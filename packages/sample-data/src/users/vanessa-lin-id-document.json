@@ -1,0 +1,18 @@
+{
+  "kind": "DriversLicense",
+  "authority": { "localized": { "en": "Texas Department of Motor Vehicles" } },
+  "location": {
+    "countryCode": "US",
+    "regionCode": "TX"
+  },
+  "identityNumber": "P27041978212",
+  "firstName": { "localized": { "en": "Vanessa" } },
+  "lastName": { "localized": { "en": "Lin" } },
+  "dob": {
+    "day": 21,
+    "month": 8,
+    "year": 1988
+  },
+  "validFrom": "2019-8-21",
+  "validUntil": "2024-8-21"
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@verii/did-web",
+  "version": "0.5.0-build",
+  "description": "did:web related functionality",
+  "repository": "https://github.com/LFDT-Verii/core",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --config ./jest.config.js --runInBand --coverage",
+    "lint": "eslint . --format json >> eslint.json",
+    "lint:fix": "eslint --fix --ext .js ."
+  },
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "did-resolver": "^4.1.0",
+    "web-did-resolver": "^2.0.27",
+    "http-errors": "^2.0.0"
+  },
+  "devDependencies": {
+    "jest": "29.7.0",
+    "nock": "14.0.5"
+  },
+  "nx": {
+    "tags": ["lib"]
+  }
+}

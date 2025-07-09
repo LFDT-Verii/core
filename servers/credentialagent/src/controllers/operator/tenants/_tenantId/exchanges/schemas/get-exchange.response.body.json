@@ -1,0 +1,147 @@
+{
+  "$id": "https://velocitycareerlabs.io/agent-operator-get-exchange-response-body",
+  "title": "agent-operator-get-exchange-response-body",
+  "type": "object",
+  "properties": {
+    "exchange": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "disclosureId",
+        "events",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "the exchange id"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "ISSUING",
+            "DISCLOSURE"
+          ],
+          "description": "the type of exchange"
+        },
+        "disclosureId": {
+          "type": "string",
+          "description": "the disclosure associated to the exchange"
+        },
+        "disclosureConsentedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "when the holder consented to the disclosure"
+        },
+        "disclosureRejectedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "disclosure was rejected by the holder and will not proceed with the exchange"
+        },
+        "presentationId": {
+          "type": "string",
+          "description": "presentationId received for the disclosure request"
+        },
+        "pushDelegate": {
+          "type": "object",
+          "description": "push metadata",
+          "properties": {
+            "pushUrl": {
+              "type": "string"
+            },
+            "pushToken": {
+              "type": "string"
+            }
+          }
+        },
+        "pushSentAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "when was the push sent at?"
+        },
+        "protocolMetadata": {
+          "type": "object",
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          }
+        },
+        "identityMatcherValues": {
+          "type": "array",
+          "description": "identity matcher value used by agent when generating offers from a offer template held on the disclosure",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          }
+        },
+        "events": {
+          "type": "array",
+          "description": "The events array. the last entry is the current state of the exchange. ",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "state": {
+                "type": "string",
+                "description": "state that the exchange entered at that timestamp"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "timestamp of the event"
+              }
+            },
+            "required": [
+              "state",
+              "timestamp"
+            ]
+          }
+        },
+        "vendorUserId": {
+          "type": "string"
+        },
+        "vendorOfferStatuses": {
+          "type": "object",
+          "patternProperties": {
+            ".*": {
+              "type": "string"
+            }
+          }
+        },
+        "offerIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "err": {
+          "type": "string",
+          "description": "message about the error received. If err is set, then the exchange is in a failure state and probably cannot be recovered"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "when the exchange was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "when the exchange was last updated"
+        }
+      }
+    }
+  },
+  "required": [
+    "exchange"
+  ]
+}

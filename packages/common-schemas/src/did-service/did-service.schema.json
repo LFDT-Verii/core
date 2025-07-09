@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "did-service",
+  "title": "did-service",
+  "type": "object",
+  "additionalProperties": true,
+  "allOf": [{
+    "type": "object",
+    "properties": {
+      "type": {
+        "type": "string",
+        "enum": [
+          "VlcCredentialAgentOperator_v1",
+          "VlcCareerIssuer_v1",
+          "VlcIdentityIssuer_v1",
+          "VlcNotaryIssuer_v1",
+          "VlcInspector_v1",
+          "VlcNodeOperator_v1",
+          "VlcIdDocumentIssuer_v1",
+          "VlcNotaryIdDocumentIssuer_v1",
+          "VlcContactIssuer_v1",
+          "VlcNotaryContactIssuer_v1",
+          "VlcHolderAppProvider_v1",
+          "VlcWebWalletProvider_v1"
+        ],
+        "minLength": 1,
+        "maxLength": 30
+      },
+      "id": {
+        "type": "string",
+        "description": "Just the id fragment, without the hash"
+      }
+    }
+  },
+    {
+      "$ref": "modify-did-service#"
+    }],
+  "required": [
+    "id",
+    "type"
+  ]
+}

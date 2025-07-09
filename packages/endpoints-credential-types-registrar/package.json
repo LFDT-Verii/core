@@ -1,0 +1,61 @@
+{
+  "name": "@verii/endpoints-credential-types-registrar",
+  "version": "0.5.0-build",
+  "description": "Credential Types Registrar",
+  "repository": "https://github.com/LFDT-Verii/core",
+  "main": "src/index.js",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --config ./jest.config.js --runInBand --coverage",
+    "lint": "eslint . --format json >> eslint.json",
+    "lint:fix": "eslint --fix --ext .js ."
+  },
+  "dependencies": {
+    "@fastify/autoload": "^6.0.0",
+    "@fastify/helmet": "^13.0.0",
+    "@fastify/multipart": "^9.0.0",
+    "@fastify/sensible": "^6.0.0",
+    "@fastify/swagger": "^9.0.0",
+    "@fastify/swagger-ui": "^5.0.0",
+    "@spencejs/spence-mongo-repos": "~0.10.2",
+    "@verii/auth": "0.5.0-build",
+    "@verii/aws-clients": "0.5.0-build",
+    "@verii/common-fetchers": "0.5.0-build",
+    "@verii/common-functions": "0.5.0-build",
+    "@verii/config": "0.5.0-build",
+    "@verii/fastify-plugins": "0.5.0-build",
+    "@verii/validation": "0.5.0-build",
+    "env-var": "^7.0.0",
+    "fastest-levenshtein": "~1.0.16",
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.0",
+    "http-errors": "~2.0.0",
+    "lodash": "~4.17.21",
+    "nanoid": "~3.3.8"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "3.820.0",
+    "@spencejs/spence-factories": "0.10.2",
+    "@verii/sample-data": "0.5.0-build",
+    "@verii/server-provider": "0.5.0-build",
+    "@verii/test-regexes": "0.5.0-build",
+    "@verii/tests-helpers": "0.5.0-build",
+    "eslint": "8.57.1",
+    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-config-prettier": "8.10.0",
+    "eslint-plugin-autofix": "1.1.0",
+    "eslint-plugin-better-mutation": "1.7.0",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-watch": "7.0.0",
+    "form-data": "4.0.3",
+    "jest": "29.7.0",
+    "mongodb": "6.16.0",
+    "nock": "14.0.5",
+    "prettier": "2.8.8"
+  }
+}

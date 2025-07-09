@@ -1,0 +1,26 @@
+{
+  "title": "issuer-data",
+  "type": "object",
+  "$id": "https://velocitynetwork.foundation/schemas/issuer-data.schema.json",
+  "description": "issuer data schema",
+  "properties": {
+    "credentialType": {
+      "type": "string"
+    },
+    "issuer": {
+      "type": "string"
+    },
+    "issued": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validFrom": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "validUntil": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

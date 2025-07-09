@@ -1,0 +1,11 @@
+{
+    "firstName": {"localized": {"en": "Yann"}},
+    "lastName": {"localized": {"en": "Martin"}},
+    "kind": "DriversLicense",
+    "authority": {"localized": {"en": "New Jersey MVC"}},
+    "location": {
+        "countryCode": "US",
+        "regionCode": "NJ"
+    },
+    "identityNumber": "Y03692036920203"
+}

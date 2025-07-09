@@ -1,0 +1,28 @@
+{
+  "title": "page-body",
+  "type": "object",
+  "$id": "https://velocitynetwork.foundation/schemas/page-body.schema.json",
+  "description": "Schema for configuring pagination with a page body",
+  "properties": {
+    "size": {
+      "type": "number",
+      "description": "The number of items to display per page"
+    },
+    "skip": {
+      "type": "number",
+      "description": "The number of items to skip before displaying the page (DEPRECATED)"
+    },
+    "nextPageToken": {
+      "type": "string",
+      "description": "The token to use to retrieve the next page"
+    },
+    "prevPageToken": {
+      "type": "string",
+      "description": "The token to use to retrieve the previous page"
+    }
+  },
+  "required": [
+    "size"
+  ],
+  "additionalProperties": false
+}

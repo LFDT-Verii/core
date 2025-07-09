@@ -1,0 +1,35 @@
+{
+  "title": "full-organization",
+  "$id": "https://velocitycareerlabs.io/full-organization.json",
+  "description": "represents a full organization including didDoc if custodied",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "didDoc": {
+      "$ref": "did-doc#"
+    },
+    "profile": {
+      "$ref": "organization-profile#"
+    },
+    "ids": {
+      "$ref": "https://velocitycareerlabs.io/organization-ids.json#"
+    },
+    "custodied": {
+      "type": "boolean"
+    },
+    "activatedServiceIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "$ref": "https://velocitycareerlabs.io/organization-registry-service-response.schema.json#"
+      }
+    }
+  }
+}

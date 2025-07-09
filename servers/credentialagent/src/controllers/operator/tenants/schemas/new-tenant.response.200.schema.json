@@ -1,0 +1,7 @@
+{
+  "title": "new-tenant",
+  "$id": "https://velocitycareerlabs.io/new-tenant.response.200.schema.json",
+  "type": "object",
+  "description": "",
+  "$ref": "immutable-entity#"
+}

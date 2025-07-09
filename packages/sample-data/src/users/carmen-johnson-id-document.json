@@ -1,0 +1,11 @@
+{
+    "firstName": {"localized": {"en": "Carmen"}},
+    "lastName": {"localized": {"en": "Johnson"}},
+    "kind": "DriversLicense",
+    "authority": {"localized": {"en": "Florida HSMV"}},
+    "location": {
+        "countryCode": "US",
+        "regionCode": "FL"
+    },
+    "identityNumber": "Z135791357913"
+}

@@ -1,0 +1,26 @@
+{
+  "title": {
+    "path": [
+      "$.authority.name"
+    ],
+    "schema": {
+      "type": "string"
+    },
+    "fallback": "-"
+  },
+  "subtitle": {
+    "path": [
+      "$.name"
+    ],
+    "schema": {
+      "type": "string"
+    },
+    "fallback": "-"
+  },
+  "properties": [
+    {
+      "text": "Property 1",
+      "label": "Label 1"
+    }
+  ]
+}

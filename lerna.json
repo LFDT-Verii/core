@@ -1,0 +1,17 @@
+{
+  "lerna": "2.6.0",
+  "packages": [
+    "packages/*",
+    "servers/*",
+    "tools/*"
+  ],
+  "tagVersionPrefix": "",
+  "version": "independent",
+  "npmClient": "yarn",
+  "useNx": true,
+  "ignoreChanges": [
+    "**/*.md",
+    "**/test/**",
+    "**/__tests__/**"
+  ]
+}

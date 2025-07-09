@@ -1,0 +1,34 @@
+issuer = "http://auth0:3000/"
+subject = "interopUser"
+
+[user_info]
+subject = "interopUser"
+name = "Local"
+given_name = "Locie"
+family_name = "Auth0"
+nickname = "locie.auth0"
+locale = "en"
+gender = "none"
+birthdate = "2022-02-11"
+email = "interopUser@example.com"
+email_verified = true
+picture = "https://github.com/primait/localauth0/blob/6f71c9318250219a9d03fb72afe4308b8824aef7/web/assets/static/media/localauth0.png"
+updated_at = "2022-11-11T11:00:00Z"
+
+
+[[audience]]
+name = "testAudience"
+permissions = ["admin:organizations", "admin:credentialTypes"]
+
+[[audience]]
+name = "https://velocitynetwork.node"
+permissions = ["*:*"]
+
+[[audience]]
+name = "https://fineract.velocitycareerlabs.io"
+permissions = ["fineract:finance_admin"]
+
+[access_token]
+custom_claims = [
+    { name = "http://velocitynetwork.foundation/groupId", value = { String = "did:ion:123" } }
+]

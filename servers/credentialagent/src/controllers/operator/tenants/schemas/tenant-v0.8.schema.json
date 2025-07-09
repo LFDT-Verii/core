@@ -1,0 +1,62 @@
+{
+  "title": "tenant",
+  "$id": "https://velocitycareerlabs.io/tenant-v0.8.schema.json",
+  "description": "",
+  "allOf": [
+    { "$ref": "mutable-entity#"},
+    {
+      "properties": {
+        "did": {
+          "type": "string",
+          "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$"
+        },
+        "serviceIds": {
+          "type": "array",
+          "description": "id's of the service",
+          "items": {
+            "type": "string",
+            "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+#[A-Za-z0-9._:?=&%;-]+$"
+          }
+        },
+        "logo": {
+          "type": "string",
+          "format": "uri"
+        },
+        "webhookUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "name": {
+          "type": "string",
+          "description": "did for the org"
+        },
+        "primaryAddress": {
+          "type": "string",
+          "description": "ethereum primary address of tenant"
+        },
+        "description": {
+          "type": "string",
+          "description": "did for the org"
+        },
+        "credentialTypesIssued": {
+          "type": "array",
+          "description": "credential types that are issued",
+          "items": {
+            "type": "string"
+          }
+        },
+        "webhookAuth": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type":"string",
+              "enums": ["bearer"]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "required": ["did"],
+  "additionalProperties": false
+}

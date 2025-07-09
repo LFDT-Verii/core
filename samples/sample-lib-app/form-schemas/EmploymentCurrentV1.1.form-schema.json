@@ -1,0 +1,96 @@
+{
+  "legalEmployer": {
+    "name": {
+      "ui:title": "Employer"
+    },
+    "identifier": {
+      "ui:widget": "hidden"
+    },
+    "place": {
+      "ui:widget": "hidden"
+    }
+  },
+  "role": {
+    "ui:title": "Role"
+  },
+  "description": {
+    "ui:title": "Role description"
+  },
+  "startDate": {
+    "ui:title": "Start date",
+    "ui:widget": "date"
+  },
+  "place": {
+    "name": {
+      "ui:title": "Place of work"
+    },
+    "addressCountry": {
+      "ui:title": "Country of work",
+      "ui:enum": [
+        "TARGET_COUNTRIES_ENUM"
+      ],
+      "ui:enumNames": [
+        "TARGET_COUNTRIES_ENUM_NAMES"
+      ],
+      "ui:widget": "select"
+    },
+    "addressRegion": {
+      "ui:title": "Region or state of work",
+      "ui:enum": [
+        "TARGET_REGIONS_ENUM"
+      ],
+      "ui:enumNames": [
+        "TARGET_REGIONS_ENUM_NAMES"
+      ],
+      "ui:widget": "select"
+    },
+    "addressLocality": {
+      "ui:title": "City of work"
+    },
+    "ui:order": [
+      "name",
+      "addressLocality",
+      "addressRegion",
+      "addressCountry"
+    ]
+  },
+  "employmentType": {
+    "ui:title": "Employment Type"
+  },
+  "alignment": {
+    "ui:widget": "hidden"
+  },
+  "recipient": {
+    "givenName": {
+      "ui:title": "First name"
+    },
+    "middleName": {
+      "ui:title": "Middle name"
+    },
+    "familyName": {
+      "ui:title": "Last name"
+    },
+    "namePrefix": {
+      "ui:title": "Name prefix"
+    },
+    "nameSuffix": {
+      "ui:title": "Name suffix"
+    },
+    "ui:order": [
+      "givenName",
+      "middleName",
+      "familyName",
+      "namePrefix",
+      "nameSuffix"
+    ]
+  },
+  "ui:order": [
+    "legalEmployer",
+    "role",
+    "description",
+    "startDate",
+    "place",
+    "employmentType",
+    "recipient"
+  ]
+}

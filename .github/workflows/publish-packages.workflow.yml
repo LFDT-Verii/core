@@ -1,0 +1,94 @@
+name: Publish Packages
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'packages/**'
+      - 'servers/**'
+      - 'tools/**'
+  workflow_dispatch:
+    inputs:
+      version-type:
+        type: choice
+        description: Choose environment
+        default: 'prerelease'
+        options: 
+        - prerelease
+        - release
+env:
+  LERNA_VERSION: '6.6.2'
+  NX_VERSION: '17.2.7'
+  DIST_TAG: 'prerelease'
+  NODE_VERSION: '22.x'
+  VERSION_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.version-type || format('{0}', 'prerelease') }}
+  TARGET_ORG: 'verii'
+  CURR_REPO_VERSION: '1.0.0'
+jobs:
+  # Publish Packages
+  publish-packages:
+    name: Publish Packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      # Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      # Generate PreRelease Version Number
+      - name: Generate PreRelease Version Number
+        run: echo "PRERELEASE_VER_NUM=${{format('{0}-pre.$(date +%s)', env.CURR_REPO_VERSION)}}" >> $GITHUB_ENV
+      # Set Npm Version Number
+      - name: Set Npm Version Number
+        run: echo "NPM_VER_NUM=${{ env.VERSION_TYPE == 'release' && env.CURR_REPO_VERSION || env.PRERELEASE_VER_NUM }}" >> $GITHUB_ENV
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # Get yarn cache directory path
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      # Restore yarn cached
+      - name: Restore yarn cached
+        id: cache-yarn-restore
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: |
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            node_modules
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-yarn-${{ hashFiles('yarn.lock') }}
+      # Install Dependencies
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+      # Install Lerna
+      - name: Install Lerna
+        run: yarn global add lerna@${{ env.LERNA_VERSION }}
+      # Install Nx
+      - name: Install Nx
+        run: yarn global add nx@
+      # Set Version
+      - name: Set Version
+        run: lerna version --no-git-tag-version --no-push --exact --yes ${{ env.NPM_VER_NUM }}
+      # Git Set Identity
+      - name: Git Identity
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      # Set Dist Tag For Release
+      - name: Set Dist Tag For Release
+        run: echo 'DIST_TAG=latest' >> $GITHUB_ENV
+        if: env.VERSION_TYPE == 'release'
+      # Commit Version Locally for Npmjs
+      - name: Commit Version Locally for Npmjs
+        run: git commit -am "Creating Version ${{ env.NPM_VER_NUM }}"
+      # Set Github Packages Config
+      - name: Set NPM Packages Config
+        run: |
+          echo "@${{ env.TARGET_ORG }}:registry=https://registry.npmjs.org/" > .npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_VERII }}" >> .npmrc
+      # Publish to NpmJS
+      - name: Publish NpmJS
+        run: lerna publish --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"

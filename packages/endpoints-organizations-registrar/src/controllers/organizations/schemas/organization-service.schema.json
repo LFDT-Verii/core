@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "organization-service",
+  "title": "organization-service",
+  "type": "object",
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "type": "object",
+      "properties": {
+        "credentialTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "supportedExchangeProtocols": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "VN_API",
+              "OPENID4VC"
+            ]
+          },
+          "minItems": 1
+        }
+      }
+    },
+    {
+      "$ref": "did-service#"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "type": [
+    "Course"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "flaxman-training-center"
+  },
+  "credentialSubject": {
+    "vendorUserId": "andrew.hall@example.com",
+    "title": { "localized": {"en":  "Emerging Leaders Training"}},
+    "description": { "localized": {"en":  "This course was designed to help you define what success means to you, and to develop a plan for achieving it. The course offers personalized assessments to help you probe your past, imagine your future, and measure your strengths. These are combined with the latest scientific insights on everything from self-confidence and happiness to relationships and careers."}},
+    "type": "In Company Training",
+    "duration": "5d",
+    "registrationDate": {
+      "day": 1,
+      "month": 6,
+      "year": 2020
+    },
+    "startDate": {
+      "day": 1,
+      "month": 7,
+      "year": 2020
+    },
+    "completionDate": {
+      "day": 1,
+      "month": 8,
+      "year": 2020
+    },
+    "alignment": {
+      "targetName": "Emerging Leaders Training Course",
+      "targetUrl": "https://sandbox.credentialengine.org/finder/learningopportunity/8461",
+      "targetCode": "ce-c20da527-8246-4a13-bcff-960fbf4fdf42",
+      "targetFramework": "Credential Registry"
+    }
+  }
+}

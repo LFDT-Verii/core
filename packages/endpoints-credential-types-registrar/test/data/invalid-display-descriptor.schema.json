@@ -1,0 +1,12 @@
+{
+  "subtitle": "An awesome app",
+  "summary_detail": "This app is the best",
+  "description": "Lorem ipsum dolor sit amet",
+  "logo": "https://example.com/logo.png",
+  "properties": [
+    {
+      "text": "Property 1",
+      "label": "Label 1"
+    }
+  ]
+}

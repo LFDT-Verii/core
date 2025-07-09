@@ -1,0 +1,22 @@
+{
+  "type": ["OpenBadgeV1.0"],
+  "issuer": {
+    "id": "{{did}}"
+  },
+  "credentialSubject": {
+    "vendorUserId": "{{email}}",
+    "holds": {
+      "name" : "SAP Sapphire Attendance",
+      "description" : "Digital Badge for the Conference Attendees of SAPs Sapphire Conference",
+      "type" : "BadgeClass",
+      "issuer" : {
+        "type": "Profile",
+        "id": "{{did}}",
+        "name": "SAP",
+        "uri": "https://sap.com"
+      },
+      "image": "https://example.com/badge-image.png",
+      "criteria": "https://example.com/sap/criteria.html"
+    }
+  }
+}

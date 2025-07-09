@@ -1,0 +1,31 @@
+{
+  "extends": "nx/presets/npm.json",
+  "parallel": 2,
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "cache": true,
+      "parallelism": false
+    },
+    "lint": {
+      "cache": true
+    },
+    "package": {
+      "cache": true
+    },
+    "prepare": {
+      "cache": true,
+      "dependsOn": ["^prepare"]
+    }
+  },
+  "useInferencePlugins": false,
+  "defaultBase": "main",
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  }
+}

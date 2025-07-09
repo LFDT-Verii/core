@@ -1,0 +1,17 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "ecmascript", // or "ecmascript"
+      "jsx": true
+    },
+    "transform": {
+      "react": {
+        "runtime": "automatic" // or "classic" if not using the new JSX transform
+      }
+    }
+  },
+  "module": {
+    "type": "es6",
+    "strict": true
+  }
+}

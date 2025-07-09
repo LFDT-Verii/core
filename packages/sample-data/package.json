@@ -1,0 +1,23 @@
+{
+  "name": "@verii/sample-data",
+  "version": "0.5.0-build",
+  "description": "Organizations, metadata and credentials that can be used for testing.",
+  "repository": "https://github.com/LFDT-Verii/core",
+  "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --config ./jest.config.js --runInBand --coverage --passWithNoTests",
+    "lint": "eslint . --format json >> eslint.json",
+    "lint:fix": "eslint --fix --ext .js ."
+  },
+  "author": "Itay Podhajcer",
+  "license": "Apache-2.0",
+  "dependencies": {
+  },
+  "devDependencies": {},
+  "nx": {
+    "tags": ["lib"]
+  }
+}

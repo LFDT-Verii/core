@@ -1,0 +1,51 @@
+{
+  "type": [
+    "EducationDegree"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "den-haag-university"
+  },
+  "credentialSubject": {
+    "vendorUserId": "loek.dejong@example.com",
+    "school": "did:velocity:",
+    "schoolName": {
+      "localized": {
+        "en": "Den Haag University"
+      }
+    },
+    "degreeName": {
+      "localized": {
+        "en": "Master of Arts"
+      }
+    },
+    "program": {
+      "localized": {
+        "en": "Master in Law and Economics"
+      }
+    },
+    "startMonthYear": {
+      "month": 10,
+      "year": 2015
+    },
+    "endMonthYear": {
+      "month": 7,
+      "year": 2019
+    },
+    "fieldsOfStudy": {
+      "localized": {
+        "en": "Economics, Law"
+      }
+    },
+    "grade": {
+      "localized": {
+        "en": "94"
+      }
+    },
+    "alignment": [{
+      "targetName": "M.S. Economics and Law",
+      "targetUrl": "https://sandbox.credentialengine.org/finder/credential/15863/M_A__Economics_and_Law",
+      "targetCode": "ce-cf854504-75dd-4dde-a4be-1f4fc6c91643",
+      "targetFramework": "Credential Engine - Credential Registry"
+    }]
+  }
+}

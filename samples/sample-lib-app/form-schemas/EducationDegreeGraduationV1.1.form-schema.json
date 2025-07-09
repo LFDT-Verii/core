@@ -1,0 +1,126 @@
+{
+  "degreeName": {
+    "ui:title": "Degree"
+  },
+  "description": {
+    "ui:title": "Degree description"
+  },
+  "institution": {
+    "name": {
+      "ui:title": "Institution"
+    },
+    "identifier": {
+      "ui:widget": "hidden"
+    },
+    "place": {
+      "ui:widget": "hidden"
+    }
+  },
+  "school": {
+    "name": {
+      "ui:title": "School or department"
+    },
+    "identifier": {
+      "ui:widget": "hidden"
+    },
+    "place": {
+      "ui:widget": "hidden"
+    }
+  },
+  "programName": {
+    "ui:title": "Program"
+  },
+  "programType": {
+    "ui:widget": "hidden"
+  },
+  "programMode": {
+    "ui:widget": "hidden"
+  },
+  "degreeMajor": {
+    "ui:title": "Major(s)"
+  },
+  "degreeMinor": {
+    "ui:title": "Minor(s)"
+  },
+  "honors": {
+    "ui:title": "Honors"
+  },
+  "alignment": {
+    "ui:widget": "hidden"
+  },
+  "grade": {
+    "scoreValue": {
+      "ui:title": "Grade"
+    },
+    "result": {
+      "ui:title": "Result"
+    },
+    "passFail": {
+      "ui:title": "Pass or fail"
+    },
+    "scoreMethod": {
+      "ui:widget": "hidden"
+    },
+    "ui:order": [
+      "scoreValue",
+      "result",
+      "passFail"
+    ]
+  },
+  "registrationDate": {
+    "ui:title": "Registration date",
+    "ui:widget": "date"
+  },
+  "startDate": {
+    "ui:title": "Start date",
+    "ui:widget": "date"
+  },
+  "endDate": {
+    "ui:title": "End date",
+    "ui:widget": "date"
+  },
+  "conferredDate": {
+    "ui:title": "Date conferred",
+    "ui:widget": "date"
+  },
+  "recipient": {
+    "givenName": {
+      "ui:title": "First name"
+    },
+    "middleName": {
+      "ui:title": "Middle name"
+    },
+    "familyName": {
+      "ui:title": "Last name"
+    },
+    "namePrefix": {
+      "ui:title": "Name prefix"
+    },
+    "nameSuffix": {
+      "ui:title": "Name suffix"
+    },
+    "ui:order": [
+      "givenName",
+      "middleName",
+      "familyName",
+      "namePrefix",
+      "nameSuffix"
+    ]
+  },
+  "ui:order": [
+    "institution",
+    "degreeName",
+    "school",
+    "description",
+    "registrationDate",
+    "startDate",
+    "endDate",
+    "conferredDate",
+    "grade",
+    "honors",
+    "degreeMajor",
+    "degreeMinor",
+    "programName",
+    "recipient"
+  ]
+}

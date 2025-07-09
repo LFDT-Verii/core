@@ -1,0 +1,18 @@
+{
+  "kind": "DriversLicense",
+  "authority": { "localized": { "en": "Illinois Department of Motor Vehicles" } },
+  "location": {
+    "countryCode": "US",
+    "regionCode": "IL"
+  },
+  "identityNumber": "P26769836721",
+  "firstName": { "localized": { "en": "Michelle" } },
+  "lastName": { "localized": { "en": "Harris" } },
+  "dob": {
+    "day": 16,
+    "month": 7,
+    "year": 1989
+  },
+  "validFrom": "2018-7-16T00:00:00.000Z",
+  "validUntil": "2023-7-16T00:00:00.000Z"
+}

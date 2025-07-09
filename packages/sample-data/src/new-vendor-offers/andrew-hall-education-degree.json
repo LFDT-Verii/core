@@ -1,0 +1,40 @@
+{
+  "type": [
+    "EducationDegree"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "wakefield-university"
+  },
+  "credentialSubject": {
+    "vendorUserId": "andrew.hall@example.com",
+    "school": "did:velocity:",
+    "schoolName": {
+      "localized": {
+        "en": "Wakefield University"
+      }
+    },
+    "degreeName": {
+      "localized": {
+        "en": "Bachelor of Arts"
+      }
+    },
+    "program": {
+      "localized": {
+        "en": "Undergraduate program in accounting and economics"
+      }
+    },
+    "startMonthYear": {
+      "month": 9,
+      "year": 2015
+    },
+    "endMonthYear": {
+      "month": 6,
+      "year": 2018
+    },
+    "fieldsOfStudy": {
+      "localized": {
+        "en": "Accounting, Economics"
+      }
+    }
+  }
+}

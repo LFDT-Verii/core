@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://velocitycareerlabs.io/holder-disclosure.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "description": "The disclosure request made by an inspector on the velocity newtwork. It describes credential types wanted and (in the future) predicate information as well as terms and conditions for usage of the data",
+  "allOf": [
+    { "$ref": "mutable-entity#"},
+    {
+    "properties": {
+      "description": {
+        "type": "string",
+        "description": "Description field for this disclosure"
+      },
+      "types": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The credential type to be disclosed"
+            }
+          }
+        },
+        "description": "To be expanded. Predicates will be added and associated with each credential type. Enables expression of expressions that limit the kinds of credential requested",
+        "minItems": 1
+      },
+      "organization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "DID of the inspecting organization"
+          },
+          "logo": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to a logo"
+          },
+          "name": {
+            "type": "string",
+            "description": "name of the inspecting organization"
+          },
+          "description": {
+            "type": "string",
+            "description": "description of the inspecting organization"
+          }
+        }
+      },
+      "purpose": {
+        "type": "string",
+        "description": "purpose is a summary of the description"
+      },
+      "duration": {
+        "type": "string",
+        "description": "duration can be a number of days (5d), weeks (12w), months (6m) or years (7y)"
+      },
+      "termsUrl": {
+        "type": "string"
+      }
+    }
+  }],
+  "required": [
+    "id",
+    "types",
+    "organization",
+    "purpose",
+    "duration",
+    "createdAt",
+    "updatedAt"
+  ]
+}

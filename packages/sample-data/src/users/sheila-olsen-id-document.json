@@ -1,0 +1,18 @@
+{
+  "kind": "DriversLicense",
+  "authority": { "localized": { "en": "Utah Department of Public Safety" } },
+  "location": {
+    "countryCode": "US",
+    "regionCode": "UT"
+  },
+  "identityNumber": "4113214215",
+  "firstName": { "localized": { "en": "Sheila" } },
+  "lastName": { "localized": { "en": "Olsen" } },
+  "dob": {
+    "day": 19,
+    "month": 5,
+    "year": 1998
+  },
+  "validFrom": "2018-5-19",
+  "validUntil": "2023-5-19"
+}

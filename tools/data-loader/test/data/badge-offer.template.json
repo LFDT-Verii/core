@@ -1,0 +1,22 @@
+{
+  "type": ["OpenBadgeV2.0"],
+  "issuer": {
+    "id": "{{did}}"
+  },
+  "credentialSubject": {
+    "vendorUserId": "{{email}}",
+    "hasCredential": {
+      "name" : "Microsoft Inspire Attendance",
+      "description" : "Digital Badge for the Conference Attendees",
+      "type" : "BadgeClass",
+      "issuer" : {
+        "type": "Profile",
+        "id": "{{did}}",
+        "name": "Microsoft",
+        "url": "https://microsoft.com"
+      },
+      "image": "https://example.com/badge-image.png",
+      "criteria": "Criteria ABC"
+    }
+  }
+}

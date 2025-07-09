@@ -1,0 +1,33 @@
+{
+  "firstName": { "localized":  {"en": "Adam"}},
+  "lastName":  { "localized":  {"en": "Smith"}},
+  "emails": ["adam.smith@example.com"],
+  "phones": ["+15556192191"],
+  "dob": {
+    "day": 3,
+    "month": 3,
+    "year": 1971
+  },
+  "location": {
+    "countryCode": "US",
+    "regionCode": "CA"
+  },
+  "idDocumentCredentials": [{
+    "kind": "DriversLicense",
+    "firstName": { "localized":  {"en": "Adam"}},
+    "lastName":  { "localized":  {"en": "Smith"}},
+    "authority": { "localized":  {"en": "California DMV" } },
+    "identityNumber": "12310312312",
+    "location": {
+      "countryCode": "US",
+      "regionCode": "CA"
+    }
+  }],
+  "address": {
+    "line1": "400 Bell St",
+    "line2": "East Palo Alto",
+    "postcode": "94303",
+    "regionCode": "CA",
+    "countryCode": "US"
+  }
+}

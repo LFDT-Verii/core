@@ -1,0 +1,19 @@
+{
+  "type": [
+    "VaccinationCertificate-Apr2021"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "mcb-health-services"
+  },
+  "credentialSubject": {
+    "vendorUserId": "olivia.hafez@example.com",
+    "formVersion": "1.0.0",
+    "disease": "Covid-19",
+    "vaccineDescription": "Vaccine product containing only Severe acute respiratory syndrome coronavirus 2 antigen (medicinal product)",
+    "vaccineType": "COVID-19 mRNA vaccine",
+    "certifiedBy": "MCB Health Services",
+    "certificateNumber": "4159DE64-BA61",
+    "certificateValidFrom": "2021-02-18T00:00:00Z",
+    "certificateValidTo": "2021-08-17T00:00:00Z"
+  }
+}

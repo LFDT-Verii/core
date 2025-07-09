@@ -1,0 +1,31 @@
+{
+  "kind": "Passport",
+  "authority": {
+    "localized": {
+      "en": "Ministry of the Interior",
+      "es": "Ministerio del Interior"
+    }
+  },
+  "location": {
+    "countryCode": "ES",
+    "regionCode": "MD"
+  },
+  "identityNumber": "6303961111",
+  "firstName": {
+    "localized": {
+      "en": "Montserrat"
+    }
+  },
+  "lastName": {
+    "localized": {
+      "en": "Reyes"
+    }
+  },
+  "dob": {
+    "day": 16,
+    "month": 7,
+    "year": 1998
+  },
+  "validFrom": "2018-10-11T00:00:00.000Z",
+  "validUntil": "2028-10-10T00:00:00.000Z"
+}

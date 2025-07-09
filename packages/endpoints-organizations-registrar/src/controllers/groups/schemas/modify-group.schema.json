@@ -1,0 +1,25 @@
+{
+  "title": "modify-group",
+  "$id": "https://velocitycareerlabs.io/modify-group.schema.json",
+  "type": "object",
+  "description": "describes the subset of https://velocitycareerlabs.io/group.schema.json properties that can be modified",
+  "properties": {
+    "dids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "clientAdminIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "dids",
+    "clientAdminIds"
+  ]
+}

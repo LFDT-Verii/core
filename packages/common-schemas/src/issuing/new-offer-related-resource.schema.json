@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://velocitycareerlabs.io/new-offer-related-resource.schema.json",
+  "title": "New Offer Related Resource",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "the id of the resource that is an related resource",
+          "format": "uri"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "the type of related resource. Typically omitted"
+        },
+        "mediaType": {
+          "type": "string",
+          "description": "the media type of the URI. Can be used to validate what is downloaded"
+        },
+        "digestSRI": {
+          "type": "string",
+          "description": "the digest of the object"
+        },
+        "name": {
+          "type": "string",
+          "description": "the name of the referenced resource"
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "rendering hints for wallets. Can be used to validate the downloaded credential. Eg PDF or VerifiableCredential"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "offerId": {
+          "type": "string",
+          "description": "a reference to an offerId in the same exchange"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "the type of related resource. Typically omitted"
+        }
+      },
+      "required": [
+        "offerId"
+      ]
+    }
+  ]
+}

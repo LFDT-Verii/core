@@ -1,0 +1,44 @@
+{
+  "title": "modify-tenant",
+  "$id": "https://velocitycareerlabs.io/modify-tenant-v0.8.schema.json",
+  "type": "object",
+  "description": "",
+  "properties": {
+    "serviceIds": {
+      "type": "array",
+      "description": "id's of the service",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+#[A-Za-z0-9._:?=&%;-]+$"
+          },
+          {
+            "type": "string",
+            "pattern": "^#[A-Za-z0-9._:?=&%;-]+$"
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "webhookUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "webhookAuth": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["bearer"]
+        },
+        "bearerToken": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "serviceIds"
+  ]
+}

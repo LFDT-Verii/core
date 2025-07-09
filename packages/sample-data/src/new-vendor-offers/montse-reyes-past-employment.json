@@ -1,0 +1,34 @@
+{
+  "type": [
+    "PastEmploymentPosition"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "banco-de-badalona"
+  },
+  "credentialSubject": {
+    "vendorUserId": "montse.reyes@example.com",
+    "company": "did:velocity:",
+    "companyName": {
+      "localized": {
+        "en": "Banco de Badalona"
+      }
+    },
+    "title": {
+      "localized": {
+        "en": "Derivatives Analyst"
+      }
+    },
+    "startMonthYear": {
+      "month": 10,
+      "year": 2018
+    },
+    "endMonthYear": {
+      "month": 1,
+      "year": 2020
+    },
+    "location": {
+      "countryCode": "ES",
+      "regionCode": "CAT"
+    }
+  }
+}

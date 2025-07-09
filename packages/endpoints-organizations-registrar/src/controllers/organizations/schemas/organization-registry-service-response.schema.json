@@ -1,0 +1,26 @@
+{
+  "title": "organization-registry-service-response",
+  "$id": "https://velocitycareerlabs.io/organization-registry-service-response.schema.json",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "type": "object",
+      "properties": {
+        "credentialTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "$ref": "did-service#"
+    }
+  ],
+  "required": [
+    "id",
+    "type",
+    "serviceEndpoint"
+  ]
+}

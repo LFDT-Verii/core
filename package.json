@@ -1,0 +1,81 @@
+{
+  "name": "core",
+  "version": "independent",
+  "description": "Monorepo for Verii core. Includes common modules, registrar endpoints, credential agent, mock vendor builds",
+  "main": "index.js",
+  "repository": "git@github.com:LFDT-Verii/core.git",
+  "author": "Andres Olave",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "build": "nx run-many --target=build --all",
+    "build:affected": "nx affected --target=build",
+    "build:lib": "nx run-many --target=build --projects=tag:lib",
+    "lint": "nx run-many --target=lint --all",
+    "lint:affected": "nx affected --target=lint",
+    "lint:fix": "nx run-many --target=lint:fix --all",
+    "lint:fix:affected": "nx affected --target=lint:fix",
+    "test": "NODE_ENV=test nx run-many --target=test --all",
+    "test:affected": "NODE_ENV=test nx affected --target=test",
+    "depcheck": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,jest*,@storybook/*,ts-node,typescript' --oneline",
+    "depcheck-ci": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,jest*,@storybook/*,ts-node,typescript' --json",
+    "jest:test": "node --max-old-space-size=6144 --trace-warnings node_modules/.bin/jest --onlyChanged --config ./jest.config.js --runInBand --coverage",
+    "update-version": "lerna publish --skip-git --skip-npm --force-publish '*'",
+    "check-packages": "yarn clean && yarn compile && yarn test && yarn lint",
+    "check-licenses": "yarn licenses list --production --json | grep table | ./check-license.js",
+    "start": "docker-compose up",
+    "start:rebuild": "docker-compose up --build",
+    "stop": "docker-compose down -v"
+  },
+  "//": "resolutions notes",
+  "//": "'tar', 'ansi-regex', 'elliptic', 'node-fetch' can be removed with truffle",
+  "//": "'json5 after eslint-plugin-import upgrade from 2.31.0",
+  "resolutions": {
+    "tar": "^6.1.2",
+    "ansi-regex": "~5.0.1",
+    "**/minimatch": "^7.4.6",
+    "**/elliptic": "^6.6.1",
+    "**/decode-uri-component": "^0.2.2",
+    "**/node-fetch": "~2.7.0",
+    "**/semver": "~7.7.0",
+    "**/json5": "~2.2.3"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "19.8.1",
+    "@commitlint/config-conventional": "19.8.1",
+    "depcheck": "1.4.7",
+    "husky": "4.3.8",
+    "jest-junit": "16.0.0",
+    "lerna": "8.2.3",
+    "nx": "19.5.3",
+    "typescript": "5.8.3"
+  },
+  "workspaces": [
+    "contracts/*",
+    "packages/*",
+    "servers/*",
+    "tools/*",
+    "samples/*"
+  ],
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E  HUSKY_GIT_PARAMS"
+    }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "rules": {
+      "subject-case": [
+        2,
+        "never",
+        [
+          "start-case",
+          "pascal-case"
+        ]
+      ]
+    }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

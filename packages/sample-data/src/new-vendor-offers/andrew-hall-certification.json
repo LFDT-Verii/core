@@ -1,0 +1,20 @@
+{
+  "type": [
+    "Certification"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "acca"
+  },
+  "credentialSubject": {
+    "vendorUserId": "andrew.hall@example.com",
+    "authority": "did:velocity:",
+    "authorityName": { "localized":  {"en": "Association of Chartered Certified Accountants"}},
+    "type": { "localized":  {"en": "Certification"}},
+    "name": { "localized":  {"en": "ACCA Diploma in Financial and Management Accounting (RQF Level 2)"}},
+    "certificationDate": {
+      "day": 1,
+      "month": 1,
+      "year": 2020
+    }
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "name": "@verii/components-organizations-registrar",
+  "version": "0.5.0-build",
+  "type": "module",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./components": {
+      "import": "./dist/components.js",
+      "require": "./dist/components.cjs"
+    },
+    "./components/AppBar": {
+      "import":"./dist/components/AppBar.js",
+      "require":"./dist/components/AppBar.cjs"
+    },
+    "./components/common": {
+      "import": "./dist/components/common.js",
+      "require": "./dist/components/common.cjs"
+    },
+    "./components/invitations": {
+      "import": "./dist/components/invitations.js",
+      "require": "./dist/components/invitations.cjs"
+    },
+    "./components/organizations": {
+      "import": "./dist/components/organizations.js",
+      "require": "./dist/components/organizations.cjs"
+    },
+    "./components/services": {
+      "import": "./dist/components/services.js",
+      "require": "./dist/components/services.cjs"
+    },
+    "./constants": {
+      "import": "./dist/constants.js",
+      "require": "./dist/constants.cjs"
+    },
+    "./layouts": {
+      "import": "./dist/layouts.js",
+      "require": "./dist/layouts.cjs"
+    },
+    "./pages": {
+      "import": "./dist/pages.js",
+      "require": "./dist/pages.cjs"
+    },
+    "./pages/individuals": {
+      "import": "./dist/pages/individuals.js",
+      "require": "./dist/pages/individuals.cjs"
+    },
+    "./pages/invitations": {
+      "import": "./dist/pages/invitations.js",
+      "require": "./dist/pages/invitations.cjs"
+    },
+    "./pages/organizations": {
+      "import": "./dist/pages/organizations.js",
+      "require": "./dist/pages/organizations.cjs"
+    },
+    "./pages/services": {
+      "import": "./dist/pages/services.js",
+      "require": "./dist/pages/services.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:watch": "vite build --watch",
+    "prepublish": "vite build",
+    "test": "jest --coverage",
+    "lint": "NODE_OPTIONS=--experimental-specifier-resolution=node eslint src",
+    "lint:fix": "NODE_OPTIONS=--experimental-specifier-resolution=node eslint src --fix"
+  },
+  "dependencies": {
+    "@auth0/auth0-react": "^2.2.1",
+    "@mui/icons-material": "^6.0.0",
+    "@mui/material": "^6.0.0",
+    "@react-pdf/renderer": "^4.0.0",
+    "autosuggest-highlight": "^3.3.4",
+    "lodash": "^4.17.21",
+    "prop-types": "^15.8.1",
+    "ra-core": "^5.5.2",
+    "ra-data-local-storage": "^5.5.2",
+    "react-admin": "^5.5.2",
+    "react-router-dom": "7.6.3",
+    "react-router": "7.6.3"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
+    "react-router": "7.6.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "8.57.1",
+    "@swc/core": "1.12.9",
+    "@swc/jest": "0.2.38",
+    "@testing-library/react": "16.3.0",
+    "@testing-library/jest-dom": "6.6.3",
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "@vitejs/plugin-react-swc": "3.10.2",
+    "eslint": "8.57.1",
+    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-config-prettier": "8.10.0",
+    "eslint-plugin-autofix": "1.1.0",
+    "eslint-plugin-better-mutation": "1.7.0",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "4.6.2",
+    "eslint-import-resolver-alias": "1.1.2",
+    "globals": "16.3.0",
+    "identity-obj-proxy": "3.0.0",
+    "jest-environment-jsdom": "29.7.0",
+    "jest-fetch-mock": "3.0.3",
+    "vite": "6.3.5",
+    "vite-plugin-externalize-deps": "0.9.0",
+    "vite-plugin-lib-inject-css": "2.2.2"
+  },
+  "nx": {
+    "tags": ["lib"]
+  }
+}

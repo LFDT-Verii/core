@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://velocitycareerlabs.io/vendor-offer.schema.json",
+  "type": "object",
+  "title": "vendor-offer",
+  "description": "An offer is similar to a credential but is never wrapped in a JWT and hence doesnt carry the JWS (digital signature)",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "$ref": "https://velocitycareerlabs.io/new-vendor-offer.schema.json#"
+    },
+    {
+      "$ref": "mutable-entity#"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "issuer": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "description": "The name of brand"
+            },
+            "image": {
+              "type": "string",
+              "description": "The uri to image"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "type",
+        "credentialSubject",
+        "exchangeId"
+      ]
+    }
+  ]
+}

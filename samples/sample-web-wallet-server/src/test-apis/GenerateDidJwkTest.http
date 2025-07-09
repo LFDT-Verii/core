@@ -1,0 +1,10 @@
+### Generate Did Jwk
+POST http://localhost:5000/generateDidJwk HTTP/1.1
+Content-Type: application/json
+
+{
+  "didJwkDescriptor": {
+    "signatureAlgorithm": "P-256",
+    "remoteCryptoServicesToken": null
+  }
+}

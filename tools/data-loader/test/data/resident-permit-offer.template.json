@@ -1,0 +1,10 @@
+{
+  "type": ["ResidentPermitV1.0"],
+  "issuer": {
+    "id": "{{did}}"
+  },
+  "credentialSubject": {
+    "vendorUserId": "{{identifier}}",
+    "identifier": "{{identifier}}"
+  }
+}

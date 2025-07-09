@@ -1,0 +1,3 @@
+CREATE DATABASE IF NOT EXISTS `fineract_tenants`;
+CREATE DATABASE IF NOT EXISTS `fineract_default`;
+CREATE DATABASE IF NOT EXISTS `exchange`;

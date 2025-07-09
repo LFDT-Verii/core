@@ -1,0 +1,69 @@
+name: fineract
+include:
+  - ./auth-compose.yml
+
+services:
+  fineractmysql:
+    image: mysql:8.4@sha256:0f775a92980b41c87c58f934a204de80431dd4d854057160ec1cb936663eabe9
+    volumes:
+      - ./db-init:/db-init
+    command: --mysql-native-password=ON --init-file /db-init/fineract-default.sql
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: skdcnwauicn2ucnaecasdsajdnizucawencascdca
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost", "--password=skdcnwauicn2ucnaecasdsajdnizucawencascdca" ]
+      timeout: 10s
+      retries: 10
+    ports:
+      - 13306:3306
+
+  fineract-server:
+    image: ghcr.io/velocitynetworkfoundation/fineract:dev
+    restart: on-failure
+    depends_on:
+      - fineractmysql
+      - auth0
+    ports:
+      - 13008:8080
+    environment:
+      - DRIVERCLASS_NAME=com.mysql.cj.jdbc.Driver
+      - PROTOCOL=jdbc
+      - SUB_PROTOCOL=mysql
+      - fineract_tenants_driver=com.mysql.cj.jdbc.Driver
+      - fineract_tenants_url=jdbc:mysql://fineractmysql:3306/fineract_tenants
+      - fineract_tenants_uid=root
+      - fineract_tenants_pwd=skdcnwauicn2ucnaecasdsajdnizucawencascdca
+      - FINERACT_DEFAULT_TENANTDB_HOSTNAME=fineractmysql
+      - FINERACT_DEFAULT_TENANTDB_PORT=3306
+      - FINERACT_DEFAULT_TENANTDB_UID=root
+      - FINERACT_DEFAULT_TENANTDB_PWD=skdcnwauicn2ucnaecasdsajdnizucawencascdca
+      - FINERACT_DEFAULT_TENANTDB_CONN_PARAMS=
+      - FINERACT_SECURITY_AUTH0_DOMAIN=http://auth0:3000
+      - FINERACT_SECURITY_AUTH0_ISSUER_URI=http://auth0:3000/
+      - FINERACT_SECURITY_AUTH0_AUDIENCE=testAudience
+      - FINERACT_SENTRY_DSN=
+      - FINERACT_SENTRY_EXCEPTION_RESOLVE_ORDER=-2147483647
+      - FINERACT_SENTRY_LOGGING_ENABLED=false
+      - FINERACT_SENTRY_LOGGING_MIN_EVENT_LEVEL=info
+      - FINERACT_SENTRY_LOGGING_MIN_BREADCRUMB_LEVEL=debug
+    entrypoint:
+      - "java"
+      - "-agentlib:jdwp=transport=dt_socket,server=y,address=*:8000,suspend=n"
+      - "-Dloader.path=/app/libs/"
+      - "-Duser.timezone=UTC"
+      - "-jar"
+      - "/app/fineract-provider.jar"
+
+  fineract-probe:
+    image: bash:5.2.37
+    restart: on-failure
+    command: sleep infinity
+    depends_on:
+      - fineract-server
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "fineract-server", "8080"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 20s

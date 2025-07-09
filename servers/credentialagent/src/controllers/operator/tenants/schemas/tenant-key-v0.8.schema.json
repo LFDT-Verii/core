@@ -1,0 +1,14 @@
+{
+  "title": "tenant-key",
+  "$id": "https://velocitycareerlabs.io/tenant-key-v0.8.schema.json",
+  "description": "",
+  "allOf": [
+    {
+      "$ref": "https://velocitycareerlabs.io/secret-key-metadata.schema.json#"
+    },
+    {
+      "$ref": "immutable-entity#"
+    }
+  ],
+  "additionalProperties": false
+}

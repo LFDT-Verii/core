@@ -1,0 +1,42 @@
+{
+  "title": "organization-search-query-params",
+  "type": "object",
+  "$id": "organization-search-query-params",
+  "description": "Query parameters used for searching organizations",
+  "allOf": [
+    {
+      "$ref": "https://velocitynetwork.foundation/schemas/page-query.schema.json#"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "type": "object",
+          "properties": {
+            "serviceTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "credentialTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "did": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "q": {
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

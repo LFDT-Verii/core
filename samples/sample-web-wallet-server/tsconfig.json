@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "module": "Node16",
+    "esModuleInterop": true,
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "noImplicitAny": false,
+    "sourceMap": true,
+    "strict": true,
+    "lib": ["ES6", "ES2022"],
+    "target": "ES6",
+    "moduleResolution": "node16",
+    "downlevelIteration": true,
+    "declaration": true
+  },
+  "include": [
+    "./src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "parserOptions":  {
+    "ecmaVersion":  "2022",  // Allows for the parsing of modern ECMAScript features
+    "sourceType":  "module"  // Allows for the use of imports
+  }
+}

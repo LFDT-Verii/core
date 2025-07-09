@@ -1,0 +1,29 @@
+{
+    "title": "page-query",
+    "type": "object",
+    "$id": "https://velocitynetwork.foundation/schemas/page-query.schema.json",
+    "description": "Schema for configuring pagination with a page in the querystring",
+    "properties": {
+        "page": {
+            "type": "object",
+            "properties": {
+                "size": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "skip": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "sort": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2
+            }
+        }
+    }
+}

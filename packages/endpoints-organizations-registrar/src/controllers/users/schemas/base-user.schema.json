@@ -1,0 +1,55 @@
+{
+  "title": "base-user",
+  "$id": "https://velocitycareerlabs.io/base-user.schema.json",
+  "type": "object",
+  "description": "base user schema",
+  "properties": {
+    "email": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$"
+    },
+    "givenName": {
+      "type": "string"
+    },
+    "familyName": {
+      "type": "string"
+    },
+    "groupId": {
+      "type": ["string", "null"]
+    },
+    "registrarRole": {
+      "type": ["string", "null"],
+      "enum": [
+        "clientadmin",
+        null
+      ]
+    },
+    "tokenWalletRole": {
+      "type": ["string", "null"],
+      "enum": [
+        "clientfinanceadmin",
+        "clientsystemuser",
+        null
+      ]
+    }
+  },
+  "anyOf": [
+    {
+      "type": "object",
+      "required": [
+        "registrarRole"
+      ]
+    },
+    {
+      "type": "object",
+      "required": [
+        "tokenWalletRole"
+      ]
+    }
+  ],
+  "required": [
+    "email",
+    "givenName",
+    "familyName"
+  ]
+}

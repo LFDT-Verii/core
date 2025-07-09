@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "organization-verified-profile",
+  "type": "object",
+  "title": "An organization verified profile",
+  "description": "Verified profile information for an organization",
+  "allOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A unique id for the credential that was disclosed at this time."
+        },
+        "type": {
+          "type": "array",
+          "description": "type is identical to the standard based type found on verifiable credentials but does not accept a string, it only accepts an array to indicate an unordered set of type URIs",
+          "items": {
+            "type": "string"
+          }
+        },
+        "issuer": {
+          "type": "object",
+          "description": "DID of the issuer",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "alsoKnownAs": {
+              "title": "Also Known As",
+              "description": "https://www.w3.org/TR/did-core/#also-known-as",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          }
+        },
+        "credentialSubject": {
+          "$ref": "organization-profile#"
+        },
+        "credentialSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          }
+        },
+        "validFrom": {
+          "type": "string",
+          "format": "date-time",
+          "description": "when the credential will start being valid"
+        },
+        "validUntil": {
+          "type": "string",
+          "format": "date-time",
+          "description": "when the credential will expire"
+        },
+        "issuanceDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "when did the issuer actually issue the verified credential"
+        },
+        "credentialChecks": {
+          "type": "object",
+          "properties": {
+            "checked": {
+              "type": "string",
+              "format": "date-time",
+              "description": "when did the system last run checks on the profile VC"
+            },
+            "TRUSTED_ISSUER": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_CHECKED",
+                "SELF_SIGNED"
+              ]
+            },
+            "UNREVOKED": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_CHECKED"
+              ]
+            },
+            "UNEXPIRED": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_CHECKED",
+                "NOT_APPLICABLE"
+              ]
+            },
+            "UNTAMPERED": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_CHECKED"
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "type",
+        "issuer",
+        "credentialSubject",
+        "issuanceDate",
+        "credentialChecks"
+      ]
+    }
+  ]
+}

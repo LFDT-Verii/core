@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "create-did-service",
+  "title": "create-did-service",
+  "additionalProperties": true,
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "VlcCredentialAgentOperator_v1",
+        "VlcCareerIssuer_v1",
+        "VlcIdentityIssuer_v1",
+        "VlcNotaryIssuer_v1",
+        "VlcInspector_v1",
+        "VlcNodeOperator_v1",
+        "VlcIdDocumentIssuer_v1",
+        "VlcNotaryIdDocumentIssuer_v1",
+        "VlcContactIssuer_v1",
+        "VlcNotaryContactIssuer_v1",
+        "VlcHolderAppProvider_v1",
+        "VlcWebWalletProvider_v1"
+      ],
+      "minLength": 1,
+      "maxLength": 30
+    },
+    "id": {
+      "type": "string",
+      "description": "Just the id fragment, without the hash"
+    },
+    "serviceEndpoint": {
+      "type": "string"
+    },
+    "logoUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "playStoreUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "appleAppStoreUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "appleAppId": {
+      "type": "string"
+    },
+    "googlePlayId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "supportedExchangeProtocols": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "VN_API",
+          "OPENID4VC"
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "id"
+  ]
+}

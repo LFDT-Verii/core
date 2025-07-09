@@ -1,0 +1,74 @@
+name: sample-registrar-server
+include:
+  - ../../../eng/docker/services/shared-compose.yml
+  - ../../../eng/docker/services/auth-compose.yml
+  - ../../../eng/docker/services/fineract-compose.yml
+
+services:
+  registrar-migrations:
+    depends_on:
+      velocity-mongo:
+        condition: service_started
+    image: velocitycore/sample-registrar-server-migrations:local
+    build:
+      context: ../../..
+      dockerfile: eng/docker/Dockerfile-NodeE2E
+      target: builder
+      args:
+        SERVICE: registrar-migrations
+        NODE_ENV: development
+        SRC_DIR: samples/sample-registrar-server
+    restart: on-failure
+    volumes:
+      - ../../../packages:/app/packages
+      - /app/servers/registrar-migrations/node_modules
+      - ..:/app/servers/registrar-migrations
+      - ../../sample-lib-app:/app/samples/sample-lib-app
+    command: "yarn --cwd servers/registrar-migrations migrate:up"
+    env_file:
+      - ../.localdev.env
+
+  registrar:
+    depends_on:
+      certfix:
+        condition: service_started
+      velocity-mongo:
+        condition: service_started
+      fineract-probe:
+        condition: service_healthy
+      auth0:
+        condition: service_started
+    image: velocitycore/sample-registrar-server:local
+    build:
+      context: ../../..
+      dockerfile: eng/docker/Dockerfile-NodeE2E
+      target: builder
+      args:
+        SERVICE: registrar
+        SRC_DIR: samples/sample-registrar-server
+    restart: on-failure
+    volumes:
+      - ../../../packages:/app/packages
+      - /app/servers/registrar/node_modules
+      - ..:/app/servers/registrar
+      - httpscert:/certs
+    command: npx nodemon --exec "cd servers/registrar && yarn start"
+    env_file:
+      - ../.localdev.env
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    ports:
+      - 13999:3000
+
+  registrar-proxy:
+    image: nginx:alpine@sha256:b2e814d28359e77bd0aa5fed1939620075e4ffa0eb20423cc557b375bd5c14ad
+    restart: on-failure
+    depends_on:
+      - registrar
+      - certfix
+    ports:
+      - "13003:80"
+      - "13004:443"
+    volumes:
+      - httpscert:/etc/nginx/ssl
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf

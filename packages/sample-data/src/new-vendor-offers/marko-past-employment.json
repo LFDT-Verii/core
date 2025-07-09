@@ -1,0 +1,36 @@
+{
+  "type": [
+    "PastEmploymentPosition"
+  ],
+  "issuer": {
+    "id": "did:velocity:0x534c700a5421abe2b36478090f4fc59179c3c86a"
+  },
+  "credentialSubject": {
+    "vendorUserId": "marko.nikolic@example.com",
+    "company": "did:velocity:0x534c700a5421abe2b36478090f4fc59179c3c86a",
+    "companyName": {
+      "localized": {
+        "en": "Orchidée Pharmaceutique"
+      }
+    },
+    "title": {
+      "localized": {
+        "en": "Clean Room Technician"
+      }
+    },
+    "startMonthYear": {
+      "day": 20,
+      "month": 6,
+      "year": 2020
+    },
+    "endMonthYear": {
+      "day": 21,
+      "month": 4,
+      "year": 2021
+    },
+    "location": {
+      "countryCode": "FR",
+      "regionCode": "IL"
+    }
+  }
+}

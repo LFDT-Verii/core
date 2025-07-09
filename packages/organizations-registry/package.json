@@ -1,0 +1,31 @@
+{
+  "name": "@verii/organizations-registry",
+  "version": "0.5.0-build",
+  "description": "Velocity DID documents library",
+  "repository": "https://github.com/LFDT-Verii/core",
+  "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --config ./jest.config.js --runInBand --coverage",
+    "lint": "eslint . --format json >> eslint.json",
+    "lint:fix": "eslint --fix --ext .js ."
+  },
+  "author": "Itay Podhajcer",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@verii/crypto": "0.5.0-build",
+    "@verii/jwt": "0.5.0-build",
+    "http-errors": "^2.0.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@verii/test-regexes": "0.5.0-build",
+    "@verii/tests-helpers": "0.5.0-build",
+    "jest": "29.7.0"
+  },
+  "nx": {
+    "tags": ["lib"]
+  }
+}

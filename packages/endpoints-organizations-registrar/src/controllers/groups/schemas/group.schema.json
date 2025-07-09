@@ -1,0 +1,22 @@
+{
+  "title": "group",
+  "$id": "https://velocitycareerlabs.io/group.schema.json",
+  "type": "object",
+  "description": "describes a group from the Velocity organization group registrar",
+  "allOf": [
+    {
+      "type": "object",
+      "properties": {
+        "groupId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "groupId"
+      ]
+    },
+    {
+      "$ref": "https://velocitycareerlabs.io/modify-group.schema.json"
+    }
+  ]
+}

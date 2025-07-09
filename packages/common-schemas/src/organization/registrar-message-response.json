@@ -1,0 +1,9 @@
+{
+  "$id": "registrar-message-response",
+  "type": "object",
+  "properties": {
+    "messageType": { "type": "string", "enum": ["ack"] },
+    "messageId": { "type": "string" }
+  },
+  "required": ["messageType", "messageId"]
+}

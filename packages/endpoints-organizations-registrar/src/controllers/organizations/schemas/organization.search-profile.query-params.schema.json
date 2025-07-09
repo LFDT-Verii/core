@@ -1,0 +1,50 @@
+{
+  "title": "organization-search-query-params",
+  "type": "object",
+  "$id": "organization-search-profile-query-params",
+  "description": "Query parameters used for searching organizations",
+  "properties": {
+    "filter": {
+      "type": "object",
+      "properties": {
+        "serviceTypes": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "did": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "skip": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "q": {
+      "type": "string"
+    },
+    "sort": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "no-service-endpoint-transform": {
+      "type": "string",
+      "enum": ["1", "true"]
+    }
+  },
+  "additionalProperties": false
+}
