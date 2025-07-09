@@ -22,7 +22,7 @@
     "jest:test": "node --max-old-space-size=6144 --trace-warnings node_modules/.bin/jest --onlyChanged --config ./jest.config.js --runInBand --coverage",
     "update-version": "lerna publish --skip-git --skip-npm --force-publish '*'",
     "check-packages": "yarn clean && yarn compile && yarn test && yarn lint",
-    "check-licenses": "yarn licenses list --production --json | grep table | ./check-license.js",
+    "check-licenses": "yarn licenses list --production --json | grep table | node ./check-license.js",
     "start": "docker-compose up",
     "start:rebuild": "docker-compose up --build",
     "stop": "docker-compose down -v"
