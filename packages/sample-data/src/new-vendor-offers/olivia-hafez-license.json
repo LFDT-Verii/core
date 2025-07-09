@@ -1,0 +1,21 @@
+{
+  "type": [
+    "Certification"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "precheck"
+  },
+  "credentialSubject": {
+    "vendorUserId": "olivia.hafez@example.com",
+    "authority": "did:velocity:0x689a3309d404e0cb419cde54963b6d9b395e4710",
+    "authorityName": { "localized":  {"en": "New Jersey Board of Nursing"}},
+    "type": { "localized":  {"en": "License"}},
+    "name": { "localized":  {"en": "Licensed Practical Nurse"}},
+    "certificationDate": {
+      "day": 18,
+      "month": 5,
+      "year": 2020
+    },
+    "number": "PN123456L"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "company": "did:velocity:bateissuer1234567890",
+  "companyName": {
+    "localized": {
+      "en": "BATE Corporation"
+    }
+  },
+  "title": {
+    "localized": {
+      "en": "Junior Project Manager"
+    }
+  },
+  "startMonthYear": {
+    "month": 2,
+    "year": 2007
+  },
+  "endMonthYear": {
+    "month": 8,
+    "year": 2009
+  },
+  "location": {
+    "countryCode": "US",
+    "regionCode": "AZ"
+  },
+  "description": "Business Operations Junior Project Manager\nManaged the delivery of all National Promotions"
+}

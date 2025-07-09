@@ -1,0 +1,189 @@
+{
+  "title": {
+    "path": [
+      "$.legalEmployer.name",
+      "$.credentialSubject.legalEmployer.name"
+    ],
+    "schema": {
+      "type": "string"
+    },
+    "fallback": "-"
+  },
+  "subtitle": {
+    "path": [
+      "$.role",
+      "$.credentialSubject.role"
+    ],
+    "schema": {
+      "type": "string"
+    },
+    "fallback": "-"
+  },
+  "summary_detail": {
+    "path": [
+      "$.place.name",
+      "$.credentialSubject.place.name"
+    ],
+    "schema": {
+      "type": "string"
+    },
+    "fallback": "$.place.addressLocality"
+  },
+  "description": {
+    "text": "Current employment position"
+  },
+  "logo": {
+    "path": [
+      "$.legalEmployer.image",
+      "$.credentialSubject.legalEmployer.image"
+    ],
+    "schema": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "properties": [
+    {
+      "label": "Role",
+      "path": [
+        "$.role",
+        "$.credentialSubject.role"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Role description",
+      "path": [
+        "$.description",
+        "$.credentialSubject.description"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Start date",
+      "path": [
+        "$.startDate",
+        "$.credentialSubject.startDate"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date"
+      }
+    },
+    {
+      "label": "Place of work",
+      "path": [
+        "$.place.name",
+        "$.credentialSubject.place.name"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "City of work",
+      "path": [
+        "$.place.addressLocality",
+        "$.credentialSubject.place.addressLocality"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "State or region of work",
+      "path": [
+        "$.place.addressRegion",
+        "$.credentialSubject.place.addressRegion"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Country of work",
+      "path": [
+        "$.place.addressCountry",
+        "$.credentialSubject.place.addressCountry"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Employment type",
+      "path": [
+        "$.employmentType[*]",
+        "$.credentialSubject.employmentType[*]"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "First name",
+      "path": [
+        "$.recipient.givenName",
+        "$.credentialSubject.recipient.givenName"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Middle name",
+      "path": [
+        "$.recipient.middleName",
+        "$.credentialSubject.recipient.middleName"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Last name",
+      "path": [
+        "$.recipient.familyName",
+        "$.credentialSubject.recipient.familyName"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Mame prefix",
+      "path": [
+        "$.recipient.namePrefix",
+        "$.credentialSubject.recipient.namePrefix"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Name suffix",
+      "path": [
+        "$.recipient.nameSuffix",
+        "$.credentialSubject.recipient.nameSuffix"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "label": "Learn more about the credential",
+      "path": [
+        "$.alignment[0].targetUrl",
+        "$.credentialSubject.alignment[0].targetUrl"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "uri"
+      }
+    }
+  ]
+}

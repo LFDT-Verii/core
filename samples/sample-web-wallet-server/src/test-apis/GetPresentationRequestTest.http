@@ -1,0 +1,7 @@
+### Get Presentation Request
+POST http://localhost:5000/getPresentationRequest HTTP/1.1
+Content-Type: application/json
+
+{
+  "value": "velocity-network-devnet://inspect?request_uri=https%3A%2F%2Fdevagent.velocitycareerlabs.io%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3AEiAbP9xvCYnUOiLwqgbkV4auH_26Pv7BT2pYYT3masvvhw%2Finspect%2Fget-presentation-request%3Fid%3D62d8f05788de05e27930b037&inspectorDid=did%3Aion%3AEiAbP9xvCYnUOiLwqgbkV4auH_26Pv7BT2pYYT3masvvhw"
+}

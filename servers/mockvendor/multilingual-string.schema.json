@@ -1,0 +1,40 @@
+
+{
+  "type": "object",
+  "title": "multilingual-string",
+  "$id": "https://velocitynetwork.foundation/schemas/multilingual-string.schema.json",
+  "additionalProperties": false,
+  "description": "an internationalized version of a string",
+  "properties": {
+    "localized": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z]{2}(_[A-Z]{2})?$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "preferredLocale": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string",
+          "format": "regex",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "language": {
+          "type": "string",
+          "format": "regex",
+          "pattern": "^[a-z]{2}$"
+        }
+      },
+      "required": [
+        "language"
+      ]
+    }
+  },
+  "required": [
+    "localized"
+  ]
+}

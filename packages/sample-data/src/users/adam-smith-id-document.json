@@ -1,0 +1,16 @@
+{
+    "firstName": {"localized": {"en": "Adam"}},
+    "lastName": {"localized": {"en": "Smith"}},
+    "kind": "DriversLicense",
+    "authority": {"localized": {"en": "California DMV"}},
+    "location": {
+        "countryCode": "US",
+        "regionCode": "CA"
+    },
+    "dob": {
+        "day": 20,
+        "month": 6,
+        "year": 1966
+    },
+    "identityNumber": "12310312312"
+}

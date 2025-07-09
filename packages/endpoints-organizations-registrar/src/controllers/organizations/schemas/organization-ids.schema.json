@@ -1,0 +1,34 @@
+{
+  "title": "organization-ids",
+  "$id": "https://velocitycareerlabs.io/organization-ids.json",
+  "type": "object",
+  "description": "represents the ids associated with an organization",
+  "properties": {
+    "tokenAccountId": {
+      "type": "string"
+    },
+    "stakesAccountId": {
+      "type": "string"
+    },
+    "fineractClientId": {
+      "type": "string"
+    },
+    "escrowAccountId": {
+      "type": "string"
+    },
+    "ethereumAccount": {
+      "type": "string"
+    },
+    "stripeConnectAccountId": {
+      "type": "string"
+    },
+    "did": {
+      "type": "string"
+    },
+    "brokerClientId": {
+      "type": "string"
+    }
+  },
+  "required": [
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "type": [
+    "EducationDegree"
+  ],
+  "issuer": {
+    "id": "did:velocity:0xb03c6539f6edccbd3c3a34f512bc7f681299620f"
+  },
+  "credentialSubject": {
+    "vendorUserId": "marko.nikolic@example.com",
+    "school": "did:velocity:0xb03c6539f6edccbd3c3a34f512bc7f681299620f",
+    "schoolName": {
+      "localized": {
+        "en": "Belgrade School of Technology"
+      }
+    },
+    "degreeName": {
+      "localized": {
+        "en": "Bachelor of Engineering"
+      }
+    },
+    "program": {
+      "localized": {
+        "en": "Undergraduate program in engineering "
+      }
+    },
+    "startMonthYear": {
+      "month": 10,
+      "year": 2013
+    },
+    "endMonthYear": {
+      "month": 10,
+      "year": 2016
+    },
+    "alignment": [{
+      "targetName": "Дипломирани инжењер (Bachelor of Engineering)",
+      "targetUrl": "https://sandbox.credentialengine.org/finder/credential/20150/Bachelor_of_Engineering",
+      "targetDescription": "Студијски програм Еколошки инжењеринг има за циљ да оспособи студенте за обављање послова који се односе на управљање отпадом, одрживи развој, мониторинг и заштиту животне средине коришћењем нових технологија.",
+      "targetCode": "ce-fa4dc769-a42e-48a5-bb43-88669330663a",
+      "targetFramework": "Credential Engine"
+    }]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "title": "verification-identify-response-200",
+  "$id": "verification-identify-response-200",
+  "type": "object",
+  "properties": {
+    "vendorUserId": { "type": "string" }
+  },
+  "required": [
+    "vendorUserId"
+  ],
+  "additionalProperties": false
+}

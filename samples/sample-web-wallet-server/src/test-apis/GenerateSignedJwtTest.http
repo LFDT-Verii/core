@@ -1,0 +1,40 @@
+### Generate Signed Jwt
+POST http://localhost:5000/generateSignedJwt HTTP/1.1
+Content-Type: application/json
+
+{
+  "jwtDescriptor": {
+    "payload": {
+      "p1": "v1",
+      "p2": "v12"
+    },
+    "iss": "iss123",
+    "jti": "jti123"
+  },
+  "didJwk": {
+    "payload": {
+      "did": "did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6IkFYQWxaWThqNGh5cm10dzBoRjNrLTJWT080THZXRzBLNEF5a0JYS25HVWciLCJ5IjoiYzlEVHE5cVRWUTlRQmlsLUgxdGRWN3FZZERic3BhTG5wZ0FJdkRKeEpHayJ9",
+      "kid": "did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6IkFYQWxaWThqNGh5cm10dzBoRjNrLTJWT080THZXRzBLNEF5a0JYS25HVWciLCJ5IjoiYzlEVHE5cVRWUTlRQmlsLUgxdGRWN3FZZERic3BhTG5wZ0FJdkRKeEpHayJ9#0",
+      "keyId": "Iv5pwCQfp6e5FsncVgVX0",
+      "publicJwk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "y": "c9DTq9qTVQ9QBil-H1tdV7qYdDbspaLnpgAIvDJxJGk",
+        "x": "AXAlZY8j4hyrmtw0hF3k-2VOO4LvWG0K4AykBXKnGUg"
+      }
+    },
+    "did": "did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6IkFYQWxaWThqNGh5cm10dzBoRjNrLTJWT080THZXRzBLNEF5a0JYS25HVWciLCJ5IjoiYzlEVHE5cVRWUTlRQmlsLUgxdGRWN3FZZERic3BhTG5wZ0FJdkRKeEpHayJ9",
+    "publicJwk": {
+      "valueStr": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"y\":\"c9DTq9qTVQ9QBil-H1tdV7qYdDbspaLnpgAIvDJxJGk\",\"x\":\"AXAlZY8j4hyrmtw0hF3k-2VOO4LvWG0K4AykBXKnGUg\"}",
+      "valueJson": {
+        "kty": "EC",
+        "crv": "P-256",
+        "y": "c9DTq9qTVQ9QBil-H1tdV7qYdDbspaLnpgAIvDJxJGk",
+        "x": "AXAlZY8j4hyrmtw0hF3k-2VOO4LvWG0K4AykBXKnGUg"
+      }
+    },
+    "kid": "did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6IkFYQWxaWThqNGh5cm10dzBoRjNrLTJWT080THZXRzBLNEF5a0JYS25HVWciLCJ5IjoiYzlEVHE5cVRWUTlRQmlsLUgxdGRWN3FZZERic3BhTG5wZ0FJdkRKeEpHayJ9#0",
+    "keyId": "Iv5pwCQfp6e5FsncVgVX0"
+  },
+  "remoteCryptoServicesToken": null
+}

@@ -1,0 +1,11 @@
+{
+    "firstName": {"localized": {"en": "Olivia"}},
+    "lastName": {"localized": {"en": "Hafez"}},
+    "kind": "DriversLicense",
+    "authority": {"localized": {"en": "New Jersey MVC"}},
+    "location": {
+        "countryCode": "US",
+        "regionCode": "NJ"
+    },
+    "identityNumber": "X24680246802468"
+}

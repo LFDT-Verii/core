@@ -1,0 +1,451 @@
+{
+  "@context": {
+    "id": "@id",
+    "type": "@type",
+    "schema": "http://schema.org/",
+    "xsd": "https://www.w3.org/2001/XMLSchema#",
+    "ob": "https://purl.imsglobal.org/spec/vc/ob/vocab.html#",
+    "ceterms": "https://credreg.net/ctdl/terms/",
+    "Address": {
+      "@id": "https://velocitynetwork.foundation/contexts#Address",
+      "@context": {
+        "streetAddress": "schema:streetAddress",
+        "addressLocality": "schema:addressLocality",
+        "addressRegion": "schema:addressRegion",
+        "postCode": "schema:postalCode",
+        "addressCountry": "schema:addressCountry"
+      }
+    },
+    "Place": {
+      "@id": "https://velocitynetwork.foundation/contexts#Place",
+      "@context": {
+        "name": "schema:name",
+        "addressLocality": "schema:addressLocality",
+        "addressRegion": "schema:addressRegion",
+        "addressCountry": "schema:addressCountry"
+      }
+    },
+    "Validity": {
+      "@id": "https://velocitynetwork.foundation/contexts#Validity",
+      "@context": {
+        "firstValidFrom": {
+          "@id": "https://velocitynetwork.foundation/contexts#firstValidFrom",
+          "@type": "schema:Date"
+        },
+        "validFrom": "schema:validFrom",
+        "validUntil": "schema:validUntil",
+        "validIn": {
+          "@id": "https://velocitynetwork.foundation/contexts#place"
+        }
+      }
+    },
+    "Person": {
+      "@id": "https://velocitynetwork.foundation/contexts#Person",
+      "@context": {
+        "givenName": "schema:givenName",
+        "familyName": "schema:familyName",
+        "middleName": "schema:additionalName",
+        "namePrefix": "schema:honorificPrefix",
+        "nameSuffix": "schema:honorificSuffix",
+        "birthDate": "schema:birthDate",
+        "birthPlace": {
+          "@id": "https://velocitynetwork.foundation/contexts#place"
+        },
+        "gender": "schema:gender"
+      }
+    },
+    "PersonName": {
+      "@id": "https://velocitynetwork.foundation/contexts#PersonName",
+      "@context": {
+        "givenName": "schema:givenName",
+        "familyName": "schema:familyName",
+        "middleName": "schema:additionalName",
+        "namePrefix": "schema:honorificPrefix",
+        "nameSuffix": "schema:honorificSuffix"
+      }
+    },
+    "Organization": {
+      "@id": "https://velocitynetwork.foundation/contexts#Organization",
+      "@context": {
+        "name": "schema:name",
+        "identifier": {
+          "@id": "schema:identifier",
+          "@type": "@id"
+        },
+        "place": {
+          "@id": "https://velocitynetwork.foundation/contexts#place"
+        }
+      }
+    },
+    "PrimaryOrganization": "Organization",
+    "ObiProfile": {
+      "@id": "https://velocitynetwork.foundation/contexts#ObiProfile",
+      "@context": {
+        "id": "@id",
+        "type": "@type"
+      }
+    },
+    "PrimarySourceProfile": "ObiProfile",
+    "AlignmentObject": {
+      "@id": "https://velocitynetwork.foundation/contexts#AlignmentObject",
+      "@context": {
+        "targetCode": {
+          "@id": "ob:targetCode",
+          "@type": "xsd:string"
+        },
+        "targetDescription": "schema:targetDescription",
+        "targetFramework": "schema:targetFramework",
+        "targetName": "schema:targetName",
+        "targetType": {
+          "@id": "ob:targetType",
+          "@type": "xsd:string"
+        },
+        "targetUrl": {
+          "@id": "schema:targetUrl",
+          "@type": "xsd:anyURI"
+        }
+      }
+    },
+    "Score": {
+      "@id": "https://velocitynetwork.foundation/contexts#Score",
+      "@context": {
+        "scoreMethod": {
+          "@id": "https://velocitynetwork.foundation/contexts#scoreMethod"
+        },
+        "scoreValue": {
+          "@id": "https://velocitynetwork.foundation/contexts#scoreValue",
+          "@type": "xsd:string"
+        },
+        "result": {
+          "@id": "https://velocitynetwork.foundation/contexts#result",
+          "@type": "xsd:string"
+        },
+        "passFail": {
+          "@id": "https://velocitynetwork.foundation/contexts#passFail",
+          "@type": "xsd:string"
+        }
+      }
+    },
+    "ScoreMethod": {
+      "@id": "https://velocitynetwork.foundation/contexts#ScoreMethod",
+      "@context": {
+        "scoreMethodType": "ceterms:scoringMethodType",
+        "scoreMethodDescription": "ceterms:scoringMethodDescription",
+        "alignment": {
+          "@id": "https://velocitynetwork.foundation/contexts#alignment",
+          "@container": "@set"
+        },
+        "passingScore": "ceterms:requires"
+      }
+    },
+    "Email": {
+      "@id": "https://velocitynetwork.foundation/contexts#Email",
+      "@context": {
+        "email": "schema:email"
+      }
+    },
+    "Phone": {
+      "@id": "https://velocitynetwork.foundation/contexts#Phone",
+      "@context": {
+        "phone": "schema:telephone"
+      }
+    },
+    "IdDocument": {
+      "@id": "https://velocitynetwork.foundation/contexts#IdDocument",
+      "@context": {
+        "documentType": "schema:additionalType",
+        "postalAddress": {
+          "@id": "https://velocitynetwork.foundation/contexts#address"
+        },
+        "authority": {
+          "@id": "https://velocitynetwork.foundation/contexts#primaryOrganization"
+        },
+        "validity": {
+          "@id": "https://velocitynetwork.foundation/contexts#validity"
+        },
+        "person": {
+          "@id": "https://velocitynetwork.foundation/contexts#person"
+        },
+        "identifier": {
+          "@id": "schema:identifier",
+          "@type": "@id"
+        },
+        "nationality": "schema:addressCountry"
+      }
+    },
+    "Passport": {
+      "@id": "https://velocitynetwork.foundation/contexts#Passport",
+      "@context": {
+        "documentCode": "schema:additionalType",
+        "authority": {
+          "@id": "https://velocitynetwork.foundation/contexts#primaryOrganization"
+        },
+        "validity": {
+          "@id": "https://velocitynetwork.foundation/contexts#validity"
+        },
+        "person": {
+          "@id": "https://velocitynetwork.foundation/contexts#person"
+        },
+        "identifier": {
+          "@id": "schema:identifier",
+          "@type": "@id"
+        },
+        "nationality": "schema:addressCountry"
+      }
+    },
+    "DriversLicense": {
+      "@id": "https://velocitynetwork.foundation/contexts#DriversLicense",
+      "@context": {
+        "authority": {
+          "@id": "https://velocitynetwork.foundation/contexts#primaryOrganization"
+        },
+        "validity": {
+          "@id": "https://velocitynetwork.foundation/contexts#validity"
+        },
+        "person": {
+          "@id": "https://velocitynetwork.foundation/contexts#person"
+        },
+        "identifier": {
+          "@id": "schema:identifier",
+          "@type": "@id"
+        },
+        "nationality": "schema:addressCountry",
+        "address": {
+          "@id": "https://velocitynetwork.foundation/contexts#address"
+        },
+        "description": "schema:description",
+        "endorsementCode": {
+          "@id": "xsd:string",
+          "@container": "@set"
+        },
+        "restrictionCode": {
+          "@id": "xsd:string",
+          "@container": "@set"
+        },
+        "alignment": {
+          "@id": "https://velocitynetwork.foundation/contexts#alignment",
+          "@container": "@set"
+        }
+      }
+    },
+    "Employment": {
+      "@id": "https://velocitynetwork.foundation/contexts#Employment",
+      "@context": {
+        "legalEmployer": {
+          "@id": "https://velocitynetwork.foundation/contexts#primaryOrganization"
+        },
+        "role": "schema:roleName",
+        "description": "schema:description",
+        "employmentType": "schema:employmentType",
+        "startDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#startDate",
+          "@type": "schema:Date"
+        },
+        "endDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#endDate",
+          "@type": "schema:Date"
+        },
+        "place": "https://velocitynetwork.foundation/contexts#place",
+        "alignment": {
+          "@id": "https://velocitynetwork.foundation/contexts#alignment",
+          "@container": "@set"
+        },
+        "recipient": {
+          "@id": "https://velocitynetwork.foundation/contexts#personName"
+        }
+      }
+    },
+    "EducationDegree": {
+      "@id": "https://velocitynetwork.foundation/contexts#EducationDegree",
+      "@context": {
+        "institution": {
+          "@id": "https://velocitynetwork.foundation/contexts#primaryOrganization"
+        },
+        "school": {
+          "@id": "https://velocitynetwork.foundation/contexts#organization"
+        },
+        "programName": "schema:name",
+        "programType": "schema:programType",
+        "programMode": "schema:educationalProgramMode",
+        "degreeName": "schema:educationalCredentialAwarded",
+        "degreeMajor": "ceterms:degreeMajor",
+        "degreeMinor": "ceterms:degreeMinor",
+        "description": "schema:description",
+        "alignment": {
+          "@id": "https://velocitynetwork.foundation/contexts#alignment",
+          "@container": "@set"
+        },
+        "registrationDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#registrationDate",
+          "@type": "schema:Date"
+        },
+        "conferredDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#conferredDate",
+          "@type": "schema:Date"
+        },
+        "startDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#startDate",
+          "@type": "schema:Date"
+        },
+        "endDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#endDate",
+          "@type": "schema:Date"
+        },
+        "honors": "xsd:string",
+        "grade": {
+          "@id": "https://velocitynetwork.foundation/contexts#score"
+        },
+        "recipient": {
+          "@id": "https://velocitynetwork.foundation/contexts#personName"
+        }
+      }
+    },
+    "Course": {
+      "@id": "https://velocitynetwork.foundation/contexts#Course",
+      "@context": {
+        "provider": {
+          "@id": "https://velocitynetwork.foundation/contexts#primaryOrganization"
+        },
+        "contentProvider": {
+          "@id": "https://velocitynetwork.foundation/contexts#organization"
+        },
+        "courseName": "schema:educationalCredentialAwarded",
+        "courseCode": "schema:courseCode",
+        "courseType": "schema:programType",
+        "courseMode": "schema:educationalProgramMode",
+        "courseLevel": "schema:educationalLevel",
+        "courseDuration": "schema:timeToComplete",
+        "description": "schema:description",
+        "alignment": {
+          "@id": "https://velocitynetwork.foundation/contexts#alignment",
+          "@container": "@set"
+        },
+        "grade": {
+          "@id": "https://velocitynetwork.foundation/contexts#score"
+        },
+        "registrationDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#registrationDate",
+          "@type": "schema:Date"
+        },
+        "startDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#startDate",
+          "@type": "schema:Date"
+        },
+        "completionDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#completionDate",
+          "@type": "schema:Date"
+        },
+        "recipient": {
+          "@id": "https://velocitynetwork.foundation/contexts#personName"
+        }
+      }
+    },
+    "AssessmentDimension": {
+      "@id": "https://velocitynetwork.foundation/contexts#AssessmentDimension",
+      "@context": {
+        "name": "schema:name",
+        "assesses": "schema:assesses",
+        "description": "schema:description",
+        "assessmentLevel": "schema:educationalLevel",
+        "assessmentMethod": "ceterms:assessmentMethodDescription",
+        "alignment": {
+          "@id": "https://velocitynetwork.foundation/contexts#alignment",
+          "@container": "@set"
+        },
+        "score": {
+          "@id": "https://velocitynetwork.foundation/contexts#score"
+        },
+        "assessmentDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#assessmentDate",
+          "@type": "schema:Date"
+        }
+      }
+    },
+    "Assessment": {
+      "@id": "https://velocitynetwork.foundation/contexts#Assessment",
+      "@context": {
+        "name": "schema:name",
+        "assesses": "schema:assesses",
+        "description": "schema:description",
+        "assessmentLevel": "schema:educationalLevel",
+        "assessmentMethod": "ceterms:assessmentMethodDescription",
+        "alignment": {
+          "@id": "https://velocitynetwork.foundation/contexts#alignment",
+          "@container": "@set"
+        },
+        "score": {
+          "@id": "https://velocitynetwork.foundation/contexts#score"
+        },
+        "assessmentDate": {
+          "@id": "https://velocitynetwork.foundation/contexts#assessmentDate",
+          "@type": "schema:Date"
+        },
+        "authority": {
+          "@id": "https://velocitynetwork.foundation/contexts#primaryOrganization"
+        },
+        "assessmentDimensions": {
+          "@id": "https://velocitynetwork.foundation/contexts#assessmentDimension",
+          "@container": "@list"
+        },
+        "recipient": {
+          "@id": "https://velocitynetwork.foundation/contexts#personName"
+        }
+      }
+    },
+    "CertificationLicense": {
+      "@id": "https://velocitynetwork.foundation/contexts#CertificationLicense",
+      "@context": {
+        "name": "schema:name",
+        "authority": {
+          "@id": "https://velocitynetwork.foundation/contexts#primaryOrganization"
+        },
+        "description": "schema:description",
+        "identifier": {
+          "@id": "schema:identifier",
+          "@type": "@id"
+        },
+        "validity": {
+          "@id": "https://velocitynetwork.foundation/contexts#validity"
+        },
+        "alignment": {
+          "@id": "https://velocitynetwork.foundation/contexts#alignment",
+          "@container": "@set"
+        },
+        "endorsementCode": {
+          "@id": "xsd:string",
+          "@container": "@set"
+        },
+        "restrictionCode": {
+          "@id": "xsd:string",
+          "@container": "@set"
+        },
+        "recipient": {
+          "@id": "https://velocitynetwork.foundation/contexts#personName"
+        }
+      }
+    },
+    "Badge": {
+      "@id": "https://velocitynetwork.foundation/contexts#Badge",
+      "@context": {
+        "issuer": {
+          "@id": "https://velocitynetwork.foundation/contexts#primarySourceProfile"
+        },
+        "hasCredential": {
+          "@id": "https://velocitynetwork.foundation/contexts#hasCredential"
+        },
+        "recipient": {
+          "@id": "https://velocitynetwork.foundation/contexts#personName"
+        }
+      }
+    },
+    "AchievementSubject": {
+      "@id": "https://velocitynetwork.foundation/contexts#Badge",
+      "@context": {
+        "source": {
+          "@id": "https://velocitynetwork.foundation/contexts#primarySourceProfile",
+          "@type": "@id"
+        }
+      }
+    }
+  }
+}

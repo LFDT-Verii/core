@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://velocitycareerlabs.io/user.schema.json",
+  "title": "user",
+  "description": "The user",
+  "allOf": [
+    { "$ref": "https://velocitycareerlabs.io/new-user.schema.json#"},
+    { "$ref": "mutable-entity#"}
+  ],
+  "required": [
+    "id",
+    "vendorUserId",
+    "createdAt",
+    "updatedAt"
+  ]
+}

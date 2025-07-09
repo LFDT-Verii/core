@@ -1,0 +1,10 @@
+{
+  "type": ["EmailV1.0"],
+  "issuer": {
+    "id": "{{did}}"
+  },
+  "credentialSubject": {
+    "vendorUserId": "{{vendorUserId}}",
+    "email": "{{email}}"
+  }
+}

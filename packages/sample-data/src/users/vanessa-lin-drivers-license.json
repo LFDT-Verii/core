@@ -1,0 +1,22 @@
+{
+  "@context": "https://velocitynetwork.foundation/contexts/drivers-license",
+  "authority": {
+    "name": "Texas Department of Motor Vehicles",
+    "place": {
+      "addressLocality": "Houston",
+      "addressRegion": "TX",
+      "addressCountry": "US"
+    }
+  },
+  "validity": {
+    "validFrom": "2019-8-21",
+    "validUntil": "2024-8-21"
+  },
+  "person": {
+    "givenName": "Vanessa",
+    "familyName": "Lin",
+    "birthDate": "1988-08-21",
+    "gender": "Female"
+  },
+  "identifier": "P27041978212"
+}

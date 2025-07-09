@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "organization-profile-base",
+  "title": "Base Organization Profile Information",
+  "type": "object",
+  "additionalProperties": false,
+  "description": "Profile info for an org that can be set in a \"form\"",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "the name of the of",
+      "maxLength": 100
+    },
+    "location": {
+      "$ref": "https://velocitynetwork.foundation/schemas/location.schema.json#"
+    },
+    "logo": {
+      "type": "string",
+      "description": "the logo to be used for the org",
+      "format": "uri"
+    },
+    "website": {
+      "type": "string",
+      "format": "uri"
+    },
+    "alsoKnownAs": {
+      "title": "Also Known As",
+      "description": "https://www.w3.org/TR/did-core/#also-known-as",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "contactEmail": {
+      "type": "string",
+      "format": "email"
+    },
+    "technicalEmail": {
+      "type": "string",
+      "format": "email"
+    },
+    "description": {
+      "type": "string"
+    },
+    "founded": {
+      "type": "string",
+      "format": "regex",
+      "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$"
+    },
+    "closed": {
+      "type": "string",
+      "format": "regex",
+      "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "company",
+        "non-profit"
+      ],
+      "default": "company"
+    },
+    "registrationNumbers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "authority": {
+            "type": "string",
+            "enum": [
+              "NationalAuthority",
+              "DunnAndBradstreet",
+              "GLEIF",
+              "LinkedIn"
+            ]
+          },
+          "number": {
+            "type": "string"
+          },
+          "uri": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "authority",
+          "number"
+        ]
+      }
+    },
+    "commercialEntities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "the type of commericial entity",
+            "enum": [
+              "Brand",
+              "Department"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "the commercial name of the org",
+            "maxLength": 100
+          },
+          "logo": {
+            "type": "string",
+            "description": "the commercial logo to be used for the org",
+            "format": "uri"
+          },
+          "description": {
+            "type": "string",
+            "description": "a description associated with this entity"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "logo"
+        ]
+      }
+    },
+    "adminGivenName": {
+      "type": "string",
+      "description": "Given name of the admin"
+    },
+    "adminFamilyName": {
+      "type": "string",
+      "description": "Family name of the admin"
+    },
+    "adminTitle": {
+      "type": "string",
+      "description": "Title of the admin"
+    },
+    "adminEmail": {
+      "type": "string",
+      "format": "email",
+      "description": "Email of the admin"
+    },
+    "signatoryGivenName": {
+      "type": "string",
+      "description": "Given name of the signatory"
+    },
+    "signatoryFamilyName": {
+      "type": "string",
+      "description": "Family name of the signatory"
+    },
+    "signatoryTitle": {
+      "type": "string",
+      "description": "Title of the signatory"
+    },
+    "signatoryEmail": {
+      "type": "string",
+      "format": "email",
+      "description": "Email of the signatory"
+    },
+    "physicalAddress": {
+      "$ref": "https://velocitynetwork.foundation/schemas/address.schema.json#"
+    },
+    "linkedInProfile": {
+      "type": "string",
+      "format": "uri"
+    }
+  }
+}

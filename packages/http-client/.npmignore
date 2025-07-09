@@ -1,0 +1,6 @@
+node_modules
+*.log
+coverage
+test
+example
+jest.config.js

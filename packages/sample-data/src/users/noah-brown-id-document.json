@@ -1,0 +1,30 @@
+{
+  "kind": "DriversLicense",
+  "authority": {
+    "localized": {
+      "en": "DMV Illinois"
+    }
+  },
+  "location": {
+    "countryCode": "US",
+    "regionCode": "IL"
+  },
+  "identityNumber": "X13579013578829",
+  "firstName": {
+    "localized": {
+      "en": "Noah"
+    }
+  },
+  "lastName": {
+    "localized": {
+      "en": "Brown"
+    }
+  },
+  "dob": {
+    "day": 19,
+    "month": 9,
+    "year": 1996
+  },
+  "validFrom": "2016-9-19T00:00:00.000Z",
+  "validUntil": "2026-9-18T00:00:00.000Z"
+}

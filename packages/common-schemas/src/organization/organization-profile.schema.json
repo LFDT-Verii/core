@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "organization-profile",
+  "type": "object",
+  "title": "An organization in persistent storage",
+  "description": "Profile info for an organization",
+  "allOf": [
+    {
+      "$ref": "organization-profile-base#",
+      "required": [
+        "type",
+        "name",
+        "website",
+        "location",
+        "logo"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$",
+          "description": "the did of the organization"
+        },
+        "verifiableCredentialJwt": {
+          "type": "string",
+          "format": "uri",
+          "description": "the jwt of the vc that has the profile information encoded with in"
+        },
+        "permittedVelocityServiceCategory": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Issuer",
+              "Inspector",
+              "CredentialAgentOperator",
+              "NodeOperator",
+              "NotaryIssuer",
+              "HolderAppProvider",
+              "TrustRoot",
+              "IdentityIssuer",
+              "IdDocumentIssuer",
+              "NotaryIdDocumentIssuer",
+              "ContactIssuer",
+              "NotaryContactIssuer"
+            ]
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "permittedVelocityServiceCategory"
+      ]
+    }
+  ]
+}

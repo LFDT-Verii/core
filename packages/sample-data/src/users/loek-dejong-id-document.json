@@ -1,0 +1,30 @@
+{
+  "kind": "NationalIdentityCard",
+  "authority": {
+    "localized": {
+      "en": "Ministry of the Interior"
+    }
+  },
+  "location": {
+    "countryCode": "NL",
+    "regionCode": "ZH"
+  },
+  "identityNumber": "246802468",
+  "firstName": {
+    "localized": {
+      "en": "Loek"
+    }
+  },
+  "lastName": {
+    "localized": {
+      "en": "De Jong"
+    }
+  },
+  "dob": {
+    "day": 28,
+    "month": 2,
+    "year": 1997
+  },
+  "validFrom": "2017-1-15T00:00:00.000Z",
+  "validUntil": "2027-1-14T00:00:00.000Z"
+}

@@ -1,0 +1,68 @@
+name: shared_services
+services:
+  blockchain:
+    image: hyperledger/besu:25.4.1@sha256:00468488df234ead7c0e450ffcd5bc1ac3ed62f458a0de42ba029155ecdf5331
+    restart: on-failure
+    command: |
+        --genesis-file=/opt/besu/config/genesis.json
+        --node-private-key-file=/opt/besu/config/key
+        --rpc-http-enabled
+        --rpc-http-api=ETH,NET,WEB3
+        --host-allowlist=*
+        --rpc-http-cors-origins=all
+        --min-gas-price=0
+        --profile=enterprise
+    volumes:
+      - ./blockchain-config:/opt/besu/config
+    ports:
+      - 18545:8545
+    healthcheck:
+      test: ["CMD", "bash", "-c", ">/dev/tcp/localhost/8545"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  contracts-deployment:
+    image: node:22.14.0-slim@sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b
+    environment:
+      - RPC_NODE_URL=http://blockchain:8545
+    command: npx @verii/contracts-deployment@1.25.0-dev-build.1caf36412
+    depends_on:
+      blockchain:
+        condition: service_healthy
+    restart: on-failure
+
+  localstack:
+    image: localstack/localstack@sha256:0bc4495b8a204f80ee16779d968c857f570fd4ea08d3e2e898c226782fe1d74d
+    environment:
+      - SERVICES=kms,sns,ses,s3
+      - PERSISTENCE=1
+    ports:
+      - 14566:4566
+      - 14510-14559:4510-4559
+
+  velocity-mongo:
+    image: mongo:8.0@sha256:7bd28e5eea1c5766a084d5818254046f3ebe3b8f20a65e3a274640189e296667
+    restart: on-failure
+    ports:
+      - 17017:27017
+
+  certgen:
+    image: alpine/openssl@sha256:f4dead2cc05e01fb683f04ef5573da53ecf2004c8d7603e1c65f6994d8d38313
+    restart: on-failure
+    volumes:
+      - httpscert:/certs
+    command: req -x509 -keyout /certs/key.pem -out /certs/cert.crt -sha256 -days 365 -nodes -subj "/CN=e2e-registrar"
+
+  certfix:
+    image: alpine@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
+    restart: on-failure
+    volumes:
+      - httpscert:/certs
+    command: chown -R 1000:1000 /certs
+    depends_on:
+      - certgen
+
+volumes:
+  httpscert:

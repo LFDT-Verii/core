@@ -1,0 +1,19 @@
+{
+  "title": "new-tenant",
+  "$id": "https://velocitycareerlabs.io/new-tenant-v0.8.schema.json",
+  "type": "object",
+  "description": "",
+  "allOf": [
+    { "$ref": "https://velocitycareerlabs.io/modify-tenant-v0.8.schema.json#"},
+    {
+      "type": "object",
+      "properties": {
+        "did": {
+          "type": "string",
+          "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$"
+        }
+      }
+    }
+  ],
+  "required": ["did"]
+}

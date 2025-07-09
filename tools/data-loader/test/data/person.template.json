@@ -1,0 +1,15 @@
+{
+  "emails": [{
+    "email": "{{email}}"
+  }],
+  "firstName": {
+    "localized": {
+      "en": "{{givenName}}"
+    }
+  },
+  "lastName": {
+    "localized": {
+      "en": "{{familyName}}"
+    }
+  }
+}

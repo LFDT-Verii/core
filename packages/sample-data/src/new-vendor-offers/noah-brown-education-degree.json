@@ -1,0 +1,35 @@
+{
+  "type": [
+    "EducationDegree"
+  ],
+  "issuer": {
+    "id": "did:velocity:0x6fb4ab76498a84b8f12bb2fcfcb2e6b95a637b06"
+  },
+  "credentialSubject": {
+    "vendorUserId": "noah.brown@example.com",
+    "school": "did:velocity:0x6fb4ab76498a84b8f12bb2fcfcb2e6b95a637b06",
+    "schoolName": {
+      "localized": {
+        "en": "Illinois College of Art"
+      }
+    },
+    "degreeName": {
+      "localized": {
+        "en": "Bachelor of Fine Art"
+      }
+    },
+    "program": {
+      "localized": {
+        "en": "UI/UX and interaction design program"
+      }
+    },
+    "startMonthYear": {
+      "month": 10,
+      "year": 2016
+    },
+    "endMonthYear": {
+      "month": 10,
+      "year": 2020
+    }
+  }
+}

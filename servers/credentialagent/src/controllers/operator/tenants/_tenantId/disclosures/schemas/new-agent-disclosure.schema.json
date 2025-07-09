@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://velocitycareerlabs.io/new-agent-disclosure.schema.json",
+  "title": "new-agent-disclosure",
+  "type": "object",
+  "description": "The disclosure request made by an inspector on the velocity network. It describes credential types wanted and (in the future) predicate information as well as terms and conditions for usage of the data",
+  "properties": {
+    "types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The credential type to be disclosed"
+          }
+        }
+      },
+      "description": "To be expanded. Predicates will be added and associated with each credential type. Enables expression of expressions that limit the kinds of credential requested"
+    },
+    "presentationDefinition": {
+      "$ref": "https://velocitycareerlabs.io/agent-disclosure-presentation-definition.schema.json#"
+    },
+    "identificationMethods": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "verifiable_presentation",
+          "preauth"
+        ]
+      },
+      "default": [
+        "verifiable_presentation"
+      ],
+      "description": "To be expanded. Predicates will be added and associated with each credential type. Enables expression of expressions that limit the kinds of credential requested"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description field for this disclosure"
+    },
+    "vendorOrganizationId": {
+      "deprecated": true,
+      "type": "string",
+      "description": "the vendor's internal id for the organization doing the inspection"
+    },
+    "vendorDisclosureId": {
+      "type": "string",
+      "description": "the vendor's internal id for the requistion or position"
+    },
+    "vendorEndpoint": {
+      "type": "string",
+      "default": "receive-checked-credentials",
+      "enum": [
+        "receive-checked-credentials",
+        "receive-unchecked-credentials",
+        "receive-applicant",
+        "issuing-identification",
+        "integrated-issuing-identification"
+      ]
+    },
+    "identityMatchers": {
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "json path(s) to resolve in order"
+              },
+              "rule": {
+                "type": "string",
+                "description": "the rule to run. ONly pick is supported right ow",
+                "enum": [
+                  "pick",
+                  "equal"
+                ]
+              },
+              "valueIndex": {
+                "type": "integer",
+                "description": "the index to use with in a data row in values. Value must return true when compared using ==="
+              }
+            },
+            "required": [
+              "path",
+              "rule",
+              "valueIndex"
+            ]
+          }
+        },
+        "vendorUserIdIndex": {
+          "type": "integer",
+          "description": "the index to use for the 'userId' value for a matched user. Must be convertable to a string"
+        }
+      },
+      "required": [
+        "vendorUserIdIndex",
+        "rules"
+      ]
+    },
+    "purpose": {
+      "type": "string",
+      "description": "purpose is a summary of the description"
+    },
+    "duration": {
+      "type": "string",
+      "description": "duration can be a number of days (5d), weeks (12w), months (6m) or years (7y)"
+    },
+    "termsUrl": {
+      "type": "string"
+    },
+    "deactivationDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "can be configured to deactivate at a predetermined time or to be deactivated on demand by setting this to now"
+    },
+    "sendPushOnVerification": {
+      "type": "boolean",
+      "description": "whether a push notification should be sent when verification occurs",
+      "default": false
+    },
+    "authTokensExpireIn": {
+      "type": "integer",
+      "default": "10080"
+    },
+    "offerMode": {
+      "type": "string",
+      "enum": [
+        "preloaded",
+        "webhook"
+      ]
+    },
+    "configurationType": {
+      "type": "string",
+      "enum": [
+        "issuing",
+        "inspection"
+      ]
+    },
+    "commercialEntityName": {
+      "type": "string"
+    },
+    "commercialEntityLogo": {
+      "type": "string"
+    },
+    "feed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "additionalProperties": true,
+  "required": [
+    "termsUrl",
+    "vendorEndpoint"
+  ]
+}

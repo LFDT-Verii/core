@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://velocitycareerlabs.io/new-user.schema.json",
+  "title": "new-user",
+  "description": "an agent holder user",
+  "type": "object",
+  "properties": {
+    "vendorUserId": {
+      "type": "string"
+    }
+  },
+  "required": ["vendorUserId"]
+}

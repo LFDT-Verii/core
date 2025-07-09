@@ -1,0 +1,9 @@
+services:
+  libserver:
+    image: nginx:alpine@sha256:b2e814d28359e77bd0aa5fed1939620075e4ffa0eb20423cc557b375bd5c14ad
+    restart: on-failure
+    ports:
+      - "18082:80"
+    volumes:
+      - "..:/srv"
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf

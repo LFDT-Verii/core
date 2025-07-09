@@ -1,0 +1,21 @@
+{
+  "name:": "Texas Driver License",
+  "authority": {
+    "name": "DMV Texas",
+    "place": {
+      "addressRegion": "TX",
+      "addressCountry": "US"
+    }
+  },
+  "validity": {
+    "validFrom": "2015-02-01",
+    "validUntil": "2025-01-30"
+  },
+  "identifier": "X77056414141557",
+  "person": {
+    "givenName": "Nicole",
+    "familyName": "Flores",
+    "birthDate": "1990-02-01",
+    "gender": "Female"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Presentation Submission",
+  "$id": "https://velocitycareerlabs.io/siop-presentation-submission.schema.json",
+  "type": "object",
+  "properties": {
+    "header": {
+      "type": "object",
+      "properties": {
+        "typ": {
+          "type": "string",
+          "enum": [
+            "JWT"
+          ]
+        },
+        "jwk": {
+          "type": "object"
+        },
+        "alg": {
+          "type": "string",
+          "enum": [
+            "ES256K"
+          ]
+        }
+      }
+    },
+    "payload": {
+      "allOf": [
+        {
+          "$ref": "https://velocitycareerlabs.io/velocity-presentation-submission.schema.json#"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string"
+            },
+            "sub": {
+              "type": "string"
+            },
+            "sub_jwk": {
+              "type": "object"
+            },
+            "iss": {
+              "type": "string",
+              "pattern": "^https?://self-issued.me$"
+            },
+            "aud": {
+              "type": "string"
+            },
+            "nonce": {
+              "type": "string"
+            },
+            "iat": {
+              "type": "integer"
+            },
+            "jti": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "sub_jwk",
+            "sub",
+            "iss",
+            "aud",
+            "nonce",
+            "jti"
+          ]
+        }
+      ]
+    }
+  },
+  "required": ["header", "payload"]
+}

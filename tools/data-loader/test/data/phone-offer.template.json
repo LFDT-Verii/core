@@ -1,0 +1,10 @@
+{
+  "type": ["PhoneV1.0"],
+  "issuer": {
+    "id": "{{did}}"
+  },
+  "credentialSubject": {
+    "vendorUserId": "{{phone}}",
+    "phone": "{{phone}}"
+  }
+}

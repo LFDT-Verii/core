@@ -1,0 +1,13 @@
+services:
+  auth0:
+    image: public.ecr.aws/primaassicurazioni/localauth0:0.8.2@sha256:197dfa7dbb7eafc46343397ff8154822059151dfddf053d8740e600e5fe73486
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD", "/localauth0", "healthcheck" ]
+    environment:
+      LOCALAUTH0_CONFIG_PATH: /etc/localauth0.toml
+    volumes:
+      - ./localauth0.toml:/etc/localauth0.toml:ro
+    ports:
+      - 13000:3000
+      - 13001:3001

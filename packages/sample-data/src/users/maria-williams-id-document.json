@@ -1,0 +1,10 @@
+{
+    "firstName": {"localized": {"en": "Maria"}},
+    "lastName": {"localized": {"en": "Williams"}},
+    "kind": "Passport",
+    "authority": {"localized": {"en": "U.S. Department of State"}},
+    "location": {
+        "countryCode": "US"
+    },
+    "identityNumber": "340007237"
+}

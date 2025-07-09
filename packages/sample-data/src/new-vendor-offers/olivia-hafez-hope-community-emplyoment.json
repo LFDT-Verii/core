@@ -1,0 +1,39 @@
+{
+  "type": [
+    "PastEmploymentPosition"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "precheck"
+  },
+  "credentialSubject": {
+    "vendorUserId": "olivia.hafez@example.com",
+    "company": "did:velocity:0xdfe0091d530d941d6b16db33d1178497588786c5",
+    "companyName": {
+      "localized": {
+        "en": "Hope Community Center"
+      }
+    },
+    "title": {
+      "localized": {
+        "en": "Tutor Assistant"
+      }
+    },
+    "startMonthYear": {
+      "month": 2,
+      "year": 2017
+    },
+    "endMonthYear": {
+      "month": 5,
+      "year": 2017
+    },
+    "location": {
+      "countryCode": "US",
+      "regionCode": "NJ"
+    },
+    "description": {
+      "localized": {
+        "en": "Assistant in after school tutoring program"
+      }
+    }
+  }
+}

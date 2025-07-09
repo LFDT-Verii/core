@@ -1,0 +1,156 @@
+### Check Offers
+POST http://localhost:5000/checkOffers HTTP/1.1
+Content-Type: application/json
+
+{
+  "sessionToken": {
+    "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksiLCJraWQiOiIjZXhjaGFuZ2Uta2V5LTEifQ.eyJuYmYiOjE3MjAxMDI1MjksImp0aSI6IjY2ODY2ZWMxMGE5MGE0YmZmM2M0NzBhOSIsImlzcyI6ImRpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQSIsImF1ZCI6ImRpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQSIsImV4cCI6MTcyMDcwNzMyOSwic3ViIjoiNjM4NmY4MjRlNzc0Nzg5YzQwM2M5NmEwIiwiaWF0IjoxNzIwMTAyNTI5fQ.uQPCLqOKOF0HCNICnGy2A60M4XYZ6sGU0QfC9vQ7ONgdHvZwO7bwJnx3y6__INTiPsaSE05MFm0KLSGZl4O8PA"
+  },
+  "identificationVerifiableCredentials": [
+    {
+      "inputDescriptor": "EmailV1.0",
+      "jwtVc": "eyJ0eXAiOiJKV1QiLCJraWQiOiJkaWQ6dmVsb2NpdHk6djI6MHg2MjU2YjE4OTIxZWFiZDM5MzUxZWMyM2YxYzk0Zjg4MDYwNGU3MGU3OjIxMTQ4ODcxODM1NTAwODo0MTY2I2tleS0xIiwiYWxnIjoiRVMyNTZLIn0.eyJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSJdLCJ0eXBlIjpbIkVtYWlsVjEuMCIsIlZlcmlmaWFibGVDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdGF0dXMiOnsidHlwZSI6IlZlbG9jaXR5UmV2b2NhdGlvbkxpc3RKYW4yMDIxIiwiaWQiOiJldGhlcmV1bToweEQ4OTBGMkQ2MEI0MjlmOWUyNTdGQzBCYzU4RWYyMjM3Nzc2REQ5MUIvZ2V0UmV2b2tlZFN0YXR1cz9hZGRyZXNzPTB4MDMwMThFM2EzODk3MzRhRTEyZjE0RTQ0NTQwZkFlYTM1NzkxZkVDNyZsaXN0SWQ9MTYzNTc4ODY2Mjk2NjUzJmluZGV4PTg2OTgiLCJzdGF0dXNMaXN0SW5kZXgiOjg2OTgsInN0YXR1c0xpc3RDcmVkZW50aWFsIjoiZXRoZXJldW06MHhEODkwRjJENjBCNDI5ZjllMjU3RkMwQmM1OEVmMjIzNzc3NkREOTFCL2dldFJldm9rZWRTdGF0dXM_YWRkcmVzcz0weDAzMDE4RTNhMzg5NzM0YUUxMmYxNEU0NDU0MGZBZWEzNTc5MWZFQzcmbGlzdElkPTE2MzU3ODg2NjI5NjY1MyIsImxpbmtDb2RlQ29tbWl0IjoiRWlBb3FJWWYycmgxdzEvdURXTnNwYTRyOHRrV2dwRGRUUjBtNHlIRTVMZUtQZz09In0sImNvbnRlbnRIYXNoIjp7InR5cGUiOiJWZWxvY2l0eUNvbnRlbnRIYXNoMjAyMCIsInZhbHVlIjoiODlkNGRjYzg2ZDU0MGM2ZWVhMzlkMTc4ZWVkYzMwMjEzZTc4MmYyNTFlMDNiNzZmNDI3MzEwNjgwOGRkMGQ0ZiJ9LCJjcmVkZW50aWFsU2NoZW1hIjp7ImlkIjoiaHR0cHM6Ly9kZXZyZWdpc3RyYXIudmVsb2NpdHluZXR3b3JrLmZvdW5kYXRpb24vc2NoZW1hcy9lbWFpbC12MS4wLnNjaGVtYS5qc29uIiwidHlwZSI6Ikpzb25TY2hlbWFWYWxpZGF0b3IyMDE4In0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImVtYWlsIjoiYWRhbS5zbWl0aEBleGFtcGxlLmNvbSJ9fSwiaXNzIjoiZGlkOmlvbjpFaUFlaFdtcFg1bUhCdWM5M1NJaFBYRjhic0V4NjhHNm1QY2RJYUxOR2JvelBBIiwianRpIjoiZGlkOnZlbG9jaXR5OnYyOjB4NjI1NmIxODkyMWVhYmQzOTM1MWVjMjNmMWM5NGY4ODA2MDRlNzBlNzoyMTE0ODg3MTgzNTUwMDg6NDE2NiIsImlhdCI6MTY1Mjg5Njg2OSwibmJmIjoxNjUyODk2ODY5fQ.fi0qJFzHiDEWTGUu0ME1aG36-j2jm7xxA2DWPs_Ra7ftl-ALMu0FY3A38klbkJQYCaXWHFH0hBbcQ5Z3uZCeew"
+    }
+  ],
+  "types": [
+    "EducationDegreeRegistrationV1.0",
+    "EducationDegreeStudyV1.0",
+    "EducationDegreeGraduationV1.0",
+    "EmploymentPastV1.1",
+    "Badge",
+    "BadgeV1.1",
+    "OpenBadgeV1.0",
+    "OpenBadgeV2.0",
+    "OpenBadgeCredential"
+  ],
+  "credentialManifest": {
+    "jwt": {
+      "signedJwt": {
+        "header": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksiLCJraWQiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEjZXhjaGFuZ2Uta2V5LTEifQ",
+        "payload": "eyJleGNoYW5nZV9pZCI6IjY2ODY2ZWMxMGE5MGE0YmZmM2M0NzBhOSIsIm1ldGFkYXRhIjp7ImNsaWVudF9uYW1lIjoiVW5pdmVyc2l0eSBvZiBNYXNzYWNodXNldHRzIEFtaGVyc3QiLCJsb2dvX3VyaSI6Imh0dHBzOi8vdXBsb2FkLndpa2ltZWRpYS5vcmcvd2lraXBlZGlhL2NvbW1vbnMvNC80Zi9VTWFzc19TZWFsX01lZGl1bV9QTVNfMjAyLnBuZyIsInRvc191cmkiOiJodHRwczovL3d3dy52ZWxvY2l0eWV4cGVyaWVuY2VjZW50ZXIuY29tL3Rlcm1zLWFuZC1jb25kaXRpb25zLXZuZiIsIm1heF9yZXRlbnRpb25fcGVyaW9kIjoiNm0iLCJwcm9ncmVzc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9nZXQtZXhjaGFuZ2UtcHJvZ3Jlc3MiLCJzdWJtaXRfcHJlc2VudGF0aW9uX3VyaSI6Imh0dHBzOi8vZGV2YWdlbnQudmVsb2NpdHljYXJlZXJsYWJzLmlvL2FwaS9ob2xkZXIvdjAuNi9vcmcvZGlkOmlvbjpFaUFwTUxkTWI0TlBiOHNhZTktaFhHSFA3OVcxZ2lzQXBWU0U4MFVTUEVidEpBL2lzc3VlL3N1Ym1pdC1pZGVudGlmaWNhdGlvbiIsImNoZWNrX29mZmVyc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9pc3N1ZS9jcmVkZW50aWFsLW9mZmVycyIsImZpbmFsaXplX29mZmVyc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9pc3N1ZS9maW5hbGl6ZS1vZmZlcnMifSwicHJlc2VudGF0aW9uX2RlZmluaXRpb24iOnsiaWQiOiI2Njg2NmVjMTBhOTBhNGJmZjNjNDcwYTkuNjM4NGEzYWQxNDhiMTk5MTY4N2Y2N2M5IiwicHVycG9zZSI6IkNyZWRlbnRpYWxzIG9mZmVyIiwibmFtZSI6IlNoYXJlIHlvdXIgSWQsIEVtYWlsIGFuZCBQaG9uZSBOdW1iZXIgdG8gZmFjaWxpdGF0ZSB0aGUgc2VhcmNoIGZvciB5b3VyIGNhcmVlciBjcmVkZW50aWFscyIsImZvcm1hdCI6eyJqd3RfdnAiOnsiYWxnIjpbInNlY3AyNTZrMSJdfX0sImlucHV0X2Rlc2NyaXB0b3JzIjpbeyJpZCI6IkVtYWlsVjEuMCIsIm5hbWUiOiJFbWFpbCIsInNjaGVtYSI6W3sidXJpIjoiaHR0cHM6Ly9kZXZsaWIudmVsb2NpdHluZXR3b3JrLmZvdW5kYXRpb24vc2NoZW1hcy9lbWFpbC12MS4wLnNjaGVtYS5qc29uIn1dLCJncm91cCI6WyJBIl19XSwic3VibWlzc2lvbl9yZXF1aXJlbWVudHMiOlt7InJ1bGUiOiJhbGwiLCJmcm9tIjoiQSIsIm1pbiI6MX1dfSwib3V0cHV0X2Rlc2NyaXB0b3JzIjpbeyJpZCI6IkVtcGxveW1lbnRQYXN0VjEuMSIsIm5hbWUiOiJQYXN0IGVtcGxveW1lbnQgcG9zaXRpb24iLCJzY2hlbWEiOlt7InVyaSI6Imh0dHBzOi8vZGV2bGliLnZlbG9jaXR5bmV0d29yay5mb3VuZGF0aW9uL3NjaGVtYXMvZW1wbG95bWVudC1wYXN0LXYxLjEuc2NoZW1hLmpzb24ifV0sImRpc3BsYXkiOnsidGl0bGUiOnsicGF0aCI6WyIkLmxlZ2FsRW1wbG95ZXIubmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9LCJmYWxsYmFjayI6Ii0ifSwic3VidGl0bGUiOnsicGF0aCI6WyIkLnJvbGUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifSwiZmFsbGJhY2siOiItIn0sInN1bW1hcnlfZGV0YWlsIjp7InBhdGgiOlsiJC5wbGFjZS5uYW1lIl0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn0sImZhbGxiYWNrIjoicGxhY2UuYWRkcmVzc0xvY2FsaXR5In0sImRlc2NyaXB0aW9uIjp7InRleHQiOiJQYXN0IGVtcGxveW1lbnQgcG9zaXRpb24ifSwibG9nbyI6eyJwYXRoIjpbIiQubGVnYWxFbXBsb3llci5pbWFnZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6InVyaSJ9fSwicHJvcGVydGllcyI6W3sibGFiZWwiOiJSb2xlIiwicGF0aCI6WyIkLnJvbGUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IlJvbGUgZGVzY3JpcHRpb24iLCJwYXRoIjpbIiQuZGVzY3JpcHRpb24iXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IlN0YXJ0IGRhdGUiLCJwYXRoIjpbIiQuc3RhcnREYXRlIl0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIiwiZm9ybWF0IjoiZGF0ZSJ9fSx7ImxhYmVsIjoiRW5kIGRhdGUiLCJwYXRoIjpbIiQuZW5kRGF0ZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6ImRhdGUifX0seyJsYWJlbCI6IlBsYWNlIG9mIHdvcmsiLCJwYXRoIjpbIiQucGxhY2UubmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiQ2l0eSBvZiB3b3JrIiwicGF0aCI6WyIkLnBsYWNlLmFkZHJlc3NMb2NhbGl0eSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiU3RhdGUgb3IgcmVnaW9uIG9mIHdvcmsiLCJwYXRoIjpbIiQucGxhY2UuYWRkcmVzc1JlZ2lvbiJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiQ291bnRyeSBvZiB3b3JrIiwicGF0aCI6WyIkLnBsYWNlLmFkZHJlc3NDb3VudHJ5Il0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn19LHsibGFiZWwiOiJFbXBsb3ltZW50IHR5cGUiLCJwYXRoIjpbIiQuZW1wbG95bWVudFR5cGVbKl0iXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IkZpcnN0IG5hbWUiLCJwYXRoIjpbIiQucmVjaXBpZW50LmdpdmVuTmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiTWlkZGxlIG5hbWUiLCJwYXRoIjpbIiQucmVjaXBpZW50Lm1pZGRsZU5hbWUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6Ikxhc3QgbmFtZSIsInBhdGgiOlsiJC5yZWNpcGllbnQuZmFtaWx5TmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiTmFtZSBwcmVmaXgiLCJwYXRoIjpbIiQucmVjaXBpZW50Lm5hbWVQcmVmaXgiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6Ik5hbWUgc3VmZml4IiwicGF0aCI6WyIkLnJlY2lwaWVudC5uYW1lU3VmZml4Il0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn19LHsibGFiZWwiOiJMZWFybiBtb3JlIGFib3V0IHRoZSBjcmVkZW50aWFsIiwicGF0aCI6WyIkLmFsaWdubWVudFswXS50YXJnZXRVcmwiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmciLCJmb3JtYXQiOiJ1cmkifX1dfX1dLCJpc3N1ZXIiOnsiaWQiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEifSwibmJmIjoxNzIwMDg2MjA5LCJpc3MiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEiLCJleHAiOjE3MjA2OTEwMDksImlhdCI6MTcyMDA4NjIwOX0",
+        "signature": "oU1Trf1bn5kYmw_RJBy9k51HZfQaMl_IPFawxsqzXyrtmTc1MygLte7OoBE0CdDWGvRwBPltbWoAs2BFb19n7Q"
+      },
+      "encodedJwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksiLCJraWQiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEjZXhjaGFuZ2Uta2V5LTEifQ.eyJleGNoYW5nZV9pZCI6IjY2ODY2ZWMxMGE5MGE0YmZmM2M0NzBhOSIsIm1ldGFkYXRhIjp7ImNsaWVudF9uYW1lIjoiVW5pdmVyc2l0eSBvZiBNYXNzYWNodXNldHRzIEFtaGVyc3QiLCJsb2dvX3VyaSI6Imh0dHBzOi8vdXBsb2FkLndpa2ltZWRpYS5vcmcvd2lraXBlZGlhL2NvbW1vbnMvNC80Zi9VTWFzc19TZWFsX01lZGl1bV9QTVNfMjAyLnBuZyIsInRvc191cmkiOiJodHRwczovL3d3dy52ZWxvY2l0eWV4cGVyaWVuY2VjZW50ZXIuY29tL3Rlcm1zLWFuZC1jb25kaXRpb25zLXZuZiIsIm1heF9yZXRlbnRpb25fcGVyaW9kIjoiNm0iLCJwcm9ncmVzc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9nZXQtZXhjaGFuZ2UtcHJvZ3Jlc3MiLCJzdWJtaXRfcHJlc2VudGF0aW9uX3VyaSI6Imh0dHBzOi8vZGV2YWdlbnQudmVsb2NpdHljYXJlZXJsYWJzLmlvL2FwaS9ob2xkZXIvdjAuNi9vcmcvZGlkOmlvbjpFaUFwTUxkTWI0TlBiOHNhZTktaFhHSFA3OVcxZ2lzQXBWU0U4MFVTUEVidEpBL2lzc3VlL3N1Ym1pdC1pZGVudGlmaWNhdGlvbiIsImNoZWNrX29mZmVyc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9pc3N1ZS9jcmVkZW50aWFsLW9mZmVycyIsImZpbmFsaXplX29mZmVyc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9pc3N1ZS9maW5hbGl6ZS1vZmZlcnMifSwicHJlc2VudGF0aW9uX2RlZmluaXRpb24iOnsiaWQiOiI2Njg2NmVjMTBhOTBhNGJmZjNjNDcwYTkuNjM4NGEzYWQxNDhiMTk5MTY4N2Y2N2M5IiwicHVycG9zZSI6IkNyZWRlbnRpYWxzIG9mZmVyIiwibmFtZSI6IlNoYXJlIHlvdXIgSWQsIEVtYWlsIGFuZCBQaG9uZSBOdW1iZXIgdG8gZmFjaWxpdGF0ZSB0aGUgc2VhcmNoIGZvciB5b3VyIGNhcmVlciBjcmVkZW50aWFscyIsImZvcm1hdCI6eyJqd3RfdnAiOnsiYWxnIjpbInNlY3AyNTZrMSJdfX0sImlucHV0X2Rlc2NyaXB0b3JzIjpbeyJpZCI6IkVtYWlsVjEuMCIsIm5hbWUiOiJFbWFpbCIsInNjaGVtYSI6W3sidXJpIjoiaHR0cHM6Ly9kZXZsaWIudmVsb2NpdHluZXR3b3JrLmZvdW5kYXRpb24vc2NoZW1hcy9lbWFpbC12MS4wLnNjaGVtYS5qc29uIn1dLCJncm91cCI6WyJBIl19XSwic3VibWlzc2lvbl9yZXF1aXJlbWVudHMiOlt7InJ1bGUiOiJhbGwiLCJmcm9tIjoiQSIsIm1pbiI6MX1dfSwib3V0cHV0X2Rlc2NyaXB0b3JzIjpbeyJpZCI6IkVtcGxveW1lbnRQYXN0VjEuMSIsIm5hbWUiOiJQYXN0IGVtcGxveW1lbnQgcG9zaXRpb24iLCJzY2hlbWEiOlt7InVyaSI6Imh0dHBzOi8vZGV2bGliLnZlbG9jaXR5bmV0d29yay5mb3VuZGF0aW9uL3NjaGVtYXMvZW1wbG95bWVudC1wYXN0LXYxLjEuc2NoZW1hLmpzb24ifV0sImRpc3BsYXkiOnsidGl0bGUiOnsicGF0aCI6WyIkLmxlZ2FsRW1wbG95ZXIubmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9LCJmYWxsYmFjayI6Ii0ifSwic3VidGl0bGUiOnsicGF0aCI6WyIkLnJvbGUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifSwiZmFsbGJhY2siOiItIn0sInN1bW1hcnlfZGV0YWlsIjp7InBhdGgiOlsiJC5wbGFjZS5uYW1lIl0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn0sImZhbGxiYWNrIjoicGxhY2UuYWRkcmVzc0xvY2FsaXR5In0sImRlc2NyaXB0aW9uIjp7InRleHQiOiJQYXN0IGVtcGxveW1lbnQgcG9zaXRpb24ifSwibG9nbyI6eyJwYXRoIjpbIiQubGVnYWxFbXBsb3llci5pbWFnZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6InVyaSJ9fSwicHJvcGVydGllcyI6W3sibGFiZWwiOiJSb2xlIiwicGF0aCI6WyIkLnJvbGUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IlJvbGUgZGVzY3JpcHRpb24iLCJwYXRoIjpbIiQuZGVzY3JpcHRpb24iXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IlN0YXJ0IGRhdGUiLCJwYXRoIjpbIiQuc3RhcnREYXRlIl0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIiwiZm9ybWF0IjoiZGF0ZSJ9fSx7ImxhYmVsIjoiRW5kIGRhdGUiLCJwYXRoIjpbIiQuZW5kRGF0ZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6ImRhdGUifX0seyJsYWJlbCI6IlBsYWNlIG9mIHdvcmsiLCJwYXRoIjpbIiQucGxhY2UubmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiQ2l0eSBvZiB3b3JrIiwicGF0aCI6WyIkLnBsYWNlLmFkZHJlc3NMb2NhbGl0eSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiU3RhdGUgb3IgcmVnaW9uIG9mIHdvcmsiLCJwYXRoIjpbIiQucGxhY2UuYWRkcmVzc1JlZ2lvbiJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiQ291bnRyeSBvZiB3b3JrIiwicGF0aCI6WyIkLnBsYWNlLmFkZHJlc3NDb3VudHJ5Il0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn19LHsibGFiZWwiOiJFbXBsb3ltZW50IHR5cGUiLCJwYXRoIjpbIiQuZW1wbG95bWVudFR5cGVbKl0iXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IkZpcnN0IG5hbWUiLCJwYXRoIjpbIiQucmVjaXBpZW50LmdpdmVuTmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiTWlkZGxlIG5hbWUiLCJwYXRoIjpbIiQucmVjaXBpZW50Lm1pZGRsZU5hbWUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6Ikxhc3QgbmFtZSIsInBhdGgiOlsiJC5yZWNpcGllbnQuZmFtaWx5TmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiTmFtZSBwcmVmaXgiLCJwYXRoIjpbIiQucmVjaXBpZW50Lm5hbWVQcmVmaXgiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6Ik5hbWUgc3VmZml4IiwicGF0aCI6WyIkLnJlY2lwaWVudC5uYW1lU3VmZml4Il0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn19LHsibGFiZWwiOiJMZWFybiBtb3JlIGFib3V0IHRoZSBjcmVkZW50aWFsIiwicGF0aCI6WyIkLmFsaWdubWVudFswXS50YXJnZXRVcmwiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmciLCJmb3JtYXQiOiJ1cmkifX1dfX1dLCJpc3N1ZXIiOnsiaWQiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEifSwibmJmIjoxNzIwMDg2MjA5LCJpc3MiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEiLCJleHAiOjE3MjA2OTEwMDksImlhdCI6MTcyMDA4NjIwOX0.oU1Trf1bn5kYmw_RJBy9k51HZfQaMl_IPFawxsqzXyrtmTc1MygLte7OoBE0CdDWGvRwBPltbWoAs2BFb19n7Q"
+    },
+    "vendorOriginContext": null,
+    "verifiedProfile": {
+      "payload": {
+        "id": "928363a2-bce4-4b54-9350-d0d906518da4",
+        "type": [
+          "OrganizationBasicProfile-v1.0",
+          "VerifiableCredential"
+        ],
+        "issuer": {
+          "id": "did:velocity:0x7c98a6cea317ec176ba865a42d3eae639dfe9fb1"
+        },
+        "credentialSubject": {
+          "name": "University of Massachusetts Amherst",
+          "location": {
+            "countryCode": "US",
+            "regionCode": "MA"
+          },
+          "logo": "https://upload.wikimedia.org/wikipedia/commons/4/4f/UMass_Seal_Medium_PMS_202.png",
+          "website": "https://www.umass.edu/",
+          "contactEmail": "test@test.com",
+          "technicalEmail": "test@test.com",
+          "description": "Test org, primarily for Issuing Education and Cource credentials",
+          "founded": "2023-04-04",
+          "type": "company",
+          "physicalAddress": {
+            "line1": "xxxx",
+            "line2": "xxxx",
+            "line3": "xxxx",
+            "regionCode": "XX-XX",
+            "countryCode": "XX",
+            "postcode": "xxxx"
+          },
+          "linkedInProfile": "https://xxxx.xxx",
+          "id": "did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA",
+          "permittedVelocityServiceCategory": [
+            "Issuer",
+            "Inspector"
+          ],
+          "createdAt": "2022-03-01T10:17:38.542Z",
+          "updatedAt": "2023-06-26T13:36:05.180Z"
+        },
+        "issued": "2024-02-13T11:54:41.000Z",
+        "credentialChecks": {
+          "checked": "2024-07-04T09:43:28.100Z",
+          "TRUSTED_ISSUER": "PASS",
+          "UNREVOKED": "NOT_CHECKED",
+          "UNEXPIRED": "NOT_APPLICABLE",
+          "UNTAMPERED": "PASS"
+        }
+      },
+      "credentialSubject": {
+        "name": "University of Massachusetts Amherst",
+        "location": {
+          "countryCode": "US",
+          "regionCode": "MA"
+        },
+        "logo": "https://upload.wikimedia.org/wikipedia/commons/4/4f/UMass_Seal_Medium_PMS_202.png",
+        "website": "https://www.umass.edu/",
+        "contactEmail": "test@test.com",
+        "technicalEmail": "test@test.com",
+        "description": "Test org, primarily for Issuing Education and Cource credentials",
+        "founded": "2023-04-04",
+        "type": "company",
+        "physicalAddress": {
+          "line1": "xxxx",
+          "line2": "xxxx",
+          "line3": "xxxx",
+          "regionCode": "XX-XX",
+          "countryCode": "XX",
+          "postcode": "xxxx"
+        },
+        "linkedInProfile": "https://xxxx.xxx",
+        "id": "did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA",
+        "permittedVelocityServiceCategory": [
+          "Issuer",
+          "Inspector"
+        ],
+        "createdAt": "2022-03-01T10:17:38.542Z",
+        "updatedAt": "2023-06-26T13:36:05.180Z"
+      },
+      "name": "University of Massachusetts Amherst",
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/4/4f/UMass_Seal_Medium_PMS_202.png",
+      "id": "did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA",
+      "serviceTypes": {
+        "all": [
+          "Issuer",
+          "Inspector"
+        ]
+      }
+    },
+    "deepLink": {
+      "value": "velocity-network-devnet://issue?request_uri=https%3A%2F%2Fdevagent.velocitycareerlabs.io%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3AEiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA%2Fissue%2Fget-credential-manifest%3Fid%3D6384a3ad148b1991687f67c9%26credential_types%3DEmploymentPastV1.1%26issuerDid%3Ddid%3Aion%3AEiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA",
+      "requestUri": "https://devagent.velocitycareerlabs.io/api/holder/v0.6/org/did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA/issue/get-credential-manifest?id=6384a3ad148b1991687f67c9&credential_types=EmploymentPastV1.1&issuerDid=did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA"
+    },
+    "didJwk": {
+      "payload": {
+        "did": "did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6IkFYQWxaWThqNGh5cm10dzBoRjNrLTJWT080THZXRzBLNEF5a0JYS25HVWciLCJ5IjoiYzlEVHE5cVRWUTlRQmlsLUgxdGRWN3FZZERic3BhTG5wZ0FJdkRKeEpHayJ9",
+        "kid": "did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6IkFYQWxaWThqNGh5cm10dzBoRjNrLTJWT080THZXRzBLNEF5a0JYS25HVWciLCJ5IjoiYzlEVHE5cVRWUTlRQmlsLUgxdGRWN3FZZERic3BhTG5wZ0FJdkRKeEpHayJ9#0",
+        "keyId": "Iv5pwCQfp6e5FsncVgVX0",
+        "publicJwk": {
+          "kty": "EC",
+          "crv": "P-256",
+          "y": "c9DTq9qTVQ9QBil-H1tdV7qYdDbspaLnpgAIvDJxJGk",
+          "x": "AXAlZY8j4hyrmtw0hF3k-2VOO4LvWG0K4AykBXKnGUg"
+        }
+      },
+      "did": "did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6IkFYQWxaWThqNGh5cm10dzBoRjNrLTJWT080THZXRzBLNEF5a0JYS25HVWciLCJ5IjoiYzlEVHE5cVRWUTlRQmlsLUgxdGRWN3FZZERic3BhTG5wZ0FJdkRKeEpHayJ9",
+      "publicJwk": {
+        "valueStr": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"y\":\"c9DTq9qTVQ9QBil-H1tdV7qYdDbspaLnpgAIvDJxJGk\",\"x\":\"AXAlZY8j4hyrmtw0hF3k-2VOO4LvWG0K4AykBXKnGUg\"}",
+        "valueJson": {
+          "kty": "EC",
+          "crv": "P-256",
+          "y": "c9DTq9qTVQ9QBil-H1tdV7qYdDbspaLnpgAIvDJxJGk",
+          "x": "AXAlZY8j4hyrmtw0hF3k-2VOO4LvWG0K4AykBXKnGUg"
+        }
+      },
+      "kid": "did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6IkFYQWxaWThqNGh5cm10dzBoRjNrLTJWT080THZXRzBLNEF5a0JYS25HVWciLCJ5IjoiYzlEVHE5cVRWUTlRQmlsLUgxdGRWN3FZZERic3BhTG5wZ0FJdkRKeEpHayJ9#0",
+      "keyId": "Iv5pwCQfp6e5FsncVgVX0"
+    },
+    "remoteCryptoServicesToken": null
+  }
+}

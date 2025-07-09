@@ -1,0 +1,30 @@
+{
+  "kind": "Passport",
+  "authority": {
+    "localized": {
+      "en": "HM Passport Office"
+    }
+  },
+  "location": {
+    "countryCode": "UK",
+    "regionCode": "WSM"
+  },
+  "identityNumber": "1081234567",
+  "firstName": {
+    "localized": {
+      "en": "Andrew"
+    }
+  },
+  "lastName": {
+    "localized": {
+      "en": "Hall"
+    }
+  },
+  "dob": {
+    "day": 9,
+    "month": 11,
+    "year": 1996
+  },
+  "validFrom": "2016-10-30T00:00:00.000Z",
+  "validUntil": "2026-10-29T00:00:00.000Z"
+}

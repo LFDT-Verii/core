@@ -1,0 +1,51 @@
+{
+  "type": [
+    "EducationDegree"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "universidad-de-sant-cugat"
+  },
+  "credentialSubject": {
+    "vendorUserId": "montse.reyes@example.com",
+    "school": "did:velocity:",
+    "schoolName": {
+      "localized": {
+        "en": "Universidad de Sant Cugat"
+      }
+    },
+    "degreeName": {
+      "localized": {
+        "en": "Bachelor of Arts"
+      }
+    },
+    "program": {
+      "localized": {
+        "en": "Undergraduate Program in Economics"
+      }
+    },
+    "startMonthYear": {
+      "month": 1,
+      "year": 2016
+    },
+    "endMonthYear": {
+      "month": 1,
+      "year": 2019
+    },
+    "fieldsOfStudy": {
+      "localized": {
+        "en": "Economics"
+      }
+    },
+    "grade": {
+      "localized": {
+        "en": "90"
+      }
+    },
+    "alignment": [{
+      "targetName": "B.A. Economics",
+      "targetUrl": "https://sandbox.credentialengine.org/finder/credential/13013/B_S__Economics",
+      "targetCode": "ce-938286c4-7113-4542-82fb-c072b7351bf8",
+      "targetFramework": "Credential Engine - Credential Registry"
+    }]
+  }
+}

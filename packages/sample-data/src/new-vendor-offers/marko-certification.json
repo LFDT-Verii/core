@@ -1,0 +1,39 @@
+{
+  "type": [
+    "Certification"
+  ],
+  "issuer": {
+    "id": "did:velocity:0x74a3b3f254a021f014531e0240f0aff94b657ec7"
+  },
+  "credentialSubject": {
+    "vendorUserId": "marko.nikolic@example.com",
+    "authority": "did:velocity:0x74a3b3f254a021f014531e0240f0aff94b657ec7",
+    "authorityName": {
+      "localized": {
+        "en": "LABIT training academy"
+      }
+    },
+    "type": {
+      "localized": {
+        "en": "Certification"
+      }
+    },
+    "name": {
+      "localized": {
+        "en": "Clean room technician"
+      }
+    },
+    "certificationDate": {
+      "day": 12,
+      "month": 4,
+      "year": 2020
+    },
+    "alignment": [{
+      "targetName": "Clean Room Technician Certification",
+      "targetUrl": "https://sandbox.credentialengine.org/finder/credential/20151/Clean_Room_Technician_Certification",
+      "targetDescription": "Avant tout travail sur le terrain, les techniciens suivent un programme de formation complet qui commence par une formation en classe dans notre centre d'essai sur site et se termine par une formation sur le terrain. Les critères de formation sont basés sur les directives et recommandations du fabricant de l'équipement pour le fonctionnement et les normes et pratiques recommandées applicables.",
+      "targetCode": "ce-b37c73ba-61c9-41c9-b6c4-7cb17f6d694e",
+      "targetFramework": "Credential Engine"
+    }]
+  }
+}

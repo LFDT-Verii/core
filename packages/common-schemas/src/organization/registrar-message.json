@@ -1,0 +1,84 @@
+{
+    "$id": "registrar-message",
+    "type": "object",
+    "properties": {
+        "messageType": {
+            "type": "string",
+            "enum": [
+                "test",
+                "create_tenant"
+            ]
+        },
+        "messageId": {
+            "type": "string"
+        },
+        "payload": {
+            "type": "object",
+            "properties": {
+                "caoDid": {
+                    "type": "string"
+                },
+                "caoService": {
+                    "$ref": "did-service#"
+                },
+                "create_tenant": {
+                    "type": "object",
+                    "properties": {
+                        "did": {
+                            "type": "string"
+                        },
+                        "serviceIds": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "keys": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "kidFragment": {
+                                        "type": "string",
+                                        "pattern": "^#[a-zA-Z0-9-_:?=&;]+$"
+                                    },
+                                    "purposes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "publicKey": {
+                                        "type": "string"
+                                    },
+                                    "algorithm": {
+                                        "type": "string",
+                                        "enum": [
+                                            "SECP256K1",
+                                            "ED25519"
+                                        ]
+                                    },
+                                    "encoding": {
+                                        "type": "string",
+                                        "enum": [
+                                            "hex",
+                                            "base58",
+                                            "jwk"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "required": [
+        "messageType",
+        "messageId"
+    ]
+}

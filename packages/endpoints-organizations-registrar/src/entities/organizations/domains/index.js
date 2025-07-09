@@ -1,0 +1,17 @@
+module.exports = {
+  ...require('./build-custodied-did-web'),
+  ...require('./build-full-organization-response'),
+  ...require('./build-organization-modifications-on-service-change'),
+  ...require('./build-profile-vc-url'),
+  ...require('./build-profile-verifiable-credential'),
+  ...require('./build-public-profile'),
+  ...require('./constants'),
+  ...require('./organization-vc-checks'),
+  ...require('./parse-profile-to-csv'),
+  ...require('./prepare-profile-vc'),
+  ...require('./profile-name-normalization'),
+  ...require('./validate-byo-did-keys'),
+  ...require('./validate-profile-name'),
+  ...require('./validate-profile-website'),
+  ...require('./validate-update-profile'),
+};

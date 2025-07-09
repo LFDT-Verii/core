@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "did-doc",
+  "title": "did-doc",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "title": "@context",
+      "description": "https://w3c.github.io/did-core-registries/#context",
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "https://www.w3.org/ns/did/v1"
+        },
+        {
+          "type": "array",
+          "additionalItems": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          },
+          "prefixItems": [
+            {
+              "type": "string",
+              "const": "https://www.w3.org/ns/did/v1"
+            }
+          ]
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "id": {
+      "title": "DID",
+      "description": "https://w3c.github.io/did-core-registries/#id",
+      "type": "string",
+      "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$",
+      "example": [
+        "did:key:z6MksQ35B5bwZDQq4QKuhQW2Sv6dcqwg4PqcSFf67pdgrtjB"
+      ]
+    },
+    "controller": {
+      "title": "DID Controller",
+      "description": "https://w3c.github.io/did-core-registries/#controller",
+      "example": [
+        "did:key:z6MksQ35B5bwZDQq4QKuhQW2Sv6dcqwg4PqcSFf67pdgrtjB"
+      ],
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$"
+          }
+        }
+      ]
+    },
+    "publicKey": {
+      "title": "Public Key",
+      "deprecated": true,
+      "description": "https://w3c.github.io/did-core-registries/#publicKey",
+      "type": "array",
+      "items": {
+        "$ref": "public-key#"
+      }
+    },
+    "verificationMethod": {
+      "title": "Verification Methods of the did doc",
+      "description": "https://w3c.github.io/did-spec-registries/#verificationmethod",
+      "type": "array",
+      "items": {
+        "$ref": "public-key#"
+      }
+    },
+    "authentication": {
+      "title": "Authentication",
+      "description": "https://w3c.github.io/did-core-registries/#authentication",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "public-key#"
+          }
+        ]
+      }
+    },
+    "assertionMethod": {
+      "title": "Assertion Method",
+      "description": "https://w3c.github.io/did-core-registries/#assertionMethod",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "public-key#"
+          }
+        ]
+      }
+    },
+    "alsoKnownAs": {
+      "title": "Also Known As",
+      "description": "https://www.w3.org/TR/did-core/#also-known-as",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "service": {
+      "title": "Service",
+      "description": "https://w3c.github.io/did-core-registries/#service",
+      "type": "array",
+      "items": {
+        "$ref": "did-service#"
+      }
+    },
+    "created": {
+      "title": "Created",
+      "description": "https://w3c.github.io/did-core-registries/#created",
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated": {
+      "title": "Updated",
+      "description": "https://w3c.github.io/did-core-registries/#updated",
+      "type": "string",
+      "format": "date-time"
+    },
+    "proof": {
+      "title": "Proof",
+      "description": "https://w3c.github.io/did-core-registries/#proof",
+      "type": "string",
+      "$ref": "did-proof#"
+    }
+  },
+  "required": [
+    "id"
+  ]
+}

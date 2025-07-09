@@ -1,0 +1,5 @@
+*.log
+coverage
+test
+example
+jest.config.js

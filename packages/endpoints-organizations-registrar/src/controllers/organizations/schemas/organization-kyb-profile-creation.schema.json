@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "organization-kyb-profile-creation",
+  "type": "object",
+  "title": "An organization in persistent storage",
+  "description": "Profile info for an organization",
+  "allOf": [
+    {
+      "$ref": "organization-profile-base#"
+    }
+  ],
+  "required": [
+    "website",
+    "adminGivenName",
+    "adminFamilyName",
+    "adminTitle",
+    "adminEmail",
+    "signatoryGivenName",
+    "signatoryFamilyName",
+    "signatoryTitle",
+    "signatoryEmail",
+    "physicalAddress",
+    "linkedInProfile",
+    "registrationNumbers"
+  ]
+}

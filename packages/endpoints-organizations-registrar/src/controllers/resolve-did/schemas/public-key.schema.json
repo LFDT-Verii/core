@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "public-key",
+  "title": "public-key",
+  "description": "A public key is a verification method. Public keys are used for digital signatures, encryption and other cryptographic operations, which in turn are the basis for purposes such as authentication.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "title": "Public Key ID",
+          "type": "string",
+          "example": [
+            "did:example:123#primary"
+          ]
+        },
+        "type": {
+          "title": "Public Key Type",
+          "type": "string",
+          "enum": [
+            "JsonWebKey2020",
+            "EcdsaSecp256k1VerificationKey2019",
+            "X25519KeyAgreementKey2019",
+            "Ed25519VerificationKey2018"
+          ],
+          "example": [
+            "JsonWebKey2020"
+          ]
+        },
+        "controller": {
+          "title": "Controller",
+          "description": "https://w3c.github.io/did-core-registries/#controller",
+          "type": "string",
+          "example": [
+            "did:example:123"
+          ]
+        },
+        "publicKeyJwk": {
+          "title": "Public Key JWK",
+          "description": "https://w3c.github.io/did-spec-registries/#publickeyjwk",
+          "type": "object",
+          "properties": {
+            "crv": {
+              "type": "string"
+            },
+            "kid": {
+              "type": "string"
+            },
+            "kty": {
+              "type": "string"
+            },
+            "x": {
+              "type": "string"
+            },
+            "y": {
+              "type": "string"
+            }
+          },
+          "example": [
+            {
+              "crv": "secp256k1",
+              "kid": "JUvpllMEYUZ2joO59UNui_XYDqxVqiFLLAJ8klWuPBw",
+              "kty": "EC",
+              "x": "dWCvM4fTdeM0KmloF57zxtBPXTOythHPMm1HCLrdd3A",
+              "y": "36uMVGM7hnw-N6GnjFcihWE3SkrhMLzzLCdPMXPEXlA"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "controller",
+        "publicKeyJwk"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "title": "Public Key ID",
+          "type": "string",
+          "example": [
+            "did:example:123#primary"
+          ]
+        },
+        "type": {
+          "title": "Public Key Type",
+          "type": "string",
+          "enum": [
+            "EcdsaSecp256k1VerificationKey2019",
+            "X25519KeyAgreementKey2019",
+            "Ed25519VerificationKey2018"
+          ],
+          "example": [
+            "EcdsaSecp256k1VerificationKey2019"
+          ]
+        },
+        "controller": {
+          "title": "Controller",
+          "description": "https://w3c.github.io/did-core-registries/#controller",
+          "type": "string",
+          "example": [
+            "did:example:123"
+          ]
+        },
+        "publicKeyMultibase": {
+          "title": "Public Key in multibase format",
+          "description": "https://w3c.github.io/did-spec-registries/#multibase",
+          "type": "string",
+          "example": [
+            "CaSHXEvLKS6SfN9aBfkVGBpp15jSnaHazqHgLHp8KZ3Y"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "controller",
+        "publicKeyMultibase"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "title": "Public Key ID",
+          "type": "string",
+          "example": [
+            "did:example:123#primary"
+          ]
+        },
+        "type": {
+          "title": "Public Key Type",
+          "type": "string",
+          "enum": [
+            "EcdsaSecp256k1VerificationKey2019",
+            "X25519KeyAgreementKey2019",
+            "Ed25519VerificationKey2018"
+          ],
+          "example": [
+            "EcdsaSecp256k1VerificationKey2019"
+          ]
+        },
+        "controller": {
+          "title": "Controller",
+          "description": "https://w3c.github.io/did-core-registries/#controller",
+          "type": "string",
+          "example": [
+            "did:example:123"
+          ]
+        },
+        "publicKeyBase58": {
+          "title": "Public Key Base58",
+          "description": "https://w3c.github.io/did-spec-registries/#publickeybase58",
+          "type": "string",
+          "example": [
+            "CaSHXEvLKS6SfN9aBfkVGBpp15jSnaHazqHgLHp8KZ3Y"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "controller",
+        "publicKeyBase58"
+      ]
+    }
+  ]
+}

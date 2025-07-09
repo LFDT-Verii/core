@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Presentation Submission",
+  "$id": "https://velocitycareerlabs.io/presentation-submission.schema.json",
+  "type": "object",
+  "properties": {
+    "presentation_submission": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "definition_id": { "type": "string" },
+        "locale": { "type": "string" },
+        "descriptor_map": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/descriptor" }
+        }
+      },
+      "required": ["descriptor_map"],
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "descriptor": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "path": { "type": "string" },
+        "path_nested": {
+          "$ref": "#/definitions/descriptor"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["jwt", "jwt_vc", "jwt_vp", "ldp", "ldp_vc", "ldp_vp", "JWT"]
+        }
+      },
+      "required": ["id", "path", "format"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["presentation_submission"]
+}

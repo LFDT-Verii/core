@@ -1,0 +1,50 @@
+name: Blockchain Contracts Tests
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - staging
+      - qa
+      - dev
+    paths:
+      - 'contracts/**'
+  pull_request:
+    branches:
+      - master
+      - staging
+      - qa
+      - dev
+    paths:
+      - 'contracts/**'
+env:
+  DOCKER_REG: 'ghcr.io'
+  NODE_VERSION: '22'
+jobs:
+  run-contracts-tests:
+    name: Run contracts tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: ["metadata-registry", "revocation-list", "verification-coupon", "permissions"]
+    steps:
+      # Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # Install Dependencies
+      - name: Install Dependencies
+        run: npm i --legacy-peer-deps
+        working-directory: ./contracts/${{ matrix.contract }}
+      # Compile Contract
+      - name: Compile Contract
+        run: npm run build
+        working-directory: ./contracts/${{ matrix.contract }}
+      # Run Contract tests
+      - name: Run Contract tests
+        run: npm run test
+        working-directory: ./contracts/${{ matrix.contract }}

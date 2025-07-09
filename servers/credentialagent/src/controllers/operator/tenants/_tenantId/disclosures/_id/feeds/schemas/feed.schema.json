@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://velocitycareerlabs.io/feed.schema.json",
+  "title": "agent-disclosure",
+  "description": "The disclosure request made by an inspector on the velocity network. It describes credential types wanted and (in the future) predicate information as well as terms and conditions for usage of the data",
+  "allOf": [
+    {
+      "$ref": "https://velocitycareerlabs.io/modify-feed.schema.json#"
+    },
+    {
+      "$ref": "mutable-entity#"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "feedTimestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "clientId": {
+          "type": "string",
+          "description": "the client id of an associated feed"
+        }
+      }
+    }
+  ]
+}

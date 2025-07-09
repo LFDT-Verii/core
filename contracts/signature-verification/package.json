@@ -1,0 +1,13 @@
+{
+  "name": "@verii/signature-verification-library",
+  "version": "0.5.0-build",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "devDependencies": {}
+}

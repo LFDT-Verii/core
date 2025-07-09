@@ -1,0 +1,28 @@
+{
+  "short_name": "Credential Agent",
+  "name": "Velocity Network Credential Agent",
+  "icons": [
+    {
+      "src": "public/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "public/logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "public/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "io.velocitycareerlabs.holderapp"
+    }
+  ]
+}

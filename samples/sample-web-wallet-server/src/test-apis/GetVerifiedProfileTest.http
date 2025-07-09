@@ -1,0 +1,8 @@
+### Get Verified Profile
+POST http://localhost:5000/getVerifiedProfile HTTP/1.1
+Content-Type: application/json
+
+{
+  "did": "did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA"
+}
+

@@ -1,0 +1,366 @@
+{
+  "title": "Education degree graduation",
+  "$id": "https://velocitynetwork.foundation/schemas/education-degree-graduation-v1.1",
+  "allOf": [
+    {
+      "$ref": "#/definitions/Education-degree-base_Schema"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "registrationDate": {
+          "$ref": "#/definitions/Date_Schema"
+        },
+        "startDate": {
+          "$ref": "#/definitions/Date_Schema"
+        },
+        "endDate": {
+          "$ref": "#/definitions/Date_Schema"
+        },
+        "conferredDate": {
+          "$ref": "#/definitions/Date_Schema"
+        },
+        "grade": {
+          "$ref": "#/definitions/Score_Schema"
+        },
+        "honors": {
+          "type": "string",
+          "description": "The type of honors degree given, such as cum laude, merit, etc.",
+          "maxLength": 64
+        }
+      }
+    }
+  ],
+  "required": [
+    "institution",
+    "conferredDate",
+    "degreeName",
+    "recipient"
+  ],
+  "description": "",
+  "definitions": {
+    "Education-degree-base_Schema": {
+      "title": "Degree-base",
+      "type": "object",
+      "properties": {
+        "@context": {
+          "$ref": "#/definitions/Json-ld-context_Schema"
+        },
+        "type": {
+          "type": "string",
+          "default": "EducationDegree"
+        },
+        "institution": {
+          "$ref": "#/definitions/Organization_Schema"
+        },
+        "school": {
+          "$ref": "#/definitions/Organization_Schema"
+        },
+        "programName": {
+          "type": "string",
+          "description": "The program in which the person holding the degree studied for the degree.",
+          "maxLength": 256
+        },
+        "programType": {
+          "type": "string",
+          "description": "The type of program, e.g., full.",
+          "maxLength": 256
+        },
+        "programMode": {
+          "type": "string",
+          "description": "The program mode or method of teaching, e.g., online.",
+          "maxLength": 256
+        },
+        "degreeName": {
+          "type": "string",
+          "description": "The name of the degree.",
+          "maxLength": 256
+        },
+        "degreeMajor": {
+          "type": "array",
+          "description": "The major field or fields of study of the degree.",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "degreeMinor": {
+          "type": "array",
+          "description": "The minor field or fields of study of the degree.",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the degree.",
+          "maxLength": 2048
+        },
+        "recipient": {
+          "$ref": "#/definitions/PersonName_Schema"
+        },
+        "alignment": {
+          "type": "array",
+          "description": "A public resource to which the degree is aligned.",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Alignment_Schema"
+          }
+        }
+      }
+    },
+    "Json-ld-context_Schema": {
+      "title": "json-ld-context",
+      "oneOf": [
+        {
+          "type": "string",
+          "maxLength": 2048
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        }
+      ],
+      "description": "Simplified context for Velocity Publishers to Use"
+    },
+    "Alignment_Schema": {
+      "title": "Alignment",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "default": "AlignmentObject"
+        },
+        "targetName": {
+          "type": "string",
+          "description": "Name of the target alignment.",
+          "maxLength": 256
+        },
+        "targetUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the target alignment. ",
+          "maxLength": 2048
+        },
+        "targetDescription": {
+          "type": "string",
+          "description": "Detailed description of the target alignment. ",
+          "maxLength": 2048
+        },
+        "targetCode": {
+          "type": "string",
+          "description": "Code of the target alignment. ",
+          "maxLength": 256
+        },
+        "targetFramework": {
+          "type": "string",
+          "description": "The framework to which the target belongs. ",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "targetName",
+        "targetUrl"
+      ]
+    },
+    "Date_Schema": {
+      "title": "Calendar date",
+      "type": "string",
+      "pattern": "^[1,2]\\d\\d\\d(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2]\\d|30|31))?)?$",
+      "description": ""
+    },
+    "Did_Schema": {
+      "title": "DID",
+      "type": "string",
+      "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$"
+    },
+    "Organization_Schema": {
+      "title": "Organization",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "default": "Organization"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the organization.",
+          "maxLength": 256
+        },
+        "identifier": {
+          "$ref": "#/definitions/Did_Schema"
+        },
+        "place": {
+          "$ref": "#/definitions/Place_Schema"
+        },
+        "image": {
+          "type": "string",
+          "maxLength": 2048,
+          "format": "uri",
+          "description": "IRI representing the logo of the organization. This must be JPG, PNG or SVG file. \nFor PNG or JPG: 300px x 300px minimum, maximum size 500kb. "
+        }
+      },
+      "required": [
+        "name",
+        "place"
+      ]
+    },
+    "PersonName_Schema": {
+      "title": "Person name",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "default": "PersonName"
+        },
+        "givenName": {
+          "type": "string",
+          "description": "The given name or first name of the person.",
+          "maxLength": 64
+        },
+        "familyName": {
+          "type": "string",
+          "description": "The family name or surname of the person.",
+          "maxLength": 64
+        },
+        "middleName": {
+          "type": "string",
+          "description": "The middle name of the person.",
+          "maxLength": 256
+        },
+        "namePrefix": {
+          "type": "string",
+          "description": "A prefix to the name such as Dr or Sir.",
+          "maxLength": 8
+        },
+        "nameSuffix": {
+          "type": "string",
+          "description": "A suffix to the name such as Jr. or Sr.",
+          "maxLength": 16
+        }
+      },
+      "required": [
+        "givenName",
+        "familyName"
+      ]
+    },
+    "Place_Schema": {
+      "title": "Place",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "default": "Place"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the place, e.g., building name, branch name, etc.",
+          "maxLength": 256
+        },
+        "addressLocality": {
+          "type": "string",
+          "description": "The locality where the place is, e.g., town or city name.",
+          "maxLength": 256
+        },
+        "addressRegion": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$",
+          "description": "The region where the place is. These are states, provinces, etc. Must be an [ISO 3166-2 subdivision code](https://en.wikipedia.org/wiki/ISO_3166-2)",
+          "maxLength": 6
+        },
+        "addressCountry": {
+          "type": "string",
+          "description": "The country where the place is. Must be an [ISO 3166 2 letter country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)",
+          "pattern": "^[A-Z]{2}$",
+          "maxLength": 2
+        }
+      },
+      "required": [
+        "addressCountry"
+      ]
+    },
+    "Score_Schema": {
+      "title": "Score",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scoreMethod": {
+          "type": "object",
+          "description": "The method according to which the score is given. ",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "default": "ScoreMethod"
+            },
+            "scoreMethodType": {
+              "type": "string",
+              "enum": [
+                "NormReferenced",
+                "CriterionReferenced"
+              ],
+              "description": "One of: NormReferenced, CriterionReferenced."
+            },
+            "alignment": {
+              "type": "array",
+              "description": "A public resource to which the scoring method is aligned.",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/Alignment_Schema"
+              }
+            },
+            "scoreMethodDescription": {
+              "type": "string",
+              "description": "A description of the scoring method used.",
+              "maxLength": 2048
+            },
+            "passingScore": {
+              "type": "string",
+              "description": "The minimum passing score",
+              "maxLength": 16
+            }
+          }
+        },
+        "type": {
+          "type": "string",
+          "default": "Score"
+        },
+        "scoreValue": {
+          "type": "string",
+          "description": "The score achieved by the person.",
+          "maxLength": 16
+        },
+        "result": {
+          "type": "string",
+          "description": "The result achieved by the person, e.g. acceptable, excellent, poor. Applicable when results are not stated as scores. ",
+          "maxLength": 2048
+        },
+        "passFail": {
+          "type": "string",
+          "enum": [
+            "Pass",
+            "Fail"
+          ],
+          "description": "One of: Pass, Fail"
+        },
+        "scoreDescription": {
+          "type": "string",
+          "description": "Explanation or description of the meaning of the score and/or result achieved.",
+          "maxLength": 2048
+        }
+      },
+      "description": ""
+    }
+  }
+}

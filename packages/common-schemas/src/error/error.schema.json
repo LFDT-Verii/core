@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "$id": "error",
+  "description": "error response schema",
+  "properties": {
+    "error": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "statusCode": {
+      "type": "integer"
+    },
+    "errorCode": {
+      "type": "string"
+    },
+    "requestId": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

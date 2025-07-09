@@ -1,0 +1,48 @@
+{
+  "name": "@verii/fastify-plugins",
+  "version": "0.5.0-build",
+  "description": "Plugin for handling errors",
+  "repository": "https://github.com/LFDT-Verii/core",
+  "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --config ./jest.config.js --runInBand --coverage",
+    "lint": "eslint . --format json >> eslint.json",
+    "lint:fix": "eslint --fix --ext .js ."
+  },
+  "author": "Yauheni Pozdnyakov",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@fastify/cors": "11.0.1",
+    "@verii/error-aggregation": "0.5.0-build",
+    "@verii/crypto": "0.5.0-build",
+    "@verii/request": "0.5.0-build",
+    "fastify-plugin": "~5.0.0",
+    "lodash":"^4.17.21",
+    "http-errors":"^2.0.0",
+    "statuses": "~2.0.1",
+    "toidentifier": "~1.0.1",
+    "quick-lru": "~5.1.1"
+  },
+  "devDependencies": {
+    "@verii/request": "~0.5.0-build",
+    "eslint": "8.57.1",
+    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-config-prettier": "8.10.0",
+    "eslint-plugin-autofix": "1.1.0",
+    "eslint-plugin-better-mutation": "1.7.0",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-watch": "7.0.0",
+    "nock": "14.0.5",
+    "fastify": "5.3.3",
+    "jest": "29.7.0",
+    "prettier": "2.8.8"
+  },
+  "nx": {
+    "tags": ["lib"]
+  }
+}

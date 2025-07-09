@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "did-proof",
+  "title": "did-proof",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "created": {
+      "title": "Created",
+      "description": "https://w3c.github.io/did-core-registries/#created",
+      "type": "string",
+      "format": "date-time"
+    },
+    "jws": {
+      "title": "JWS",
+      "description": "https://w3c.github.io/did-core-registries/#jws",
+      "type": "string"
+    },
+    "proofPurpose": {
+      "title": "Proof Purpose",
+      "description": "https://w3c.github.io/did-core-registries/#proof-purpose",
+      "type": "string",
+      "enum": ["assertionMethod", "authentication"]
+    },
+    "type": {
+      "title": "Type of Proof supplied",
+      "description": "https://w3c.github.io/did-core-registries/#type",
+      "type": "string",
+      "enum": ["EcdsaSecp256k1Signature2019", "Ed25519Signature2020"]
+    },
+    "verificationMethod": {
+      "title": "Verification Method",
+      "description": "https://w3c.github.io/did-core-registries/#verification-method",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "public-key#"
+        }
+      ]
+    }
+  }
+}

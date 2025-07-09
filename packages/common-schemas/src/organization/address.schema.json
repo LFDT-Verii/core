@@ -1,0 +1,33 @@
+{
+  "title": "address",
+  "type": "object",
+  "$id": "https://velocitynetwork.foundation/schemas/address.schema.json",
+  "additionalProperties": false,
+  "description": "address validation schema",
+  "properties": {
+    "line1": {
+      "type": "string"
+    },
+    "line2": {
+      "type": "string"
+    },
+    "line3": {
+      "type": "string"
+    },
+    "regionCode": {
+      "type": "string",
+      "format": "regex",
+      "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$",
+      "description": "An uppercase region code as defined by [ISO-3166-2](https://en.wikipedia.org/wiki/ISO_3166-2)"
+    },
+    "countryCode": {
+      "type": "string",
+      "format": "regex",
+      "pattern": "^[A-Z]{2}$",
+      "description": "An uppercase two-letter country code as defined by [ISO-3166-1](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)"
+    },
+    "postcode": {
+      "type": "string"
+    }
+  }
+}

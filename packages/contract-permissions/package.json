@@ -1,0 +1,29 @@
+{
+  "name": "@verii/contract-permissions",
+  "version": "0.5.0-build",
+  "description": "Package allows interacting with the permissions smart contracts, based on ethers.js",
+  "repository": "https://github.com/LFDT-Verii/core",
+  "main": "index.js",
+  "author": "Viktar Pashchanka",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --config ./jest.config.js --runInBand --coverage",
+    "lint": "eslint . --format json >> eslint.json",
+    "lint:fix": "eslint --fix --ext .js ."
+  },
+  "devDependencies": {
+    "@verii/tests-helpers": "0.5.0-build",
+    "@spencejs/spence-config":  "0.10.2",
+    "@verii/blockchain-functions": "0.5.0-build",
+    "@verii/crypto": "0.5.0-build"
+  },
+  "dependencies": {
+    "@verii/base-contract-io": "^0.5.0-build"
+  },
+  "nx": {
+    "tags": ["lib"]
+  }
+}

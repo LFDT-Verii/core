@@ -1,0 +1,93 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "hostRules": [
+    {
+      "hostType": "npm",
+      "matchHost": "npm.pkg.github.com",
+      "token": "{{ secrets.GITHUB_TOKEN }}"
+    }
+  ],
+  "timezone": "Asia/Jerusalem",
+  "extends": [
+    "config:best-practices",  
+    "npm:unpublishSafe",
+    "group:allDigest",
+    "group:linters",
+    "group:jsTest",
+    "group:postcss",
+    "group:react",
+    "group:vite",
+    "security:openssf-scorecard",
+    ":enableVulnerabilityAlertsWithLabel(security)"
+  ],
+  "prHourlyLimit": 10,
+  "addLabels": ["dependencies"],
+  "automerge": true,
+  "schedule": ["* 0-2 * * 1,3"],
+  "packageRules": [    
+    {
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"],
+      "automerge": false,
+      "schedule": ["* 0-2 1,15 * *"]
+    },
+    {
+      "groupName": "group: fastify packages",
+      "matchPackageNames": [
+        "@fastify/{/,}**",
+        "fastify{/,}**",
+        "avvio{/,}**",
+        "fast-json{/,}**",
+        "fast-jwt{/,}**",
+        "pino{/,}**"
+      ]
+    },
+    {
+      "matchFileNames": [
+        "eng/**",
+        ".github/**",
+        "docker*.yml",
+        "Dockerfile*"
+      ],
+      "addLabels": ["eng"]
+    },
+    {
+      "matchFileNames": [
+        "contracts/**"
+      ],
+      "addLabels": ["contracts"],
+      "automerge": false,
+      "schedule": ["* 0-2 1,15 * *"]
+    },
+    {
+      "groupName": "group: auth0 packages",
+      "matchPackageNames": [
+        "@auth0/{/,}**",
+        "auth0{/,}**"
+      ],
+      "automerge": false
+    },
+    {
+      "matchPackageNames": [
+        "twilio{/,}**",
+        "ethers{/,}**",
+        "@sentry/{/,}**"
+      ],
+      "automerge": false
+    },
+    {
+      "matchPackageNames": [
+        "@aws-sdk/{/,}**"
+      ],
+      "extends": ["schedule:monthly"],
+      "automerge": false
+    },
+    {
+      "matchPackageNames": [
+        "nx",
+        "@nx/{/,}**"
+      ],
+      "enabled": false
+    }
+  ]
+}

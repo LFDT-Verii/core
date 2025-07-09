@@ -1,0 +1,48 @@
+{
+  "name": "@verii/db-kms",
+  "version": "0.5.0-build",
+  "description": "KMS plugin that uses a db",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest --config ./jest.config.js --runInBand --coverage",
+    "lint": "eslint . --format json >> eslint.json",
+    "lint:fix": "eslint --fix ."
+  },
+  "dependencies": {
+    "@spencejs/spence-mongo-repos": "~0.10.2",
+    "@verii/crypto": "0.5.0-build",
+    "@verii/jwt": "0.5.0-build",
+    "@verii/spencer-mongo-extensions": "0.5.0-build",
+    "fastify-plugin": "^5.0.0",
+    "lodash": "~4.17.21",
+    "mongodb": "6.16.0"
+  },
+  "devDependencies": {
+    "@spencejs/spence-config": "0.10.2",
+    "@verii/tests-helpers": "0.5.0-build",
+    "@verii/test-regexes": "0.5.0-build",
+    "@typescript-eslint/parser": "6.21.0",
+    "@typescript-eslint/eslint-plugin": "6.21.0",
+    "eslint": "8.57.1",
+    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-config-prettier": "8.10.0",
+    "eslint-plugin-autofix": "1.1.0",
+    "eslint-plugin-better-mutation": "1.7.0",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-watch": "7.0.0",
+    "fastify": "5.3.3",
+    "mongodb": "6.16.0",
+    "jest": "29.7.0",
+    "prettier": "2.8.8",
+    "typescript": "5.8.3"
+  },
+  "nx": {
+    "tags": ["lib"]
+  }
+}

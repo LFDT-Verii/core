@@ -1,0 +1,36 @@
+{
+    "type": [
+      "EducationDegree"
+    ],
+    "issuer": {
+      "vendorOrganizationId": "3e5182f1-e019-40cf-9544-c7ef485f7057",
+    },
+    "credentialSubject": {
+      "vendorUserId": "adam.smith@example.com",
+      "school": "did:velocity:0x0b154da48d0f213c26c4b1d040dc5ff1dbf99ffa",
+      "schoolName": {
+        "localized": {
+          "en": "University of Cambridge"
+        }
+      },
+      "degreeName": {
+        "localized": {
+          "en": "Bachelor"
+        }
+      },
+      "program": {
+        "localized": {
+          "en": "Computer Science"
+        }
+      },
+      "startMonthYear": {
+        "month": 9,
+        "year": 2002
+      },
+      "endMonthYear": {
+        "month": 5,
+        "year": 2005
+      }
+    }
+  }
+}

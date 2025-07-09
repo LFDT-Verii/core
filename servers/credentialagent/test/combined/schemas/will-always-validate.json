@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "test-will-always-validate",
+  "type": "object",
+  "properties": {
+      "foo": {
+          "type": "string"
+      }
+  }
+}

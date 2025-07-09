@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "organization-profile-update",
+  "title": "Editable Organization Profile Information",
+  "type": "object",
+  "description": "Profile info for an org that can be set in a \"form\"",
+  "allOf": [{
+    "$ref": "organization-profile-base#"
+  }],
+  "required": [
+    "type",
+    "name",
+    "description",
+    "location",
+    "logo",
+    "contactEmail",
+    "technicalEmail"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@verii/sample-libapp",
+  "version": "0.5.0-build",
+  "description": "Velocity Schema and Document Library",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "resolutions": {},
+  "scripts": {},
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}

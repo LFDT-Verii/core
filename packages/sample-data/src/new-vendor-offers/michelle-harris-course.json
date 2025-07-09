@@ -1,0 +1,35 @@
+{
+  "type": [
+    "Course"
+  ],
+  "issuer": {
+    "id": "did:velocity:0x6242efe976e065b882d8ba0ea532e95564f64abc"
+  },
+  "credentialSubject": {
+    "vendorUserId": "michelle.harris@example.com",
+    "title": { "localized": { "en": "UX design" } },
+    "description": { "localized": { "en": "UX design basics" } },
+    "duration": "3M",
+    "registrationDate": {
+      "day": 1,
+      "month": 5,
+      "year": 2021
+    },
+    "startDate": {
+      "day": 15,
+      "month": 5,
+      "year": 2021
+    },
+    "completionDate": {
+      "day": 15,
+      "month": 8,
+      "year": 2021
+    },
+    "alignment": {
+      "targetName": "Mobile UX/UI Design Intensive Certificate",
+      "targetUrl": "https://credentialfinder.org/credential/ce-4b03cf76-b780-4048-8c68-f34461a99612",
+      "targetDescription": "The Mobile UX/UI Design Intensive provides students with a practical knowledge of UX principles, tools and techniques in user interaction and user experience design. Upon successful completion of the intensive, students will have completed a portfolio and gain a solid foundation in UX that can be applied immediately to their current or future job opportunities.",
+      "targetFramework": "Credential Engine"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "kind": "Passport",
+  "authority": { "localized": { "en": "Serbia Ministry of Internal Affairs" } },
+  "location": {
+    "countryCode": "RS",
+    "regionCode": "00"
+  },
+  "identityNumber": "630396022",
+  "firstName": { "localized": { "en": "Marko" } },
+  "lastName": { "localized": { "en": "Nikolić" } },
+  "dob": {
+    "day": 11,
+    "month": 1,
+    "year": 1993
+  },
+  "validFrom": "2013-2-18T00:00:00.000Z",
+  "validUntil": "2023-2-18T00:00:00.000Z"
+}

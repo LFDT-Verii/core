@@ -1,0 +1,92 @@
+<p>Dear {{organization.profile.signatoryGivenName}} {{organization.profile.signatoryFamilyName}},
+</p>
+<p>
+    As part of ongoing service enhancements for {{organization.profile.name}},
+    {{#if inviterOrganization}}
+        {{inviterOrganization.profile.name}}
+    {{else}}
+        {{organization.profile.adminGivenName}} {{organization.profile.adminFamilyName}}
+    {{/if}}
+    has registered your organization to the Velocity Network to enable expanded functionality.
+    <br />
+    To learn more about Velocity Network, please visit
+    <a href="https://www.velocitynetwork.foundation/" target="_blank">
+        https://www.velocitynetwork.foundation/
+    </a>.
+</p>
+
+<p>
+{{#if organization.services.length}}
+    {{organization.profile.name}} has been assigned the following role(s) on Velocity Network:
+{{else}}
+    {{organization.profile.name}} has not yet been assigned a role on Velocity Network:
+{{/if}}
+</p>
+
+<ul>
+    {{#each organization.services}}
+        <li>
+            <span style="border: none; cursor: pointer;">
+                {{lookup ../ServiceTypeLabels [type]}}
+            </span>
+        </li>
+    {{else}}
+    {{/each}}
+</ul>
+<br/>
+<p>Please confirm your approval of the following:</p>
+<ul>
+    <li>You are the authorized signatory for your organization.</li>
+    <li>
+        {{organization.profile.adminGivenName}}
+        {{organization.profile.adminFamilyName}}
+        ({{organization.profile.adminEmail}})
+        has been nominated as the administrator of
+        {{organization.profile.name}}
+        on the Velocity Network.
+    </li>
+    <li>
+        {{organization.profile.adminGivenName}}
+        {{organization.profile.adminFamilyName}}
+        ({{organization.profile.adminEmail}})
+        is authorized to accept the applicable
+        <a href="https://www.velocitynetwork.foundation/main2/participation-agreements" target="_blank">
+            terms of participation
+        </a>.
+    </li>
+</ul>
+<div style="display: inline-block">
+    <a href="{{config.registrarAppUiUrl}}/signatories/approve?authCode={{authCode}}&did={{organization.didDoc.id}}"
+    target="_blank"
+    style="border: none; color: white; background-color: #0277ff; text-decoration: none; padding: 5px 15px; text-align:
+    center; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;">
+    Approve
+    </a>
+    <span>&nbsp;</span>
+    <a href="{{config.registrarAppUiUrl}}/signatories/reject?authCode={{authCode}}&did={{organization.didDoc.id}}"
+    target="_blank"
+    style=" border: none; color: white; background-color: #0277ff; text-decoration: none; padding: 5px 15px; text-align:
+    center; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; "
+    >
+    Reject
+    </a>
+</div>
+<br/>
+<p>
+    <strong>If the buttons above do not work, please copy and paste the appropriate link into your browser:</strong>
+</p>
+<p>
+    <strong>Approve:</strong>
+    <br/>
+    <span>
+        {{config.registrarAppUiUrl}}/signatories/approve?authCode={{authCode}}&did={{organization.didDoc.id}}
+    </span>
+</p>
+<p>
+    <strong>Reject:</strong>
+    <br/>
+    <span>
+        {{config.registrarAppUiUrl}}/signatories/reject?authCode={{authCode}}&did={{organization.didDoc.id}}
+    </span>
+</p>
+<br/>

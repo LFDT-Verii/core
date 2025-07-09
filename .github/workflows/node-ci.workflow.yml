@@ -1,0 +1,324 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Node.js CI
+
+on:
+  workflow_dispatch:
+  merge_group:
+  pull_request:
+    branches: 
+      - main
+      - release/**
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  schedule:
+    - cron: '0 0 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKER_REG: 'ghcr.io'
+jobs:
+  # Prepare
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    outputs:
+      lint-packages: ${{ steps.packages-list.outputs.lint-packages }}
+      test-packages: ${{ steps.packages-list.outputs.test-packages }}
+      node-versions: '[ "22.x" ]'
+    strategy:
+      matrix:
+        node-version: ['22.x']
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      with:
+        fetch-depth: 0
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+    - name: Restore yarn cached
+      id: cache-yarn-restore
+      uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      with:
+        path: |
+          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          node_modules
+        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+    - name: Setup Token
+      run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+    - name: Install Dependencies
+      run: yarn install --frozen-lockfile --prefer-offline
+    - name: Save yarn Cache
+      id: cache-yarn-save
+      uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      with:
+        path: |
+          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          node_modules
+        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+      if: ${{ steps.cache-yarn-restore.outputs.cache-hit != 'true' }}
+    - name: Split Branch Name
+      env:
+        BRANCH: ${{ github.event.merge_group.base_ref }}
+      id: split-branch-name
+      run: echo "fragment=${BRANCH##*/}" >> $GITHUB_OUTPUT
+      if : github.event_name == 'merge_group'
+    - name: Derive SHAs `nx affected` commands~
+      uses: nrwl/nx-set-shas@dbe0650947e5f2c81f59190a38512cf49126fe6b # v4
+      with:
+        main-branch-name: ${{ github.base_ref || steps.split-branch-name.outputs.fragment }}
+      if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+    - name: Get Lint Affected Packages
+      run: |
+        echo LINT_PACKAGES_LIST=$(yarn --silent nx show projects --affected --with-target lint --json) >> $GITHUB_ENV
+      if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+    - name: Get Lint All Packages
+      run: |
+        echo LINT_PACKAGES_LIST=$(yarn --silent nx show projects --with-target lint --json) >> $GITHUB_ENV
+      if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
+    - name: Get Test Affected Packages
+      run: |
+        echo TEST_PACKAGES_LIST=$(yarn --silent nx show projects --affected --with-target test --json) >> $GITHUB_ENV
+      if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+    - name: Get Test All Packages
+      run: |
+        echo TEST_PACKAGES_LIST=$(yarn --silent nx show projects --with-target test --json) >> $GITHUB_ENV
+      if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
+    - name: Set Output
+      id: packages-list
+      run: |
+        echo "lint-packages=$LINT_PACKAGES_LIST" >> $GITHUB_OUTPUT
+        echo "test-packages=$TEST_PACKAGES_LIST" >> $GITHUB_OUTPUT
+
+  # Lint
+  lint:
+    name: Lint
+    needs: [prepare]
+    runs-on: ubuntu-latest
+    if: needs.prepare.outputs.lint-packages != '[]'
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.prepare.outputs.lint-packages) }}
+        node-version: ${{ fromJson(needs.prepare.outputs.node-versions) }}
+        mongodb-version: ['8.0']
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      with:
+        fetch-depth: 0
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+    - name: Restore yarn cached
+      id: cache-yarn-restore
+      uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      with:
+        path: |
+          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          node_modules
+        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+    - name: Install Dependencies
+      run: yarn install --frozen-lockfile --prefer-offline
+    - name: Build Libs
+      run: yarn build:lib
+    - name: Lint
+      run: yarn nx run ${{ matrix.package }}:lint
+    - name: Create Artifact Name
+      run: |
+        echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
+      if: '!cancelled()'
+    - name: Upload Lint Report
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: lint${{ env.ARTIFACT_NAME }}
+        path: |
+          **/eslint.json
+      if: '!cancelled()'
+
+  # Post Lint
+  post-lint:
+    name: Post Lint
+    needs: lint
+    runs-on: ubuntu-latest
+    if: needs.prepare.outputs.lint-packages != '[]' && !cancelled()
+    steps:
+    - name: Download All Reports
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      with:
+        path: reports
+        pattern: lint-*
+        merge-multiple: true
+    - name: Publish Lint Report
+      uses: ataylorme/eslint-annotate-action@v3
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        report-json: "**/eslint.json"
+
+  # Test
+  test:
+    name: Test
+    needs: [prepare, lint]
+    runs-on: ubuntu-latest
+    if: needs.prepare.outputs.test-packages != '[]'
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.prepare.outputs.test-packages) }}
+        node-version: ${{ fromJson(needs.prepare.outputs.node-versions) }}
+        mongodb-version: ['8.0']
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      with:
+        fetch-depth: 0
+    - name: Start MongoDB
+      uses: supercharge/mongodb-github-action@90004df786821b6308fb02299e5835d0dae05d0d # 1.12.0
+      with:
+        mongodb-version: ${{ matrix.mongodb-version }}
+        mongodb-replica-set: insert-replica-set-name
+    - name: Start Besu Blockchain Node
+      run: >
+        docker run
+        --name blockchain
+        -p 8545:8545
+        -v ./eng/docker/services/blockchain-config:/opt/besu/config
+        -d
+        hyperledger/besu:25.4.1@sha256:00468488df234ead7c0e450ffcd5bc1ac3ed62f458a0de42ba029155ecdf5331
+        --genesis-file=/opt/besu/config/genesis.json
+        --node-private-key-file=/opt/besu/config/key
+        --rpc-http-enabled
+        --rpc-http-api=ETH,NET,WEB3
+        --host-allowlist=*
+        --rpc-http-cors-origins=all
+        --min-gas-price=0
+        --profile=enterprise
+    - name: Start AWS localstack
+      run: docker run --name localstack -p 4566:4566 -p 4571:4571 -e SERVICES=sns,ses,kms,s3 -d localstack/localstack:2.3.2
+    - name: Wait for SES to launch
+      run: while ! nc -z localhost 4566; do echo "Waiting for SES to launch on port 4566..."; sleep 2; done;
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+    - name: Restore yarn cached
+      id: cache-yarn-restore
+      uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+      with:
+        path: |
+          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          node_modules
+        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+    - name: Install Dependencies
+      run: yarn install --frozen-lockfile --prefer-offline
+    - name: Build Libs
+      run: yarn build:lib
+    - name: Run Credential Agent Migrations
+      working-directory: ./servers/credentialagent
+      run: MONGO_URI=mongodb://localhost:27017/test-credential-agent yarn migrate:up
+    - name: Test
+      uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+      with: 
+        timeout_minutes: 10
+        max_attempts: 2
+        retry_on: timeout
+        command: yarn nx run ${{ matrix.package }}:test
+      env:
+        IS_CI: true
+        NODE_OPTIONS: "--max_old_space_size=4096"
+    - name: Create Artifact Name
+      run: |
+        echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
+      if: '!cancelled()'
+    - name: Upload Test Report
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: test${{ env.ARTIFACT_NAME }}
+        path: |
+          test-results/**/*.xml
+          test-results/**/*.trx
+          test-results/**/*.json
+      if: '!cancelled()'
+    - name: Upload Codecov Report
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: codecov${{ env.ARTIFACT_NAME }}
+        path: |
+          **/lcov.info
+          !tools/**/lcov.info
+
+  # Post Test
+  post-test:
+    name: Post Test
+    needs: test
+    permissions:
+      checks: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    if: needs.prepare.outputs.test-packages != '[]' && !cancelled()
+    steps:
+    - name: Download All Test Reports
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      with:
+        path: test-results
+        pattern: test-*
+        merge-multiple: true
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@3a74b2957438d0b6e2e61d67b05318aa25c9e6c6 # v2
+      with:
+        test_changes_limit: 0
+        json_thousands_separator: ","
+        action_fail: true
+        files: |
+          test-results/**/*.xml
+          test-results/**/*.trx
+          test-results/**/*.json
+    - name: Download All Codecov Reports
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      with:
+        path: codecov-reports
+        pattern: codecov-*
+        merge-multiple: true
+    - name: Upload coverage for PR
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: lcov.info,!tools
+        flags: pull_request
+      if: github.event_name == 'pull_request'
+    - name: Upload coverage for All
+      uses: codecov/codecov-action@18283e04ce6e62d37312384ff67231eb8fd56d24 # v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: lcov.info,!tools
+      if: github.event_name != 'pull_request'
+
+  # CI Result
+  ci-result:
+    name: CI Result
+    needs: [prepare, lint, post-lint, test, post-test]
+    runs-on: ubuntu-latest
+    if: always() && !cancelled() && github.event.pull_request.draft == false
+    steps:
+    - name: Fail on Failure or Draft PR
+      run: exit 1
+      if: ${{ contains(needs.*.result, 'failure') }}
+

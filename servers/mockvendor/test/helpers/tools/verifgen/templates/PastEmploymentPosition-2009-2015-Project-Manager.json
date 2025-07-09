@@ -1,0 +1,26 @@
+{
+    "company": "did:velocity:iamanissuer1234567890",
+    "companyName": {
+        "localized": {
+            "en": "ACME Corporation"
+        }
+    },
+    "title": {
+        "localized": {
+            "en": "Project Manager"
+        }
+    },
+    "startMonthYear": {
+        "month": 8,
+        "year": 2009
+    },
+    "endMonthYear": {
+        "month": 1,
+        "year": 2015
+    },
+    "location": {
+        "countryCode": "US",
+        "regionCode": "CA"
+    },
+    "description": "Business Delivery Project Manager\nManaged the Roll-out of the Widget Contact proposition to Widgets Vendors"
+}

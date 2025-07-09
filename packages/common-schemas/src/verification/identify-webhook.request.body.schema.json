@@ -1,0 +1,113 @@
+{
+  "title": "identify-webhook-request-body",
+  "$id": "identify-webhook-request-body",
+  "type": "object",
+  "anyOf": [
+    {
+      "properties": {
+        "idDocumentCredentials": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "deprecated": true
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "credentialSubject": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  }
+                },
+                "required": [
+                  "credentialSubject"
+                ]
+              }
+            ]
+          }
+        },
+        "exchangeId": {
+          "type": "string"
+        },
+        "vendorOriginContext": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "idDocumentCredentials",
+        "exchangeId"
+      ]
+    },
+    {
+      "properties": {
+        "idDocumentCredentials": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "deprecated": true
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "credentialSubject": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  }
+                },
+                "required": [
+                  "credentialSubject"
+                ]
+              }
+            ]
+          }
+        },
+        "exchangeId": {
+          "type": "string"
+        },
+        "vendorOriginContext": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "idDocumentCredentials",
+        "vendorOriginContext",
+        "exchangeId"
+      ]
+    }
+  ]
+}

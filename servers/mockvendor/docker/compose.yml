@@ -1,0 +1,25 @@
+name: mockvendor
+include:
+  - ../../../eng/docker/services/shared-compose.yml
+
+services:
+  mockvendor:
+    depends_on:
+      - velocity-mongo
+    image: velocitycore/mockvendor:local
+    build:
+      context: ../../..
+      dockerfile: eng/docker/Dockerfile-NodeE2E
+      target: builder
+      args:
+        SERVICE: mockvendor
+    restart: on-failure
+    volumes:
+      - ../../../packages:/app/packages
+      - /app/servers/mockvendor/node_modules
+      - ..:/app/servers/mockvendor
+    command: npx nodemon --exec "cd servers/mockvendor && yarn start"
+    env_file:
+      - ../.localdev.env
+    ports:
+      - 13013:3000

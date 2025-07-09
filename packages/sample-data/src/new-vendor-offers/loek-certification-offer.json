@@ -1,0 +1,43 @@
+{
+  "type": [
+    "Certification"
+  ],
+  "issuer": {
+    "vendorOrganizationId": "duo"
+  },
+  "credentialSubject": {
+    "vendorUserId": "loek.dejong@example.com",
+    "authority": "did:velocity:",
+    "authorityName": {
+      "localized": {
+        "en": "DUO"
+      }
+    },
+    "type": {
+      "localized": {
+        "en": "License"
+      }
+    },
+    "name": {
+      "localized": {
+        "en": "Mortgage Advisor License"
+      }
+    },
+    "certificationDate": {
+      "day": 1,
+      "month": 11,
+      "year": 2020
+    },
+    "notes": {
+      "localized": {
+        "en": "WFF Hypotecair Kredit Diploma"
+      }
+    },
+    "alignment": [{
+      "targetName": "WFT Hypotecair Kredit Diploma",
+      "targetUrl": "https://sandbox.credentialengine.org/finder/credential/15867/WFT_Hypotecair_Kredit_Diploma",
+      "targetCode": "ce-5e5f098f-833e-431d-9362-4ecbfe265f68",
+      "targetFramework": "Credential Engine - Credential Registry"
+    }]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "name": "@verii/sample-registrar-app",
+  "version": "0.5.0-build",
+  "description": "Velocity Registrar",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@auth0/auth0-react": "^2.2.1",
+    "@csstools/normalize.css": "^12.0.0",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/icons-material": "^6.0.0",
+    "@mui/material": "^6.0.0",
+    "@react-pdf/renderer": "^4.0.0",
+    "@verii/components-organizations-registrar": "0.5.0-build",
+    "autosuggest-highlight": "^3.3.4",
+    "lodash": "^4.17.21",
+    "prop-types": "^15.8.1",
+    "ra-core": "^5.5.2",
+    "ra-data-local-storage": "^5.5.2",
+    "react": "^18.3.1",
+    "react-admin": "^5.5.2",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
+    "react-router-dom": "7.6.3",
+    "react-router": "7.6.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react-swc": "3.10.2",
+    "eslint": "8.57.1",
+    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-config-prettier": "8.10.0",
+    "eslint-plugin-autofix": "1.1.0",
+    "eslint-plugin-better-mutation": "1.7.0",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "4.6.2",
+    "postcss-normalize": "13.0.1",
+    "vite": "6.3.5"
+  },
+  "scripts": {
+    "start": "vite dev --mode dev.local",
+    "start:remote": "vite dev --mode dev.remote",
+    "start:remoteauth": "vite dev --mode dev.remoteauth",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --format json >> eslint.json",
+    "lint:fix": "eslint src --fix"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}

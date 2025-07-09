@@ -1,0 +1,35 @@
+{
+  "title": "add-key-body",
+  "$id": "https://velocitycareerlabs.io/add-key-body.json",
+  "type": "object",
+  "description": "payload for adding a key to an organization in the registrar",
+  "additionalProperties": true,
+  "properties": {
+    "kidFragment": {
+      "type": "string",
+      "pattern": "^#[a-zA-Z0-9-_:?=&;]+$"
+    },
+    "purposes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "algorithm": {
+      "type": "string",
+      "enum": [
+        "SECP256K1"
+      ],
+      "default": "SECP256K1"
+    },
+    "custodied": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "purposes",
+    "algorithm"
+  ]
+}
