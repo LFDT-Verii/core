@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-const {
-  newOfferRelatedResourceSchema,
-} = require('@verii/common-schemas');
+const { newOfferRelatedResourceSchema } = require('@verii/common-schemas');
 const { concat, isEmpty, flow, filter, map } = require('lodash/fp');
 const newError = require('http-errors');
 const {

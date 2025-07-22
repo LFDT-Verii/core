@@ -21,20 +21,11 @@ const {
   ISO_DATETIME_FORMAT,
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
-const {
-  errorResponseMatcher,
-  mongoify,
-} = require('@verii/tests-helpers');
+const { errorResponseMatcher, mongoify } = require('@verii/tests-helpers');
 const { hexFromJwk, jwkFromSecp256k1Key } = require('@verii/jwt');
 const { rootPrivateKey } = require('@verii/sample-data');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
-const {
-  KeyPurposes,
-  KeyEncodings,
-  generateKeyPair,
-} = require('@verii/crypto');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
+const { KeyPurposes, KeyEncodings, generateKeyPair } = require('@verii/crypto');
 const {
   deployTestPermissionsContract,
 } = require('@verii/contract-permissions/test/helpers/deploy-test-permissions-contract');

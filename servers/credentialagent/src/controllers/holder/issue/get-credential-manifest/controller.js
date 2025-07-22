@@ -18,9 +18,7 @@
 const cors = require('@fastify/cors');
 const { isEmpty, map, compact } = require('lodash/fp');
 const newError = require('http-errors');
-const {
-  getCredentialTypeDescriptor,
-} = require('@verii/common-fetchers');
+const { getCredentialTypeDescriptor } = require('@verii/common-fetchers');
 const {
   ensureTenantDefaultIssuingDisclosureIdPlugin,
   ensureDisclosureConfigurationTypePlugin,

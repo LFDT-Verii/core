@@ -15,9 +15,7 @@
  *
  */
 
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { map } = require('lodash/fp');
 const {
   initPermissionsContractByKeyId,

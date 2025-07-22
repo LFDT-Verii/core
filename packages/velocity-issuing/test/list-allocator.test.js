@@ -20,9 +20,7 @@ const { first, omit } = require('lodash/fp');
 const { ObjectId, MongoClient } = require('mongodb');
 const { nanoid } = require('nanoid');
 const { generateJWAKeyPair } = require('@verii/crypto');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { hexFromJwk } = require('@verii/jwt');
 const {
   mongoAllocationListQueries,

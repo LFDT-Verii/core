@@ -16,10 +16,7 @@
  */
 
 const newError = require('http-errors');
-const {
-  addressSchema,
-  locationSchema,
-} = require('@verii/common-schemas');
+const { addressSchema, locationSchema } = require('@verii/common-schemas');
 const {
   RegistrarScopes,
   isInvitationExpired,

@@ -23,9 +23,7 @@ const {
 const { find, startsWith, omitBy, isNil, isEmpty, map } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
 const newError = require('http-errors');
-const {
-  splitDidUrlWithFragment,
-} = require('@verii/did-doc/src/did-parsing');
+const { splitDidUrlWithFragment } = require('@verii/did-doc/src/did-parsing');
 
 const refreshTenantDids = async ({ all, did }, context) => {
   const { repos, log } = context;

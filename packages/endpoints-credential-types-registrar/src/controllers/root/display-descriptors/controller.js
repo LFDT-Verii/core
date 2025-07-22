@@ -1,6 +1,4 @@
-const {
-  normalizeDisplayDescriptorName,
-} = require('@verii/common-functions');
+const { normalizeDisplayDescriptorName } = require('@verii/common-functions');
 const path = require('path');
 const newError = require('http-errors');
 const { isEmpty } = require('lodash/fp');

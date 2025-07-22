@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { mapWithIndex } = require('@verii/common-functions');
 const { KeyPurposes, calcSha384 } = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');

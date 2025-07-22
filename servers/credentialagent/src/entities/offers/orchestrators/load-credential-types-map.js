@@ -15,9 +15,7 @@
  *
  */
 
-const {
-  getCredentialTypeMetadata,
-} = require('@verii/common-fetchers');
+const { getCredentialTypeMetadata } = require('@verii/common-fetchers');
 const { flow, keyBy, map, uniq } = require('lodash/fp');
 const { extractCredentialType } = require('@verii/vc-checks');
 

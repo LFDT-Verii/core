@@ -29,9 +29,7 @@ const {
   tamperJwt,
   generateDocJwt,
 } = require('@verii/jwt');
-const {
-  sampleOrganizationProfile1,
-} = require('@verii/sample-data');
+const { sampleOrganizationProfile1 } = require('@verii/sample-data');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const { VnfProtocolVersions } = require('@verii/vc-checks');
 const { map, isString } = require('lodash/fp');

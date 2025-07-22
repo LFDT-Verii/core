@@ -1,7 +1,5 @@
 const { generateCredentialJwt } = require('@verii/jwt');
-const {
-  VerifiableCredentialTypes,
-} = require('@verii/verifiable-credentials');
+const { VerifiableCredentialTypes } = require('@verii/verifiable-credentials');
 const { v4: uuid } = require('uuid');
 const { buildPublicProfile } = require('./build-public-profile');
 

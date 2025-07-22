@@ -17,11 +17,7 @@
 
 const { register } = require('@spencejs/spence-factories');
 const { ObjectId } = require('mongodb');
-const {
-  KeyPurposes,
-  KeyEncodings,
-  KeyAlgorithms,
-} = require('@verii/crypto');
+const { KeyPurposes, KeyEncodings, KeyAlgorithms } = require('@verii/crypto');
 
 const initOrganizationFactory = require('../../organizations/factories/organizations-factory');
 const initKmsFactory = require('../../kms/factories/kms-factory');

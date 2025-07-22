@@ -14,14 +14,8 @@
  * limitations under the License.
  *
  */
-const {
-  verifyCredentialJwt,
-  safeJwtDecode,
-} = require('@verii/jwt');
-const {
-  extractVerificationKey,
-  isDidMatching,
-} = require('@verii/did-doc');
+const { verifyCredentialJwt, safeJwtDecode } = require('@verii/jwt');
+const { extractVerificationKey, isDidMatching } = require('@verii/did-doc');
 
 const verifyBoundIssuerVc = async (
   { issuerDidDocument, boundIssuerVc },

@@ -19,9 +19,7 @@ const AutoLoad = require('@fastify/autoload');
 const fastifyRoutes = require('@fastify/routes');
 const path = require('path');
 const { pick, omit } = require('lodash/fp');
-const {
-  vnfProtocolVersionPlugin,
-} = require('@verii/fastify-plugins');
+const { vnfProtocolVersionPlugin } = require('@verii/fastify-plugins');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,

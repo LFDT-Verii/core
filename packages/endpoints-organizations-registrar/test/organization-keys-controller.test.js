@@ -42,9 +42,7 @@ const { times } = require('lodash/fp');
 
 const { nanoid } = require('nanoid');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const {
   KeyPurposes,
   generateKeyPair,
@@ -130,9 +128,7 @@ jest.mock('auth0', () => ({
 }));
 
 jest.mock('@verii/contract-permissions', () => {
-  const originalModule = jest.requireActual(
-    '@verii/contract-permissions'
-  );
+  const originalModule = jest.requireActual('@verii/contract-permissions');
   return {
     ...originalModule,
     initPermissions: mockInitPermission,
@@ -140,9 +136,7 @@ jest.mock('@verii/contract-permissions', () => {
 });
 
 jest.mock('@verii/fineract-client', () => {
-  const originalModule = jest.requireActual(
-    '@verii/fineract-client'
-  );
+  const originalModule = jest.requireActual('@verii/fineract-client');
   return {
     ...originalModule,
     createFineractClient: mockCreateFineractClient,
@@ -151,9 +145,7 @@ jest.mock('@verii/fineract-client', () => {
 });
 
 jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual(
-    '@verii/error-aggregation'
-  );
+  const originalModule = jest.requireActual('@verii/error-aggregation');
   return {
     ...originalModule,
     initSendError: mockInitSendError,

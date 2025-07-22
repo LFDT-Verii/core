@@ -16,9 +16,7 @@
  */
 
 const { isEmpty, map, defaults, omit, xor } = require('lodash/fp');
-const {
-  categorizeServices,
-} = require('@verii/organizations-registry');
+const { categorizeServices } = require('@verii/organizations-registry');
 const {
   selectActivatedServices,
 } = require('../../organization-services/domains');

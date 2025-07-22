@@ -16,10 +16,7 @@
  */
 
 const { nanoid } = require('nanoid');
-const {
-  decryptCollection,
-  encryptCollection,
-} = require('@verii/crypto');
+const { decryptCollection, encryptCollection } = require('@verii/crypto');
 const { omit } = require('lodash/fp');
 const { initEncryptPropExtension } = require('../src/encrypted-prop-extension');
 

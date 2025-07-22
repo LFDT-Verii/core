@@ -12,9 +12,7 @@ const {
   initPermissions,
   AddressScopePermissions,
 } = require('@verii/contract-permissions');
-const {
-  ServiceCategories,
-} = require('@verii/organizations-registry');
+const { ServiceCategories } = require('@verii/organizations-registry');
 
 const ServiceCategoryToPermissions = {
   [ServiceCategories.CredentialAgentOperator]: [],

@@ -16,10 +16,7 @@
 
 const { omit, get } = require('lodash/fp');
 const { credentialUnexpired } = require('@verii/sample-data');
-const {
-  generateJWAKeyPair,
-  KeyAlgorithms,
-} = require('@verii/crypto');
+const { generateJWAKeyPair, KeyAlgorithms } = require('@verii/crypto');
 const {
   generateCredentialJwt,
   generatePresentationJwt,

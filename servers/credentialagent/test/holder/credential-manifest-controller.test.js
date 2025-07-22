@@ -26,14 +26,8 @@ const {
   sampleOrganizationVerifiedProfile1,
   samplePresentationDefinition,
 } = require('@verii/sample-data');
-const {
-  OBJECT_ID_FORMAT,
-  JWT_FORMAT,
-} = require('@verii/test-regexes');
-const {
-  mongoify,
-  errorResponseMatcher,
-} = require('@verii/tests-helpers');
+const { OBJECT_ID_FORMAT, JWT_FORMAT } = require('@verii/test-regexes');
+const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
 const buildFastify = require('./helpers/credentialagent-holder-build-fastify');
 const {
   nockRegistrarGetOrganizationVerifiedProfile,

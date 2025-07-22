@@ -21,11 +21,7 @@
  * @import { Context, Id, KMS, KeySpec, KmsKey, KmsSecret, ImportableKey, ImportableSecret } from "../../types/types"
  */
 
-const {
-  generateJWAKeyPair,
-  encrypt,
-  decrypt,
-} = require('@verii/crypto');
+const { generateJWAKeyPair, encrypt, decrypt } = require('@verii/crypto');
 const { jwtSign, jwtVerify, hexFromJwk } = require('@verii/jwt');
 const { isEmpty, omit } = require('lodash/fp');
 const kmsRepo = require('./repo');

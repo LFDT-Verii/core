@@ -66,9 +66,7 @@ jest.mock('@verii/aws-clients', () => {
 });
 
 jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual(
-    '@verii/metadata-registration'
-  );
+  const originalModule = jest.requireActual('@verii/metadata-registration');
   return {
     ...originalModule,
     initVerificationCoupon: mockInitVerificationCoupon,

@@ -56,10 +56,7 @@ const mockInitVerificationCoupon = jest.fn().mockImplementation(() => {
     pullBurnCouponEvents: mockPullBurnCouponEvents,
   };
 });
-const {
-  mongoify,
-  mongoCloseWrapper,
-} = require('@verii/tests-helpers');
+const { mongoify, mongoCloseWrapper } = require('@verii/tests-helpers');
 // eslint-disable-next-line max-len
 const initOrganizationFactory = require('@verii/endpoints-organizations-registrar/src/entities/organizations/factories/organizations-factory');
 const organizationsRepoPlugin = require('@verii/endpoints-organizations-registrar/src/entities/organizations/repos/repo');
@@ -80,9 +77,7 @@ jest.mock('@verii/aws-clients', () => {
 });
 
 jest.mock('@verii/fineract-client', () => {
-  const originalModule = jest.requireActual(
-    '@verii/fineract-client'
-  );
+  const originalModule = jest.requireActual('@verii/fineract-client');
   return {
     ...originalModule,
     batchOperations: mockBatchOperations,
@@ -90,9 +85,7 @@ jest.mock('@verii/fineract-client', () => {
 });
 
 jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual(
-    '@verii/metadata-registration'
-  );
+  const originalModule = jest.requireActual('@verii/metadata-registration');
   return {
     ...originalModule,
     initVerificationCoupon: mockInitVerificationCoupon,

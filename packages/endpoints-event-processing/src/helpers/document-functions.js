@@ -1,7 +1,4 @@
-const {
-  initReadDocument,
-  initWriteDocument,
-} = require('@verii/aws-clients');
+const { initReadDocument, initWriteDocument } = require('@verii/aws-clients');
 
 const initDocumentFunctions = ({ eventName }, context) => {
   const readDocument = initReadDocument(context.config);

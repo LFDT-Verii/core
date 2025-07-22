@@ -16,10 +16,7 @@
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
-const {
-  mongoify,
-  errorResponseMatcher,
-} = require('@verii/tests-helpers');
+const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
 const nock = require('nock');
 const { generateKeyPair } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
@@ -44,9 +41,7 @@ const {
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
-const {
-  openBadgeCredentialExample,
-} = require('@verii/sample-data');
+const { openBadgeCredentialExample } = require('@verii/sample-data');
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const {
   initKeysFactory,

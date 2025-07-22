@@ -64,9 +64,7 @@ jest.mock('@verii/aws-clients', () => {
 });
 
 jest.mock('@verii/fineract-client', () => {
-  const originalModule = jest.requireActual(
-    '@verii/fineract-client'
-  );
+  const originalModule = jest.requireActual('@verii/fineract-client');
   return {
     ...originalModule,
     batchTransferCredits: mockBatchTransferCredits,
@@ -74,9 +72,7 @@ jest.mock('@verii/fineract-client', () => {
 });
 
 jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual(
-    '@verii/metadata-registration'
-  );
+  const originalModule = jest.requireActual('@verii/metadata-registration');
   return {
     ...originalModule,
     initMetadataRegistry: mockInitMetadataRegistry,

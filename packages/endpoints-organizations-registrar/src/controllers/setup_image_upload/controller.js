@@ -1,10 +1,7 @@
 const { initS3Client } = require('@verii/aws-clients');
 const { values, isEmpty } = require('lodash/fp');
 const newError = require('http-errors');
-const {
-  ExtensionTypes,
-  getMimeType,
-} = require('@verii/image-processing');
+const { ExtensionTypes, getMimeType } = require('@verii/image-processing');
 const { nanoid } = require('nanoid');
 const {
   RegistrarScopes,

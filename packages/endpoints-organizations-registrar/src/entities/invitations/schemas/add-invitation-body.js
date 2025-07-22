@@ -1,7 +1,5 @@
 const { omit, values, pick } = require('lodash/fp');
-const {
-  organizationProfileBaseSchema,
-} = require('@verii/common-schemas');
+const { organizationProfileBaseSchema } = require('@verii/common-schemas');
 const {
   ServiceCategories,
   ServiceTypesOfServiceCategory,

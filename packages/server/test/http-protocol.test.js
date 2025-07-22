@@ -19,10 +19,7 @@ const fs = require('fs');
 const got = require('got');
 const h2url = require('h2url');
 const { wait } = require('@verii/common-functions');
-const {
-  loadTestEnv,
-  buildMongoConnection,
-} = require('@verii/tests-helpers');
+const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
 
 loadTestEnv();
 const { genericConfig } = require('@verii/config');

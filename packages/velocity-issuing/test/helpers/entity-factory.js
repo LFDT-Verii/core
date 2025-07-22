@@ -17,9 +17,7 @@
 
 const { nanoid } = require('nanoid');
 const { generateKeyPair } = require('@verii/crypto');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { hexFromJwk } = require('@verii/jwt');
 const { createExampleDid } = require('./create-example-did');
 

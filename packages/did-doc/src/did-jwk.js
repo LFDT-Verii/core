@@ -16,10 +16,7 @@
 
 const util = require('util');
 const { calculateJwkThumbprint } = require('jose');
-const {
-  base64UrlToJwk,
-  jwkToPublicBase64Url,
-} = require('@verii/jwt');
+const { base64UrlToJwk, jwkToPublicBase64Url } = require('@verii/jwt');
 
 const DID_JWK_FORMAT = 'did:jwk:%s';
 

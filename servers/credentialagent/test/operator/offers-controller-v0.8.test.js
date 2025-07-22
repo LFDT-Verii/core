@@ -35,9 +35,7 @@ const {
   errorResponseMatcher,
 } = require('@verii/tests-helpers');
 const { hashOffer } = require('@verii/velocity-issuing');
-const {
-  openBadgeCredentialExample,
-} = require('@verii/sample-data');
+const { openBadgeCredentialExample } = require('@verii/sample-data');
 const {
   nockRegistrarAppSchemaName,
 } = require('../combined/helpers/nock-registrar-app-schema-name');

@@ -21,9 +21,7 @@ const {
 } = require('@verii/crypto');
 const { compact, first, map, omit, reduce } = require('lodash/fp');
 const { nanoid } = require('nanoid');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { initPermissions } = require('@verii/contract-permissions');
 const {
   mongoFactoryWrapper,

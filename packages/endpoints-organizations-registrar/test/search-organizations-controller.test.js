@@ -18,13 +18,8 @@
 const { flow, map, kebabCase, omit, reverse, forEach } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const {
-  mapWithIndex,
-  runSequentially,
-} = require('@verii/common-functions');
-const {
-  testReadOrganizationsUser,
-} = require('@verii/tests-helpers');
+const { mapWithIndex, runSequentially } = require('@verii/common-functions');
+const { testReadOrganizationsUser } = require('@verii/tests-helpers');
 const { ServiceTypes } = require('@verii/organizations-registry');
 
 const { generateKeyPair } = require('@verii/crypto');

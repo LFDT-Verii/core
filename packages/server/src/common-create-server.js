@@ -18,9 +18,7 @@
 const ajvFormatsPlugin = require('ajv-formats');
 const { loggerProvider } = require('@verii/logger');
 const { nanoid } = require('nanoid');
-const {
-  customFastifyQueryStringParser,
-} = require('@verii/rest-queries');
+const { customFastifyQueryStringParser } = require('@verii/rest-queries');
 const Fastify = require('fastify');
 const { FST_ERR_LOG_INVALID_LOGGER_CONFIG } = require('fastify/lib/errors');
 const { initEvents } = require('@spencejs/spence-events');

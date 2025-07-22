@@ -22,9 +22,7 @@ const {
 const { env: config } = require('@spencejs/spence-config');
 const console = require('console');
 
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 
 const { wait } = require('@verii/common-functions');
 const testEventsAbi = require('./data/test-events-abi.json');

@@ -1,7 +1,4 @@
-const {
-  createServer,
-  listenServer,
-} = require('@verii/server-provider');
+const { createServer, listenServer } = require('@verii/server-provider');
 const { flow } = require('lodash/fp');
 const config = require('./config/config');
 const { initServer } = require('./init-server');

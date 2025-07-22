@@ -22,10 +22,7 @@ const {
   get2BytesHash,
   KeyAlgorithms,
 } = require('@verii/crypto');
-const {
-  jsonLdToUnsignedVcJwtContent,
-  jwtSign,
-} = require('@verii/jwt');
+const { jsonLdToUnsignedVcJwtContent, jwtSign } = require('@verii/jwt');
 const { extractCredentialType } = require('@verii/vc-checks');
 const { hashOffer } = require('./hash-offer');
 const { buildRevocationUrl } = require('../adapters/build-revocation-url');

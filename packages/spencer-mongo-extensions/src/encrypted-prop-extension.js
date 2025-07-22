@@ -17,10 +17,7 @@
 
 const { get, isEqual, isEmpty, omit } = require('lodash/fp');
 const { set } = require('lodash');
-const {
-  encryptCollection,
-  decryptCollection,
-} = require('@verii/crypto');
+const { encryptCollection, decryptCollection } = require('@verii/crypto');
 
 const initEncryptPropExtension = ({
   prop,

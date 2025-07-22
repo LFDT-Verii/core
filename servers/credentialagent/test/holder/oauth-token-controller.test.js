@@ -20,14 +20,8 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { getUnixTime, addDays } = require('date-fns/fp');
 const { jwtVerify } = require('@verii/jwt');
 const { ObjectId } = require('mongodb');
-const {
-  mongoify,
-  errorResponseMatcher,
-} = require('@verii/tests-helpers');
-const {
-  generateKeyPair,
-  hashAndEncodeHex,
-} = require('@verii/crypto');
+const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
+const { generateKeyPair, hashAndEncodeHex } = require('@verii/crypto');
 const {
   initDisclosureFactory,
   initTenantFactory,

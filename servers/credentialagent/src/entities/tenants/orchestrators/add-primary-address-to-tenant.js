@@ -16,9 +16,7 @@
 
 const { initPermissions } = require('@verii/contract-permissions');
 const { KeyPurposes, decrypt } = require('@verii/crypto');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { hexFromJwk } = require('@verii/jwt');
 
 const addPrimaryAddressToTenant = async ({ _id }, context) => {

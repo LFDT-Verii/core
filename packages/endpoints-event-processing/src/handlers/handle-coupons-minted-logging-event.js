@@ -1,8 +1,6 @@
 const { map, forEach } = require('lodash/fp');
 const { toHexString } = require('@verii/blockchain-functions');
-const {
-  initVerificationCoupon,
-} = require('@verii/metadata-registration');
+const { initVerificationCoupon } = require('@verii/metadata-registration');
 const { initDocumentFunctions } = require('../helpers');
 
 const task = 'coupons-minted-logging';

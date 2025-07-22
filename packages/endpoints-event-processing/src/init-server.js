@@ -19,10 +19,7 @@ const {
   rpcProviderPlugin,
 } = require('@verii/base-contract-io');
 const basicAuth = require('@fastify/basic-auth');
-const {
-  oauthPlugin,
-  initBasicAuthValidate,
-} = require('@verii/auth');
+const { oauthPlugin, initBasicAuthValidate } = require('@verii/auth');
 const { requestPlugin } = require('@verii/fastify-plugins');
 const { eventProcessingEndpoints } = require('./event-processing-endpoints');
 

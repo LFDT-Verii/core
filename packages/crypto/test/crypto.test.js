@@ -16,10 +16,7 @@
 
 const { padCharsStart } = require('lodash/fp');
 const crypto = require('crypto');
-const {
-  HEX_FORMAT,
-  URLSAFE_BASE64_FORMAT,
-} = require('@verii/test-regexes');
+const { HEX_FORMAT, URLSAFE_BASE64_FORMAT } = require('@verii/test-regexes');
 const {
   generateKeyPair,
   publicKeyHexToPem,

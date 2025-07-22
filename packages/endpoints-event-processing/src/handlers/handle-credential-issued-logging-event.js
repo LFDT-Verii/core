@@ -1,7 +1,5 @@
 const { map, forEach } = require('lodash/fp');
-const {
-  initMetadataRegistry,
-} = require('@verii/metadata-registration');
+const { initMetadataRegistry } = require('@verii/metadata-registration');
 const { initDocumentFunctions, decodeIssuerVc } = require('../helpers');
 
 const task = 'credential-issued-logging';

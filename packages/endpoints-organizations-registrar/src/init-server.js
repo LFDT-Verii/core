@@ -16,10 +16,7 @@
  */
 
 const { validationPlugin } = require('@verii/validation');
-const {
-  corsPlugin,
-  requestPlugin,
-} = require('@verii/fastify-plugins');
+const { corsPlugin, requestPlugin } = require('@verii/fastify-plugins');
 const { sendEmailPlugin } = require('@verii/aws-clients');
 const {
   authenticateVnfClientPlugin,

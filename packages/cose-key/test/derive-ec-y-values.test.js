@@ -15,10 +15,7 @@
  *
  */
 
-const {
-  generateJWAKeyPair,
-  KeyAlgorithms,
-} = require('@verii/crypto');
+const { generateJWAKeyPair, KeyAlgorithms } = require('@verii/crypto');
 const { isEcYValueEven, deriveEcYValue } = require('../src/derive-ec-y-values');
 
 const hundred = Array.from(Array(3000).keys()).map((i) => [i]);

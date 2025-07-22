@@ -15,11 +15,7 @@
  */
 
 const { first, startsWith, isEmpty, lastIndexOf } = require('lodash/fp');
-const {
-  jwtVerify,
-  jwtHeaderDecode,
-  jwkThumbprint,
-} = require('@verii/jwt');
+const { jwtVerify, jwtHeaderDecode, jwkThumbprint } = require('@verii/jwt');
 const newError = require('http-errors');
 const { getUnixTime } = require('date-fns/fp');
 const { resolveDidJwkDocument } = require('@verii/did-doc');

@@ -8,9 +8,7 @@ const {
   flow,
   find,
 } = require('lodash/fp');
-const {
-  initMetadataRegistry,
-} = require('@verii/metadata-registration');
+const { initMetadataRegistry } = require('@verii/metadata-registration');
 
 const { get2BytesHash } = require('@verii/crypto');
 const { batchTransferCredits } = require('@verii/fineract-client');

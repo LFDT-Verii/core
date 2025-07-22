@@ -15,9 +15,7 @@
  */
 
 const { generateKeyPair } = require('@verii/crypto');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { initProvider } = require('@verii/base-contract-io');
 const {
   mongoFactoryWrapper,

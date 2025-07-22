@@ -5,9 +5,7 @@ const { default: bs58 } = require('bs58');
 const path = require('path');
 const { getOr } = require('lodash/fp');
 const { generateKeyPair } = require('@verii/crypto');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { generateProof } = require('@verii/did-doc');
 
 const templatesPath = path.resolve(__dirname, '../templates');

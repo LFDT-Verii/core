@@ -1,6 +1,4 @@
-const {
-  ServiceCategories,
-} = require('@verii/organizations-registry');
+const { ServiceCategories } = require('@verii/organizations-registry');
 const { includes, some } = require('lodash/fp');
 const { CheckResults } = require('./check-results');
 

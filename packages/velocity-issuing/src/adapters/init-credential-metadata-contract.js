@@ -19,10 +19,7 @@ const {
   initMetadataRegistry,
   ALG_TYPE,
 } = require('@verii/metadata-registration');
-const {
-  jsonLdToUnsignedVcJwtContent,
-  hexFromJwk,
-} = require('@verii/jwt');
+const { jsonLdToUnsignedVcJwtContent, hexFromJwk } = require('@verii/jwt');
 const { initCallWithKmsKey } = require('@verii/crypto');
 const { KeyAlgorithms } = require('@verii/crypto/src/constants');
 const { buildIssuerVcUrl } = require('./build-issuer-vc-url');

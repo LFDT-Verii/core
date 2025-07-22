@@ -24,10 +24,7 @@ const { decodeJwt } = require('jose');
 const { map, omitBy } = require('lodash/fp');
 const nock = require('nock');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
-const {
-  mongoify,
-  errorResponseMatcher,
-} = require('@verii/tests-helpers');
+const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
 const metadataRegistration = require('@verii/metadata-registration');
 
 const DEFAULT_CREDENTIAL_CHECKS = {
@@ -46,9 +43,7 @@ jest.mock('@verii/verifiable-credentials', () => ({
   verifyCredentials: (...args) => mockVerifyCredentials(...args),
 }));
 
-const {
-  CredentialCheckResultValue,
-} = require('@verii/verifiable-credentials');
+const { CredentialCheckResultValue } = require('@verii/verifiable-credentials');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { holderConfig } = require('../../src/config/holder-config');
 const {

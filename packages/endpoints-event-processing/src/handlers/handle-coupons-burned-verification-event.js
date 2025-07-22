@@ -1,7 +1,5 @@
 const { map, zip } = require('lodash/fp');
-const {
-  initVerificationCoupon,
-} = require('@verii/metadata-registration');
+const { initVerificationCoupon } = require('@verii/metadata-registration');
 
 const { batchOperations } = require('@verii/fineract-client');
 const { getDidAndAliases } = require('@verii/did-doc');

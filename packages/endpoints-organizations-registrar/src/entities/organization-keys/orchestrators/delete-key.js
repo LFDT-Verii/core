@@ -14,18 +14,13 @@
  * limitations under the License.
  *
  */
-const {
-  toRelativeServiceId,
-  removeKeyFromDidDoc,
-} = require('@verii/did-doc');
+const { toRelativeServiceId, removeKeyFromDidDoc } = require('@verii/did-doc');
 const { ObjectId } = require('mongodb');
 const newError = require('http-errors');
 const { includes } = require('lodash/fp');
 const { KeyPurposes } = require('@verii/crypto');
 const { hexFromJwk } = require('@verii/jwt');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const {
   initPermissionsContract,
 } = require('../../../helpers/init-permissions-contract');

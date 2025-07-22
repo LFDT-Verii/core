@@ -2,9 +2,7 @@ const {
   repoFactory,
   autoboxIdsExtension,
 } = require('@spencejs/spence-mongo-repos');
-const {
-  deletedExtension,
-} = require('@verii/spencer-mongo-extensions');
+const { deletedExtension } = require('@verii/spencer-mongo-extensions');
 
 module.exports = (app, options, next = () => {}) => {
   next();

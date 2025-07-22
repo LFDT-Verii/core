@@ -20,9 +20,7 @@ const { find, isNil, reduce } = require('lodash/fp');
 const { signPayload, generateKeyPair } = require('@verii/crypto');
 const { hexFromJwk, jwkFromSecp256k1Key } = require('@verii/jwt');
 
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 
 const { toRelativeKeyId } = require('./normalize-id');
 

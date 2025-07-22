@@ -32,9 +32,7 @@ const {
   rpcUrl,
 } = require('@verii/metadata-registration/test/helpers/deploy-contracts');
 const { initPermissions } = require('@verii/contract-permissions');
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { hexFromJwk, jwtDecode } = require('@verii/jwt');
 const { ObjectId } = require('mongodb');
 const nock = require('nock');

@@ -18,9 +18,7 @@ const initRequest = require('@verii/request');
 const Static = require('@fastify/static');
 const fastifyRoutes = require('@fastify/routes');
 const { adminJwtAuthPlugin } = require('@verii/auth');
-const {
-  vnfProtocolVersionPlugin,
-} = require('@verii/fastify-plugins');
+const { vnfProtocolVersionPlugin } = require('@verii/fastify-plugins');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,

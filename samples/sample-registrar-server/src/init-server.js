@@ -1,19 +1,13 @@
 const { pick } = require('lodash/fp');
 const { validationPlugin } = require('@verii/validation');
-const {
-  corsPlugin,
-  requestPlugin,
-} = require('@verii/fastify-plugins');
+const { corsPlugin, requestPlugin } = require('@verii/fastify-plugins');
 const { sendEmailPlugin } = require('@verii/aws-clients');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,
 } = require('@verii/base-contract-io');
 const basicAuth = require('@fastify/basic-auth');
-const {
-  oauthPlugin,
-  initBasicAuthValidate,
-} = require('@verii/auth');
+const { oauthPlugin, initBasicAuthValidate } = require('@verii/auth');
 const {
   credentialTypesRegistrarEndpoints,
 } = require('@verii/endpoints-credential-types-registrar');

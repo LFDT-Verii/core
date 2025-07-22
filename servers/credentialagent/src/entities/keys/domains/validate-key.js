@@ -16,11 +16,7 @@
 
 const { all, includes, values, uniq } = require('lodash/fp');
 const newError = require('http-errors');
-const {
-  KeyPurposes,
-  KeyAlgorithms,
-  KeyEncodings,
-} = require('@verii/crypto');
+const { KeyPurposes, KeyAlgorithms, KeyEncodings } = require('@verii/crypto');
 const { KeyErrorMessages } = require('./constants');
 
 const validKeyPurposes = values(KeyPurposes);

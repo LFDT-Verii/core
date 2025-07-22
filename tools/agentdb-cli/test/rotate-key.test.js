@@ -1,9 +1,6 @@
 const { buildMongoConnection } = require('@verii/tests-helpers');
 const { ObjectId } = require('mongodb');
-const {
-  decryptCollection,
-  encryptCollection,
-} = require('@verii/crypto');
+const { decryptCollection, encryptCollection } = require('@verii/crypto');
 const { initMongoClient } = require('../src/helpers/init-mongo-client');
 const {
   reencryptCollectionField,

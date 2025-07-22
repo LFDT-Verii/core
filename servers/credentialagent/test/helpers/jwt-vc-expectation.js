@@ -24,10 +24,7 @@ const {
   pick,
   uniq,
 } = require('lodash/fp');
-const {
-  ISO_DATETIME_FORMAT,
-  DID_FORMAT,
-} = require('@verii/test-regexes');
+const { ISO_DATETIME_FORMAT, DID_FORMAT } = require('@verii/test-regexes');
 const { VelocityRevocationListType } = require('@verii/vc-checks');
 
 const jwtVcExpectation = ({

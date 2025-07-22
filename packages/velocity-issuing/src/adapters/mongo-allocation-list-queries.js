@@ -16,9 +16,7 @@
  */
 /** @import { Issuer, AllocationListEntry, AllocationListQueries, Context } from "../../types/types" */
 
-const {
-  toEthereumAddress,
-} = require('@verii/blockchain-functions');
+const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { hexFromJwk } = require('@verii/jwt');
 /**
  * Returns the queries needed for allocating to DLT Lists

@@ -1,10 +1,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { parseToCsv } = require('@verii/csv-parser');
 const { csvResponseHook } = require('@verii/fastify-plugins');
-const {
-  toStartOfDay,
-  toEndOfDay,
-} = require('@verii/rest-queries');
+const { toStartOfDay, toEndOfDay } = require('@verii/rest-queries');
 
 const offerDataController = async (fastify) => {
   fastify.get(

@@ -19,10 +19,7 @@ const buildFastify = require('./helpers/credentialagent-operator-build-fastify')
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
-const {
-  mongoify,
-  errorResponseMatcher,
-} = require('@verii/tests-helpers');
+const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
 const {
   initTenantFactory,
   initDisclosureFactory,
