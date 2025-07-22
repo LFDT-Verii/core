@@ -39,8 +39,20 @@
     },
     "issuer": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "the type of the issuer property"
+            },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          ]
+        },
         "id": {
           "type": "string",
           "description": "The issuer id."

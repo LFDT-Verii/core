@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const { getOrganizationVerifiedProfile } = require('@verii/common-fetchers');
+const {
+  getOrganizationVerifiedProfile,
+} = require('@verii/common-fetchers');
 const {
   setTenantDefaultIssuingDisclosure,
   validateDisclosure,

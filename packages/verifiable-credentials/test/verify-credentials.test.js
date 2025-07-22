@@ -16,12 +16,18 @@
 
 const console = require('console');
 const { compact, first, flow, join, omit, tail } = require('lodash/fp');
-const { jwtSign, jwtDecode, generateCredentialJwt } = require('@verii/jwt');
+const {
+  jwtSign,
+  jwtDecode,
+  generateCredentialJwt,
+} = require('@verii/jwt');
 const { addHours, setMilliseconds } = require('date-fns/fp');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { credentialUnexpired } = require('@verii/sample-data');
 const metadataRegistration = require('@verii/metadata-registration');
-const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
+const {
+  generateKeyPairInHexAndJwk,
+} = require('@verii/tests-helpers');
 const {
   CheckResults,
   VnfProtocolVersions,

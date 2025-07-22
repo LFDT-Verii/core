@@ -21,7 +21,10 @@ const {
 const {
   deployTestPermissionsContract,
 } = require('@verii/contract-permissions/test/helpers/deploy-test-permissions-contract');
-const { generateKeyPair, get2BytesHash } = require('@verii/crypto');
+const {
+  generateKeyPair,
+  get2BytesHash,
+} = require('@verii/crypto');
 const { initProvider } = require('@verii/base-contract-io');
 const { initVerificationCoupon, initMetadataRegistry } = require('../../index');
 const verificationCouponAbi = require('../../src/contracts/verification-coupon.json');

@@ -23,7 +23,10 @@ const {
   VerifiableCredentialTypes,
   VerifiableCredentialFormats,
 } = require('@verii/verifiable-credentials');
-const { decodeCredentialJwt, jwkFromSecp256k1Key } = require('@verii/jwt');
+const {
+  decodeCredentialJwt,
+  jwkFromSecp256k1Key,
+} = require('@verii/jwt');
 const { publish } = require('@spencejs/spence-events');
 const {
   verifyUserOrganizationReadAuthorized,

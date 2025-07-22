@@ -16,20 +16,21 @@
 
 const { omit, get } = require('lodash/fp');
 const { credentialUnexpired } = require('@verii/sample-data');
-const { generateKeyPair } = require('@verii/crypto');
+const {
+  generateJWAKeyPair,
+  KeyAlgorithms,
+} = require('@verii/crypto');
 const {
   generateCredentialJwt,
   generatePresentationJwt,
 } = require('../src/verifiable-generators');
-const { jwkFromSecp256k1Key, jwtVerify } = require('../src/core');
+const { jwtVerify } = require('../src/core');
 const {
   minimalJsonLdCredential,
   maximalJsonLdCredential,
 } = require('./helpers/minimal-jsonld-credential');
 
 describe('Verifiable Generator Tests', () => {
-  const keyPair = generateKeyPair();
-
   const presentation = {
     '@context': [
       'https://www.w3.org/2018/credentials/v1',
@@ -45,16 +46,17 @@ describe('Verifiable Generator Tests', () => {
   };
 
   describe('Generate credential JWT', () => {
-    it('Should generate JWT from credential', async () => {
+    it('Should generate a ES256K JWT from credential', async () => {
+      const keyPair = generateJWAKeyPair({
+        algorithm: 'ec',
+        curve: 'secp256k1',
+      });
       const result = await generateCredentialJwt(
         minimalJsonLdCredential,
         keyPair.privateKey,
         'KEY-ID'
       );
-      const verified = await jwtVerify(
-        result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false)
-      );
+      const verified = await jwtVerify(result, keyPair.publicKey);
 
       expect(verified).toEqual({
         header: {
@@ -72,16 +74,81 @@ describe('Verifiable Generator Tests', () => {
       });
     });
 
+    it('Should generate a ES256 JWT from credential', async () => {
+      const keyPair = generateJWAKeyPair({ algorithm: 'ec', curve: 'P-256' });
+      const result = await generateCredentialJwt(
+        minimalJsonLdCredential,
+        keyPair.privateKey,
+        'KEY-ID',
+        KeyAlgorithms.ES256
+      );
+      const verified = await jwtVerify(result, keyPair.publicKey);
+
+      expect(verified).toEqual({
+        header: {
+          alg: KeyAlgorithms.ES256,
+          typ: 'JWT',
+          kid: 'KEY-ID',
+        },
+        payload: {
+          vc: {
+            ...omit(['credentialSubject'], minimalJsonLdCredential),
+            credentialSubject: {
+              ...get('credentialSubject', minimalJsonLdCredential),
+            },
+          },
+          iat: expect.any(Number),
+          nbf: expect.any(Number),
+          iss: minimalJsonLdCredential.issuer.id,
+          jti: minimalJsonLdCredential.id,
+          sub: minimalJsonLdCredential.credentialSubject.id,
+        },
+      });
+    });
+
+    it('Should generate a RS256 JWT from credential', async () => {
+      const keyPair = generateJWAKeyPair({ algorithm: 'rsa' });
+      const result = await generateCredentialJwt(
+        minimalJsonLdCredential,
+        keyPair.privateKey,
+        'KEY-ID',
+        KeyAlgorithms.RS256
+      );
+      const verified = await jwtVerify(result, keyPair.publicKey);
+
+      expect(verified).toEqual({
+        header: {
+          alg: KeyAlgorithms.RS256,
+          typ: 'JWT',
+          kid: 'KEY-ID',
+        },
+        payload: {
+          vc: {
+            ...omit(['credentialSubject'], minimalJsonLdCredential),
+            credentialSubject: {
+              ...get('credentialSubject', minimalJsonLdCredential),
+            },
+          },
+          iat: expect.any(Number),
+          nbf: expect.any(Number),
+          iss: minimalJsonLdCredential.issuer.id,
+          jti: minimalJsonLdCredential.id,
+          sub: minimalJsonLdCredential.credentialSubject.id,
+        },
+      });
+    });
+
     it('Should generate JWT with a sub_jwk if the credential subject contains a jwk field', async () => {
+      const keyPair = generateJWAKeyPair({
+        algorithm: 'ec',
+        curve: 'secp256k1',
+      });
       const result = await generateCredentialJwt(
         maximalJsonLdCredential,
         keyPair.privateKey,
         'KEY-ID'
       );
-      const verified = await jwtVerify(
-        result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false)
-      );
+      const verified = await jwtVerify(result, keyPair.publicKey);
 
       expect(verified).toEqual({
         header: {
@@ -102,7 +169,11 @@ describe('Verifiable Generator Tests', () => {
       });
     });
 
-    it('Should generate JWT from credential for old style issuer', async () => {
+    it('Should generate JWT from credential for string issuer value', async () => {
+      const keyPair = generateJWAKeyPair({
+        algorithm: 'ec',
+        curve: 'secp256k1',
+      });
       const result = await generateCredentialJwt(
         {
           ...minimalJsonLdCredential,
@@ -111,10 +182,7 @@ describe('Verifiable Generator Tests', () => {
         keyPair.privateKey,
         'KEY-ID'
       );
-      const verified = await jwtVerify(
-        result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false)
-      );
+      const verified = await jwtVerify(result, keyPair.publicKey);
 
       expect(verified).toEqual({
         header: {
@@ -137,24 +205,82 @@ describe('Verifiable Generator Tests', () => {
   });
 
   describe('Generate presentation JWT', () => {
-    it('Should generate JWT from presentation', async () => {
+    it('Should generate a ES256K presentation JWT', async () => {
+      const keyPair = generateJWAKeyPair({
+        algorithm: 'ec',
+        curve: 'secp256k1',
+      });
       const result = await generatePresentationJwt(
         presentation,
         keyPair.privateKey
       );
-      const verified = await jwtVerify(
-        result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false),
-        {
-          complete: true,
-        }
-      );
+      const verified = await jwtVerify(result, keyPair.publicKey, {
+        complete: true,
+      });
 
       expect(verified).toEqual({
         header: {
           alg: 'ES256K',
           typ: 'JWT',
-          jwk: jwkFromSecp256k1Key(keyPair.publicKey, false),
+          jwk: keyPair.publicKey,
+        },
+        payload: {
+          vp: expect.any(Object),
+          iat: Date.parse(presentation.issuanceDate) / 1000,
+          nbf: Date.parse(presentation.issuanceDate) / 1000,
+          exp: Date.parse(presentation.expirationDate) / 1000,
+          jti: presentation.id,
+          iss: presentation.issuer,
+          aud: presentation.verifier,
+        },
+      });
+    });
+    it('Should generate a ES256 JWT for the presentation', async () => {
+      const keyPair = generateJWAKeyPair({ algorithm: 'ec', curve: 'P-256' });
+      const result = await generatePresentationJwt(
+        presentation,
+        keyPair.privateKey,
+        null,
+        KeyAlgorithms.ES256
+      );
+      const verified = await jwtVerify(result, keyPair.publicKey, {
+        complete: true,
+      });
+
+      expect(verified).toEqual({
+        header: {
+          alg: KeyAlgorithms.ES256,
+          typ: 'JWT',
+          jwk: keyPair.publicKey,
+        },
+        payload: {
+          vp: expect.any(Object),
+          iat: Date.parse(presentation.issuanceDate) / 1000,
+          nbf: Date.parse(presentation.issuanceDate) / 1000,
+          exp: Date.parse(presentation.expirationDate) / 1000,
+          jti: presentation.id,
+          iss: presentation.issuer,
+          aud: presentation.verifier,
+        },
+      });
+    });
+    it('Should generate a RS256 JWT for a presentation', async () => {
+      const keyPair = generateJWAKeyPair({ algorithm: 'rsa' });
+      const result = await generatePresentationJwt(
+        presentation,
+        keyPair.privateKey,
+        null,
+        KeyAlgorithms.RS256
+      );
+      const verified = await jwtVerify(result, keyPair.publicKey, {
+        complete: true,
+      });
+
+      expect(verified).toEqual({
+        header: {
+          alg: KeyAlgorithms.RS256,
+          typ: 'JWT',
+          jwk: keyPair.publicKey,
         },
         payload: {
           vp: expect.any(Object),

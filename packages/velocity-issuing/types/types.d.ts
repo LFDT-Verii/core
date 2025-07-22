@@ -100,6 +100,7 @@ export interface CredentialTypeMetadata {
   layer1: boolean;
   jsonldContext: string[];
   schemaUrl: string;
+  defaultSignatureAlgorithm: string;
 }
 
 export interface BaseCredential {

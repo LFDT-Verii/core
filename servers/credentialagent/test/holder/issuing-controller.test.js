@@ -20,13 +20,21 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { getUnixTime, subYears, subDays } = require('date-fns/fp');
 const { nanoid } = require('nanoid');
 const { mapWithIndex, wait } = require('@verii/common-functions');
-const { jwtDecode, jwtSign, hexFromJwk, jwkThumbprint } = require('@verii/jwt');
+const {
+  jwtDecode,
+  jwtSign,
+  hexFromJwk,
+  jwkThumbprint,
+} = require('@verii/jwt');
 const {
   VnfProtocolVersions,
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { generateKeyPair: joseGenerateKeyPair, exportJWK } = require('jose');
-const { generateDidInfo, getDidUriFromJwk } = require('@verii/did-doc');
+const {
+  generateDidInfo,
+  getDidUriFromJwk,
+} = require('@verii/did-doc');
 const { ObjectId } = require('mongodb');
 const {
   castArray,
@@ -42,7 +50,9 @@ const {
   uniq,
 } = require('lodash/fp');
 const nock = require('nock');
-const { openBadgeCredentialExample } = require('@verii/sample-data');
+const {
+  openBadgeCredentialExample,
+} = require('@verii/sample-data');
 
 const {
   OBJECT_ID_FORMAT,
@@ -55,7 +65,9 @@ const {
   errorResponseMatcher,
 } = require('@verii/tests-helpers');
 const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const { hashOffer } = require('@verii/velocity-issuing');
 
 const {
@@ -91,6 +103,7 @@ const mockAddRevocationListSigned = jest.fn();
 const mockLookupPrimary = jest.fn();
 const mockInitPermissions = jest.fn();
 jest.mock('@verii/metadata-registration', () => ({
+  ...jest.requireActual('@verii/metadata-registration'),
   initRevocationRegistry: () => ({
     addRevocationListSigned: mockAddRevocationListSigned,
   }),
@@ -3035,6 +3048,7 @@ describe('Holder Issuing Test Suite', () => {
         },
         issuer: {
           id: tenant.did,
+          type: ['Issuer'],
           name: 'mock',
           image: 'mock',
           badProperty: 'should be ignored',
@@ -4128,7 +4142,7 @@ describe('Holder Issuing Test Suite', () => {
           tenant,
           exchange,
           user,
-          issuer: { image: 'image', name: 'name' },
+          issuer: { type: 'Brand', image: 'image', name: 'name' },
         })
       );
       nock(mockVendorUrl)
@@ -4160,6 +4174,7 @@ describe('Holder Issuing Test Suite', () => {
               tenant,
             }),
             issuer: {
+              type: 'Brand',
               image: 'image',
               name: 'name',
               id: tenant.did,

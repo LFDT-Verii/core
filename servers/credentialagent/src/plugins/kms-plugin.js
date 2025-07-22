@@ -17,7 +17,9 @@
 
 const fp = require('fastify-plugin');
 const { dbKmsPlugin } = require('@verii/db-kms');
-const { multitenantExtension } = require('@verii/spencer-mongo-extensions');
+const {
+  multitenantExtension,
+} = require('@verii/spencer-mongo-extensions');
 
 const agentKmsOptions = {
   name: 'keys',

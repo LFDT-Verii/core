@@ -15,13 +15,16 @@
  */
 
 const { generateKeyPair } = require('@verii/crypto');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const { initProvider } = require('@verii/base-contract-io');
 const {
   mongoFactoryWrapper,
   mongoCloseWrapper,
 } = require('@verii/tests-helpers');
 const { env } = require('@spencejs/spence-config');
+const { wait } = require('@verii/common-functions');
 const {
   deployTestPermissionsContract,
 } = require('./helpers/deploy-test-permissions-contract');
@@ -83,6 +86,10 @@ describe('Permissions Contract Test Suite', () => {
       permissioningAccount.privateKey,
       deployedContract
     );
+  });
+
+  afterEach(async () => {
+    await wait(1000);
   });
 
   afterAll(async () => {

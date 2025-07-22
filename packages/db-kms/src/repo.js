@@ -22,7 +22,9 @@ const {
   repoFactory,
   autoboxIdsExtension,
 } = require('@spencejs/spence-mongo-repos');
-const { initEncryptPropExtension } = require('@verii/spencer-mongo-extensions');
+const {
+  initEncryptPropExtension,
+} = require('@verii/spencer-mongo-extensions');
 const { defaultRepoOptions } = require('./default-repo-options');
 
 /**

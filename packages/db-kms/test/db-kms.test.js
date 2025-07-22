@@ -256,4 +256,40 @@ describe('db kms', () => {
       payload: { iat: expect.any(Number), ...payload },
     });
   });
+
+  describe('encryption/decryption operations', () => {
+    let keys;
+    let alternativeKeys;
+    const plainText = 'foo';
+    beforeAll(async () => {
+      keys = await Promise.all(
+        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs))
+      );
+      alternativeKeys = await Promise.all(
+        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs))
+      );
+    });
+
+    describe('encrypting & decrypting texts', () => {
+      it('should encrypt text using a private key and decrypt to original value', async () => {
+        const encryptedText = await kms.encryptString(plainText, keys[0].id);
+        const decryptedText = await kms.decryptString(
+          encryptedText,
+          keys[0].id
+        );
+        expect(encryptedText).toEqual(expect.any(String));
+        expect(decryptedText).toEqual(plainText);
+      });
+
+      it('should encrypt text using a private key and fail to decrypt with different key', async () => {
+        const encryptedText = await kms.encryptString(plainText, keys[0].id);
+        expect(encryptedText).toEqual(expect.any(String));
+        await expect(() =>
+          kms.decryptString(encryptedText, alternativeKeys[0].id)
+        ).rejects.toThrow(
+          new Error('Unsupported state or unable to authenticate data')
+        );
+      });
+    });
+  });
 });

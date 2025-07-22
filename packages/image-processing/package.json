@@ -1,7 +1,7 @@
 {
   "name": "@verii/image-processing",
   "version": "0.5.0-build",
-  "description": "Set of image processing functions used in Velocity Foundation projects",
+  "description": "Set of image processing functions used in Verii projects",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
   "publishConfig": {

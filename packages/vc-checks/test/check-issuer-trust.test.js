@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
+const {
+  generateKeyPairInHexAndJwk,
+} = require('@verii/tests-helpers');
 const { set, times, join } = require('lodash/fp');
 const { generateCredentialJwt } = require('@verii/jwt');
 const { checkIssuerTrust } = require('../src/check-issuer-trust');

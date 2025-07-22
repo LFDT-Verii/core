@@ -16,12 +16,11 @@
 
 const { isEmpty, some, map } = require('lodash/fp');
 const newError = require('http-errors');
-const { KeyPurposes } = require('@verii/crypto');
+const { KeyEncodings, KeyPurposes } = require('@verii/crypto');
 const { resolveDid } = require('@verii/common-fetchers');
 
 const {
   addPrimaryAddressToTenant,
-  KeyEncodings,
   validateDidDocKeys,
 } = require('../../../../../entities');
 

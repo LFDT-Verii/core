@@ -31,7 +31,11 @@ const {
   toLower,
   uniq,
 } = require('lodash/fp');
-const { buildDecodedCredential, jwtDecode, hexFromJwk } = require('@verii/jwt');
+const {
+  buildDecodedCredential,
+  jwtDecode,
+  hexFromJwk,
+} = require('@verii/jwt');
 const {
   initMetadataRegistry,
   initVerificationCoupon,
@@ -49,7 +53,10 @@ const {
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { mapWithIndex } = require('@verii/common-functions');
-const { resolveDidJwkDocument, toDidUrl } = require('@verii/did-doc');
+const {
+  resolveDidJwkDocument,
+  toDidUrl,
+} = require('@verii/did-doc');
 const { loadJsonldContext } = require('./load-jsonld-context');
 
 const verifyCredentials = async (

@@ -16,7 +16,9 @@
  */
 
 const { includes } = require('lodash/fp');
-const { ServiceCategories } = require('@verii/organizations-registry');
+const {
+  ServiceCategories,
+} = require('@verii/organizations-registry');
 const { checkIdentityIssuer } = require('./check-identity-issuer');
 const { verifyPrimarySourceIssuer } = require('./verify-primary-source-issuer');
 

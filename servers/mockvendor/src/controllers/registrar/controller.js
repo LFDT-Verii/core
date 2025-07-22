@@ -1,6 +1,8 @@
 const { wait } = require('@verii/common-functions');
 const { verifyVnfSignature } = require('@verii/crypto');
-const { VNF_SIGNATURE_HTTP_HEADER_NAME } = require('@verii/crypto');
+const {
+  VNF_SIGNATURE_HTTP_HEADER_NAME,
+} = require('@verii/crypto');
 
 module.exports = async (fastify) => {
   fastify.post(

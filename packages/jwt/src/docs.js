@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-const { omit } = require('lodash/fp');
+const { pick } = require('lodash/fp');
 const { jwkFromSecp256k1Key, jwtSign } = require('./core');
 
 const DEFAULT_NOT_BEFORE = '0s';
+const PUBLIC_JWK_PROPS = ['x', 'y', 'e', 'n', 'kty', 'crv', 'use'];
 
 const docJti = (doc, options) => (options?.jti != null ? {} : { jti: doc.id });
 
 const headerKey = (jwk, kid) =>
-  kid != null ? { kid } : { jwk: omit(['d'], jwk) };
+  kid != null ? { kid } : { jwk: pick(PUBLIC_JWK_PROPS, jwk) };
 
 const generateDocJwt = (doc, key, { kid, ...options } = {}) => {
   const jwk = key.kty != null ? key : jwkFromSecp256k1Key(key);

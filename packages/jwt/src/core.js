@@ -21,9 +21,14 @@ const {
   calculateJwkThumbprint,
   decodeJwt,
   decodeProtectedHeader,
+  base64url,
 } = require('jose');
+const canonicalize = require('canonicalize');
+
+const utf8Decoder = new TextDecoder('utf-8');
 const keyto = require('@trust/keyto');
 const { flow, isString, startsWith, split, omit } = require('lodash/fp');
+const { KeyAlgorithms } = require('@verii/crypto');
 const {
   setIssuedAt,
   setOptionalNotBefore,
@@ -35,8 +40,11 @@ const {
   setOptionalSubject,
 } = require('./jwt-fp');
 
+const keyAlgorithmToJoseAlg = (keyAlgorithm = KeyAlgorithms.SECP256K1) =>
+  keyAlgorithm === KeyAlgorithms.SECP256K1 ? 'ES256K' : keyAlgorithm;
+
 const toKeyObject = (key, header) => {
-  const alg = header?.alg ?? key.alg ?? 'ES256K';
+  const alg = keyAlgorithmToJoseAlg(header?.alg ?? key.alg);
   return importJWK(key, alg);
 };
 
@@ -132,6 +140,13 @@ const jwkFromStringified = (key, priv = true) => {
   return k.toJwk(priv ? 'private' : 'public');
 };
 
+const base64UrlToJwk = (base64String) => {
+  const buffer = base64url.decode(base64String);
+  return JSON.parse(utf8Decoder.decode(buffer));
+};
+
+const jwkToPublicBase64Url = (json) => base64url.encode(canonicalize(json));
+
 const jwkThumbprint = calculateJwkThumbprint;
 
 const jwtHeaderDecode = decodeProtectedHeader;
@@ -187,11 +202,13 @@ const toJwk = (key, priv = true) => {
 const prepAlgAndKey = async (keyOrSecret, optionsAlg) =>
   isString(keyOrSecret)
     ? {
-        alg: optionsAlg ?? DEFAULT_SYMMETRIC_ALG,
+        alg: keyAlgorithmToJoseAlg(optionsAlg ?? DEFAULT_SYMMETRIC_ALG),
         key: new TextEncoder().encode(keyOrSecret),
       }
     : {
-        alg: keyOrSecret.alg ?? optionsAlg ?? DEFAULT_ASYMMETRIC_ALG,
+        alg: keyAlgorithmToJoseAlg(
+          keyOrSecret.alg ?? optionsAlg ?? DEFAULT_ASYMMETRIC_ALG
+        ),
         key: await toKeyObject(keyOrSecret),
       };
 
@@ -211,4 +228,7 @@ module.exports = {
   stringifyJwk,
   tamperJwt,
   toJwk,
+  base64UrlToJwk,
+  jwkToPublicBase64Url,
+  keyAlgorithmToJoseAlg,
 };

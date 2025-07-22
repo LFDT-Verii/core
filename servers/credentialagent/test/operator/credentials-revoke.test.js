@@ -21,9 +21,14 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 
 const metadataRegistration = require('@verii/metadata-registration');
 const nock = require('nock');
-const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
+const {
+  mongoify,
+  errorResponseMatcher,
+} = require('@verii/tests-helpers');
 const { generateKeyPair, KeyPurposes } = require('@verii/crypto');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const { ObjectId } = require('mongodb');
 const { hexFromJwk } = require('@verii/jwt');
 const {

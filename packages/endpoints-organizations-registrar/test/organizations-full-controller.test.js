@@ -62,14 +62,19 @@ const {
 } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const {
   KeyPurposes,
   generateKeyPair,
   decryptCollection,
 } = require('@verii/crypto');
 const { decodeCredentialJwt, hexFromJwk } = require('@verii/jwt');
-const { mapWithIndex, runSequentially } = require('@verii/common-functions');
+const {
+  mapWithIndex,
+  runSequentially,
+} = require('@verii/common-functions');
 const { toRelativeKeyId } = require('@verii/did-doc');
 const {
   DID_FORMAT,
@@ -194,7 +199,9 @@ const mockCreateFineractClientReturnValue = {
 };
 
 jest.mock('@verii/contract-permissions', () => {
-  const originalModule = jest.requireActual('@verii/contract-permissions');
+  const originalModule = jest.requireActual(
+    '@verii/contract-permissions'
+  );
   return {
     ...originalModule,
     initPermissions: mockInitPermission,
@@ -211,7 +218,9 @@ jest.mock('@aws-sdk/client-ses', () => ({
 }));
 
 jest.mock('@verii/fineract-client', () => {
-  const originalModule = jest.requireActual('@verii/fineract-client');
+  const originalModule = jest.requireActual(
+    '@verii/fineract-client'
+  );
   return {
     ...originalModule,
     createFineractClient: mockCreateFineractClient,
@@ -220,7 +229,9 @@ jest.mock('@verii/fineract-client', () => {
 });
 
 jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual('@verii/error-aggregation');
+  const originalModule = jest.requireActual(
+    '@verii/error-aggregation'
+  );
   return {
     ...originalModule,
     initSendError: mockInitSendError,

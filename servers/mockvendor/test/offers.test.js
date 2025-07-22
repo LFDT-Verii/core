@@ -123,7 +123,7 @@ describe('Offer routes', () => {
       expect(first(response.json)).toEqual({
         ...expectedOffer({
           ...offer,
-          issuer: { name: 'x' },
+          issuer: { bla: 'o', name: 'x' },
         }),
         id: expect.stringMatching(OBJECT_ID_FORMAT),
         _id: expect.stringMatching(OBJECT_ID_FORMAT),
@@ -134,15 +134,15 @@ describe('Offer routes', () => {
         await mongoDb()
           .collection('offers')
           .findOne({ _id: new ObjectId(first(response.json)._id) })
-      ).toEqual({
-        _id: new ObjectId(first(response.json)._id),
-        ...mongoify({
+      ).toEqual(
+        mongoify({
+          _id: new ObjectId(first(response.json)._id),
           ...offer,
-          issuer: { name: 'x' },
-        }),
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      });
+          issuer: { name: 'x', bla: 'o' },
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        })
+      );
     });
     it('should be able to create an offer', async () => {
       const offer = await newOffer({ label: 'x-label' });
@@ -377,6 +377,7 @@ describe('Offer routes', () => {
             issuer: {
               id: 'uniq-1',
               name: 'uniq-1',
+              bla: 'uniq-1',
             },
           }),
         ],
@@ -441,7 +442,7 @@ describe('Offer routes', () => {
       });
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
-        offers: [expectedOffer(offers[5], { issuer: {} })],
+        offers: [expectedOffer(offers[5])],
       });
     });
 
@@ -461,8 +462,8 @@ describe('Offer routes', () => {
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
         offers: expect.arrayContaining([
-          expectedOffer(offers[0], { issuer: {} }),
-          expectedOffer(offers[5], { issuer: {} }),
+          expectedOffer(offers[0]),
+          expectedOffer(offers[5]),
         ]),
       });
 

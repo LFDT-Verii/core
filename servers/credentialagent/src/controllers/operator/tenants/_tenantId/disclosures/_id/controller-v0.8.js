@@ -17,7 +17,9 @@
 const { ObjectId } = require('mongodb');
 const qr = require('qr-image');
 const newError = require('http-errors');
-const { getOrganizationVerifiedProfile } = require('@verii/common-fetchers');
+const {
+  getOrganizationVerifiedProfile,
+} = require('@verii/common-fetchers');
 const {
   buildDisclosureRequestDeepLink,
   velocityProtocolUriToHttpUri,

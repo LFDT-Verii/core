@@ -17,7 +17,10 @@
 const { castArray, includes, map, some } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { mapWithIndex, runSequentially } = require('@verii/common-functions');
+const {
+  mapWithIndex,
+  runSequentially,
+} = require('@verii/common-functions');
 const { ServiceTypes } = require('@verii/organizations-registry');
 
 const nock = require('nock');

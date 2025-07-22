@@ -18,7 +18,9 @@ const initRequest = require('@verii/request');
 const Static = require('@fastify/static');
 const fastifyRoutes = require('@fastify/routes');
 const { pick, omit } = require('lodash/fp');
-const { vnfProtocolVersionPlugin } = require('@verii/fastify-plugins');
+const {
+  vnfProtocolVersionPlugin,
+} = require('@verii/fastify-plugins');
 const { rpcProviderPlugin } = require('@verii/base-contract-io');
 const { validationPlugin } = require('@verii/validation');
 const path = require('path');

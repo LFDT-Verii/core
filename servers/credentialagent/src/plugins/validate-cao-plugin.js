@@ -16,8 +16,12 @@
 
 const fp = require('fastify-plugin');
 const { includes } = require('lodash/fp');
-const { ServiceCategories } = require('@verii/organizations-registry');
-const { getOrganizationVerifiedProfile } = require('@verii/common-fetchers');
+const {
+  ServiceCategories,
+} = require('@verii/organizations-registry');
+const {
+  getOrganizationVerifiedProfile,
+} = require('@verii/common-fetchers');
 
 async function validateCao() {
   const context = this;

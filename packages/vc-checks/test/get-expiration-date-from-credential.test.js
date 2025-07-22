@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const { credentialSubjectNotExpired } = require('@verii/sample-data');
+const {
+  credentialSubjectNotExpired,
+} = require('@verii/sample-data');
 const {
   getExpirationDateFromCredential,
 } = require('../src/get-expiration-date-from-credential');

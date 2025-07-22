@@ -17,11 +17,14 @@
 
 const { nanoid } = require('nanoid');
 const { generateKeyPair } = require('@verii/crypto');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
+const { hexFromJwk } = require('@verii/jwt');
 const { createExampleDid } = require('./create-example-did');
 
 const entityFactory = ({ service = [], key = [], ...values } = {}) => {
-  const keyPair = generateKeyPair();
+  const keyPair = generateKeyPair({ format: 'jwk' });
 
   const did = createExampleDid();
   return {
@@ -35,12 +38,12 @@ const entityFactory = ({ service = [], key = [], ...values } = {}) => {
       ...service,
     ],
     key: [
-      { id: `${did}#velocity-key-1`, publicKeyHex: keyPair.publicKey },
+      { id: `${did}#velocity-key-1`, publicKeyJwk: keyPair.publicKey },
       ...key,
     ],
     keyPair,
     kmsKeyId: nanoid(),
-    primaryAddress: toEthereumAddress(keyPair.publicKey),
+    primaryAddress: toEthereumAddress(hexFromJwk(keyPair.publicKey, false)),
     ...values,
   };
 };

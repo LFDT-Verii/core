@@ -26,8 +26,10 @@ const KeyPurposes = {
 
 // TODO If we create a keys entity package, KeyAlgorithms should probably be moved there
 const KeyAlgorithms = {
-  SECP256K1: 'SECP256K1',
+  // Could be renamed to JsonWebAlgorithms
+  SECP256K1: 'SECP256K1', // Also ES256K
   ES256: 'ES256',
+  RS256: 'RS256',
 };
 
 // TODO If we create a keys entity package, KeyEncodings should probably be moved there

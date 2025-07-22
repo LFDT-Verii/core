@@ -15,9 +15,16 @@
  *
  */
 
-const { initMetadataRegistry } = require('@verii/metadata-registration');
-const { jsonLdToUnsignedVcJwtContent, hexFromJwk } = require('@verii/jwt');
+const {
+  initMetadataRegistry,
+  ALG_TYPE,
+} = require('@verii/metadata-registration');
+const {
+  jsonLdToUnsignedVcJwtContent,
+  hexFromJwk,
+} = require('@verii/jwt');
 const { initCallWithKmsKey } = require('@verii/crypto');
+const { KeyAlgorithms } = require('@verii/crypto/src/constants');
 const { buildIssuerVcUrl } = require('./build-issuer-vc-url');
 
 /** @import { Issuer, CredentialMetadata, Context } from "../../types/types" */
@@ -56,7 +63,8 @@ const initCredentialMetadataContract = async (issuer, context) => {
       credentialMetadataRegistry.addCredentialMetadataEntry(
         metadata,
         metadata.contentHash,
-        caoDid
+        caoDid,
+        ALG_TYPE.COSEKEY_AES_256
       ),
     /**
      * List to create on the dlt
@@ -73,6 +81,7 @@ const initCredentialMetadataContract = async (issuer, context) => {
           issuanceDate: new Date().toISOString(),
           credentialSubject: { listId, accountId },
         },
+        KeyAlgorithms.SECP256K1,
         issuer.issuingServiceDIDKeyId
       );
 
@@ -86,7 +95,8 @@ const initCredentialMetadataContract = async (issuer, context) => {
         accountId,
         listId,
         issuerVC,
-        caoDid
+        caoDid,
+        ALG_TYPE.COSEKEY_AES_256
       );
     },
   };

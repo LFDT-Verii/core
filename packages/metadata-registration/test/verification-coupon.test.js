@@ -29,6 +29,7 @@ const {
 const { env } = require('@spencejs/spence-config');
 const console = require('console');
 
+const { wait } = require('@verii/common-functions');
 const { initVerificationCoupon } = require('../index');
 const {
   deployPermissionContract,
@@ -89,6 +90,10 @@ describe('Verification Coupon', () => {
       context
     );
     verificationCoupon = await initVerificationCouponClient();
+  });
+
+  afterEach(async () => {
+    await wait(1000);
   });
 
   afterAll(async () => {

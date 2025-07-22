@@ -16,7 +16,10 @@
  */
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { testRegistrarUser, mongoify } = require('@verii/tests-helpers');
+const {
+  testRegistrarUser,
+  mongoify,
+} = require('@verii/tests-helpers');
 
 const initGroupsFactory = require('../src/entities/groups/factories/groups-factory');
 const buildFastify = require('./helpers/build-fastify');

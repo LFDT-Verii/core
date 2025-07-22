@@ -1,5 +1,8 @@
 const { map, flow, get, size, each } = require('lodash/fp');
-const { decryptCollection, encryptCollection } = require('@verii/crypto');
+const {
+  decryptCollection,
+  encryptCollection,
+} = require('@verii/crypto');
 const { printInfo } = require('../helpers/common');
 
 const updateProp = (id, secretProp, encryptedKey, currentTime) => ({

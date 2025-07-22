@@ -5,7 +5,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Dictionary, VCLDidJwkDescriptor } from '@verii/vnf-nodejs-wallet-sdk';
+import {
+  Dictionary,
+  VCLDidJwkDescriptor,
+} from '@verii/vnf-nodejs-wallet-sdk';
 import { getCreateDidKeyServiceUrl } from './Urls';
 import fetcher from './Fetcher';
 import { GlobalConfig } from '../../GlobalConfig';

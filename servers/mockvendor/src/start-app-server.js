@@ -17,7 +17,10 @@
 
 /* istanbul ignore next */
 const { flow } = require('lodash/fp');
-const { createServer, listenServer } = require('@verii/server-provider');
+const {
+  createServer,
+  listenServer,
+} = require('@verii/server-provider');
 const { initServer } = require('./init-server');
 const config = require('./config/config');
 

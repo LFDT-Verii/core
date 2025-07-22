@@ -19,7 +19,9 @@ const { MongoClient } = require('mongodb');
 const { nanoid } = require('nanoid');
 const { addYears } = require('date-fns');
 const { filter, first, /* map, */ omit, replace } = require('lodash/fp');
-const { KeyPurposes /* generateKeyPair */ } = require('@verii/crypto');
+const {
+  KeyPurposes /* generateKeyPair */,
+} = require('@verii/crypto');
 const {
   // applyOverrides,
   formatAsDate,
@@ -43,12 +45,16 @@ const { ServiceTypes } = require('@verii/organizations-registry');
 // const { CheckResults } = require('@verii/vc-checks');
 
 const { addMonths } = require('date-fns/fp');
-const { initVerificationCoupon } = require('@verii/metadata-registration');
+const {
+  initVerificationCoupon,
+} = require('@verii/metadata-registration');
 const { initProvider } = require('@verii/base-contract-io');
 const dotenv = require('dotenv');
 const path = require('path');
 const { toHexString } = require('@verii/blockchain-functions');
-const { Authorities } = require('@verii/endpoints-organizations-registrar');
+const {
+  Authorities,
+} = require('@verii/endpoints-organizations-registrar');
 // const {
 //   sampleEducationDegreeGraduation,
 // } = require('@verii/sample-data');

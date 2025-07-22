@@ -21,7 +21,9 @@ const { nanoid } = require('nanoid/non-secure');
 const { initTransformToFinder } = require('@verii/rest-queries');
 const { tableRegistry } = require('@spencejs/spence-mongo-repos');
 const { KeyPurposes } = require('@verii/crypto');
-const { getRevocationRegistry } = require('@verii/velocity-issuing');
+const {
+  getRevocationRegistry,
+} = require('@verii/velocity-issuing');
 const { sendPush } = require('../../../../../fetchers');
 const { issuedCredentialProjection } = require('../../../../../entities');
 

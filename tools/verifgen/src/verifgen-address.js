@@ -1,5 +1,7 @@
 const { program } = require('commander');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const common = require('./common');
 
 const generateAddress = (publicKeyFile, addressFile) => {

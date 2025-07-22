@@ -1,5 +1,7 @@
 const { map, forEach } = require('lodash/fp');
-const { initVerificationCoupon } = require('@verii/metadata-registration');
+const {
+  initVerificationCoupon,
+} = require('@verii/metadata-registration');
 const { initDocumentFunctions, mapCouponBurned } = require('../helpers');
 
 const task = 'coupons-burned-logging';

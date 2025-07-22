@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-const { generateRandomBytes, createCommitment } = require('@verii/crypto');
+const {
+  generateRandomBytes,
+  createCommitment,
+} = require('@verii/crypto');
 
 const LINK_CODE_BIT_LENGTH = 160;
 const LINK_CODE_BYTE_LENGTH = LINK_CODE_BIT_LENGTH / 8;

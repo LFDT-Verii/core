@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const { mapWithIndex } = require('@verii/common-functions');
 const { KeyPurposes, calcSha384 } = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');
@@ -91,7 +93,10 @@ const doIssueVerifiableCredentials = async (
   const credentialTypesMap = await loadCredentialTypesMap(offers, context);
 
   // eslint-disable-next-line better-mutation/no-mutation
-  context.allocationListQueries = mongoAllocationListQueries(mongoDb());
+  context.allocationListQueries = mongoAllocationListQueries(
+    mongoDb(),
+    'allocations'
+  );
 
   return issueVelocityVerifiableCredentials(
     offers,

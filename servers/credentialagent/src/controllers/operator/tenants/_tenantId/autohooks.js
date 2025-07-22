@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const { newOfferRelatedResourceSchema } = require('@verii/common-schemas');
+const {
+  newOfferRelatedResourceSchema,
+} = require('@verii/common-schemas');
 const {
   tenantLoaderPlugin,
   ensureTenantDefaultIssuingDisclosureIdPlugin,

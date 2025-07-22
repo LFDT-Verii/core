@@ -19,20 +19,17 @@ export const getCredentialTypeMetadataByVc = (
     const result = credentialTypes.all.find(
         (credentialTypeObj) =>
             credentialTypeObj.payload?.credentialType?.toLowerCase() ===
-            credentialTypeName.toLowerCase()
+            credentialTypeName?.toLowerCase()
     );
     return result?.payload || {};
 };
 
-const getCredentialTypeName = (jwtVc: VCLJwt): string => {
-    try {
-        const types = jwtVc.payload.vc[CodingKeys.KeyType] || [];
-        return types[0] || '';
-    } catch (e) {
-        return '';
-    }
+/**
+ * The implementation relaying on the below reference:
+ * https://github.com/LFDT-Verii/core
+ * /blob/37c8535c2ef839ed72a2706685a398f20f4ae11c/packages/vc-checks/src/extract-credential-type.js#L20
+ */
+const getCredentialTypeName = (jwtVc: VCLJwt): string | undefined => {
+    const types = jwtVc.payload?.vc?.type || [];
+    return types?.find((type: any) => type !== 'VerifiableCredential');
 };
-
-class CodingKeys {
-    static readonly KeyType = 'type';
-}

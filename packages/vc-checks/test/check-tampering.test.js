@@ -16,7 +16,9 @@
 
 const { generateCredentialJwt } = require('@verii/jwt');
 const { credentialUnexpired } = require('@verii/sample-data');
-const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
+const {
+  generateKeyPairInHexAndJwk,
+} = require('@verii/tests-helpers');
 const console = require('console');
 const { checkJwtVCTampering } = require('../src/check-jwt-vc-tampering');
 const { CheckResults } = require('../src/check-results');

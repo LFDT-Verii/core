@@ -20,6 +20,8 @@ const { compact, first, last, omit, pick, uniq } = require('lodash/fp');
 const { castArray } = require('lodash');
 const { VelocityRevocationListType } = require('@verii/vc-checks');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
+const { KeyAlgorithms } = require('@verii/crypto');
+const { keyAlgorithmToJoseAlg } = require('@verii/jwt');
 const { credentialTypeMetadata } = require('./credential-types-map');
 const { hashOffer } = require('../../src/domain/hash-offer');
 
@@ -28,19 +30,20 @@ const jwtVcExpectation = (
   { issuerEntity, offer, credentialId, userId, issuer, payload = {} },
   context
 ) => {
+  const typeMetadata = credentialTypeMetadata[extractOfferType(offer)];
   const contextExpectation = uniq(
     compact([
       'https://www.w3.org/2018/credentials/v1',
-      ...castArray(
-        credentialTypeMetadata[extractOfferType(offer)].jsonldContext
-      ),
+      ...castArray(typeMetadata.jsonldContext),
       ...castArray(offer['@context']),
       'https://lib.test/contexts/credential-extensions-2022.jsonld.json',
     ])
   );
   return {
     header: {
-      alg: 'ES256K',
+      alg: keyAlgorithmToJoseAlg(
+        typeMetadata.defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1
+      ),
       kid: `${credentialId}#key-1`,
       typ: 'JWT',
     },
@@ -74,7 +77,7 @@ const jwtVcExpectation = (
         vnfProtocolVersion: offer.vnfProtocolVersion ?? 2,
         type: expect.arrayContaining([
           extractOfferType(offer),
-          credentialTypeMetadata[extractOfferType(offer)].layer1
+          typeMetadata.layer1
             ? 'VelocityNetworkLayer1Credential'
             : 'VelocityNetworkLayer2Credential',
           'VerifiableCredential',
@@ -97,9 +100,9 @@ const jwtVcExpectation = (
                 velocityRefreshService(issuerEntity),
               ]
             : velocityRefreshService(issuerEntity),
-        credentialSchema: {
+        credentialSchema: offer.credentialSchema ?? {
           type: 'JsonSchemaValidator2018',
-          id: credentialTypeMetadata[extractOfferType(offer)].schemaUrl,
+          id: typeMetadata.schemaUrl,
         },
         contentHash: {
           type: 'VelocityContentHash2020',

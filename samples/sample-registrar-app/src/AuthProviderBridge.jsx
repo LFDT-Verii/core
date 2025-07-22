@@ -15,7 +15,10 @@
  *
  */
 import React, { useMemo } from 'react';
-import { AuthContext, registrarApiScopes } from '@verii/components-organizations-registrar';
+import {
+  AuthContext,
+  registrarApiScopes,
+} from '@verii/components-organizations-registrar';
 import { useAuth0 } from '@auth0/auth0-react';
 
 /* eslint-disable react/prop-types */

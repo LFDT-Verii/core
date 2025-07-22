@@ -1,5 +1,5 @@
 const { Wallet } = require('ethers');
-const { signAddress } = require('../src/sign-address');
+const { signAddress } = require('../src/sign-arguments');
 
 describe('getTransactionSignature test suite', () => {
   it('should return a valid signature', async () => {

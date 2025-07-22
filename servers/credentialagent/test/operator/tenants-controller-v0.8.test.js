@@ -24,13 +24,22 @@ const {
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const { rootPrivateKey } = require('@verii/sample-data');
-const { KeyPurposes, generateKeyPair, decrypt } = require('@verii/crypto');
+const {
+  KeyPurposes,
+  generateKeyPair,
+  decrypt,
+} = require('@verii/crypto');
 const {
   deployTestPermissionsContract,
 } = require('@verii/contract-permissions/test/helpers/deploy-test-permissions-contract');
-const { hexFromJwk, publicKeyFromPrivateKey } = require('@verii/jwt');
+const {
+  hexFromJwk,
+  publicKeyFromPrivateKey,
+} = require('@verii/jwt');
 const { jwkFromSecp256k1Key } = require('@verii/jwt');
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const { createOrgDoc } = require('./helpers/create-test-org-doc');

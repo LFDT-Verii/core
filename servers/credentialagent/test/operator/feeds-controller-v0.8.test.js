@@ -22,7 +22,10 @@ const {
   ISO_DATETIME_FORMAT,
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
-const { errorResponseMatcher, mongoify } = require('@verii/tests-helpers');
+const {
+  errorResponseMatcher,
+  mongoify,
+} = require('@verii/tests-helpers');
 
 const { ObjectId } = require('mongodb');
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');

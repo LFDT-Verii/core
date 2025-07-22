@@ -60,7 +60,9 @@ const {
 } = require('../src/plugins/authorization');
 
 jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual('@verii/error-aggregation');
+  const originalModule = jest.requireActual(
+    '@verii/error-aggregation'
+  );
   return {
     ...originalModule,
     initSendError: mockInitSendError,

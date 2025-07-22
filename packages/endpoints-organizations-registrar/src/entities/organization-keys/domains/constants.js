@@ -1,11 +1,3 @@
-// const KeyAlgorithms = {
-//   SECP256K1: 'SECP256K1',
-// };
-//
-// const KeyEncodings = {
-//   HEX: 'hex',
-// };
-
 const KeyErrorMessages = {
   UNRECOGNIZED_PURPOSE_DETECTED: 'Unrecognized purpose detected',
   DUPLICATE_PURPOSE_DETECTED: 'Duplicate key purposes detected',
@@ -19,12 +11,8 @@ const KeyErrorMessages = {
     `Key with kidFragment ${kidFragment} already exists`,
   PUBLIC_KEY_ALREADY_EXISTS_TEMPLATE: ({ publicKey }) =>
     `publicKey ${publicKey} already exists`,
-  // UNRECOGNIZED_ALGORITHM: 'Unrecognized algorithm',
-  // UNRECOGNIZED_ENCODING: 'Unrecognized encoding',
 };
 
 module.exports = {
-  // KeyAlgorithms,
-  // KeyEncodings,
   KeyErrorMessages,
 };

@@ -1,4 +1,7 @@
-const { toHexString, toNumber } = require('@verii/blockchain-functions');
+const {
+  toHexString,
+  toNumber,
+} = require('@verii/blockchain-functions');
 
 const mapCouponBurned = (evt, { log }) => {
   const expirationTime = new Date(toNumber(evt.args[6]) * 1000);

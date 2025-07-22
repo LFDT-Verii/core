@@ -15,7 +15,9 @@
  */
 
 const nock = require('nock');
-const { ServiceCategories } = require('@verii/organizations-registry');
+const {
+  ServiceCategories,
+} = require('@verii/organizations-registry');
 const {
   validateCao,
   validateCaoPlugin,

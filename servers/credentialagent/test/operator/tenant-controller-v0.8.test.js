@@ -19,7 +19,10 @@ const nock = require('nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { first, flow, map, omit, sortBy } = require('lodash/fp');
 const { idKeyMapper } = require('@verii/common-functions');
-const { errorResponseMatcher, mongoify } = require('@verii/tests-helpers');
+const {
+  errorResponseMatcher,
+  mongoify,
+} = require('@verii/tests-helpers');
 const {
   rootIssuerProfile,
   rootIssuerVerifiedProfile,

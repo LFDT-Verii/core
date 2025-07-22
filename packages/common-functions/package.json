@@ -1,7 +1,7 @@
 {
   "name": "@verii/common-functions",
   "version": "0.5.0-build",
-  "description": "Set of functions and utils used by Velocity Foundation projects",
+  "description": "Set of functions and utils used by Verii projects",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
   "publishConfig": {

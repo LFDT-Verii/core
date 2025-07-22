@@ -15,22 +15,17 @@
  */
 
 const util = require('util');
-const { calculateJwkThumbprint, base64url } = require('jose');
-const canonicalize = require('canonicalize');
+const { calculateJwkThumbprint } = require('jose');
+const {
+  base64UrlToJwk,
+  jwkToPublicBase64Url,
+} = require('@verii/jwt');
 
 const DID_JWK_FORMAT = 'did:jwk:%s';
-const utf8Decoder = new TextDecoder('utf-8');
 
 const verifyJwk = async (jwk) => {
   await calculateJwkThumbprint(jwk);
 };
-
-const base64UrlToJwk = (base64String) => {
-  const buffer = base64url.decode(base64String);
-  return JSON.parse(utf8Decoder.decode(buffer));
-};
-
-const jwkToPublicBase64Url = (json) => base64url.encode(canonicalize(json));
 
 const resolveDidJwkDocument = async (didJwkUri) =>
   getDidJwkDocument(getJwkFromDidUri(didJwkUri));

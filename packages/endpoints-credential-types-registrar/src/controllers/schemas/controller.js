@@ -1,5 +1,7 @@
 const { map, omit, trim } = require('lodash/fp');
-const { normalizeJsonSchemaName } = require('@verii/common-functions');
+const {
+  normalizeJsonSchemaName,
+} = require('@verii/common-functions');
 const { fetchJson } = require('@verii/common-fetchers');
 const { initLoadSchemaValidate } = require('../../entities');
 const { CachingConstants } = require('../../helpers');

@@ -18,7 +18,9 @@ const {
   repoFactory,
   autoboxIdsExtension,
 } = require('@spencejs/spence-mongo-repos');
-const { multitenantExtension } = require('@verii/spencer-mongo-extensions');
+const {
+  multitenantExtension,
+} = require('@verii/spencer-mongo-extensions');
 const { ObjectId } = require('mongodb');
 const newError = require('http-errors');
 const {

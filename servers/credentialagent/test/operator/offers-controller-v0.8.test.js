@@ -35,7 +35,9 @@ const {
   errorResponseMatcher,
 } = require('@verii/tests-helpers');
 const { hashOffer } = require('@verii/velocity-issuing');
-const { openBadgeCredentialExample } = require('@verii/sample-data');
+const {
+  openBadgeCredentialExample,
+} = require('@verii/sample-data');
 const {
   nockRegistrarAppSchemaName,
 } = require('../combined/helpers/nock-registrar-app-schema-name');
@@ -1052,7 +1054,7 @@ describe('vendor offer management', () => {
       );
     });
 
-    it('/offers should 200 and have issuer with bad property in the issuer', async () => {
+    it('/offers should 200 and have issuer with additional property in the issuer', async () => {
       await nockRegistrarAppSchemaName({
         schemaName: 'past-employment-position',
         credentialType: 'PastEmploymentPosition',
@@ -1060,18 +1062,16 @@ describe('vendor offer management', () => {
       });
 
       const offer = await newVendorOffer({ tenant, exchange });
+      const issuer = {
+        id: tenant.did,
+        name: 'image',
+        image: 'http://image.com',
+        additionalProperty: 'additionalProperty',
+      };
       const response = await fastify.injectJson({
         method: 'POST',
         url: exchangeOffersUrl({ tenant, exchange }, ''),
-        payload: {
-          ...offer,
-          issuer: {
-            id: tenant.did,
-            name: 'image',
-            image: 'http://image.com',
-            badProperty: 'badProperty',
-          },
-        },
+        payload: { ...offer, issuer },
       });
 
       expect(response.statusCode).toEqual(200);
@@ -1083,11 +1083,7 @@ describe('vendor offer management', () => {
         },
         exchangeId,
         id: expect.stringMatching(OBJECT_ID_FORMAT),
-        issuer: {
-          id: tenant.did,
-          name: 'image',
-          image: 'http://image.com',
-        },
+        issuer,
         updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       });
@@ -1140,11 +1136,7 @@ describe('vendor offer management', () => {
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           exchangeId,
-          issuer: {
-            id: tenant.did,
-            name: 'image',
-            image: 'http://image.com',
-          },
+          issuer,
         })
       );
     });

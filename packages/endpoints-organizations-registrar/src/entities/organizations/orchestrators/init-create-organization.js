@@ -6,7 +6,9 @@ const {
   KeyAlgorithms,
 } = require('@verii/crypto');
 const { toRelativeKeyId } = require('@verii/did-doc');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const { ObjectId } = require('mongodb');
 const { publish } = require('@spencejs/spence-events');
 const { acceptInvitation } = require('../../invitations');

@@ -39,6 +39,7 @@
   "devDependencies": {
     "@aws-sdk/client-s3": "3.820.0",
     "@spencejs/spence-factories": "0.10.2",
+    "@verii/crypto": "0.5.0-build",
     "@verii/sample-data": "0.5.0-build",
     "@verii/server-provider": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
@@ -52,9 +53,9 @@
     "eslint-plugin-prefer-arrow-functions": "3.6.2",
     "eslint-plugin-prettier": "4.2.1",
     "eslint-watch": "7.0.0",
-    "form-data": "4.0.3",
+    "form-data": "4.0.4",
     "jest": "29.7.0",
-    "mongodb": "6.16.0",
+    "mongodb": "6.17.0",
     "nock": "14.0.5",
     "prettier": "2.8.8"
   }

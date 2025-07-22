@@ -15,7 +15,10 @@
  */
 
 const { createTestServer } = require('@verii/server-provider');
-const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
+const {
+  loadTestEnv,
+  buildMongoConnection,
+} = require('@verii/tests-helpers');
 
 loadTestEnv();
 

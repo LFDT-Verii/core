@@ -17,11 +17,20 @@
 
 const { omit } = require('lodash/fp');
 const { getUnixTime } = require('date-fns/fp');
+const { keyAlgorithmToJoseAlg } = require('./core');
 
 // Using credential structure as defined at: https://w3c.github.io/vc-imp-guide/ conformant to JWS JSON Serialization
 // https://www.rfc-editor.org/rfc/rfc7515#section-7.2.1,
-const jsonLdToUnsignedVcJwtContent = (jsonldCredential, kid) => {
-  const header = { kid, typ: 'JWT' };
+const jsonLdToUnsignedVcJwtContent = (
+  jsonldCredential,
+  signatureAlgorithm,
+  kid
+) => {
+  const header = {
+    kid,
+    alg: keyAlgorithmToJoseAlg(signatureAlgorithm),
+    typ: 'JWT',
+  };
   const iat = getUnixTime(
     new Date(
       jsonldCredential.issued ?? jsonldCredential.issuanceDate ?? new Date()

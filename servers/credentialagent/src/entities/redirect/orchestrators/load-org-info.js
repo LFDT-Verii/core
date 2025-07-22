@@ -1,4 +1,6 @@
-const { getOrganizationVerifiedProfile } = require('@verii/common-fetchers');
+const {
+  getOrganizationVerifiedProfile,
+} = require('@verii/common-fetchers');
 const { isEmpty } = require('lodash/fp');
 
 const loadOrgInfo = async (did, context) => {

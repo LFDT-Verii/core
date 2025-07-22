@@ -18,7 +18,9 @@ const { initSendError } = require('@verii/error-aggregation');
 const { sendErrorPlugin } = require('../src/send-error-plugin');
 
 jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual('@verii/error-aggregation');
+  const originalModule = jest.requireActual(
+    '@verii/error-aggregation'
+  );
   return {
     ...originalModule,
     initSendError: jest.fn().mockReturnValue({

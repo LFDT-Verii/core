@@ -16,7 +16,10 @@
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
-const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
+const {
+  mongoify,
+  errorResponseMatcher,
+} = require('@verii/tests-helpers');
 const nock = require('nock');
 const { generateKeyPair } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
@@ -41,7 +44,9 @@ const {
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
-const { openBadgeCredentialExample } = require('@verii/sample-data');
+const {
+  openBadgeCredentialExample,
+} = require('@verii/sample-data');
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const {
   initKeysFactory,
@@ -60,6 +65,7 @@ const mockAddRevocationListSigned = jest.fn();
 const mockGetRevokeUrl = jest.fn();
 
 jest.mock('@verii/metadata-registration', () => ({
+  ...jest.requireActual('@verii/metadata-registration'),
   initRevocationRegistry: () => ({
     addRevocationListSigned: mockAddRevocationListSigned,
   }),
@@ -329,7 +335,12 @@ describe('vc-api credentials endpoints', () => {
           })
         );
         expect(mockAddCredentialMetadataEntry.mock.calls).toEqual([
-          [expect.any(Object), expect.any(String), 'did:ion:cao'],
+          [
+            expect.any(Object),
+            expect.any(String),
+            'did:ion:cao',
+            'cosekey:aes-256-gcm',
+          ],
         ]);
       });
 
@@ -724,8 +735,8 @@ describe('vc-api credentials endpoints', () => {
               'payload.vc.credentialSubject.type': 'AchievementSubject',
               'payload.vc.credentialSubject.@context': undefined,
               'payload.vc.credentialSchema': {
-                id: 'https://imsglobal.org/schemas/open-badge-v3.0-schema.json',
-                type: 'JsonSchemaValidator2018',
+                type: '1EdTechJsonSchemaValidator2019',
+                id: 'http://example.com/schema.json',
               },
             },
           })

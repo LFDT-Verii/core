@@ -18,7 +18,9 @@ const {
   repoFactory,
   autoboxIdsExtension,
 } = require('@spencejs/spence-mongo-repos');
-const { multitenantExtension } = require('@verii/spencer-mongo-extensions');
+const {
+  multitenantExtension,
+} = require('@verii/spencer-mongo-extensions');
 const {
   findOrInsertVendorUserRepoExtension,
 } = require('./find-or-insert-vendor-user-repo-extension');

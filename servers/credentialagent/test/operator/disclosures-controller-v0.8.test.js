@@ -30,7 +30,9 @@ const {
   mongoify,
   testAuthToken,
 } = require('@verii/tests-helpers');
-const { samplePresentationDefinition } = require('@verii/sample-data');
+const {
+  samplePresentationDefinition,
+} = require('@verii/sample-data');
 const {
   initDisclosureFactory,
   initFeedFactory,

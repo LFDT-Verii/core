@@ -81,7 +81,7 @@ const prepareJsonLdCredential = (
       credentialContexts,
       context
     ),
-    credentialSchema: {
+    credentialSchema: offer.credentialSchema ?? {
       type: 'JsonSchemaValidator2018',
       id: credentialTypeMetadata.schemaUrl,
     },

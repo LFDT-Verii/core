@@ -21,19 +21,22 @@ const {
 } = require('@verii/base-contract-io');
 
 const {
-  encrypt,
-  decrypt,
   get2BytesHash,
   deriveEncryptionSecretFromPassword,
 } = require('@verii/crypto');
-const { jwkFromSecp256k1Key, hexFromJwk } = require('@verii/jwt');
-const { find, flow, isEmpty, last, map, partition } = require('lodash/fp');
+const {
+  find,
+  flow,
+  isEmpty,
+  join,
+  last,
+  map,
+  partition,
+} = require('lodash/fp');
 
 const contractAbi = require('./contracts/metadata-registry.json');
-const { RESOLUTION_METADATA_ERROR } = require('./constants');
-
-const VERSION = '1';
-const ALG_TYPE = 'aes-256-gcm';
+const { RESOLUTION_METADATA_ERROR, VERSION, ALG_TYPE } = require('./constants');
+const { encodeJwk, decodeJwk } = require('./code-jwk');
 
 const initMetadataRegistry = async (
   { privateKey, contractAddress, rpcProvider },
@@ -134,14 +137,6 @@ const initMetadataRegistry = async (
         context
       );
 
-    await transactingClient.contractClient.getPaidEntriesSigned.staticCall(
-      indexEntries,
-      traceId,
-      caoDid,
-      burnerDid,
-      signature
-    );
-
     const tx = await transactingClient.contractClient.getPaidEntriesSigned(
       indexEntries,
       traceId,
@@ -158,7 +153,7 @@ const initMetadataRegistry = async (
     listId,
     issuerVC,
     caoDid,
-    algType = ALG_TYPE,
+    algType = ALG_TYPE.HEX_AES_256,
     version = VERSION
   ) => {
     log.info(
@@ -199,17 +194,15 @@ const initMetadataRegistry = async (
   const addCredentialMetadataEntry = async (
     { listId, index, credentialTypeEncoded, publicKey },
     password,
-    caoDid
+    caoDid,
+    algType = ALG_TYPE.HEX_AES_256
   ) => {
     log.info(
-      { listId, index, credentialTypeEncoded, caoDid, publicKey },
+      { listId, index, credentialTypeEncoded, caoDid, publicKey, algType },
       'addCredentialMetadataEntry'
     );
     const secret = await deriveEncryptionSecretFromPassword(password);
-    const encryptedPK = `0x${Buffer.from(
-      encrypt(hexFromJwk(publicKey, false), secret),
-      'base64'
-    ).toString('hex')}`;
+    const encryptedPK = await encodeJwk(algType, publicKey, secret);
 
     try {
       await setEntrySigned(
@@ -263,28 +256,29 @@ const initMetadataRegistry = async (
     }, entriesPart.split(';'));
   };
 
-  const resolvePublicKey = ({ id, entry, secret }) => {
+  const resolvePublicKey = async ({ id, entry, secret }) => {
     log.info({ id, entry, secret }, 'resolvePublicKey');
     const { algType, version } = entry;
-    if (
-      version !== get2BytesHash(VERSION) ||
-      algType !== get2BytesHash(ALG_TYPE)
-    ) {
+
+    if (version !== get2BytesHash(VERSION)) {
+      throw new Error(`Unsupported version "${version}"`);
+    }
+    if (!Object.values(ALG_TYPE).map(get2BytesHash).includes(algType)) {
       throw new Error(
-        `Unsupported encryption algorithm "${ALG_TYPE}" or version "${VERSION}"`
+        `Unsupported algorithm (${algType}). Valid values are ${flow(
+          map((type) => `${type} (${get2BytesHash(type)})`),
+          join(' or ')
+        )(Object.values(ALG_TYPE))}`
       );
     }
 
     const encryptedPublicKey = Buffer.from(
       entry.encryptedPublicKey.slice(2),
       'hex'
-    ).toString('base64');
+    );
 
     try {
-      const publicKeyJwk = jwkFromSecp256k1Key(
-        decrypt(encryptedPublicKey, secret),
-        false
-      );
+      const publicKeyJwk = await decodeJwk(algType, encryptedPublicKey, secret);
       return {
         id: `${id}#key-1`,
         publicKeyJwk,
@@ -391,10 +385,14 @@ const initMetadataRegistry = async (
     );
     log.info({ credentialEntries }, 'resolveDidDocument 1');
 
-    const [resolvedPublicKeys, unresolvedPublicKeys] = flow(
-      map(resolvePublicKey),
-      partition(({ publicKeyJwk }) => !!publicKeyJwk)
-    )(credentialEntries);
+    const publicKeys = await Promise.all(
+      map(resolvePublicKey, credentialEntries)
+    );
+
+    const [resolvedPublicKeys, unresolvedPublicKeys] = partition(
+      ({ publicKeyJwk }) => !!publicKeyJwk,
+      publicKeys
+    );
 
     const service = map(resolveService, credentialEntries);
 

@@ -16,7 +16,10 @@
 
 const newError = require('http-errors');
 const { isEmpty, get, set, flow, map } = require('lodash/fp');
-const { decryptCollection, encryptCollection } = require('@verii/crypto');
+const {
+  decryptCollection,
+  encryptCollection,
+} = require('@verii/crypto');
 
 const encryptSecret = ({ value, context, secretPropName, format }) => {
   if (isEmpty(get(secretPropName, value))) {

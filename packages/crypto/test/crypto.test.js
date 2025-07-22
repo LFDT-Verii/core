@@ -16,7 +16,10 @@
 
 const { padCharsStart } = require('lodash/fp');
 const crypto = require('crypto');
-const { HEX_FORMAT, URLSAFE_BASE64_FORMAT } = require('@verii/test-regexes');
+const {
+  HEX_FORMAT,
+  URLSAFE_BASE64_FORMAT,
+} = require('@verii/test-regexes');
 const {
   generateKeyPair,
   publicKeyHexToPem,
@@ -26,7 +29,9 @@ const {
   verifyPayload,
   generateRandomBytes,
   encrypt,
+  encryptBuffer,
   decrypt,
+  decryptBuffer,
   createCommitment,
   hashAndEncodeHex,
   isStringHex,
@@ -69,7 +74,7 @@ describe('Crypto tests', () => {
   });
 
   describe('encryption', () => {
-    it('should encrypt', () => {
+    it('should encrypt & decrypt', () => {
       const text = '0123456789-/!abcdefg';
       const secret =
         '81F9D21264DBA82B70E4B21241178473320A016ACF5819FB276CBA562A7AD78F';
@@ -77,6 +82,17 @@ describe('Crypto tests', () => {
       expect(encryptedValue).toEqual(expect.any(String));
       expect(encryptedValue).not.toEqual(text);
       expect(decrypt(encryptedValue, secret)).toEqual(text);
+    });
+
+    it('should encrypt & decrypt buffers', () => {
+      const text = '0123456789-/!abcdefg';
+      const buffer = Buffer.from(text, 'utf-8');
+      const secret =
+        '81F9D21264DBA82B70E4B21241178473320A016ACF5819FB276CBA562A7AD78F';
+      const encryptedValue = encryptBuffer(buffer, secret);
+      expect(encryptedValue).toEqual(expect.any(Buffer));
+      expect(encryptedValue).not.toEqual(text);
+      expect(decryptBuffer(encryptedValue, secret)).toEqual(buffer);
     });
   });
 

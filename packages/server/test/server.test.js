@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
+const {
+  loadTestEnv,
+  buildMongoConnection,
+} = require('@verii/tests-helpers');
 
 loadTestEnv();
 const { genericConfig } = require('@verii/config');

@@ -19,7 +19,9 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const nock = require('nock');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const { applyOverrides } = require('@verii/common-functions');
-const { sampleEducationDegreeGraduation } = require('@verii/sample-data');
+const {
+  sampleEducationDegreeGraduation,
+} = require('@verii/sample-data');
 const buildFastify = require('./helpers/build-fastify');
 const initCredentialSchemasRepo = require('./factories/credential-schema-factory');
 const educationDegreeSchema = require('../../../samples/sample-lib-app/schemas/education-degree-graduation-v1.1.schema.json');

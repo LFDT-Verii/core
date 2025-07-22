@@ -24,7 +24,10 @@ const {
   first,
   uniq,
 } = require('lodash/fp');
-const { DID_FORMAT, BASE64_FORMAT } = require('@verii/test-regexes');
+const {
+  DID_FORMAT,
+  BASE64_FORMAT,
+} = require('@verii/test-regexes');
 const { VelocityRevocationListType } = require('@verii/vc-checks');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const { castArray } = require('lodash');

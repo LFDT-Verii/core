@@ -31,6 +31,7 @@ const config = {
   migrationsDir: 'migrations',
   changelogCollectionName: 'changelog',
   migrationFileExtension: '.js',
+  moduleSystem: 'commonjs',
 };
 
 module.exports = config;

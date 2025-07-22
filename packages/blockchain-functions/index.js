@@ -18,5 +18,5 @@ module.exports = {
   ...require('./src/ethers-wrappers'),
   ...require('./src/ibft'),
   ...require('./src/eth'),
-  ...require('./src/sign-address'),
+  ...require('./src/sign-arguments'),
 };

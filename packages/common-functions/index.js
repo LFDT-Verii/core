@@ -16,6 +16,7 @@
 
 module.exports = {
   ...require('./src/apply-overrides'),
+  ...require('./src/coerce-array'),
   ...require('./src/dateify'),
   ...require('./src/idKeyMapper'),
   ...require('./src/optional'),
