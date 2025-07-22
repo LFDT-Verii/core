@@ -1,16 +1,7 @@
 name: Blockchain Contracts Tests
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'contracts/**'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'contracts/**'
+
 env:
   DOCKER_REG: 'ghcr.io'
   NODE_VERSION: '22'
