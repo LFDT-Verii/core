@@ -8,8 +8,8 @@
     "node": ">=22.11.0"
   },
   "scripts": {
-    "test": "jest ./test --config ./jest.config.js --runInBand --coverage",
-    "test:e2e": "jest ./e2e/org-registration-and-issuing.e2e.test.js --config ./jest.config.js --runInBand",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest ./test --config ./jest.config.js --runInBand --coverage",
+    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest ./e2e/org-registration-and-issuing.e2e.test.js --config ./jest.config.js --runInBand",
     "start": "node src/main.js",
     "start:dev": "node --throw-deprecation src/standalone.js",
     "start-operator": "node src/main-operator.js",
@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@fastify/autoload": "^6.0.0",
+    "@fastify/cors": "^11.0.1",
     "@fastify/helmet": "^13.0.0",
     "@fastify/routes": "^6.0.0",
     "@fastify/sensible": "^6.0.0",
@@ -63,7 +64,7 @@
     "@verii/verifiable-credentials": "0.5.0-build",
     "@verii/vc-checks": "0.5.0-build",
     "ajv": "8.17.1",
-    "canonicalize": "^2.0.0",
+    "canonicalize": "^2.1.0",
     "date-fns": "~3.6.0",
     "env-var": "~7.5.0",
     "eth-url-parser": "~1.0.3",
@@ -73,7 +74,7 @@
     "http-errors": "~2.0.0",
     "jsonpath-plus": "^10.3.0",
     "lodash": "^4.17.21",
-    "mongodb": "~6.16.0",
+    "mongodb": "~6.17.0",
     "nanoid": "~3.3.1",
     "nock": "14.0.5",
     "qr-image": "~3.2.0"
@@ -85,7 +86,7 @@
     "@verii/test-regexes": "0.5.0-build",
     "@verii/endpoints-organizations-registrar": "0.5.0-build",
     "cheerio": "1.1.0",
-    "dotenv": "16.5.0",
+    "dotenv": "16.6.1",
     "eslint": "8.57.1",
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-config-prettier": "8.10.0",

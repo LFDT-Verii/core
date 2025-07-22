@@ -4,7 +4,7 @@
   "description": "Package contains functions needed across all contract io packages",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
-  "author": "Nassan Paul",
+  "author": "Velocity Career Labs",
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public"
@@ -20,7 +20,7 @@
     "@verii/request": "^0.5.0-build",
     "date-fns": "^3.0.0",
     "fastify-plugin": "^5.0.0",
-    "ethers": "6.14.1",
+    "ethers": "6.15.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

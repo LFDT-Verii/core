@@ -15,6 +15,7 @@
  */
 
 module.exports = {
+  ...require('./allocations'),
   ...require('./common'),
   ...require('./credentials'),
   ...require('./deep-links'),
@@ -23,11 +24,9 @@ module.exports = {
   ...require('./feeds'),
   ...require('./keys'),
   ...require('./notifications'),
-  ...require('./metadata-list-allocations'),
   ...require('./offers'),
   ...require('./presentations'),
   ...require('./groups'),
-  ...require('./revocation-list-allocations'),
   ...require('./schemas'),
   ...require('./tenants'),
   ...require('./tokens'),

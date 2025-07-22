@@ -159,6 +159,7 @@ const credentialManifestDescriptorRefreshFrom = (
     json.service,
     json.credentialIds,
     didJwkFrom(json.didJwk),
+    json.did,
     json.remoteCryptoServicesToken
       ? new VCLToken(json.remoteCryptoServicesToken)
       : null

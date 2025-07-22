@@ -15,6 +15,7 @@
     "lint:fix": "eslint --fix --ext .js ."
   },
   "devDependencies": {
+    "@verii/common-functions": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
     "@spencejs/spence-config":  "0.10.2",
     "@verii/blockchain-functions": "0.5.0-build",

@@ -25,6 +25,7 @@ const { env } = require('@spencejs/spence-config');
 const console = require('console');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { initPermissions } = require('@verii/contract-permissions');
+const { wait } = require('@verii/common-functions');
 const initRevocationRegistry = require('../src/revocation-registry');
 const {
   deployPermissionContract,
@@ -58,6 +59,10 @@ describe('Revocation Registry', () => {
       await initializationPermissions();
     defaultPrimaryAddress = primaryAddress;
     revocationRegistry = await createRevocationRegistryWallet(operatorKeyPair);
+  });
+
+  afterEach(async () => {
+    await wait(1000);
   });
 
   afterAll(async () => {

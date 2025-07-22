@@ -1,7 +1,7 @@
 {
   "name": "@verii/spencer-mongo-extensions",
   "version": "0.5.0-build",
-  "description": "Set of functions that extend spencer mongo functionality for use by Velocity Foundation projects",
+  "description": "Set of functions that extend spencer mongo functionality for use by Verii projects",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
   "publishConfig": {
@@ -18,7 +18,7 @@
     "@verii/crypto": "0.5.0-build",
     "http-errors": "^2.0.0",
     "lodash": "^4.17.21",
-    "mongodb": "6.16.0"
+    "mongodb": "6.17.0"
   },
   "devDependencies": {
     "@spencejs/spence-config": "0.10.2",

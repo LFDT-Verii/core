@@ -15,6 +15,7 @@
  *
  */
 const { omit } = require('lodash/fp');
+const { KeyAlgorithms } = require('@verii/crypto/src/constants');
 const { jsonLdToUnsignedVcJwtContent } = require('../src/vc-mappers');
 const {
   maximalJsonLdCredential,
@@ -26,10 +27,11 @@ describe('Generate a W3C VC-JWT v1.1 from a jsonld vc', () => {
     expect(
       jsonLdToUnsignedVcJwtContent(
         minimalJsonLdCredential,
+        KeyAlgorithms.SECP256K1,
         'did:example#key-id'
       )
     ).toEqual({
-      header: { typ: 'JWT', kid: 'did:example#key-id' },
+      header: { typ: 'JWT', kid: 'did:example#key-id', alg: 'ES256K' },
       payload: {
         vc: minimalJsonLdCredential,
         jti: minimalJsonLdCredential.id,
@@ -44,10 +46,11 @@ describe('Generate a W3C VC-JWT v1.1 from a jsonld vc', () => {
     expect(
       jsonLdToUnsignedVcJwtContent(
         maximalJsonLdCredential,
+        KeyAlgorithms.RS256,
         'did:example#key-id'
       )
     ).toEqual({
-      header: { typ: 'JWT', kid: 'did:example#key-id' },
+      header: { typ: 'JWT', kid: 'did:example#key-id', alg: 'RS256' },
       payload: {
         vc: omit(['credentialSubject.jwk'], maximalJsonLdCredential),
         iat: Date.parse(maximalJsonLdCredential.issuanceDate) / 1000,

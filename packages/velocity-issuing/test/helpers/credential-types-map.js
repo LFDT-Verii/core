@@ -16,6 +16,7 @@
  */
 
 const { keyBy } = require('lodash/fp');
+const { KeyAlgorithms } = require('@verii/crypto/src/constants');
 
 const credentialTypeMetadata = keyBy('credentialType', [
   {
@@ -32,12 +33,21 @@ const credentialTypeMetadata = keyBy('credentialType', [
     jsonldContext: [
       'https://velocitynetwork.foundation/contexts/layer1-credentials-v1.1.json',
     ],
+    defaultSignatureAlgorithm: KeyAlgorithms.SECP256K1,
+  },
+  {
+    credentialType: 'OpenBadgeCredential',
+    layer1: false,
+    schemaUrl: 'https://imsglobal.org/schemas/open-badge-credential.json',
+    jsonldContext: ['https://imsglobal.org/schemas/openbadge-context.json'],
+    defaultSignatureAlgorithm: KeyAlgorithms.RS256,
   },
   {
     credentialType: '1EdtechCLR2.0',
     layer1: false,
-    schemaUrl: 'https://imsglobal.org/schemas/clr-v2.0-schema.json',
+    schemaUrl: 'https://velocitynetwork.foundation/schemas/clr.schema.json',
     jsonldContext: ['https://imsglobal.org/schemas/clr-context.json'],
+    defaultSignatureAlgorithm: KeyAlgorithms.RS256,
   },
 ]);
 const credentialTypesMap = keyBy('credentialType', credentialTypeMetadata);

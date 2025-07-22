@@ -23,6 +23,7 @@ const { generateKeyPair } = require('@verii/crypto');
 const { env: config } = require('@spencejs/spence-config');
 const console = require('console');
 
+const { wait } = require('@verii/common-functions');
 const testEventsAbi = require('./data/test-events-abi.json');
 
 const { initContractClient, initProvider } = require('../index');
@@ -44,6 +45,10 @@ describe('Mocked Contract Client Test Suite', () => {
   const authenticate = () => 'TOKEN';
 
   beforeAll(async () => {});
+
+  afterEach(async () => {
+    await wait(1000);
+  });
 
   afterAll(async () => {});
 

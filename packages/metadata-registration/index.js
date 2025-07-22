@@ -22,4 +22,5 @@ module.exports = {
   initRevocationRegistry,
   initMetadataRegistry,
   initVerificationCoupon,
+  ...require('./src/constants'),
 };

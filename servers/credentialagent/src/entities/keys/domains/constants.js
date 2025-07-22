@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-const KeyAlgorithms = {
-  SECP256K1: 'SECP256K1',
-};
-
-const KeyEncodings = {
-  HEX: 'hex',
-  JWK: 'jwk',
-};
-
 const KeyErrorMessages = {
   UNRECOGNIZED_PURPOSE_DETECTED: 'Unrecognized purpose detected',
   DUPLICATE_PURPOSE_DETECTED: 'Duplicate key purposes detected',
@@ -30,8 +21,4 @@ const KeyErrorMessages = {
   UNRECOGNIZED_ENCODING: 'Unrecognized encoding',
 };
 
-module.exports = {
-  KeyAlgorithms,
-  KeyEncodings,
-  KeyErrorMessages,
-};
+module.exports = { KeyErrorMessages };

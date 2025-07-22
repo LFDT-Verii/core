@@ -10,7 +10,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest --config ./jest.config.js --runInBand --coverage",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.js --runInBand --coverage",
     "lint": "eslint . --format json >> eslint.json",
     "lint:fix": "eslint --fix --ext .js ."
   },
@@ -18,6 +18,7 @@
     "@verii/base-contract-io": "^0.5.0-build",
     "@verii/blockchain-functions": "0.5.0-build",
     "@verii/common-functions": "0.5.0-build",
+    "@verii/cose-key": "0.5.0-build",
     "@verii/crypto": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",
     "@verii/contract-permissions": "^0.5.0-build",

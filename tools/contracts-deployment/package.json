@@ -17,7 +17,7 @@
     "access": "public"
   },
   "dependencies": {
-    "ethers": "6.14.1",
+    "ethers": "6.15.0",
     "@verii/crypto": "^0.5.0-build",
     "@verii/contract-permissions": "^0.5.0-build",
     "@verii/metadata-registration": "^0.5.0-build"

@@ -153,13 +153,9 @@ const tenantController = async (fastify) => {
       await repos.vendorUserIdMappings
         .collection()
         .deleteMany({ tenantId: tenant._id });
-      await repos.revocationListAllocations.collection().deleteMany({
-        tenantId: tenant._id,
-      });
+      await repos.allocations.collection().deleteMany({ tenantId: tenant._id });
       await repos.offers.collection().deleteMany({ 'issuer.id': tenant.did });
-
       await repos.tenants.delUsingFilter({ filter: { did: tenant.did } });
-
       await repos.groups.deleteTenant(tenant.did);
 
       reply.code(204);

@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-// eslint-disable-next-line import/order
 const nock = require('nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
@@ -27,7 +25,7 @@ const { errorResponseMatcher, mongoify } = require('@verii/tests-helpers');
 const { hexFromJwk, jwkFromSecp256k1Key } = require('@verii/jwt');
 const { rootPrivateKey } = require('@verii/sample-data');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
-const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
+const { KeyPurposes, KeyEncodings, generateKeyPair } = require('@verii/crypto');
 const {
   deployTestPermissionsContract,
 } = require('@verii/contract-permissions/test/helpers/deploy-test-permissions-contract');
@@ -40,7 +38,6 @@ const {
   initTenantFactory,
   initKeysFactory,
   tenantRepoPlugin,
-  KeyEncodings,
 } = require('../../src/entities');
 const {
   generatePrimaryAndAddOperatorToPrimary,

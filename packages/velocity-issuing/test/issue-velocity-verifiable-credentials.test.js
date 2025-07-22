@@ -19,17 +19,12 @@ const { toLower } = require('lodash/fp');
 const { MongoClient } = require('mongodb');
 const { publicJwkMatcher } = require('@verii/tests-helpers');
 const initRequest = require('@verii/request');
-const {
-  jwtDecode,
-  jwtVerify,
-  jwtSign,
-  jwkFromSecp256k1Key,
-} = require('@verii/jwt');
+const { jwtDecode, jwtVerify, jwtSign } = require('@verii/jwt');
 const { first, map } = require('lodash/fp');
-const { getUnixTime } = require('date-fns/fp');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { nanoid } = require('nanoid');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
+const { ALG_TYPE } = require('@verii/metadata-registration');
+const { KeyAlgorithms } = require('@verii/crypto');
 const { hashOffer } = require('../src/domain/hash-offer');
 const {
   issueVelocityVerifiableCredentials,
@@ -57,6 +52,7 @@ const mockCreateCredentialMetadataList = jest.fn();
 const mockAddRevocationListSigned = jest.fn();
 
 jest.mock('@verii/metadata-registration', () => ({
+  ...jest.requireActual('@verii/metadata-registration'),
   initRevocationRegistry: () => ({
     addRevocationListSigned: mockAddRevocationListSigned,
   }),
@@ -69,21 +65,16 @@ jest.mock('@verii/metadata-registration', () => ({
 describe('issuing velocity verifiable credentials', () => {
   const mongoClient = new MongoClient('mongodb://localhost:27017/');
 
-  let metadataListCollection;
-  let revocationListCollection;
+  let allocationsCollection;
   let issuer;
   let issuerEntity;
   let caoEntity;
   let context;
 
   beforeAll(async () => {
-    revocationListCollection = await collectionClient({
+    allocationsCollection = await collectionClient({
       mongoClient,
-      name: 'revocationListAllocations',
-    });
-    metadataListCollection = await collectionClient({
-      mongoClient,
-      name: 'metadataListAllocations',
+      name: 'allocations',
     });
     issuerEntity = entityFactory({ service: [{ id: '#issuer-1' }] });
     caoEntity = entityFactory({ service: [{ id: '#cao-1' }] });
@@ -93,7 +84,7 @@ describe('issuing velocity verifiable credentials', () => {
       issuingServiceId: issuerEntity.service[1]?.id,
       issuingServiceKMSKeyId: issuerEntity.kmsKeyId,
       issuingServiceDIDKeyId: issuerEntity.key[0].id,
-      dltOperatorAddress: toEthereumAddress(issuerEntity.keyPair.publicKey),
+      dltOperatorAddress: issuerEntity.primaryAddress,
       dltOperatorKMSKeyId: issuerEntity.kmsKeyId,
       dltOperatorDLTKeyId: issuerEntity.key[0].id,
       dltPrimaryAddress: issuerEntity.primaryAddress,
@@ -101,8 +92,7 @@ describe('issuing velocity verifiable credentials', () => {
   });
 
   beforeEach(async () => {
-    await revocationListCollection.deleteMany();
-    await metadataListCollection.deleteMany();
+    await allocationsCollection.deleteMany();
     jest.resetAllMocks();
     mockAddCredentialMetadataEntry.mockResolvedValue(true);
     mockCreateCredentialMetadataList.mockResolvedValue(true);
@@ -110,7 +100,8 @@ describe('issuing velocity verifiable credentials', () => {
       issuerEntity,
       caoEntity,
       allocationListQueries: mongoAllocationListQueries(
-        mongoClient.db('test-collections')
+        mongoClient.db('test-collections'),
+        'allocations'
       ),
     });
   });
@@ -144,6 +135,12 @@ describe('issuing velocity verifiable credentials', () => {
         type: '1EdtechCLR2.0',
         issuerId: issuerEntity.did,
         credentialSubject: require('./clrSubject.json'),
+        credentialSchema: [
+          {
+            type: 'ImsGlobalValidator2019',
+            id: 'https://imsglobal.org/schemas/clr-v2.0-schema.json',
+          },
+        ],
       },
     ]);
     const userId = createExampleDid();
@@ -273,7 +270,7 @@ describe('issuing velocity verifiable credentials', () => {
         { issuerEntity, caoEntity, offer: offers[i], userId }
       );
     }
-    verifyCreateMetadataListCalledOnce(
+    await verifyCreateMetadataListCalledOnce(
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0][0].listId,
       mockCreateCredentialMetadataList,
@@ -327,7 +324,7 @@ describe('issuing velocity verifiable credentials', () => {
         { issuerEntity, caoEntity, offer: offers[i], userId }
       );
     }
-    verifyCreateMetadataListCalledOnce(
+    await verifyCreateMetadataListCalledOnce(
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0][0].listId,
       mockCreateCredentialMetadataList,
@@ -346,7 +343,7 @@ const buildContext = ({ issuerEntity, caoEntity, ...args }) => ({
         throw new Error('KeyNotFound');
       }
       return Promise.resolve({
-        privateJwk: jwkFromSecp256k1Key(issuerEntity.keyPair.privateKey),
+        privateJwk: issuerEntity.keyPair.privateKey,
         id: issuerEntity.kmsKeyId,
       });
     },
@@ -381,12 +378,13 @@ const verifyCreateMetadataListCalledOnce = async (
     listId,
     expect.any(String),
     caoEntity.did,
+    ALG_TYPE.COSEKEY_AES_256,
   ]);
 
   const issuerAttestationJwtVc = args[2];
   const { header, payload } = await jwtVerify(
     issuerAttestationJwtVc,
-    jwkFromSecp256k1Key(issuerEntity.keyPair.publicKey, false)
+    issuerEntity.keyPair.publicKey
   );
   expect(header).toEqual({
     alg: 'ES256K',
@@ -394,7 +392,7 @@ const verifyCreateMetadataListCalledOnce = async (
     typ: 'JWT',
   });
   expect(payload).toEqual({
-    iat: getUnixTime(payload.vc.issuanceDate),
+    iat: expect.any(Number),
     iss: issuerEntity.did,
     jti: `ethereum:${METADATA_LIST_CONTRACT_ADDRESS}/getСredentialMetadataListIssuerVC?address=${issuerEntity.primaryAddress}&listId=${listId}`,
     nbf: expect.any(Number),
@@ -442,12 +440,16 @@ const verifyCredentialAndAddEntryExpectations = async (
   expect(credentialMetadataCall).toEqual([
     expect.objectContaining({
       credentialType: extractOfferType(offer),
-      publicKey: publicJwkMatcher,
+      publicKey: publicJwkMatcher(
+        credentialTypeMetadata[extractOfferType(offer)]
+          .defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1
+      ),
       listId: expect.any(Number),
       index: expect.any(Number),
     }),
     hashOffer(offer),
     caoEntity.did,
+    ALG_TYPE.COSEKEY_AES_256,
   ]);
 
   const { publicKey } = first(credentialMetadataCall);

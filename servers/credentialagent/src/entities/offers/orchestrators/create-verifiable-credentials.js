@@ -91,7 +91,10 @@ const doIssueVerifiableCredentials = async (
   const credentialTypesMap = await loadCredentialTypesMap(offers, context);
 
   // eslint-disable-next-line better-mutation/no-mutation
-  context.allocationListQueries = mongoAllocationListQueries(mongoDb());
+  context.allocationListQueries = mongoAllocationListQueries(
+    mongoDb(),
+    'allocations'
+  );
 
   return issueVelocityVerifiableCredentials(
     offers,

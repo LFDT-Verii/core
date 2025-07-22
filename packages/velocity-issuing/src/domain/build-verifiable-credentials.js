@@ -17,7 +17,11 @@
 
 const { toLower } = require('lodash/fp');
 const { mapWithIndex } = require('@verii/common-functions');
-const { generateKeyPair, get2BytesHash } = require('@verii/crypto');
+const {
+  generateJWAKeyPair,
+  get2BytesHash,
+  KeyAlgorithms,
+} = require('@verii/crypto');
 const { jsonLdToUnsignedVcJwtContent, jwtSign } = require('@verii/jwt');
 const { extractCredentialType } = require('@verii/vc-checks');
 const { hashOffer } = require('./hash-offer');
@@ -49,8 +53,13 @@ const buildVerifiableCredentials = async (
   return Promise.all(
     mapWithIndex(async (offer, i) => {
       const metadataEntry = metadataEntries[i];
-      const keyPair = generateKeyPair({ format: 'jwk' });
       const credentialType = extractCredentialType(offer);
+      const digitalSignatureAlgorithm =
+        credentialTypesMap[credentialType].defaultSignatureAlgorithm ??
+        KeyAlgorithms.SECP256K1;
+
+      const keyPair = generateJWAKeyPair(digitalSignatureAlgorithm);
+
       const metadata = {
         ...metadataEntry,
         credentialType,
@@ -82,6 +91,7 @@ const buildVerifiableCredentials = async (
 
       const { header, payload } = jsonLdToUnsignedVcJwtContent(
         jsonLdCredential,
+        digitalSignatureAlgorithm,
         `${credentialId}#key-1`
       );
       const vcJwt = await jwtSign(payload, keyPair.privateKey, header);

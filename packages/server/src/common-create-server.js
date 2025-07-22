@@ -149,9 +149,7 @@ const commonCreateServer = (config, log) => {
 const buildAjvOptions = (config) => {
   return {
     ajv: {
-      customOptions: {
-        ...config.ajvOptions,
-      },
+      customOptions: config.ajvOptions,
       plugins: [[ajvFormatsPlugin, config.ajvFormats]],
     },
   };

@@ -21,8 +21,8 @@
  * @import { Context, Id, KMS, KeySpec, KmsKey, KmsSecret, ImportableKey, ImportableSecret } from "../../types/types"
  */
 
-const { generateJWAKeyPair } = require('@verii/crypto');
-const { jwtSign, jwtVerify } = require('@verii/jwt');
+const { generateJWAKeyPair, encrypt, decrypt } = require('@verii/crypto');
+const { jwtSign, jwtVerify, hexFromJwk } = require('@verii/jwt');
 const { isEmpty, omit } = require('lodash/fp');
 const kmsRepo = require('./repo');
 const { defaultRepoOptions } = require('./default-repo-options');
@@ -165,6 +165,34 @@ const initDbKms = (fastify, kmsOptions = {}) => {
       );
     };
 
+    /**
+     * encrypt text using a secret
+     * @param {Record<string, unknown>} plainText the text to encrypt
+     * @param {Id} keyId the key id to encrypt with
+     * @returns {string} the encrypted text
+     */
+    const encryptString = async (plainText, keyId) => {
+      const key = await loadKey(keyId);
+      const hex = hexFromJwk(
+        key[repoOptions.secretProp] ?? key[repoOptions.keyProp]
+      );
+      return encrypt(plainText, hex);
+    };
+
+    /**
+     * Decrypt text using a secret
+     * @param {string} encrypted the encrypted text to decrypt
+     * @param {Id} keyId the key id to decrypt with
+     * @returns {string} the decrypted text
+     */
+    const decryptString = async (encrypted, keyId) => {
+      const key = await loadKey(keyId);
+      const hex = hexFromJwk(
+        key[repoOptions.secretProp] ?? key[repoOptions.keyProp]
+      );
+      return decrypt(encrypted, hex);
+    };
+
     return {
       createKey,
       importKey,
@@ -172,6 +200,8 @@ const initDbKms = (fastify, kmsOptions = {}) => {
       exportKeyOrSecret,
       signJwt,
       verifyJwt,
+      encryptString,
+      decryptString,
     };
   };
 };

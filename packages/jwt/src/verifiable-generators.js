@@ -21,7 +21,7 @@ const { getExpirationISODate, getIssuerId } = require('./vc-mappers');
 
 // Using credential structure as defined at: https://w3c.github.io/vc-imp-guide/
 // Using JWT structure as defined at: https://www.w3.org/TR/vc-data-model/#json-web-token
-const generateCredentialJwt = (credentialWrapper, key, kid) => {
+const generateCredentialJwt = (credentialWrapper, key, kid, alg) => {
   const credential = unwrap('vc', credentialWrapper);
   const payload = {
     vc: {
@@ -36,21 +36,22 @@ const generateCredentialJwt = (credentialWrapper, key, kid) => {
     payload.sub_jwk = credential.credentialSubject.jwk;
   }
 
-  const options = {
+  const opts = {
     ...docJti(credential),
     ...iatAndNbf(credential),
     ...issCredential(credential),
     ...exp(credential),
     ...sub(credential),
     kid,
+    alg,
   };
 
-  return generateDocJwt(payload, key, options);
+  return generateDocJwt(payload, key, opts);
 };
 
 // Using presentation structure as defined at: https://w3c.github.io/vc-imp-guide/
 // Using JWT structure as defined at: https://www.w3.org/TR/vc-data-model/#json-web-token
-const generatePresentationJwt = (presentationWrapper, key, kid) => {
+const generatePresentationJwt = (presentationWrapper, key, kid, alg) => {
   const presentation = unwrap('vp', presentationWrapper);
   const payload = {
     vp: {
@@ -67,6 +68,7 @@ const generatePresentationJwt = (presentationWrapper, key, kid) => {
     ...issPresentation(presentation),
     ...aud(presentation),
     kid,
+    alg,
   };
 
   return generateDocJwt(payload, key, options);

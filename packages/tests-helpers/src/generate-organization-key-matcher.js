@@ -16,7 +16,7 @@
 
 const { last } = require('lodash/fp');
 const { HEX_FORMAT } = require('@verii/test-regexes');
-const { publicKeyMatcher } = require('./matchers');
+const { publicJwkMatcher } = require('./jwk-matchers');
 
 const generateOrganizationKeyMatcher = ({
   kid,
@@ -43,7 +43,7 @@ const generateOrganizationKeyMatcher = ({
       controller: expect.any(String),
       ...(type === 'JsonWebKey2020'
         ? {
-            publicKeyJwk: publicKeyMatcher,
+            publicKeyJwk: publicJwkMatcher(),
           }
         : {
             publicKeyMultibase: expect.stringMatching(HEX_FORMAT),

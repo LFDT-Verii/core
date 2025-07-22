@@ -21,9 +21,10 @@ const { hexFromJwk } = require('@verii/jwt');
 /**
  * Returns the queries needed for allocating to DLT Lists
  * @param {unknown} db the db connection
+ * @param {string} collectionName the collection name
  * @returns {AllocationListQueries} queries to allocate to lists on a db
  */
-const mongoAllocationListQueries = (db) => {
+const mongoAllocationListQueries = (db, collectionName) => {
   /**
    * Gets the next entry out of the list
    * @param {string} entityName the name of the collection or table for the list
@@ -33,10 +34,11 @@ const mongoAllocationListQueries = (db) => {
    */
   const allocateNextEntry = async (entityName, issuer, context) => {
     const operatorAddress = await getOperatorAddress(issuer, context);
-    const result = await db.collection(entityName).findOneAndUpdate(
+    const result = await db.collection(collectionName).findOneAndUpdate(
       {
         tenantId: issuer.id,
         operatorAddress,
+        entityName,
         $and: [
           { freeIndexes: { $exists: true } },
           { freeIndexes: { $not: { $size: 0 } } },
@@ -78,8 +80,9 @@ const mongoAllocationListQueries = (db) => {
     context
   ) => {
     const operatorAddress = await getOperatorAddress(issuer, context);
-    await db.collection(entityName).insertOne({
+    await db.collection(collectionName).insertOne({
       tenantId: issuer.id,
+      entityName,
       freeIndexes: allocations.slice(1),
       currentListId: newListId,
       operatorAddress,

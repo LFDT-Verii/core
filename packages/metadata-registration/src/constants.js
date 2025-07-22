@@ -19,6 +19,15 @@ const RESOLUTION_METADATA_ERROR = {
   DATA_INTEGRITY_ERROR: 'DATA_INTEGRITY_ERROR',
 };
 
+const VERSION = '1';
+
+const ALG_TYPE = {
+  HEX_AES_256: 'aes-256-gcm',
+  COSEKEY_AES_256: 'cosekey:aes-256-gcm',
+};
+
 module.exports = {
   RESOLUTION_METADATA_ERROR,
+  VERSION,
+  ALG_TYPE,
 };

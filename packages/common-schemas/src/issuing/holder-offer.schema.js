@@ -13,7 +13,7 @@ const holderOfferSchema = {
       oneOf: [
         {
           type: 'object',
-          additionalProperties: false,
+          additionalProperties: true,
           required: ['id'],
           properties: {
             id: {
@@ -21,8 +21,16 @@ const holderOfferSchema = {
               description: 'the did id for the issuer.',
             },
             type: {
-              type: 'string',
-              description: 'the type of the issuer property',
+              oneOf: [
+                {
+                  type: 'string',
+                  description: 'the type of the issuer property',
+                },
+                {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+              ],
             },
             name: {
               type: 'string',

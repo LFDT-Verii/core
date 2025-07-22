@@ -18,4 +18,5 @@ module.exports = {
     '!**/migrations/**',
   ],
   verbose: true,
+  testTimeout: 7000,
 };

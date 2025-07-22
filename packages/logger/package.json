@@ -1,7 +1,7 @@
 {
   "name": "@verii/logger",
   "version": "0.5.0-build",
-  "description": "Logger for velocity foundation network",
+  "description": "Logger for Verii network",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
   "publishConfig": {

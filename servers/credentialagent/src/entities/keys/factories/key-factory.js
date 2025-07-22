@@ -15,11 +15,15 @@
  */
 
 const { register } = require('@spencejs/spence-factories');
-const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
+const {
+  KeyPurposes,
+  KeyAlgorithms,
+  KeyEncodings,
+  generateKeyPair,
+} = require('@verii/crypto');
 const { ObjectId } = require('mongodb');
 const { defaultRepoOptions, kmsRepo } = require('@verii/db-kms');
 const { initTenantFactory } = require('../../tenants');
-const { KeyAlgorithms, KeyEncodings } = require('../domains');
 const { agentKmsOptions } = require('../../../plugins/kms-plugin');
 
 const initKeysFactory = (app) => {

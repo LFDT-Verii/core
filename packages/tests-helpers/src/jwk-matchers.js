@@ -15,20 +15,41 @@
  */
 
 const { URLSAFE_BASE64_FORMAT } = require('@verii/test-regexes');
+const { KeyAlgorithms } = require('@verii/crypto');
 
-const privateJwkMatcher = {
-  crv: 'secp256k1',
-  kty: 'EC',
-  d: expect.stringMatching(URLSAFE_BASE64_FORMAT),
-  x: expect.stringMatching(URLSAFE_BASE64_FORMAT),
-  y: expect.stringMatching(URLSAFE_BASE64_FORMAT),
-};
+const privateJwkMatcher = (dsa = KeyAlgorithms.SECP256K1) =>
+  dsa.startsWith('RS')
+    ? {
+        kty: 'RS',
+        n: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        e: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        d: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        dp: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        dq: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        p: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        q: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        qi: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+      }
+    : {
+        crv: dsa === KeyAlgorithms.ES256 ? 'P-256' : 'secp256k1',
+        kty: 'EC',
+        d: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        x: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        y: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+      };
 
-const publicJwkMatcher = {
-  crv: 'secp256k1',
-  kty: 'EC',
-  x: expect.stringMatching(URLSAFE_BASE64_FORMAT),
-  y: expect.stringMatching(URLSAFE_BASE64_FORMAT),
-};
+const publicJwkMatcher = (dsa = KeyAlgorithms.SECP256K1) =>
+  dsa.startsWith('RS')
+    ? {
+        kty: 'RSA',
+        n: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        e: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+      }
+    : {
+        crv: dsa === KeyAlgorithms.ES256 ? 'P-256' : 'secp256k1',
+        kty: 'EC',
+        x: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+        y: expect.stringMatching(URLSAFE_BASE64_FORMAT),
+      };
 
 module.exports = { publicJwkMatcher, privateJwkMatcher };

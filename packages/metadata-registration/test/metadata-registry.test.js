@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-const { generateKeyPair, get2BytesHash } = require('@verii/crypto');
-const { compact, map, omit, reduce } = require('lodash/fp');
+const {
+  generateKeyPair,
+  get2BytesHash,
+  generateJWAKeyPair,
+} = require('@verii/crypto');
+const { compact, first, map, omit, reduce } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { initPermissions } = require('@verii/contract-permissions');
@@ -26,6 +30,7 @@ const {
 const { env } = require('@spencejs/spence-config');
 const console = require('console');
 
+const { mapWithIndex, wait } = require('@verii/common-functions');
 const {
   deployPermissionContract,
   deployVerificationCouponContract,
@@ -34,6 +39,7 @@ const {
   deployerPrivateKey,
 } = require('./helpers/deploy-contracts');
 const { initMetadataRegistry, initVerificationCoupon } = require('../index');
+const { ALG_TYPE } = require('../src/constants');
 
 const testListAlgType = '0x6b86';
 const testListVersion = '0xa38d';
@@ -114,12 +120,6 @@ describe('Metadata Registry', () => {
   let context;
 
   const { publicKey: credentialKey } = generateKeyPair({ format: 'jwk' });
-  const baseCredentialMetadata = {
-    listId: 2,
-    index: 1,
-    publicKey: credentialKey,
-    credentialTypeEncoded: get2BytesHash(defaultCredentialType),
-  };
 
   beforeAll(async () => {
     context = {
@@ -202,6 +202,10 @@ describe('Metadata Registry', () => {
     );
   });
 
+  afterEach(async () => {
+    await wait(1000);
+  });
+
   afterAll(async () => {
     await mongoCloseWrapper();
   });
@@ -225,13 +229,25 @@ describe('Metadata Registry', () => {
         scope: 'credential:contactissue',
       });
     });
-    it('Create a new list', async () => {
+    it('Create a new legacy list', async () => {
       const result =
         await operatorMetadataRegistryClient.createCredentialMetadataList(
           primaryAddress,
           1001,
           vc,
           caoDid
+        );
+      expect(result).toEqual(true);
+    });
+
+    it('Create a COSE key list', async () => {
+      const result =
+        await operatorMetadataRegistryClient.createCredentialMetadataList(
+          primaryAddress,
+          2001,
+          vc,
+          caoDid,
+          ALG_TYPE.COSEKEY_AES_256
         );
       expect(result).toEqual(true);
     });
@@ -268,7 +284,17 @@ describe('Metadata Registry', () => {
     });
   });
 
-  describe('add entry to list', () => {
+  describe.each([
+    { algType: ALG_TYPE.COSEKEY_AES_256, listId: 3001, title: 'COSE key' },
+    { algType: ALG_TYPE.HEX_AES_256, listId: 3002, title: 'legacy' },
+  ])('Add $title entry to credential metadata list', ({ algType, listId }) => {
+    const baseCredentialMetadata = {
+      listId,
+      index: 1,
+      publicKey: credentialKey,
+      credentialTypeEncoded: get2BytesHash(defaultCredentialType),
+    };
+
     beforeAll(async () => {
       await deployerPermissionsClient.addAddressScope({
         address: primaryAddress,
@@ -280,12 +306,14 @@ describe('Metadata Registry', () => {
       });
       await operatorMetadataRegistryClient.createCredentialMetadataList(
         primaryAddress,
-        baseCredentialMetadata.listId,
+        listId,
         vc,
-        caoDid
+        caoDid,
+        algType
       );
     });
-    it('Use an existing list', async () => {
+
+    it('Use an existing cose key list', async () => {
       const metadata = {
         ...baseCredentialMetadata,
         index: Math.floor(Math.random() * 10000),
@@ -295,7 +323,8 @@ describe('Metadata Registry', () => {
         await operatorMetadataRegistryClient.addCredentialMetadataEntry(
           metadata,
           password,
-          caoDid
+          caoDid,
+          algType
         );
 
       expect(result0).toEqual(true);
@@ -312,7 +341,8 @@ describe('Metadata Registry', () => {
         await operatorMetadataRegistryClient.addCredentialMetadataEntry(
           metadata,
           password,
-          caoDid
+          caoDid,
+          algType
         );
       expect(result).toEqual(true);
     });
@@ -321,13 +351,15 @@ describe('Metadata Registry', () => {
       await operatorMetadataRegistryClient.addCredentialMetadataEntry(
         baseCredentialMetadata,
         password,
-        caoDid
+        caoDid,
+        algType
       );
 
       const result = operatorMetadataRegistryClient.addCredentialMetadataEntry(
         baseCredentialMetadata,
         password,
-        caoDid
+        caoDid,
+        algType
       );
       await expect(result).rejects.toThrow('Index already used');
     });
@@ -343,7 +375,8 @@ describe('Metadata Registry', () => {
         operatorMetadataRegistryClient.addCredentialMetadataEntry(
           metadata,
           password,
-          caoDid
+          caoDid,
+          algType
         )
       ).rejects.toThrow('Index already used');
     });
@@ -362,7 +395,8 @@ describe('Metadata Registry', () => {
         await operatorMetadataRegistryClient.addCredentialMetadataEntry(
           metadata,
           password,
-          caoDid
+          caoDid,
+          algType
         );
 
         await deployerPermissionsClient.addAddressScope({
@@ -395,7 +429,8 @@ describe('Metadata Registry', () => {
         await operatorMetadataRegistryClient.addCredentialMetadataEntry(
           metadata,
           password,
-          caoDid
+          caoDid,
+          algType
         );
         expect(true).toEqual('should have thrown');
       } catch (e) {
@@ -417,7 +452,8 @@ describe('Metadata Registry', () => {
         await operatorMetadataRegistryClient.addCredentialMetadataEntry(
           metadata,
           password,
-          caoDid
+          caoDid,
+          algType
         );
         expect(true).toEqual('should have thrown');
       } catch (e) {
@@ -490,7 +526,7 @@ describe('Metadata Registry', () => {
     });
   });
 
-  describe('Metadata list resolution test group', () => {
+  describe('Reading from credential metadata lists', () => {
     const burnerDid = 'did:ion:123';
 
     beforeAll(async () => {
@@ -713,20 +749,20 @@ describe('Metadata Registry', () => {
     });
 
     describe.each([
-      { listId: 3, didSuffix: null },
-      { listId: 4, didSuffix: password },
+      { listId: 3, didSuffix: null, title: 'without a didSuffix' },
+      { listId: 4, didSuffix: password, title: 'using a didSuffix' },
     ])(
-      'Resolve did document with $didSuffix didSuffix',
-      ({ listId, didSuffix }) => {
+      'Resolve DID $title from legacy credential metadata entry',
+      ({ listId, didSuffix, algType }) => {
         let credential;
         let indexEntry;
         const index = 2342;
         const { publicKey } = generateKeyPair({ format: 'jwk' });
         const credentialMetadata = {
-          ...baseCredentialMetadata,
           listId,
           index,
           publicKey,
+          credentialTypeEncoded: get2BytesHash(defaultCredentialType),
         };
 
         beforeAll(async () => {
@@ -748,7 +784,8 @@ describe('Metadata Registry', () => {
           await operatorMetadataRegistryClient.addCredentialMetadataEntry(
             credentialMetadata,
             password,
-            caoDid
+            caoDid,
+            algType
           );
         });
         beforeEach(async () => {
@@ -888,7 +925,7 @@ describe('Metadata Registry', () => {
           });
 
           await expect(result).rejects.toThrow(
-            'Unsupported encryption algorithm "aes-256-gcm" or version "1"'
+            'Unsupported algorithm (0x682d). Valid values are aes-256-gcm (0xa38d) or cosekey:aes-256-gcm (0xd19a)'
           );
         });
 
@@ -943,6 +980,280 @@ describe('Metadata Registry', () => {
         });
       }
     );
+
+    describe('Resolve DID with didSuffix from COSE key credential metadata entry', () => {
+      let credentialIds;
+
+      const keyPairs = [
+        generateJWAKeyPair({ algorithm: 'ec', curve: 'secp256k1' }),
+        generateJWAKeyPair({ algorithm: 'ec', curve: 'P-256' }),
+        generateJWAKeyPair({ algorithm: 'rsa' }),
+      ];
+
+      const credentialMetadatas = mapWithIndex(
+        (keyPair, i) => ({
+          listId: 3004,
+          index: 2342 + i,
+          publicKey: keyPair.publicKey,
+          credentialTypeEncoded: get2BytesHash(defaultCredentialType),
+        }),
+        keyPairs
+      );
+
+      beforeAll(async () => {
+        await operatorMetadataRegistryClient.createCredentialMetadataList(
+          primaryAddress,
+          first(credentialMetadatas).listId,
+          vc,
+          caoDid,
+          ALG_TYPE.COSEKEY_AES_256
+        );
+        credentialIds = map(
+          (credentialMetadata) =>
+            `did:velocity:v2:${primaryAddress}:${credentialMetadata.listId}:${credentialMetadata.index}:${password}`,
+          credentialMetadatas
+        );
+
+        for (const credentialMetadata of credentialMetadatas) {
+          // eslint-disable-next-line no-await-in-loop
+          await operatorMetadataRegistryClient.addCredentialMetadataEntry(
+            credentialMetadata,
+            password,
+            caoDid,
+            ALG_TYPE.COSEKEY_AES_256
+          );
+        }
+      });
+      beforeEach(async () => {
+        await deployerVerificationCouponClient.mint({
+          toAddress: primaryAddress,
+          expirationTime,
+          quantity: 1,
+          ownerDid,
+        });
+      });
+
+      it('Create and resolve did', async () => {
+        const credential = {
+          id: first(credentialIds),
+          credentialType: defaultCredentialType,
+        };
+        const didDocument =
+          await operatorMetadataRegistryClient.resolveDidDocument({
+            did: first(credentialIds),
+            credentials: [credential],
+            burnerDid,
+            caoDid: 'did:velocity:99',
+          });
+
+        expect(didDocument).toEqual({
+          didDocument: {
+            id: didValidation,
+            publicKey: [expectedPublicKey(first(keyPairs))],
+            service: [serviceValidation],
+          },
+          didDocumentMetadata: {
+            boundIssuerVcs: [boundIssuerVcsValidation],
+          },
+          didResolutionMetadata: {},
+        });
+      });
+
+      it('Create and resolve multi did', async () => {
+        const credentialDatas = map(
+          (id) => ({
+            id,
+            credentialType: defaultCredentialType,
+          }),
+          credentialIds
+        );
+        const indexEntries = [
+          [
+            primaryAddress,
+            credentialMetadatas[0].listId,
+            credentialMetadatas[0].index,
+            password,
+          ],
+          [
+            primaryAddress,
+            credentialMetadatas[1].listId,
+            credentialMetadatas[1].index,
+            password,
+          ],
+          [
+            primaryAddress,
+            credentialMetadatas[2].listId,
+            credentialMetadatas[2].index,
+            password,
+          ],
+        ];
+        const did = buildMultiDid(indexEntries);
+        const didDocument =
+          await operatorMetadataRegistryClient.resolveDidDocument({
+            did,
+            credentials: credentialDatas,
+            burnerDid,
+            caoDid: 'did:velocity:99',
+          });
+        const multiDidDocumentValidation = {
+          didDocument: {
+            id: didValidation,
+            publicKey: [
+              expectedPublicKey(keyPairs[0]),
+              expectedPublicKey(keyPairs[1]),
+              expectedPublicKey(keyPairs[2]),
+            ],
+            service: [serviceValidation, serviceValidation, serviceValidation],
+          },
+          didDocumentMetadata: {
+            boundIssuerVcs: [
+              boundIssuerVcsValidation,
+              boundIssuerVcsValidation,
+              boundIssuerVcsValidation,
+            ],
+          },
+          didResolutionMetadata: {},
+        };
+        expect(didDocument).toEqual(multiDidDocumentValidation);
+      });
+
+      it('Should return did resolution metadata if wrong resolved', async () => {
+        const entryIndexes = [
+          [
+            primaryAddress,
+            credentialMetadatas[0].listId,
+            2342,
+            '1111111111111111111111111111111111111111111111111111111111111111',
+          ],
+        ];
+        const did = entryIndexes.reduce(
+          (multiDid, [accountId, listId, index, pass], i) =>
+            !i
+              ? `${multiDid}:${accountId}:${listId}:${index}:${pass}`
+              : `${multiDid};${accountId}:${listId}:${index}:${pass}`,
+          'did:velocity:v2:multi'
+        );
+        const credential = {
+          id: `did:velocity:v2:${entryIndexes[0][0]}:${entryIndexes[0][1]}:${entryIndexes[0][2]}:${entryIndexes[0][3]}`,
+          credentialType: defaultCredentialType,
+        };
+        const didDocument =
+          await operatorMetadataRegistryClient.resolveDidDocument({
+            did,
+            credentials: [credential],
+            burnerDid,
+            caoDid: 'did:velocity:99',
+          });
+
+        expect(didDocument).toEqual({
+          didDocument: {
+            id: didValidation,
+            publicKey: [],
+            service: [serviceValidation],
+          },
+          didDocumentMetadata: {
+            boundIssuerVcs: [boundIssuerVcsValidation],
+          },
+          didResolutionMetadata: {
+            error: 'UNRESOLVED_MULTI_DID_ENTRIES',
+            unresolvedMultiDidEntries: [
+              {
+                id: didValidation,
+                error: 'DATA_INTEGRITY_ERROR',
+              },
+            ],
+          },
+        });
+      });
+
+      it('Unsupported encryption algorithm and version to resolve multi did', async () => {
+        const listId = 11;
+        await operatorMetadataRegistryClient.createCredentialMetadataList(
+          primaryAddress,
+          listId,
+          vc,
+          caoDid,
+          'unsupported algorithm',
+          '1'
+        );
+        await operatorMetadataRegistryClient.addCredentialMetadataEntry(
+          { ...credentialMetadatas[0], listId },
+          password,
+          caoDid,
+          ALG_TYPE.COSEKEY_AES_256
+        );
+
+        const credentialData = {
+          id: `did:velocity:v2:${primaryAddress}:${listId}:${credentialMetadatas[0].index}:${password}`,
+          credentialType: regularIssuingCredentialType,
+        };
+        const indexEntries = [
+          [primaryAddress, listId, credentialMetadatas[0].index, password],
+        ];
+        const did = buildMultiDid(indexEntries);
+        const result = operatorMetadataRegistryClient.resolveDidDocument({
+          did,
+          credentials: [credentialData],
+          burnerDid,
+          caoDid: 'did:velocity:99',
+        });
+
+        await expect(result).rejects.toThrow(
+          'Unsupported algorithm (0x682d). Valid values are aes-256-gcm (0xa38d) or cosekey:aes-256-gcm (0xd19a)'
+        );
+      });
+
+      it('Invalid hash credentialType wrong type resolve did', async () => {
+        const credential = {
+          id: credentialIds[0],
+          credentialType: 'Wrong type!',
+        };
+        const result = operatorMetadataRegistryClient.resolveDidDocument({
+          did: credentialIds[0],
+          credentials: [credential],
+          burnerDid,
+          caoDid: 'did:velocity:99',
+        });
+
+        await expect(result).rejects.toThrow(
+          'Invalid hash credentialType "Wrong type!"'
+        );
+      });
+      it('Missed credential type field in VC', async () => {
+        const credential = {
+          id: credentialIds[0],
+          credentialType: null,
+        };
+        const result = operatorMetadataRegistryClient.resolveDidDocument({
+          did: credentialIds[0],
+          credentials: [credential],
+          burnerDid,
+          caoDid: 'did:velocity:99',
+        });
+
+        await expect(result).rejects.toThrow(
+          `Could not resolve credential type from VC with ${credentialIds[0]}`
+        );
+      });
+
+      it('Missed content hash field in VC', async () => {
+        const did = credentialIds[0].split(':').slice(0, -1).join(':');
+        const credential = {
+          id: did,
+          credentialType: defaultCredentialType,
+        };
+        const result = operatorMetadataRegistryClient.resolveDidDocument({
+          did,
+          credentials: [credential],
+          burnerDid,
+          caoDid: 'did:velocity:99',
+        });
+
+        await expect(result).rejects.toThrow(
+          `Could not resolve content hash from VC with ${did}`
+        );
+      });
+    });
 
     describe('Pull Metadata Registry Events', () => {
       it('Should pull CreatedMetadataList event', async () => {
@@ -1025,3 +1336,8 @@ const boundIssuerVcsValidation = {
   format: 'jwt_vc',
   vc: expect.any(String),
 };
+
+const expectedPublicKey = (keyPair) => ({
+  id: expect.stringMatching(/^did:velocity:v2:.*#key-1$/),
+  publicKeyJwk: keyPair.publicKey,
+});

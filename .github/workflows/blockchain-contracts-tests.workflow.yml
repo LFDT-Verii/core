@@ -1,22 +1,7 @@
 name: Blockchain Contracts Tests
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - staging
-      - qa
-      - dev
-    paths:
-      - 'contracts/**'
-  pull_request:
-    branches:
-      - main
-      - staging
-      - qa
-      - dev
-    paths:
-      - 'contracts/**'
+
 env:
   DOCKER_REG: 'ghcr.io'
   NODE_VERSION: '22'
@@ -44,6 +29,23 @@ jobs:
       - name: Compile Contract
         run: npm run build
         working-directory: ./contracts/${{ matrix.contract }}
+      # Start Besu Blockchain Node
+      - name: Start Besu Blockchain Node
+        run: >
+          docker run
+          --name blockchain
+          -p 8545:8545
+          -v ./eng/docker/services/blockchain-config:/opt/besu/config
+          -d
+          hyperledger/besu:25.4.1@sha256:00468488df234ead7c0e450ffcd5bc1ac3ed62f458a0de42ba029155ecdf5331
+          --genesis-file=/opt/besu/config/genesis.json
+          --node-private-key-file=/opt/besu/config/key
+          --rpc-http-enabled
+          --rpc-http-api=ETH,NET,WEB3
+          --host-allowlist=*
+          --rpc-http-cors-origins=all
+          --min-gas-price=0
+          --profile=enterprise
       # Run Contract tests
       - name: Run Contract tests
         run: npm run test

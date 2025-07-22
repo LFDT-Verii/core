@@ -586,9 +586,13 @@ describe('get credential manifests', () => {
             'CurrentEmploymentPosition',
           ],
         }),
+        headers: {
+          origin: 'foo',
+        },
       });
 
       expect(response.statusCode).toEqual(200);
+      expect(response.headers['access-control-allow-origin']).toEqual('foo');
       expect(response.json).toEqual({
         issuing_request: expect.any(String),
       });
