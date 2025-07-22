@@ -1,7 +1,7 @@
 name: Vulnerability Audit
 on:
   pull_request:
-    branches: [ main, staging, qa, dev ]
+    branches: [ main ]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
