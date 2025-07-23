@@ -15,7 +15,7 @@
  */
 
 const nock = require('nock');
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 const { ProductIds, createFineractClient } = require('../src');
 
 const testHost = 'https://localhost.test';
@@ -27,7 +27,7 @@ describe('create clients', () => {
 
   beforeAll(async () => {
     const baseContext = { log: console };
-    const fineractFetch = initRequest({ prefixUrl: testHost })(baseContext);
+    const fineractFetch = initHttpClient({ prefixUrl: testHost })(baseContext);
     context = { ...baseContext, fineractFetch };
   });
 

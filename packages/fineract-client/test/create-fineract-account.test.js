@@ -15,7 +15,7 @@
  */
 
 const nock = require('nock');
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 const {
   ProductIds,
   createStakesAccount,
@@ -30,7 +30,10 @@ describe('create client accounts', () => {
 
   beforeAll(async () => {
     const baseContext = { log: console };
-    const fineractFetch = initRequest({ prefixUrl: testHost })(baseContext);
+    const fineractFetch = initHttpClient({
+      prefixUrls: [testHost],
+      skipAgentInit: true
+    })(testHost, baseContext);
     context = { ...baseContext, fineractFetch };
   });
 

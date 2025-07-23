@@ -19,7 +19,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@verii/request": "0.5.0-build",
+    "@verii/http-client": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
     "date-fns": "3.6.0",
     "eslint": "8.57.1",
@@ -32,7 +32,7 @@
     "eslint-plugin-prettier": "4.2.1",
     "eslint-watch": "7.0.0",
     "jest": "29.7.0",
-    "nock": "14.0.5",
+    "nock": "15.0.0-beta.4",
     "prettier": "2.8.8"
   },
   "nx": {

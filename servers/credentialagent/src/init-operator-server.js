@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 const AutoLoad = require('@fastify/autoload');
 const fastifyRoutes = require('@fastify/routes');
 const path = require('path');
 const { pick, omit } = require('lodash/fp');
-const { vnfProtocolVersionPlugin } = require('@verii/fastify-plugins');
+const {
+  vnfProtocolVersionPlugin,
+  cachePlugin,
+} = require('@verii/fastify-plugins');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,
@@ -56,38 +59,44 @@ const initOperatorServer = (fastify) => {
       autoHooks: true,
       cascadeHooks: true,
     })
+    .register(cachePlugin)
     .decorate(
       'baseVendorFetch',
-      initRequest({
+      initHttpClient({
         ...omit(['bearerToken'], fastify.config),
         prefixUrl: fastify.config.vendorUrl,
+        cache: fastify.cache,
       })
     )
     .decorate(
       'baseRegistrarFetch',
-      initRequest({
+      initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.oracleUrl,
+        cache: fastify.cache,
       })
     )
     .decorate(
       'baseUniversalResolverFetch',
-      initRequest({
+      initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.universalResolverUrl,
+        cache: fastify.cache,
       })
     )
     .decorate(
       'baseFetch',
-      initRequest({
+      initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
+        cache: fastify.cache,
       })
     )
     .decorate(
       'baseLibFetch',
-      initRequest({
+      initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.libUrl,
+        cache: fastify.cache,
       })
     )
     .register(Static, {

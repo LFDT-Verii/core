@@ -1,4 +1,4 @@
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 const path = require('path');
 const AutoLoad = require('@fastify/autoload');
 
@@ -19,9 +19,10 @@ const initServer = (server) => {
       server
         .decorate(
           'baseAgentFetch',
-          initRequest({
+          initHttpClient({
             ...server.config,
             prefixUrl: server.config.agentUrl,
+            cache: server.cache,
           })
         )
         .decorateRequest('agentFetch', null)

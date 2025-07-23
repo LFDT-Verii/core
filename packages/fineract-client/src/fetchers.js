@@ -165,11 +165,11 @@ const createCreditsAccount = async (
     productId,
     autoApproveAndActivate,
   });
-  const { savingsId } = await fineractFetch
+  const response = await fineractFetch
     .post('fineract-provider/api/v1/savingsaccounts', {
       json: payload,
-    })
-    .json();
+    });
+  const { savingsId } = await response.json();
   return { tokenAccountId: `${savingsId}` };
 };
 

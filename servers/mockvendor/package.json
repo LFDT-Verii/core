@@ -32,7 +32,7 @@
     "@verii/did-doc": "0.5.0-build",
     "@verii/fastify-plugins": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",
-    "@verii/request": "0.5.0-build",
+    "@verii/http-client": "0.5.0-build",
     "@verii/server-credentialagent": "0.5.0-build",
     "@verii/server-provider": "0.5.0-build",
     "date-fns": "~3.6.0",
@@ -60,7 +60,7 @@
     "eslint-watch": "7.0.0",
     "canonicalize": "2.1.0",
     "jest": "29.7.0",
-    "nock": "14.0.5",
+    "nock": "15.0.0-beta.4",
     "nodemon": "3.1.10",
     "prettier": "2.8.8"
   }
