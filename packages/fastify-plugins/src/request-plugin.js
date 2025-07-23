@@ -15,7 +15,7 @@
  *
  */
 
-const initRequest = require('@verii/http-client');
+const initRequest = require('@verii/request');
 const { capitalize } = require('lodash/fp');
 const fp = require('fastify-plugin');
 
