@@ -33,7 +33,7 @@ const {
 
 const { nanoid } = require('nanoid');
 const { hexFromJwk, jwtSign, jwtDecode } = require('@verii/jwt');
-const initRequest = require('@verii/request');
+const initRequest = require('@verii/http-client');
 const { MongoClient } = require('mongodb');
 const { map } = require('lodash/fp');
 const { collectionClient } = require('./helpers/collection-client');

@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 const Static = require('@fastify/static');
 const fastifyRoutes = require('@fastify/routes');
 const { adminJwtAuthPlugin } = require('@verii/auth');
-const { vnfProtocolVersionPlugin } = require('@verii/fastify-plugins');
+const {
+  vnfProtocolVersionPlugin,
+  cachePlugin,
+} = require('@verii/fastify-plugins');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,
@@ -74,39 +77,45 @@ const initServer = (server) => {
     .register(autoloadHolderApiControllers)
     .register(autoloadRootApiController)
     .register(autoloadSaasoperatorApiControllers)
+    .register(cachePlugin)
     .decorate(
       'baseVendorFetch',
-      initRequest({
+      initHttpClient({
         ...omit(['bearerToken'], server.config),
         mapUrl: initMapVendorUrl(server.config),
         prefixUrl: server.config.vendorUrl,
+        cache: server.cache,
       })
     )
     .decorate(
       'baseRegistrarFetch',
-      initRequest({
+      initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
         prefixUrl: server.config.oracleUrl,
+        cache: server.cache,
       })
     )
     .decorate(
       'baseUniversalResolverFetch',
-      initRequest({
+      initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
         prefixUrl: server.config.universalResolverUrl,
+        cache: server.cache,
       })
     )
     .decorate(
       'baseFetch',
-      initRequest({
+      initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
+        cache: server.cache,
       })
     )
     .decorate(
       'baseLibFetch',
-      initRequest({
+      initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
         prefixUrl: server.config.libUrl,
+        cache: server.cache,
       })
     )
     .register(Static, {

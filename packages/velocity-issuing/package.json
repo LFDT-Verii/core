@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@verii/contract-permissions": "0.5.0-build",
-    "@verii/request": "0.5.0-build",
+    "@verii/http-client": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
     "eslint": "8.57.1",

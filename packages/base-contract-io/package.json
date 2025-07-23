@@ -17,7 +17,7 @@
   "dependencies": {
     "@verii/blockchain-functions": "0.5.0-build",
     "@verii/common-functions": "0.5.0-build",
-    "@verii/request": "^0.5.0-build",
+    "@verii/http-client": "^0.5.0-build",
     "date-fns": "^3.0.0",
     "fastify-plugin": "^5.0.0",
     "ethers": "6.15.0",

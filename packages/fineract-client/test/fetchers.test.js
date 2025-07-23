@@ -17,7 +17,7 @@
 const nock = require('nock');
 const { startOfDay, subDays } = require('date-fns/fp');
 const { formatAsDate } = require('@verii/common-functions');
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 const {
   ISO_DATETIME_FORMAT_ONLY_DATE_SECTION,
 } = require('@verii/test-regexes');
@@ -46,7 +46,7 @@ describe('fineract client test suite', () => {
   let fineractFetch;
 
   beforeAll(async () => {
-    fineractFetch = initRequest({
+    fineractFetch = initHttpClient({
       prefixUrl: testHost,
     })({ log: console });
   });
