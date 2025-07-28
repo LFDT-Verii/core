@@ -15,12 +15,12 @@
  */
 
 const fp = require('fastify-plugin');
-const QuickLru = require('quick-lru');
+const { initCache } = require('@verii/http-client');
 
-const cache = new QuickLru({ maxSize: 1000, maxAge: 2 * 60 * 60 * 1000 }); // 1000 items cached for a mac of 2 hours
+const store = initCache();
 
 const cachePlugin = (fastify, options, done) => {
-  fastify.decorate('cache', cache);
+  fastify.decorate('cache', store);
   fastify.addHook('onRequest', (request, reply, next) => {
     request.cache = fastify.cache;
     next();
