@@ -3434,10 +3434,10 @@
   dependencies:
     sparse-bitfield "^3.0.3"
 
-"@mswjs/interceptors@^0.38.7":
-  version "0.38.7"
-  resolved "https://registry.npmjs.org/@mswjs/interceptors/-/interceptors-0.38.7.tgz#5ca205dbf8887830ace8d0bd9b23323a211350de"
-  integrity sha512-Jkb27iSn7JPdkqlTqKfhncFfnEZsIJVYxsFbUSWEkxdIPdsyngrhoDBk0/BGD2FQcRH99vlRrkHpNTyKqI+0/w==
+"@mswjs/interceptors@^0.39.3":
+  version "0.39.4"
+  resolved "https://registry.npmjs.org/@mswjs/interceptors/-/interceptors-0.39.4.tgz#820727657bf8be02c185c3e9c83f7209e3c73467"
+  integrity sha512-B82DbrGVCIBrNEfRJbqUFB0eNz0wVzqbenEpmbE71XLVU4yKZbDnRBuxz+7udc/uM7LDWDD4sRJ5tISzHf2QkQ==
   dependencies:
     "@open-draft/deferred-promise" "^2.2.0"
     "@open-draft/logger" "^0.3.0"
@@ -15426,12 +15426,12 @@ no-case@^3.0.4:
     lower-case "^2.0.2"
     tslib "^2.0.3"
 
-nock@15.0.0-beta.4:
-  version "15.0.0-beta.4"
-  resolved "https://registry.npmjs.org/nock/-/nock-15.0.0-beta.4.tgz#6e2a40361f2b9782d576e7e903d8376bf2377dd8"
-  integrity sha512-ZWLweXuh96gt8LwF9NjBRtNN/NMZYeLRoDc2wX8djva+v2qVzI0EiFZpSMbanJ45WTFIAiqsM5GW8TahiBn7Xw==
+nock@15.0.0-beta.5:
+  version "15.0.0-beta.5"
+  resolved "https://registry.npmjs.org/nock/-/nock-15.0.0-beta.5.tgz#cef9b54750fc2299c5e4d83d38564aa8c7263922"
+  integrity sha512-PnPM6UiBb4y+BoEvSE/tYioWzyExRdEk+wnjO0uty3j/gAvz7lo5VR6FQRX3vnSjcv6uvDxTDhjx686BOCpT0Q==
   dependencies:
-    "@mswjs/interceptors" "^0.38.7"
+    "@mswjs/interceptors" "^0.39.3"
     json-stringify-safe "^5.0.1"
 
 node-abi@^3.61.0:
