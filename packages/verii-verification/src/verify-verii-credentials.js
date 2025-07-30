@@ -32,6 +32,10 @@ const verifyVeriiCredentials = async (
 
   // eslint-disable-next-line better-mutation/no-mutation
   context.registrarFetch = httpClient(context.config.registrarUrl, context);
+  if (context?.tenant?.id == null) {
+    // eslint-disable-next-line better-mutation/no-mutation
+    context.tenant = { did: relyingParty.did };
+  }
 
   return verifyCredentials(
     { credentials, expectedHolderDid, relyingParty },

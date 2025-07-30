@@ -40,7 +40,7 @@ jest.mock('@verii/metadata-registration');
 const registrarHost = 'registrar.test';
 const registrarUrl = `https://${registrarHost}`;
 
-describe('Verify credentials', () => {
+describe('Verify verii credentials', () => {
   const orgKeyPair = generateKeyPairInHexAndJwk();
   const issuerDid = 'did:ion:1234567890';
   const issuerKeyPair = generateKeyPairInHexAndJwk();
@@ -75,7 +75,6 @@ describe('Verify credentials', () => {
     };
 
     context = {
-      tenant: { did: 'did:ion:123' },
       log: console,
       config,
       kms: { exportKeyOrSecret: async (id) => keys[id] },
@@ -193,7 +192,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -217,7 +219,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -241,7 +246,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -283,7 +291,10 @@ describe('Verify credentials', () => {
         const result = await verifyVeriiCredentials(
           {
             credentials: [openBadgeVc],
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
             expectedHolderDid: issuerDidJwk,
           },
           context
@@ -320,7 +331,10 @@ describe('Verify credentials', () => {
           {
             credentials: [vcWithArrayOfStatus],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -344,7 +358,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -372,7 +389,10 @@ describe('Verify credentials', () => {
         const result = await verifyVeriiCredentials(
           {
             credentials: [openBadgeVc],
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -411,7 +431,13 @@ describe('Verify credentials', () => {
           }
         );
         const result = await verifyVeriiCredentials(
-          { credentials: [signedCredential] },
+          {
+            credentials: [signedCredential],
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
+          },
           context
         );
         const { header } = jwtDecode(signedCredential);
@@ -445,7 +471,10 @@ describe('Verify credentials', () => {
             {
               credentials: [openBadgeVc],
               expectedHolderDid: issuerDidJwk,
-              relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+              relyingParty: {
+                did: 'did:ion:123',
+                dltOperatorKMSKeyId: 'keyid-1',
+              },
             },
             context
           )
@@ -473,7 +502,10 @@ describe('Verify credentials', () => {
           {
             credentials: [signedCredential],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -530,7 +562,10 @@ describe('Verify credentials', () => {
                 credentialDid
               ),
             ],
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -562,7 +597,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -593,7 +631,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -626,7 +667,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -659,7 +703,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -702,7 +749,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -734,7 +784,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -757,7 +810,10 @@ describe('Verify credentials', () => {
         const result = await verifyVeriiCredentials(
           {
             credentials: [openBadgeVc],
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -794,7 +850,10 @@ describe('Verify credentials', () => {
           {
             credentials: [vcWithoutCorrectStatus],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -822,7 +881,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
@@ -850,7 +912,10 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: 'keyid-1' },
+            relyingParty: {
+              did: 'did:ion:123',
+              dltOperatorKMSKeyId: 'keyid-1',
+            },
           },
           context
         );
