@@ -121,7 +121,6 @@ const doIssueVerifiableCredentials = async (
         context
       );
 
-    // Step 2: Anchor the credentials to the blockchain
     return await anchorVelocityVerifiableCredentials(
       vcs,
       revocationListEntries,

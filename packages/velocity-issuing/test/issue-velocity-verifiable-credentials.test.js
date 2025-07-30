@@ -146,7 +146,6 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
     const userId = createExampleDid();
 
-    // Step 1: Prepare the verifiable credentials
     const { vcs, revocationListEntries } =
       await prepareVelocityVerifiableCredentials(
         offers,
@@ -156,7 +155,6 @@ describe('issuing velocity verifiable credentials', () => {
         context
       );
 
-    // Step 2: Anchor the credentials to the blockchain
     const credentials = await anchorVelocityVerifiableCredentials(
       vcs,
       revocationListEntries,
@@ -216,7 +214,6 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
     const userId = createExampleDid();
 
-    // Step 1: Prepare the verifiable credentials
     const { vcs, revocationListEntries } =
       await prepareVelocityVerifiableCredentials(
         offers,
@@ -226,7 +223,6 @@ describe('issuing velocity verifiable credentials', () => {
         context
       );
 
-    // Step 2: Anchor the credentials to the blockchain
     const credentials = await anchorVelocityVerifiableCredentials(
       vcs,
       revocationListEntries,
@@ -276,7 +272,6 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
     const userId = createExampleDid();
 
-    // Step 1: Prepare the verifiable credentials
     const { vcs, revocationListEntries } =
       await prepareVelocityVerifiableCredentials(
         offers,
@@ -286,7 +281,6 @@ describe('issuing velocity verifiable credentials', () => {
         context
       );
 
-    // Step 2: Anchor the credentials to the blockchain
     const credentials = await anchorVelocityVerifiableCredentials(
       vcs,
       revocationListEntries,
@@ -340,7 +334,6 @@ describe('issuing velocity verifiable credentials', () => {
 
     const userId = createExampleDid();
 
-    // Step 1: Prepare the verifiable credentials
     const { vcs, revocationListEntries } =
       await prepareVelocityVerifiableCredentials(
         offers,
@@ -350,7 +343,6 @@ describe('issuing velocity verifiable credentials', () => {
         context
       );
 
-    // Step 2: Anchor the credentials to the blockchain
     const credentials = await anchorVelocityVerifiableCredentials(
       vcs,
       revocationListEntries,
