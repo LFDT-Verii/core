@@ -6892,11 +6892,7 @@ const offerExpectation = ({
         ...castArray(offer['@context']),
       ])
     ),
-    type: [
-      first(offer.type),
-      'VelocityNetworkLayer1Credential',
-      'VerifiableCredential',
-    ],
+    type: [first(offer.type), 'VerifiableCredential'],
     credentialSchema: {
       id: credentialTypeMetadata[first(offer.type)].schemaUrl,
       type: 'JsonSchemaValidator2018',

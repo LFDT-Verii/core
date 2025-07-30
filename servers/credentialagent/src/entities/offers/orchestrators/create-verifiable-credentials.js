@@ -20,7 +20,7 @@ const { KeyPurposes, calcSha384 } = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');
 const { hexFromJwk, jwtDecode } = require('@verii/jwt');
 const {
-  issueVelocityVerifiableCredentials,
+  issueVeriiCredentials,
   mongoAllocationListQueries,
 } = require('@verii/verii-issuing');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
@@ -96,7 +96,7 @@ const doIssueVerifiableCredentials = async (
     'allocations'
   );
 
-  return issueVelocityVerifiableCredentials(
+  return issueVeriiCredentials(
     offers,
     credentialSubjectId,
     credentialTypesMap,
