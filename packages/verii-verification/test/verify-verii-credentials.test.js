@@ -32,6 +32,7 @@ const { generateKeyPair } = require('@verii/crypto');
 const { applyOverrides } = require('@verii/common-functions');
 const nock = require('nock');
 const undici = require('undici');
+const { interceptors } = require('undici');
 
 const { verifyVeriiCredentials } = require('../src/verify-verii-credentials');
 
@@ -78,7 +79,7 @@ describe('Verify credentials', () => {
       log: console,
       config,
       kms: { exportKeyOrSecret: async (id) => keys[id] },
-      agent: undici.getGlobalDispatcher(),
+      agent: undici.getGlobalDispatcher().compose(interceptors.responseError()),
     };
   });
 
