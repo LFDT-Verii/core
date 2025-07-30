@@ -16,6 +16,8 @@
 
 const { nanoid } = require('nanoid/non-secure');
 const { Agent, interceptors, cacheStores } = require('undici');
+const createError = require('http-errors');
+
 const pkg = require('../package.json');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
@@ -60,6 +62,11 @@ const initHttpClient = (options) => {
       headers: reqHeaders,
     });
     const { statusCode, headers: resHeaders, body } = httpResponse;
+    if (statusCode >= 400) {
+      const error = new createError[statusCode]();
+      error.response = httpResponse;
+      throw error;
+    }
     return {
       statusCode,
       resHeaders,

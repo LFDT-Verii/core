@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * Fetches the verified organization profile for a given organization DID.
+ *
+ * @param {string} orgDid - The Decentralized Identifier (DID) of the organization.
+ * @param {Object} options - Options object.
+ * @param {Object} options.registrarFetch - An object implementing a `get` method to perform the fetch.
+ * @param {string} options.registrarFetch.responseType - Expected response type (e.g. 'promise').
+ * @param {any} options.cache - Optional cache configuration.
+ * @returns {Promise<Object>} A promise that resolves to the verified organization profile.
+ */
 const getOrganizationVerifiedProfile = async (
   orgDid,
   { registrarFetch, cache }

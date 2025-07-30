@@ -22,7 +22,7 @@ const { hexFromJwk, jwtDecode } = require('@verii/jwt');
 const {
   issueVelocityVerifiableCredentials,
   mongoAllocationListQueries,
-} = require('@verii/velocity-issuing');
+} = require('@verii/verii-issuing');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { first, isEmpty, map, size } = require('lodash/fp');
 const newError = require('http-errors');
@@ -103,7 +103,7 @@ const doIssueVerifiableCredentials = async (
     {
       id: tenant._id,
       did: tenant.did,
-      issuingServiceId: first(tenant.serviceIds),
+      issuingRefreshServiceId: first(tenant.serviceIds),
       issuingServiceKMSKeyId: issuerServiceKey.keyId,
       issuingServiceDIDKeyId: toDidUrl(
         tenant.did,

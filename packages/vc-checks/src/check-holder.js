@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-const { VnfProtocolVersions } = require('./vnf-protocol-versions');
+const { VeriiProtocolVersions } = require('./verii-protocol-versions');
 const { CheckResults } = require('./check-results');
 
 const checkHolder = (credential, expectedHolderDid, { log }) => {
   const {
-    vnfProtocolVersion = VnfProtocolVersions.VNF_PROTOCOL_VERSION_1,
+    vnfProtocolVersion = VeriiProtocolVersions.PROTOCOL_VERSION_1,
     credentialSubject,
   } = credential;
-  if (vnfProtocolVersion < VnfProtocolVersions.VNF_PROTOCOL_VERSION_2) {
+  if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
     return CheckResults.NOT_APPLICABLE;
   }
 

@@ -1,7 +1,7 @@
 {
-  "name": "@verii/verifiable-credentials",
+  "name": "@verii/verii-verification",
   "version": "0.5.0-build",
-  "description": "Velocity Verifiable credentials library ",
+  "description": "Verii VC and VP Verification library ",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
   "publishConfig": {
@@ -15,8 +15,10 @@
   "author": "Yauheni Pozdnyakov",
   "license": "Apache-2.0",
   "dependencies": {
+    "@verii/common-fetchers": "0.5.0-build",
     "@verii/common-functions": "0.5.0-build",
     "@verii/did-doc": "0.5.0-build",
+    "@verii/http-client": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",
     "@verii/metadata-registration": "^0.5.0-build",
     "@verii/vc-checks": "0.5.0-build",
@@ -40,7 +42,9 @@
     "eslint-watch": "7.0.0",
     "jest": "29.7.0",
     "nanoid": "3.3.11",
-    "prettier": "2.8.8"
+    "nock": "^15.0.0-beta.5",
+    "prettier": "2.8.8",
+    "undici": "^7.12.0"
   },
   "nx": {
     "tags": ["lib"]

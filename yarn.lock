@@ -3793,6 +3793,18 @@
     outvariant "^1.4.3"
     strict-event-emitter "^0.5.1"
 
+"@mswjs/interceptors@^0.39.3":
+  version "0.39.4"
+  resolved "https://registry.npmjs.org/@mswjs/interceptors/-/interceptors-0.39.4.tgz#820727657bf8be02c185c3e9c83f7209e3c73467"
+  integrity sha512-B82DbrGVCIBrNEfRJbqUFB0eNz0wVzqbenEpmbE71XLVU4yKZbDnRBuxz+7udc/uM7LDWDD4sRJ5tISzHf2QkQ==
+  dependencies:
+    "@open-draft/deferred-promise" "^2.2.0"
+    "@open-draft/logger" "^0.3.0"
+    "@open-draft/until" "^2.0.0"
+    is-node-process "^1.2.0"
+    outvariant "^1.4.3"
+    strict-event-emitter "^0.5.1"
+
 "@mui/core-downloads-tracker@^6.5.0":
   version "6.5.0"
   resolved "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-6.5.0.tgz#e9f7049d7e7bb1ee05839f7a0ce813755f137432"
@@ -16145,6 +16157,14 @@ nock@14.0.5:
     json-stringify-safe "^5.0.1"
     propagate "^2.0.0"
 
+nock@^15.0.0-beta.5:
+  version "15.0.0-beta.5"
+  resolved "https://registry.npmjs.org/nock/-/nock-15.0.0-beta.5.tgz#cef9b54750fc2299c5e4d83d38564aa8c7263922"
+  integrity sha512-PnPM6UiBb4y+BoEvSE/tYioWzyExRdEk+wnjO0uty3j/gAvz7lo5VR6FQRX3vnSjcv6uvDxTDhjx686BOCpT0Q==
+  dependencies:
+    "@mswjs/interceptors" "^0.39.3"
+    json-stringify-safe "^5.0.1"
+
 node-abi@^3.61.0:
   version "3.74.0"
   resolved "https://registry.npmjs.org/node-abi/-/node-abi-3.74.0.tgz#5bfb4424264eaeb91432d2adb9da23c63a301ed0"
@@ -20251,6 +20271,11 @@ undici@^7.0.0, undici@^7.10.0:
   version "7.11.0"
   resolved "https://registry.npmjs.org/undici/-/undici-7.11.0.tgz#8e13a54f62afa756666c0590c38b3866e286d0b3"
   integrity sha512-heTSIac3iLhsmZhUCjyS3JQEkZELateufzZuBaVM5RHXdSBMb1LPMQf5x+FH7qjsZYDP0ttAc3nnVpUB+wYbOg==
+
+undici@^7.12.0:
+  version "7.12.0"
+  resolved "https://registry.npmjs.org/undici/-/undici-7.12.0.tgz#e93244fa49383e8a0e1a4295048fd454541c7ccb"
+  integrity sha512-GrKEsc3ughskmGA9jevVlIOPMiiAHJ4OFUtaAH+NhfTUSiZ1wMPIQqQvAJUrJspFXJt3EBWgpAeoHEDVT1IBug==
 
 unicode-properties@^1.4.0, unicode-properties@^1.4.1:
   version "1.4.1"
