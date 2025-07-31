@@ -31,7 +31,7 @@
   "//": "'tar', 'ansi-regex', 'elliptic', 'node-fetch' can be removed with truffle",
   "//": "'json5 after eslint-plugin-import upgrade from 2.31.0",
   "resolutions": {
-    "tar": "^6.1.2",
+    "tar": "^7.0.0",
     "ansi-regex": "~5.0.1",
     "**/minimatch": "^7.4.6",
     "**/elliptic": "^6.6.1",
