@@ -1,0 +1,7 @@
+node_modules
+*.tgz
+*.log
+coverage
+test
+example
+jest.config.js
