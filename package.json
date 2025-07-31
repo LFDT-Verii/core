@@ -38,7 +38,8 @@
     "**/decode-uri-component": "^0.2.2",
     "**/node-fetch": "~2.7.0",
     "**/semver": "~7.7.0",
-    "**/json5": "~2.2.3"
+    "**/json5": "~2.2.3",
+    "**/form-data": "^4.0.4"
   },
   "devDependencies": {
     "@commitlint/cli": "19.8.1",
