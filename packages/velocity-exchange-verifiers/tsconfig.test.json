@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [
+      "jest"
+    ],
+    "isolatedModules": false
+  },
+  "include": [
+    "test/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "babel.config.jest.js"
+  ]
+}
