@@ -27,7 +27,8 @@ const { ALG_TYPE } = require('@verii/metadata-registration');
 const { KeyAlgorithms } = require('@verii/crypto');
 const { hashOffer } = require('../src/domain/hash-offer');
 const {
-  issueVelocityVerifiableCredentials,
+  prepareVelocityVerifiableCredentials,
+  anchorVelocityVerifiableCredentials,
 } = require('../src/issue-velocity-verifiable-credentials');
 const { collectionClient } = require('./helpers/collection-client');
 const { entityFactory } = require('./helpers/entity-factory');
@@ -144,10 +145,19 @@ describe('issuing velocity verifiable credentials', () => {
       },
     ]);
     const userId = createExampleDid();
-    const credentials = await issueVelocityVerifiableCredentials(
-      offers,
-      userId,
-      credentialTypesMap,
+
+    const { vcs, revocationListEntries } =
+      await prepareVelocityVerifiableCredentials(
+        offers,
+        userId,
+        credentialTypesMap,
+        issuer,
+        context
+      );
+
+    const credentials = await anchorVelocityVerifiableCredentials(
+      vcs,
+      revocationListEntries,
       issuer,
       context
     );
@@ -203,10 +213,19 @@ describe('issuing velocity verifiable credentials', () => {
       },
     ]);
     const userId = createExampleDid();
-    const credentials = await issueVelocityVerifiableCredentials(
-      offers,
-      userId,
-      credentialTypesMap,
+
+    const { vcs, revocationListEntries } =
+      await prepareVelocityVerifiableCredentials(
+        offers,
+        userId,
+        credentialTypesMap,
+        issuer,
+        context
+      );
+
+    const credentials = await anchorVelocityVerifiableCredentials(
+      vcs,
+      revocationListEntries,
       issuer,
       context
     );
@@ -253,10 +272,18 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
     const userId = createExampleDid();
 
-    const credentials = await issueVelocityVerifiableCredentials(
-      offers,
-      userId,
-      credentialTypesMap,
+    const { vcs, revocationListEntries } =
+      await prepareVelocityVerifiableCredentials(
+        offers,
+        userId,
+        credentialTypesMap,
+        issuer,
+        context
+      );
+
+    const credentials = await anchorVelocityVerifiableCredentials(
+      vcs,
+      revocationListEntries,
       issuer,
       context
     );
@@ -307,10 +334,18 @@ describe('issuing velocity verifiable credentials', () => {
 
     const userId = createExampleDid();
 
-    const credentials = await issueVelocityVerifiableCredentials(
-      offers,
-      userId,
-      credentialTypesMap,
+    const { vcs, revocationListEntries } =
+      await prepareVelocityVerifiableCredentials(
+        offers,
+        userId,
+        credentialTypesMap,
+        issuer,
+        context
+      );
+
+    const credentials = await anchorVelocityVerifiableCredentials(
+      vcs,
+      revocationListEntries,
       issuer,
       context
     );

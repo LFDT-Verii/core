@@ -30,16 +30,16 @@ const METADATA_LIST_SIZE = 10000;
 /** @import { Issuer, AllocationListEntry, VelocityOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
 
 /**
- * Creates verifiable credential from a local offer. Current assumption is that offers contain all required fields
- * including @context, type, contentHash
+ * Prepares verifiable credentials from local offers without anchoring them to the blockchain.
+ * Current assumption is that offers contain all required fields including @context, type, contentHash
  * @param {VelocityOffer[]} offers  array of offers
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
  * @param {Context} context the context
- * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
+ * @returns {Promise<{vcs: object[], revocationListEntries: object[]}>} Returns prepared credentials and revocation list entries
  */
-const issueVelocityVerifiableCredentials = async (
+const prepareVelocityVerifiableCredentials = async (
   offers,
   credentialSubjectId,
   credentialTypesMap,
@@ -74,6 +74,23 @@ const issueVelocityVerifiableCredentials = async (
     context
   );
 
+  return { vcs, revocationListEntries };
+};
+
+/**
+ * Anchors prepared verifiable credentials to the blockchain.
+ * @param {object[]} vcs  array of verifiable credentials
+ * @param {object[]} revocationListEntries  array of revocation list entries
+ * @param {Issuer} issuer  the issuer
+ * @param {Context} context the context
+ * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
+ */
+const anchorVelocityVerifiableCredentials = async (
+  vcs,
+  revocationListEntries,
+  issuer,
+  context
+) => {
   // create any necessary revocation lists on dlt
   await Promise.all(
     flow(
@@ -101,4 +118,7 @@ const issueVelocityVerifiableCredentials = async (
   return map('vcJwt', vcs);
 };
 
-module.exports = { issueVelocityVerifiableCredentials };
+module.exports = {
+  prepareVelocityVerifiableCredentials,
+  anchorVelocityVerifiableCredentials,
+};

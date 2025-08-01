@@ -20,7 +20,8 @@ const { KeyPurposes, calcSha384 } = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');
 const { hexFromJwk, jwtDecode } = require('@verii/jwt');
 const {
-  issueVelocityVerifiableCredentials,
+  prepareVelocityVerifiableCredentials,
+  anchorVelocityVerifiableCredentials,
   mongoAllocationListQueries,
 } = require('@verii/velocity-issuing');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
@@ -96,28 +97,37 @@ const doIssueVerifiableCredentials = async (
     'allocations'
   );
 
-  return issueVelocityVerifiableCredentials(
-    offers,
-    credentialSubjectId,
-    credentialTypesMap,
-    {
-      id: tenant._id,
-      did: tenant.did,
-      issuingServiceId: first(tenant.serviceIds),
-      issuingServiceKMSKeyId: issuerServiceKey.keyId,
-      issuingServiceDIDKeyId: toDidUrl(
-        tenant.did,
-        issuerServiceKey.kidFragment
-      ),
-      dltOperatorAddress:
-        dltOperatorKey.publicKey != null
-          ? toEthereumAddress(hexFromJwk(dltOperatorKey.publicKey, false))
-          : null,
-      dltOperatorKMSKeyId: dltOperatorKey.keyId,
-      dltPrimaryAddress: tenant.primaryAddress,
-    },
-    context
-  ).catch((e) => {
+  const issuer = {
+    id: tenant._id,
+    did: tenant.did,
+    issuingServiceId: first(tenant.serviceIds),
+    issuingServiceKMSKeyId: issuerServiceKey.keyId,
+    issuingServiceDIDKeyId: toDidUrl(tenant.did, issuerServiceKey.kidFragment),
+    dltOperatorAddress:
+      dltOperatorKey.publicKey != null
+        ? toEthereumAddress(hexFromJwk(dltOperatorKey.publicKey, false))
+        : null,
+    dltOperatorKMSKeyId: dltOperatorKey.keyId,
+    dltPrimaryAddress: tenant.primaryAddress,
+  };
+
+  try {
+    const { vcs, revocationListEntries } =
+      await prepareVelocityVerifiableCredentials(
+        offers,
+        credentialSubjectId,
+        credentialTypesMap,
+        issuer,
+        context
+      );
+
+    return await anchorVelocityVerifiableCredentials(
+      vcs,
+      revocationListEntries,
+      issuer,
+      context
+    );
+  } catch (e) {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':
       case 'identity_issuing_not_permitted':
@@ -128,7 +138,7 @@ const doIssueVerifiableCredentials = async (
       default:
         throw e;
     }
-  });
+  }
 };
 
 module.exports = { createVerifiableCredentials };
