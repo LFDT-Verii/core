@@ -15,19 +15,18 @@
  *
  */
 
-const { VnfProtocolVersions } = require('@verii/vc-checks');
+const { VeriiProtocolVersions } = require('@verii/vc-checks');
 const { toRelativeServiceId } = require('@verii/did-doc');
 const { castArray, isEmpty, isObject, omit, uniq } = require('lodash/fp');
 const { VelocityRevocationListType } = require('@verii/vc-checks');
-const { VELOCITY_NETWORK_CREDENTIAL_TYPE } = require('../utils/constants');
 
-/** @import { Issuer, CredentialTypeMetadata, VelocityOffer, Context, JsonLdCredential, LinkedData, CredentialSubject } from "../types/types" */
+/** @import { Issuer, CredentialTypeMetadata, CredentialOffer, Context, JsonLdCredential, LinkedData, CredentialSubject } from "../types/types" */
 
 /**
  * Prepares a json-ld credential from an offer
  * @param {Issuer} issuer the issuer
  * @param {string | undefined} credentialSubjectId id of the credential subject to bind into the credential
- * @param {VelocityOffer} offer offer to generate from
+ * @param {CredentialOffer} offer offer to generate from
  * @param {string} credentialId id of the credential
  * @param {string} contentHash hash of the raw credentialSubject and validity values
  * @param {CredentialTypeMetadata} credentialTypeMetadata credentialType metadata
@@ -49,31 +48,18 @@ const prepareJsonLdCredential = (
     config: { credentialExtensionsContextUrl },
   } = context;
 
-  const layerCredentialType = credentialTypeMetadata?.layer1
-    ? VELOCITY_NETWORK_CREDENTIAL_TYPE.LAYER_1
-    : VELOCITY_NETWORK_CREDENTIAL_TYPE.LAYER_2;
   const credentialContexts = uniq([
     'https://www.w3.org/2018/credentials/v1',
     ...buildCredentialTypeJsonLdContext(credentialTypeMetadata),
     ...extractJsonLdContext(offer),
     credentialExtensionsContextUrl,
   ]);
-  return {
+  const jsonldCredential = {
     ...cleanOffer(offer),
     '@context': credentialContexts,
     id: credentialId,
-    type: uniq([
-      ...castArray(offer.type),
-      layerCredentialType,
-      'VerifiableCredential',
-    ]),
-    issuer:
-      offer.issuer != null && isObject(offer.issuer)
-        ? {
-            id: issuer.did,
-            ...omit(['vendorOrganizationId'], offer.issuer),
-          }
-        : { id: issuer.did },
+    type: uniq([...castArray(offer.type), 'VerifiableCredential']),
+    issuer: buildIssuer(offer, issuer),
     issuanceDate: new Date().toISOString(),
     credentialSubject: buildCredentialSubject(
       offer,
@@ -86,15 +72,21 @@ const prepareJsonLdCredential = (
       id: credentialTypeMetadata.schemaUrl,
     },
     credentialStatus: buildCredentialStatus(offer, revocationUrl),
-    refreshService: buildRefreshService(issuer, offer),
     contentHash: {
       type: 'VelocityContentHash2020',
       value: contentHash,
     },
     vnfProtocolVersion: isEmpty(credentialSubjectId)
-      ? VnfProtocolVersions.VNF_PROTOCOL_VERSION_1
-      : VnfProtocolVersions.VNF_PROTOCOL_VERSION_2,
+      ? VeriiProtocolVersions.PROTOCOL_VERSION_1
+      : VeriiProtocolVersions.PROTOCOL_VERSION_2,
   };
+
+  const refreshService = buildRefreshService(issuer, offer);
+  if (refreshService != null) {
+    jsonldCredential.refreshService = refreshService;
+  }
+
+  return jsonldCredential;
 };
 
 const cleanOffer = omit([
@@ -113,8 +105,22 @@ const cleanOffer = omit([
 ]);
 
 /**
+ * Prepares an issuer for jsonld credential
+ * @param {CredentialOffer} offer the offer
+ * @param {Issuer} issuer the issuer
+ * @returns { string | { id: string, type?: string | string[], name?: string, image?: string }} the Issuer
+ */
+const buildIssuer = (offer, issuer) =>
+  offer.issuer != null && isObject(offer.issuer)
+    ? {
+        id: issuer.did,
+        ...omit(['vendorOrganizationId'], offer.issuer),
+      }
+    : { id: issuer.did };
+
+/**
  * Builds credential status for the credential
- * @param {VelocityOffer} offer the offer
+ * @param {CredentialOffer} offer the offer
  * @param {string} credentialSubjectId the credential subject id
  * @param {Array} credentialContexts the credential contexts
  * @param {Context} context the context
@@ -140,7 +146,7 @@ const buildCredentialSubject = (
 
 /**
  * Builds credential status for the credential
- * @param {VelocityOffer} offer the offer
+ * @param {CredentialOffer} offer the offer
  * @param {string} velocityRevocationUrl the revocation url
  * @returns {LinkedData | LinkedData[]} the credential status
  */
@@ -159,13 +165,17 @@ const buildCredentialStatus = (offer, velocityRevocationUrl) => {
 /**
  * Builds refresh service(s)
  * @param {Issuer} issuer the issuer
- * @param {VelocityOffer} offer the offer
- * @returns {LinkedData | LinkedData[]} the refreshservices for this offer
+ * @param {CredentialOffer} offer the offer
+ * @returns {LinkedData | LinkedData[] | undefined} the refreshservices for this offer
  */
 const buildRefreshService = (issuer, offer) => {
+  if (issuer.issuingRefreshServiceId == null) {
+    return undefined;
+  }
+
   const defaultRefreshService = {
     type: 'VelocityNetworkRefreshService2024',
-    id: `${issuer.did}${toRelativeServiceId(issuer.issuingServiceId)}`,
+    id: `${issuer.did}${toRelativeServiceId(issuer.issuingRefreshServiceId)}`,
   };
   return addToPolymorphicArray(defaultRefreshService, offer.refreshService);
 };

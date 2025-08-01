@@ -83,7 +83,7 @@ export interface Entity {
 }
 
 export interface Issuer extends Entity {
-  issuingServiceId: string;
+  issuingRefreshServiceId: string;
   issuingServiceKMSKeyId: string;
   issuingServiceDIDKeyId: string;
 }
@@ -97,7 +97,6 @@ export interface Issuer extends Entity {
 export interface CredentialTypeMetadata {
   id: string;
   credentialType: string;
-  layer1: boolean;
   jsonldContext: string[];
   schemaUrl: string;
   defaultSignatureAlgorithm: string;
@@ -134,7 +133,7 @@ export interface AllocationListEntry {
   index: number;
 }
 
-export interface VelocityOffer extends BaseCredential {
+export interface CredentialOffer extends BaseCredential {
   /**
    * Contains all the claims of the credential
    */

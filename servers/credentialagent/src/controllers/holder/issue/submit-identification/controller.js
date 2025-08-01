@@ -16,7 +16,7 @@
 
 const {
   verifyVerifiablePresentationJwt,
-} = require('@verii/verifiable-credentials');
+} = require('@verii/verii-verification');
 const { handlePresentationSubmission } = require('../../../../entities');
 
 const controller = async (fastify) => {

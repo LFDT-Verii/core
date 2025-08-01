@@ -28,11 +28,11 @@ const { hashOffer } = require('./hash-offer');
 const { buildRevocationUrl } = require('../adapters/build-revocation-url');
 const { prepareJsonLdCredential } = require('./prepare-jsonld-credential');
 
-/** @import { Issuer, AllocationListEntry, VelocityOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
+/** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
 
 /**
  * Builds the VCs
- * @param {VelocityOffer[]} offers  array of offers
+ * @param {CredentialOffer[]} offers  array of offers
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {Issuer} issuer  the issuer
  * @param {AllocationListEntry[]} metadataEntries metadata entries

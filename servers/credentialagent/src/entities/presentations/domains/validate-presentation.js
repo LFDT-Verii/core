@@ -18,9 +18,7 @@
 const createError = require('http-errors');
 const { reduce, isEmpty, first, includes } = require('lodash/fp');
 const { jwtDecode } = require('@verii/jwt');
-const {
-  validatePresentationContext,
-} = require('@verii/verifiable-credentials');
+const { validatePresentationContext } = require('@verii/verii-verification');
 const { getJsonAtPath } = require('../../common');
 const {
   ExchangeErrorCodeState,

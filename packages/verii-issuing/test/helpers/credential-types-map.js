@@ -21,13 +21,11 @@ const { KeyAlgorithms } = require('@verii/crypto/src/constants');
 const credentialTypeMetadata = keyBy('credentialType', [
   {
     credentialType: 'EmailV1.0',
-    layer1: true,
     schemaUrl:
       'https://velocitynetwork.foundation/schemas/email-v1.0.schema.json',
   },
   {
     credentialType: 'EmploymentCurrentV1.1',
-    layer1: true,
     schemaUrl:
       'https://velocitynetwork.foundation/schemas/employment-v1.1.schema.json',
     jsonldContext: [
@@ -37,14 +35,12 @@ const credentialTypeMetadata = keyBy('credentialType', [
   },
   {
     credentialType: 'OpenBadgeCredential',
-    layer1: false,
     schemaUrl: 'https://imsglobal.org/schemas/open-badge-credential.json',
     jsonldContext: ['https://imsglobal.org/schemas/openbadge-context.json'],
     defaultSignatureAlgorithm: KeyAlgorithms.RS256,
   },
   {
     credentialType: '1EdtechCLR2.0',
-    layer1: false,
     schemaUrl: 'https://velocitynetwork.foundation/schemas/clr.schema.json',
     jsonldContext: ['https://imsglobal.org/schemas/clr-context.json'],
     defaultSignatureAlgorithm: KeyAlgorithms.RS256,

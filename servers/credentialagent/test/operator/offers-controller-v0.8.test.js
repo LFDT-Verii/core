@@ -34,7 +34,7 @@ const {
   testAuthToken,
   errorResponseMatcher,
 } = require('@verii/tests-helpers');
-const { hashOffer } = require('@verii/velocity-issuing');
+const { hashOffer } = require('@verii/verii-issuing');
 const { openBadgeCredentialExample } = require('@verii/sample-data');
 const {
   nockRegistrarAppSchemaName,

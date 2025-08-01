@@ -19,11 +19,11 @@ const { getCredentialTypeMetadata } = require('@verii/common-fetchers');
 const { flow, keyBy, map, uniq } = require('lodash/fp');
 const { extractCredentialType } = require('@verii/vc-checks');
 
-/** @import { VelocityOffer, Context, CredentialTypeMetadata } from "@verii/velocity-issuing" */
+/** @import { CredentialOffer, Context, CredentialTypeMetadata } from "@verii/verii-issuing" */
 
 /**
  * Gets credential metadata from the Velocity Network registrar
- * @param {VelocityOffer[]} offers The offers that need metadata
+ * @param {CredentialOffer[]} offers The offers that need metadata
  * @param {Context} context the context
  * @returns {Promise<{[Name: string]: CredentialTypeMetadata}>} the map of types to metadata
  */

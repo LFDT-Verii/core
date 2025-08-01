@@ -4,7 +4,7 @@ const { all, find, get, last, map } = require('lodash/fp');
 const {
   initDoVerifyCredentialChecks,
   initVerifyIssuerChain,
-} = require('@verii/verifiable-credentials');
+} = require('@verii/verii-verification');
 const { decodePresentationJwt } = require('@verii/jwt');
 const { extractVerificationKey } = require('@verii/did-doc');
 const console = require('console');

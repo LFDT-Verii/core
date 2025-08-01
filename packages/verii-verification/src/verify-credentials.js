@@ -50,7 +50,6 @@ const {
 } = require('@verii/vc-checks');
 const { mapWithIndex } = require('@verii/common-functions');
 const { resolveDidJwkDocument, toDidUrl } = require('@verii/did-doc');
-const { loadJsonldContext } = require('./load-jsonld-context');
 
 const verifyCredentials = async (
   { credentials: jwtVcs, expectedHolderDid, relyingParty },
@@ -240,38 +239,26 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
     const issuerIds = flow(map('issuerId'), uniq)(credentialData);
     const credentialTypes = flow(map('credentialType'), uniq)(credentialData);
 
-    const [
-      accreditationVCs,
-      issuerDidDocuments,
-      rootJsonLdContexts,
-      credentialSubjectJsonLdContexts,
-      credentialTypeMetadatas,
-    ] = await Promise.all([
-      Promise.all(
-        map(
-          (issuerId) =>
-            fetchers.getOrganizationVerifiedProfile(issuerId, context),
-          issuerIds
-        )
-      ),
-      Promise.all(
-        map((issuerId) => fetchers.resolveDid(issuerId, context), issuerIds)
-      ),
-      Promise.all(
-        map(
-          ({ credential }) => loadJsonldContext(credential, context),
-          credentialData
-        )
-      ),
-      Promise.all(
-        map(
-          ({ credential }) =>
-            loadJsonldContext(credential.credentialSubject, context),
-          credentialData
-        )
-      ),
-      fetchers.getCredentialTypeMetadata(credentialTypes, context),
-    ]);
+    const [accreditationVCs, issuerDidDocuments, credentialTypeMetadatas] =
+      await Promise.all([
+        Promise.all(
+          map(
+            (issuerId) =>
+              fetchers
+                .getOrganizationVerifiedProfile(issuerId, context)
+                .catch(() => {}),
+            issuerIds
+          )
+        ),
+        Promise.all(
+          map(
+            (issuerId) =>
+              fetchers.resolveDid(issuerId, context).catch(() => {}),
+            issuerIds
+          )
+        ),
+        fetchers.getCredentialTypeMetadata(credentialTypes, context),
+      ]);
 
     return {
       accreditationVCMap: keyBy('credentialSubject.id', accreditationVCs),
@@ -279,15 +266,6 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
       credentialTypeMetadatasMap: keyBy(
         'credentialType',
         credentialTypeMetadatas
-      ),
-      jsonLdContexts: mapWithIndex(
-        ({ credential }, i) =>
-          rootJsonLdContexts[i]?.['@context']?.[
-            credential?.credentialSubject?.type
-          ] != null
-            ? rootJsonLdContexts[i]
-            : credentialSubjectJsonLdContexts[i],
-        credentialData
       ),
     };
   } catch (error) {
@@ -362,13 +340,12 @@ const runTamperingCheck = (
 };
 
 const runIssuerTrustCheck = (
-  { id, keyMetadata, issuerId, credentialType, index, credential },
+  { id, keyMetadata, issuerId, credentialType, credential },
   {
     boundIssuerVcsMap,
     accreditationVCMap,
     issuerDidDocumentMap,
     credentialTypeMetadatasMap,
-    jsonLdContexts,
     errors,
   },
   context
@@ -397,15 +374,7 @@ const runIssuerTrustCheck = (
     return Promise.resolve(CheckResults.FAIL);
   }
 
-  return checkIssuerTrust(
-    credential,
-    issuerId,
-    {
-      ...resolvedDeps,
-      jsonLdContext: jsonLdContexts[index],
-    },
-    context
-  );
+  return checkIssuerTrust(credential, issuerId, resolvedDeps, context);
 };
 
 const runCredentialStatusCheck = ({ index }, { credentialStatuses, errors }) =>

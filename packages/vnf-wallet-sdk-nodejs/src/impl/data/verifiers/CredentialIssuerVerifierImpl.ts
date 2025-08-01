@@ -8,7 +8,6 @@ import { verifyIssuerForCredentialType } from '@verii/vc-checks';
 import VCLJwt from '../../../api/entities/VCLJwt';
 import VCLFinalizeOffersDescriptor from '../../../api/entities/VCLFinalizeOffersDescriptor';
 import CredentialIssuerVerifier from '../../domain/verifiers/CredentialIssuerVerifier';
-import { loadJsonldContext } from '../../utils/LoadJsonldContext';
 import NetworkService from '../../domain/infrastructure/network/NetworkService';
 import CredentialTypesModel from '../../domain/models/CredentialTypesModel';
 import { getCredentialTypeMetadataByVc } from './VerificationUtils';
@@ -26,10 +25,6 @@ export default class CredentialIssuerVerifierImpl
         finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
     ): Promise<boolean> {
         const verifiedPromises = jwtCredentials.map(async (jwtCredential) => {
-            const jsonLdContext = await loadJsonldContext(
-                jwtCredential.payload.vc,
-                this.networkService
-            );
             const credentialTypeMetadata = getCredentialTypeMetadataByVc(
                 this.credentialTypesModel.data,
                 jwtCredential
@@ -42,7 +37,6 @@ export default class CredentialIssuerVerifierImpl
                         finalizeOffersDescriptor.credentialManifest
                             .verifiedProfile.credentialSubject,
                     credentialTypeMetadata,
-                    jsonLdContext,
                 },
                 {
                     log: console,

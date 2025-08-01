@@ -17,7 +17,7 @@
 
 const { isNil, map, reject, range } = require('lodash/fp');
 const { nanoid } = require('nanoid');
-const { verifyCredentials } = require('@verii/verifiable-credentials');
+const { verifyCredentials } = require('@verii/verii-verification');
 const { decodeCredentialJwt } = require('@verii/jwt');
 const {
   getOrganizationVerifiedProfile,

@@ -17,7 +17,7 @@
 const { register } = require('@spencejs/spence-factories');
 const { nanoid } = require('nanoid/non-secure');
 const { ObjectId } = require('mongodb');
-const { hashOffer } = require('@verii/velocity-issuing');
+const { hashOffer } = require('@verii/verii-issuing');
 const { offerRepoPlugin } = require('../repos');
 const { initTenantFactory } = require('../../tenants');
 const { initOfferExchangeFactory } = require('../../exchanges');

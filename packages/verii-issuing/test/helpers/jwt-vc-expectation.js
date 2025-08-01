@@ -75,13 +75,7 @@ const jwtVcExpectation = (
         },
         '@context': contextExpectation,
         vnfProtocolVersion: offer.vnfProtocolVersion ?? 2,
-        type: expect.arrayContaining([
-          extractOfferType(offer),
-          typeMetadata.layer1
-            ? 'VelocityNetworkLayer1Credential'
-            : 'VelocityNetworkLayer2Credential',
-          'VerifiableCredential',
-        ]),
+        type: [extractOfferType(offer), 'VerifiableCredential'],
         id: credentialId,
         issuer: issuer ?? {
           id: issuerEntity.did,

@@ -16,7 +16,7 @@
 
 const { nanoid } = require('nanoid');
 const { map } = require('lodash/fp');
-const { verifyCredentials } = require('@verii/verifiable-credentials');
+const { verifyCredentials } = require('@verii/verii-verification');
 const httpError = require('http-errors');
 
 const { KeyPurposes } = require('@verii/crypto');

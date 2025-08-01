@@ -68,9 +68,7 @@ const credentialTypesController = async (fastify) => {
           filter.credentialType = credentialType;
         }
 
-        return repos.credentialSchemas.find({
-          filter,
-        });
+        return repos.credentialSchemas.find({ filter });
       }
     );
 

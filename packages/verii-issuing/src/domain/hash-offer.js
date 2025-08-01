@@ -14,9 +14,22 @@
  * limitations under the License.
  *
  */
-module.exports = {
-  ...require('./issue-velocity-verifiable-credentials'),
-  ...require('./domain/hash-offer'),
-  ...require('./adapters/mongo-allocation-list-queries'),
-  ...require('./adapters/get-revocation-registry'),
-};
+
+const { flow, pick } = require('lodash/fp');
+const canonicalize = require('canonicalize');
+const { hashAndEncodeHex } = require('@verii/crypto');
+/** @import { CredentialOffer } from "../types/types" */
+
+/**
+ * The hex encoded hash of the CredentialOffer
+ * @param {CredentialOffer} offer the offer to hash
+ * @returns {string} the hash of the offer encoded in hex
+ */
+const hashOffer = (offer) =>
+  flow(
+    pick(['credentialSubject', 'validFrom', 'expirationDate', 'validUntil']),
+    canonicalize,
+    hashAndEncodeHex
+  )(offer);
+
+module.exports = { hashOffer };

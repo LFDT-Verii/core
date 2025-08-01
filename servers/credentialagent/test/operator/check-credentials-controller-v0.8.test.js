@@ -38,7 +38,7 @@ const buildCheckCredentialsUrl = ({ _id }) =>
   `/operator-api/v0.8/tenants/${_id}/check-credentials`;
 
 jest.mock('@verii/metadata-registration');
-jest.mock('@verii/verifiable-credentials', () => ({
+jest.mock('@verii/verii-verification', () => ({
   verifyCredentials: mockVerifyCredentials,
 }));
 jest.mock('../../src/fetchers', () => ({

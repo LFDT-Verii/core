@@ -23,7 +23,7 @@ const { verifyPrimarySourceIssuer } = require('./verify-primary-source-issuer');
 const verifyIssuerForCredentialType = (
   credential,
   issuerId,
-  { issuerAccreditation, credentialTypeMetadata, jsonLdContext = {} },
+  { issuerAccreditation, credentialTypeMetadata },
   { log, config }
 ) => {
   const { permittedVelocityServiceCategory } = issuerAccreditation;
@@ -46,7 +46,7 @@ const verifyIssuerForCredentialType = (
 
   if (includes(ServiceCategories.Issuer, permittedVelocityServiceCategory)) {
     return verifyPrimarySourceIssuer(
-      { credential, issuerId, jsonLdContext },
+      { credential, issuerId, credentialTypeMetadata },
       { log, config }
     );
   }
