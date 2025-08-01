@@ -22,7 +22,7 @@
     "@openzeppelin/contracts": "4.9.6",
     "@openzeppelin/contracts-upgradeable": "4.9.6",
     "@openzeppelin/truffle-upgrades": "1.21.0",
-    "@truffle/hdwallet-provider": "1.7.0",
+    "@truffle/hdwallet-provider": "2.1.15",
     "@verii/blockchain-functions": "^0.5.0-build",
     "@verii/verification-coupon-contract": "^0.5.0-build",
     "@verii/permissions-contract": "^0.5.0-build",
