@@ -1885,7 +1885,6 @@ describe('submit identification disclosure', () => {
       let identityWebhookHeaders;
       const nockWebhook = await nock(webhookUrl)
         .post(identifyUserOnVendorEndpoint)
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
         .reply(200, async (request) => {
           identityWebhookHeaders = request.headers;
           identifyWebhookPayload = await request.json();

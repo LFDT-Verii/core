@@ -5274,8 +5274,7 @@ describe('Holder Issuing Test Suite', () => {
       const nockWeb = nock(webhookUrl)
         .post(acceptedOffersNotificationEndpoint)
 
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function (request) {
+        .reply(200, (request) => {
           identityWebhookHeaders = request.headers;
         });
 
@@ -5323,9 +5322,7 @@ describe('Holder Issuing Test Suite', () => {
 
       const nockWeb = nock(webhookUrl)
         .post(acceptedOffersNotificationEndpoint)
-
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function (request) {
+        .reply(200, (request) => {
           identityWebhookHeaders = request.headers;
         });
 
