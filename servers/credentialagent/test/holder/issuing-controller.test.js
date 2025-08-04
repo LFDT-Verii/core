@@ -1284,9 +1284,8 @@ describe('Holder Issuing Test Suite', () => {
       let identityWebhookHeaders;
       const webhookNock = nock(webhookUrl)
         .post(requestOffersFromVendorEndpoint)
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function () {
-          identityWebhookHeaders = this.req.headers;
+        .reply(200, (request) => {
+          identityWebhookHeaders = request.headers;
 
           return {
             offers: [offer],
@@ -1307,7 +1306,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(webhookNock.isDone()).toBe(true);
-      expect(identityWebhookHeaders.authorization).toBe(
+      expect(identityWebhookHeaders.get('Authorization')).toBe(
         'Bearer fake-bearer-token'
       );
     });
@@ -1363,9 +1362,8 @@ describe('Holder Issuing Test Suite', () => {
       let identityWebhookHeaders;
       const webhookNock = nock(webhookUrl)
         .post(requestOffersFromVendorEndpoint)
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function () {
-          identityWebhookHeaders = this.req.headers;
+        .reply(200, (request) => {
+          identityWebhookHeaders = request.headers;
 
           return {
             offers: [offer],
@@ -1386,7 +1384,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(webhookNock.isDone()).toBe(true);
-      expect(identityWebhookHeaders.authorization).toBe('Bearer secret');
+      expect(identityWebhookHeaders.get('Authorization')).toBe('Bearer secret');
     });
 
     it('/credential-offers should not apply customToken if webhookUrl is not present', async () => {
@@ -1438,9 +1436,8 @@ describe('Holder Issuing Test Suite', () => {
       let identityWebhookHeaders;
       const webhookNock = nock(mockVendorUrl)
         .post(requestOffersFromVendorEndpoint)
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function () {
-          identityWebhookHeaders = this.req.headers;
+        .reply(200, (request) => {
+          identityWebhookHeaders = request.headers;
 
           return {
             offers: [offer],
@@ -1461,7 +1458,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(webhookNock.isDone()).toBe(true);
-      expect(identityWebhookHeaders.authorization).toBe(
+      expect(identityWebhookHeaders.get('Authorization')).toBe(
         'Bearer fake-bearer-token'
       );
     });
@@ -1518,9 +1515,8 @@ describe('Holder Issuing Test Suite', () => {
       let identityWebhookHeaders;
       const webhookNock = nock(webhookUrl)
         .post(requestOffersFromVendorEndpoint)
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function () {
-          identityWebhookHeaders = this.req.headers;
+        .reply(200, (request) => {
+          identityWebhookHeaders = request.headers;
 
           return {
             offers: [offer],
@@ -1541,7 +1537,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(webhookNock.isDone()).toBe(true);
-      expect(identityWebhookHeaders.authorization).toBe(
+      expect(identityWebhookHeaders.get('Authorization')).toBe(
         'Bearer fake-bearer-token'
       );
     });
@@ -1596,9 +1592,8 @@ describe('Holder Issuing Test Suite', () => {
       let identityWebhookHeaders;
       nock(webhookUrl)
         .post(requestOffersFromVendorEndpoint)
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function () {
-          identityWebhookHeaders = this.req.headers;
+        .reply(200, (request) => {
+          identityWebhookHeaders = request.headers;
 
           return {
             offers: [offer],
@@ -1618,7 +1613,9 @@ describe('Holder Issuing Test Suite', () => {
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(identityWebhookHeaders.authorization).toEqual('Bearer secret');
+      expect(identityWebhookHeaders.get('Authorization')).toEqual(
+        'Bearer secret'
+      );
     });
 
     it('/credential-offers should return all offers if exchange has only OFFERS_RECEIVED event and no OFFERS_WAITING_ON_VENDOR event', async () => {
@@ -5278,8 +5275,8 @@ describe('Holder Issuing Test Suite', () => {
         .post(acceptedOffersNotificationEndpoint)
 
         // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function () {
-          identityWebhookHeaders = this.req.headers;
+        .reply(200, function (request) {
+          identityWebhookHeaders = request.headers;
         });
 
       const response = await fastify.injectJson({
@@ -5298,7 +5295,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(nockWeb.isDone()).toEqual(true);
-      expect(identityWebhookHeaders.authorization).toBeUndefined();
+      expect(identityWebhookHeaders.get('Authorization')).toBeNull();
     });
 
     it('/finalize-offers should call a custom webhook from tenant with custom token', async () => {
@@ -5328,8 +5325,8 @@ describe('Holder Issuing Test Suite', () => {
         .post(acceptedOffersNotificationEndpoint)
 
         // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function () {
-          identityWebhookHeaders = this.req.headers;
+        .reply(200, function (request) {
+          identityWebhookHeaders = request.headers;
         });
 
       const response = await fastify.injectJson({
@@ -5348,7 +5345,9 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(nockWeb.isDone()).toEqual(true);
-      expect(identityWebhookHeaders.authorization).toEqual('Bearer secret');
+      expect(identityWebhookHeaders.get('Authorization')).toEqual(
+        'Bearer secret'
+      );
     });
 
     it('/finalize-offers should approve offer from approvedOfferIds payload array and call triggerOffersAcceptedWebhook with an error', async () => {
