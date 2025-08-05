@@ -57,7 +57,6 @@ describe('fineract client test suite', () => {
   });
 
   afterAll(() => {
-    nock.cleanAll();
     nock.restore();
   });
 
@@ -66,8 +65,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return [{ statusCode: 200, body: '{"clientId":1}' }];
         });
       const transfer1 = {
@@ -87,9 +86,7 @@ describe('fineract client test suite', () => {
           {
             transfers: [transfer1, transfer2],
           },
-          {
-            fineractFetch,
-          }
+          { fineractFetch }
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
@@ -149,8 +146,8 @@ describe('fineract client test suite', () => {
 
       nock(testHost)
         .post('/fineract-provider/api/v1/batches?')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return [
             { statusCode: 200, body: '{"clientId":1}' },
             {
@@ -213,8 +210,8 @@ describe('fineract client test suite', () => {
 
       nock(testHost)
         .post('/fineract-provider/api/v1/batches?')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return [
             { statusCode: 200, body: '{"clientId":1}' },
             {
@@ -276,8 +273,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return [{ statusCode: 200, body: '{"clientId":1}' }];
         });
       const now = new Date();
@@ -330,8 +327,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return [{ statusCode: 200, body: '{"clientId":1}' }];
         });
       const now = new Date();
@@ -365,8 +362,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return [
             {
               requestId: 1,
@@ -421,8 +418,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return [{ statusCode: 200, body: '{"savingsId":1}' }];
         });
       const now = new Date();
@@ -466,8 +463,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return [{ statusCode: 200, body: '{"clientId":1}' }];
         });
       const transfer1 = {
@@ -515,8 +512,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/clients')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return { officeId: 1, clientId: 1, resourceId: 21 };
         });
       const func = () => {
@@ -559,8 +556,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/savingsaccounts')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return {
             officeId: 1,
             clientId: 2,
@@ -612,8 +609,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/savingsaccounts')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return {
             officeId: 1,
             clientId: 2,
@@ -665,8 +662,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/savingsaccounts')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
         });
       const clientId = '1';
       const externalId = 'creditaccount1';
@@ -700,8 +697,8 @@ describe('fineract client test suite', () => {
         .post(
           `/fineract-provider/api/v1/datatables/Voucher/${clientId}?genericResultSet=true`
         )
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
         });
       const func = () => {
         return createVouchers(
@@ -899,8 +896,8 @@ describe('fineract client test suite', () => {
           `/fineract-provider/api/v1/savingsaccounts/${payload.accountId}/transactions`
         )
         .query(true)
-        .reply(200, (uri) => {
-          uriCalled = uri;
+        .reply(200, (request) => {
+          uriCalled = request.url;
           return {
             pageItems: [mockedItem],
             totalFilteredRecords: 40,
@@ -930,7 +927,7 @@ describe('fineract client test suite', () => {
       searchParams.append('description', description2);
 
       expect(uriCalled).toEqual(
-        `/fineract-provider/api/v1/savingsaccounts/${
+        `https://localhost.test/fineract-provider/api/v1/savingsaccounts/${
           payload.accountId
         }/transactions?${searchParams.toString()}`
       );
@@ -951,8 +948,8 @@ describe('fineract client test suite', () => {
           `/fineract-provider/api/v1/savingsaccounts/${payload.accountId}/transactions`
         )
         .query(true)
-        .reply(200, (uri) => {
-          uriCalled = uri;
+        .reply(200, (request) => {
+          uriCalled = request.url;
           return {
             pageItems: [],
             totalFilteredRecords: 0,
@@ -980,7 +977,7 @@ describe('fineract client test suite', () => {
       searchParams.append('description', description2);
 
       expect(uriCalled).toEqual(
-        `/fineract-provider/api/v1/savingsaccounts/${
+        `https://localhost.test/fineract-provider/api/v1/savingsaccounts/${
           payload.accountId
         }/transactions?${searchParams.toString()}`
       );
@@ -992,8 +989,8 @@ describe('fineract client test suite', () => {
       let webhookPayload;
       nock(testHost)
         .post('/fineract-provider/api/v1/accounttransfers')
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return {};
         });
       const fromAccount = '1';
