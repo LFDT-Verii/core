@@ -10,8 +10,10 @@
     "access": "public"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.js --runInBand --coverage",
-    "lint": "eslint . --format json >> eslint.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
+    "test:ci": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml  'test/**/*.test.js'",
+    "lint": "eslint --ext .js .",
+    "lint:ci": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix --ext .js ."
   },
   "dependencies": {
@@ -29,8 +31,8 @@
     "@spencejs/spence-config": "0.10.2",
     "@verii/tests-helpers": "0.5.0-build",
     "date-fns": "3.6.0",
-    "jest": "29.7.0",
-    "nanoid": "3.3.11"
+    "expect": "29.7.0",
+    "nanoid": "5.0.9"
   },
   "nx": {
     "tags": ["lib"]

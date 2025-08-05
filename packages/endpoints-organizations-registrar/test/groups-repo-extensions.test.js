@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { testRegistrarUser, mongoify } = require('@verii/tests-helpers');
 
@@ -29,7 +32,7 @@ describe('Organizations Group related functions test suite', () => {
   let persistGroup;
   let groupsRepo;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -42,11 +45,10 @@ describe('Organizations Group related functions test suite', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     await mongoDb().collection('groups').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

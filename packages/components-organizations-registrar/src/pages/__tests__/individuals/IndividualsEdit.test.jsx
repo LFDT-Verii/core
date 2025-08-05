@@ -1,7 +1,6 @@
-// eslint-disable-next-line no-unused-vars
+import { describe, it } from 'node:test';
 import { BrowserRouter as Router, Routes, Route } from 'react-router';
 import { render } from '@testing-library/react';
-// eslint-disable-next-line no-unused-vars
 import IndividualsEdit from '../../individuals/IndividualsEdit.jsx';
 
 // Todo: investigate how to cover with tests UI of react-admin

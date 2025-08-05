@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLPublicJwk from '../../src/api/entities/VCLPublicJwk';
 import { JwtMocks } from '../infrastructure/resources/valid/JwtMocks';
 

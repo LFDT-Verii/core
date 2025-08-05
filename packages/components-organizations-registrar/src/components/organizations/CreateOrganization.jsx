@@ -15,7 +15,6 @@
  */
 
 import { Box, Stack, Tooltip, Typography, Button } from '@mui/material';
-import Grid from '@mui/material/Grid2';
 import {
   AutocompleteInput,
   Form,
@@ -23,6 +22,7 @@ import {
   required,
   TextInput,
   FormDataConsumer,
+  Grid,
 } from 'react-admin';
 import { useCallback } from 'react';
 import InfoIcon from '@mui/icons-material/Info';

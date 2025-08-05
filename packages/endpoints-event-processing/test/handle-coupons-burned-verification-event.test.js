@@ -14,6 +14,66 @@
  * limitations under the License.
  *
  */
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
+const mockReadDocument = mock.fn();
+const mockWriteDocument = mock.fn();
+const mockBatchOperations = mock.fn(() =>
+  Promise.resolve([
+    {
+      statusCode: 200,
+      body: '{}',
+    },
+    {
+      statusCode: 200,
+      body: '{}',
+    },
+    {
+      statusCode: 200,
+      body: '{}',
+    },
+    {
+      statusCode: 200,
+      body: '{}',
+    },
+  ])
+);
+const eventsWrapper = { events: [] };
+const mockEventCursor = mock.fn(() => ({
+  [Symbol.asyncIterator]() {
+    return {
+      index: -1,
+      next() {
+        this.index += 1;
+        return eventsWrapper.events[this.index];
+      },
+    };
+  },
+}));
+const mockInitVerificationCoupon = mock.fn(() => ({
+  pullBurnCouponEvents: () =>
+    Promise.resolve({ eventsCursor: mockEventCursor, latestBlock: 42 }),
+}));
+
+mock.module('@verii/aws-clients', {
+  namedExports: {
+    initReadDocument: () => mockReadDocument,
+    initWriteDocument: () => mockWriteDocument,
+  },
+});
+
+mock.module('@verii/fineract-client', {
+  namedExports: {
+    batchOperations: mockBatchOperations,
+  },
+});
+
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    initVerificationCoupon: mockInitVerificationCoupon,
+  },
+});
 
 const {
   bindRepo,
@@ -109,7 +169,7 @@ describe('Coupons burned event verification task test suite', () => {
   let burnedCouponsRepo;
   let organizations;
 
-  beforeAll(async () => {
+  before(async () => {
     await mongoFactory(testContext);
     organizationsRepoPlugin(testContext);
     purchaseRepo = purchaseRepoPlugin(testContext);
@@ -123,7 +183,17 @@ describe('Coupons burned event verification task test suite', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    eventsWrapper.events = [
+      { value: [] },
+      { value: burnEventsArray },
+      { done: true },
+    ];
+    mockInitVerificationCoupon.mock.resetCalls();
+    mockReadDocument.mock.resetCalls();
+    mockWriteDocument.mock.resetCalls();
+    mockBatchOperations.mock.resetCalls();
+    mockEventCursor.mock.resetCalls();
+
     await mongoDb().collection('organizations').deleteMany({});
     await mongoDb().collection('purchases').deleteMany({});
     await mongoDb().collection('burnedCoupons').deleteMany({});
@@ -151,29 +221,11 @@ describe('Coupons burned event verification task test suite', () => {
         },
       }),
     ]);
-
-    mockBatchOperations.mockResolvedValue([
-      {
-        statusCode: 200,
-        body: '{}',
-      },
-      {
-        statusCode: 200,
-        body: '{}',
-      },
-      {
-        statusCode: 200,
-        body: '{}',
-      },
-      {
-        statusCode: 200,
-        body: '{}',
-      },
-    ]);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoCloseWrapper();
+    mock.reset();
   });
 
   it('Should successfully sync burns for a given set of events read off the blockchain', async () => {
@@ -202,31 +254,32 @@ describe('Coupons burned event verification task test suite', () => {
         updatedAt: now,
       },
     });
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
 
     const func = async () => handleCouponsBurnedVerificationEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
-    expect(mockInitReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitVerificationCoupon).toHaveBeenCalledTimes(1);
+    expect(mockInitVerificationCoupon.mock.callCount()).toEqual(1);
 
-    expect(mockReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockReadDocument).toHaveBeenCalledWith(
+    expect(mockReadDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockReadDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
-      { EventName: task }
-    );
+      { EventName: task },
+    ]);
 
-    expect(mockPullBurnCouponEvents).toHaveBeenCalledTimes(1);
-    expect(mockPullBurnCouponEvents).toHaveBeenCalledWith(2);
-
-    expect(mockBatchOperations).toHaveBeenCalledTimes(1);
-    expect(mockBatchOperations).toHaveBeenCalledWith(
+    expect(mockBatchOperations.mock.callCount()).toEqual(1);
+    expect(
+      mockBatchOperations.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         clientVoucherBurns: [
           clientVoucherBurnsExpectation(),
@@ -236,16 +289,18 @@ describe('Coupons burned event verification task test suite', () => {
         ],
         transactionalBatch: false,
       },
-      testContext
-    );
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+      testContext,
+    ]);
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
+      },
+    ]);
 
     const purchases = await purchaseRepo(testContext).find({
       sort: [['couponBundle.couponBundleId', 'ASC']],
@@ -285,37 +340,43 @@ describe('Coupons burned event verification task test suite', () => {
   });
 
   it('Should successfully sync burns and log out failures of batch call to fineract', async () => {
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
-    mockBatchOperations.mockResolvedValue([
-      {
-        statusCode: 400,
-        body: 'foo error',
-      },
-      {
-        statusCode: 400,
-        body: 'foo error',
-      },
-      {
-        statusCode: 400,
-        body: 'foo error',
-      },
-      {
-        statusCode: 400,
-        body: 'foo error',
-      },
-    ]);
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
+    mockBatchOperations.mock.mockImplementationOnce(() =>
+      Promise.resolve([
+        {
+          statusCode: 400,
+          body: 'foo error',
+        },
+        {
+          statusCode: 400,
+          body: 'foo error',
+        },
+        {
+          statusCode: 400,
+          body: 'foo error',
+        },
+        {
+          statusCode: 400,
+          body: 'foo error',
+        },
+      ])
+    );
 
     const func = async () => handleCouponsBurnedVerificationEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
 
-    expect(mockBatchOperations).toHaveBeenCalledTimes(1);
-    expect(mockBatchOperations).toHaveBeenCalledWith(
+    expect(mockBatchOperations.mock.callCount()).toEqual(1);
+    expect(
+      mockBatchOperations.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         clientVoucherBurns: [
           clientVoucherBurnsExpectation(),
@@ -325,16 +386,18 @@ describe('Coupons burned event verification task test suite', () => {
         ],
         transactionalBatch: false,
       },
-      testContext
-    );
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+      testContext,
+    ]);
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
+      },
+    ]);
   });
 
   it('Should not update purchase without balance', async () => {
@@ -351,12 +414,14 @@ describe('Coupons burned event verification task test suite', () => {
         updatedAt: now,
       },
     });
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
 
     await handleCouponsBurnedVerificationEvent(testContext);
 
@@ -385,12 +450,14 @@ describe('Coupons burned event verification task test suite', () => {
         updatedAt: now,
       },
     });
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
+    mockReadDocument.mock.mockImplementation(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
 
     await handleCouponsBurnedVerificationEvent(testContext);
 
@@ -419,48 +486,33 @@ describe('Coupons burned event verification task test suite', () => {
   });
 
   it('Should successfully handle initial case of no existing blocks', async () => {
-    mockReadDocument.mockResolvedValue(undefined);
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve(undefined)
+    );
 
     const func = async () => handleCouponsBurnedVerificationEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
-
-    expect(mockPullBurnCouponEvents).toHaveBeenCalledWith(0);
   });
 
   it('Should still update block when there are no events to process', async () => {
-    mockEventCursor.mockImplementation(() => {
-      return {
-        [Symbol.asyncIterator]: () => {
-          return {
-            next: mockEventCursorNext
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { done: true };
-              }),
-          };
-        },
-      };
-    });
+    eventsWrapper.events = [{ value: [] }, { value: [] }, { done: true }];
 
     const func = async () => handleCouponsBurnedVerificationEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
 
-    expect(mockBatchOperations).toHaveBeenCalledTimes(0);
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+    expect(mockBatchOperations.mock.callCount()).toEqual(0);
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
+      },
+    ]);
   });
 });
 

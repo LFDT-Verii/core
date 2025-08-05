@@ -14,18 +14,37 @@
  * limitations under the License.
  *
  */
+const {
+  afterEach,
+  beforeEach,
+  describe,
+  it,
+  mock,
+  after,
+} = require('node:test');
+const { expect } = require('expect');
+
+const mockKmsInstance = () => ({ encrypt: mock.fn(), decrypt: mock.fn() });
+const mockWithKmsKey = mock.fn();
+
+const initDbKms = mock.fn(() => {
+  return mockKmsInstance;
+});
+mock.module('../src/db-kms.js', {
+  namedExports: {
+    initDbKms,
+  },
+});
+
+const initCallWithKmsKey = mock.fn(() => mockWithKmsKey);
+mock.module('@verii/crypto', {
+  namedExports: {
+    initCallWithKmsKey,
+  },
+});
+
 const Fastify = require('fastify');
-const { initCallWithKmsKey } = require('@verii/crypto');
-const { initDbKms, dbKmsPlugin } = require('..');
-
-// Mock dependencies
-jest.mock('../src/db-kms', () => ({
-  initDbKms: jest.fn().mockReturnValue(jest.fn().mockReturnValue({})),
-}));
-
-jest.mock('@verii/crypto', () => ({
-  initCallWithKmsKey: jest.fn(),
-}));
+const { dbKmsPlugin } = require('..');
 
 describe('dbKmsPlugin Fastify Plugin', () => {
   let fastify;
@@ -45,7 +64,10 @@ describe('dbKmsPlugin Fastify Plugin', () => {
 
   afterEach(async () => {
     await fastify.close();
-    jest.clearAllMocks();
+  });
+
+  after(() => {
+    mock.reset();
   });
 
   it('should register Fastify plugin correctly', async () => {
@@ -53,12 +75,6 @@ describe('dbKmsPlugin Fastify Plugin', () => {
   });
 
   it('should assign kms and withKmsKey to the request', async () => {
-    const mockKmsInstance = { encrypt: jest.fn(), decrypt: jest.fn() };
-    const mockWithKmsKey = jest.fn();
-
-    initDbKms.mockReturnValue(() => mockKmsInstance);
-    initCallWithKmsKey.mockReturnValue(mockWithKmsKey);
-
     const response = await fastify.inject({
       method: 'GET',
       url: '/test',
@@ -70,7 +86,12 @@ describe('dbKmsPlugin Fastify Plugin', () => {
       withKmsKey: true,
     });
 
-    expect(initDbKms).toHaveBeenCalledWith(fastify, {});
-    expect(initCallWithKmsKey).toHaveBeenCalledWith(expect.any(Object));
+    expect(initDbKms.mock.calls.map((call) => call.arguments)).toContainEqual([
+      fastify,
+      {},
+    ]);
+    expect(
+      initCallWithKmsKey.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([expect.any(Object)]);
   });
 });

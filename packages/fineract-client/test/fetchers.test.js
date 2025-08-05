@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { startOfDay, subDays } = require('date-fns/fp');
 const { formatAsDate } = require('@verii/common-functions');
@@ -45,7 +48,7 @@ const testHost = 'https://localhost.test';
 describe('fineract client test suite', () => {
   let fineractFetch;
 
-  beforeAll(async () => {
+  before(async () => {
     fineractFetch = initRequest({
       prefixUrl: testHost,
     })({ log: console });
@@ -53,10 +56,9 @@ describe('fineract client test suite', () => {
 
   beforeEach(async () => {
     nock.cleanAll();
-    jest.resetAllMocks();
   });
 
-  afterAll(() => {
+  after(() => {
     nock.cleanAll();
     nock.restore();
   });
@@ -1034,7 +1036,7 @@ describe('fineract client test suite', () => {
 
   describe('Get vouchers tests', () => {
     let testVouchers;
-    beforeAll(() => {
+    before(() => {
       testVouchers = [
         {
           expiry: [2022, 1, 1],
@@ -1069,7 +1071,7 @@ describe('fineract client test suite', () => {
 
   describe('Get expiring vouchers tests', () => {
     let testExpiringVouchers;
-    beforeAll(() => {
+    before(() => {
       testExpiringVouchers = [
         {
           quantity: 1,

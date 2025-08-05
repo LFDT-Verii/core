@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const buildFastify = require('./helpers/credentialagent-build-fastify');
 
 describe('Android manifest.json and related files test suite', () => {
   let fastify;
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

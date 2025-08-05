@@ -15,7 +15,20 @@
  */
 
 // eslint-disable-next-line import/order
-const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+  mock,
+} = require('node:test');
+const { expect } = require('expect');
+
+mock.module('../../src/fetchers/push-gateway/generate-push-gateway-token.js', {
+  namedExports: { generatePushGatewayToken: () => Promise.resolve('token') },
+});
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
@@ -36,6 +49,7 @@ const {
 } = require('@verii/tests-helpers');
 const { hashOffer } = require('@verii/velocity-issuing');
 const { openBadgeCredentialExample } = require('@verii/sample-data');
+const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const {
   nockRegistrarAppSchemaName,
 } = require('../combined/helpers/nock-registrar-app-schema-name');
@@ -53,11 +67,6 @@ const {
 const {
   nockRegistrarGetOrganizationDidDoc,
 } = require('../combined/helpers/nock-registrar-get-organization-diddoc');
-
-jest.mock(
-  '../../src/fetchers/push-gateway/generate-push-gateway-token',
-  () => ({ generatePushGatewayToken: () => Promise.resolve('token') })
-);
 
 const exchangeOffersUrl = ({ tenant, exchange }, suffix = '') =>
   `/operator-api/v0.8/tenants/${tenant._id}/exchanges/${exchange._id}/offers/${suffix}`;
@@ -88,7 +97,7 @@ describe('vendor offer management', () => {
   let pushExchangeOffers;
   let offersRepo;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistDisclosure } = initDisclosureFactory(fastify));
@@ -99,7 +108,6 @@ describe('vendor offer management', () => {
   });
 
   beforeEach(async () => {
-    jest.resetAllMocks();
     fastify.resetOverrides();
     fastify.removeDocSchema();
     fastify.overrides.reqConfig = (config) => ({
@@ -165,10 +173,11 @@ describe('vendor offer management', () => {
     nock.cleanAll();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();
+    mock.reset();
   });
 
   describe('/offers Adding offers to exchange Test Suite', () => {

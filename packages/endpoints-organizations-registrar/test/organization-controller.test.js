@@ -14,10 +14,19 @@
  * limitations under the License.
  *
  */
+// eslint-disable-next-line max-classes-per-file
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+  mock,
+} = require('node:test');
+const { expect } = require('expect');
 
-const mockCreateFineractClient = jest.fn();
-const mockCreateStakesAccount = jest.fn();
-const mockInitSendError = jest.fn().mockReturnValue({
+const mockInitSendError = mock.fn(() => ({
   sendError: (err) => {
     console.log(`fake capturing exception: ${err.message}`);
   },
@@ -27,18 +36,103 @@ const mockInitSendError = jest.fn().mockReturnValue({
   finishProfiling: () => {
     console.log('fake finish sentry profiling');
   },
+}));
+
+mock.module('@verii/error-aggregation', {
+  namedExports: {
+    initSendError: mockInitSendError,
+  },
 });
 
-const mockAddPrimary = jest.fn().mockResolvedValue(undefined);
-const mockAddOperator = jest.fn().mockResolvedValue(undefined);
-const mockRemoveOperator = jest.fn().mockResolvedValue(undefined);
-const mockInitPermission = jest.fn().mockResolvedValue({
-  addPrimary: mockAddPrimary,
-  addOperatorKey: mockAddOperator,
-  removeOperatorKey: mockRemoveOperator,
+const mockAuth0ClientDelete = mock.fn(async ({ id }) => {
+  console.log(`deleting auth0 client ${id}`);
+});
+const mockAuth0ClientGrantDelete = mock.fn(async ({ id }) => {
+  console.log(`deleting auth0 client grant ${id}`);
+});
+const mockAuth0ClientCreate = mock.fn(async (obj) => {
+  const id = nanoid();
+  console.log(`create auth0 client ${id}`);
+  return { client_id: id, client_secret: nanoid(), ...obj };
+});
+const mockAuth0ClientGrantCreate = mock.fn(async (obj) => {
+  const id = nanoid();
+  console.log(`create auth0 clientGrant ${id}`);
+  return { id: nanoid(), ...obj };
+});
+const mockAuth0UserUpdate = mock.fn(async ({ id }, obj) => {
+  console.log(`update auth0 user ${id}`);
+  return { id, ...obj };
+});
+const mockAuth0GetUsers = mock.fn(() =>
+  Promise.resolve({
+    email: `${mockAuth0GetUsers.mock.callCount()}@localhost.test`,
+  })
+);
+
+class ManagementClient {
+  constructor() {
+    this.clients = {
+      create: mockAuth0ClientCreate,
+      delete: mockAuth0ClientDelete,
+    };
+    this.clientGrants = {
+      create: mockAuth0ClientGrantCreate,
+      delete: mockAuth0ClientGrantDelete,
+    };
+    this.users = {
+      update: mockAuth0UserUpdate,
+    };
+    this.getUsers = mockAuth0GetUsers;
+  }
+}
+mock.module('auth0', {
+  namedExports: {
+    ManagementClient,
+  },
 });
 
-const { map, omit, times } = require('lodash/fp');
+const mockAddPrimary = mock.fn(() => Promise.resolve(undefined));
+const mockAddOperator = mock.fn(() => Promise.resolve(undefined));
+const mockRemoveOperator = mock.fn(() => Promise.resolve(undefined));
+const mockInitPermission = mock.fn(() =>
+  Promise.resolve({
+    addPrimary: mockAddPrimary,
+    addOperatorKey: mockAddOperator,
+    removeOperatorKey: mockRemoveOperator,
+  })
+);
+mock.module('@verii/contract-permissions', {
+  namedExports: {
+    ...require('../../contract-permissions/src/constants'),
+    initPermissions: mockInitPermission,
+  },
+});
+
+const mockCreateFineractClient = mock.fn();
+const mockCreateStakesAccount = mock.fn();
+mock.module('@verii/fineract-client', {
+  namedExports: {
+    createFineractClient: mockCreateFineractClient,
+    createStakesAccount: mockCreateStakesAccount,
+  },
+});
+
+class SESClient {}
+const mockSESSendEmail = mock.fn((payload) => payload);
+SESClient.prototype.send = mockSESSendEmail;
+mock.module('@aws-sdk/client-ses', {
+  namedExports: {
+    SendEmailCommand: class SendEmailCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    SESClient,
+  },
+});
+
+const { map, omit } = require('lodash/fp');
 
 const { nanoid } = require('nanoid');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
@@ -190,7 +284,7 @@ const publicProfileMatcher = (profile) =>
     profile
   );
 
-describe('Organization Registrar Test Suite', () => {
+describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
   let fastify;
   let organizationsRepo;
   let persistOrganization;
@@ -211,7 +305,7 @@ describe('Organization Registrar Test Suite', () => {
     await mongoDb().collection('images').deleteMany({});
   };
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistOrganization, newOrganization } =
@@ -240,22 +334,24 @@ describe('Organization Registrar Test Suite', () => {
   }, 10000);
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-    mockCreateStakesAccount.mockResolvedValue('foo');
+    mockCreateStakesAccount.mock.mockImplementation(() =>
+      Promise.resolve('foo')
+    );
     nock.cleanAll();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoDb().collection('credentialSchemas').deleteMany({});
     await fastify.close();
     nock.cleanAll();
     nock.restore();
+    mock.reset();
   });
 
   describe('Organization Modifications', () => {
     let orgProfile;
 
-    beforeAll(async () => {
+    before(async () => {
       const org = await newOrganization();
       orgProfile = omit(
         ['id', 'createdAt', 'updatedAt', 'website'],
@@ -1173,7 +1269,7 @@ describe('Organization Registrar Test Suite', () => {
   describe('Organization Retrieval', () => {
     describe('GET Organization DID Doc', () => {
       let organization;
-      beforeAll(async () => {
+      before(async () => {
         await clearDb();
         organization = await persistOrganization();
       });
@@ -1304,7 +1400,7 @@ describe('Organization Registrar Test Suite', () => {
 
     describe('GET Full Organization', () => {
       let organization;
-      beforeAll(async () => {
+      before(async () => {
         await clearDb();
         organization = await persistOrganization({
           service: [
@@ -1627,7 +1723,7 @@ describe('Organization Registrar Test Suite', () => {
     describe('Organization Verifiable Credentials Retrieval by Type', () => {
       let organization;
 
-      beforeAll(async () => {
+      before(async () => {
         await clearDb();
         organization = await persistOrganization();
       });
@@ -1737,7 +1833,7 @@ describe('Organization Registrar Test Suite', () => {
 
     describe('Organization Verifiable Credential Retrieval by Id', () => {
       let organization;
-      beforeAll(async () => {
+      before(async () => {
         await clearDb();
         organization = await persistOrganization();
       });
@@ -1817,7 +1913,7 @@ describe('Organization Registrar Test Suite', () => {
 
     describe('Single Organization Verified Profile Retrieval by Id', () => {
       let organization;
-      beforeAll(async () => {
+      before(async () => {
         await clearDb();
         organization = await persistOrganization();
       });

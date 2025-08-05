@@ -1,4 +1,5 @@
-import { expect } from '@jest/globals';
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import ExchangeProgressRepositoryImpl from '../../src/impl/data/repositories/ExchangeProgressRepositoryImpl';
 import ExchangeProgressUseCaseImpl from '../../src/impl/data/usecases/ExchangeProgressUseCaseImpl';

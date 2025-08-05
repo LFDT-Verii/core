@@ -28,8 +28,7 @@ import {
   TextInput,
 } from 'react-admin';
 import { useParams } from 'react-router';
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Grid, Stack, Tooltip, Typography } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { useState } from 'react';
 import {

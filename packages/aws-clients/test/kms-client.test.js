@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const {
   KMSClient,
@@ -42,7 +44,7 @@ describe('kms-client test suite', () => {
     endpoint: 'http://localhost:4566',
   });
 
-  beforeAll(async () => {
+  before(async () => {
     const createKeyResponse = await testClient.send(new CreateKeyCommand());
     const createAliasParams = {
       AliasName: aliasName,
@@ -51,7 +53,7 @@ describe('kms-client test suite', () => {
     await testClient.send(new CreateAliasCommand(createAliasParams));
   });
 
-  afterAll(async () => {
+  after(async () => {
     await testClient.send(new DeleteAliasCommand({ AliasName: aliasName }));
   });
 

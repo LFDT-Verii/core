@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const {
   ISO_DATETIME_FORMAT,
@@ -12,7 +15,7 @@ describe('Users API Test Suite', () => {
   let newUser;
   let persistUser;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ newUser, persistUser } = initUserFactory(fastify));
@@ -22,7 +25,7 @@ describe('Users API Test Suite', () => {
     await mongoDb().collection('users').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

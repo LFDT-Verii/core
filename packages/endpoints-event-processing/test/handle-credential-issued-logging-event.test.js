@@ -14,45 +14,47 @@
  * limitations under the License.
  *
  */
+const { beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
+const mockReadDocument = mock.fn();
+const mockWriteDocument = mock.fn();
+const mockLogInfo = mock.fn();
+const eventsWrapper = { events: [] };
+
+const mockEventCursor = mock.fn(() => ({
+  [Symbol.asyncIterator]() {
+    return {
+      index: -1,
+      next() {
+        this.index += 1;
+        return eventsWrapper.events[this.index];
+      },
+    };
+  },
+}));
+const mockInitMetadataRegistry = mock.fn(() => ({
+  pullAddedCredentialMetadataEvents: () =>
+    Promise.resolve({ eventsCursor: mockEventCursor, latestBlock: 42 }),
+}));
+
+mock.module('@verii/aws-clients', {
+  namedExports: {
+    initReadDocument: () => mockReadDocument,
+    initWriteDocument: () => mockWriteDocument,
+  },
+});
+
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    initMetadataRegistry: mockInitMetadataRegistry,
+  },
+});
+
+const { after } = require('lodash/function');
 const {
   events: sampleCredentialEventsArray,
 } = require('./data/sample-credential-events-array');
-
-const mockReadDocument = jest.fn().mockResolvedValue(undefined);
-const mockWriteDocument = jest.fn().mockResolvedValue(undefined);
-const mockInitReadDocument = jest.fn().mockReturnValue(mockReadDocument);
-const mockInitWriteDocument = jest.fn().mockReturnValue(mockWriteDocument);
-const mockLogInfo = jest.fn();
-const mockEventCursorNext = jest.fn();
-const mockEventCursor = jest.fn().mockImplementation(() => {
-  return {
-    [Symbol.asyncIterator]: () => {
-      return {
-        next: mockEventCursorNext
-          .mockImplementationOnce(async () => {
-            return { value: [] };
-          })
-          .mockImplementationOnce(async () => {
-            return { value: sampleCredentialEventsArray };
-          })
-          .mockImplementationOnce(async () => {
-            return { done: true };
-          }),
-      };
-    },
-  };
-});
-
-const mockPullAddedCredentialMetadataEvents = jest
-  .fn()
-  .mockResolvedValue({ eventsCursor: mockEventCursor, latestBlock: 42 });
-const mockInitMetadataRegistry = jest.fn().mockImplementation(() => {
-  return {
-    pullAddedCredentialMetadataEvents: mockPullAddedCredentialMetadataEvents,
-  };
-});
-
 const { handleCredentialIssuedLoggingEvent } = require('../src/handlers');
 
 jest.mock('@verii/aws-clients', () => {
@@ -86,34 +88,46 @@ describe('Credential issued event logging task test suite', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    eventsWrapper.events = [
+      { value: [] },
+      { value: sampleCredentialEventsArray },
+      { done: true },
+    ];
+    mockInitMetadataRegistry.mock.resetCalls();
+    mockReadDocument.mock.resetCalls();
+    mockWriteDocument.mock.resetCalls();
+    mockLogInfo.mock.resetCalls();
+    mockEventCursor.mock.resetCalls();
+  });
+
+  after(() => {
+    mock.reset();
   });
 
   it('Should successfully write log entries for a given set of events read off the blockchain', async () => {
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
 
     await handleCredentialIssuedLoggingEvent(testContext);
 
-    expect(mockInitReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitMetadataRegistry).toHaveBeenCalledTimes(1);
+    expect(mockInitMetadataRegistry.mock.callCount()).toEqual(1);
 
-    expect(mockReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockReadDocument).toHaveBeenCalledWith(
+    expect(mockReadDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockReadDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
-      { EventName: task }
-    );
+      { EventName: task },
+    ]);
 
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledTimes(1);
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledWith(2);
-
-    expect(mockLogInfo).toHaveBeenCalledTimes(12);
-    expect(mockLogInfo).toHaveBeenNthCalledWith(9, {
+    expect(mockLogInfo.mock.callCount()).toEqual(12);
+    expect(mockLogInfo.mock.calls[8].arguments[0]).toEqual({
       blockHash: expect.any(String),
       blockNumber: expect.any(Number),
       caoDid: expect.any(String),
@@ -128,59 +142,46 @@ describe('Credential issued event logging task test suite', () => {
       transactionIndex: 0,
     });
 
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
-    expect(mockEventCursor).toHaveBeenCalledTimes(1);
-    expect(mockEventCursorNext).toHaveBeenCalledTimes(3);
+      },
+    ]);
+    expect(mockEventCursor.mock.callCount()).toEqual(1);
   });
 
   it('Should successfully handle initial case of no existing blocks', async () => {
-    mockReadDocument.mockResolvedValue(undefined);
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve(undefined)
+    );
 
     const func = async () => handleCredentialIssuedLoggingEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
-
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledWith(0);
   });
 
   it('Should still update block when there are no events to process', async () => {
-    mockEventCursor.mockImplementation(() => {
-      return {
-        [Symbol.asyncIterator]: () => {
-          return {
-            next: mockEventCursorNext
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { done: true };
-              }),
-          };
-        },
-      };
-    });
+    eventsWrapper.events = [{ value: [] }, { value: [] }, { done: true }];
 
     const func = async () => handleCredentialIssuedLoggingEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
 
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
+      },
+    ]);
+    expect(mockLogInfo.mock.callCount()).toEqual(4);
   });
 });

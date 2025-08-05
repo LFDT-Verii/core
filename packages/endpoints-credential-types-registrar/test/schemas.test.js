@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const nock = require('nock');
@@ -28,7 +30,7 @@ describe('Schema Management', () => {
   let fastify;
   let persistCredentialSchema;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistCredentialSchema } = initCredentialSchemasRepo(fastify));
@@ -39,7 +41,7 @@ describe('Schema Management', () => {
     nock.cleanAll();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoDb().collection('credentialSchemas').deleteMany({});
     await fastify.close();
     nock.cleanAll();

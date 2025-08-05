@@ -13,9 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
-const mockSendPush = jest.fn().mockResolvedValue(undefined);
-const mockVerifyCredentials = jest.fn().mockResolvedValue(undefined);
+const initRevocationRegistry = mock.fn(() => ({
+  getRevokedStatus: () => Promise.resolve(true),
+}));
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    initRevocationRegistry,
+  },
+});
+const mockVerifyCredentials = mock.fn(() => Promise.resolve(undefined));
+mock.module('@verii/verifiable-credentials', {
+  namedExports: {
+    verifyCredentials: mockVerifyCredentials,
+  },
+});
+const mockSendPush = mock.fn(() => Promise.resolve(undefined));
+mock.module('../../src/fetchers/push-gateway/push-fetcher.js', {
+  namedExports: {
+    sendPush: mockSendPush,
+  },
+});
 // eslint-disable-next-line import/order
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const { ObjectId } = require('mongodb');
@@ -25,7 +45,6 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const { credentialUnexpired } = require('@verii/sample-data');
-const metadataRegistration = require('@verii/metadata-registration');
 const { CheckResults } = require('@verii/vc-checks');
 const {
   initTenantFactory,
@@ -71,7 +90,7 @@ describe('Credentials checking tests', () => {
     },
   };
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistTenant } = initTenantFactory(fastify));
@@ -82,7 +101,8 @@ describe('Credentials checking tests', () => {
 
   beforeEach(async () => {
     nock.cleanAll();
-    jest.resetAllMocks();
+    mockVerifyCredentials.mock.resetCalls();
+    mockSendPush.mock.resetCalls();
     await mongoDb().collection('tenants').deleteMany({});
     await mongoDb().collection('keys').deleteMany({});
     await mongoDb().collection('disclosures').deleteMany({});
@@ -100,43 +120,43 @@ describe('Credentials checking tests', () => {
           issuerCategory: 'ContactIssuer',
         },
       ]);
-    mockVerifyCredentials.mockImplementationOnce(async ({ credentials }) => {
-      switch (credentials[0]) {
-        case '0000':
-          return Promise.reject(new Error('BAD JWT!'));
-        case '0001':
-          return Promise.resolve([
-            {
-              credential: {
-                ...credentialUnexpired,
-                issuer: {
-                  id: '0000',
-                  name: 'Velocity',
-                  image: 'https://velocity.com/image.png',
+    mockVerifyCredentials.mock.mockImplementationOnce(
+      async ({ credentials }) => {
+        switch (credentials[0]) {
+          case '0000':
+            return Promise.reject(new Error('BAD JWT!'));
+          case '0001':
+            return Promise.resolve([
+              {
+                credential: {
+                  ...credentialUnexpired,
+                  issuer: {
+                    id: '0000',
+                    name: 'Velocity',
+                    image: 'https://velocity.com/image.png',
+                  },
+                },
+                credentialChecks: {
+                  TRUSTED_HOLDER: CheckResults.FAIL,
+                  TRUSTED_ISSUER: CheckResults.PASS,
+                  UNEXPIRED: CheckResults.PASS,
+                  UNREVOKED: CheckResults.PASS,
+                  UNTAMPERED: CheckResults.VOUCHER_RESERVE_EXHAUSTED,
                 },
               },
-              credentialChecks: {
-                TRUSTED_HOLDER: CheckResults.FAIL,
-                TRUSTED_ISSUER: CheckResults.PASS,
-                UNEXPIRED: CheckResults.PASS,
-                UNREVOKED: CheckResults.PASS,
-                UNTAMPERED: CheckResults.VOUCHER_RESERVE_EXHAUSTED,
-              },
-            },
-          ]);
-        default:
-          return Promise.resolve([checkResult]);
+            ]);
+          default:
+            return Promise.resolve([checkResult]);
+        }
       }
-    });
-    metadataRegistration.initRevocationRegistry.mockImplementation(() => ({
-      getRevokedStatus: () => Promise.resolve(true),
-    }));
+    );
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();
+    mock.reset();
   });
 
   it('Should return 400 when request is malformed', async () => {
@@ -274,7 +294,7 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(0);
+    expect(mockSendPush.mock.callCount()).toEqual(0);
     expect(response.statusCode).toEqual(500);
   });
 
@@ -303,8 +323,10 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(0);
-    expect(mockVerifyCredentials.mock.calls).toEqual([
+    expect(mockSendPush.mock.callCount()).toEqual(0);
+    expect(
+      mockVerifyCredentials.mock.calls.map((call) => call.arguments)
+    ).toEqual([
       [
         {
           credentials: map('rawCredential', payload.rawCredentials),
@@ -360,7 +382,7 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(0);
+    expect(mockSendPush.mock.callCount()).toEqual(0);
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
@@ -403,8 +425,10 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(1);
-    expect(mockSendPush).toBeCalledWith(
+    expect(mockSendPush.mock.callCount()).toEqual(1);
+    expect(
+      mockSendPush.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         data: {
           exchangeId: '123123',
@@ -416,8 +440,8 @@ describe('Credentials checking tests', () => {
         pushToken: 'token',
       },
       pushDelegate,
-      expect.any(Object)
-    );
+      expect.any(Object),
+    ]);
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
@@ -469,7 +493,7 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(0);
+    expect(mockSendPush.mock.callCount()).toEqual(0);
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
@@ -522,8 +546,10 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(1);
-    expect(mockSendPush).toBeCalledWith(
+    expect(mockSendPush.mock.callCount()).toEqual(1);
+    expect(
+      mockSendPush.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         data: {
           exchangeId: exchange._id,
@@ -535,8 +561,8 @@ describe('Credentials checking tests', () => {
         pushToken: 'token',
       },
       pushDelegate,
-      expect.any(Object)
-    );
+      expect.any(Object),
+    ]);
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
@@ -589,8 +615,10 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(1);
-    expect(mockSendPush).toBeCalledWith(
+    expect(mockSendPush.mock.callCount()).toEqual(1);
+    expect(
+      mockSendPush.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         data: {
           exchangeId: exchange._id,
@@ -602,8 +630,8 @@ describe('Credentials checking tests', () => {
         pushToken: 'token',
       },
       pushDelegate,
-      expect.any(Object)
-    );
+      expect.any(Object),
+    ]);
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
@@ -660,8 +688,10 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(1);
-    expect(mockSendPush).toBeCalledWith(
+    expect(mockSendPush.mock.callCount()).toEqual(1);
+    expect(
+      mockSendPush.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         data: {
           exchangeId: exchange._id,
@@ -673,8 +703,8 @@ describe('Credentials checking tests', () => {
         pushToken: 'token',
       },
       pushDelegate,
-      expect.any(Object)
-    );
+      expect.any(Object),
+    ]);
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
@@ -728,7 +758,7 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(0);
+    expect(mockSendPush.mock.callCount()).toEqual(0);
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
@@ -782,7 +812,7 @@ describe('Credentials checking tests', () => {
       payload,
     });
 
-    expect(mockSendPush).toBeCalledTimes(1);
+    expect(mockSendPush.mock.callCount()).toEqual(1);
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].issuer).toEqual({

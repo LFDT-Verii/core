@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { env } = require('@spencejs/spence-config');
 const {
@@ -40,7 +42,7 @@ const config = {
 describe('db kms', () => {
   let kms;
 
-  beforeAll(async () => {
+  before(async () => {
     await mongoFactoryWrapper('kms', {
       log: console,
       config,
@@ -49,7 +51,7 @@ describe('db kms', () => {
     await mongoDb().collection('kms').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoCloseWrapper();
   });
 
@@ -198,7 +200,7 @@ describe('db kms', () => {
     let keys;
     let alternativeKeys;
     const payload = { iss: 'http://example.com', user: { id: '1234' } };
-    beforeAll(async () => {
+    before(async () => {
       keys = await Promise.all(
         map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs))
       );

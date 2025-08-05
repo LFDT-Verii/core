@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { generateKeyPair } = require('@verii/crypto');
 const {
@@ -21,7 +23,7 @@ const {
   toNumber,
 } = require('../src/ethers-wrappers');
 
-describe('Ehters Wrappers', () => {
+describe('Ethers Wrappers', () => {
   describe('Ethereum Addresses', () => {
     it('Should return Ethereum address from public key', () => {
       const publicKey =

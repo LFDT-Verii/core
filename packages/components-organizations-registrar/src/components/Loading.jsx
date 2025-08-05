@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import CircularProgress from '@mui/material/CircularProgress';
-import { Box } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import PropTypes from 'prop-types';
 
 const Loading = ({ sx = {}, color = 'secondary', size = 40 }) => (

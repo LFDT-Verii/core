@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
 const { generateKeyPair } = require('@verii/crypto');
 const { generateDocJwt, jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');

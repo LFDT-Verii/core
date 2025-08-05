@@ -16,8 +16,8 @@
 
 import { useEffect } from 'react';
 import { useGetList, useRedirect } from 'react-admin';
-import useSelectedOrganization from '../../state/selectedOrganizationState';
-import Loading from '../../components/Loading.jsx';
+import useSelectedOrganization from '@/state/selectedOrganizationState';
+import Loading from '@/components/Loading.jsx';
 
 const IndividualsDashboard = () => {
   const redirect = useRedirect();

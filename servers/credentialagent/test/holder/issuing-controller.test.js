@@ -13,9 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
-// eslint-disable-next-line import/order
-const buildFastify = require('./helpers/credentialagent-holder-build-fastify');
+const mockAddCredentialMetadataEntry = mock.fn();
+const mockCreateCredentialMetadataList = mock.fn();
+const mockAddRevocationListSigned = mock.fn();
+const mockInitPermissions = mock.fn();
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    initRevocationRegistry: () => ({
+      addRevocationListSigned: mockAddRevocationListSigned,
+    }),
+    initMetadataRegistry: () => ({
+      addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
+      createCredentialMetadataList: mockCreateCredentialMetadataList,
+    }),
+    initVerificationCoupon: () => ({}),
+  },
+});
+
+const mockLookupPrimary = mock.fn();
+mock.module('@verii/contract-permissions', {
+  namedExports: {
+    initPermissions: () => ({
+      lookupPrimary: mockLookupPrimary,
+    }),
+  },
+});
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { getUnixTime, subYears, subDays } = require('date-fns/fp');
 const { nanoid } = require('nanoid');
@@ -57,6 +83,7 @@ const {
 const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { hashOffer } = require('@verii/velocity-issuing');
+const buildFastify = require('./helpers/credentialagent-holder-build-fastify');
 
 const {
   nockCredentialTypes,
@@ -158,7 +185,7 @@ describe('Holder Issuing Test Suite', () => {
       tenantKeyDatum.kidFragment
     );
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify({
       storeIssuerAsString: false,
     });
@@ -174,7 +201,7 @@ describe('Holder Issuing Test Suite', () => {
   });
 
   beforeEach(async () => {
-    jest.resetAllMocks();
+    mockLookupPrimary.mock.resetCalls();
     nock.cleanAll();
     fastify.resetOverrides();
     fastify.removeDocSchema();
@@ -185,8 +212,12 @@ describe('Holder Issuing Test Suite', () => {
         allErrors: true,
       },
     });
-    mockAddCredentialMetadataEntry.mockResolvedValue(true);
-    mockCreateCredentialMetadataList.mockResolvedValue(true);
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+      Promise.resolve(true)
+    );
+    mockCreateCredentialMetadataList.mock.mockImplementation(() =>
+      Promise.resolve(true)
+    );
 
     await mongoDb().collection('offers').deleteMany({});
     await mongoDb().collection('exchanges').deleteMany({});
@@ -244,10 +275,11 @@ describe('Holder Issuing Test Suite', () => {
     authToken = await genAuthToken(tenant, exchange);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();
+    mock.reset();
   });
 
   const issuingUrl = ({ did }, suffix = '') =>
@@ -5887,7 +5919,7 @@ describe('Holder Issuing Test Suite', () => {
     describe('/finalize-offers issuing permissions test suite ', () => {
       it('/finalize-offers should 502 when primary is not authorized to issue career credentials for single offer', async () => {
         await updateExchangeOffersIds(exchangeId, [offer0._id]);
-        mockAddCredentialMetadataEntry.mockImplementation(async () => {
+        mockAddCredentialMetadataEntry.mock.mockImplementation(async () => {
           const e = new Error(
             'Permissions: mock error primary lacks permissions'
           );
@@ -5954,10 +5986,10 @@ describe('Holder Issuing Test Suite', () => {
       it('/finalize-offers should 502 when primary is not authorized to issue credentials for one of multiple offer', async () => {
         const offer1 = await persistFinalizableOffer();
         await updateExchangeOffersIds(exchangeId, [offer0._id, offer1._id]);
-        mockAddCredentialMetadataEntry.mockImplementationOnce(() => {
+        mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() => {
           return Promise.resolve(true);
         });
-        mockAddCredentialMetadataEntry.mockImplementationOnce(async () => {
+        mockAddCredentialMetadataEntry.mock.mockImplementationOnce(async () => {
           const e = new Error(
             'Permissions: mock error primary lacks permissions'
           );
@@ -6037,7 +6069,7 @@ describe('Holder Issuing Test Suite', () => {
 
       it('/finalize-offers should 502 when primary is not authorized to identity contact credentials for single offer', async () => {
         await updateExchangeOffersIds(exchangeId, [offer0._id]);
-        mockAddCredentialMetadataEntry.mockImplementation(async () => {
+        mockAddCredentialMetadataEntry.mock.mockImplementation(async () => {
           const e = new Error(
             'Permissions: mock error primary lacks permissions'
           );
@@ -6103,7 +6135,7 @@ describe('Holder Issuing Test Suite', () => {
 
       it('/finalize-offers should 502 when primary is not authorized to issue contact credentials for single offer', async () => {
         await updateExchangeOffersIds(exchangeId, [offer0._id]);
-        mockAddCredentialMetadataEntry.mockImplementation(async () => {
+        mockAddCredentialMetadataEntry.mock.mockImplementation(async () => {
           const e = new Error(
             'Permissions: mock error primary lacks permissions'
           );
@@ -6169,7 +6201,7 @@ describe('Holder Issuing Test Suite', () => {
 
       it('/finalize-offers should throw unknown error when contract bubbles up an unexpected error', async () => {
         await updateExchangeOffersIds(exchangeId, [offer0._id]);
-        mockAddCredentialMetadataEntry.mockImplementation(async () => {
+        mockAddCredentialMetadataEntry.mock.mockImplementation(async () => {
           throw new Error('foo error');
         });
         const response = await fastify.injectJson({
@@ -6244,13 +6276,15 @@ describe('Holder Issuing Test Suite', () => {
           },
         });
         expect(response.statusCode).toEqual(200);
-        expect(mockLookupPrimary).toHaveBeenCalledTimes(0);
+        expect(mockLookupPrimary.mock.callCount()).toEqual(0);
       });
 
       it('ensure-tenant-primary-address-plugin should add primaryAddress to tenant if field not exists', async () => {
-        mockInitPermissions.mockResolvedValue({
-          lookupPrimary: mockLookupPrimary,
-        });
+        mockInitPermissions.mock.mockImplementation(() =>
+          Promise.resolve({
+            lookupPrimary: mockLookupPrimary,
+          })
+        );
         const newTenant = await persistTenant({
           primaryAddress: '',
         });
@@ -6291,16 +6325,20 @@ describe('Holder Issuing Test Suite', () => {
           },
         });
         expect(response.statusCode).toEqual(200);
-        expect(mockLookupPrimary).toHaveBeenCalledTimes(1);
-        expect(mockLookupPrimary).toHaveBeenCalledWith(
-          toEthereumAddress(hexFromJwk(keyPair.publicKey, false))
-        );
+        expect(mockLookupPrimary.mock.callCount()).toEqual(1);
+        expect(
+          mockLookupPrimary.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          toEthereumAddress(hexFromJwk(keyPair.publicKey, false)),
+        ]);
       });
 
       it('ensure-tenant-primary-address-plugin should not add primaryAddress to tenant if DLT_TRANSACTION key not exist', async () => {
-        mockInitPermissions.mockResolvedValue({
-          lookupPrimary: mockLookupPrimary,
-        });
+        mockInitPermissions.mock.mockImplementation(() =>
+          Promise.resolve({
+            lookupPrimary: mockLookupPrimary,
+          })
+        );
         const newTenant = await persistTenant({
           primaryAddress: '',
         });
@@ -6352,7 +6390,7 @@ describe('Holder Issuing Test Suite', () => {
           },
         });
         expect(response.statusCode).toEqual(200);
-        expect(mockLookupPrimary).toHaveBeenCalledTimes(0);
+        expect(mockLookupPrimary.mock.callCount()).toEqual(0);
       });
     });
 

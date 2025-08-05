@@ -1,3 +1,5 @@
+import { beforeEach, describe, test, mock } from 'node:test';
+import { expect } from 'expect';
 import { VCLImpl } from '../src/impl/VCLImpl';
 import GlobalConfig from '../src/impl/GlobalConfig';
 import VCLLog from '../src/impl/utils/VCLLog';
@@ -9,13 +11,13 @@ import {
 
 const mockCryptoServicesDescriptor = {
     keyService: {
-        generateDidJwk: jest.fn(),
+        generateDidJwk: mock.fn(),
     },
     jwtSignService: {
-        sign: jest.fn(),
+        sign: mock.fn(),
     },
     jwtVerifyService: {
-        verify: jest.fn(),
+        verify: mock.fn(),
     },
 };
 
@@ -23,17 +25,17 @@ describe('VCLImpl - initGlobalConfigurations()', () => {
     let vclImpl: VCLImpl;
 
     const mockLogService = {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
+        info: mock.fn(),
+        warn: mock.fn(),
+        error: mock.fn(),
     };
-    const mockGlobalConfigInit = jest.fn();
+    const mockGlobalConfigInit = mock.fn();
 
     beforeEach(() => {
         vclImpl = new VCLImpl();
 
         GlobalConfig.init = mockGlobalConfigInit;
-        mockGlobalConfigInit.mockClear();
+        mockGlobalConfigInit.mock.resetCalls();
     });
 
     test('should call GlobalConfig.init with correct parameters', () => {
@@ -47,13 +49,13 @@ describe('VCLImpl - initGlobalConfigurations()', () => {
 
         vclImpl.initGlobalConfigurations(initializationDescriptor);
 
-        expect(mockGlobalConfigInit).toHaveBeenCalledTimes(1);
-        expect(mockGlobalConfigInit).toHaveBeenCalledWith(
+        expect(mockGlobalConfigInit.mock.callCount()).toEqual(1);
+        expect(mockGlobalConfigInit.mock.calls[0].arguments).toEqual([
             initializationDescriptor.isDebugOn,
             initializationDescriptor.environment,
             initializationDescriptor.xVnfProtocolVersion,
-            true
-        );
+            true,
+        ]);
     });
 
     test('should assign VCLLog.LoggerService to the provided log service', () => {

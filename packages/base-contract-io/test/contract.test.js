@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { generateKeyPair } = require('@verii/crypto');
 const {
@@ -34,8 +36,7 @@ const context = {
   config,
 };
 
-describe('Contract Client Test Suite', () => {
-  jest.setTimeout(15000);
+describe('Contract Client Test Suite', { timeout: 15000 }, () => {
   const { privateKey: deployerPrivateKey } = generateKeyPair();
   const randomAccount = toEthereumAddress(generateKeyPair().publicKey);
   const rpcUrl = 'http://localhost:8545';
@@ -47,7 +48,7 @@ describe('Contract Client Test Suite', () => {
       contract.initialize(randomAccount, ['0x2c26'])
     );
 
-  beforeAll(async () => {
+  before(async () => {
     await mongoFactoryWrapper('test-contract', context);
   });
 
@@ -55,7 +56,7 @@ describe('Contract Client Test Suite', () => {
     await wait(1000);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoCloseWrapper();
   });
 

@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { buildMongoConnection } = require('@verii/tests-helpers');
 const {
   removePiiFromFinalizedOffers,
@@ -12,14 +15,14 @@ describe('pii-purge test suite', () => {
   let client;
   let db;
   let persistOffer;
-  beforeAll(async () => {
+  before(async () => {
     client = await initMongoClient(
       buildMongoConnection('test-credentialagent')
     );
     db = client.db();
     persistOffer = persistOfferFactory(db);
   });
-  afterAll(async () => {
+  after(async () => {
     await client.close();
   });
   beforeEach(async () => {

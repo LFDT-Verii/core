@@ -15,8 +15,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { Box, Button, Divider, Paper, Stack, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Button, Divider, Paper, Stack, Typography, Grid } from '@mui/material';
 import PropTypes from 'prop-types';
 import EditIcon from '@mui/icons-material/Edit';
 import { useParams, useNavigate } from 'react-router';
@@ -32,14 +31,14 @@ import {
   LEI_HINT,
   NATIONAL_AUTHORITY_HINT,
   ALSO_KNOWN_AS_HINT,
-} from '../../utils/index.jsx';
-import Loading from '../../components/Loading.jsx';
-import OrganizationAvatar from '../../components/common/OrganizationAvatar.jsx';
-import useCountryCodes from '../../utils/countryCodes';
-import useSelectedOrganization from '../../state/selectedOrganizationState';
-import { AuthoritiesList, Authorities, authorityOptions } from '../../constants/messageCodes';
-import DataItem from '../../components/common/DataItem.jsx';
-import { useAuth } from '../../utils/auth/AuthContext';
+} from '@/utils/index.jsx';
+import Loading from '@/components/Loading.jsx';
+import OrganizationAvatar from '@/components/common/OrganizationAvatar.jsx';
+import useCountryCodes from '@/utils/countryCodes';
+import useSelectedOrganization from '@/state/selectedOrganizationState';
+import { AuthoritiesList, Authorities, authorityOptions } from '@/constants/messageCodes';
+import DataItem from '@/components/common/DataItem.jsx';
+import { useAuth } from '@/utils/auth/AuthContext';
 
 // eslint-disable-next-line complexity
 const OrganizationShow = () => {

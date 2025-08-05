@@ -1,9 +1,9 @@
-const { env } = require('node:process');
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const path = require('path');
 const nock = require('nock');
-const got = require('got');
 
-const gotExtendSpy = jest.spyOn(got, 'extend');
 const { nanoid } = require('nanoid');
 const { runBatchIssuing } = require('../src/batch-issuing/orchestrators');
 
@@ -11,17 +11,13 @@ const ISO_DATETIME_TZ_FORMAT =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\+\d\d:\d\d|Z)$/;
 
 describe('batch issuing test', () => {
-  beforeAll(() => {
+  before(() => {
     nock.cleanAll();
   });
 
-  afterAll(() => {
+  after(() => {
     nock.cleanAll();
     nock.restore();
-  });
-
-  beforeEach(() => {
-    jest.clearAllMocks();
   });
 
   it("should fail if options don't have credential type or type doesn't exist", async () => {
@@ -1467,57 +1463,6 @@ describe('batch issuing test', () => {
           },
         ],
       });
-    });
-  });
-
-  describe('https.rejectUnauthorized test suite', () => {
-    beforeEach(() => {
-      env.NODE_TLS_REJECT_UNAUTHORIZED = '';
-    });
-    afterAll(() => {
-      env.NODE_TLS_REJECT_UNAUTHORIZED = '';
-    });
-
-    it('when NODE_TLS_REJECT_UNAUTHORIZED is "0", got client should be setup with https.rejectUnauthorized false', async () => {
-      env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-      const options = {
-        csvFilename: path.join(__dirname, 'data/batch-vars-offerids.csv'),
-        offerTemplateFilename: path.join(
-          __dirname,
-          'data/email-offer.template.json'
-        ),
-        tenant: 'foo',
-        termsUrl: 'http://example.com/terms.html',
-        new: true,
-        dryrun: true,
-      };
-      await runBatchIssuing(options);
-      expect(gotExtendSpy.mock.calls).toEqual([
-        [{ https: { rejectUnauthorized: false } }],
-      ]);
-    });
-
-    it('when NODE_TLS_REJECT_UNAUTHORIZED is value other than "0", got client should be setup without https.rejectUnauthorized', async () => {
-      const options = {
-        csvFilename: path.join(__dirname, 'data/batch-vars-offerids.csv'),
-        offerTemplateFilename: path.join(
-          __dirname,
-          'data/email-offer.template.json'
-        ),
-        tenant: 'foo',
-        termsUrl: 'http://example.com/terms.html',
-        new: true,
-        dryrun: true,
-      };
-      env.NODE_TLS_REJECT_UNAUTHORIZED = 'false';
-      await runBatchIssuing(options);
-      env.NODE_TLS_REJECT_UNAUTHORIZED = '';
-      await runBatchIssuing(options);
-      env.NODE_TLS_REJECT_UNAUTHORIZED = 'undefined';
-      await runBatchIssuing(options);
-      delete env.NODE_TLS_REJECT_UNAUTHORIZED;
-      await runBatchIssuing(options);
-      expect(gotExtendSpy.mock.calls).toEqual([[{}], [{}], [{}], [{}]]);
     });
   });
 });

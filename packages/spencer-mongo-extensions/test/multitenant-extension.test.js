@@ -15,6 +15,9 @@
  */
 
 // eslint-disable-next-line import/order
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const console = require('console');
 const {
   mongoFactoryWrapper,
@@ -27,14 +30,14 @@ const { multitenantExtension } = require('../src/multitenant-extension');
 describe('multitenant extension', () => {
   let tenant1;
 
-  beforeAll(async () => {
+  before(async () => {
     await mongoFactoryWrapper('test-multitenant-extension', {
       log: console,
       config,
     });
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoCloseWrapper();
   });
 
@@ -45,8 +48,8 @@ describe('multitenant extension', () => {
   it('should error if tenant missing on the context', () => {
     const extension = multitenantExtension()(
       {
-        prepFilter: jest.fn((x) => x),
-        prepModification: jest.fn((x) => x),
+        prepFilter: mock.fn((x) => x),
+        prepModification: mock.fn((x) => x),
         extensions: [],
         collection: {
           tableName: 'foos',
@@ -67,8 +70,8 @@ describe('multitenant extension', () => {
     const tenantId = nanoid();
 
     const extension = multitenantExtension()({
-      prepFilter: jest.fn((x) => x),
-      prepModification: jest.fn((x) => x),
+      prepFilter: mock.fn((x) => x),
+      prepModification: mock.fn((x) => x),
       extensions: [],
       collection: {
         name: 'foos',
@@ -89,8 +92,8 @@ describe('multitenant extension', () => {
   it('should build ok if the tenant is passed', () => {
     const extension = multitenantExtension()(
       {
-        prepFilter: jest.fn((x) => x),
-        prepModification: jest.fn((x) => x),
+        prepFilter: mock.fn((x) => x),
+        prepModification: mock.fn((x) => x),
         extensions: [],
         collection: {
           name: 'foos',
@@ -115,8 +118,8 @@ describe('multitenant extension', () => {
       tenantProp: 'name',
     })(
       {
-        prepFilter: jest.fn((x) => x),
-        prepModification: jest.fn((x) => x),
+        prepFilter: mock.fn((x) => x),
+        prepModification: mock.fn((x) => x),
         extensions: [],
         collection: {
           name: 'foos',
@@ -143,8 +146,8 @@ describe('multitenant extension', () => {
       },
     })(
       {
-        prepFilter: jest.fn((x) => x),
-        prepModification: jest.fn((x) => x),
+        prepFilter: mock.fn((x) => x),
+        prepModification: mock.fn((x) => x),
         extensions: [],
         collection: {
           name: 'foos',

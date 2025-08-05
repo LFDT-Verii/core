@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const {
   testReadOrganizationsUser,
   testRegistrarSuperUser,
@@ -36,13 +39,13 @@ describe('Registrar Consents controller', () => {
   let persistRegistrarConsent;
   let persistOrganization;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistRegistrarConsent } = initConsentsFactory(fastify));
     ({ persistOrganization } = initOrganizationFactory(fastify));
   }, 5000);
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
   beforeEach(async () => {

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { get } = require('lodash/fp');
 const { getUnixTime } = require('date-fns/fp');
