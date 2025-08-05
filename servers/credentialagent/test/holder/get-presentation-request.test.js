@@ -204,6 +204,13 @@ describe('presentation request', () => {
       expect(response.statusCode).toEqual(404);
     });
     it('should 500 if tenant did doc cannot be found', async () => {
+      nock('http://oracle.localhost.test')
+        .get(
+          `/api/v0.6/organizations/${encodeURIComponent(
+            tenant.did
+          )}/verified-profile`
+        )
+        .reply(404);
       const q = { disclosureId: disclosure._id };
       const response = await fastify.injectJson({
         method: 'GET',
@@ -212,7 +219,7 @@ describe('presentation request', () => {
           `/get-presentation-request?id=${q.disclosureId}`
         ),
       });
-      expect(response.statusCode).toEqual(500);
+      expect(response.statusCode).toEqual(502);
     });
     it('should 500 if tenant doesnt have a private key defined', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
