@@ -40,7 +40,7 @@
     "mongodb": "6.17.0",
     "jest": "29.7.0",
     "prettier": "2.8.8",
-    "typescript": "5.8.3"
+    "typescript": "5.9.2"
   },
   "nx": {
     "tags": ["lib"]
