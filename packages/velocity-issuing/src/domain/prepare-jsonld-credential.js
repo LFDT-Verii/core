@@ -59,14 +59,13 @@ const prepareJsonLdCredential = (
     credentialExtensionsContextUrl,
   ]);
   return {
-    ...cleanOffer(offer),
     '@context': credentialContexts,
-    id: credentialId,
     type: uniq([
+      'VerifiableCredential',
       ...castArray(offer.type),
       layerCredentialType,
-      'VerifiableCredential',
     ]),
+    id: credentialId,
     issuer:
       offer.issuer != null && isObject(offer.issuer)
         ? {
@@ -74,13 +73,14 @@ const prepareJsonLdCredential = (
             ...omit(['vendorOrganizationId'], offer.issuer),
           }
         : { id: issuer.did },
-    issuanceDate: new Date().toISOString(),
     credentialSubject: buildCredentialSubject(
       offer,
       credentialSubjectId,
       credentialContexts,
       context
     ),
+    ...cleanOffer(offer),
+    issuanceDate: new Date().toISOString(),
     credentialSchema: offer.credentialSchema ?? {
       type: 'JsonSchemaValidator2018',
       id: credentialTypeMetadata.schemaUrl,
@@ -110,6 +110,11 @@ const cleanOffer = omit([
   'linkedCredentials',
   'consentedAt',
   'rejectedAt',
+  'type',
+  '@context',
+  'credentialSubject',
+  'id',
+  'issuer',
 ]);
 
 /**
