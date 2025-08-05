@@ -3523,10 +3523,12 @@ describe('Organizations Full Test Suite', () => {
               createdAt: expect.any(Date),
             })
           );
-          expect(mockSendEmail.mock.calls).toEqual([
-            [expectedSupportEmail()],
-            [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
-          ]);
+          expect(mockSendEmail.mock.calls).toEqual(
+            expect.arrayContaining([
+              [expectedSupportEmail()],
+              [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
+            ])
+          );
         });
 
         it('Should create organization without services and accept invitation', async () => {

@@ -1,12 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "hostRules": [
-    {
-      "hostType": "npm",
-      "matchHost": "npm.pkg.github.com",
-      "token": "{{ secrets.GITHUB_TOKEN }}"
-    }
-  ],
   "timezone": "Asia/Jerusalem",
   "extends": [
     "config:best-practices",  
