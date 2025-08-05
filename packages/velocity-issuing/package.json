@@ -47,7 +47,7 @@
     "mongodb": "6.17.0",
     "nanoid": "3.3.11",
     "prettier": "2.8.8",
-    "typescript": "5.8.3"
+    "typescript": "5.9.2"
   },
   "nx": {
     "tags": ["lib"]
