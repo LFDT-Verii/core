@@ -72,22 +72,6 @@ const {
 } = require('../../src/entities');
 const { nockRegistrarAppSchemaName } = require('../combined/helpers');
 
-const mockAddCredentialMetadataEntry = jest.fn();
-const mockCreateCredentialMetadataList = jest.fn();
-const mockAddRevocationListSigned = jest.fn();
-const mockGetRevokeUrl = jest.fn();
-
-jest.mock('@verii/metadata-registration', () => ({
-  ...jest.requireActual('@verii/metadata-registration'),
-  initRevocationRegistry: () => ({
-    addRevocationListSigned: mockAddRevocationListSigned,
-  }),
-  initMetadataRegistry: () => ({
-    addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
-    createCredentialMetadataList: mockCreateCredentialMetadataList,
-  }),
-}));
-
 const clearDb = async () => {
   await mongoDb().collection('tenants').deleteMany({});
   await mongoDb().collection('keys').deleteMany({});
@@ -351,7 +335,14 @@ describe('vc-api credentials endpoints', () => {
           mockAddCredentialMetadataEntry.mock.calls.map(
             (call) => call.arguments
           )
-        ).toEqual([[expect.any(Object), expect.any(String), 'did:ion:cao', 'cosekey:aes-256-gcm']]);
+        ).toEqual([
+          [
+            expect.any(Object),
+            expect.any(String),
+            'did:ion:cao',
+            'cosekey:aes-256-gcm',
+          ],
+        ]);
       });
 
       it("should issue a credential without a credential subject's DID", async () => {

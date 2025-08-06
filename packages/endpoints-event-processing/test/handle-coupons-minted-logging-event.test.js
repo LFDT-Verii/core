@@ -57,24 +57,6 @@ const {
 } = require('./data/sample-mint-events-array');
 const { handleCouponsMintedLoggingEvent } = require('../src/handlers');
 
-jest.mock('@verii/aws-clients', () => {
-  const originalModule = jest.requireActual('@verii/aws-clients');
-
-  return {
-    ...originalModule,
-    initReadDocument: mockInitReadDocument,
-    initWriteDocument: mockInitWriteDocument,
-  };
-});
-
-jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual('@verii/metadata-registration');
-  return {
-    ...originalModule,
-    initVerificationCoupon: mockInitVerificationCoupon,
-  };
-});
-
 describe('Coupons minted event logging task test suite', () => {
   const task = 'coupons-minted-logging';
   const testContext = {

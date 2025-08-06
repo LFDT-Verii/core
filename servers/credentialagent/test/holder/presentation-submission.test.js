@@ -81,19 +81,6 @@ const {
   NotificationTypes,
 } = require('../../src/entities');
 
-jest.mock('@verii/metadata-registration');
-jest.mock('@verii/verifiable-credentials', () => ({
-  ...jest.requireActual('@verii/verifiable-credentials'),
-  verifyCredentials: mockVerifyCredentials,
-}));
-jest.mock('../../src/fetchers', () => {
-  const actualFetchers = jest.requireActual('../../src/fetchers');
-  return {
-    ...actualFetchers,
-    sendPush: mockSendPush,
-  };
-});
-
 describe('presentation submission', () => {
   let fastify;
   let persistDisclosure;

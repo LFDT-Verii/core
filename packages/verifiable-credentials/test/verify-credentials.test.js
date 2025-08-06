@@ -133,31 +133,31 @@ describe('Verify credentials', () => {
       let credentialDid;
 
       beforeEach(async () => {
-          initMetadataRegistry.mock.resetCalls();
-          initRevocationRegistry.mock.resetCalls();
-          resolveDidDocument.mock.resetCalls();
-          resolveDidDocument.mock.mockImplementation(() => ({
-              didDocument: {
-                  id: 'DID',
-                  publicKey: [
-                      {
-                          id: `${credentialDid.toLowerCase()}#key`,
-                          publicKeyJwk: orgKeyPair.publicJwk,
-                      },
-                  ],
-                  service: ['SERVICE'],
+        initMetadataRegistry.mock.resetCalls();
+        initRevocationRegistry.mock.resetCalls();
+        resolveDidDocument.mock.resetCalls();
+        resolveDidDocument.mock.mockImplementation(() => ({
+          didDocument: {
+            id: 'DID',
+            publicKey: [
+              {
+                id: `${credentialDid.toLowerCase()}#key`,
+                publicKeyJwk: orgKeyPair.publicJwk,
               },
-              didDocumentMetadata: {
-                  boundIssuerVcs: [
-                      {
-                          id: credentialDid.toLowerCase(),
-                          format: 'jwt_vc',
-                          vc: issuerVc,
-                      },
-                  ],
+            ],
+            service: ['SERVICE'],
+          },
+          didDocumentMetadata: {
+            boundIssuerVcs: [
+              {
+                id: credentialDid.toLowerCase(),
+                format: 'jwt_vc',
+                vc: issuerVc,
               },
-              didResolutionMetadata: {},
-          }));
+            ],
+          },
+          didResolutionMetadata: {},
+        }));
 
         indexEntry = ['0xf123', 1, 42, didSuffix];
         credentialDid = buildDid(indexEntry, 'did:velocity:v2:');
@@ -267,163 +267,13 @@ describe('Verify credentials', () => {
               UNREVOKED: CheckResults.PASS,
             },
           },
-        },
-      ]);
-          expect(
-              initMetadataRegistry.mock.calls.map((call) => call.arguments)
-          ).toEqual([[{ privateKey: orgKeyPair.privateKey }, kmsContext]]);
-          expect(
-              resolveDidDocument.mock.calls.map((call) => call.arguments)
-          ).toEqual([
-        [
-          {
-            burnerDid: kmsContext.tenant.did,
-            caoDid: kmsContext.tenant.caoDid,
-            credentials: [
-              expect.objectContaining({ credential: idCredential }),
-            ],
-            did: `did:velocity:v2:multi:${idCredential.id
-              .split(':')
-              .slice(3)
-              .join(':')}`,
-            verificationCoupon: expect.any(Object),
-          },
-        ],
-      ]);
-    });
-
-      it('should return successful credential check when checked @context', async () => {
-        const result = await verifyCredentials(
-          {
-            credentials: [openBadgeVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-          },
-          fetchers,
-          context
-        );
-
-        expect(result).toEqual([
-          {
-            credential: openBadgeCredential,
-            credentialChecks: {
-              UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.PASS,
-              TRUSTED_HOLDER: CheckResults.PASS,
-              UNEXPIRED: CheckResults.PASS,
-              UNREVOKED: CheckResults.PASS,
-            },
-          },
         ]);
-      });
-
-      it('should return successful legacy credential check when checked @context is on credentialSubject', async () => {
-        const legacyOpenBadgeCredential = {
-          ...openBadgeCredential,
-          '@context': [first(openBadgeCredential['@context'])],
-          credentialSubject: {
-            '@context': tail(openBadgeCredential['@context']),
-            ...openBadgeCredential.credentialSubject,
-          },
-        };
-        const legacyOpenBadgeVc = await generateCredentialJwt(
-          legacyOpenBadgeCredential,
-          orgKeyPair.privateJwk,
-          `${credentialDid}#key`
-        );
-
-        const result = await verifyCredentials(
-          {
-            credentials: [legacyOpenBadgeVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-          },
-          fetchers,
-          context
-        );
-
-        expect(result).toEqual([
-          {
-            credential: legacyOpenBadgeCredential,
-            credentialChecks: {
-              UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.PASS,
-              TRUSTED_HOLDER: CheckResults.PASS,
-              UNEXPIRED: CheckResults.PASS,
-              UNREVOKED: CheckResults.PASS,
-            },
-          },
-        ]);
-      });
-
-    it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
-      const x = omit(
-        ['@context.OpenBadgeCredential.@context.authority'],
-        openBadgeJsonLdContext
-      );
-      mockGetJsonLdContextJson.mock.mockImplementation(() =>
-        Promise.resolve(x)
-      );
-
-        const result = await verifyCredentials(
-          {
-            credentials: [openBadgeVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-          },
-          fetchers,
-          context
-        );
-
-        expect(result).toEqual([
-          {
-            credential: openBadgeCredential,
-            credentialChecks: {
-              UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.PASS,
-              TRUSTED_HOLDER: CheckResults.PASS,
-              UNEXPIRED: CheckResults.PASS,
-              UNREVOKED: CheckResults.PASS,
-            },
-          },
-        ]);
-      });
-
-      it('should return successful credential check using kms', async () => {
-        const keys = {
-          [orgKeyPair.publicKey]: { privateJwk: orgKeyPair.privateJwk },
-        };
-        const kmsContext = {
-          ...context,
-          kms: { exportKeyOrSecret: async (id) => keys[id] },
-        };
-        const result = await verifyCredentials(
-          {
-            credentials: [idVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: orgKeyPair.publicKey },
-          },
-          fetchers,
-          kmsContext
-        );
-
-      expect(result).toEqual([
-        {
-          credential: idCredential,
-          credentialChecks: {
-            UNTAMPERED: CheckResults.PASS,
-            TRUSTED_ISSUER: CheckResults.PASS,
-            TRUSTED_HOLDER: CheckResults.PASS,
-            UNEXPIRED: CheckResults.PASS,
-            UNREVOKED: CheckResults.PASS,
-          },
-        ]);
-          expect(
-              initMetadataRegistry.mock.calls.map((call) => call.arguments)
-          ).toEqual([[{ privateKey: orgKeyPair.privateKey }, kmsContext]]);
-          expect(
-              resolveDidDocument.mock.calls.map((call) => call.arguments)
-          ).toEqual([
+        expect(
+          initMetadataRegistry.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ privateKey: orgKeyPair.privateKey }, kmsContext]]);
+        expect(
+          resolveDidDocument.mock.calls.map((call) => call.arguments)
+        ).toEqual([
           [
             {
               burnerDid: kmsContext.tenant.did,
@@ -505,14 +355,164 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
-      const x = omit(
-        ['@context.OpenBadgeCredential.@context.authority'],
-        openBadgeJsonLdContext
-      );
-      mockGetJsonLdContextJson.mock.mockImplementation(() =>
-        Promise.resolve(x)
-      );
+      it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
+        const x = omit(
+          ['@context.OpenBadgeCredential.@context.authority'],
+          openBadgeJsonLdContext
+        );
+        mockGetJsonLdContextJson.mock.mockImplementation(() =>
+          Promise.resolve(x)
+        );
+
+        const result = await verifyCredentials(
+          {
+            credentials: [openBadgeVc],
+            expectedHolderDid: issuerDidJwk,
+            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+          },
+          fetchers,
+          context
+        );
+
+        expect(result).toEqual([
+          {
+            credential: openBadgeCredential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.PASS,
+              TRUSTED_HOLDER: CheckResults.PASS,
+              UNEXPIRED: CheckResults.PASS,
+              UNREVOKED: CheckResults.PASS,
+            },
+          },
+        ]);
+      });
+
+      it('should return successful credential check using kms', async () => {
+        const keys = {
+          [orgKeyPair.publicKey]: { privateJwk: orgKeyPair.privateJwk },
+        };
+        const kmsContext = {
+          ...context,
+          kms: { exportKeyOrSecret: async (id) => keys[id] },
+        };
+        const result = await verifyCredentials(
+          {
+            credentials: [idVc],
+            expectedHolderDid: issuerDidJwk,
+            relyingParty: { dltOperatorKMSKeyId: orgKeyPair.publicKey },
+          },
+          fetchers,
+          kmsContext
+        );
+
+        expect(result).toEqual([
+          {
+            credential: idCredential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.PASS,
+              TRUSTED_HOLDER: CheckResults.PASS,
+              UNEXPIRED: CheckResults.PASS,
+              UNREVOKED: CheckResults.PASS,
+            },
+          },
+        ]);
+        expect(
+          initMetadataRegistry.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ privateKey: orgKeyPair.privateKey }, kmsContext]]);
+        expect(
+          resolveDidDocument.mock.calls.map((call) => call.arguments)
+        ).toEqual([
+          [
+            {
+              burnerDid: kmsContext.tenant.did,
+              caoDid: kmsContext.tenant.caoDid,
+              credentials: [
+                expect.objectContaining({ credential: idCredential }),
+              ],
+              did: `did:velocity:v2:multi:${idCredential.id
+                .split(':')
+                .slice(3)
+                .join(':')}`,
+              verificationCoupon: expect.any(Object),
+            },
+          ],
+        ]);
+      });
+
+      it('should return successful credential check when checked @context', async () => {
+        const result = await verifyCredentials(
+          {
+            credentials: [openBadgeVc],
+            expectedHolderDid: issuerDidJwk,
+            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+          },
+          fetchers,
+          context
+        );
+
+        expect(result).toEqual([
+          {
+            credential: openBadgeCredential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.PASS,
+              TRUSTED_HOLDER: CheckResults.PASS,
+              UNEXPIRED: CheckResults.PASS,
+              UNREVOKED: CheckResults.PASS,
+            },
+          },
+        ]);
+      });
+
+      it('should return successful legacy credential check when checked @context is on credentialSubject', async () => {
+        const legacyOpenBadgeCredential = {
+          ...openBadgeCredential,
+          '@context': [first(openBadgeCredential['@context'])],
+          credentialSubject: {
+            '@context': tail(openBadgeCredential['@context']),
+            ...openBadgeCredential.credentialSubject,
+          },
+        };
+        const legacyOpenBadgeVc = await generateCredentialJwt(
+          legacyOpenBadgeCredential,
+          orgKeyPair.privateJwk,
+          `${credentialDid}#key`
+        );
+
+        const result = await verifyCredentials(
+          {
+            credentials: [legacyOpenBadgeVc],
+            expectedHolderDid: issuerDidJwk,
+            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+          },
+          fetchers,
+          context
+        );
+
+        expect(result).toEqual([
+          {
+            credential: legacyOpenBadgeCredential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.PASS,
+              TRUSTED_HOLDER: CheckResults.PASS,
+              UNEXPIRED: CheckResults.PASS,
+              UNREVOKED: CheckResults.PASS,
+            },
+          },
+        ]);
+      });
+
+      it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
+        const x = omit(
+          ['@context.OpenBadgeCredential.@context.authority'],
+          openBadgeJsonLdContext
+        );
+        mockGetJsonLdContextJson.mock.mockImplementation(() =>
+          Promise.resolve(x)
+        );
 
         const result = await verifyCredentials(
           {
@@ -602,14 +602,14 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
-      const x = omit(
-        ['@context.OpenBadgeCredential.@context.authority'],
-        openBadgeJsonLdContext
-      );
-      mockGetJsonLdContextJson.mock.mockImplementation(() =>
-        Promise.resolve(x)
-      );
+      it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
+        const x = omit(
+          ['@context.OpenBadgeCredential.@context.authority'],
+          openBadgeJsonLdContext
+        );
+        mockGetJsonLdContextJson.mock.mockImplementation(() =>
+          Promise.resolve(x)
+        );
 
         const result = await verifyCredentials(
           {
@@ -658,18 +658,19 @@ describe('Verify credentials', () => {
           context
         );
 
-      expect(result).toEqual([
-        {
-          credential: credentialWithArrayOfStatus,
-          credentialChecks: {
-            UNTAMPERED: CheckResults.PASS,
-            TRUSTED_ISSUER: CheckResults.PASS,
-            TRUSTED_HOLDER: CheckResults.PASS,
-            UNEXPIRED: CheckResults.PASS,
-            UNREVOKED: CheckResults.PASS,
+        expect(result).toEqual([
+          {
+            credential: credentialWithArrayOfStatus,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.PASS,
+              TRUSTED_HOLDER: CheckResults.PASS,
+              UNEXPIRED: CheckResults.PASS,
+              UNREVOKED: CheckResults.PASS,
+            },
           },
         ]);
-    });
+      });
 
       it('should return successful credential check if selfsigned using did:jwk in kid', async () => {
         const keyPair = generateKeyPairInHexAndJwk();
@@ -721,27 +722,26 @@ describe('Verify credentials', () => {
               UNEXPIRED: CheckResults.PASS,
             },
           },
-        },
-      ]);
-    });
-    it('should generate correct multi did', async () => {
-      await verifyCredentials(
-        {
-          credentials: [openBadgeVc, openBadgeVc],
-          relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-        },
-        fetchers,
-        context
-      );
+        ]);
+      });
+      it('should generate correct multi did', async () => {
+        await verifyCredentials(
+          {
+            credentials: [openBadgeVc, openBadgeVc],
+            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+          },
+          fetchers,
+          context
+        );
         expect(
-            resolveDidDocument.mock.calls.map((call) => call.arguments)
+          resolveDidDocument.mock.calls.map((call) => call.arguments)
         ).toContainEqual([
-            {
-                did: 'did:velocity:v2:multi:1:BBB:42;1:BBB:42',
-                credentials: expect.any(Array),
-                burnerDid: 'did:ion:123',
-                verificationCoupon: {},
-            },
+          {
+            did: 'did:velocity:v2:multi:1:BBB:42;1:BBB:42',
+            credentials: expect.any(Array),
+            burnerDid: 'did:ion:123',
+            verificationCoupon: {},
+          },
         ]);
       });
 
@@ -791,10 +791,10 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('should pass if credential jsonLdContext lookups fail when context isnt checked', async () => {
-      mockGetJsonLdContextJson.mock.mockImplementationOnce(() =>
-        Promise.reject(new Error())
-      );
+      it('should pass if credential jsonLdContext lookups fail when context isnt checked', async () => {
+        mockGetJsonLdContextJson.mock.mockImplementationOnce(() =>
+          Promise.reject(new Error())
+        );
 
         const result = await verifyCredentials(
           {
@@ -820,33 +820,33 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('UNTAMPERED should return VOUCHER_RESERVE_EXHAUSTED and skip credential check with no available tokens', async () => {
-      const contractError = new Error('Contract error');
-      contractError.reason = 'No available tokens';
-      initMetadataRegistry.mock.mockImplementationOnce(() => ({
-        resolveDidDocument: () => Promise.reject(contractError),
-      }));
-      const result = await verifyCredentials(
-        {
-          credentials: [idVc],
-          relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-        },
-        fetchers,
-        context
-      );
-      expect(result).toEqual([
-        {
-          credential: idCredential,
-          credentialChecks: {
-            UNTAMPERED: CheckResults.VOUCHER_RESERVE_EXHAUSTED,
-            TRUSTED_ISSUER: CheckResults.NOT_CHECKED,
-            TRUSTED_HOLDER: CheckResults.NOT_CHECKED,
-            UNEXPIRED: CheckResults.NOT_CHECKED,
-            UNREVOKED: CheckResults.NOT_CHECKED,
+      it('UNTAMPERED should return VOUCHER_RESERVE_EXHAUSTED and skip credential check with no available tokens', async () => {
+        const contractError = new Error('Contract error');
+        contractError.reason = 'No available tokens';
+        initMetadataRegistry.mock.mockImplementationOnce(() => ({
+          resolveDidDocument: () => Promise.reject(contractError),
+        }));
+        const result = await verifyCredentials(
+          {
+            credentials: [idVc],
+            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
-        },
-      ]);
-    });
+          fetchers,
+          context
+        );
+        expect(result).toEqual([
+          {
+            credential: idCredential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.VOUCHER_RESERVE_EXHAUSTED,
+              TRUSTED_ISSUER: CheckResults.NOT_CHECKED,
+              TRUSTED_HOLDER: CheckResults.NOT_CHECKED,
+              UNEXPIRED: CheckResults.NOT_CHECKED,
+              UNREVOKED: CheckResults.NOT_CHECKED,
+            },
+          },
+        ]);
+      });
 
       it('UNTAMPERED should return DEPENDENCY_RESOLUTION_ERROR if credential signed using an unsupported did method in kid', async () => {
         const keyPair = generateKeyPairInHexAndJwk();
@@ -893,35 +893,35 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('UNTAMPERED should DEPENDENCY_RESOLUTION_ERROR if reason of error not `No available tokens`', async () => {
-      const contractError = new Error('Contract error');
-      contractError.reason = 'Some another reason message';
-      initMetadataRegistry.mock.mockImplementationOnce(() => ({
-        resolveDidDocument: () => Promise.reject(contractError),
-      }));
-      await expect(
-        verifyCredentials(
+      it('UNTAMPERED should DEPENDENCY_RESOLUTION_ERROR if reason of error not `No available tokens`', async () => {
+        const contractError = new Error('Contract error');
+        contractError.reason = 'Some another reason message';
+        initMetadataRegistry.mock.mockImplementationOnce(() => ({
+          resolveDidDocument: () => Promise.reject(contractError),
+        }));
+        await expect(
+          verifyCredentials(
+            {
+              credentials: [idVc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            },
+            fetchers,
+            context
+          )
+        ).resolves.toEqual([
           {
-            credentials: [idVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            credential: idCredential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+              TRUSTED_ISSUER: CheckResults.NOT_CHECKED,
+              TRUSTED_HOLDER: CheckResults.NOT_CHECKED,
+              UNEXPIRED: CheckResults.NOT_CHECKED,
+              UNREVOKED: CheckResults.NOT_CHECKED,
+            },
           },
-          fetchers,
-          context
-        )
-      ).resolves.toEqual([
-        {
-          credential: idCredential,
-          credentialChecks: {
-            UNTAMPERED: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
-            TRUSTED_ISSUER: CheckResults.NOT_CHECKED,
-            TRUSTED_HOLDER: CheckResults.NOT_CHECKED,
-            UNEXPIRED: CheckResults.NOT_CHECKED,
-            UNREVOKED: CheckResults.NOT_CHECKED,
-          },
-        },
-      ]);
-    });
+        ]);
+      });
 
       it('UNTAMPERED should return FAIL if key does not match', async () => {
         const signedCredential = await generateCredentialJwt(
@@ -953,34 +953,34 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('UNTAMPERED should return DATA_INTEGRITY_ERROR if publicKey does not exist', async () => {
-      initMetadataRegistry.mock.mockImplementationOnce(() => ({
-        resolveDidDocument: mock.fn(() => ({
-          didDocument: {
-            id: 'DID',
-            publicKey: [],
-            service: ['SERVICE'],
-          },
-          didDocumentMetadata: {
-            boundIssuerVcs: [
-              {
-                id: credentialDid,
-                format: 'jwt_vc',
-                vc: issuerVc,
-              },
-            ],
-          },
-          didResolutionMetadata: {
-            error: 'UNRESOLVED_MULTI_DID_ENTRIES',
-            unresolvedMultiDidEntries: [
-              {
-                id: 'did:velocity:v2:1:BBB:42:abcdefg',
-                error: 'DATA_INTEGRITY_ERROR',
-              },
-            ],
-          },
-        })),
-      }));
+      it('UNTAMPERED should return DATA_INTEGRITY_ERROR if publicKey does not exist', async () => {
+        initMetadataRegistry.mock.mockImplementationOnce(() => ({
+          resolveDidDocument: mock.fn(() => ({
+            didDocument: {
+              id: 'DID',
+              publicKey: [],
+              service: ['SERVICE'],
+            },
+            didDocumentMetadata: {
+              boundIssuerVcs: [
+                {
+                  id: credentialDid,
+                  format: 'jwt_vc',
+                  vc: issuerVc,
+                },
+              ],
+            },
+            didResolutionMetadata: {
+              error: 'UNRESOLVED_MULTI_DID_ENTRIES',
+              unresolvedMultiDidEntries: [
+                {
+                  id: 'did:velocity:v2:1:BBB:42:abcdefg',
+                  error: 'DATA_INTEGRITY_ERROR',
+                },
+              ],
+            },
+          })),
+        }));
 
         const result = await verifyCredentials(
           {
@@ -1064,10 +1064,10 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR if credential jsonLdContext lookups fail', async () => {
-      mockGetJsonLdContextJson.mock.mockImplementationOnce(() =>
-        Promise.reject(new Error())
-      );
+      it('TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR if credential jsonLdContext lookups fail', async () => {
+        mockGetJsonLdContextJson.mock.mockImplementationOnce(() =>
+          Promise.reject(new Error())
+        );
 
         const result = await verifyCredentials(
           {
@@ -1280,10 +1280,10 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('UNREVOKED should return FAIL when status is revoked', async () => {
-      initRevocationRegistry.mock.mockImplementationOnce(() => ({
-        getRevokedStatus: mock.fn(() => Promise.resolve(1n)),
-      }));
+      it('UNREVOKED should return FAIL when status is revoked', async () => {
+        initRevocationRegistry.mock.mockImplementationOnce(() => ({
+          getRevokedStatus: mock.fn(() => Promise.resolve(1n)),
+        }));
 
         const result = await verifyCredentials(
           {
@@ -1309,10 +1309,10 @@ describe('Verify credentials', () => {
         ]);
       });
 
-    it('UNREVOKED should return FAIL when status request errors', async () => {
-      initRevocationRegistry.mock.mockImplementationOnce(() => ({
-        getRevokedStatus: mock.fn(() => Promise.reject(new Error('boom'))),
-      }));
+      it('UNREVOKED should return FAIL when status request errors', async () => {
+        initRevocationRegistry.mock.mockImplementationOnce(() => ({
+          getRevokedStatus: mock.fn(() => Promise.reject(new Error('boom'))),
+        }));
 
         const result = await verifyCredentials(
           {

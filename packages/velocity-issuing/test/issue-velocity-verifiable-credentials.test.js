@@ -73,21 +73,6 @@ const {
 
 const METADATA_LIST_CONTRACT_ADDRESS = '0xabcdef';
 
-const mockAddCredentialMetadataEntry = jest.fn();
-const mockCreateCredentialMetadataList = jest.fn();
-const mockAddRevocationListSigned = jest.fn();
-
-jest.mock('@verii/metadata-registration', () => ({
-  ...jest.requireActual('@verii/metadata-registration'),
-  initRevocationRegistry: () => ({
-    addRevocationListSigned: mockAddRevocationListSigned,
-  }),
-  initMetadataRegistry: () => ({
-    addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
-    createCredentialMetadataList: mockCreateCredentialMetadataList,
-  }),
-}));
-
 describe('issuing velocity verifiable credentials', () => {
   const mongoClient = new MongoClient('mongodb://localhost:27017/');
 

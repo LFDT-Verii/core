@@ -78,32 +78,6 @@ const {
 } = require('./data/sample-credential-events-array');
 const { handleCredentialIssuedRewardsEvent } = require('../src/handlers');
 
-jest.mock('@verii/aws-clients', () => {
-  const originalModule = jest.requireActual('@verii/aws-clients');
-
-  return {
-    ...originalModule,
-    initReadDocument: mockInitReadDocument,
-    initWriteDocument: mockInitWriteDocument,
-  };
-});
-
-jest.mock('@verii/fineract-client', () => {
-  const originalModule = jest.requireActual('@verii/fineract-client');
-  return {
-    ...originalModule,
-    batchTransferCredits: mockBatchTransferCredits,
-  };
-});
-
-jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual('@verii/metadata-registration');
-  return {
-    ...originalModule,
-    initMetadataRegistry: mockInitMetadataRegistry,
-  };
-});
-
 describe('Credential issued event rewards distribution task test suite', () => {
   const task = 'credential-issued-rewards';
   const config = {

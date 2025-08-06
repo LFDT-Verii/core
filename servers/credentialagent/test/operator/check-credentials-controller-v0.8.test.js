@@ -56,14 +56,6 @@ const {
 const buildCheckCredentialsUrl = ({ _id }) =>
   `/operator-api/v0.8/tenants/${_id}/check-credentials`;
 
-jest.mock('@verii/metadata-registration');
-jest.mock('@verii/verifiable-credentials', () => ({
-  verifyCredentials: mockVerifyCredentials,
-}));
-jest.mock('../../src/fetchers', () => ({
-  sendPush: mockSendPush,
-}));
-
 describe('Credentials checking tests', () => {
   let fastify;
   let persistTenant;

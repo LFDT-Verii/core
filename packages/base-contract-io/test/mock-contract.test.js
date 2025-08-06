@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 // eslint-disable-next-line max-classes-per-file
-const { beforeEach, describe, it, mock, after } = require('node:test');
+const {
+  afterEach,
+  beforeEach,
+  describe,
+  it,
+  mock,
+  after,
+} = require('node:test');
 const { expect } = require('expect');
 
 const mockEncodeFilterTopics = mock.fn();

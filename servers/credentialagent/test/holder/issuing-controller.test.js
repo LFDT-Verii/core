@@ -112,29 +112,6 @@ const {
   generateTestAccessToken,
 } = require('./helpers/generate-test-access-token');
 
-const mockAddCredentialMetadataEntry = jest.fn();
-const mockCreateCredentialMetadataList = jest.fn();
-const mockAddRevocationListSigned = jest.fn();
-const mockLookupPrimary = jest.fn();
-const mockInitPermissions = jest.fn();
-jest.mock('@verii/metadata-registration', () => ({
-  ...jest.requireActual('@verii/metadata-registration'),
-  initRevocationRegistry: () => ({
-    addRevocationListSigned: mockAddRevocationListSigned,
-  }),
-  initMetadataRegistry: () => ({
-    addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
-    createCredentialMetadataList: mockCreateCredentialMetadataList,
-  }),
-  initVerificationCoupon: () => ({}),
-}));
-
-jest.mock('@verii/contract-permissions', () => ({
-  initPermissions: () => ({
-    lookupPrimary: mockLookupPrimary,
-  }),
-}));
-
 const mockVendorUrl = 'http://mockvendor.localhost.test';
 const requestOffersFromVendorEndpoint = '/issuing/generate-offers';
 const acceptedOffersNotificationEndpoint =

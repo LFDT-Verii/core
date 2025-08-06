@@ -57,24 +57,6 @@ const {
 } = require('./data/sample-credential-events-array');
 const { handleCredentialIssuedLoggingEvent } = require('../src/handlers');
 
-jest.mock('@verii/aws-clients', () => {
-  const originalModule = jest.requireActual('@verii/aws-clients');
-
-  return {
-    ...originalModule,
-    initReadDocument: mockInitReadDocument,
-    initWriteDocument: mockInitWriteDocument,
-  };
-});
-
-jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual('@verii/metadata-registration');
-  return {
-    ...originalModule,
-    initMetadataRegistry: mockInitMetadataRegistry,
-  };
-});
-
 describe('Credential issued event logging task test suite', () => {
   const task = 'credential-issued-logging';
   const testContext = {

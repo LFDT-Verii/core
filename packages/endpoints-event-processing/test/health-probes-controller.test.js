@@ -33,12 +33,6 @@ const {
 } = require('@verii/blockchain-functions');
 const buildFastify = require('./helpers/build-fastify');
 
-jest.mock('@verii/blockchain-functions', () => ({
-  initGetSignerMetrics: jest.fn(),
-  initGetBlockNumber: jest.fn(),
-  initGetBlock: jest.fn(),
-}));
-
 describe('Blockchain Health', () => {
   const baseUrl = 'api/v0.6/health-probes';
   const nodeAddress = '0x0';

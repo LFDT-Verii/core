@@ -68,14 +68,6 @@ const {
   verifyAuthorizedReadUsers,
 } = require('../src/plugins/authorization');
 
-jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual('@verii/error-aggregation');
-  return {
-    ...originalModule,
-    initSendError: mockInitSendError,
-  };
-});
-
 describe('Authorization Test suite', () => {
   let fastify;
   let persistGroup;

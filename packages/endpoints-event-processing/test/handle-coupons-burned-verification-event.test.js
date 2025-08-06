@@ -82,40 +82,6 @@ const {
 } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { addDays } = require('date-fns/fp');
-
-const mockReadDocument = jest.fn().mockResolvedValue(undefined);
-const mockWriteDocument = jest.fn().mockResolvedValue(undefined);
-const mockInitReadDocument = jest.fn().mockReturnValue(mockReadDocument);
-const mockInitWriteDocument = jest.fn().mockReturnValue(mockWriteDocument);
-const mockBatchOperations = jest.fn().mockResolvedValue([]);
-const mockEventCursorNext = jest.fn();
-const mockEventCursor = jest.fn().mockImplementation(() => {
-  return {
-    [Symbol.asyncIterator]: () => {
-      return {
-        next: mockEventCursorNext
-          .mockImplementationOnce(async () => {
-            return { value: [] };
-          })
-          .mockImplementationOnce(async () => {
-            return { value: burnEventsArray };
-          })
-          .mockImplementationOnce(async () => {
-            return { done: true };
-          }),
-      };
-    },
-  };
-});
-const mockPullBurnCouponEvents = jest
-  .fn()
-  .mockResolvedValue({ eventsCursor: mockEventCursor, latestBlock: 42 });
-
-const mockInitVerificationCoupon = jest.fn().mockImplementation(() => {
-  return {
-    pullBurnCouponEvents: mockPullBurnCouponEvents,
-  };
-});
 const { mongoify, mongoCloseWrapper } = require('@verii/tests-helpers');
 // eslint-disable-next-line max-len
 const initOrganizationFactory = require('@verii/endpoints-organizations-registrar/src/entities/organizations/factories/organizations-factory');
@@ -125,32 +91,6 @@ const purchaseRepoPlugin = require('../src/entities/purchases/repo');
 const { burnEventsArray } = require('./data/sample-burn-events-array');
 const burnedCouponsRepoPlugin = require('../src/entities/burned-coupons/repo');
 const { handleCouponsBurnedVerificationEvent } = require('../src/handlers');
-
-jest.mock('@verii/aws-clients', () => {
-  const originalModule = jest.requireActual('@verii/aws-clients');
-
-  return {
-    ...originalModule,
-    initReadDocument: mockInitReadDocument,
-    initWriteDocument: mockInitWriteDocument,
-  };
-});
-
-jest.mock('@verii/fineract-client', () => {
-  const originalModule = jest.requireActual('@verii/fineract-client');
-  return {
-    ...originalModule,
-    batchOperations: mockBatchOperations,
-  };
-});
-
-jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual('@verii/metadata-registration');
-  return {
-    ...originalModule,
-    initVerificationCoupon: mockInitVerificationCoupon,
-  };
-});
 
 describe('Coupons burned event verification task test suite', () => {
   const task = 'coupons-burned-verification';

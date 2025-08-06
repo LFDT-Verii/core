@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { generateJWAKeyPair, KeyAlgorithms } = require('@verii/crypto');
 const { isEcYValueEven, deriveEcYValue } = require('../src/derive-ec-y-values');

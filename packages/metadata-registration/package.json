@@ -10,8 +10,8 @@
     "access": "public"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
-    "test:ci": "NODE_OPTIONS=--experimental-vm-modules NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml  'test/**/*.test.js'",
+    "test": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
+    "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml  'test/**/*.test.js'",
     "lint": "eslint --ext .js .",
     "lint:ci": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix --ext .js ."

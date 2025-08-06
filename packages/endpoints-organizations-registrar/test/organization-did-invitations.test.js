@@ -37,18 +37,18 @@ mock.module('@verii/error-aggregation', {
 });
 
 const mockAuth0UserCreate = mock.fn(async (obj) => {
-  return { data: { user_id: 'user_id_123', ...obj }};
+  return { data: { user_id: 'user_id_123', ...obj } };
 });
 const mockAuth0UserGetByEmail = mock.fn(async () => {
-  return { data: []};
+  return { data: [] };
 });
 const mockAuth0TicketChange = mock.fn(async () => {
   return {
-    data: {ticket: undefined},
+    data: { ticket: undefined },
   };
 });
 const mockAuth0ClientAssignRole = mock.fn(async (obj) => {
-  return { data: { id: nanoid(), ...obj }};
+  return { data: { id: nanoid(), ...obj } };
 });
 class ManagementClient {
   constructor() {
@@ -93,9 +93,7 @@ const {
   errorResponseMatcher,
 } = require('@verii/tests-helpers');
 const console = require('console');
-const {
-  NANO_ID_FORMAT,
-} = require('@verii/test-regexes/src/regexes');
+const { NANO_ID_FORMAT } = require('@verii/test-regexes/src/regexes');
 const buildFastify = require('./helpers/build-fastify');
 const { expectedInvitationSentEmail } = require('./helpers/email-matchers');
 const initGroupsFactory = require('../src/entities/groups/factories/groups-factory');
@@ -103,62 +101,6 @@ const initOrganizationFactory = require('../src/entities/organizations/factories
 const initInvitationsFactory = require('../src/entities/invitations/factories/invitations-factory');
 const initCredentialSchemaFactory = require('../../endpoints-credential-types-registrar/test/factories/credential-schema-factory');
 const { invitationsRepoPlugin } = require('../src/entities/invitations');
-
-const mockAuth0UserCreate = jest.fn().mockImplementation(async (obj) => {
-  return { data: { user_id: 'user_id_123', ...obj } };
-});
-
-const mockAuth0UserGetByEmail = jest.fn().mockImplementation(async () => {
-  return { data: [] };
-});
-
-const mockAuth0TicketChange = jest.fn().mockImplementation(async () => {
-  return {
-    data: { ticket: undefined },
-  };
-});
-
-const mockAuth0ClientAssignRole = jest.fn().mockImplementation(async (obj) => {
-  return { data: { id: nanoid(), ...obj } };
-});
-
-jest.mock('auth0', () => ({
-  ManagementClient: jest.fn().mockImplementation(() => ({
-    users: {
-      create: mockAuth0UserCreate,
-      assignRoles: mockAuth0ClientAssignRole,
-    },
-    usersByEmail: {
-      getByEmail: mockAuth0UserGetByEmail,
-    },
-    tickets: { changePassword: mockAuth0TicketChange },
-  })),
-}));
-
-const mockSendEmail = jest.fn((payload) => payload);
-
-jest.mock('@aws-sdk/client-ses', () => ({
-  SendEmailCommand: jest.fn((args) => args),
-  SESClient: jest.fn().mockImplementation(() => ({
-    send: mockSendEmail,
-  })),
-}));
-
-jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual('@verii/error-aggregation');
-  return {
-    ...originalModule,
-    initSendError: mockInitSendError,
-  };
-});
-
-jest.mock('nanoid/non-secure', () => {
-  const originalModule = jest.requireActual('nanoid/non-secure');
-  return {
-    ...originalModule,
-    nanoid: jest.fn().mockReturnValue('mocknano'),
-  };
-});
 
 const invitationUrl = (did) => `/api/v0.6/organizations/${did}/invitations`;
 
@@ -794,7 +736,7 @@ describe('Organization invitations test suites', () => {
 
       expect(
         mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
-      ).toContainEqual([{email: 'test@email.com'}]);
+      ).toContainEqual([{ email: 'test@email.com' }]);
       expect(
         mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
       ).toContainEqual([
@@ -887,7 +829,7 @@ describe('Organization invitations test suites', () => {
 
       expect(
         mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
-      ).toContainEqual([{email: 'test@email.com'}]);
+      ).toContainEqual([{ email: 'test@email.com' }]);
       expect(
         mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
       ).toContainEqual([
@@ -972,7 +914,7 @@ describe('Organization invitations test suites', () => {
 
       expect(
         mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
-      ).toContainEqual([{ email: 'test@email.com'}]);
+      ).toContainEqual([{ email: 'test@email.com' }]);
       expect(
         mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
       ).toContainEqual([
@@ -1088,7 +1030,7 @@ describe('Organization invitations test suites', () => {
     });
     it('should reuse a an existing user if they have already signed up', async () => {
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async (email) => {
-        return { data: [{ user_id: 'user_id_123', logins_count: 1, email }]};
+        return { data: [{ user_id: 'user_id_123', logins_count: 1, email }] };
       });
       const payload = {
         inviteeEmail: 'test@email.com',
@@ -1154,10 +1096,10 @@ describe('Organization invitations test suites', () => {
         };
       });
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
-        return { data: []};
+        return { data: [] };
       });
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
-        return { data: [{ user_id: 'user_id_123' }]};
+        return { data: [{ user_id: 'user_id_123' }] };
       });
 
       const payload1 = {
@@ -1245,12 +1187,12 @@ describe('Organization invitations test suites', () => {
       expect(mockAuth0UserCreate.mock.callCount()).toEqual(1);
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(2);
 
-      expect(mockAuth0UserGetByEmail.mock.calls[0].arguments[0]).toEqual(
-          {email: 'test@email.com'}
-      );
-      expect(mockAuth0UserGetByEmail.mock.calls[1].arguments[0]).toEqual(
-          {email: 'test@email.com'}
-      );
+      expect(mockAuth0UserGetByEmail.mock.calls[0].arguments[0]).toEqual({
+        email: 'test@email.com',
+      });
+      expect(mockAuth0UserGetByEmail.mock.calls[1].arguments[0]).toEqual({
+        email: 'test@email.com',
+      });
       expect(
         mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
       ).toContainEqual([
@@ -1890,7 +1832,7 @@ describe('Organization invitations test suites', () => {
     it('Should resend invitation', async () => {
       const ticket = 'https://ticket.com?pass=123';
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
-        return { data:[]};
+        return { data: [] };
       });
       mockAuth0TicketChange.mock.mockImplementationOnce(async () => {
         return {
@@ -2029,7 +1971,7 @@ describe('Organization invitations test suites', () => {
 
     it('Should resend invitation without creating a user', async () => {
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
-        return { data:[{ user_id: 'user_id_123' }]};
+        return { data: [{ user_id: 'user_id_123' }] };
       });
       const ticket = 'https://ticket.com?pass=123';
       mockAuth0TicketChange.mock.mockImplementationOnce(async () => {
@@ -2141,7 +2083,7 @@ describe('Organization invitations test suites', () => {
 
       expect(
         mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
-      ).toContainEqual([{email: 'email123@email.com'}]);
+      ).toContainEqual([{ email: 'email123@email.com' }]);
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
         expectedInvitationSentEmail(
           `${response.json.invitation.code}?signup_url=${encodeURIComponent(

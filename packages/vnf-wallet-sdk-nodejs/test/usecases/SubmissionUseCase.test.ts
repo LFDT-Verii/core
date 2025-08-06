@@ -1,4 +1,5 @@
-import { expect } from '@jest/globals';
+import { describe, beforeEach, test } from 'node:test';
+import { expect } from 'expect';
 import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import JwtServiceRepositoryImpl from '../../src/impl/data/repositories/JwtServiceRepositoryImpl';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';

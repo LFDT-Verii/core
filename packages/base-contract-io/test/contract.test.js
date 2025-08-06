@@ -13,7 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const { after, before, beforeEach, describe, it } = require('node:test');
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+} = require('node:test');
 const { expect } = require('expect');
 
 const { generateKeyPair } = require('@verii/crypto');

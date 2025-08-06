@@ -263,7 +263,7 @@ describe('db kms', () => {
     let keys;
     let alternativeKeys;
     const plainText = 'foo';
-    beforeAll(async () => {
+    before(async () => {
       keys = await Promise.all(
         map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs))
       );

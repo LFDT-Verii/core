@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { after, before, describe, it } = require('node:test');
+const { after, afterEach, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { last } = require('lodash/fp');
