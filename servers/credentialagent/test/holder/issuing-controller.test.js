@@ -6889,9 +6889,9 @@ const offerExpectation = ({
       ])
     ),
     type: [
+      'VerifiableCredential',
       first(offer.type),
       'VelocityNetworkLayer1Credential',
-      'VerifiableCredential',
     ],
     credentialSchema: {
       id: credentialTypeMetadata[first(offer.type)].schemaUrl,

@@ -74,9 +74,9 @@ const jwtVcExpectation = ({
         '@context': credentialContextExpectation,
         vnfProtocolVersion: offer.vnfProtocolVersion ?? 1,
         type: [
+          'VerifiableCredential',
           first(offer.type),
           'VelocityNetworkLayer1Credential',
-          'VerifiableCredential',
         ],
         id: credentialId,
         issuer: issuer ?? {
