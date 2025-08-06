@@ -189,16 +189,16 @@
     "@ast-grep/napi-win32-x64-msvc" "0.36.3"
 
 "@auth0/auth0-react@^2.2.1":
-  version "2.3.0"
-  resolved "https://registry.npmjs.org/@auth0/auth0-react/-/auth0-react-2.3.0.tgz#59273aeafac8494ad87bfc8e5dfb9d72a8fbd80f"
-  integrity sha512-YYTc/DWWigKC9fURufR/79h3+3DAnIzbfEzJLZ8Z4Q0BXE0azru3pKUbU+vYzS4lMAJkclwLuAbUnLjK81vCpA==
+  version "2.4.0"
+  resolved "https://registry.npmjs.org/@auth0/auth0-react/-/auth0-react-2.4.0.tgz#a0209635cd756adb9d471ad0e8c929d62eeaffdb"
+  integrity sha512-5bt3sO9FVupNM15IpqyYu/2OPHpLI5El7RgWLQXZOPbnCBbtl+VgdHR+H2NfhNQ4SqQtC/5uKbHWafcVcsxkiw==
   dependencies:
-    "@auth0/auth0-spa-js" "^2.1.3"
+    "@auth0/auth0-spa-js" "^2.2.0"
 
-"@auth0/auth0-spa-js@^2.1.3":
-  version "2.1.3"
-  resolved "https://registry.npmjs.org/@auth0/auth0-spa-js/-/auth0-spa-js-2.1.3.tgz#aabf6f439e41edbeef0cf4766ad754e5b47616e5"
-  integrity sha512-NMTBNuuG4g3rame1aCnNS5qFYIzsTUV5qTFPRfTyYFS1feS6jsCBR+eTq9YkxCp1yuoM2UIcjunPaoPl77U9xQ==
+"@auth0/auth0-spa-js@^2.2.0":
+  version "2.3.0"
+  resolved "https://registry.npmjs.org/@auth0/auth0-spa-js/-/auth0-spa-js-2.3.0.tgz#fcbbe31e31e8e98c4e7b25a8d043eac8c01f73bf"
+  integrity sha512-zAW6w79UO+G1+3AxboVQIUIZy05xluSOb1ymGg2dqG0pIi0JxEtZGec05BOf2LJ9SehzW4WeCYUQsYD9BjrVpQ==
 
 "@aws-crypto/crc32@5.2.0":
   version "5.2.0"
@@ -7410,7 +7410,7 @@ axios@1.5.0:
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
-axios@^1.6.0, axios@^1.7.9, axios@^1.8.3:
+axios@^1.11.0, axios@^1.6.0, axios@^1.7.9, axios@^1.8.3:
   version "1.11.0"
   resolved "https://registry.npmjs.org/axios/-/axios-1.11.0.tgz#c2ec219e35e414c025b2095e8b8280278478fdb6"
   integrity sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==
@@ -19106,11 +19106,11 @@ tweetnacl@^1.0.3:
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==
 
 twilio@^5.0.0:
-  version "5.7.3"
-  resolved "https://registry.npmjs.org/twilio/-/twilio-5.7.3.tgz#6e6e870243b69066d94a2cd9c59d172f3992a8ed"
-  integrity sha512-RuCjbQRLorFZrqd52KZ4JzeUbCbs/3KJVdawcAQ2yR53S2D0VwBQ+1Pkcnc20Y8QLKCP41TkQ98MHbF7upRhtA==
+  version "5.8.0"
+  resolved "https://registry.npmjs.org/twilio/-/twilio-5.8.0.tgz#9e63688056ca5ad0f5e9ea1816d1398e5d6dff98"
+  integrity sha512-aJLBvI7ODLmFHI7ZYLBiMZKIdHuF9PrPeRM/GBMDg/AAzGXs4V8gEnNPHyTVThK0/8J48YHSqXMlQ+WJR5nxoQ==
   dependencies:
-    axios "^1.8.3"
+    axios "^1.11.0"
     dayjs "^1.11.9"
     https-proxy-agent "^5.0.0"
     jsonwebtoken "^9.0.2"
