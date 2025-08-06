@@ -70,7 +70,7 @@
     "build": "vite build",
     "build:watch": "vite build --watch",
     "prepublish": "vite build",
-    "test": "jest --coverage",
+    "test": "NODE_OPTOINS=--experimental-vm-modules jest --config ./jest.config.cjs --runInBand --coverage",
     "lint": "NODE_OPTIONS=--experimental-specifier-resolution=node eslint src",
     "lint:fix": "NODE_OPTIONS=--experimental-specifier-resolution=node eslint src --fix"
   },
