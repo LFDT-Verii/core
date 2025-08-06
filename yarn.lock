@@ -3118,18 +3118,6 @@
     outvariant "^1.4.3"
     strict-event-emitter "^0.5.1"
 
-"@mswjs/interceptors@^0.39.3":
-  version "0.39.5"
-  resolved "https://registry.npmjs.org/@mswjs/interceptors/-/interceptors-0.39.5.tgz#6f0571493bf76291a60b62234ed0add2c4bd970e"
-  integrity sha512-B9nHSJYtsv79uo7QdkZ/b/WoKm20IkVSmTc/WCKarmDtFwM0dRx2ouEniqwNkzCSLn3fydzKmnMzjtfdOWt3VQ==
-  dependencies:
-    "@open-draft/deferred-promise" "^2.2.0"
-    "@open-draft/logger" "^0.3.0"
-    "@open-draft/until" "^2.0.0"
-    is-node-process "^1.2.0"
-    outvariant "^1.4.3"
-    strict-event-emitter "^0.5.1"
-
 "@mui/core-downloads-tracker@^6.5.0":
   version "6.5.0"
   resolved "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-6.5.0.tgz#e9f7049d7e7bb1ee05839f7a0ce813755f137432"
@@ -15116,14 +15104,6 @@ no-case@^3.0.4:
     tslib "^2.0.3"
 
 nock@15.0.0-beta.5:
-  version "15.0.0-beta.5"
-  resolved "https://registry.npmjs.org/nock/-/nock-15.0.0-beta.5.tgz#cef9b54750fc2299c5e4d83d38564aa8c7263922"
-  integrity sha512-PnPM6UiBb4y+BoEvSE/tYioWzyExRdEk+wnjO0uty3j/gAvz7lo5VR6FQRX3vnSjcv6uvDxTDhjx686BOCpT0Q==
-  dependencies:
-    "@mswjs/interceptors" "^0.39.3"
-    json-stringify-safe "^5.0.1"
-
-nock@^15.0.0-beta.5:
   version "15.0.0-beta.5"
   resolved "https://registry.npmjs.org/nock/-/nock-15.0.0-beta.5.tgz#cef9b54750fc2299c5e4d83d38564aa8c7263922"
   integrity sha512-PnPM6UiBb4y+BoEvSE/tYioWzyExRdEk+wnjO0uty3j/gAvz7lo5VR6FQRX3vnSjcv6uvDxTDhjx686BOCpT0Q==
