@@ -1566,8 +1566,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1649,8 +1649,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1767,8 +1767,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       const nockWebhook = await nock(webhookUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1891,10 +1891,9 @@ describe('submit identification disclosure', () => {
       let identityWebhookHeaders;
       const nockWebhook = await nock(webhookUrl)
         .post(identifyUserOnVendorEndpoint)
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function namedFn(uri, body) {
-          identityWebhookHeaders = this.req.headers;
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identityWebhookHeaders = request.headers;
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1943,7 +1942,9 @@ describe('submit identification disclosure', () => {
         tenantDID: customTenant.did,
         tenantId: customTenant._id,
       });
-      expect(identityWebhookHeaders.authorization).toEqual('Bearer secret');
+      expect(identityWebhookHeaders.get('Authorization')).toEqual(
+        'Bearer secret'
+      );
     });
 
     it('should 200 when identifying email and a coupon was not provided', async () => {
@@ -1958,8 +1959,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2050,8 +2051,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2139,8 +2140,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2230,8 +2231,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2319,8 +2320,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2408,8 +2409,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2504,8 +2505,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2682,8 +2683,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return { vendorUserId };
         });
 
@@ -2774,8 +2775,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return { vendorUserId };
         });
 
@@ -2889,8 +2890,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return { vendorUserId };
         });
 
@@ -3006,8 +3007,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId: existingUser.vendorUserId,
           };
@@ -3133,8 +3134,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       const nockWebhook = await nock(webhookUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId: existingUser.vendorUserId,
           };
@@ -3694,8 +3695,8 @@ describe('submit identification disclosure', () => {
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
         .twice()
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -3835,8 +3836,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -3951,8 +3952,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -4061,8 +4062,8 @@ describe('submit identification disclosure', () => {
         let identifyWebhookPayload;
         nock(mockVendorUrl)
           .post(identifyUserOnVendorEndpoint)
-          .reply(200, (uri, body) => {
-            identifyWebhookPayload = body;
+          .reply(200, async (request) => {
+            identifyWebhookPayload = await request.json();
             return {
               vendorUserId,
             };
@@ -4158,8 +4159,8 @@ describe('submit identification disclosure', () => {
         let identifyWebhookPayload;
         nock(mockVendorUrl)
           .post(identifyUserOnVendorEndpoint)
-          .reply(200, (uri, body) => {
-            identifyWebhookPayload = body;
+          .reply(200, async (request) => {
+            identifyWebhookPayload = await request.json();
             return {
               vendorUserId,
             };
@@ -4338,8 +4339,8 @@ describe('submit identification disclosure', () => {
         let identifyWebhookPayload;
         nock(mockVendorUrl)
           .post(identifyUserOnVendorEndpoint)
-          .reply(200, (uri, body) => {
-            identifyWebhookPayload = body;
+          .reply(200, async (request) => {
+            identifyWebhookPayload = await request.json();
             return {
               vendorUserId,
             };
@@ -4545,8 +4546,8 @@ describe('submit identification disclosure', () => {
         let identifyWebhookPayload;
         nock(mockVendorUrl)
           .post(identifyUserOnVendorEndpoint)
-          .reply(200, (uri, body) => {
-            identifyWebhookPayload = body;
+          .reply(200, async (request) => {
+            identifyWebhookPayload = await request.json();
             return {
               vendorUserId,
             };

@@ -50,8 +50,8 @@ describe('create client accounts', () => {
     let webhookPayload;
     nock(testHost)
       .post('/fineract-provider/api/v1/savingsaccounts')
-      .reply(200, (uri, body) => {
-        webhookPayload = body;
+      .reply(200, async (request) => {
+        webhookPayload = await request.json();
         return {
           officeId: 1,
           clientId: 30,
@@ -73,8 +73,8 @@ describe('create client accounts', () => {
     let webhookPayload;
     nock(testHost)
       .post('/fineract-provider/api/v1/savingsaccounts')
-      .reply(200, (uri, body) => {
-        webhookPayload = body;
+      .reply(200, async (request) => {
+        webhookPayload = await request.json();
         return {
           officeId: 1,
           clientId: 30,

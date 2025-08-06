@@ -363,8 +363,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsUncheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -446,8 +446,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsUncheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -597,8 +597,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -687,8 +687,8 @@ describe('presentation submission', () => {
       );
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -772,8 +772,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -842,8 +842,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1031,8 +1031,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1308,8 +1308,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1422,8 +1422,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1490,8 +1490,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1542,8 +1542,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1778,8 +1778,8 @@ describe('presentation submission', () => {
       let webhookPayload;
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 

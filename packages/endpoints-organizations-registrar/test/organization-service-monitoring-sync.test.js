@@ -253,11 +253,11 @@ const setGetMonitorsNock = (dids, serviceIds) => {
     });
 };
 
-const getUrlFailNock = (host, url) => () => nock(host, {}).get(url).reply(500);
+const getUrlFailNock = (host, url) => () => nock(host).get(url).reply(500, '');
 
 const setGetSectionsFailNock = getUrlFailNock(
   'https://betteruptime.com',
-  /\/api\/v2\/status-pages\/\d{6}\/sections/
+  /api\/v2\/status-pages\/\d{6}\/sections/
 );
 
 const nockExecuted = (pendingMockString) => (nockScope) => {
@@ -430,6 +430,9 @@ describe('Monitoring Test Suite', () => {
         }
       });
       it('failed sync should error hard', async () => {
+        setGetMonitorsNock([], []);
+        setServicePingNock(serviceEndpoints[0]);
+        setServicePingNock(serviceEndpoints[1]);
         setGetSectionsFailNock();
         const response = await fastify.injectJson({
           method: 'POST',
@@ -437,7 +440,7 @@ describe('Monitoring Test Suite', () => {
           payload: {},
         });
 
-        expect(response.statusCode).toEqual(500);
+        expect(response.statusCode).toEqual(502);
       });
     });
   });

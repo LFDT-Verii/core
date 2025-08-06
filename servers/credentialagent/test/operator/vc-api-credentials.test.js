@@ -949,9 +949,9 @@ const nockCredentialTypes = () => {
       )
     )
     .times(2)
-    .reply(200, (uri) => {
-      const questionMarkIdx = uri.indexOf('?');
-      const searchParamsString = uri.substring(questionMarkIdx);
+    .reply(200, (request) => {
+      const questionMarkIdx = request.url.indexOf('?');
+      const searchParamsString = request.url.substring(questionMarkIdx);
       const query = new URLSearchParams(searchParamsString);
       return Object.values(
         pick(query.getAll('credentialType'), credentialTypeMetadata)
