@@ -39,7 +39,7 @@ const METADATA_LIST_SIZE = 10000;
  * @param {Context} context the context
  * @returns {Promise<{vcs: object[], revocationListEntries: object[]}>} Returns prepared credentials and revocation list entries
  */
-const issueVeriiCredentials = async (
+const prepareVeriiVerifiableCredentials = async (
   offers,
   credentialSubjectId,
   credentialTypesMap,
@@ -85,7 +85,7 @@ const issueVeriiCredentials = async (
  * @param {Context} context the context
  * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
  */
-const anchorVelocityVerifiableCredentials = async (
+const anchorVeriiVerifiableCredentials = async (
   vcs,
   revocationListEntries,
   issuer,
@@ -128,8 +128,7 @@ const anchorVelocityVerifiableCredentials = async (
  * @param {Context} context the context
  * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
  */
-const issueVeriiCredentials
-    = async (
+const issueVeriiCredentials = async (
   offers,
   credentialSubjectId,
   credentialTypesMap,
@@ -137,14 +136,14 @@ const issueVeriiCredentials
   context
 ) => {
   const { vcs, revocationListEntries } =
-    await prepareVelocityVerifiableCredentials(
+    await prepareVeriiVerifiableCredentials(
       offers,
       credentialSubjectId,
       credentialTypesMap,
       issuer,
       context
     );
-  return anchorVelocityVerifiableCredentials(
+  return anchorVeriiVerifiableCredentials(
     vcs,
     revocationListEntries,
     issuer,
@@ -152,7 +151,7 @@ const issueVeriiCredentials
   );
 };
 module.exports = {
-  anchorVelocityVerifiableCredentials,
-    issueVeriiCredentials,
-  prepareVelocityVerifiableCredentials,
+  anchorVeriiVerifiableCredentials,
+  issueVeriiCredentials,
+  prepareVeriiVerifiableCredentials,
 };
