@@ -13,16 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-<<<<<<<< HEAD:packages/tests-helpers/src/mocks/css.mjs
 export default {};
-========
-
-const VeriiProtocolVersions = {
-  PROTOCOL_VERSION_1: 1,
-  PROTOCOL_VERSION_2: 2,
-};
-
-module.exports = {
-  VeriiProtocolVersions,
-};
->>>>>>>> cc27d7cdd1363c903f47e01a2387e65940602bb5:packages/vc-checks/src/verii-protocol-versions.js

@@ -32,10 +32,6 @@ mock.module('@verii/metadata-registration', {
     initVerificationCoupon,
   },
 });
-const mockGetJsonLdContextJson = mock.fn();
-mockGetJsonLdContextJson.mock.mockImplementation(() =>
-  Promise.resolve(openBadgeJsonLdContext)
-);
 
 const console = require('console');
 const { compact, first, flow, join, omit, tail } = require('lodash/fp');
@@ -83,26 +79,26 @@ describe('Verify credentials', () => {
           publicKey: [{ id: '#key-1', publicKeyJwk: orgKeyPair.publicJwk }],
         })
       ),
-      getOrganizationVerifiedProfile: mock.fn(
-        () => mockGetOrganizationVerifiedProfile
+      getOrganizationVerifiedProfile: mock.fn(() =>
+        Promise.resolve(mockGetOrganizationVerifiedProfile)
       ),
       getCredentialTypeMetadata: mock.fn(() =>
         Promise.resolve([
           {
             credentialType: 'Passport',
             issuerCategory: 'IdentityIssuer',
-              primaryOrganizationClaimPaths: [
-                  ['credentialSubject', 'authority'],
-                  ['credentialSubject', 'authority', 'identifier'],
-              ],
+            primaryOrganizationClaimPaths: [
+              ['credentialSubject', 'authority'],
+              ['credentialSubject', 'authority', 'identifier'],
+            ],
           },
           {
             credentialType: 'OpenBadgeCredential',
             issuerCategory: 'RegularIssuer',
-              primaryOrganizationClaimPaths: [
-                  ['credentialSubject', 'issuer'],
-                  ['credentialSubject', 'issuer', 'id'],
-              ],
+            primaryOrganizationClaimPaths: [
+              ['credentialSubject', 'issuer'],
+              ['credentialSubject', 'issuer', 'id'],
+            ],
           },
         ])
       ),
