@@ -129,13 +129,18 @@ const synchronizeMonitors = async (context) => {
 
   const allMonitorsResponse = await getAllMonitors(context);
 
-  return Promise.all(
-    map(
-      async (organization) =>
-        ensureMonitorsExist(organization, allMonitorsResponse.data, context),
-      organizations
-    )
-  );
+  try {
+    return await Promise.all(
+      map(
+        async (organization) =>
+          ensureMonitorsExist(organization, allMonitorsResponse.data, context),
+        organizations
+      )
+    );
+  } catch (e) {
+    context.log.error(e);
+    throw e;
+  }
 };
 
 const findMonitorByPartialMatch = (monitorsArray, { orgId, serviceId }) =>

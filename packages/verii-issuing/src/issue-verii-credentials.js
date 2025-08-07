@@ -27,19 +27,19 @@ const {
 const REVOCATION_LIST_SIZE = 10240;
 const METADATA_LIST_SIZE = 10000;
 
-/** @import { Issuer, AllocationListEntry, VelocityOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
+/** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
 
 /**
  * Prepares verifiable credentials from local offers without anchoring them to the blockchain.
  * Current assumption is that offers contain all required fields including @context, type, contentHash
- * @param {VelocityOffer[]} offers  array of offers
+ * @param {CredentialOffer[]} offers  array of offers
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
  * @param {Context} context the context
  * @returns {Promise<{vcs: object[], revocationListEntries: object[]}>} Returns prepared credentials and revocation list entries
  */
-const prepareVelocityVerifiableCredentials = async (
+const issueVeriiCredentials = async (
   offers,
   credentialSubjectId,
   credentialTypesMap,
@@ -121,14 +121,15 @@ const anchorVelocityVerifiableCredentials = async (
 /**
  * Creates verifiable credential from a local offer. Current assumption is that offers contain all required fields
  * including @context, type, contentHash
- * @param {VelocityOffer[]} offers  array of offers
+ * @param {CredentialOffer[]} offers  array of offers
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
  * @param {Context} context the context
  * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
  */
-const issueVelocityVerifiableCredentials = async (
+const issueVeriiCredentials
+    = async (
   offers,
   credentialSubjectId,
   credentialTypesMap,
@@ -152,6 +153,6 @@ const issueVelocityVerifiableCredentials = async (
 };
 module.exports = {
   anchorVelocityVerifiableCredentials,
-  issueVelocityVerifiableCredentials,
+    issueVeriiCredentials,
   prepareVelocityVerifiableCredentials,
 };

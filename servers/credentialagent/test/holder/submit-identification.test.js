@@ -17,7 +17,7 @@
 // eslint-disable-next-line import/order
 const buildFastify = require('./helpers/credentialagent-holder-build-fastify');
 const { generateKeyPair } = require('@verii/crypto');
-const { VnfProtocolVersions } = require('@verii/vc-checks');
+const { VeriiProtocolVersions } = require('@verii/vc-checks');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { decodeJwt } = require('jose');
@@ -38,12 +38,12 @@ const DEFAULT_CREDENTIAL_CHECKS = {
 jest.mock('@verii/metadata-registration');
 
 const mockVerifyCredentials = jest.fn();
-jest.mock('@verii/verifiable-credentials', () => ({
-  ...jest.requireActual('@verii/verifiable-credentials'),
+jest.mock('@verii/verii-verification', () => ({
+  ...jest.requireActual('@verii/verii-verification'),
   verifyCredentials: (...args) => mockVerifyCredentials(...args),
 }));
 
-const { CredentialCheckResultValue } = require('@verii/verifiable-credentials');
+const { CredentialCheckResultValue } = require('@verii/verii-verification');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { holderConfig } = require('../../src/config/holder-config');
 const {
@@ -1140,7 +1140,7 @@ describe('submit identification disclosure', () => {
           method: 'POST',
           url: idUrl(tenant),
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           payload: {
             jwt_vp: await presentationEmail.sign(
@@ -1211,7 +1211,7 @@ describe('submit identification disclosure', () => {
           method: 'POST',
           url: idUrl(tenant),
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           payload: {
             jwt_vp: await presentationEmail.sign(
@@ -1287,7 +1287,7 @@ describe('submit identification disclosure', () => {
         const response = await fastify.injectJson({
           method: 'POST',
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           url: idUrl(tenant),
           payload: {
@@ -1382,7 +1382,7 @@ describe('submit identification disclosure', () => {
         const response = await fastify.injectJson({
           method: 'POST',
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           url: idUrl(tenant),
           payload: {
@@ -1452,7 +1452,7 @@ describe('submit identification disclosure', () => {
         const response = await fastify.injectJson({
           method: 'POST',
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           url: idUrl(tenant),
           payload: {
@@ -1560,8 +1560,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1571,7 +1571,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: emptyDisclosureExchange._id,
@@ -1643,8 +1643,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1654,7 +1654,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: exchange._id,
@@ -1761,8 +1761,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       const nockWebhook = await nock(webhookUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1772,7 +1772,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(customTenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: customExchange._id,
@@ -1885,10 +1885,9 @@ describe('submit identification disclosure', () => {
       let identityWebhookHeaders;
       const nockWebhook = await nock(webhookUrl)
         .post(identifyUserOnVendorEndpoint)
-        // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
-        .reply(200, function namedFn(uri, body) {
-          identityWebhookHeaders = this.req.headers;
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identityWebhookHeaders = request.headers;
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1898,7 +1897,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(customTenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: customExchange._id,
@@ -1937,7 +1936,9 @@ describe('submit identification disclosure', () => {
         tenantDID: customTenant.did,
         tenantId: customTenant._id,
       });
-      expect(identityWebhookHeaders.authorization).toEqual('Bearer secret');
+      expect(identityWebhookHeaders.get('Authorization')).toEqual(
+        'Bearer secret'
+      );
     });
 
     it('should 200 when identifying email and a coupon was not provided', async () => {
@@ -1952,8 +1953,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -1963,7 +1964,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationEmail.sign(
@@ -2044,8 +2045,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2055,7 +2056,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationEmail.sign(
@@ -2133,8 +2134,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2144,7 +2145,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationEmail.sign(
@@ -2224,8 +2225,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2235,7 +2236,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationEmail.sign(
@@ -2313,8 +2314,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2324,7 +2325,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationPhone.sign(
@@ -2402,8 +2403,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2413,7 +2414,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationVerificationIdentifier.sign(
@@ -2498,8 +2499,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -2509,7 +2510,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentation.sign(
@@ -2613,7 +2614,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationWhatever.sign(
@@ -2676,8 +2677,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return { vendorUserId };
         });
 
@@ -2685,7 +2686,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationMixed.sign(
@@ -2768,8 +2769,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return { vendorUserId };
         });
 
@@ -2777,7 +2778,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationMixed.sign(
@@ -2883,8 +2884,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return { vendorUserId };
         });
 
@@ -2892,7 +2893,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationMixed.sign(
@@ -3000,8 +3001,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId: existingUser.vendorUserId,
           };
@@ -3011,7 +3012,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3127,8 +3128,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       const nockWebhook = await nock(webhookUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId: existingUser.vendorUserId,
           };
@@ -3138,7 +3139,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(customTenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3227,7 +3228,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3259,7 +3260,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3309,7 +3310,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3360,7 +3361,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3408,7 +3409,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3455,7 +3456,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3501,7 +3502,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3550,7 +3551,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3584,7 +3585,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           jwt_vp: await presentationIdDocument.sign(
@@ -3633,7 +3634,7 @@ describe('submit identification disclosure', () => {
         });
 
       const headers = {
-        'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+        'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
       };
       const payload = {
         jwt_vp: await presentationEmail.sign(
@@ -3688,15 +3689,15 @@ describe('submit identification disclosure', () => {
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
         .twice()
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
         });
 
       const headers = {
-        'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+        'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
       };
 
       const response = await fastify.injectJson({
@@ -3807,7 +3808,7 @@ describe('submit identification disclosure', () => {
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(404);
       const headers = {
-        'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+        'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
       };
 
       const response = await fastify.injectJson({
@@ -3829,8 +3830,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -3923,7 +3924,7 @@ describe('submit identification disclosure', () => {
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(500);
       const headers = {
-        'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+        'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
       };
 
       const response = await fastify.injectJson({
@@ -3945,8 +3946,8 @@ describe('submit identification disclosure', () => {
       let identifyWebhookPayload;
       nock(mockVendorUrl)
         .post(identifyUserOnVendorEndpoint)
-        .reply(200, (uri, body) => {
-          identifyWebhookPayload = body;
+        .reply(200, async (request) => {
+          identifyWebhookPayload = await request.json();
           return {
             vendorUserId,
           };
@@ -4055,8 +4056,8 @@ describe('submit identification disclosure', () => {
         let identifyWebhookPayload;
         nock(mockVendorUrl)
           .post(identifyUserOnVendorEndpoint)
-          .reply(200, (uri, body) => {
-            identifyWebhookPayload = body;
+          .reply(200, async (request) => {
+            identifyWebhookPayload = await request.json();
             return {
               vendorUserId,
             };
@@ -4152,8 +4153,8 @@ describe('submit identification disclosure', () => {
         let identifyWebhookPayload;
         nock(mockVendorUrl)
           .post(identifyUserOnVendorEndpoint)
-          .reply(200, (uri, body) => {
-            identifyWebhookPayload = body;
+          .reply(200, async (request) => {
+            identifyWebhookPayload = await request.json();
             return {
               vendorUserId,
             };
@@ -4275,7 +4276,7 @@ describe('submit identification disclosure', () => {
           method: 'POST',
           url: idUrl(tenant),
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           payload: {
             jwt_vp: await presentationEmail.sign(
@@ -4332,8 +4333,8 @@ describe('submit identification disclosure', () => {
         let identifyWebhookPayload;
         nock(mockVendorUrl)
           .post(identifyUserOnVendorEndpoint)
-          .reply(200, (uri, body) => {
-            identifyWebhookPayload = body;
+          .reply(200, async (request) => {
+            identifyWebhookPayload = await request.json();
             return {
               vendorUserId,
             };
@@ -4343,7 +4344,7 @@ describe('submit identification disclosure', () => {
           method: 'POST',
           url: idUrl(tenant),
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           payload: {
             jwt_vp: await presentationEmail.sign(
@@ -4473,7 +4474,7 @@ describe('submit identification disclosure', () => {
           method: 'POST',
           url: idUrl(tenant),
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           payload: {
             jwt_vp: await presentationEmail.sign(
@@ -4539,8 +4540,8 @@ describe('submit identification disclosure', () => {
         let identifyWebhookPayload;
         nock(mockVendorUrl)
           .post(identifyUserOnVendorEndpoint)
-          .reply(200, (uri, body) => {
-            identifyWebhookPayload = body;
+          .reply(200, async (request) => {
+            identifyWebhookPayload = await request.json();
             return {
               vendorUserId,
             };
@@ -4550,7 +4551,7 @@ describe('submit identification disclosure', () => {
           method: 'POST',
           url: idUrl(tenant),
           headers: {
-            'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
           },
           payload: {
             jwt_vp: await presentationEmail.sign(
@@ -4655,7 +4656,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: exchange._id,
@@ -4686,7 +4687,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: exchange._id,
@@ -4718,7 +4719,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: exchange._id,
@@ -4754,7 +4755,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: exchange._id,
@@ -4781,7 +4782,7 @@ describe('submit identification disclosure', () => {
         method: 'POST',
         url: idUrl(tenant),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         },
         payload: {
           exchange_id: exchange._id,

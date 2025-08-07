@@ -32,7 +32,7 @@ const {
   values,
   pick,
 } = require('lodash/fp');
-const { hashOffer } = require('@verii/velocity-issuing');
+const { hashOffer } = require('@verii/verii-issuing');
 const {
   ensureExchangeStateValid,
   initValidateOffer,

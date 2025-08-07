@@ -24,7 +24,7 @@ module.exports = {
   ...require('./src/check-credential-status'),
   ...require('./src/check-jwt-vc-tampering'),
   ...require('./src/verify-issuer-for-credential-type'),
-  ...require('./src/vnf-protocol-versions'),
+  ...require('./src/verii-protocol-versions'),
   ...require('./src/extract-credential-type'),
   ...require('./src/credential-status'),
   ...require('./src/velocity-revocation-list-type'),
