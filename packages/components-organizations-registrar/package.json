@@ -70,9 +70,9 @@
     "build": "vite build",
     "build:watch": "vite build --watch",
     "prepublish": "vite build",
-    "test": "NODE_OPTOINS=--experimental-vm-modules jest --config ./jest.config.cjs --runInBand --coverage",
-    "lint": "NODE_OPTIONS=--experimental-specifier-resolution=node eslint src",
-    "lint:fix": "NODE_OPTIONS=--experimental-specifier-resolution=node eslint src --fix"
+    "test": "jest --config ./jest.config.cjs --runInBand --coverage",
+    "lint": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node eslint src",
+    "lint:fix": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node eslint src --fix"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.1",
