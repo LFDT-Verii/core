@@ -15,21 +15,15 @@
  *
  */
 
-const { flow, pick } = require('lodash/fp');
-const canonicalize = require('canonicalize');
-const { hashAndEncodeHex } = require('@verii/crypto');
-/** @import { VelocityOffer } from "../types/types" */
+const OfferType = {
+  PREPREPARED_ONLY: 'PREPREPARED_ONLY',
+  ALL: 'ALL',
+  LEGACY: 'LEGACY',
+};
 
-/**
- * The hex encoded hash of the VelocityOffer
- * @param {VelocityOffer} offer the offer to hash
- * @returns {string} the hash of the offer encoded in hex
- */
-const hashOffer = (offer) =>
-  flow(
-    pick(['credentialSubject', 'validFrom', 'expirationDate', 'validUntil']),
-    canonicalize,
-    hashAndEncodeHex
-  )(offer);
+const ISSUING_CHALLENGE_SIZE = 16;
 
-module.exports = { hashOffer };
+module.exports = {
+  OfferType,
+  ISSUING_CHALLENGE_SIZE,
+};

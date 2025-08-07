@@ -1,5 +1,5 @@
-/**
- * Copyright 2023 Velocity Team
+/*
+ * Copyright 2024 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,13 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
-
-const VnfProtocolVersions = {
-  VNF_PROTOCOL_VERSION_1: 1,
-  VNF_PROTOCOL_VERSION_2: 2,
-};
-
 module.exports = {
-  VnfProtocolVersions,
+  ...require('./issue-verii-credentials'),
+  ...require('./domain/hash-offer'),
+  ...require('./adapters/mongo-allocation-list-queries'),
+  ...require('./adapters/get-revocation-registry'),
 };

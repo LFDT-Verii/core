@@ -15,7 +15,7 @@
  */
 
 const { jwtDecode, verifyPresentationJwt } = require('@verii/jwt');
-const { VnfProtocolVersions } = require('@verii/vc-checks');
+const { VeriiProtocolVersions } = require('@verii/vc-checks');
 const { getJwkFromDidUri } = require('@verii/did-doc');
 const newError = require('http-errors');
 
@@ -24,7 +24,7 @@ const verifyVerifiablePresentationJwt = async (
   { vnfProtocolVersion }
 ) => {
   try {
-    if (vnfProtocolVersion < VnfProtocolVersions.VNF_PROTOCOL_VERSION_2) {
+    if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
       return await verifyPresentationJwt(presentationJwt);
     }
 

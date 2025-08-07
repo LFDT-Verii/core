@@ -22,7 +22,7 @@ const { nanoid } = require('nanoid');
 const { mapWithIndex, wait } = require('@verii/common-functions');
 const { jwtDecode, jwtSign, hexFromJwk, jwkThumbprint } = require('@verii/jwt');
 const {
-  VnfProtocolVersions,
+  VeriiProtocolVersions,
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { generateKeyPair: joseGenerateKeyPair, exportJWK } = require('jose');
@@ -56,7 +56,7 @@ const {
 } = require('@verii/tests-helpers');
 const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
-const { hashOffer } = require('@verii/velocity-issuing');
+const { hashOffer } = require('@verii/verii-issuing');
 
 const {
   nockCredentialTypes,
@@ -6635,7 +6635,7 @@ describe('Holder Issuing Test Suite', () => {
             credentialId: vc.payload.jti,
             offer: {
               ...offer,
-              vnfProtocolVersion: VnfProtocolVersions.VNF_PROTOCOL_VERSION_2,
+              vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
               credentialSubject: {
                 id: didJwk,
                 ...offer.credentialSubject,
@@ -6704,7 +6704,7 @@ describe('Holder Issuing Test Suite', () => {
             credentialId: vc.payload.jti,
             offer: {
               ...offer,
-              vnfProtocolVersion: VnfProtocolVersions.VNF_PROTOCOL_VERSION_2,
+              vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
               credentialSubject: {
                 id: didJwk,
                 ...offer.credentialSubject,
@@ -6773,7 +6773,7 @@ describe('Holder Issuing Test Suite', () => {
             credentialId: vc.payload.jti,
             offer: {
               ...offer,
-              vnfProtocolVersion: VnfProtocolVersions.VNF_PROTOCOL_VERSION_2,
+              vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
               credentialSubject: {
                 id: didJwkThumbprint,
                 ...offer.credentialSubject,
@@ -6888,11 +6888,7 @@ const offerExpectation = ({
         ...castArray(offer['@context']),
       ])
     ),
-    type: [
-      first(offer.type),
-      'VelocityNetworkLayer1Credential',
-      'VerifiableCredential',
-    ],
+    type: [first(offer.type), 'VerifiableCredential'],
     credentialSchema: {
       id: credentialTypeMetadata[first(offer.type)].schemaUrl,
       type: 'JsonSchemaValidator2018',

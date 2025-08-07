@@ -9,7 +9,7 @@ const {
 const { mapWithIndex } = require('@verii/common-functions');
 const { generateKeyPair } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
-const { VnfProtocolVersions } = require('@verii/vc-checks');
+const { VeriiProtocolVersions } = require('@verii/vc-checks');
 
 const common = require('./common');
 
@@ -44,7 +44,7 @@ const generatePresentation = async ({
       vendorOriginContext,
     });
     const generatePresentationJwtFunction =
-      protocolVersion < VnfProtocolVersions.VNF_PROTOCOL_VERSION_2
+      protocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2
         ? generatePresentationJwt(payload, privateKey)
         : generatePresentationJwt(
             payload,
@@ -93,7 +93,7 @@ const createPayload = ({
 };
 
 const getIssuer = ({ issuer, protocolVersion }) => {
-  if (protocolVersion < VnfProtocolVersions.VNF_PROTOCOL_VERSION_2) {
+  if (protocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
     return issuer == null ? 'https://self-issued.me' : issuer.did.id;
   }
 
