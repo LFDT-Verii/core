@@ -44,8 +44,7 @@ const freeCredentialTypesList = ['EmailV1.0', 'DrivingLicenseV1.0'];
 const { offerFactory } = require('./helpers/offer-factory');
 const { createExampleDid } = require('./helpers/create-example-did');
 const {
-  prepareVelocityVerifiableCredentials,
-  anchorVelocityVerifiableCredentials,
+  issueVelocityVerifiableCredentials,
 } = require('../src/issue-velocity-verifiable-credentials');
 const { credentialTypesMap } = require('./helpers/credential-types-map');
 const { jwtVcExpectation } = require('./helpers/jwt-vc-expectation');
@@ -205,18 +204,11 @@ describe('E2E issuing', () => {
       },
     ]);
     const userId = createExampleDid();
-    const { vcs, revocationListEntries } =
-      await prepareVelocityVerifiableCredentials(
-        offers,
-        userId,
-        credentialTypesMap,
-        issuer,
-        context
-      );
 
-    const credentials = await anchorVelocityVerifiableCredentials(
-      vcs,
-      revocationListEntries,
+    const credentials = await issueVelocityVerifiableCredentials(
+      offers,
+      userId,
+      credentialTypesMap,
       issuer,
       context
     );

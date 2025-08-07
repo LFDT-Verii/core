@@ -118,7 +118,40 @@ const anchorVelocityVerifiableCredentials = async (
   return map('vcJwt', vcs);
 };
 
+/**
+ * Creates verifiable credential from a local offer. Current assumption is that offers contain all required fields
+ * including @context, type, contentHash
+ * @param {VelocityOffer[]} offers  array of offers
+ * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
+ * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
+ * @param {Issuer} issuer  the issuer
+ * @param {Context} context the context
+ * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
+ */
+const issueVelocityVerifiableCredentials = async (
+  offers,
+  credentialSubjectId,
+  credentialTypesMap,
+  issuer,
+  context
+) => {
+  const { vcs, revocationListEntries } =
+    await prepareVelocityVerifiableCredentials(
+      offers,
+      credentialSubjectId,
+      credentialTypesMap,
+      issuer,
+      context
+    );
+  return anchorVelocityVerifiableCredentials(
+    vcs,
+    revocationListEntries,
+    issuer,
+    context
+  );
+};
 module.exports = {
-  prepareVelocityVerifiableCredentials,
   anchorVelocityVerifiableCredentials,
+  issueVelocityVerifiableCredentials,
+  prepareVelocityVerifiableCredentials,
 };
