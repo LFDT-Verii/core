@@ -8,8 +8,8 @@
     "node": ">=22.11.0"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest ./test --config ./jest.config.js --runInBand --coverage",
-    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest ./e2e/org-registration-and-issuing.e2e.test.js --config ./jest.config.js --runInBand",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest ./test --config ./jest.config.js --runInBand --coverage",
+    "test:e2e": "cross-env NODE_OPTIONS=--experimental-vm-modules jest ./e2e/org-registration-and-issuing.e2e.test.js --config ./jest.config.js --runInBand",
     "start": "node src/main.js",
     "start:dev": "node --throw-deprecation src/standalone.js",
     "start-operator": "node src/main-operator.js",

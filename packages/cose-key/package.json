@@ -8,7 +8,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.js --runInBand --coverage",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.js --runInBand --coverage",
     "lint": "eslint . --format json >> eslint.json",
     "lint:fix": "eslint --fix --ext .js ."
   },
