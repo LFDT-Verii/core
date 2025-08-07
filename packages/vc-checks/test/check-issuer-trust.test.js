@@ -15,7 +15,7 @@
  */
 
 const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
-const { set, times, join } = require('lodash/fp');
+const { omit, set, times, join } = require('lodash/fp');
 const { generateCredentialJwt } = require('@verii/jwt');
 const { checkIssuerTrust } = require('../src/check-issuer-trust');
 const {
@@ -29,19 +29,6 @@ describe('issuer checks', () => {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-  };
-  const jsonLdContext = {
-    '@context': {
-      IdDocument: {
-        '@id': 'https://velocitynetwork.foundation/contexts#IdDocument',
-        '@context': {
-          authority: {
-            '@id':
-              'https://velocitynetwork.foundation/contexts#primaryOrganization',
-          },
-        },
-      },
-    },
   };
   const issuerKeyPair = generateKeyPairInHexAndJwk();
 
@@ -109,8 +96,10 @@ describe('issuer checks', () => {
       credentialTypeMetadata: {
         credentialType: 'Passport',
         issuerCategory: 'RegularIssuer',
+        primaryOrganizationClaimPaths: [
+          ['credentialSubject', 'authority', 'identifier'],
+        ],
       },
-      jsonLdContext,
       isSelfSigned: false,
     };
 
@@ -304,18 +293,18 @@ describe('issuer checks', () => {
     expect(result).toEqual(CheckResults.PASS);
   });
 
-  it('should DEPENDENCY_RESOLUTION_ERROR if jsonLdContext is empty', async () => {
+  it('should PASS if primaryOrganizationClaimPaths is empty', async () => {
     const result = await checkIssuerTrust(
       identityCredential,
       issuerDid,
-      {
-        ...defaultDependencies,
-        jsonLdContext: {},
-      },
+      omit(
+        ['credentialTypeMetadata.primaryOrganizationClaimPaths'],
+        defaultDependencies
+      ),
       context
     );
 
-    expect(result).toEqual(CheckResults.DEPENDENCY_RESOLUTION_ERROR);
+    expect(result).toEqual(CheckResults.PASS);
   });
 
   describe('checkIdentityIssuer tests suite', () => {
@@ -346,92 +335,6 @@ describe('issuer checks', () => {
       jest.clearAllMocks();
     });
 
-    it('should throw error if jsonld contexts not loaded', async () => {
-      expect(() =>
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context': [
-                  'https://www.mockdomain.org/context/jsonld-file.json',
-                ],
-                type: 'IdDocument',
-                authority: {
-                  identifier: issuerDid,
-                },
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
-            },
-            issuerId: issuerDid,
-            jsonLdContext: {},
-          },
-          { log, config }
-        )
-      ).toThrowError('unresolved_credential_subject_context');
-    });
-
-    it('should pass if `type` in the `vc.credentialSubject` is missing', async () => {
-      await expect(
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context': [
-                  'https://www.mockdomain.org/context/jsonld-file.json',
-                ],
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
-            },
-            issuerId: issuerDid,
-            jsonLdContext,
-          },
-          testContext
-        )
-      ).toEqual(true);
-    });
-
-    it('should pass if `type` in the `vc.credentialSubject` is not found', async () => {
-      expect(
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context': [
-                  'https://www.mockdomain.org/context/jsonld-file.json',
-                ],
-                type: 'NOT_FOUND',
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
-            },
-            issuerId: issuerDid,
-            jsonLdContext,
-          },
-          testContext
-        )
-      ).toEqual(true);
-    });
-
-    it('should pass if identifier is not found', async () => {
-      expect(
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context': [
-                  'https://www.mockdomain.org/context/jsonld-file.json',
-                ],
-                type: 'IdDocument',
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
-            },
-            issuerId: issuerDid,
-            jsonLdContext,
-          },
-          testContext
-        )
-      ).toEqual(true);
-    });
-
     it('should throw error if identifier does not match to iss', async () => {
       expect(() =>
         verifyPrimarySourceIssuer(
@@ -449,7 +352,12 @@ describe('issuer checks', () => {
               issuanceDate: '2031-01-01T00:00:00Z',
             },
             issuerId: issuerDid,
-            jsonLdContext,
+            credentialTypeMetadata: {
+              primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority'],
+                ['credentialSubject', 'authority', 'identifier'],
+              ],
+            },
           },
           testContext
         )
@@ -473,61 +381,19 @@ describe('issuer checks', () => {
               issuanceDate: '2031-01-01T00:00:00Z',
             },
             issuerId: issuerDid,
-            jsonLdContext,
-          },
-          testContext
-        )
-      ).toBe(true);
-    });
-
-    it('should pass validation when `credentialSubject.type` is Array', async () => {
-      expect(
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context': [
-                  'https://www.mockdomain.org/context/jsonld-file.json',
-                ],
-                type: ['IdDocument'],
-                authority: {
-                  identifier: issuerDid,
-                },
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
+            credentialTypeMetadata: {
+              primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority'],
+                ['credentialSubject', 'authority', 'identifier'],
+              ],
             },
-            issuerId: issuerDid,
-            jsonLdContext,
           },
           testContext
         )
       ).toBe(true);
     });
 
-    it('should pass validation when `credentialSubject.@context` is string', async () => {
-      expect(
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context':
-                  'https://www.mockdomain.org/context/jsonld-file.json',
-                type: ['IdDocument'],
-                authority: {
-                  identifier: issuerDid,
-                },
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
-            },
-            issuerId: issuerDid,
-            jsonLdContext,
-          },
-          testContext
-        )
-      ).toBe(true);
-    });
-
-    it('should pass validation with https://velocitynetwork.foundation/contexts#primarySourceProfile value', async () => {
+    it('should pass validation when issuer is not on the credential', async () => {
       expect(
         verifyPrimarySourceIssuer(
           {
@@ -537,32 +403,15 @@ describe('issuer checks', () => {
                   'https://www.mockdomain.org/context/jsonld-file.json',
                 ],
                 type: 'IdDocument',
-                hasCredential: {
-                  authority: {
-                    identifier: issuerDid,
-                  },
-                },
               },
               issuanceDate: '2031-01-01T00:00:00Z',
             },
             issuerId: issuerDid,
-            jsonLdContext: {
-              '@context': {
-                IdDocument: {
-                  '@id':
-                    'https://velocitynetwork.foundation/contexts#IdDocument',
-                  '@context': {
-                    authority: {
-                      '@id':
-                        'https://velocitynetwork.foundation/contexts#primarySourceProfile',
-                    },
-                    hasCredential: {
-                      '@id':
-                        'https://velocitynetwork.foundation/contexts#hasCredential',
-                    },
-                  },
-                },
-              },
+            credentialTypeMetadata: {
+              primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority'],
+                ['credentialSubject', 'authority', 'identifier'],
+              ],
             },
           },
           testContext
@@ -629,60 +478,19 @@ describe('issuer checks', () => {
               issuanceDate: '2031-01-01T00:00:00Z',
             },
             issuerId: issuerDid,
-            jsonLdContext: {
-              '@context': {
-                IdDocument: {
-                  '@id':
-                    'https://velocitynetwork.foundation/contexts#IdDocument',
-                  '@context': {
-                    authority: {
-                      '@id':
-                        'https://velocitynetwork.foundation/contexts#primarySourceProfile',
-                    },
-                    hasCredential: {
-                      '@id':
-                        'https://velocitynetwork.foundation/contexts#hasCredential',
-                    },
-                  },
-                },
-              },
-            },
-          },
-          testContext
-        )
-      ).toBe(true);
-    });
-
-    it('should pass validation with https://velocitynetwork.foundation/contexts#primarySourceProfile value', async () => {
-      expect(
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context': [
-                  'https://www.mockdomain.org/context/jsonld-file.json',
+            credentialTypeMetadata: {
+              primaryOrganizationClaimPaths: [
+                [
+                  'credentialSubject',
+                  'hasCredential',
+                  'child3',
+                  'child2',
+                  'child3',
+                  'child4',
+                  'authority',
+                  'id',
                 ],
-                type: 'IdDocument',
-                authority: {
-                  identifier: issuerDid,
-                },
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
-            },
-            issuerId: issuerDid,
-            jsonLdContext: {
-              '@context': {
-                IdDocument: {
-                  '@id':
-                    'https://velocitynetwork.foundation/contexts#IdDocument',
-                  '@context': {
-                    authority: {
-                      '@id':
-                        'https://velocitynetwork.foundation/contexts#primarySourceProfile',
-                    },
-                  },
-                },
-              },
+              ],
             },
           },
           testContext
@@ -690,79 +498,7 @@ describe('issuer checks', () => {
       ).toBe(true);
     });
 
-    it('should pass validation if identifier is string', async () => {
-      expect(
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context': [
-                  'https://www.mockdomain.org/context/jsonld-file.json',
-                ],
-                type: 'IdDocument',
-                authority: issuerDid,
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
-            },
-            issuerId: issuerDid,
-            jsonLdContext: {
-              '@context': {
-                IdDocument: {
-                  '@id':
-                    'https://velocitynetwork.foundation/contexts#IdDocument',
-                  '@context': {
-                    authority: {
-                      '@id':
-                        'https://velocitynetwork.foundation/contexts#primarySourceProfile',
-                    },
-                  },
-                },
-              },
-            },
-          },
-          testContext
-        )
-      ).toBe(true);
-    });
-
-    it('should pass validation if identifier is object with id property', async () => {
-      expect(
-        verifyPrimarySourceIssuer(
-          {
-            credential: {
-              credentialSubject: {
-                '@context': [
-                  'https://www.mockdomain.org/context/jsonld-file.json',
-                ],
-                type: 'IdDocument',
-                authority: {
-                  id: issuerDid,
-                },
-              },
-              issuanceDate: '2031-01-01T00:00:00Z',
-            },
-            issuerId: issuerDid,
-            jsonLdContext: {
-              '@context': {
-                IdDocument: {
-                  '@id':
-                    'https://velocitynetwork.foundation/contexts#IdDocument',
-                  '@context': {
-                    authority: {
-                      '@id':
-                        'https://velocitynetwork.foundation/contexts#primarySourceProfile',
-                    },
-                  },
-                },
-              },
-            },
-          },
-          testContext
-        )
-      ).toBe(true);
-    });
-
-    it('should pass if type is string and no Primary Organization type is found', async () => {
+    it('should pass if type is string and no primaryOrganizationClaimPaths exist', async () => {
       const result = verifyPrimarySourceIssuer(
         {
           credential: {
@@ -778,11 +514,7 @@ describe('issuer checks', () => {
             issuanceDate: '2031-01-01T00:00:00Z',
           },
           issuerId: issuerDid,
-          jsonLdContext: {
-            '@context': {
-              IdDocument: 'some string',
-            },
-          },
+          credentialTypeMetadata: {},
         },
         testContext
       );

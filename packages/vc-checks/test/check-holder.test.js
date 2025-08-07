@@ -17,7 +17,7 @@
 const { set, flow } = require('lodash/fp');
 const { credentialUnexpired } = require('@verii/sample-data');
 const console = require('console');
-const { VnfProtocolVersions } = require('../src/vnf-protocol-versions');
+const { VeriiProtocolVersions } = require('../src/verii-protocol-versions');
 const { checkHolder } = require('../src/check-holder');
 const { CheckResults } = require('../src/check-results');
 
@@ -30,7 +30,7 @@ describe('holder checks', () => {
     const result = checkHolder(
       flow(
         set('credentialSubject.id', 'not-match'),
-        set('vnfProtocolVersion', VnfProtocolVersions.VNF_PROTOCOL_VERSION_2)
+        set('vnfProtocolVersion', VeriiProtocolVersions.PROTOCOL_VERSION_2)
       )(credentialUnexpired),
       'not-match-1',
       context
@@ -55,7 +55,7 @@ describe('holder checks', () => {
   it('Should return PASS when presentation issuer is the credential subject id', async () => {
     const decodedCredential = flow(
       set('credentialSubject.id', 'match'),
-      set('vnfProtocolVersion', VnfProtocolVersions.VNF_PROTOCOL_VERSION_2)
+      set('vnfProtocolVersion', VeriiProtocolVersions.PROTOCOL_VERSION_2)
     )(credentialUnexpired);
     expect(decodedCredential.credentialSubject.id).toEqual('match');
     const result = checkHolder(decodedCredential, 'match', context);

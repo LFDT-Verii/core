@@ -29,6 +29,7 @@ module.exports = (app, options, next = () => {}) => {
         displayDescriptorUrls: 1,
         formSchemaUrls: 1,
         defaultSignatureAlgorithm: 1,
+        primaryOrganizationClaimPaths: 1,
         createdAt: 1,
         updatedAt: 1,
         createdBy: 1,
