@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const { beforeEach, describe, it, mock } = require('node:test');
+const { after, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const mockReadDocument = mock.fn();
@@ -51,7 +51,6 @@ mock.module('@verii/metadata-registration', {
   },
 });
 
-const { after } = require('lodash/function');
 const {
   events: sampleCredentialEventsArray,
 } = require('./data/sample-credential-events-array');

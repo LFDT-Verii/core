@@ -122,9 +122,8 @@ describe('Verify credentials', () => {
     mock.reset();
   });
 
-  describe.each([{ didSuffix: null }, { didSuffix: 'abc' }])(
-    'full verification with didSuffix=$didSuffix',
-    ({ didSuffix }) => {
+  [{ didSuffix: null }, { didSuffix: 'abc' }].forEach(({ didSuffix }) =>
+    describe(`full verification with ${didSuffix}`, () => {
       let openBadgeCredential;
       let openBadgeVc;
       let idCredential;
@@ -737,8 +736,15 @@ describe('Verify credentials', () => {
           resolveDidDocument.mock.calls.map((call) => call.arguments)
         ).toContainEqual([
           {
-            did: 'did:velocity:v2:multi:1:BBB:42;1:BBB:42',
+            did: `did:velocity:v2:multi:${openBadgeCredential.id
+              .split(':')
+              .slice(3)
+              .join(':')};${openBadgeCredential.id
+              .split(':')
+              .slice(3)
+              .join(':')}`,
             credentials: expect.any(Array),
+            caoDid: undefined,
             burnerDid: 'did:ion:123',
             verificationCoupon: {},
           },
@@ -1337,7 +1343,7 @@ describe('Verify credentials', () => {
           },
         ]);
       });
-    }
+    })
   );
 });
 
