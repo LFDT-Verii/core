@@ -96,28 +96,30 @@ const doIssueVerifiableCredentials = async (
     'allocations'
   );
 
-  return issueVeriiCredentials(
-    offers,
-    credentialSubjectId,
-    credentialTypesMap,
-    {
-      id: tenant._id,
-      did: tenant.did,
-      issuingRefreshServiceId: first(tenant.serviceIds),
-      issuingServiceKMSKeyId: issuerServiceKey.keyId,
-      issuingServiceDIDKeyId: toDidUrl(
-        tenant.did,
-        issuerServiceKey.kidFragment
-      ),
-      dltOperatorAddress:
-        dltOperatorKey.publicKey != null
-          ? toEthereumAddress(hexFromJwk(dltOperatorKey.publicKey, false))
-          : null,
-      dltOperatorKMSKeyId: dltOperatorKey.keyId,
-      dltPrimaryAddress: tenant.primaryAddress,
-    },
-    context
-  ).catch((e) => {
+  try {
+    return issueVeriiCredentials(
+      offers,
+      credentialSubjectId,
+      credentialTypesMap,
+      {
+        id: tenant._id,
+        did: tenant.did,
+        issuingRefreshServiceId: first(tenant.serviceIds),
+        issuingServiceKMSKeyId: issuerServiceKey.keyId,
+        issuingServiceDIDKeyId: toDidUrl(
+          tenant.did,
+          issuerServiceKey.kidFragment
+        ),
+        dltOperatorAddress:
+          dltOperatorKey.publicKey != null
+            ? toEthereumAddress(hexFromJwk(dltOperatorKey.publicKey, false))
+            : null,
+        dltOperatorKMSKeyId: dltOperatorKey.keyId,
+        dltPrimaryAddress: tenant.primaryAddress,
+      },
+      context
+    );
+  } catch (e) {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':
       case 'identity_issuing_not_permitted':
@@ -128,7 +130,7 @@ const doIssueVerifiableCredentials = async (
       default:
         throw e;
     }
-  });
+  }
 };
 
 module.exports = { createVerifiableCredentials };
