@@ -18,11 +18,11 @@
 const { flow, pick } = require('lodash/fp');
 const canonicalize = require('canonicalize');
 const { hashAndEncodeHex } = require('@verii/crypto');
-/** @import { VelocityOffer } from "../types/types" */
+/** @import { CredentialOffer } from "../types/types" */
 
 /**
- * The hex encoded hash of the VelocityOffer
- * @param {VelocityOffer} offer the offer to hash
+ * The hex encoded hash of the CredentialOffer
+ * @param {CredentialOffer} offer the offer to hash
  * @returns {string} the hash of the offer encoded in hex
  */
 const hashOffer = (offer) =>

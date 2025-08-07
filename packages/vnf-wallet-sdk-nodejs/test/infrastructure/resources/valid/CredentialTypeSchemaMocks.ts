@@ -64,7 +64,6 @@ export class CredentialTypeSchemaMocks {
         schemaName: 'current-employment-position',
         credentialType: 'CurrentEmploymentPosition',
         recommended: true,
-        jsonldContext: [],
         issuerCategory: 'RegularIssuer',
     };
 

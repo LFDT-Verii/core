@@ -1,7 +1,7 @@
 {
-  "name": "@verii/velocity-issuing",
+  "name": "@verii/verii-issuing",
   "version": "0.5.0-build",
-  "description": "Velocity Issuing Package",
+  "description": "Verii Issuing Package",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "src/index.js",
   "types": "types/types.d.ts",

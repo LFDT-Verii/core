@@ -1,5 +1,5 @@
-/*
- * Copyright 2025 Velocity Team
+/**
+ * Copyright 2023 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,6 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
+<<<<<<<< HEAD:packages/tests-helpers/src/mocks/css.mjs
 export default {};
+========
+
+const VeriiProtocolVersions = {
+  PROTOCOL_VERSION_1: 1,
+  PROTOCOL_VERSION_2: 2,
+};
+
+module.exports = {
+  VeriiProtocolVersions,
+};
+>>>>>>>> cc27d7cdd1363c903f47e01a2387e65940602bb5:packages/vc-checks/src/verii-protocol-versions.js

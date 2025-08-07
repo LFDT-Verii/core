@@ -25,7 +25,7 @@ mock.module('@verii/metadata-registration', {
   },
 });
 const mockVerifyCredentials = mock.fn(() => Promise.resolve(undefined));
-mock.module('@verii/verifiable-credentials', {
+mock.module('@verii/verii-verification', {
   namedExports: {
     verifyCredentials: mockVerifyCredentials,
   },

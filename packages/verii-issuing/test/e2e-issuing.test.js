@@ -36,7 +36,6 @@ const {
 
 const { nanoid } = require('nanoid');
 const { hexFromJwk, jwtSign, jwtDecode } = require('@verii/jwt');
-const initRequest = require('@verii/request');
 const { MongoClient } = require('mongodb');
 const { map } = require('lodash/fp');
 const { collectionClient } = require('./helpers/collection-client');
@@ -46,9 +45,7 @@ const freeCredentialTypesList = ['EmailV1.0', 'DrivingLicenseV1.0'];
 
 const { offerFactory } = require('./helpers/offer-factory');
 const { createExampleDid } = require('./helpers/create-example-did');
-const {
-  issueVelocityVerifiableCredentials,
-} = require('../src/issue-velocity-verifiable-credentials');
+const { issueVeriiCredentials } = require('../src/issue-verii-credentials');
 const { credentialTypesMap } = require('./helpers/credential-types-map');
 const { jwtVcExpectation } = require('./helpers/jwt-vc-expectation');
 const {
@@ -84,7 +81,7 @@ describe('E2E issuing', { timeout: 60000 }, () => {
     issuer = {
       id: nanoid(),
       did: issuerEntity.did,
-      issuingServiceId: issuerEntity.service[1]?.id,
+      issuingRefreshServiceId: issuerEntity.service[1]?.id,
       issuingServiceKMSKeyId: issuerEntity.key[0].id,
       issuingServiceDIDKeyId: issuerEntity.key[0].id,
       dltOperatorAddress: toEthereumAddress(issuerEntity.keyPair.publicKey),
@@ -205,7 +202,7 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       },
     ]);
     const userId = createExampleDid();
-    const credentials = await issueVelocityVerifiableCredentials(
+    const credentials = await issueVeriiCredentials(
       offers,
       userId,
       credentialTypesMap,
@@ -260,9 +257,6 @@ const buildContext = ({
       'https://lib.test/contexts/credential-extensions-2022.jsonld.json',
   },
   db,
-  registrarFetch: initRequest({
-    prefixUrl: 'http://oracle.localhost.test',
-  })({ log: console }),
   log: console,
   traceId: nanoid(),
   ...args,

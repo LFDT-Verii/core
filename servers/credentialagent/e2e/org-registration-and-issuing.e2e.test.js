@@ -43,7 +43,7 @@ const { ServiceTypes } = require('@verii/organizations-registry');
 //   jwtSign,
 // } = require('@verii/jwt');
 // const { getDidUriFromJwk } = require('@verii/did-doc');
-// const { hashOffer } = require('@verii/velocity-issuing');
+// const { hashOffer } = require('@verii/verii-issuing');
 // const { CheckResults } = require('@verii/vc-checks');
 
 const { addMonths } = require('date-fns/fp');

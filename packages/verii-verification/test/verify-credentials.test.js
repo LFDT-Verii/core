@@ -46,7 +46,7 @@ const { credentialUnexpired } = require('@verii/sample-data');
 const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
 const {
   CheckResults,
-  VnfProtocolVersions,
+  VeriiProtocolVersions,
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { generateKeyPair } = require('@verii/crypto');
@@ -70,9 +70,6 @@ describe('Verify credentials', () => {
   const config = {
     rootPublicKey: orgKeyPair.publicKey,
     revocationContractAddress: 'any',
-    contractAbi: 'contractAbi',
-    contractAddress: 'contractAddress',
-    rpcUrl: 'rpcUrl',
   };
   let issuerVc;
   let context;
@@ -94,10 +91,18 @@ describe('Verify credentials', () => {
           {
             credentialType: 'Passport',
             issuerCategory: 'IdentityIssuer',
+              primaryOrganizationClaimPaths: [
+                  ['credentialSubject', 'authority'],
+                  ['credentialSubject', 'authority', 'identifier'],
+              ],
           },
           {
             credentialType: 'OpenBadgeCredential',
             issuerCategory: 'RegularIssuer',
+              primaryOrganizationClaimPaths: [
+                  ['credentialSubject', 'issuer'],
+                  ['credentialSubject', 'issuer', 'id'],
+              ],
           },
         ])
       ),
@@ -106,15 +111,6 @@ describe('Verify credentials', () => {
       tenant: { did: 'did:ion:123' },
       log: console,
       config,
-      fetch: {
-        get: mock.fn((url) =>
-          url != null && url !== 'https://www.w3.org/2018/credentials/v1'
-            ? {
-                json: mockGetJsonLdContextJson,
-              }
-            : { json: mock.fn(() => Promise.resolve({})) }
-        ),
-      },
     };
   });
 
@@ -190,7 +186,7 @@ describe('Verify credentials', () => {
               id: issuerDid,
             },
           },
-          vnfProtocolVersion: VnfProtocolVersions.VNF_PROTOCOL_VERSION_2,
+          vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
         });
         idCredential = applyOverrides(openBadgeCredential, {
           type: ['Passport'],
@@ -355,14 +351,6 @@ describe('Verify credentials', () => {
       });
 
       it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
-        const x = omit(
-          ['@context.OpenBadgeCredential.@context.authority'],
-          openBadgeJsonLdContext
-        );
-        mockGetJsonLdContextJson.mock.mockImplementation(() =>
-          Promise.resolve(x)
-        );
-
         const result = await verifyCredentials(
           {
             credentials: [openBadgeVc],
@@ -504,22 +492,22 @@ describe('Verify credentials', () => {
         ]);
       });
 
-      it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
-        const x = omit(
-          ['@context.OpenBadgeCredential.@context.authority'],
-          openBadgeJsonLdContext
-        );
-        mockGetJsonLdContextJson.mock.mockImplementation(() =>
-          Promise.resolve(x)
-        );
-
+      it('should return successful legacy credential whose metadata doesnt have primaryOrganizationClaimPaths', async () => {
         const result = await verifyCredentials(
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
-          fetchers,
+          {
+            ...fetchers,
+            getCredentialTypeMetadata: () => [
+              {
+                credentialType: 'OpenBadgeCredential',
+                issuerCategory: 'Issuer',
+              },
+            ],
+          },
           context
         );
 
@@ -590,39 +578,6 @@ describe('Verify credentials', () => {
         expect(result).toEqual([
           {
             credential: legacyOpenBadgeCredential,
-            credentialChecks: {
-              UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.PASS,
-              TRUSTED_HOLDER: CheckResults.PASS,
-              UNEXPIRED: CheckResults.PASS,
-              UNREVOKED: CheckResults.PASS,
-            },
-          },
-        ]);
-      });
-
-      it('should return successful legacy credential that doesnt have @context with a PrimaryOrganization defined', async () => {
-        const x = omit(
-          ['@context.OpenBadgeCredential.@context.authority'],
-          openBadgeJsonLdContext
-        );
-        mockGetJsonLdContextJson.mock.mockImplementation(() =>
-          Promise.resolve(x)
-        );
-
-        const result = await verifyCredentials(
-          {
-            credentials: [openBadgeVc],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-            expectedHolderDid: issuerDidJwk,
-          },
-          fetchers,
-          context
-        );
-
-        expect(result).toEqual([
-          {
-            credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
               TRUSTED_ISSUER: CheckResults.PASS,
@@ -792,35 +747,6 @@ describe('Verify credentials', () => {
               TRUSTED_HOLDER: CheckResults.NOT_APPLICABLE,
               UNREVOKED: CheckResults.NOT_APPLICABLE,
               UNEXPIRED: CheckResults.PASS,
-            },
-          },
-        ]);
-      });
-
-      it('should pass if credential jsonLdContext lookups fail when context isnt checked', async () => {
-        mockGetJsonLdContextJson.mock.mockImplementationOnce(() =>
-          Promise.reject(new Error())
-        );
-
-        const result = await verifyCredentials(
-          {
-            credentials: [idVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-          },
-          fetchers,
-          context
-        );
-
-        expect(result).toEqual([
-          {
-            credential: idCredential,
-            credentialChecks: {
-              UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.PASS,
-              TRUSTED_HOLDER: CheckResults.PASS,
-              UNEXPIRED: CheckResults.PASS,
-              UNREVOKED: CheckResults.PASS,
             },
           },
         ]);
@@ -1017,7 +943,7 @@ describe('Verify credentials', () => {
         ]);
       });
 
-      it('TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR if issuer lookups fail', async () => {
+      it('TRUSTED_ISSUER should return FAIL if issuer lookups fail', async () => {
         const result = await verifyCredentials(
           {
             credentials: [idVc],
@@ -1033,7 +959,7 @@ describe('Verify credentials', () => {
             credential: idCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+              TRUSTED_ISSUER: CheckResults.FAIL,
               TRUSTED_HOLDER: CheckResults.PASS,
               UNEXPIRED: CheckResults.PASS,
               UNREVOKED: CheckResults.PASS,
@@ -1070,35 +996,6 @@ describe('Verify credentials', () => {
         ]);
       });
 
-      it('TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR if credential jsonLdContext lookups fail', async () => {
-        mockGetJsonLdContextJson.mock.mockImplementationOnce(() =>
-          Promise.reject(new Error())
-        );
-
-        const result = await verifyCredentials(
-          {
-            credentials: [openBadgeVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-          },
-          fetchers,
-          context
-        );
-
-        expect(result).toEqual([
-          {
-            credential: openBadgeCredential,
-            credentialChecks: {
-              UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
-              TRUSTED_HOLDER: CheckResults.PASS,
-              UNEXPIRED: CheckResults.PASS,
-              UNREVOKED: CheckResults.PASS,
-            },
-          },
-        ]);
-      });
-
       it('TRUSTED_ISSUER should FAIL when issuerDidDocument not found', async () => {
         const result = await verifyCredentials(
           {
@@ -1108,7 +1005,7 @@ describe('Verify credentials', () => {
           },
           {
             ...fetchers,
-            resolveDid: () => ({
+            resolveDid: async () => ({
               id: 'did:ion:otherDid',
             }),
           },
@@ -1138,7 +1035,7 @@ describe('Verify credentials', () => {
           },
           {
             ...fetchers,
-            getOrganizationVerifiedProfile: () => ({}),
+            getOrganizationVerifiedProfile: async () => ({}),
           },
           context
         );
@@ -1217,7 +1114,7 @@ describe('Verify credentials', () => {
       it('TRUSTED_HOLDER should return NOT_APPLICABLE if expectedHolderDid is missing and vnfprotocol is 1', async () => {
         const credentialWithVnfProtocolV1 = {
           ...idCredential,
-          vnfProtocolVersion: VnfProtocolVersions.VNF_PROTOCOL_VERSION_1,
+          vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_1,
         };
         const signedCredential = await generateCredentialJwt(
           credentialWithVnfProtocolV1,
@@ -1349,17 +1246,3 @@ describe('Verify credentials', () => {
 
 const buildDid = (indexEntry, didPrefix = 'did:velocity:v2:') =>
   `${didPrefix}${flow(compact, join(':'))(indexEntry)}`;
-
-const openBadgeJsonLdContext = {
-  '@context': {
-    OpenBadgeCredential: {
-      '@id': 'https://velocitynetwork.foundation/contexts#OpenBadgeCredential',
-      '@context': {
-        authority: {
-          '@id':
-            'https://velocitynetwork.foundation/contexts#primaryOrganization',
-        },
-      },
-    },
-  },
-};

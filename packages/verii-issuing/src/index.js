@@ -15,7 +15,7 @@
  *
  */
 module.exports = {
-  ...require('./issue-velocity-verifiable-credentials'),
+  ...require('./issue-verii-credentials'),
   ...require('./domain/hash-offer'),
   ...require('./adapters/mongo-allocation-list-queries'),
   ...require('./adapters/get-revocation-registry'),

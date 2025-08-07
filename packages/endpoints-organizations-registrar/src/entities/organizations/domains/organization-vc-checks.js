@@ -1,5 +1,5 @@
 const { decodeCredentialJwt } = require('@verii/jwt');
-const { CredentialCheckResultValue } = require('@verii/verifiable-credentials');
+const { CredentialCheckResultValue } = require('@verii/verii-verification');
 const {
   checkExpiration,
   checkJwtVCTampering,

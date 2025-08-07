@@ -20,9 +20,9 @@ const { KeyPurposes, calcSha384 } = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');
 const { hexFromJwk, jwtDecode } = require('@verii/jwt');
 const {
-  issueVelocityVerifiableCredentials,
+  issueVeriiCredentials,
   mongoAllocationListQueries,
-} = require('@verii/velocity-issuing');
+} = require('@verii/verii-issuing');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { first, isEmpty, map, size } = require('lodash/fp');
 const newError = require('http-errors');
@@ -96,14 +96,14 @@ const doIssueVerifiableCredentials = async (
     'allocations'
   );
 
-  return issueVelocityVerifiableCredentials(
+  return issueVeriiCredentials(
     offers,
     credentialSubjectId,
     credentialTypesMap,
     {
       id: tenant._id,
       did: tenant.did,
-      issuingServiceId: first(tenant.serviceIds),
+      issuingRefreshServiceId: first(tenant.serviceIds),
       issuingServiceKMSKeyId: issuerServiceKey.keyId,
       issuingServiceDIDKeyId: toDidUrl(
         tenant.did,

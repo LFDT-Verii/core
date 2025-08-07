@@ -74,6 +74,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://qalib.velocitynetwork.foundation/form-schemas/VrHkv65XvYk7DoZrBpD9p-test-v1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authorityId'],
+            ],
             id: '65d5ec79d4775aa694443b3b',
             createdAt: '2024-02-21T12:28:41.751Z',
             updatedAt: '2024-02-21T12:28:41.751Z',
@@ -118,6 +121,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EducationDegreeGraduationV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'institution', 'identifier'],
+            ],
             id: '644e1d3dbb302308ea73539d',
             createdAt: '2023-04-30T07:48:13.076Z',
             updatedAt: '2023-04-30T07:48:13.076Z',
@@ -145,6 +151,10 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/OpenBadgeCredential.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+                ['credentialSubject', 'authority'],
+            ],
             id: '629e033ed91f177d0ecc22b6',
             createdAt: '2022-06-06T13:38:06.595Z',
             updatedAt: '2022-06-06T13:38:06.595Z',
@@ -169,6 +179,7 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EducationDegree.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [['credentialSubject', 'school']],
             id: '5fe4a315d8b45dd2e80bd739',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.633Z',
@@ -193,6 +204,7 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CurrentEmploymentPosition.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [['credentialSubject', 'company']],
             id: '5fe4a315d8b45dd2e80bd73a',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.632Z',
@@ -217,6 +229,7 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/PastEmploymentPosition.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [['credentialSubject', 'company']],
             id: '5fe4a315d8b45dd2e80bd73b',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.643Z',
@@ -265,6 +278,7 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/Certification.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [['credentialSubject', 'authority']],
             id: '5fe4a315d8b45dd2e80bd73d',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.640Z',
@@ -313,6 +327,7 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/Assessment.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [['credentialSubject', 'authority']],
             id: '5fe4a315d8b45dd2e80bd73f',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.634Z',
@@ -385,6 +400,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/IdDocument.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authorityId'],
+            ],
             id: '5fedca322ceb53ba8710b292',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.640Z',
@@ -412,6 +430,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CourseRegistrationV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'provider', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e42',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.642Z',
@@ -439,6 +460,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CourseCompletionV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'provider', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e43',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.636Z',
@@ -466,6 +490,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CourseAttendanceV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'provider', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e44',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.641Z',
@@ -493,6 +520,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EducationDegreeRegistrationV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'institution', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e45',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.637Z',
@@ -520,6 +550,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EducationDegreeStudyV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'institution', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e46',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.644Z',
@@ -547,6 +580,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CertificationV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e48',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.643Z',
@@ -574,6 +610,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/IdDocumentV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authorityId'],
+            ],
             id: '618d1caff7d8914e84703e49',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.639Z',
@@ -601,6 +640,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/LicenseV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e4a',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.634Z',
@@ -628,6 +670,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/DriversLicenseV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e4b',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-06-06T13:38:05.105Z',
@@ -655,6 +700,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/NationalIdCardV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e4c',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-06-06T13:38:05.105Z',
@@ -682,6 +730,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/PassportV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e4d',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-06-06T13:38:05.105Z',
@@ -709,6 +760,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/ResidentPermitV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e4e',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-06-06T13:38:05.105Z',
@@ -763,6 +817,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/AssessmentV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e50',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.633Z',
@@ -790,6 +847,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EmploymentCurrentV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'legalEmployer', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e51',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.639Z',
@@ -817,6 +877,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EmploymentPastV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'legalEmployer', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e52',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.637Z',
@@ -898,6 +961,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/ProofOfAgeV1.0.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '618d1caff7d8914e84703e56',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-06-06T13:38:05.105Z',
@@ -925,6 +991,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CourseRegistrationV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'provider', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b11',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.643Z',
@@ -952,6 +1021,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CourseCompletionV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'provider', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b12',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.644Z',
@@ -979,6 +1051,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CourseAttendanceV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'provider', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b13',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.645Z',
@@ -1006,6 +1081,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EducationDegreeRegistrationV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'institution', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b14',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.645Z',
@@ -1033,6 +1111,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EducationDegreeStudyV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'institution', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b15',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.646Z',
@@ -1060,6 +1141,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EducationDegreeGraduationV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'institution', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b16',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.646Z',
@@ -1087,6 +1171,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/CertificationV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b17',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.647Z',
@@ -1114,6 +1201,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/LicenseV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b19',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.646Z',
@@ -1141,6 +1231,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/AssessmentV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'authority', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b1f',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.648Z',
@@ -1168,6 +1261,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EmploymentCurrentV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'legalEmployer', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b20',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.647Z',
@@ -1195,6 +1291,9 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
             formSchemaUrls: {
                 en: 'https://staginglib.velocitynetwork.foundation/form-schemas/en/EmploymentPastV1.1.form-schema.json',
             },
+            primaryOrganizationClaimPaths: [
+                ['credentialSubject', 'legalEmployer', 'identifier'],
+            ],
             id: '6220c47998fdb468aecc2b21',
             createdAt: '2022-03-30T10:24:55.010Z',
             updatedAt: '2022-04-26T08:09:34.647Z',

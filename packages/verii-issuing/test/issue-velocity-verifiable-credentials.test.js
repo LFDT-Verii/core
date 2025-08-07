@@ -40,11 +40,9 @@ mockCreateCredentialMetadataList.mock.mockImplementation(() =>
   Promise.resolve(true)
 );
 
-const console = require('console');
 const { toLower } = require('lodash/fp');
 const { MongoClient } = require('mongodb');
 const { publicJwkMatcher } = require('@verii/tests-helpers');
-const initRequest = require('@verii/request');
 const { jwtDecode, jwtVerify, jwtSign } = require('@verii/jwt');
 const { first, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
@@ -52,9 +50,7 @@ const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const { ALG_TYPE } = require('@verii/metadata-registration');
 const { KeyAlgorithms } = require('@verii/crypto');
 const { hashOffer } = require('../src/domain/hash-offer');
-const {
-  issueVelocityVerifiableCredentials,
-} = require('../src/issue-velocity-verifiable-credentials');
+const { issueVeriiCredentials } = require('../src/issue-verii-credentials');
 const { collectionClient } = require('./helpers/collection-client');
 const { entityFactory } = require('./helpers/entity-factory');
 const { offerFactory } = require('./helpers/offer-factory');
@@ -92,7 +88,7 @@ describe('issuing velocity verifiable credentials', () => {
     issuer = {
       id: nanoid(),
       did: issuerEntity.did,
-      issuingServiceId: issuerEntity.service[1]?.id,
+      issuingRefreshServiceId: issuerEntity.service[1]?.id,
       issuingServiceKMSKeyId: issuerEntity.kmsKeyId,
       issuingServiceDIDKeyId: issuerEntity.key[0].id,
       dltOperatorAddress: issuerEntity.primaryAddress,
@@ -156,7 +152,7 @@ describe('issuing velocity verifiable credentials', () => {
       },
     ]);
     const userId = createExampleDid();
-    const credentials = await issueVelocityVerifiableCredentials(
+    const credentials = await issueVeriiCredentials(
       offers,
       userId,
       credentialTypesMap,
@@ -215,7 +211,7 @@ describe('issuing velocity verifiable credentials', () => {
       },
     ]);
     const userId = createExampleDid();
-    const credentials = await issueVelocityVerifiableCredentials(
+    const credentials = await issueVeriiCredentials(
       offers,
       userId,
       credentialTypesMap,
@@ -265,7 +261,7 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
     const userId = createExampleDid();
 
-    const credentials = await issueVelocityVerifiableCredentials(
+    const credentials = await issueVeriiCredentials(
       offers,
       userId,
       credentialTypesMap,
@@ -319,7 +315,7 @@ describe('issuing velocity verifiable credentials', () => {
 
     const userId = createExampleDid();
 
-    const credentials = await issueVelocityVerifiableCredentials(
+    const credentials = await issueVeriiCredentials(
       offers,
       userId,
       credentialTypesMap,
@@ -371,10 +367,6 @@ const buildContext = ({ issuerEntity, caoEntity, ...args }) => ({
     credentialExtensionsContextUrl:
       'https://lib.test/contexts/credential-extensions-2022.jsonld.json',
   },
-  registrarFetch: initRequest({
-    prefixUrl: 'http://oracle.localhost.test',
-  }),
-  log: console,
   ...args,
 });
 

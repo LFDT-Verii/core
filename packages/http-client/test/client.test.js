@@ -106,8 +106,18 @@ describe('Http Client Package', () => {
           traceId: 'TRACE-ID',
         });
       });
-      it('Should throw NotFoundError', async () => {
+
+      it('Should throw NotFoundError if mock not matched', async () => {
         const result = () => httpClient.get('404');
+        await expect(result).rejects.toThrow(NotFoundError);
+      });
+
+      it('Should throw NotFoundError if mock returns 404', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/not_found', method: 'GET' })
+          .reply(404);
+        const result = () => httpClient.get('not_found');
         await expect(result).rejects.toThrow(NotFoundError);
       });
 
@@ -115,7 +125,7 @@ describe('Http Client Package', () => {
         mockAgent
           .get(origin)
           .intercept({ path: '/bad_request', method: 'GET' })
-          .reply(400, { error: true });
+          .reply(400);
         const result = () => httpClient.get('bad_request');
 
         await expect(result).rejects.toThrow(ResponseStatusCodeError);

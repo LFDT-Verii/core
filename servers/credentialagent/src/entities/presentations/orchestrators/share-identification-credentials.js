@@ -17,9 +17,7 @@
 
 const newError = require('http-errors');
 const { isString, isEmpty } = require('lodash/fp');
-const {
-  buildFailedCheckResultError,
-} = require('@verii/verifiable-credentials');
+const { buildFailedCheckResultError } = require('@verii/verii-verification');
 const { ExchangeStates } = require('../../exchanges');
 const { identifyUserOnVendor } = require('../../../fetchers');
 const { VendorEndpoint } = require('../../disclosures');

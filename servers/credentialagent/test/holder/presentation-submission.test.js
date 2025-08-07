@@ -29,9 +29,9 @@ mock.module('@verii/metadata-registration', {
   },
 });
 const mockVerifyCredentials = mock.fn();
-mock.module('@verii/verifiable-credentials', {
+mock.module('@verii/verii-verification', {
   namedExports: {
-    ...require('@verii/verifiable-credentials'),
+    ...require('@verii/verii-verification'),
     verifyCredentials: mockVerifyCredentials,
   },
 });
@@ -57,7 +57,7 @@ const {
 } = require('@verii/jwt');
 const { sampleOrganizationProfile1 } = require('@verii/sample-data');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
-const { VnfProtocolVersions } = require('@verii/vc-checks');
+const { VeriiProtocolVersions } = require('@verii/vc-checks');
 const { map, isString } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const nock = require('nock');
@@ -696,7 +696,7 @@ describe('presentation submission', () => {
         method: 'POST',
         url: inspectUrl(tenant, '/submit-presentation'),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         }, // actually irrelevant as verifiable-credentials calls are all mocked out
         payload: {
           exchange_id: disclosurePresentationExchange._id,

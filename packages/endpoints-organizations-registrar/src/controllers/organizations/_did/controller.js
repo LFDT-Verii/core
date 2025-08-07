@@ -22,7 +22,7 @@ const { resolveDidWeb } = require('@verii/did-web');
 const {
   VerifiableCredentialTypes,
   VerifiableCredentialFormats,
-} = require('@verii/verifiable-credentials');
+} = require('@verii/verii-verification');
 const { decodeCredentialJwt, jwkFromSecp256k1Key } = require('@verii/jwt');
 const { publish } = require('@spencejs/spence-events');
 const {
