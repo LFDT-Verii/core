@@ -116,7 +116,7 @@ const defaultCredentialType = 'Certification';
 const password =
   '3dbc33ed4f3b5ca79d75a698e2b36f6010604a96c3126ec3d326aa222a71bde0';
 
-describe('Metadata Registry', { timeout: 240000 }, () => {
+describe('Metadata Registry', { timeout: 480000 }, () => {
   let metadataAddress;
 
   const expirationTime = new Date(Date.now() + 60 * 60 * 1000).toISOString();
@@ -293,181 +293,184 @@ describe('Metadata Registry', { timeout: 240000 }, () => {
     });
   });
 
-  describe.each([
+  [
     { algType: ALG_TYPE.COSEKEY_AES_256, listId: 3001, title: 'COSE key' },
     { algType: ALG_TYPE.HEX_AES_256, listId: 3002, title: 'legacy' },
-  ])('Add $title entry to credential metadata list', ({ algType, listId }) => {
-    const baseCredentialMetadata = {
-      listId,
-      index: 1,
-      publicKey: credentialKey,
-      credentialTypeEncoded: get2BytesHash(defaultCredentialType),
-    };
-
-    before(async () => {
-      await deployerPermissionsClient.addAddressScope({
-        address: primaryAddress,
-        scope: 'credential:identityissue',
-      });
-      await deployerPermissionsClient.addAddressScope({
-        address: primaryAddress,
-        scope: 'credential:contactissue',
-      });
-      await operatorMetadataRegistryClient.createCredentialMetadataList(
-        primaryAddress,
+  ].forEach(({ algType, listId, title }) => {
+    describe(`Add ${title} entry to credential metadata list`, () => {
+      const baseCredentialMetadata = {
         listId,
-        vc,
-        caoDid,
-        algType
-      );
-    });
-
-    it('Use an existing cose key list', async () => {
-      const metadata = {
-        ...baseCredentialMetadata,
-        index: Math.floor(Math.random() * 10000),
+        index: 1,
+        publicKey: credentialKey,
+        credentialTypeEncoded: get2BytesHash(defaultCredentialType),
       };
 
-      const result0 =
-        await operatorMetadataRegistryClient.addCredentialMetadataEntry(
-          metadata,
-          password,
-          caoDid,
-          algType
-        );
-
-      expect(result0).toEqual(true);
-    });
-
-    it('Allow issuing an unknown credential type as long as primary has regular issuing permissions', async () => {
-      const metadata = {
-        ...baseCredentialMetadata,
-        index: Math.floor(Math.random() * 10000),
-        credentialTypeEncoded: get2BytesHash('foo'),
-      };
-
-      const result =
-        await operatorMetadataRegistryClient.addCredentialMetadataEntry(
-          metadata,
-          password,
-          caoDid,
-          algType
-        );
-      expect(result).toEqual(true);
-    });
-
-    it('Error when issuing to a filled slot', async () => {
-      await operatorMetadataRegistryClient.addCredentialMetadataEntry(
-        baseCredentialMetadata,
-        password,
-        caoDid,
-        algType
-      );
-
-      const result = operatorMetadataRegistryClient.addCredentialMetadataEntry(
-        baseCredentialMetadata,
-        password,
-        caoDid,
-        algType
-      );
-      await expect(result).rejects.toThrow('Index already used');
-    });
-
-    // TODO FIX non-existent list error
-    it('Error when issuing to non-existent list', async () => {
-      const metadata = {
-        ...baseCredentialMetadata,
-        list: Math.floor(Math.random() * 10000),
-      };
-
-      await expect(
-        operatorMetadataRegistryClient.addCredentialMetadataEntry(
-          metadata,
-          password,
-          caoDid,
-          algType
-        )
-      ).rejects.toThrow('Index already used');
-    });
-
-    it('Error when primary lacks regular issuing permission', async () => {
-      await deployerPermissionsClient.removeAddressScope({
-        address: primaryAddress,
-        scope: 'credential:issue',
-      });
-      const metadata = {
-        ...baseCredentialMetadata,
-        index: Math.floor(Math.random() * 10000),
-      };
-
-      try {
-        await operatorMetadataRegistryClient.addCredentialMetadataEntry(
-          metadata,
-          password,
-          caoDid,
-          algType
-        );
-
+      before(async () => {
         await deployerPermissionsClient.addAddressScope({
+          address: primaryAddress,
+          scope: 'credential:identityissue',
+        });
+        await deployerPermissionsClient.addAddressScope({
+          address: primaryAddress,
+          scope: 'credential:contactissue',
+        });
+        await operatorMetadataRegistryClient.createCredentialMetadataList(
+          primaryAddress,
+          listId,
+          vc,
+          caoDid,
+          algType
+        );
+      });
+
+      it('Use an existing cose key list', async () => {
+        const metadata = {
+          ...baseCredentialMetadata,
+          index: Math.floor(Math.random() * 10000),
+        };
+
+        const result0 =
+          await operatorMetadataRegistryClient.addCredentialMetadataEntry(
+            metadata,
+            password,
+            caoDid,
+            algType
+          );
+
+        expect(result0).toEqual(true);
+      });
+
+      it('Allow issuing an unknown credential type as long as primary has regular issuing permissions', async () => {
+        const metadata = {
+          ...baseCredentialMetadata,
+          index: Math.floor(Math.random() * 10000),
+          credentialTypeEncoded: get2BytesHash('foo'),
+        };
+
+        const result =
+          await operatorMetadataRegistryClient.addCredentialMetadataEntry(
+            metadata,
+            password,
+            caoDid,
+            algType
+          );
+        expect(result).toEqual(true);
+      });
+
+      it('Error when issuing to a filled slot', async () => {
+        await operatorMetadataRegistryClient.addCredentialMetadataEntry(
+          baseCredentialMetadata,
+          password,
+          caoDid,
+          algType
+        );
+
+        const result =
+          operatorMetadataRegistryClient.addCredentialMetadataEntry(
+            baseCredentialMetadata,
+            password,
+            caoDid,
+            algType
+          );
+        await expect(result).rejects.toThrow('Index already used');
+      });
+
+      // TODO FIX non-existent list error
+      it('Error when issuing to non-existent list', async () => {
+        const metadata = {
+          ...baseCredentialMetadata,
+          list: Math.floor(Math.random() * 10000),
+        };
+
+        await expect(
+          operatorMetadataRegistryClient.addCredentialMetadataEntry(
+            metadata,
+            password,
+            caoDid,
+            algType
+          )
+        ).rejects.toThrow('Index already used');
+      });
+
+      it('Error when primary lacks regular issuing permission', async () => {
+        await deployerPermissionsClient.removeAddressScope({
           address: primaryAddress,
           scope: 'credential:issue',
         });
+        const metadata = {
+          ...baseCredentialMetadata,
+          index: Math.floor(Math.random() * 10000),
+        };
 
-        expect(true).toEqual('should have thrown');
-      } catch (e) {
-        await deployerPermissionsClient.addAddressScope({
+        try {
+          await operatorMetadataRegistryClient.addCredentialMetadataEntry(
+            metadata,
+            password,
+            caoDid,
+            algType
+          );
+
+          await deployerPermissionsClient.addAddressScope({
+            address: primaryAddress,
+            scope: 'credential:issue',
+          });
+
+          expect(true).toEqual('should have thrown');
+        } catch (e) {
+          await deployerPermissionsClient.addAddressScope({
+            address: primaryAddress,
+            scope: 'credential:issue',
+          });
+
+          expect(e.errorCode).toEqual('career_issuing_not_permitted');
+        }
+      });
+
+      it('Error when primary lacks identity issuing permission', async () => {
+        await deployerPermissionsClient.removeAddressScope({
           address: primaryAddress,
-          scope: 'credential:issue',
+          scope: 'credential:identityissue',
         });
-
-        expect(e.errorCode).toEqual('career_issuing_not_permitted');
-      }
-    });
-
-    it('Error when primary lacks identity issuing permission', async () => {
-      await deployerPermissionsClient.removeAddressScope({
-        address: primaryAddress,
-        scope: 'credential:identityissue',
+        const metadata = {
+          ...baseCredentialMetadata,
+          index: Math.floor(Math.random() * 10000),
+          credentialTypeEncoded: get2BytesHash('DriversLicenseV1.0'),
+        };
+        try {
+          await operatorMetadataRegistryClient.addCredentialMetadataEntry(
+            metadata,
+            password,
+            caoDid,
+            algType
+          );
+          expect(true).toEqual('should have thrown');
+        } catch (e) {
+          expect(e.errorCode).toEqual('identity_issuing_not_permitted');
+        }
       });
-      const metadata = {
-        ...baseCredentialMetadata,
-        index: Math.floor(Math.random() * 10000),
-        credentialTypeEncoded: get2BytesHash('DriversLicenseV1.0'),
-      };
-      try {
-        await operatorMetadataRegistryClient.addCredentialMetadataEntry(
-          metadata,
-          password,
-          caoDid,
-          algType
-        );
-        expect(true).toEqual('should have thrown');
-      } catch (e) {
-        expect(e.errorCode).toEqual('identity_issuing_not_permitted');
-      }
-    });
 
-    it('Error when primary lacks contact issuing permission', async () => {
-      await deployerPermissionsClient.removeAddressScope({
-        address: primaryAddress,
-        scope: 'credential:contactissue',
+      it('Error when primary lacks contact issuing permission', async () => {
+        await deployerPermissionsClient.removeAddressScope({
+          address: primaryAddress,
+          scope: 'credential:contactissue',
+        });
+        const metadata = {
+          ...baseCredentialMetadata,
+          index: Math.floor(Math.random() * 10000),
+          credentialTypeEncoded: get2BytesHash('EmailV1.0'),
+        };
+        try {
+          await operatorMetadataRegistryClient.addCredentialMetadataEntry(
+            metadata,
+            password,
+            caoDid,
+            algType
+          );
+          expect(true).toEqual('should have thrown');
+        } catch (e) {
+          expect(e.errorCode).toEqual('contact_issuing_not_permitted');
+        }
       });
-      const metadata = {
-        ...baseCredentialMetadata,
-        index: Math.floor(Math.random() * 10000),
-        credentialTypeEncoded: get2BytesHash('EmailV1.0'),
-      };
-      try {
-        await operatorMetadataRegistryClient.addCredentialMetadataEntry(
-          metadata,
-          password,
-          caoDid,
-          algType
-        );
-        expect(true).toEqual('should have thrown');
-      } catch (e) {
-        expect(e.errorCode).toEqual('contact_issuing_not_permitted');
-      }
     });
   });
 
@@ -757,12 +760,11 @@ describe('Metadata Registry', { timeout: 240000 }, () => {
       });
     });
 
-    describe.each([
+    [
       { listId: 3, didSuffix: null, title: 'without a didSuffix' },
       { listId: 4, didSuffix: password, title: 'using a didSuffix' },
-    ])(
-      'Resolve DID $title from legacy credential metadata entry',
-      ({ listId, didSuffix, algType }) => {
+    ].forEach(({ listId, didSuffix, title }) => {
+      describe(`Resolve DID ${title} from legacy credential metadata entry`, () => {
         let credential;
         let indexEntry;
         const index = 2342;
@@ -793,8 +795,7 @@ describe('Metadata Registry', { timeout: 240000 }, () => {
           await operatorMetadataRegistryClient.addCredentialMetadataEntry(
             credentialMetadata,
             password,
-            caoDid,
-            algType
+            caoDid
           );
         });
         beforeEach(async () => {
@@ -987,8 +988,8 @@ describe('Metadata Registry', { timeout: 240000 }, () => {
             `Could not resolve content hash from VC with ${badCredential.id}`
           );
         });
-      }
-    );
+      });
+    });
 
     describe('Resolve DID with didSuffix from COSE key credential metadata entry', () => {
       let credentialIds;

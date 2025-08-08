@@ -23,6 +23,7 @@ const mockAddRevocationListSigned = mock.fn();
 
 mock.module('@verii/metadata-registration', {
   namedExports: {
+    ...require('@verii/metadata-registration'),
     initRevocationRegistry: () => ({
       addRevocationListSigned: mockAddRevocationListSigned,
     }),
@@ -40,15 +41,15 @@ mockCreateCredentialMetadataList.mock.mockImplementation(() =>
   Promise.resolve(true)
 );
 
+const { KeyAlgorithms } = require('@verii/crypto');
+const { ALG_TYPE } = require('@verii/metadata-registration');
+const { jwtDecode, jwtVerify, jwtSign } = require('@verii/jwt');
+const { publicJwkMatcher } = require('@verii/tests-helpers');
+const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const { toLower } = require('lodash/fp');
 const { MongoClient } = require('mongodb');
-const { publicJwkMatcher } = require('@verii/tests-helpers');
-const { jwtDecode, jwtVerify, jwtSign } = require('@verii/jwt');
 const { first, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
-const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
-const { ALG_TYPE } = require('@verii/metadata-registration');
-const { KeyAlgorithms } = require('@verii/crypto');
 const { hashOffer } = require('../src/domain/hash-offer');
 const { issueVeriiCredentials } = require('../src/issue-verii-credentials');
 const { collectionClient } = require('./helpers/collection-client');

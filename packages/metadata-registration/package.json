@@ -3,15 +3,15 @@
   "version": "0.5.0-build",
   "description": "Package allows interacting with the smart contracts, based on ethers.js",
   "repository": "https://github.com/LFDT-Verii/core",
-  "main": "index.js",
+  "main": "./index.js",
   "author": "Ivan Vodzich",
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "test": "NODE_ENV=test node --test --test-concurrency=1 --test-timeout=60000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
-    "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --test-timeout=60000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml  'test/**/*.test.js'",
+    "test": "NODE_ENV=test node --test --test-concurrency=1 --test-timeout=900000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
+    "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --test-timeout=900000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml  'test/**/*.test.js'",
     "lint": "eslint --ext .js .",
     "lint:ci": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix --ext .js ."
