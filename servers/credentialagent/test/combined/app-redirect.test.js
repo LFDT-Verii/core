@@ -196,4 +196,22 @@ describe('app redirect controller test', () => {
     expect(scriptTag.attr('data-deeplink')).toEqual(deeplink);
     expect(scriptTag.attr('data-automode')).toEqual('');
   });
+
+  it('should include correct deeplink with issuerDid', async () => {
+    const url =
+      // eslint-disable-next-line max-len
+      'http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId';
+    const response = await fastify.injectJson({
+      method: 'GET',
+      url: `${appRedirectUrl}?request_uri=${url}&exchange_type=issue&issuerDid=321123`,
+    });
+    expect(response.statusCode).toEqual(200);
+    const $ = cheerio.load(response.body);
+
+    const scriptTag = $('html > body > #vnf-wallet-selection');
+    const deeplink =
+      // eslint-disable-next-line max-len
+      'velocity-test://issue?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId&issuerDid=321123';
+    expect(scriptTag.attr('data-deeplink')).toEqual(deeplink);
+  });
 });

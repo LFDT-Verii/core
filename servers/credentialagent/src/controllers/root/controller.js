@@ -81,6 +81,7 @@ const appRedirectController = async (fastify) => {
                 items: { type: 'string' },
               },
               inspectorDid: { type: 'array', items: { type: 'string' } },
+              issuerDid: { type: 'array', items: { type: 'string' } },
             },
             required: ['request_uri', 'exchange_type'],
           },
@@ -142,6 +143,7 @@ const processingLinks = (context) => {
       exchange_type: exchangeType,
       request_uri: requestUriItems,
       inspectorDid: inspectorDidItems = [],
+      issuerDid: issuerDidItems = [],
       vendorOriginContext: vendorOriginContextItems = [],
     },
   } = context;
@@ -152,14 +154,16 @@ const processingLinks = (context) => {
       requestUri: value,
       vendorOriginContext: vendorOriginContextItems[index],
       inspectorDid: inspectorDidItems[index],
+      issuerDid: issuerDidItems[index],
     }))
   )(requestUriItems);
 
   const deeplink = createDeepLinkUrl(exchangeType, context);
-  forEach(({ requestUri, inspectorDid, vendorOriginContext }) => {
+  forEach(({ requestUri, inspectorDid, issuerDid, vendorOriginContext }) => {
     flow(
       appendSearchParam('request_uri', requestUri),
       appendSearchParam('inspectorDid', inspectorDid),
+      appendSearchParam('issuerDid', issuerDid),
       appendSearchParam('vendorOriginContext', vendorOriginContext)
     )(deeplink);
   }, parsedLinks);
