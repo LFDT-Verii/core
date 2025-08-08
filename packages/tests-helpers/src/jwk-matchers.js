@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { expect } = require('expect');
 
 const { URLSAFE_BASE64_FORMAT } = require('@verii/test-regexes');
 const { KeyAlgorithms } = require('@verii/crypto');

@@ -15,6 +15,9 @@
  */
 
 // eslint-disable-next-line import/order
+const { after, before, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const console = require('console');
 const {
   mongoFactoryWrapper,
@@ -24,21 +27,21 @@ const { env: config } = require('@spencejs/spence-config');
 const { deletedExtension } = require('../src/deleted-extension');
 
 describe('deleted extension', () => {
-  beforeAll(async () => {
+  before(async () => {
     await mongoFactoryWrapper('test-deleted-extension', {
       log: console,
       config,
     });
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoCloseWrapper();
   });
 
   it('should build deleted filter', () => {
     const extension = deletedExtension()({
-      prepFilter: jest.fn((x) => x),
-      prepModification: jest.fn((x) => x),
+      prepFilter: mock.fn((x) => x),
+      prepModification: mock.fn((x) => x),
       extensions: [],
       collection: {
         name: 'foos',
@@ -54,8 +57,8 @@ describe('deleted extension', () => {
 
   it('should build deleted filter with custom field name', () => {
     const extension = deletedExtension('abc')({
-      prepFilter: jest.fn((x) => x),
-      prepModification: jest.fn((x) => x),
+      prepFilter: mock.fn((x) => x),
+      prepModification: mock.fn((x) => x),
       extensions: [],
       collection: {
         name: 'foos',

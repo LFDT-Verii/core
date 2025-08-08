@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, before, afterEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const nock = require('nock');
 const buildFastify = require('./helpers/credentialagent-build-fastify');
@@ -20,7 +22,7 @@ const buildFastify = require('./helpers/credentialagent-build-fastify');
 describe('root controller test', () => {
   let fastify;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
   });
@@ -29,7 +31,7 @@ describe('root controller test', () => {
     nock.cleanAll();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();

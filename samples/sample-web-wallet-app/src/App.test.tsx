@@ -1,4 +1,6 @@
+import { test } from 'node:test';
 import React from 'react';
+import { expect } from 'expect';
 import { render, screen } from '@testing-library/react';
 import App from './App.tsx';
 

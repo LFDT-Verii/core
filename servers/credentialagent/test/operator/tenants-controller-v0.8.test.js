@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
-// eslint-disable-next-line import/order
 const nock = require('nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
@@ -68,7 +69,7 @@ describe('Tenants management Test suite', () => {
   let tenantRepo;
   let findKmsKey;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -106,7 +107,7 @@ describe('Tenants management Test suite', () => {
     nockRegistrarGetOrganizationDidDoc(orgDoc.id, orgDoc);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();
@@ -922,7 +923,7 @@ describe('Tenants management Test suite', () => {
     });
     let keyPair;
 
-    beforeAll(async () => {
+    before(async () => {
       keyPair = await generateKeyPair({ format: 'jwk' });
       orgKey = keyPair.privateKey;
       orgDoc = getDidWebDoc(

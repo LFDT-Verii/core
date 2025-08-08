@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { signAndEncodeBase64 } = require('@verii/crypto');
 const { ObjectId } = require('mongodb');
@@ -10,7 +13,7 @@ describe('Registrar messages controller tests', () => {
   let fastify;
   let messagesCollection;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     messagesCollection = mongoDb().collection('messages');
@@ -20,12 +23,11 @@ describe('Registrar messages controller tests', () => {
     await messagesCollection.deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
   describe('Registrar webhook test suite', () => {
     it('should receive secure messaging from api', async () => {
-      jest.spyOn(Date, 'now').mockImplementation(() => 1234567890);
       const payload = {
         messageType: 'create_tenant',
         messageId: '123',
@@ -52,8 +54,9 @@ describe('Registrar messages controller tests', () => {
           },
         },
       };
+      const now = Date.now();
       const signature = signAndEncodeBase64(
-        `${Date.now()}.${canonicalize(payload)}`,
+        `${now}.${canonicalize(payload)}`,
         vnfHeaderSignatureSigningKey
       );
       const response = await fastify.injectJson({
@@ -61,7 +64,7 @@ describe('Registrar messages controller tests', () => {
         url: '/registrar/registrar-webhook/',
         payload,
         headers: {
-          'x-vnf-signature': `t=${Date.now()},v1=${signature}`,
+          'x-vnf-signature': `t=${now},v1=${signature}`,
         },
       });
       expect(response.json).toEqual({
@@ -103,7 +106,6 @@ describe('Registrar messages controller tests', () => {
       });
     });
     it('should receive secure messaging from api with bad signature', async () => {
-      jest.spyOn(Date, 'now').mockImplementation(() => 1234567890);
       const payload = {
         messageType: 'create_tenant',
         messageId: '123',
@@ -130,8 +132,10 @@ describe('Registrar messages controller tests', () => {
           },
         },
       };
+      const now = Date.now();
+
       const signature = signAndEncodeBase64(
-        `${Date.now()}.${canonicalize(payload)}`,
+        `${now}.${canonicalize(payload)}`,
         vnfHeaderSignatureSigningKey
       );
       const response = await fastify.injectJson({
@@ -142,7 +146,7 @@ describe('Registrar messages controller tests', () => {
           messageId: '456',
         },
         headers: {
-          'x-vnf-signature': `t=${Date.now()},v1=${signature}`,
+          'x-vnf-signature': `t=${now},v1=${signature}`,
         },
       });
       expect(response.json).toEqual({
@@ -199,10 +203,10 @@ describe('Registrar messages controller tests', () => {
   });
   describe('Registrar webhook delay test suite', () => {
     it('should receive secure messaging from api with 30 second delay', async () => {
-      jest.spyOn(Date, 'now').mockImplementation(() => 1234567890);
       const payload = { messageType: 'test', messageId: '123' };
+      const now = Date.now();
       const signature = signAndEncodeBase64(
-        `${Date.now()}.${canonicalize(payload)}`,
+        `${now}.${canonicalize(payload)}`,
         vnfHeaderSignatureSigningKey
       );
       const response = await fastify.injectJson({
@@ -210,7 +214,7 @@ describe('Registrar messages controller tests', () => {
         url: '/registrar/registrar-webhook-delay/',
         payload,
         headers: {
-          'x-vnf-signature': `t=${Date.now()},v1=${signature}`,
+          'x-vnf-signature': `t=${now},v1=${signature}`,
         },
       });
       expect(response.json).toEqual({ messageId: '123', messageType: 'ack' });
@@ -243,10 +247,10 @@ describe('Registrar messages controller tests', () => {
   });
   describe('Registrar webhook bad protocal test suite', () => {
     it('should return foo with bad endpoint protocol', async () => {
-      jest.spyOn(Date, 'now').mockImplementation(() => 1234567890);
       const payload = { messageType: 'create_tenant', messageId: '123' };
+      const now = Date.now();
       const signature = signAndEncodeBase64(
-        `${Date.now()}.${canonicalize(payload)}`,
+        `${now}.${canonicalize(payload)}`,
         vnfHeaderSignatureSigningKey
       );
       const response = await fastify.injectJson({
@@ -254,7 +258,7 @@ describe('Registrar messages controller tests', () => {
         url: '/registrar/registrar-webhook-bad-protocol/',
         payload,
         headers: {
-          'x-vnf-signature': `t=${Date.now()},v1=${signature}`,
+          'x-vnf-signature': `t=${now},v1=${signature}`,
         },
       });
       expect(response.json).toEqual({ foo: 'foo' });

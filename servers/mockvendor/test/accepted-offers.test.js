@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const {
   ISO_DATETIME_FORMAT,
@@ -10,7 +13,7 @@ describe('Accepted Offer managment', () => {
   let fastify;
   let persistAcceptedOffers;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistAcceptedOffers } = initAcceptedOffersFactory(fastify));
@@ -20,7 +23,7 @@ describe('Accepted Offer managment', () => {
     await mongoDb().collection('acceptedOffers').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoDb().collection('acceptedOffers').deleteMany({});
     await fastify.close();
   });

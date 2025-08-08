@@ -15,12 +15,14 @@
  */
 
 // eslint-disable-next-line import/order
-const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { map, omit } = require('lodash/fp');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const { mongoify } = require('@verii/tests-helpers');
+const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const { initTenantFactory, initUserFactory } = require('../../src/entities');
 
 const mappingsVendorUserIdUrl = (tenant) =>
@@ -33,7 +35,7 @@ describe('vendor user id mappings', () => {
   let persistTenant;
   let tenant;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistTenant } = initTenantFactory(fastify));
@@ -47,7 +49,7 @@ describe('vendor user id mappings', () => {
     tenant = await persistTenant();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

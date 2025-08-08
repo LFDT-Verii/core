@@ -14,6 +14,9 @@
  * limitations under the License.
  *
  */
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { castArray, includes, map, some } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
@@ -278,18 +281,17 @@ describe('Monitoring Test Suite', () => {
     await mongoDb().collection('groups').deleteMany({});
   };
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistOrganization } = initOrganizationFactory(fastify));
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     nock.cleanAll();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();
@@ -304,7 +306,7 @@ describe('Monitoring Test Suite', () => {
       'https://agent.samplevendor.com/beta',
     ];
 
-    beforeAll(async () => {
+    before(async () => {
       await clearDb();
       const authClients = [
         {

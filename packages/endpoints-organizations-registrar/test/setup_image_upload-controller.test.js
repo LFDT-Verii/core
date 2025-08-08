@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const {
@@ -29,7 +32,7 @@ const baseUrl = '/api/v0.6/setup_image_upload';
 describe('Organization setup image upload', () => {
   let fastify;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
   });
@@ -38,7 +41,7 @@ describe('Organization setup image upload', () => {
     await mongoDb().collection('images').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

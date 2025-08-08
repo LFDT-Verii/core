@@ -4,10 +4,10 @@ import { useDataProvider } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
 import parse from 'autosuggest-highlight/parse';
 import match from 'autosuggest-highlight/match';
-import AddIcon from '@mui/icons-material/Add';
+import { Add as AddIcon } from '@mui/icons-material';
 import PropTypes from 'prop-types';
-import { dataResources } from '../../utils/remoteDataProvider';
-import useDebounce from '../../utils/hooks/useDebounceValue';
+import { dataResources } from '@/utils/remoteDataProvider';
+import useDebounce from '@/utils/hooks/useDebounceValue';
 
 const DID_START = 'did:';
 const ERRORS = {

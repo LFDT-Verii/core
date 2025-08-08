@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLError from '../../src/api/entities/error/VCLError';
 import { ErrorMocks } from '../infrastructure/resources/valid/ErrorMocks';
 

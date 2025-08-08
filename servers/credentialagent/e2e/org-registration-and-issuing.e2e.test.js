@@ -14,6 +14,10 @@
  * limitations under the License.
  *
  */
+
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const console = require('console');
 const { MongoClient } = require('mongodb');
 const { nanoid } = require('nanoid');
@@ -88,10 +92,10 @@ describe('org registration and issuing e2e', () => {
   // let holderKeyPair;
   // let holderDid;
 
-  afterAll(async () => {
+  after(async () => {
     await client.close();
   });
-  beforeAll(async () => {
+  before(async () => {
     client = await MongoClient.connect('mongodb://localhost:17017');
 
     // Generate holder DID and key pair for fake wallet

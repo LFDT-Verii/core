@@ -1,5 +1,7 @@
 /* eslint-disable max-len */
 
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLCredentialManifestDescriptorByService from '../../src/api/entities/VCLCredentialManifestDescriptorByService';
 import { VCLIssuingType } from '../../src';
 import VCLService from '../../src/api/entities/VCLService';

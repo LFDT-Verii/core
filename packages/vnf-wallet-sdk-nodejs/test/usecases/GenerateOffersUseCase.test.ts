@@ -1,4 +1,5 @@
-import { expect } from '@jest/globals';
+import { describe, it } from 'node:test';
+import { expect } from 'expect';
 import GenerateOffersUseCase from '../../src/impl/domain/usecases/GenerateOffersUseCase';
 import GenerateOffersRepositoryImpl from '../../src/impl/data/repositories/GenerateOffersRepositoryImpl';
 import GenerateOffersUseCaseImpl from '../../src/impl/data/usecases/GenerateOffersUseCaseImpl';

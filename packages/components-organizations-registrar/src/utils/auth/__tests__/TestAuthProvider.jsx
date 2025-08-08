@@ -1,4 +1,5 @@
-import { AuthContext } from '../AuthContext';
+import { mock } from 'node:test';
+import { AuthContext } from '@/utils/auth/AuthContext';
 
 // eslint-disable-next-line react/prop-types
 export const TestAuthProvider = ({ children }) => (
@@ -7,10 +8,10 @@ export const TestAuthProvider = ({ children }) => (
       isLoading: false,
       isAuthenticated: true,
       user: { sub: 'user_123' },
-      loginWithRedirect: jest.fn(),
-      getAccessToken: jest.fn(() => Promise.resolve('1234')),
-      getAccessTokenWithPopup: jest.fn(() => Promise.resolve('1234')),
-      logout: jest.fn(),
+      loginWithRedirect: mock.fn(),
+      getAccessToken: mock.fn(() => Promise.resolve('1234')),
+      getAccessTokenWithPopup: mock.fn(() => Promise.resolve('1234')),
+      logout: mock.fn(),
     }}
   >
     {children}

@@ -27,7 +27,7 @@ import {
 } from 'react-admin';
 import { useParams } from 'react-router';
 import { Stack, Typography, Box, Tooltip } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import InfoIcon from '@mui/icons-material/Info';
 import { omit } from 'lodash/fp';
 import Loading from '../../components/Loading.jsx';

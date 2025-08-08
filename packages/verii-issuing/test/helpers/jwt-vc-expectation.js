@@ -15,7 +15,8 @@
  *
  */
 
-// eslint-disable-next-line complexity
+const { expect } = require('expect');
+
 const { compact, first, last, omit, pick, uniq } = require('lodash/fp');
 const { castArray } = require('lodash');
 const { VelocityRevocationListType } = require('@verii/vc-checks');

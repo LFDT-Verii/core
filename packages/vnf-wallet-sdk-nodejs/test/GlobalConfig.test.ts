@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import { VCLEnvironment, VCLXVnfProtocolVersion } from '../src';
 import GlobalConfig from '../src/impl/GlobalConfig';
 

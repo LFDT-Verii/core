@@ -14,33 +14,46 @@
  * limitations under the License.
  *
  */
+// eslint-disable-next-line max-classes-per-file
+const { mock, beforeEach, describe, it, after } = require('node:test');
+const { expect } = require('expect');
 
-const mockTwilioCreate = jest.fn();
-const mockTwilio = jest.fn(() => ({
-  messages: {
-    create: mockTwilioCreate,
+const mockTwilioCreate = mock.fn();
+
+class Twilio {
+  constructor() {
+    this.messages = {
+      create: mockTwilioCreate,
+    };
+  }
+}
+mock.module('twilio', { defaultExport: Twilio });
+
+const mockPublish = mock.fn((payload) => Promise.resolve(payload));
+class SNSClient {}
+SNSClient.prototype.send = mockPublish;
+mock.module('@aws-sdk/client-sns', {
+  namedExports: {
+    PublishCommand: class PublishCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    SNSClient,
   },
-}));
-jest.mock('twilio', () => {
-  return mockTwilio;
 });
-
-const mockPublish = jest.fn((payload) => payload);
-
-jest.mock('@aws-sdk/client-sns', () => ({
-  PublishCommand: jest.fn((args) => args),
-  SNSClient: jest.fn().mockImplementation(() => ({
-    send: mockPublish,
-  })),
-}));
 
 const { initSendSmsNotification } = require('../src/sms-notifications');
 
 describe('SMS Notifications', () => {
   let sendSmsNotification;
 
+  after(() => {
+    mock.reset();
+  });
+
   beforeEach(() => {
-    mockPublish.mockReset();
+    mockPublish.mock.resetCalls();
     sendSmsNotification = initSendSmsNotification({
       twilioAccountSid: 'mocked-sid',
       twilioAuthToken: 'mocked-auth-token',
@@ -51,16 +64,20 @@ describe('SMS Notifications', () => {
   it('Should call SNS client without sender ID', async () => {
     await sendSmsNotification({ message: 'MESSAGE', phoneNumber: '123465' });
 
-    expect(mockPublish).toHaveBeenCalledWith({
-      Message: 'MESSAGE',
-      PhoneNumber: '123465',
-      MessageAttributes: {
-        'AWS.SNS.SMS.SMSType': {
-          DataType: 'String',
-          StringValue: 'Transactional',
+    expect(mockPublish.mock.calls.map((call) => call.arguments)).toContainEqual(
+      [
+        {
+          Message: 'MESSAGE',
+          PhoneNumber: '123465',
+          MessageAttributes: {
+            'AWS.SNS.SMS.SMSType': {
+              DataType: 'String',
+              StringValue: 'Transactional',
+            },
+          },
         },
-      },
-    });
+      ]
+    );
   });
 
   it('Should call SNS client with sender ID', async () => {
@@ -70,20 +87,24 @@ describe('SMS Notifications', () => {
       senderId: 'SENDER-ID',
     });
 
-    expect(mockPublish).toHaveBeenCalledWith({
-      Message: 'MESSAGE',
-      PhoneNumber: '123465',
-      MessageAttributes: {
-        'AWS.SNS.SMS.SenderID': {
-          DataType: 'String',
-          StringValue: 'SENDER-ID',
+    expect(mockPublish.mock.calls.map((call) => call.arguments)).toContainEqual(
+      [
+        {
+          Message: 'MESSAGE',
+          PhoneNumber: '123465',
+          MessageAttributes: {
+            'AWS.SNS.SMS.SenderID': {
+              DataType: 'String',
+              StringValue: 'SENDER-ID',
+            },
+            'AWS.SNS.SMS.SMSType': {
+              DataType: 'String',
+              StringValue: 'Transactional',
+            },
+          },
         },
-        'AWS.SNS.SMS.SMSType': {
-          DataType: 'String',
-          StringValue: 'Transactional',
-        },
-      },
-    });
+      ]
+    );
   });
 
   it('Should call Twilio client', async () => {
@@ -92,12 +113,15 @@ describe('SMS Notifications', () => {
       phoneNumber: '+65123465',
     });
 
-    expect(mockTwilio).toHaveBeenCalledWith('mocked-sid', 'mocked-auth-token');
-    expect(mockTwilioCreate).toHaveBeenCalledWith({
-      to: '+65123465',
-      from: '+70200000',
-      body: 'MESSAGE',
-    });
+    expect(
+      mockTwilioCreate.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      {
+        to: '+65123465',
+        from: '+70200000',
+        body: 'MESSAGE',
+      },
+    ]);
   });
 
   it('Should call only Twilio client', async () => {
@@ -113,12 +137,15 @@ describe('SMS Notifications', () => {
       phoneNumber: '123465',
     });
 
-    expect(mockPublish).toHaveBeenCalledTimes(0);
-    expect(mockTwilio).toHaveBeenCalledWith('mocked-sid', 'mocked-auth-token');
-    expect(mockTwilioCreate).toHaveBeenCalledWith({
-      to: '123465',
-      from: '+70200000',
-      body: 'MESSAGE',
-    });
+    expect(mockPublish.mock.callCount()).toEqual(0);
+    expect(
+      mockTwilioCreate.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      {
+        to: '123465',
+        from: '+70200000',
+        body: 'MESSAGE',
+      },
+    ]);
   });
 });

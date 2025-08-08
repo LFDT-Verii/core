@@ -14,47 +14,18 @@
  * limitations under the License.
  *
  */
-const { nanoid } = require('nanoid');
-const { omit } = require('lodash/fp');
-const newError = require('http-errors');
+// eslint-disable-next-line max-classes-per-file
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
-const {
-  testIAMSuperUser,
-  testWriteIAMUser,
-  testRegistrarSuperUser,
-  testRegistrarUser,
-  mongoify,
-  errorResponseMatcher,
-} = require('@verii/tests-helpers');
-
-const console = require('console');
-
-const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const initGroupsFactory = require('../src/entities/groups/factories/groups-factory');
-const buildFastify = require('./helpers/build-fastify');
-
-const groupsRepoPlugin = require('../src/entities/groups/repo');
+const { testRegistrarUser } = require('@verii/tests-helpers');
 const {
   VNF_GROUP_ID_CLAIM,
-  RoleNames,
-  initUserRegistrarEmails,
-} = require('../src/entities');
-const { UserErrorMessages } = require('../src');
+  // eslint-disable-next-line import/order
+} = require('../src/entities/oauth/domain/constants');
 
-const baseUrl = '/api/v0.6/users';
-const idUrl = ({ id }) => `/api/v0.6/users/${id}`;
-
-const ticketUrl = 'http://localhost/ticket';
-
-const baseCreateUserPayload = {
-  email: 'user@localhost.com',
-  givenName: 'john',
-  familyName: 'smith',
-  groupId: 'some-group-id',
-};
-const mockAuth0CreateUser = jest.fn().mockImplementation(async () => {
+const mockAuth0CreateUser = mock.fn(async () => {
   const id = nanoid();
-  console.log(`create auth0 user ${id}`);
   return { data: { user_id: id } };
 });
 const mockUser = {
@@ -65,69 +36,98 @@ const mockUser = {
   app_metadata: { groupId: testRegistrarUser[VNF_GROUP_ID_CLAIM] },
 };
 
-const mockAuth0AddRoleToUser = jest
-  .fn()
-  .mockImplementation(async (params, payload) => {
-    console.log(`adding auth0 role ${payload.roles} to user ${params.id}`);
-    return { data: undefined };
-  });
+const mockAuth0AddRoleToUser = mock.fn(() =>
+  Promise.resolve({ data: { undefined } })
+);
+const mockAuth0GetUser = mock.fn(() => Promise.resolve({ data: mockUser }));
+const mockAuth0UpdateUser = mock.fn(async ({ id }, obj) => ({
+  data: {
+    user_id: id,
+    ...obj,
+  },
+}));
 
-const mockAuth0CreatePasswordChangeTicket = jest
-  .fn()
-  .mockImplementation(async (payload) => {
-    console.log(
-      `creating auth0 password change ticket for user ${payload.user_id}`
-    );
-    return {
-      data: {
-        ticket: ticketUrl,
-      },
-    };
-  });
+const mockAuth0GetUserRoles = mock.fn(() =>
+  Promise.resolve({ data: [{ id: 'rol_sQZLrbwBEblVBNDj' }] })
+);
 
-const mockAuth0GetUser = jest.fn().mockResolvedValue({ data: mockUser });
+const mockAuth0CreatePasswordChangeTicket = mock.fn(() =>
+  Promise.resolve({
+    data: {
+      ticket: 'http://localhost/ticket',
+    },
+  })
+);
 
-const mockAuth0UpdateUser = jest
-  .fn()
-  .mockImplementation(async ({ id }, obj) => {
-    console.log(`update auth0 user ${id}`);
-    return { data: { user_id: id, ...obj } };
-  });
-
-const mockAuth0GetUserRoles = jest
-  .fn()
-  .mockResolvedValue({ data: [{ id: 'rol_sQZLrbwBEblVBNDj' }] }); // clientAdminRoleId
-
-jest.mock('auth0', () => ({
-  ManagementClient: jest.fn().mockImplementation(() => ({
-    users: {
+class ManagementClient {
+  constructor() {
+    this.users = {
       create: mockAuth0CreateUser,
       assignRoles: mockAuth0AddRoleToUser,
       update: mockAuth0UpdateUser,
       get: mockAuth0GetUser,
       getRoles: mockAuth0GetUserRoles,
-    },
-    tickets: {
+    };
+    this.tickets = {
       changePassword: mockAuth0CreatePasswordChangeTicket,
+    };
+  }
+}
+mock.module('auth0', {
+  namedExports: {
+    ManagementClient,
+  },
+});
+
+class SESClient {}
+const mockSESSendEmail = mock.fn((payload) => payload);
+SESClient.prototype.send = mockSESSendEmail;
+mock.module('@aws-sdk/client-ses', {
+  namedExports: {
+    SendEmailCommand: class SendEmailCommand {
+      constructor(args) {
+        return args;
+      }
     },
-  })),
-}));
+    SESClient,
+  },
+});
 
-const mockSendEmail = jest.fn((payload) => payload);
+const { nanoid } = require('nanoid');
+const { last, omit } = require('lodash/fp');
+const newError = require('http-errors');
 
-jest.mock('@aws-sdk/client-ses', () => ({
-  SendEmailCommand: jest.fn((args) => args),
-  SESClient: jest.fn().mockImplementation(() => ({
-    send: mockSendEmail,
-  })),
-}));
+const {
+  testIAMSuperUser,
+  testWriteIAMUser,
+  testRegistrarSuperUser,
+  mongoify,
+  errorResponseMatcher,
+} = require('@verii/tests-helpers');
 
+const { mongoDb } = require('@spencejs/spence-mongo-repos');
+const initGroupsFactory = require('../src/entities/groups/factories/groups-factory');
+const buildFastify = require('./helpers/build-fastify');
+
+const groupsRepoPlugin = require('../src/entities/groups/repo');
+const { RoleNames, initUserRegistrarEmails } = require('../src/entities');
+const { UserErrorMessages } = require('../src');
+
+const baseUrl = '/api/v0.6/users';
+const idUrl = ({ id }) => `/api/v0.6/users/${id}`;
+
+const baseCreateUserPayload = {
+  email: 'user@localhost.com',
+  givenName: 'john',
+  familyName: 'smith',
+  groupId: 'some-group-id',
+};
 describe('Users Registrar Test Suite', () => {
   let fastify;
   let persistGroup;
   let groupsRepo;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -140,12 +140,18 @@ describe('Users Registrar Test Suite', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    mockSESSendEmail.mock.resetCalls();
+    mockAuth0GetUser.mock.resetCalls();
+    mockAuth0CreateUser.mock.resetCalls();
+    mockAuth0AddRoleToUser.mock.resetCalls();
+    mockAuth0CreatePasswordChangeTicket.mock.resetCalls();
+
     await mongoDb().collection('groups').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
+    mock.reset();
   });
 
   describe('User CRUD', () => {
@@ -288,10 +294,10 @@ describe('Users Registrar Test Suite', () => {
           })
         );
 
-        expect(mockAuth0CreateUser).toHaveBeenCalledTimes(0);
-        expect(mockAuth0AddRoleToUser).toHaveBeenCalledTimes(0);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenCalledTimes(0);
-        expect(mockSendEmail).toHaveBeenCalledTimes(0);
+        expect(mockAuth0CreateUser.mock.callCount()).toEqual(0);
+        expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(0);
+        expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(0);
+        expect(mockSESSendEmail.mock.callCount()).toEqual(0);
       });
 
       it('Should 403 clientadmin creating clientadmin in different group', async () => {
@@ -448,16 +454,20 @@ describe('Users Registrar Test Suite', () => {
           dids: [],
           clientAdminIds: [response.json.id],
         });
-        expect(mockAuth0CreateUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0AddRoleToUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenLastCalledWith({
-          user_id: response.json.id,
-          result_url: 'https://ui.example.com',
-          mark_email_as_verified: true,
-          ttl_sec: 604800,
-        });
-        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        expect(mockAuth0CreateUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
+        expect(
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+        ).toEqual([
+          {
+            user_id: response.json.id,
+            result_url: 'https://ui.example.com',
+            mark_email_as_verified: true,
+            ttl_sec: 604800,
+          },
+        ]);
+        expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       });
 
       it('createdAt of group should be updated', async () => {
@@ -516,16 +526,20 @@ describe('Users Registrar Test Suite', () => {
         });
         const dbGroup = await groupsRepo.findOne();
         expect(dbGroup).toEqual(mongoify(group));
-        expect(mockAuth0CreateUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0AddRoleToUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenLastCalledWith({
-          user_id: response.json.id,
-          result_url: 'https://tokenwallet.example.com',
-          mark_email_as_verified: true,
-          ttl_sec: 604800,
-        });
-        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        expect(mockAuth0CreateUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
+        expect(
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+        ).toEqual([
+          {
+            user_id: response.json.id,
+            result_url: 'https://tokenwallet.example.com',
+            mark_email_as_verified: true,
+            ttl_sec: 604800,
+          },
+        ]);
+        expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       });
 
       it('Should 201 clientadmin creating clientfinanceadmin with the same group', async () => {
@@ -551,16 +565,20 @@ describe('Users Registrar Test Suite', () => {
         });
         const group = await groupsRepo.findOne();
         expect(group).toEqual(mongoify(authUserGroup));
-        expect(mockAuth0CreateUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0AddRoleToUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenLastCalledWith({
-          user_id: response.json.id,
-          result_url: 'https://tokenwallet.example.com',
-          mark_email_as_verified: true,
-          ttl_sec: 604800,
-        });
-        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        expect(mockAuth0CreateUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
+        expect(
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+        ).toEqual([
+          {
+            user_id: response.json.id,
+            result_url: 'https://tokenwallet.example.com',
+            mark_email_as_verified: true,
+            ttl_sec: 604800,
+          },
+        ]);
+        expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       });
 
       it('Should 201 clientadmin creating clientsystemuser with the same group', async () => {
@@ -586,16 +604,20 @@ describe('Users Registrar Test Suite', () => {
         });
         const group = await groupsRepo.findOne();
         expect(group).toEqual(mongoify(authUserGroup));
-        expect(mockAuth0CreateUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0AddRoleToUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenLastCalledWith({
-          user_id: response.json.id,
-          result_url: 'https://tokenwallet.example.com',
-          mark_email_as_verified: true,
-          ttl_sec: 604800,
-        });
-        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        expect(mockAuth0CreateUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
+        expect(
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+        ).toEqual([
+          {
+            user_id: response.json.id,
+            result_url: 'https://tokenwallet.example.com',
+            mark_email_as_verified: true,
+            ttl_sec: 604800,
+          },
+        ]);
+        expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       });
 
       it('Should 201 and sanitize body when extra property is in payload', async () => {
@@ -624,7 +646,9 @@ describe('Users Registrar Test Suite', () => {
       });
 
       it('Should 201 even when email notification to user fails', async () => {
-        mockSendEmail.mockRejectedValueOnce(new Error('mock error'));
+        mockSESSendEmail.mock.mockImplementationOnce(() =>
+          Promise.reject(new Error('mock error'))
+        );
         const payload = {
           ...baseCreateUserPayload,
           groupId: 'new',
@@ -643,16 +667,20 @@ describe('Users Registrar Test Suite', () => {
           ...omit(['groupId'], payload),
           id: expect.any(String),
         });
-        expect(mockAuth0CreateUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0AddRoleToUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenLastCalledWith({
-          user_id: response.json.id,
-          result_url: 'https://ui.example.com',
-          mark_email_as_verified: true,
-          ttl_sec: 604800,
-        });
-        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        expect(mockAuth0CreateUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
+        expect(
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+        ).toEqual([
+          {
+            user_id: response.json.id,
+            result_url: 'https://ui.example.com',
+            mark_email_as_verified: true,
+            ttl_sec: 604800,
+          },
+        ]);
+        expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       });
 
       it('Should 201 superuser creating clientfinanceadmin with "new" groupId provided', async () => {
@@ -678,22 +706,26 @@ describe('Users Registrar Test Suite', () => {
         });
         const groups = await groupsRepo.find();
         expect(groups).toEqual([mongoify(authUserGroup)]);
-        expect(mockAuth0CreateUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0AddRoleToUser).toHaveBeenCalledTimes(2);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenCalledTimes(1);
-        expect(mockAuth0CreatePasswordChangeTicket).toHaveBeenLastCalledWith({
-          user_id: response.json.id,
-          result_url: 'https://ui.example.com',
-          mark_email_as_verified: true,
-          ttl_sec: 604800,
-        });
-        expect(mockSendEmail).toHaveBeenCalledTimes(1);
+        expect(mockAuth0CreateUser.mock.callCount()).toEqual(1);
+        expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(2);
+        expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
+        expect(
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+        ).toEqual([
+          {
+            user_id: response.json.id,
+            result_url: 'https://ui.example.com',
+            mark_email_as_verified: true,
+            ttl_sec: 604800,
+          },
+        ]);
+        expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       });
     });
 
     describe('User Delete', () => {
       it('Should 404 if user does not exist', async () => {
-        mockAuth0GetUser.mockImplementationOnce(() => {
+        mockAuth0GetUser.mock.mockImplementationOnce(() => {
           throw new newError.NotFound('User not found');
         });
 
@@ -713,10 +745,12 @@ describe('Users Registrar Test Suite', () => {
             statusCode: 404,
           })
         );
-        expect(mockAuth0GetUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0GetUser).toHaveBeenLastCalledWith({
-          id: userId,
-        });
+        expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
+          {
+            id: userId,
+          },
+        ]);
       });
       it('Should 204 upon successful soft deletion', async () => {
         const response = await fastify.injectJson({
@@ -727,16 +761,18 @@ describe('Users Registrar Test Suite', () => {
           },
         });
         expect(response.statusCode).toEqual(204);
-        expect(mockAuth0GetUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0GetUser).toHaveBeenLastCalledWith({
-          id: userId,
-        });
+        expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
+          {
+            id: userId,
+          },
+        ]);
       });
     });
 
     describe('Get Single User', () => {
       it('Should 404 if user does not exist', async () => {
-        mockAuth0GetUser.mockImplementationOnce(async () => {
+        mockAuth0GetUser.mock.mockImplementationOnce(async () => {
           throw new newError.NotFound('User not found');
         });
 
@@ -756,14 +792,16 @@ describe('Users Registrar Test Suite', () => {
             statusCode: 404,
           })
         );
-        expect(mockAuth0GetUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0GetUser).toHaveBeenLastCalledWith({
-          id: userId,
-        });
+        expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
+          {
+            id: userId,
+          },
+        ]);
       });
 
       it("Should 404 if user does not exist in user's group", async () => {
-        mockAuth0GetUser.mockImplementationOnce(async () => ({
+        mockAuth0GetUser.mock.mockImplementationOnce(async () => ({
           data: {
             ...mockUser,
             groupId: 'otherGroup',
@@ -785,10 +823,12 @@ describe('Users Registrar Test Suite', () => {
             statusCode: 404,
           })
         );
-        expect(mockAuth0GetUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0GetUser).toHaveBeenLastCalledWith({
-          id: userId,
-        });
+        expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
+          {
+            id: userId,
+          },
+        ]);
       });
       it("Should 200 and return user that isn't associated with a group", async () => {
         const response = await fastify.injectJson({
@@ -800,10 +840,12 @@ describe('Users Registrar Test Suite', () => {
         });
         expect(response.statusCode).toEqual(200);
         expect(response.json).toEqual(userJsonResponse(mockUser));
-        expect(mockAuth0GetUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0GetUser).toHaveBeenLastCalledWith({
-          id: userId,
-        });
+        expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
+          {
+            id: userId,
+          },
+        ]);
       });
       it('Should 200 and return user that is associated with a group', async () => {
         await persistGroup({
@@ -819,10 +861,12 @@ describe('Users Registrar Test Suite', () => {
         });
         expect(response.statusCode).toEqual(200);
         expect(response.json).toEqual(userJsonResponse(mockUser));
-        expect(mockAuth0GetUser).toHaveBeenCalledTimes(1);
-        expect(mockAuth0GetUser).toHaveBeenLastCalledWith({
-          id: userId,
-        });
+        expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
+          {
+            id: userId,
+          },
+        ]);
       });
     });
 

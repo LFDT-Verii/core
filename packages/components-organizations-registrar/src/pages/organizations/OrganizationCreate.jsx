@@ -33,8 +33,7 @@ import {
   useGetList,
 } from 'react-admin';
 
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Stack, Tooltip, Typography, Grid } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { kebabCase } from 'lodash/string';
 import PropTypes from 'prop-types';

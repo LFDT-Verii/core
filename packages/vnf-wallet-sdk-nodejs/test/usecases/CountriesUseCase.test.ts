@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import CountriesUseCaseImpl from '../../src/impl/data/usecases/CountriesModelUseCaseImpl';
 import CountriesRepositoryImpl from '../../src/impl/data/repositories/CountriesRepositoryImpl';

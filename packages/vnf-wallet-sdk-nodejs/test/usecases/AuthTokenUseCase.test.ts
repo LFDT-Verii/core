@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import TokenMocks from '../infrastructure/resources/valid/TokenMocks';
 import AuthTokenUseCase from '../../src/impl/domain/usecases/AuthTokenUseCase';
 import AuthTokenUseCaseImpl from '../../src/impl/data/usecases/AuthTokenUseCaseImpl';

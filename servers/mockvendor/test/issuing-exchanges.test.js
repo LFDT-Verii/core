@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const {
@@ -17,7 +20,7 @@ describe('Issuing Exchanges routes', () => {
   let newOffer;
   let persistIssuingExchanges;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ newOffer } = initOfferFactory(fastify));
@@ -29,7 +32,7 @@ describe('Issuing Exchanges routes', () => {
     await mongoDb().collection('issuingExchanges').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoDb().collection('offers').deleteMany({});
     await mongoDb().collection('issuingExchanges').deleteMany({});
     await fastify.close();

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { before, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { set, flow } = require('lodash/fp');
 const { credentialUnexpired } = require('@verii/sample-data');
@@ -24,7 +26,7 @@ const { CheckResults } = require('../src/check-results');
 const context = { log: { error: console.log.bind(console) } };
 
 describe('holder checks', () => {
-  beforeAll(async () => {});
+  before(async () => {});
 
   it('Should return FAIL when presentation issuer is not the credential subject id', async () => {
     const result = checkHolder(

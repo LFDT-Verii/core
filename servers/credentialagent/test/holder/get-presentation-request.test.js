@@ -14,6 +14,9 @@
  * limitations under the License.
  *
  */
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
@@ -72,7 +75,7 @@ describe('presentation request', () => {
   let nonDisclosure;
   let orgDidDoc;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistDisclosure } = initDisclosureFactory(fastify));
@@ -81,7 +84,6 @@ describe('presentation request', () => {
   });
 
   beforeEach(async () => {
-    jest.resetAllMocks();
     nock.cleanAll();
 
     await mongoDb().collection('disclosures').deleteMany({});
@@ -151,7 +153,7 @@ describe('presentation request', () => {
       );
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();

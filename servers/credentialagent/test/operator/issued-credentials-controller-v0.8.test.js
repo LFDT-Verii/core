@@ -15,13 +15,15 @@
  */
 
 // eslint-disable-next-line import/order
-const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { ObjectId } = require('mongodb');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { omit } = require('lodash/fp');
 const { VelocityRevocationListType } = require('@verii/vc-checks');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
+const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const {
   initOfferFactory,
   initTenantFactory,
@@ -49,7 +51,7 @@ describe('issued credentials management', () => {
   let credential2;
   let credentialCredentialStatusNull;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistOfferExchange } = initOfferExchangeFactory(fastify));
@@ -58,7 +60,6 @@ describe('issued credentials management', () => {
   });
 
   beforeEach(async () => {
-    jest.resetAllMocks();
     offerCollection = mongoDb().collection('offers');
     await mongoDb().collection('vendorUserIdMappings').deleteMany({});
     await offerCollection.deleteMany({});
@@ -125,7 +126,7 @@ describe('issued credentials management', () => {
       );
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

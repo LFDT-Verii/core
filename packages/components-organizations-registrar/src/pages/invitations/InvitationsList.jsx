@@ -15,8 +15,7 @@
  */
 
 import { Box, Container, Typography } from '@mui/material';
-import LoopIcon from '@mui/icons-material/Loop';
-import ClearIcon from '@mui/icons-material/Clear';
+import { Loop as LoopIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useGetList, useGetOne, useRedirect, useDelete } from 'react-admin';
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import useSelectedOrganization from '../../state/selectedOrganizationState';

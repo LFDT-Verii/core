@@ -1,3 +1,6 @@
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { initBasicAuthValidate } = require('../src/basic-auth');
 
 describe('Basic Auth', () => {

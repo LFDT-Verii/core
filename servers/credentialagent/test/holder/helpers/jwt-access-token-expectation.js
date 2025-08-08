@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  */
+const { expect } = require('expect');
 
 const jwtAccessTokenExpectation = (tenant, header, payload) => ({
   header: { alg: 'ES256K', typ: 'JWT', kid: '#exchanges-1', ...header },

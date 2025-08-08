@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLPresentationRequestDescriptor from '../../src/api/entities/VCLPresentationRequestDescriptor';
 import { PresentationRequestDescriptorMocks } from '../infrastructure/resources/valid/PresentationRequestDescriptorMocks';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';

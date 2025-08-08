@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { buildMongoConnection } = require('@verii/tests-helpers');
 const { getMetrics } = require('../src/metrics/get-metrics');
 const { initMongoClient } = require('../src/helpers/init-mongo-client');
@@ -8,7 +11,7 @@ describe('metrics test suite', () => {
   let db;
   let persistOffer;
 
-  beforeAll(async () => {
+  before(async () => {
     client = await initMongoClient(
       buildMongoConnection('test-credentialagent')
     );
@@ -16,7 +19,7 @@ describe('metrics test suite', () => {
     persistOffer = persistOfferFactory(db);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await client.close();
   });
 

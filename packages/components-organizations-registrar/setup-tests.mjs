@@ -1,5 +1,5 @@
-/**
- * Copyright 2024 Velocity Team
+/*
+ * Copyright 2025 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,9 +12,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-const jestConfig = require('../../jest.config.base');
-const pack = require('./package.json');
+/* eslint-disable import/no-extraneous-dependencies */
+import '@verii/tests-helpers/src/setup-react-tests.mjs';
+import { TextEncoder, TextDecoder } from 'util';
+import { register } from 'node:module';
 
-module.exports = jestConfig(pack.name);
+register('./alias-resolver.mjs', import.meta.url);
+register('./jsx-resolver.mjs', import.meta.url);
+
+// eslint-disable-next-line better-mutation/no-mutation
+global.TextEncoder = TextEncoder;
+// eslint-disable-next-line better-mutation/no-mutation
+global.TextDecoder = TextDecoder;

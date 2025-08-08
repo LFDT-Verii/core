@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { VCLOrganizationsSearchDescriptor, VCLService } from '../../src';
 import OrganizationsUseCaseImpl from '../../src/impl/data/usecases/OrganizationsUseCaseImpl';

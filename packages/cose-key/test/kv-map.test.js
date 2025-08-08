@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
 const { KVMap, assertMap, assertInt } = require('../src/kv-map');
 
 describe('KVMap', () => {

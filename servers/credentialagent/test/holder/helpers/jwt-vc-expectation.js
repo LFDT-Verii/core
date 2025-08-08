@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-
+const { expect } = require('expect');
 const {
   compact,
   isNil,

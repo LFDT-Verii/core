@@ -1,6 +1,8 @@
 /* eslint-disable max-len */
 
-import { expect } from '@jest/globals';
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
+
 import VCLDidJwk from '../../src/api/entities/VCLDidJwk';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 

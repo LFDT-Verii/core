@@ -15,7 +15,10 @@
  *
  */
 
-const mockInitSendError = jest.fn().mockReturnValue({
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
+const mockInitSendError = mock.fn(() => ({
   sendError: (err) => {
     console.log(`fake capturing exception: ${err.message}`);
   },
@@ -24,6 +27,12 @@ const mockInitSendError = jest.fn().mockReturnValue({
   },
   finishProfiling: () => {
     console.log('fake finish sentry profiling');
+  },
+}));
+
+mock.module('@verii/error-aggregation', {
+  namedExports: {
+    initSendError: mockInitSendError,
   },
 });
 
@@ -59,14 +68,6 @@ const {
   verifyAuthorizedReadUsers,
 } = require('../src/plugins/authorization');
 
-jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual('@verii/error-aggregation');
-  return {
-    ...originalModule,
-    initSendError: mockInitSendError,
-  };
-});
-
 describe('Authorization Test suite', () => {
   let fastify;
   let persistGroup;
@@ -77,7 +78,7 @@ describe('Authorization Test suite', () => {
     scope: '',
   };
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -98,12 +99,12 @@ describe('Authorization Test suite', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     await mongoDb().collection('groups').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
+    mock.reset();
   });
 
   describe('verifyUserOrganizationWriteAuthorized test suite', () => {

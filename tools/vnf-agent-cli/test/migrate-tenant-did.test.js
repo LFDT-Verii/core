@@ -1,4 +1,5 @@
-const { mock } = require('node:test');
+const { describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 const {
   migrateTenantDid,
 } = require('../src/migrate-tenant-did/migrate-tenant-did');
@@ -91,7 +92,9 @@ describe('migrate-tenant-did test suite', () => {
     await migrateTenantDid({
       options,
     });
-    expect(global.fetch.mock.calls).toHaveLength(3);
+    expect(global.fetch.mock.calls.map((call) => call.arguments)).toHaveLength(
+      3
+    );
     const fullRefreshUrl = `${options.endpoint}/operator-api/v0.8/tenants/refresh`;
     const fullGetTenantsUrl = `${options.endpoint}/operator-api/v0.8/tenants`;
     const getTenantsExpectation = [
@@ -136,7 +139,9 @@ describe('migrate-tenant-did test suite', () => {
     await migrateTenantDid({
       options,
     });
-    expect(global.fetch.mock.calls).toHaveLength(3);
+    expect(global.fetch.mock.calls.map((call) => call.arguments)).toHaveLength(
+      3
+    );
     const fullRefreshUrl = `${options.endpoint}/operator-api/v0.8/tenants/refresh`;
     const fullGetTenantsUrl = `${options.endpoint}/operator-api/v0.8/tenants`;
     const getTenantsExpectation = [

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { expect } = require('expect');
+
 const { omit } = require('lodash/fp');
 
 const errorResponseExpectation = {

@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const fastify = require('fastify');
 const { corsPlugin } = require('../src/cors-plugin');
 
@@ -26,34 +29,42 @@ describe('CORS plugin Test Suite', () => {
         tokenWalletBaseUrl: 'one',
         registrarAppUiUrl: 'two',
       },
-      register: jest.fn(),
+      register: mock.fn(),
     };
     await corsPlugin(fakeServer, {}, () => {});
-    expect(fakeServer.register.mock.calls).toEqual([
-      [expect.any(Function), expect.any(Function)],
-    ]);
+    expect(
+      fakeServer.register.mock.calls.map((call) => call.arguments)
+    ).toEqual([[expect.any(Function), expect.any(Function)]]);
     const mockRequest = {
       routeOptions: {},
     };
-    const mockCorsCallback = jest.fn();
-    fakeServer.register.mock.calls[0][1]()(mockRequest, mockCorsCallback);
-    expect(mockCorsCallback).toHaveBeenCalledWith(null, {
-      origin: ['one', 'two'],
-      allowedHeaders: [
-        'Authorization',
-        'Accept',
-        'Origin',
-        'Keep-Alive',
-        'User-Agent',
-        'Cache-Control',
-        'Content-Type',
-        'Content-Range',
-        'Range',
-        'x-auto-activate',
-        'x-vnf-protocol-version',
-      ],
-      methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE', 'PATCH'],
-    });
+    const mockCorsCallback = mock.fn();
+    fakeServer.register.mock.calls[0].arguments[1]()(
+      mockRequest,
+      mockCorsCallback
+    );
+    expect(
+      mockCorsCallback.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      null,
+      {
+        origin: ['one', 'two'],
+        allowedHeaders: [
+          'Authorization',
+          'Accept',
+          'Origin',
+          'Keep-Alive',
+          'User-Agent',
+          'Cache-Control',
+          'Content-Type',
+          'Content-Range',
+          'Range',
+          'x-auto-activate',
+          'x-vnf-protocol-version',
+        ],
+        methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE', 'PATCH'],
+      },
+    ]);
   });
   it('cors plugin origins response should be per route', async () => {
     const testServer = buildFastify({});

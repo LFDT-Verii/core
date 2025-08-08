@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { GotError } = require('got');
 const { NotFoundError } = require('http-errors');
 const nock = require('nock');
@@ -25,7 +28,7 @@ describe('Request Execution', () => {
     traceId: 'TRACE-ID',
   });
 
-  beforeAll(() => {
+  before(() => {
     nock.disableNetConnect();
   });
 
@@ -37,7 +40,7 @@ describe('Request Execution', () => {
       .reply(200, 'Hello Doodle World!');
   });
 
-  afterAll(() => {
+  after(() => {
     nock.cleanAll();
     nock.restore();
     nock.enableNetConnect();

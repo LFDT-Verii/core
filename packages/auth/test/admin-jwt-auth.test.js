@@ -1,3 +1,6 @@
+const { afterEach, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const fastify = require('fastify');
 const { adminJwtAuthPlugin } = require('../src/admin-jwt-auth');
 

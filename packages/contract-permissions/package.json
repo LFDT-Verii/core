@@ -10,8 +10,10 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest --config ./jest.config.js --runInBand --coverage",
-    "lint": "eslint . --format json >> eslint.json",
+    "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --test-timeout=600000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
+    "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --test-timeout=600000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
+    "lint": "eslint --ext .js .",
+    "lint:ci": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix --ext .js ."
   },
   "devDependencies": {
@@ -19,7 +21,8 @@
     "@verii/tests-helpers": "0.5.0-build",
     "@spencejs/spence-config":  "0.10.2",
     "@verii/blockchain-functions": "0.5.0-build",
-    "@verii/crypto": "0.5.0-build"
+    "@verii/crypto": "0.5.0-build",
+    "expect": "29.7.0"
   },
   "dependencies": {
     "@verii/base-contract-io": "^0.5.0-build"

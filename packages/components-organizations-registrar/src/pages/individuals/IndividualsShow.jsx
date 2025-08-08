@@ -18,7 +18,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useGetOne, useRedirect } from 'react-admin';
 import { Box, Button, Stack, Typography, Paper, Tooltip } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
 import useSelectedOrganization from '@/state/selectedOrganizationState';

@@ -3,4 +3,3 @@ node_modules
 coverage
 test
 example
-jest.config.js
