@@ -7,7 +7,7 @@
   "bin": "index.js",
   "scripts": {
     "deploy": "node ./index.js",
-    "test": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage **/*.test.js --passWithNoTests",
+    "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage **/*.test.js --passWithNoTests",
     "lint": "eslint --ext .js .",
     "lint:ci": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix --ext .js ."
