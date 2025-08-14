@@ -29,7 +29,7 @@
     "@spencejs/spence-config": "0.10.2",
     "@verii/tests-helpers": "0.5.0-build",
     "date-fns": "3.6.0",
-    "jest": "29.7.0",
+    "jest": "30.0.5",
     "nanoid": "3.3.11"
   },
   "nx": {
