@@ -34,15 +34,15 @@ const buildMongoConnection = (dbName) => {
   // Uses tlsAllowInvalidHostnames to allow localhost SSH tunnleing to remote DB
   const connUri =
     testMongoBaseUri !== ''
-      ? `${testMongoBaseUri}/${dbName}`
-      : `mongodb://${mongoUsername}:${mongoPassword}@localhost:27017/${dbName}`;
+      ? `${testMongoBaseUri}/${dbName}?`
+      : `mongodb://${mongoUsername}:${mongoPassword}@localhost:27017/${dbName}?authMechanism=SCRAM-SHA-1&`;
   const directConnection = includes('mongodb+srv', testMongoBaseUri)
     ? ''
     : '&directConnection=true';
   const tlsCaFileOption = caFilename !== '' ? `&tlsCAFile=${caFilename}` : '';
   const connOptions = `tls=true${tlsCaFileOption}&tlsAllowInvalidHostnames=true&retryWrites=false${directConnection}`;
 
-  return `${connUri}?${connOptions}`;
+  return `${connUri}${connOptions}`;
 };
 
 module.exports = { buildMongoConnection };
