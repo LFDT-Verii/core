@@ -44,12 +44,12 @@
         "eslint-plugin-prefer-arrow-functions": "3.6.2",
         "eslint-plugin-prettier": "4.2.5",
         "eslint-plugin-unused-imports": "2.0.0",
-      "expect": "29.7.0",
-      "global-jsdom": "26.0.0",
-      "tsx": "4.19.4",
-      "typescript": "5.9.2",
+        "expect": "29.7.0",
+        "global-jsdom": "26.0.0",
+        "tsx": "4.19.4",
+        "typescript": "5.9.2",
         "json-schema-to-ts": "3.1.1",
-        "pino": "9.7.0",
+        "pino": "9.8.0",
         "pino-pretty": "13.1.1"
     },
     "nx": {
