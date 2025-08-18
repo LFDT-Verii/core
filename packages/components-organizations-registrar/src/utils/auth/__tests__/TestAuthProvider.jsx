@@ -1,5 +1,5 @@
 import { mock } from 'node:test';
-import { AuthContext } from '@/utils/auth/AuthContext';
+import { AuthContext } from '@/utils/auth/AuthContext.js';
 
 // eslint-disable-next-line react/prop-types
 export const TestAuthProvider = ({ children }) => (

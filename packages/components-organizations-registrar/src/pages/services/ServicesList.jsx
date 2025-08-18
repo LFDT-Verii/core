@@ -26,12 +26,12 @@ import ListItem from '@/components/common/ListItem.jsx';
 import Loading from '@/components/Loading.jsx';
 import ServicesEdit from '@/components/services/ServicesEdit.jsx';
 import ServicesDelete from '@/components/services/ServicesDelete.jsx';
-import useSelectedOrganization from '@/state/selectedOrganizationState';
-import { dataResources } from '@/utils/remoteDataProvider';
-import useParticipantAgreementState from '@/state/participantAgreementState';
+import useSelectedOrganization from '@/state/selectedOrganizationState.js';
+import { dataResources } from '@/utils/remoteDataProvider.js';
+import useParticipantAgreementState from '@/state/participantAgreementState.js';
 import ServiceCreateForm from './ServiceCreateForm.jsx';
-import { serviceTypeTitlesMap } from '../../utils/serviceTypes';
-import useDeleteService from './useDeleteService';
+import { serviceTypeTitlesMap } from '../../utils/serviceTypes.js';
+import useDeleteService from './useDeleteService.js';
 
 const SAVE_ERROR_MESSAGE =
   'We were unable to update your service with the details provided.  Please check to ensure you have provided valid information and then try again.';

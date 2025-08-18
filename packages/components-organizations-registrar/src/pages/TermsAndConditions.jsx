@@ -22,7 +22,7 @@ import Toolbar from '@mui/material/Toolbar';
 import AppBar from '@mui/material/AppBar';
 import { Link as ReactRouterLink } from 'react-router';
 
-import theme, { FOOTER_HEIGHT } from '../theme/theme';
+import theme, { FOOTER_HEIGHT } from '../theme/theme.js';
 
 export const TERMS_AND_CONDITIONS_VERSION = '8';
 

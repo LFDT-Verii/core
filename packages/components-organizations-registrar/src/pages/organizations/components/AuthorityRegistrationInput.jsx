@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import { get } from 'lodash';
+import { get } from 'lodash-es';
 import { Box, FormControl, FormControlLabel, Radio, RadioGroup, Tooltip } from '@mui/material';
 import {
   TextInput,
@@ -19,7 +19,7 @@ import {
   NATIONAL_AUTHORITY_HINT,
   LINKEDIN_ORGANIZATION_ID,
 } from '@/utils/index.jsx';
-import { validateWebsite } from '@/components/organizations/CreateOrganization.utils';
+import { validateWebsite } from '@/components/organizations/CreateOrganizationUtils.js';
 
 export const registrationNumbers = {
   DunnAndBradstreet: {
@@ -86,7 +86,9 @@ export const AuthorityRegistrationInput = ({
   const isHorizontal = orientation === 'horizontal';
 
   useEffect(() => {
-    if (!selectedAuthority || activeAuthorityEntry) return;
+    if (!selectedAuthority || activeAuthorityEntry) {
+      return;
+    }
     // Create empty entry for the selected authority
     const updated = {
       authority: selectedAuthority,
@@ -138,6 +140,7 @@ export const AuthorityRegistrationInput = ({
       <Box sx={styles.authorityContainer} flexDirection={isNationalAuthority ? 'row' : 'column'}>
         <ResourceContextProvider value="organizations">
           <ArrayInput
+            name="authorities"
             source={source}
             fullWidth
             label={false}

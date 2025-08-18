@@ -5,7 +5,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { Form } from 'react-admin';
 import PropTypes from 'prop-types';
 
-import { getTitle, formatSecrets } from '@/pages/services/utils';
+import { getTitle, formatSecrets } from '@/pages/services/utils/index.js';
 
 const selectedStep = 4;
 

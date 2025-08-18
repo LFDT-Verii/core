@@ -34,11 +34,11 @@ import {
 } from '@/utils/index.jsx';
 import Loading from '@/components/Loading.jsx';
 import OrganizationAvatar from '@/components/common/OrganizationAvatar.jsx';
-import useCountryCodes from '@/utils/countryCodes';
-import useSelectedOrganization from '@/state/selectedOrganizationState';
-import { AuthoritiesList, Authorities, authorityOptions } from '@/constants/messageCodes';
+import useCountryCodes from '@/utils/countryCodes.js';
+import useSelectedOrganization from '@/state/selectedOrganizationState.js';
+import { AuthoritiesList, Authorities, authorityOptions } from '@/constants/messageCodes.js';
 import DataItem from '@/components/common/DataItem.jsx';
-import { useAuth } from '@/utils/auth/AuthContext';
+import { useAuth } from '@/utils/auth/AuthContext.js';
 
 // eslint-disable-next-line complexity
 const OrganizationShow = () => {

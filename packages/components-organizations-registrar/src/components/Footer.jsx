@@ -18,7 +18,7 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 
-import theme, { FOOTER_HEIGHT } from '../theme/theme';
+import theme, { FOOTER_HEIGHT } from '../theme/theme.js';
 
 const Footer = () => {
   return (

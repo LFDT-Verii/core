@@ -17,14 +17,14 @@
 import { useCallback, useMemo } from 'react';
 import { Form, AutocompleteInput, required } from 'react-admin';
 import { Box, Stack } from '@mui/material';
-import { kebabCase } from 'lodash/string';
+import { kebabCase } from 'lodash-es';
 import PropTypes from 'prop-types';
 
 import {
   serviceTypesIssuingOrInspection,
   credentialTypesByServiceTypes,
-} from '@/utils/serviceTypes';
-import OrganizationSubmitButton from '../organizations/OrganisationSubmitButton.jsx';
+} from '@/utils/serviceTypes.js';
+import OrganizationSubmitButton from '../organizations/OrganizationSubmitButton.jsx';
 
 const SetInvitationService = ({ children, onSubmit, defaultValues, serviceEndpointsOptions }) => {
   const defaultFormData = useMemo(() => {

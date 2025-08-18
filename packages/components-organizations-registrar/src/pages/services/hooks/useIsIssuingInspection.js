@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { serviceTypesIssuingOrInspection, CREDENTIAL_TYPES_IDS } from '@/utils/serviceTypes';
+import { serviceTypesIssuingOrInspection, CREDENTIAL_TYPES_IDS } from '@/utils/serviceTypes.js';
 
 export const useIsIssuingInspection = (serviceType) => {
   const { isIssuingOrInspection, isCAO } = useMemo(() => {

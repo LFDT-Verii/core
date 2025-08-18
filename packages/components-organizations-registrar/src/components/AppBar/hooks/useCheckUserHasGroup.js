@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useGetOne, useRedirect } from 'react-admin';
-import { useAuth } from '@/utils/auth/AuthContext';
-import { dataResources } from '@/utils/remoteDataProvider';
-import useSelectedOrganization from '@/state/selectedOrganizationState';
+import { useAuth } from '@/utils/auth/AuthContext.js';
+import { dataResources } from '@/utils/remoteDataProvider.js';
+import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 
 export const useCheckUserHasGroup = () => {
   const { user, getAccessTokenWithPopup } = useAuth();

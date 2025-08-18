@@ -35,15 +35,15 @@ import {
 
 import { Box, Stack, Tooltip, Typography, Grid } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
-import { kebabCase } from 'lodash/string';
+import { kebabCase } from 'lodash-es';
 import PropTypes from 'prop-types';
 
-import useSelectedOrganization from '@/state/selectedOrganizationState';
+import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 import Loading from '@/components/Loading.jsx';
 import {
   validateWebsite,
   validateWebsiteStrict,
-} from '@/components/organizations/CreateOrganization.utils';
+} from '@/components/organizations/CreateOrganizationUtils.js';
 import CustomImageInput from '@/components/common/CustomImageInput/index.jsx';
 import PlusButtonBlock from '@/components/common/PlusButtonBlock.jsx';
 import {
@@ -58,10 +58,10 @@ import {
   parseJwt,
   ERRORS,
 } from '@/utils/index.jsx';
-import useCountryCodes from '@/utils/countryCodes';
-import { useAuth } from '@/utils/auth/AuthContext';
-import { dataResources } from '@/utils/remoteDataProvider';
-import { credentialTypesByServiceTypes } from '@/utils/serviceTypes';
+import useCountryCodes from '@/utils/countryCodes.js';
+import { useAuth } from '@/utils/auth/AuthContext.js';
+import { dataResources } from '@/utils/remoteDataProvider.js';
+import { credentialTypesByServiceTypes } from '@/utils/serviceTypes.js';
 
 import AuthorityRegistrationNumbersInput from './components/AuthorityRegistrationInput.jsx';
 import { LinkedInRegistrationInput } from './components/LinkedInRegistrationInput.jsx';
@@ -69,7 +69,12 @@ import { OrganizationBrand } from './components/OrganizationBrand.jsx';
 import { OrganizationSubmitButton } from './components/OrganizationSubmitButton.jsx';
 import { OrganizationCreateTitle } from './components/OrganizationCreateTitle.jsx';
 import ServiceCreateFormContainer from './OrganizationAddService.jsx';
-import { requestOptions, organizationPlaceholder, validateName, validateEmail } from './utils';
+import {
+  requestOptions,
+  organizationPlaceholder,
+  validateName,
+  validateEmail,
+} from './utils/index.js';
 
 export const defaultBrandValue = [
   {

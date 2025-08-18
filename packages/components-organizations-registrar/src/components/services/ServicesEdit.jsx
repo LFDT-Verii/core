@@ -19,10 +19,10 @@ import { Form, TextInput, SaveButton, required } from 'react-admin';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import PropTypes from 'prop-types';
 import { Stack } from '@mui/material';
-import { useIsIssuingInspection } from '@/pages/services/hooks/useIsIssuingInspection';
+import { useIsIssuingInspection } from '@/pages/services/hooks/useIsIssuingInspection.js';
 
 import Popup from '../common/Popup.jsx';
-import { validateServiceEndpoint } from '../organizations/CreateOrganization.utils';
+import { validateServiceEndpoint } from '../organizations/CreateOrganizationUtils.js';
 
 const ServicesEdit = ({ onClose, onSave, selectedService, InterceptOnCreate }) => {
   const { isIssuingOrInspection, isCAO } = useIsIssuingInspection({ id: selectedService?.type });

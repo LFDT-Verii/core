@@ -23,15 +23,12 @@ import { extname } from 'path';
 export const resolve = async (specifier, context, nextResolve) => {
   const ext = extname(specifier);
   if (ext === 'jsx') {
-    // console.info(JSON.stringify({ resolver: 'jsx', specifier }));
-
     const resolved = await nextResolve(specifier, context);
     return {
       ...resolved,
       format: 'module',
     };
   }
-
   return nextResolve(specifier, context);
 };
 

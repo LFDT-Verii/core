@@ -2,7 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Popup from '@/components/common/Popup.jsx';
 import WarningSecretKeysPopup from './WarningSecretKeysPopup/index.jsx';
-import { useKeyDownload } from '../../hooks/useKeyDownload';
+import { useKeyDownload } from '../../hooks/useKeyDownload.js';
 import { ServiceSecretKeys } from './ServiceSecretKeys/index.jsx';
 
 export const SecretKeysPopup = ({ isOpen, secretKeys, onClose, wording, warningWording }) => {

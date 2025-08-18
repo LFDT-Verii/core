@@ -1,3 +1,3 @@
-export { formatSecrets } from './formatSecrets';
-export { isAddButtonDisabled } from './isAddButtonDisabled';
-export { getTitle } from './getTitle';
+export { formatSecrets } from './formatSecrets.js';
+export { isAddButtonDisabled } from './isAddButtonDisabled.js';
+export { getTitle } from './getTitle.js';

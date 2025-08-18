@@ -18,13 +18,13 @@ import { Box, Container, Typography } from '@mui/material';
 import { Loop as LoopIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { useGetList, useGetOne, useRedirect, useDelete } from 'react-admin';
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import useSelectedOrganization from '../../state/selectedOrganizationState';
+import useSelectedOrganization from '../../state/selectedOrganizationState.js';
 import InfoBlock from '../../components/common/infoBlock.jsx';
 import InvitationsListContainer from '../../components/invitations/InvitationsListContainer.jsx';
 import InvitationCreateForm from './InvitationCreateForm.jsx';
 import InvitationResend from './InvitationResend.jsx';
 import InvitationExistingOrgPopup from './InvitationExistingOrgPopup.jsx';
-import { dataResources } from '../../utils/remoteDataProvider';
+import { dataResources } from '../../utils/remoteDataProvider.js';
 
 const INVITATIONS_UNAVAILABLE =
   'This feature is only available to organizations that have set up a Credential Agent Operator service.';

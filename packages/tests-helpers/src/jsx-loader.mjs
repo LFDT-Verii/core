@@ -54,13 +54,17 @@ export const resolve = async (specifier, ctx, nextResolve) => {
  */
 export const load = async (url, ctx, nextLoad) => {
   const ext = extname(url);
-  const result = await nextLoad(url, ctx);
+  try {
+    const result = await nextLoad(url, ctx);
+    if (ext === '.jsx' || ext === '.tsx') {
+      // Ensure React is in scope for JSX transforms.
+      // eslint-disable-next-line better-mutation/no-mutation
+      result.source = requiredCode + result.source;
+    }
 
-  if (ext === '.jsx' || ext === '.tsx') {
-    // Ensure React is in scope for JSX transforms.
-    // eslint-disable-next-line better-mutation/no-mutation
-    result.source = requiredCode + result.source;
+    return result;
+  } catch (e) {
+    console.error(e);
+    throw e;
   }
-
-  return result;
 };

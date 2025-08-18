@@ -21,10 +21,10 @@ import { Box, Button, Stack, Typography, Paper, Tooltip } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import EditIcon from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
-import useSelectedOrganization from '@/state/selectedOrganizationState';
+import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 import Loading from '@/components/Loading.jsx';
 import DataItem from '@/components/common/DataItem.jsx';
-import { useAuth } from '@/utils/auth/AuthContext';
+import { useAuth } from '@/utils/auth/AuthContext.js';
 import {
   ADMINISTRATOR_DETAILS_HINT,
   SIGNATORY_DETAILS_HINT,
