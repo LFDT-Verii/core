@@ -18,17 +18,19 @@
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
-const mockInitSendError = mock.fn(() => ({
-  sendError: (err) => {
-    console.log(`fake capturing exception: ${err.message}`);
-  },
-  startProfiling: () => {
-    console.log('fake start sentry profiling');
-  },
-  finishProfiling: () => {
-    console.log('fake finish sentry profiling');
-  },
-}));
+const mockInitSendError = mock.fn(() =>
+  Promise.resolve({
+    sendError: (err) => {
+      console.log(`fake capturing exception: ${err.message}`);
+    },
+    startProfiling: () => {
+      console.log('fake start sentry profiling');
+    },
+    finishProfiling: () => {
+      console.log('fake finish sentry profiling');
+    },
+  })
+);
 
 mock.module('@verii/error-aggregation', {
   namedExports: {

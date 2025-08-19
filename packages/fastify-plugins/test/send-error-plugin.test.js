@@ -16,18 +16,20 @@
 const { beforeEach, describe, it, mock, after } = require('node:test');
 const { expect } = require('expect');
 
-const { sendErrorPlugin } = require('../src/send-error-plugin');
-
-const initSendError = mock.fn(() => ({
-  sendError: 'sendErrorFn',
-  startProfiling: 'startProfilingFn',
-  finishProfiling: 'finishProfilingFn',
-}));
+const initSendError = mock.fn(() =>
+  Promise.resolve({
+    sendError: 'sendErrorFn',
+    startProfiling: 'startProfilingFn',
+    finishProfiling: 'finishProfilingFn',
+  })
+);
 mock.module('@verii/error-aggregation', {
   namedExports: { initSendError },
 });
 
-describe.skip('Capture Exception to Sentry plugin tests', () => {
+const { sendErrorPlugin } = require('../src/send-error-plugin');
+
+describe('Capture Exception to Sentry plugin tests', () => {
   beforeEach(() => {
     initSendError.mock.resetCalls();
   });

@@ -17,6 +17,8 @@
 const { describe, it, mock, after } = require('node:test');
 const { expect } = require('expect');
 
+const ethers = require('ethers');
+
 const { initGetBlockNumber, initGetBlock, sendNoOpTx } = require('../src/eth');
 
 class JsonRpcProvider {}
@@ -29,6 +31,7 @@ JsonRpcProvider.prototype.getBlock = mock.fn((blockNumber) =>
 mock.module('ethers', {
   namedExports: {
     JsonRpcProvider,
+    FetchRequest: ethers.FetchRequest,
   },
 });
 
@@ -36,7 +39,7 @@ const rpcUrl = 'RPC-URL';
 const authenticate = () => Promise.resolve('TOKEN');
 const blockNumberResult = 1;
 
-describe.skip('ETH Suite', () => {
+describe('ETH Suite', () => {
   after(() => {
     mock.reset();
   });

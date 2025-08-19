@@ -16,6 +16,8 @@
 const { describe, it, mock, after } = require('node:test');
 const { expect } = require('expect');
 
+const ethers = require('ethers');
+
 const { initGetSignerMetrics } = require('../src/ibft');
 
 class JsonRpcProvider {}
@@ -25,6 +27,7 @@ JsonRpcProvider.prototype.send = mock.fn(() =>
 mock.module('ethers', {
   namedExports: {
     JsonRpcProvider,
+    FetchRequest: ethers.FetchRequest,
   },
 });
 
@@ -53,7 +56,7 @@ const signerMetricsResult = [
   },
 ];
 
-describe.skip('IBFT Signer Metrics', () => {
+describe('IBFT Signer Metrics', () => {
   after(() => {
     mock.reset();
   });
