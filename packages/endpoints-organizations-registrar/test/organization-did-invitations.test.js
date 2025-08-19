@@ -54,10 +54,12 @@ class ManagementClient {
   constructor() {
     this.users = {
       create: mockAuth0UserCreate,
-      getByEmail: mockAuth0UserGetByEmail,
       assignRoles: mockAuth0ClientAssignRole,
     };
     this.tickets = { changePassword: mockAuth0TicketChange };
+    this.usersByEmail = {
+      getByEmail: mockAuth0UserGetByEmail,
+    };
   }
 }
 mock.module('auth0', {
@@ -543,7 +545,7 @@ describe('Organization invitations test suites', () => {
             code: expect.stringMatching(NANO_ID_FORMAT),
             inviterDid: inviterOrganization.didDoc.id,
             invitationUrl: expect.stringMatching(
-              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9]+/
+              /http:\/\/localhost.test\/invitations\/[_a-zA-Z0-9]+/
             ),
             expiresAt: expect.any(String),
             createdAt: expect.any(String),

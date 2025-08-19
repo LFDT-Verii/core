@@ -100,7 +100,7 @@ describe('signatoriesController', () => {
     });
 
     ({ sendEmailToSignatoryForOrganizationApproval } =
-      initSendEmailNotifications(fastify));
+      await initSendEmailNotifications(fastify));
     testContext = {
       ...fastify,
       repos: {

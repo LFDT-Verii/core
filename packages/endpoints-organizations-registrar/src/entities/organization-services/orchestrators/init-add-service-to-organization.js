@@ -32,8 +32,8 @@ const {
   getServiceConsentType,
 } = require('../domains');
 
-const initAddServiceToOrganization = (fastify) => {
-  const auth0Provisioner = initAuth0Provisioner(fastify.config);
+const initAddServiceToOrganization = async (fastify) => {
+  const auth0Provisioner = await initAuth0Provisioner(fastify.config);
   const provisionAuth0Clients = initProvisionAuth0Clients(auth0Provisioner);
 
   const buildOrganizationModificationsOnServiceChange =

@@ -74,6 +74,7 @@ class ManagementClient {
   }
 }
 mock.module('auth0', {
+  defaultExport: {},
   namedExports: {
     ManagementClient,
   },

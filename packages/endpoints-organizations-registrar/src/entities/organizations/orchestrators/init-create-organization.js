@@ -36,12 +36,12 @@ const {
   getServiceConsentType,
 } = require('../../organization-services/domains/get-service-consent-type');
 
-const initCreateOrganization = (fastify) => {
+const initCreateOrganization = async (fastify) => {
   const buildOrganizationModificationsOnServiceChange =
     initBuildOrganizationModificationsOnServiceChange(fastify);
 
-  const provisionGroup = initProvisionGroup(fastify);
-  const auth0Provisioner = initAuth0Provisioner(fastify.config);
+  const provisionGroup = await initProvisionGroup(fastify);
+  const auth0Provisioner = await initAuth0Provisioner(fastify.config);
   const provisionAuth0Clients = initProvisionAuth0Clients(auth0Provisioner);
 
   return async (

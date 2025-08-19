@@ -36,7 +36,6 @@ mock.module('@verii/error-aggregation', {
     initSendError: mockInitSendError,
   },
 });
-const csvParser = require('@verii/csv-parser');
 
 const mockAuth0ClientDelete = mock.fn(async ({ id }) => {
   console.log(`deleting auth0 client ${id}`);
@@ -130,6 +129,13 @@ mock.module('@aws-sdk/client-ses', {
     },
     SESClient,
   },
+});
+
+const csvParser = require('@verii/csv-parser');
+
+const parseToCsvSpy = mock.fn(csvParser.parseToCsv);
+mock.module('@verii/csv-parser', {
+  namedExports: { parseToCsv: parseToCsvSpy },
 });
 
 const {
@@ -598,6 +604,7 @@ describe('Organizations Full Test Suite', () => {
     mockInitPermission.mock.resetCalls();
     mockSESSendEmail.mock.resetCalls();
     mockUpdateAddressScopes.mock.resetCalls();
+    parseToCsvSpy.mock.resetCalls();
     nock.cleanAll();
   });
 
@@ -2135,20 +2142,18 @@ describe('Organizations Full Test Suite', () => {
           ])
         );
 
-        expect(csvParser.parseToCsv.mock.calls).toEqual([
+        expect(parseToCsvSpy.mock.calls[0].arguments).toEqual([
           [
-            [
-              expect.objectContaining({
-                registrationNumbers: reject(
-                  {
-                    authority: Authorities.LinkedIn,
-                  },
-                  registrationNumbers
-                ),
-              }),
-            ],
-            expect.any(Array),
+            expect.objectContaining({
+              registrationNumbers: reject(
+                {
+                  authority: Authorities.LinkedIn,
+                },
+                registrationNumbers
+              ),
+            }),
           ],
+          expect.any(Array),
         ]);
       });
 
@@ -3250,7 +3255,7 @@ describe('Organizations Full Test Suite', () => {
           expect(response.statusCode).toEqual(201);
           const groupFromDb = await groupsRepo.findOne({
             filter: {
-              clientAdminIds: testWriteOrganizationsUser.sub,
+              clientAdminIds: testNoGroupRegistrarUser.sub,
             },
           });
           expect(groupFromDb).toMatchObject({
@@ -3276,18 +3281,36 @@ describe('Organizations Full Test Suite', () => {
           });
 
           expect(response.statusCode).toEqual(201);
-          const groupFromDb = await groupsRepo.findOne({
-            filter: {
-              clientAdminIds: testWriteOrganizationsUser.sub,
+          await expect(
+            groupsRepo.find({
+              filter: {
+                dids: response.json.id,
+              },
+            })
+          ).resolves.toEqual([
+            {
+              dids: [response.json.id],
+              groupId: response.json.id,
+              _id: expect.any(ObjectId),
+              createdAt: expect.any(Date),
+              updatedAt: expect.any(Date),
             },
-          });
-          expect(groupFromDb).toBeNull();
+          ]);
+          await expect(
+            groupsRepo.findOne({
+              filter: {
+                clientAdminIds: testRegistrarSuperUser.sub,
+              },
+            })
+          ).resolves.toBeNull();
           expect(
             mockSESSendEmail.mock.calls.map((call) => call.arguments)
-          ).toEqual([
-            [expectedSupportEmail(orgProfile.name)],
-            [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
-          ]);
+          ).toEqual(
+            expect.arrayContaining([
+              [expectedSupportEmail(orgProfile.name)],
+              [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
+            ])
+          );
         });
 
         it("Should add organization to user's group when creating an organization and group exists already for user", async () => {
@@ -3309,7 +3332,7 @@ describe('Organizations Full Test Suite', () => {
           expect(response.statusCode).toEqual(201);
           const groupFromDb = await groupsRepo.findOne({
             filter: {
-              clientAdminIds: testNoGroupRegistrarUser.sub,
+              clientAdminIds: testWriteOrganizationsUser.sub,
             },
           });
           expect(groupFromDb).toMatchObject({

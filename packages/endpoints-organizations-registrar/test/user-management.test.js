@@ -39,9 +39,11 @@ class ManagementClient {
     this.users = {
       update: mockAuth0UpdateUser,
       get: mockAuth0GetUser,
+      getRoles: mockAuth0GetUserRoles,
+    };
+    this.usersByEmail = {
       getByEmail: mockAuth0GetUserByEmail,
     };
-    this.getUserRoles = mockAuth0GetUserRoles;
   }
 }
 mock.module('auth0', {
@@ -63,7 +65,7 @@ const testConfig = {
 describe('user management test suite', () => {
   let userManagementClient;
   before(async () => {
-    userManagementClient = initUserManagement(testConfig);
+    userManagementClient = await initUserManagement(testConfig);
   });
   beforeEach(async () => {
     mockAuth0UpdateUser.mock.resetCalls();
