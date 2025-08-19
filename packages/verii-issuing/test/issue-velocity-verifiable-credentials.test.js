@@ -16,6 +16,7 @@
  */
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
+const { ALG_TYPE } = require('@verii/metadata-registration');
 
 const mockAddCredentialMetadataEntry = mock.fn();
 const mockCreateCredentialMetadataList = mock.fn();
@@ -23,7 +24,7 @@ const mockAddRevocationListSigned = mock.fn();
 
 mock.module('@verii/metadata-registration', {
   namedExports: {
-    ...require('@verii/metadata-registration'),
+    ALG_TYPE,
     initRevocationRegistry: () => ({
       addRevocationListSigned: mockAddRevocationListSigned,
     }),
@@ -42,7 +43,6 @@ mockCreateCredentialMetadataList.mock.mockImplementation(() =>
 );
 
 const { KeyAlgorithms } = require('@verii/crypto');
-const { ALG_TYPE } = require('@verii/metadata-registration');
 const { jwtDecode, jwtVerify, jwtSign } = require('@verii/jwt');
 const { publicJwkMatcher } = require('@verii/tests-helpers');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');

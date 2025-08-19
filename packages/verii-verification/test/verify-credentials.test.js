@@ -16,6 +16,7 @@
 
 const { before, beforeEach, describe, it, mock, after } = require('node:test');
 const { expect } = require('expect');
+const { ALG_TYPE } = require('@verii/metadata-registration');
 
 const resolveDidDocument = mock.fn();
 const initMetadataRegistry = mock.fn(() => ({
@@ -27,6 +28,7 @@ const initRevocationRegistry = mock.fn(() => ({
 const initVerificationCoupon = mock.fn(() => ({}));
 mock.module('@verii/metadata-registration', {
   namedExports: {
+    ALG_TYPE,
     initMetadataRegistry,
     initRevocationRegistry,
     initVerificationCoupon,
