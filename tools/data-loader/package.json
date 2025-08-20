@@ -30,7 +30,7 @@
     "prettier": "2.8.8"
   },
   "dependencies": {
-    "chalk": "~4.1.2",
+    "chalk": "~5.6.0",
     "commander": "~13.1.0",
     "csv-parser": "~3.2.0",
     "got": "11.8.6",

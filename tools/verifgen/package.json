@@ -37,7 +37,7 @@
     "@verii/verii-verification": "0.5.0-build",
     "@verii/vc-checks": "0.5.0-build",
     "bs58": "~6.0.0",
-    "chalk": "~4.1.2",
+    "chalk": "~5.6.0",
     "commander": "~13.1.0",
     "got": "11.8.6",
     "lodash": "^4.17.21",
