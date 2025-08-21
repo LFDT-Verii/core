@@ -16,7 +16,7 @@
 
 const { pick, mapValues, flow, isEmpty, map, isObject } = require('lodash/fp');
 
-const { hashOffer } = require('@verii/velocity-issuing');
+const { hashOffer } = require('@verii/verii-issuing');
 const { generateLinkCode } = require('./generate-link-code');
 
 const buildOffer = (offer, credentialRefsMap, { tenant, exchange }) => {

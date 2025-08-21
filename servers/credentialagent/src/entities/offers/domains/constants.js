@@ -20,13 +20,8 @@ const OfferType = {
   LEGACY: 'LEGACY',
 };
 const ISSUING_CHALLENGE_SIZE = 16;
-const VELOCITY_NETWORK_CREDENTIAL_TYPE = {
-  LAYER_1: 'VelocityNetworkLayer1Credential',
-  LAYER_2: 'VelocityNetworkLayer2Credential',
-};
 
 module.exports = {
   OfferType,
   ISSUING_CHALLENGE_SIZE,
-  VELOCITY_NETWORK_CREDENTIAL_TYPE,
 };

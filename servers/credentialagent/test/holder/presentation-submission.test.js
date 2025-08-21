@@ -31,7 +31,7 @@ const {
 } = require('@verii/jwt');
 const { sampleOrganizationProfile1 } = require('@verii/sample-data');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
-const { VnfProtocolVersions } = require('@verii/vc-checks');
+const { VeriiProtocolVersions } = require('@verii/vc-checks');
 const { map, isString } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const nock = require('nock');
@@ -57,8 +57,8 @@ const {
 } = require('../../src/entities');
 
 jest.mock('@verii/metadata-registration');
-jest.mock('@verii/verifiable-credentials', () => ({
-  ...jest.requireActual('@verii/verifiable-credentials'),
+jest.mock('@verii/verii-verification', () => ({
+  ...jest.requireActual('@verii/verii-verification'),
   verifyCredentials: mockVerifyCredentials,
 }));
 jest.mock('../../src/fetchers', () => {
@@ -355,8 +355,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsUncheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -438,8 +438,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsUncheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -589,8 +589,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -677,8 +677,8 @@ describe('presentation submission', () => {
       );
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -686,7 +686,7 @@ describe('presentation submission', () => {
         method: 'POST',
         url: inspectUrl(tenant, '/submit-presentation'),
         headers: {
-          'x-vnf-protocol-version': `${VnfProtocolVersions.VNF_PROTOCOL_VERSION_2}`,
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
         }, // actually irrelevant as verifiable-credentials calls are all mocked out
         payload: {
           exchange_id: disclosurePresentationExchange._id,
@@ -764,8 +764,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -834,8 +834,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1023,8 +1023,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1320,8 +1320,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1432,8 +1432,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1498,8 +1498,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1550,8 +1550,8 @@ describe('presentation submission', () => {
 
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 
@@ -1786,8 +1786,8 @@ describe('presentation submission', () => {
       let webhookPayload;
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, (uri, body) => {
-          webhookPayload = body;
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
           return sendCredentialsPayload;
         });
 

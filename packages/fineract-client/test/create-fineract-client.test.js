@@ -51,8 +51,8 @@ describe('create clients', () => {
     };
     nock(testHost)
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
-      .reply(200, (uri, body) => {
-        webhookPayloads.push(body);
+      .reply(200, async (request) => {
+        webhookPayloads.push(await request.json());
         return [
           {
             statusCode: 200,
@@ -62,7 +62,8 @@ describe('create clients', () => {
       });
     nock(testHost)
       .post('/fineract-provider/api/v1/savingsaccounts')
-      .reply(200, (uri, body) => {
+      .reply(200, async (request) => {
+        const body = await request.json();
         webhookPayloads.push(body);
         savingsCounter += 1;
         return {
@@ -103,8 +104,8 @@ describe('create clients', () => {
     };
     nock(testHost)
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
-      .reply(200, (uri, body) => {
-        webhookPayloads.push(body);
+      .reply(200, async (request) => {
+        webhookPayloads.push(await request.json());
         return [
           {
             statusCode: 200,
@@ -115,7 +116,8 @@ describe('create clients', () => {
     nock(testHost)
       .post('/fineract-provider/api/v1/savingsaccounts')
       .twice()
-      .reply(200, (uri, body) => {
+      .reply(200, async (request) => {
+        const body = await request.json();
         webhookPayloads.push(body);
         savingsCounter += 1;
         return {

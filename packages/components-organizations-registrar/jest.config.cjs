@@ -9,7 +9,10 @@ module.exports = {
   roots: ['src'],
   testEnvironment: 'jsdom',
   transform: { '^.+\\.[jt]sx?$': '@swc/jest' },
-  transformIgnorePatterns: ['node_modules/', '\\.(css|scss|sass)$'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!decode-uri-component|react-hotkeys-hook)',
+    '\\.(css|scss|sass)$',
+  ],
 
   // Recognized file extensions for modules
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
