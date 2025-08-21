@@ -18,6 +18,7 @@ import { register } from 'node:module';
 import { afterEach } from 'node:test';
 import { cleanup } from '@testing-library/react';
 
+register('./css-resolver.mjs', import.meta.url);
 register('./jsx-loader.mjs', import.meta.url);
 
 afterEach(cleanup);

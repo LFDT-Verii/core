@@ -21,7 +21,6 @@ import { TextEncoder, TextDecoder } from 'util';
 import { register } from 'node:module';
 
 register('./alias-resolver.mjs', import.meta.url);
-register('./jsx-resolver.mjs', import.meta.url);
 
 // eslint-disable-next-line better-mutation/no-mutation
 global.TextEncoder = TextEncoder;

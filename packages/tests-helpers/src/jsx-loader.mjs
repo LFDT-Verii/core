@@ -14,35 +14,10 @@
  * limitations under the License.
  *
  */
-import { extname } from 'path';
-
-const requiredCode = "import * as React from 'react';";
-const css = new URL('mocks/css.mjs', import.meta.url).href;
-
-/**
- *
- * This hook intercepts module resolution, allowing us to handle
- * CSS/SCSS files in a custom way. Instead of actually loading the CSS,
- * we short-circuit the resolution and return a mock module.
- *
- * @type {import('node:module').ResolveHook}
- */
-export const resolve = async (specifier, ctx, nextResolve) => {
-  const ext = extname(specifier);
-  if (ext === '.css' || ext === '.scss') {
-    // console.info(JSON.stringify({ resolver: 'css', specifier }));
-
-    // For CSS/SCSS, return the mock CSS module and skip default resolution.
-    return {
-      format: 'module',
-      url: css,
-      shortCircuit: true,
-    };
-  }
-
-  // console.info(JSON.stringify({ resolver: 'none', specifier }));
-  return nextResolve(specifier);
-};
+import { fileURLToPath } from 'url';
+import { readFile } from 'fs/promises';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import swc from '@swc/core';
 
 /**
  *
@@ -52,19 +27,38 @@ export const resolve = async (specifier, ctx, nextResolve) => {
  *
  * @type {import('node:module').LoadHook}
  */
-export const load = async (url, ctx, nextLoad) => {
-  const ext = extname(url);
-  try {
-    const result = await nextLoad(url, ctx);
-    if (ext === '.jsx' || ext === '.tsx') {
-      // Ensure React is in scope for JSX transforms.
-      // eslint-disable-next-line better-mutation/no-mutation
-      result.source = requiredCode + result.source;
-    }
 
-    return result;
-  } catch (e) {
-    console.error(e);
-    throw e;
+export const load = async (url, context, nextLoad) => {
+  if (url.endsWith('.jsx')) {
+    const filepath = fileURLToPath(url);
+    const code = await readFile(filepath, 'utf8');
+
+    const { code: transformedCode } = await swc.transform(code, {
+      filename: filepath,
+      jsc: {
+        parser: {
+          syntax: 'ecmascript',
+          jsx: true,
+        },
+        target: 'es2020',
+        transform: {
+          react: {
+            runtime: 'automatic', // or "classic" if you prefer React.createElement
+          },
+        },
+      },
+      sourceMaps: 'inline',
+      module: {
+        type: 'es6',
+      },
+    });
+
+    return {
+      format: 'module',
+      source: transformedCode,
+      shortCircuit: true,
+    };
   }
+
+  return nextLoad(url, context);
 };

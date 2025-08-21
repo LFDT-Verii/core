@@ -77,7 +77,7 @@ describe('validate cao plugin test suite', () => {
     );
   });
 
-  it('should ignore if register does not response', async () => {
+  it('should ignore if register does not respond', async () => {
     await validateCao.call({
       ...fastify,
       config: {
@@ -93,6 +93,25 @@ describe('validate cao plugin test suite', () => {
       config: {
         ...fastify.config,
         validateCaoDid: false,
+      },
+    });
+  });
+
+  it('should not warn for valid cao', async () => {
+    nock('http://oracle.localhost.test')
+      .get('/api/v0.6/organizations/didtest/verified-profile')
+      .reply(200, {
+        credentialSubject: {
+          permittedVelocityServiceCategory: [
+            ServiceCategories.CredentialAgentOperator,
+          ],
+        },
+      });
+    await validateCao.call({
+      ...fastify,
+      config: {
+        ...fastify.config,
+        caoDid: 'didtest',
       },
     });
   });
