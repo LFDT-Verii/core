@@ -8050,10 +8050,10 @@ cbor@^5.2.0:
     bignumber.js "^9.0.1"
     nofilter "^1.0.4"
 
-cborg@4.2.12:
-  version "4.2.12"
-  resolved "https://registry.npmjs.org/cborg/-/cborg-4.2.12.tgz#2f9826773f559e436cb85a49c88fc1bb08bdc373"
-  integrity sha512-z126yLoavS75cdTuiKu61RC3Y3trqtDAgQRa5Q0dpHn1RmqhIedptWXKnk0lQ5yo/GmcV9myvIkzFgZ8GnqSog==
+cborg@4.2.13:
+  version "4.2.13"
+  resolved "https://registry.npmjs.org/cborg/-/cborg-4.2.13.tgz#81eeae1437a770b1b40dc94d2f30a943cdb7fcd9"
+  integrity sha512-HAiZCITe/5Av0ukt6rOYE+VjnuFGfujN3NUKgEbIlONpRpsYMZAa+Bjk16mj6dQMuB0n81AuNrcB9YVMshcrfA==
 
 chalk@4.1.0:
   version "4.1.0"
