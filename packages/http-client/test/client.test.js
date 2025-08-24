@@ -109,7 +109,7 @@ describe('Http Client Package', () => {
       beforeAll(() => {
         httpClient = initHttpClient({
           rejectUnauthorized: false,
-          skipAgentInit: true,
+          useExistingGlobalAgent: true,
           prefixUrls: [origin],
         })(origin, {
           log: console,
@@ -276,7 +276,7 @@ describe('Http Client Package', () => {
           .reply(200, { message: 'matched' });
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
-          skipAgentInit: true,
+          useExistingGlobalAgent: true,
         })({
           log: console,
           traceId: 'TRACE-ID',
@@ -300,7 +300,7 @@ describe('Http Client Package', () => {
           .reply(200, { message: 'matched' });
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
-          skipAgentInit: true,
+          useExistingGlobalAgent: true,
         })({
           log: console,
           traceId: 'TRACE-ID',

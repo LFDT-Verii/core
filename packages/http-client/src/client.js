@@ -34,7 +34,7 @@ const initCache = () => new cacheStores.MemoryCacheStore();
 const initHttpClient = (options) => {
   const {
     prefixUrls,
-    skipAgentInit,
+    useExistingGlobalAgent,
     clientId,
     clientSecret,
     tokensEndpoint,
@@ -55,12 +55,12 @@ const initHttpClient = (options) => {
     registeredPrefixUrls.set(prefixUrl, parsedPrefixUrl);
   }
 
-  if (!skipAgentInit) {
+  if (!useExistingGlobalAgent) {
     const agent =
       new Agent(clientOptions).compose([
         interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false }),
         interceptors.responseError(),
-        interceptors.cache({ cache, methods: ['GET'] }),
+        ...addCache(cache),
         ...(tokensEndpoint
           ? [
             createOidcInterceptor({
@@ -77,6 +77,13 @@ const initHttpClient = (options) => {
       ]);
 
     setGlobalDispatcher(agent);
+  } else {
+    const existingAgent = getGlobalDispatcher();
+    const updatedAgent = existingAgent.compose([
+      interceptors.responseError(),
+      ...addCache(cache),
+    ]);
+    setGlobalDispatcher(updatedAgent);
   }
 
   const request = async (
@@ -196,6 +203,9 @@ const buildRelativePath = (rootPath, url, reqOptions) =>
 
 const addSearchParams = (path, searchParams) =>
   searchParams != null ? `${path}?${searchParams}` : path;
+
+const addCache = (store) =>
+  store ? [interceptors.cache({ store, methods: ['GET'] })] : [];
 
 const HTTP_VERBS = {
   GET: 'GET',

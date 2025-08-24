@@ -24,18 +24,16 @@ const buildFastify = () => {
   const { initHttpClient } = require('@verii/http-client');
   const fastify = require('fastify')()
     .register(cachePlugin)
-    .decorate('baseRequest', () => initHttpClient({ cache: fastify.cache }), [
-      'cache',
-    ])
+    .decorate('baseRequest', () => initHttpClient({ cache: fastify.cache, useExistingGlobalAgent: true }))
     .addHook('preValidation', async (req) => {
-      req.fetch = fastify.baseRequest(req);
+      req.fetch = fastify.baseRequest()(req);
     });
 
   fastify.get('/test-csv', async (req) => {
     const response = await req.fetch
-      .get('https://www.example.com/user', { cache: req.cache })
-      .json();
-    return response;
+      .get('https://www.example.com/user', { cache: req.cache });
+    const result = await response.json();
+    return result;
   });
 
   return fastify;
@@ -90,9 +88,15 @@ describe('cache-plugin test suite', () => {
     expect(response2.statusCode).toEqual(200);
     expect(response2.json()).toEqual({ name: 'user' });
     expect(getUserNock.isDone()).toBe(true);
-    expect(fastify.cache.size).toEqual(1);
-    expect(
-      fastify.cache.get('cacheable-request:GET:https://www.example.com/user')
-    ).toEqual(expect.any(String));
+
+    const cachedResponse = fastify.cache.get({
+      origin: 'https://www.example.com',
+      method: 'GET',
+      path: '/user',
+    });
+    const cachedResponseText = JSON.parse(Buffer.from(cachedResponse.body[0]).toString());
+
+    expect(cachedResponse.body.length).toEqual(1);
+    expect(cachedResponseText).toEqual({ name: 'user' });
   });
 });
