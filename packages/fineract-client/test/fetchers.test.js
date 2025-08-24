@@ -47,8 +47,9 @@ describe('fineract client test suite', () => {
 
   beforeAll(async () => {
     fineractFetch = initHttpClient({
-      prefixUrl: testHost,
-    })({ log: console });
+      prefixUrls: [testHost],
+      useExistingGlobalAgent: true,
+    })(testHost, { log: console });
   });
 
   beforeEach(async () => {
@@ -90,7 +91,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
-      expect(webhookPayload).toEqual([
+      expect(webhookPayload.json).toEqual([
         {
           requestId: expect.any(Number),
           relativeUrl: 'accounttransfers',
@@ -178,7 +179,7 @@ describe('fineract client test suite', () => {
           fineractFetch,
         }
       );
-      expect(webhookPayload).toEqual([
+      expect(webhookPayload.json).toEqual([
         {
           requestId: expect.any(Number),
           relativeUrl: 'accounttransfers',
@@ -242,7 +243,7 @@ describe('fineract client test suite', () => {
           fineractFetch,
         }
       );
-      expect(webhookPayload).toEqual([
+      expect(webhookPayload.json).toEqual([
         {
           requestId: expect.any(Number),
           relativeUrl: 'accounttransfers',
@@ -303,7 +304,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
-      expect(webhookPayload).toEqual([
+      expect(webhookPayload.json).toEqual([
         {
           requestId: expect.any(Number),
           relativeUrl: 'clients',
@@ -349,7 +350,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
-      expect(webhookPayload).toEqual([
+      expect(webhookPayload.json).toEqual([
         {
           requestId: expect.any(Number),
           relativeUrl: `vouchers/${burnVoucherInput.clientId}`,
@@ -402,7 +403,7 @@ describe('fineract client test suite', () => {
           },
         },
       ]);
-      expect(webhookPayload).toEqual([
+      expect(webhookPayload.json).toEqual([
         {
           requestId: expect.any(Number),
           relativeUrl: 'clients',
@@ -442,7 +443,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
-      expect(webhookPayload).toEqual([
+      expect(webhookPayload.json).toEqual([
         {
           requestId: expect.any(Number),
           relativeUrl: 'savingsaccounts',
@@ -452,7 +453,7 @@ describe('fineract client test suite', () => {
           ),
         },
       ]);
-      const parsedBody = JSON.parse(webhookPayload[0].body);
+      const parsedBody = JSON.parse(webhookPayload.json[0].body);
 
       expect(parsedBody).toMatchObject({ productId: ProductIds.STAKES });
     });
@@ -490,7 +491,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
-      expect(webhookPayload).toEqual([
+      expect(webhookPayload.json).toEqual([
         {
           requestId: expect.any(Number),
           relativeUrl: 'accounttransfers',
@@ -532,7 +533,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual({ clientId: '1' });
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         officeId: 1,
         legalFormId: 2,
         fullname: 'Fetcher test 1',
@@ -581,7 +582,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual({ tokenAccountId: '9' });
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         productId: 1,
         clientId: Number(clientId),
         dateFormat: 'yyyy-MM-dd',
@@ -635,7 +636,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual({ tokenAccountId: '9' });
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         productId: 2,
         clientId: Number(clientId),
         dateFormat: 'yyyy-MM-dd',
@@ -664,6 +665,8 @@ describe('fineract client test suite', () => {
         .post('/fineract-provider/api/v1/savingsaccounts')
         .reply(200, async (request) => {
           webhookPayload = await request.json();
+
+          return { savingsId: 'SOME-ID' }
         });
       const clientId = '1';
       const externalId = 'creditaccount1';
@@ -682,7 +685,7 @@ describe('fineract client test suite', () => {
         );
       };
       await func();
-      expect(webhookPayload).toMatchObject({
+      expect(webhookPayload.json).toMatchObject({
         autoApproveAndActivate: false,
       });
     });
@@ -699,6 +702,8 @@ describe('fineract client test suite', () => {
         )
         .reply(200, async (request) => {
           webhookPayload = await request.json();
+
+          return '';
         });
       const func = () => {
         return createVouchers(
@@ -714,7 +719,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual('');
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         couponBundleId: 'abc',
         symbol: 'VVO',
         quantity: `${quantity}`,
@@ -1011,7 +1016,7 @@ describe('fineract client test suite', () => {
         );
       };
       await expect(func()).resolves.toEqual({});
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         fromAccountId: Number(fromAccount),
         fromAccountType: 2,
         fromOfficeId: 1,

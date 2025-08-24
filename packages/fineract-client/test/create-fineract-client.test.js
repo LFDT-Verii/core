@@ -27,7 +27,10 @@ describe('create clients', () => {
 
   beforeAll(async () => {
     const baseContext = { log: console };
-    const fineractFetch = initHttpClient({ prefixUrl: testHost })(baseContext);
+    const fineractFetch = initHttpClient({ 
+      prefixUrls: [testHost],
+      useExistingGlobalAgent: true
+    })(testHost, baseContext);
     context = { ...baseContext, fineractFetch };
   });
 
@@ -52,7 +55,8 @@ describe('create clients', () => {
     nock(testHost)
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
       .reply(200, async (request) => {
-        webhookPayloads.push(await request.json());
+        const body = await request.json()
+        webhookPayloads.push(body.json);
         return [
           {
             statusCode: 200,
@@ -64,11 +68,11 @@ describe('create clients', () => {
       .post('/fineract-provider/api/v1/savingsaccounts')
       .reply(200, async (request) => {
         const body = await request.json();
-        webhookPayloads.push(body);
+        webhookPayloads.push(body.json);
         savingsCounter += 1;
         return {
           officeId: 1,
-          clientId: body.clientId,
+          clientId: body.json.clientId,
           savingsId: savingsCounter,
           resourceId: 9,
           gsimId: 0,
@@ -105,7 +109,8 @@ describe('create clients', () => {
     nock(testHost)
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
       .reply(200, async (request) => {
-        webhookPayloads.push(await request.json());
+        const body = await request.json();
+        webhookPayloads.push(body.json);
         return [
           {
             statusCode: 200,
@@ -118,11 +123,11 @@ describe('create clients', () => {
       .twice()
       .reply(200, async (request) => {
         const body = await request.json();
-        webhookPayloads.push(body);
+        webhookPayloads.push(body.json);
         savingsCounter += 1;
         return {
           officeId: 1,
-          clientId: body.clientId,
+          clientId: body.json.clientId,
           savingsId: savingsCounter,
           resourceId: 9,
           gsimId: 0,
