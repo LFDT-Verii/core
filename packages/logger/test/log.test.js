@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const { Writable } = require('node:stream');
 
 const { beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
+const { Writable } = require('node:stream');
 const { loggerProvider } = require('../index');
 
 const store = {};
@@ -44,6 +44,7 @@ class MemoryStream extends Writable {
 
 describe('Test pino logger provider with redaction', () => {
   const logStream = new MemoryStream('log');
+
   const log = loggerProvider({
     nodeEnv: 'test',
     logSeverity: 'info',
@@ -120,7 +121,6 @@ describe('Test pino logger provider with redaction', () => {
         'accept-version': '1.0.0',
         'x-trace-id': '1234',
         authorization:
-          // eslint-disable-next-line max-len
           'Bearer eywrongJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiwrongRtaW5AZXhhbXBsZS5jb20ifQ.EoDg_46Qi28tScwrong',
       },
       hostname: 'localhost',
@@ -261,7 +261,6 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      // eslint-disable-next-line max-len
       '"authClient":{"clientSecret":"...shhh..."},"body":{"authClient":{"clientSecret":"...shhh..."}}'
     );
   });
@@ -432,7 +431,6 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      // eslint-disable-next-line max-len
       '"body":{"credentialSubject":"...shhh..."},"credentialSubject":"...shhh..."}'
     );
   });
@@ -605,9 +603,7 @@ describe('Test pino logger provider with redaction', () => {
 
     log.info(dataForLog);
 
-    const logInfo =
-      // eslint-disable-next-line max-len
-      '"body":{"file":"...large file..."}';
+    const logInfo = '"body":{"file":"...large file..."}';
 
     expect(logStream.toString()).toMatch(logInfo);
   });
@@ -621,9 +617,7 @@ describe('Test pino logger provider with redaction', () => {
 
     log.info(dataForLog);
 
-    const logInfo =
-      // eslint-disable-next-line max-len
-      '"body":{"file":"...large file..."}';
+    const logInfo = '"body":{"file":"...large file..."}';
 
     expect(logStream.toString()).toMatch(logInfo);
   });
@@ -639,9 +633,7 @@ describe('Test pino logger provider with redaction', () => {
 
     log.info(dataForLog);
 
-    const logInfo =
-      // eslint-disable-next-line max-len
-      '"err":{"gatewayResponse":"...large object..."}';
+    const logInfo = '"err":{"gatewayResponse":"...large object..."}';
 
     expect(logStream.toString()).toMatch(logInfo);
   });
