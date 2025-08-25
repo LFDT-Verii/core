@@ -14,15 +14,44 @@
  * limitations under the License.
  */
 
-const pino = require('pino');
+const { Writable } = require('node:stream');
 const { loggerProvider } = require('../index');
 
+const store = {};
+class MemoryStream extends Writable {
+  constructor(key, options) {
+    super(options);
+    this.key = key;
+    store[this.key] = Buffer.from('');
+  }
+
+  _write(chunk, enc, cb) {
+    store[this.key] = Buffer.concat([store[this.key], Buffer.from(chunk, enc)]);
+    cb();
+  }
+
+  reset() {
+    store[this.key] = Buffer.from('');
+  }
+
+  toString() {
+    return store[this.key].toString();
+  }
+}
+
 describe('Test pino logger provider with redaction', () => {
+  const logStream = new MemoryStream('log');
+
   const log = loggerProvider({
     nodeEnv: 'test',
     logSeverity: 'info',
     version: '1.0',
     traceIdHeader: 'x-trace-id',
+    destination: logStream,
+  });
+
+  beforeEach(() => {
+    logStream.reset();
   });
 
   it('should correctly serialize request object', () => {
@@ -89,7 +118,6 @@ describe('Test pino logger provider with redaction', () => {
         'accept-version': '1.0.0',
         'x-trace-id': '1234',
         authorization:
-          // eslint-disable-next-line max-len
           'Bearer eywrongJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiwrongRtaW5AZXhhbXBsZS5jb20ifQ.EoDg_46Qi28tScwrong',
       },
       hostname: 'localhost',
@@ -120,23 +148,11 @@ describe('Test pino logger provider with redaction', () => {
       vclServiceDeskToken: '123',
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        // eslint-disable-next-line max-len
-        '"secret":"...shhh...","allowedToLog":"123","vclOauthClientSecret":"...shhh...","vnfBrokerClientSecret":"...shhh...","stripeWebhookEndpointSecret":"...shhh...","vclServiceDeskToken":"...shhh..."'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        // eslint-disable-next-line max-len
-        '"secret":"...shhh...","allowedToLog":"123","vclOauthClientSecret":"...shhh...","vnfBrokerClientSecret":"...shhh...","stripeWebhookEndpointSecret":"...shhh...","vclServiceDeskToken":"...shhh..."'
-      )
+    expect(logStream.toString()).toMatch(
+      // eslint-disable-next-line max-len
+      '"secret":"...shhh...","allowedToLog":"123","vclOauthClientSecret":"...shhh...","vnfBrokerClientSecret":"...shhh...","stripeWebhookEndpointSecret":"...shhh...","vclServiceDeskToken":"...shhh..."'
     );
   });
 
@@ -156,21 +172,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"keys":[{"key":"...shhh..."}],"body":{"keys":[{"key":"...shhh..."}]}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"keys":[{"key":"...shhh..."}],"body":{"keys":[{"key":"...shhh..."}]}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"keys":[{"key":"...shhh..."}],"body":{"keys":[{"key":"...shhh..."}]}'
     );
   });
 
@@ -182,21 +187,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"access_token":"...shhh...","body":{"access_token":"...shhh..."}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"access_token":"...shhh...","body":{"access_token":"...shhh..."}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"access_token":"...shhh...","body":{"access_token":"...shhh..."}'
     );
   });
 
@@ -209,21 +203,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"Authorization":"...shhh...","headers":{"Authorization":"...shhh...","authorization":"...shhh..."}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"Authorization":"...shhh...","headers":{"Authorization":"...shhh...","authorization":"...shhh..."}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"Authorization":"...shhh...","headers":{"Authorization":"...shhh...","authorization":"...shhh..."}'
     );
   });
 
@@ -232,18 +215,9 @@ describe('Test pino logger provider with redaction', () => {
       vnfClientSecret: 'vnfClientSecret',
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('"vnfClientSecret":"...shhh..."')
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining('"vnfClientSecret":"...shhh..."')
-    );
+    expect(logStream.toString()).toMatch('"vnfClientSecret":"...shhh..."');
   });
 
   it('Redaction should shh clientSecret of authClients', () => {
@@ -262,21 +236,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"authClients":[{"clientSecret":"...shhh..."}],"body":{"authClients":[{"clientSecret":"...shhh..."}]}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"authClients":[{"clientSecret":"...shhh..."}],"body":{"authClients":[{"clientSecret":"...shhh..."}]}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"authClients":[{"clientSecret":"...shhh..."}],"body":{"authClients":[{"clientSecret":"...shhh..."}]}'
     );
   });
 
@@ -292,44 +255,20 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        // eslint-disable-next-line max-len
-        '"authClient":{"clientSecret":"...shhh..."},"body":{"authClient":{"clientSecret":"...shhh..."}}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        // eslint-disable-next-line max-len
-        '"authClient":{"clientSecret":"...shhh..."},"body":{"authClient":{"clientSecret":"...shhh..."}}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"authClient":{"clientSecret":"...shhh..."},"body":{"authClient":{"clientSecret":"...shhh..."}}'
     );
   });
 
   it('Redaction of stripeSecretKey', () => {
     const dataForLog = { stripeSecretKey: 'SECRET-KEY', allowedToLog: '123' };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"stripeSecretKey":"...shhh...","allowedToLog":"123"'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"stripeSecretKey":"...shhh...","allowedToLog":"123"'
-      )
+    expect(logStream.toString()).toMatch(
+      '"stripeSecretKey":"...shhh...","allowedToLog":"123"'
     );
   });
 
@@ -341,21 +280,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"token":"...shhh...","body":{"token":"...shhh..."}}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"token":"...shhh...","body":{"token":"...shhh..."}}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"token":"...shhh...","body":{"token":"...shhh..."}}'
     );
   });
 
@@ -371,21 +299,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"key":{"key":"...shhh..."},"body":{"key":{"key":"...shhh..."}}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"key":{"key":"...shhh..."},"body":{"key":{"key":"...shhh..."}}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"key":{"key":"...shhh..."},"body":{"key":{"key":"...shhh..."}}'
     );
   });
 
@@ -398,21 +315,10 @@ describe('Test pino logger provider with redaction', () => {
       ],
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"relatedResource":{"id":"...shhh...","foo":"bar"}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"relatedResource":{"id":"...shhh...","foo":"bar"}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"relatedResource":{"id":"...shhh...","foo":"bar"}'
     );
   });
 
@@ -428,21 +334,10 @@ describe('Test pino logger provider with redaction', () => {
       ],
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"relatedResource":[{"id":"...shhh...","foo":"bar"},{"id":"...shhh..."}]'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"relatedResource":[{"id":"...shhh...","foo":"bar"},{"id":"...shhh..."}]'
-      )
+    expect(logStream.toString()).toMatch(
+      '"relatedResource":[{"id":"...shhh...","foo":"bar"},{"id":"...shhh..."}]'
     );
   });
 
@@ -457,21 +352,10 @@ describe('Test pino logger provider with redaction', () => {
       ],
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"credentials":[{"credentialSubject":"...shhh..."'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"credentials":[{"credentialSubject":"...shhh..."'
-      )
+    expect(logStream.toString()).toMatch(
+      '"credentials":[{"credentialSubject":"...shhh..."'
     );
   });
 
@@ -486,21 +370,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"body":{"credential":{"credentialSubject":"...shhh..."}}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"body":{"credential":{"credentialSubject":"...shhh..."}}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"body":{"credential":{"credentialSubject":"...shhh..."}}'
     );
   });
 
@@ -513,17 +386,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('"credential":{"credentialSubject":"...shhh..."}')
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining('"credential":{"credentialSubject":"...shhh..."}')
+    expect(logStream.toString()).toMatch(
+      '"credential":{"credentialSubject":"...shhh..."}'
     );
   });
 
@@ -540,21 +406,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"body":{"credentials":[{"credentialSubject":"...shhh..."'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"body":{"credentials":[{"credentialSubject":"...shhh..."'
-      )
+    expect(logStream.toString()).toMatch(
+      '"body":{"credentials":[{"credentialSubject":"...shhh..."'
     );
   });
 
@@ -570,23 +425,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        // eslint-disable-next-line max-len
-        '"body":{"credentialSubject":"...shhh..."},"credentialSubject":"...shhh..."}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        // eslint-disable-next-line max-len
-        '"body":{"credentialSubject":"...shhh..."},"credentialSubject":"...shhh..."}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"body":{"credentialSubject":"...shhh..."},"credentialSubject":"...shhh..."}'
     );
   });
 
@@ -601,17 +443,10 @@ describe('Test pino logger provider with redaction', () => {
       ],
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('"body":[{"credentialSubject":"...shhh..."}]')
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining('"body":[{"credentialSubject":"...shhh..."}]')
+    expect(logStream.toString()).toMatch(
+      '"body":[{"credentialSubject":"...shhh..."}]'
     );
   });
 
@@ -628,21 +463,10 @@ describe('Test pino logger provider with redaction', () => {
       ],
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"credentialEntries":[{"credential":{"credentialSubject":"...shhh..."}}]'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"credentialEntries":[{"credential":{"credentialSubject":"...shhh..."}}]'
-      )
+    expect(logStream.toString()).toMatch(
+      '"credentialEntries":[{"credential":{"credentialSubject":"...shhh..."}}]'
     );
   });
 
@@ -659,21 +483,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}]}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}]}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}]}'
     );
   });
 
@@ -690,21 +503,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"body":{"idDocumentCredentials":[{"credentialSubject":"...shhh..."}]}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"body":{"idDocumentCredentials":[{"credentialSubject":"...shhh..."}]}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"body":{"idDocumentCredentials":[{"credentialSubject":"...shhh..."}]}'
     );
   });
 
@@ -722,21 +524,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"body":{"phoneCredentials":[{"credentialSubject":"...shhh..."}],"phones":["...shhh..."]}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"body":{"phoneCredentials":[{"credentialSubject":"...shhh..."}],"phones":["...shhh..."]}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"body":{"phoneCredentials":[{"credentialSubject":"...shhh..."}],"phones":["...shhh..."]}'
     );
   });
 
@@ -754,21 +545,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}],"emails":["...shhh..."]}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}],"emails":["...shhh..."]}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}],"emails":["...shhh..."]}'
     );
   });
 
@@ -785,21 +565,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '"body":{"issuedCredentials":[{"credentialSubject":"...shhh..."}]}'
-      )
-    );
-
-    expect(output).toEqual(
-      expect.stringContaining(
-        '"body":{"issuedCredentials":[{"credentialSubject":"...shhh..."}]}'
-      )
+    expect(logStream.toString()).toMatch(
+      '"body":{"issuedCredentials":[{"credentialSubject":"...shhh..."}]}'
     );
   });
 
@@ -814,17 +583,12 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
     const logInfo =
       '"body":{"account":{"refreshToken":"...shhh..."},"access_token":"...shhh...","refresh_token":"...shhh..."}';
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining(logInfo));
-
-    expect(output).toEqual(expect.stringContaining(logInfo));
+    expect(logStream.toString()).toMatch(logInfo);
   });
 
   it('Redaction should redact body.file', () => {
@@ -834,18 +598,11 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    const logInfo =
-      // eslint-disable-next-line max-len
-      '"body":{"file":"...large file..."}';
+    const logInfo = '"body":{"file":"...large file..."}';
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining(logInfo));
-
-    expect(output).toEqual(expect.stringContaining(logInfo));
+    expect(logStream.toString()).toMatch(logInfo);
   });
 
   it('Redaction should redact body.file', () => {
@@ -855,18 +612,11 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    const logInfo =
-      // eslint-disable-next-line max-len
-      '"body":{"file":"...large file..."}';
+    const logInfo = '"body":{"file":"...large file..."}';
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining(logInfo));
-
-    expect(output).toEqual(expect.stringContaining(logInfo));
+    expect(logStream.toString()).toMatch(logInfo);
   });
 
   it('Redaction should redact err.gatewayResponse', () => {
@@ -878,17 +628,10 @@ describe('Test pino logger provider with redaction', () => {
       },
     };
 
-    const stream = log[pino.pino.symbols.streamSym];
-    const consoleSpy = jest.spyOn(stream, 'write');
-    const output = log[pino.pino.symbols.asJsonSym](dataForLog);
     log.info(dataForLog);
 
-    const logInfo =
-      // eslint-disable-next-line max-len
-      '"err":{"gatewayResponse":"...large object..."}';
+    const logInfo = '"err":{"gatewayResponse":"...large object..."}';
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining(logInfo));
-
-    expect(output).toEqual(expect.stringContaining(logInfo));
+    expect(logStream.toString()).toMatch(logInfo);
   });
 });
