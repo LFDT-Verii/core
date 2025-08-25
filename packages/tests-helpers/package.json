@@ -27,7 +27,7 @@
     "expect": "29.7.0",
     "lodash": "^4.17.21",
     "mongodb": "~6.18.0",
-    "nanoid": "~5.0.9"
+    "nanoid": "~3.3.11"
   },
   "peerDependencies": {
     "@testing-library/react": ">14.1.0"
@@ -42,7 +42,7 @@
     "eslint-plugin-prefer-arrow-functions": "3.6.2",
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
-    "nanoid": "5.0.9",
+    "nanoid": "3.3.11",
     "prettier": "2.8.8"
   }
 }
