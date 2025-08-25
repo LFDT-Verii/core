@@ -121,7 +121,13 @@ const buildUserId = (req) => {
   return {};
 };
 
-const loggerProvider = ({ nodeEnv, logSeverity, traceIdHeader, version }) => {
+const loggerProvider = ({
+  nodeEnv,
+  logSeverity,
+  traceIdHeader,
+  version,
+  destination,
+}) => {
   // adds logging of the traceId if its on the request
   const serializers = {
     req: (req) => ({
@@ -157,7 +163,7 @@ const loggerProvider = ({ nodeEnv, logSeverity, traceIdHeader, version }) => {
       serializers,
       redact,
     },
-    prettyPrint(nodeEnv)
+    destination ?? prettyPrint(nodeEnv)
   );
 };
 

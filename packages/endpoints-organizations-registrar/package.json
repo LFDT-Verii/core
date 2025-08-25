@@ -49,7 +49,7 @@
     "@verii/validation": "0.5.0-build",
     "@verii/vc-checks": "0.5.0-build",
     "@verii/verii-verification": "0.5.0-build",
-    "auth0": "4.27.0",
+    "auth0": "4.28.0",
     "bs58": "~6.0.0",
     "date-fns": "~3.6.0",
     "env-var": "^7.0.0",
