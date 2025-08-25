@@ -18,7 +18,7 @@
 const { pick } = require('lodash/fp');
 const { validationPlugin } = require('@verii/validation');
 const { oauthPlugin } = require('@verii/auth');
-const { requestPlugin } = require('@verii/fastify-plugins');
+const { httpClientPlugin } = require('@verii/fastify-plugins');
 const {
   credentialTypesRegistrarEndpoints,
 } = require('./credential-types-registrar-endpoints');
@@ -41,10 +41,10 @@ const initServer = (server) => {
     .addHook('preValidation', async (req) => {
       req.getDocValidator = server.getDocValidator;
     })
-    .register(requestPlugin, {
+    .register(httpClientPlugin, {
       name: 'fetch',
       options: pick(
-        ['nodeEnv', 'requestTimeout', 'traceIdHeader'],
+        ['nodeEnv', 'requestTimeout', 'traceIdHeader', 'useExistingGlobalAgent'],
         server.config
       ),
     })

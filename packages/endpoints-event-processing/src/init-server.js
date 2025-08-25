@@ -20,7 +20,7 @@ const {
 } = require('@verii/base-contract-io');
 const basicAuth = require('@fastify/basic-auth');
 const { oauthPlugin, initBasicAuthValidate } = require('@verii/auth');
-const { requestPlugin } = require('@verii/fastify-plugins');
+const { httpClientPlugin } = require('@verii/fastify-plugins');
 const { eventProcessingEndpoints } = require('./event-processing-endpoints');
 
 const initServer = (server) => {
@@ -44,7 +44,7 @@ const initServer = (server) => {
 
   return server
     .register(rpcProviderPlugin)
-    .register(requestPlugin, {
+    .register(httpClientPlugin, {
       name: 'fineractFetch',
       options: {
         ...server.config,
@@ -57,6 +57,7 @@ const initServer = (server) => {
         customHeaders: {
           'fineract-platform-tenantid': 'default',
         },
+        useExistingGlobalAgent: server.config.useExistingGlobalAgent,
       },
     })
     .register(eventProcessingEndpoints);
