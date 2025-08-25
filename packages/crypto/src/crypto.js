@@ -19,7 +19,6 @@ const crypto = require('crypto');
 const argon2 = require('argon2');
 const { flow, isString, omit } = require('lodash/fp');
 const randomNumber = require('random-number-csprng');
-const multihash = require('multihashing');
 const keyto = require('@trust/keyto');
 const { HEX_FORMAT } = require('@verii/test-regexes');
 const { KeyAlgorithms } = require('./constants');
@@ -32,8 +31,13 @@ const generatePositive256BitHexString = () =>
   `0x${crypto.randomBytes(32).toString('hex')}`;
 
 const createCommitment = (val) => {
-  const hash = multihash(val, 'sha2-256');
-  return Buffer.from(hash).toString('base64');
+  const hash = calculateDigest('sha256')(val);
+  const multihashBuffer = Buffer.concat([
+    Buffer.from([0x12]), // sha256 code
+    Buffer.from(hash.length.toString(16), 'hex'), // digest length
+    hash,
+  ]);
+  return multihashBuffer.toString('base64');
 };
 
 const generateJWAKeyPair = (dsaOrConfig) => {

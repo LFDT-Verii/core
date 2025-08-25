@@ -23,7 +23,6 @@
     "cborg": "4.2.13",
     "elliptic": "^6.6.1",
     "lodash": "^4.17.21",
-    "multihashing": "~0.3.3",
     "random-number-csprng": "^1.0.2"
   },
   "devDependencies": {
