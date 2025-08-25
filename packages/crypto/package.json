@@ -22,7 +22,7 @@
     "argon2": "0.43.1",
     "bigint-crypto-utils": "3.3.0",
     "canonicalize": "^2.1.0",
-    "cborg": "4.2.12",
+    "cborg": "4.2.13",
     "elliptic": "^6.6.1",
     "lodash": "^4.17.21",
     "multihashing": "~0.3.3",
