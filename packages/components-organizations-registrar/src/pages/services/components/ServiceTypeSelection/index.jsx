@@ -4,9 +4,9 @@ import { Form } from 'react-admin';
 import PropTypes from 'prop-types';
 import Loading from '@/components/Loading.jsx';
 import CustomDropDown from '@/components/common/CustomDropDown.jsx';
-import serviceTypes from '@/utils/serviceTypes';
+import serviceTypes from '@/utils/serviceTypes.js';
 
-import { getTitle } from '../../utils';
+import { getTitle } from '../../utils/index.js';
 
 const selectedStep = 1;
 

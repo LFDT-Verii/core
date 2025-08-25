@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { generateKeyPair } = require('@verii/crypto');
 const {
@@ -33,65 +35,71 @@ const context = {
   config,
 };
 
-describe('Contract With Transacting Client Test Suite', () => {
-  jest.setTimeout(15000);
-  const { privateKey: deployerPrivateKey } = generateKeyPair();
-  const rpcUrl = 'http://localhost:8545';
-  const authenticate = () => 'TOKEN';
-  const rpcProvider = initProvider(rpcUrl, authenticate);
+describe(
+  'Contract With Transacting Client Test Suite',
+  { timeout: 15000 },
+  () => {
+    const { privateKey: deployerPrivateKey } = generateKeyPair();
+    const rpcUrl = 'http://localhost:8545';
+    const authenticate = () => 'TOKEN';
+    const rpcProvider = initProvider(rpcUrl, authenticate);
 
-  const deployContractWrapper = () =>
-    deployContract(testNoEventsAbi, deployerPrivateKey, rpcUrl);
+    const deployContractWrapper = () =>
+      deployContract(testNoEventsAbi, deployerPrivateKey, rpcUrl);
 
-  beforeAll(async () => {
-    await mongoFactoryWrapper('test-contract-with-transacting-client', context);
-  });
-
-  afterAll(async () => {
-    await mongoCloseWrapper();
-  });
-
-  describe('Contract With Transacting Client Creation Test Suite', () => {
-    let contractInstance;
-    let contractClient;
-
-    beforeEach(async () => {
-      contractInstance = await deployContractWrapper();
+    before(async () => {
+      await mongoFactoryWrapper(
+        'test-contract-with-transacting-client',
+        context
+      );
     });
-    it('Creating a client with no contractAddress should fail', async () => {
-      const { privateKey: clientPrivateKey } = generateKeyPair();
-      const func = async () =>
-        initContractWithTransactingClient(
+
+    after(async () => {
+      await mongoCloseWrapper();
+    });
+
+    describe('Contract With Transacting Client Creation Test Suite', () => {
+      let contractInstance;
+      let contractClient;
+
+      beforeEach(async () => {
+        contractInstance = await deployContractWrapper();
+      });
+      it('Creating a client with no contractAddress should fail', async () => {
+        const { privateKey: clientPrivateKey } = generateKeyPair();
+        const func = async () =>
+          initContractWithTransactingClient(
+            {
+              privateKey: clientPrivateKey,
+              contractAbi: testEventsAbi,
+              rpcProvider,
+            },
+            context
+          );
+        expect(func).rejects.toThrowError(
+          'Check the required parameters: contractAddress'
+        );
+      });
+
+      it('Create a client', async () => {
+        const { privateKey: clientPrivateKey } = generateKeyPair();
+
+        const { transactingClient } = await initContractWithTransactingClient(
           {
             privateKey: clientPrivateKey,
+            contractAddress: await contractInstance.getAddress(),
             contractAbi: testEventsAbi,
             rpcProvider,
           },
           context
         );
-      expect(func).rejects.toThrowError(
-        'Check the required parameters: contractAddress'
-      );
+        contractClient = transactingClient;
+
+        expect(contractClient.wallet.provider).toEqual(rpcProvider);
+        expect(contractClient.contractClient.runner.provider).toEqual(
+          rpcProvider
+        );
+      });
     });
-
-    it('Create a client', async () => {
-      const { privateKey: clientPrivateKey } = generateKeyPair();
-
-      const { transactingClient } = await initContractWithTransactingClient(
-        {
-          privateKey: clientPrivateKey,
-          contractAddress: await contractInstance.getAddress(),
-          contractAbi: testEventsAbi,
-          rpcProvider,
-        },
-        context
-      );
-      contractClient = transactingClient;
-
-      expect(contractClient.wallet.provider).toEqual(rpcProvider);
-      expect(contractClient.contractClient.runner.provider).toEqual(
-        rpcProvider
-      );
-    });
-  });
-});
+  }
+);

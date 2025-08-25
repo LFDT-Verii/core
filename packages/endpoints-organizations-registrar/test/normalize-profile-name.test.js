@@ -15,6 +15,9 @@
  *
  */
 
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { normalizeProfileName } = require('../src/entities');
 
 describe('normalizeProfileName Test Suite', () => {

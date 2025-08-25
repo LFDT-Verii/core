@@ -17,7 +17,9 @@
 const { initSendActivationEmailsToCAOs } = require('../entities');
 
 const notifyCaos = async (fastify) => {
-  const sendActivationEmailsToCAOs = initSendActivationEmailsToCAOs(fastify);
+  const sendActivationEmailsToCAOs = await initSendActivationEmailsToCAOs(
+    fastify
+  );
 
   const eventHandler = (
     {

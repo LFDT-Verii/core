@@ -17,17 +17,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGetList } from 'react-admin';
 import PropTypes from 'prop-types';
-import { kebabCase } from 'lodash/string';
+import { kebabCase } from 'lodash-es';
 
 import Loading from '../../components/Loading.jsx';
 import Popup from '../../components/common/Popup.jsx';
-import { credentialTypesByServiceTypes } from '../../utils/serviceTypes';
-import { dataResources } from '../../utils/remoteDataProvider';
+import { credentialTypesByServiceTypes } from '../../utils/serviceTypes.js';
+import { dataResources } from '../../utils/remoteDataProvider.js';
 
 import { ServiceEndpointSelection } from '../services/components/ServiceEndpointSelection/index.jsx';
 import { ServiceTypeSelection } from '../services/components/ServiceTypeSelection/index.jsx';
 import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
-import { useIsIssuingInspection } from '../services/hooks/useIsIssuingInspection';
+import { useIsIssuingInspection } from '../services/hooks/useIsIssuingInspection.js';
 
 const OrganizationAddService = ({
   isModalOpened,

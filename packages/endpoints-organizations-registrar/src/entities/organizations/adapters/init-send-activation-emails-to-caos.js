@@ -24,12 +24,12 @@ const {
   initOrganizationRegistrarEmails,
 } = require('./init-organization-registrar-emails');
 
-const initSendActivationEmailsToCAOs = (initCtx) => {
+const initSendActivationEmailsToCAOs = async (initCtx) => {
   const { sendEmail, config, sendError } = initCtx;
   const { emailToCAOsForServicesActivation } =
     initOrganizationRegistrarEmails(config);
 
-  const { getUsersByIds } = initAuth0Provisioner(config);
+  const { getUsersByIds } = await initAuth0Provisioner(config);
 
   return async (
     organization,

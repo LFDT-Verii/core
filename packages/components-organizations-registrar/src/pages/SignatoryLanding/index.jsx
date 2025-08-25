@@ -3,8 +3,8 @@ import { Box } from '@mui/material';
 
 import { useGetOne } from 'ra-core';
 import Loading from '@/components/Loading.jsx';
-import { dataResources } from '@/utils/remoteDataProvider';
-import { useSignatoryResponse } from './hooks/useSignatoryResponse';
+import { dataResources } from '@/utils/remoteDataProvider.js';
+import { useSignatoryResponse } from './hooks/useSignatoryResponse.js';
 import { Wording } from './components/Wording.jsx';
 
 const SignatoryLanding = () => {

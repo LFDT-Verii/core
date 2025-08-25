@@ -1,4 +1,5 @@
-import { expect } from '@jest/globals';
+import { describe, test, mock } from 'node:test';
+import { expect } from 'expect';
 import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import JwtServiceRepositoryImpl from '../../src/impl/data/repositories/JwtServiceRepositoryImpl';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';
@@ -19,15 +20,13 @@ import VCLJwtDescriptor from '../../src/api/entities/VCLJwtDescriptor';
 
 describe('PresentationSubmission Tests', () => {
     const jwtSignServiceMock = new JwtSignServiceMock();
-    jwtSignServiceMock.sign = jest
-        .fn()
-        .mockResolvedValue(
-            Promise.resolve(
-                VCLJwt.fromEncodedJwt(
-                    PresentationSubmissionMocks.JwtEncodedSubmission
-                )
+    jwtSignServiceMock.sign = mock.fn(() =>
+        Promise.resolve(
+            VCLJwt.fromEncodedJwt(
+                PresentationSubmissionMocks.JwtEncodedSubmission
             )
-        );
+        )
+    );
     const jwtVerifyServiceMock = new JwtVerifyServiceMock();
     const jwtServiceRepository = new JwtServiceRepositoryImpl(
         jwtSignServiceMock,
@@ -91,8 +90,8 @@ describe('PresentationSubmission Tests', () => {
             identificationSubmission
         );
 
-        expect(jwtSignServiceMock.sign).toHaveBeenCalledTimes(1);
-        expect(jwtSignServiceMock.sign).toHaveBeenCalledWith(
+        expect(jwtSignServiceMock.sign.mock.callCount()).toEqual(1);
+        expect(jwtSignServiceMock.sign.mock.calls[0].arguments).toEqual([
             new VCLJwtDescriptor(
                 identificationSubmission.generatePayload(
                     identificationSubmission.didJwk.did
@@ -102,8 +101,8 @@ describe('PresentationSubmission Tests', () => {
             ),
             identificationSubmission.didJwk,
             null,
-            identificationSubmission.remoteCryptoServicesToken
-        );
+            identificationSubmission.remoteCryptoServicesToken,
+        ]);
 
         expect(identificationSubmissionResult).toEqual(
             expectedPresentationSubmissionResult

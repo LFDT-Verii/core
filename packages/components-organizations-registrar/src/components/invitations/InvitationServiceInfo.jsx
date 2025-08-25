@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import { Stack, Box, Typography, Link } from '@mui/material';
-import { serviceTypesIssuingOrInspection, CREDENTIAL_TYPES_IDS } from '@/utils/serviceTypes';
-import { chainNames } from '@/utils/chainNames';
-import { useConfig } from '@/utils/ConfigContext';
+import { serviceTypesIssuingOrInspection, CREDENTIAL_TYPES_IDS } from '@/utils/serviceTypes.js';
+import { chainNames } from '@/utils/chainNames.js';
+import { useConfig } from '@/utils/ConfigContext.js';
 
 const getServiceKey = (key) => {
   switch (key) {

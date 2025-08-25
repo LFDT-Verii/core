@@ -46,7 +46,7 @@ const {
 const organizationController = async (fastify) => {
   const { sendError } = fastify;
 
-  const auth0Provisioner = initAuth0Provisioner(fastify.config);
+  const auth0Provisioner = await initAuth0Provisioner(fastify.config);
   const provisionAuth0ClientGrants =
     initProvisionAuth0ClientGrants(auth0Provisioner);
 

@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { afterEach, before, after, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const fs = require('fs').promises;
 const path = require('path');
@@ -49,7 +51,7 @@ describe('S3 client', () => {
   const bucket = 'mockedbucket';
   let originalS3Client;
   let client;
-  beforeAll(async () => {
+  before(async () => {
     client = initS3Client({
       awsRegion: 'us-west-1',
       awsEndpoint: 'http://localhost:4566',
@@ -76,7 +78,7 @@ describe('S3 client', () => {
     await deleteS3Object(originalS3Client, bucket);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await originalS3Client.send(new DeleteBucketCommand({ Bucket: bucket }));
   });
 

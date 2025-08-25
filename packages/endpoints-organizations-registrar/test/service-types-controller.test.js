@@ -15,17 +15,20 @@
  *
  */
 
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const buildFastify = require('./helpers/build-fastify');
 
 describe('service types controller', () => {
   let fastify;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

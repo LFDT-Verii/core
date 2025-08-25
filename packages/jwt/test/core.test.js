@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const {
   jwtVerify: joseJwtVerify,
   generateKeyPair: joseGenerateKeyPair,
@@ -49,7 +52,7 @@ describe('JWT Tests', () => {
   let es256KeyPair;
   let hs384Secret;
   let hs384JoseSecret;
-  beforeAll(async () => {
+  before(async () => {
     secp256kJoseKeyPair = await joseGenerateKeyPair('ES256K');
     secp256kKeyPair = {
       privateKey: await exportJWK(secp256kJoseKeyPair.privateKey),
@@ -226,7 +229,7 @@ describe('JWT Tests', () => {
 
   describe('Safe Decode JWT', () => {
     let jwt;
-    beforeAll(async () => {
+    before(async () => {
       jwt = await new SignJWT(payload)
         .setProtectedHeader({ alg: 'ES256K' })
         .sign(secp256kJoseKeyPair.privateKey);

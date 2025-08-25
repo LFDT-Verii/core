@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const {
@@ -29,7 +32,7 @@ describe('tenant loader plugin', () => {
   let tenant;
   let db;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     db = await mongoDb();
@@ -37,12 +40,11 @@ describe('tenant loader plugin', () => {
     ({ persistTenant } = initTenantFactory(fastify));
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     db.collection('tenants').deleteMany({});
     tenant = await persistTenant();
   });
@@ -81,10 +83,9 @@ describe('tenant loader plugin', () => {
   });
 
   describe('plugin', () => {
-    // jest setup
     let server;
-    const decorateRequest = jest.fn().mockImplementation(() => server);
-    const addHook = jest.fn().mockImplementation(() => server);
+    const decorateRequest = mock.fn(() => server);
+    const addHook = mock.fn(() => server);
     server = { decorateRequest, addHook };
 
     it("should load tenant by tenantId matching the '_id'", async () => {

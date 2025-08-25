@@ -17,7 +17,7 @@
 /* eslint-disable */
 import { Link } from '@mui/material';
 import { useLocation } from 'react-router';
-import { Authorities } from '../constants/messageCodes';
+import { Authorities } from '@/constants/messageCodes.js';
 
 function fallbackCopyTextToClipboard(text, cb) {
   const textArea = document.createElement('textarea');

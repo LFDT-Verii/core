@@ -17,10 +17,9 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { ImageInput, useDataProvider, required, useStore } from 'react-admin';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { useFormContext } from 'react-hook-form';
-import { dataResources } from '../../../utils/remoteDataProvider';
-import theme from '../../../theme/theme';
+import { dataResources } from '../../../utils/remoteDataProvider.js';
+import theme from '../../../theme/theme.js';
 import { toBase64, ERRORS, IMAGE_STATUS_REFETCH_INTERVAL } from './utils.jsx';
 import ProfileLogo from './ProfileLogo.jsx';
 import Preview from './Preview.jsx';

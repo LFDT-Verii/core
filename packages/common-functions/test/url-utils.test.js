@@ -14,6 +14,9 @@
  * limitations under the License.
  *
  */
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const {
   appendSearchParam,
   appendSearchParamArray,

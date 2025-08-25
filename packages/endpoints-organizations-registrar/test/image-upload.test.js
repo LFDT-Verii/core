@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const initImageFactory = require('../src/entities/images/factories/images-factory');
@@ -27,7 +30,7 @@ describe('Organization image upload', () => {
   let fastify;
   let persistImage;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -38,7 +41,7 @@ describe('Organization image upload', () => {
     await mongoDb().collection('images').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

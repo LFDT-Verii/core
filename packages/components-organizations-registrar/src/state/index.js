@@ -15,5 +15,5 @@
  *
  */
 
-export { default as useParticipantAgreementState } from './participantAgreementState';
-export { default as useSelectedOrganization } from './selectedOrganizationState';
+export { default as useParticipantAgreementState } from './participantAgreementState.js';
+export { default as useSelectedOrganization } from './selectedOrganizationState.js';

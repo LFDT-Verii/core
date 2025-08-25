@@ -1,5 +1,5 @@
 const path = require('path');
-const eslintConfig = require('../../.eslintrc');
+const eslintConfig = require('../../.eslintrc.js');
 
 module.exports = {
   ...eslintConfig,
@@ -14,6 +14,10 @@ module.exports = {
     es6: true,
     browser: true,
     jest: true,
+  },
+  rules: {
+    ...eslintConfig.rules,
+    'import/extensions': ['error', 'always', { ignorePackages: true }],
   },
   settings: {
     'import/resolver': {

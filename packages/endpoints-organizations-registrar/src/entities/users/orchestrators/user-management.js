@@ -15,7 +15,6 @@
  *
  */
 
-const { ManagementClient } = require('auth0');
 const {
   camelCase,
   flow,
@@ -28,7 +27,16 @@ const {
 } = require('lodash/fp');
 const { initAuth0RoleArrToRolesObj } = require('../../oauth');
 
-const initManagementClient = ({ domain, clientId, clientSecret, audience }) => {
+const initManagementClient = async ({
+  domain,
+  clientId,
+  clientSecret,
+  audience,
+}) => {
+  // Use of async import for patching around https://github.com/nodejs/node/issues/58231
+  // Remove if migrating to esm
+  const { ManagementClient } = await import('auth0');
+
   return new ManagementClient({
     audience,
     domain,
@@ -37,7 +45,7 @@ const initManagementClient = ({ domain, clientId, clientSecret, audience }) => {
   });
 };
 
-const initUserManagement = ({
+const initUserManagement = async ({
   auth0ManagementApiAudience,
   auth0Domain,
   auth0ClientId,
@@ -47,7 +55,7 @@ const initUserManagement = ({
   auth0ClientFinanceAdminRoleId,
   auth0ClientSystemUserRoleId,
 } = {}) => {
-  const managementClient = initManagementClient({
+  const managementClient = await initManagementClient({
     audience: auth0ManagementApiAudience,
     domain: auth0Domain,
     clientId: auth0ClientId,

@@ -3,7 +3,6 @@ module.exports = {
     commonjs: true,
     es6: true,
     node: true,
-    jest: true,
   },
   extends: ['airbnb-base', 'prettier', 'prettier/prettier'],
   globals: {
@@ -109,7 +108,6 @@ module.exports = {
           '**/test/**/*.tsx',
           '**/setupTests.ts',
           '**/setupTests.js',
-          '**/jest.config.js',
           '**/vite.config.js',
           '**/.eslintrc.js',
         ],
@@ -127,6 +125,10 @@ module.exports = {
     },
     {
       files: [
+        '**/e2e/**/*.js',
+        '**/e2e/**/*.ts',
+        '**/e2e/**/*.jsx',
+        '**/e2e/**/*.tsx',
         '**/*.test.js',
         '**/*.test.jsx',
         '**/*.test.ts',
@@ -134,9 +136,6 @@ module.exports = {
         '**/test/**/*.js',
         '**/test/**/*.ts',
       ],
-      env: {
-        jest: true,
-      },
       rules: {
         'better-mutation/no-mutating-functions': 'off',
         'better-mutation/no-mutating-methods': 'off',

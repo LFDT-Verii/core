@@ -27,7 +27,7 @@ const invitationsController = async (fastify) => {
     await tableRegistry.invitations()
   );
 
-  const getOrCreateAuth0User = initGetOrCreateAuth0User(fastify);
+  const getOrCreateAuth0User = await initGetOrCreateAuth0User(fastify);
   const sendEmailToInvitee = initSendEmailInvitee(fastify);
 
   fastify.post(

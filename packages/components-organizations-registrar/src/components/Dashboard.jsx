@@ -16,7 +16,7 @@
 
 import { useEffect } from 'react';
 import { useRedirect } from 'react-admin';
-import useSelectedOrganization from '../state/selectedOrganizationState';
+import useSelectedOrganization from '../state/selectedOrganizationState.js';
 import Loading from './Loading.jsx';
 
 const Dashboard = () => {

@@ -3,6 +3,8 @@ import { Nullish } from '../VCLTypes';
 import VCLServiceTypes from './VCLServiceTypes';
 
 export class VCLOrganizationsSearchDescriptor {
+    public readonly queryParams;
+
     constructor(
         public readonly filter: Nullish<VCLFilter> = null,
         public readonly page: Nullish<VCLPage> = null,
@@ -16,9 +18,9 @@ export class VCLOrganizationsSearchDescriptor {
          * Prefer results that are the first word of the name, or first letter of a word
          */
         public readonly query: Nullish<string> = null
-    ) {}
-
-    public readonly queryParams = this.generateQueryParams();
+    ) {
+        this.queryParams = this.generateQueryParams();
+    }
 
     // eslint-disable-next-line complexity
     private generateQueryParams(): Nullish<string> {

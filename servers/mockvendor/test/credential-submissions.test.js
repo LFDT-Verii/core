@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { flow, map } = require('lodash/fp');
@@ -38,7 +41,7 @@ describe('Credential Submissions', () => {
     createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
   }));
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
   });
@@ -68,7 +71,7 @@ describe('Credential Submissions', () => {
     ];
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

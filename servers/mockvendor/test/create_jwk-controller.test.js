@@ -1,14 +1,17 @@
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const buildFastify = require('./helpers/mockvendor-build-fastify');
 
 describe('create_jwk controller test suite', () => {
   let fastify;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = await buildFastify({});
     await fastify.ready();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

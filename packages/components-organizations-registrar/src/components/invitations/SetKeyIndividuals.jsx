@@ -19,8 +19,8 @@ import { Form, FormDataConsumer, TextInput, maxLength, required } from 'react-ad
 import PropTypes from 'prop-types';
 import InfoIcon from '@mui/icons-material/Info';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { validateEmail } from '../organizations/CreateOrganization.utils';
-import OrganizationSubmitButton from '../organizations/OrganisationSubmitButton.jsx';
+import { validateEmail } from '../organizations/index.jsx';
+import OrganizationSubmitButton from '../organizations/OrganizationSubmitButton.jsx';
 import {
   ADMINISTRATOR_DETAILS_HINT,
   SIGNATORY_DETAILS_HINT,

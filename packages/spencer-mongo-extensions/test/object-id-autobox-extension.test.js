@@ -14,6 +14,10 @@
  * limitations under the License.
  *
  */
+
+const { describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const { ObjectId } = require('mongodb');
 const {
   initObjectIdAutoboxExtension,
@@ -21,8 +25,8 @@ const {
 
 describe('autobox field extension', () => {
   const mockParent = {
-    prepModification: jest.fn().mockImplementation((arg) => arg),
-    prepFilter: jest.fn().mockImplementation((arg) => arg),
+    prepModification: mock.fn((arg) => arg),
+    prepFilter: mock.fn((arg) => arg),
     extensions: [],
   };
 

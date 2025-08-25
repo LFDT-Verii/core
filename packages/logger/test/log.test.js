@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { Writable } = require('node:stream');
 const { loggerProvider } = require('../index');
 

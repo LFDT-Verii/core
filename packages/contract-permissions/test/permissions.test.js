@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, afterEach, before, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { generateKeyPair } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
@@ -29,8 +31,7 @@ const {
 
 const { initPermissions } = require('../index');
 
-describe('Permissions Contract Test Suite', () => {
-  jest.setTimeout(10000);
+describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
   const rpcUrl = 'http://localhost:8545';
   const authenticate = () => 'TOKEN';
   const rpcProvider = initProvider(rpcUrl, authenticate);
@@ -64,7 +65,7 @@ describe('Permissions Contract Test Suite', () => {
   let rootPermissioningContractClient;
   let permissioningContractClient;
 
-  beforeAll(async () => {
+  before(async () => {
     await mongoFactoryWrapper('test-permissions', context);
 
     const rootKeyPair = generateKeyPair();
@@ -90,7 +91,7 @@ describe('Permissions Contract Test Suite', () => {
     await wait(1000);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoCloseWrapper();
   });
 
@@ -123,7 +124,7 @@ describe('Permissions Contract Test Suite', () => {
 
     describe('Address -> Scopes mappings test suite', () => {
       let primaryAccount;
-      beforeAll(async () => {
+      before(async () => {
         primaryAccount = generateAccount();
         await rootPermissioningContractClient.addPrimary({
           primary: primaryAccount.address,
@@ -238,7 +239,7 @@ describe('Permissions Contract Test Suite', () => {
   describe('Permissioning key Permissions Contract Operation Test Suite', () => {
     let primaryAccount;
 
-    beforeAll(async () => {
+    before(async () => {
       primaryAccount = generateAccount();
       await rootPermissioningContractClient.addPrimary({
         primary: primaryAccount.address,
@@ -390,7 +391,7 @@ describe('Permissions Contract Test Suite', () => {
   describe('Rotation key Permissions Contract Operation Test Suite', () => {
     let primaryAccount;
 
-    beforeAll(async () => {
+    before(async () => {
       primaryAccount = generateAccount();
       await rootPermissioningContractClient.addPrimary({
         primary: primaryAccount.address,

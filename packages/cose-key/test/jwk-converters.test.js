@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
 const { fromJwk, toJwk } = require('../src/jwk-converters');
 
 const es256Jwk = {

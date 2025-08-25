@@ -14,21 +14,42 @@
  * limitations under the License.
  *
  */
-const mockSendEmail = jest.fn((payload) => payload);
-const mockSendSupportEmail = jest.fn((payload) => payload);
+// eslint-disable-next-line max-classes-per-file
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
-jest.mock('@aws-sdk/client-ses', () => ({
-  SendEmailCommand: jest.fn((args) => args),
-  SESClient: jest.fn().mockImplementation(() => ({
-    send: mockSendEmail,
-  })),
-}));
+const {
+  sendReminders: originalSendReminders,
+  // eslint-disable-next-line import/order
+} = require('../src/entities/signatories/orchestrators/send-reminders');
+
+class SESClient {}
+const mockSESSendEmail = mock.fn((payload) => payload);
+SESClient.prototype.send = mockSESSendEmail;
+mock.module('@aws-sdk/client-ses', {
+  namedExports: {
+    SendEmailCommand: class SendEmailCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    SESClient,
+  },
+});
+
+const mockSendReminders = mock.fn();
+mock.module('../src/entities/signatories/orchestrators/send-reminders.js', {
+  namedExports: { mockSendReminders },
+});
+
+const mockSendSupportEmail = mock.fn((payload) => payload);
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { subDays, subMonths, subHours } = require('date-fns/fp');
 const { ServiceTypes } = require('@verii/organizations-registry');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
+const { NANO_ID_FORMAT } = require('@verii/test-regexes/src/regexes');
 const buildFastify = require('./helpers/build-fastify');
 const initOrganizationFactory = require('../src/entities/organizations/factories/organizations-factory');
 const initSignatoryStatusFactory = require('../src/entities/signatories/factories/signatory-status-factory');
@@ -43,28 +64,9 @@ const signatoryStatusPlugin = require('../src/entities/signatories/repos/repo');
 const organizationsPlugin = require('../src/entities/organizations/repos/repo');
 const invitationsPlugin = require('../src/entities/invitations/repo');
 const {
-  sendReminders,
   initSendEmailNotifications,
   SignatoryEventStatus,
 } = require('../src/entities');
-
-jest.mock('nanoid', () => {
-  const originalModule = jest.requireActual('nanoid');
-  return {
-    ...originalModule,
-    nanoid: jest.fn().mockReturnValue('1'),
-  };
-});
-
-jest.mock('../src/entities/signatories/orchestrators/send-reminders', () => {
-  const originalModule = jest.requireActual(
-    '../src/entities/signatories/orchestrators/send-reminders'
-  );
-  return {
-    ...originalModule,
-    sendReminders: jest.fn(originalModule.sendReminders),
-  };
-});
 
 describe('signatoriesController', () => {
   let testContext;
@@ -77,7 +79,7 @@ describe('signatoriesController', () => {
   let invitationsRepo;
   let sendEmailToSignatoryForOrganizationApproval;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistOrganization } = initOrganizationFactory(fastify));
@@ -98,7 +100,7 @@ describe('signatoriesController', () => {
     });
 
     ({ sendEmailToSignatoryForOrganizationApproval } =
-      initSendEmailNotifications(fastify));
+      await initSendEmailNotifications(fastify));
     testContext = {
       ...fastify,
       repos: {
@@ -112,15 +114,16 @@ describe('signatoriesController', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    mockSESSendEmail.mock.resetCalls();
     await mongoDb().collection('organizations').deleteMany({});
     await mongoDb().collection('invitations').deleteMany({});
     await mongoDb().collection('signatoryStatus').deleteMany({});
     await mongoDb().collection('registrarConsents').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
+    mock.reset();
   });
 
   describe('GET /:did/signatories/response/approve', () => {
@@ -134,8 +137,8 @@ describe('signatoriesController', () => {
         url: `/api/v0.6/organizations/${organization.didDoc.id}/signatories/response/approve?authCode=${signatory.authCodes[0].code}`,
       });
       expect(response.statusCode).toEqual(200);
-      expect(mockSendEmail).toHaveBeenCalledTimes(1);
-      expect(mockSendEmail.mock.calls[0][0]).toEqual(
+      expect(mockSESSendEmail.mock.callCount()).toEqual(1);
+      expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
         expectedSignatoryApprovedEmail(organization)
       );
     });
@@ -188,7 +191,7 @@ describe('signatoriesController', () => {
         .findOne();
       expect(dbRegistrarConsent).toEqual({
         _id: expect.any(ObjectId),
-        consentId: '1',
+        consentId: expect.stringMatching(NANO_ID_FORMAT),
         createdAt: expect.any(Date),
         organizationId: new ObjectId(organization._id),
         type: 'Signatory',
@@ -324,7 +327,7 @@ describe('signatoriesController', () => {
           statusCode: 404,
         })
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(0);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
   });
 
@@ -339,8 +342,8 @@ describe('signatoriesController', () => {
         url: `/api/v0.6/organizations/${organization.didDoc.id}/signatories/response/reject?authCode=${signatory.authCodes[0].code}`,
       });
       expect(response.statusCode).toEqual(200);
-      expect(mockSendEmail).toHaveBeenCalledTimes(1);
-      expect(mockSendEmail.mock.calls[0][0]).toEqual(
+      expect(mockSESSendEmail.mock.callCount()).toEqual(1);
+      expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
         expectedSignatoryRejectedEmail(organization)
       );
     });
@@ -465,7 +468,7 @@ describe('signatoriesController', () => {
           statusCode: 400,
         })
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(0);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
 
     it('should return 400 if authCode expired', async () => {
@@ -508,13 +511,15 @@ describe('signatoriesController', () => {
           statusCode: 404,
         })
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(0);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
   });
 
   describe('POST /send-reminder', () => {
     it('should return 200', async () => {
-      sendReminders.mockResolvedValueOnce(undefined);
+      mockSendReminders.mock.mockImplementationOnce(() =>
+        Promise.resolve(undefined)
+      );
       const response = await fastify.injectJson({
         method: 'POST',
         url: '/api/v0.6/signatories/send-reminder',
@@ -524,7 +529,9 @@ describe('signatoriesController', () => {
     });
 
     it('1234 should return 200 if something went wrong', async () => {
-      sendReminders.mockRejectedValueOnce(new Error('Something went wrong'));
+      mockSendReminders.mock.mockImplementationOnce(() =>
+        Promise.reject(new Error('Something went wrong'))
+      );
       const response = await fastify.injectJson({
         method: 'POST',
         url: '/api/v0.6/signatories/send-reminder',
@@ -534,11 +541,11 @@ describe('signatoriesController', () => {
     });
 
     it('should not send emails if there are no signatory reminders', async () => {
-      await sendReminders(
+      await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
         testContext
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(0);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
 
     it('should send emails if there are active signatory reminders', async () => {
@@ -601,15 +608,17 @@ describe('signatoriesController', () => {
           },
         ],
       });
-      await sendReminders(
+      await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
         testContext
       );
 
-      expect(mockSendEmail.mock.calls).toEqual([
-        [expectedSignatoryReminderEmail(inviterOrganization, organization2)],
-        [expectedSignatoryReminderEmail(inviterOrganization, organization1)],
-      ]);
+      expect(mockSESSendEmail.mock.calls.map((call) => call.arguments)).toEqual(
+        [
+          [expectedSignatoryReminderEmail(inviterOrganization, organization2)],
+          [expectedSignatoryReminderEmail(inviterOrganization, organization1)],
+        ]
+      );
 
       const signatoryStatus3Db = await signatoryStatusRepo.findOne({
         filter: {
@@ -665,7 +674,7 @@ describe('signatoriesController', () => {
             timestamp: expect.any(Date),
           },
           {
-            code: '1',
+            code: expect.stringMatching(NANO_ID_FORMAT),
             timestamp: expect.any(Date),
           },
         ],
@@ -698,7 +707,7 @@ describe('signatoriesController', () => {
             timestamp: expect.any(Date),
           },
           {
-            code: '1',
+            code: expect.stringMatching(NANO_ID_FORMAT),
             timestamp: expect.any(Date),
           },
         ],
@@ -727,15 +736,15 @@ describe('signatoriesController', () => {
           },
         ],
       });
-      await sendReminders(
+      await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
         testContext
       );
 
-      expect(mockSendEmail.mock.calls).toEqual([]);
-      expect(mockSendSupportEmail.mock.calls).toEqual([
-        expectedSupportMaxSignatoryReminderReachedEmailParams(),
-      ]);
+      expect(mockSESSendEmail.mock.calls).toEqual([]);
+      expect(
+        mockSendSupportEmail.mock.calls.map((call) => call.arguments)
+      ).toEqual([expectedSupportMaxSignatoryReminderReachedEmailParams()]);
 
       const signatoryStatusDb1 = await signatoryStatusRepo.findOne({
         filter: {
@@ -794,13 +803,13 @@ describe('signatoriesController', () => {
           },
         ],
       });
-      await sendReminders(
+      await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
         testContext
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(1);
-      expect(mockSendEmail.mock.calls).toEqual([
-        [expectedSignatoryReminderEmail(null, organization)],
+      expect(mockSESSendEmail.mock.callCount()).toEqual(1);
+      expect(mockSESSendEmail.mock.calls[0].arguments).toEqual([
+        expectedSignatoryReminderEmail(null, organization),
       ]);
     });
 
@@ -816,11 +825,11 @@ describe('signatoriesController', () => {
         ],
         approvedAt: new Date(),
       });
-      await sendReminders(
+      await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
         testContext
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(0);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
 
     it('should not send emails if there are signatory reminders but email was sent within delay period from config', async () => {
@@ -834,11 +843,11 @@ describe('signatoriesController', () => {
           },
         ],
       });
-      await sendReminders(
+      await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
         testContext
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(0);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
 
     it('should not send emails if sending fail', async () => {
@@ -861,12 +870,14 @@ describe('signatoriesController', () => {
           },
         ],
       });
-      mockSendEmail.mockRejectedValueOnce(new Error('Failed to send email'));
-      await sendReminders(
+      mockSESSendEmail.mock.mockImplementationOnce(() =>
+        Promise.reject(new Error('Failed to send email'))
+      );
+      await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
         testContext
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(1);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       const signatoryReminderDb = await signatoryStatusRepo.findOne({
         filter: {
           _id: new ObjectId(signatoryReminder._id),
@@ -911,11 +922,11 @@ describe('signatoriesController', () => {
           },
         ],
       });
-      await sendReminders(
+      await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
         testContext
       );
-      expect(mockSendEmail).toHaveBeenCalledTimes(0);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(0);
       const signatoryReminderDb = await signatoryStatusRepo.findOne({
         filter: {
           _id: new ObjectId(signatoryReminder._id),

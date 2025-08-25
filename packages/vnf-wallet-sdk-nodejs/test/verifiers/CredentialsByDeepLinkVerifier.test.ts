@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import { CredentialManifestDescriptorMocks } from '../infrastructure/resources/valid/CredentialManifestDescriptorMocks';
 import { VCLErrorCode, VCLJwt } from '../../src';
 import { CredentialsByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';

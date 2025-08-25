@@ -15,11 +15,13 @@
  */
 
 // eslint-disable-next-line import/order
-const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
+const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const {
   initTenantFactory,
   initDisclosureFactory,
@@ -43,7 +45,7 @@ describe('vendor exchange creation', () => {
   let persistDisclosure;
   let tenant;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistTenant } = initTenantFactory(fastify));
@@ -55,7 +57,7 @@ describe('vendor exchange creation', () => {
     tenant = await persistTenant();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await clearDb();
     await fastify.close();
   });

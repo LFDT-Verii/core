@@ -14,34 +14,45 @@
  * limitations under the License.
  *
  */
+// eslint-disable-next-line max-classes-per-file
+const { beforeEach, describe, it, mock, after } = require('node:test');
+const { expect } = require('expect');
 
+class SESClient {}
+const mockSESSendEmail = mock.fn((payload) => payload);
+mock.module('@aws-sdk/client-ses', {
+  namedExports: {
+    SendEmailCommand: class SendEmailCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    SESClient,
+  },
+});
+SESClient.prototype.send = mockSESSendEmail;
+
+const mockSESv2SendEmail = mock.fn((payload) => payload);
+class SESv2Client {}
+mock.module('@aws-sdk/client-sesv2', {
+  namedExports: {
+    SendEmailCommand: class SendEmailCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    SESv2Client,
+  },
+});
+SESv2Client.prototype.send = mockSESv2SendEmail;
 const {
   initSendEmailNotification,
   buildRawMessage,
 } = require('../src/email-notifications');
 
-const mockSESSendEmail = jest.fn((payload) => payload);
-
-jest.mock('@aws-sdk/client-ses', () => ({
-  SendEmailCommand: jest.fn((args) => args),
-  SESClient: jest.fn().mockImplementation(() => ({
-    send: mockSESSendEmail,
-  })),
-}));
-
-const mockSESv2SendEmail = jest.fn((payload) => payload);
-
-jest.mock('@aws-sdk/client-sesv2', () => ({
-  SendEmailCommand: jest.fn((args) => args),
-  SESv2Client: jest.fn().mockImplementation(() => ({
-    send: mockSESv2SendEmail,
-  })),
-}));
-
 describe('Email notifications test suite', () => {
   let params;
   beforeEach(() => {
-    // jest.resetAllMocks();
     params = {
       subject: 'fooSubject',
       message: 'fooMessage',
@@ -51,32 +62,40 @@ describe('Email notifications test suite', () => {
     };
   });
 
+  after(() => {
+    mock.reset();
+  });
+
   it('Should email with legacy client when awsEndpoint param exists', async () => {
     const sendEmail = initSendEmailNotification({ awsEndpoint: 'foo' });
 
     await sendEmail(params);
 
-    expect(mockSESSendEmail).toHaveBeenCalledWith({
-      Source: 'fooSender',
-      Destination: {
-        ToAddresses: ['fooRecipient'],
-      },
-      ReplyToAddresses: ['fooReplyTo'],
-      Message: {
-        Subject: {
-          Data: 'fooSubject',
+    expect(
+      mockSESSendEmail.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      {
+        Source: 'fooSender',
+        Destination: {
+          ToAddresses: ['fooRecipient'],
         },
-        Body: {
-          Text: {
-            Data: 'fooMessage',
+        ReplyToAddresses: ['fooReplyTo'],
+        Message: {
+          Subject: {
+            Data: 'fooSubject',
+          },
+          Body: {
+            Text: {
+              Data: 'fooMessage',
+            },
           },
         },
       },
-    });
+    ]);
   });
 
   it('Should email with attachment with legacy client', async () => {
-    jest.spyOn(Math, 'random').mockReturnValue(100);
+    Math.random = () => 100;
     const sendEmail = initSendEmailNotification({ awsEndpoint: 'foo' });
 
     await sendEmail({
@@ -86,17 +105,89 @@ describe('Email notifications test suite', () => {
       attachmentName: 'fooAttachmentName.csv',
     });
 
-    expect(mockSESSendEmail).toHaveBeenCalledWith({
-      Source: 'fooSender',
-      Destination: {
-        ToAddresses: ['fooRecipient'],
-      },
-      ReplyToAddresses: ['fooReplyTo'],
-      Message: {
-        Subject: {
-          Data: 'fooSubject',
+    expect(
+      mockSESSendEmail.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      expect.objectContaining({
+        Source: 'fooSender',
+        Destination: {
+          ToAddresses: ['fooRecipient'],
         },
-        Body: {
+        ReplyToAddresses: ['fooReplyTo'],
+        Message: {
+          Subject: {
+            Data: 'fooSubject',
+          },
+          Body: {
+            Raw: {
+              Data: buildRawMessage({
+                subject: 'fooSubject',
+                message: 'fooMessage',
+                sender: 'fooSender',
+                recipients: ['fooRecipient'],
+                ccs: [],
+                attachment: 'name,value',
+                contentType: 'text/csv',
+                attachmentName: 'fooAttachmentName.csv',
+              }),
+            },
+          },
+        },
+      }),
+    ]);
+  });
+
+  it('Should email with non-legacy client when awsEndpoint param is missing', async () => {
+    const sendEmail = initSendEmailNotification({});
+
+    await sendEmail(params);
+
+    expect(
+      mockSESv2SendEmail.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      {
+        FromEmailAddress: 'fooSender',
+        Destination: {
+          ToAddresses: ['fooRecipient'],
+        },
+        ReplyToAddresses: ['fooReplyTo'],
+        Content: {
+          Simple: {
+            Body: {
+              Text: {
+                Data: 'fooMessage',
+              },
+            },
+            Subject: {
+              Data: 'fooSubject',
+            },
+          },
+        },
+      },
+    ]);
+  });
+
+  it('Should email with attachment and non-legacy client', async () => {
+    Math.random = () => 100;
+    const sendEmail = initSendEmailNotification({});
+
+    await sendEmail({
+      ...params,
+      attachment: 'name,value',
+      contentType: 'text/csv',
+      attachmentName: 'fooAttachmentName.csv',
+    });
+
+    expect(
+      mockSESv2SendEmail.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      {
+        FromEmailAddress: 'fooSender',
+        Destination: {
+          ToAddresses: ['fooRecipient'],
+        },
+        ReplyToAddresses: ['fooReplyTo'],
+        Content: {
           Raw: {
             Data: buildRawMessage({
               subject: 'fooSubject',
@@ -111,67 +202,7 @@ describe('Email notifications test suite', () => {
           },
         },
       },
-    });
-  });
-
-  it('Should email with non-legacy client when awsEndpoint param is missing', async () => {
-    const sendEmail = initSendEmailNotification({});
-
-    await sendEmail(params);
-
-    expect(mockSESv2SendEmail).toHaveBeenCalledWith({
-      FromEmailAddress: 'fooSender',
-      Destination: {
-        ToAddresses: ['fooRecipient'],
-      },
-      ReplyToAddresses: ['fooReplyTo'],
-      Content: {
-        Simple: {
-          Body: {
-            Text: {
-              Data: 'fooMessage',
-            },
-          },
-          Subject: {
-            Data: 'fooSubject',
-          },
-        },
-      },
-    });
-  });
-
-  it('Should email with attachment and non-legacy client', async () => {
-    jest.spyOn(Math, 'random').mockReturnValue(100);
-    const sendEmail = initSendEmailNotification({});
-
-    await sendEmail({
-      ...params,
-      attachment: 'name,value',
-      contentType: 'text/csv',
-      attachmentName: 'fooAttachmentName.csv',
-    });
-
-    expect(mockSESv2SendEmail).toHaveBeenCalledWith({
-      FromEmailAddress: 'fooSender',
-      Destination: {
-        ToAddresses: ['fooRecipient'],
-      },
-      ReplyToAddresses: ['fooReplyTo'],
-      Content: {
-        Raw: {
-          Data: buildRawMessage({
-            subject: 'fooSubject',
-            message: 'fooMessage',
-            sender: 'fooSender',
-            recipients: ['fooRecipient'],
-            ccs: [],
-            attachment: 'name,value',
-            contentType: 'text/csv',
-            attachmentName: 'fooAttachmentName.csv',
-          }),
-        },
-      },
-    });
+    ]);
   });
 
   it('Should email using HTML body when html flag is true', async () => {
@@ -179,25 +210,29 @@ describe('Email notifications test suite', () => {
 
     await sendEmail({ ...params, html: true });
 
-    expect(mockSESv2SendEmail).toHaveBeenCalledWith({
-      FromEmailAddress: 'fooSender',
-      Destination: {
-        ToAddresses: ['fooRecipient'],
-      },
-      ReplyToAddresses: ['fooReplyTo'],
-      Content: {
-        Simple: {
-          Body: {
-            Html: {
-              Data: 'fooMessage',
+    expect(
+      mockSESv2SendEmail.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      {
+        FromEmailAddress: 'fooSender',
+        Destination: {
+          ToAddresses: ['fooRecipient'],
+        },
+        ReplyToAddresses: ['fooReplyTo'],
+        Content: {
+          Simple: {
+            Body: {
+              Html: {
+                Data: 'fooMessage',
+              },
             },
-          },
-          Subject: {
-            Data: 'fooSubject',
+            Subject: {
+              Data: 'fooSubject',
+            },
           },
         },
       },
-    });
+    ]);
   });
 
   it('Should email with legacy client including cc/bbc addresses', async () => {
@@ -210,24 +245,28 @@ describe('Email notifications test suite', () => {
       recipients: [],
     });
 
-    expect(mockSESSendEmail).toHaveBeenCalledWith({
-      Source: 'fooSender',
-      Destination: {
-        CcAddresses: ['fooCc'],
-        BccAddresses: ['fooBcc'],
-      },
-      ReplyToAddresses: ['fooReplyTo'],
-      Message: {
-        Subject: {
-          Data: 'fooSubject',
+    expect(
+      mockSESSendEmail.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      {
+        Source: 'fooSender',
+        Destination: {
+          CcAddresses: ['fooCc'],
+          BccAddresses: ['fooBcc'],
         },
-        Body: {
-          Text: {
-            Data: 'fooMessage',
+        ReplyToAddresses: ['fooReplyTo'],
+        Message: {
+          Subject: {
+            Data: 'fooSubject',
+          },
+          Body: {
+            Text: {
+              Data: 'fooMessage',
+            },
           },
         },
       },
-    });
+    ]);
   });
 
   it('Should email with non-legacy client including cc/bcc addresses', async () => {
@@ -240,25 +279,29 @@ describe('Email notifications test suite', () => {
       recipients: [],
     });
 
-    expect(mockSESv2SendEmail).toHaveBeenCalledWith({
-      FromEmailAddress: 'fooSender',
-      Destination: {
-        CcAddresses: ['fooCc'],
-        BccAddresses: ['fooBcc'],
-      },
-      ReplyToAddresses: ['fooReplyTo'],
-      Content: {
-        Simple: {
-          Body: {
-            Text: {
-              Data: 'fooMessage',
+    expect(
+      mockSESv2SendEmail.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      {
+        FromEmailAddress: 'fooSender',
+        Destination: {
+          CcAddresses: ['fooCc'],
+          BccAddresses: ['fooBcc'],
+        },
+        ReplyToAddresses: ['fooReplyTo'],
+        Content: {
+          Simple: {
+            Body: {
+              Text: {
+                Data: 'fooMessage',
+              },
             },
-          },
-          Subject: {
-            Data: 'fooSubject',
+            Subject: {
+              Data: 'fooSubject',
+            },
           },
         },
       },
-    });
+    ]);
   });
 });

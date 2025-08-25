@@ -4,8 +4,8 @@ const {
   hasAdminOrganizationScope,
 } = require('../../oauth');
 
-const initProvisionGroup = (fastify) => {
-  const auth0Provisioner = initAuth0Provisioner(fastify.config);
+const initProvisionGroup = async (fastify) => {
+  const auth0Provisioner = await initAuth0Provisioner(fastify.config);
 
   return async (organization, context) => {
     const { sendError } = fastify;

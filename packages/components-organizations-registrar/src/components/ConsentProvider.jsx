@@ -18,14 +18,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { pdf } from '@react-pdf/renderer';
 
-import { dataResources } from '../utils/remoteDataProvider';
+import { dataResources } from '../utils/remoteDataProvider.js';
 import { parseJwt } from '../utils/index.jsx';
 import { TERMS_AND_CONDITIONS_VERSION } from '../pages/TermsAndConditions.jsx';
 import TermsAndConditionsPdf from '../pages/TermsAndConditionsPdf.jsx';
 import TermsOfUsePopup from './TermsOfUsePopup.jsx';
 import Loading from './Loading.jsx';
-import { useAuth } from '../utils/auth/AuthContext';
-import { useConfig } from '../utils/ConfigContext';
+import { useAuth } from '../utils/auth/AuthContext.js';
+import { useConfig } from '../utils/ConfigContext.js';
 
 const logoutErrors = ['Unauthorized', 'missing_refresh_token', 'invalid_grant'];
 

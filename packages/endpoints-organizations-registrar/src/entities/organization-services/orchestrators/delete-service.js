@@ -29,8 +29,8 @@ const {
 const { removeMonitor } = require('../../monitors');
 const { initAuth0Provisioner } = require('../../oauth');
 
-const initDeleteService = (fastify) => {
-  const { removeAuth0Client } = initAuth0Provisioner(fastify.config);
+const initDeleteService = async (fastify) => {
+  const { removeAuth0Client } = await initAuth0Provisioner(fastify.config);
   const buildOrganizationModificationsOnServiceChange =
     initBuildOrganizationModificationsOnServiceChange(fastify);
 

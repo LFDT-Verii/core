@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { default: bs58 } = require('bs58');
 const { last } = require('lodash/fp');
 const { toEthereumAddress } = require('@verii/blockchain-functions');

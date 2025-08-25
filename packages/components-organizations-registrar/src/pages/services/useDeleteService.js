@@ -16,8 +16,8 @@
 
 import { useState } from 'react';
 import { useDelete } from 'react-admin';
-import { dataResources } from '../../utils/remoteDataProvider';
-import useSelectedOrganization from '../../state/selectedOrganizationState';
+import { dataResources } from '../../utils/remoteDataProvider.js';
+import useSelectedOrganization from '../../state/selectedOrganizationState.js';
 
 const useDeleteService = (refetch) => {
   const [did] = useSelectedOrganization();

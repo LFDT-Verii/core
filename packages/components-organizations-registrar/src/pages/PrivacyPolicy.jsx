@@ -18,7 +18,7 @@ import { Typography, Link, Box, Toolbar, AppBar, List, ListItem } from '@mui/mat
 
 import { Link as ReactRouterLink } from 'react-router';
 
-import theme, { FOOTER_HEIGHT } from '../theme/theme';
+import theme, { FOOTER_HEIGHT } from '../theme/theme.js';
 
 const PrivacyPolicy = () => {
   return (

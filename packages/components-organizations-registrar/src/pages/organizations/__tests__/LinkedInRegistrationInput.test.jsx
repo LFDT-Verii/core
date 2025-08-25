@@ -1,8 +1,14 @@
-import '@testing-library/jest-dom';
+import * as matchers from '@testing-library/jest-dom/matchers';
 import React from 'react';
+import { expect } from 'expect';
 import { render, screen } from '@testing-library/react';
 import { useForm, FormProvider } from 'react-hook-form';
+import { describe, it } from 'node:test';
+import theme from '@/theme/theme.js';
+import { AdminContext } from 'react-admin';
 import { LinkedInRegistrationInput } from '../components/LinkedInRegistrationInput.jsx';
+
+expect.extend(matchers);
 
 describe('LinkedInRegistrationInput', () => {
   const formData = {
@@ -16,7 +22,13 @@ describe('LinkedInRegistrationInput', () => {
     // eslint-disable-next-line react/prop-types
     const Wrapper = ({ children }) => {
       const methods = useForm({ defaultValues });
-      return <FormProvider {...methods}>{children}</FormProvider>;
+      return (
+        <AdminContext theme={theme}>
+          <FormProvider {...methods}>
+            <form>{children}</form>
+          </FormProvider>
+        </AdminContext>
+      );
     };
     return render(ui, { wrapper: Wrapper });
   };

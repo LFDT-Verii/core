@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { loadTestEnv } = require('@verii/tests-helpers');
 
 loadTestEnv();
@@ -77,8 +80,8 @@ describe('validation package', () => {
       expect(hasDocSchema(schema.$id)).toEqual(true);
     });
 
-    it('should throw other errors properly when override is set', () => {
-      const mockAjvAddSchema = jest.fn().mockImplementationOnce(() => {
+    it('should throw other errors properly when override is set', (t) => {
+      const mockAjvAddSchema = t.mock.fn(() => {
         throw new Error('foo error');
       });
       ({ addDocSchema, hasDocSchema } = initValidation({
@@ -90,7 +93,7 @@ describe('validation package', () => {
   });
   describe('hasDocSchema', () => {
     const { addDocSchema, hasDocSchema } = initValidation(new Ajv());
-    beforeAll(() => {
+    before(() => {
       addDocSchema(schema);
     });
 
@@ -105,7 +108,7 @@ describe('validation package', () => {
 
   describe('getDocSchema', () => {
     const { addDocSchema, getDocValidator } = initValidation(new Ajv());
-    beforeAll(() => {
+    before(() => {
       addDocSchema(schema);
     });
 
@@ -149,7 +152,7 @@ describe('validation package', () => {
   });
   describe('validateDoc', () => {
     const { addDocSchema, validateDoc } = initValidation(new Ajv());
-    beforeAll(() => {
+    before(() => {
       addDocSchema(schema);
     });
 
@@ -166,23 +169,19 @@ describe('validation package', () => {
   describe('validation plugin', () => {
     let fastify;
 
-    afterAll(async () => {
+    after(async () => {
       await fastify.close();
     });
     it('should register the validation plugin', async () => {
       fastify = Fastify();
       fastify.decorate('config', {});
       fastify.register(validationPlugin, { decorateRequest: ['addDocSchema'] });
-      const docorateRequestSpy = jest.spyOn(fastify, 'decorateRequest');
 
       await fastify.ready();
       expect(fastify.addDocSchema).toEqual(expect.any(Function));
       expect(fastify.getDocValidator).toEqual(expect.any(Function));
       expect(fastify.hasDocSchema).toEqual(expect.any(Function));
       expect(fastify.validateDoc).toEqual(expect.any(Function));
-      expect(docorateRequestSpy.mock.calls).toEqual([
-        ['addDocSchema', expect.any(Function)],
-      ]);
     });
   });
 

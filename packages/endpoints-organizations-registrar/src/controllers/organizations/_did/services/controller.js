@@ -29,8 +29,8 @@ const {
 } = require('../../../../entities');
 
 const servicesController = async (fastify) => {
-  const deleteService = initDeleteService(fastify);
-  const addService = initAddService(fastify);
+  const deleteService = await initDeleteService(fastify);
+  const addService = await initAddService(fastify);
 
   fastify
     .get(

@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const {
   getPushDelegate,
 } = require('../src/entities/push-delegate/get-push-delegate');

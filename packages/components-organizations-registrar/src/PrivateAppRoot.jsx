@@ -27,12 +27,12 @@ import Dashboard from './components/Dashboard.jsx';
 import Loading from './components/Loading.jsx';
 import Footer from './components/Footer.jsx';
 import ConsentProvider from './components/ConsentProvider.jsx';
-import initReactAdminAuthProvider from './utils/reactAdminAuthProvider';
-import { useAuth } from './utils/auth/AuthContext';
-import useSignupRedirect from './utils/auth/useSignupRedirect';
-import remoteDataProvider from './utils/remoteDataProvider';
-import { useConfig } from './utils/ConfigContext';
-import theme from './theme/theme';
+import initReactAdminAuthProvider from './utils/reactAdminAuthProvider.js';
+import { useAuth } from './utils/auth/AuthContext.js';
+import useSignupRedirect from './utils/auth/useSignupRedirect.js';
+import remoteDataProvider from './utils/remoteDataProvider.js';
+import { useConfig } from './utils/ConfigContext.js';
+import theme from './theme/theme.js';
 
 export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
   const auth = useAuth();

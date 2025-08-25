@@ -4,7 +4,7 @@ import inter400 from '../fonts/inter-v12-latin-regular.ttf';
 import inter500 from '../fonts/inter-v12-latin-500.ttf';
 import inter600 from '../fonts/inter-v12-latin-600.ttf';
 
-import theme from '../theme/theme';
+import theme from '../theme/theme.js';
 
 Font.register({
   family: 'Inter',

@@ -4,7 +4,8 @@
  * Copyright 2022 Velocity Career Labs inc.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import CredentialManifestByDeepLinkVerifier from '../../src/impl/domain/verifiers/CredentialManifestByDeepLinkVerifier';
 import {
     VCLCredentialManifest,

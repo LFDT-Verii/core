@@ -15,6 +15,8 @@
  */
 
 // eslint-disable-next-line import/order
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const _ = require('lodash/fp');
@@ -48,7 +50,7 @@ describe('CRUD Feeds Test Suite', () => {
   let tenant;
   let disclosure;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistDisclosure } = initDisclosureFactory(fastify));
@@ -66,7 +68,7 @@ describe('CRUD Feeds Test Suite', () => {
     disclosure = await persistDisclosure({ tenant, feed: true });
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

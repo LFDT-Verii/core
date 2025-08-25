@@ -1,16 +1,21 @@
-import '@testing-library/jest-dom';
+import * as matchers from '@testing-library/jest-dom/matchers';
+import { describe, it, mock, before } from 'node:test';
+import { expect } from 'expect';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import ServicesEdit from '../ServicesEdit.jsx';
 
-// Mock required dependencies
-jest.mock('@/pages/services/hooks/useIsIssuingInspection', () => ({
-  useIsIssuingInspection: jest.fn(() => ({ isIssuingOrInspection: false, isCAO: false })),
-}));
+const mockOnSave = mock.fn();
+const mockOnClose = mock.fn();
+const mockUseIsIssuingInspection = mock.fn(() => ({ isIssuingOrInspection: false, isCAO: false }));
 
-const mockOnSave = jest.fn();
-const mockOnClose = jest.fn();
+mock.module('@/pages/services/hooks/useIsIssuingInspection', {
+  namedExports: {
+    useIsIssuingInspection: mockUseIsIssuingInspection,
+  },
+  defaultExport: mockUseIsIssuingInspection,
+});
+expect.extend(matchers);
 
 // eslint-disable-next-line react/prop-types
 const InterceptOnCreateMock = ({ isInterceptOnCreateOpen, onClose }) => {
@@ -23,6 +28,10 @@ const InterceptOnCreateMock = ({ isInterceptOnCreateOpen, onClose }) => {
 };
 
 describe('ServicesEdit', () => {
+  let ServicesEdit;
+  before(async () => {
+    ServicesEdit = (await import('../ServicesEdit.jsx')).default;
+  });
   const selectedService = {
     id: 'test-id',
     type: 'some-type-id',
@@ -50,7 +59,7 @@ describe('ServicesEdit', () => {
     fireEvent.click(screen.getByRole('button', { name: /Save/i }));
 
     await waitFor(() =>
-      expect(mockOnSave).toHaveBeenCalledWith({
+      expect(mockOnSave.mock.calls[0].arguments).toContainEqual({
         serviceEndpoint: 'https://changed.com',
       }),
     );
@@ -97,8 +106,9 @@ describe('ServicesEdit', () => {
   });
 
   it('shows URL validation error if isCAO is true and URL is invalid', async () => {
-    jest.mock('@/pages/services/hooks/useIsIssuingInspection', () => ({
-      useIsIssuingInspection: jest.fn(() => ({ isIssuingOrInspection: false, isCAO: true })),
+    mockUseIsIssuingInspection.mock.mockImplementationOnce(() => ({
+      isIssuingOrInspection: false,
+      isCAO: true,
     }));
 
     render(

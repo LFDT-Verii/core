@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
+const { describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const fastify = require('fastify');
 const { autoSchemaPlugin } = require('../src/auto-schema-plugin');
 
 describe('Auto Schema Plugin', () => {
   const fakeServer = {
-    decorate: jest.fn().mockImplementation((key, value) => {
+    decorate: mock.fn((key, value) => {
       fakeServer[key] = value;
     }),
-    getSchema: jest.fn().mockReturnValue(true),
+    getSchema: mock.fn(() => true),
     // eslint-disable-next-line no-prototype-builtins
     hasDecorator: (key) => fakeServer.hasOwnProperty(key),
   };
@@ -30,19 +33,19 @@ describe('Auto Schema Plugin', () => {
   it('should add 44 decorators', async () => {
     await autoSchemaPlugin(fakeServer);
 
-    expect(fakeServer.decorate.mock.calls[0]).toEqual([
+    expect(fakeServer.decorate.mock.calls[0].arguments).toEqual([
       'BadRequestResponse',
       { 400: { $ref: 'error#' } },
     ]);
-    expect(fakeServer.decorate.mock.calls[1]).toEqual([
+    expect(fakeServer.decorate.mock.calls[1].arguments).toEqual([
       'UnauthorizedResponse',
       { 401: { $ref: 'error#' } },
     ]);
-    expect(fakeServer.decorate.mock.calls[2]).toEqual([
+    expect(fakeServer.decorate.mock.calls[2].arguments).toEqual([
       'PaymentRequiredResponse',
       { 402: { $ref: 'error#' } },
     ]);
-    expect(fakeServer.decorate.mock.calls[3]).toEqual([
+    expect(fakeServer.decorate.mock.calls[3].arguments).toEqual([
       'ForbiddenResponse',
       { 403: { $ref: 'error#' } },
     ]);
@@ -55,8 +58,8 @@ describe('Auto Schema Plugin', () => {
 
   it('should fail if no error schema is defined', async () => {
     const fakeServerError = {
-      decorate: jest.fn(),
-      getSchema: jest.fn().mockReturnValue(undefined),
+      decorate: mock.fn(),
+      getSchema: mock.fn(() => undefined),
     };
 
     await expect(autoSchemaPlugin(fakeServerError)).rejects.toEqual(
@@ -66,10 +69,10 @@ describe('Auto Schema Plugin', () => {
 
   it('should add custom error schema', async () => {
     const fakeServerError = {
-      decorate: jest.fn().mockImplementation((key, value) => {
+      decorate: mock.fn((key, value) => {
         fakeServer[key] = value;
       }),
-      getSchema: jest.fn().mockReturnValue(true),
+      getSchema: mock.fn(() => true),
     };
 
     await autoSchemaPlugin(fakeServerError, { errorSchemaId: 'randomId' });

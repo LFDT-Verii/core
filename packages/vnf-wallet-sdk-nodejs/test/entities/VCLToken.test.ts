@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLToken from '../../src/api/entities/VCLToken';
 import TokenMocks from '../infrastructure/resources/valid/TokenMocks';
 

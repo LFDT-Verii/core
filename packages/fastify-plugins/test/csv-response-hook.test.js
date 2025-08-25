@@ -1,3 +1,5 @@
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
 const { csvResponseHook } = require('../src/csv-response-hook');
 
 const buildFastify = () => {
@@ -29,12 +31,12 @@ const buildFastify = () => {
 describe('csvResponseHook Test Suite', () => {
   let fastify;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

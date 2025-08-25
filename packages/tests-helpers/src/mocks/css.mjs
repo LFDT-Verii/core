@@ -13,8 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-const jestConfig = require('../../jest.config.base');
-const pack = require('./package.json');
-
-module.exports = jestConfig(pack.name);
+export default {};

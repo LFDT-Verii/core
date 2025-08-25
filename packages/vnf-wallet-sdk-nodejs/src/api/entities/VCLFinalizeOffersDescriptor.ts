@@ -38,13 +38,15 @@ export default class VCLFinalizeOffersDescriptor {
         return this.credentialManifest.verifiedProfile.serviceTypes;
     }
 
-    payload: Dictionary<any> = {
-        [VCLFinalizeOffersDescriptor.KeyExchangeId]: this.exchangeId,
-        [VCLFinalizeOffersDescriptor.KeyApprovedOfferIds]:
-            this.approvedOfferIds,
-        [VCLFinalizeOffersDescriptor.KeyRejectedOfferIds]:
-            this.rejectedOfferIds,
-    };
+    get payload(): Dictionary<any> {
+        return {
+            [VCLFinalizeOffersDescriptor.KeyExchangeId]: this.exchangeId,
+            [VCLFinalizeOffersDescriptor.KeyApprovedOfferIds]:
+                this.approvedOfferIds,
+            [VCLFinalizeOffersDescriptor.KeyRejectedOfferIds]:
+                this.rejectedOfferIds,
+        };
+    }
 
     generateRequestBody(proof: Nullish<VCLJwt> = null): Dictionary<any> {
         const retVal = { ...this.payload };

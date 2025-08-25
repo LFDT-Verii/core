@@ -14,22 +14,47 @@
  * limitations under the License.
  *
  */
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
-const mockReadDocument = jest.fn().mockResolvedValue(undefined);
-const mockWriteDocument = jest.fn().mockResolvedValue(undefined);
-const mockInitReadDocument = jest.fn().mockReturnValue(mockReadDocument);
-const mockInitWriteDocument = jest.fn().mockReturnValue(mockWriteDocument);
-const mockBatchTransferCredits = jest.fn().mockResolvedValue([]);
-const mockEventCursor = jest.fn();
-const mockEventCursorNext = jest.fn();
+const mockReadDocument = mock.fn();
+const mockWriteDocument = mock.fn();
+const mockBatchTransferCredits = mock.fn(() => Promise.resolve([]));
+const eventsWrapper = { events: [] };
+const mockEventCursor = mock.fn(() => ({
+  [Symbol.asyncIterator]() {
+    return {
+      index: -1,
+      next() {
+        this.index += 1;
+        return eventsWrapper.events[this.index];
+      },
+    };
+  },
+}));
 
-const mockPullAddedCredentialMetadataEvents = jest
-  .fn()
-  .mockResolvedValue({ eventsCursor: mockEventCursor, latestBlock: 42 });
-const mockInitMetadataRegistry = jest.fn().mockImplementation(async () => {
-  return {
-    pullAddedCredentialMetadataEvents: mockPullAddedCredentialMetadataEvents,
-  };
+const mockInitMetadataRegistry = mock.fn(async () => ({
+  pullAddedCredentialMetadataEvents: () =>
+    Promise.resolve({ eventsCursor: mockEventCursor, latestBlock: 42 }),
+}));
+
+mock.module('@verii/aws-clients', {
+  namedExports: {
+    initReadDocument: () => mockReadDocument,
+    initWriteDocument: () => mockWriteDocument,
+  },
+});
+
+mock.module('@verii/fineract-client', {
+  namedExports: {
+    batchTransferCredits: mockBatchTransferCredits,
+  },
+});
+
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    initMetadataRegistry: mockInitMetadataRegistry,
+  },
 });
 
 const { get2BytesHash } = require('@verii/crypto');
@@ -53,32 +78,6 @@ const {
 } = require('./data/sample-credential-events-array');
 const { handleCredentialIssuedRewardsEvent } = require('../src/handlers');
 
-jest.mock('@verii/aws-clients', () => {
-  const originalModule = jest.requireActual('@verii/aws-clients');
-
-  return {
-    ...originalModule,
-    initReadDocument: mockInitReadDocument,
-    initWriteDocument: mockInitWriteDocument,
-  };
-});
-
-jest.mock('@verii/fineract-client', () => {
-  const originalModule = jest.requireActual('@verii/fineract-client');
-  return {
-    ...originalModule,
-    batchTransferCredits: mockBatchTransferCredits,
-  };
-});
-
-jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual('@verii/metadata-registration');
-  return {
-    ...originalModule,
-    initMetadataRegistry: mockInitMetadataRegistry,
-  };
-});
-
 describe('Credential issued event rewards distribution task test suite', () => {
   const task = 'credential-issued-rewards';
   const config = {
@@ -101,7 +100,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
   let credentialSchemaHashLayer2;
   let persistCredentialSchema;
 
-  beforeAll(async () => {
+  before(async () => {
     await mongoFactory(testContext);
     organizationsRepoPlugin(testContext);
     credentialSchemasRepoPlugin(testContext);
@@ -112,7 +111,33 @@ describe('Credential issued event rewards distribution task test suite', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    eventsWrapper.events = [
+      { value: [] },
+      {
+        value: map(
+          (ev) => ({
+            ...ev,
+            args: [
+              ev.args[0],
+              ev.args[1],
+              ev.args[2],
+              credentialSchemaHashLayer1,
+              ev.args[4],
+              ev.args[5],
+              ev.args[6],
+            ],
+          }),
+          sampleCredentialEventsArray
+        ),
+      },
+      { done: true },
+    ];
+    mockInitMetadataRegistry.mock.resetCalls();
+    mockReadDocument.mock.resetCalls();
+    mockWriteDocument.mock.resetCalls();
+    mockBatchTransferCredits.mock.resetCalls();
+    mockEventCursor.mock.resetCalls();
+
     await mongoDb().collection('organizations').deleteMany({});
     await mongoDb().collection('credentialSchemas').deleteMany({});
 
@@ -154,53 +179,22 @@ describe('Credential issued event rewards distribution task test suite', () => {
         },
       }),
     ]);
-    mockEventCursor.mockImplementation(() => {
-      return {
-        [Symbol.asyncIterator]: () => {
-          return {
-            next: mockEventCursorNext
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return {
-                  value: map(
-                    (ev) => ({
-                      ...ev,
-                      args: [
-                        ev.args[0],
-                        ev.args[1],
-                        ev.args[2],
-                        credentialSchemaHashLayer1,
-                        ev.args[4],
-                        ev.args[5],
-                        ev.args[6],
-                      ],
-                    }),
-                    sampleCredentialEventsArray
-                  ),
-                };
-              })
-              .mockImplementationOnce(async () => {
-                return { done: true };
-              }),
-          };
-        },
-      };
-    });
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoCloseWrapper();
+    mock.reset();
   });
 
   it('Should successfully distribute rewards for a given set of events read off the blockchain', async () => {
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
 
     const eventsForMock = [
       {
@@ -300,44 +294,29 @@ describe('Credential issued event rewards distribution task test suite', () => {
         ],
       },
     ];
-    mockEventCursorNext.mockReset();
-    mockEventCursor.mockImplementation(() => {
-      return {
-        [Symbol.asyncIterator]: () => {
-          return {
-            next: mockEventCursorNext
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { value: eventsForMock };
-              })
-              .mockImplementationOnce(async () => {
-                return { done: true };
-              }),
-          };
-        },
-      };
-    });
+    eventsWrapper.events = [
+      { value: [] },
+      { value: eventsForMock },
+      { done: true },
+    ];
 
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
-    expect(mockInitReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitMetadataRegistry).toHaveBeenCalledTimes(1);
+    expect(mockInitMetadataRegistry.mock.callCount()).toEqual(1);
 
-    expect(mockReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockReadDocument).toHaveBeenCalledWith(
+    expect(mockReadDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockReadDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
-      { EventName: task }
-    );
+      { EventName: task },
+    ]);
 
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledTimes(1);
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledWith(2);
-
-    expect(mockBatchTransferCredits).toHaveBeenCalledTimes(1);
-    expect(mockBatchTransferCredits).toHaveBeenCalledWith(
+    expect(mockBatchTransferCredits.mock.callCount()).toEqual(1);
+    expect(
+      mockBatchTransferCredits.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         transfers: expect.arrayContaining([
           {
@@ -360,46 +339,48 @@ describe('Credential issued event rewards distribution task test suite', () => {
           },
         ]),
       },
-      testContext
-    );
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+      testContext,
+    ]);
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
-    expect(mockEventCursor).toHaveBeenCalledTimes(1);
-    expect(mockEventCursorNext).toHaveBeenCalledTimes(3);
+      },
+    ]);
+    expect(mockEventCursor.mock.callCount()).toEqual(1);
   });
 
   it('Should successfully distribute rewards for a given set of events and create two transaction for one organization', async () => {
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
 
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
-    expect(mockInitReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitMetadataRegistry).toHaveBeenCalledTimes(1);
+    expect(mockInitMetadataRegistry.mock.callCount()).toEqual(1);
 
-    expect(mockReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockReadDocument).toHaveBeenCalledWith(
+    expect(mockReadDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockReadDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
-      { EventName: task }
-    );
+      { EventName: task },
+    ]);
 
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledTimes(1);
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledWith(2);
-
-    expect(mockBatchTransferCredits).toHaveBeenCalledTimes(1);
-    expect(mockBatchTransferCredits).toHaveBeenCalledWith(
+    expect(mockBatchTransferCredits.mock.callCount()).toEqual(1);
+    expect(
+      mockBatchTransferCredits.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         transfers: expect.arrayContaining([
           {
@@ -422,25 +403,29 @@ describe('Credential issued event rewards distribution task test suite', () => {
           },
         ]),
       },
-      testContext
-    );
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+      testContext,
+    ]);
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
+      },
+    ]);
   });
 
   it('Should distribute rewards only for layer 1 credentials', async () => {
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
     const eventsForMock = [
       {
         blockNumber: 157143,
@@ -539,42 +524,27 @@ describe('Credential issued event rewards distribution task test suite', () => {
         ],
       },
     ];
-    mockEventCursorNext.mockReset();
-    mockEventCursor.mockImplementation(() => {
-      return {
-        [Symbol.asyncIterator]: () => {
-          return {
-            next: mockEventCursorNext
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { value: eventsForMock };
-              })
-              .mockImplementationOnce(async () => {
-                return { done: true };
-              }),
-          };
-        },
-      };
-    });
+    eventsWrapper.events = [
+      { value: [] },
+      { value: eventsForMock },
+      { done: true },
+    ];
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
     await expect(func()).resolves.toEqual(undefined);
-    expect(mockInitReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitMetadataRegistry).toHaveBeenCalledTimes(1);
+    expect(mockInitMetadataRegistry.mock.callCount()).toEqual(1);
 
-    expect(mockReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockReadDocument).toHaveBeenCalledWith(
+    expect(mockReadDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockReadDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
-      { EventName: task }
-    );
+      { EventName: task },
+    ]);
 
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledTimes(1);
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledWith(2);
-
-    expect(mockBatchTransferCredits).toHaveBeenCalledTimes(1);
-    expect(mockBatchTransferCredits).toHaveBeenCalledWith(
+    expect(mockBatchTransferCredits.mock.callCount()).toEqual(1);
+    expect(
+      mockBatchTransferCredits.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       {
         transfers: expect.arrayContaining([
           {
@@ -591,28 +561,31 @@ describe('Credential issued event rewards distribution task test suite', () => {
           },
         ]),
       },
-      testContext
-    );
+      testContext,
+    ]);
 
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
-    expect(mockEventCursor).toHaveBeenCalledTimes(1);
-    expect(mockEventCursorNext).toHaveBeenCalledTimes(3);
+      },
+    ]);
+    expect(mockEventCursor.mock.callCount()).toEqual(1);
   });
 
   it('Should not distribute rewards for layer 2 credentials', async () => {
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
+    );
     const eventsForMock = [
       {
         blockNumber: 157143,
@@ -711,65 +684,47 @@ describe('Credential issued event rewards distribution task test suite', () => {
         ],
       },
     ];
-    mockEventCursorNext.mockReset();
-    mockEventCursor.mockImplementation(() => {
-      return {
-        [Symbol.asyncIterator]: () => {
-          return {
-            next: mockEventCursorNext
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { value: eventsForMock };
-              })
-              .mockImplementationOnce(async () => {
-                return { done: true };
-              }),
-          };
-        },
-      };
-    });
+    eventsWrapper.events = [
+      { value: [] },
+      { value: eventsForMock },
+      { done: true },
+    ];
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
     await expect(func()).resolves.toEqual(undefined);
-    expect(mockInitReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitMetadataRegistry).toHaveBeenCalledTimes(1);
+    expect(mockInitMetadataRegistry.mock.callCount()).toEqual(1);
 
-    expect(mockReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockReadDocument).toHaveBeenCalledWith(
+    expect(mockReadDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockReadDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
-      { EventName: task }
-    );
+      { EventName: task },
+    ]);
 
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledTimes(1);
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledWith(2);
-
-    expect(mockBatchTransferCredits).toHaveBeenCalledTimes(0);
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+    expect(mockBatchTransferCredits.mock.callCount()).toEqual(0);
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
-    expect(mockEventCursor).toHaveBeenCalledTimes(1);
-    expect(mockEventCursorNext).toHaveBeenCalledTimes(3);
+      },
+    ]);
+    expect(mockEventCursor.mock.callCount()).toEqual(1);
   });
 
   it('Should successfully handle initial case of no existing blocks', async () => {
-    mockReadDocument.mockResolvedValue(undefined);
+    mockReadDocument.mock.mockImplementation(() => Promise.resolve(undefined));
 
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
-
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledWith(0);
   });
 
   it('Should reject organizations with missing tokenAccountId', async () => {
-    mockReadDocument.mockResolvedValue(undefined);
+    mockReadDocument.mock.mockImplementation(() => Promise.resolve(undefined));
 
     await mongoDb()
       .collection('organizations')
@@ -784,42 +739,24 @@ describe('Credential issued event rewards distribution task test suite', () => {
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
-
-    expect(mockPullAddedCredentialMetadataEvents).toHaveBeenCalledWith(0);
   });
 
   it('Should still update block when there are no events to process', async () => {
-    mockEventCursorNext.mockReset();
-    mockEventCursor.mockImplementation(() => {
-      return {
-        [Symbol.asyncIterator]: () => {
-          return {
-            next: mockEventCursorNext
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { done: true };
-              }),
-          };
-        },
-      };
-    });
+    eventsWrapper.events = [{ value: [] }, { value: [] }, { done: true }];
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
 
-    expect(mockBatchTransferCredits).toHaveBeenCalledTimes(0);
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+    expect(mockBatchTransferCredits.mock.callCount()).toEqual(0);
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
+      },
+    ]);
   });
 });

@@ -6,7 +6,7 @@ const {
 
 const signatoriesController = async (fastify) => {
   const { sendEmailToSignatoryForOrganizationApproval } =
-    initSendEmailNotifications(fastify);
+    await initSendEmailNotifications(fastify);
 
   fastify.post(
     '/send-reminder',

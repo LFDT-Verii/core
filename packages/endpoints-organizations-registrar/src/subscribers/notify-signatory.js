@@ -22,7 +22,7 @@ const {
 
 const notifySignatory = async (fastify) => {
   const { sendEmailToSignatoryForOrganizationApproval } =
-    initSendEmailNotifications(fastify);
+    await initSendEmailNotifications(fastify);
 
   fastify
     .pubsub('notifySignatory')

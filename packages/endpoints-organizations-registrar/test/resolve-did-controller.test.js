@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ServiceTypes } = require('@verii/organizations-registry');
@@ -28,7 +31,7 @@ describe('Resolve did test suite', () => {
   let fastify;
   let persistOrganization;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -36,12 +39,11 @@ describe('Resolve did test suite', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     nock.cleanAll();
     await mongoDb().collection('organizations').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();

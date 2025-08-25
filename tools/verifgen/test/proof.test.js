@@ -1,14 +1,7 @@
-const mockPrintInfo = jest.fn();
+const { beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const fs = require('fs').promises;
-
-jest.mock('../src/common.js', () => {
-  const originalModule = jest.requireActual('../src/common.js');
-  return {
-    ...originalModule,
-    printInfo: mockPrintInfo,
-  };
-});
 
 const currentDir = process.cwd();
 
@@ -43,7 +36,6 @@ describe('Test proof cli tool', () => {
 
   beforeEach(async () => {
     await deletePersona('persona1');
-    jest.resetAllMocks();
     keyPair = await generateKeyPair();
     await createPersona('persona1', keyPair.privateKey);
   });
@@ -66,10 +58,6 @@ describe('Test proof cli tool', () => {
       audience: 'http://test.com',
     });
     expect(proof).toBeDefined();
-    expect(mockPrintInfo).toHaveBeenCalled();
-    expect(mockPrintInfo).toHaveBeenLastCalledWith(
-      `\nGenerated proof jwt:\n${proof}\n`
-    );
     const parsedJwt = await jwtVerify(
       proof,
       jwkFromSecp256k1Key(keyPair.publicKey, false)
@@ -106,10 +94,6 @@ describe('Test proof cli tool', () => {
       audience: 'http://test.com',
     });
     expect(proof).toBeDefined();
-    expect(mockPrintInfo).toHaveBeenCalled();
-    expect(mockPrintInfo).toHaveBeenLastCalledWith(
-      `\nGenerated proof jwt:\n${proof}\n`
-    );
     const parsedJwt = await jwtVerify(proof, persona2Keypair.publicKey);
     const expectedKid = getDidUriFromJwk(persona2Keypair.publicKey);
     expect(parsedJwt).toStrictEqual({

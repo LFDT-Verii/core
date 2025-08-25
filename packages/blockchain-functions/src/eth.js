@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-const ethers = require('ethers');
-
 const initGetBlockNumber = async ({ rpcUrl, authenticate }) => {
+  const ethers = await import('ethers');
   const token = await authenticate();
   const connection = new ethers.FetchRequest(rpcUrl);
   connection.setHeader('Authorization', `Bearer ${token}`);
@@ -26,6 +25,7 @@ const initGetBlockNumber = async ({ rpcUrl, authenticate }) => {
 };
 
 const initGetBlock = async ({ rpcUrl, authenticate }) => {
+  const ethers = await import('ethers');
   const token = await authenticate();
   const connection = new ethers.FetchRequest(rpcUrl);
   connection.setHeader('Authorization', `Bearer ${token}`);

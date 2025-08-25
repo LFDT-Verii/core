@@ -1,4 +1,5 @@
-import { expect } from '@jest/globals';
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import { CredentialTypesMocks } from '../infrastructure/resources/valid/CredentialTypesMocks';
 import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import CredentialTypesRepositoryImpl from '../../src/impl/data/repositories/CredentialTypesRepositoryImpl';

@@ -15,14 +15,72 @@
  *
  */
 
-const mockSendError = jest.fn().mockReturnValue(undefined);
-const mockInitSendError = jest.fn().mockReturnValue({
-  sendError: mockSendError,
-  startProfiling: () => {
-    console.log('fake start sentry profiling');
+// eslint-disable-next-line max-classes-per-file
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
+const mockSendError = mock.fn(() => undefined);
+const mockInitSendError = mock.fn(() =>
+  Promise.resolve({
+    sendError: mockSendError,
+    startProfiling: () => {
+      console.log('fake start sentry profiling');
+    },
+    finishProfiling: () => {
+      console.log('fake finish sentry profiling');
+    },
+  })
+);
+
+mock.module('@verii/error-aggregation', {
+  namedExports: {
+    initSendError: mockInitSendError,
   },
-  finishProfiling: () => {
-    console.log('fake finish sentry profiling');
+});
+
+const mockAuth0UserCreate = mock.fn(async (obj) => {
+  return { data: { user_id: 'user_id_123', ...obj } };
+});
+const mockAuth0UserGetByEmail = mock.fn(async () => {
+  return { data: [] };
+});
+const mockAuth0TicketChange = mock.fn(async () => {
+  return {
+    data: { ticket: undefined },
+  };
+});
+const mockAuth0ClientAssignRole = mock.fn(async (obj) => {
+  return { data: { id: nanoid(), ...obj } };
+});
+class ManagementClient {
+  constructor() {
+    this.users = {
+      create: mockAuth0UserCreate,
+      assignRoles: mockAuth0ClientAssignRole,
+    };
+    this.tickets = { changePassword: mockAuth0TicketChange };
+    this.usersByEmail = {
+      getByEmail: mockAuth0UserGetByEmail,
+    };
+  }
+}
+mock.module('auth0', {
+  namedExports: {
+    ManagementClient,
+  },
+});
+
+class SESClient {}
+const mockSESSendEmail = mock.fn((payload) => payload);
+SESClient.prototype.send = mockSESSendEmail;
+mock.module('@aws-sdk/client-ses', {
+  namedExports: {
+    SendEmailCommand: class SendEmailCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    SESClient,
   },
 });
 
@@ -39,6 +97,7 @@ const {
   errorResponseMatcher,
 } = require('@verii/tests-helpers');
 const console = require('console');
+const { NANO_ID_FORMAT } = require('@verii/test-regexes/src/regexes');
 const buildFastify = require('./helpers/build-fastify');
 const { expectedInvitationSentEmail } = require('./helpers/email-matchers');
 const initGroupsFactory = require('../src/entities/groups/factories/groups-factory');
@@ -46,62 +105,6 @@ const initOrganizationFactory = require('../src/entities/organizations/factories
 const initInvitationsFactory = require('../src/entities/invitations/factories/invitations-factory');
 const initCredentialSchemaFactory = require('../../endpoints-credential-types-registrar/test/factories/credential-schema-factory');
 const { invitationsRepoPlugin } = require('../src/entities/invitations');
-
-const mockAuth0UserCreate = jest.fn().mockImplementation(async (obj) => {
-  return { data: { user_id: 'user_id_123', ...obj } };
-});
-
-const mockAuth0UserGetByEmail = jest.fn().mockImplementation(async () => {
-  return { data: [] };
-});
-
-const mockAuth0TicketChange = jest.fn().mockImplementation(async () => {
-  return {
-    data: { ticket: undefined },
-  };
-});
-
-const mockAuth0ClientAssignRole = jest.fn().mockImplementation(async (obj) => {
-  return { data: { id: nanoid(), ...obj } };
-});
-
-jest.mock('auth0', () => ({
-  ManagementClient: jest.fn().mockImplementation(() => ({
-    users: {
-      create: mockAuth0UserCreate,
-      assignRoles: mockAuth0ClientAssignRole,
-    },
-    usersByEmail: {
-      getByEmail: mockAuth0UserGetByEmail,
-    },
-    tickets: { changePassword: mockAuth0TicketChange },
-  })),
-}));
-
-const mockSendEmail = jest.fn((payload) => payload);
-
-jest.mock('@aws-sdk/client-ses', () => ({
-  SendEmailCommand: jest.fn((args) => args),
-  SESClient: jest.fn().mockImplementation(() => ({
-    send: mockSendEmail,
-  })),
-}));
-
-jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual('@verii/error-aggregation');
-  return {
-    ...originalModule,
-    initSendError: mockInitSendError,
-  };
-});
-
-jest.mock('nanoid/non-secure', () => {
-  const originalModule = jest.requireActual('nanoid/non-secure');
-  return {
-    ...originalModule,
-    nanoid: jest.fn().mockReturnValue('mocknano'),
-  };
-});
 
 const invitationUrl = (did) => `/api/v0.6/organizations/${did}/invitations`;
 
@@ -162,7 +165,7 @@ describe('Organization invitations test suites', () => {
     await mongoDb().collection('credentialSchemas').deleteMany({});
   };
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistOrganization, newOrganization } =
@@ -177,7 +180,11 @@ describe('Organization invitations test suites', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    mockAuth0UserCreate.mock.resetCalls();
+    mockAuth0UserGetByEmail.mock.resetCalls();
+    mockAuth0ClientAssignRole.mock.resetCalls();
+    mockAuth0TicketChange.mock.resetCalls();
+    mockSESSendEmail.mock.resetCalls();
     await clearDb();
     inviterOrganization = await persistOrganization({
       service: [
@@ -195,8 +202,9 @@ describe('Organization invitations test suites', () => {
     });
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
+    mock.reset();
   });
 
   describe('Create Invitation Test Suite', () => {
@@ -536,9 +544,11 @@ describe('Organization invitations test suites', () => {
           invitation: {
             id: expect.any(String),
             ...payload,
-            code: 'mocknano',
+            code: expect.stringMatching(NANO_ID_FORMAT),
             inviterDid: inviterOrganization.didDoc.id,
-            invitationUrl: 'http://localhost.test/invitations/mocknano',
+            invitationUrl: expect.stringMatching(
+              /http:\/\/localhost.test\/invitations\/[_a-zA-Z0-9]+/
+            ),
             expiresAt: expect.any(String),
             createdAt: expect.any(String),
             createdBy: testRegistrarSuperUser.sub,
@@ -575,9 +585,11 @@ describe('Organization invitations test suites', () => {
           invitation: {
             id: expect.any(String),
             ...payload,
-            code: 'mocknano',
+            code: expect.stringMatching(NANO_ID_FORMAT),
             inviterDid: inviterOrganization.didDoc.id,
-            invitationUrl: 'http://localhost.test/invitations/mocknano',
+            invitationUrl: expect.stringMatching(
+              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9]+/
+            ),
             expiresAt: expect.any(String),
             createdAt: expect.any(String),
             createdBy: testRegistrarSuperUser.sub,
@@ -618,9 +630,11 @@ describe('Organization invitations test suites', () => {
         invitation: {
           id: expect.any(String),
           ...payload,
-          code: 'mocknano',
+          code: expect.stringMatching(NANO_ID_FORMAT),
           inviterDid: inviterOrganization.didDoc.id,
-          invitationUrl: 'http://localhost.test/invitations/mocknano',
+          invitationUrl: expect.stringMatching(
+            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+          ),
           expiresAt: expect.any(String),
           createdAt: expect.any(String),
           createdBy: expect.stringMatching(/auth0|[A-Za-z0-9_-]+/),
@@ -658,9 +672,11 @@ describe('Organization invitations test suites', () => {
         invitation: {
           id: expect.any(String),
           ...payload,
-          code: 'mocknano',
+          code: expect.stringMatching(NANO_ID_FORMAT),
           inviterDid: inviterOrganization.didDoc.id,
-          invitationUrl: 'http://localhost.test/invitations/mocknano',
+          invitationUrl: expect.stringMatching(
+            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+          ),
           expiresAt: expect.any(String),
           createdAt: expect.any(String),
           createdBy: expect.stringMatching(/auth0|[A-Za-z0-9_-]+/),
@@ -672,7 +688,10 @@ describe('Organization invitations test suites', () => {
     });
 
     it('should send error if send email failed', async () => {
-      mockSendEmail.mockRejectedValueOnce('mocked error');
+      mockSESSendEmail.mock.mockImplementationOnce(() =>
+        // eslint-disable-next-line prefer-promise-reject-errors
+        Promise.reject('mocked error')
+      );
       const service = {
         id: 'issuer-1',
         type: 'VlcCareerIssuer_v1',
@@ -715,39 +734,54 @@ describe('Organization invitations test suites', () => {
         },
       ]);
 
-      expect(mockAuth0UserGetByEmail).toBeCalledTimes(1);
-      expect(mockAuth0UserCreate).toBeCalledTimes(1);
-      expect(mockAuth0TicketChange).toBeCalledTimes(1);
+      expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(1);
+      expect(mockAuth0UserCreate.mock.callCount()).toEqual(1);
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
-      expect(mockAuth0UserGetByEmail).toHaveBeenCalledWith({
-        email: 'test@email.com',
-      });
-      expect(mockAuth0UserCreate).toHaveBeenCalledWith({
-        app_metadata: { groupId: undefined },
-        connection: undefined,
-        email: 'test@email.com',
-        email_verified: false,
-        family_name: 'A-family-name',
-        given_name: 'A-given-name',
-        password: expect.anything(),
-        verify_email: false,
-      });
-      expect(mockAuth0ClientAssignRole.mock.calls).toEqual([
+      expect(
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([{ email: 'test@email.com' }]);
+      expect(
+        mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          app_metadata: { groupId: undefined },
+          connection: undefined,
+          email: 'test@email.com',
+          email_verified: false,
+          family_name: 'A-family-name',
+          given_name: 'A-given-name',
+          password: expect.anything(),
+          verify_email: false,
+        },
+      ]);
+      expect(
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+      ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
-      expect(mockAuth0TicketChange).toHaveBeenCalledWith({
-        mark_email_as_verified: true,
-        result_url: 'https://ui.example.com',
-        ttl_sec: 604800,
-        user_id: 'user_id_123',
-      });
+      expect(
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          mark_email_as_verified: true,
+          result_url: 'https://ui.example.com',
+          ttl_sec: 604800,
+          user_id: 'user_id_123',
+        },
+      ]);
 
-      expect(mockSendError).toHaveBeenCalledWith('mocked error', {
-        err: 'mocked error',
-        message: 'Unable to send invitation email to user',
-        email: 'test@email.com',
-      });
+      expect(
+        mockSendError.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        'mocked error',
+        {
+          err: 'mocked error',
+          message: 'Unable to send invitation email to user',
+          email: 'test@email.com',
+        },
+      ]);
     });
 
     it('should create a profile with only name and one service, return 200, and ensure auth0 user is created & email sent', async () => {
@@ -793,35 +827,45 @@ describe('Organization invitations test suites', () => {
         },
       ]);
 
-      expect(mockAuth0UserGetByEmail).toBeCalledTimes(1);
-      expect(mockAuth0UserCreate).toBeCalledTimes(1);
-      expect(mockAuth0TicketChange).toBeCalledTimes(1);
+      expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(1);
+      expect(mockAuth0UserCreate.mock.callCount()).toEqual(1);
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
-      expect(mockAuth0UserGetByEmail).toHaveBeenCalledWith({
-        email: 'test@email.com',
-      });
-      expect(mockAuth0UserCreate).toHaveBeenCalledWith({
-        app_metadata: { groupId: undefined },
-        connection: undefined,
-        email: 'test@email.com',
-        email_verified: false,
-        family_name: 'A-family-name',
-        given_name: 'A-given-name',
-        password: expect.anything(),
-        verify_email: false,
-      });
-      expect(mockAuth0ClientAssignRole.mock.calls).toEqual([
+      expect(
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([{ email: 'test@email.com' }]);
+      expect(
+        mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          app_metadata: { groupId: undefined },
+          connection: undefined,
+          email: 'test@email.com',
+          email_verified: false,
+          family_name: 'A-family-name',
+          given_name: 'A-given-name',
+          password: expect.anything(),
+          verify_email: false,
+        },
+      ]);
+      expect(
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+      ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
-      expect(mockAuth0TicketChange).toHaveBeenCalledWith({
-        mark_email_as_verified: true,
-        result_url: 'https://ui.example.com',
-        ttl_sec: 604800,
-        user_id: 'user_id_123',
-      });
-      expect(mockSendEmail.mock.calls[0][0]).toEqual(
-        expectedInvitationSentEmail()
+      expect(
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          mark_email_as_verified: true,
+          result_url: 'https://ui.example.com',
+          ttl_sec: 604800,
+          user_id: 'user_id_123',
+        },
+      ]);
+      expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
+        expectedInvitationSentEmail(response.json.invitation.code)
       );
     });
 
@@ -868,36 +912,46 @@ describe('Organization invitations test suites', () => {
         },
       ]);
 
-      expect(mockAuth0UserGetByEmail).toBeCalledTimes(1);
-      expect(mockAuth0UserCreate).toBeCalledTimes(1);
-      expect(mockAuth0TicketChange).toBeCalledTimes(1);
+      expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(1);
+      expect(mockAuth0UserCreate.mock.callCount()).toEqual(1);
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
-      expect(mockAuth0UserGetByEmail).toHaveBeenCalledWith({
-        email: 'test@email.com',
-      });
-      expect(mockAuth0UserCreate).toHaveBeenCalledWith({
-        app_metadata: { groupId: undefined },
-        connection: undefined,
-        email: 'test@email.com',
-        email_verified: false,
-        family_name: 'A-family-name',
-        given_name: 'A-given-name',
-        password: expect.anything(),
-        verify_email: false,
-      });
-      expect(mockAuth0ClientAssignRole.mock.calls).toEqual([
+      expect(
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([{ email: 'test@email.com' }]);
+      expect(
+        mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          app_metadata: { groupId: undefined },
+          connection: undefined,
+          email: 'test@email.com',
+          email_verified: false,
+          family_name: 'A-family-name',
+          given_name: 'A-given-name',
+          password: expect.anything(),
+          verify_email: false,
+        },
+      ]);
+      expect(
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+      ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
-      expect(mockAuth0TicketChange).toHaveBeenCalledWith({
-        mark_email_as_verified: true,
-        result_url: 'https://ui.example.com',
-        ttl_sec: 604800,
-        user_id: 'user_id_123',
-      });
+      expect(
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          mark_email_as_verified: true,
+          result_url: 'https://ui.example.com',
+          ttl_sec: 604800,
+          user_id: 'user_id_123',
+        },
+      ]);
 
-      expect(mockSendEmail.mock.calls[0][0]).toEqual(
-        expectedInvitationSentEmail()
+      expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
+        expectedInvitationSentEmail(response.json.invitation.code)
       );
     });
 
@@ -979,7 +1033,7 @@ describe('Organization invitations test suites', () => {
       expect(response.json.invitation.keyIndividuals).toEqual(keyIndividuals);
     });
     it('should reuse a an existing user if they have already signed up', async () => {
-      mockAuth0UserGetByEmail.mockImplementationOnce(async (email) => {
+      mockAuth0UserGetByEmail.mock.mockImplementationOnce(async (email) => {
         return { data: [{ user_id: 'user_id_123', logins_count: 1, email }] };
       });
       const payload = {
@@ -1026,29 +1080,29 @@ describe('Organization invitations test suites', () => {
           updatedBy: testRegistrarUser.sub,
         },
       ]);
-      expect(mockAuth0UserGetByEmail).toBeCalledTimes(1);
-      expect(mockAuth0UserCreate).toBeCalledTimes(0);
-      expect(mockAuth0ClientAssignRole).toBeCalledTimes(0);
-      expect(mockAuth0TicketChange).toBeCalledTimes(0);
-      expect(mockSendEmail.mock.calls[0][0]).toEqual(
-        expectedInvitationSentEmail()
+      expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(1);
+      expect(mockAuth0UserCreate.mock.callCount()).toEqual(0);
+      expect(mockAuth0ClientAssignRole.mock.callCount()).toEqual(0);
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(0);
+      expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
+        expectedInvitationSentEmail(response.json.invitation.code)
       );
     });
 
     // eslint-disable-next-line max-len
     it('should create two profiles for different organizations with the same auth0 user, ensure only one version of the user is created, and send two emails', async () => {
       const ticket = 'https://ticket.com?pass=123';
-      mockAuth0TicketChange.mockImplementationOnce(async () => {
+      mockAuth0TicketChange.mock.mockImplementationOnce(async () => {
         return {
           data: {
             ticket,
           },
         };
       });
-      mockAuth0UserGetByEmail.mockImplementationOnce(async () => {
+      mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
         return { data: [] };
       });
-      mockAuth0UserGetByEmail.mockImplementationOnce(async () => {
+      mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
         return { data: [{ user_id: 'user_id_123' }] };
       });
 
@@ -1133,43 +1187,57 @@ describe('Organization invitations test suites', () => {
         },
       ]);
 
-      expect(mockAuth0UserGetByEmail).toBeCalledTimes(2);
-      expect(mockAuth0UserCreate).toBeCalledTimes(1);
-      expect(mockAuth0TicketChange).toBeCalledTimes(2);
+      expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(2);
+      expect(mockAuth0UserCreate.mock.callCount()).toEqual(1);
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(2);
 
-      expect(mockAuth0UserGetByEmail).toHaveBeenNthCalledWith(1, {
+      expect(mockAuth0UserGetByEmail.mock.calls[0].arguments[0]).toEqual({
         email: 'test@email.com',
       });
-      expect(mockAuth0UserGetByEmail).toHaveBeenNthCalledWith(2, {
+      expect(mockAuth0UserGetByEmail.mock.calls[1].arguments[0]).toEqual({
         email: 'test@email.com',
       });
-      expect(mockAuth0UserCreate).toHaveBeenCalledWith({
-        app_metadata: { groupId: undefined },
-        connection: undefined,
-        email: 'test@email.com',
-        email_verified: false,
-        family_name: 'A-family-name',
-        given_name: 'A-given-name',
-        password: expect.anything(),
-        verify_email: false,
-      });
-      expect(mockAuth0ClientAssignRole.mock.calls).toEqual([
+      expect(
+        mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          app_metadata: { groupId: undefined },
+          connection: undefined,
+          email: 'test@email.com',
+          email_verified: false,
+          family_name: 'A-family-name',
+          given_name: 'A-given-name',
+          password: expect.anything(),
+          verify_email: false,
+        },
+      ]);
+      expect(
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+      ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
-      expect(mockAuth0TicketChange).toBeCalledTimes(2);
-      expect(mockAuth0TicketChange).toHaveBeenCalledWith({
-        mark_email_as_verified: true,
-        result_url: 'https://ui.example.com',
-        ttl_sec: 604800,
-        user_id: 'user_id_123',
-      });
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(2);
+      expect(
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          mark_email_as_verified: true,
+          result_url: 'https://ui.example.com',
+          ttl_sec: 604800,
+          user_id: 'user_id_123',
+        },
+      ]);
 
-      expect(mockSendEmail.mock.calls[0][0]).toEqual(
-        expectedInvitationSentEmail(`?signup_url=${encodeURIComponent(ticket)}`)
+      expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
+        expectedInvitationSentEmail(
+          `${response1.json.invitation.code}?signup_url=${encodeURIComponent(
+            ticket
+          )}`
+        )
       );
-      expect(mockSendEmail.mock.calls[1][0]).toEqual(
-        expectedInvitationSentEmail()
+      expect(mockSESSendEmail.mock.calls[1].arguments[0]).toEqual(
+        expectedInvitationSentEmail(response2.json.invitation.code)
       );
     });
   });
@@ -1652,9 +1720,9 @@ describe('Organization invitations test suites', () => {
         },
       });
 
-      expect(mockAuth0TicketChange).toBeCalledTimes(0);
-      expect(mockAuth0UserGetByEmail).toBeCalledTimes(0);
-      expect(mockSendEmail).toBeCalledTimes(0);
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(0);
+      expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(0);
+      expect(mockSESSendEmail.mock.callCount()).toEqual(0);
       expect(response.statusCode).toEqual(404);
       expect(response.json()).toEqual(
         errorResponseMatcher({
@@ -1767,10 +1835,10 @@ describe('Organization invitations test suites', () => {
 
     it('Should resend invitation', async () => {
       const ticket = 'https://ticket.com?pass=123';
-      mockAuth0UserGetByEmail.mockImplementationOnce(async () => {
+      mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
         return { data: [] };
       });
-      mockAuth0TicketChange.mockImplementationOnce(async () => {
+      mockAuth0TicketChange.mock.mockImplementationOnce(async () => {
         return {
           data: {
             ticket,
@@ -1798,7 +1866,7 @@ describe('Organization invitations test suites', () => {
         updatedBy: 'fooUser1',
       });
 
-      const response = await fastify.inject({
+      const response = await fastify.injectJson({
         method: 'PUT',
         url: `/api/v0.6/organizations/${
           inviterOrganization.didDoc.id
@@ -1809,7 +1877,7 @@ describe('Organization invitations test suites', () => {
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.json()).toEqual({
+      expect(response.json).toEqual({
         invitation: {
           id: invitation._id.toString(),
           inviterDid: inviterOrganization.didDoc.id,
@@ -1827,8 +1895,10 @@ describe('Organization invitations test suites', () => {
             },
           ],
           keyIndividuals: minKeyIndvidiuals,
-          invitationUrl: 'http://localhost.test/invitations/mocknano',
-          code: 'mocknano',
+          invitationUrl: expect.stringMatching(
+            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+          ),
+          code: expect.stringMatching(NANO_ID_FORMAT),
           createdBy: 'fooUser1',
           updatedBy: 'fooUser1',
           expiresAt: expect.any(String),
@@ -1856,8 +1926,10 @@ describe('Organization invitations test suites', () => {
           },
         ],
         keyIndividuals: minKeyIndvidiuals,
-        invitationUrl: 'http://localhost.test/invitations/mocknano',
-        code: 'mocknano',
+        invitationUrl: expect.stringMatching(
+          /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+        ),
+        code: expect.stringMatching(NANO_ID_FORMAT),
         createdBy: 'fooUser1',
         updatedBy: 'fooUser1',
         expiresAt: expect.any(Date),
@@ -1868,37 +1940,45 @@ describe('Organization invitations test suites', () => {
         mongoify(invitation).updatedAt.getTime()
       );
 
-      expect(mockAuth0UserGetByEmail).toBeCalledTimes(1);
-      expect(mockAuth0UserCreate).toBeCalledTimes(1);
-      expect(mockAuth0TicketChange).toBeCalledTimes(1);
+      expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(1);
+      expect(mockAuth0UserCreate.mock.callCount()).toEqual(1);
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
-      expect(mockAuth0UserGetByEmail).toHaveBeenCalledWith({
-        email: 'email123@email.com',
-      });
-      expect(mockAuth0ClientAssignRole.mock.calls).toEqual([
+      expect(
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([{ email: 'email123@email.com' }]);
+      expect(
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+      ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
-      expect(mockAuth0TicketChange).toHaveBeenCalledWith({
-        mark_email_as_verified: true,
-        result_url: 'https://ui.example.com',
-        ttl_sec: 604800,
-        user_id: 'user_id_123',
-      });
-      expect(mockSendEmail.mock.calls[0][0]).toEqual(
+      expect(
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          mark_email_as_verified: true,
+          result_url: 'https://ui.example.com',
+          ttl_sec: 604800,
+          user_id: 'user_id_123',
+        },
+      ]);
+      expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
         expectedInvitationSentEmail(
-          `?signup_url=${encodeURIComponent(ticket)}`,
+          `${response.json.invitation.code}?signup_url=${encodeURIComponent(
+            ticket
+          )}`,
           'email123@email.com'
         )
       );
     });
 
     it('Should resend invitation without creating a user', async () => {
-      mockAuth0UserGetByEmail.mockImplementationOnce(async () => {
+      mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
         return { data: [{ user_id: 'user_id_123' }] };
       });
       const ticket = 'https://ticket.com?pass=123';
-      mockAuth0TicketChange.mockImplementationOnce(async () => {
+      mockAuth0TicketChange.mock.mockImplementationOnce(async () => {
         return {
           data: {
             ticket,
@@ -1926,7 +2006,7 @@ describe('Organization invitations test suites', () => {
         updatedBy: 'fooUser1',
       });
 
-      const response = await fastify.inject({
+      const response = await fastify.injectJson({
         method: 'PUT',
         url: `/api/v0.6/organizations/${
           inviterOrganization.didDoc.id
@@ -1937,7 +2017,7 @@ describe('Organization invitations test suites', () => {
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.json()).toEqual({
+      expect(response.json).toEqual({
         invitation: {
           id: invitation._id.toString(),
           inviterDid: inviterOrganization.didDoc.id,
@@ -1955,8 +2035,10 @@ describe('Organization invitations test suites', () => {
             },
           ],
           keyIndividuals,
-          invitationUrl: 'http://localhost.test/invitations/mocknano',
-          code: 'mocknano',
+          invitationUrl: expect.stringMatching(
+            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+          ),
+          code: expect.stringMatching(NANO_ID_FORMAT),
           createdBy: 'fooUser1',
           updatedBy: 'fooUser1',
           expiresAt: expect.any(String),
@@ -1984,8 +2066,10 @@ describe('Organization invitations test suites', () => {
           },
         ],
         keyIndividuals,
-        invitationUrl: 'http://localhost.test/invitations/mocknano',
-        code: 'mocknano',
+        invitationUrl: expect.stringMatching(
+          /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+        ),
+        code: expect.stringMatching(NANO_ID_FORMAT),
         createdBy: 'fooUser1',
         updatedBy: 'fooUser1',
         expiresAt: expect.any(Date),
@@ -1996,17 +2080,19 @@ describe('Organization invitations test suites', () => {
         mongoify(invitation).updatedAt.getTime()
       );
 
-      expect(mockAuth0UserGetByEmail).toBeCalledTimes(1);
-      expect(mockAuth0UserCreate).toBeCalledTimes(0);
-      expect(mockAuth0ClientAssignRole).toBeCalledTimes(0);
-      expect(mockAuth0TicketChange).toBeCalledTimes(1);
+      expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(1);
+      expect(mockAuth0UserCreate.mock.callCount()).toEqual(0);
+      expect(mockAuth0ClientAssignRole.mock.callCount()).toEqual(0);
+      expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
-      expect(mockAuth0UserGetByEmail).toHaveBeenCalledWith({
-        email: 'email123@email.com',
-      });
-      expect(mockSendEmail.mock.calls[0][0]).toEqual(
+      expect(
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([{ email: 'email123@email.com' }]);
+      expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
         expectedInvitationSentEmail(
-          `?signup_url=${encodeURIComponent(ticket)}`,
+          `${response.json.invitation.code}?signup_url=${encodeURIComponent(
+            ticket
+          )}`,
           'email123@email.com'
         )
       );

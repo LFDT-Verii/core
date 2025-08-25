@@ -24,7 +24,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import PropTypes from 'prop-types';
 
 import { copyTextToClipboard, objectToString } from '../../utils/index.jsx';
-import downloadTxtAsFile from '../../utils/downloadTxtAsFile';
+import downloadTxtAsFile from '../../utils/downloadTxtAsFile.js';
 import Popup from '../../components/common/Popup.jsx';
 
 const SecretKeysPopup = ({

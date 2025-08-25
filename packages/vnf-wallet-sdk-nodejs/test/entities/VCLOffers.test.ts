@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import { VCLOffers, VCLToken } from '../../src';
 import { OffersMocks } from '../infrastructure/resources/valid/OffersMocks';
 

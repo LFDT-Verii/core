@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { generateKeyPair } = require('@verii/crypto');
 
@@ -64,7 +67,7 @@ describe('Get exchange progress test suite', () => {
       exchangeKeyDatum.kidFragment
     );
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistOfferExchange } = initOfferExchangeFactory(fastify));
@@ -90,7 +93,7 @@ describe('Get exchange progress test suite', () => {
     user = await persistVendorUserIdMapping({ tenant });
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

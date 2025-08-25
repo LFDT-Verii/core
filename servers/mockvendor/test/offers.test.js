@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const {
@@ -9,9 +12,6 @@ const { castArray, map, omit, first } = require('lodash/fp');
 const buildFastify = require('./helpers/mockvendor-build-fastify');
 const initOfferFactory = require('./factories/offers.factory');
 const initAcceptedOffersFactory = require('./factories/accepted-offers.factory');
-const offersIO = require('../src/controllers/api/issuing-exchanges/fetchers');
-
-jest.mock('../src/controllers/api/issuing-exchanges/fetchers');
 
 describe('Offer routes', () => {
   let fastify;
@@ -19,7 +19,7 @@ describe('Offer routes', () => {
   let persistOffer;
   let acceptedOffers;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ newOffer, persistOffer } = initOfferFactory(fastify));
@@ -32,7 +32,7 @@ describe('Offer routes', () => {
     await mongoDb().collection('acceptedOffers').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 
@@ -144,11 +144,23 @@ describe('Offer routes', () => {
         })
       );
     });
-    it('should be able to create an offer', async () => {
+    it('should be able to create an offer', async (t) => {
+      const mockSubmitOffer = t.mock.fn(() =>
+        Promise.resolve(Promise.resolve())
+      );
+      const mockCompleteSubmitOffer = t.mock.fn(() =>
+        Promise.resolve(Promise.resolve())
+      );
+
+      t.mock.module('../src/controllers/api/issuing-exchanges/fetchers.js', {
+        namedExports: {
+          mockSubmitOffer,
+          mockCompleteSubmitOffer,
+        },
+      });
+
       const offer = await newOffer({ label: 'x-label' });
       const offer2 = await newOffer();
-      offersIO.submitOffer.mockResolvedValue(Promise.resolve());
-      offersIO.completeSubmitOffer.mockResolvedValue(Promise.resolve());
       const response = await fastify.injectJson({
         method: 'POST',
         url: '/api/offers',

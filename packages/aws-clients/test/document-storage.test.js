@@ -14,43 +14,63 @@
  * limitations under the License.
  *
  */
+// eslint-disable-next-line max-classes-per-file
+const { after, mock, describe, it } = require('node:test');
+const { expect } = require('expect');
 
-const { DynamoDBDocumentClient } = require('@aws-sdk/lib-dynamodb');
+const mockSend = mock.fn((payload) => payload);
+mock.module('@aws-sdk/lib-dynamodb', {
+  namedExports: {
+    GetCommand: class GetCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    PutCommand: class PutCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    DynamoDBDocumentClient: {
+      from: mock.fn(() => ({
+        send: mockSend,
+      })),
+    },
+  },
+});
+
 const {
   initReadDocument,
   initWriteDocument,
 } = require('../src/document-storage');
 
-const mockSend = jest.fn((payload) => payload);
-
-jest.mock('@aws-sdk/lib-dynamodb', () => ({
-  ...jest.requireActual('@aws-sdk/lib-dynamodb'),
-  GetCommand: jest.fn((args) => args),
-  PutCommand: jest.fn((args) => args),
-}));
-DynamoDBDocumentClient.from = jest.fn().mockImplementation(() => ({
-  send: mockSend,
-}));
-
 const readDocument = initReadDocument({});
 const writeDocument = initWriteDocument({});
 
 describe('Documents Storage', () => {
+  after(() => {
+    mock.reset();
+  });
+
   it('Should read document', async () => {
     await readDocument('TABLE', 'KEY');
 
-    expect(mockSend).toHaveBeenCalledWith({
-      TableName: 'TABLE',
-      Key: 'KEY',
-    });
+    expect(mockSend.mock.calls.map((call) => call.arguments)).toContainEqual([
+      {
+        TableName: 'TABLE',
+        Key: 'KEY',
+      },
+    ]);
   });
 
   it('Should write document', async () => {
     await writeDocument('TABLE', {});
 
-    expect(mockSend).toHaveBeenCalledWith({
-      TableName: 'TABLE',
-      Item: {},
-    });
+    expect(mockSend.mock.calls.map((call) => call.arguments)).toContainEqual([
+      {
+        TableName: 'TABLE',
+        Item: {},
+      },
+    ]);
   });
 });

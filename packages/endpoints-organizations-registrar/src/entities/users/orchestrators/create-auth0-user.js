@@ -18,9 +18,9 @@
 const { compact, map, isEmpty } = require('lodash/fp');
 const { RoleNames, initAuth0Provisioner } = require('../../oauth');
 
-const initCreateAuth0User = (fastify) => {
+const initCreateAuth0User = async (fastify) => {
   const { createAuth0User, addRoleToAuth0User, createPasswordChangeTicket } =
-    initAuth0Provisioner(fastify.config);
+    await initAuth0Provisioner(fastify.config);
 
   return async (
     { userPayload, registrarRole = null, tokenWalletRole = null, groupId },

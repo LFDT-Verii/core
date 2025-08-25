@@ -23,9 +23,9 @@ import React from 'react';
 import Dashboard from './components/Dashboard.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import Footer from './components/Footer.jsx';
-import theme from './theme/theme';
-import remoteDataProvider from './utils/remoteDataProvider';
-import { useConfig } from './utils/ConfigContext';
+import theme from './theme/theme.js';
+import remoteDataProvider from './utils/remoteDataProvider.js';
+import { useConfig } from './utils/ConfigContext.js';
 
 export const PublicAppRoot = ({ children }) => {
   const config = useConfig();

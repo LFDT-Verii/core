@@ -29,11 +29,11 @@ import {
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import AddIcon from '@mui/icons-material/Add';
 import OrganizationAvatar from '../common/OrganizationAvatar.jsx';
-import useSelectedOrganization from '../../state/selectedOrganizationState';
+import useSelectedOrganization from '../../state/selectedOrganizationState.js';
 import { useIsHideSidebar } from '../../utils/index.jsx';
-import useCountryCodes from '../../utils/countryCodes';
+import useCountryCodes from '../../utils/countryCodes.js';
 import Loading from '../Loading.jsx';
-import { useAuth } from '../../utils/auth/AuthContext';
+import { useAuth } from '../../utils/auth/AuthContext.js';
 
 // eslint-disable-next-line complexity
 const AppBarOrganization = () => {

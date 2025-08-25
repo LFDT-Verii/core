@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { describe, it, mock, after } = require('node:test');
+const { expect } = require('expect');
+
+const ethers = require('ethers');
 
 const { initGetSignerMetrics } = require('../src/ibft');
 
-jest.mock('ethers', () => ({
-  ...jest.requireActual('ethers'),
-  JsonRpcProvider: jest.fn(() => ({
-    send: () => Promise.resolve(signerMetricsResult),
-  })),
-}));
+class JsonRpcProvider {}
+JsonRpcProvider.prototype.send = mock.fn(() =>
+  Promise.resolve(signerMetricsResult)
+);
+mock.module('ethers', {
+  namedExports: {
+    JsonRpcProvider,
+    FetchRequest: ethers.FetchRequest,
+  },
+});
 
 const rpcUrl = 'RPC-URL';
 const authenticate = () => Promise.resolve('TOKEN');
@@ -49,6 +57,10 @@ const signerMetricsResult = [
 ];
 
 describe('IBFT Signer Metrics', () => {
+  after(() => {
+    mock.reset();
+  });
+
   it('Should return IBFT signer merics', async () => {
     const getSignerMetrics = await initGetSignerMetrics({
       rpcUrl,

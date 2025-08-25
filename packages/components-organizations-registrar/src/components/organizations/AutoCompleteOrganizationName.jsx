@@ -2,12 +2,14 @@ import { useCallback, useState, useEffect } from 'react';
 import { Box, Autocomplete, Typography, useTheme, TextField, Button } from '@mui/material';
 import { useDataProvider } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
-import parse from 'autosuggest-highlight/parse';
-import match from 'autosuggest-highlight/match';
-import AddIcon from '@mui/icons-material/Add';
+// eslint-disable-next-line import/extensions
+import parse from 'autosuggest-highlight/parse/index.js';
+// eslint-disable-next-line import/extensions
+import match from 'autosuggest-highlight/match/index.js';
+import { Add as AddIcon } from '@mui/icons-material';
 import PropTypes from 'prop-types';
-import { dataResources } from '../../utils/remoteDataProvider';
-import useDebounce from '../../utils/hooks/useDebounceValue';
+import { dataResources } from '@/utils/remoteDataProvider.js';
+import useDebounce from '@/utils/hooks/useDebounceValue.js';
 
 const DID_START = 'did:';
 const ERRORS = {

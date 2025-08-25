@@ -16,4 +16,4 @@
  */
 export { default as ServiceCreateForm } from './ServiceCreateForm.jsx';
 export { default as ServicesList } from './ServicesList.jsx';
-export { default as useDeleteService } from './useDeleteService';
+export { default as useDeleteService } from './useDeleteService.js';

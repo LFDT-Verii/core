@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 /* eslint-disable max-len */
 const { generateKeyPair, exportJWK } = require('jose');
 

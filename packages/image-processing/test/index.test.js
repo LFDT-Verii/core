@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { describe, it, mock, after } = require('node:test');
+const { expect } = require('expect');
 
 const { getMimeType, ExtensionTypes, getImageFormat } = require('../src');
 
-jest.mock('nanoid', () => ({
-  nanoid: () => '1234',
-}));
+mock.module('nanoid', { namedExports: { nanoid: () => 1234 } });
 
 describe('Image-processing test suite', () => {
+  after(() => {
+    mock.reset();
+  });
+
   describe('get mime type test suite', () => {
     it('should return image/jpeg', () => {
       const mimeType = getMimeType(ExtensionTypes.JPEG);

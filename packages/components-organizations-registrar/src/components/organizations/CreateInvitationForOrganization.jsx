@@ -27,12 +27,12 @@ import {
   validateWebsite,
   validateName,
   validateWebsiteStrict,
-} from './CreateOrganization.utils';
-import OrganizationSubmitButton from './OrganisationSubmitButton.jsx';
+} from './CreateOrganizationUtils.js';
+import OrganizationSubmitButton from './OrganizationSubmitButton.jsx';
 import CustomImageInput from '../common/CustomImageInput/index.jsx';
 import AuthorityRegistrationNumbersInput from '../../pages/organizations/components/AuthorityRegistrationInput.jsx';
 import { LinkedInRegistrationInput } from '../../pages/organizations/components/LinkedInRegistrationInput.jsx';
-import { dataResources } from '../../utils/remoteDataProvider';
+import { dataResources } from '../../utils/remoteDataProvider.js';
 
 const CreateInvitationForOrganization = ({ onSubmit, countryCodes, onCancel, defaultValues }) => {
   const dataProvider = useDataProvider();

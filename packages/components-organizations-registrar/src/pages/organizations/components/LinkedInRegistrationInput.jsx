@@ -5,7 +5,7 @@ import { Box, Stack, Tooltip } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 
 import { preservedRegistrationNumbers } from './AuthorityRegistrationInput.jsx';
-import { Authorities } from '../../../constants/messageCodes';
+import { Authorities } from '../../../constants/messageCodes.js';
 
 export const LinkedInRegistrationInput = ({ formData, source = 'registrationNumbers' }) => (
   <Stack flexDirection="row" gap={1.75}>

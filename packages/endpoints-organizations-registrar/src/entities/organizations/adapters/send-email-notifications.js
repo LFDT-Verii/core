@@ -23,7 +23,7 @@ const {
   initOrganizationRegistrarEmails,
 } = require('./init-organization-registrar-emails');
 
-const initSendEmailNotifications = (initCtx) => {
+const initSendEmailNotifications = async (initCtx) => {
   const { config } = initCtx;
   const {
     emailToNewOrgForServicesActivated,
@@ -31,7 +31,7 @@ const initSendEmailNotifications = (initCtx) => {
     emailToSupportForServicesAddedAndNeedActivation,
     emailToRegisteredOrgForServicesActivated,
   } = initOrganizationRegistrarEmails(config);
-  const { getUsersByIds } = initAuth0Provisioner(config);
+  const { getUsersByIds } = await initAuth0Provisioner(config);
 
   const shouldSendEmailForServicesActivated = (
     activatedServiceIds,

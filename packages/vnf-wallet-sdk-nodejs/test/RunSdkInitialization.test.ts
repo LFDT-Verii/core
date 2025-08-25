@@ -5,7 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { expect } from '@jest/globals';
+import { describe, it } from 'node:test';
+import { expect } from 'expect';
 import { VCLImpl } from '../src/impl/VCLImpl';
 import { VCLProvider } from '../src';
 

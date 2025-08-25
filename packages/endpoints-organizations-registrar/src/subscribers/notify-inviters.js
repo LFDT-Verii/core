@@ -18,7 +18,7 @@ const { initSendEmailInvitationAcceptedToInviter } = require('../entities');
 
 const notifyInviters = async (fastify) => {
   const sendEmailInvitationAcceptedToInviter =
-    initSendEmailInvitationAcceptedToInviter(fastify);
+    await initSendEmailInvitationAcceptedToInviter(fastify);
 
   const eventHandler = (
     { payload: { organization, invitation, addedServices, caoServiceRefs } },

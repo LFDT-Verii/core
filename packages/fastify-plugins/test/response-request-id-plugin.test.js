@@ -1,3 +1,6 @@
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const fastify = require('fastify');
 const {
   responseRequestIdPlugin,

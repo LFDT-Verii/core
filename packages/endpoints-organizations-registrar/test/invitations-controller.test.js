@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { subDays } = require('date-fns/fp');
 const { omit } = require('lodash/fp');
@@ -45,7 +48,7 @@ describe('Invitations controller test suite', () => {
     await mongoDb().collection('groups').deleteMany({});
   };
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistInvitation } = initInvitationsFactory(fastify));
@@ -58,11 +61,10 @@ describe('Invitations controller test suite', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     await clearDb();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

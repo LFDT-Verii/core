@@ -21,17 +21,17 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import { useEffect, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { FOOTER_HEIGHT } from '@/theme/theme';
+import { FOOTER_HEIGHT } from '@/theme/theme.js';
 import CreateOrganisation from '@/components/organizations/CreateOrganization.jsx';
 import InvitationServiceInfo from '@/components/invitations/InvitationServiceInfo.jsx';
 import Popup from '@/components/common/Popup.jsx';
 import Loading from '@/components/Loading.jsx';
-import { MESSAGE_CODES } from '@/constants/messageCodes';
+import { MESSAGE_CODES } from '@/constants/messageCodes.js';
 import { formatWebSiteUrl, formatRegistrationNumbers, parseJwt } from '@/utils/index.jsx';
-import useCountryCodes from '@/utils/countryCodes';
-import { dataResources } from '@/utils/remoteDataProvider';
-import { useAuth } from '@/utils/auth/AuthContext';
-import useSelectedOrganization from '@/state/selectedOrganizationState';
+import useCountryCodes from '@/utils/countryCodes.js';
+import { dataResources } from '@/utils/remoteDataProvider.js';
+import { useAuth } from '@/utils/auth/AuthContext.js';
+import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
 
 const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {

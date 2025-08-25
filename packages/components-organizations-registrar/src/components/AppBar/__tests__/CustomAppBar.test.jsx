@@ -1,27 +1,14 @@
-import '@testing-library/jest-dom';
+import { before, describe, it, mock } from 'node:test';
+import { expect } from 'expect';
+import * as matchers from '@testing-library/jest-dom/matchers';
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { AdminContext, memoryStore } from 'react-admin';
-import * as selectedOrgState from '@/state/selectedOrganizationState';
-import * as useCountryCodes from '@/utils/countryCodes';
-import * as reactAdmin from 'react-admin';
-import CustomAppBar from '../CustomAppBar.jsx';
-import { useCheckUserHasGroup } from '../hooks/useCheckUserHasGroup.jsx';
+import { AdminContext, memoryStore, useLogout } from 'react-admin';
+import { Link } from 'react-router';
 
-jest.mock('react-admin', () => ({
-  ...jest.requireActual('react-admin'),
-  useGetList: jest.fn(),
-  useRedirect: jest.fn(() => jest.fn()),
-}));
+expect.extend(matchers);
 
-jest.mock('react-router', () => ({
-  ...jest.requireActual('react-router'),
-  useLocation: () => ({
-    pathname: '/organizations/did%3Aweb%3Aa.com/show',
-  }),
-}));
-
-reactAdmin.useGetList.mockImplementation(() => ({
+const useGetListMock = mock.fn(() => ({
   data: [
     {
       id: 'org-1',
@@ -35,31 +22,50 @@ reactAdmin.useGetList.mockImplementation(() => ({
   isLoading: false,
   total: 1,
   error: null,
-  refetch: jest.fn(),
+  refetch: mock.fn(),
 }));
 
-reactAdmin.useRedirect.mockImplementation(() => jest.fn());
+const useRedirectMock = mock.fn(() => mock.fn());
+mock.module('react-admin', {
+  namedExports: {
+    useLogout,
+    useGetList: useGetListMock,
+    useRedirect: useRedirectMock,
+  },
+});
 
-jest.mock('@/state/selectedOrganizationState');
-jest.mock('@/utils/countryCodes');
-jest.mock('../hooks/useCheckUserHasGroup.jsx', () => ({
-  useCheckUserHasGroup: jest.fn(),
-}));
+mock.module('react-router', {
+  namedExports: {
+    Link,
+    useLocation: () => ({
+      pathname: '/organizations/did%3Aweb%3Aa.com/show',
+    }),
+  },
+});
+
+mock.module('@/state/selectedOrganizationState.js', {
+  defaultExport: () => ['org-1', () => {}],
+});
+mock.module('@/utils/countryCodes.js', {
+  defaultExport: () => ({
+    getCountryNameByCode: mock.fn((code) => (code === 'US' ? 'United States' : 'Unknown')),
+  }),
+});
+const useCheckUserHasGroupMock = mock.fn();
+mock.module('../hooks/useCheckUserHasGroup.js', {
+  namedExports: { useCheckUserHasGroup: useCheckUserHasGroupMock },
+});
 
 describe('CustomAppBar', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  let CustomAppBar;
+  before(async () => {
+    CustomAppBar = (await import('../CustomAppBar.jsx')).default;
   });
-
   it('renders AppBarOrganization when hasOrganisations is true', async () => {
-    useCheckUserHasGroup.mockReturnValue({
+    useCheckUserHasGroupMock.mock.mockImplementation(() => ({
       hasOrganisations: true,
       isLoading: false,
-    });
-    selectedOrgState.default.mockReturnValue(['org-1', jest.fn()]);
-    useCountryCodes.default.mockReturnValue({
-      getCountryNameByCode: jest.fn((code) => (code === 'US' ? 'United States' : 'Unknown')),
-    });
+    }));
 
     render(
       <AdminContext store={memoryStore()}>
@@ -72,10 +78,10 @@ describe('CustomAppBar', () => {
   });
 
   it('does not render AppBarOrganization when hasOrganisations is false', async () => {
-    useCheckUserHasGroup.mockReturnValue({
+    useCheckUserHasGroupMock.mock.mockImplementation(() => ({
       hasOrganisations: false,
       isLoading: false,
-    });
+    }));
 
     render(
       <AdminContext store={memoryStore()}>

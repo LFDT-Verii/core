@@ -17,6 +17,6 @@
 export { default as AutoCompleteOrganizationName } from './AutoCompleteOrganizationName.jsx';
 export { default as CreateInvitationForOrganization } from './CreateInvitationForOrganization.jsx';
 export { default as CreateOrganisation } from './CreateOrganization.jsx';
-export * from './CreateOrganization.utils';
-export { default as OrganisationSubmitButton } from './OrganisationSubmitButton.jsx';
+export * from './CreateOrganizationUtils.js';
+export { default as OrganizationSubmitButton } from './OrganizationSubmitButton.jsx';
 export { default as ValidateTextInput } from './ValidateTextInput.jsx';

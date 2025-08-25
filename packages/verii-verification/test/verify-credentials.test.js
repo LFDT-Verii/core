@@ -14,13 +14,33 @@
  * limitations under the License.
  */
 
+const { before, beforeEach, describe, it, mock, after } = require('node:test');
+const { expect } = require('expect');
+const { ALG_TYPE } = require('@verii/metadata-registration');
+
+const resolveDidDocument = mock.fn();
+const initMetadataRegistry = mock.fn(() => ({
+  resolveDidDocument,
+}));
+const initRevocationRegistry = mock.fn(() => ({
+  getRevokedStatus: mock.fn(() => Promise.resolve(0)),
+}));
+const initVerificationCoupon = mock.fn(() => ({}));
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    ALG_TYPE,
+    initMetadataRegistry,
+    initRevocationRegistry,
+    initVerificationCoupon,
+  },
+});
+
 const console = require('console');
 const { compact, first, flow, join, omit, tail } = require('lodash/fp');
 const { jwtSign, jwtDecode, generateCredentialJwt } = require('@verii/jwt');
 const { addHours, setMilliseconds } = require('date-fns/fp');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { credentialUnexpired } = require('@verii/sample-data');
-const metadataRegistration = require('@verii/metadata-registration');
 const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
 const {
   CheckResults,
@@ -31,8 +51,6 @@ const { generateKeyPair } = require('@verii/crypto');
 const { nanoid } = require('nanoid');
 const { applyOverrides } = require('@verii/common-functions');
 const { verifyCredentials } = require('../src/verify-credentials');
-
-jest.mock('@verii/metadata-registration');
 
 describe('Verify credentials', () => {
   const orgKeyPair = generateKeyPairInHexAndJwk();
@@ -55,33 +73,37 @@ describe('Verify credentials', () => {
   let context;
   let fetchers;
 
-  beforeAll(async () => {
+  before(async () => {
     fetchers = {
-      resolveDid: jest.fn().mockResolvedValue({
-        id: issuerDid,
-        publicKey: [{ id: '#key-1', publicKeyJwk: orgKeyPair.publicJwk }],
-      }),
-      getOrganizationVerifiedProfile: jest
-        .fn()
-        .mockResolvedValue(mockGetOrganizationVerifiedProfile),
-      getCredentialTypeMetadata: jest.fn().mockResolvedValue([
-        {
-          credentialType: 'Passport',
-          issuerCategory: 'IdentityIssuer',
-          primaryOrganizationClaimPaths: [
-            ['credentialSubject', 'authority'],
-            ['credentialSubject', 'authority', 'identifier'],
-          ],
-        },
-        {
-          credentialType: 'OpenBadgeCredential',
-          issuerCategory: 'RegularIssuer',
-          primaryOrganizationClaimPaths: [
-            ['credentialSubject', 'issuer'],
-            ['credentialSubject', 'issuer', 'id'],
-          ],
-        },
-      ]),
+      resolveDid: mock.fn(() =>
+        Promise.resolve({
+          id: issuerDid,
+          publicKey: [{ id: '#key-1', publicKeyJwk: orgKeyPair.publicJwk }],
+        })
+      ),
+      getOrganizationVerifiedProfile: mock.fn(() =>
+        Promise.resolve(mockGetOrganizationVerifiedProfile)
+      ),
+      getCredentialTypeMetadata: mock.fn(() =>
+        Promise.resolve([
+          {
+            credentialType: 'Passport',
+            issuerCategory: 'IdentityIssuer',
+            primaryOrganizationClaimPaths: [
+              ['credentialSubject', 'authority'],
+              ['credentialSubject', 'authority', 'identifier'],
+            ],
+          },
+          {
+            credentialType: 'OpenBadgeCredential',
+            issuerCategory: 'RegularIssuer',
+            primaryOrganizationClaimPaths: [
+              ['credentialSubject', 'issuer'],
+              ['credentialSubject', 'issuer', 'id'],
+            ],
+          },
+        ])
+      ),
     };
     context = {
       tenant: { did: 'did:ion:123' },
@@ -90,10 +112,12 @@ describe('Verify credentials', () => {
     };
   });
 
-  describe.each([{ didSuffix: null }, { didSuffix: 'abc' }])(
-    'full verification with didSuffix=$didSuffix',
-    ({ didSuffix }) => {
-      let resolveDidDocument;
+  after(() => {
+    mock.reset();
+  });
+
+  [{ didSuffix: null }, { didSuffix: 'abc' }].forEach(({ didSuffix }) =>
+    describe(`full verification with ${didSuffix}`, () => {
       let openBadgeCredential;
       let openBadgeVc;
       let idCredential;
@@ -102,26 +126,10 @@ describe('Verify credentials', () => {
       let credentialDid;
 
       beforeEach(async () => {
-        jest.clearAllMocks();
-
-        indexEntry = ['0xf123', 1, 42, didSuffix];
-        credentialDid = buildDid(indexEntry, 'did:velocity:v2:');
-
-        const issuerCred = {
-          iss: issuerDid,
-          vc: {
-            id: credentialDid,
-            credentialSubject: {
-              accountId: indexEntry[0],
-              listId: indexEntry[1],
-            },
-          },
-        };
-        issuerVc = await jwtSign(issuerCred, orgKeyPair.privateJwk, {
-          kid: `${issuerDid}#key-1`,
-        });
-
-        resolveDidDocument = jest.fn(() => ({
+        initMetadataRegistry.mock.resetCalls();
+        initRevocationRegistry.mock.resetCalls();
+        resolveDidDocument.mock.resetCalls();
+        resolveDidDocument.mock.mockImplementation(() => ({
           didDocument: {
             id: 'DID',
             publicKey: [
@@ -144,13 +152,23 @@ describe('Verify credentials', () => {
           didResolutionMetadata: {},
         }));
 
-        metadataRegistration.initVerificationCoupon.mockReturnValue({});
-        metadataRegistration.initMetadataRegistry.mockReturnValue({
-          resolveDidDocument,
+        indexEntry = ['0xf123', 1, 42, didSuffix];
+        credentialDid = buildDid(indexEntry, 'did:velocity:v2:');
+
+        const issuerCred = {
+          iss: issuerDid,
+          vc: {
+            id: credentialDid,
+            credentialSubject: {
+              accountId: indexEntry[0],
+              listId: indexEntry[1],
+            },
+          },
+        };
+        issuerVc = await jwtSign(issuerCred, orgKeyPair.privateJwk, {
+          kid: `${issuerDid}#key-1`,
         });
-        metadataRegistration.initRevocationRegistry.mockReturnValue({
-          getRevokedStatus: jest.fn().mockResolvedValue(0),
-        });
+
         openBadgeCredential = applyOverrides(credentialUnexpired, {
           id: credentialDid,
           issuer: { id: issuerDid },
@@ -243,10 +261,12 @@ describe('Verify credentials', () => {
             },
           },
         ]);
-        expect(metadataRegistration.initMetadataRegistry.mock.calls).toEqual([
-          [{ privateKey: orgKeyPair.privateKey }, kmsContext],
-        ]);
-        expect(resolveDidDocument.mock.calls).toEqual([
+        expect(
+          initMetadataRegistry.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ privateKey: orgKeyPair.privateKey }, kmsContext]]);
+        expect(
+          resolveDidDocument.mock.calls.map((call) => call.arguments)
+        ).toEqual([
           [
             {
               burnerDid: kmsContext.tenant.did,
@@ -383,10 +403,12 @@ describe('Verify credentials', () => {
             },
           },
         ]);
-        expect(metadataRegistration.initMetadataRegistry.mock.calls).toEqual([
-          [{ privateKey: orgKeyPair.privateKey }, kmsContext],
-        ]);
-        expect(resolveDidDocument.mock.calls).toEqual([
+        expect(
+          initMetadataRegistry.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ privateKey: orgKeyPair.privateKey }, kmsContext]]);
+        expect(
+          resolveDidDocument.mock.calls.map((call) => call.arguments)
+        ).toEqual([
           [
             {
               burnerDid: kmsContext.tenant.did,
@@ -601,25 +623,6 @@ describe('Verify credentials', () => {
           },
         ]);
       });
-      it('should generate correct multi did', async () => {
-        await verifyCredentials(
-          {
-            credentials: [openBadgeVc, openBadgeVc],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
-          },
-          fetchers,
-          context
-        );
-        expect(resolveDidDocument).toHaveBeenCalledWith({
-          did: buildDid(
-            indexEntry,
-            `${buildDid(indexEntry, 'did:velocity:v2:multi:')};`
-          ),
-          credentials: expect.any(Array),
-          burnerDid: 'did:ion:123',
-          verificationCoupon: {},
-        });
-      });
 
       it('should return successful credential check if selfsigned using did:jwk in kid', async () => {
         const keyPair = generateKeyPairInHexAndJwk();
@@ -673,6 +676,33 @@ describe('Verify credentials', () => {
           },
         ]);
       });
+      it('should generate correct multi did', async () => {
+        await verifyCredentials(
+          {
+            credentials: [openBadgeVc, openBadgeVc],
+            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+          },
+          fetchers,
+          context
+        );
+        expect(
+          resolveDidDocument.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            did: `did:velocity:v2:multi:${openBadgeCredential.id
+              .split(':')
+              .slice(3)
+              .join(':')};${openBadgeCredential.id
+              .split(':')
+              .slice(3)
+              .join(':')}`,
+            credentials: expect.any(Array),
+            caoDid: undefined,
+            burnerDid: 'did:ion:123',
+            verificationCoupon: {},
+          },
+        ]);
+      });
 
       it('should return successful credential check if selfsigned using jwk', async () => {
         const keyPair = generateKeyPairInHexAndJwk();
@@ -723,9 +753,9 @@ describe('Verify credentials', () => {
       it('UNTAMPERED should return VOUCHER_RESERVE_EXHAUSTED and skip credential check with no available tokens', async () => {
         const contractError = new Error('Contract error');
         contractError.reason = 'No available tokens';
-        metadataRegistration.initMetadataRegistry.mockReturnValueOnce({
+        initMetadataRegistry.mock.mockImplementationOnce(() => ({
           resolveDidDocument: () => Promise.reject(contractError),
-        });
+        }));
         const result = await verifyCredentials(
           {
             credentials: [idVc],
@@ -796,9 +826,9 @@ describe('Verify credentials', () => {
       it('UNTAMPERED should DEPENDENCY_RESOLUTION_ERROR if reason of error not `No available tokens`', async () => {
         const contractError = new Error('Contract error');
         contractError.reason = 'Some another reason message';
-        metadataRegistration.initMetadataRegistry.mockReturnValue({
+        initMetadataRegistry.mock.mockImplementationOnce(() => ({
           resolveDidDocument: () => Promise.reject(contractError),
-        });
+        }));
         await expect(
           verifyCredentials(
             {
@@ -854,8 +884,8 @@ describe('Verify credentials', () => {
       });
 
       it('UNTAMPERED should return DATA_INTEGRITY_ERROR if publicKey does not exist', async () => {
-        metadataRegistration.initMetadataRegistry.mockReturnValueOnce({
-          resolveDidDocument: jest.fn(() => ({
+        initMetadataRegistry.mock.mockImplementationOnce(() => ({
+          resolveDidDocument: mock.fn(() => ({
             didDocument: {
               id: 'DID',
               publicKey: [],
@@ -880,7 +910,7 @@ describe('Verify credentials', () => {
               ],
             },
           })),
-        });
+        }));
 
         const result = await verifyCredentials(
           {
@@ -1152,9 +1182,9 @@ describe('Verify credentials', () => {
       });
 
       it('UNREVOKED should return FAIL when status is revoked', async () => {
-        metadataRegistration.initRevocationRegistry.mockReturnValue({
-          getRevokedStatus: jest.fn().mockResolvedValue(1n),
-        });
+        initRevocationRegistry.mock.mockImplementationOnce(() => ({
+          getRevokedStatus: mock.fn(() => Promise.resolve(1n)),
+        }));
 
         const result = await verifyCredentials(
           {
@@ -1181,9 +1211,9 @@ describe('Verify credentials', () => {
       });
 
       it('UNREVOKED should return FAIL when status request errors', async () => {
-        metadataRegistration.initRevocationRegistry.mockReturnValue({
-          getRevokedStatus: jest.fn().mockRejectedValue(new Error('boom')),
-        });
+        initRevocationRegistry.mock.mockImplementationOnce(() => ({
+          getRevokedStatus: mock.fn(() => Promise.reject(new Error('boom'))),
+        }));
 
         const result = await verifyCredentials(
           {
@@ -1208,7 +1238,7 @@ describe('Verify credentials', () => {
           },
         ]);
       });
-    }
+    })
   );
 });
 

@@ -15,6 +15,10 @@
  */
 
 // eslint-disable-next-line import/order
+
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const console = require('console');
 const {
   mongoFactoryWrapper,
@@ -27,20 +31,20 @@ const {
 const { VendorEndpoint } = require('../../src/entities');
 
 describe('setConfigurationType tests suite', () => {
-  beforeAll(async () => {
+  before(async () => {
     await mongoFactoryWrapper('test-set-configuration-type-modifier', {
       log: console,
       config,
     });
   });
 
-  afterAll(async () => {
+  after(async () => {
     await mongoCloseWrapper();
   });
 
-  it('should set right configuration type', () => {
+  it('should set right configuration type', (t) => {
     const extension = setConfigurationType({
-      prepModification: jest.fn((x) => x),
+      prepModification: t.mock.fn((x) => x),
     });
     expect(extension.prepModification({}, 'insert')).toEqual({}, 'insert');
     expect(

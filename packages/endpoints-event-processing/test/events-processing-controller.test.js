@@ -15,23 +15,26 @@
  *
  */
 
-const { wait } = require('@verii/common-functions');
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
-const mockHandleCredentialIssuedRewardsEvent = jest.fn();
-const mockHandleCouponsBurnedVerificationEvent = jest.fn();
-const mockHandleCouponsMintedLoggingEvent = jest.fn();
-const mockHandleCouponsBurnedLoggingEvent = jest.fn();
-const mockHandleCredentialIssuedLoggingEvent = jest.fn();
-jest.mock('../src/handlers', () => {
-  return {
+const mockHandleCredentialIssuedRewardsEvent = mock.fn();
+const mockHandleCouponsBurnedVerificationEvent = mock.fn();
+const mockHandleCouponsMintedLoggingEvent = mock.fn();
+const mockHandleCouponsBurnedLoggingEvent = mock.fn();
+const mockHandleCredentialIssuedLoggingEvent = mock.fn();
+mock.module('../src/handlers/index.js', {
+  namedExports: {
     handleCredentialIssuedRewardsEvent: mockHandleCredentialIssuedRewardsEvent,
     handleCouponsMintedLoggingEvent: mockHandleCouponsMintedLoggingEvent,
     handleCouponsBurnedVerificationEvent:
       mockHandleCouponsBurnedVerificationEvent,
     handleCouponsBurnedLoggingEvent: mockHandleCouponsBurnedLoggingEvent,
     handleCredentialIssuedLoggingEvent: mockHandleCredentialIssuedLoggingEvent,
-  };
+  },
 });
+
+const { wait } = require('@verii/common-functions');
 
 const buildFastify = require('./helpers/build-fastify');
 
@@ -40,17 +43,22 @@ describe('Event processing controller test suite', () => {
 
   const baseUrl = 'api/v0.6/events-processing';
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockHandleCredentialIssuedRewardsEvent.mock.resetCalls();
+    mockHandleCouponsMintedLoggingEvent.mock.resetCalls();
+    mockHandleCouponsBurnedVerificationEvent.mock.resetCalls();
+    mockHandleCouponsBurnedLoggingEvent.mock.resetCalls();
+    mockHandleCredentialIssuedLoggingEvent.mock.resetCalls();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
+    mock.reset();
   });
 
   describe('credentials issued rewards type test suite', () => {
@@ -62,12 +70,14 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCredentialIssuedRewardsEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCredentialIssuedRewardsEvent.mock.callCount()).toEqual(
+        1
+      );
     });
 
     it('Should 200 and handle error from non-blocking process', async () => {
-      mockHandleCredentialIssuedRewardsEvent.mockRejectedValue(
-        new Error('test error')
+      mockHandleCredentialIssuedRewardsEvent.mock.mockImplementationOnce(() =>
+        Promise.reject(new Error('test error'))
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -76,7 +86,9 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCredentialIssuedRewardsEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCredentialIssuedRewardsEvent.mock.callCount()).toEqual(
+        1
+      );
     });
   });
 
@@ -89,12 +101,14 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCouponsBurnedVerificationEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCouponsBurnedVerificationEvent.mock.callCount()).toEqual(
+        1
+      );
     });
 
     it('Should 200 and handle error from non-blocking process', async () => {
-      mockHandleCouponsBurnedVerificationEvent.mockRejectedValue(
-        new Error('test error')
+      mockHandleCouponsBurnedVerificationEvent.mock.mockImplementationOnce(() =>
+        Promise.reject(new Error('test error'))
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -103,7 +117,9 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCouponsBurnedVerificationEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCouponsBurnedVerificationEvent.mock.callCount()).toEqual(
+        1
+      );
     });
   });
 
@@ -116,12 +132,12 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCouponsMintedLoggingEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCouponsMintedLoggingEvent.mock.callCount()).toEqual(1);
     });
 
     it('Should 200 and handle error from non-blocking process', async () => {
-      mockHandleCouponsMintedLoggingEvent.mockRejectedValue(
-        new Error('test error')
+      mockHandleCouponsMintedLoggingEvent.mock.mockImplementationOnce(() =>
+        Promise.reject(new Error('test error'))
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -130,7 +146,7 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCouponsMintedLoggingEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCouponsMintedLoggingEvent.mock.callCount()).toEqual(1);
     });
   });
 
@@ -143,12 +159,12 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCouponsBurnedLoggingEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCouponsBurnedLoggingEvent.mock.callCount()).toEqual(1);
     });
 
     it('Should 200 and handle error from non-blocking process', async () => {
-      mockHandleCouponsBurnedLoggingEvent.mockRejectedValue(
-        new Error('test error')
+      mockHandleCouponsBurnedLoggingEvent.mock.mockImplementationOnce(() =>
+        Promise.reject(new Error('test error'))
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -157,7 +173,7 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCouponsBurnedLoggingEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCouponsBurnedLoggingEvent.mock.callCount()).toEqual(1);
     });
   });
 
@@ -170,12 +186,14 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCredentialIssuedLoggingEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCredentialIssuedLoggingEvent.mock.callCount()).toEqual(
+        1
+      );
     });
 
     it('Should 200 and handle error from non-blocking process', async () => {
-      mockHandleCredentialIssuedLoggingEvent.mockRejectedValue(
-        new Error('test error')
+      mockHandleCredentialIssuedLoggingEvent.mock.mockImplementationOnce(() =>
+        Promise.reject(new Error('test error'))
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -184,7 +202,9 @@ describe('Event processing controller test suite', () => {
       });
       expect(response.statusCode).toEqual(200);
       await wait(0);
-      expect(mockHandleCredentialIssuedLoggingEvent).toHaveBeenCalledTimes(1);
+      expect(mockHandleCredentialIssuedLoggingEvent.mock.callCount()).toEqual(
+        1
+      );
     });
   });
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useConfig } from '@/utils/ConfigContext';
+import { useConfig } from '@/utils/ConfigContext.js';
 
 /**
  * useSignatoryResponse hook

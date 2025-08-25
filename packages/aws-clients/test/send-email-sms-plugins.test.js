@@ -14,42 +14,51 @@
  * limitations under the License.
  *
  */
-const { initSendEmailNotification } = require('../src/email-notifications');
+const { mock, describe, it, after } = require('node:test');
+const { expect } = require('expect');
 
-jest.mock('../src/email-notifications', () => {
-  return {
-    initSendEmailNotification: jest.fn().mockReturnValue('sendEmailFn'),
-  };
+const initSendEmailNotification = mock.fn(() => 'sendEmailFn');
+
+mock.module('../src/email-notifications.js', {
+  namedExports: {
+    initSendEmailNotification,
+  },
 });
 
-const { initSendSmsNotification } = require('../src/sms-notifications');
+const initSendSmsNotification = mock.fn(() => 'sendSmsFn');
 
-jest.mock('../src/sms-notifications', () => {
-  return {
-    initSendSmsNotification: jest.fn().mockReturnValue('sendSmsFn'),
-  };
+mock.module('../src/sms-notifications.js', {
+  namedExports: {
+    initSendSmsNotification,
+  },
 });
 
 const { sendEmailPlugin, sendSmsPlugin } = require('..');
 
 describe('Send Email and SMS Plugins', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  after(() => {
+    mock.reset();
   });
 
   it('email plugin should decorate fastify', async () => {
-    const fakeServer = { config: { hi: 1 }, decorate: jest.fn() };
+    const fakeServer = { config: { hi: 1 }, decorate: mock.fn(() => {}) };
     await sendEmailPlugin(fakeServer);
-    expect(initSendEmailNotification.mock.calls).toEqual([[fakeServer.config]]);
-    expect(fakeServer.decorate.mock.calls).toEqual([
-      ['sendEmail', 'sendEmailFn'],
-    ]);
+    expect(
+      initSendEmailNotification.mock.calls.map((call) => call.arguments)
+    ).toEqual([[fakeServer.config]]);
+    expect(
+      fakeServer.decorate.mock.calls.map((call) => call.arguments)
+    ).toEqual([['sendEmail', 'sendEmailFn']]);
   });
 
   it('sms plugin should decorate fastify', async () => {
-    const fakeServer = { config: {}, decorate: jest.fn() };
+    const fakeServer = { config: {}, decorate: mock.fn(() => {}) };
     await sendSmsPlugin(fakeServer);
-    expect(initSendSmsNotification.mock.calls).toEqual([[fakeServer.config]]);
-    expect(fakeServer.decorate.mock.calls).toEqual([['sendSms', 'sendSmsFn']]);
+    expect(
+      initSendSmsNotification.mock.calls.map((call) => call.arguments)
+    ).toEqual([[fakeServer.config]]);
+    expect(
+      fakeServer.decorate.mock.calls.map((call) => call.arguments)
+    ).toEqual([['sendSms', 'sendSmsFn']]);
   });
 });

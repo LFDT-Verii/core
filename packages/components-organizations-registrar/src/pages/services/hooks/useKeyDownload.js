@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import downloadTxtAsFile from '@/utils/downloadTxtAsFile';
+import downloadTxtAsFile from '@/utils/downloadTxtAsFile.js';
 import { copyTextToClipboard, objectToString } from '@/utils/index.jsx';
 
 export const useKeyDownload = () => {

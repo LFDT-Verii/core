@@ -18,9 +18,9 @@
 export * from './PrivateAppRoot.jsx';
 // eslint-disable-next-line import/export
 export * from './PublicAppRoot.jsx';
-export * from './utils/auth/AuthContext';
-export * from './utils/auth/authScopes';
-export * from './utils/ConfigContext';
-export * from './utils/chainNames';
-export * from './utils/serviceTypes';
-export * from './state';
+export * from './utils/auth/AuthContext.js';
+export * from './utils/auth/authScopes.js';
+export * from './utils/ConfigContext.js';
+export * from './utils/chainNames.js';
+export * from './utils/serviceTypes.js';
+export * from './state/index.js';

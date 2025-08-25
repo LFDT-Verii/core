@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { isEmpty, omit } = require('lodash/fp');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
@@ -59,7 +62,7 @@ describe('get credential manifests', () => {
   let orgDidDoc;
   let keyPair;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistTenant } = initTenantFactory(fastify));
@@ -69,7 +72,6 @@ describe('get credential manifests', () => {
   });
 
   beforeEach(async () => {
-    jest.resetAllMocks();
     nock.cleanAll();
     fastify.resetOverrides();
 
@@ -113,7 +115,7 @@ describe('get credential manifests', () => {
     nockRegistrarGetOrganizationDidDoc(orgDidDoc.id, orgDidDoc);
   });
 
-  afterAll(async () => {
+  after(async () => {
     nock.cleanAll();
     nock.restore();
     await fastify.close();
