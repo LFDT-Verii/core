@@ -15,31 +15,85 @@
  */
 
 const { nanoid } = require('nanoid/non-secure');
-const { Agent, interceptors, cacheStores } = require('undici');
+const {
+  Agent,
+  interceptors,
+  cacheStores,
+  setGlobalDispatcher,
+  getGlobalDispatcher
+} = require('undici');
+const { createOidcInterceptor } = require('undici-oidc-interceptor');
+const { map } = require('lodash/fp');
 const pkg = require('../package.json');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
 const registeredPrefixUrls = new Map();
 
+const initCache = () => new cacheStores.MemoryCacheStore();
+
 const initHttpClient = (options) => {
-  const { clientOptions, traceIdHeader, customHeaders } = parseOptions(options);
+  const {
+    prefixUrls,
+    useExistingGlobalAgent,
+    clientId,
+    clientSecret,
+    tokensEndpoint,
+    scopes,
+    audience,
+    cache,
+  } = options;
+
+  const {
+    clientOptions,
+    traceIdHeader,
+    customHeaders,
+  } = parseOptions(options);
 
   // register prefixUrls
-  for (const prefixUrl of options.prefixUrls ?? []) {
+  for (const prefixUrl of prefixUrls ?? []) {
     const parsedPrefixUrl = parsePrefixUrl(prefixUrl);
     registeredPrefixUrls.set(prefixUrl, parsedPrefixUrl);
   }
 
-  const store = new cacheStores.MemoryCacheStore();
-  const agent =
-    options.agent ??
-    new Agent(clientOptions).compose([
-      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false }),
-      interceptors.responseError(),
-      interceptors.cache({ store, methods: ['GET'] }),
-    ]);
+  if (!useExistingGlobalAgent) {
+    const agent =
+      new Agent(clientOptions).compose([
+        interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false }),
+        interceptors.responseError(),
+        ...addCache(cache),
+        ...(tokensEndpoint
+          ? [
+            createOidcInterceptor({
+              idpTokenUrl: tokensEndpoint,
+              clientId,
+              clientSecret,
+              retryOnStatusCodes: [401],
+              scopes,
+              audience,
+              urls: map((url) => url.origin, registeredPrefixUrls.values()),
+            }),
+          ]
+          : []),
+      ]);
 
-  const request = async (url, reqOptions, method, host, { traceId, log }) => {
+    setGlobalDispatcher(agent);
+  } else {
+    const existingAgent = getGlobalDispatcher();
+    const updatedAgent = existingAgent.compose([
+      interceptors.responseError(),
+      ...addCache(cache),
+    ]);
+    setGlobalDispatcher(updatedAgent);
+  }
+
+  const request = async (
+    url,
+    reqOptions,
+    method,
+    host,
+    { traceId, log },
+    body
+  ) => {
     const reqId = nanoid();
     const reqHeaders = {
       'user-agent': USER_AGENT_HEADER,
@@ -53,18 +107,21 @@ const initHttpClient = (options) => {
 
     log.info({ origin, path, url, reqId, reqHeaders }, 'HttpClient request');
 
-    const httpResponse = await agent.request({
+    const globalAgent = getGlobalDispatcher();
+
+    const httpResponse = await globalAgent.request({
       origin,
       path,
       method,
       headers: reqHeaders,
+      ...(body ? { body } : {}),
     });
-    const { statusCode, headers: resHeaders, body } = httpResponse;
+    const { statusCode, headers: resHeaders, body: resBody } = httpResponse;
     return {
       statusCode,
       resHeaders,
       json: async () => {
-        const bodyJson = await body.json();
+        const bodyJson = await resBody.json();
         log.info(
           { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
           'HttpClient response'
@@ -72,7 +129,7 @@ const initHttpClient = (options) => {
         return bodyJson;
       },
       text: async () => {
-        const bodyText = await body.text();
+        const bodyText = await resBody.text();
         log.info(
           { origin, url, reqId, statusCode, resHeaders, body: bodyText },
           'HttpClient response'
@@ -93,6 +150,15 @@ const initHttpClient = (options) => {
     return {
       get: (url, reqOptions) =>
         request(url, reqOptions, HTTP_VERBS.GET, host, context),
+      post: (url, payload, reqOptions) =>
+        request(
+          url,
+          reqOptions,
+          HTTP_VERBS.POST,
+          host,
+          context,
+          JSON.stringify(payload)
+        ),
       responseType: 'promise',
     };
   };
@@ -138,8 +204,12 @@ const buildRelativePath = (rootPath, url, reqOptions) =>
 const addSearchParams = (path, searchParams) =>
   searchParams != null ? `${path}?${searchParams}` : path;
 
+const addCache = (store) =>
+  store ? [interceptors.cache({ store, methods: ['GET'] })] : [];
+
 const HTTP_VERBS = {
   GET: 'GET',
+  POST: 'POST',
 };
 
-module.exports = { initHttpClient, parseOptions, parsePrefixUrl };
+module.exports = { initHttpClient, parseOptions, parsePrefixUrl, initCache };

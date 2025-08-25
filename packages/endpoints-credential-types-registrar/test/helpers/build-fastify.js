@@ -41,4 +41,5 @@ module.exports = (initializer = identity) =>
     defaultOAuthUser: testRegistrarSuperUser,
     accessKeyId: 'tests-key-id',
     secretAccessKey: 'tests-key',
+    useExistingGlobalAgent: true,
   });

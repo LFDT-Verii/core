@@ -17,7 +17,7 @@
 
 const fp = require('fastify-plugin');
 const { addSeconds } = require('date-fns/fp');
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 
 const TOKEN_EXPIRATION_SAFE_BUFFER = 5;
 
@@ -26,7 +26,7 @@ const isTokenCached = (tokensCache, audience) =>
 
 const initAuthenticateVnfClient = (fastify) => {
   return async ({ audience, clientId, clientSecret }, req) => {
-    const request = initRequest(fastify.config)(req);
+    const request = initHttpClient(fastify.config)(req);
 
     if (!isTokenCached(fastify.vnfAuthTokensCache, audience)) {
       const authResult = await request

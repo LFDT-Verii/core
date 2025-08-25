@@ -78,7 +78,7 @@ describe('Verify verii credentials', () => {
       log: console,
       config,
       kms: { exportKeyOrSecret: async (id) => keys[id] },
-      agent: undici.getGlobalDispatcher().compose(interceptors.responseError()),
+      useExistingGlobalAgent: true,
     };
   });
 
