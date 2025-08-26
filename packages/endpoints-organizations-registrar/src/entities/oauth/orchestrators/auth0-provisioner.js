@@ -1,4 +1,3 @@
-const { ManagementClient } = require('auth0');
 const { kebabCase, trim, map, join, includes } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const {
@@ -27,7 +26,7 @@ const initRoleNameToRoleId = ({
     }
   };
 };
-const initAuth0Provisioner = ({
+const initAuth0Provisioner = async ({
   auth0Domain,
   auth0ManagementApiAudience,
   auth0ClientId,
@@ -40,6 +39,10 @@ const initAuth0Provisioner = ({
   auth0ClientFinanceAdminRoleId,
   auth0ClientSystemUserRoleId,
 }) => {
+  // Use of async import for patching around https://github.com/nodejs/node/issues/58231
+  // Remove if migrating to esm
+  const { ManagementClient } = await import('auth0');
+
   const auth0ManagementClient = new ManagementClient({
     domain: auth0Domain,
     audience: auth0ManagementApiAudience,

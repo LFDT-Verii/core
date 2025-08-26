@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLServiceTypes from '../../src/api/entities/VCLServiceTypes';
 import VCLServiceType from '../../src/api/entities/VCLServiceType';
 import { VCLIssuingType } from '../../src';

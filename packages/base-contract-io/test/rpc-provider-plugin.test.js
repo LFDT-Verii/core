@@ -14,36 +14,38 @@
  * limitations under the License.
  *
  */
+const { describe, it, mock, after } = require('node:test');
+const { expect } = require('expect');
+
+mock.module('../src/contract.js', {
+  namedExports: {
+    initProvider: mock.fn(() => 'provider'),
+  },
+});
 
 const {
   rpcProviderPlugin,
   setProvider,
 } = require('../src/rpc-provider-plugin');
 
-jest.mock('../src/contract', () => {
-  return {
-    initProvider: jest.fn().mockReturnValue('provider'),
-  };
-});
-
 describe('RPC Provider Plugin', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  after(() => {
+    mock.reset();
   });
 
   it('RPC provider plugin should decorate fastify', async () => {
     const fakeServer = {
       config: { rpcUrl: 'RPC-URL' },
-      decorateRequest: jest.fn(),
-      addHook: jest.fn(),
+      decorateRequest: mock.fn(() => {}),
+      addHook: mock.fn(() => {}),
     };
     rpcProviderPlugin(fakeServer);
-    expect(fakeServer.decorateRequest.mock.calls).toEqual([
-      ['rpcProvider', null],
-    ]);
-    expect(fakeServer.addHook.mock.calls).toEqual([
-      ['preValidation', expect.any(Function)],
-    ]);
+    expect(
+      fakeServer.decorateRequest.mock.calls.map((call) => call.arguments)
+    ).toEqual([['rpcProvider', null]]);
+    expect(fakeServer.addHook.mock.calls.map((call) => call.arguments)).toEqual(
+      [['preValidation', expect.any(Function)]]
+    );
   });
 
   it('RPC provider plugin should set provider', async () => {

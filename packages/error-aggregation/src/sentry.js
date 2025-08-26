@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-const Sentry = require('@sentry/node');
-
 const buildProfilingOptions = (enableProfiling) => {
   if (process.env.NODE_ENV != null && enableProfiling) {
     const { nodeProfilingIntegration } = require('@sentry/profiling-node');
@@ -29,7 +27,15 @@ const buildProfilingOptions = (enableProfiling) => {
     integrations: [],
   };
 };
-const initSentry = ({ dsn, enableProfiling, release, environment, debug }) => {
+const initSentry = async ({
+  dsn,
+  enableProfiling,
+  release,
+  environment,
+  debug,
+}) => {
+  const Sentry = await import('@sentry/node');
+
   Sentry.init({
     dsn,
     ...buildProfilingOptions(enableProfiling),
@@ -40,8 +46,8 @@ const initSentry = ({ dsn, enableProfiling, release, environment, debug }) => {
   return Sentry;
 };
 
-const initStartProfiling = (enableProfiling) =>
-  enableProfiling ? Sentry.startTransaction : () => undefined;
+const initStartProfiling = (sentry, enableProfiling) =>
+  enableProfiling ? sentry.startTransaction : () => undefined;
 
 const finishProfiling = (transaction) => {
   if (transaction) {
@@ -49,7 +55,7 @@ const finishProfiling = (transaction) => {
   }
 };
 
-const initSendError = ({
+const initSendError = async ({
   dsn,
   enableProfiling,
   release,
@@ -57,7 +63,7 @@ const initSendError = ({
   debug = false,
 } = {}) => {
   if (dsn) {
-    const sentry = initSentry({
+    const sentry = await initSentry({
       dsn,
       enableProfiling,
       release,
@@ -72,7 +78,7 @@ const initSendError = ({
         }
         sentry.captureException(error);
       },
-      startProfiling: initStartProfiling(enableProfiling),
+      startProfiling: initStartProfiling(sentry, enableProfiling),
       finishProfiling,
     };
   }

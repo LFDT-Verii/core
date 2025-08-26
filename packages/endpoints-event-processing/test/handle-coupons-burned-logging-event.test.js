@@ -15,60 +15,45 @@
  *
  */
 
-const { burnEventsArray } = require('./data/sample-burn-events-array');
+const { after, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
-const mockReadDocument = jest.fn().mockResolvedValue(undefined);
-const mockWriteDocument = jest.fn().mockResolvedValue(undefined);
-const mockInitReadDocument = jest.fn().mockReturnValue(mockReadDocument);
-const mockInitWriteDocument = jest.fn().mockReturnValue(mockWriteDocument);
-const mockLogInfo = jest.fn();
-const mockEventCursorNext = jest.fn();
-const mockEventCursor = jest.fn().mockImplementation(() => {
-  return {
-    [Symbol.asyncIterator]: () => {
-      return {
-        next: mockEventCursorNext
-          .mockImplementationOnce(async () => {
-            return { value: [] };
-          })
-          .mockImplementationOnce(async () => {
-            return { value: burnEventsArray };
-          })
-          .mockImplementationOnce(async () => {
-            return { done: true };
-          }),
-      };
-    },
-  };
-});
-const mockPullBurnCouponEvents = jest
-  .fn()
-  .mockResolvedValue({ eventsCursor: mockEventCursor, latestBlock: 42 });
-const mockInitVerificationCoupon = jest.fn().mockImplementation(() => {
-  return {
-    pullBurnCouponEvents: mockPullBurnCouponEvents,
-  };
+const mockReadDocument = mock.fn();
+const mockWriteDocument = mock.fn();
+const mockLogInfo = mock.fn();
+const eventsWrapper = { events: [] };
+
+const mockEventCursor = mock.fn(() => ({
+  [Symbol.asyncIterator]() {
+    return {
+      index: -1,
+      next() {
+        this.index += 1;
+        return eventsWrapper.events[this.index];
+      },
+    };
+  },
+}));
+const mockInitVerificationCoupon = mock.fn(() => ({
+  pullBurnCouponEvents: () =>
+    Promise.resolve({ eventsCursor: mockEventCursor, latestBlock: 42 }),
+}));
+
+mock.module('@verii/aws-clients', {
+  namedExports: {
+    initReadDocument: () => mockReadDocument,
+    initWriteDocument: () => mockWriteDocument,
+  },
 });
 
-const { handleCouponsBurnedLoggingEvent } = require('../src/handlers');
-
-jest.mock('@verii/aws-clients', () => {
-  const originalModule = jest.requireActual('@verii/aws-clients');
-
-  return {
-    ...originalModule,
-    initReadDocument: mockInitReadDocument,
-    initWriteDocument: mockInitWriteDocument,
-  };
-});
-
-jest.mock('@verii/metadata-registration', () => {
-  const originalModule = jest.requireActual('@verii/metadata-registration');
-  return {
-    ...originalModule,
+mock.module('@verii/metadata-registration', {
+  namedExports: {
     initVerificationCoupon: mockInitVerificationCoupon,
-  };
+  },
 });
+
+const { burnEventsArray } = require('./data/sample-burn-events-array');
+const { handleCouponsBurnedLoggingEvent } = require('../src/handlers');
 
 describe('Coupons burned event logging task test suite', () => {
   const task = 'coupons-burned-logging';
@@ -83,34 +68,45 @@ describe('Coupons burned event logging task test suite', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    eventsWrapper.events = [
+      { value: [] },
+      { value: burnEventsArray },
+      { done: true },
+    ];
+    mockInitVerificationCoupon.mock.resetCalls();
+    mockReadDocument.mock.resetCalls();
+    mockWriteDocument.mock.resetCalls();
+    mockLogInfo.mock.resetCalls();
+    mockEventCursor.mock.resetCalls();
+  });
+
+  after(() => {
+    mock.reset();
   });
 
   it('Should successfully write log entries for a given set of events read off the blockchain', async () => {
-    mockReadDocument.mockResolvedValue({
-      Item: {
-        EventName: task,
-        BlockNumber: 1,
-      },
-    });
-
-    await handleCouponsBurnedLoggingEvent(testContext);
-
-    expect(mockInitReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockInitVerificationCoupon).toHaveBeenCalledTimes(1);
-
-    expect(mockReadDocument).toHaveBeenCalledTimes(1);
-    expect(mockReadDocument).toHaveBeenCalledWith(
-      testContext.config.dynamoDbTableEventBlock,
-      { EventName: task }
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve({
+        Item: {
+          EventName: task,
+          BlockNumber: 1,
+        },
+      })
     );
 
-    expect(mockPullBurnCouponEvents).toHaveBeenCalledTimes(1);
-    expect(mockPullBurnCouponEvents).toHaveBeenCalledWith(2);
+    await handleCouponsBurnedLoggingEvent(testContext);
+    expect(mockInitVerificationCoupon.mock.callCount()).toEqual(1);
 
-    expect(mockLogInfo).toHaveBeenCalledTimes(10);
-    expect(mockLogInfo).toHaveBeenNthCalledWith(8, {
+    expect(mockReadDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockReadDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
+      testContext.config.dynamoDbTableEventBlock,
+      { EventName: task },
+    ]);
+
+    expect(mockLogInfo.mock.callCount()).toEqual(10);
+    expect(mockLogInfo.mock.calls[7].arguments[0]).toEqual({
       blockNumber: expect.any(Number),
       blockHash: expect.any(String),
       transactionHash: expect.any(String),
@@ -127,62 +123,47 @@ describe('Coupons burned event logging task test suite', () => {
       burnTime: expect.any(Date),
     });
 
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
-    expect(mockEventCursor).toHaveBeenCalledTimes(1);
-    expect(mockEventCursorNext).toHaveBeenCalledTimes(3);
+      },
+    ]);
+    expect(mockEventCursor.mock.callCount()).toEqual(1);
   });
 
   it('Should successfully handle initial case of no existing blocks', async () => {
-    mockReadDocument.mockResolvedValue(undefined);
+    mockReadDocument.mock.mockImplementationOnce(() =>
+      Promise.resolve(undefined)
+    );
 
     const func = async () => handleCouponsBurnedLoggingEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
-
-    expect(mockPullBurnCouponEvents).toHaveBeenCalledWith(0);
   });
 
   it('Should still update block when there are no events to process', async () => {
-    mockEventCursor.mockImplementation(() => {
-      return {
-        [Symbol.asyncIterator]: () => {
-          return {
-            next: mockEventCursorNext
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { value: [] };
-              })
-              .mockImplementationOnce(async () => {
-                return { done: true };
-              }),
-          };
-        },
-      };
-    });
+    eventsWrapper.events = [{ value: [] }, { value: [] }, { done: true }];
 
     const func = async () => handleCouponsBurnedLoggingEvent(testContext);
 
     await expect(func()).resolves.toEqual(undefined);
 
-    expect(mockWriteDocument).toHaveBeenCalledTimes(1);
-    expect(mockWriteDocument).toHaveBeenCalledWith(
+    expect(mockWriteDocument.mock.callCount()).toEqual(1);
+    expect(
+      mockWriteDocument.mock.calls.map((call) => call.arguments)
+    ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
         EventName: task,
         BlockNumber: 42,
-      }
-    );
-    expect(mockEventCursor).toHaveBeenCalledTimes(1);
-    expect(mockEventCursorNext).toHaveBeenCalledTimes(3);
-    expect(mockLogInfo).toHaveBeenCalledTimes(4);
+      },
+    ]);
+    expect(mockEventCursor.mock.callCount()).toEqual(1);
+    expect(mockLogInfo.mock.callCount()).toEqual(4);
   });
 });

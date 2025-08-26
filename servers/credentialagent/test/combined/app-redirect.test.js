@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+} = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const cheerio = require('cheerio');
 const buildFastify = require('./helpers/credentialagent-build-fastify');
@@ -37,21 +47,20 @@ const setupNock = () => {
 describe('app redirect controller test', () => {
   let fastify;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = await buildFastify();
     await fastify.ready();
   });
 
   beforeEach(async () => {
     nock.cleanAll();
-    jest.resetAllMocks();
   });
 
   afterEach(() => {
     nock.cleanAll();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { Box, Stack, Tooltip, Typography, Button } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Stack, Tooltip, Typography, Button, Grid } from '@mui/material';
 import {
   AutocompleteInput,
   Form,
@@ -28,14 +27,14 @@ import { useCallback } from 'react';
 import InfoIcon from '@mui/icons-material/Info';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router';
-import { FOOTER_HEIGHT } from '../../theme/theme';
+import { FOOTER_HEIGHT } from '../../theme/theme.js';
 import {
   validateEmail,
   validateName,
   validateWebsite,
   validateWebsiteStrict,
-} from './CreateOrganization.utils';
-import OrganizationSubmitButton from './OrganisationSubmitButton.jsx';
+} from './CreateOrganizationUtils.js';
+import OrganizationSubmitButton from './OrganizationSubmitButton.jsx';
 import CustomImageInput from '../common/CustomImageInput/index.jsx';
 import {
   ADMINISTRATOR_DETAILS_HINT,
@@ -47,7 +46,7 @@ import {
 } from '../../utils/index.jsx';
 import AuthorityRegistrationNumbersInput from '../../pages/organizations/components/AuthorityRegistrationInput.jsx';
 import { LinkedInRegistrationInput } from '../../pages/organizations/components/LinkedInRegistrationInput.jsx';
-import { useAuth } from '../../utils/auth/AuthContext';
+import { useAuth } from '../../utils/auth/AuthContext.js';
 
 const CreateOrganization = ({
   children,

@@ -1,16 +1,14 @@
+const { describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const { promisify } = require('../src/promisify');
 
 const reply = {
-  code: jest.fn().mockReturnThis(),
-  send: jest.fn().mockReturnThis(),
+  code: mock.fn(() => reply),
+  send: mock.fn(() => reply),
 };
 
 describe('Test promisify method for Fastify plugins', () => {
-  beforeEach(() => {
-    reply.code.mockClear();
-    reply.send.mockClear();
-  });
-
   it('Should return the same response & request as the original plugin`s function invocation', async () => {
     const request = {};
 
@@ -25,8 +23,12 @@ describe('Test promisify method for Fastify plugins', () => {
 
     await decoratedPlugin(request, reply);
 
-    expect(reply.code).toHaveBeenCalledWith(200);
-    expect(reply.send).toHaveBeenCalledWith({ hello: 'world' });
+    expect(reply.code.mock.calls.map((call) => call.arguments)).toContainEqual([
+      200,
+    ]);
+    expect(reply.send.mock.calls.map((call) => call.arguments)).toContainEqual([
+      { hello: 'world' },
+    ]);
     expect(request.user).toEqual({ id: '123' });
   });
 
@@ -44,6 +46,8 @@ describe('Test promisify method for Fastify plugins', () => {
       message: 'Unauthorized',
     });
 
-    expect(reply.code).toHaveBeenCalledWith(401);
+    expect(reply.code.mock.calls.map((call) => call.arguments)).toContainEqual([
+      401,
+    ]);
   });
 });

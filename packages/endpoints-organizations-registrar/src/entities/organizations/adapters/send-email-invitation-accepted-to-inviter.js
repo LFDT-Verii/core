@@ -31,9 +31,9 @@ const mergeCaoServices = async (addedServices, caoServiceRefs) => {
   )(addedServices);
 };
 
-const initSendEmailInvitationAcceptedToInviter = (fastify) => {
+const initSendEmailInvitationAcceptedToInviter = async (fastify) => {
   const { sendEmail } = fastify;
-  const { getUsersByIds } = initAuth0Provisioner(fastify.config);
+  const { getUsersByIds } = await initAuth0Provisioner(fastify.config);
   const { emailToGroupForInvitationAccepted } = initOrganizationRegistrarEmails(
     fastify.config
   );

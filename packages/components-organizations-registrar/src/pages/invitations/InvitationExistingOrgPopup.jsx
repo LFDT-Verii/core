@@ -2,14 +2,14 @@ import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useGetOne, useRedirect, useCreate } from 'react-admin';
 import { Box, Button, Typography } from '@mui/material';
-import { kebabCase } from 'lodash/string';
+import { kebabCase } from 'lodash-es';
 
-import { credentialTypesByServiceTypes } from '../../utils/serviceTypes';
+import { credentialTypesByServiceTypes } from '../../utils/serviceTypes.js';
 import InvitationServiceInfo from '../../components/invitations/InvitationServiceInfo.jsx';
 import Popup from '../../components/common/Popup.jsx';
-import { dataResources } from '../../utils/remoteDataProvider';
+import { dataResources } from '../../utils/remoteDataProvider.js';
 import Loading from '../../components/Loading.jsx';
-import { getNewServiceIndex } from '../../utils/invitations';
+import { getNewServiceIndex } from '../../utils/invitations.js';
 
 const InvitationExistingOrgPopup = () => {
   const [searchParams] = useSearchParams();

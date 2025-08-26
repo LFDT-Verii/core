@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const buildFastify = require('./helpers/build-fastify');
@@ -24,13 +27,13 @@ describe('Form schemas', () => {
   let fastify;
   let persistCredentialSchema;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistCredentialSchema } = initCredentialSchemaFactory(fastify));
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();

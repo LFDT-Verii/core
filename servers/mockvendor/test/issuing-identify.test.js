@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const buildFastify = require('./helpers/mockvendor-build-fastify');
@@ -10,7 +13,7 @@ describe('issuing/identify webhook test suite', () => {
   let persistUser;
   let user1;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistUser } = initUserFactory(fastify));
@@ -26,7 +29,7 @@ describe('issuing/identify webhook test suite', () => {
     ]);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

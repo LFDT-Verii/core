@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 
 describe('swagger json', () => {
   let fastify;
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

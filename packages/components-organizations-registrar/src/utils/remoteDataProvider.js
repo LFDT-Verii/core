@@ -15,7 +15,7 @@
  */
 
 import { fetchUtils } from 'react-admin';
-import httpClient from './httpClient';
+import httpClient from './httpClient.js';
 
 export const dataResources = {
   ORGANIZATIONS: 'organizations',

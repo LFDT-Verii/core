@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
-import { expect } from '@jest/globals';
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import {
     VCLCredentialManifest,
     VCLDeepLink,

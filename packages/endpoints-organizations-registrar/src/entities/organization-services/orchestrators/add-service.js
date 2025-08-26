@@ -30,8 +30,8 @@ const {
   initAddServiceToOrganization,
 } = require('./init-add-service-to-organization');
 
-const initAddService = (fastify) => {
-  const addServiceToOrganization = initAddServiceToOrganization(fastify);
+const initAddService = async (fastify) => {
+  const addServiceToOrganization = await initAddServiceToOrganization(fastify);
 
   return async (did, newService, context) => {
     const { repos } = context;

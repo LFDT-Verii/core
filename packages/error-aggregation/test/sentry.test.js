@@ -14,111 +14,127 @@
  * limitations under the License.
  */
 
-const mockSentryInit = jest.fn();
-const mockSentryCaptureException = jest.fn();
-const mockSentryStartTransaction = jest.fn();
-const mockFinishTransaction = jest.fn();
+const { beforeEach, describe, it, mock, after } = require('node:test');
+const { expect } = require('expect');
 
-const { initSendError } = require('..');
+const mockSentryInit = mock.fn();
+const mockSentryCaptureException = mock.fn();
+const mockSentryStartTransaction = mock.fn();
+const mockFinishTransaction = mock.fn();
 
-jest.mock('@sentry/node', () => {
-  const originalModule = jest.requireActual('@sentry/node');
-  return {
-    ...originalModule,
+mock.module('@sentry/node', {
+  namedExports: {
     init: mockSentryInit,
     captureException: mockSentryCaptureException,
     startTransaction: mockSentryStartTransaction,
-  };
+  },
 });
 
+const { initSendError } = require('..');
+
 describe('Sentry test suite', () => {
-  beforeEach(async () => {
-    jest.clearAllMocks();
+  beforeEach(() => {
+    mockSentryInit.mock.resetCalls();
+    mockSentryCaptureException.mock.resetCalls();
+    mockSentryStartTransaction.mock.resetCalls();
+    mockFinishTransaction.mock.resetCalls();
   });
 
-  it('should initialize sentry with captureException and startTransaction when dsn is provided and profiling is enabled', () => {
-    const { sendError, startProfiling } = initSendError({
+  after(() => {
+    mock.reset();
+  });
+
+  it('should initialize sentry with captureException and startTransaction when dsn is provided and profiling is enabled', async () => {
+    const { sendError, startProfiling } = await initSendError({
       dsn: 'test',
       enableProfiling: true,
     });
     const mockError = new Error('mock');
     sendError(mockError);
     startProfiling();
-    expect(mockSentryInit).toHaveBeenCalledTimes(1);
-    expect(mockSentryInit).toHaveBeenLastCalledWith({
-      dsn: 'test',
-      tracesSampleRate: 1.0,
-      profilesSampleRate: 1.0,
-      integrations: [expect.any(Object)],
-      debug: expect.any(Boolean),
-    });
-    expect(mockSentryCaptureException).toHaveBeenCalledTimes(1);
-    expect(mockSentryCaptureException).toHaveBeenLastCalledWith(mockError);
-    expect(mockSentryStartTransaction).toHaveBeenCalledTimes(1);
-    expect(mockSentryStartTransaction).toHaveBeenLastCalledWith();
+    expect(mockSentryInit.mock.callCount()).toEqual(1);
+    expect(mockSentryInit.mock.calls[0].arguments).toEqual([
+      {
+        dsn: 'test',
+        tracesSampleRate: 1.0,
+        profilesSampleRate: 1.0,
+        integrations: [expect.any(Object)],
+        debug: expect.any(Boolean),
+      },
+    ]);
+    expect(mockSentryCaptureException.mock.callCount()).toEqual(1);
+    expect(mockSentryCaptureException.mock.calls[0].arguments).toEqual([
+      mockError,
+    ]);
+    expect(mockSentryStartTransaction.mock.callCount()).toEqual(1);
+    expect(mockSentryStartTransaction.mock.calls[0].arguments).toEqual([]);
   });
 
-  it('should initialize sentry with captureException and without startTransaction when dsn is provided and profiling is disabled', () => {
-    const { sendError, startProfiling } = initSendError({
+  it('should initialize sentry with captureException and without startTransaction when dsn is provided and profiling is disabled', async () => {
+    const { sendError, startProfiling } = await initSendError({
       dsn: 'test',
     });
     const mockError = new Error('mock');
     sendError(mockError);
     startProfiling();
-    expect(mockSentryInit).toHaveBeenCalledTimes(1);
-    expect(mockSentryInit).toHaveBeenLastCalledWith({
-      dsn: 'test',
-      integrations: [],
-      debug: expect.any(Boolean),
-    });
-    expect(mockSentryCaptureException).toHaveBeenCalledTimes(1);
-    expect(mockSentryCaptureException).toHaveBeenLastCalledWith(mockError);
-    expect(mockSentryStartTransaction).toHaveBeenCalledTimes(0);
+    expect(mockSentryInit.mock.callCount()).toEqual(1);
+    expect(mockSentryInit.mock.calls[0].arguments).toEqual([
+      {
+        dsn: 'test',
+        integrations: [],
+        debug: expect.any(Boolean),
+      },
+    ]);
+    expect(mockSentryCaptureException.mock.callCount()).toEqual(1);
+    expect(mockSentryCaptureException.mock.calls[0].arguments).toEqual([
+      mockError,
+    ]);
+    expect(mockSentryStartTransaction.mock.callCount()).toEqual(0);
   });
 
-  it('initSendError should not initialize sentry and return no-op functions when dsn is not provided', () => {
-    const { sendError, startProfiling } = initSendError();
+  it('await initSendError should not initialize sentry and return no-op functions when dsn is not provided', async () => {
+    const { sendError, startProfiling } = await initSendError();
     const mockError = new Error('mock');
     sendError(mockError);
     startProfiling();
-    expect(mockSentryInit).toHaveBeenCalledTimes(0);
-    expect(mockSentryCaptureException).toHaveBeenCalledTimes(0);
-    expect(mockSentryStartTransaction).toHaveBeenCalledTimes(0);
+    expect(mockSentryInit.mock.callCount()).toEqual(0);
+    expect(mockSentryCaptureException.mock.callCount()).toEqual(0);
+    expect(mockSentryStartTransaction.mock.callCount()).toEqual(0);
   });
 
-  it('finishProfiling should no-op when nothing passed to it', () => {
-    const { finishProfiling } = initSendError();
+  it('finishProfiling should no-op when nothing passed to it', async () => {
+    const { finishProfiling } = await initSendError();
     finishProfiling();
-    expect(mockFinishTransaction).toHaveBeenCalledTimes(0);
+    expect(mockFinishTransaction.mock.callCount()).toEqual(0);
   });
 
-  it('finishProfiling should call finish function when transaction is passed', () => {
-    const { finishProfiling } = initSendError({ dsn: 'test' });
+  it('finishProfiling should call finish function when transaction is passed', async () => {
+    const { finishProfiling } = await initSendError({ dsn: 'test' });
     const finishableTransaction = {
       finish: mockFinishTransaction,
     };
     finishProfiling(finishableTransaction);
-    expect(mockFinishTransaction).toHaveBeenCalledTimes(1);
+    expect(mockFinishTransaction.mock.callCount()).toEqual(1);
   });
 
-  it('finishProfiling should no-op transaction is not passed', () => {
-    const { finishProfiling } = initSendError({ dsn: 'test' });
+  it('finishProfiling should no-op transaction is not passed', async () => {
+    const { finishProfiling } = await initSendError({ dsn: 'test' });
     finishProfiling();
-    expect(mockFinishTransaction).toHaveBeenCalledTimes(0);
+    expect(mockFinishTransaction.mock.callCount()).toEqual(0);
   });
 
-  it('finishProfiling should no-op if dsn is not passed', () => {
-    const { finishProfiling } = initSendError();
+  it('finishProfiling should no-op if dsn is not passed', async () => {
+    const { finishProfiling } = await initSendError();
     finishProfiling();
-    expect(mockFinishTransaction).toHaveBeenCalledTimes(0);
+    expect(mockFinishTransaction.mock.callCount()).toEqual(0);
   });
 
-  it('sendError should skip 4xx errors', () => {
-    const { sendError } = initSendError({ dsn: 'test' });
+  it('sendError should skip 4xx errors', async () => {
+    const { sendError } = await initSendError({ dsn: 'test' });
     const mockError = {
       status: 400,
     };
     sendError(mockError);
-    expect(mockSentryCaptureException).toHaveBeenCalledTimes(0);
+    expect(mockSentryCaptureException.mock.callCount()).toEqual(0);
   });
 });

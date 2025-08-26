@@ -14,46 +14,46 @@
  * limitations under the License.
  */
 
+const { beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const { vnfProtocolVersionPlugin } = require('../src/vnf-protocol-plugin');
 
 describe('vnf protocol plugin tests', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('is registered properly on the server instance', () => {
     const fakeServer = {
-      decorateRequest: jest.fn(),
-      addHook: jest.fn(),
+      decorateRequest: mock.fn(),
+      addHook: mock.fn(),
     };
     vnfProtocolVersionPlugin(fakeServer, {}, () => {});
-    expect(fakeServer.decorateRequest.mock.calls).toEqual([
-      ['vnfProtocolVersion', null],
-    ]);
-    expect(fakeServer.addHook.mock.calls).toEqual([
-      ['onRequest', expect.any(Function)],
-    ]);
+    expect(
+      fakeServer.decorateRequest.mock.calls.map((call) => call.arguments)
+    ).toEqual([['vnfProtocolVersion', null]]);
+    expect(fakeServer.addHook.mock.calls.map((call) => call.arguments)).toEqual(
+      [['onRequest', expect.any(Function)]]
+    );
   });
 
   describe('vnf protocol plugin login tests', () => {
     let fakeServer;
-    const fakeDecorateRequest = jest.fn();
-    const fakeAddHook = jest.fn();
+    const fakeDecorateRequest = mock.fn();
+    const fakeAddHook = mock.fn();
     let preHandlerFunc;
     beforeEach(() => {
-      jest.clearAllMocks();
+      fakeDecorateRequest.mock.resetCalls();
+      fakeAddHook.mock.resetCalls();
       fakeServer = {
         decorateRequest: fakeDecorateRequest,
         addHook: fakeAddHook,
       };
       vnfProtocolVersionPlugin(fakeServer, {}, () => {});
-      preHandlerFunc = fakeServer.addHook.mock.calls[0][1];
+      preHandlerFunc = fakeServer.addHook.mock.calls[0].arguments[1];
     });
 
     it('defaults to 0 when vnf protocol header is not set', () => {
-      expect(fakeServer.decorateRequest.mock.calls).toEqual([
-        ['vnfProtocolVersion', null],
-      ]);
+      expect(
+        fakeServer.decorateRequest.mock.calls.map((call) => call.arguments)
+      ).toEqual([['vnfProtocolVersion', null]]);
       const fakeReq = { headers: {} };
       preHandlerFunc(fakeReq);
       expect(fakeReq).toEqual({ headers: {}, vnfProtocolVersion: 0 });

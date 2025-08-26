@@ -1,28 +1,43 @@
-import '@testing-library/jest-dom';
+import * as matchers from '@testing-library/jest-dom/matchers';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it } from 'node:test';
+import { expect } from 'expect';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { AdminContext } from 'react-admin';
 import { useForm, FormProvider } from 'react-hook-form';
+import theme from '@/theme/theme.js';
 import {
   AuthorityRegistrationInput,
   registrationNumbers,
 } from '../components/AuthorityRegistrationInput.jsx';
 
+expect.extend(matchers);
+
 const renderWithForm = (ui, defaultValues = {}) => {
   // eslint-disable-next-line react/prop-types
   const Wrapper = ({ children }) => {
     const methods = useForm({ defaultValues });
-    return <FormProvider {...methods}>{children}</FormProvider>;
+    return (
+      <AdminContext theme={theme}>
+        <FormProvider {...methods}>
+          <form>{children}</form>
+        </FormProvider>
+      </AdminContext>
+    );
   };
   return render(ui, { wrapper: Wrapper });
 };
 describe('AuthorityRegistrationInput', () => {
-  it('renders all authority radio buttons', () => {
+  it('renders all authority radio buttons', async () => {
     renderWithForm(<AuthorityRegistrationInput />);
-    expect(screen.getByRole('radiogroup')).toBeInTheDocument();
-    Object.values(registrationNumbers).forEach(({ label }) => {
-      const radio = screen.getByLabelText(label);
-      fireEvent.click(radio);
-      expect(radio).toBeChecked();
+
+    await waitFor(() => {
+      expect(screen.getByRole('radiogroup')).toBeInTheDocument();
+      Object.values(registrationNumbers).forEach(({ label }) => {
+        const radio = screen.getByLabelText(label);
+        fireEvent.click(radio);
+        expect(radio).toBeChecked();
+      });
     });
   });
   it('check DunnAndBradstreet selected as default', () => {

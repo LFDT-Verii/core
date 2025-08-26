@@ -1,4 +1,5 @@
-/* import { CredentialManifestDescriptorMocks } from "path-to-your-mocks"; */
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLCredentialManifestDescriptorByDeepLink from '../../src/api/entities/VCLCredentialManifestDescriptorByDeepLink';
 import { VCLIssuingType } from '../../src';
 import { CredentialManifestDescriptorMocks } from '../infrastructure/resources/valid/CredentialManifestDescriptorMocks';
@@ -8,10 +9,6 @@ import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 
 describe('VCLCredentialManifestDescriptorByDeepLink Tests', () => {
     let subject: VCLCredentialManifestDescriptorByDeepLink;
-
-    beforeEach(() => {
-        // Setup code before each test
-    });
 
     test('testCredentialManifestDescriptorFullValidByDeepLinkSuccess', () => {
         subject = new VCLCredentialManifestDescriptorByDeepLink(

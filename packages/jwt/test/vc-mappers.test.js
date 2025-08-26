@@ -14,6 +14,9 @@
  * limitations under the License.
  *
  */
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { omit } = require('lodash/fp');
 const { KeyAlgorithms } = require('@verii/crypto/src/constants');
 const { jsonLdToUnsignedVcJwtContent } = require('../src/vc-mappers');

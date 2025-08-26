@@ -10,11 +10,13 @@ export default class VCLGenerateOffersDescriptor {
         public readonly identificationVerifiableCredentials: VCLVerifiableCredential[]
     ) {}
 
-    payload: Dictionary<any> = {
-        [VCLGenerateOffersDescriptor.KeyExchangeId]: this.exchangeId,
-        [VCLGenerateOffersDescriptor.KeyTypes]: this.types,
-        [VCLGenerateOffersDescriptor.KeyOfferHashes]: this.offerHashes,
-    };
+    get payload(): Dictionary<any> {
+        return {
+            [VCLGenerateOffersDescriptor.KeyExchangeId]: this.exchangeId,
+            [VCLGenerateOffersDescriptor.KeyTypes]: this.types,
+            [VCLGenerateOffersDescriptor.KeyOfferHashes]: this.offerHashes,
+        };
+    }
 
     get exchangeId() {
         return this.credentialManifest.exchangeId;

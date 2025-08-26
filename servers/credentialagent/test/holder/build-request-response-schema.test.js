@@ -15,6 +15,8 @@
  *
  */
 
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
 const { buildRequestResponseSchema } = require('../../src/entities');
 
 describe('build request response schema test suite', () => {

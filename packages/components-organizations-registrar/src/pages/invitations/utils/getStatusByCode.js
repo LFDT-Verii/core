@@ -1,4 +1,4 @@
-import { MESSAGE_CODES } from '@/constants/messageCodes';
+import { MESSAGE_CODES } from '@/constants/messageCodes.js';
 
 export const getStatusByCode = (errorCode) => {
   switch (errorCode) {

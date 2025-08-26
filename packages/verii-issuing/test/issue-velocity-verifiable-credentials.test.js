@@ -14,15 +14,42 @@
  * limitations under the License.
  *
  */
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+const { ALG_TYPE } = require('@verii/metadata-registration');
+
+const mockAddCredentialMetadataEntry = mock.fn();
+const mockCreateCredentialMetadataList = mock.fn();
+const mockAddRevocationListSigned = mock.fn();
+
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    ALG_TYPE,
+    initRevocationRegistry: () => ({
+      addRevocationListSigned: mockAddRevocationListSigned,
+    }),
+    initMetadataRegistry: () => ({
+      addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
+      createCredentialMetadataList: mockCreateCredentialMetadataList,
+    }),
+  },
+});
+
+mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+  Promise.resolve(true)
+);
+mockCreateCredentialMetadataList.mock.mockImplementation(() =>
+  Promise.resolve(true)
+);
+
+const { KeyAlgorithms } = require('@verii/crypto');
+const { jwtDecode, jwtVerify, jwtSign } = require('@verii/jwt');
+const { publicJwkMatcher } = require('@verii/tests-helpers');
+const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const { toLower } = require('lodash/fp');
 const { MongoClient } = require('mongodb');
-const { publicJwkMatcher } = require('@verii/tests-helpers');
-const { jwtDecode, jwtVerify, jwtSign } = require('@verii/jwt');
 const { first, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
-const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
-const { ALG_TYPE } = require('@verii/metadata-registration');
-const { KeyAlgorithms } = require('@verii/crypto');
 const { hashOffer } = require('../src/domain/hash-offer');
 const { issueVeriiCredentials } = require('../src/issue-verii-credentials');
 const { collectionClient } = require('./helpers/collection-client');
@@ -43,21 +70,6 @@ const {
 
 const METADATA_LIST_CONTRACT_ADDRESS = '0xabcdef';
 
-const mockAddCredentialMetadataEntry = jest.fn();
-const mockCreateCredentialMetadataList = jest.fn();
-const mockAddRevocationListSigned = jest.fn();
-
-jest.mock('@verii/metadata-registration', () => ({
-  ...jest.requireActual('@verii/metadata-registration'),
-  initRevocationRegistry: () => ({
-    addRevocationListSigned: mockAddRevocationListSigned,
-  }),
-  initMetadataRegistry: () => ({
-    addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
-    createCredentialMetadataList: mockCreateCredentialMetadataList,
-  }),
-}));
-
 describe('issuing velocity verifiable credentials', () => {
   const mongoClient = new MongoClient('mongodb://localhost:27017/');
 
@@ -67,7 +79,7 @@ describe('issuing velocity verifiable credentials', () => {
   let caoEntity;
   let context;
 
-  beforeAll(async () => {
+  before(async () => {
     allocationsCollection = await collectionClient({
       mongoClient,
       name: 'allocations',
@@ -89,9 +101,9 @@ describe('issuing velocity verifiable credentials', () => {
 
   beforeEach(async () => {
     await allocationsCollection.deleteMany();
-    jest.resetAllMocks();
-    mockAddCredentialMetadataEntry.mockResolvedValue(true);
-    mockCreateCredentialMetadataList.mockResolvedValue(true);
+    mockAddRevocationListSigned.mock.resetCalls();
+    mockAddCredentialMetadataEntry.mock.resetCalls();
+    mockCreateCredentialMetadataList.mock.resetCalls();
     context = buildContext({
       issuerEntity,
       caoEntity,
@@ -102,8 +114,9 @@ describe('issuing velocity verifiable credentials', () => {
     });
   });
 
-  afterAll(() => {
+  after(() => {
     mongoClient.close();
+    mock.reset();
   });
 
   it('should create vcs', async () => {
@@ -153,18 +166,18 @@ describe('issuing velocity verifiable credentials', () => {
       // eslint-disable-next-line no-await-in-loop
       await verifyCredentialAndAddEntryExpectations(
         credentials[i],
-        mockAddCredentialMetadataEntry.mock.calls[i],
+        mockAddCredentialMetadataEntry.mock.calls[i].arguments,
         { issuerEntity, caoEntity, offer: offers[i], userId }
       );
     }
     await verifyCreateMetadataListCalledOnce(
       issuer,
-      mockAddCredentialMetadataEntry.mock.calls[0][0].listId,
+      mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
       mockCreateCredentialMetadataList,
       { issuerEntity, caoEntity }
     );
 
-    expect(mockAddRevocationListSigned.mock.calls).toEqual([
+    expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
     ]);
   });
@@ -212,19 +225,19 @@ describe('issuing velocity verifiable credentials', () => {
       // eslint-disable-next-line no-await-in-loop
       await verifyCredentialAndAddEntryExpectations(
         credentials[i],
-        mockAddCredentialMetadataEntry.mock.calls[i],
+        mockAddCredentialMetadataEntry.mock.calls[i].arguments,
         { issuerEntity, caoEntity, offer: offers[i], userId },
         context
       );
     }
     await verifyCreateMetadataListCalledOnce(
       issuer,
-      mockAddCredentialMetadataEntry.mock.calls[0][0].listId,
+      mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
       mockCreateCredentialMetadataList,
       { issuerEntity, caoEntity }
     );
 
-    expect(mockAddRevocationListSigned.mock.calls).toEqual([
+    expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
     ]);
   });
@@ -262,17 +275,17 @@ describe('issuing velocity verifiable credentials', () => {
       // eslint-disable-next-line no-await-in-loop
       await verifyCredentialAndAddEntryExpectations(
         credentials[i],
-        mockAddCredentialMetadataEntry.mock.calls[i],
+        mockAddCredentialMetadataEntry.mock.calls[i].arguments,
         { issuerEntity, caoEntity, offer: offers[i], userId }
       );
     }
     await verifyCreateMetadataListCalledOnce(
       issuer,
-      mockAddCredentialMetadataEntry.mock.calls[0][0].listId,
+      mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
       mockCreateCredentialMetadataList,
       { caoEntity, issuerEntity }
     );
-    expect(mockAddRevocationListSigned.mock.calls).toEqual([
+    expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
     ]);
   });
@@ -316,17 +329,17 @@ describe('issuing velocity verifiable credentials', () => {
       // eslint-disable-next-line no-await-in-loop
       await verifyCredentialAndAddEntryExpectations(
         credentials[i],
-        mockAddCredentialMetadataEntry.mock.calls[i],
+        mockAddCredentialMetadataEntry.mock.calls[i].arguments,
         { issuerEntity, caoEntity, offer: offers[i], userId }
       );
     }
     await verifyCreateMetadataListCalledOnce(
       issuer,
-      mockAddCredentialMetadataEntry.mock.calls[0][0].listId,
+      mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
       mockCreateCredentialMetadataList,
       { caoEntity, issuerEntity }
     );
-    expect(mockAddRevocationListSigned.mock.calls).toEqual([
+    expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
     ]);
   });
@@ -361,11 +374,11 @@ const buildContext = ({ issuerEntity, caoEntity, ...args }) => ({
 const verifyCreateMetadataListCalledOnce = async (
   issuer,
   listId,
-  mock,
+  mockFn,
   { issuerEntity, caoEntity }
 ) => {
-  expect(mock).toHaveBeenCalledTimes(1);
-  const args = mock.mock.calls[0];
+  expect(mockFn.mock.callCount()).toEqual(1);
+  const args = mockFn.mock.calls[0].arguments;
   expect(args).toEqual([
     issuer.dltPrimaryAddress,
     listId,
@@ -404,7 +417,7 @@ const verifyCreateMetadataListCalledOnce = async (
 
 const verifyCredentialAndAddEntryExpectations = async (
   credential,
-  credentialMetadataCall,
+  credentialMetadataArgs,
   { issuerEntity, caoEntity, offer, userId },
   context
 ) => {
@@ -422,15 +435,15 @@ const verifyCredentialAndAddEntryExpectations = async (
   );
   expect(jwtVc.payload.jti).toEqual(
     `did:velocity:v2:${toLower(issuerEntity.primaryAddress)}:${
-      credentialMetadataCall[0].listId
-    }:${credentialMetadataCall[0].index}:${hashOffer(offer)}`
+      credentialMetadataArgs[0].listId
+    }:${credentialMetadataArgs[0].index}:${hashOffer(offer)}`
   );
   expect(jwtVc.header.kid).toEqual(
     `did:velocity:v2:${toLower(issuerEntity.primaryAddress)}:${
-      credentialMetadataCall[0].listId
-    }:${credentialMetadataCall[0].index}:${hashOffer(offer)}#key-1`
+      credentialMetadataArgs[0].listId
+    }:${credentialMetadataArgs[0].index}:${hashOffer(offer)}#key-1`
   );
-  expect(credentialMetadataCall).toEqual([
+  expect(credentialMetadataArgs).toEqual([
     expect.objectContaining({
       credentialType: extractOfferType(offer),
       publicKey: publicJwkMatcher(
@@ -445,6 +458,6 @@ const verifyCredentialAndAddEntryExpectations = async (
     ALG_TYPE.COSEKEY_AES_256,
   ]);
 
-  const { publicKey } = first(credentialMetadataCall);
+  const { publicKey } = first(credentialMetadataArgs);
   await jwtVerify(credential, publicKey, false);
 };

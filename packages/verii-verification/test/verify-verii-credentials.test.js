@@ -14,6 +14,26 @@
  * limitations under the License.
  *
  */
+const { describe, it, before, beforeEach, mock } = require('node:test');
+const { expect } = require('expect');
+const { ALG_TYPE } = require('@verii/metadata-registration');
+
+const resolveVelocityDidDocument = mock.fn();
+const initMetadataRegistry = mock.fn(() => ({
+  resolveDidDocument: resolveVelocityDidDocument,
+}));
+const initRevocationRegistry = mock.fn(() => ({
+  getRevokedStatus: mock.fn(() => Promise.resolve(0)),
+}));
+const initVerificationCoupon = mock.fn(() => ({}));
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    ALG_TYPE,
+    initMetadataRegistry,
+    initRevocationRegistry,
+    initVerificationCoupon,
+  },
+});
 
 const console = require('console');
 const { compact, flow, join, omit } = require('lodash/fp');
@@ -21,7 +41,6 @@ const { jwtSign, jwtDecode, generateCredentialJwt } = require('@verii/jwt');
 const { addHours, setMilliseconds } = require('date-fns/fp');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { credentialUnexpired } = require('@verii/sample-data');
-const metadataRegistration = require('@verii/metadata-registration');
 const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
 const {
   CheckResults,
@@ -36,7 +55,6 @@ const { interceptors } = require('undici');
 
 const { verifyVeriiCredentials } = require('../src/verify-verii-credentials');
 
-jest.mock('@verii/metadata-registration');
 const registrarHost = 'registrar.test';
 const registrarUrl = `https://${registrarHost}`;
 
@@ -69,7 +87,7 @@ describe('Verify verii credentials', () => {
   let issuerVc;
   let context;
 
-  beforeAll(async () => {
+  before(async () => {
     const keys = {
       'keyid-1': { privateJwk: orgKeyPair.privateJwk },
     };
@@ -82,17 +100,39 @@ describe('Verify verii credentials', () => {
     };
   });
 
-  describe.each([{ didSuffix: null }, { didSuffix: 'abc' }])(
-    'full verification with didSuffix=$didSuffix',
-    ({ didSuffix }) => {
-      let resolveVelocityDidDocument;
+  [{ didSuffix: null }, { didSuffix: 'abc' }].forEach(({ didSuffix }) => {
+    describe(`full verification with didSuffix=${didSuffix}`, () => {
       let openBadgeCredential;
       let openBadgeVc;
       let indexEntry;
       let credentialDid;
 
       beforeEach(async () => {
-        jest.clearAllMocks();
+        initMetadataRegistry.mock.resetCalls();
+        initRevocationRegistry.mock.resetCalls();
+        resolveVelocityDidDocument.mock.resetCalls();
+        resolveVelocityDidDocument.mock.mockImplementation(() => ({
+          didDocument: {
+            id: 'DID',
+            publicKey: [
+              {
+                id: `${credentialDid.toLowerCase()}#key`,
+                publicKeyJwk: orgKeyPair.publicJwk,
+              },
+            ],
+            service: ['SERVICE'],
+          },
+          didDocumentMetadata: {
+            boundIssuerVcs: [
+              {
+                id: credentialDid.toLowerCase(),
+                format: 'jwt_vc',
+                vc: issuerVc,
+              },
+            ],
+          },
+          didResolutionMetadata: {},
+        }));
 
         indexEntry = ['0xf123', 1, 42, didSuffix];
         credentialDid = buildDid(indexEntry, 'did:velocity:v2:');
@@ -133,36 +173,6 @@ describe('Verify verii credentials', () => {
           kid: `${issuerDid}#key-1`,
         });
 
-        resolveVelocityDidDocument = jest.fn(() => ({
-          didDocument: {
-            id: 'DID',
-            publicKey: [
-              {
-                id: `${credentialDid.toLowerCase()}#key`,
-                publicKeyJwk: orgKeyPair.publicJwk,
-              },
-            ],
-            service: ['SERVICE'],
-          },
-          didDocumentMetadata: {
-            boundIssuerVcs: [
-              {
-                id: credentialDid.toLowerCase(),
-                format: 'jwt_vc',
-                vc: issuerVc,
-              },
-            ],
-          },
-          didResolutionMetadata: {},
-        }));
-
-        metadataRegistration.initVerificationCoupon.mockReturnValue({});
-        metadataRegistration.initMetadataRegistry.mockReturnValue({
-          resolveDidDocument: resolveVelocityDidDocument,
-        });
-        metadataRegistration.initRevocationRegistry.mockReturnValue({
-          getRevokedStatus: jest.fn().mockResolvedValue(0),
-        });
         openBadgeCredential = applyOverrides(credentialUnexpired, {
           id: credentialDid,
           issuer: { id: issuerDid },
@@ -266,10 +276,12 @@ describe('Verify verii credentials', () => {
             },
           },
         ]);
-        expect(metadataRegistration.initMetadataRegistry.mock.calls).toEqual([
-          [{ privateKey: orgKeyPair.privateKey }, context],
-        ]);
-        expect(resolveVelocityDidDocument.mock.calls).toEqual([
+        expect(
+          initMetadataRegistry.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ privateKey: orgKeyPair.privateKey }, context]]);
+        expect(
+          resolveVelocityDidDocument.mock.calls.map((call) => call.arguments)
+        ).toEqual([
           [
             {
               burnerDid: context.tenant.did,
@@ -383,9 +395,9 @@ describe('Verify verii credentials', () => {
       it('UNTAMPERED should return VOUCHER_RESERVE_EXHAUSTED and skip credential check with no available tokens', async () => {
         const contractError = new Error('Contract error');
         contractError.reason = 'No available tokens';
-        metadataRegistration.initMetadataRegistry.mockReturnValueOnce({
+        initMetadataRegistry.mock.mockImplementationOnce(() => ({
           resolveDidDocument: () => Promise.reject(contractError),
-        });
+        }));
         const result = await verifyVeriiCredentials(
           {
             credentials: [openBadgeVc],
@@ -463,9 +475,9 @@ describe('Verify verii credentials', () => {
       it('UNTAMPERED should DEPENDENCY_RESOLUTION_ERROR if reason of error not `No available tokens`', async () => {
         const contractError = new Error('Contract error');
         contractError.reason = 'Some another reason message';
-        metadataRegistration.initMetadataRegistry.mockReturnValue({
-          resolveDidDocument: () => Promise.reject(contractError),
-        });
+        initMetadataRegistry.mock.mockImplementationOnce(() => ({
+          resolveVelocityDidDocument: () => Promise.reject(contractError),
+        }));
         await expect(
           verifyVeriiCredentials(
             {
@@ -525,33 +537,31 @@ describe('Verify verii credentials', () => {
       });
 
       it('UNTAMPERED should return DATA_INTEGRITY_ERROR if publicKey does not exist', async () => {
-        metadataRegistration.initMetadataRegistry.mockReturnValueOnce({
-          resolveDidDocument: jest.fn(() => ({
-            didDocument: {
-              id: 'DID',
-              publicKey: [],
-              service: ['SERVICE'],
-            },
-            didDocumentMetadata: {
-              boundIssuerVcs: [
-                {
-                  id: credentialDid,
-                  format: 'jwt_vc',
-                  vc: issuerVc,
-                },
-              ],
-            },
-            didResolutionMetadata: {
-              error: 'UNRESOLVED_MULTI_DID_ENTRIES',
-              unresolvedMultiDidEntries: [
-                {
-                  id: 'did:velocity:v2:1:BBB:42:abcdefg',
-                  error: 'DATA_INTEGRITY_ERROR',
-                },
-              ],
-            },
-          })),
-        });
+        resolveVelocityDidDocument.mock.mockImplementationOnce(async () => ({
+          didDocument: {
+            id: 'DID',
+            publicKey: [],
+            service: ['SERVICE'],
+          },
+          didDocumentMetadata: {
+            boundIssuerVcs: [
+              {
+                id: credentialDid,
+                format: 'jwt_vc',
+                vc: issuerVc,
+              },
+            ],
+          },
+          didResolutionMetadata: {
+            error: 'UNRESOLVED_MULTI_DID_ENTRIES',
+            unresolvedMultiDidEntries: [
+              {
+                id: 'did:velocity:v2:1:BBB:42:abcdefg',
+                error: 'DATA_INTEGRITY_ERROR',
+              },
+            ],
+          },
+        }));
 
         const result = await verifyVeriiCredentials(
           {
@@ -873,9 +883,9 @@ describe('Verify verii credentials', () => {
       });
 
       it('UNREVOKED should return FAIL when status is revoked', async () => {
-        metadataRegistration.initRevocationRegistry.mockReturnValue({
-          getRevokedStatus: jest.fn().mockResolvedValue(1n),
-        });
+        initRevocationRegistry.mock.mockImplementationOnce(() => ({
+          getRevokedStatus: mock.fn(() => Promise.resolve(1n)),
+        }));
 
         const result = await verifyVeriiCredentials(
           {
@@ -904,9 +914,9 @@ describe('Verify verii credentials', () => {
       });
 
       it('UNREVOKED should return FAIL when status request errors', async () => {
-        metadataRegistration.initRevocationRegistry.mockReturnValue({
-          getRevokedStatus: jest.fn().mockRejectedValue(new Error('boom')),
-        });
+        initRevocationRegistry.mock.mockImplementationOnce(() => ({
+          getRevokedStatus: mock.fn(() => Promise.reject(new Error('boom'))),
+        }));
 
         const result = await verifyVeriiCredentials(
           {
@@ -933,8 +943,8 @@ describe('Verify verii credentials', () => {
           },
         ]);
       });
-    }
-  );
+    });
+  });
 });
 
 const buildDid = (indexEntry, didPrefix = 'did:velocity:v2:') =>

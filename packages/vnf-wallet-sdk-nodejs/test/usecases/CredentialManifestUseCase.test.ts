@@ -1,4 +1,5 @@
-import { expect } from '@jest/globals';
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import CredentialManifestUseCase from '../../src/impl/domain/usecases/CredentialManifestUseCase';
 import CredentialManifestUseCaseImpl from '../../src/impl/data/usecases/CredentialManifestUseCaseImpl';
 import CredentialManifestRepositoryImpl from '../../src/impl/data/repositories/CredentialManifestRepositoryImpl';

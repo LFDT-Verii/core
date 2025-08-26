@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { uriToDidWeb } = require('../src/did-web');
 
 describe('Did Web test suite', () => {

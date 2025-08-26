@@ -8,11 +8,11 @@ import PropTypes from 'prop-types';
 import CustomDropDown from '@/components/common/CustomDropDown.jsx';
 import Autocomplete from '@/components/common/Autocomplete.jsx';
 import OrganizationAvatar from '@/components/common/OrganizationAvatar.jsx';
-import { validateServiceEndpoint } from '@/components/organizations/CreateOrganization.utils';
-import { chainNames } from '@/utils/chainNames';
-import { useConfig } from '@/utils/ConfigContext';
+import { validateServiceEndpoint } from '@/components/organizations/CreateOrganizationUtils.js';
+import { chainNames } from '@/utils/chainNames.js';
+import { useConfig } from '@/utils/ConfigContext.js';
 
-import { getTitle, isAddButtonDisabled } from '../../utils';
+import { getTitle, isAddButtonDisabled } from '../../utils/index.js';
 
 const selectedStep = 2;
 

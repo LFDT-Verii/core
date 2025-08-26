@@ -1,4 +1,5 @@
-import { beforeAll, expect } from '@jest/globals';
+import { before, describe, test } from 'node:test';
+import { expect } from 'expect';
 import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { GenerateOffersMocks } from '../infrastructure/resources/valid/GenerateOffersMocks';
 import FinalizeOffersUseCase from '../../src/impl/domain/usecases/FinalizeOffersUseCase';
@@ -61,7 +62,7 @@ describe('FinalizeOffersUseCase Tests', () => {
         CredentialMocks.JwtCredentialsFromRegularIssuer
     ).length;
 
-    beforeAll(async () => {
+    before(async () => {
         const generateOffersDescriptor = new VCLGenerateOffersDescriptor(
             new VCLCredentialManifest(
                 CommonMocks.JWT,

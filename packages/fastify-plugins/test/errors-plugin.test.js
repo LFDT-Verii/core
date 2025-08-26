@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
 const newError = require('http-errors');
 const {
@@ -212,7 +214,7 @@ describe('Error Handling', () => {
 
   it('Should get error with error code if not exist', () => {
     const error = { statusCode: 400, message: 'SOME-ERROR-MESSAGE' };
-    const mockLog = jest.fn();
+    const mockLog = mock.fn();
     const context = {
       log: {
         error: mockLog,
@@ -223,7 +225,7 @@ describe('Error Handling', () => {
       ...error,
       errorCode: ERROR_CODES.MISSING_ERROR_CODE,
     });
-    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.callCount()).toEqual(1);
   });
 
   it('Should return error with error code', () => {
@@ -232,7 +234,7 @@ describe('Error Handling', () => {
       message: 'SOME-ERROR-MESSAGE',
       errorCode: 'abc_code',
     };
-    const mockLog = jest.fn();
+    const mockLog = mock.fn();
     const context = {
       log: {
         error: mockLog,
@@ -240,7 +242,7 @@ describe('Error Handling', () => {
     };
 
     expect(ensureErrorCode(error, context)).toEqual(error);
-    expect(mockLog).toHaveBeenCalledTimes(0);
+    expect(mockLog.mock.callCount()).toEqual(0);
   });
 
   it('Should add error code related to validation if validation is present on error', () => {
@@ -284,15 +286,14 @@ describe('Error Handling', () => {
   });
 
   describe('Error plugin tests', () => {
-    const fakeSetErrorHandler = jest.fn();
-    const fakeSendError = jest.fn();
-    const fakeLogError = jest.fn();
+    const fakeSetErrorHandler = mock.fn();
+    const fakeSendError = mock.fn();
+    const fakeLogError = mock.fn();
     let fakeServer;
     let fakeReply;
     let preHandlerFunc;
 
     beforeEach(() => {
-      jest.clearAllMocks();
       fakeServer = {
         setErrorHandler: fakeSetErrorHandler,
         log: {
@@ -303,25 +304,33 @@ describe('Error Handling', () => {
         send: fakeSendError,
       };
       errorsPlugin(fakeServer, {}, () => {});
-      preHandlerFunc = fakeServer.setErrorHandler.mock.calls[0][0];
+      preHandlerFunc = fakeServer.setErrorHandler.mock.calls[0].arguments[0];
     });
 
     it('should throw error', () => {
       preHandlerFunc({ message: 'error message' }, {}, fakeReply);
-      expect(fakeSendError).toHaveBeenCalledTimes(1);
-      expect(fakeSendError).toHaveBeenCalledWith({
-        message: 'error message',
-        errorCode: ERROR_CODES.MISSING_ERROR_CODE,
-      });
-      expect(fakeLogError).toHaveBeenCalledTimes(1);
-      expect(fakeLogError).toHaveBeenCalledWith({
-        err: {
-          errorCode: ERROR_CODES.MISSING_ERROR_CODE,
+      expect(fakeSendError.mock.callCount()).toEqual(1);
+      expect(
+        fakeSendError.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
           message: 'error message',
+          errorCode: ERROR_CODES.MISSING_ERROR_CODE,
         },
-        message:
-          'Error code missing. Please open a ticket with Velocity Network Foundation',
-      });
+      ]);
+      expect(fakeLogError.mock.callCount()).toEqual(1);
+      expect(
+        fakeLogError.mock.calls.map((call) => call.arguments)
+      ).toContainEqual([
+        {
+          err: {
+            errorCode: ERROR_CODES.MISSING_ERROR_CODE,
+            message: 'error message',
+          },
+          message:
+            'Error code missing. Please open a ticket with Velocity Network Foundation',
+        },
+      ]);
     });
   });
 });

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { after, afterEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const path = require('path');
 const fs = require('fs');
@@ -47,106 +49,124 @@ const initServer = (server) => {
   });
   return server;
 };
-describe('HTTP/2 or 1.1 and HTTP or HTTPS configuration', () => {
-  jest.setTimeout(15000);
-  let server;
+describe(
+  'HTTP/2 or 1.1 and HTTP or HTTPS configuration',
+  { timeout: 15000 },
+  () => {
+    let server;
 
-  afterEach(async () => {
-    if (server) {
-      await server.close();
-    }
-  });
-  afterAll(async () => {});
-
-  it('server should respond to HTTP/1.1 insecure by default', async () => {
-    const config = buildConfig();
-    server = initServer(createServer(config));
-    listenServer(server);
-    await server.ready();
-
-    const urlObj = new URL(`http://${appHost}:${appPort}`);
-    const response = await got(urlObj.href);
-    expect(response.statusCode).toEqual(200);
-  });
-
-  it('server should respond to HTTP/1.1 secure when ssl termination is configured', async () => {
-    const serverCertificateFilePath = path.join(__dirname, 'localhost.cert');
-    const serverCertificate = fs.readFileSync(serverCertificateFilePath);
-    const serverCertificateKeyFilePath = path.join(__dirname, 'localhost.key');
-    const serverCertificateKey = fs.readFileSync(serverCertificateKeyFilePath);
-    const config = buildConfig();
-    config.serverCertificateKey = serverCertificateKey;
-    config.serverCertificate = serverCertificate;
-    server = initServer(createServer(config));
-
-    listenServer(server);
-    await server.ready();
-    const urlObj = new URL(`http://${appHost}:${appPort}`);
-    urlObj.protocol = 'https';
-    const response = await got(urlObj.href, {
-      https: {
-        certificateAuthority: serverCertificate,
-      },
+    afterEach(async () => {
+      if (server) {
+        await server.close();
+      }
     });
-    expect(response.statusCode).toEqual(200);
-  });
+    after(async () => {});
 
-  it('server should respond to HTTP/2 insecure when http2 mode is enabled', async () => {
-    const config = buildConfig();
-    config.enableHttp2 = true;
+    it('server should respond to HTTP/1.1 insecure by default', async () => {
+      const config = buildConfig();
+      server = initServer(createServer(config));
+      listenServer(server);
+      await server.ready();
 
-    server = initServer(createServer(config));
-    listenServer(server);
-    await server.ready();
-    const urlObj = new URL(`http://${appHost}:${appPort}`);
-    await wait(3000);
-    const response = await h2url.concat({ url: urlObj.href });
-    expect(response.headers[':status']).toEqual(200);
-  });
-
-  it('server should respond to HTTP/2 secure when http2 mode is enabled and ssl termination is configured', async () => {
-    const serverCertificateFilePath = path.join(__dirname, 'localhost.cert');
-    const serverCertificate = fs.readFileSync(serverCertificateFilePath);
-    const serverCertificateKeyFilePath = path.join(__dirname, 'localhost.key');
-    const serverCertificateKey = fs.readFileSync(serverCertificateKeyFilePath);
-
-    const config = buildConfig();
-    config.serverCertificateKey = serverCertificateKey;
-    config.serverCertificate = serverCertificate;
-    config.enableHttp2 = true;
-
-    server = initServer(createServer(config));
-    listenServer(server);
-    await server.ready();
-    await wait(3000);
-    const urlObj = new URL(`http://${appHost}:${appPort}`);
-    urlObj.protocol = 'https';
-    const response = await h2url.concat({ url: urlObj.href });
-    expect(response.headers[':status']).toEqual(200);
-  });
-
-  it('server should respond to HTTP/1 secure when http2 mode is enabled and ssl termination is configured', async () => {
-    const serverCertificateFilePath = path.join(__dirname, 'localhost.cert');
-    const serverCertificate = fs.readFileSync(serverCertificateFilePath);
-    const serverCertificateKeyFilePath = path.join(__dirname, 'localhost.key');
-    const serverCertificateKey = fs.readFileSync(serverCertificateKeyFilePath);
-
-    const config = buildConfig();
-    config.serverCertificateKey = serverCertificateKey;
-    config.serverCertificate = serverCertificate;
-    config.enableHttp2 = true;
-
-    server = initServer(createServer(config));
-    listenServer(server);
-    await server.ready();
-    const urlObj = new URL(`http://${appHost}:${appPort}`);
-    urlObj.protocol = 'https';
-    await wait(3000);
-    const response = await got(urlObj.href, {
-      https: {
-        certificateAuthority: serverCertificate,
-      },
+      const urlObj = new URL(`http://${appHost}:${appPort}`);
+      const response = await got(urlObj.href);
+      expect(response.statusCode).toEqual(200);
     });
-    expect(response.statusCode).toEqual(200);
-  });
-});
+
+    it('server should respond to HTTP/1.1 secure when ssl termination is configured', async () => {
+      const serverCertificateFilePath = path.join(__dirname, 'localhost.cert');
+      const serverCertificate = fs.readFileSync(serverCertificateFilePath);
+      const serverCertificateKeyFilePath = path.join(
+        __dirname,
+        'localhost.key'
+      );
+      const serverCertificateKey = fs.readFileSync(
+        serverCertificateKeyFilePath
+      );
+      const config = buildConfig();
+      config.serverCertificateKey = serverCertificateKey;
+      config.serverCertificate = serverCertificate;
+      server = initServer(createServer(config));
+
+      listenServer(server);
+      await server.ready();
+      const urlObj = new URL(`http://${appHost}:${appPort}`);
+      urlObj.protocol = 'https';
+      const response = await got(urlObj.href, {
+        https: {
+          certificateAuthority: serverCertificate,
+        },
+      });
+      expect(response.statusCode).toEqual(200);
+    });
+
+    it('server should respond to HTTP/2 insecure when http2 mode is enabled', async () => {
+      const config = buildConfig();
+      config.enableHttp2 = true;
+
+      server = initServer(createServer(config));
+      listenServer(server);
+      await server.ready();
+      const urlObj = new URL(`http://${appHost}:${appPort}`);
+      await wait(3000);
+      const response = await h2url.concat({ url: urlObj.href });
+      expect(response.headers[':status']).toEqual(200);
+    });
+
+    it('server should respond to HTTP/2 secure when http2 mode is enabled and ssl termination is configured', async () => {
+      const serverCertificateFilePath = path.join(__dirname, 'localhost.cert');
+      const serverCertificate = fs.readFileSync(serverCertificateFilePath);
+      const serverCertificateKeyFilePath = path.join(
+        __dirname,
+        'localhost.key'
+      );
+      const serverCertificateKey = fs.readFileSync(
+        serverCertificateKeyFilePath
+      );
+
+      const config = buildConfig();
+      config.serverCertificateKey = serverCertificateKey;
+      config.serverCertificate = serverCertificate;
+      config.enableHttp2 = true;
+
+      server = initServer(createServer(config));
+      listenServer(server);
+      await server.ready();
+      await wait(3000);
+      const urlObj = new URL(`http://${appHost}:${appPort}`);
+      urlObj.protocol = 'https';
+      const response = await h2url.concat({ url: urlObj.href });
+      expect(response.headers[':status']).toEqual(200);
+    });
+
+    it('server should respond to HTTP/1 secure when http2 mode is enabled and ssl termination is configured', async () => {
+      const serverCertificateFilePath = path.join(__dirname, 'localhost.cert');
+      const serverCertificate = fs.readFileSync(serverCertificateFilePath);
+      const serverCertificateKeyFilePath = path.join(
+        __dirname,
+        'localhost.key'
+      );
+      const serverCertificateKey = fs.readFileSync(
+        serverCertificateKeyFilePath
+      );
+
+      const config = buildConfig();
+      config.serverCertificateKey = serverCertificateKey;
+      config.serverCertificate = serverCertificate;
+      config.enableHttp2 = true;
+
+      server = initServer(createServer(config));
+      listenServer(server);
+      await server.ready();
+      const urlObj = new URL(`http://${appHost}:${appPort}`);
+      urlObj.protocol = 'https';
+      await wait(3000);
+      const response = await got(urlObj.href, {
+        https: {
+          certificateAuthority: serverCertificate,
+        },
+      });
+      expect(response.statusCode).toEqual(200);
+    });
+  }
+);

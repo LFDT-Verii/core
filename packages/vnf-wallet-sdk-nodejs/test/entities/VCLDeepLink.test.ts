@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLDeepLink from '../../src/api/entities/VCLDeepLink';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 

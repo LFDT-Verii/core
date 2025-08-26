@@ -1,5 +1,5 @@
 import { Typography } from '@mui/material';
-import { useConfig } from '@/utils/ConfigContext';
+import { useConfig } from '@/utils/ConfigContext.js';
 
 export const OrganizationCreateTitle = () => {
   const config = useConfig();

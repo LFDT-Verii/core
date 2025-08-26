@@ -21,7 +21,7 @@ import { Link } from 'react-router';
 
 import { Download } from '@mui/icons-material';
 import Popup from './common/Popup.jsx';
-import theme from '../theme/theme';
+import theme from '../theme/theme.js';
 
 const TermsOfUsePopup = ({ onClose, isOpen, onProceed, title, onDownload }) => {
   return (
