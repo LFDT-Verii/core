@@ -103,7 +103,6 @@
     "@testing-library/user-event": "14.6.1",
     "@types/react": "19.1.10",
     "@types/react-dom": "19.1.7",
-    "@verii/test-resolvers": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
     "@vitejs/plugin-react-swc": "4.0.1",
     "eslint": "8.57.1",
