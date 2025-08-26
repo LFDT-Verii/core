@@ -14,9 +14,8 @@
  * limitations under the License.
  *
  */
-import { extname } from 'path';
+import { extname } from 'node:path';
 
-const requiredCode = "import * as React from 'react';";
 const css = new URL('mocks/css.mjs', import.meta.url).href;
 
 /**
@@ -30,8 +29,6 @@ const css = new URL('mocks/css.mjs', import.meta.url).href;
 export const resolve = async (specifier, ctx, nextResolve) => {
   const ext = extname(specifier);
   if (ext === '.css' || ext === '.scss') {
-    // console.info(JSON.stringify({ resolver: 'css', specifier }));
-
     // For CSS/SCSS, return the mock CSS module and skip default resolution.
     return {
       format: 'module',
@@ -40,27 +37,5 @@ export const resolve = async (specifier, ctx, nextResolve) => {
     };
   }
 
-  // console.info(JSON.stringify({ resolver: 'none', specifier }));
   return nextResolve(specifier);
-};
-
-/**
- *
- * This hook is used to modify the source of JSX/TSX files on the fly.
- * We prepend the necessary React import to ensure React is available,
- * which is required for JSX to work without explicitly importing React.
- *
- * @type {import('node:module').LoadHook}
- */
-export const load = async (url, ctx, nextLoad) => {
-  const ext = extname(url);
-  const result = await nextLoad(url, ctx);
-
-  if (ext === '.jsx' || ext === '.tsx') {
-    // Ensure React is in scope for JSX transforms.
-    // eslint-disable-next-line better-mutation/no-mutation
-    result.source = requiredCode + result.source;
-  }
-
-  return result;
 };

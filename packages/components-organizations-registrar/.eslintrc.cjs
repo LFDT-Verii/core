@@ -20,6 +20,9 @@ module.exports = {
     'import/extensions': ['error', 'always', { ignorePackages: true }],
   },
   settings: {
+    react: {
+      version: 'detect',
+    },
     'import/resolver': {
       alias: {
         map: [['@', path.resolve(__dirname, 'src')]],

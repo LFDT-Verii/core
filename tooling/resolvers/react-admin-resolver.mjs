@@ -14,56 +14,35 @@
  * limitations under the License.
  *
  */
-import { fileURLToPath, pathToFileURL } from 'url';
-import path, { extname } from 'path';
+import { fileURLToPath } from 'node:url';
+import { extname } from 'node:path';
 import fs from 'fs/promises';
 import { some } from 'lodash-es';
 
-const SRC_ALIAS = '@';
-const SRC_PATH = path.resolve(process.cwd(), 'src');
-const REACT_ADMIN_PKGS = ['react-admin', 'ra-core', 'ra-ui-materialui', 'ra-i18n-polyglot'];
+const REACT_ADMIN_PKGS = [
+  'react-admin',
+  'ra-core',
+  'ra-ui-materialui',
+  'ra-i18n-polyglot',
+];
 
 export const resolve = async (specifier, ctx, nextResolve) => {
+  // force loading of esm react admin packages because they don't correctly specify exports
   if (REACT_ADMIN_PKGS.includes(specifier)) {
     return resolveReactAdminToEsm(specifier);
   }
-
   if (isReactAdminParent(ctx.parentURL)) {
     return resolveReactAdminImports(specifier, ctx, nextResolve);
   }
-
-  if (specifier.startsWith(`${SRC_ALIAS}/`)) {
-    return resolveSrcAlias(specifier);
-  }
-
   return nextResolve(specifier);
-};
-
-const resolveSrcAlias = async (specifier) => {
-  let resolvedPath = path.join(SRC_PATH, specifier.slice(SRC_ALIAS.length + 1));
-  const ext = extname(specifier);
-  if (ext === '') {
-    // eslint-disable-next-line better-mutation/no-mutation
-    resolvedPath += '.js';
-  }
-
-  const fileUrl = pathToFileURL(resolvedPath).href;
-
-  // Optionally check if the file exists before resolving
-  try {
-    await fs.access(fileURLToPath(fileUrl));
-    return {
-      url: fileUrl,
-      shortCircuit: true,
-    };
-  } catch (e) {
-    throw new Error(`Cannot resolve alias path: ${specifier}`);
-  }
 };
 
 const resolveReactAdminToEsm = (specifier) => {
   return {
-    url: new URL(`../../node_modules/${specifier}/dist/esm/index.js`, import.meta.url).href,
+    url: new URL(
+      `../../node_modules/${specifier}/dist/esm/index.js`,
+      import.meta.url
+    ).href,
     shortCircuit: true,
   };
 };
@@ -100,13 +79,17 @@ const resolveReactAdminImports = async (specifier, ctx, nextResolve) => {
 };
 
 const isRel = (spec) =>
-  spec.startsWith('./') || spec.startsWith('../') || spec === '.' || spec === '..';
+  spec.startsWith('./') ||
+  spec.startsWith('../') ||
+  spec === '.' ||
+  spec === '..';
 
 const isReactAdminParent = (parentUrl) =>
   some(REACT_ADMIN_PKGS, (pkg) => parentUrl?.includes(`/node_modules/${pkg}/`));
 
-const includesSubpath = (specifier) => specifier.includes('/');
-
-const isLodashSubpath = (specifier) => includesSubpath(specifier) && specifier.startsWith('lodash');
+const isLodashSubpath = (specifier) =>
+  includesSubpath(specifier) && specifier.startsWith('lodash');
 const isJsonExportEsm = (specifier) =>
   includesSubpath(specifier) && specifier.startsWith('jsonexport');
+
+const includesSubpath = (specifier) => specifier.includes('/');

@@ -14,10 +14,11 @@
  * limitations under the License.
  *
  */
-import { fileURLToPath } from 'url';
-import { readFile } from 'fs/promises';
+import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import swc from '@swc/core';
+import { extname } from 'node:path';
 
 /**
  *
@@ -29,21 +30,21 @@ import swc from '@swc/core';
  */
 
 export const load = async (url, context, nextLoad) => {
-  if (url.endsWith('.jsx')) {
+  const ext = extname(url);
+  if (ext === '.jsx' || ext === '.tsx') {
     const filepath = fileURLToPath(url);
     const code = await readFile(filepath, 'utf8');
-
     const { code: transformedCode } = await swc.transform(code, {
       filename: filepath,
       jsc: {
         parser: {
-          syntax: 'ecmascript',
+          syntax: ext === '.tsx' ? 'typescript' : 'ecmascript',
           jsx: true,
         },
         target: 'es2020',
         transform: {
           react: {
-            runtime: 'automatic', // or "classic" if you prefer React.createElement
+            runtime: 'automatic',
           },
         },
       },

@@ -14,15 +14,18 @@
  * limitations under the License.
  *
  */
-
-/* eslint-disable import/no-extraneous-dependencies */
-import '@verii/tests-helpers/src/setup-react-tests.mjs';
-import { TextEncoder, TextDecoder } from 'util';
 import { register } from 'node:module';
+import { afterEach } from 'node:test';
+import { cleanup } from '@testing-library/react';
 
-register('./alias-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/react-admin-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/alias-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/css-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/jsx-loader.mjs', import.meta.url);
 
-// eslint-disable-next-line better-mutation/no-mutation
-global.TextEncoder = TextEncoder;
-// eslint-disable-next-line better-mutation/no-mutation
-global.TextDecoder = TextDecoder;
+afterEach(cleanup);
+
+// eslint-disable-next-line better-mutation/no-mutation,no-undef
+global.Event = window.Event;
+// eslint-disable-next-line better-mutation/no-mutation,no-undef
+global.CustomEvent = window.CustomEvent;
