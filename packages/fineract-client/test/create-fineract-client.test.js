@@ -27,9 +27,9 @@ describe('create clients', () => {
 
   beforeAll(async () => {
     const baseContext = { log: console };
-    const fineractFetch = initHttpClient({ 
-      prefixUrls: [testHost],
-      useExistingGlobalAgent: true
+    const fineractFetch = initHttpClient({
+      prefixUrl: testHost,
+      useExistingGlobalAgent: true,
     })(testHost, baseContext);
     context = { ...baseContext, fineractFetch };
   });
@@ -55,7 +55,7 @@ describe('create clients', () => {
     nock(testHost)
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
       .reply(200, async (request) => {
-        const body = await request.json()
+        const body = await request.json();
         webhookPayloads.push(body.json);
         return [
           {

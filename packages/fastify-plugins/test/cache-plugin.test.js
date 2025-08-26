@@ -24,14 +24,17 @@ const buildFastify = () => {
   const { initHttpClient } = require('@verii/http-client');
   const fastify = require('fastify')()
     .register(cachePlugin)
-    .decorate('baseRequest', () => initHttpClient({ cache: fastify.cache, useExistingGlobalAgent: true }))
+    .decorate('baseRequest', () =>
+      initHttpClient({ cache: fastify.cache, useExistingGlobalAgent: true })
+    )
     .addHook('preValidation', async (req) => {
       req.fetch = fastify.baseRequest()(req);
     });
 
   fastify.get('/test-csv', async (req) => {
-    const response = await req.fetch
-      .get('https://www.example.com/user', { cache: req.cache });
+    const response = await req.fetch.get('https://www.example.com/user', {
+      cache: req.cache,
+    });
     const result = await response.json();
     return result;
   });
@@ -94,7 +97,9 @@ describe('cache-plugin test suite', () => {
       method: 'GET',
       path: '/user',
     });
-    const cachedResponseText = JSON.parse(Buffer.from(cachedResponse.body[0]).toString());
+    const cachedResponseText = JSON.parse(
+      Buffer.from(cachedResponse.body[0]).toString()
+    );
 
     expect(cachedResponse.body.length).toEqual(1);
     expect(cachedResponseText).toEqual({ name: 'user' });

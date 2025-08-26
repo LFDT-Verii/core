@@ -52,7 +52,12 @@ const initServer = (server) => {
     .register(httpClientPlugin, {
       name: 'fetch',
       options: pick(
-        ['nodeEnv', 'requestTimeout', 'traceIdHeader', 'useExistingGlobalAgent'],
+        [
+          'nodeEnv',
+          'requestTimeout',
+          'traceIdHeader',
+          'useExistingGlobalAgent',
+        ],
         server.config
       ),
     })
@@ -74,7 +79,10 @@ const initServer = (server) => {
     .register(httpClientPlugin, {
       name: 'secureMessagesFetch',
       options: {
-        ...pick(['nodeEnv', 'traceIdHeader', 'useExistingGlobalAgent'], server.config),
+        ...pick(
+          ['nodeEnv', 'traceIdHeader', 'useExistingGlobalAgent'],
+          server.config
+        ),
         requestTimeout: 20000,
       },
     })

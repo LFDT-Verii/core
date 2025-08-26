@@ -47,7 +47,7 @@ describe('fineract client test suite', () => {
 
   beforeAll(async () => {
     fineractFetch = initHttpClient({
-      prefixUrls: [testHost],
+      prefixUrl: testHost,
       useExistingGlobalAgent: true,
     })(testHost, { log: console });
   });
@@ -666,7 +666,7 @@ describe('fineract client test suite', () => {
         .reply(200, async (request) => {
           webhookPayload = await request.json();
 
-          return { savingsId: 'SOME-ID' }
+          return { savingsId: 'SOME-ID' };
         });
       const clientId = '1';
       const externalId = 'creditaccount1';

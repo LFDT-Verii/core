@@ -26,7 +26,7 @@ const verifyVeriiCredentials = async (
     nodeEnv: context.config.nodeEnv,
     requestTimeout: context.config.requestTimeout,
     traceIdHeader: context.config.traceIdHeader,
-    prefixUrls: [context.config.registrarUrl],
+    prefixUrl: context.config.registrarUrl,
     useExistingGlobalAgent: context.useExistingGlobalAgent,
   });
 

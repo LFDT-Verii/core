@@ -20,7 +20,7 @@ const {
   interceptors,
   ResponseStatusCodeError,
   cacheStores,
-  setGlobalDispatcher
+  setGlobalDispatcher,
 } = require('undici');
 const {
   initHttpClient,
@@ -110,7 +110,7 @@ describe('Http Client Package', () => {
         httpClient = initHttpClient({
           rejectUnauthorized: false,
           useExistingGlobalAgent: true,
-          prefixUrls: [origin],
+          prefixUrl: origin,
         })(origin, {
           log: console,
           traceId: 'TRACE-ID',

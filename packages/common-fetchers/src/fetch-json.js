@@ -1,9 +1,8 @@
-const fetchJson = async (link, context) => {
-  const { fetch } = context;
-  const response = await fetch(context).get(link, {});
+const fetchJson = async (link, { fetch }) => {
+  const response = await fetch.get(link, {});
 
   return response.json();
-}
+};
 
 module.exports = {
   fetchJson,
