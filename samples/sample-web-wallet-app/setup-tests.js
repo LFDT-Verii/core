@@ -14,11 +14,16 @@
  * limitations under the License.
  *
  */
-import { describe, it } from 'node:test';
-import { expect } from 'expect';
+import { register } from 'node:module';
+import { afterEach } from 'node:test';
+import { cleanup } from '@testing-library/react';
 
-describe('Empty Test', () => {
-  it('empty test', async () => {
-    expect(true).toBeTruthy();
-  });
-});
+register('../../tooling/resolvers/css-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/jsx-loader.mjs', import.meta.url);
+
+afterEach(cleanup);
+
+// eslint-disable-next-line better-mutation/no-mutation,no-undef
+global.Event = window.Event;
+// eslint-disable-next-line better-mutation/no-mutation,no-undef
+global.CustomEvent = window.CustomEvent;

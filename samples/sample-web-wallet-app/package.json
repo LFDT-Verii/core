@@ -45,8 +45,8 @@
     "start": "vite",
     "build": "tsc & vite build",
     "serve": "vite preview",
-    "test": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=../../packages/tests-helpers/src/setup-react-tests.mjs --test --test-reporter=spec --test-reporter-destination=stdout '**/*.test.ts' '**/*.test.tsx'",
-    "test:ci": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=../../packages/tests-helpers/src/setup-react-tests.mjs  --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info '**/*.test.ts' '**/*.test.tsx'"
+    "test": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=./setup-tests.js --test --test-reporter=spec --test-reporter-destination=stdout '**/*.test.ts' '**/*.test.tsx'",
+    "test:ci": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=./setup-tests.js  --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info '**/*.test.ts' '**/*.test.tsx'"
   },
   "browserslist": {
     "production": [
