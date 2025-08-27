@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 const VeriiProtocolVersions = {
   PROTOCOL_VERSION_1: 1,
   PROTOCOL_VERSION_2: 2,

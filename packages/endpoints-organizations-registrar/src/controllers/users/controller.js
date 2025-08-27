@@ -12,8 +12,8 @@ const {
 } = require('../../entities');
 
 const userController = async (fastify) => {
-  const createAuth0User = initCreateAuth0User(fastify);
-  const { getUserWithRoles, softDeleteUser } = initUserManagement(
+  const createAuth0User = await initCreateAuth0User(fastify);
+  const { getUserWithRoles, softDeleteUser } = await initUserManagement(
     fastify.config
   );
 

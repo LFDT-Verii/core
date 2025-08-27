@@ -1,6 +1,7 @@
 const { jwkFromSecp256k1Key } = require('@verii/jwt');
 const { omit } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
+const { expect } = require('expect');
 
 const mapResponseKeyToDbKey = (key) => ({
   _id: expect.any(ObjectId),

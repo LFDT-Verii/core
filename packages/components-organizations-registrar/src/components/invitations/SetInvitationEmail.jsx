@@ -20,8 +20,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Form, TextInput, required } from 'react-admin';
 import PropTypes from 'prop-types';
 
-import { validateEmail } from '../organizations/CreateOrganization.utils';
-import OrganizationSubmitButton from '../organizations/OrganisationSubmitButton.jsx';
+import { validateEmail } from '../organizations/CreateOrganizationUtils.js';
+import OrganizationSubmitButton from '../organizations/OrganizationSubmitButton.jsx';
 
 const SetInvitationEmail = ({ children, onSubmit, defaultValue, loading }) => {
   const [isEmailValid, setIsEmailValid] = useState(false);

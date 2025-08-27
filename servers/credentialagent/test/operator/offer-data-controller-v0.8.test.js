@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { ObjectId } = require('mongodb');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { update, map, flow } = require('lodash/fp');
@@ -67,14 +70,14 @@ describe('Get Offers Data controller Test Suit', () => {
     return offer;
   };
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = await buildFastify();
 
     ({ persistOffer } = initOfferFactory(fastify));
     ({ persistTenant } = initTenantFactory(fastify));
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

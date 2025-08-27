@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { extractVerificationKey } = require('@verii/did-doc');
@@ -46,7 +49,7 @@ describe('Public Key Resolution', () => {
   let fastify;
   let persistOrganization;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -54,13 +57,12 @@ describe('Public Key Resolution', () => {
   });
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     nock.cleanAll();
     await mongoDb().collection('organizations').deleteMany({});
     await mongoDb().collection('organizationKeys').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();

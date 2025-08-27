@@ -15,6 +15,23 @@
  *
  */
 
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+  mock,
+} = require('node:test');
+const { expect } = require('expect');
+
+mock.module('nanoid', {
+  namedExports: {
+    nanoid: () => '1234',
+  },
+});
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const FormData = require('form-data');
 const path = require('path');
@@ -33,504 +50,582 @@ const {
 const { ObjectId } = require('mongodb');
 const buildFastify = require('./helpers/build-fastify');
 
-jest.mock('nanoid', () => {
-  return {
-    nanoid: () => '1234',
-  };
-});
-
 const baseUrl = '/api/v0.6/credential_file_upload';
 
-describe('Organization setup credential file upload', () => {
-  let fastify;
-  const libS3Bucket = 'lib-bucket';
-  let s3Client;
+describe(
+  'Organization setup credential file upload',
+  { timeout: 20000 },
+  () => {
+    let fastify;
+    const libS3Bucket = 'lib-bucket';
+    let s3Client;
 
-  beforeAll(async () => {
-    s3Client = new S3Client({
-      apiVersion: '2006-03-01',
-      region: process.env.AWS_REGION,
-      forcePathStyle: true,
-      credentials: {
-        accessKeyId: 'tests-key-id',
-        secretAccessKey: 'tests-key',
-      },
-      endpoint: process.env.AWS_ENDPOINT,
-    });
-    await s3Client.send(new CreateBucketCommand({ Bucket: libS3Bucket }));
+    before(async () => {
+      s3Client = new S3Client({
+        apiVersion: '2006-03-01',
+        region: process.env.AWS_REGION,
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: 'tests-key-id',
+          secretAccessKey: 'tests-key',
+        },
+        endpoint: process.env.AWS_ENDPOINT,
+      });
 
-    fastify = buildFastify((server) => {
-      // eslint-disable-next-line better-mutation/no-mutation
-      server.injectMultipart = async ({
-        method,
-        url,
-        userId,
-        payload,
-        headers,
-      }) => {
-        const form = new FormData();
-        // eslint-disable-next-line no-restricted-syntax, guard-for-in
-        for (const key in payload) {
-          form.append(key, payload[key]);
-        }
-        return server.inject({
+      try {
+        await deleteS3Object(s3Client, libS3Bucket);
+        // delete in case after never was called
+        await s3Client.send(new DeleteBucketCommand({ Bucket: libS3Bucket }));
+      } catch (err) {
+        // ignore
+        console.error(err);
+      }
+      try {
+        await s3Client.send(new CreateBucketCommand({ Bucket: libS3Bucket }));
+      } catch (err) {
+        console.error(err);
+        // ignore
+      }
+
+      fastify = buildFastify((server) => {
+        // eslint-disable-next-line better-mutation/no-mutation
+        server.injectMultipart = async ({
           method,
           url,
-          payload: form.getBuffer(),
-          headers: {
+          user,
+          payload,
+          headers,
+        }) => {
+          const form = new FormData();
+          // eslint-disable-next-line no-restricted-syntax, guard-for-in
+          for (const key in payload) {
+            form.append(key, payload[key]);
+          }
+          const httpHeaders = {
             'Content-Type': `multipart/form-data; boundary=${form.getBoundary()}`,
-            'x-user-id': userId || '',
+            'x-override-oauth-user': JSON.stringify(user),
             ...headers,
-          },
-        });
-      };
-      return server;
+          };
+
+          return server.inject({
+            method,
+            url,
+            payload: form.getBuffer(),
+            headers: httpHeaders,
+          });
+        };
+        return server;
+      });
+      await fastify.ready();
     });
-    await fastify.ready();
-  });
 
-  beforeEach(async () => {
-    await mongoDb().collection('credentialFiles').deleteMany({});
-  });
+    beforeEach(async () => {
+      await mongoDb().collection('credentialFiles').deleteMany({});
+    });
 
-  afterEach(async () => {
-    await deleteS3Object(s3Client, libS3Bucket);
-  });
+    afterEach(async () => {
+      await deleteS3Object(s3Client, libS3Bucket);
+    });
 
-  afterAll(async () => {
-    await fastify.close();
-    await s3Client.send(new DeleteBucketCommand({ Bucket: libS3Bucket }));
-  });
+    after(async () => {
+      await fastify.close();
+      await s3Client.send(new DeleteBucketCommand({ Bucket: libS3Bucket }));
+      mock.reset();
+    });
 
-  it('Should return upload URL', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'JsonSchema',
-        originalFilename: 'email-v1.0.schema.json',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/example.schema.json`
+    it('Should return upload URL', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'JsonSchema',
+          originalFilename: 'email-v1.0.schema.json',
+          file: await fs.readFile(
+            `${path.dirname(__dirname)}/test/data/example.schema.json`
+          ),
+        },
+      });
+
+      expect(response.json()).toEqual({
+        fileMetadata: {
+          url: expect.stringMatching(
+            'http://lib.localhost.test/schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json'
+          ),
+          userId: testRegistrarUser.sub,
+          credentialFileType: 'JsonSchema',
+          createdAt: expect.any(String),
+        },
+      });
+      const credentialFile = await mongoDb()
+        .collection('credentialFiles')
+        .find({})
+        .toArray();
+      expect(credentialFile).toEqual([
+        {
+          _id: expect.any(ObjectId),
+          userId: testRegistrarUser.sub,
+          s3Key: expect.stringMatching(
+            'schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json'
+          ),
+          url: expect.stringMatching(
+            'http://lib.localhost.test/schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json'
+          ),
+          credentialFileType: 'JsonSchema',
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        },
+      ]);
+
+      const s3Obj = await getObject({
+        s3Client,
+        key: credentialFile[0].s3Key,
+        bucket: libS3Bucket,
+      });
+      expect(s3Obj).toBeDefined();
+    });
+
+    it('Should return DisplayDescriptor credentialFileType', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'DisplayDescriptor',
+          originalFilename: 'email-v1.0.descriptor.json',
+          file: await fs.readFile(
+            `${path.dirname(
+              __dirname
+            )}/test/data/display-descriptor.schema.json`
+          ),
+        },
+      });
+
+      expect(response.json()).toEqual({
+        fileMetadata: {
+          url: expect.stringMatching(
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          userId: testRegistrarUser.sub,
+          credentialFileType: 'DisplayDescriptor',
+          createdAt: expect.any(String),
+        },
+      });
+      const credentialFile = await mongoDb()
+        .collection('credentialFiles')
+        .find({})
+        .toArray();
+      expect(credentialFile).toEqual([
+        {
+          _id: expect.any(ObjectId),
+          userId: testRegistrarUser.sub,
+          s3Key: expect.stringMatching(
+            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          url: expect.stringMatching(
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          credentialFileType: 'DisplayDescriptor',
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        },
+      ]);
+
+      const s3Obj = await getObject({
+        s3Client,
+        key: expect.stringMatching(
+          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
         ),
-      },
+        bucket: libS3Bucket,
+      });
+      expect(s3Obj).toBeDefined();
     });
 
-    expect(response.json()).toEqual({
-      fileMetadata: {
-        url: 'http://lib.localhost.test/schemas/1234-email-v1.0.schema.json',
-        userId: testRegistrarUser.sub,
-        credentialFileType: 'JsonSchema',
-        createdAt: expect.any(String),
-      },
-    });
-    const credentialFile = await mongoDb()
-      .collection('credentialFiles')
-      .find({})
-      .toArray();
-    expect(credentialFile).toEqual([
-      {
-        _id: expect.any(ObjectId),
-        userId: testRegistrarUser.sub,
-        s3Key: 'schemas/1234-email-v1.0.schema.json',
-        url: 'http://lib.localhost.test/schemas/1234-email-v1.0.schema.json',
-        credentialFileType: 'JsonSchema',
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      },
-    ]);
+    it('Should 400 if label is missing', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'DisplayDescriptor',
+          originalFilename: 'email-v1.0.descriptor.json',
+          file: await fs.readFile(
+            `${path.dirname(
+              __dirname
+            )}/test/data/display-descriptor.schema.json`
+          ),
+        },
+      });
 
-    const s3Obj = await getObject({
-      s3Client,
-      key: 'schemas/1234-email-v1.0.schema.json',
-      bucket: libS3Bucket,
-    });
-    expect(s3Obj).toBeDefined();
-  });
+      expect(response.json()).toEqual({
+        fileMetadata: {
+          url: expect.stringMatching(
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          userId: testRegistrarUser.sub,
+          credentialFileType: 'DisplayDescriptor',
+          createdAt: expect.any(String),
+        },
+      });
+      const credentialFile = await mongoDb()
+        .collection('credentialFiles')
+        .find({})
+        .toArray();
+      expect(credentialFile).toEqual([
+        {
+          _id: expect.any(ObjectId),
+          userId: testRegistrarUser.sub,
+          s3Key: expect.stringMatching(
+            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          url: expect.stringMatching(
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          credentialFileType: 'DisplayDescriptor',
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        },
+      ]);
 
-  it('Should return DisplayDescriptor credentialFileType', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'DisplayDescriptor',
-        originalFilename: 'email-v1.0.descriptor.json',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/display-descriptor.schema.json`
+      const s3Obj = await getObject({
+        s3Client,
+        key: expect.stringMatching(
+          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
         ),
-      },
+        bucket: libS3Bucket,
+      });
+      expect(s3Obj).toBeDefined();
     });
 
-    expect(response.json()).toEqual({
-      fileMetadata: {
-        url: 'http://lib.localhost.test/display-descriptors/1234-email-v1.0.descriptor.json',
-        userId: testRegistrarUser.sub,
-        credentialFileType: 'DisplayDescriptor',
-        createdAt: expect.any(String),
-      },
-    });
-    const credentialFile = await mongoDb()
-      .collection('credentialFiles')
-      .find({})
-      .toArray();
-    expect(credentialFile).toEqual([
-      {
-        _id: expect.any(ObjectId),
-        userId: testRegistrarUser.sub,
-        s3Key: 'display-descriptors/1234-email-v1.0.descriptor.json',
-        url: 'http://lib.localhost.test/display-descriptors/1234-email-v1.0.descriptor.json',
-        credentialFileType: 'DisplayDescriptor',
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      },
-    ]);
+    it('Should validate display descriptor with a few properties', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'DisplayDescriptor',
+          originalFilename: 'email-v1.0.descriptor.json',
+          file: await fs.readFile(
+            `${path.dirname(
+              __dirname
+            )}/test/data/certification-v1.1.descriptor.json`
+          ),
+        },
+      });
 
-    const s3Obj = await getObject({
-      s3Client,
-      key: 'display-descriptors/1234-email-v1.0.descriptor.json',
-      bucket: libS3Bucket,
-    });
-    expect(s3Obj).toBeDefined();
-  });
+      expect(response.json()).toEqual({
+        fileMetadata: {
+          url: expect.stringMatching(
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          userId: testRegistrarUser.sub,
+          credentialFileType: 'DisplayDescriptor',
+          createdAt: expect.any(String),
+        },
+      });
+      const credentialFile = await mongoDb()
+        .collection('credentialFiles')
+        .find({})
+        .toArray();
+      expect(credentialFile).toEqual([
+        {
+          _id: expect.any(ObjectId),
+          userId: testRegistrarUser.sub,
+          s3Key: expect.stringMatching(
+            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          url: expect.stringMatching(
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          ),
+          credentialFileType: 'DisplayDescriptor',
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        },
+      ]);
 
-  it('Should 400 if label is missing', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'DisplayDescriptor',
-        originalFilename: 'email-v1.0.descriptor.json',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/display-descriptor.schema.json`
+      const s3Obj = await getObject({
+        s3Client,
+        key: expect.stringMatching(
+          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
         ),
-      },
+        bucket: libS3Bucket,
+      });
+      expect(s3Obj).toBeDefined();
     });
 
-    expect(response.json()).toEqual({
-      fileMetadata: {
-        url: 'http://lib.localhost.test/display-descriptors/1234-email-v1.0.descriptor.json',
-        userId: testRegistrarUser.sub,
-        credentialFileType: 'DisplayDescriptor',
-        createdAt: expect.any(String),
-      },
-    });
-    const credentialFile = await mongoDb()
-      .collection('credentialFiles')
-      .find({})
-      .toArray();
-    expect(credentialFile).toEqual([
-      {
-        _id: expect.any(ObjectId),
-        userId: testRegistrarUser.sub,
-        s3Key: 'display-descriptors/1234-email-v1.0.descriptor.json',
-        url: 'http://lib.localhost.test/display-descriptors/1234-email-v1.0.descriptor.json',
-        credentialFileType: 'DisplayDescriptor',
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      },
-    ]);
+    it('Should return FormSchema credentialFileType', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'FormSchema',
+          originalFilename: 'email-v1.0.form-schema.json',
+          file: await fs.readFile(
+            `${path.dirname(__dirname)}/test/data/example.schema.json`
+          ),
+        },
+      });
 
-    const s3Obj = await getObject({
-      s3Client,
-      key: 'display-descriptors/1234-email-v1.0.descriptor.json',
-      bucket: libS3Bucket,
-    });
-    expect(s3Obj).toBeDefined();
-  });
+      expect(response.json()).toEqual({
+        fileMetadata: {
+          url: expect.stringMatching(
+            'http://lib.localhost.test/form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json'
+          ),
+          userId: testRegistrarUser.sub,
+          credentialFileType: 'FormSchema',
+          createdAt: expect.any(String),
+        },
+      });
+      const credentialFile = await mongoDb()
+        .collection('credentialFiles')
+        .find({})
+        .toArray();
+      expect(credentialFile).toEqual([
+        {
+          _id: expect.any(ObjectId),
+          userId: testRegistrarUser.sub,
+          s3Key: expect.stringMatching(
+            'form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json'
+          ),
+          url: expect.stringMatching(
+            'http://lib.localhost.test/form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json'
+          ),
+          credentialFileType: 'FormSchema',
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        },
+      ]);
 
-  it('Should validate display descriptor with a few properties', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'DisplayDescriptor',
-        originalFilename: 'email-v1.0.descriptor.json',
-        file: await fs.readFile(
-          `${path.dirname(
-            __dirname
-          )}/test/data/certification-v1.1.descriptor.json`
+      const s3Obj = await getObject({
+        s3Client,
+        key: expect.stringMatching(
+          'form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json'
         ),
-      },
+        bucket: libS3Bucket,
+      });
+      expect(s3Obj).toBeDefined();
     });
 
-    expect(response.json()).toEqual({
-      fileMetadata: {
-        url: 'http://lib.localhost.test/display-descriptors/1234-email-v1.0.descriptor.json',
-        userId: testRegistrarUser.sub,
-        credentialFileType: 'DisplayDescriptor',
-        createdAt: expect.any(String),
-      },
-    });
-    const credentialFile = await mongoDb()
-      .collection('credentialFiles')
-      .find({})
-      .toArray();
-    expect(credentialFile).toEqual([
-      {
-        _id: expect.any(ObjectId),
-        userId: testRegistrarUser.sub,
-        s3Key: 'display-descriptors/1234-email-v1.0.descriptor.json',
-        url: 'http://lib.localhost.test/display-descriptors/1234-email-v1.0.descriptor.json',
-        credentialFileType: 'DisplayDescriptor',
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      },
-    ]);
+    it('Should return JsonldContext credentialFileType', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'JsonldContext',
+          originalFilename: 'email-v1.0.jsonld.json',
+          file: await fs.readFile(
+            `${path.dirname(__dirname)}/test/data/example.schema.json`
+          ),
+        },
+      });
 
-    const s3Obj = await getObject({
-      s3Client,
-      key: 'display-descriptors/1234-email-v1.0.descriptor.json',
-      bucket: libS3Bucket,
-    });
-    expect(s3Obj).toBeDefined();
-  });
+      expect(response.json()).toEqual({
+        fileMetadata: {
+          url: expect.stringMatching(
+            'http://lib.localhost.test/contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json'
+          ),
+          userId: testRegistrarUser.sub,
+          credentialFileType: 'JsonldContext',
+          createdAt: expect.any(String),
+        },
+      });
+      const credentialFile = await mongoDb()
+        .collection('credentialFiles')
+        .find({})
+        .toArray();
+      expect(credentialFile).toEqual([
+        {
+          _id: expect.any(ObjectId),
+          userId: testRegistrarUser.sub,
+          s3Key: expect.stringMatching(
+            'contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json'
+          ),
+          url: expect.stringMatching(
+            'http://lib.localhost.test/contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json'
+          ),
+          credentialFileType: 'JsonldContext',
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        },
+      ]);
 
-  it('Should return FormSchema credentialFileType', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'FormSchema',
-        originalFilename: 'email-v1.0.form-schema.json',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/example.schema.json`
+      const s3Obj = await getObject({
+        s3Client,
+        key: expect.stringMatching(
+          'contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json'
         ),
-      },
+        bucket: libS3Bucket,
+      });
+      expect(s3Obj).toBeDefined();
     });
 
-    expect(response.json()).toEqual({
-      fileMetadata: {
-        url: 'http://lib.localhost.test/form-schemas/1234-email-v1.0.form-schema.json',
-        userId: testRegistrarUser.sub,
-        credentialFileType: 'FormSchema',
-        createdAt: expect.any(String),
-      },
-    });
-    const credentialFile = await mongoDb()
-      .collection('credentialFiles')
-      .find({})
-      .toArray();
-    expect(credentialFile).toEqual([
-      {
-        _id: expect.any(ObjectId),
-        userId: testRegistrarUser.sub,
-        s3Key: 'form-schemas/1234-email-v1.0.form-schema.json',
-        url: 'http://lib.localhost.test/form-schemas/1234-email-v1.0.form-schema.json',
-        credentialFileType: 'FormSchema',
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      },
-    ]);
+    it('Should 400 if credentialFileType invalid type', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'not-valid',
+          originalFilename: 'email-v1.0.jsonld.json',
+          file: await fs.readFile(
+            `${path.dirname(__dirname)}/test/data/example.schema.json`
+          ),
+        },
+      });
 
-    const s3Obj = await getObject({
-      s3Client,
-      key: 'form-schemas/1234-email-v1.0.form-schema.json',
-      bucket: libS3Bucket,
-    });
-    expect(s3Obj).toBeDefined();
-  });
-
-  it('Should return JsonldContext credentialFileType', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'JsonldContext',
-        originalFilename: 'email-v1.0.jsonld.json',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/example.schema.json`
-        ),
-      },
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'request_validation_failed',
+          message:
+            'body/credentialFileType must be equal to one of the allowed values',
+          statusCode: 400,
+        })
+      );
     });
 
-    expect(response.json()).toEqual({
-      fileMetadata: {
-        url: 'http://lib.localhost.test/contexts/1234-email-v1.0.jsonld.json',
-        userId: testRegistrarUser.sub,
-        credentialFileType: 'JsonldContext',
-        createdAt: expect.any(String),
-      },
-    });
-    const credentialFile = await mongoDb()
-      .collection('credentialFiles')
-      .find({})
-      .toArray();
-    expect(credentialFile).toEqual([
-      {
-        _id: expect.any(ObjectId),
-        userId: testRegistrarUser.sub,
-        s3Key: 'contexts/1234-email-v1.0.jsonld.json',
-        url: 'http://lib.localhost.test/contexts/1234-email-v1.0.jsonld.json',
-        credentialFileType: 'JsonldContext',
-        createdAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      },
-    ]);
+    it('Should 400 if originalFilename is empty', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'JsonldContext',
+          file: await fs.readFile(
+            `${path.dirname(__dirname)}/test/data/example.schema.json`
+          ),
+        },
+      });
 
-    const s3Obj = await getObject({
-      s3Client,
-      key: 'contexts/1234-email-v1.0.jsonld.json',
-      bucket: libS3Bucket,
-    });
-    expect(s3Obj).toBeDefined();
-  });
-
-  it('Should 400 if credentialFileType invalid type', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'not-valid',
-        originalFilename: 'email-v1.0.jsonld.json',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/example.schema.json`
-        ),
-      },
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'request_validation_failed',
+          message: "body must have required property 'originalFilename'",
+          statusCode: 400,
+        })
+      );
     });
 
-    expect(response.statusCode).toEqual(400);
-    expect(response.json()).toEqual(
-      errorResponseMatcher({
-        error: 'Bad Request',
-        errorCode: 'request_validation_failed',
-        message:
-          'body/credentialFileType must be equal to one of the allowed values',
-        statusCode: 400,
-      })
-    );
-  });
+    it('Should 400 if originalFilename is empty string', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'JsonldContext',
+          originalFilename: '',
+          file: await fs.readFile(
+            `${path.dirname(__dirname)}/test/data/example.schema.json`
+          ),
+        },
+      });
 
-  it('Should 400 if originalFilename is empty', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'JsonldContext',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/example.schema.json`
-        ),
-      },
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'request_validation_failed',
+          message:
+            'body/originalFilename must NOT have fewer than 1 characters',
+          statusCode: 400,
+        })
+      );
     });
 
-    expect(response.statusCode).toEqual(400);
-    expect(response.json()).toEqual(
-      errorResponseMatcher({
-        error: 'Bad Request',
-        errorCode: 'request_validation_failed',
-        message: "body must have required property 'originalFilename'",
-        statusCode: 400,
-      })
-    );
-  });
+    it('Should 400 if user has not sub', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'FormSchema',
+          originalFilename: 'email-v1.0.form-schema.json',
+          file: await fs.readFile(
+            `${path.dirname(__dirname)}/test/data/example.schema.json`
+          ),
+        },
+        headers: {
+          'x-override-oauth-unauthorized': true,
+        },
+      });
 
-  it('Should 400 if originalFilename is empty string', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'JsonldContext',
-        originalFilename: '',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/example.schema.json`
-        ),
-      },
+      expect(response.statusCode).toEqual(401);
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Unauthorized',
+          errorCode: 'missing_error_code',
+          message: 'Unauthorized',
+          statusCode: 401,
+        })
+      );
     });
 
-    expect(response.statusCode).toEqual(400);
-    expect(response.json()).toEqual(
-      errorResponseMatcher({
-        error: 'Bad Request',
-        errorCode: 'request_validation_failed',
-        message: 'body/originalFilename must NOT have fewer than 1 characters',
-        statusCode: 400,
-      })
-    );
-  });
+    it('Should 400 if json is invalid', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'FormSchema',
+          originalFilename: 'email-v1.0.form-schema.json',
+          file: await fs.readFile(
+            `${path.dirname(__dirname)}/test/helpers/build-fastify.js`
+          ),
+        },
+      });
 
-  it('Should 400 if user has not sub', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'FormSchema',
-        originalFilename: 'email-v1.0.form-schema.json',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/data/example.schema.json`
-        ),
-      },
-      headers: {
-        'x-override-oauth-unauthorized': true,
-      },
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'invalid_json',
+          message: 'Invalid JSON',
+          statusCode: 400,
+        })
+      );
     });
 
-    expect(response.statusCode).toEqual(401);
-    expect(response.json()).toEqual(
-      errorResponseMatcher({
-        error: 'Unauthorized',
-        errorCode: 'missing_error_code',
-        message: 'Unauthorized',
-        statusCode: 401,
-      })
-    );
-  });
+    it('Should 400 if DisplayDescriptor credentialFileType file invalid', async () => {
+      const response = await fastify.injectMultipart({
+        method: 'POST',
+        url: baseUrl,
+        user: testRegistrarUser,
+        payload: {
+          credentialFileType: 'DisplayDescriptor',
+          originalFilename: 'email-v1.0.descriptor.json',
+          file: await fs.readFile(
+            `${path.dirname(
+              __dirname
+            )}/test/data/invalid-display-descriptor.schema.json`
+          ),
+        },
+      });
 
-  it('Should 400 if json is invalid', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'FormSchema',
-        originalFilename: 'email-v1.0.form-schema.json',
-        file: await fs.readFile(
-          `${path.dirname(__dirname)}/test/helpers/build-fastify.js`
-        ),
-      },
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'file_validation_error',
+          message: "must have required property 'title'",
+          statusCode: 400,
+        })
+      );
+      const credentialFile = await mongoDb()
+        .collection('credentialFiles')
+        .find({})
+        .toArray();
+      expect(credentialFile).toEqual([]);
+
+      const s3Obj = await getObject({
+        s3Client,
+        s3Key: 'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
+        bucket: libS3Bucket,
+      });
+      expect(s3Obj).toBeNull();
     });
-
-    expect(response.statusCode).toEqual(400);
-    expect(response.json()).toEqual(
-      errorResponseMatcher({
-        error: 'Bad Request',
-        errorCode: 'invalid_json',
-        message: 'Invalid JSON',
-        statusCode: 400,
-      })
-    );
-  });
-
-  it('Should 400 if DisplayDescriptor credentialFileType file invalid', async () => {
-    const response = await fastify.injectMultipart({
-      method: 'POST',
-      url: baseUrl,
-      payload: {
-        credentialFileType: 'DisplayDescriptor',
-        originalFilename: 'email-v1.0.descriptor.json',
-        file: await fs.readFile(
-          `${path.dirname(
-            __dirname
-          )}/test/data/invalid-display-descriptor.schema.json`
-        ),
-      },
-    });
-
-    expect(response.json()).toEqual(
-      errorResponseMatcher({
-        error: 'Bad Request',
-        errorCode: 'file_validation_error',
-        message: "must have required property 'title'",
-        statusCode: 400,
-      })
-    );
-    const credentialFile = await mongoDb()
-      .collection('credentialFiles')
-      .find({})
-      .toArray();
-    expect(credentialFile).toEqual([]);
-
-    const s3Obj = await getObject({
-      s3Client,
-      s3Key: 'display-descriptors/1234-email-v1.0.descriptor.json',
-      bucket: libS3Bucket,
-    });
-    expect(s3Obj).toBeNull();
-  });
-});
+  }
+);

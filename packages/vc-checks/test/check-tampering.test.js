@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { before, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { generateCredentialJwt } = require('@verii/jwt');
 const { credentialUnexpired } = require('@verii/sample-data');
@@ -27,7 +29,7 @@ describe('tampering checks', () => {
 
   let signedCredential;
 
-  beforeAll(async () => {
+  before(async () => {
     signedCredential = await generateCredentialJwt(
       credentialUnexpired,
       keyPair.privateJwk,

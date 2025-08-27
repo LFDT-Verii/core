@@ -1,0 +1,31 @@
+/*
+ * Copyright 2025 Velocity Team
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+import { register } from 'node:module';
+import { afterEach } from 'node:test';
+import { cleanup } from '@testing-library/react';
+
+register('../../tooling/resolvers/react-admin-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/alias-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/css-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/jsx-loader.mjs', import.meta.url);
+
+afterEach(cleanup);
+
+// eslint-disable-next-line better-mutation/no-mutation,no-undef
+global.Event = window.Event;
+// eslint-disable-next-line better-mutation/no-mutation,no-undef
+global.CustomEvent = window.CustomEvent;

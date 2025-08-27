@@ -15,10 +15,12 @@
  */
 
 // eslint-disable-next-line import/order
-const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { omit } = require('lodash/fp');
+const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const {
   initTenantFactory,
   initDisclosureFactory,
@@ -42,7 +44,7 @@ describe('Exchange of specific Id Controller Test Suite', () => {
   let persistOfferExchange;
   let tenant;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistTenant } = initTenantFactory(fastify));
@@ -55,7 +57,7 @@ describe('Exchange of specific Id Controller Test Suite', () => {
     tenant = await persistTenant();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await clearDb();
     await fastify.close();
   });

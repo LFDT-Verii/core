@@ -23,15 +23,15 @@ import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 
 import Popup from '../../components/common/Popup.jsx';
 import CreateInvitationForOrganization from '../../components/organizations/CreateInvitationForOrganization.jsx';
-import { CREDENTIAL_TYPES_IDS } from '../../utils/serviceTypes';
-import useCountryCodes from '../../utils/countryCodes';
-import useSelectedOrganization from '../../state/selectedOrganizationState';
+import { CREDENTIAL_TYPES_IDS } from '../../utils/serviceTypes.js';
+import useCountryCodes from '../../utils/countryCodes.js';
+import useSelectedOrganization from '../../state/selectedOrganizationState.js';
 import StatusPopup from '../../components/common/StatusPopup.jsx';
 import SetInvitationService from '../../components/invitations/SetInvitationService.jsx';
-import { MESSAGE_CODES } from '../../constants/messageCodes';
+import { MESSAGE_CODES } from '../../constants/messageCodes.js';
 import SetKeyIndividuals from '../../components/invitations/SetKeyIndividuals.jsx';
 import { formatWebSiteUrl, formatRegistrationNumbers } from '../../utils/index.jsx';
-import { getStatusByCode } from './utils';
+import { getStatusByCode } from './utils/index.js';
 
 const DEFAULT_STATUS_STATE = { error: null, title: '' };
 

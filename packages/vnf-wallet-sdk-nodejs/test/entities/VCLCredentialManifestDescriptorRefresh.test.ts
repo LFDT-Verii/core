@@ -1,3 +1,5 @@
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLCredentialManifestDescriptorRefresh from '../../src/api/entities/VCLCredentialManifestDescriptorRefresh';
 import VCLService from '../../src/api/entities/VCLService';
 import { CredentialManifestDescriptorMocks } from '../infrastructure/resources/valid/CredentialManifestDescriptorMocks';

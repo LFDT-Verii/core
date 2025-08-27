@@ -27,9 +27,9 @@ import {
 } from 'react-admin';
 import { useParams } from 'react-router';
 import { Stack, Typography, Box, Tooltip } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import InfoIcon from '@mui/icons-material/Info';
-import { omit } from 'lodash/fp';
+import { omit } from 'lodash-es';
 import Loading from '../../components/Loading.jsx';
 import {
   ERRORS,
@@ -70,7 +70,7 @@ const IndividualsEdit = () => {
         sx={sx.formContainer}
         resource="organizations"
         redirect={() => `individuals/${id}/show`}
-        transform={(data) => ({ ...data, ...{ profile: omit(['website'], data.profile) } })}
+        transform={(data) => ({ ...data, ...{ profile: omit(data.profile, ['website']) } })}
       >
         <Form mode="onTouched">
           <FormDataConsumer>

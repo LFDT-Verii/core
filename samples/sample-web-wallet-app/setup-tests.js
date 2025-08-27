@@ -1,5 +1,5 @@
-/**
- * Copyright 2024 Velocity Team
+/*
+ * Copyright 2025 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,9 +12,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
+import { register } from 'node:module';
+import { afterEach } from 'node:test';
+import { cleanup } from '@testing-library/react';
 
-const jestConfig = require('../../jest.config.base');
-const pack = require('./package.json');
+register('../../tooling/resolvers/css-resolver.mjs', import.meta.url);
+register('../../tooling/resolvers/jsx-loader.mjs', import.meta.url);
 
-module.exports = jestConfig(pack.name);
+afterEach(cleanup);
+
+// eslint-disable-next-line better-mutation/no-mutation,no-undef
+global.Event = window.Event;
+// eslint-disable-next-line better-mutation/no-mutation,no-undef
+global.CustomEvent = window.CustomEvent;

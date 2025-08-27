@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { initHttpClient } = require('@verii/http-client');
 const { ProductIds, createFineractClient } = require('../src');
@@ -25,7 +28,7 @@ describe('create clients', () => {
   const profile = { name: 'ACME Corp' };
   let context;
 
-  beforeAll(async () => {
+  before(async () => {
     const baseContext = { log: console };
     const fineractFetch = initHttpClient({
       prefixUrl: testHost,
@@ -36,10 +39,9 @@ describe('create clients', () => {
 
   beforeEach(async () => {
     nock.cleanAll();
-    jest.resetAllMocks();
   });
 
-  afterAll(() => {
+  after(() => {
     nock.cleanAll();
     nock.restore();
   });

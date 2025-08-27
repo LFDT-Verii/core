@@ -38,7 +38,7 @@ const {
 
 const fullOrganizationController = async (fastify) => {
   const transformToFinder = initTransformOrganizationFilter();
-  const createOrganization = initCreateOrganization(fastify);
+  const createOrganization = await initCreateOrganization(fastify);
 
   fastify
     .get(

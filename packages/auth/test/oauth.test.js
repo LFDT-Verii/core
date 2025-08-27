@@ -1,3 +1,6 @@
+const { after, afterEach, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const fastify = require('fastify');
 const nock = require('nock');
 const { oauthPlugin } = require('../src/oauth');
@@ -71,7 +74,7 @@ describe('oauth module', () => {
     await server.close();
   });
 
-  afterAll(() => {
+  after(() => {
     nock.cleanAll();
     nock.enableNetConnect();
     nock.restore();

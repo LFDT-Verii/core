@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const {
   rootIssuerProfile,
   rootPrivateKey,
@@ -28,16 +31,12 @@ const { initBuildProfileVerifiableCredential } = require('../src/entities');
 describe('Organizations Domain function tests', () => {
   let fastify;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
   });
 
-  beforeEach(async () => {
-    jest.clearAllMocks();
-  });
-
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { cachePlugin } = require('../src/cache-plugin');
 
-const mockDecorate = jest.fn();
-const mockAddHook = jest.fn();
+const mockDecorate = mock.fn();
+const mockAddHook = mock.fn();
 
 const buildFastify = () => {
   const { initHttpClient } = require('@verii/http-client');
@@ -45,17 +48,16 @@ const buildFastify = () => {
 describe('cache-plugin test suite', () => {
   let fastify;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
   });
 
   beforeEach(() => {
     nock.cleanAll();
-    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 
@@ -65,10 +67,14 @@ describe('cache-plugin test suite', () => {
       addHook: mockAddHook,
     };
     cachePlugin(fakeServer, {}, () => {});
-    expect(mockDecorate).toHaveBeenCalledTimes(1);
-    expect(mockAddHook).toHaveBeenCalledTimes(1);
-    expect(mockDecorate).toHaveBeenCalledWith('cache', expect.any(Object));
-    expect(mockAddHook).toHaveBeenCalledWith('onRequest', expect.any(Function));
+    expect(mockDecorate.mock.callCount()).toEqual(1);
+    expect(mockAddHook.mock.callCount()).toEqual(1);
+    expect(
+      mockDecorate.mock.calls.map((call) => call.arguments)
+    ).toContainEqual(['cache', expect.any(Object)]);
+    expect(mockAddHook.mock.calls.map((call) => call.arguments)).toContainEqual(
+      ['onRequest', expect.any(Function)]
+    );
   });
 
   it('cache plugin should cached requests', async () => {

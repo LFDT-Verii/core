@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { initHttpClient } = require('@verii/http-client');
 const {
@@ -28,7 +31,7 @@ describe('create client accounts', () => {
   const didDoc = { id: 'did:ion:1234' };
   let context;
 
-  beforeAll(async () => {
+  before(async () => {
     const baseContext = { log: console };
     const fineractFetch = initHttpClient({
       prefixUrl: testHost,
@@ -39,10 +42,9 @@ describe('create client accounts', () => {
 
   beforeEach(async () => {
     nock.cleanAll();
-    jest.resetAllMocks();
   });
 
-  afterAll(() => {
+  after(() => {
     nock.cleanAll();
     nock.restore();
   });

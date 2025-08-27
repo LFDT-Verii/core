@@ -1,3 +1,5 @@
+import { beforeEach, describe, test } from 'node:test';
+import { expect } from 'expect';
 import VCLSubmission from '../../src/api/entities/VCLSubmission';
 import VCLPresentationSubmission from '../../src/api/entities/VCLPresentationSubmission';
 import { PresentationSubmissionMocks } from '../infrastructure/resources/valid/PresentationSubmissionMocks';

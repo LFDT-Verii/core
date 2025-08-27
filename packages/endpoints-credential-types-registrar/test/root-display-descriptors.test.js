@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const nock = require('nock');
@@ -25,7 +27,7 @@ describe('Static display descriptor files tests suite', () => {
   let fastify;
   let persistCredentialSchema;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -37,7 +39,7 @@ describe('Static display descriptor files tests suite', () => {
     await mongoDb().collection('credentialSchemas').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();

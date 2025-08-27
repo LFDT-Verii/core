@@ -1,12 +1,11 @@
 import { useMemo } from 'react';
-import { Box, Button, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Button, Grid, Typography } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import DownloadIcon from '@mui/icons-material/Download';
 import { Form } from 'react-admin';
 import PropTypes from 'prop-types';
 
-import { getTitle, formatSecrets } from '@/pages/services/utils';
+import { getTitle, formatSecrets } from '@/pages/services/utils/index.js';
 
 const selectedStep = 4;
 

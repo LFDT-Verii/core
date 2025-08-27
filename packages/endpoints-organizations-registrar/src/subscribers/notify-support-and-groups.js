@@ -25,8 +25,8 @@ const notifySupportAndGroups = async (fastify) => {
     sendOrganizationCreatedNotification,
     sendServiceNotificationToGroup,
     sendServiceNotification,
-  } = initSendEmailNotifications(fastify);
-  const { getUsersByIds } = initAuth0Provisioner(fastify.config);
+  } = await initSendEmailNotifications(fastify);
+  const { getUsersByIds } = await initAuth0Provisioner(fastify.config);
 
   fastify
     .pubsub('notifySupportAndGroups')

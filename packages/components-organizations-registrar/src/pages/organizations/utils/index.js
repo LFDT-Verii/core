@@ -1,5 +1,5 @@
 import { required, maxLength, email } from 'react-admin';
-import { authorityOptions } from '@/constants/messageCodes';
+import { authorityOptions } from '@/constants/messageCodes.js';
 
 export const validateName = [required(), maxLength(100)];
 export const validateEmail = [required(), email()];

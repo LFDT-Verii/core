@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { describe, it } from 'node:test';
+import { expect } from 'expect';
 import { VCLAuthToken } from '../../src';
 import TokenMocks from '../infrastructure/resources/valid/TokenMocks';
 

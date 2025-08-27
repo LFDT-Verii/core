@@ -1,3 +1,6 @@
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { reverse, map, flow } = require('lodash/fp');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const buildFastify = require('./helpers/mockvendor-build-fastify');
@@ -7,7 +10,7 @@ describe('identifications endpoints', () => {
   let fastify;
   let persistIdentification;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistIdentification } = initIdentificationsFactory(fastify));
@@ -17,7 +20,7 @@ describe('identifications endpoints', () => {
     await mongoDb().collection('identifications').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

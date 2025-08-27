@@ -15,6 +15,9 @@
  */
 
 // eslint-disable-next-line import/order
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const nock = require('nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { first, flow, map, omit, sortBy } = require('lodash/fp');
@@ -59,7 +62,7 @@ describe('Tenant management Test Suite', () => {
   let groupRepo;
   let agentKms;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -82,7 +85,7 @@ describe('Tenant management Test Suite', () => {
     nockRegistrarGetOrganizationDidDoc(orgDoc.id, orgDoc);
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
     nock.cleanAll();
     nock.restore();

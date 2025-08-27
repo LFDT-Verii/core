@@ -21,11 +21,11 @@
     "ra-core": "^5.5.2",
     "ra-data-local-storage": "^5.5.2",
     "react": "^18.3.1",
-    "react-admin": "^5.5.2",
+    "react-admin": "^5.8.2",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.53.0",
-    "react-router-dom": "7.8.0",
-    "react-router": "7.8.0"
+    "react-hook-form": "^7.56.4",
+    "react-router-dom": "7.8.2",
+    "react-router": "7.8.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react-swc": "4.0.1",
@@ -48,8 +48,9 @@
     "start:remoteauth": "vite dev --mode dev.remoteauth",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src --format json >> eslint.json",
-    "lint:fix": "eslint src --fix"
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "lint:ci": "eslint src --format json >> eslint-results.json"
   },
   "browserslist": [
     ">0.2%",

@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  */
+const { expect } = require('expect');
 
 const sendServicesActivatedEmailMatcher = () => ({
   Destination: {
@@ -72,7 +73,7 @@ Click the button below to accept the invitation and finish registering your orga
 Click the button below to accept the invitation and complete your organization’s registration. This will include setting up your account and creating your organization's profile with a logo, website, company description, LinkedIn company page ID, and more.
 <br>
 <br>
-<a href="http://localhost.test/invitations/mocknano${signupUrl}" target="_blank">ACCEPT INVITATION</a>`,
+<a href="http://localhost.test/invitations/${signupUrl}" target="_blank">ACCEPT INVITATION</a>`,
         /* eslint-enable */
       },
     },

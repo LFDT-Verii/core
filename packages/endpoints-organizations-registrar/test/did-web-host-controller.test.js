@@ -15,6 +15,9 @@
  *
  */
 
+const { after, before, beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
+
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const initOrganizationFactory = require('../src/entities/organizations/factories/organizations-factory');
 const buildFastify = require('./helpers/build-fastify');
@@ -25,7 +28,7 @@ describe(':d/website did-doc publishing test suite', () => {
   let fastify;
   let persistOrganization;
 
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
 
@@ -36,7 +39,7 @@ describe(':d/website did-doc publishing test suite', () => {
     await mongoDb().collection('organizations').deleteMany({});
   });
 
-  afterAll(async () => {
+  after(async () => {
     await fastify.close();
   });
 

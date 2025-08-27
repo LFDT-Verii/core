@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { before, describe, it } = require('node:test');
+const { expect } = require('expect');
 const { NotFoundError } = require('http-errors');
 const { entries, set } = require('lodash/fp');
 const {
@@ -97,7 +99,7 @@ describe('Http Client Package', () => {
     const origin = 'https://www.example.com';
     let mockAgent;
 
-    beforeAll(() => {
+    before(() => {
       mockAgent = new MockAgent().compose(interceptors.responseError());
       mockAgent.disableNetConnect();
       setGlobalDispatcher(mockAgent);
@@ -106,7 +108,7 @@ describe('Http Client Package', () => {
     describe('Request client test suite', () => {
       let httpClient;
 
-      beforeAll(() => {
+      before(() => {
         httpClient = initHttpClient({
           rejectUnauthorized: false,
           useExistingGlobalAgent: true,

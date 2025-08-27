@@ -1,9 +1,15 @@
-import '@testing-library/jest-dom';
+import { describe, it, mock } from 'node:test';
+import * as matchers from '@testing-library/jest-dom/matchers';
+import { expect } from 'expect';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, renderHook } from '@testing-library/react';
 import { AdminContext, memoryStore } from 'react-admin';
 
+import { FormProvider, useForm } from 'react-hook-form';
 import SetKeyIndividuals from '../SetKeyIndividuals.jsx';
+import theme from '../../../theme/theme.js';
+
+expect.extend(matchers);
 
 const defaultData = {
   adminEmail: 'admin@example.com',
@@ -17,22 +23,27 @@ const defaultData = {
 };
 
 describe('SetKeyIndividuals', () => {
-  const mockSubmit = jest.fn();
-  const mockBack = jest.fn();
+  const mockSubmit = mock.fn();
+  const mockBack = mock.fn();
 
-  const renderComponent = (defaultValues) =>
+  const renderComponent = (defaultValues) => {
+    const { result } = renderHook(() => useForm());
+
     render(
-      <AdminContext store={memoryStore()}>
-        <SetKeyIndividuals
-          onSubmit={mockSubmit}
-          onBack={mockBack}
-          defaultValues={defaultValues}
-          loading={false}
-        >
-          <div>Child content</div>
-        </SetKeyIndividuals>
+      <AdminContext store={memoryStore()} theme={theme}>
+        <FormProvider {...result.current}>
+          <SetKeyIndividuals
+            onSubmit={mockSubmit}
+            onBack={mockBack}
+            defaultValues={defaultValues}
+            loading={false}
+          >
+            <div>Child content</div>
+          </SetKeyIndividuals>
+        </FormProvider>
       </AdminContext>,
     );
+  };
 
   it('renders all form fields', () => {
     renderComponent({});
@@ -70,7 +81,7 @@ describe('SetKeyIndividuals', () => {
   it('calls onBack when Back button is clicked', () => {
     renderComponent();
     fireEvent.click(screen.getByRole('button', { name: /back/i }));
-    expect(mockBack).toHaveBeenCalled();
+    expect(mockBack.mock.calls.length).toBeGreaterThan(0);
   });
 
   it('renders the submit button with text "Invite Client"', () => {

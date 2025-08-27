@@ -15,11 +15,9 @@
  */
 
 import { Link } from 'react-router';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import { Box } from '@mui/material';
+import { AppBar, Box, Toolbar } from '@mui/material';
 import AppBarOrganization from './AppBarOrganization.jsx';
-import { useCheckUserHasGroup } from './hooks/useCheckUserHasGroup.jsx';
+import { useCheckUserHasGroup } from './hooks/useCheckUserHasGroup.js';
 
 const CustomAppBar = (props) => {
   const { hasOrganisations, isLoading } = useCheckUserHasGroup();

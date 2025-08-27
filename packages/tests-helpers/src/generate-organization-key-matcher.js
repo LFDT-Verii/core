@@ -16,6 +16,7 @@
 
 const { last } = require('lodash/fp');
 const { HEX_FORMAT } = require('@verii/test-regexes');
+const { expect } = require('expect');
 const { publicJwkMatcher } = require('./jwk-matchers');
 
 const generateOrganizationKeyMatcher = ({

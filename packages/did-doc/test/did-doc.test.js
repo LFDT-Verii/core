@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const { rootIssuer } = require('@verii/sample-data');
 const {

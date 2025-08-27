@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { beforeEach, describe, it } = require('node:test');
+const { expect } = require('expect');
 
 const crypto = require('crypto');
 const canonicalize = require('canonicalize');
@@ -29,13 +31,9 @@ const {
 
 describe('vnf signature library', () => {
   const { privateKey, publicKey } = generateKeyPair();
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
 
   describe('build vnf signatures', () => {
     it('should be able to create verifiable proofs', () => {
-      jest.spyOn(Date, 'now').mockImplementation(() => 1234567890);
       const context = {
         config: {
           vnfHeaderSignatureSigningKey: privateKey,
@@ -44,10 +42,10 @@ describe('vnf signature library', () => {
       const payload = { body: 1 };
       const result = buildVnfSignature(payload, context);
       expect(result).toEqual({
-        timestamp: 1234567890,
+        timestamp: expect.any(Number),
         vnfSignature: expect.any(String),
         headerValue: expect.stringMatching(
-          new RegExp('t=1234567890,v1=[A-Za-z0-9/+=]+')
+          new RegExp('t=\\d+,v1=[A-Za-z0-9/+=]+')
         ),
       });
       const [timestamp, vnfSignature] = result.headerValue.split(',');
@@ -74,7 +72,6 @@ describe('vnf signature library', () => {
     let proof;
 
     beforeEach(() => {
-      jest.spyOn(Date, 'now').mockImplementation(() => 1234567890);
       currentTimestamp = Date.now();
       signature = signAndEncodeBase64(
         `${currentTimestamp}.${canonicalize(body)}`,

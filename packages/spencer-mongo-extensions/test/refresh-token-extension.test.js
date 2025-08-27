@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
+const { beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const { refreshTokenExtension } = require('../src/refresh-token-extension');
 
 describe('Refresh token extension test suite', () => {
-  beforeEach(async () => {
-    jest.resetAllMocks();
-  });
+  beforeEach(async () => {});
 
   it('prepFilter should no-op if refresh token is not present in the filter', async () => {
     const extension = refreshTokenExtension({
-      prepFilter: jest.fn((x) => x),
-      prepModification: jest.fn((x) => x),
+      prepFilter: mock.fn((x) => x),
+      prepModification: mock.fn((x) => x),
     });
     expect(
       extension.prepFilter({
@@ -36,8 +37,8 @@ describe('Refresh token extension test suite', () => {
   });
   it('prepFilter should hash the refresh token if present in the filter', async () => {
     const extension = refreshTokenExtension({
-      prepFilter: jest.fn((x) => x),
-      prepModification: jest.fn((x) => x),
+      prepFilter: mock.fn((x) => x),
+      prepModification: mock.fn((x) => x),
     });
     const refreshTokenUnhashed = 'refreshTokenFoo';
     const preppedFilter = extension.prepFilter({
@@ -52,8 +53,8 @@ describe('Refresh token extension test suite', () => {
   });
   it('prepModification should no-op if refresh token is not present in the filter', async () => {
     const extension = refreshTokenExtension({
-      prepFilter: jest.fn((x) => x),
-      prepModification: jest.fn((x) => x),
+      prepFilter: mock.fn((x) => x),
+      prepModification: mock.fn((x) => x),
     });
     expect(
       extension.prepModification({
@@ -65,8 +66,8 @@ describe('Refresh token extension test suite', () => {
   });
   it('prepModification should hash the refresh token if present in the filter', async () => {
     const extension = refreshTokenExtension({
-      prepFilter: jest.fn((x) => x),
-      prepModification: jest.fn((x) => x),
+      prepFilter: mock.fn((x) => x),
+      prepModification: mock.fn((x) => x),
     });
     const refreshTokenUnhashed = 'refreshTokenFoo';
     const preppedModification = extension.prepModification({

@@ -14,44 +14,51 @@
  * limitations under the License.
  *
  */
+const { before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
 const { initCallWithKmsKey } = require('../src/call-with-kms-key');
 const { generateKeyPair } = require('../src/crypto');
 
 describe('kms key callback', () => {
   const mockKms = {
-    exportKeyOrSecret: jest.fn(),
+    exportKeyOrSecret: mock.fn(),
   };
 
   let callWithKmsKey;
-  beforeAll(() => {
-    jest.resetAllMocks();
+  before(() => {
+    mockKms.exportKeyOrSecret.mock.resetCalls();
     callWithKmsKey = initCallWithKmsKey({ kms: mockKms });
   });
   it('should throw an error if the key cannot be found', async () => {
-    mockKms.exportKeyOrSecret.mockRejectedValue(new Error('Not Found'));
-    await expect(callWithKmsKey('1', jest.fn())).rejects.toEqual(
+    mockKms.exportKeyOrSecret.mock.mockImplementationOnce(() =>
+      Promise.reject(new Error('Not Found'))
+    );
+    await expect(callWithKmsKey('1', mock.fn())).rejects.toEqual(
       new Error('Not Found')
     );
   });
 
   describe('key loaded', () => {
     const keyPair = generateKeyPair({ format: 'jwk' });
-    const callback = jest.fn();
+    const callback = mock.fn();
 
     beforeEach(() => {
-      mockKms.exportKeyOrSecret.mockImplementation((keyId) => ({
+      mockKms.exportKeyOrSecret.mock.mockImplementation((keyId) => ({
         keyId,
         privateJwk: keyPair.privateKey,
       }));
     });
     it('should return the callback error', async () => {
-      callback.mockRejectedValue(new Error('Callback Error'));
+      callback.mock.mockImplementationOnce(() =>
+        Promise.reject(new Error('Callback Error'))
+      );
       await expect(callWithKmsKey('1', callback)).rejects.toEqual(
         new Error('Callback Error')
       );
     });
     it('should return callback result', async () => {
-      callback.mockResolvedValue('Happy Days');
+      callback.mock.mockImplementationOnce(() => Promise.resolve('Happy Days'));
       await expect(callWithKmsKey('1', callback)).resolves.toEqual(
         'Happy Days'
       );

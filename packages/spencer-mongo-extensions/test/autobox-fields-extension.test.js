@@ -14,22 +14,25 @@
  * limitations under the License.
  *
  */
+const { beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
+const mockParent = {
+  prepModification: mock.fn((arg) => arg),
+  prepFilter: mock.fn((arg) => arg),
+  extensions: [],
+};
+
+const testAutoboxFunc = mock.fn((val) => String(val));
+
 const {
   initAutoboxFieldsExtension,
 } = require('../src/autobox-fields-extension');
 
 describe('autobox field extension', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    testAutoboxFunc.mock.resetCalls();
   });
-
-  const mockParent = {
-    prepModification: jest.fn().mockImplementation((arg) => arg),
-    prepFilter: jest.fn().mockImplementation((arg) => arg),
-    extensions: [],
-  };
-
-  const testAutoboxFunc = jest.fn().mockImplementation((val) => String(val));
 
   describe('prepFilter', () => {
     it('should not call autoboxing function if prop is missing', () => {
@@ -43,7 +46,9 @@ describe('autobox field extension', () => {
       expect(autoboxExtension(mockParent).prepFilter(filter)).toEqual({
         foo: 1,
       });
-      expect(testAutoboxFunc.mock.calls).toEqual([]);
+      expect(testAutoboxFunc.mock.calls.map((call) => call.arguments)).toEqual(
+        []
+      );
     });
     it('should call autoboxing function for every prop that is present', () => {
       const filter = {
@@ -60,7 +65,10 @@ describe('autobox field extension', () => {
         bar: 'false',
         foo2: null,
       });
-      expect(testAutoboxFunc.mock.calls).toEqual([[1], [false]]);
+      expect(testAutoboxFunc.mock.calls.map((call) => call.arguments)).toEqual([
+        [1],
+        [false],
+      ]);
     });
   });
 
@@ -78,7 +86,9 @@ describe('autobox field extension', () => {
       ).toEqual({
         foo: 1,
       });
-      expect(testAutoboxFunc.mock.calls).toEqual([]);
+      expect(testAutoboxFunc.mock.calls.map((call) => call.arguments)).toEqual(
+        []
+      );
     });
     it('should call autoboxing function for every prop that is present', () => {
       const modification = {
@@ -97,7 +107,10 @@ describe('autobox field extension', () => {
         bar: 'false',
         foo2: null,
       });
-      expect(testAutoboxFunc.mock.calls).toEqual([[1], [false]]);
+      expect(testAutoboxFunc.mock.calls.map((call) => call.arguments)).toEqual([
+        [1],
+        [false],
+      ]);
     });
   });
 });

@@ -1,1 +1,1 @@
-export { getStatusByCode } from './getStatusByCode';
+export { getStatusByCode } from './getStatusByCode.js';

@@ -28,14 +28,13 @@ import {
   TextInput,
 } from 'react-admin';
 import { useParams } from 'react-router';
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import { Box, Grid, Stack, Tooltip, Typography } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { useState } from 'react';
 import {
   validateWebsite,
   validateWebsiteStrict,
-} from '../../components/organizations/CreateOrganization.utils';
+} from '../../components/organizations/CreateOrganizationUtils.js';
 import Loading from '../../components/Loading.jsx';
 import {
   ERRORS,
@@ -45,7 +44,7 @@ import {
   TECHNICAL_EMAIL_HINT,
   WEBSITE_HINT_SHORT,
 } from '../../utils/index.jsx';
-import useCountryCodes from '../../utils/countryCodes';
+import useCountryCodes from '../../utils/countryCodes.js';
 import CustomImageInput from '../../components/common/CustomImageInput/index.jsx';
 import { defaultBrandValue, allBrandsFilled, isAddBrandDisabled } from './OrganizationCreate.jsx';
 import PlusButtonBlock from '../../components/common/PlusButtonBlock.jsx';

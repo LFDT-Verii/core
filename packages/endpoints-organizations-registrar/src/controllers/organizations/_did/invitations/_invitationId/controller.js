@@ -17,7 +17,7 @@ const {
 const invitationController = async (fastify) => {
   const sendEmailToInvitee = initSendEmailInvitee(fastify);
 
-  const getOrCreateAuth0User = initGetOrCreateAuth0User(fastify);
+  const getOrCreateAuth0User = await initGetOrCreateAuth0User(fastify);
 
   fastify.get(
     '/',

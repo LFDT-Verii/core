@@ -15,17 +15,17 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { kebabCase } from 'lodash/string';
+import { kebabCase } from 'lodash-es';
 import { useRedirect, useCreate, useGetList } from 'react-admin';
 import { useLocation, useNavigate } from 'react-router';
 import PropTypes from 'prop-types';
 
 import Popup from '@/components/common/Popup.jsx';
-import { credentialTypesByServiceTypes } from '@/utils/serviceTypes';
-import { dataResources } from '@/utils/remoteDataProvider';
-import { getNewServiceIndex } from '@/utils/invitations';
-import useSelectedOrganization from '@/state/selectedOrganizationState';
-import { useIsIssuingInspection } from './hooks/useIsIssuingInspection';
+import { credentialTypesByServiceTypes } from '@/utils/serviceTypes.js';
+import { dataResources } from '@/utils/remoteDataProvider.js';
+import { getNewServiceIndex } from '@/utils/invitations.js';
+import useSelectedOrganization from '@/state/selectedOrganizationState.js';
+import { useIsIssuingInspection } from './hooks/useIsIssuingInspection.js';
 import { ServiceTypeSelection } from './components/ServiceTypeSelection/index.jsx';
 import { ServiceEndpointSelection } from './components/ServiceEndpointSelection/index.jsx';
 import { SecretKeysPopup } from './components/SecretKeysPopup/index.jsx';

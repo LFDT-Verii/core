@@ -21,7 +21,7 @@ const sendErrorPlugin = async (fastify) => {
   const {
     config: { sentryDsn, enableProfiling, enableSentryDebug, nodeEnv, version },
   } = fastify;
-  const { sendError, startProfiling, finishProfiling } = initSendError({
+  const { sendError, startProfiling, finishProfiling } = await initSendError({
     dsn: sentryDsn,
     enableProfiling,
     release: version,

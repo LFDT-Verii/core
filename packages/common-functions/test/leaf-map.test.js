@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { describe, it, mock } = require('node:test');
+const { expect } = require('expect');
 
 const { leafMap } = require('../src/leafMap');
 
 describe('leafMap Test Suite', () => {
   it('should call func to transform each leaf', () => {
-    const impl = (val) => {
+    const fn = mock.fn((val) => {
       return val === 'bar' ? 'baz' : val;
-    };
-    const fn = jest.fn().mockImplementation(impl);
+    });
     expect(leafMap(fn, null)).toEqual(null);
     expect(leafMap(fn, true)).toEqual(true);
     expect(leafMap(fn, undefined)).toEqual(undefined);

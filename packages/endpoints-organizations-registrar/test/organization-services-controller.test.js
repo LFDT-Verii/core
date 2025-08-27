@@ -15,25 +15,118 @@
  *
  */
 
-const mockCreateFineractClient = jest.fn();
-const mockCreateStakesAccount = jest.fn();
-const mockSendError = jest.fn().mockImplementation(() => {
+// eslint-disable-next-line max-classes-per-file
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+
+const mockSendError = mock.fn(() => {
   console.log('sendError test');
 });
-const mockInitSendError = jest.fn().mockReturnValue({
-  sendError: mockSendError,
-  startProfiling: () => {
-    console.log('fake start sentry profiling');
-  },
-  finishProfiling: () => {
-    console.log('fake finish sentry profiling');
+const mockInitSendError = mock.fn(() =>
+  Promise.resolve({
+    sendError: mockSendError,
+    startProfiling: () => {
+      console.log('fake start sentry profiling');
+    },
+    finishProfiling: () => {
+      console.log('fake finish sentry profiling');
+    },
+  })
+);
+mock.module('@verii/error-aggregation', {
+  namedExports: {
+    initSendError: mockInitSendError,
   },
 });
-const mockUpdateAddressScopes = jest.fn().mockResolvedValue(undefined);
 
-const mockInitPermission = jest.fn().mockResolvedValue({
-  updateAddressScopes: mockUpdateAddressScopes,
+const mockAuth0ClientDelete = mock.fn(async ({ id }) => {
+  console.log(`deleting auth0 client ${id}`);
 });
+const mockAuth0ClientGrantDelete = mock.fn(async ({ id }) => {
+  console.log(`deleting auth0 client grant ${id}`);
+});
+const mockAuth0ClientCreate = mock.fn(async (obj) => {
+  const id = nanoid();
+  console.log(`create auth0 client ${id}`);
+  return { data: { client_id: id, client_secret: nanoid(), ...obj } };
+});
+const mockAuth0ClientGrantCreate = mock.fn(async (obj) => {
+  const id = nanoid();
+  console.log(`create auth0 clientGrant ${id}`);
+  return { data: { id: nanoid(), ...obj } };
+});
+const mockAuth0UserUpdate = mock.fn(async ({ id }, obj) => {
+  console.log(`update auth0 user ${id}`);
+  return { data: { id, ...obj } };
+});
+const mockAuth0GetUsers = mock.fn(() =>
+  Promise.resolve({
+    data: [{ email: '0@localhost.test' }, { email: '1@localhost.test' }],
+  })
+);
+const mockAuth0GetUser = mock.fn(() =>
+  Promise.resolve({ data: { email: 'admin@localhost.test' } })
+);
+
+class ManagementClient {
+  constructor() {
+    this.clients = {
+      create: mockAuth0ClientCreate,
+      delete: mockAuth0ClientDelete,
+    };
+    this.clientGrants = {
+      create: mockAuth0ClientGrantCreate,
+      delete: mockAuth0ClientGrantDelete,
+    };
+    this.users = {
+      get: mockAuth0GetUser,
+      update: mockAuth0UserUpdate,
+    };
+    this.getUsers = mockAuth0GetUsers;
+  }
+}
+mock.module('auth0', {
+  namedExports: {
+    ManagementClient,
+  },
+});
+
+const mockUpdateAddressScopes = mock.fn(() => Promise.resolve(undefined));
+const mockInitPermission = mock.fn(() =>
+  Promise.resolve({
+    updateAddressScopes: mockUpdateAddressScopes,
+  })
+);
+mock.module('@verii/contract-permissions', {
+  namedExports: {
+    ...require('../../contract-permissions/src/constants'),
+    initPermissions: mockInitPermission,
+  },
+});
+
+const mockCreateFineractClient = mock.fn();
+const mockCreateStakesAccount = mock.fn();
+mock.module('@verii/fineract-client', {
+  namedExports: {
+    createFineractClient: mockCreateFineractClient,
+    createStakesAccount: mockCreateStakesAccount,
+  },
+});
+
+class SESClient {}
+const mockSESSendEmail = mock.fn((payload) => payload);
+SESClient.prototype.send = mockSESSendEmail;
+mock.module('@aws-sdk/client-ses', {
+  namedExports: {
+    SendEmailCommand: class SendEmailCommand {
+      constructor(args) {
+        return args;
+      }
+    },
+    SESClient,
+  },
+});
+
 const {
   castArray,
   first,
@@ -42,7 +135,6 @@ const {
   map,
   omit,
   some,
-  times,
   pick,
   flow,
 } = require('lodash/fp');
@@ -105,100 +197,6 @@ const {
 } = require('../src/entities');
 
 const baseUrl = '/api/v0.6/organizations';
-
-const mockAuth0ClientDelete = jest.fn().mockImplementation(async ({ id }) => {
-  console.log(`deleting auth0 client ${id}`);
-});
-const mockAuth0ClientGrantDelete = jest
-  .fn()
-  .mockImplementation(async ({ id }) => {
-    console.log(`deleting auth0 client grant ${id}`);
-  });
-const mockAuth0ClientCreate = jest.fn().mockImplementation(async (obj) => {
-  const id = nanoid();
-  console.log(`create auth0 client ${id}`);
-  return { data: { client_id: id, client_secret: nanoid(), ...obj } };
-});
-const mockAuth0ClientGrantCreate = jest.fn().mockImplementation(async (obj) => {
-  const id = nanoid();
-  console.log(`create auth0 clientGrant ${id}`);
-  return { data: { id: nanoid(), ...obj } };
-});
-const mockAuth0UserUpdate = jest
-  .fn()
-  .mockImplementation(async ({ id }, obj) => {
-    console.log(`update auth0 user ${id}`);
-    return { data: { id, ...obj } };
-  });
-const mockAuth0GetUsers = jest.fn().mockResolvedValue({
-  data: times((id) => ({ email: `${id}@localhost.test` }), 2),
-});
-
-const mockAuth0GetUser = jest
-  .fn()
-  .mockImplementation(() =>
-    Promise.resolve({ data: { email: 'admin@localhost.test' } })
-  );
-
-jest.mock('auth0', () => ({
-  ManagementClient: jest.fn().mockImplementation(() => ({
-    clients: {
-      create: mockAuth0ClientCreate,
-      delete: mockAuth0ClientDelete,
-    },
-    clientGrants: {
-      create: mockAuth0ClientGrantCreate,
-      delete: mockAuth0ClientGrantDelete,
-    },
-    users: {
-      get: mockAuth0GetUser,
-      update: mockAuth0UserUpdate,
-    },
-    getUsers: mockAuth0GetUsers,
-  })),
-}));
-
-jest.mock('@verii/contract-permissions', () => {
-  const originalModule = jest.requireActual('@verii/contract-permissions');
-  return {
-    ...originalModule,
-    initPermissions: mockInitPermission,
-  };
-});
-
-const mockSendEmail = jest.fn((payload) => payload);
-
-jest.mock('@aws-sdk/client-ses', () => ({
-  SendEmailCommand: jest.fn((args) => args),
-  SESClient: jest.fn().mockImplementation(() => ({
-    send: mockSendEmail,
-  })),
-}));
-
-jest.mock('@verii/fineract-client', () => {
-  const originalModule = jest.requireActual('@verii/fineract-client');
-  return {
-    ...originalModule,
-    createFineractClient: mockCreateFineractClient,
-    createStakesAccount: mockCreateStakesAccount,
-  };
-});
-
-jest.mock('@verii/error-aggregation', () => {
-  const originalModule = jest.requireActual('@verii/error-aggregation');
-  return {
-    ...originalModule,
-    initSendError: mockInitSendError,
-  };
-});
-
-jest.mock('nanoid/non-secure', () => {
-  const originalModule = jest.requireActual('nanoid/non-secure');
-  return {
-    ...originalModule,
-    nanoid: jest.fn().mockReturnValue('1'),
-  };
-});
 
 const serviceAgentVersionMock = '0.9.0-build.abc12345';
 
@@ -483,11 +481,7 @@ describe('Organization Services Test Suite', () => {
     await mongoDb().collection('registrarConsents').deleteMany({});
   };
 
-  beforeEach(async () => {
-    await clearDb();
-  });
-
-  beforeAll(async () => {
+  before(async () => {
     fastify = buildFastify();
     await fastify.ready();
     ({ persistOrganization, newOrganization } =
@@ -514,22 +508,33 @@ describe('Organization Services Test Suite', () => {
   }, 10000);
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-    mockCreateStakesAccount.mockResolvedValue('foo');
+    await clearDb();
+    mockUpdateAddressScopes.mock.resetCalls();
+    mockAuth0ClientGrantCreate.mock.resetCalls();
+    mockAuth0ClientCreate.mock.resetCalls();
+    mockCreateStakesAccount.mock.resetCalls();
+    mockCreateStakesAccount.mock.mockImplementation(() =>
+      Promise.resolve('foo')
+    );
+    mockAuth0ClientGrantDelete.mock.resetCalls();
+    mockAuth0ClientDelete.mock.resetCalls();
+    mockSendError.mock.resetCalls();
+    mockSESSendEmail.mock.resetCalls();
     nock.cleanAll();
   }, 10000);
 
-  afterAll(async () => {
+  after(async () => {
     await mongoDb().collection('credentialSchemas').deleteMany({});
     await fastify.close();
     nock.cleanAll();
     nock.restore();
+    mock.reset();
   });
 
   describe('Organization Service Modifications', () => {
     let orgProfile;
 
-    beforeAll(async () => {
+    before(async () => {
       const org = await newOrganization();
       orgProfile = omit(['id', 'createdAt', 'updatedAt'], org.profile);
     });
@@ -589,23 +594,27 @@ describe('Organization Services Test Suite', () => {
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg.activatedServiceIds).toEqual(map('id', service));
 
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToRemove: [
-            'transactions:write',
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:revoke',
-            'credential:inspect',
-            'credential:issue',
-          ],
-          scopesToAdd: [],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToRemove: [
+              'transactions:write',
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:revoke',
+              'credential:inspect',
+              'credential:issue',
+            ],
+            scopesToAdd: [],
+          },
+        ]);
       });
       it('should activate inactive services and send emails to CAO only with correct serviceEndpoints', async () => {
         const caoOrganization = await persistOrganization({
@@ -668,8 +677,10 @@ describe('Organization Services Test Suite', () => {
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg.activatedServiceIds).toEqual(map('id', service));
 
-        expect(mockSendEmail).toBeCalledTimes(2);
-        expect(mockSendEmail.mock.calls).toEqual(
+        expect(mockSESSendEmail.mock.callCount()).toEqual(2);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual(
           expect.arrayContaining([
             [sendServicesActivatedEmailMatcher()],
             [
@@ -728,7 +739,12 @@ describe('Organization Services Test Suite', () => {
         });
         const did = organization.didDoc.id;
 
-        mockSendEmail.mockRejectedValueOnce({ message: 'JustTest' });
+        mockSESSendEmail.mock.mockImplementationOnce(() =>
+          // eslint-disable-next-line prefer-promise-reject-errors
+          Promise.reject({
+            message: 'JustTest',
+          })
+        );
         const response = await fastify.injectJson({
           method: 'POST',
           url: `${baseUrl}/${did}/activate-services`,
@@ -743,8 +759,10 @@ describe('Organization Services Test Suite', () => {
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg.activatedServiceIds).toEqual(map('id', service));
 
-        expect(mockSendError).toBeCalledTimes(1);
-        expect(mockSendEmail.mock.calls).toEqual(
+        expect(mockSendError.mock.callCount()).toEqual(1);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual(
           expect.arrayContaining([
             [sendServicesActivatedEmailMatcher()],
             [
@@ -813,7 +831,9 @@ describe('Organization Services Test Suite', () => {
 
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg.activatedServiceIds).toEqual([]);
-        expect(mockSendEmail.mock.calls).toEqual([]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([]);
       });
 
       it('should 200, but no email, if trying to activate already existent services', async () => {
@@ -854,7 +874,9 @@ describe('Organization Services Test Suite', () => {
 
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg.activatedServiceIds).toEqual(map('id', service));
-        expect(mockSendEmail.mock.calls).toEqual([]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([]);
       });
 
       it('should 200, and create client grants when activating operator services', async () => {
@@ -955,13 +977,13 @@ describe('Organization Services Test Suite', () => {
           createdAt: expect.any(Date),
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(2);
-        expect(mockAuth0ClientGrantCreate).toHaveBeenNthCalledWith(1, {
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(2);
+        expect(mockAuth0ClientGrantCreate.mock.calls[0].arguments[0]).toEqual({
           client_id: first(dbOrg.authClients).clientId,
           audience: fastify.config.blockchainApiAudience,
           scope: ['*:*'],
         });
-        expect(mockAuth0ClientGrantCreate).toHaveBeenNthCalledWith(2, {
+        expect(mockAuth0ClientGrantCreate.mock.calls[1].arguments[0]).toEqual({
           client_id: dbOrg.authClients[1].clientId,
           audience: fastify.config.blockchainApiAudience,
           scope: ['eth:*'],
@@ -1061,12 +1083,16 @@ describe('Organization Services Test Suite', () => {
           createdAt: expect.any(Date),
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(1);
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledWith({
-          client_id: first(dbOrg.authClients).clientId,
-          audience: fastify.config.blockchainApiAudience,
-          scope: ['*:*'],
-        });
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
+        expect(
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            client_id: first(dbOrg.authClients).clientId,
+            audience: fastify.config.blockchainApiAudience,
+            scope: ['*:*'],
+          },
+        ]);
       });
 
       it('should activate service when public key has sig property', async () => {
@@ -1126,23 +1152,27 @@ describe('Organization Services Test Suite', () => {
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg.activatedServiceIds).toEqual(map('id', service));
 
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToRemove: [
-            'transactions:write',
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:revoke',
-            'credential:inspect',
-            'credential:issue',
-          ],
-          scopesToAdd: [],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToRemove: [
+              'transactions:write',
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:revoke',
+              'credential:inspect',
+              'credential:issue',
+            ],
+            scopesToAdd: [],
+          },
+        ]);
       });
     });
 
@@ -1771,25 +1801,29 @@ describe('Organization Services Test Suite', () => {
           )
         );
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToRemove: [
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:inspect',
-          ],
-          scopesToAdd: [
-            'transactions:write',
-            'credential:revoke',
-            'credential:issue',
-          ],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToRemove: [
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:inspect',
+            ],
+            scopesToAdd: [
+              'transactions:write',
+              'credential:revoke',
+              'credential:issue',
+            ],
+          },
+        ]);
       });
 
       describe('Service type on-chain permissions tests', () => {
@@ -1818,19 +1852,23 @@ describe('Organization Services Test Suite', () => {
             service: expectedService,
           });
 
-          expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-          expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-            address: organization.ids.ethereumAccount,
-            scopesToRemove: [
-              'transactions:write',
-              'credential:identityissue',
-              'credential:contactissue',
-              'credential:revoke',
-              'credential:inspect',
-              'credential:issue',
-            ],
-            scopesToAdd: [],
-          });
+          expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+          expect(
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          ).toContainEqual([
+            {
+              address: organization.ids.ethereumAccount,
+              scopesToRemove: [
+                'transactions:write',
+                'credential:identityissue',
+                'credential:contactissue',
+                'credential:revoke',
+                'credential:inspect',
+                'credential:issue',
+              ],
+              scopesToAdd: [],
+            },
+          ]);
         });
 
         it('adding organization service with IdDocumentIssuer type should give correct permissions', async () => {
@@ -1851,20 +1889,24 @@ describe('Organization Services Test Suite', () => {
 
           expect(response.statusCode).toEqual(201);
 
-          expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-          expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-            address: organization.ids.ethereumAccount,
-            scopesToRemove: [
-              'credential:contactissue',
-              'credential:inspect',
-              'credential:issue',
-            ],
-            scopesToAdd: [
-              'transactions:write',
-              'credential:revoke',
-              'credential:identityissue',
-            ],
-          });
+          expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+          expect(
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          ).toContainEqual([
+            {
+              address: organization.ids.ethereumAccount,
+              scopesToRemove: [
+                'credential:contactissue',
+                'credential:inspect',
+                'credential:issue',
+              ],
+              scopesToAdd: [
+                'transactions:write',
+                'credential:revoke',
+                'credential:identityissue',
+              ],
+            },
+          ]);
         });
 
         it('adding organization service with NotaryIdDocumentIssuer type should give correct permissions', async () => {
@@ -1885,20 +1927,24 @@ describe('Organization Services Test Suite', () => {
 
           expect(response.statusCode).toEqual(201);
 
-          expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-          expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-            address: organization.ids.ethereumAccount,
-            scopesToRemove: [
-              'credential:contactissue',
-              'credential:inspect',
-              'credential:issue',
-            ],
-            scopesToAdd: [
-              'transactions:write',
-              'credential:revoke',
-              'credential:identityissue',
-            ],
-          });
+          expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+          expect(
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          ).toContainEqual([
+            {
+              address: organization.ids.ethereumAccount,
+              scopesToRemove: [
+                'credential:contactissue',
+                'credential:inspect',
+                'credential:issue',
+              ],
+              scopesToAdd: [
+                'transactions:write',
+                'credential:revoke',
+                'credential:identityissue',
+              ],
+            },
+          ]);
         });
 
         it('adding organization service with ContactIssuer type should give correct permissions', async () => {
@@ -1919,20 +1965,24 @@ describe('Organization Services Test Suite', () => {
 
           expect(response.statusCode).toEqual(201);
 
-          expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-          expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-            address: organization.ids.ethereumAccount,
-            scopesToRemove: [
-              'credential:identityissue',
-              'credential:inspect',
-              'credential:issue',
-            ],
-            scopesToAdd: [
-              'transactions:write',
-              'credential:revoke',
-              'credential:contactissue',
-            ],
-          });
+          expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+          expect(
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          ).toContainEqual([
+            {
+              address: organization.ids.ethereumAccount,
+              scopesToRemove: [
+                'credential:identityissue',
+                'credential:inspect',
+                'credential:issue',
+              ],
+              scopesToAdd: [
+                'transactions:write',
+                'credential:revoke',
+                'credential:contactissue',
+              ],
+            },
+          ]);
         });
 
         it('adding organization service with NotaryContactIssuer type should give correct permissions', async () => {
@@ -1953,20 +2003,24 @@ describe('Organization Services Test Suite', () => {
 
           expect(response.statusCode).toEqual(201);
 
-          expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-          expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-            address: organization.ids.ethereumAccount,
-            scopesToRemove: [
-              'credential:identityissue',
-              'credential:inspect',
-              'credential:issue',
-            ],
-            scopesToAdd: [
-              'transactions:write',
-              'credential:revoke',
-              'credential:contactissue',
-            ],
-          });
+          expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+          expect(
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          ).toContainEqual([
+            {
+              address: organization.ids.ethereumAccount,
+              scopesToRemove: [
+                'credential:identityissue',
+                'credential:inspect',
+                'credential:issue',
+              ],
+              scopesToAdd: [
+                'transactions:write',
+                'credential:revoke',
+                'credential:contactissue',
+              ],
+            },
+          ]);
         });
 
         it('adding organization service with NotaryContactIssuer and then IdentityIssuer type should give correct permissions', async () => {
@@ -2002,8 +2056,8 @@ describe('Organization Services Test Suite', () => {
 
           expect(response2.statusCode).toEqual(201);
 
-          expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(2);
-          expect(mockUpdateAddressScopes).toHaveBeenNthCalledWith(1, {
+          expect(mockUpdateAddressScopes.mock.callCount()).toEqual(2);
+          expect(mockUpdateAddressScopes.mock.calls[0].arguments[0]).toEqual({
             address: organization.ids.ethereumAccount,
             scopesToRemove: [
               'credential:identityissue',
@@ -2016,7 +2070,7 @@ describe('Organization Services Test Suite', () => {
               'credential:contactissue',
             ],
           });
-          expect(mockUpdateAddressScopes).toHaveBeenNthCalledWith(2, {
+          expect(mockUpdateAddressScopes.mock.calls[1].arguments[0]).toEqual({
             address: organization.ids.ethereumAccount,
             scopesToRemove: [
               'credential:identityissue',
@@ -2064,8 +2118,8 @@ describe('Organization Services Test Suite', () => {
 
           expect(response2.statusCode).toEqual(201);
 
-          expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(2);
-          expect(mockUpdateAddressScopes).toHaveBeenNthCalledWith(1, {
+          expect(mockUpdateAddressScopes.mock.callCount()).toEqual(2);
+          expect(mockUpdateAddressScopes.mock.calls[0].arguments[0]).toEqual({
             address: organization.ids.ethereumAccount,
             scopesToRemove: [
               'credential:identityissue',
@@ -2078,7 +2132,7 @@ describe('Organization Services Test Suite', () => {
               'credential:contactissue',
             ],
           });
-          expect(mockUpdateAddressScopes).toHaveBeenNthCalledWith(2, {
+          expect(mockUpdateAddressScopes.mock.calls[1].arguments[0]).toEqual({
             address: organization.ids.ethereumAccount,
             scopesToRemove: ['credential:inspect', 'credential:issue'],
             scopesToAdd: [
@@ -2169,7 +2223,7 @@ describe('Organization Services Test Suite', () => {
             },
           ],
         });
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
 
         // consent entity checks
         expect(await getConsentsFromDb(dbOrg)).toEqual(
@@ -2250,7 +2304,7 @@ describe('Organization Services Test Suite', () => {
             },
           ],
         });
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
       });
 
       it('Adding a second service InspectionType should be allowed', async () => {
@@ -2327,7 +2381,7 @@ describe('Organization Services Test Suite', () => {
           ],
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
       });
 
       it('Adding a second service NotaryIssuerType should be allowed', async () => {
@@ -2403,7 +2457,7 @@ describe('Organization Services Test Suite', () => {
             },
           ],
         });
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
       });
 
       it("Adding a second service type should result in updated 'permittedVelocityServiceCategory'", async () => {
@@ -2610,14 +2664,20 @@ describe('Organization Services Test Suite', () => {
           ],
         });
 
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledTimes(1);
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledWith({
-          client_id: response.json.authClient.clientId,
-          audience: 'https://velocitynetwork.node',
-          scope: ['eth:*'],
-        });
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
+        expect(
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            client_id: response.json.authClient.clientId,
+            audience: 'https://velocitynetwork.node',
+            scope: ['eth:*'],
+          },
+        ]);
 
-        expect(mockAuth0ClientCreate.mock.calls).toEqual([
+        expect(
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+        ).toEqual([
           [
             {
               app_type: 'non_interactive',
@@ -2643,15 +2703,17 @@ describe('Organization Services Test Suite', () => {
             },
           ],
         ]);
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
       });
 
       it('Should add organization service if auth0 client create fail', async () => {
-        mockAuth0ClientCreate.mockRejectedValueOnce(new Error());
+        mockAuth0ClientCreate.mock.mockImplementationOnce(() =>
+          Promise.reject(new Error())
+        );
         const organization = await setupOrganizationWithGroup();
         const did = organization.didDoc.id;
         const payload = {
@@ -2706,13 +2768,13 @@ describe('Organization Services Test Suite', () => {
           authClients: [],
         });
 
-        expect(mockAuth0ClientCreate).toHaveBeenCalledTimes(1);
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledTimes(0);
-        expect(mockSendError).toHaveBeenCalledTimes(1);
+        expect(mockAuth0ClientCreate.mock.callCount()).toEqual(1);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
+        expect(mockSendError.mock.callCount()).toEqual(1);
 
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
       });
@@ -2789,14 +2851,20 @@ describe('Organization Services Test Suite', () => {
           ],
         });
 
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledTimes(1);
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledWith({
-          client_id: response.json.authClient.clientId,
-          audience: 'https://velocitynetwork.node',
-          scope: ['eth:*'],
-        });
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
+        expect(
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            client_id: response.json.authClient.clientId,
+            audience: 'https://velocitynetwork.node',
+            scope: ['eth:*'],
+          },
+        ]);
 
-        expect(mockAuth0ClientCreate.mock.calls).toEqual([
+        expect(
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+        ).toEqual([
           [
             {
               app_type: 'non_interactive',
@@ -2822,9 +2890,9 @@ describe('Organization Services Test Suite', () => {
             },
           ],
         ]);
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
       });
 
@@ -2882,9 +2950,9 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [expectedService.id],
           services: expectedServices([expectedService]),
         });
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
       }, 30000);
 
       it('Should add organization service without automatic activation', async () => {
@@ -2939,14 +3007,16 @@ describe('Organization Services Test Suite', () => {
           services: expectedServices([payload]),
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
-        expect(mockSendEmail.mock.calls).toEqual([
-          [expectedServiceActivationRequiredEmail],
-        ]);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[expectedServiceActivationRequiredEmail]]);
       }, 20000);
 
       it('Should add service and send "emailToSupportForServicesAddedAndNeedActivation" email', async () => {
-        mockAuth0GetUsers.mockResolvedValueOnce([]);
+        mockAuth0GetUsers.mock.mockImplementationOnce(() =>
+          Promise.resolve([])
+        );
         const organization = await setupOrganizationWithGroup();
         const did = organization.didDoc.id;
         const payload = {
@@ -2975,9 +3045,9 @@ describe('Organization Services Test Suite', () => {
           service: expectedService,
         });
 
-        expect(mockSendEmail.mock.calls).toEqual([
-          [expectedServiceActivationRequiredEmail],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[expectedServiceActivationRequiredEmail]]);
       });
 
       it('Should add organization service - type HolderAppProvider', async () => {
@@ -3043,9 +3113,9 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [expectedService.id],
           services: expectedServices([payload]),
         });
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
       });
 
       it('Should add organization service - type NodeOperator', async () => {
@@ -3108,21 +3178,25 @@ describe('Organization Services Test Suite', () => {
           },
           activatedServiceIds: [expectedService.id],
         });
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
-        expect(mockCreateStakesAccount).toHaveBeenLastCalledWith(
+        expect(last(mockCreateStakesAccount.mock.calls).arguments).toEqual([
           organization.ids.fineractClientId,
           dbOrg.didDoc.id,
-          expect.any(Object)
-        );
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(1);
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledWith({
-          client_id: response.json.authClient.clientId,
-          audience: 'https://velocitynetwork.node',
-          scope: ['*:*'],
-        });
+          expect.any(Object),
+        ]);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
+        expect(
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            client_id: response.json.authClient.clientId,
+            audience: 'https://velocitynetwork.node',
+            scope: ['*:*'],
+          },
+        ]);
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
       });
       it('Should add second organization service with type NodeOperator', async () => {
@@ -3231,21 +3305,25 @@ describe('Organization Services Test Suite', () => {
           ]),
           activatedServiceIds: ['#credentialagent-1', expectedService.id],
         });
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
-        expect(mockCreateStakesAccount).toHaveBeenLastCalledWith(
+        expect(last(mockCreateStakesAccount.mock.calls).arguments).toEqual([
           organization.ids.fineractClientId,
           dbOrg.didDoc.id,
-          expect.any(Object)
-        );
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(1);
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledWith({
-          client_id: response.json.authClient.clientId,
-          audience: 'https://velocitynetwork.node',
-          scope: ['*:*'],
-        });
+          expect.any(Object),
+        ]);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
+        expect(
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            client_id: response.json.authClient.clientId,
+            audience: 'https://velocitynetwork.node',
+            scope: ['*:*'],
+          },
+        ]);
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
       });
       it('Should not add stakes account if already a node operator', async () => {
@@ -3337,7 +3415,7 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: expect.arrayContaining([expectedService.id]),
         });
 
-        expect(mockCreateStakesAccount).not.toHaveBeenCalled();
+        expect(mockCreateStakesAccount.mock.callCount()).toEqual(0);
       });
 
       it('Should add organization service and not add stakes account if account already exists', async () => {
@@ -3430,7 +3508,7 @@ describe('Organization Services Test Suite', () => {
           ]),
           activatedServiceIds: expect.arrayContaining([expectedService.id]),
         });
-        expect(mockCreateStakesAccount).not.toHaveBeenCalled();
+        expect(mockCreateStakesAccount.mock.callCount()).toEqual(0);
       });
 
       it('Should not call client grant if trying call with wrong type', async () => {
@@ -3478,7 +3556,7 @@ describe('Organization Services Test Suite', () => {
 
         expect(response.statusCode).toEqual(201);
 
-        expect(mockAuth0ClientGrantCreate).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
       });
       describe('Organization Service Addition with invitations Test Suite', () => {
         it('Should add service and ignore missing invitationCode', async () => {
@@ -3633,7 +3711,7 @@ describe('Organization Services Test Suite', () => {
             verifiableCredentialJwt: expect.any(String),
             updatedAt: expect.any(Date),
           });
-          expect(mockSendEmail).toBeCalledTimes(1);
+          expect(mockSESSendEmail.mock.callCount()).toEqual(1);
         });
         it('Should add service and accept invitation', async () => {
           const inviterOrganization = await persistOrganization({
@@ -3726,8 +3804,10 @@ describe('Organization Services Test Suite', () => {
             updatedAt: expect.any(Date),
           });
 
-          expect(mockSendEmail).toBeCalledTimes(3);
-          expect(mockSendEmail.mock.calls).toEqual(
+          expect(mockSESSendEmail.mock.callCount()).toEqual(3);
+          expect(
+            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailToCAOsMatcher(inviterOrganization)],
               [expectedInvitationAcceptanceEmail],
@@ -3802,8 +3882,8 @@ describe('Organization Services Test Suite', () => {
 
           expect(response.statusCode).toEqual(201);
 
-          expect(mockSendEmail).toBeCalledTimes(1);
-          expect(mockSendEmail.mock.calls[0][0]).toEqual(
+          expect(mockSESSendEmail.mock.callCount()).toEqual(1);
+          expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
             expectedServiceActivationRequiredEmail
           );
         });
@@ -3862,8 +3942,10 @@ describe('Organization Services Test Suite', () => {
           });
 
           expect(response.statusCode).toEqual(201);
-          expect(mockSendEmail).toBeCalledTimes(2);
-          expect(mockSendEmail.mock.calls).toEqual(
+          expect(mockSESSendEmail.mock.callCount()).toEqual(2);
+          expect(
+            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailMatcher()],
               [sendServicesActivatedEmailToCAOsMatcher(caoOrg)],
@@ -4678,9 +4760,9 @@ describe('Organization Services Test Suite', () => {
           services: [],
           activatedServiceIds: [],
         });
-        expect(mockAuth0ClientDelete.mock.calls).toEqual([
-          [{ client_id: authClients[1].clientId }],
-        ]);
+        expect(
+          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ client_id: authClients[1].clientId }]]);
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
       });
 
@@ -4746,31 +4828,37 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [],
         });
 
-        expect(mockAuth0ClientGrantDelete.mock.calls).toEqual(
+        expect(
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
             authClients[1].clientGrantIds
           )
         );
-        expect(mockAuth0ClientDelete.mock.calls).toEqual([
-          [{ client_id: authClients[1].clientId }],
-        ]);
+        expect(
+          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ client_id: authClients[1].clientId }]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToRemove: [
-            'transactions:write',
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:revoke',
-            'credential:inspect',
-            'credential:issue',
-          ],
-          scopesToAdd: [],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToRemove: [
+              'transactions:write',
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:revoke',
+              'credential:inspect',
+              'credential:issue',
+            ],
+            scopesToAdd: [],
+          },
+        ]);
       });
     });
 
@@ -4994,27 +5082,33 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [],
         });
 
-        expect(mockAuth0ClientGrantDelete.mock.calls).toEqual(
+        expect(
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
             authClients[0].clientGrantIds
           )
         );
-        expect(mockAuth0ClientDelete).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToRemove: [
-            'transactions:write',
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:revoke',
-            'credential:inspect',
-            'credential:issue',
-          ],
-          scopesToAdd: [],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToRemove: [
+              'transactions:write',
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:revoke',
+              'credential:inspect',
+              'credential:issue',
+            ],
+            scopesToAdd: [],
+          },
+        ]);
       });
 
       it('Deactivate a CAO service from an org with two CAO service', async () => {
@@ -5120,27 +5214,33 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: ['#credentialagent-2'],
         });
 
-        expect(mockAuth0ClientGrantDelete.mock.calls).toEqual(
+        expect(
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
             authClients[0].clientGrantIds
           )
         );
-        expect(mockAuth0ClientDelete).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToRemove: [
-            'transactions:write',
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:revoke',
-            'credential:inspect',
-            'credential:issue',
-          ],
-          scopesToAdd: [],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToRemove: [
+              'transactions:write',
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:revoke',
+              'credential:inspect',
+              'credential:issue',
+            ],
+            scopesToAdd: [],
+          },
+        ]);
       });
 
       it('Deactivate two CAO services from an org with two CAO service', async () => {
@@ -5248,20 +5348,28 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [],
         });
 
-        expect(mockAuth0ClientGrantDelete).toHaveBeenNthCalledWith(1, {
-          id: authClients[0].clientGrantIds[0],
-        });
-        expect(mockAuth0ClientGrantDelete).toHaveBeenNthCalledWith(2, {
-          id: authClients[0].clientGrantIds[1],
-        });
-        expect(mockAuth0ClientGrantDelete).toHaveBeenNthCalledWith(3, {
-          id: authClients[1].clientGrantIds[0],
-        });
-        expect(mockAuth0ClientGrantDelete).toHaveBeenNthCalledWith(4, {
-          id: authClients[1].clientGrantIds[1],
-        });
+        expect(mockAuth0ClientGrantDelete.mock.calls[0].arguments).toEqual([
+          {
+            id: authClients[0].clientGrantIds[0],
+          },
+        ]);
+        expect(mockAuth0ClientGrantDelete.mock.calls[1].arguments).toEqual([
+          {
+            id: authClients[0].clientGrantIds[1],
+          },
+        ]);
+        expect(mockAuth0ClientGrantDelete.mock.calls[2].arguments).toEqual([
+          {
+            id: authClients[1].clientGrantIds[0],
+          },
+        ]);
+        expect(mockAuth0ClientGrantDelete.mock.calls[3].arguments).toEqual([
+          {
+            id: authClients[1].clientGrantIds[1],
+          },
+        ]);
 
-        expect(mockAuth0ClientDelete).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
       });
 
       it('Deactivate a Issuer service from an org with one CAO service and one Issuer service', async () => {
@@ -5336,8 +5444,8 @@ describe('Organization Services Test Suite', () => {
           updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         });
 
-        expect(mockAuth0ClientGrantDelete).toHaveBeenCalledTimes(0);
-        expect(mockAuth0ClientDelete).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientGrantDelete.mock.callCount()).toEqual(0);
+        expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
 
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg).toEqual({
@@ -5438,8 +5546,8 @@ describe('Organization Services Test Suite', () => {
           updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         });
 
-        expect(mockAuth0ClientGrantDelete).toHaveBeenCalledTimes(0);
-        expect(mockAuth0ClientDelete).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientGrantDelete.mock.callCount()).toEqual(0);
+        expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
 
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg).toEqual({
@@ -5762,24 +5870,28 @@ describe('Organization Services Test Suite', () => {
           createdAt: expect.any(Date),
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(1);
-        expect(mockSendEmail.mock.calls).toEqual([
-          [sendServicesActivatedEmailMatcher()],
-        ]);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
+        expect(
+          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+        ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToAdd: [],
-          scopesToRemove: [
-            'transactions:write',
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:revoke',
-            'credential:inspect',
-            'credential:issue',
-          ],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToAdd: [],
+            scopesToRemove: [
+              'transactions:write',
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:revoke',
+              'credential:inspect',
+              'credential:issue',
+            ],
+          },
+        ]);
         expect(nockData.isDone()).toEqual(true);
 
         // consent entity checks
@@ -5866,8 +5978,8 @@ describe('Organization Services Test Suite', () => {
           createdAt: expect.any(Date),
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(0);
 
         // consent entity checks
         expect(await getConsentsFromDb(dbOrg)).toEqual(
@@ -5970,8 +6082,8 @@ describe('Organization Services Test Suite', () => {
           createdAt: expect.any(Date),
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(0);
 
         // consent entity checks
         expect(await getConsentsFromDb(dbOrg)).toEqual(
@@ -6045,8 +6157,8 @@ describe('Organization Services Test Suite', () => {
           createdAt: expect.any(Date),
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(0);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(0);
       });
 
       it('Should 400 if did document does not have service', async () => {
@@ -6349,32 +6461,38 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [],
         });
         expect(dbOrg.services.length).toEqual(0);
-        expect(mockAuth0ClientGrantDelete.mock.calls).toEqual(
+        expect(
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
             authClients[1].clientGrantIds
           )
         );
 
-        expect(mockAuth0ClientDelete.mock.calls).toEqual([
-          [{ client_id: authClients[1].clientId }],
-        ]);
+        expect(
+          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ client_id: authClients[1].clientId }]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToRemove: [
-            'transactions:write',
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:revoke',
-            'credential:inspect',
-            'credential:issue',
-          ],
-          scopesToAdd: [],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToRemove: [
+              'transactions:write',
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:revoke',
+              'credential:inspect',
+              'credential:issue',
+            ],
+            scopesToAdd: [],
+          },
+        ]);
       });
       it('Should remove additional organization service', async () => {
         const monitorNockScope = setMonitorEventsNock();
@@ -6448,33 +6566,39 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: ['#other'],
         });
         expect(dbOrg.services.length).toEqual(1);
-        expect(mockAuth0ClientGrantDelete.mock.calls).toEqual(
+        expect(
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
             authClients[1].clientGrantIds
           )
         );
 
-        expect(mockAuth0ClientDelete.mock.calls).toEqual([
-          [{ client_id: authClients[1].clientId }],
-        ]);
+        expect(
+          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual([[{ client_id: authClients[1].clientId }]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organization.ids.ethereumAccount,
-          scopesToRemove: [
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:inspect',
-          ],
-          scopesToAdd: [
-            'transactions:write',
-            'credential:revoke',
-            'credential:issue',
-          ],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organization.ids.ethereumAccount,
+            scopesToRemove: [
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:inspect',
+            ],
+            scopesToAdd: [
+              'transactions:write',
+              'credential:revoke',
+              'credential:issue',
+            ],
+          },
+        ]);
       });
     });
     describe('Organization Service Retrieval', () => {
@@ -6693,17 +6817,21 @@ describe('Organization Services Test Suite', () => {
           createdAt: expect.any(Date),
         });
 
-        expect(mockAuth0ClientGrantCreate).toBeCalledTimes(2);
-        expect(mockAuth0ClientGrantCreate).toHaveBeenNthCalledWith(1, {
-          client_id: first(dbOrg.authClients).clientId,
-          audience: fastify.config.blockchainApiAudience,
-          scope: ['*:*'],
-        });
-        expect(mockAuth0ClientGrantCreate).toHaveBeenNthCalledWith(2, {
-          client_id: dbOrg.authClients[1].clientId,
-          audience: fastify.config.blockchainApiAudience,
-          scope: ['eth:*'],
-        });
+        expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(2);
+        expect(mockAuth0ClientGrantCreate.mock.calls[0].arguments).toEqual([
+          {
+            client_id: first(dbOrg.authClients).clientId,
+            audience: fastify.config.blockchainApiAudience,
+            scope: ['*:*'],
+          },
+        ]);
+        expect(mockAuth0ClientGrantCreate.mock.calls[1].arguments).toEqual([
+          {
+            client_id: dbOrg.authClients[1].clientId,
+            audience: fastify.config.blockchainApiAudience,
+            scope: ['eth:*'],
+          },
+        ]);
         expect(nockData.isDone()).toEqual(true);
       });
       it('Should 400 error if DLT_TRANSACTIONS key is not present', async () => {
@@ -6920,27 +7048,33 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [],
         });
 
-        expect(mockAuth0ClientGrantDelete.mock.calls).toEqual(
+        expect(
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+        ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
             authClients[0].clientGrantIds
           )
         );
-        expect(mockAuth0ClientDelete).toHaveBeenCalledTimes(0);
+        expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
 
-        expect(mockUpdateAddressScopes).toHaveBeenCalledTimes(1);
-        expect(mockUpdateAddressScopes).toHaveBeenCalledWith({
-          address: organizationWithService.ids.ethereumAccount,
-          scopesToRemove: [
-            'transactions:write',
-            'credential:identityissue',
-            'credential:contactissue',
-            'credential:revoke',
-            'credential:inspect',
-            'credential:issue',
-          ],
-          scopesToAdd: [],
-        });
+        expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
+        expect(
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+        ).toContainEqual([
+          {
+            address: organizationWithService.ids.ethereumAccount,
+            scopesToRemove: [
+              'transactions:write',
+              'credential:identityissue',
+              'credential:contactissue',
+              'credential:revoke',
+              'credential:inspect',
+              'credential:issue',
+            ],
+            scopesToAdd: [],
+          },
+        ]);
         expect(nockData.isDone()).toEqual(true);
       });
       it('Deactivate should throw error service is not present on db', async () => {

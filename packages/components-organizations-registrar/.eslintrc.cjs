@@ -1,5 +1,5 @@
 const path = require('path');
-const eslintConfig = require('../../.eslintrc');
+const eslintConfig = require('../../.eslintrc.js');
 
 module.exports = {
   ...eslintConfig,
@@ -15,7 +15,14 @@ module.exports = {
     browser: true,
     jest: true,
   },
+  rules: {
+    ...eslintConfig.rules,
+    'import/extensions': ['error', 'always', { ignorePackages: true }],
+  },
   settings: {
+    react: {
+      version: 'detect',
+    },
     'import/resolver': {
       alias: {
         map: [['@', path.resolve(__dirname, 'src')]],

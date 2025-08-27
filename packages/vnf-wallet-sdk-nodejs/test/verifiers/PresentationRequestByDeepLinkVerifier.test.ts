@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { describe, test } from 'node:test';
+import { expect } from 'expect';
 import { VCLErrorCode } from '../../src';
 import { PresentationRequestByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
 import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
