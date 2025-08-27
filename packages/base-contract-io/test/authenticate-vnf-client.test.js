@@ -81,7 +81,9 @@ describe('VNF Identity Provider Authentication', () => {
         access_token: 'OTHER_TOKEN',
       };
 
-      initHttpClient.mock.mockImplementationOnce(() => gotMock(otherTokenResult));
+      initHttpClient.mock.mockImplementationOnce(() =>
+        gotMock(otherTokenResult)
+      );
 
       const result = await vnfAuthenticate('API-IDENTIFIER');
 
@@ -103,7 +105,9 @@ describe('VNF Identity Provider Authentication', () => {
         access_token: 'OTHER_TOKEN',
       };
 
-      initHttpClient.mock.mockImplementationOnce(() => gotMock(otherTokenResult));
+      initHttpClient.mock.mockImplementationOnce(() =>
+        gotMock(otherTokenResult)
+      );
 
       const result = await vnfAuthenticate('API-IDENTIFIER');
 
