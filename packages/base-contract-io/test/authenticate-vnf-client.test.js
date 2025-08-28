@@ -17,10 +17,9 @@
 const { mock, beforeEach, describe, it, after } = require('node:test');
 const { expect } = require('expect');
 
-const initRequest = mock.fn();
-mock.module('@verii/request', { defaultExport: initRequest });
+const initHttpClient = mock.fn();
+mock.module('@verii/http-client', { namedExports: { initHttpClient } });
 
-const { initHttpClient } = require('@verii/http-client');
 const {
   initAuthenticateVnfClient,
   initAuthenticateVnfBlockchainClient,
@@ -52,7 +51,7 @@ describe('VNF Identity Provider Authentication', () => {
   let vnfAuthenticate;
 
   beforeEach(() => {
-    initRequest.mock.resetCalls();
+    initHttpClient.mock.resetCalls();
     gotMockPost.mock.resetCalls();
     fastify = createFastify();
     vnfAuthenticate = initAuthenticateVnfClient(fastify);
