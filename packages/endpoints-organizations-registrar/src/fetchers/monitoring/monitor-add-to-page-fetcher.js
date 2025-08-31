@@ -9,9 +9,13 @@ const addMonitorToStatusPage = async (
     explanation: 'Add Comment here',
     status_page_section_id: statusPageSectionId,
   };
-  return betterUptimeFetch
-    .post(`status-pages/${statusPageId}/resources`, { json: payload })
-    .json();
+
+  const response = await betterUptimeFetch.post(
+    `status-pages/${statusPageId}/resources`,
+    { json: payload }
+  );
+
+  return response.json();
 };
 module.exports = {
   addMonitorToStatusPage,

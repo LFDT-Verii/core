@@ -20,15 +20,18 @@ const sendCredentials = async (vendorEndpoint, payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
 
-  const { numProcessed } = await vendorFetch
-    .post(`inspection/${vendorEndpoint}`, {
+  const response = await await vendorFetch.post(
+    `inspection/${vendorEndpoint}`,
+    {
       json: payload,
       ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
       headers: {
         ...setAuthHeader(context),
       },
-    })
-    .json();
+    }
+  );
+
+  const { numProcessed } = await response.json();
   return numProcessed;
 };
 

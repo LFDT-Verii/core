@@ -16,19 +16,19 @@
 
 const { setAuthHeader } = require('./webhook-auth-header');
 
-const identifyUserOnVendor = (payload, context) => {
+const identifyUserOnVendor = async (payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
 
-  return vendorFetch
-    .post('issuing/identify', {
-      json: payload,
-      ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
-      headers: {
-        ...setAuthHeader(context),
-      },
-    })
-    .json();
+  const response = await vendorFetch.post('issuing/identify', {
+    json: payload,
+    ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
+    headers: {
+      ...setAuthHeader(context),
+    },
+  });
+
+  return response.json();
 };
 
 module.exports = {

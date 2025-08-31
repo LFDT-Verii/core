@@ -6,9 +6,13 @@ const createSection = async (
     name: orgName,
     position: 0,
   };
-  return betterUptimeFetch
-    .post(`status-pages/${statusPageId}/sections`, { json: payload })
-    .json();
+
+  const response = await betterUptimeFetch.post(
+    `status-pages/${statusPageId}/sections`,
+    { json: payload }
+  );
+
+  return response.json();
 };
 
 module.exports = {

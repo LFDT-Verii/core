@@ -26,4 +26,11 @@ const { initServer } = require('../../../src/init-server');
 const mongoConnection = buildMongoConnection('test-credential-agent');
 
 module.exports = () =>
-  flow(createTestServer, initServer)({ ...config, mongoConnection });
+  flow(
+    createTestServer,
+    initServer
+  )({
+    ...config,
+    mongoConnection,
+    useExistingGlobalAgent: true,
+  });

@@ -29,4 +29,9 @@ module.exports = (overrideConfig = {}) =>
   flow(
     createTestServer,
     initOperatorServer
-  )({ ...operatorConfig, ...overrideConfig, mongoConnection });
+  )({
+    ...operatorConfig,
+    ...overrideConfig,
+    mongoConnection,
+    useExistingGlobalAgent: true,
+  });
