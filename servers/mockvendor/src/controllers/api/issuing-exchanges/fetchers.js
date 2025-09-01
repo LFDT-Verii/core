@@ -1,9 +1,12 @@
-const submitCreateExchange = (tenantDID, type, { agentFetch }) =>
-  agentFetch
+const submitCreateExchange = async (tenantDID, type, { agentFetch }) => {
+  const response = await agentFetch
     .post(`operator-api/v0.8/tenants/${tenantDID}/exchanges`, {
       json: { type },
-    })
-    .json();
+    });
+
+  return response.json();
+}
+  
 
 const getExchangeQrCode = (
   tenantDID,

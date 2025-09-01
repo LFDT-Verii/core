@@ -209,8 +209,8 @@ const controller = async (fastify) => {
         vendorOriginContext,
         req
       );
-
-      return reply.type('image/png').send(response.body);
+      
+      return reply.type('image/png').send(response.rawBody);
     }
   );
 };

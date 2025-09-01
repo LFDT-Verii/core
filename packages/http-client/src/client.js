@@ -111,12 +111,13 @@ const initHttpClient = (options) => {
       headers: reqHeaders,
       ...(body ? { body } : {}),
     });
-    const { statusCode, headers: resHeaders, body: resBody } = httpResponse;
+    const { statusCode, headers: resHeaders, body: rawBody } = httpResponse;
     return {
+      rawBody,
       statusCode,
       resHeaders,
       json: async () => {
-        const bodyJson = await resBody.json();
+        const bodyJson = await rawBody.json();
         log.info(
           { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
           'HttpClient response'
@@ -124,7 +125,7 @@ const initHttpClient = (options) => {
         return bodyJson;
       },
       text: async () => {
-        const bodyText = await resBody.text();
+        const bodyText = await rawBody.text();
         log.info(
           { origin, url, reqId, statusCode, resHeaders, body: bodyText },
           'HttpClient response'
