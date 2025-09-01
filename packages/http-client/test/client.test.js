@@ -370,6 +370,132 @@ describe('Http Client Package', () => {
         });
       });
 
+      it('Should throw NotFoundError if mock returns 404 for delete()', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/not_found', method: 'DELETE' })
+          .reply(404);
+        const result = () => httpClient.delete('not_found');
+        await expect(result).rejects.toThrow(NotFoundError);
+      });
+
+      it('Should throw BadRequestError for delete()', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/bad_request', method: 'DELETE' })
+          .reply(400, { error: true });
+        const result = () => httpClient.delete('bad_request');
+
+        await expect(result).rejects.toThrow(ResponseStatusCodeError);
+      });
+
+      it('Should throw InternalServerError for delete()', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/internal_server_error', method: 'DELETE' })
+          .reply(500);
+        const result = () => httpClient.delete('internal_server_error');
+
+        await expect(result).rejects.toThrow(ResponseStatusCodeError);
+      });
+
+      it('Should handle empty body in 204 response for delete()', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/empty_body_response', method: 'DELETE' })
+          .reply(204);
+
+        const response = await httpClient.delete('empty_body_response');
+        expect(response).toEqual({
+          statusCode: 204,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+        await expect(response.text()).resolves.toEqual('');
+      });
+
+      it('Should parse text for delete()', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/text', method: 'DELETE' })
+          .reply(200, 'Hello world!');
+        const response = await httpClient.delete('text');
+        expect(response).toEqual({
+          statusCode: 200,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+        await expect(response.text()).resolves.toEqual('Hello world!');
+      });
+
+      it('should parse json for delete()', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/json', method: 'DELETE' })
+          .reply(202, { message: 'Deleted!' });
+
+        const response = await httpClient.delete('json');
+        expect(response).toEqual({
+          statusCode: 202,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+        await expect(response.json()).resolves.toEqual({
+          message: 'Deleted!',
+        });
+      });
+
+      it('should handle delete() with no prefixUrl params', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/json', method: 'DELETE' })
+          .reply(200, { message: 'matched' });
+        const httpClient2 = initHttpClient({
+          rejectUnauthorized: false,
+          useExistingGlobalAgent: true,
+        })({
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+        const response = await httpClient2.delete(`${origin}/json`);
+        expect(response).toEqual({
+          statusCode: 200,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+        await expect(response.json()).resolves.toEqual({
+          message: 'matched',
+        });
+      });
+
+      it('should handle delete() with options.searchParams', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/json?id=123', method: 'DELETE' })
+          .reply(200, { message: 'deleted' });
+        const searchParams = new URLSearchParams();
+        searchParams.append('id', '123');
+        const response = await httpClient.delete('json', { searchParams });
+        expect(response).toEqual({
+          statusCode: 200,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+        await expect(response.json()).resolves.toEqual({
+          message: 'deleted',
+        });
+      });
+
       it("should have a 'promise' responseType ", async () => {
         const client = initHttpClient({
           prefixUrl: `${origin}/json`,

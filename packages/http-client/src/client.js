@@ -155,6 +155,8 @@ const initHttpClient = (options) => {
           context,
           JSON.stringify(payload)
         ),
+      delete: (url, reqOptions) =>
+        request(url, reqOptions, HTTP_VERBS.DELETE, host, context),
       responseType: 'promise',
     };
   };
@@ -206,6 +208,7 @@ const addCache = (store) =>
 const HTTP_VERBS = {
   GET: 'GET',
   POST: 'POST',
+  DELETE: 'DELETE',
 };
 
 module.exports = { initHttpClient, parseOptions, parsePrefixUrl, initCache };
