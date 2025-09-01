@@ -4702,7 +4702,6 @@ describe('Organization Services Test Suite', () => {
 
       it(
         'Should remove organization service without the client grant ids',
-        { only: true },
         async () => {
           const monitorNockScope = setMonitorEventsNock();
           const serviceId = '#credentialagent-1';
