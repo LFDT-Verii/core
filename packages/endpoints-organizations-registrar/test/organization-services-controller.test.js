@@ -4700,71 +4700,75 @@ describe('Organization Services Test Suite', () => {
         });
       });
 
-      it('Should remove organization service without the client grant ids', {only: true}, async () => {
-        const monitorNockScope = setMonitorEventsNock();
-        const serviceId = '#credentialagent-1';
-        const authClients = [
-          {
-            type: 'auth0',
-            clientType: AuthClientTypes.REGISTRAR,
-            clientId: nanoid(),
-          },
-          {
-            type: 'auth0',
-            clientType: AuthClientTypes.CAO_NODE_CLIENT,
-            clientId: nanoid(),
-            serviceId,
-          },
-        ];
-
-        const organization = await persistOrganization({
-          service: [
+      it(
+        'Should remove organization service without the client grant ids',
+        { only: true },
+        async () => {
+          const monitorNockScope = setMonitorEventsNock();
+          const serviceId = '#credentialagent-1';
+          const authClients = [
             {
-              id: serviceId,
-              type: ServiceTypes.CredentialAgentOperatorType,
-              serviceEndpoint: 'https://agent.samplevendor.com/acme',
+              type: 'auth0',
+              clientType: AuthClientTypes.REGISTRAR,
+              clientId: nanoid(),
             },
-          ],
-          authClients,
-        });
-        const did = organization.didDoc.id;
+            {
+              type: 'auth0',
+              clientType: AuthClientTypes.CAO_NODE_CLIENT,
+              clientId: nanoid(),
+              serviceId,
+            },
+          ];
 
-        setGetMonitorsNock(did, serviceId);
+          const organization = await persistOrganization({
+            service: [
+              {
+                id: serviceId,
+                type: ServiceTypes.CredentialAgentOperatorType,
+                serviceEndpoint: 'https://agent.samplevendor.com/acme',
+              },
+            ],
+            authClients,
+          });
+          const did = organization.didDoc.id;
 
-        const response = await fastify.injectJson({
-          method: 'DELETE',
-          url: `${baseUrl}/${did}/services/${serviceId.slice(1)}`,
-        });
+          setGetMonitorsNock(did, serviceId);
 
-        expect(response.statusCode).toEqual(204);
-        expect(response.body).toEqual('');
-        const dbOrg = await getOrganizationFromDb(did);
-        expect(dbOrg).toEqual({
-          ...mongoify(organization),
-          profile: {
-            ...organization.profile,
-            permittedVelocityServiceCategory: [],
-          },
-          didDoc: {
-            ...organization.didDoc,
-            service: [],
-          },
-          signedProfileVcJwt: {
-            credentialId: expect.any(String),
-            signedCredential: expect.any(String),
-          },
-          verifiableCredentialJwt: `http://localhost.test/api/v0.6/organizations/${did}/resolve-vc/${dbOrg.signedProfileVcJwt.credentialId}`,
-          updatedAt: expect.any(Date),
-          createdAt: expect.any(Date),
-          authClients: authClients.slice(0, 1),
-          services: [],
-          activatedServiceIds: [],
-        });
-        expect(
-          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
-        ).toEqual([[{ client_id: authClients[1].clientId }]]);
-        expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
-      });
+          const response = await fastify.injectJson({
+            method: 'DELETE',
+            url: `${baseUrl}/${did}/services/${serviceId.slice(1)}`,
+          });
+
+          expect(response.statusCode).toEqual(204);
+          expect(response.body).toEqual('');
+          const dbOrg = await getOrganizationFromDb(did);
+          expect(dbOrg).toEqual({
+            ...mongoify(organization),
+            profile: {
+              ...organization.profile,
+              permittedVelocityServiceCategory: [],
+            },
+            didDoc: {
+              ...organization.didDoc,
+              service: [],
+            },
+            signedProfileVcJwt: {
+              credentialId: expect.any(String),
+              signedCredential: expect.any(String),
+            },
+            verifiableCredentialJwt: `http://localhost.test/api/v0.6/organizations/${did}/resolve-vc/${dbOrg.signedProfileVcJwt.credentialId}`,
+            updatedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+            authClients: authClients.slice(0, 1),
+            services: [],
+            activatedServiceIds: [],
+          });
+          expect(
+            mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+          ).toEqual([[{ client_id: authClients[1].clientId }]]);
+          expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
+        }
+      );
 
       it('Should remove organization service', async () => {
         const monitorNockScope = setMonitorEventsNock();
