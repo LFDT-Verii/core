@@ -185,6 +185,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.text()).resolves.toEqual('');
       });
@@ -201,6 +202,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.text()).resolves.toEqual('');
       });
@@ -216,6 +218,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.text()).resolves.toEqual('Hello world!');
       });
@@ -231,6 +234,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.text()).resolves.toEqual('Hello world!');
       });
@@ -247,6 +251,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.json()).resolves.toEqual({
           message: 'Not Yet!',
@@ -265,6 +270,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.json()).resolves.toEqual({
           message: 'Not Yet!',
@@ -289,6 +295,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
@@ -313,6 +320,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
@@ -332,6 +340,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
@@ -354,6 +363,7 @@ describe('Http Client Package', () => {
           resHeaders: {},
           json: expect.any(Function),
           text: expect.any(Function),
+          rawBody: expect.any(Object),
         });
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
