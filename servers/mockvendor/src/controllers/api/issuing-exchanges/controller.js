@@ -210,7 +210,7 @@ const controller = async (fastify) => {
         req
       );
 
-      return reply.type('image/png').send(response.rawBody);
+      return reply.type('image/png').send(response.body);
     }
   );
 };

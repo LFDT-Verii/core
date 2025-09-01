@@ -20,22 +20,28 @@ const getExchangeQrCode = (
   );
 };
 
-const submitOffer = ({ offer, tenantDID, exchangeId }, { agentFetch }) =>
-  agentFetch
+const submitOffer = async ({ offer, tenantDID, exchangeId }, { agentFetch }) => {
+  const response = await agentFetch
     .post(
       `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers`,
       {
         json: offer,
       }
-    )
-    .json();
+    );
 
-const completeSubmitOffer = ({ exchangeId, tenantDID }, { agentFetch }) =>
-  agentFetch
+    return response.json();
+}
+  
+
+const completeSubmitOffer = async ({ exchangeId, tenantDID }, { agentFetch }) => {
+  const response = await agentFetch
     .post(
       `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers/complete`
-    )
-    .json();
+    );
+
+  return response.json();
+}
+  
 
 module.exports = {
   submitOffer,
