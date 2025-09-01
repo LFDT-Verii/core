@@ -1,12 +1,13 @@
 const submitCreateExchange = async (tenantDID, type, { agentFetch }) => {
-  const response = await agentFetch
-    .post(`operator-api/v0.8/tenants/${tenantDID}/exchanges`, {
+  const response = await agentFetch.post(
+    `operator-api/v0.8/tenants/${tenantDID}/exchanges`,
+    {
       json: { type },
-    });
+    }
+  );
 
   return response.json();
-}
-  
+};
 
 const getExchangeQrCode = (
   tenantDID,
