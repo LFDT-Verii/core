@@ -135,11 +135,14 @@ const initHttpClient = (options) => {
         },
       };
     } catch (error) {
-      error.gatewayResponse = {
-        url: `${origin}${path}`,
+      const enrichedError = {
+        ...error,
+        gatewayResponse = {
+          url: `${origin}${path}`,
+        },
       };
 
-      throw error;
+      throw enrichedError;
     }
   };
 
