@@ -139,7 +139,7 @@ const initHttpClient = (options) => {
       error.gatewayResponse = {
         url: `${origin}${path}`,
       };
-      
+
       throw error;
     }
   };
