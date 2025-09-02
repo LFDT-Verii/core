@@ -58,16 +58,16 @@ const initHttpClient = (options) => {
       ...addCache(cache),
       ...(tokensEndpoint
         ? [
-            createOidcInterceptor({
-              idpTokenUrl: tokensEndpoint,
-              clientId,
-              clientSecret,
-              retryOnStatusCodes: [401],
-              scopes,
-              audience,
-              urls: map((url) => url.origin, registeredPrefixUrls.values()),
-            }),
-          ]
+          createOidcInterceptor({
+            idpTokenUrl: tokensEndpoint,
+            clientId,
+            clientSecret,
+            retryOnStatusCodes: [401],
+            scopes,
+            audience,
+            urls: map((url) => url.origin, registeredPrefixUrls.values()),
+          }),
+        ]
         : []),
     ]);
 
@@ -104,35 +104,43 @@ const initHttpClient = (options) => {
 
     const globalAgent = getGlobalDispatcher();
 
-    const httpResponse = await globalAgent.request({
-      origin,
-      path,
-      method,
-      headers: reqHeaders,
-      ...(body ? { body } : {}),
-    });
-    const { statusCode, headers: resHeaders, body: rawBody } = httpResponse;
-    return {
-      rawBody,
-      statusCode,
-      resHeaders,
-      json: async () => {
-        const bodyJson = await rawBody.json();
-        log.info(
-          { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
-          'HttpClient response'
-        );
-        return bodyJson;
-      },
-      text: async () => {
-        const bodyText = await rawBody.text();
-        log.info(
-          { origin, url, reqId, statusCode, resHeaders, body: bodyText },
-          'HttpClient response'
-        );
-        return bodyText;
-      },
-    };
+    try {
+      const httpResponse = await globalAgent.request({
+        origin,
+        path,
+        method,
+        headers: reqHeaders,
+        ...(body ? { body } : {}),
+      });
+      const { statusCode, headers: resHeaders, body: rawBody } = httpResponse;
+      return {
+        rawBody,
+        statusCode,
+        resHeaders,
+        json: async () => {
+          const bodyJson = await rawBody.json();
+          log.info(
+            { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
+            'HttpClient response'
+          );
+          return bodyJson;
+        },
+        text: async () => {
+          const bodyText = await rawBody.text();
+          log.info(
+            { origin, url, reqId, statusCode, resHeaders, body: bodyText },
+            'HttpClient response'
+          );
+          return bodyText;
+        },
+      };
+    } catch (error) {
+      error.gatewayResponse = {
+        url: `${origin}${path}`,
+      };
+
+      throw error;
+    }
   };
 
   return (...args) => {
