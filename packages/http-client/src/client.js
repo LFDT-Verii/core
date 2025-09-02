@@ -135,14 +135,12 @@ const initHttpClient = (options) => {
         },
       };
     } catch (error) {
-      const enrichedError = {
-        ...error,
-        gatewayResponse: {
-          url: `${origin}${path}`,
-        },
+      // eslint-disable-next-line better-mutation/no-mutation
+      error.gatewayResponse = {
+        url: `${origin}${path}`,
       };
-
-      throw enrichedError;
+      
+      throw error;
     }
   };
 
