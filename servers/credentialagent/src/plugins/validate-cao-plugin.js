@@ -19,7 +19,7 @@ const { includes } = require('lodash/fp');
 const { ServiceCategories } = require('@verii/organizations-registry');
 const { getOrganizationVerifiedProfile } = require('@verii/common-fetchers');
 
-async function validateCao({ oracleUrl }) {
+async function validateCao() {
   const context = this;
 
   if (!context.config.validateCaoDid) {
@@ -28,7 +28,7 @@ async function validateCao({ oracleUrl }) {
     return;
   }
 
-  const registrarFetch = context.baseRegistrarFetch(oracleUrl, context);
+  const registrarFetch = context.baseRegistrarFetch(context.config.oracleUrl, context);
   const caoErrorMessage =
     // eslint-disable-next-line max-len
     'The provided CAO is not permitted to operator on the network. Make sure the organization exists on the registrar and is approved for Credential Agent Operation';
@@ -42,7 +42,7 @@ async function validateCao({ oracleUrl }) {
   } catch (error) {
     context.log.info({ error });
     const { response } = error;
-    const { statusCode } = response || {};
+    const { statusCode } = response || error || {};
 
     switch (true) {
       case statusCode >= 400 && statusCode < 500:
@@ -73,7 +73,7 @@ const checkServiceCategories = (profile, caoErrorMessage) => {
 
 const validateCaoPlugin = (fastify, options, next) => {
   if (!fastify.config.isTest) {
-    fastify.addHook('onReady', validateCao(fastify.config));
+    fastify.addHook('onReady', validateCao());
   }
   next();
 };
