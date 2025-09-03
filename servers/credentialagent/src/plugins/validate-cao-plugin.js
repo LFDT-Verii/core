@@ -28,7 +28,10 @@ async function validateCao() {
     return;
   }
 
-  const registrarFetch = context.baseRegistrarFetch(context.config.oracleUrl, context);
+  const registrarFetch = context.baseRegistrarFetch(
+    context.config.oracleUrl,
+    context
+  );
   const caoErrorMessage =
     // eslint-disable-next-line max-len
     'The provided CAO is not permitted to operator on the network. Make sure the organization exists on the registrar and is approved for Credential Agent Operation';
