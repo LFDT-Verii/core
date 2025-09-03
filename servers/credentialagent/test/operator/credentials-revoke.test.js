@@ -184,7 +184,7 @@ describe('Credentials checking tests', () => {
       },
     ]);
     expect(nockedPushEndpoint.isDone()).toEqual(true);
-    expect(pushBody).toEqual({
+    expect(pushBody.json).toEqual({
       data: {
         count: 1,
         credentialId,
@@ -393,7 +393,7 @@ describe('Credentials checking tests', () => {
       payload: {},
     });
     expect(response.statusCode).toEqual(200);
-    expect(pushBody).toEqual({
+    expect(pushBody.json).toEqual({
       data: {
         count: 1,
         credentialId,
@@ -453,7 +453,7 @@ describe('Credentials checking tests', () => {
     ]);
 
     expect(nockedPushEndpoint.isDone()).toEqual(true);
-    expect(pushBody).toEqual({
+    expect(pushBody.json).toEqual({
       data: {
         count: 1,
         credentialId,
@@ -502,7 +502,7 @@ describe('Credentials checking tests', () => {
     ]);
 
     expect(nockedPushEndpoint.isDone()).toEqual(true);
-    expect(pushBody).toEqual({
+    expect(pushBody.json).toEqual({
       data: {
         count: 1,
         credentialId,
