@@ -1627,7 +1627,7 @@ describe('submit identification disclosure', () => {
           ]
         )
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [],
         emails: [],
         exchangeId: emptyDisclosureExchange._id,
@@ -1705,7 +1705,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [],
         emails: [],
         exchangeId: exchange._id,
@@ -1824,7 +1824,7 @@ describe('submit identification disclosure', () => {
         ])
       );
       expect(nockWebhook.isDone()).toEqual(true);
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [],
         emails: [],
         exchangeId: customExchange._id,
@@ -1918,7 +1918,7 @@ describe('submit identification disclosure', () => {
       expect(response.statusCode).toEqual(200);
 
       expect(nockWebhook.isDone()).toEqual(true);
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [],
         emails: [],
         exchangeId: customExchange._id,
@@ -2015,7 +2015,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [
           {
             id: emailPayload.vc.id,
@@ -2107,7 +2107,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [
           {
             id: emailPayload.vc.id,
@@ -2196,7 +2196,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [
           {
             id: emailPayload.vc.id,
@@ -2287,7 +2287,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [
           {
             id: emailPayload.vc.id,
@@ -2376,7 +2376,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         phoneCredentials: [
           {
             id: phonePayload.vc.id,
@@ -2465,7 +2465,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         phones: [],
         idDocumentCredentials: [
           {
@@ -2561,7 +2561,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [
           {
             id: emailPayload.vc.id,
@@ -2739,7 +2739,7 @@ describe('submit identification disclosure', () => {
         ])
       );
 
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         phoneCredentials: [],
         phones: [],
         emails: [],
@@ -2830,7 +2830,7 @@ describe('submit identification disclosure', () => {
         ])
       );
 
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         phoneCredentials: [
           {
             id: phonePayload.vc.id,
@@ -2945,7 +2945,7 @@ describe('submit identification disclosure', () => {
         ])
       );
 
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         firstName: 'Sam',
         lastName: 'Smith',
         phoneCredentials: [
@@ -3065,7 +3065,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [],
         emails: [],
         exchangeId: exchange._id,
@@ -3192,7 +3192,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.IDENTIFIED,
         ])
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [],
         emails: [],
         exchangeId: customExchange._id,
@@ -3783,7 +3783,7 @@ describe('submit identification disclosure', () => {
         ])
       );
 
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [
           {
             id: emailPayload.vc.id,
@@ -3899,7 +3899,7 @@ describe('submit identification disclosure', () => {
           'user not found'
         )
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [
           {
             id: emailPayload.vc.id,
@@ -4015,7 +4015,7 @@ describe('submit identification disclosure', () => {
           'Response code 500 (Internal Server Error)'
         )
       );
-      expect(identifyWebhookPayload).toEqual({
+      expect(identifyWebhookPayload.json).toEqual({
         emailCredentials: [
           {
             id: emailPayload.vc.id,
@@ -4128,7 +4128,7 @@ describe('submit identification disclosure', () => {
             updatedAt: expect.any(Date),
           })
         );
-        expect(identifyWebhookPayload).toEqual({
+        expect(identifyWebhookPayload.json).toEqual({
           phoneCredentials: [
             {
               phone: phonePayload.vc.credentialSubject.phone,
@@ -4225,7 +4225,7 @@ describe('submit identification disclosure', () => {
             updatedAt: expect.any(Date),
           })
         );
-        expect(identifyWebhookPayload).toEqual({
+        expect(identifyWebhookPayload.json).toEqual({
           phoneCredentials: [
             {
               phone: phonePayload.vc.credentialSubject.phone,
@@ -4395,7 +4395,7 @@ describe('submit identification disclosure', () => {
             ExchangeStates.IDENTIFIED,
           ])
         );
-        expect(identifyWebhookPayload).toEqual({
+        expect(identifyWebhookPayload.json).toEqual({
           emailCredentials: [
             {
               id: emailPayload.vc.id,
@@ -4602,7 +4602,7 @@ describe('submit identification disclosure', () => {
             ExchangeStates.IDENTIFIED,
           ])
         );
-        expect(identifyWebhookPayload).toEqual({
+        expect(identifyWebhookPayload.json).toEqual({
           emailCredentials: [
             {
               id: emailPayload.vc.id,
