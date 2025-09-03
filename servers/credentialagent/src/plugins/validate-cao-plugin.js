@@ -19,6 +19,12 @@ const { includes } = require('lodash/fp');
 const { ServiceCategories } = require('@verii/organizations-registry');
 const { getOrganizationVerifiedProfile } = require('@verii/common-fetchers');
 
+const getStatusCode = (error) => {
+  const { response } = error;
+
+  return response || error || {};
+};
+
 async function validateCao() {
   const context = this;
 
@@ -44,8 +50,7 @@ async function validateCao() {
     });
   } catch (error) {
     context.log.info({ error });
-    const { response } = error;
-    const { statusCode } = response || error || {};
+    const { statusCode } = getStatusCode(error);
 
     switch (true) {
       case statusCode >= 400 && statusCode < 500:
