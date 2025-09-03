@@ -381,7 +381,7 @@ describe('presentation submission', () => {
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
       expect(response.statusCode).toEqual(200);
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -475,7 +475,7 @@ describe('presentation submission', () => {
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
       expect(response.statusCode).toEqual(200);
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -631,7 +631,7 @@ describe('presentation submission', () => {
       ]);
 
       expect(response.statusCode).toEqual(200);
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -708,7 +708,7 @@ describe('presentation submission', () => {
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
       expect(response.statusCode).toEqual(200);
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -789,7 +789,7 @@ describe('presentation submission', () => {
       expect(response.statusCode).toEqual(200);
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -859,7 +859,7 @@ describe('presentation submission', () => {
       expect(response.statusCode).toEqual(200);
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -1091,7 +1091,7 @@ describe('presentation submission', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1369,7 +1369,7 @@ describe('presentation submission', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1437,7 +1437,7 @@ describe('presentation submission', () => {
       });
       expect(response.statusCode).toEqual(200);
 
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1505,7 +1505,7 @@ describe('presentation submission', () => {
       });
       expect(response.statusCode).toEqual(200);
 
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1585,7 +1585,7 @@ describe('presentation submission', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1840,7 +1840,7 @@ describe('presentation submission', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(webhookPayload).toEqual({
+      expect(webhookPayload.json).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
