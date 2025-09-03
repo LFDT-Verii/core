@@ -18,10 +18,7 @@ const { initHttpClient } = require('@verii/http-client');
 const Static = require('@fastify/static');
 const fastifyRoutes = require('@fastify/routes');
 const { adminJwtAuthPlugin } = require('@verii/auth');
-const {
-  vnfProtocolVersionPlugin,
-  cachePlugin,
-} = require('@verii/fastify-plugins');
+const { vnfProtocolVersionPlugin } = require('@verii/fastify-plugins');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,
@@ -77,7 +74,6 @@ const initServer = (server) => {
     .register(autoloadHolderApiControllers)
     .register(autoloadRootApiController)
     .register(autoloadSaasoperatorApiControllers)
-    .register(cachePlugin)
     .decorate(
       'baseVendorFetch',
       initHttpClient({
@@ -85,6 +81,7 @@ const initServer = (server) => {
         mapUrl: initMapVendorUrl(server.config),
         prefixUrl: server.config.vendorUrl,
         cache: server.cache,
+        useExistingGlobalAgent: server.config.useExistingGlobalAgent,
       })
     )
     .decorate(
@@ -93,6 +90,7 @@ const initServer = (server) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
         prefixUrl: server.config.oracleUrl,
         cache: server.cache,
+        useExistingGlobalAgent: server.config.useExistingGlobalAgent,
       })
     )
     .decorate(
@@ -101,6 +99,7 @@ const initServer = (server) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
         prefixUrl: server.config.universalResolverUrl,
         cache: server.cache,
+        useExistingGlobalAgent: server.config.useExistingGlobalAgent,
       })
     )
     .decorate(
@@ -108,6 +107,7 @@ const initServer = (server) => {
       initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
         cache: server.cache,
+        useExistingGlobalAgent: server.config.useExistingGlobalAgent,
       })
     )
     .decorate(
@@ -116,6 +116,7 @@ const initServer = (server) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
         prefixUrl: server.config.libUrl,
         cache: server.cache,
+        useExistingGlobalAgent: server.config.useExistingGlobalAgent,
       })
     )
     .register(Static, {

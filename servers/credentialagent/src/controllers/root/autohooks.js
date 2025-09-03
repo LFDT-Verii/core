@@ -18,6 +18,9 @@ module.exports = async (fastify) => {
   fastify
     .decorateRequest('registrarFetch', null)
     .addHook('preValidation', async (req) => {
-      req.registrarFetch = fastify.baseRegistrarFetch(req);
+      req.registrarFetch = fastify.baseRegistrarFetch(
+        fastify.config.oracleUrl,
+        req
+      );
     });
 };

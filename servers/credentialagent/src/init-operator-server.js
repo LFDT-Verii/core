@@ -19,10 +19,7 @@ const AutoLoad = require('@fastify/autoload');
 const fastifyRoutes = require('@fastify/routes');
 const path = require('path');
 const { pick, omit } = require('lodash/fp');
-const {
-  vnfProtocolVersionPlugin,
-  cachePlugin,
-} = require('@verii/fastify-plugins');
+const { vnfProtocolVersionPlugin } = require('@verii/fastify-plugins');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,
@@ -59,13 +56,13 @@ const initOperatorServer = (fastify) => {
       autoHooks: true,
       cascadeHooks: true,
     })
-    .register(cachePlugin)
     .decorate(
       'baseVendorFetch',
       initHttpClient({
         ...omit(['bearerToken'], fastify.config),
         prefixUrl: fastify.config.vendorUrl,
         cache: fastify.cache,
+        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
       })
     )
     .decorate(
@@ -74,6 +71,7 @@ const initOperatorServer = (fastify) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.oracleUrl,
         cache: fastify.cache,
+        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
       })
     )
     .decorate(
@@ -82,6 +80,7 @@ const initOperatorServer = (fastify) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.universalResolverUrl,
         cache: fastify.cache,
+        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
       })
     )
     .decorate(
@@ -89,6 +88,7 @@ const initOperatorServer = (fastify) => {
       initHttpClient({
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         cache: fastify.cache,
+        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
       })
     )
     .decorate(
@@ -97,6 +97,7 @@ const initOperatorServer = (fastify) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.libUrl,
         cache: fastify.cache,
+        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
       })
     )
     .register(Static, {
