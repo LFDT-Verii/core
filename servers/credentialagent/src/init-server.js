@@ -17,7 +17,10 @@
 const Static = require('@fastify/static');
 const fastifyRoutes = require('@fastify/routes');
 const { adminJwtAuthPlugin } = require('@verii/auth');
-const { vnfProtocolVersionPlugin, httpClientPlugin } = require('@verii/fastify-plugins');
+const {
+  vnfProtocolVersionPlugin,
+  httpClientPlugin,
+} = require('@verii/fastify-plugins');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,
@@ -81,7 +84,7 @@ const initServer = (server) => {
         prefixUrl: server.config.vendorUrl,
         cache: server.cache,
         useExistingGlobalAgent: server.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(httpClientPlugin, {
       name: 'registrarFetch',
@@ -90,7 +93,7 @@ const initServer = (server) => {
         prefixUrl: server.config.oracleUrl,
         cache: server.cache,
         useExistingGlobalAgent: server.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(httpClientPlugin, {
       name: 'universalResolverFetch',
@@ -99,7 +102,7 @@ const initServer = (server) => {
         prefixUrl: server.config.universalResolverUrl,
         cache: server.cache,
         useExistingGlobalAgent: server.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(httpClientPlugin, {
       name: 'fetch',
@@ -107,7 +110,7 @@ const initServer = (server) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], server.config),
         cache: server.cache,
         useExistingGlobalAgent: server.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(httpClientPlugin, {
       name: 'libFetch',
@@ -116,7 +119,7 @@ const initServer = (server) => {
         prefixUrl: server.config.libUrl,
         cache: server.cache,
         useExistingGlobalAgent: server.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(Static, {
       root: path.join(__dirname, 'assets/public'),

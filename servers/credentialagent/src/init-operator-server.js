@@ -18,7 +18,10 @@ const AutoLoad = require('@fastify/autoload');
 const fastifyRoutes = require('@fastify/routes');
 const path = require('path');
 const { pick, omit } = require('lodash/fp');
-const { vnfProtocolVersionPlugin, httpClientPlugin } = require('@verii/fastify-plugins');
+const {
+  vnfProtocolVersionPlugin,
+  httpClientPlugin,
+} = require('@verii/fastify-plugins');
 const {
   authenticateVnfClientPlugin,
   rpcProviderPlugin,
@@ -62,7 +65,7 @@ const initOperatorServer = (fastify) => {
         prefixUrl: fastify.config.vendorUrl,
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(httpClientPlugin, {
       name: 'registrarFetch',
@@ -71,7 +74,7 @@ const initOperatorServer = (fastify) => {
         prefixUrl: fastify.config.oracleUrl,
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(httpClientPlugin, {
       name: 'universalResolverFetch',
@@ -80,7 +83,7 @@ const initOperatorServer = (fastify) => {
         prefixUrl: fastify.config.universalResolverUrl,
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(httpClientPlugin, {
       name: 'fetch',
@@ -88,7 +91,7 @@ const initOperatorServer = (fastify) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(httpClientPlugin, {
       name: 'libFetch',
@@ -97,7 +100,7 @@ const initOperatorServer = (fastify) => {
         prefixUrl: fastify.config.libUrl,
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      }
+      },
     })
     .register(Static, {
       root: path.join(__dirname, 'assets/public'),

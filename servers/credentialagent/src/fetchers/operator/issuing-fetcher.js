@@ -19,7 +19,7 @@ const { setAuthHeader } = require('./webhook-auth-header');
 const requestOffersFromVendor = async (payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
- 
+
   return vendorFetch.post('issuing/generate-offers', payload, {
     responseType: 'json',
     ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),

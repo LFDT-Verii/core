@@ -340,7 +340,7 @@ const controller = async (fastify) => {
       vendorFilter,
       context
     );
-    
+
     if (statusCode === 202) {
       return { status: 202, offers: [], offerStatuses: {} };
     }
