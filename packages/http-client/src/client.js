@@ -200,8 +200,8 @@ const buildUrl = (host, url, reqOptions, clientOptions) => {
   const fullUrl = prefixUrl ? new URL(url, prefixUrl).toString() : url;
 
   return host && !prefixUrl
-      ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
-      : parseFullURL(fullUrl, clientOptions, reqOptions);
+    ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
+    : parseFullURL(fullUrl, clientOptions, reqOptions);
 };
 
 const parseFullURL = (url, clientOptions, reqOptions) => {
