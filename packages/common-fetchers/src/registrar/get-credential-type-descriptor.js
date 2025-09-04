@@ -33,10 +33,12 @@ const getCredentialTypeDescriptor = async (
       const response = await registrarFetch.get(path, options);
       return response.json();
     }
-    return await registrarFetch.get(path, options).json();
+    const response = await registrarFetch(path, options);
+
+    return await response.json();
   } catch (e) {
     // ignore the 404s for particular types and return a basic version.
-    if (e.response?.statusCode === 404) {
+    if (e.response?.statusCode ?? e.statusCode === 404) {
       return {
         id: type,
         name: type,

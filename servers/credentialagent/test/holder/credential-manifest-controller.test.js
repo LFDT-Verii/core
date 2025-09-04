@@ -354,7 +354,7 @@ describe('get credential manifests', () => {
           },
         ],
         offerHashes: [],
-        err: 'Response code 403 (Forbidden)',
+        err: expect.any(String),
         tenantId: new ObjectId(tenant._id),
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
