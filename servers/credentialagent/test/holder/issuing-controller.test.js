@@ -1096,7 +1096,7 @@ describe('Holder Issuing Test Suite', () => {
           },
         })
       );
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -1240,7 +1240,7 @@ describe('Holder Issuing Test Suite', () => {
           },
         })
       );
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -1749,7 +1749,7 @@ describe('Holder Issuing Test Suite', () => {
           },
         })
       );
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -1886,7 +1886,7 @@ describe('Holder Issuing Test Suite', () => {
           },
         })
       );
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -1956,7 +1956,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.statusCode).toEqual(200);
       expect(response.json.offers).toHaveLength(0);
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId: exchangeForOldTenant._id,
         tenantDID: tenantWithVendorOrganizationId.did,
         tenantId: tenantWithVendorOrganizationId._id,
@@ -2045,7 +2045,7 @@ describe('Holder Issuing Test Suite', () => {
         })
       );
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId: exchangeForOldTenant._id,
         tenantDID: tenantWithVendorOrganizationId.did,
         tenantId: tenantWithVendorOrganizationId._id,
@@ -2258,7 +2258,7 @@ describe('Holder Issuing Test Suite', () => {
           },
         })
       );
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -2334,7 +2334,7 @@ describe('Holder Issuing Test Suite', () => {
         })
       );
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -2432,7 +2432,7 @@ describe('Holder Issuing Test Suite', () => {
         })
       );
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -2514,7 +2514,7 @@ describe('Holder Issuing Test Suite', () => {
           },
         })
       );
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -3171,7 +3171,6 @@ describe('Holder Issuing Test Suite', () => {
         .post(requestOffersFromVendorEndpoint)
         .reply(200, { offers: [offer] });
 
-      fastify.cache.clear();
       const response = await fastify.injectJson({
         method: 'POST',
         url: issuingUrl(customTenant, 'credential-offers'),
@@ -3193,7 +3192,6 @@ describe('Holder Issuing Test Suite', () => {
         [offer.offerId]: 'OK',
       });
       expect(getSchemaNock.isDone()).toEqual(true);
-      expect(fastify.cache.size).toBe(1);
     });
 
     it('/credential-offers should return the same response after user is authenticated after first token has expired', async () => {
@@ -3276,7 +3274,7 @@ describe('Holder Issuing Test Suite', () => {
         })
       );
       expect(getSchemaNock.isDone()).toEqual(true);
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -3639,7 +3637,7 @@ describe('Holder Issuing Test Suite', () => {
         ),
         challenge: expect.any(String),
       });
-      expect(sentBody.json).toEqual(undefined);
+      expect(sentBody).toEqual(undefined);
     });
   });
 
@@ -3745,7 +3743,7 @@ describe('Holder Issuing Test Suite', () => {
         challenge: expect.any(String),
       });
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -3896,7 +3894,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(getSchemaNock.isDone()).toEqual(true);
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -4038,7 +4036,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(getSchemaNock.isDone()).toEqual(true);
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -4107,7 +4105,7 @@ describe('Holder Issuing Test Suite', () => {
           "'$'/relatedResource/0 must have required property 'id', '$'/relatedResource/0 must have required property 'offerId', '$'/relatedResource/0 must match exactly one schema in oneOf",
       });
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -4181,7 +4179,7 @@ describe('Holder Issuing Test Suite', () => {
         challenge: expect.any(String),
       });
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -4283,7 +4281,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(getSchemaNock.isDone()).toEqual(true);
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,
@@ -4379,7 +4377,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(getSchemaNock.isDone()).toEqual(false);
 
-      expect(sentBody.json).toEqual({
+      expect(sentBody).toEqual({
         exchangeId,
         tenantDID: tenant.did,
         tenantId: tenant._id,

@@ -340,12 +340,12 @@ const controller = async (fastify) => {
       vendorFilter,
       context
     );
-
-    const { offers: vendorOffers } = await json();
-
+    
     if (statusCode === 202) {
       return { status: 202, offers: [], offerStatuses: {} };
     }
+
+    const { offers: vendorOffers } = await json();
 
     const countOffersWithoutOfferId = flow(
       filter(({ offerId }) => isNil(offerId)),

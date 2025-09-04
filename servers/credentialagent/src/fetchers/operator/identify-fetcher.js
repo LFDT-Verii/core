@@ -20,8 +20,7 @@ const identifyUserOnVendor = async (payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
 
-  const response = await vendorFetch.post('issuing/identify', {
-    json: payload,
+  const response = await vendorFetch.post('issuing/identify', payload, {
     ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
     headers: {
       ...setAuthHeader(context),

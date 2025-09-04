@@ -16,12 +16,11 @@
 
 const { setAuthHeader } = require('./webhook-auth-header');
 
-const requestOffersFromVendor = (payload, context) => {
+const requestOffersFromVendor = async (payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
-
-  return vendorFetch.post('issuing/generate-offers', {
-    json: payload,
+ 
+  return vendorFetch.post('issuing/generate-offers', payload, {
     responseType: 'json',
     ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
     headers: {
@@ -30,12 +29,11 @@ const requestOffersFromVendor = (payload, context) => {
   });
 };
 
-const issuedCredentialsNotificationCallback = (payload, context) => {
+const issuedCredentialsNotificationCallback = async (payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
 
-  return vendorFetch.post('issuing/receive-issued-credentials', {
-    json: payload,
+  return vendorFetch.post('issuing/receive-issued-credentials', payload, {
     responseType: 'json',
     ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
     headers: {

@@ -94,11 +94,9 @@ const initHttpClient = (options) => {
       'user-agent': USER_AGENT_HEADER,
       [traceIdHeader]: traceId,
       ...customHeaders,
+      ...reqOptions?.headers,
     };
-    const [origin, path] =
-      host != null
-        ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
-        : parseFullURL(url, clientOptions, reqOptions);
+    const [origin, path] = buildUrl(host, url, reqOptions, clientOptions);
 
     log.info({ origin, path, url, reqId, reqHeaders }, 'HttpClient request');
 
@@ -195,6 +193,15 @@ const parsePrefixUrl = (prefixUrl) => {
     rootPath:
       url.pathname.at(-1) === '/' ? url.pathname.slice(0, -1) : url.pathname,
   };
+};
+
+const buildUrl = (host, url, reqOptions, clientOptions) => {
+  const { prefixUrl } = reqOptions;
+  const fullUrl = prefixUrl ? new URL(url, prefixUrl).toString() : url;
+
+  return host && !prefixUrl
+      ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
+      : parseFullURL(fullUrl, clientOptions, reqOptions);
 };
 
 const parseFullURL = (url, clientOptions, reqOptions) => {

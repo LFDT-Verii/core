@@ -22,8 +22,8 @@ const sendCredentials = async (vendorEndpoint, payload, context) => {
 
   const response = await await vendorFetch.post(
     `inspection/${vendorEndpoint}`,
+    payload,
     {
-      json: payload,
       ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
       headers: {
         ...setAuthHeader(context),
