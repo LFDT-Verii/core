@@ -196,10 +196,9 @@ const parsePrefixUrl = (prefixUrl) => {
 };
 
 const buildUrl = (host, url, reqOptions, clientOptions) => {
-  const { prefixUrl } = reqOptions;
-  const fullUrl = prefixUrl ? new URL(url, prefixUrl).toString() : url;
+  const fullUrl = reqOptions?.prefixUrl ? new URL(url, reqOptions.prefixUrl).toString() : url;
 
-  return host && !prefixUrl
+  return host && !reqOptions?.prefixUrl
     ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
     : parseFullURL(fullUrl, clientOptions, reqOptions);
 };
