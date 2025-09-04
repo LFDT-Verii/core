@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-const { initHttpClient } = require('@verii/http-client');
 const Static = require('@fastify/static');
 const fastifyRoutes = require('@fastify/routes');
 const { pick, omit } = require('lodash/fp');
-const { vnfProtocolVersionPlugin } = require('@verii/fastify-plugins');
+const { vnfProtocolVersionPlugin, httpClientPlugin } = require('@verii/fastify-plugins');
 const { rpcProviderPlugin } = require('@verii/base-contract-io');
 const { validationPlugin } = require('@verii/validation');
 const path = require('path');
@@ -62,51 +61,51 @@ const initHolderServer = (fastify) => {
     .register(autoloadRepos, { path: `${__dirname}/entities` })
     .register(autoloadHolderApiControllers)
     .register(autoloadRootApiController)
-    .decorate(
-      'baseVendorFetch',
-      initHttpClient({
+    .register(httpClientPlugin, {
+      name: 'vendorFetch',
+      options: {
         ...omit(['bearerToken'], fastify.config),
         mapUrl: initMapVendorUrl(fastify.config),
         prefixUrl: fastify.config.vendorUrl,
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      })
-    )
-    .decorate(
-      'baseRegistrarFetch',
-      initHttpClient({
+      }
+    })
+    .register(httpClientPlugin, {
+      name: 'registrarFetch',
+      options: {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.oracleUrl,
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      })
-    )
-    .decorate(
-      'baseUniversalResolverFetch',
-      initHttpClient({
+      }
+    })
+    .register(httpClientPlugin, {
+      name: 'universalResolverFetch',
+      options: {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.universalResolverUrl,
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      })
-    )
-    .decorate(
-      'baseFetch',
-      initHttpClient({
+      }
+    })
+    .register(httpClientPlugin, {
+      name: 'fetch',
+      options: {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      })
-    )
-    .decorate(
-      'baseLibFetch',
-      initHttpClient({
+      }
+    })
+    .register(httpClientPlugin, {
+      name: 'libFetch',
+      options: {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.libUrl,
         cache: fastify.cache,
         useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
-      })
-    )
+      }
+    })
     .register(Static, {
       root: path.join(__dirname, 'assets/public'),
       prefix: '/public',

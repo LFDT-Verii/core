@@ -32,27 +32,6 @@ module.exports = async (fastify) =>
     .decorateRequest('registrarFetch', null)
     .decorateRequest('fetch', null)
     .decorateRequest('libFetch', null)
-    .addHook('preValidation', async (req) => {
-      req.vendorFetch = fastify.baseVendorFetch(fastify.config.vendorUrl, req);
-    })
-    .addHook('preValidation', async (req) => {
-      req.universalResolverFetch = fastify.baseUniversalResolverFetch(
-        fastify.config.universalResolverUrl,
-        req
-      );
-    })
-    .addHook('preValidation', async (req) => {
-      req.registrarFetch = fastify.baseRegistrarFetch(
-        fastify.config.oracleUrl,
-        req
-      );
-    })
-    .addHook('preValidation', async (req) => {
-      req.fetch = fastify.baseFetch(req);
-    })
-    .addHook('preValidation', async (req) => {
-      req.libFetch = fastify.baseLibFetch(fastify.config.libUrl, req);
-    })
     .autoSchemaPreset({
       params: {
         type: 'object',
