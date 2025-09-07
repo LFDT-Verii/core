@@ -20,7 +20,7 @@ const { capitalize } = require('lodash/fp');
 const fp = require('fastify-plugin');
 
 const httpClientPlugin = async (fastify, { name, options }) => {
-  const fastifyDecoration = `base${capitalize(name)}`;
+  const fastifyDecoration = `base${name[0].toUpperCase()}${name.slice(1)}`;
   const requestDecoration = name;
   const { prefixUrl } = options;
   fastify
