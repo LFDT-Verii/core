@@ -16,7 +16,6 @@
  */
 
 const { initHttpClient } = require('@verii/http-client');
-const { capitalize } = require('lodash/fp');
 const fp = require('fastify-plugin');
 
 const httpClientPlugin = async (fastify, { name, options }) => {
