@@ -298,14 +298,14 @@ jobs:
         pattern: codecov-*
         merge-multiple: true
     - name: Upload coverage for PR
-      uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
+      uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: lcov.info,!tools
         flags: pull_request
       if: github.event_name == 'pull_request'
     - name: Upload coverage for All
-      uses: codecov/codecov-action@fdcc8476540edceab3de004e990f80d881c6cc00 # v5
+      uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: lcov.info,!tools
