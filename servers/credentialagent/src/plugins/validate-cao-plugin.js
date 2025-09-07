@@ -34,7 +34,7 @@ async function validateCao() {
     return;
   }
 
-  const registrarFetch = context.baseRegistrarFetch(
+  const registrarFetch = context.baseRegistrarFetch()(
     context.config.oracleUrl,
     context
   );
