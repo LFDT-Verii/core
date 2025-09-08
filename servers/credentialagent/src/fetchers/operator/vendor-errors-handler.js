@@ -48,7 +48,7 @@ const handleConnectivityError = (error) => {
 };
 
 const handleBadRequestError = (error) => {
-  if (error.response?.statusCode === 400) {
+  if (error.statusCode === 400) {
     throw newError(
       502,
       'Bad request sent from credential agent to vendor gateway (this should be raised with velocity support).',
@@ -61,8 +61,8 @@ const handleBadRequestError = (error) => {
 
 const handleUnauthorizedForbiddenError = (error) => {
   if (
-    error.response?.statusCode === 401 ||
-    error.response?.statusCode === 403
+    error.statusCode === 401 ||
+    error.statusCode === 403
   ) {
     throw newError(
       502,
@@ -77,7 +77,7 @@ const handleUnauthorizedForbiddenError = (error) => {
 };
 
 const handleNotFoundError = (error, endpointPath) => {
-  if (error.response?.statusCode === 404) {
+  if (error.statusCode === 404) {
     throw newError(
       502,
       `Missing implementation of the endpoint '${endpointPath}'.`,
