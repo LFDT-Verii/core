@@ -66,14 +66,12 @@ const addValidationErrorCode = (err) => {
 };
 const errorsPlugin = (fastify, options, next) => {
   fastify.setErrorHandler((_error, request, reply) => {
-    const { sendError = () => {} } = fastify;
     const error = flow(
       addValidationErrorCode,
       (err) => ensureErrorCode(err, fastify),
       (err) => addRequestId(err, request)
     )(_error);
 
-    sendError(error);
     return reply.send(error);
   });
   next();
