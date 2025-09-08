@@ -60,10 +60,7 @@ const handleBadRequestError = (error) => {
 };
 
 const handleUnauthorizedForbiddenError = (error) => {
-  if (
-    error.statusCode === 401 ||
-    error.statusCode === 403
-  ) {
+  if (error.statusCode === 401 || error.statusCode === 403) {
     throw newError(
       502,
       'Bad authentication of the server. Please review the supported authentication methods for the agent.',
