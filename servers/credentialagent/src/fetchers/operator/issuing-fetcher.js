@@ -32,6 +32,8 @@ const requestOffersFromVendor = async (payload, context) => {
   } catch (error) {
     handleVendorError(error);
   }
+
+  return null;
 };
 
 const issuedCredentialsNotificationCallback = async (payload, context) => {
@@ -49,6 +51,8 @@ const issuedCredentialsNotificationCallback = async (payload, context) => {
   } catch (error) {
     handleVendorError(error);
   }
+
+  return null;
 };
 
 module.exports = {

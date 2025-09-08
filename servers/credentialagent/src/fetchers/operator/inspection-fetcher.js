@@ -39,6 +39,8 @@ const sendCredentials = async (vendorEndpoint, payload, context) => {
   } catch (error) {
     handleVendorError(error);
   }
+
+  return null;
 };
 
 module.exports = { sendCredentials };

@@ -15,9 +15,8 @@
  */
 
 const url = require('url');
-const newError = require('http-errors');
 const fp = require('fastify-plugin');
-const { includes, get, isEmpty, flow } = require('lodash/fp');
+const { get, isEmpty, flow } = require('lodash/fp');
 const { ERROR_CODES } = require('./constants');
 
 const extractEndpoint = (endpointUrl) => {
@@ -73,7 +72,7 @@ const errorsPlugin = (fastify, options, next) => {
       (err) => ensureErrorCode(err, fastify),
       (err) => addRequestId(err, request)
     )(_error);
-    
+
     sendError(error);
     return reply.send(error);
   });

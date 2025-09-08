@@ -18,7 +18,9 @@ const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const newError = require('http-errors');
 
-const { handleVendorError } = require('../../src/fetchers/operator/vendor-errors-handler');
+const {
+  handleVendorError,
+} = require('../../src/fetchers/operator/vendor-errors-handler');
 
 describe('Vendor Errors Handler', () => {
   it('Should throw BadGateway when error message includes "getaddrinfo"', () => {
@@ -145,7 +147,7 @@ describe('Vendor Errors Handler', () => {
     const urlPath = 'SOME-URL-PATH';
     const error = {
       response: { statusCode: 404 },
-      url: urlPath
+      url: urlPath,
     };
 
     const result = () => handleVendorError(error);

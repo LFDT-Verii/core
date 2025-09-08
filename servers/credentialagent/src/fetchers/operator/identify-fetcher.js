@@ -33,6 +33,8 @@ const identifyUserOnVendor = async (payload, context) => {
   } catch (error) {
     handleVendorError(error);
   }
+
+  return null;
 };
 
 module.exports = {
