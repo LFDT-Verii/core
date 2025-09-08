@@ -15,24 +15,30 @@
  */
 
 const { setAuthHeader } = require('./webhook-auth-header');
+const { handleVendorError } = require('./vendor-errors-handler');
 
 const sendCredentials = async (vendorEndpoint, payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
 
-  const response = await await vendorFetch.post(
-    `inspection/${vendorEndpoint}`,
-    payload,
-    {
-      ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
-      headers: {
-        ...setAuthHeader(context),
-      },
-    }
-  );
+  try {
+    const response = await await vendorFetch.post(
+      `inspection/${vendorEndpoint}`,
+      payload,
+      {
+        ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
+        headers: {
+          ...setAuthHeader(context),
+        },
+      }
+    );
 
-  const { numProcessed } = await response.json();
-  return numProcessed;
+    const { numProcessed } = await response.json();
+
+    return numProcessed;
+  } catch (error) {
+    handleVendorError(error);
+  }
 };
 
 module.exports = { sendCredentials };

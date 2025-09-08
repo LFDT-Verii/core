@@ -134,9 +134,7 @@ const initHttpClient = (options) => {
       };
     } catch (error) {
       // eslint-disable-next-line better-mutation/no-mutation
-      error.gatewayResponse = {
-        url: `${origin}${path}`,
-      };
+      error.url = `${origin}${path}`;
 
       throw error;
     }
