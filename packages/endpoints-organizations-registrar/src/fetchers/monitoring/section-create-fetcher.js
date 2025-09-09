@@ -9,7 +9,7 @@ const createSection = async (
 
   const response = await betterUptimeFetch.post(
     `status-pages/${statusPageId}/sections`,
-    { json: payload }
+    payload
   );
 
   return response.json();

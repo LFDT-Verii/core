@@ -88,14 +88,12 @@ const batchOperations = async (
   }
   const response = await fineractFetch.post(
     `fineract-provider/api/v1/batches?${queryParams}`,
-    {
-      json: [
-        ...batchedTransfers,
-        ...batchedClientsToCreate,
-        ...batchedCreditAccountsToCreate,
-        ...batchedClientBurnVouchers,
-      ],
-    }
+    [
+      ...batchedTransfers,
+      ...batchedClientsToCreate,
+      ...batchedCreditAccountsToCreate,
+      ...batchedClientBurnVouchers,
+    ]
   );
   const result = await response.json();
   if (transactionalBatch && firstStatusCode(result) >= 400) {
@@ -150,9 +148,7 @@ const createClient = async (
   });
   const response = await fineractFetch.post(
     'fineract-provider/api/v1/clients',
-    {
-      json: payload,
-    }
+    payload
   );
   const { clientId } = await response.json();
   return { clientId: `${clientId}` };
@@ -171,9 +167,7 @@ const createCreditsAccount = async (
   });
   const response = await fineractFetch.post(
     'fineract-provider/api/v1/savingsaccounts',
-    {
-      json: payload,
-    }
+    payload
   );
   const { savingsId } = await response.json();
   return { tokenAccountId: `${savingsId}` };
@@ -194,9 +188,7 @@ const createVouchers = async (
   };
   const response = await fineractFetch.post(
     `fineract-provider/api/v1/datatables/Voucher/${clientId}?genericResultSet=true`,
-    {
-      json: payload,
-    }
+    payload
   );
   return response.text();
 };
@@ -289,9 +281,7 @@ const transferCredits = async (
   };
   const response = await fineractFetch.post(
     'fineract-provider/api/v1/accounttransfers',
-    {
-      json: payload,
-    }
+    payload
   );
   await response.json();
   return {};

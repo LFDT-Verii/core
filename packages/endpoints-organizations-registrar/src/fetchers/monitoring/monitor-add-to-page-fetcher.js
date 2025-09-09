@@ -12,7 +12,7 @@ const addMonitorToStatusPage = async (
 
   const response = await betterUptimeFetch.post(
     `status-pages/${statusPageId}/resources`,
-    { json: payload }
+    payload
   );
 
   return response.json();

@@ -15,7 +15,7 @@ const createMonitor = async (
     payload.required_keyword = requiredKeyword;
   }
 
-  const response = await betterUptimeFetch.post('monitors', { json: payload });
+  const response = await betterUptimeFetch.post('monitors', payload);
 
   return response.json();
 };

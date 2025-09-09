@@ -20,11 +20,10 @@ const sendPush = async (body, pushDelegate, context) => {
   const { pushUrl } = pushDelegate;
 
   try {
-    const response = await context.fetch.post(pushUrl, {
+    const response = await context.fetch.post(pushUrl, body, {
       headers: {
         Authorization: await generatePushGatewayToken(body, pushUrl, context),
       },
-      json: body,
     });
 
     return response.json();
