@@ -116,6 +116,10 @@ const initHttpClient = (options) => {
         statusCode,
         resHeaders,
         json: async () => {
+          if (!rawBody.bodyUsed) {
+            return undefined;
+          }
+
           const bodyJson = await rawBody.json();
           log.info(
             { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
