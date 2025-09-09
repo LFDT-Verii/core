@@ -100,7 +100,7 @@ describe('Vendor Errors Handler', () => {
 
   it('Should throw BadGateway when HTTP status is 400', () => {
     const error = {
-      response: { statusCode: 400 },
+      statusCode: 400,
       url: 'SOME-URL-PATH',
     };
 
@@ -115,7 +115,7 @@ describe('Vendor Errors Handler', () => {
 
   it('Should throw BadGateway when HTTP status is 401', () => {
     const error = {
-      response: { statusCode: 401 },
+      statusCode: 401,
       url: 'SOME-URL-PATH',
     };
 
@@ -130,7 +130,7 @@ describe('Vendor Errors Handler', () => {
 
   it('Should throw BadGateway when HTTP status is 403', () => {
     const error = {
-      response: { statusCode: 403 },
+      statusCode: 403,
       url: 'SOME-URL-PATH',
     };
 
@@ -146,7 +146,7 @@ describe('Vendor Errors Handler', () => {
   it('Should throw BadGateway when HTTP status is 404', () => {
     const urlPath = 'SOME-URL-PATH';
     const error = {
-      response: { statusCode: 404 },
+      statusCode: 404,
       url: urlPath,
     };
 
