@@ -22,7 +22,7 @@ const sendCredentials = async (vendorEndpoint, payload, context) => {
   const { webhookUrl } = tenant;
 
   try {
-    const response = await await vendorFetch.post(
+    const response = await vendorFetch.post(
       `inspection/${vendorEndpoint}`,
       payload,
       {
