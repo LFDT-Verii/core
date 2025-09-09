@@ -116,7 +116,7 @@ const initHttpClient = (options) => {
         statusCode,
         resHeaders,
         json: async () => {
-          if (method == 'POST' && !rawBody.bodyUsed) {
+          if (method === 'POST' && !rawBody.bodyUsed) {
             return {};
           }
 
