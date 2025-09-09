@@ -557,7 +557,7 @@ describe('presentation submission', () => {
 
       const webhookNock = await nock(webhookUrl)
         .post(sendCredentialsUncheckedEndpoint)
-        .reply(200, {});
+        .reply(200);
 
       const response = await fastify.inject({
         method: 'POST',
@@ -932,7 +932,7 @@ describe('presentation submission', () => {
 
       const nockWebhook = await nock(webhookUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200, {});
+        .reply(200);
 
       const response = await fastify.inject({
         method: 'POST',
@@ -2290,7 +2290,7 @@ describe('presentation submission', () => {
         },
       });
 
-      vendorNock.post(sendCredentialsUncheckedEndpoint).reply(200, {});
+      vendorNock.post(sendCredentialsUncheckedEndpoint).reply(200);
 
       const signedJwt = await generateDocJwt(
         { foo: 'foo' },
@@ -2336,7 +2336,7 @@ describe('presentation submission', () => {
         },
       });
 
-      vendorNock.post(sendCredentialsUncheckedEndpoint).reply(200, {});
+      vendorNock.post(sendCredentialsUncheckedEndpoint).reply(200);
 
       const builder = await generatePresentation(disclosureExchange);
 
