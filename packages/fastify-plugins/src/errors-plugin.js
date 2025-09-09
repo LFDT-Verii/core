@@ -16,6 +16,7 @@
 
 const url = require('url');
 const fp = require('fastify-plugin');
+const newError = require('http-errors'); 
 const { get, isEmpty, flow } = require('lodash/fp');
 const { ERROR_CODES } = require('./constants');
 
@@ -64,12 +65,24 @@ const addValidationErrorCode = (err) => {
   err.errorCode = 'request_validation_failed';
   return err;
 };
+
+const transformToInternalServerError = (error, fastify) => {
+  if (error.url && error.statusCode && error.statusCode < 500) {
+    fastify.log.info(`Transforming error to Internal Server Error`, { error });
+
+    return newError(500, 'Internal Server Error');
+  }
+
+  return error;
+};
+
 const errorsPlugin = (fastify, options, next) => {
   fastify.setErrorHandler((_error, request, reply) => {
     const error = flow(
       addValidationErrorCode,
       (err) => ensureErrorCode(err, fastify),
-      (err) => addRequestId(err, request)
+      (err) => addRequestId(err, request),
+      (err) => transformToInternalServerError(err, fastify)
     )(_error);
 
     return reply.send(error);
