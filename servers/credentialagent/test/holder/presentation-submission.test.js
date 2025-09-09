@@ -381,7 +381,7 @@ describe('presentation submission', () => {
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
       expect(response.statusCode).toEqual(200);
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -475,7 +475,7 @@ describe('presentation submission', () => {
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
       expect(response.statusCode).toEqual(200);
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -557,7 +557,7 @@ describe('presentation submission', () => {
 
       const webhookNock = await nock(webhookUrl)
         .post(sendCredentialsUncheckedEndpoint)
-        .reply(200);
+        .reply(200, {});
 
       const response = await fastify.inject({
         method: 'POST',
@@ -631,7 +631,7 @@ describe('presentation submission', () => {
       ]);
 
       expect(response.statusCode).toEqual(200);
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -708,7 +708,7 @@ describe('presentation submission', () => {
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
       expect(response.statusCode).toEqual(200);
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -789,7 +789,7 @@ describe('presentation submission', () => {
       expect(response.statusCode).toEqual(200);
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -859,7 +859,7 @@ describe('presentation submission', () => {
       expect(response.statusCode).toEqual(200);
       expect(mockSendPush.mock.callCount()).toEqual(0);
 
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosurePresentationExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: presentationDisclosure.vendorDisclosureId,
@@ -932,7 +932,7 @@ describe('presentation submission', () => {
 
       const nockWebhook = await nock(webhookUrl)
         .post(sendCredentialsCheckedEndpoint)
-        .reply(200);
+        .reply(200, {});
 
       const response = await fastify.inject({
         method: 'POST',
@@ -1091,7 +1091,7 @@ describe('presentation submission', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1369,7 +1369,7 @@ describe('presentation submission', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1437,7 +1437,7 @@ describe('presentation submission', () => {
       });
       expect(response.statusCode).toEqual(200);
 
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1505,7 +1505,7 @@ describe('presentation submission', () => {
       });
       expect(response.statusCode).toEqual(200);
 
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1585,7 +1585,7 @@ describe('presentation submission', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -1840,7 +1840,7 @@ describe('presentation submission', () => {
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
       });
-      expect(webhookPayload.json).toEqual({
+      expect(webhookPayload).toEqual({
         exchangeId: disclosureExchange._id,
         presentationId: presentationBuilder.presentation.id,
         vendorDisclosureId: disclosure.vendorDisclosureId,
@@ -2290,7 +2290,7 @@ describe('presentation submission', () => {
         },
       });
 
-      vendorNock.post(sendCredentialsUncheckedEndpoint).reply(200);
+      vendorNock.post(sendCredentialsUncheckedEndpoint).reply(200, {});
 
       const signedJwt = await generateDocJwt(
         { foo: 'foo' },
@@ -2336,7 +2336,7 @@ describe('presentation submission', () => {
         },
       });
 
-      vendorNock.post(sendCredentialsUncheckedEndpoint).reply(200);
+      vendorNock.post(sendCredentialsUncheckedEndpoint).reply(200, {});
 
       const builder = await generatePresentation(disclosureExchange);
 
