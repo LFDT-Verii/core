@@ -41,7 +41,7 @@ const handleConnectivityError = (error) => {
     includes('ECONNREFUSED', error.message)
   ) {
     // eslint-disable-next-line better-mutation/no-mutation
-    error.processedError =  newError(
+    error.processedError = newError(
       502,
       'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings',
       {
@@ -56,7 +56,7 @@ const handleConnectivityError = (error) => {
 const handleBadRequestError = (error) => {
   if (error.statusCode === 400) {
     // eslint-disable-next-line better-mutation/no-mutation
-    error.processedError =  newError(
+    error.processedError = newError(
       502,
       'Bad request sent from credential agent to vendor gateway (this should be raised with velocity support).',
       {
@@ -71,7 +71,7 @@ const handleBadRequestError = (error) => {
 const handleUnauthorizedForbiddenError = (error) => {
   if (error.statusCode === 401 || error.statusCode === 403) {
     // eslint-disable-next-line better-mutation/no-mutation
-    error.processedError =  newError(
+    error.processedError = newError(
       502,
       'Bad authentication of the server. Please review the supported authentication methods for the agent.',
       {

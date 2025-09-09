@@ -35,7 +35,7 @@ describe('Vendor Errors Handler', () => {
       ...error,
       processedError: new newError.BadRequest(
         'DNS Error - Please verify that that the server has access to an internal DNS server, and that the vendor gateway api has an entry'
-      )
+      ),
     });
   });
 
@@ -51,7 +51,7 @@ describe('Vendor Errors Handler', () => {
       ...error,
       processedError: new newError.BadGateway(
         'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
-      )
+      ),
     });
   });
 
@@ -67,7 +67,7 @@ describe('Vendor Errors Handler', () => {
       ...error,
       processedError: new newError.BadGateway(
         'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
-      )
+      ),
     });
   });
 
@@ -83,7 +83,7 @@ describe('Vendor Errors Handler', () => {
       ...error,
       processedError: new newError.BadGateway(
         'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
-      )
+      ),
     });
   });
 
@@ -99,7 +99,7 @@ describe('Vendor Errors Handler', () => {
       ...error,
       processedError: new newError.BadGateway(
         'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
-      )
+      ),
     });
   });
 
@@ -116,7 +116,7 @@ describe('Vendor Errors Handler', () => {
       ...error,
       processedError: new newError.BadGateway(
         'Bad request sent from credential agent to vendor gateway (this should be raised with velocity support).'
-      )
+      ),
     });
   });
 
@@ -133,7 +133,7 @@ describe('Vendor Errors Handler', () => {
       ...error,
       processedError: new newError.BadGateway(
         'Bad authentication of the server. Please review the supported authentication methods for the agent.'
-      )
+      ),
     });
   });
 
