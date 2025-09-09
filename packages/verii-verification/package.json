@@ -46,7 +46,7 @@
     "nanoid": "3.3.11",
     "nock": "15.0.0-beta.5",
     "prettier": "2.8.8",
-    "undici": "7.13.0"
+    "undici": "7.15.0"
   },
   "nx": {
     "tags": ["lib"]
