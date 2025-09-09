@@ -58,16 +58,16 @@ const initHttpClient = (options) => {
       ...addCache(cache),
       ...(tokensEndpoint
         ? [
-            createOidcInterceptor({
-              idpTokenUrl: tokensEndpoint,
-              clientId,
-              clientSecret,
-              retryOnStatusCodes: [401],
-              scopes,
-              audience,
-              urls: map((url) => url.origin, registeredPrefixUrls.values()),
-            }),
-          ]
+          createOidcInterceptor({
+            idpTokenUrl: tokensEndpoint,
+            clientId,
+            clientSecret,
+            retryOnStatusCodes: [401],
+            scopes,
+            audience,
+            urls: map((url) => url.origin, registeredPrefixUrls.values()),
+          }),
+        ]
         : []),
     ]);
 
@@ -117,7 +117,7 @@ const initHttpClient = (options) => {
         resHeaders,
         json: async () => {
           if (!rawBody.bodyUsed) {
-            return undefined;
+            return {};
           }
 
           const bodyJson = await rawBody.json();
