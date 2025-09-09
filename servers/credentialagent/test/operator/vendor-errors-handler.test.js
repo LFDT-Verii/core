@@ -31,11 +31,12 @@ describe('Vendor Errors Handler', () => {
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadRequest(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadRequest(
         'DNS Error - Please verify that that the server has access to an internal DNS server, and that the vendor gateway api has an entry'
       )
-    );
+    });
   });
 
   it('Should throw BadGateway when error message includes "ETIMEDOUT"', () => {
@@ -46,11 +47,12 @@ describe('Vendor Errors Handler', () => {
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
       )
-    );
+    });
   });
 
   it('Should throw BadGateway when error message includes "EPIPE"', () => {
@@ -61,11 +63,12 @@ describe('Vendor Errors Handler', () => {
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
       )
-    );
+    });
   });
 
   it('Should throw BadGateway when error message includes "ECONNRESET"', () => {
@@ -76,11 +79,12 @@ describe('Vendor Errors Handler', () => {
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
       )
-    );
+    });
   });
 
   it('Should throw BadGateway when error message includes "ECONNREFUSED"', () => {
@@ -91,72 +95,81 @@ describe('Vendor Errors Handler', () => {
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
       )
-    );
+    });
   });
 
   it('Should throw BadGateway when HTTP status is 400', () => {
     const error = {
+      message: 'ERROR MESSAGE',
       statusCode: 400,
       url: 'SOME-URL-PATH',
     };
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         'Bad request sent from credential agent to vendor gateway (this should be raised with velocity support).'
       )
-    );
+    });
   });
 
   it('Should throw BadGateway when HTTP status is 401', () => {
     const error = {
+      message: 'ERROR MESSAGE',
       statusCode: 401,
       url: 'SOME-URL-PATH',
     };
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         'Bad authentication of the server. Please review the supported authentication methods for the agent.'
       )
-    );
+    });
   });
 
   it('Should throw BadGateway when HTTP status is 403', () => {
     const error = {
+      message: 'ERROR MESSAGE',
       statusCode: 403,
       url: 'SOME-URL-PATH',
     };
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         'Bad authentication of the server. Please review the supported authentication methods for the agent.'
-      )
-    );
+      ),
+    });
   });
 
   it('Should throw BadGateway when HTTP status is 404', () => {
     const urlPath = 'SOME-URL-PATH';
     const error = {
+      message: 'ERROR MESSAGE',
       statusCode: 404,
       url: urlPath,
     };
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         `Missing implementation of the endpoint '${urlPath}'.`
-      )
-    );
+      ),
+    });
   });
 
   it('Should throw BadGateway when unknown error', () => {
@@ -167,10 +180,11 @@ describe('Vendor Errors Handler', () => {
 
     const result = () => handleVendorError(error);
 
-    expect(result).toThrow(
-      new newError.BadGateway(
+    expect(result).toThrow({
+      ...error,
+      processedError: new newError.BadGateway(
         'Unexpected error received connecting to vendor gateway.'
-      )
-    );
+      ),
+    });
   });
 });

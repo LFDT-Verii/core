@@ -83,7 +83,7 @@ const errorsPlugin = (fastify, options, next) => {
       (err) => ensureErrorCode(err, fastify),
       (err) => addRequestId(err, request),
       (err) => transformToInternalServerError(err, fastify)
-    )(_error);
+    )(_error.processedError || _error);
 
     return reply.send(error);
   });
