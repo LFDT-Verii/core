@@ -14199,10 +14199,10 @@ no-case@^3.0.4:
     lower-case "^2.0.2"
     tslib "^2.0.3"
 
-nock@15.0.0-beta.5:
-  version "15.0.0-beta.5"
-  resolved "https://registry.npmjs.org/nock/-/nock-15.0.0-beta.5.tgz#cef9b54750fc2299c5e4d83d38564aa8c7263922"
-  integrity sha512-PnPM6UiBb4y+BoEvSE/tYioWzyExRdEk+wnjO0uty3j/gAvz7lo5VR6FQRX3vnSjcv6uvDxTDhjx686BOCpT0Q==
+nock@15.0.0-beta.6:
+  version "15.0.0-beta.6"
+  resolved "https://registry.npmjs.org/nock/-/nock-15.0.0-beta.6.tgz#44d2699c9e19bb3d15639c5e6cc55165fd38042e"
+  integrity sha512-DEOrKwXXWKCocuA3AX2DWHGNQXZK7x72yahk3aBsUuSwEIlATKHZT7IMgrQJSobIGcG1yavBBvBf6XLUwfo4Kg==
   dependencies:
     "@mswjs/interceptors" "^0.39.3"
     json-stringify-safe "^5.0.1"
