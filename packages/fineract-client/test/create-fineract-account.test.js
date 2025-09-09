@@ -66,7 +66,7 @@ describe('create client accounts', () => {
 
     const stakesAccountId = await createStakesAccount(30, didDoc.id, context);
     expect(stakesAccountId).toEqual('9');
-    expect(webhookPayload.json).toEqual({
+    expect(webhookPayload).toEqual({
       ...expectedSavingsAccountRequest,
       externalId: `${didDoc.id}#stakes-account`,
       productId: ProductIds.STAKES,
@@ -89,7 +89,7 @@ describe('create client accounts', () => {
 
     const stakesAccountId = await createEscrowAccount(30, didDoc.id, context);
     expect(stakesAccountId).toEqual('19');
-    expect(webhookPayload.json).toEqual({
+    expect(webhookPayload).toEqual({
       ...expectedSavingsAccountRequest,
       externalId: `${didDoc.id}#escrow-account`,
       productId: ProductIds.ESCROW,

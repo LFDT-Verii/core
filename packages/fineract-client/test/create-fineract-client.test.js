@@ -58,7 +58,7 @@ describe('create clients', () => {
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
       .reply(200, async (request) => {
         const body = await request.json();
-        webhookPayloads.push(body.json);
+        webhookPayloads.push(body);
         return [
           {
             statusCode: 200,
@@ -70,11 +70,11 @@ describe('create clients', () => {
       .post('/fineract-provider/api/v1/savingsaccounts')
       .reply(200, async (request) => {
         const body = await request.json();
-        webhookPayloads.push(body.json);
+        webhookPayloads.push(body);
         savingsCounter += 1;
         return {
           officeId: 1,
-          clientId: body.json.clientId,
+          clientId: body.clientId,
           savingsId: savingsCounter,
           resourceId: 9,
           gsimId: 0,
@@ -112,7 +112,7 @@ describe('create clients', () => {
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
       .reply(200, async (request) => {
         const body = await request.json();
-        webhookPayloads.push(body.json);
+        webhookPayloads.push(body);
         return [
           {
             statusCode: 200,
@@ -125,11 +125,11 @@ describe('create clients', () => {
       .twice()
       .reply(200, async (request) => {
         const body = await request.json();
-        webhookPayloads.push(body.json);
+        webhookPayloads.push(body);
         savingsCounter += 1;
         return {
           officeId: 1,
-          clientId: body.json.clientId,
+          clientId: body.clientId,
           savingsId: savingsCounter,
           resourceId: 9,
           gsimId: 0,
