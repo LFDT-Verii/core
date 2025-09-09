@@ -293,73 +293,73 @@ describe('get credential manifests', () => {
     });
 
     it('should 500 when the credential type descriptor retrieval fails', async () => {
-        nockRegistrarGetOrganizationVerifiedProfile(
-          tenant.did,
-          sampleOrganizationVerifiedProfile1
-        );
+      nockRegistrarGetOrganizationVerifiedProfile(
+        tenant.did,
+        sampleOrganizationVerifiedProfile1
+      );
 
-        nock('http://oracle.localhost.test')
-          .get(
-            '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
-          )
-          .reply(200, {
-            id: 'EmailV1.0',
-            name: 'Email',
-            schema: [
-              {
-                uri: 'http://oracle.localhost.test/schemas/Email.json',
-              },
-            ],
-            display: {
-              title: {
-                path: '$.email',
-              },
-            },
-          });
-        nock('http://oracle.localhost.test')
-          .get(
-            '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
-          )
-          .reply(403, {});
-
-        const response = await fastify.injectJson({
-          method: 'GET',
-          url: issuingUrl(tenant.did, '/get-credential-manifest', {
-            credential_types: ['PastEmploymentPosition'],
-            exchange_id: exchange._id,
-          }),
-        });
-        expect(response.statusCode).toEqual(500);
-
-        const dbExchange = await mongoDb()
-          .collection('exchanges')
-          .findOne({ tenantId: new ObjectId(tenant._id) });
-        expect(dbExchange).toEqual({
-          _id: expect.any(ObjectId),
-          type: ExchangeTypes.ISSUING,
-          credentialTypes: ['PastEmploymentPosition'],
-          disclosureId: new ObjectId(disclosure._id),
-          protocolMetadata: {
-            protocol: ExchangeProtocols.VNF_API,
-          },
-          events: [
-            { state: ExchangeStates.NEW, timestamp: expect.any(Date) },
+      nock('http://oracle.localhost.test')
+        .get(
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+        )
+        .reply(200, {
+          id: 'EmailV1.0',
+          name: 'Email',
+          schema: [
             {
-              state: ExchangeStates.CREDENTIAL_MANIFEST_REQUESTED,
-              timestamp: expect.any(Date),
-            },
-            {
-              state: ExchangeStates.UNEXPECTED_ERROR,
-              timestamp: expect.any(Date),
+              uri: 'http://oracle.localhost.test/schemas/Email.json',
             },
           ],
-          offerHashes: [],
-          err: expect.any(String),
-          tenantId: new ObjectId(tenant._id),
-          createdAt: expect.any(Date),
-          updatedAt: expect.any(Date),
+          display: {
+            title: {
+              path: '$.email',
+            },
+          },
         });
+      nock('http://oracle.localhost.test')
+        .get(
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+        )
+        .reply(403, {});
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: issuingUrl(tenant.did, '/get-credential-manifest', {
+          credential_types: ['PastEmploymentPosition'],
+          exchange_id: exchange._id,
+        }),
       });
+      expect(response.statusCode).toEqual(500);
+
+      const dbExchange = await mongoDb()
+        .collection('exchanges')
+        .findOne({ tenantId: new ObjectId(tenant._id) });
+      expect(dbExchange).toEqual({
+        _id: expect.any(ObjectId),
+        type: ExchangeTypes.ISSUING,
+        credentialTypes: ['PastEmploymentPosition'],
+        disclosureId: new ObjectId(disclosure._id),
+        protocolMetadata: {
+          protocol: ExchangeProtocols.VNF_API,
+        },
+        events: [
+          { state: ExchangeStates.NEW, timestamp: expect.any(Date) },
+          {
+            state: ExchangeStates.CREDENTIAL_MANIFEST_REQUESTED,
+            timestamp: expect.any(Date),
+          },
+          {
+            state: ExchangeStates.UNEXPECTED_ERROR,
+            timestamp: expect.any(Date),
+          },
+        ],
+        offerHashes: [],
+        err: expect.any(String),
+        tenantId: new ObjectId(tenant._id),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
+    });
 
     it('should 400 when exchange is already completed', async () => {
       const customExchange = await persistOfferExchange({
