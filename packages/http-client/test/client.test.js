@@ -190,7 +190,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
-        
+
         await expect(response.text()).resolves.toEqual('');
       });
 
@@ -279,7 +279,7 @@ describe('Http Client Package', () => {
           .reply(202, { message: 'Not Yet!' });
 
         const response = await httpClient.post('json');
-        
+
         expect(response).toEqual({
           statusCode: 202,
           resHeaders: {},
@@ -479,7 +479,7 @@ describe('Http Client Package', () => {
           .reply(202, { message: 'Deleted!' });
 
         const response = await httpClient.delete('json');
-        
+
         expect(response).toEqual({
           statusCode: 202,
           resHeaders: {},
@@ -585,7 +585,7 @@ describe('Http Client Package', () => {
           log: console,
           traceId: 'TRACE-ID',
         });
-        
+
         expect(client.responseType).toEqual('promise');
       });
     });
