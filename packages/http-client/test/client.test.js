@@ -121,6 +121,7 @@ describe('Http Client Package', () => {
 
       it('Should throw NotFoundError if mock not matched', async () => {
         const result = () => httpClient.get('404');
+
         await expect(result).rejects.toThrow(NotFoundError);
       });
 
@@ -130,6 +131,7 @@ describe('Http Client Package', () => {
           .intercept({ path: '/not_found', method: 'GET' })
           .reply(404);
         const result = () => httpClient.get('not_found');
+
         await expect(result).rejects.toThrow(NotFoundError);
       });
 
@@ -180,6 +182,7 @@ describe('Http Client Package', () => {
           .reply(204);
 
         const response = await httpClient.get('empty_body_response');
+
         expect(response).toEqual({
           statusCode: 204,
           resHeaders: {},
@@ -187,6 +190,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+        
         await expect(response.text()).resolves.toEqual('');
       });
 
@@ -197,6 +201,7 @@ describe('Http Client Package', () => {
           .reply(204);
 
         const response = await httpClient.post('empty_body_response');
+
         expect(response).toEqual({
           statusCode: 204,
           resHeaders: {},
@@ -204,6 +209,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.text()).resolves.toEqual('');
       });
 
@@ -212,7 +218,9 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/text', method: 'GET' })
           .reply(200, 'Hello world!');
+
         const response = await httpClient.get('text');
+
         expect(response).toEqual({
           statusCode: 200,
           resHeaders: {},
@@ -220,6 +228,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.text()).resolves.toEqual('Hello world!');
       });
 
@@ -228,7 +237,9 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/text', method: 'POST' })
           .reply(200, 'Hello world!');
+
         const response = await httpClient.post('text');
+
         expect(response).toEqual({
           statusCode: 200,
           resHeaders: {},
@@ -236,6 +247,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.text()).resolves.toEqual('Hello world!');
       });
 
@@ -246,6 +258,7 @@ describe('Http Client Package', () => {
           .reply(202, { message: 'Not Yet!' });
 
         const response = await httpClient.get('json');
+
         expect(response).toEqual({
           statusCode: 202,
           resHeaders: {},
@@ -253,6 +266,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'Not Yet!',
         });
@@ -265,6 +279,7 @@ describe('Http Client Package', () => {
           .reply(202, { message: 'Not Yet!' });
 
         const response = await httpClient.post('json');
+        
         expect(response).toEqual({
           statusCode: 202,
           resHeaders: {},
@@ -272,6 +287,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'Not Yet!',
         });
@@ -282,6 +298,7 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/json', method: 'GET' })
           .reply(200, { message: 'matched' });
+
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
           useExistingGlobalAgent: true,
@@ -289,7 +306,9 @@ describe('Http Client Package', () => {
           log: console,
           traceId: 'TRACE-ID',
         });
+
         const response = await httpClient2.get(`${origin}/json`);
+
         expect(response).toEqual({
           statusCode: 200,
           resHeaders: {},
@@ -297,6 +316,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
         });
@@ -307,6 +327,7 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/json', method: 'POST' })
           .reply(200, { message: 'matched' });
+
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
           useExistingGlobalAgent: true,
@@ -314,7 +335,9 @@ describe('Http Client Package', () => {
           log: console,
           traceId: 'TRACE-ID',
         });
+
         const response = await httpClient2.post(`${origin}/json`);
+
         expect(response).toEqual({
           statusCode: 200,
           resHeaders: {},
@@ -322,6 +345,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
         });
@@ -332,9 +356,13 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/json?foo=bar', method: 'GET' })
           .reply(200, { message: 'matched' });
+
         const searchParams = new URLSearchParams();
+
         searchParams.append('foo', 'bar');
+
         const response = await httpClient.get('json', { searchParams });
+
         expect(response).toEqual({
           statusCode: 200,
           resHeaders: {},
@@ -342,6 +370,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
         });
@@ -358,6 +387,7 @@ describe('Http Client Package', () => {
           .reply(202, { message: 'matched' });
 
         const response = await httpClient.post('json', { foo: 'bar' });
+
         expect(response).toEqual({
           statusCode: 202,
           resHeaders: {},
@@ -365,6 +395,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
         });
@@ -375,7 +406,9 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/not_found', method: 'DELETE' })
           .reply(404);
+
         const result = () => httpClient.delete('not_found');
+
         await expect(result).rejects.toThrow(NotFoundError);
       });
 
@@ -384,6 +417,7 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/bad_request', method: 'DELETE' })
           .reply(400, { error: true });
+
         const result = () => httpClient.delete('bad_request');
 
         await expect(result).rejects.toThrow(ResponseStatusCodeError);
@@ -394,6 +428,7 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/internal_server_error', method: 'DELETE' })
           .reply(500);
+
         const result = () => httpClient.delete('internal_server_error');
 
         await expect(result).rejects.toThrow(ResponseStatusCodeError);
@@ -406,6 +441,7 @@ describe('Http Client Package', () => {
           .reply(204);
 
         const response = await httpClient.delete('empty_body_response');
+
         expect(response).toEqual({
           statusCode: 204,
           resHeaders: {},
@@ -413,6 +449,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.text()).resolves.toEqual('');
       });
 
@@ -421,7 +458,9 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/text', method: 'DELETE' })
           .reply(200, 'Hello world!');
+
         const response = await httpClient.delete('text');
+
         expect(response).toEqual({
           statusCode: 200,
           resHeaders: {},
@@ -429,6 +468,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.text()).resolves.toEqual('Hello world!');
       });
 
@@ -439,6 +479,7 @@ describe('Http Client Package', () => {
           .reply(202, { message: 'Deleted!' });
 
         const response = await httpClient.delete('json');
+        
         expect(response).toEqual({
           statusCode: 202,
           resHeaders: {},
@@ -446,6 +487,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'Deleted!',
         });
@@ -456,6 +498,7 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/json', method: 'DELETE' })
           .reply(200, { message: 'matched' });
+
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
           useExistingGlobalAgent: true,
@@ -463,7 +506,9 @@ describe('Http Client Package', () => {
           log: console,
           traceId: 'TRACE-ID',
         });
+
         const response = await httpClient2.delete(`${origin}/json`);
+
         expect(response).toEqual({
           statusCode: 200,
           resHeaders: {},
@@ -471,6 +516,7 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
         });
@@ -481,9 +527,13 @@ describe('Http Client Package', () => {
           .get(origin)
           .intercept({ path: '/json?id=123', method: 'DELETE' })
           .reply(200, { message: 'deleted' });
+
         const searchParams = new URLSearchParams();
+
         searchParams.append('id', '123');
+
         const response = await httpClient.delete('json', { searchParams });
+
         expect(response).toEqual({
           statusCode: 200,
           resHeaders: {},
@@ -491,20 +541,10 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+
         await expect(response.json()).resolves.toEqual({
           message: 'deleted',
         });
-      });
-
-      it("should have a 'promise' responseType ", async () => {
-        const client = initHttpClient({
-          prefixUrl: `${origin}/json`,
-          rejectUnauthorized: false,
-        })({
-          log: console,
-          traceId: 'TRACE-ID',
-        });
-        expect(client.responseType).toEqual('promise');
       });
 
       it('should use `bearerToken` when passed', async () => {
@@ -517,17 +557,16 @@ describe('Http Client Package', () => {
           })
           .reply(200);
 
-        const client = initHttpClient({
+        const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
           useExistingGlobalAgent: true,
-          prefixUrl: origin,
           bearerToken: 'TOKEN',
-        })(origin, {
+        })({
           log: console,
           traceId: 'TRACE-ID',
         });
 
-        const response = await client.get('bearer');
+        const response = await httpClient2.get(`${origin}/bearer`);
 
         expect(response).toEqual({
           statusCode: 200,
@@ -536,6 +575,18 @@ describe('Http Client Package', () => {
           text: expect.any(Function),
           rawBody: expect.any(Object),
         });
+      });
+
+      it("should have a 'promise' responseType ", async () => {
+        const client = initHttpClient({
+          prefixUrl: `${origin}/json`,
+          rejectUnauthorized: false,
+        })({
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+        
+        expect(client.responseType).toEqual('promise');
       });
     });
   });
