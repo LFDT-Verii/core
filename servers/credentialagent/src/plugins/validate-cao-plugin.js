@@ -81,7 +81,7 @@ const checkServiceCategories = (profile, caoErrorMessage) => {
 
 const validateCaoPlugin = (fastify, options, next) => {
   if (!fastify.config.isTest) {
-    fastify.addHook('onReady', validateCao());
+    fastify.addHook('onReady', validateCao);
   }
   next();
 };
