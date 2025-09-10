@@ -506,6 +506,37 @@ describe('Http Client Package', () => {
         });
         expect(client.responseType).toEqual('promise');
       });
+
+      it('should use `bearerToken` when passed', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({
+            path: '/bearer',
+            method: 'GET',
+            headers: { Authorization: 'Bearer TOKEN' },
+          })
+          .reply(200);
+
+        const client = initHttpClient({
+          rejectUnauthorized: false,
+          useExistingGlobalAgent: true,
+          prefixUrl: origin,
+          bearerToken: 'TOKEN',
+        })(origin, {
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+
+        const response = await client.get('bearer');
+
+        expect(response).toEqual({
+          statusCode: 200,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+      });
     });
   });
 });

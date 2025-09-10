@@ -41,6 +41,7 @@ const initHttpClient = (options) => {
     scopes,
     audience,
     cache,
+    bearerToken,
   } = options;
 
   const { clientOptions, traceIdHeader, customHeaders } = parseOptions(options);
@@ -95,6 +96,7 @@ const initHttpClient = (options) => {
       [traceIdHeader]: traceId,
       ...customHeaders,
       ...reqOptions?.headers,
+      ...buildBearerAuthorizationHeader(bearerToken),
     };
     const [origin, path] = buildUrl(host, url, reqOptions, clientOptions);
 
@@ -223,6 +225,9 @@ const addSearchParams = (path, searchParams) =>
 
 const addCache = (store) =>
   store ? [interceptors.cache({ store, methods: ['GET'] })] : [];
+
+const buildBearerAuthorizationHeader = (token) =>
+  token ? { Authorization: `Bearer ${token}` } : {};
 
 const HTTP_VERBS = {
   GET: 'GET',
