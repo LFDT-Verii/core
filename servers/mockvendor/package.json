@@ -62,7 +62,7 @@
     "eslint-watch": "7.0.0",
     "canonicalize": "2.1.0",
     "expect": "29.7.0",
-    "nock": "15.0.0-beta.5",
+    "nock": "15.0.0-beta.6",
     "nodemon": "3.1.10",
     "prettier": "2.8.8"
   }
