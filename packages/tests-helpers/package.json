@@ -27,7 +27,7 @@
     "expect": "29.7.0",
     "lodash": "^4.17.21",
     "mongodb": "~6.18.0",
-    "nanoid": "~5.0.9"
+    "nanoid": "~5.1.0"
   },
   "devDependencies": {
     "eslint": "8.57.1",
