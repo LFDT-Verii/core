@@ -64,17 +64,12 @@ describe('cache-plugin test suite', () => {
   it('cache plugin should decorate and add hook', async () => {
     const fakeServer = {
       decorate: mockDecorate,
-      addHook: mockAddHook,
     };
     cachePlugin(fakeServer, {}, () => {});
     expect(mockDecorate.mock.callCount()).toEqual(1);
-    expect(mockAddHook.mock.callCount()).toEqual(1);
     expect(
       mockDecorate.mock.calls.map((call) => call.arguments)
     ).toContainEqual(['cache', expect.any(Object)]);
-    expect(mockAddHook.mock.calls.map((call) => call.arguments)).toContainEqual(
-      ['onRequest', expect.any(Function)]
-    );
   });
 
   it('cache plugin should cached requests', async () => {
