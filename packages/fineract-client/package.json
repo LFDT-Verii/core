@@ -21,7 +21,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@verii/request": "0.5.0-build",
+    "@verii/http-client": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
     "date-fns": "3.6.0",
     "eslint": "8.57.1",

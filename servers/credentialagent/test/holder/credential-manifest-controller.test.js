@@ -329,7 +329,7 @@ describe('get credential manifests', () => {
           exchange_id: exchange._id,
         }),
       });
-      expect(response.statusCode).toEqual(502);
+      expect(response.statusCode).toEqual(500);
 
       const dbExchange = await mongoDb()
         .collection('exchanges')
@@ -354,7 +354,7 @@ describe('get credential manifests', () => {
           },
         ],
         offerHashes: [],
-        err: 'Response code 403 (Forbidden)',
+        err: expect.any(String),
         tenantId: new ObjectId(tenant._id),
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),

@@ -21,22 +21,24 @@ const nock = require('nock');
 const { cachePlugin } = require('../src/cache-plugin');
 
 const mockDecorate = mock.fn();
-const mockAddHook = mock.fn();
 
 const buildFastify = () => {
-  const initRequest = require('@verii/request');
+  const { initHttpClient } = require('@verii/http-client');
   const fastify = require('fastify')()
     .register(cachePlugin)
-    .decorate('baseRequest', initRequest({}))
+    .decorate('baseRequest', () =>
+      initHttpClient({ cache: fastify.cache, isTest: true })
+    )
     .addHook('preValidation', async (req) => {
-      req.fetch = fastify.baseRequest(req);
+      req.fetch = fastify.baseRequest()(req);
     });
 
   fastify.get('/test-csv', async (req) => {
-    const response = await req.fetch
-      .get('https://www.example.com/user', { cache: req.cache })
-      .json();
-    return response;
+    const response = await req.fetch.get('https://www.example.com/user', {
+      cache: req.cache,
+    });
+    const result = await response.json();
+    return result;
   });
 
   return fastify;
@@ -61,17 +63,12 @@ describe('cache-plugin test suite', () => {
   it('cache plugin should decorate and add hook', async () => {
     const fakeServer = {
       decorate: mockDecorate,
-      addHook: mockAddHook,
     };
     cachePlugin(fakeServer, {}, () => {});
     expect(mockDecorate.mock.callCount()).toEqual(1);
-    expect(mockAddHook.mock.callCount()).toEqual(1);
     expect(
       mockDecorate.mock.calls.map((call) => call.arguments)
     ).toContainEqual(['cache', expect.any(Object)]);
-    expect(mockAddHook.mock.calls.map((call) => call.arguments)).toContainEqual(
-      ['onRequest', expect.any(Function)]
-    );
   });
 
   it('cache plugin should cached requests', async () => {
@@ -94,9 +91,17 @@ describe('cache-plugin test suite', () => {
     expect(response2.statusCode).toEqual(200);
     expect(response2.json()).toEqual({ name: 'user' });
     expect(getUserNock.isDone()).toBe(true);
-    expect(fastify.cache.size).toEqual(1);
-    expect(
-      fastify.cache.get('cacheable-request:GET:https://www.example.com/user')
-    ).toEqual(expect.any(String));
+
+    const cachedResponse = fastify.cache.get({
+      origin: 'https://www.example.com',
+      method: 'GET',
+      path: '/user',
+    });
+    const cachedResponseText = JSON.parse(
+      Buffer.from(cachedResponse.body[0]).toString()
+    );
+
+    expect(cachedResponse.body.length).toEqual(1);
+    expect(cachedResponseText).toEqual({ name: 'user' });
   });
 });

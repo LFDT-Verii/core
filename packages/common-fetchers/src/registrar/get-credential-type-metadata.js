@@ -34,7 +34,8 @@ const getCredentialTypeMetadata = async (
     const response = await registrarFetch.get(path, options);
     return response.json();
   }
-  return registrarFetch.get(path, options).json();
+  const response = await registrarFetch.get(path, options);
+  return response.json();
 };
 
 module.exports = { getCredentialTypeMetadata };

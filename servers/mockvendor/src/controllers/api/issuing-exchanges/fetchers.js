@@ -1,9 +1,11 @@
-const submitCreateExchange = (tenantDID, type, { agentFetch }) =>
-  agentFetch
-    .post(`operator-api/v0.8/tenants/${tenantDID}/exchanges`, {
-      json: { type },
-    })
-    .json();
+const submitCreateExchange = async (tenantDID, type, { agentFetch }) => {
+  const response = await agentFetch.post(
+    `operator-api/v0.8/tenants/${tenantDID}/exchanges`,
+    { type }
+  );
+
+  return response.json();
+};
 
 const getExchangeQrCode = (
   tenantDID,
@@ -20,22 +22,28 @@ const getExchangeQrCode = (
   );
 };
 
-const submitOffer = ({ offer, tenantDID, exchangeId }, { agentFetch }) =>
-  agentFetch
-    .post(
-      `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers`,
-      {
-        json: offer,
-      }
-    )
-    .json();
+const submitOffer = async (
+  { offer, tenantDID, exchangeId },
+  { agentFetch }
+) => {
+  const response = await agentFetch.post(
+    `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers`,
+    offer
+  );
 
-const completeSubmitOffer = ({ exchangeId, tenantDID }, { agentFetch }) =>
-  agentFetch
-    .post(
-      `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers/complete`
-    )
-    .json();
+  return response.json();
+};
+
+const completeSubmitOffer = async (
+  { exchangeId, tenantDID },
+  { agentFetch }
+) => {
+  const response = await agentFetch.post(
+    `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers/complete`
+  );
+
+  return response.json();
+};
 
 module.exports = {
   submitOffer,

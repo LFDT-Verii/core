@@ -15,9 +15,9 @@
  */
 
 const url = require('url');
-const newError = require('http-errors');
 const fp = require('fastify-plugin');
-const { includes, get, isEmpty, flow } = require('lodash/fp');
+const newError = require('http-errors');
+const { get, isEmpty, flow } = require('lodash/fp');
 const { ERROR_CODES } = require('./constants');
 
 const extractEndpoint = (endpointUrl) => {
@@ -31,101 +31,6 @@ const extractEndpoint = (endpointUrl) => {
 const getDocsUrl = (endpointUrl, { endpointDocsMap } = {}) => {
   const endpoint = extractEndpoint(endpointUrl);
   return get(endpoint, endpointDocsMap);
-};
-
-const handleDnsError = (error, docsUrl) => {
-  if (includes('getaddrinfo', error.message)) {
-    throw newError(
-      502,
-      'DNS Error - Please verify that that the server has access to an internal DNS server, and that the vendor gateway api has an entry',
-      {
-        endpointDocumentation: docsUrl,
-        errorCode: 'upstream_network_dns_error',
-      }
-    );
-  }
-};
-
-const handleConnectivityError = (error, docsUrl) => {
-  if (
-    includes('ETIMEDOUT', error.message) ||
-    includes('EPIPE', error.message) ||
-    includes('ECONNRESET', error.message) ||
-    includes('ECONNREFUSED', error.message)
-  ) {
-    throw newError(
-      502,
-      'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings',
-      {
-        endpointDocumentation: docsUrl,
-        errorCode: 'upstream_network_error',
-      }
-    );
-  }
-};
-
-const handleBadRequestError = (error, docsUrl) => {
-  if (error.response?.statusCode === 400) {
-    throw newError(
-      502,
-      'Bad request sent from credential agent to vendor gateway (this should be raised with velocity support).',
-      {
-        endpointDocumentation: docsUrl,
-        errorCode: 'upstream_response_invalid',
-      }
-    );
-  }
-};
-
-const handleUnauthorizedForbiddenError = (error, docsUrl) => {
-  if (
-    error.response?.statusCode === 401 ||
-    error.response?.statusCode === 403
-  ) {
-    throw newError(
-      502,
-      'Bad authentication of the server. Please review the supported authentication methods for the agent.',
-      {
-        authenticationDocumentation:
-          'https://docs.velocitycareerlabs.io/#/./Authentication',
-        endpointDocumentation: docsUrl,
-        errorCode: 'upstream_unauthorized',
-      }
-    );
-  }
-};
-
-const handleNotFoundError = (error, endpointPath, docsUrl) => {
-  if (error.response?.statusCode === 404) {
-    throw newError(
-      502,
-      `Missing implementation of the endpoint '${endpointPath}'.`,
-      {
-        endpointDocumentation: docsUrl,
-        errorCode: 'upstream_webhook_not_implemented',
-      }
-    );
-  }
-};
-
-const handleUnexpectedError = (docsUrl) => {
-  throw newError(
-    502,
-    'Unexpected error received connecting to vendor gateway.',
-    {
-      endpointDocumentation: docsUrl,
-      errorCode: 'upstream_unexpected_error',
-    }
-  );
-};
-
-const handleVendorError = (error, endpointPath, docsUrl) => {
-  handleDnsError(error, docsUrl);
-  handleConnectivityError(error, docsUrl);
-  handleBadRequestError(error, docsUrl);
-  handleUnauthorizedForbiddenError(error, docsUrl);
-  handleNotFoundError(error, endpointPath, docsUrl);
-  handleUnexpectedError(docsUrl);
 };
 
 const extractRequestPath = (requestUrl) => {
@@ -160,28 +65,26 @@ const addValidationErrorCode = (err) => {
   err.errorCode = 'request_validation_failed';
   return err;
 };
+
+const transformToInternalServerError = (error, fastify) => {
+  if (error.url && error.statusCode && error.statusCode < 500) {
+    fastify.log.info('Transforming error to Internal Server Error', { error });
+
+    return newError(500, 'Internal Server Error');
+  }
+
+  return error;
+};
+
 const errorsPlugin = (fastify, options, next) => {
   fastify.setErrorHandler((_error, request, reply) => {
-    const { sendError = () => {} } = fastify;
     const error = flow(
       addValidationErrorCode,
       (err) => ensureErrorCode(err, fastify),
-      (err) => addRequestId(err, request)
-    )(_error);
+      (err) => addRequestId(err, request),
+      (err) => transformToInternalServerError(err, fastify)
+    )(_error.processedError || _error);
 
-    if (error.gatewayResponse) {
-      try {
-        handleVendorError(
-          error,
-          extractRequestPath(error.gatewayResponse.url),
-          getDocsUrl(error.gatewayResponse.url.toLowerCase(), options)
-        );
-      } catch (modifiedError) {
-        sendError(error);
-        return reply.send(modifiedError);
-      }
-    }
-    sendError(error);
     return reply.send(error);
   });
   next();
@@ -189,7 +92,6 @@ const errorsPlugin = (fastify, options, next) => {
 
 module.exports = {
   addValidationErrorCode,
-  handleVendorError,
   ensureErrorCode,
   addRequestId,
   extractRequestPath,

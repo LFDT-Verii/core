@@ -18,7 +18,7 @@ const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const nock = require('nock');
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 const { ProductIds, createFineractClient } = require('../src');
 
 const testHost = 'https://localhost.test';
@@ -30,7 +30,10 @@ describe('create clients', () => {
 
   before(async () => {
     const baseContext = { log: console };
-    const fineractFetch = initRequest({ prefixUrl: testHost })(baseContext);
+    const fineractFetch = initHttpClient({
+      prefixUrl: testHost,
+      isTest: true,
+    })(testHost, baseContext);
     context = { ...baseContext, fineractFetch };
   });
 
@@ -54,7 +57,8 @@ describe('create clients', () => {
     nock(testHost)
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
       .reply(200, async (request) => {
-        webhookPayloads.push(await request.json());
+        const body = await request.json();
+        webhookPayloads.push(body);
         return [
           {
             statusCode: 200,
@@ -107,7 +111,8 @@ describe('create clients', () => {
     nock(testHost)
       .post('/fineract-provider/api/v1/batches?enclosingTransaction=true')
       .reply(200, async (request) => {
-        webhookPayloads.push(await request.json());
+        const body = await request.json();
+        webhookPayloads.push(body);
         return [
           {
             statusCode: 200,

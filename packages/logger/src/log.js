@@ -19,7 +19,7 @@ const pretty = require('pino-pretty');
 const { jwtDecode } = require('@verii/jwt');
 const { compact, split, flatMap, flow, last } = require('lodash/fp');
 
-const SPAM_PATHS = ['contractAbi', 'err.gatewayResponse', 'body.file'];
+const SPAM_PATHS = ['contractAbi', 'body.file'];
 
 const JSON_VC_PATHS = flatMap(
   (path) => {
@@ -150,9 +150,6 @@ const loggerProvider = ({
   redact.censor = (value, path) => {
     if (last(path) === 'file') {
       return '...large file...';
-    }
-    if (last(path) === 'gatewayResponse') {
-      return '...large object...';
     }
     return '...shhh...';
   };

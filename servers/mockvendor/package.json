@@ -34,7 +34,7 @@
     "@verii/did-doc": "0.5.0-build",
     "@verii/fastify-plugins": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",
-    "@verii/request": "0.5.0-build",
+    "@verii/http-client": "0.5.0-build",
     "@verii/server-credentialagent": "0.5.0-build",
     "@verii/server-provider": "0.5.0-build",
     "date-fns": "~3.6.0",

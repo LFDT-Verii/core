@@ -38,18 +38,6 @@ module.exports = async (fastify) => {
     .decorateRequest('fetch', null)
     .decorateRequest('vendorFetch', null)
     .decorateRequest('libFetch', null)
-    .addHook('preValidation', async (req) => {
-      req.registrarFetch = fastify.baseRegistrarFetch(req);
-    })
-    .addHook('preValidation', async (req) => {
-      req.fetch = fastify.baseFetch(req);
-    })
-    .addHook('preValidation', async (req) => {
-      req.vendorFetch = fastify.baseVendorFetch(req);
-    })
-    .addHook('preValidation', async (req) => {
-      req.libFetch = fastify.baseLibFetch(req);
-    })
     .addSchema(secretKeySchema)
     .addSchema(secretKeyMetadataSchema)
     .addSchema(secretKidSchema)

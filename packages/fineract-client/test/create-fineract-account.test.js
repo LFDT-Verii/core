@@ -18,7 +18,7 @@ const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const nock = require('nock');
-const initRequest = require('@verii/request');
+const { initHttpClient } = require('@verii/http-client');
 const {
   ProductIds,
   createStakesAccount,
@@ -33,7 +33,10 @@ describe('create client accounts', () => {
 
   before(async () => {
     const baseContext = { log: console };
-    const fineractFetch = initRequest({ prefixUrl: testHost })(baseContext);
+    const fineractFetch = initHttpClient({
+      prefixUrl: testHost,
+      isTest: true,
+    })(testHost, baseContext);
     context = { ...baseContext, fineractFetch };
   });
 

@@ -71,7 +71,7 @@ const sendIdentification = async (identityDoc, vendorData, context) => {
   try {
     vendorUser = await identifyUserOnVendor(payload, context);
   } catch (error) {
-    if (error.response?.statusCode === 404) {
+    if (error.statusCode === 404) {
       throw newError(401, 'user not found', {
         exchangeErrorState: ExchangeStates.NOT_IDENTIFIED,
         errorCode: 'upstream_user_not_found',

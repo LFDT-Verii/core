@@ -1,4 +1,8 @@
-const fetchJson = async (link, { fetch }) => fetch.get(link, {}).json();
+const fetchJson = async (link, { fetch }) => {
+  const response = await fetch.get(link, {});
+
+  return response.json();
+};
 
 module.exports = {
   fetchJson,
