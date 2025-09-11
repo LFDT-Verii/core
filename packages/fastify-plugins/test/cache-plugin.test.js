@@ -21,7 +21,6 @@ const nock = require('nock');
 const { cachePlugin } = require('../src/cache-plugin');
 
 const mockDecorate = mock.fn();
-const mockAddHook = mock.fn();
 
 const buildFastify = () => {
   const { initHttpClient } = require('@verii/http-client');
