@@ -21,10 +21,7 @@ const store = initCache();
 
 const cachePlugin = (fastify, options, done) => {
   fastify.decorate('cache', store);
-  fastify.addHook('onRequest', (request, reply, next) => {
-    request.cache = fastify.cache;
-    next();
-  });
+  
   done();
 };
 

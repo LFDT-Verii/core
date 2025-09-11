@@ -28,7 +28,7 @@ const buildFastify = () => {
   const fastify = require('fastify')()
     .register(cachePlugin)
     .decorate('baseRequest', () =>
-      initHttpClient({ cache: fastify.cache, useExistingGlobalAgent: true })
+      initHttpClient({ cache: fastify.cache, isTest: true })
     )
     .addHook('preValidation', async (req) => {
       req.fetch = fastify.baseRequest()(req);

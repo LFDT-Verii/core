@@ -35,7 +35,7 @@ describe('create client accounts', () => {
     const baseContext = { log: console };
     const fineractFetch = initHttpClient({
       prefixUrl: testHost,
-      useExistingGlobalAgent: true,
+      isTest: true,
     })(testHost, baseContext);
     context = { ...baseContext, fineractFetch };
   });

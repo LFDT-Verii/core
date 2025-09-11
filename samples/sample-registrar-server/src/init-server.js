@@ -56,7 +56,7 @@ const initServer = (server) => {
           'nodeEnv',
           'requestTimeout',
           'traceIdHeader',
-          'useExistingGlobalAgent',
+          'isTest',
         ],
         server.config
       ),
@@ -80,7 +80,7 @@ const initServer = (server) => {
       name: 'secureMessagesFetch',
       options: {
         ...pick(
-          ['nodeEnv', 'traceIdHeader', 'useExistingGlobalAgent'],
+          ['nodeEnv', 'traceIdHeader', 'isTest'],
           server.config
         ),
         requestTimeout: 20000,

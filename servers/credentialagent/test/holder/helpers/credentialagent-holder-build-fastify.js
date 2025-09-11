@@ -33,5 +33,4 @@ module.exports = (overrideConfig = {}) =>
     ...holderConfig,
     ...overrideConfig,
     mongoConnection,
-    useExistingGlobalAgent: true,
   });

@@ -34,7 +34,7 @@ const initCache = () => new cacheStores.MemoryCacheStore();
 const initHttpClient = (options) => {
   const {
     prefixUrl,
-    useExistingGlobalAgent,
+    isTest,
     clientId,
     clientSecret,
     tokensEndpoint,
@@ -52,34 +52,34 @@ const initHttpClient = (options) => {
     registeredPrefixUrls.set(prefixUrl, parsedPrefixUrl);
   }
 
-  if (!useExistingGlobalAgent) {
-    const agent = new Agent(clientOptions).compose([
-      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false }),
-      interceptors.responseError(),
-      ...addCache(cache),
-      ...(tokensEndpoint
-        ? [
-            createOidcInterceptor({
-              idpTokenUrl: tokensEndpoint,
-              clientId,
-              clientSecret,
-              retryOnStatusCodes: [401],
-              scopes,
-              audience,
-              urls: map((url) => url.origin, registeredPrefixUrls.values()),
-            }),
-          ]
-        : []),
-    ]);
-
-    setGlobalDispatcher(agent);
-  } else {
+  if (isTest) {
     const existingAgent = getGlobalDispatcher();
     const updatedAgent = existingAgent.compose([
       interceptors.responseError(),
       ...addCache(cache),
     ]);
     setGlobalDispatcher(updatedAgent);
+  } else {
+    const agent = new Agent(clientOptions).compose([
+      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false }),
+      interceptors.responseError(),
+      ...addCache(cache),
+      ...(tokensEndpoint
+        ? [
+          createOidcInterceptor({
+            idpTokenUrl: tokensEndpoint,
+            clientId,
+            clientSecret,
+            retryOnStatusCodes: [401],
+            scopes,
+            audience,
+            urls: map((url) => url.origin, registeredPrefixUrls.values()),
+          }),
+        ]
+        : []),
+    ]);
+
+    setGlobalDispatcher(agent);
   }
 
   const request = async (
@@ -125,7 +125,12 @@ const initHttpClient = (options) => {
               'HttpClient response'
             );
             return bodyJson;
-          } catch {
+          } catch (error) {
+            log.error(
+              { origin, url, reqId, statusCode, resHeaders, error },
+              'JSON parsing error'
+            );
+
             return {};
           }
         },

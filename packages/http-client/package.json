@@ -2,7 +2,7 @@
   "name": "@verii/http-client",
   "version": "0.5.0-build",
   "description": "HTTP client for Verii network",
-  "repository": "https://github.com/velocitycareerlabs/velocitycore",
+  "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
   "publishConfig": {
     "access": "public"

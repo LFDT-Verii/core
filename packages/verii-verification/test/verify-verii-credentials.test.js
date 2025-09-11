@@ -80,6 +80,7 @@ describe('Verify verii credentials', () => {
     rootPublicKey: orgKeyPair.publicKey,
     revocationContractAddress: 'any',
     registrarUrl,
+    isTest: true,
   };
   let issuerVc;
   let context;
@@ -93,7 +94,6 @@ describe('Verify verii credentials', () => {
       log: console,
       config,
       kms: { exportKeyOrSecret: async (id) => keys[id] },
-      useExistingGlobalAgent: true,
     };
   });
 

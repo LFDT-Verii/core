@@ -336,16 +336,16 @@ const controller = async (fastify) => {
       vendorFilter.types = types;
     }
 
-    const { json, statusCode } = await requestOffersFromVendor(
+    const offersResponse =  await requestOffersFromVendor(
       vendorFilter,
       context
     );
 
-    if (statusCode === 202) {
+    if (offersResponse.statusCode === 202) {
       return { status: 202, offers: [], offerStatuses: {} };
     }
 
-    const { offers: vendorOffers } = await json();
+    const { offers: vendorOffers } = await offersResponse.json();
 
     const countOffersWithoutOfferId = flow(
       filter(({ offerId }) => isNil(offerId)),

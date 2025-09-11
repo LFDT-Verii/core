@@ -32,5 +32,4 @@ module.exports = () =>
   )({
     ...config,
     mongoConnection,
-    useExistingGlobalAgent: true,
   });

@@ -48,7 +48,7 @@ const initServer = (server) => {
           'nodeEnv',
           'requestTimeout',
           'traceIdHeader',
-          'useExistingGlobalAgent',
+          'isTest',
         ],
         server.config
       ),

@@ -111,7 +111,7 @@ describe('Http Client Package', () => {
       before(() => {
         httpClient = initHttpClient({
           rejectUnauthorized: false,
-          useExistingGlobalAgent: true,
+          isTest: true,
           prefixUrl: origin,
         })(origin, {
           log: console,
@@ -301,7 +301,7 @@ describe('Http Client Package', () => {
 
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
-          useExistingGlobalAgent: true,
+          isTest: true,
         })({
           log: console,
           traceId: 'TRACE-ID',
@@ -330,7 +330,7 @@ describe('Http Client Package', () => {
 
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
-          useExistingGlobalAgent: true,
+          isTest: true,
         })({
           log: console,
           traceId: 'TRACE-ID',
@@ -501,7 +501,7 @@ describe('Http Client Package', () => {
 
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
-          useExistingGlobalAgent: true,
+          isTest: true,
         })({
           log: console,
           traceId: 'TRACE-ID',
@@ -559,7 +559,7 @@ describe('Http Client Package', () => {
 
         const httpClient2 = initHttpClient({
           rejectUnauthorized: false,
-          useExistingGlobalAgent: true,
+          isTest: true,
           bearerToken: 'TOKEN',
         })({
           log: console,

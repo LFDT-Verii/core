@@ -51,7 +51,7 @@ describe('fineract client test suite', () => {
   before(async () => {
     fineractFetch = initHttpClient({
       prefixUrl: testHost,
-      useExistingGlobalAgent: true,
+      isTest: true,
     })(testHost, { log: console });
   });
 

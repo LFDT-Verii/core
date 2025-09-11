@@ -57,7 +57,6 @@ const initServer = (server) => {
         customHeaders: {
           'fineract-platform-tenantid': 'default',
         },
-        useExistingGlobalAgent: server.config.useExistingGlobalAgent,
       },
     })
     .register(eventProcessingEndpoints);

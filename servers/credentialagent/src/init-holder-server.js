@@ -71,7 +71,7 @@ const initHolderServer = (fastify) => {
         mapUrl: initMapVendorUrl(fastify.config),
         prefixUrl: fastify.config.vendorUrl,
         cache: fastify.cache,
-        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
+        isTest: fastify.config.isTest,
       },
     })
     .register(httpClientPlugin, {
@@ -80,7 +80,7 @@ const initHolderServer = (fastify) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.oracleUrl,
         cache: fastify.cache,
-        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
+        isTest: fastify.config.isTest,
       },
     })
     .register(httpClientPlugin, {
@@ -89,7 +89,7 @@ const initHolderServer = (fastify) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.universalResolverUrl,
         cache: fastify.cache,
-        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
+        isTest: fastify.config.isTest,
       },
     })
     .register(httpClientPlugin, {
@@ -97,7 +97,7 @@ const initHolderServer = (fastify) => {
       options: {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         cache: fastify.cache,
-        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
+        isTest: fastify.config.isTest,
       },
     })
     .register(httpClientPlugin, {
@@ -106,7 +106,7 @@ const initHolderServer = (fastify) => {
         ...pick(['nodeEnv', 'requestTimeout', 'traceIdHeader'], fastify.config),
         prefixUrl: fastify.config.libUrl,
         cache: fastify.cache,
-        useExistingGlobalAgent: fastify.config.useExistingGlobalAgent,
+        isTest: fastify.config.isTest,
       },
     })
     .register(Static, {
