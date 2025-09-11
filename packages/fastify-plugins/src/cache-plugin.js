@@ -21,7 +21,7 @@ const store = initCache();
 
 const cachePlugin = (fastify, options, done) => {
   fastify.decorate('cache', store);
-  
+
   done();
 };
 

@@ -23,4 +23,4 @@ module.exports = (initializer = identity) =>
     ...createConfig(require('../../package.json')),
     mongoConnection,
     defaultOAuthUser: testRegistrarSuperUser,
-});
+  });

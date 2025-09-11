@@ -44,12 +44,7 @@ const initServer = (server) => {
     .register(httpClientPlugin, {
       name: 'fetch',
       options: pick(
-        [
-          'nodeEnv',
-          'requestTimeout',
-          'traceIdHeader',
-          'isTest',
-        ],
+        ['nodeEnv', 'requestTimeout', 'traceIdHeader', 'isTest'],
         server.config
       ),
     })

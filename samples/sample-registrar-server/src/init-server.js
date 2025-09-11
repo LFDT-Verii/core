@@ -52,12 +52,7 @@ const initServer = (server) => {
     .register(httpClientPlugin, {
       name: 'fetch',
       options: pick(
-        [
-          'nodeEnv',
-          'requestTimeout',
-          'traceIdHeader',
-          'isTest',
-        ],
+        ['nodeEnv', 'requestTimeout', 'traceIdHeader', 'isTest'],
         server.config
       ),
     })
@@ -79,10 +74,7 @@ const initServer = (server) => {
     .register(httpClientPlugin, {
       name: 'secureMessagesFetch',
       options: {
-        ...pick(
-          ['nodeEnv', 'traceIdHeader', 'isTest'],
-          server.config
-        ),
+        ...pick(['nodeEnv', 'traceIdHeader', 'isTest'], server.config),
         requestTimeout: 20000,
       },
     })
