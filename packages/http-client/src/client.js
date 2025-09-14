@@ -105,13 +105,16 @@ const initHttpClient = (options) => {
     const globalAgent = getGlobalDispatcher();
 
     try {
-      const httpResponse = await globalAgent.request({
+      const httpRequest = {
         origin,
         path,
         method,
         headers: reqHeaders,
-        ...(body ? { body } : {}),
-      });
+      };
+      if (body) {
+        httpRequest.body = body;
+      }
+      const httpResponse = await globalAgent.request(httpRequest);
       const { statusCode, headers: resHeaders, body: rawBody } = httpResponse;
       return {
         rawBody,
