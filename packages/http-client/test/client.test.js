@@ -577,6 +577,48 @@ describe('Http Client Package', () => {
         });
       });
 
+      it('should use OIDC when configured', async () => {
+        mockAgent
+          .get('https://auth.example.com')
+          .intercept({
+            path: '/tokens',
+            method: 'POST',
+          })
+          .reply(200, { access_token: 'TOKEN' });
+        mockAgent
+          .get(origin)
+          .intercept({
+            path: '/data',
+            method: 'GET',
+            headers: { Authorization: 'Bearer TOKEN' },
+          })
+          .reply(200);
+
+        const httpClient2 = initHttpClient({
+          rejectUnauthorized: false,
+          isTest: true,
+          tokensEndpoint: 'https://auth.example.com/tokens',
+          clientId: 'CLIENT-ID',
+          clientSecret: 'CLIENT-SECRET',
+          scopes: ['SCOPE1', 'SCOPE2'],
+          audience: 'AUDIENCE',
+          prefixUrl: origin,
+        })({
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+
+        const response = await httpClient2.get(`${origin}/data`);
+
+        expect(response).toEqual({
+          statusCode: 200,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+      });
+
       it("should have a 'promise' responseType ", async () => {
         const client = initHttpClient({
           prefixUrl: `${origin}/json`,
