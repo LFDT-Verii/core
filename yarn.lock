@@ -7116,9 +7116,9 @@ axios@1.5.0:
     proxy-from-env "^1.1.0"
 
 axios@^1.11.0, axios@^1.6.0, axios@^1.7.9, axios@^1.8.3:
-  version "1.11.0"
-  resolved "https://registry.npmjs.org/axios/-/axios-1.11.0.tgz#c2ec219e35e414c025b2095e8b8280278478fdb6"
-  integrity sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==
+  version "1.12.2"
+  resolved "https://registry.npmjs.org/axios/-/axios-1.12.2.tgz#6c307390136cf7a2278d09cec63b136dfc6e6da7"
+  integrity sha512-vMJzPewAlRyOgxV2dU0Cuz2O8zzzx9VYtbJOaBgXFeLc4IV/Eg50n4LowmehOOR61S8ZMpc2K5Sa7g6A4jfkUw==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.4"
@@ -7644,10 +7644,10 @@ cbor@^5.2.0:
     bignumber.js "^9.0.1"
     nofilter "^1.0.4"
 
-cborg@4.2.13:
-  version "4.2.13"
-  resolved "https://registry.npmjs.org/cborg/-/cborg-4.2.13.tgz#81eeae1437a770b1b40dc94d2f30a943cdb7fcd9"
-  integrity sha512-HAiZCITe/5Av0ukt6rOYE+VjnuFGfujN3NUKgEbIlONpRpsYMZAa+Bjk16mj6dQMuB0n81AuNrcB9YVMshcrfA==
+cborg@4.2.15:
+  version "4.2.15"
+  resolved "https://registry.npmjs.org/cborg/-/cborg-4.2.15.tgz#f685922b5b611fe3828ac8c9903ddd804a601ef7"
+  integrity sha512-T+YVPemWyXcBVQdp0k61lQp2hJniRNmul0lAwTj2DTS/6dI4eCq/MRMucGqqvFqMBfmnD8tJ9aFtPu5dEGAbgw==
 
 chalk@4.1.0:
   version "4.1.0"
@@ -13894,15 +13894,20 @@ nanoid@3.3.3:
   resolved "https://registry.npmjs.org/nanoid/-/nanoid-3.3.3.tgz#fd8e8b7aa761fe807dba2d1b98fb7241bb724a25"
   integrity sha512-p1sjXuopFs0xg+fPASzQ28agW1oHD7xDsd9Xkf3T15H3c/cifrFHVwrh74PdoklAPi+i7MdRsE47vm2r6JoB+w==
 
-nanoid@5.0.9, nanoid@~5.0.9:
-  version "5.0.9"
-  resolved "https://registry.npmjs.org/nanoid/-/nanoid-5.0.9.tgz#977dcbaac055430ce7b1e19cf0130cea91a20e50"
-  integrity sha512-Aooyr6MXU6HpvvWXKoVoXwKMs/KyVakWwg7xQfv5/S/RIgJMy0Ifa45H9qqYy7pTCszrHzP21Uk4PZq2HpEM8Q==
+nanoid@5.1.0:
+  version "5.1.0"
+  resolved "https://registry.npmjs.org/nanoid/-/nanoid-5.1.0.tgz#d61a0cde4db69c39f9320625fc86764c072f221f"
+  integrity sha512-zDAl/llz8Ue/EblwSYwdxGBYfj46IM1dhjVi8dyp9LQffoIGxJEAHj2oeZ4uNcgycSRcQ83CnfcZqEJzVDLcDw==
 
 nanoid@^3.3.11:
   version "3.3.11"
   resolved "https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz#4f4f112cefbe303202f2199838128936266d185b"
   integrity sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==
+
+nanoid@~5.1.0:
+  version "5.1.5"
+  resolved "https://registry.npmjs.org/nanoid/-/nanoid-5.1.5.tgz#f7597f9d9054eb4da9548cdd53ca70f1790e87de"
+  integrity sha512-Ir/+ZpE9fDsNH0hQ3C68uyThDXzYcim2EqcZ8zn8Chtt1iylPT9xXJB0kPCnqzgcEGikO9RxSrh63MsmVCU7Fw==
 
 napi-macros@~2.0.0:
   version "2.0.0"
