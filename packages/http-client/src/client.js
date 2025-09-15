@@ -23,7 +23,7 @@ const {
   getGlobalDispatcher,
 } = require('undici');
 const { createOidcInterceptor } = require('undici-oidc-interceptor');
-const { map, init } = require('lodash/fp');
+const { map } = require('lodash/fp');
 const pkg = require('../package.json');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
@@ -31,18 +31,18 @@ const registeredPrefixUrls = new Map();
 
 const initCache = () => new cacheStores.MemoryCacheStore();
 
-const buildInterceptors = ({ 
+const buildInterceptors = ({
   isTest,
-  cache, 
-  tokensEndpoint, 
-  clientId, 
-  clientSecret, 
-  scopes, 
-  audience 
+  cache,
+  tokensEndpoint,
+  clientId,
+  clientSecret,
+  scopes,
+  audience,
 }) => {
   const requiredInterceptors = [
     interceptors.responseError(),
-    ...addCache(cache)
+    ...addCache(cache),
   ];
 
   if (tokensEndpoint) {
@@ -68,11 +68,7 @@ const buildInterceptors = ({
 };
 
 const initHttpClient = (options) => {
-  const {
-    prefixUrl,
-    isTest,
-    bearerToken,
-  } = options;
+  const { prefixUrl, isTest, bearerToken } = options;
 
   const { clientOptions, traceIdHeader, customHeaders } = parseOptions(options);
 
@@ -89,7 +85,7 @@ const initHttpClient = (options) => {
     setGlobalDispatcher(updatedAgent);
   } else {
     const agent = new Agent(clientOptions).compose(buildInterceptors(options));
-      
+
     setGlobalDispatcher(agent);
   }
 
