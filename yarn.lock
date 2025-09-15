@@ -7754,10 +7754,10 @@ cbor@^5.2.0:
     bignumber.js "^9.0.1"
     nofilter "^1.0.4"
 
-cborg@4.2.13:
-  version "4.2.13"
-  resolved "https://registry.npmjs.org/cborg/-/cborg-4.2.13.tgz#81eeae1437a770b1b40dc94d2f30a943cdb7fcd9"
-  integrity sha512-HAiZCITe/5Av0ukt6rOYE+VjnuFGfujN3NUKgEbIlONpRpsYMZAa+Bjk16mj6dQMuB0n81AuNrcB9YVMshcrfA==
+cborg@4.2.15:
+  version "4.2.15"
+  resolved "https://registry.npmjs.org/cborg/-/cborg-4.2.15.tgz#f685922b5b611fe3828ac8c9903ddd804a601ef7"
+  integrity sha512-T+YVPemWyXcBVQdp0k61lQp2hJniRNmul0lAwTj2DTS/6dI4eCq/MRMucGqqvFqMBfmnD8tJ9aFtPu5dEGAbgw==
 
 chalk@4.1.0:
   version "4.1.0"
