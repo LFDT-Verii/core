@@ -23,7 +23,7 @@ const {
   getGlobalDispatcher,
 } = require('undici');
 const { createOidcInterceptor } = require('undici-oidc-interceptor');
-const { map } = require('lodash/fp');
+const { map, init } = require('lodash/fp');
 const pkg = require('../package.json');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
@@ -31,16 +31,46 @@ const registeredPrefixUrls = new Map();
 
 const initCache = () => new cacheStores.MemoryCacheStore();
 
+const buildInterceptors = ({ 
+  isTest,
+  cache, 
+  tokensEndpoint, 
+  clientId, 
+  clientSecret, 
+  scopes, 
+  audience 
+}) => {
+  const requiredInterceptors = [
+    interceptors.responseError(),
+    ...addCache(cache)
+  ];
+
+  if (tokensEndpoint) {
+    const oidcInterceptor = createOidcInterceptor({
+      idpTokenUrl: tokensEndpoint,
+      clientId,
+      clientSecret,
+      retryOnStatusCodes: [401],
+      scopes,
+      audience,
+      urls: map((url) => url.origin, registeredPrefixUrls.values()),
+    });
+    requiredInterceptors.push(oidcInterceptor);
+  }
+
+  if (!isTest) {
+    requiredInterceptors.push(
+      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false })
+    );
+  }
+
+  return requiredInterceptors;
+};
+
 const initHttpClient = (options) => {
   const {
     prefixUrl,
     isTest,
-    clientId,
-    clientSecret,
-    tokensEndpoint,
-    scopes,
-    audience,
-    cache,
     bearerToken,
   } = options;
 
@@ -54,31 +84,12 @@ const initHttpClient = (options) => {
 
   if (isTest) {
     const existingAgent = getGlobalDispatcher();
-    const updatedAgent = existingAgent.compose([
-      interceptors.responseError(),
-      ...addCache(cache),
-    ]);
+    const updatedAgent = existingAgent.compose(buildInterceptors(options));
+
     setGlobalDispatcher(updatedAgent);
   } else {
-    const agent = new Agent(clientOptions).compose([
-      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false }),
-      interceptors.responseError(),
-      ...addCache(cache),
-      ...(tokensEndpoint
-        ? [
-            createOidcInterceptor({
-              idpTokenUrl: tokensEndpoint,
-              clientId,
-              clientSecret,
-              retryOnStatusCodes: [401],
-              scopes,
-              audience,
-              urls: map((url) => url.origin, registeredPrefixUrls.values()),
-            }),
-          ]
-        : []),
-    ]);
-
+    const agent = new Agent(clientOptions).compose(buildInterceptors(options));
+      
     setGlobalDispatcher(agent);
   }
 
