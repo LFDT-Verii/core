@@ -19,7 +19,6 @@ const {
   Agent,
   interceptors,
   cacheStores,
-  setGlobalDispatcher,
   getGlobalDispatcher,
 } = require('undici');
 const { createOidcInterceptor } = require('undici-oidc-interceptor');
@@ -46,6 +45,10 @@ const buildInterceptors = ({
   ];
 
   if (tokensEndpoint) {
+    const origins = map(
+      (url) => url.origin,
+      registeredPrefixUrls.values().toArray()
+    );
     const oidcInterceptor = createOidcInterceptor({
       idpTokenUrl: tokensEndpoint,
       clientId,
@@ -53,7 +56,7 @@ const buildInterceptors = ({
       retryOnStatusCodes: [401],
       scopes,
       audience,
-      urls: map((url) => url.origin, registeredPrefixUrls.values()),
+      urls: origins,
     });
     requiredInterceptors.push(oidcInterceptor);
   }
@@ -78,15 +81,13 @@ const initHttpClient = (options) => {
     registeredPrefixUrls.set(prefixUrl, parsedPrefixUrl);
   }
 
+  let agent;
+
   if (isTest) {
     const existingAgent = getGlobalDispatcher();
-    const updatedAgent = existingAgent.compose(buildInterceptors(options));
-
-    setGlobalDispatcher(updatedAgent);
+    agent = existingAgent.compose(buildInterceptors(options));
   } else {
-    const agent = new Agent(clientOptions).compose(buildInterceptors(options));
-
-    setGlobalDispatcher(agent);
+    agent = new Agent(clientOptions).compose(buildInterceptors(options));
   }
 
   const request = async (
@@ -109,8 +110,6 @@ const initHttpClient = (options) => {
 
     log.info({ origin, path, url, reqId, reqHeaders }, 'HttpClient request');
 
-    const globalAgent = getGlobalDispatcher();
-
     try {
       const httpRequest = {
         origin,
@@ -121,7 +120,7 @@ const initHttpClient = (options) => {
       if (body) {
         httpRequest.body = body;
       }
-      const httpResponse = await globalAgent.request(httpRequest);
+      const httpResponse = await agent.request(httpRequest);
       const { statusCode, headers: resHeaders, body: rawBody } = httpResponse;
       return {
         rawBody,
