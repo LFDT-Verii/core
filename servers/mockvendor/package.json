@@ -44,7 +44,7 @@
     "fastify-plugin": "^5.0.0",
     "http-errors": "^2.0.0",
     "lodash": "^4.17.21",
-    "mongodb": "~6.18.0",
+    "mongodb": "~6.19.0",
     "nanoid": "~5.1.0"
   },
   "devDependencies": {
