@@ -17981,10 +17981,10 @@ undici-types@~7.8.0:
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-7.8.0.tgz#de00b85b710c54122e44fbfd911f8d70174cd294"
   integrity sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==
 
-undici@7.15.0:
-  version "7.15.0"
-  resolved "https://registry.npmjs.org/undici/-/undici-7.15.0.tgz#7485007549ad1782b7cab2abfaa1c1aa7b75e106"
-  integrity sha512-7oZJCPvvMvTd0OlqWsIxTuItTpJBpU1tcbVl24FMn3xt3+VSunwUasmfPJRE57oNO1KsZ4PgA1xTdAX4hq8NyQ==
+undici@7.16.0:
+  version "7.16.0"
+  resolved "https://registry.npmjs.org/undici/-/undici-7.16.0.tgz#cb2a1e957726d458b536e3f076bf51f066901c1a"
+  integrity sha512-QEg3HPMll0o3t2ourKwOeUAZ159Kn9mx5pnzHRQO8+Wixmh88YdZRiIwat0iNzNNXn0yoEtXJqFpyW7eM8BV7g==
 
 undici@^7.0.0, undici@^7.12.0:
   version "7.13.0"
