@@ -13893,10 +13893,10 @@ nanoid@3.3.3:
   resolved "https://registry.npmjs.org/nanoid/-/nanoid-3.3.3.tgz#fd8e8b7aa761fe807dba2d1b98fb7241bb724a25"
   integrity sha512-p1sjXuopFs0xg+fPASzQ28agW1oHD7xDsd9Xkf3T15H3c/cifrFHVwrh74PdoklAPi+i7MdRsE47vm2r6JoB+w==
 
-nanoid@5.1.0:
-  version "5.1.0"
-  resolved "https://registry.npmjs.org/nanoid/-/nanoid-5.1.0.tgz#d61a0cde4db69c39f9320625fc86764c072f221f"
-  integrity sha512-zDAl/llz8Ue/EblwSYwdxGBYfj46IM1dhjVi8dyp9LQffoIGxJEAHj2oeZ4uNcgycSRcQ83CnfcZqEJzVDLcDw==
+nanoid@5.1.1:
+  version "5.1.1"
+  resolved "https://registry.npmjs.org/nanoid/-/nanoid-5.1.1.tgz#460b54040ee1b74198c656200a30d3d87d3c1f53"
+  integrity sha512-GJabIFYt5DiMPnl+sJYk7nuBMtGRmuKTaqsX1YLODLAcKdJPm8Kvnt/Bl5r0t52ybiMHC1kOKxDpdQZYwnu9rg==
 
 nanoid@^3.3.11:
   version "3.3.11"
