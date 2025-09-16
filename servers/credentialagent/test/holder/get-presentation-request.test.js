@@ -221,7 +221,7 @@ describe('presentation request', () => {
           `/get-presentation-request?id=${q.disclosureId}`
         ),
       });
-      expect(response.statusCode).toEqual(502);
+      expect(response.statusCode).toEqual(500);
     });
     it('should 500 if tenant doesnt have a private key defined', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(

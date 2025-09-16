@@ -15,19 +15,25 @@
  *
  */
 
-const initRequest = require('@verii/request');
-const { capitalize } = require('lodash/fp');
+const { initHttpClient } = require('@verii/http-client');
 const fp = require('fastify-plugin');
 
-const requestPlugin = async (fastify, { name, options }) => {
-  const fastifyDecoration = `base${capitalize(name)}`;
+const httpClientPlugin = async (fastify, { name, options }) => {
+  const fastifyDecoration = `base${name[0].toUpperCase()}${name.slice(1)}`;
   const requestDecoration = name;
+  const { prefixUrl } = options;
   fastify
-    .decorate(fastifyDecoration, initRequest(options))
+    .decorate(
+      fastifyDecoration,
+      () => initHttpClient({ ...options, cache: fastify.cache }),
+      ['cache']
+    )
     .decorateRequest(requestDecoration, null)
     .addHook('preValidation', async (req) => {
-      req[requestDecoration] = fastify[fastifyDecoration](req);
+      req[requestDecoration] = prefixUrl
+        ? fastify[fastifyDecoration]()(prefixUrl, req)
+        : fastify[fastifyDecoration]()(req);
     });
 };
 
-module.exports = { requestPlugin: fp(requestPlugin) };
+module.exports = { httpClientPlugin: fp(httpClientPlugin) };

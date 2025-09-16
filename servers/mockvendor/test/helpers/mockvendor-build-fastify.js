@@ -13,4 +13,10 @@ const config = require('../../src/config/config');
 const { initServer } = require('../../src/init-server');
 
 module.exports = () =>
-  flow(createTestServer, initServer)({ ...config, mongoConnection });
+  flow(
+    createTestServer,
+    initServer
+  )({
+    ...config,
+    mongoConnection,
+  });

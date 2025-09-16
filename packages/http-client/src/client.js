@@ -15,71 +15,149 @@
  */
 
 const { nanoid } = require('nanoid/non-secure');
-const { Agent, interceptors, cacheStores } = require('undici');
+const {
+  Agent,
+  interceptors,
+  cacheStores,
+  getGlobalDispatcher,
+} = require('undici');
+const { createOidcInterceptor } = require('undici-oidc-interceptor');
+const { map } = require('lodash/fp');
 const pkg = require('../package.json');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
 const registeredPrefixUrls = new Map();
 
+const initCache = () => new cacheStores.MemoryCacheStore();
+
+const buildInterceptors = ({
+  isTest,
+  cache,
+  tokensEndpoint,
+  clientId,
+  clientSecret,
+  scopes,
+  audience,
+}) => {
+  const requiredInterceptors = [
+    interceptors.responseError(),
+    ...addCache(cache),
+  ];
+
+  if (tokensEndpoint) {
+    const origins = map(
+      (url) => url.origin,
+      registeredPrefixUrls.values().toArray()
+    );
+    const oidcInterceptor = createOidcInterceptor({
+      idpTokenUrl: tokensEndpoint,
+      clientId,
+      clientSecret,
+      retryOnStatusCodes: [401],
+      scopes,
+      audience,
+      urls: origins,
+    });
+    requiredInterceptors.push(oidcInterceptor);
+  }
+
+  if (!isTest) {
+    requiredInterceptors.push(
+      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false })
+    );
+  }
+
+  return requiredInterceptors;
+};
+
 const initHttpClient = (options) => {
+  const { prefixUrl, isTest, bearerToken } = options;
+
   const { clientOptions, traceIdHeader, customHeaders } = parseOptions(options);
 
-  // register prefixUrls
-  for (const prefixUrl of options.prefixUrls ?? []) {
+  // register prefixUrl
+  if (prefixUrl) {
     const parsedPrefixUrl = parsePrefixUrl(prefixUrl);
     registeredPrefixUrls.set(prefixUrl, parsedPrefixUrl);
   }
 
-  const store = new cacheStores.MemoryCacheStore();
-  const agent =
-    options.agent ??
-    new Agent(clientOptions).compose([
-      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false }),
-      interceptors.responseError(),
-      interceptors.cache({ store, methods: ['GET'] }),
-    ]);
+  let agent;
 
-  const request = async (url, reqOptions, method, host, { traceId, log }) => {
+  if (isTest) {
+    const existingAgent = getGlobalDispatcher();
+    agent = existingAgent.compose(buildInterceptors(options));
+  } else {
+    agent = new Agent(clientOptions).compose(buildInterceptors(options));
+  }
+
+  const request = async (
+    url,
+    reqOptions,
+    method,
+    host,
+    { traceId, log },
+    body
+  ) => {
     const reqId = nanoid();
     const reqHeaders = {
       'user-agent': USER_AGENT_HEADER,
       [traceIdHeader]: traceId,
       ...customHeaders,
+      ...reqOptions?.headers,
+      ...buildBearerAuthorizationHeader(bearerToken),
     };
-    const [origin, path] =
-      host != null
-        ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
-        : parseFullURL(url, clientOptions, reqOptions);
+    const [origin, path] = buildUrl(host, url, reqOptions, clientOptions);
 
     log.info({ origin, path, url, reqId, reqHeaders }, 'HttpClient request');
 
-    const httpResponse = await agent.request({
-      origin,
-      path,
-      method,
-      headers: reqHeaders,
-    });
-    const { statusCode, headers: resHeaders, body } = httpResponse;
-    return {
-      statusCode,
-      resHeaders,
-      json: async () => {
-        const bodyJson = await body.json();
-        log.info(
-          { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
-          'HttpClient response'
-        );
-        return bodyJson;
-      },
-      text: async () => {
-        const bodyText = await body.text();
-        log.info(
-          { origin, url, reqId, statusCode, resHeaders, body: bodyText },
-          'HttpClient response'
-        );
-        return bodyText;
-      },
-    };
+    try {
+      const httpRequest = {
+        origin,
+        path,
+        method,
+        headers: reqHeaders,
+      };
+      if (body) {
+        httpRequest.body = body;
+      }
+      const httpResponse = await agent.request(httpRequest);
+      const { statusCode, headers: resHeaders, body: rawBody } = httpResponse;
+      return {
+        rawBody,
+        statusCode,
+        resHeaders,
+        json: async () => {
+          try {
+            const bodyJson = await rawBody.json();
+            log.info(
+              { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
+              'HttpClient response'
+            );
+            return bodyJson;
+          } catch (error) {
+            log.error(
+              { origin, url, reqId, statusCode, resHeaders, error },
+              'JSON parsing error'
+            );
+
+            return {};
+          }
+        },
+        text: async () => {
+          const bodyText = await rawBody.text();
+          log.info(
+            { origin, url, reqId, statusCode, resHeaders, body: bodyText },
+            'HttpClient response'
+          );
+          return bodyText;
+        },
+      };
+    } catch (error) {
+      // eslint-disable-next-line better-mutation/no-mutation
+      error.url = `${origin}${path}`;
+
+      throw error;
+    }
   };
 
   return (...args) => {
@@ -93,6 +171,17 @@ const initHttpClient = (options) => {
     return {
       get: (url, reqOptions) =>
         request(url, reqOptions, HTTP_VERBS.GET, host, context),
+      post: (url, payload, reqOptions) =>
+        request(
+          url,
+          reqOptions,
+          HTTP_VERBS.POST,
+          host,
+          context,
+          JSON.stringify(payload)
+        ),
+      delete: (url, reqOptions) =>
+        request(url, reqOptions, HTTP_VERBS.DELETE, host, context),
       responseType: 'promise',
     };
   };
@@ -124,6 +213,16 @@ const parsePrefixUrl = (prefixUrl) => {
   };
 };
 
+const buildUrl = (host, url, reqOptions, clientOptions) => {
+  const fullUrl = reqOptions?.prefixUrl
+    ? new URL(url, reqOptions.prefixUrl).toString()
+    : url;
+
+  return host && !reqOptions?.prefixUrl
+    ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
+    : parseFullURL(fullUrl, clientOptions, reqOptions);
+};
+
 const parseFullURL = (url, clientOptions, reqOptions) => {
   const { origin, pathname } = new URL(url);
   return [origin, addSearchParams(pathname, reqOptions?.searchParams)];
@@ -138,8 +237,16 @@ const buildRelativePath = (rootPath, url, reqOptions) =>
 const addSearchParams = (path, searchParams) =>
   searchParams != null ? `${path}?${searchParams}` : path;
 
+const addCache = (store) =>
+  store ? [interceptors.cache({ store, methods: ['GET'] })] : [];
+
+const buildBearerAuthorizationHeader = (token) =>
+  token ? { Authorization: `Bearer ${token}` } : {};
+
 const HTTP_VERBS = {
   GET: 'GET',
+  POST: 'POST',
+  DELETE: 'DELETE',
 };
 
-module.exports = { initHttpClient, parseOptions, parsePrefixUrl };
+module.exports = { initHttpClient, parseOptions, parsePrefixUrl, initCache };

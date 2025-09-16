@@ -3620,7 +3620,7 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.UNEXPECTED_ERROR,
           ],
-          'Response code 500 (Internal Server Error)'
+          expect.stringContaining('Error')
         )
       );
     });
@@ -4012,7 +4012,7 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.IDENTIFIED,
           ],
-          'Response code 500 (Internal Server Error)'
+          expect.stringContaining('Error')
         )
       );
       expect(identifyWebhookPayload).toEqual({

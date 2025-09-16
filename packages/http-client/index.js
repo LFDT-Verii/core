@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-const { initHttpClient } = require('./src/client');
+const { initHttpClient, initCache } = require('./src/client');
 
-module.exports = { initHttpClient };
+module.exports = { initHttpClient, initCache };

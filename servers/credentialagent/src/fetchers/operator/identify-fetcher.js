@@ -15,20 +15,26 @@
  */
 
 const { setAuthHeader } = require('./webhook-auth-header');
+const { handleVendorError } = require('./vendor-errors-handler');
 
-const identifyUserOnVendor = (payload, context) => {
+const identifyUserOnVendor = async (payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
 
-  return vendorFetch
-    .post('issuing/identify', {
-      json: payload,
+  try {
+    const response = await vendorFetch.post('issuing/identify', payload, {
       ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
       headers: {
         ...setAuthHeader(context),
       },
-    })
-    .json();
+    });
+
+    return response.json();
+  } catch (error) {
+    handleVendorError(error);
+  }
+
+  return null;
 };
 
 module.exports = {

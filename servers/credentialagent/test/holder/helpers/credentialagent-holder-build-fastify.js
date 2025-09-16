@@ -29,4 +29,8 @@ module.exports = (overrideConfig = {}) =>
   flow(
     createTestServer,
     initHolderServer
-  )({ ...holderConfig, ...overrideConfig, mongoConnection });
+  )({
+    ...holderConfig,
+    ...overrideConfig,
+    mongoConnection,
+  });
