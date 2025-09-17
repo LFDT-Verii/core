@@ -34,8 +34,19 @@ const verifyVerifiablePresentationJwt = async (
     });
   }
 
-  const jwk = await getJwkFromDidUri(header.kid);
+  const jwk = await wrapGetJwkFromDidUri(header.kid);
   return wrapVerifyPresentationJwt(presentationJwt, jwk);
+};
+
+const wrapGetJwkFromDidUri = async (kid) => {
+  try {
+    const jwk = await getJwkFromDidUri(kid);
+    return jwk;
+  } catch (error) {
+    throw newError(400, `kid_${error.message}`, {
+      errorCode: 'presentation_malformed',
+    });
+  }
 };
 
 const wrapVerifyPresentationJwt = async (presentationJwt, jwk) => {
