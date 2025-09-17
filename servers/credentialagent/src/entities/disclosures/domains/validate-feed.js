@@ -9,12 +9,18 @@ const validateFeed = (disclosure, context) => {
       errorCode: 'issuing_feed_not_supported',
     });
   }
-  if (context.method === 'PUT' && context.disclosure.feed !== disclosure.feed) {
+  if (
+    context.method === 'PUT' &&
+    isFeedModified(context.disclosure, disclosure)
+  ) {
     throw newError(400, DisclosureErrors.FEED_PROPERTY_CANNOT_BE_MODIFIED, {
       errorCode: 'feed_property_cannot_be_modified',
     });
   }
 };
+
+const isFeedModified = (existing, modified) =>
+  (!existing.feed && modified.feed) || (existing.feed && !modified.feed);
 
 module.exports = {
   validateFeed,

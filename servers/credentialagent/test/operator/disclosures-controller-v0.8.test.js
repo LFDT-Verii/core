@@ -2834,8 +2834,7 @@ describe('disclosures management', () => {
           await persistDisclosure({
             tenant,
             configurationType: ConfigurationType.INSPECTION,
-            identificationMethods: ['verifiable_presentation'],
-            vendorEndpoint: 'receive-applicant',
+            vendorEndpoint: VendorEndpoint.RECEIVE_CHECKED_CREDENTIALS,
           })
         );
         const response = await fastify.injectJson({
@@ -2867,8 +2866,7 @@ describe('disclosures management', () => {
           await persistDisclosure({
             tenant,
             configurationType: ConfigurationType.INSPECTION,
-            identificationMethods: ['verifiable_presentation'],
-            vendorEndpoint: 'receive-applicant',
+            vendorEndpoint: VendorEndpoint.RECEIVE_CHECKED_CREDENTIALS,
           })
         );
         const response = await fastify.injectJson({
@@ -2894,52 +2892,16 @@ describe('disclosures management', () => {
         );
       });
 
-      it('should 200 and update the disclosure with identificationMethods set to [verifiable_presentation]', async () => {
-        const updatePayload = _.flow(
-          _.omit(['createdAt', 'updatedAt', '_id']),
-          _.set('identificationMethods', ['verifiable_presentation'])
-        )(disclosures.a);
-
-        const response = await fastify.injectJson({
-          method: 'PUT',
-          url: `${disclosureUrl(tenant)}/${disclosures.a._id}`,
-          payload: updatePayload,
-        });
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.json).toEqual({
-          ...updatePayload,
-          identificationMethods: ['verifiable_presentation'],
-          sendPushOnVerification: false,
-          feed: false,
-          id: expect.stringMatching(OBJECT_ID_FORMAT),
-          createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
-          updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
-        });
-
-        const dbResult = await mongoDb()
-          .collection('disclosures')
-          .findOne({ _id: new ObjectId(response.json.id) });
-        expect(mongoify(dbResult)).toEqual({
-          ...updatePayload,
-          identificationMethods: ['verifiable_presentation'],
-          sendPushOnVerification: false,
-          _id: new ObjectId(response.json.id),
-          tenantId: new ObjectId(tenant._id),
-          deactivationDate: expect.any(Date),
-          createdAt: expect.any(Date),
-          updatedAt: expect.any(Date),
-        });
-      });
-
       it('should 400 if the feed property is modified', async () => {
         const disclosure = await persistDisclosure({
-          description: 'feedTrueTest',
           feed: true,
           tenant,
+          configurationType: ConfigurationType.INSPECTION,
+          vendorEndpoint: VendorEndpoint.RECEIVE_CHECKED_CREDENTIALS,
         });
         const updatePayload = _.flow(
           _.omit(['createdAt', 'updatedAt', '_id']),
+          _.set('description', 'new description'),
           _.set('feed', false)
         )(disclosure);
 
@@ -2956,6 +2918,91 @@ describe('disclosures management', () => {
             errorCode: 'feed_property_cannot_be_modified',
             message: 'feed property cannot be modified',
             statusCode: 400,
+          })
+        );
+      });
+
+      it('should 200 and update the disclosure', async () => {
+        const disclosure = await persistDisclosure({
+          tenant,
+          configurationType: ConfigurationType.INSPECTION,
+          vendorEndpoint: VendorEndpoint.RECEIVE_CHECKED_CREDENTIALS,
+        });
+
+        const updatePayload = _.flow(
+          _.omit(['createdAt', 'updatedAt', '_id']),
+          _.set('description', 'new description')
+        )(disclosure);
+
+        const response = await fastify.injectJson({
+          method: 'PUT',
+          url: `${disclosureUrl(tenant)}/${disclosure._id}`,
+          payload: updatePayload,
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          ..._.omit(['_id'], disclosure),
+          ...updatePayload,
+          id: disclosure._id,
+          identificationMethods: ['verifiable_presentation'],
+          feed: false,
+          updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        });
+
+        const dbResult = await mongoDb()
+          .collection('disclosures')
+          .findOne({ _id: new ObjectId(response.json.id) });
+        expect(mongoify(dbResult)).toEqual(
+          mongoify({
+            ...disclosure,
+            ...updatePayload,
+            tenantId: tenant._id,
+            feed: false,
+            identificationMethods: ['verifiable_presentation'],
+            updatedAt: expect.any(Date),
+          })
+        );
+      });
+
+      it('should 200 and update the feed disclosure', async () => {
+        const disclosure = await persistDisclosure({
+          tenant,
+          feed: true,
+          configurationType: ConfigurationType.INSPECTION,
+          vendorEndpoint: VendorEndpoint.RECEIVE_CHECKED_CREDENTIALS,
+        });
+
+        const updatePayload = _.flow(
+          _.omit(['createdAt', 'updatedAt', '_id']),
+          _.set('description', 'new description')
+        )(disclosure);
+
+        const response = await fastify.injectJson({
+          method: 'PUT',
+          url: `${disclosureUrl(tenant)}/${disclosure._id}`,
+          payload: updatePayload,
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          ..._.omit(['_id'], disclosure),
+          ...updatePayload,
+          id: disclosure._id,
+          identificationMethods: ['verifiable_presentation'],
+          updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        });
+
+        const dbResult = await mongoDb()
+          .collection('disclosures')
+          .findOne({ _id: new ObjectId(response.json.id) });
+        expect(mongoify(dbResult)).toEqual(
+          mongoify({
+            ...disclosure,
+            ...updatePayload,
+            tenantId: tenant._id,
+            identificationMethods: ['verifiable_presentation'],
+            updatedAt: expect.any(Date),
           })
         );
       });
@@ -3141,6 +3188,7 @@ describe('disclosures management', () => {
         expect(mongoify(dbResult)).toEqual({
           ...updatePayload,
           identificationMethods: ['verifiable_presentation'],
+          feed: false,
           sendPushOnVerification: false,
           _id: new ObjectId(response.json.id),
           tenantId: new ObjectId(tenant._id),
@@ -3236,6 +3284,7 @@ describe('disclosures management', () => {
           ..._.omit(['_id'], payload),
           identificationMethods: ['verifiable_presentation'],
           sendPushOnVerification: false,
+          feed: false,
           _id: new ObjectId(response.json.id),
           tenantId: new ObjectId(tenant._id),
           types: [{ type: 'EmailV1.0' }, { type: 'PhoneV1.0' }],
@@ -3372,6 +3421,7 @@ describe('disclosures management', () => {
           ...updatePayload,
           identificationMethods: ['preauth'],
           sendPushOnVerification: false,
+          feed: false,
           _id: new ObjectId(response.json.id),
           tenantId: new ObjectId(tenant._id),
           deactivationDate: expect.any(Date),
@@ -3444,6 +3494,7 @@ describe('disclosures management', () => {
           .findOne({ _id: new ObjectId(disclosure._id) });
         expect(mongoify(updatedDisclosure)).toEqual({
           ...payload,
+          feed: false,
           _id: expect.any(ObjectId),
           tenantId: expect.any(ObjectId),
           identificationMethods: ['verifiable_presentation'],
@@ -3491,6 +3542,7 @@ describe('disclosures management', () => {
           .findOne({ _id: new ObjectId(disclosure._id) });
         expect(mongoify(updatedDisclosure)).toEqual({
           ...payload,
+          feed: false,
           _id: expect.any(ObjectId),
           tenantId: expect.any(ObjectId),
           identificationMethods: ['verifiable_presentation'],
