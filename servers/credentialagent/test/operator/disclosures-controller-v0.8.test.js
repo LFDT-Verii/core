@@ -2932,7 +2932,7 @@ describe('disclosures management', () => {
         });
       });
 
-      it('should 200 and strip the feed property', async () => {
+      it('should 400 if the feed property is modified', async () => {
         const disclosure = await persistDisclosure({
           description: 'feedTrueTest',
           feed: true,
@@ -2949,31 +2949,15 @@ describe('disclosures management', () => {
           payload: updatePayload,
         });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.json).toEqual({
-          ...updatePayload,
-          identificationMethods: ['verifiable_presentation'],
-          sendPushOnVerification: false,
-          feed: true,
-          id: expect.stringMatching(OBJECT_ID_FORMAT),
-          createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
-          updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
-        });
-
-        const dbResult = await mongoDb()
-          .collection('disclosures')
-          .findOne({ _id: new ObjectId(response.json.id) });
-        expect(mongoify(dbResult)).toEqual({
-          ...updatePayload,
-          feed: true,
-          identificationMethods: ['verifiable_presentation'],
-          sendPushOnVerification: false,
-          _id: new ObjectId(response.json.id),
-          tenantId: new ObjectId(tenant._id),
-          deactivationDate: expect.any(Date),
-          createdAt: expect.any(Date),
-          updatedAt: expect.any(Date),
-        });
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'feed_property_cannot_be_modified',
+            message: 'feed property cannot be modified',
+            statusCode: 400,
+          })
+        );
       });
     });
 

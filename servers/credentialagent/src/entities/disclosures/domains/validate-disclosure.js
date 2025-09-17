@@ -29,7 +29,7 @@ const validateDisclosure = (
   validateVendorEndpoint(disclosure);
   validateCommercialEntity(disclosure, verifiedProfile);
   validatePresentationDefinition(disclosure);
-  validateFeed(disclosure);
+  validateFeed(disclosure, context);
 };
 
 module.exports = {
