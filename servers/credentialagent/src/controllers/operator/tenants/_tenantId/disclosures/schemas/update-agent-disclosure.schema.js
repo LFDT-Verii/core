@@ -1,4 +1,3 @@
-const { omit } = require('lodash/fp');
 const newAgentDisclosureSchema = require('./new-agent-disclosure.schema.json');
 
 const updateAgentDisclosureSchema = {
@@ -7,7 +6,7 @@ const updateAgentDisclosureSchema = {
   title: 'update-agent-disclosure',
   description: 'Slightly modified from new-agent-disclosure',
   properties: {
-    ...omit(['feed'], newAgentDisclosureSchema.properties),
+    ...newAgentDisclosureSchema.properties,
     setIssuingDefault: {
       type: 'boolean',
     },
