@@ -21,13 +21,13 @@ import { kebabCase } from 'lodash-es';
 
 import Loading from '../../components/Loading.jsx';
 import Popup from '../../components/common/Popup.jsx';
-import { credentialTypesByServiceTypes } from '../../utils/serviceTypes.js';
 import { dataResources } from '../../utils/remoteDataProvider.js';
 
 import { ServiceEndpointSelection } from '../services/components/ServiceEndpointSelection/index.jsx';
 import { ServiceTypeSelection } from '../services/components/ServiceTypeSelection/index.jsx';
 import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
 import { useIsIssuingInspection } from '../services/hooks/useIsIssuingInspection.js';
+import { buildPayload } from '../services/utils/buildPayload.js';
 
 const OrganizationAddService = ({
   isModalOpened,
@@ -87,15 +87,12 @@ const OrganizationAddService = ({
   }, [InterceptOnCreate, isCreated]);
 
   const onCreateCallback = useCallback(
-    ({ serviceEndpoint }) => {
+    (service) => {
       const type = selectedServiceType.id.match(/.+v1/);
-      setSelectedCAO(serviceEndpoint.split('#')[0]);
+      setSelectedCAO(service.serviceEndpoint.split('#')[0]);
+      const payload = buildPayload(service, type[0]);
       onCreate({
-        serviceEndpoint,
-        type: type[0],
-        ...(selectedServiceType.id.includes('Issuing') && {
-          credentialTypes: credentialTypesByServiceTypes[selectedServiceType.id],
-        }),
+        ...payload,
       });
     },
     [onCreate, selectedServiceType.id, setSelectedCAO],
@@ -127,6 +124,7 @@ const OrganizationAddService = ({
           <ServiceEndpointSelection
             credentialAgentOperators={credentialAgentOperators}
             isIssueOrInspection={isIssuingOrInspection}
+            selectedServiceType={selectedServiceType}
             inProgress={isSending}
             onCreate={onCreateCallback}
             handleBack={() => setSelectedStep(1)}

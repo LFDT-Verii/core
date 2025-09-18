@@ -20,8 +20,9 @@ import { Box, Button, Container, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useGetOne, useRedirect, useUpdate } from 'react-admin';
-
 import PropTypes from 'prop-types';
+import { omit } from 'lodash-es';
+
 import ListItem from '@/components/common/ListItem.jsx';
 import Loading from '@/components/Loading.jsx';
 import ServicesEdit from '@/components/services/ServicesEdit.jsx';
@@ -31,6 +32,7 @@ import { dataResources } from '@/utils/remoteDataProvider.js';
 import useParticipantAgreementState from '@/state/participantAgreementState.js';
 import ServiceCreateForm from './ServiceCreateForm.jsx';
 import { serviceTypeTitlesMap } from '../../utils/serviceTypes.js';
+import { buildServiceContent } from './utils/buildServiceContent.js';
 import useDeleteService from './useDeleteService.js';
 
 const SAVE_ERROR_MESSAGE =
@@ -61,7 +63,7 @@ const ServicesList = ({
   const { handleServiceDeleteConfirm, isDeletingService, serviceToDelete, setServiceToDelete } =
     useDeleteService(refetchOrganizationServices);
 
-  const services = useMemo(() => data?.didDoc?.service || [], [data?.didDoc?.service]);
+  const services = useMemo(() => data?.services || [], [data?.services]);
   const servicesActivated = useMemo(
     () =>
       services.map((item) => ({
@@ -99,7 +101,7 @@ const ServicesList = ({
   };
 
   // eslint-disable-next-line consistent-return
-  const onSave = async ({ serviceEndpoint }) => {
+  const onSave = async (payload) => {
     try {
       await updateService(
         dataResources.SERVICES,
@@ -107,9 +109,7 @@ const ServicesList = ({
           id: currentlyEditableService.id,
           data: {
             organizationId: did,
-            payload: {
-              serviceEndpoint,
-            },
+            payload: omit(payload, ['id', 'type']),
           },
         },
         { returnPromise: true },
@@ -188,14 +188,13 @@ const ServicesList = ({
               [
                 { name: 'service id', value: service.id },
                 { name: 'service endpoint', value: service.serviceEndpoint },
-                ...(service.credentialTypes
-                  ? [
-                      {
-                        name: 'credential types',
-                        value: service.credentialTypes.join(', '),
-                      },
-                    ]
-                  : []),
+                ...buildServiceContent(service.credentialTypes, 'credential types'),
+                ...buildServiceContent(service.name, 'wallet name'),
+                ...buildServiceContent(service.supportedExchangeProtocols, 'protocols'),
+                ...buildServiceContent(service.playStoreUrl, 'play store url'),
+                ...buildServiceContent(service.googlePlayId, 'google play id'),
+                ...buildServiceContent(service.appleAppStoreUrl, 'apple app store url'),
+                ...buildServiceContent(service.appleAppId, 'apple app id'),
                 ...(AdditionalServiceProperties && AdditionalServiceProperties[service.type]
                   ? [
                       {

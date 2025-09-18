@@ -61,7 +61,6 @@ import {
 import useCountryCodes from '@/utils/countryCodes.js';
 import { useAuth } from '@/utils/auth/AuthContext.js';
 import { dataResources } from '@/utils/remoteDataProvider.js';
-import { credentialTypesByServiceTypes } from '@/utils/serviceTypes.js';
 
 import AuthorityRegistrationNumbersInput from './components/AuthorityRegistrationInput.jsx';
 import { LinkedInRegistrationInput } from './components/LinkedInRegistrationInput.jsx';
@@ -206,9 +205,7 @@ const OrganizationCreate = ({
         ? [
             {
               id: `${did}#${kebabCase(serviceData.type)}-1`,
-              serviceEndpoint: serviceData.serviceEndpoint,
-              type: serviceData.type,
-              credentialTypes: credentialTypesByServiceTypes[serviceData.type],
+              ...serviceData,
             },
           ]
         : [],
