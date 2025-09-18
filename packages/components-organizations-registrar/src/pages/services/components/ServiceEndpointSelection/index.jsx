@@ -1,16 +1,14 @@
-import { useState, useMemo } from 'react';
-import { Box, Button, Stack, Typography, Tooltip, Link } from '@mui/material';
+import { Form, FormDataConsumer, SaveButton } from 'react-admin';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import { Form, FormDataConsumer, SaveButton, TextInput, required } from 'react-admin';
-import InfoIcon from '@mui/icons-material/Info';
 
 import PropTypes from 'prop-types';
-import CustomDropDown from '@/components/common/CustomDropDown.jsx';
-import Autocomplete from '@/components/common/Autocomplete.jsx';
-import OrganizationAvatar from '@/components/common/OrganizationAvatar.jsx';
-import { validateServiceEndpoint } from '@/components/organizations/CreateOrganizationUtils.js';
-import { chainNames } from '@/utils/chainNames.js';
-import { useConfig } from '@/utils/ConfigContext.js';
+import { useIsIssuingInspection } from '../../hooks/useIsIssuingInspection.js';
+import IssuingOrInspectionSelection from './components/IssuingOrInspectionSelection.jsx';
+import WebWalletSelection from './components/WebWalletSelection.jsx';
+import HolderWalletSelection from './components/HolderWalletSelection.jsx';
+import { UserAgreement } from './components/UserAgreement.jsx';
+import CAOSelection from './components/CAOSelection.jsx';
 
 import { getTitle, isAddButtonDisabled } from '../../utils/index.js';
 
@@ -19,22 +17,13 @@ const selectedStep = 2;
 // eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
 export const ServiceEndpointSelection = ({
   credentialAgentOperators,
-  isIssueOrInspection,
+  selectedServiceType,
   inProgress,
   onCreate,
   handleBack,
 }) => {
-  const config = useConfig();
-  const [selectedCAO, setSelectedCAO] = useState('');
-  const [selectedServiceId, setSelectedServiceId] = useState('');
-  const getOptionAsText = (item) => item.name;
-
-  const CAO = useMemo(() => {
-    if (selectedCAO) {
-      return credentialAgentOperators.find((item) => item.id === selectedCAO);
-    }
-    return '';
-  }, [credentialAgentOperators, selectedCAO]);
+  const { isIssuingOrInspection, isCAO, isWallet, isWebWallet, isHolderWallet } =
+    useIsIssuingInspection(selectedServiceType);
 
   return (
     <>
@@ -47,76 +36,19 @@ export const ServiceEndpointSelection = ({
       <Typography>Please complete the details below to continue</Typography>
       <Form onSubmit={onCreate} mode="onChange" defaultValues={{ serviceEndpoint: '' }}>
         <Stack sx={styles.endpointForm}>
-          {isIssueOrInspection ? (
-            <Stack sx={{ mt: 2 }}>
-              <Stack flexDirection="row" alignItems="center" sx={styles.selectCAOContainer}>
-                <Autocomplete
-                  source="serviceCAO"
-                  label="Select Credential Agent Operator"
-                  value={selectedCAO}
-                  onChange={setSelectedCAO}
-                  items={credentialAgentOperators}
-                  /* eslint-disable-next-line react/no-unstable-nested-components */
-                  stringValue={(item) => (
-                    <Box sx={styles.menuItemLogo} component="div">
-                      <span>{item.name}</span>
-                      <OrganizationAvatar size={32} name={item.name} logo={item.logo} />
-                    </Box>
-                  )}
-                  inputText={getOptionAsText}
-                  disabled={false}
-                  styles={styles.selectCAO}
-                />
-                <Box sx={{ ml: 2 }}>
-                  <Tooltip title="The Credential Agent Operator your organization will use to integrate with Velocity Network™">
-                    <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                  </Tooltip>
-                </Box>
-              </Stack>
-              <Stack flexDirection="row" alignItems="center" mt={1} mb={4}>
-                <CustomDropDown
-                  label='Select "Service ID"'
-                  value={selectedServiceId}
-                  onChange={setSelectedServiceId}
-                  items={CAO.service || []}
-                  stringValue={(item) => `${item.id} (${item.serviceEndpoint})`}
-                  disabled={!selectedCAO}
-                  source="serviceEndpoint"
-                  parse={(value) => `${selectedCAO}${value.id}`}
-                />
-                <Box sx={{ ml: 2 }}>
-                  <Tooltip
-                    title="The agent's service ID your organization needs to use. 
-                  If there are multiple service IDs available, please contact your Credential Agent Operator to know which one to select."
-                  >
-                    <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                  </Tooltip>
-                </Box>
-              </Stack>
-            </Stack>
-          ) : (
-            <TextInput
-              source="serviceEndpoint"
-              label="Service endpoint URL"
-              validate={[
-                required('Service endpoint URL field is required'),
-                ...validateServiceEndpoint,
-              ]}
-              parse={(value) => value?.trim() ?? ''}
-              disabled={inProgress}
+          {isIssuingOrInspection && (
+            <IssuingOrInspectionSelection
+              credentialAgentOperators={credentialAgentOperators}
+              inProgress={inProgress}
             />
           )}
-          {config.chainName !== chainNames.testnet && (
-            <Typography variant="subtitle1" sx={{ marginTop: '10px' }}>
-              <span>By clicking Add, you agree to our </span>
-              <Link
-                target="_blank"
-                href="https://www.velocitynetwork.foundation/main2/participation-agreements"
-              >
-                Participant Agreement
-              </Link>
-            </Typography>
-          )}
+
+          {isWebWallet && <WebWalletSelection inProgress={inProgress} />}
+
+          {isHolderWallet && <HolderWalletSelection inProgress={inProgress} />}
+
+          {isCAO && <CAOSelection inProgress={inProgress} />}
+          <UserAgreement isWallet={isWallet} />
           <Box sx={styles.buttonBlock}>
             <Button
               variant="outlined"
@@ -131,9 +63,11 @@ export const ServiceEndpointSelection = ({
               {({ formData }) => {
                 const isDisabled = isAddButtonDisabled(
                   inProgress,
-                  isIssueOrInspection,
-                  formData.serviceCAO,
-                  formData.serviceEndpoint,
+                  isIssuingOrInspection,
+                  isCAO,
+                  isWebWallet,
+                  isHolderWallet,
+                  formData,
                 );
 
                 return (
@@ -164,31 +98,6 @@ const styles = {
   },
   endpointForm: {
     marginTop: '20px',
-  },
-  selectCAOContainer: {
-    width: '100%',
-    marginBottom: '20px',
-  },
-  selectCAO: {
-    width: '100%',
-    '& .MuiInputBase-root': {
-      width: '100%',
-    },
-    '& .MuiSelect-select': {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      py: 0,
-    },
-    '& .MuiFormHelperText-root': {
-      display: 'none',
-    },
-  },
-  menuItemLogo: {
-    display: 'flex',
-    flex: '1',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   buttonBlock: {
     display: 'flex',
@@ -232,7 +141,7 @@ ServiceEndpointSelection.propTypes = {
       ),
     }),
   ).isRequired,
-  isIssueOrInspection: PropTypes.bool.isRequired,
+  selectedServiceType: PropTypes.string.isRequired,
   inProgress: PropTypes.bool.isRequired,
   onCreate: PropTypes.func.isRequired,
   handleBack: PropTypes.func.isRequired,
