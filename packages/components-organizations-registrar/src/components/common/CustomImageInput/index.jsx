@@ -219,7 +219,9 @@ const CustomImageInput = ({
   ]);
 
   return (
-    <fieldset style={sx.fieldset}>
+    <fieldset
+      style={orientation === 'vertical' ? { ...sx.fieldset, ...sx.verticalFieldset } : sx.fieldset}
+    >
       <legend style={!labelText ? { padding: 0 } : {}}>{`${labelText}${
         isRequired ? ' *' : ''
       }`}</legend>
@@ -265,7 +267,7 @@ const CustomImageInput = ({
           />
         </ImageInput>
       ) : (
-        <ProfileLogo changeMode={setIsEditMode} imgSrc={imgSrc} />
+        <ProfileLogo changeMode={setIsEditMode} imgSrc={imgSrc} orientation={orientation} />
       )}
     </fieldset>
   );
@@ -296,6 +298,10 @@ const sx = {
     marginTop: '-12px',
     fontSize: '0.75rem',
     width: '100%',
+  },
+  verticalFieldset: {
+    maxHeight: '280px',
+    overflow: 'hidden',
   },
   container: {
     height: '100%',

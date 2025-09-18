@@ -15,20 +15,18 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { kebabCase } from 'lodash-es';
 import { useRedirect, useCreate, useGetList } from 'react-admin';
 import { useLocation, useNavigate } from 'react-router';
 import PropTypes from 'prop-types';
 
 import Popup from '@/components/common/Popup.jsx';
-import { credentialTypesByServiceTypes } from '@/utils/serviceTypes.js';
 import { dataResources } from '@/utils/remoteDataProvider.js';
-import { getNewServiceIndex } from '@/utils/invitations.js';
 import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 import { useIsIssuingInspection } from './hooks/useIsIssuingInspection.js';
 import { ServiceTypeSelection } from './components/ServiceTypeSelection/index.jsx';
 import { ServiceEndpointSelection } from './components/ServiceEndpointSelection/index.jsx';
 import { SecretKeysPopup } from './components/SecretKeysPopup/index.jsx';
+import { buildPayload } from './utils/buildPayload.js';
 
 const defaultAuthClient = { clientSecret: '', clientId: '' };
 
@@ -88,10 +86,9 @@ const ServiceCreateForm = ({ onServiceCreated, services, InterceptOnCreate }) =>
     }
   }, [InterceptOnCreate, serviceId]);
 
-  const onCreateService = async ({ serviceEndpoint }) => {
+  const onCreateService = async (service) => {
     const type = selectedServiceType.id.match(/.+v1/);
-    const kebabType = kebabCase(type[0]);
-    const id = `${did}#${kebabType}-${getNewServiceIndex(services, kebabType)}`;
+    const payload = buildPayload(service, type[0], did, services);
     try {
       setCreateServiceInProgress(true);
       const result = await createService(
@@ -99,12 +96,7 @@ const ServiceCreateForm = ({ onServiceCreated, services, InterceptOnCreate }) =>
         {
           data: {
             organizationId: did,
-            payload: {
-              id,
-              serviceEndpoint,
-              type: type[0],
-              credentialTypes: credentialTypesByServiceTypes[selectedServiceType.id],
-            },
+            payload,
           },
         },
         { returnPromise: true },
@@ -114,7 +106,7 @@ const ServiceCreateForm = ({ onServiceCreated, services, InterceptOnCreate }) =>
       if (result.authClient) {
         setAuthClient(result.authClient);
       } else {
-        setSelectedCAO(serviceEndpoint.split('#')[0]);
+        setSelectedCAO(service.serviceEndpoint.split('#')[0]);
       }
       onServiceCreated();
     } catch (e) {
@@ -142,7 +134,7 @@ const ServiceCreateForm = ({ onServiceCreated, services, InterceptOnCreate }) =>
         {selectedStep === 2 && (
           <ServiceEndpointSelection
             credentialAgentOperators={credentialAgentOperators}
-            isIssueOrInspection={isIssuingOrInspection}
+            selectedServiceType={selectedServiceType}
             inProgress={createServiceInProgress}
             onCreate={onCreateService}
             handleBack={() => setSelectedStep(1)}
