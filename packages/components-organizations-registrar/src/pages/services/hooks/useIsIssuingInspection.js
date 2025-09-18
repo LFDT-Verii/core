@@ -2,18 +2,26 @@ import { useMemo } from 'react';
 import { serviceTypesIssuingOrInspection, CREDENTIAL_TYPES_IDS } from '@/utils/serviceTypes.js';
 
 export const useIsIssuingInspection = (serviceType) => {
-  const { isIssuingOrInspection, isCAO } = useMemo(() => {
-    const isIssuingOrInspectionType =
+  const serviceGroup = useMemo(() => {
+    const isIssuingOrInspection =
       !!serviceType &&
       serviceTypesIssuingOrInspection.some((service) => service.id === serviceType.id);
 
-    const isCAOType =
+    const isCAO =
       !!serviceType && serviceType.id === CREDENTIAL_TYPES_IDS.VLC_CREDENTIAL_AGENT_OPERATOR;
 
-    return { isIssuingOrInspection: isIssuingOrInspectionType, isCAO: isCAOType };
+    const isWebWallet =
+      !!serviceType && serviceType.id === CREDENTIAL_TYPES_IDS.VLC_WEB_WALLET_PROVIDER;
+
+    const isHolderWallet =
+      !!serviceType && serviceType.id === CREDENTIAL_TYPES_IDS.VLC_HOLDER_APP_PROVIDER;
+
+    const isWallet = isWebWallet || isHolderWallet;
+
+    return { isIssuingOrInspection, isCAO, isWallet, isHolderWallet, isWebWallet };
   }, [serviceType]);
 
-  return { isIssuingOrInspection, isCAO };
+  return { ...serviceGroup };
 };
 
 export default useIsIssuingInspection;

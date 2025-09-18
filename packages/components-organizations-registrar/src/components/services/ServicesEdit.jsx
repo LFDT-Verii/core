@@ -15,14 +15,12 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Form, TextInput, SaveButton, required } from 'react-admin';
+import { Form } from 'react-admin';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import PropTypes from 'prop-types';
-import { Stack } from '@mui/material';
 import { useIsIssuingInspection } from '@/pages/services/hooks/useIsIssuingInspection.js';
-
+import { FormContent } from '@/components/services/ServiceEditContent.jsx';
 import Popup from '../common/Popup.jsx';
-import { validateServiceEndpoint } from '../organizations/CreateOrganizationUtils.js';
 
 const ServicesEdit = ({ onClose, onSave, selectedService, InterceptOnCreate }) => {
   const { isIssuingOrInspection, isCAO } = useIsIssuingInspection({ id: selectedService?.type });
@@ -55,14 +53,10 @@ const ServicesEdit = ({ onClose, onSave, selectedService, InterceptOnCreate }) =
         onClose={onClose}
         isOpen={Boolean(selectedService)}
       >
-        <Form
-          record={{ serviceEndpoint: selectedService?.serviceEndpoint }}
-          onSubmit={handleOnSave}
-          mode="onChange"
-        >
+        <Form record={selectedService} onSubmit={handleOnSave} mode="onChange">
           <FormContent
-            isIssuingOrInspection={isIssuingOrInspection}
             isModifyingServiceEnabled={isModifyingServiceEnabled}
+            selectedService={selectedService}
           />
         </Form>
       </Popup>
@@ -79,36 +73,6 @@ const ServicesEdit = ({ onClose, onSave, selectedService, InterceptOnCreate }) =
   );
 };
 
-const FormContent = ({ isIssuingOrInspection, isModifyingServiceEnabled }) => {
-  const validateArray = [required('Service endpoint URL field is required')];
-  if (!isIssuingOrInspection) {
-    validateArray.push(...validateServiceEndpoint);
-  }
-  return (
-    <Stack>
-      <TextInput
-        source="serviceEndpoint"
-        label="Service endpoint URL"
-        validate={validateArray}
-        parse={(value) => value.trim()}
-      />
-      <SaveButton
-        variant="outlined"
-        icon={null}
-        label="Save"
-        sx={sx.saveButton}
-        alwaysEnable={isModifyingServiceEnabled}
-      />
-    </Stack>
-  );
-};
-
-// eslint-disable-next-line better-mutation/no-mutation
-FormContent.propTypes = {
-  isIssuingOrInspection: PropTypes.bool.isRequired,
-  isModifyingServiceEnabled: PropTypes.bool.isRequired,
-};
-
 // eslint-disable-next-line better-mutation/no-mutation
 ServicesEdit.propTypes = {
   onClose: PropTypes.func,
@@ -116,10 +80,6 @@ ServicesEdit.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   selectedService: PropTypes.object,
   InterceptOnCreate: PropTypes.elementType,
-};
-
-const sx = {
-  saveButton: { width: 'fit-content', alignSelf: 'center', px: 4, py: 1, mt: 2 },
 };
 
 export default ServicesEdit;
