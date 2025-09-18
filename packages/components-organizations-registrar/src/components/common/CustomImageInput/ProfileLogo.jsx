@@ -12,7 +12,7 @@ const ProfileLogo = ({ changeMode, imgSrc, orientation = 'horizontal' }) => {
         justifyContent="center"
         sx={[
           sx.profileLogoContainer,
-          orientation === 'vertical' ? { maxHeight: '120px !important' } : {},
+          orientation === 'vertical' ? sx.profileLogoVerticalContainer : {},
         ]}
       >
         <Avatar
@@ -37,6 +37,9 @@ const sx = {
   profileLogoContainer: {
     flex: 1,
     maxHeight: '200px',
+  },
+  profileLogoVerticalContainer: {
+    maxHeight: '120px !important',
   },
   profileLogo: {
     width: 'fit-content',
