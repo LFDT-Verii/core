@@ -50,9 +50,6 @@ const {
 const { generateKeyPair } = require('@verii/crypto');
 const { applyOverrides } = require('@verii/common-functions');
 const nock = require('nock');
-const undici = require('undici');
-const { interceptors } = require('undici');
-
 const { verifyVeriiCredentials } = require('../src/verify-verii-credentials');
 
 const registrarHost = 'registrar.test';
@@ -83,6 +80,7 @@ describe('Verify verii credentials', () => {
     rootPublicKey: orgKeyPair.publicKey,
     revocationContractAddress: 'any',
     registrarUrl,
+    isTest: true,
   };
   let issuerVc;
   let context;
@@ -96,7 +94,6 @@ describe('Verify verii credentials', () => {
       log: console,
       config,
       kms: { exportKeyOrSecret: async (id) => keys[id] },
-      agent: undici.getGlobalDispatcher().compose(interceptors.responseError()),
     };
   });
 

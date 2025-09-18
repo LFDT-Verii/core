@@ -3222,7 +3222,7 @@ describe('submit identification disclosure', () => {
       expect(countResult).toEqual(1);
     });
 
-    it('should return 400 when jwt_vp verification failed', async () => {
+    it('should return 400 when jwt_vp kid is invalid', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
         'idDocument'
@@ -3251,7 +3251,75 @@ describe('submit identification disclosure', () => {
         errorResponseMatcher({
           error: 'Bad Request',
           errorCode: 'presentation_malformed',
-          message: 'Malformed jwt_vp property: must_be_did',
+          message: 'kid_must_be_did',
+          statusCode: 400,
+        })
+      );
+    });
+
+    it('should return 400 when jwt_vp is self signed', async () => {
+      const presentationIdDocument = await generateKYCPresentation(
+        exchange,
+        'idDocument'
+      );
+
+      nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(200, {});
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: idUrl(tenant),
+        headers: {
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
+        },
+        payload: {
+          jwt_vp: await presentationIdDocument.selfSign(),
+          exchange_id: exchange._id,
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'presentation_malformed',
+          message: 'jwt_vp must not be self signed',
+          statusCode: 400,
+        })
+      );
+    });
+
+    it('should return 400 when jwt_vp is different key', async () => {
+      const presentationIdDocument = await generateKYCPresentation(
+        exchange,
+        'idDocument'
+      );
+
+      nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(200, {});
+      const { privateKey: invalidKey } = generateKeyPair({ format: 'jwk' });
+      const jwtVp = await presentationIdDocument.sign(
+        holderKid,
+        invalidKey,
+        holderDid
+      );
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: idUrl(tenant),
+        headers: {
+          'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
+        },
+        payload: {
+          jwt_vp: jwtVp,
+          exchange_id: exchange._id,
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'presentation_malformed',
+          message: 'Malformed jwt_vp property: signature verification failed',
           statusCode: 400,
         })
       );
@@ -3620,7 +3688,7 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.UNEXPECTED_ERROR,
           ],
-          'Response code 500 (Internal Server Error)'
+          expect.stringContaining('Error')
         )
       );
     });
@@ -4012,7 +4080,7 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.IDENTIFIED,
           ],
-          'Response code 500 (Internal Server Error)'
+          expect.stringContaining('Error')
         )
       );
       expect(identifyWebhookPayload).toEqual({

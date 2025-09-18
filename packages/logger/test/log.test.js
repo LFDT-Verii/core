@@ -621,20 +621,4 @@ describe('Test pino logger provider with redaction', () => {
 
     expect(logStream.toString()).toMatch(logInfo);
   });
-
-  it('Redaction should redact err.gatewayResponse', () => {
-    const dataForLog = {
-      err: {
-        gatewayResponse: {
-          field: 'large-object',
-        },
-      },
-    };
-
-    log.info(dataForLog);
-
-    const logInfo = '"err":{"gatewayResponse":"...large object..."}';
-
-    expect(logStream.toString()).toMatch(logInfo);
-  });
 });

@@ -15,33 +15,44 @@
  */
 
 const { setAuthHeader } = require('./webhook-auth-header');
+const { handleVendorError } = require('./vendor-errors-handler');
 
-const requestOffersFromVendor = (payload, context) => {
+const requestOffersFromVendor = async (payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
 
-  return vendorFetch.post('issuing/generate-offers', {
-    json: payload,
-    responseType: 'json',
-    ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
-    headers: {
-      ...setAuthHeader(context),
-    },
-  });
+  try {
+    return vendorFetch.post('issuing/generate-offers', payload, {
+      responseType: 'json',
+      ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
+      headers: {
+        ...setAuthHeader(context),
+      },
+    });
+  } catch (error) {
+    handleVendorError(error);
+  }
+
+  return null;
 };
 
-const issuedCredentialsNotificationCallback = (payload, context) => {
+const issuedCredentialsNotificationCallback = async (payload, context) => {
   const { tenant, vendorFetch } = context;
   const { webhookUrl } = tenant;
 
-  return vendorFetch.post('issuing/receive-issued-credentials', {
-    json: payload,
-    responseType: 'json',
-    ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
-    headers: {
-      ...setAuthHeader(context),
-    },
-  });
+  try {
+    return vendorFetch.post('issuing/receive-issued-credentials', payload, {
+      responseType: 'json',
+      ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
+      headers: {
+        ...setAuthHeader(context),
+      },
+    });
+  } catch (error) {
+    handleVendorError(error);
+  }
+
+  return null;
 };
 
 module.exports = {

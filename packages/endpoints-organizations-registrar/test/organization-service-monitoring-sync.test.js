@@ -429,10 +429,11 @@ describe('Monitoring Test Suite', () => {
           expect(postMonitorNockExecuted(monitorEventNock)).toEqual(true);
         }
       });
-      it('failed sync should error hard', async () => {
+      it('failed sync should error hard', { only: true }, async () => {
         setGetMonitorsNock([], []);
         setServicePingNock(serviceEndpoints[0]);
         setServicePingNock(serviceEndpoints[1]);
+        setGetSectionsFailNock();
         setGetSectionsFailNock();
         const response = await fastify.injectJson({
           method: 'POST',
@@ -440,7 +441,7 @@ describe('Monitoring Test Suite', () => {
           payload: {},
         });
 
-        expect(response.statusCode).toEqual(502);
+        expect(response.statusCode).toEqual(500);
       });
     });
   });

@@ -16,7 +16,7 @@
  */
 
 const { validationPlugin } = require('@verii/validation');
-const { corsPlugin, requestPlugin } = require('@verii/fastify-plugins');
+const { corsPlugin, httpClientPlugin } = require('@verii/fastify-plugins');
 const { sendEmailPlugin } = require('@verii/aws-clients');
 const {
   authenticateVnfClientPlugin,
@@ -53,7 +53,7 @@ const initServer = (server) => {
     .addHook('preValidation', async (req) => {
       req.getDocValidator = server.getDocValidator;
     })
-    .register(requestPlugin, {
+    .register(httpClientPlugin, {
       name: 'fineractFetch',
       options: {
         ...server.config,
@@ -68,7 +68,7 @@ const initServer = (server) => {
         },
       },
     })
-    .register(requestPlugin, {
+    .register(httpClientPlugin, {
       name: 'betterUptimeFetch',
       options: {
         ...server.config,
@@ -77,7 +77,7 @@ const initServer = (server) => {
         prefixUrl: server.config.monitoringApiBaseUrl,
       },
     })
-    .register(requestPlugin, {
+    .register(httpClientPlugin, {
       name: 'serviceVersionFetch',
       options: {
         ...server.config,

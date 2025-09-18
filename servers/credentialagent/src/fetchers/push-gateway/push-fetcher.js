@@ -20,14 +20,13 @@ const sendPush = async (body, pushDelegate, context) => {
   const { pushUrl } = pushDelegate;
 
   try {
-    return await context.fetch
-      .post(pushUrl, {
-        headers: {
-          Authorization: await generatePushGatewayToken(body, pushUrl, context),
-        },
-        json: body,
-      })
-      .json();
+    const response = await context.fetch.post(pushUrl, body, {
+      headers: {
+        Authorization: await generatePushGatewayToken(body, pushUrl, context),
+      },
+    });
+
+    return response.json();
   } catch (error) {
     context.log.warn(error);
     return error;

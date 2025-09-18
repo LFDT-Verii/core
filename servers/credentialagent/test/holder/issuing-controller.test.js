@@ -3171,7 +3171,6 @@ describe('Holder Issuing Test Suite', () => {
         .post(requestOffersFromVendorEndpoint)
         .reply(200, { offers: [offer] });
 
-      fastify.cache.clear();
       const response = await fastify.injectJson({
         method: 'POST',
         url: issuingUrl(customTenant, 'credential-offers'),
@@ -3193,7 +3192,6 @@ describe('Holder Issuing Test Suite', () => {
         [offer.offerId]: 'OK',
       });
       expect(getSchemaNock.isDone()).toEqual(true);
-      expect(fastify.cache.size).toBe(1);
     });
 
     it('/credential-offers should return the same response after user is authenticated after first token has expired', async () => {

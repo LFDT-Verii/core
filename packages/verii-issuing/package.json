@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@verii/contract-permissions": "0.5.0-build",
-    "@verii/request": "0.5.0-build",
+    "@verii/http-client": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
     "eslint": "8.57.1",
@@ -46,8 +46,8 @@
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
     "expect": "29.7.0",
-    "mongodb": "6.18.0",
-    "nanoid": "5.1.0",
+    "mongodb": "6.19.0",
+    "nanoid": "5.1.5",
     "prettier": "2.8.8",
     "typescript": "5.9.2"
   },

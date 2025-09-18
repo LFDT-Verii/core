@@ -26,8 +26,8 @@ const verifyVeriiCredentials = async (
     nodeEnv: context.config.nodeEnv,
     requestTimeout: context.config.requestTimeout,
     traceIdHeader: context.config.traceIdHeader,
-    prefixUrls: [context.config.registrarUrl],
-    agent: context.agent,
+    prefixUrl: context.config.registrarUrl,
+    isTest: context.config.isTest,
   });
 
   // eslint-disable-next-line better-mutation/no-mutation

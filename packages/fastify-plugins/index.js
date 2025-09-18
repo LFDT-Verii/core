@@ -25,5 +25,5 @@ module.exports = {
   ...require('./src/cors-plugin'),
   ...require('./src/csv-response-hook'),
   ...require('./src/cache-plugin'),
-  ...require('./src/request-plugin'),
+  ...require('./src/http-client-plugin'),
 };
