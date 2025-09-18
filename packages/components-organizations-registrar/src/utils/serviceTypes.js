@@ -22,9 +22,8 @@ export const CREDENTIAL_TYPES_IDS = {
   VLC_NOTARY_ISSUER: 'VlcNotaryIssuer_v1',
   VLC_NOTARY_ID_DOCUMENT_ISSUER: 'VlcNotaryIdDocumentIssuer_v1',
   VLC_NOTARY_CONTACT_ISSUER: 'VlcNotaryContactIssuer_v1',
-  // VLC_HOLDER_APP_PROVIDER: 'VlcHolderAppProvider_v1',
-  // VlcHolderAppProvider_v1 is hidden according comment
-  // https://velocitycareerlabs.atlassian.net/browse/VL-6818?focusedCommentId=49600
+  VLC_HOLDER_APP_PROVIDER: 'VlcHolderAppProvider_v1',
+  VLC_WEB_WALLET_PROVIDER: 'VlcWebWalletProvider_v1',
   VLC_NODE_OPERATOR: 'VlcNodeOperator_v1',
   VLC_CONTACT_ISSUER_EMAIL: 'VlcContactIssuer_v1_email',
   VLC_CONTACT_ISSUER_PHONE: 'VlcContactIssuer_v1_phone',
@@ -67,12 +66,14 @@ const serviceTypes = [
     title: 'Credential Agent Operator',
     id: CREDENTIAL_TYPES_IDS.VLC_CREDENTIAL_AGENT_OPERATOR,
   },
-  // https://velocitycareerlabs.atlassian.net/browse/VL-6818?focusedCommentId=49600
-  // VLC_HOLDER_APP_PROVIDER: 'VlcHolderAppProvider_v1',
-  // {
-  //   title: 'Wallet App Provider',
-  //   id: CREDENTIAL_TYPES_IDS.VLC_HOLDER_APP_PROVIDER,
-  // },
+  {
+    title: 'Webwallet Provider',
+    id: CREDENTIAL_TYPES_IDS.VLC_WEB_WALLET_PROVIDER,
+  },
+  {
+    title: 'App Wallet Provider',
+    id: CREDENTIAL_TYPES_IDS.VLC_HOLDER_APP_PROVIDER,
+  },
   {
     title: 'Node Operator',
     id: CREDENTIAL_TYPES_IDS.VLC_NODE_OPERATOR,
