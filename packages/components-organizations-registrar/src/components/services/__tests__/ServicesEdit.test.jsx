@@ -59,8 +59,10 @@ describe('ServicesEdit', () => {
     fireEvent.click(screen.getByRole('button', { name: /Save/i }));
 
     await waitFor(() =>
-      expect(mockOnSave.mock.calls[0].arguments).toContainEqual({
+      expect(mockOnSave.mock.calls[0].arguments[0]).toEqual({
+        id: 'test-id',
         serviceEndpoint: 'https://changed.com',
+        type: 'some-type-id',
       }),
     );
   });
