@@ -6,6 +6,7 @@ program
   .name('verifgen proof')
   .description('Generate a proof')
   .usage('[options]')
+  .option('--openid4vci', 'Generate an openid4vci proof')
   .option(
     '-c, --challenge <challenge>',
     'Challenge from generate-offers response'

@@ -14,6 +14,7 @@ const generateProof = async (options) => {
         publicKey,
         privateKey: personaInfo.privateKey,
       },
+      typ: options.openid4vci ? 'openid4vci-proof+jwt' : 'JWT',
       options,
     });
     common.printInfo(`\nGenerated proof jwt:\n${proofJwt}\n`);
@@ -36,13 +37,14 @@ const loadNonce = (options) => {
   return response.challenge;
 };
 
-const buildProofJwt = async ({ nonce, keyPair, options }) => {
+const buildProofJwt = async ({ nonce, keyPair, typ, options }) => {
   const kid = getDidUriFromJwk(toJwk(keyPair.publicKey, false));
   const jwt = await jwtSign(
     { aud: options.audience, nonce, iss: kid },
     toJwk(keyPair.privateKey),
     {
       kid: `${kid}#0`,
+      typ,
     }
   );
   return jwt;
