@@ -110,4 +110,36 @@ describe('Test proof cli tool', () => {
       },
     });
   });
+
+  it('should generate an openid4vci proof by a prv.key.json', async () => {
+    const persona2Keypair = await generateKeyPair({ format: 'jwk' });
+    const name = 'persona2';
+    await fs.writeFile(
+      `${currentDir}/${name}.prv.key.json`,
+      JSON.stringify(persona2Keypair.privateKey)
+    );
+    await fs.writeFile(`${currentDir}/${name}.did`, JSON.stringify({}));
+    const proof = await generateProof({
+      challenge: 'abc',
+      persona: 'persona2',
+      audience: 'http://test.com',
+      openid4vci: true,
+    });
+    expect(proof).toBeDefined();
+    const parsedJwt = await jwtVerify(proof, persona2Keypair.publicKey);
+    const expectedKid = getDidUriFromJwk(persona2Keypair.publicKey);
+    expect(parsedJwt).toStrictEqual({
+      header: {
+        alg: 'ES256K',
+        typ: 'openid4vci-proof+jwt',
+        kid: `${expectedKid}#0`,
+      },
+      payload: {
+        aud: 'http://test.com',
+        iat: expect.any(Number),
+        iss: expectedKid,
+        nonce: 'abc',
+      },
+    });
+  });
 });
