@@ -29,6 +29,7 @@ const DisclosureErrors = {
   PRESENTATION_DEFINITION_GROUP_IF_SUBMISSION_REQUIREMENTS:
     'presentationDefinition input_descriptors[*].group is required when submission_requirements are sent',
   ISSUING_FEED_NOT_SUPPORTED: 'Issuing feeds are not supported',
+  FEED_PROPERTY_CANNOT_BE_MODIFIED: 'feed property cannot be modified',
 };
 
 module.exports = { DisclosureErrors };
