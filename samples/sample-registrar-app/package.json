@@ -28,7 +28,7 @@
     "react-router": "7.8.2"
   },
   "devDependencies": {
-    "@vitejs/plugin-react-swc": "4.0.1",
+    "@vitejs/plugin-react-swc": "4.1.0",
     "eslint": "8.57.1",
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-config-prettier": "8.10.2",
@@ -40,7 +40,7 @@
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "4.6.2",
     "postcss-normalize": "13.0.1",
-    "vite": "7.1.5"
+    "vite": "7.1.6"
   },
   "scripts": {
     "start": "vite dev --mode dev.local",
