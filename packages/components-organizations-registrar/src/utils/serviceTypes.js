@@ -69,7 +69,7 @@ const serviceTypes = [
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_ID_DOCUMENT_ISSUER,
   },
   {
-    title: 'Accredited Notary Issuer -  Work Permits',
+    title: 'Accredited Notary Issuer - Work Permits',
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_WORK_PERMIT_ISSUER,
   },
   {
