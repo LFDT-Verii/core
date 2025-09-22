@@ -37,7 +37,7 @@ const serviceTypes = [
     id: CREDENTIAL_TYPES_IDS.VLC_INSPECTOR,
   },
   {
-    title: 'Primary Source Issuer - Career  (eg. Employers & Educators)',
+    title: 'Primary Source Issuer - Career (eg. Employers & Educators)',
     id: CREDENTIAL_TYPES_IDS.VLC_CAREER_ISSUER,
   },
   {
