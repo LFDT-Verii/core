@@ -103,6 +103,16 @@ describe('service types controller', () => {
         },
         {
           notary: false,
+          serviceCategory: 'WorkPermitIssuer',
+          serviceType: 'VlcWorkPermitIssuer_v1',
+        },
+        {
+          notary: true,
+          serviceCategory: 'NotaryWorkPermitIssuer',
+          serviceType: 'VlcNotaryWorkPermitIssuer_v1',
+        },
+        {
+          notary: false,
           serviceCategory: 'IdentityIssuer',
           serviceType: 'VlcIdentityIssuer_v1',
         },

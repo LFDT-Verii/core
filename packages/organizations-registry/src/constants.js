@@ -29,6 +29,8 @@ const ServiceTypes = {
   NotaryIdDocumentIssuerType: 'VlcNotaryIdDocumentIssuer_v1',
   ContactIssuerType: 'VlcContactIssuer_v1',
   NotaryContactIssuerType: 'VlcNotaryContactIssuer_v1',
+  WorkPermitIssuerType: 'VlcWorkPermitIssuer_v1',
+  NotaryWorkPermitIssuerType: 'VlcNotaryWorkPermitIssuer_v1',
   IdentityIssuerType: 'VlcIdentityIssuer_v1',
 };
 
@@ -44,6 +46,8 @@ const ServiceCategories = {
   NotaryIdDocumentIssuer: 'NotaryIdDocumentIssuer',
   ContactIssuer: 'ContactIssuer',
   NotaryContactIssuer: 'NotaryContactIssuer',
+  WorkPermitIssuer: 'WorkPermitIssuer',
+  NotaryWorkPermitIssuer: 'NotaryWorkPermitIssuer',
   IdentityIssuer: 'IdentityIssuer',
 };
 
@@ -75,6 +79,10 @@ const ServiceTypesOfServiceCategory = {
   [ServiceCategories.NotaryContactIssuer]: [
     ServiceTypes.NotaryContactIssuerType,
   ],
+  [ServiceCategories.WorkPermitIssuer]: [ServiceTypes.WorkPermitIssuerType],
+  [ServiceCategories.NotaryWorkPermitIssuer]: [
+    ServiceTypes.NotaryWorkPermitIssuerType,
+  ],
   [ServiceCategories.IdentityIssuer]: [ServiceTypes.IdentityIssuerType],
 };
 
@@ -86,6 +94,8 @@ const IssuingAndInspectionCategories = [
   ServiceCategories.NotaryIdDocumentIssuer,
   ServiceCategories.ContactIssuer,
   ServiceCategories.NotaryContactIssuer,
+  ServiceCategories.WorkPermitIssuer,
+  ServiceCategories.NotaryWorkPermitIssuer,
   ServiceCategories.Inspector,
 ];
 
