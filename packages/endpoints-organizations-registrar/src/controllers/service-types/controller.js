@@ -16,6 +16,8 @@ const CredentialGroupToServiceTypeMap = {
   [ServiceTypes.NotaryIdDocumentIssuerType]: 'IdDocument',
   [ServiceTypes.ContactIssuerType]: 'Contact',
   [ServiceTypes.NotaryContactIssuerType]: 'Contact',
+  [ServiceTypes.WorkPermitIssuerType]: undefined,
+  [ServiceTypes.NotaryWorkPermitIssuerType]: undefined,
 };
 
 const isNotary = (serviceType) =>
@@ -23,6 +25,7 @@ const isNotary = (serviceType) =>
     ServiceTypes.NotaryContactIssuerType,
     ServiceTypes.NotaryIdDocumentIssuerType,
     ServiceTypes.NotaryIssuerType,
+    ServiceTypes.NotaryWorkPermitIssuerType,
   ]);
 
 const serviceTypesController = async (fastify) => {

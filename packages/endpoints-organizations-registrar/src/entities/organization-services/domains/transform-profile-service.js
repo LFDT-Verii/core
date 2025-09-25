@@ -62,6 +62,8 @@ const isLegacyIssuerService = (service) =>
     ServiceTypes.NotaryIdDocumentIssuerType,
     ServiceTypes.ContactIssuerType,
     ServiceTypes.NotaryContactIssuerType,
+    ServiceTypes.WorkPermitIssuerType,
+    ServiceTypes.NotaryWorkPermitIssuerType,
     ServiceTypes.NotaryIssuerType,
     ServiceTypes.IdentityIssuerType,
     ...ServiceTypesOfServiceCategory[ServiceCategories.Issuer],

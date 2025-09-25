@@ -44,6 +44,8 @@ const requiredKeyPurposes = {
   [ServiceTypes.NotaryIssuerType]: keyPurposesIssuing,
   [ServiceTypes.ContactIssuerType]: keyPurposesIssuing,
   [ServiceTypes.NotaryContactIssuerType]: keyPurposesIssuing,
+  [ServiceTypes.WorkPermitIssuerType]: keyPurposesIssuing,
+  [ServiceTypes.NotaryWorkPermitIssuerType]: keyPurposesIssuing,
   [ServiceTypes.NotaryIdDocumentIssuerType]: keyPurposesIssuing,
   [ServiceTypes.IdDocumentIssuerType]: keyPurposesIssuing,
   // RELYING PARTIES
