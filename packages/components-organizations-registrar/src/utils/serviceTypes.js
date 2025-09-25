@@ -19,9 +19,11 @@ export const CREDENTIAL_TYPES_IDS = {
   VLC_INSPECTOR: 'VlcInspector_v1',
   VLC_CAREER_ISSUER: 'VlcCareerIssuer_v1',
   VLC_ID_DOCUMENT_ISSUER: 'VlcIdDocumentIssuer_v1',
+  VLC_WORK_PERMIT_ISSUER: 'VlcWorkPermitIssuer_v1',
   VLC_NOTARY_ISSUER: 'VlcNotaryIssuer_v1',
   VLC_NOTARY_ID_DOCUMENT_ISSUER: 'VlcNotaryIdDocumentIssuer_v1',
   VLC_NOTARY_CONTACT_ISSUER: 'VlcNotaryContactIssuer_v1',
+  VLC_NOTARY_WORK_PERMIT_ISSUER: 'VlcNotaryWorkPermitIssuer_v1',
   VLC_HOLDER_APP_PROVIDER: 'VlcHolderAppProvider_v1',
   VLC_WEB_WALLET_PROVIDER: 'VlcWebWalletProvider_v1',
   VLC_NODE_OPERATOR: 'VlcNodeOperator_v1',
@@ -35,32 +37,40 @@ const serviceTypes = [
     id: CREDENTIAL_TYPES_IDS.VLC_INSPECTOR,
   },
   {
-    title: 'Primary Source Career Issuer (eg. Employers & Educators)',
+    title: 'Primary Source Issuer - Career (eg. Employers & Educators)',
     id: CREDENTIAL_TYPES_IDS.VLC_CAREER_ISSUER,
   },
   {
-    title: 'Primary Source Id Document Issuer (eg. Government Agency)',
-    id: CREDENTIAL_TYPES_IDS.VLC_ID_DOCUMENT_ISSUER,
-  },
-  {
-    title: 'Primary Source Phone Issuer (eg. Telco)',
+    title: 'Primary Source Issuer - Phone (eg. Telco)',
     id: CREDENTIAL_TYPES_IDS.VLC_CONTACT_ISSUER_PHONE,
   },
   {
-    title: 'Primary Source Email Issuer (eg. Email Service Provider)',
+    title: 'Primary Source Issuer - Email (eg. Email Service Provider)',
     id: CREDENTIAL_TYPES_IDS.VLC_CONTACT_ISSUER_EMAIL,
   },
   {
-    title: 'Accredited Notary Career Issuer (eg. Background screeners)',
+    title: 'Primary Source Issuer - Id Documents (eg. Government Agency)',
+    id: CREDENTIAL_TYPES_IDS.VLC_ID_DOCUMENT_ISSUER,
+  },
+  {
+    title: 'Primary Source Issuer - Work Permits',
+    id: CREDENTIAL_TYPES_IDS.VLC_WORK_PERMIT_ISSUER,
+  },
+  {
+    title: 'Accredited Notary Issuer - Career (eg. Background screeners)',
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_ISSUER,
   },
   {
-    title: 'Accredited Notary Phone/Email Issuer (eg. OTP Verifiers)',
+    title: 'Accredited Notary Issuer - Phone/Email (eg. OTP Verifiers)',
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_CONTACT_ISSUER,
   },
   {
-    title: 'Accredited Notary Id Document Issuer (eg. IdV)',
+    title: 'Accredited Notary Issuer - Id Documents (eg. IdV)',
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_ID_DOCUMENT_ISSUER,
+  },
+  {
+    title: 'Accredited Notary Issuer - Work Permits',
+    id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_WORK_PERMIT_ISSUER,
   },
   {
     title: 'Credential Agent Operator',
@@ -86,34 +96,40 @@ export const serviceTypesIssuingOrInspection = [
     id: CREDENTIAL_TYPES_IDS.VLC_INSPECTOR,
   },
   {
-    title: 'Primary Source Career Issuer (eg. Employers & Educators)',
+    title: 'Primary Source Issuer - Career  (eg. Employers & Educators)',
     id: CREDENTIAL_TYPES_IDS.VLC_CAREER_ISSUER,
   },
   {
-    title: 'Primary Source Id Document Issuer (eg. Government Agency)',
-    id: CREDENTIAL_TYPES_IDS.VLC_ID_DOCUMENT_ISSUER,
-  },
-  {
-    title: 'Primary Source Phone Issuer (eg. Telco)',
+    title: 'Primary Source Issuer - Phone (eg. Telco)',
     id: CREDENTIAL_TYPES_IDS.VLC_CONTACT_ISSUER_PHONE,
   },
   {
-    title: 'Primary Source Email Issuer (eg. Email Service Provider)',
+    title: 'Primary Source Issuer - Email (eg. Email Service Provider)',
     id: CREDENTIAL_TYPES_IDS.VLC_CONTACT_ISSUER_EMAIL,
   },
   {
-    title: 'Accredited Notary Career Issuer (eg. Background screeners)',
+    title: 'Primary Source Issuer - Id Documents (eg. Government Agency)',
+    id: CREDENTIAL_TYPES_IDS.VLC_ID_DOCUMENT_ISSUER,
+  },
+  {
+    title: 'Primary Source Issuer - Work Permits',
+    id: CREDENTIAL_TYPES_IDS.VLC_WORK_PERMIT_ISSUER,
+  },
+  {
+    title: 'Accredited Notary Issuer - Career (eg. Background screeners)',
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_ISSUER,
   },
-
   {
-    title: 'Accredited Notary Phone/Email Issuer (eg. OTP Verifiers)',
+    title: 'Accredited Notary Issuer - Phone/Email (eg. OTP Verifiers)',
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_CONTACT_ISSUER,
   },
-
   {
-    title: 'Accredited Notary Id Document Issuer (eg. IdV)',
+    title: 'Accredited Notary Issuer - Id Documents (eg. IdV)',
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_ID_DOCUMENT_ISSUER,
+  },
+  {
+    title: 'Accredited Notary Issuer -  Work Permits',
+    id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_WORK_PERMIT_ISSUER,
   },
 ];
 
@@ -156,6 +172,8 @@ export const credentialTypesByServiceTypes = {
   [CREDENTIAL_TYPES_IDS.VLC_CAREER_ISSUER]: commonCredentialTypes,
   [CREDENTIAL_TYPES_IDS.VLC_NOTARY_ISSUER]: commonCredentialTypes,
   [CREDENTIAL_TYPES_IDS.VLC_NOTARY_CONTACT_ISSUER]: ['EmailV1.0', 'PhoneV1.0'],
+  [CREDENTIAL_TYPES_IDS.VLC_WORK_PERMIT_ISSUER]: ['CertificationV1.1'],
+  [CREDENTIAL_TYPES_IDS.VLC_NOTARY_WORK_PERMIT_ISSUER]: ['CertificationV1.1'],
 };
 
 export const serviceTypeTitlesMap = serviceTypes.reduce((acc, item) => {
