@@ -32,6 +32,7 @@ const {
   jwtSignSymmetric,
   jwtDecode,
   jwtVerify,
+  jwsVerify,
   jwkFromSecp256k1Key,
   hexFromJwk,
   publicKeyFromPrivateKey,
@@ -263,6 +264,18 @@ describe('JWT Tests', () => {
         header: { alg: 'ES256K', typ: 'JWT' },
       });
     });
+    it('Should fail expired JWT using ES256K', async () => {
+      const jwt = await new SignJWT({
+        ...payload,
+        exp: Date.now() / 1000 - 1000,
+      })
+        .setProtectedHeader({ alg: 'ES256K', typ: 'JWT' })
+        .sign(secp256kJoseKeyPair.privateKey);
+
+      await expect(() =>
+        jwtVerify(jwt, secp256kKeyPair.publicKey)
+      ).rejects.toThrow('"exp" claim timestamp check failed');
+    });
     it('Should verify JWT using HS384', async () => {
       const jwt = await new SignJWT(payload)
         .setProtectedHeader({ alg: 'HS384', typ: 'JWT' })
@@ -275,7 +288,6 @@ describe('JWT Tests', () => {
         header: { alg: 'HS384', typ: 'JWT' },
       });
     });
-
     it("Should permit Iat''s from the near future", async () => {
       const epochNow = Math.floor(Date.now() / 1000);
       const jwt = await new SignJWT(payload)
@@ -284,6 +296,63 @@ describe('JWT Tests', () => {
         .sign(secp256kJoseKeyPair.privateKey);
 
       const verified = await jwtVerify(jwt, secp256kKeyPair.publicKey);
+      expect(verified).toEqual({
+        payload: {
+          ...payload,
+          iat: expect.any(Number),
+        },
+        header: { typ: 'JWT', alg: 'ES256K' },
+      });
+    });
+  });
+
+  describe('Verify JWS', () => {
+    it('Should verify JWS using ES256K', async () => {
+      const jwt = await new SignJWT(payload)
+        .setProtectedHeader({ alg: 'ES256K', typ: 'JWT' })
+        .sign(secp256kJoseKeyPair.privateKey);
+
+      const verified = await jwsVerify(jwt, secp256kKeyPair.publicKey);
+
+      expect(verified).toEqual({
+        payload,
+        header: { alg: 'ES256K', typ: 'JWT' },
+      });
+    });
+    it('Should pass expired JWS using ES256K', async () => {
+      const expiredPayload = {
+        ...payload,
+        exp: Date.now() / 1000 - 1000,
+      };
+      const jwt = await new SignJWT(expiredPayload)
+        .setProtectedHeader({ alg: 'ES256K', typ: 'JWT' })
+        .sign(secp256kJoseKeyPair.privateKey);
+
+      await expect(jwsVerify(jwt, secp256kKeyPair.publicKey)).resolves.toEqual({
+        payload: expiredPayload,
+        header: { alg: 'ES256K', typ: 'JWT' },
+      });
+    });
+    it('Should verify JWS using HS384', async () => {
+      const jwt = await new SignJWT(payload)
+        .setProtectedHeader({ alg: 'HS384', typ: 'JWT' })
+        .sign(hs384JoseSecret);
+
+      const verified = await jwsVerify(jwt, hs384Secret);
+
+      expect(verified).toEqual({
+        payload,
+        header: { alg: 'HS384', typ: 'JWT' },
+      });
+    });
+    it("Should permit Iat''s from the near future", async () => {
+      const epochNow = Math.floor(Date.now() / 1000);
+      const jwt = await new SignJWT(payload)
+        .setProtectedHeader({ alg: 'ES256K', typ: 'JWT' })
+        .setIssuedAt(epochNow + 90) // add 90 seconds
+        .sign(secp256kJoseKeyPair.privateKey);
+
+      const verified = await jwsVerify(jwt, secp256kKeyPair.publicKey);
       expect(verified).toEqual({
         payload: {
           ...payload,
