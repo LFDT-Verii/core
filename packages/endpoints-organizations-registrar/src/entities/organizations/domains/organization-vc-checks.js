@@ -2,7 +2,7 @@ const { decodeCredentialJwt } = require('@verii/jwt');
 const { CredentialCheckResultValue } = require('@verii/verii-verification');
 const {
   checkExpiration,
-  checkJwtVCTampering,
+  checkJwsVcTampering,
   CheckResults,
 } = require('@verii/vc-checks');
 
@@ -19,7 +19,7 @@ const runAllOrgChecks = async (
 ) => {
   const decodedCredential = await decodeCredentialJwt(signedCredential);
 
-  const tamperingCheck = await checkJwtVCTampering(
+  const tamperingCheck = await checkJwsVcTampering(
     signedCredential,
     rootJwk,
     context

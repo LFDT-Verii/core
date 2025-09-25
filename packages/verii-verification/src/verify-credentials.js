@@ -41,7 +41,7 @@ const {
   CheckResults,
   CredentialStatus,
   checkExpiration,
-  checkJwtVCTampering,
+  checkJwsVcTampering,
   checkCredentialStatus,
   checkIssuerTrust,
   checkHolder,
@@ -336,7 +336,7 @@ const runTamperingCheck = (
   if (key == null && isIssuerTheSubject(keyMetadata)) {
     key = keyMetadata.jwk;
   }
-  return checkJwtVCTampering(jwtVc, key, context);
+  return checkJwsVcTampering(jwtVc, key, context);
 };
 
 const runIssuerTrustCheck = (

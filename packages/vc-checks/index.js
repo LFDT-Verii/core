@@ -22,7 +22,7 @@ module.exports = {
   ...require('./src/check-issuer-trust'),
   ...require('./src/verify-primary-source-issuer'),
   ...require('./src/check-credential-status'),
-  ...require('./src/check-jwt-vc-tampering'),
+  ...require('./src/check-jws-vc-tampering'),
   ...require('./src/verify-issuer-for-credential-type'),
   ...require('./src/verii-protocol-versions'),
   ...require('./src/extract-credential-type'),
