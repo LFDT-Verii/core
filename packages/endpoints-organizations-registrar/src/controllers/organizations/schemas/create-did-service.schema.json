@@ -18,6 +18,8 @@
         "VlcNotaryIdDocumentIssuer_v1",
         "VlcContactIssuer_v1",
         "VlcNotaryContactIssuer_v1",
+        "VlcWorkPermitIssuer_v1",
+        "VlcNotaryWorkPermitIssuer_v1",
         "VlcHolderAppProvider_v1",
         "VlcWebWalletProvider_v1"
       ],
