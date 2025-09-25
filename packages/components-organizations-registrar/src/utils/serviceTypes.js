@@ -54,7 +54,7 @@ const serviceTypes = [
   },
   {
     title: 'Primary Source Issuer - Work Permits',
-    id: CREDENTIAL_TYPES_IDS.VLC_PRIMARY_WORK_PERMIT_ISSUER,
+    id: CREDENTIAL_TYPES_IDS.VLC_WORK_PERMIT_ISSUER,
   },
   {
     title: 'Accredited Notary Issuer - Career (eg. Background screeners)',
@@ -113,7 +113,7 @@ export const serviceTypesIssuingOrInspection = [
   },
   {
     title: 'Primary Source Issuer - Work Permits',
-    id: CREDENTIAL_TYPES_IDS.VLC_PRIMARY_WORK_PERMIT_ISSUER,
+    id: CREDENTIAL_TYPES_IDS.VLC_WORK_PERMIT_ISSUER,
   },
   {
     title: 'Accredited Notary Issuer - Career (eg. Background screeners)',
@@ -172,7 +172,7 @@ export const credentialTypesByServiceTypes = {
   [CREDENTIAL_TYPES_IDS.VLC_CAREER_ISSUER]: commonCredentialTypes,
   [CREDENTIAL_TYPES_IDS.VLC_NOTARY_ISSUER]: commonCredentialTypes,
   [CREDENTIAL_TYPES_IDS.VLC_NOTARY_CONTACT_ISSUER]: ['EmailV1.0', 'PhoneV1.0'],
-  [CREDENTIAL_TYPES_IDS.VLC_PRIMARY_WORK_PERMIT_ISSUER]: ['CertificationV1.1'],
+  [CREDENTIAL_TYPES_IDS.VLC_WORK_PERMIT_ISSUER]: ['CertificationV1.1'],
   [CREDENTIAL_TYPES_IDS.VLC_NOTARY_WORK_PERMIT_ISSUER]: ['CertificationV1.1'],
 };
 
