@@ -37,7 +37,7 @@ const serviceTypes = [
     id: CREDENTIAL_TYPES_IDS.VLC_INSPECTOR,
   },
   {
-    title: 'Primary Source Issuer - Career  (eg. Employers & Educators)',
+    title: 'Primary Source Issuer - Career (eg. Employers & Educators)',
     id: CREDENTIAL_TYPES_IDS.VLC_CAREER_ISSUER,
   },
   {
@@ -69,7 +69,7 @@ const serviceTypes = [
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_ID_DOCUMENT_ISSUER,
   },
   {
-    title: 'Accredited Notary Issuer -  Work Permits',
+    title: 'Accredited Notary Issuer - Work Permits',
     id: CREDENTIAL_TYPES_IDS.VLC_NOTARY_WORK_PERMIT_ISSUER,
   },
   {
