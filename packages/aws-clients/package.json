@@ -27,7 +27,7 @@
     "@aws-sdk/s3-request-presigner": "^3.731.1",
     "fastify-plugin": "^5.0.0",
     "lodash": "^4.17.21",
-    "twilio": "^5.0.0"
+    "twilio": "^5.10.1"
   },
   "devDependencies": {
     "@verii/crypto": "0.5.0-build",
