@@ -32,7 +32,7 @@
     "@verii/tests-helpers": "0.5.0-build",
     "date-fns": "3.6.0",
     "expect": "29.7.0",
-    "nanoid": "5.1.5"
+    "nanoid": "5.1.6"
   },
   "nx": {
     "tags": ["lib"]
