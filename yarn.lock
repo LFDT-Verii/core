@@ -15070,12 +15070,11 @@ pino@9.11.0, pino@~9.11.0:
     thread-stream "^3.0.0"
 
 pino@^9.0.0, pino@^9.6.0:
-  version "9.9.5"
-  resolved "https://registry.npmjs.org/pino/-/pino-9.9.5.tgz#f06a5a0b4c715e34606290070dbb938c27eddd8b"
-  integrity sha512-d1s98p8/4TfYhsJ09r/Azt30aYELRi6NNnZtEbqFw6BoGsdPVf5lKNK3kUwH8BmJJfpTLNuicjUQjaMbd93dVg==
+  version "9.12.0"
+  resolved "https://registry.npmjs.org/pino/-/pino-9.12.0.tgz#976e549cc29e21e5dbf56b47910dc52817dc5a97"
+  integrity sha512-0Gd0OezGvqtqMwgYxpL7P0pSHHzTJ0Lx992h+mNlMtRVfNnqweWmf0JmRWk5gJzHalyd2mxTzKjhiNbGS2Ztfw==
   dependencies:
     atomic-sleep "^1.0.0"
-    fast-redact "^3.1.1"
     on-exit-leak-free "^2.1.0"
     pino-abstract-transport "^2.0.0"
     pino-std-serializers "^7.0.0"
@@ -15083,6 +15082,7 @@ pino@^9.0.0, pino@^9.6.0:
     quick-format-unescaped "^4.0.3"
     real-require "^0.2.0"
     safe-stable-stringify "^2.3.1"
+    slow-redact "^0.3.0"
     sonic-boom "^4.0.1"
     thread-stream "^3.0.0"
 
@@ -16766,6 +16766,11 @@ slashes@^3.0.12:
   version "3.0.12"
   resolved "https://registry.npmjs.org/slashes/-/slashes-3.0.12.tgz#3d664c877ad542dc1509eaf2c50f38d483a6435a"
   integrity sha512-Q9VME8WyGkc7pJf6QEkj3wE+2CnvZMI+XJhwdTPR8Z/kWQRXi7boAWLDibRPyHRTUTPx5FaU7MsyrjI3yLB4HA==
+
+slow-redact@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npmjs.org/slow-redact/-/slow-redact-0.3.0.tgz#97b4d7bd04136404e529c1ab29f3cb50e903c746"
+  integrity sha512-cf723wn9JeRIYP9tdtd86GuqoR5937u64Io+CYjlm2i7jvu7g0H+Cp0l0ShAf/4ZL+ISUTVT+8Qzz7RZmp9FjA==
 
 smart-buffer@^4.2.0:
   version "4.2.0"
