@@ -21,7 +21,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "eslint-plugin-autofix": "1.1.0",
+    "eslint-plugin-autofix": "2.2.0",
     "eslint-plugin-prefer-arrow-functions": "3.8.1",
     "expect": "29.7.0"
   },
