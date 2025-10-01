@@ -53,6 +53,16 @@ const ServiceCategoryToPermissions = {
     AddressScopePermissions.CredentialRevoke,
     AddressScopePermissions.CredentialIssue,
   ],
+  [ServiceCategories.WorkPermitIssuer]: [
+    AddressScopePermissions.TransactionsWrite,
+    AddressScopePermissions.CredentialRevoke,
+    AddressScopePermissions.CredentialIssue,
+  ],
+  [ServiceCategories.NotaryWorkPermitIssuer]: [
+    AddressScopePermissions.TransactionsWrite,
+    AddressScopePermissions.CredentialRevoke,
+    AddressScopePermissions.CredentialIssue,
+  ],
 };
 
 const mapPermissionsToServiceTypes = (permittedVelocityServiceCategories) => {
