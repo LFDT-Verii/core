@@ -44,7 +44,7 @@ jobs:
         run: echo "NPM_VER_NUM=${{ env.VERSION_TYPE == 'release' && env.CURR_REPO_VERSION || env.PRERELEASE_VER_NUM }}" >> $GITHUB_ENV
       # Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: ${{ env.NODE_VERSION }}
       # Get yarn cache directory path
