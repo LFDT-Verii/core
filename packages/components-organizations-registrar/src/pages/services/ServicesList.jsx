@@ -186,10 +186,11 @@ const ServicesList = ({
             actions={[editAction, deleteAction]}
             content={[
               [
-                { name: 'service id', value: service.id },
-                { name: 'service endpoint', value: service.serviceEndpoint },
+                { name: 'service id', value: service.id, isLink: false },
+                { name: 'service endpoint', value: service.serviceEndpoint, isLink: false },
                 ...buildServiceContent(service.credentialTypes, 'credential types'),
                 ...buildServiceContent(service.name, 'wallet name'),
+                ...buildServiceContent(service.logoUrl, 'logo url', true),
                 ...buildServiceContent(service.supportedExchangeProtocols, 'protocols'),
                 ...buildServiceContent(service.playStoreUrl, 'play store url'),
                 ...buildServiceContent(service.googlePlayId, 'google play id'),
@@ -200,6 +201,7 @@ const ServicesList = ({
                       {
                         name: AdditionalServiceProperties[service.type]?.name,
                         value: AdditionalServiceProperties[service.type]?.value,
+                        isLink: AdditionalServiceProperties[service.type]?.isLink || false,
                       },
                     ]
                   : []),
