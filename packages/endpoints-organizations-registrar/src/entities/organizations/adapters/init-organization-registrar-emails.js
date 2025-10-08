@@ -16,23 +16,9 @@
  */
 
 const { map } = require('lodash/fp');
+const { whichNet } = require('../domains/which-net');
 const { buildPublicServices } = require('../../organization-services/domains');
 
-const whichNet = ({ nodeEnv }) => {
-  switch (nodeEnv) {
-    case 'development':
-    case 'test':
-      return 'LocalDevNet';
-    case 'dev':
-      return 'DevNet';
-    case 'staging':
-      return 'TestNet';
-    case 'production':
-      return 'MainNet';
-    default:
-      return '';
-  }
-};
 const initOrganizationRegistrarEmails = (config) => {
   return {
     emailToNewOrgForServicesActivated: ({

@@ -14,4 +14,5 @@ module.exports = {
   ...require('./validate-profile-name'),
   ...require('./validate-profile-website'),
   ...require('./validate-update-profile'),
+  ...require('./which-net'),
 };
