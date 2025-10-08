@@ -21,6 +21,7 @@ const {
   calculateJwkThumbprint,
   decodeJwt,
   decodeProtectedHeader,
+  compactVerify: joseJwsVerify,
   base64url,
 } = require('jose');
 const canonicalize = require('canonicalize');
@@ -123,6 +124,18 @@ const jwtVerify = async (jwt, keyOrSecret, options = {}) => {
   return { header, payload };
 };
 
+const jwsVerify = async (jws, keyOrSecret, options = {}) => {
+  const header = decodeProtectedHeader(jws);
+  const keyObject = isString(keyOrSecret)
+    ? new TextEncoder().encode(keyOrSecret)
+    : await toKeyObject(keyOrSecret, header);
+  const { payload } = await joseJwsVerify(jws, keyObject, {
+    clockTolerance: '120s',
+    ...options,
+  });
+  return { header, payload: JSON.parse(new TextDecoder().decode(payload)) };
+};
+
 const isPem = startsWith('-----BEGIN');
 
 const jwkFromSecp256k1Key = (key, priv = true) => {
@@ -222,6 +235,7 @@ module.exports = {
   jwtSign,
   jwtSignSymmetric,
   jwkThumbprint,
+  jwsVerify,
   jwtVerify,
   publicKeyFromPrivateKey,
   safeJwtDecode,
