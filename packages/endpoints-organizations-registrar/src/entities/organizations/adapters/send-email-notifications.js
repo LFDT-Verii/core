@@ -18,7 +18,11 @@
 const { isEmpty, omitBy, isNil, map } = require('lodash/fp');
 const { optional } = require('@verii/common-functions');
 const { initAuth0Provisioner } = require('../../oauth');
-const { parseProfileToCsv, ServiceTypeLabels } = require('../domains');
+const {
+  parseProfileToCsv,
+  ServiceTypeLabels,
+  getSubjectNetPrefix,
+} = require('../domains');
 const {
   initOrganizationRegistrarEmails,
 } = require('./init-organization-registrar-emails');
@@ -148,6 +152,7 @@ const initSendEmailNotifications = async (initCtx) => {
         'support-organization-created-subject',
         {
           organization,
+          netPrefix: getSubjectNetPrefix(context.config),
         }
       ),
       message: await context.renderTemplate(
