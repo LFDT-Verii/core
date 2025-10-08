@@ -2,6 +2,9 @@ const { isEmpty, size } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { subMinutes } = require('date-fns/fp');
 const { SignatoryEventStatus } = require('../domain');
+const {
+  getSubjectNetPrefix,
+} = require('../../organizations/domains/which-net');
 
 const task = 'send-reminders';
 const sendReminders = async (
@@ -58,7 +61,7 @@ const sendReminder = async (
       await context.sendSupportEmail(
         await context.renderTemplate(
           'support-signatory-max-reminders-reached-email-subject',
-          { organization }
+          { organization, netPrefix: getSubjectNetPrefix(context.config) }
         ),
         await context.renderTemplate(
           'support-signatory-max-reminders-reached-email-body',

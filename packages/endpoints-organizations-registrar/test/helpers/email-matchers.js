@@ -78,7 +78,7 @@ Click the button below to accept the invitation and complete your organization�
       },
     },
     Subject: {
-      Data: 'Invitation by Test Organization to Join Velocity Network™',
+      Data: 'LocalDevNet: Invitation by Test Organization to Join Velocity Network™',
     },
   },
 });
@@ -193,7 +193,7 @@ const expectedSupportEmail = (orgName = 'Test Organization') => ({
       },
     },
     Subject: {
-      Data: `Organization ${orgName} created`,
+      Data: `LocalDevNet: Organization ${orgName} created`,
     },
   },
   ReplyToAddresses: [undefined],
@@ -223,7 +223,7 @@ const expectedSignatoryReminderEmail = (
 ) => expectedSignatoryApprovalEmail(inviterOrg, orgForApproval, messageMatcher);
 
 const expectedSupportMaxSignatoryReminderReachedEmailParams = () => [
-  expect.stringMatching(/Maximum signatory reminder alert/),
+  expect.stringMatching(/LocalDevNet: Maximum signatory reminder alert/),
   expect.stringMatching(
     /The Velocity Network has sent the maximum number of reminder emails to/
   ),
