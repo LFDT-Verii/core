@@ -78,6 +78,7 @@ const transformToInternalServerError = (error, fastify) => {
 
 const errorsPlugin = (fastify, options, next) => {
   fastify.setErrorHandler((_error, request, reply) => {
+    const { sendError = () => {} } = fastify;
     const error = flow(
       addValidationErrorCode,
       (err) => ensureErrorCode(err, fastify),
@@ -85,6 +86,7 @@ const errorsPlugin = (fastify, options, next) => {
       (err) => transformToInternalServerError(err, fastify)
     )(_error.processedError || _error);
 
+    sendError(error);
     return reply.send(error);
   });
   next();
