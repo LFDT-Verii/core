@@ -206,6 +206,7 @@ describe('Holder Issuing Test Suite', () => {
     await mongoDb().collection('keys').deleteMany({});
     await mongoDb().collection('vendorUserIdMappings').deleteMany({});
     await mongoDb().collection('groups').deleteMany({});
+    await mongoDb().collection('allocations').deleteMany({});
 
     tenant = await persistTenant({
       serviceIds: ['#foo-service-id-1'],
