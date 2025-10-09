@@ -2,8 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "timezone": "Asia/Jerusalem",
   "extends": [
-    "config:best-practices",  
-    "npm:unpublishSafe",
+    "config:best-practices",
+    "security:minimumReleaseAgeNpm",
     "group:allDigest",
     "group:linters",
     "group:jsTest",
@@ -14,15 +14,25 @@
     ":enableVulnerabilityAlertsWithLabel(security)"
   ],
   "prHourlyLimit": 10,
-  "addLabels": ["dependencies"],
+  "addLabels": [
+    "dependencies"
+  ],
   "automerge": true,
-  "schedule": ["* 0-2 * * 1,3"],
-  "packageRules": [    
+  "schedule": [
+    "* 0-2 * * 1,3"
+  ],
+  "packageRules": [
     {
-      "matchUpdateTypes": ["major"],
-      "addLabels": ["major"],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "addLabels": [
+        "major"
+      ],
       "automerge": false,
-      "schedule": ["* 0-2 1,15 * *"]
+      "schedule": [
+        "* 0-2 1,15 * *"
+      ]
     },
     {
       "groupName": "group: fastify packages",
@@ -42,15 +52,21 @@
         "docker*.yml",
         "Dockerfile*"
       ],
-      "addLabels": ["eng"]
+      "addLabels": [
+        "eng"
+      ]
     },
     {
       "matchFileNames": [
         "contracts/**"
       ],
-      "addLabels": ["contracts"],
+      "addLabels": [
+        "contracts"
+      ],
       "automerge": false,
-      "schedule": ["* 0-2 1,15 * *"]
+      "schedule": [
+        "* 0-2 1,15 * *"
+      ]
     },
     {
       "groupName": "group: auth0 packages",
@@ -72,7 +88,9 @@
       "matchPackageNames": [
         "@aws-sdk/{/,}**"
       ],
-      "extends": ["schedule:monthly"],
+      "extends": [
+        "schedule:monthly"
+      ],
       "automerge": false
     },
     {
