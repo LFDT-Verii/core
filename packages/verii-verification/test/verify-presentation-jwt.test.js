@@ -20,6 +20,7 @@ const { generateKeyPair } = require('@verii/crypto');
 const { generateDocJwt, jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
 const { getDidUriFromJwk } = require('@verii/did-doc');
+const { omit } = require('lodash/fp');
 const {
   verifyVerifiablePresentationJwt,
 } = require('../src/verify-presentation-jwt');
@@ -97,6 +98,19 @@ describe('verify presentation jwt', () => {
       ).rejects.toEqual(
         new Error('Malformed jwt_vp property: signature verification failed')
       );
+    });
+
+    it('should fail to verify presentation with jwk set', async () => {
+      const presentation = await generateDocJwt(
+        payload,
+        keyPair.privateKey,
+        omit(['kid'], options)
+      );
+      await expect(() =>
+        verifyVerifiablePresentationJwt(presentation, {
+          vnfProtocolVersion: 2,
+        })
+      ).rejects.toEqual(new Error('jwt_vp must not be self signed'));
     });
   });
 });

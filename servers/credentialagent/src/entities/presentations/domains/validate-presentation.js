@@ -49,14 +49,14 @@ const crossValidateVp = (presentation, { exchange }) => {
     throw createError(400, 'Mismatched Exchange Ids', {
       exchange,
       presentationSubmission,
-      errorCode: 'presention_mismatch_exchange',
+      errorCode: 'presentation_mismatch_exchange',
     });
   }
   if (exchange?.disclosureId.toString() !== disclosureId) {
     throw createError(400, 'Mismatched Disclosure Ids', {
       exchange,
       presentationSubmission,
-      errorCode: 'presention_mismatch_disclosure',
+      errorCode: 'presentation_mismatch_disclosure',
     });
   }
 };

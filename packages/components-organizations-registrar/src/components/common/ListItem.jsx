@@ -100,10 +100,26 @@ const ListItem = ({
             {content.map((service, i) => (
               // eslint-disable-next-line react/no-array-index-key
               <Box key={i}>
-                {service.map(({ name, value }) => (
+                {service.map(({ name, value, isLink }) => (
                   <Stack flexDirection="row" key={`${id}-${value}`} sx={{ py: 1 }}>
                     <Typography sx={sx.name}>{name}</Typography>
-                    <Typography sx={sx.value}>{value}</Typography>
+                    {isLink ? (
+                      <Typography
+                        component="a"
+                        href={value}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          window.open(value, '_blank', 'noopener,noreferrer');
+                        }}
+                        sx={{ ...sx.value, ...sx.link }}
+                      >
+                        {value}
+                      </Typography>
+                    ) : (
+                      <Typography sx={sx.value}>{value}</Typography>
+                    )}
                   </Stack>
                 ))}
                 {i < content.length - 1 && <Divider flexItem sx={{ my: 1 }} />}
@@ -166,6 +182,14 @@ const sx = {
     borderColor: 'secondary.light',
   },
   value: { flex: 1, fontWeight: 600, overflowWrap: 'anywhere' },
+  link: {
+    color: 'primary.main',
+    textDecoration: 'underline',
+    cursor: 'pointer',
+    '&:hover': {
+      textDecoration: 'none',
+    },
+  },
   undoButton: {
     backgroundColor: 'background.light',
     boxShadow: 'none',

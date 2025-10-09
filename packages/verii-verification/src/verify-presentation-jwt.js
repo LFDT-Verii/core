@@ -23,13 +23,34 @@ const verifyVerifiablePresentationJwt = async (
   presentationJwt,
   { vnfProtocolVersion }
 ) => {
-  try {
-    if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
-      return await verifyPresentationJwt(presentationJwt);
-    }
+  if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
+    return wrapVerifyPresentationJwt(presentationJwt);
+  }
 
-    const { header } = jwtDecode(presentationJwt);
-    const jwk = await getJwkFromDidUri(header.kid);
+  const { header } = jwtDecode(presentationJwt);
+  if (header.jwk != null) {
+    throw newError(400, 'jwt_vp must not be self signed', {
+      errorCode: 'presentation_malformed',
+    });
+  }
+
+  const jwk = await wrapGetJwkFromDidUri(header.kid);
+  return wrapVerifyPresentationJwt(presentationJwt, jwk);
+};
+
+const wrapGetJwkFromDidUri = async (kid) => {
+  try {
+    const jwk = await getJwkFromDidUri(kid);
+    return jwk;
+  } catch (error) {
+    throw newError(400, `kid_${error.message}`, {
+      errorCode: 'presentation_malformed',
+    });
+  }
+};
+
+const wrapVerifyPresentationJwt = async (presentationJwt, jwk) => {
+  try {
     return await verifyPresentationJwt(presentationJwt, jwk);
   } catch (error) {
     throw newError(400, `Malformed jwt_vp property: ${error.message}`, {

@@ -21,7 +21,7 @@
     "@verii/spencer-mongo-extensions": "0.5.0-build",
     "fastify-plugin": "^5.0.0",
     "lodash": "~4.17.21",
-    "mongodb": "6.18.0"
+    "mongodb": "6.20.0"
   },
   "devDependencies": {
     "@spencejs/spence-config": "0.10.2",
@@ -35,11 +35,11 @@
     "eslint-plugin-autofix": "1.1.0",
     "eslint-plugin-better-mutation": "1.7.0",
     "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prefer-arrow-functions": "3.8.1",
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
-    "fastify": "5.4.0",
-    "mongodb": "6.18.0",
+    "fastify": "5.6.1",
+    "mongodb": "6.20.0",
     "expect": "29.7.0",
     "prettier": "2.8.8",
     "typescript": "5.9.2"

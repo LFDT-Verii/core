@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "eslint-plugin-autofix": "1.1.0",
-    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prefer-arrow-functions": "3.8.1",
     "expect": "29.7.0"
   },
   "nx": {

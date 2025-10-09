@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-const { jwtVerify, decodeCredentialJwt } = require('@verii/jwt');
+const { jwsVerify, decodeCredentialJwt } = require('@verii/jwt');
 const { CheckResults } = require('./check-results');
 
-const checkJwtVCTampering = async (jwt, verificationKey, { log }) => {
+const checkJwsVcTampering = async (jwt, verificationKey, { log }) => {
   try {
-    await jwtVerify(jwt, verificationKey);
+    await jwsVerify(jwt, verificationKey);
     return CheckResults.PASS;
   } catch (error) {
     log.error(
@@ -32,4 +32,4 @@ const checkJwtVCTampering = async (jwt, verificationKey, { log }) => {
   }
 };
 
-module.exports = { checkJwtVCTampering };
+module.exports = { checkJwsVcTampering };

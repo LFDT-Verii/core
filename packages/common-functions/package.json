@@ -27,11 +27,11 @@
     "eslint-plugin-autofix": "1.1.0",
     "eslint-plugin-better-mutation": "1.7.0",
     "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prefer-arrow-functions": "3.8.1",
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
     "expect": "29.7.0",
-    "nanoid": "5.1.0",
+    "nanoid": "5.1.6",
     "prettier": "2.8.8"
   },
   "nx": {

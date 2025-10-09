@@ -39,7 +39,7 @@
     "nanoid": "~5.1.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "3.858.0",
+    "@aws-sdk/client-s3": "3.901.0",
     "@spencejs/spence-factories": "0.10.2",
     "@verii/crypto": "0.5.0-build",
     "@verii/sample-data": "0.5.0-build",
@@ -52,12 +52,12 @@
     "eslint-plugin-autofix": "1.1.0",
     "eslint-plugin-better-mutation": "1.7.0",
     "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-prefer-arrow-functions": "3.6.2",
+    "eslint-plugin-prefer-arrow-functions": "3.8.1",
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
     "form-data": "4.0.4",
     "expect": "29.7.0",
-    "mongodb": "6.18.0",
+    "mongodb": "6.20.0",
     "nock": "15.0.0-beta.6",
     "prettier": "2.8.8"
   }
