@@ -18066,10 +18066,10 @@ vite-compatible-readable-stream@^3.6.1:
     string_decoder "^1.1.1"
     util-deprecate "^1.0.1"
 
-vite-plugin-externalize-deps@0.9.0:
-  version "0.9.0"
-  resolved "https://registry.npmjs.org/vite-plugin-externalize-deps/-/vite-plugin-externalize-deps-0.9.0.tgz#316a6b9080844432d9b0ab19b96b094937f73db2"
-  integrity sha512-wg3qb5gCy2d1KpPKyD9wkXMcYJ84yjgziHrStq9/8R7chhUC73mhQz+tVtvhFiICQHsBn1pnkY4IBbPqF9JHNw==
+vite-plugin-externalize-deps@0.10.0:
+  version "0.10.0"
+  resolved "https://registry.npmjs.org/vite-plugin-externalize-deps/-/vite-plugin-externalize-deps-0.10.0.tgz#75a64a731f86db14daf5e557403b3c8653508b9f"
+  integrity sha512-eQrtpT/Do7AvDn76l1yL6ZHyXJ+UWH2LaHVqhAes9go54qaAnPZuMbgxcroQ/7WY3ZyetZzYW2quQnDF0DV5qg==
 
 vite-plugin-lib-inject-css@2.2.2:
   version "2.2.2"
@@ -18098,10 +18098,10 @@ vite-tsconfig-paths@5.1.4:
     globrex "^0.1.2"
     tsconfck "^3.0.3"
 
-vite@7.1.7:
-  version "7.1.7"
-  resolved "https://registry.npmjs.org/vite/-/vite-7.1.7.tgz#ed3f9f06e21d6574fe1ad425f6b0912d027ffc13"
-  integrity sha512-VbA8ScMvAISJNJVbRDTJdCwqQoAareR/wutevKanhR2/1EkoXVZVkkORaYm/tNVCjP/UDTKtcw3bAkwOUdedmA==
+vite@7.1.10:
+  version "7.1.10"
+  resolved "https://registry.npmjs.org/vite/-/vite-7.1.10.tgz#47c9970f3b0fe9057bfbcfeff8cd370edd7bd41b"
+  integrity sha512-CmuvUBzVJ/e3HGxhg6cYk88NGgTnBoOo7ogtfJJ0fefUWAxN/WDSUa50o+oVBxuIhO8FoEZW0j2eW7sfjs5EtA==
   dependencies:
     esbuild "^0.25.0"
     fdir "^6.5.0"
