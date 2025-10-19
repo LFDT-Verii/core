@@ -102,7 +102,7 @@
     "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "14.6.1",
     "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.1",
+    "@types/react-dom": "19.2.2",
     "@verii/tests-helpers": "0.5.0-build",
     "@vitejs/plugin-react-swc": "4.1.0",
     "eslint": "8.57.1",
