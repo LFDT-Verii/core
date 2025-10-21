@@ -21,7 +21,7 @@
     "@verii/error-aggregation": "0.5.0-build",
     "@verii/crypto": "0.5.0-build",
     "@verii/http-client": "0.5.0-build",
-    "fastify-plugin": "~5.0.0",
+    "fastify-plugin": "~5.1.0",
     "lodash":"^4.17.21",
     "http-errors":"^2.0.0",
     "statuses": "~2.0.1",
