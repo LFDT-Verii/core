@@ -28,8 +28,7 @@ const METADATA_LIST_SIZE = 10000;
 /** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
 
 /**
- * Creates verifiable credential from a local offer. Current assumption is that offers contain all required fields
- * including @context, type, contentHash
+ * Prepares, signs and anchors a verifiable credential from a credential offer.
  * @param {CredentialOffer[]} offers  array of offers
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
@@ -59,7 +58,7 @@ const issueVeriiCredentials = async (
 
 /**
  * Prepares and signs verifiable credentials from local offers without anchoring them to the blockchain.
- * Current assumption is that offers contain all required fields including @context, type, contentHash
+ * Assumption is that credential offers contain all required fields including @context, type, contentHash
  * @param {CredentialOffer[]} offers  array of offers
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
@@ -110,12 +109,12 @@ const signVeriiCredentials = async (
 };
 
 /**
- * Anchors prepared verifiable credentials to the blockchain.
- * @param {CredentialMetadata[]} credentialMetadatum array of verifiable credential credential metadata
+ * Anchors prepared verifiable credentials to the blockchain using their credential metadata.
+ * @param {CredentialMetadata[]} credentialMetadatas array of verifiable credential metadata
  * @param {Issuer} issuer  the issuer
  * @param {Context} context the context
  */
-const anchorVeriiCredentials = async (credentialMetadatum, issuer, context) => {
+const anchorVeriiCredentials = async (credentialMetadatas, issuer, context) => {
   const { addEntry, createList } = await initCredentialMetadataContract(
     issuer,
     context
@@ -126,11 +125,11 @@ const anchorVeriiCredentials = async (credentialMetadatum, issuer, context) => {
     flow(
       filter({ isNewList: true }),
       map(({ listId }) => createList(listId, issuer, context))
-    )(credentialMetadatum)
+    )(credentialMetadatas)
   );
 
   // create credential metadata entries on dlt
-  await Promise.all(map((metadata) => addEntry(metadata), credentialMetadatum));
+  await Promise.all(map((metadata) => addEntry(metadata), credentialMetadatas));
 };
 
 module.exports = {
