@@ -34,7 +34,7 @@ const { VelocityRevocationListType } = require('@verii/vc-checks');
  * @param {Context} context context
  * @returns {JsonLdCredential} a json-ld formatted unsigned credential
  */
-const prepareJsonLdCredential = (
+const buildJsonLdCredential = (
   issuer,
   credentialSubjectId,
   offer,
@@ -215,5 +215,5 @@ const buildCredentialTypeJsonLdContext = (credentialTypeMetadata) =>
     : [];
 
 module.exports = {
-  prepareJsonLdCredential,
+  buildJsonLdCredential,
 };
