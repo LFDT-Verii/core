@@ -60,20 +60,22 @@ const prepareJwtVcs = async (
         KeyAlgorithms.SECP256K1;
 
       const keyPair = generateJWAKeyPair(digitalSignatureAlgorithm);
+      const contentHash = hashOffer(offer);
+
+      const credentialId = buildVelocityCredentialMetadataDID(
+        metadataEntry,
+        issuer,
+        contentHash
+      );
 
       const metadata = {
         ...metadataEntry,
         credentialType,
         credentialTypeEncoded: get2BytesHash(credentialType), // TODO replace with bytes encoding from credentialMetadata
-        contentHash: hashOffer(offer),
+        contentHash,
         publicKey: keyPair.publicKey,
+        credentialId,
       };
-
-      const credentialId = buildVelocityCredentialMetadataDID(
-        metadataEntry,
-        issuer,
-        metadata.contentHash
-      );
       const revocationUrl = buildRevocationUrl(
         revocationListEntries[i],
         issuer,
