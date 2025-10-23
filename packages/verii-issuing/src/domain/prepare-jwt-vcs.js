@@ -26,9 +26,10 @@ const { jsonLdToUnsignedVcJwtContent, jwtSign } = require('@verii/jwt');
 const { extractCredentialType } = require('@verii/vc-checks');
 const { hashOffer } = require('./hash-offer');
 const { buildRevocationUrl } = require('../adapters/build-revocation-url');
-const { prepareJsonLdCredential } = require('./prepare-jsonld-credential');
+const { buildJsonLdCredential } = require('./build-jsonld-credential');
 
-/** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
+// eslint-disable-next-line max-len
+/** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context, JsonLdCredential } from "../types/types" */
 
 /**
  * Builds the VCs
@@ -39,9 +40,9 @@ const { prepareJsonLdCredential } = require('./prepare-jsonld-credential');
  * @param {AllocationListEntry[]} revocationListEntries revocation list entries
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types
  * @param {Context} context the context
- * @returns {Promise<{metadata: CredentialMetadata, vcJwt: string}[]>} the vc and its metadata
+ * @returns {Promise<{vcJwt: string, jsonLdCredential: JsonLdCredential, metadata: CredentialMetadata}[]>} the vc and its metadata
  */
-const buildVerifiableCredentials = async (
+const prepareJwtVcs = async (
   offers,
   credentialSubjectId,
   issuer,
@@ -78,7 +79,7 @@ const buildVerifiableCredentials = async (
         issuer,
         context
       );
-      const jsonLdCredential = prepareJsonLdCredential(
+      const jsonLdCredential = buildJsonLdCredential(
         issuer,
         credentialSubjectId,
         offer,
@@ -113,4 +114,4 @@ const buildVelocityCredentialMetadataDID = (entry, issuer, contentHash) =>
     entry.index
   }:${contentHash}`;
 
-module.exports = { buildVerifiableCredentials };
+module.exports = { prepareJwtVcs };
