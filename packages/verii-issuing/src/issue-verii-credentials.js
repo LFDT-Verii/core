@@ -20,103 +20,12 @@ const {
   initCredentialMetadataContract,
 } = require('./adapters/init-credential-metadata-contract');
 const { createRevocationList } = require('./adapters/create-revocation-list');
-const {
-  buildVerifiableCredentials,
-} = require('./domain/build-verifiable-credentials');
+const { prepareJwtVcs } = require('./domain/prepare-jwt-vcs');
 
 const REVOCATION_LIST_SIZE = 10240;
 const METADATA_LIST_SIZE = 10000;
 
 /** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
-
-/**
- * Prepares verifiable credentials from local offers without anchoring them to the blockchain.
- * Current assumption is that offers contain all required fields including @context, type, contentHash
- * @param {CredentialOffer[]} offers  array of offers
- * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
- * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
- * @param {Issuer} issuer  the issuer
- * @param {Context} context the context
- * @returns {Promise<{vcs: object[], revocationListEntries: object[]}>} Returns prepared credentials and revocation list entries
- */
-const prepareVeriiVerifiableCredentials = async (
-  offers,
-  credentialSubjectId,
-  credentialTypesMap,
-  issuer,
-  context
-) => {
-  // pre-allocate list entries using internal tables/collections
-  const revocationListEntries = await allocateListEntries(
-    offers.length,
-    issuer,
-    'revocationListAllocations',
-    REVOCATION_LIST_SIZE,
-    context
-  );
-
-  const metadataEntries = await allocateListEntries(
-    offers.length,
-    issuer,
-    'metadataListAllocations',
-    METADATA_LIST_SIZE,
-    context
-  );
-
-  // build credential and metadata
-  const vcs = await buildVerifiableCredentials(
-    offers,
-    credentialSubjectId,
-    issuer,
-    metadataEntries,
-    revocationListEntries,
-    credentialTypesMap,
-    context
-  );
-
-  return { vcs, revocationListEntries };
-};
-
-/**
- * Anchors prepared verifiable credentials to the blockchain.
- * @param {object[]} vcs  array of verifiable credentials
- * @param {object[]} revocationListEntries  array of revocation list entries
- * @param {Issuer} issuer  the issuer
- * @param {Context} context the context
- * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
- */
-const anchorVeriiVerifiableCredentials = async (
-  vcs,
-  revocationListEntries,
-  issuer,
-  context
-) => {
-  // create any necessary revocation lists on dlt
-  await Promise.all(
-    flow(
-      filter({ isNewList: true }),
-      map((entry) => createRevocationList(entry.listId, issuer, context))
-    )(revocationListEntries)
-  );
-
-  const { addEntry, createList } = await initCredentialMetadataContract(
-    issuer,
-    context
-  );
-
-  // create any necessary metadata lists on dlt
-  await Promise.all(
-    flow(
-      filter({ metadata: { isNewList: true } }),
-      map(({ metadata: { listId } }) => createList(listId, issuer, context))
-    )(vcs)
-  );
-
-  // create credential metadata entries on dlt
-  await Promise.all(map(({ metadata }) => addEntry(metadata), vcs));
-
-  return map('vcJwt', vcs);
-};
 
 /**
  * Creates verifiable credential from a local offer. Current assumption is that offers contain all required fields
@@ -135,23 +44,97 @@ const issueVeriiCredentials = async (
   issuer,
   context
 ) => {
-  const { vcs, revocationListEntries } =
-    await prepareVeriiVerifiableCredentials(
-      offers,
-      credentialSubjectId,
-      credentialTypesMap,
-      issuer,
-      context
-    );
-  return anchorVeriiVerifiableCredentials(
-    vcs,
-    revocationListEntries,
+  const vcs = await signVeriiCredentials(
+    offers,
+    credentialSubjectId,
+    credentialTypesMap,
     issuer,
     context
   );
+
+  await anchorVeriiCredentials(map('metadata', vcs), issuer, context);
+
+  return map('vcJwt', vcs);
 };
+
+/**
+ * Prepares and signs verifiable credentials from local offers without anchoring them to the blockchain.
+ * Current assumption is that offers contain all required fields including @context, type, contentHash
+ * @param {CredentialOffer[]} offers  array of offers
+ * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
+ * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
+ * @param {Issuer} issuer  the issuer
+ * @param {Context} context the context
+ * @returns {Promise<{vcJwt: string, metadata: CredentialMetadata}[]>} Returns array of signed vcs (in jwt format) and their metadata
+ */
+const signVeriiCredentials = async (
+  offers,
+  credentialSubjectId,
+  credentialTypesMap,
+  issuer,
+  context
+) => {
+  const metadataEntries = await allocateListEntries(
+    offers.length,
+    issuer,
+    'metadataListAllocations',
+    METADATA_LIST_SIZE,
+    context
+  );
+
+  // pre-allocate list entries using internal tables/collections
+  const revocationListEntries = await allocateListEntries(
+    offers.length,
+    issuer,
+    'revocationListAllocations',
+    REVOCATION_LIST_SIZE,
+    context
+  );
+
+  await Promise.all(
+    flow(
+      filter({ isNewList: true }),
+      map((entry) => createRevocationList(entry.listId, issuer, context))
+    )(revocationListEntries)
+  );
+
+  return prepareJwtVcs(
+    offers,
+    credentialSubjectId,
+    issuer,
+    metadataEntries,
+    revocationListEntries,
+    credentialTypesMap,
+    context
+  );
+};
+
+/**
+ * Anchors prepared verifiable credentials to the blockchain.
+ * @param {CredentialMetadata[]} credentialMetadatum array of verifiable credential credential metadata
+ * @param {Issuer} issuer  the issuer
+ * @param {Context} context the context
+ */
+const anchorVeriiCredentials = async (credentialMetadatum, issuer, context) => {
+  const { addEntry, createList } = await initCredentialMetadataContract(
+    issuer,
+    context
+  );
+
+  // create any necessary metadata lists on dlt
+  await Promise.all(
+    flow(
+      filter({ isNewList: true }),
+      map(({ listId }) => createList(listId, issuer, context))
+    )(credentialMetadatum)
+  );
+
+  // create credential metadata entries on dlt
+  await Promise.all(map((metadata) => addEntry(metadata), credentialMetadatum));
+};
+
 module.exports = {
-  anchorVeriiVerifiableCredentials,
+  anchorVeriiCredentials,
   issueVeriiCredentials,
-  prepareVeriiVerifiableCredentials,
+  signVeriiCredentials,
 };
