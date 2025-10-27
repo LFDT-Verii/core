@@ -41,11 +41,11 @@ export const serviceTypeFromString = (value: string): VCLServiceType => {
     if (value.includes(VCLServiceType.ContactIssuer.toString())) {
         return VCLServiceType.ContactIssuer;
     }
-    if (value.includes(VCLServiceType.Issuer.toString())) {
-        return VCLServiceType.Issuer;
-    }
     if (value.includes(VCLServiceType.NotaryWorkPermitIssuer.toString())) {
         return VCLServiceType.NotaryWorkPermitIssuer;
+    }
+    if (value.includes(VCLServiceType.Issuer.toString())) {
+        return VCLServiceType.Issuer;
     }
     return VCLServiceType.Undefined;
 };
