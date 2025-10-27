@@ -1,5 +1,3 @@
-import { describe, test } from 'node:test';
-import { expect } from 'expect';
 import VCLServiceTypes from '../../src/api/entities/VCLServiceTypes';
 import VCLServiceType from '../../src/api/entities/VCLServiceType';
 import { VCLIssuingType } from '../../src';
@@ -12,12 +10,14 @@ describe('VCLServiceTypes Tests', () => {
             VCLServiceType.CareerIssuer,
             VCLServiceType.NotaryIssuer,
             VCLServiceType.IdentityIssuer,
+            VCLServiceType.NotaryWorkPermitIssuer
         ]);
 
         expect(serviceTypes.contains(VCLServiceType.Issuer)).toBeTruthy();
         expect(serviceTypes.contains(VCLServiceType.Inspector)).toBeTruthy();
         expect(serviceTypes.contains(VCLServiceType.CareerIssuer)).toBeTruthy();
         expect(serviceTypes.contains(VCLServiceType.NotaryIssuer)).toBeTruthy();
+        expect(serviceTypes.contains(VCLServiceType.NotaryWorkPermitIssuer)).toBeTruthy();
         expect(
             serviceTypes.contains(VCLServiceType.IdentityIssuer)
         ).toBeTruthy();
@@ -76,7 +76,7 @@ describe('VCLServiceTypes Tests', () => {
         expect(serviceTypes.contains(VCLServiceType.Issuer)).toBeFalsy();
         expect(serviceTypes.contains(VCLServiceType.Inspector)).toBeFalsy();
         expect(serviceTypes.contains(VCLServiceType.CareerIssuer)).toBeFalsy();
-        expect(serviceTypes.contains(VCLServiceType.NotaryIssuer)).toBeFalsy();
+        expect(serviceTypes.contains(VCLServiceType.NotaryWorkPermitIssuer)).toBeFalsy();
         expect(
             serviceTypes.contains(VCLServiceType.IdentityIssuer)
         ).toBeFalsy();
@@ -89,6 +89,7 @@ describe('VCLServiceTypes Tests', () => {
                     VCLServiceType.Inspector,
                     VCLServiceType.CareerIssuer,
                     VCLServiceType.NotaryIssuer,
+                    VCLServiceType.NotaryWorkPermitIssuer,
                     VCLServiceType.IdentityIssuer,
                 ])
             )
@@ -103,6 +104,7 @@ describe('VCLServiceTypes Tests', () => {
         expect(serviceTypes.contains(VCLServiceType.Issuer)).toBeTruthy();
         expect(serviceTypes.contains(VCLServiceType.CareerIssuer)).toBeTruthy();
         expect(serviceTypes.contains(VCLServiceType.NotaryIssuer)).toBeTruthy();
+        expect(serviceTypes.contains(VCLServiceType.NotaryWorkPermitIssuer)).toBeTruthy();
 
         expect(
             serviceTypes.containsAtLeastOneOf(
@@ -146,6 +148,7 @@ describe('VCLServiceTypes Tests', () => {
         expect(serviceTypes.contains(VCLServiceType.Issuer)).toBeFalsy();
         expect(serviceTypes.contains(VCLServiceType.CareerIssuer)).toBeFalsy();
         expect(serviceTypes.contains(VCLServiceType.NotaryIssuer)).toBeFalsy();
+        expect(serviceTypes.contains(VCLServiceType.NotaryWorkPermitIssuer)).toBeFalsy();
         expect(serviceTypes.contains(VCLServiceType.Undefined)).toBeFalsy();
 
         expect(
@@ -169,7 +172,7 @@ describe('VCLServiceTypes Tests', () => {
         expect(serviceTypes.contains(VCLServiceType.Issuer)).toBeTruthy();
         expect(serviceTypes.contains(VCLServiceType.CareerIssuer)).toBeTruthy();
         expect(serviceTypes.contains(VCLServiceType.NotaryIssuer)).toBeTruthy();
-
+        expect(serviceTypes.contains(VCLServiceType.NotaryWorkPermitIssuer)).toBeTruthy();
         expect(
             serviceTypes.containsAtLeastOneOf(
                 new VCLServiceTypes([

@@ -13,6 +13,7 @@ export default class VCLServiceTypes {
                     VCLServiceType.Issuer,
                     VCLServiceType.CareerIssuer,
                     VCLServiceType.NotaryIssuer,
+                    VCLServiceType.NotaryWorkPermitIssuer,
                 ];
                 break;
             case VCLIssuingType.Identity:
@@ -24,6 +25,7 @@ export default class VCLServiceTypes {
                     VCLServiceType.CareerIssuer,
                     VCLServiceType.NotaryIssuer,
                     VCLServiceType.IdentityIssuer,
+                    VCLServiceType.NotaryWorkPermitIssuer,
                 ];
                 break;
             case VCLIssuingType.Undefined:

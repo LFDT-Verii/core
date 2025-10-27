@@ -1,5 +1,3 @@
-import { describe, test } from 'node:test';
-import { expect } from 'expect';
 import VCLServiceType, {
     serviceTypeFromString,
 } from '../../src/api/entities/VCLServiceType';
@@ -34,6 +32,9 @@ describe('VCLServiceType Tests', () => {
             VCLServiceType.ContactIssuer
         );
         expect(serviceTypeFromString('Issuer')).toEqual(VCLServiceType.Issuer);
+        expect(serviceTypeFromString('NotaryWorkPermitIssuer')).toEqual(
+            VCLServiceType.NotaryWorkPermitIssuer
+        );
         expect(serviceTypeFromString('OtherService')).toEqual(
             VCLServiceType.Undefined
         );
@@ -72,6 +73,9 @@ describe('VCLServiceType Tests', () => {
         );
         expect(serviceTypeFromString('eskld#Issuerdkdf')).toEqual(
             VCLServiceType.Issuer
+        );
+        expect(serviceTypeFromString('dfjkn@NotaryWorkPermitIssuer34')).toEqual(
+            VCLServiceType.NotaryWorkPermitIssuer
         );
         expect(serviceTypeFromString('ksdjhkD#OtherService959)%')).toEqual(
             VCLServiceType.Undefined
