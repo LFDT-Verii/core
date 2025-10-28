@@ -129,7 +129,7 @@ const anchorVeriiCredentials = async (credentialMetadatas, issuer, context) => {
 /**
  * Gets the new list entry. Since the number of entries per list is 10k then only one will ever be returned
  * @param {AllocationListEntry[]} entries the entries
- * @returns {AllocationListEntry} returns the new list entry if it exists, otherwise undefined
+ * @returns {AllocationListEntry | undefined} returns the new list entry if it exists, otherwise undefined
  */
 const getNewListEntry = (entries) => entries?.find((entry) => entry.isNewList);
 
