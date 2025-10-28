@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { filter, flow, map } = require('lodash/fp');
+const { map } = require('lodash/fp');
 const { allocateListEntries } = require('./allocate-list-entries');
 const {
   initCredentialMetadataContract,
@@ -80,6 +80,14 @@ const signVeriiCredentials = async (
     METADATA_LIST_SIZE,
     context
   );
+  const newMetadataListEntry = getNewListEntry(metadataEntries);
+  if (newMetadataListEntry != null) {
+    const { createList } = await initCredentialMetadataContract(
+      issuer,
+      context
+    );
+    await createList(newMetadataListEntry.listId);
+  }
 
   // pre-allocate list entries using internal tables/collections
   const revocationListEntries = await allocateListEntries(
@@ -89,13 +97,10 @@ const signVeriiCredentials = async (
     REVOCATION_LIST_SIZE,
     context
   );
-
-  await Promise.all(
-    flow(
-      filter({ isNewList: true }),
-      map((entry) => createRevocationList(entry.listId, issuer, context))
-    )(revocationListEntries)
-  );
+  const newRevocationListEntry = getNewListEntry(revocationListEntries);
+  if (newRevocationListEntry != null) {
+    await createRevocationList(newRevocationListEntry.listId, issuer, context);
+  }
 
   return prepareJwtVcs(
     offers,
@@ -115,22 +120,18 @@ const signVeriiCredentials = async (
  * @param {Context} context the context
  */
 const anchorVeriiCredentials = async (credentialMetadatas, issuer, context) => {
-  const { addEntry, createList } = await initCredentialMetadataContract(
-    issuer,
-    context
-  );
-
-  // create any necessary metadata lists on dlt
-  await Promise.all(
-    flow(
-      filter({ isNewList: true }),
-      map(({ listId }) => createList(listId, issuer, context))
-    )(credentialMetadatas)
-  );
+  const { addEntry } = await initCredentialMetadataContract(issuer, context);
 
   // create credential metadata entries on dlt
   await Promise.all(map((metadata) => addEntry(metadata), credentialMetadatas));
 };
+
+/**
+ * Gets the new list entry. Since the number of entries per list is 10k then only one will ever be returned
+ * @param {AllocationListEntry[]} entries the entries
+ * @returns {AllocationListEntry | undefined} returns the new list entry if it exists, otherwise undefined
+ */
+const getNewListEntry = (entries) => entries?.find((entry) => entry.isNewList);
 
 module.exports = {
   anchorVeriiCredentials,
