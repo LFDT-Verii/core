@@ -11,7 +11,7 @@ enum VCLServiceType {
     ContactIssuer = 'ContactIssuer',
     NotaryContactIssuer = 'NotaryContactIssuer',
     NotaryWorkPermitIssuer = 'NotaryWorkPermitIssuer',
-    WorkPermitIssuer= 'WorkPermitIssuer',
+    WorkPermitIssuer = 'WorkPermitIssuer',
     Undefined = 'Undefined',
 }
 export default VCLServiceType;
