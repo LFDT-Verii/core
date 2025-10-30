@@ -34,6 +34,12 @@ describe('VCLServiceType Tests', () => {
             VCLServiceType.ContactIssuer
         );
         expect(serviceTypeFromString('Issuer')).toEqual(VCLServiceType.Issuer);
+        expect(serviceTypeFromString('NotaryWorkPermitIssuer')).toEqual(
+            VCLServiceType.NotaryWorkPermitIssuer
+        );
+        expect(serviceTypeFromString('WorkPermitIssuer')).toEqual(
+            VCLServiceType.WorkPermitIssuer
+        );
         expect(serviceTypeFromString('OtherService')).toEqual(
             VCLServiceType.Undefined
         );
@@ -72,6 +78,12 @@ describe('VCLServiceType Tests', () => {
         );
         expect(serviceTypeFromString('eskld#Issuerdkdf')).toEqual(
             VCLServiceType.Issuer
+        );
+        expect(serviceTypeFromString('dfjkn@NotaryWorkPermitIssuer34')).toEqual(
+            VCLServiceType.NotaryWorkPermitIssuer
+        );
+        expect(serviceTypeFromString('dfjkn@WorkPermitIssuer34')).toEqual(
+            VCLServiceType.WorkPermitIssuer
         );
         expect(serviceTypeFromString('ksdjhkD#OtherService959)%')).toEqual(
             VCLServiceType.Undefined
