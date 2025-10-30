@@ -10,6 +10,8 @@ enum VCLServiceType {
     NotaryIdDocumentIssuer = 'NotaryIdDocumentIssuer',
     ContactIssuer = 'ContactIssuer',
     NotaryContactIssuer = 'NotaryContactIssuer',
+    NotaryWorkPermitIssuer = 'NotaryWorkPermitIssuer',
+    WorkPermitIssuer = 'WorkPermitIssuer',
     Undefined = 'Undefined',
 }
 export default VCLServiceType;
@@ -39,6 +41,12 @@ export const serviceTypeFromString = (value: string): VCLServiceType => {
     }
     if (value.includes(VCLServiceType.ContactIssuer.toString())) {
         return VCLServiceType.ContactIssuer;
+    }
+    if (value.includes(VCLServiceType.NotaryWorkPermitIssuer.toString())) {
+        return VCLServiceType.NotaryWorkPermitIssuer;
+    }
+    if (value.includes(VCLServiceType.WorkPermitIssuer.toString())) {
+        return VCLServiceType.WorkPermitIssuer;
     }
     if (value.includes(VCLServiceType.Issuer.toString())) {
         return VCLServiceType.Issuer;
