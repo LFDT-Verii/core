@@ -24,7 +24,7 @@
     "@aws-sdk/client-s3": "^3.731.1",
     "dotenv": "^16.0.0",
     "env-var": "^7.0.0",
-    "expect": "29.7.0",
+    "expect": "30.2.0",
     "lodash": "^4.17.21",
     "mongodb": "~6.20.0",
     "nanoid": "~5.1.0"

@@ -31,7 +31,7 @@
     "@spencejs/spence-config": "0.10.2",
     "@verii/tests-helpers": "0.5.0-build",
     "date-fns": "3.6.0",
-    "expect": "29.7.0",
+    "expect": "30.2.0",
     "nanoid": "5.1.6"
   },
   "nx": {
