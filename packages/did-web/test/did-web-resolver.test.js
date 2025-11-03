@@ -25,7 +25,7 @@ describe('Did web resolver test suite', () => {
   describe('resolveDidWeb', () => {
     it('should throw error if did is not resolved', async () => {
       const did = 'did:web:unknown';
-      await expect(() => resolveDidWeb(did)).rejects.toThrowError(
+      await expect(() => resolveDidWeb(did)).rejects.toThrow(
         newError(400, `Could not resolve ${did}`, {
           errorCode: 'did_resolution_failed',
         })

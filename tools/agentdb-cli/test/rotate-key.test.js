@@ -190,7 +190,7 @@ describe('rotate-key test suite', () => {
         testOptions.secretProp,
         { db, ...testOptions }
       );
-    await expect(exec).rejects.toThrowError(
+    await expect(exec).rejects.toThrow(
       'Unsupported state or unable to authenticate data'
     );
   });

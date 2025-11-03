@@ -34,7 +34,7 @@ describe('batch issuing test', () => {
       dryrun: true,
     };
 
-    await expect(() => runBatchIssuing(options)).rejects.toThrowError(
+    await expect(() => runBatchIssuing(options)).rejects.toThrow(
       "Mug2.1 doesn't exist. Please use one of EmailV1.0,PhoneV1.0,DriversLicenseV1.0"
     );
   });
@@ -51,7 +51,7 @@ describe('batch issuing test', () => {
       dryrun: true,
     };
 
-    await expect(() => runBatchIssuing(options)).rejects.toThrowError(
+    await expect(() => runBatchIssuing(options)).rejects.toThrow(
       'one of "--tenant" or "--did" is required'
     );
   });
@@ -1325,7 +1325,7 @@ describe('batch issuing test', () => {
         authToken: 'fakeToken',
       };
 
-      await expect(() => runBatchIssuing(options)).rejects.toThrowError();
+      await expect(() => runBatchIssuing(options)).rejects.toThrow();
     });
 
     it("should find the existing disclosure disclosureRequest with 'tenant' option", async () => {

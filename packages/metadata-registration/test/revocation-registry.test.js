@@ -189,7 +189,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
           },
           context
         )
-      ).rejects.toThrowError('Check the required parameters: contractAddress');
+      ).rejects.toThrow('Check the required parameters: contractAddress');
     });
 
     it('Throw an error: the wallet already added', async () => {
@@ -197,9 +197,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         revocationRegistry.addWalletToRegistrySigned({
           caoDid: 'did:velocity:99',
         })
-      ).rejects.toThrowError(
-        /execution reverted: "wallet already in registry"/
-      );
+      ).rejects.toThrow(/execution reverted: "wallet already in registry"/);
     });
 
     it('Throw an error: the revocation list is not exist', async () => {
@@ -217,7 +215,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
             listId + 1
           }&index=${index}`
         )
-      ).rejects.toThrowError(/revocation list with given id does not exist/);
+      ).rejects.toThrow(/revocation list with given id does not exist/);
     });
 
     it('Throw an error: the index shoud be < 10240', async () => {
@@ -236,7 +234,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
           index,
           caoDid: 'did:velocity:99',
         })
-      ).rejects.toThrowError(/execution reverted: "list index out of bound"/);
+      ).rejects.toThrow(/execution reverted: "list index out of bound"/);
     });
 
     it('Throw an error: invalid url params', async () => {
@@ -252,21 +250,21 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         revocationRegistry.getRevokedStatus(
           `ethereum:${revocationRegistryContractAddress}/invalidMethod?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
         );
-      }).toThrowError(
+      }).toThrow(
         'Wrong url, please check the params: scheme, target_address, function_name'
       );
       expect(() => {
         revocationRegistry.getRevokedStatus(
           `ethereum:${defaultPrimaryAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
         );
-      }).toThrowError(
+      }).toThrow(
         'Wrong url, please check the params: scheme, target_address, function_name'
       );
       expect(() => {
         revocationRegistry.getRevokedStatus(
           `eth:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
         );
-      }).toThrowError('Not an Ethereum URI');
+      }).toThrow('Not an Ethereum URI');
     });
   });
 

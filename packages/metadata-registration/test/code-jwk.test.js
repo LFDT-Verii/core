@@ -99,7 +99,7 @@ describe('encoding and decoding of jwks for blockchains', () => {
     it('decodes a raw hex key using HEX_AES_256 algType', async () => {
       await expect(() =>
         decodeJwk('SOME_OTHER_TYPE', Buffer.from('deadbeef', 'hex'), secret)
-      ).rejects.toThrowError();
+      ).rejects.toThrow();
     });
 
     it('decodes a es256k compact JWK buffer back to JWK object', async () => {

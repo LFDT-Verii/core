@@ -152,7 +152,7 @@ describe('Crypto tests', () => {
         generateKeyPair({
           curve: 'abc',
         })
-      ).toThrowError('Invalid EC curve name');
+      ).toThrow('Invalid EC curve name');
     });
   });
 
@@ -344,8 +344,8 @@ describe('Crypto tests', () => {
     });
 
     it('should return error if value is null or undefined', () => {
-      expect(() => get2BytesHash(null)).toThrowError();
-      expect(() => get2BytesHash()).toThrowError();
+      expect(() => get2BytesHash(null)).toThrow();
+      expect(() => get2BytesHash()).toThrow();
     });
   });
 
@@ -363,12 +363,12 @@ describe('Crypto tests', () => {
     });
 
     it('should return error if value is null or undefined', () => {
-      expect(() => calculateDigest('sha384', 'base64')(null)).toThrowError();
-      expect(() => calculateDigest('sha384', 'base64')()).toThrowError();
+      expect(() => calculateDigest('sha384', 'base64')(null)).toThrow();
+      expect(() => calculateDigest('sha384', 'base64')()).toThrow();
     });
 
     it('should return error if value is not a string', () => {
-      expect(() => calculateDigest('sha384', 'base64')(123)).toThrowError();
+      expect(() => calculateDigest('sha384', 'base64')(123)).toThrow();
     });
   });
 

@@ -117,9 +117,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           rotation: rotationAccount.address,
           permissioning: permissioningAccount.address,
         })
-      ).rejects.toThrowError(
-        /execution reverted: "Permissions: caller is not VNF"/
-      );
+      ).rejects.toThrow(/execution reverted: "Permissions: caller is not VNF"/);
     });
 
     describe('Address -> Scopes mappings test suite', () => {
@@ -295,7 +293,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           primary: primaryAccount.address,
           operator: testOperatorKey,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         /execution reverted: "Permissions: caller is not permissioning key"/
       );
     });
@@ -340,7 +338,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           primary: primaryAccount.address,
           operator: testOperatorAccount.address,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         /execution reverted: "Permissions: caller is not permissioning key"/
       );
     });
@@ -382,7 +380,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           newOperator: newTestOperatorAccount.address,
           oldOperator: testOperatorAccount.address,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         /execution reverted: "Permissions: caller is not permissioning key"/
       );
     });
@@ -431,7 +429,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           newPermissioning: permissioningAccount3.address,
           newRotation: rotationAccount3.address,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         /execution reverted: "Permissions: caller is not rotation key"/
       );
 
@@ -449,7 +447,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           newPermissioning: permissioningAccount4.address,
           newRotation: rotationAccount4.address,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         /execution reverted: "Permissions: caller is not rotation key"/
       );
 
@@ -459,7 +457,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           newPermissioning: permissioningAccount4.address,
           newRotation: rotationAccount4.address,
         })
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         /execution reverted: "Permissions: caller is not rotation key"/
       );
     });

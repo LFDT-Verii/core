@@ -21,6 +21,6 @@ describe('Basic Auth', () => {
     const exec = () =>
       basciAuthValidate(`${username}-DIFF`, `${password}-DIFF`);
 
-    expect(exec).rejects.toThrowError('Wrong username or password');
+    expect(exec).rejects.toThrow('Wrong username or password');
   });
 });
