@@ -9447,10 +9447,10 @@ eslint-plugin-jsx-a11y@6.10.2:
     safe-regex-test "^1.0.3"
     string.prototype.includes "^2.0.1"
 
-eslint-plugin-prefer-arrow-functions@3.8.1:
-  version "3.8.1"
-  resolved "https://registry.npmjs.org/eslint-plugin-prefer-arrow-functions/-/eslint-plugin-prefer-arrow-functions-3.8.1.tgz#dae5910a76f67c398410493a82d4ce6e5e243fca"
-  integrity sha512-S4VJBIS+DObvi95K21UAe/4qAV9HyLp+Clh6glANMqA/mLAhWOZrh1I3x2CSnd/vN7yy+9IimDgqCaxoVbVprg==
+eslint-plugin-prefer-arrow-functions@3.9.1:
+  version "3.9.1"
+  resolved "https://registry.npmjs.org/eslint-plugin-prefer-arrow-functions/-/eslint-plugin-prefer-arrow-functions-3.9.1.tgz#38fceefa4956838489a1ad427ed02bd0cf66762c"
+  integrity sha512-Mr9Ia8i5ohfCMcZBRedXXWdDJIo30gdKdPfRQ5DtO62yzogB5ErVGwQWPz+ycRlQPKpCAlBHpJdp1TCeCtt+YA==
   dependencies:
     "@typescript-eslint/types" "^8.19.1"
     "@typescript-eslint/utils" "^8.19.1"
