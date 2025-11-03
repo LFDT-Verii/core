@@ -8502,10 +8502,10 @@ dataloader@2.1.0:
   resolved "https://registry.npmjs.org/dataloader/-/dataloader-2.1.0.tgz#c69c538235e85e7ac6c6c444bae8ecabf5de9df7"
   integrity sha512-qTcEYLen3r7ojZNgVUaRggOI+KM7jrKxXeSHhogh/TWxYMeONEMqY+hmkobiYQozsGIyg9OYVzO4ZIfoB4I0pQ==
 
-date-fns@3.6.0, date-fns@^3.0.0, date-fns@^3.6.0, date-fns@~3.6.0:
-  version "3.6.0"
-  resolved "https://registry.npmjs.org/date-fns/-/date-fns-3.6.0.tgz#f20ca4fe94f8b754951b24240676e8618c0206bf"
-  integrity sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==
+date-fns@4.1.0, date-fns@^4.0.0, date-fns@~4.1.0:
+  version "4.1.0"
+  resolved "https://registry.npmjs.org/date-fns/-/date-fns-4.1.0.tgz#64b3d83fff5aa80438f5b1a633c2e83b8a1c2d14"
+  integrity sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==
 
 date-fns@^2.28.0:
   version "2.30.0"
@@ -8513,6 +8513,11 @@ date-fns@^2.28.0:
   integrity sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==
   dependencies:
     "@babel/runtime" "^7.21.0"
+
+date-fns@^3.6.0:
+  version "3.6.0"
+  resolved "https://registry.npmjs.org/date-fns/-/date-fns-3.6.0.tgz#f20ca4fe94f8b754951b24240676e8618c0206bf"
+  integrity sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==
 
 dateformat@^3.0.3:
   version "3.0.3"
@@ -17771,9 +17776,9 @@ tweetnacl@^1.0.3:
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==
 
 twilio@^5.10.1:
-  version "5.10.3"
-  resolved "https://registry.npmjs.org/twilio/-/twilio-5.10.3.tgz#864745dc1945a2e5a2aa4b4cb1041212e2dc2ca2"
-  integrity sha512-msve3uADprpG+LRlthOxBUJWZDczGe+mdzotG7Wluaf8nn8fSIK0n2fX3INR26Xedeea/azmAdLK0c2rJhIHpQ==
+  version "5.10.4"
+  resolved "https://registry.npmjs.org/twilio/-/twilio-5.10.4.tgz#d20053f9e70147ccd0124cef95c3e0f6fd4bef04"
+  integrity sha512-5dUsT3/O1+WxyJop2a6a4r92NAgtEQL7+oSU4t466NPhDaPOOBH/uomxnYHD5GWouYo7CZ/B7XSOwlhEUAHpWg==
   dependencies:
     axios "^1.12.0"
     dayjs "^1.11.9"
