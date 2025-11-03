@@ -382,8 +382,6 @@ describe('Http Client Package', () => {
           .intercept({ path: '/json?foo=bar', method: 'GET' })
           .reply(200, { message: 'matched' });
 
-        const searchParams = new URLSearchParams();
-
         const response = await httpClient.get('json?foo=bar');
 
         expect(response).toEqual({

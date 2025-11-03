@@ -225,7 +225,10 @@ const buildUrl = (host, url, reqOptions) => {
 
 const parseFullURL = (url, reqOptions) => {
   const { origin, pathname, searchParams } = new URL(url);
-  return [origin, addSearchParams(pathname, reqOptions?.searchParams || `${searchParams}`)];
+  return [
+    origin,
+    addSearchParams(pathname, reqOptions?.searchParams || `${searchParams}`),
+  ];
 };
 
 const buildRelativePath = (rootPath, url, reqOptions) =>
