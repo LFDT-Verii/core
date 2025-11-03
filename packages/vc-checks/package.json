@@ -20,7 +20,7 @@
     "@verii/did-doc": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",
     "@verii/organizations-registry": "~0.5.0-build",
-    "date-fns": "^3.0.0",
+    "date-fns": "^4.0.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
