@@ -46,7 +46,7 @@ describe('math test suite', () => {
   describe('fromBigNumber test suite', () => {
     it('should error with a non BigNumber', () => {
       const func = () => fromBigNumber(123);
-      expect(func).toThrowError('123 is not BigNumber');
+      expect(func).toThrow('123 is not BigNumber');
     });
     it('should return String if BigNumber is passed', () => {
       const stringX = fromBigNumber(toBigNumber('000999.550000000'));

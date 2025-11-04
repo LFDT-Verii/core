@@ -43,7 +43,7 @@ describe('validate presentation context', () => {
   });
   describe('string presentation context', () => {
     it('should fail empty presentation', () => {
-      expect(() => validatePresentationContext({}, { config })).toThrowError(
+      expect(() => validatePresentationContext({}, { config })).toThrow(
         new Error('presentation @context is not set correctly')
       );
     });
@@ -55,7 +55,7 @@ describe('validate presentation context', () => {
           },
           { config }
         )
-      ).toThrowError(new Error('presentation @context is not set correctly'));
+      ).toThrow(new Error('presentation @context is not set correctly'));
     });
     it('should pass string presentation context', () => {
       expect(
@@ -70,7 +70,7 @@ describe('validate presentation context', () => {
   });
   describe('array presentation context', () => {
     it('should fail empty presentation', () => {
-      expect(() => validatePresentationContext({}, { config })).toThrowError(
+      expect(() => validatePresentationContext({}, { config })).toThrow(
         new Error('presentation @context is not set correctly')
       );
     });
@@ -85,7 +85,7 @@ describe('validate presentation context', () => {
           },
           { config }
         )
-      ).toThrowError(new Error('presentation @context is not set correctly'));
+      ).toThrow(new Error('presentation @context is not set correctly'));
     });
     it('should pass array presentation context', () => {
       expect(

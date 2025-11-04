@@ -577,9 +577,7 @@ describe('JWT Tests', () => {
       const tamperedJwt = tamperJwt(untamperedJwt, { foo: 'foo' });
       const func = async () =>
         jwtVerify(tamperedJwt, secp256kKeyPair.publicKey);
-      await expect(func()).rejects.toThrowError(
-        'signature verification failed'
-      );
+      await expect(func()).rejects.toThrow('signature verification failed');
     });
   });
 

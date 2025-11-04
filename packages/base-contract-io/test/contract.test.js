@@ -85,7 +85,7 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
           },
           context
         );
-      expect(func).rejects.toThrowError(
+      expect(func).rejects.toThrow(
         'Check the required parameters: contractAddress'
       );
     });

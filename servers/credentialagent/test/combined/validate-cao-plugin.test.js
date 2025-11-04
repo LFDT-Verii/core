@@ -53,7 +53,7 @@ describe('validate cao plugin test suite', () => {
           caoDid: 'didtest',
         },
       })
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       // eslint-disable-next-line max-len
       'The provided CAO is not permitted to operator on the network. Make sure the organization exists on the registrar and is approved for Credential Agent Operation'
     );
@@ -71,7 +71,7 @@ describe('validate cao plugin test suite', () => {
           caoDid: 'didtest',
         },
       })
-    ).rejects.toThrowError(
+    ).rejects.toThrow(
       // eslint-disable-next-line max-len
       'The provided CAO is not permitted to operator on the network. Make sure the organization exists on the registrar and is approved for Credential Agent Operation'
     );

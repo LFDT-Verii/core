@@ -26,7 +26,7 @@
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
-    "expect": "29.7.0",
+    "expect": "30.2.0",
     "nock": "15.0.0-beta.6",
     "prettier": "2.8.8"
   },
@@ -35,7 +35,7 @@
     "commander": "~13.1.0",
     "csv-parser": "~3.2.0",
     "got": "11.8.6",
-    "date-fns": "3.6.0",
+    "date-fns": "4.1.0",
     "handlebars": "^4.7.7",
     "lodash": "^4.17.21",
     "nanoid": "5.1.6",

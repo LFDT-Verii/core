@@ -34,7 +34,7 @@
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
     "fastify": "5.6.1",
-    "expect": "29.7.0",
+    "expect": "30.2.0",
     "prettier": "2.8.8"
   },
   "nx": {

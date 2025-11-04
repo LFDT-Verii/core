@@ -37,7 +37,7 @@
     "@verii/math": "0.5.0-build",
     "@verii/metadata-registration": "0.5.0-build",
     "@verii/spencer-mongo-extensions": "0.5.0-build",
-    "date-fns": "~3.6.0",
+    "date-fns": "~4.1.0",
     "env-var": "^7.0.0",
     "fastify": "^5.0.0",
     "fastify-plugin": "~5.1.0",
@@ -58,7 +58,7 @@
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
     "ethers": "6.15.0",
-    "expect": "29.7.0",
+    "expect": "30.2.0",
     "mongodb": "6.20.0",
     "prettier": "2.8.8"
   }

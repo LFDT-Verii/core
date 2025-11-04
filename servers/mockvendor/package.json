@@ -37,7 +37,7 @@
     "@verii/http-client": "0.5.0-build",
     "@verii/server-credentialagent": "0.5.0-build",
     "@verii/server-provider": "0.5.0-build",
-    "date-fns": "~3.6.0",
+    "date-fns": "~4.1.0",
     "dotenv": "16.6.1",
     "env-var": "~7.5.0",
     "fastify": "^5.0.0",
@@ -61,7 +61,7 @@
     "eslint-plugin-prettier": "4.2.5",
     "eslint-watch": "7.0.0",
     "canonicalize": "2.1.0",
-    "expect": "29.7.0",
+    "expect": "30.2.0",
     "nock": "15.0.0-beta.6",
     "nodemon": "3.1.10",
     "prettier": "2.8.8"
