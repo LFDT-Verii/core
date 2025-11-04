@@ -307,19 +307,17 @@ describe('issuer checks', () => {
 
   describe('checkIdentityIssuer tests suite', () => {
     it('should throw error if `IdentityIssuer` does not exists in `permittedVelocityServiceCategory`', async () => {
-      expect(() => checkIdentityIssuer([])).toThrowError(
+      expect(() => checkIdentityIssuer([])).toThrow(
         'issuer_requires_identity_permission'
       );
     });
 
     it('should not throw error if `IdDocumentIssuer` exists in `permittedVelocityServiceCategory`', async () => {
-      expect(() =>
-        checkIdentityIssuer(['IdDocumentIssuer'])
-      ).not.toThrowError();
+      expect(() => checkIdentityIssuer(['IdDocumentIssuer'])).not.toThrow();
     });
 
     it('should not throw error if `IdentityIssuer` exists in `permittedVelocityServiceCategory`', async () => {
-      expect(() => checkIdentityIssuer(['IdentityIssuer'])).not.toThrowError();
+      expect(() => checkIdentityIssuer(['IdentityIssuer'])).not.toThrow();
     });
   });
 
@@ -355,7 +353,7 @@ describe('issuer checks', () => {
           },
           testContext
         )
-      ).toThrowError('issuer_requires_notary_permission');
+      ).toThrow('issuer_requires_notary_permission');
     });
 
     it('should pass validation when issuer is matched in the credential', async () => {

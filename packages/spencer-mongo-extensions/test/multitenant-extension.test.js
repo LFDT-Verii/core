@@ -58,12 +58,10 @@ describe('multitenant extension', () => {
       {}
     );
     const funcPrepFilter = () => extension.prepFilter({ foo: 'bar' });
-    expect(funcPrepFilter).toThrowError('context.tenant[_id] is undefined');
+    expect(funcPrepFilter).toThrow('context.tenant[_id] is undefined');
     const funcPrepModification = () =>
       extension.prepModification({ foo: 'bar' });
-    expect(funcPrepModification).toThrowError(
-      'context.tenant[_id] is undefined'
-    );
+    expect(funcPrepModification).toThrow('context.tenant[_id] is undefined');
   });
 
   it('should be ok if the tenantId is already on filter or modification', () => {

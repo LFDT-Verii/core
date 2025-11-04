@@ -76,7 +76,7 @@ describe(
             },
             context
           );
-        expect(func).rejects.toThrowError(
+        expect(func).rejects.toThrow(
           'Check the required parameters: contractAddress'
         );
       });
