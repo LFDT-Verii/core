@@ -110,17 +110,7 @@ export abstract class Constants {
     filter: { did: Constants.IssuerDidStaging },
   };
 
-  static readonly CredentialTypes = [
-    'EducationDegreeRegistrationV1.0',
-    'EducationDegreeStudyV1.0',
-    'EducationDegreeGraduationV1.0',
-    'EmploymentPastV1.1',
-    'Badge',
-    'BadgeV1.1',
-    'OpenBadgeV1.0',
-    'OpenBadgeV2.0',
-    'OpenBadgeCredential',
-  ];
+  static readonly CredentialTypes = [];
 
   static readonly ResidentPermitV10 = 'ResidentPermitV1.0';
 
