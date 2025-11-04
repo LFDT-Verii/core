@@ -15,7 +15,7 @@
  *
  */
 
-const { includes, startsWith } = require('lodash/fp');
+const { includes, startsWith, some } = require('lodash/fp');
 const { ServiceCategories } = require('@verii/organizations-registry');
 const { checkIdentityIssuer } = require('./check-identity-issuer');
 const { verifyPrimarySourceIssuer } = require('./verify-primary-source-issuer');
@@ -38,7 +38,7 @@ const verifyIssuerForCredentialType = (
     return checkIdentityIssuer(permittedVelocityServiceCategory);
   }
 
-  if (startsWith('Notary', permittedVelocityServiceCategory)) {
+  if (some((category) => startsWith('Notary', category), permittedVelocityServiceCategory)) {
     return true;
   }
 
