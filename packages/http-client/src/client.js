@@ -23,8 +23,8 @@ const {
 } = require('undici');
 const { createOidcInterceptor } = require('undici-oidc-interceptor');
 const { map } = require('lodash/fp');
-const pkg = require('../package.json');
 const { isObject } = require('lodash');
+const pkg = require('../package.json');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
 const registeredPrefixUrls = new Map();
