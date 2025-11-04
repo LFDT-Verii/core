@@ -376,6 +376,27 @@ describe('Http Client Package', () => {
         });
       });
 
+      it('should handle get() with searchParams in URL', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/json?foo=bar', method: 'GET' })
+          .reply(200, { message: 'matched' });
+
+        const response = await httpClient.get('json?foo=bar');
+
+        expect(response).toEqual({
+          statusCode: 200,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+
+        await expect(response.json()).resolves.toEqual({
+          message: 'matched',
+        });
+      });
+
       it('should handle post() with JSON body', async () => {
         mockAgent
           .get(origin)

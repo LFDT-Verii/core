@@ -106,7 +106,7 @@ const initHttpClient = (options) => {
       ...reqOptions?.headers,
       ...buildBearerAuthorizationHeader(bearerToken),
     };
-    const [origin, path] = buildUrl(host, url, reqOptions, clientOptions);
+    const [origin, path] = buildUrl(host, url, reqOptions);
 
     log.info({ origin, path, url, reqId, reqHeaders }, 'HttpClient request');
 
@@ -213,19 +213,22 @@ const parsePrefixUrl = (prefixUrl) => {
   };
 };
 
-const buildUrl = (host, url, reqOptions, clientOptions) => {
+const buildUrl = (host, url, reqOptions) => {
   const fullUrl = reqOptions?.prefixUrl
     ? new URL(url, reqOptions.prefixUrl).toString()
     : url;
 
   return host && !reqOptions?.prefixUrl
     ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
-    : parseFullURL(fullUrl, clientOptions, reqOptions);
+    : parseFullURL(fullUrl, reqOptions);
 };
 
-const parseFullURL = (url, clientOptions, reqOptions) => {
-  const { origin, pathname } = new URL(url);
-  return [origin, addSearchParams(pathname, reqOptions?.searchParams)];
+const parseFullURL = (url, reqOptions) => {
+  const { origin, pathname, searchParams } = new URL(url);
+  return [
+    origin,
+    addSearchParams(pathname, reqOptions?.searchParams || `${searchParams}`),
+  ];
 };
 
 const buildRelativePath = (rootPath, url, reqOptions) =>
@@ -235,7 +238,7 @@ const buildRelativePath = (rootPath, url, reqOptions) =>
   );
 
 const addSearchParams = (path, searchParams) =>
-  searchParams != null ? `${path}?${searchParams}` : path;
+  searchParams?.size || searchParams?.length ? `${path}?${searchParams}` : path;
 
 const addCache = (store) =>
   store ? [interceptors.cache({ store, methods: ['GET'] })] : [];
