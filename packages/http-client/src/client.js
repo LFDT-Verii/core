@@ -24,6 +24,7 @@ const {
 const { createOidcInterceptor } = require('undici-oidc-interceptor');
 const { map } = require('lodash/fp');
 const pkg = require('../package.json');
+const { isObject } = require('lodash');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
 const registeredPrefixUrls = new Map();
@@ -178,7 +179,7 @@ const initHttpClient = (options) => {
           HTTP_VERBS.POST,
           host,
           context,
-          JSON.stringify(payload)
+          isObject(payload) ? JSON.stringify(payload) : payload
         ),
       delete: (url, reqOptions) =>
         request(url, reqOptions, HTTP_VERBS.DELETE, host, context),
