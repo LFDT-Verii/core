@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const BaseUrl = 'http://0.0.0.0:5000';
+const BaseUrl = 'http://0.0.0.0:5001';
 
 const Urls = {
   get getCountries(): string {
