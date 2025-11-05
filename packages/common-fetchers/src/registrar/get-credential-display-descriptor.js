@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-const getCredentialDisplayDescriptor = (schemaName, { libFetch, cache }) =>
-  libFetch
-    .get(`display-descriptors/${schemaName}.descriptor.json`, { cache })
-    .json();
-//  registrarFetch.get('api/v0.6/credential-type-descriptors/{credentialType}').json();
+const getCredentialDisplayDescriptor = async (schemaName, { libFetch, cache }) => {
+  const response = await libFetch.get(`display-descriptors/${schemaName}.descriptor.json`, { cache });
+  return await response.json();
+  //  registrarFetch.get('api/v0.6/credential-type-descriptors/{credentialType}').json();
+};
 module.exports = {
   getCredentialDisplayDescriptor,
 };

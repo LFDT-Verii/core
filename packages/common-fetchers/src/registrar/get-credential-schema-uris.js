@@ -16,8 +16,8 @@
 
 const { flow, map, uniq } = require('lodash/fp');
 
-const getCredentialSchemaUris = (credentialTypes, { registrarFetch, cache }) =>
-  registrarFetch
+const getCredentialSchemaUris = async (credentialTypes, { registrarFetch, cache }) => {
+  const response = await registrarFetch
     .get('api/v0.6/schemas/get-uri', {
       searchParams: new URLSearchParams(
         flow(
@@ -26,7 +26,8 @@ const getCredentialSchemaUris = (credentialTypes, { registrarFetch, cache }) =>
         )(credentialTypes)
       ),
       cache,
-    })
-    .json();
+    });
+  return await response.json();
+};
 
 module.exports = { getCredentialSchemaUris };

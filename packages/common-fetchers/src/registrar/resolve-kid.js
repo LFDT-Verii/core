@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-const resolveKid = ({ kid }, { registrarFetch }) =>
-  registrarFetch
-    .get(`api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=jwk`)
-    .json();
+const resolveKid = async ({ kid }, { registrarFetch }) => {
+  const response = await registrarFetch.get(`api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=jwk`);
+  return await response.json();
+};
 
 module.exports = {
   resolveKid,
