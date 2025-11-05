@@ -422,6 +422,31 @@ describe('Http Client Package', () => {
         });
       });
 
+      it('should handle post() with string body', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({
+            path: '/json',
+            method: 'POST',
+            body: 'SOME-VALUE',
+          })
+          .reply(202, { message: 'matched' });
+
+        const response = await httpClient.post('json', 'SOME-VALUE');
+
+        expect(response).toEqual({
+          statusCode: 202,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+
+        await expect(response.json()).resolves.toEqual({
+          message: 'matched',
+        });
+      });
+
       it('Should throw NotFoundError if mock returns 404 for delete()', async () => {
         mockAgent
           .get(origin)
