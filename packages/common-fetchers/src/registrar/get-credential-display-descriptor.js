@@ -23,7 +23,6 @@ const getCredentialDisplayDescriptor = async (
     { cache }
   );
   return response.json();
-  //  registrarFetch.get('api/v0.6/credential-type-descriptors/{credentialType}').json();
 };
 module.exports = {
   getCredentialDisplayDescriptor,
