@@ -55,7 +55,7 @@ const buildInterceptors = ({
       clientId,
       clientSecret,
       retryOnStatusCodes: [401],
-      scopes,
+      scope: scopes,
       audience,
       urls: origins,
     });
