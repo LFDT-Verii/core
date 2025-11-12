@@ -43,16 +43,18 @@ const commonCreateServer = (config, log) => {
   const { customFastifyOptions, traceIdHeader } = config;
 
   const fastifyOptions = {
-    maxParamLength: 2000,
-    caseSensitive: false,
     keepAliveTimeout: 65000,
     genReqId: () => nanoid(10),
-    ignoreTrailingSlash: true,
     trustProxy: true,
     ...customFastifyOptions,
-    querystringParser: customFastifyQueryStringParser,
     ...buildAjvOptions(config),
     ...buildHttpOptions(config),
+    routerOptions: {
+      caseSensitive: false,
+      ignoreTrailingSlash: true,
+      maxParamLength: 2000,
+      querystringParser: customFastifyQueryStringParser,
+    },
   };
 
   if (FST_ERR_LOG_INVALID_LOGGER_CONFIG == null) {
