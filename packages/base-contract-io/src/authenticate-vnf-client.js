@@ -29,15 +29,17 @@ const initAuthenticateVnfClient = (fastify) => {
     const httpClient = initHttpClient(fastify.config)(req);
 
     if (!isTokenCached(fastify.vnfAuthTokensCache, audience)) {
-      const response = await httpClient
-        .post(fastify.config.vnfOAuthTokensEndpoint, {
+      const response = await httpClient.post(
+        fastify.config.vnfOAuthTokensEndpoint,
+        {
           form: {
             grant_type: 'client_credentials',
             client_id: clientId,
             client_secret: clientSecret,
             audience,
           },
-        });
+        }
+      );
 
       const authResult = await response.json();
 
