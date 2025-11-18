@@ -41,18 +41,18 @@ describe('VNF Identity Provider Authentication', () => {
     access_token: 'TOKEN',
     expires_in: 60,
   };
-  const gotMockPost = mock.fn((result) => ({
+  const undiciMockPost = mock.fn((result) => ({
     json: () => Promise.resolve(result),
   }));
-  const gotMock = (result) => () => ({
-    post: () => gotMockPost(result),
+  const undiciMock = (result) => () => ({
+    post: () => undiciMockPost(result),
   });
   let fastify;
   let vnfAuthenticate;
 
   beforeEach(() => {
     initHttpClient.mock.resetCalls();
-    gotMockPost.mock.resetCalls();
+    undiciMockPost.mock.resetCalls();
     fastify = createFastify();
     vnfAuthenticate = initAuthenticateVnfClient(fastify);
   });
@@ -63,7 +63,7 @@ describe('VNF Identity Provider Authentication', () => {
 
   describe('VNF Authenticate', () => {
     it('Base VNF authenticate call', async () => {
-      initHttpClient.mock.mockImplementationOnce(() => gotMock(tokenResult));
+      initHttpClient.mock.mockImplementationOnce(() => undiciMock(tokenResult));
 
       const result = await vnfAuthenticate('API-IDENTIFIER');
 
@@ -71,7 +71,7 @@ describe('VNF Identity Provider Authentication', () => {
     });
 
     it('Get cached token', async () => {
-      initHttpClient.mock.mockImplementationOnce(() => gotMock(tokenResult));
+      initHttpClient.mock.mockImplementationOnce(() => undiciMock(tokenResult));
 
       await vnfAuthenticate('API-IDENTIFIER');
 
@@ -81,7 +81,7 @@ describe('VNF Identity Provider Authentication', () => {
       };
 
       initHttpClient.mock.mockImplementationOnce(() =>
-        gotMock(otherTokenResult)
+        undiciMock(otherTokenResult)
       );
 
       const result = await vnfAuthenticate('API-IDENTIFIER');
@@ -91,7 +91,7 @@ describe('VNF Identity Provider Authentication', () => {
 
     it('Get new token when cached expired', async () => {
       initHttpClient.mock.mockImplementationOnce(() =>
-        gotMock({
+        undiciMock({
           ...tokenResult,
           expires_in: 0,
         })
@@ -105,7 +105,7 @@ describe('VNF Identity Provider Authentication', () => {
       };
 
       initHttpClient.mock.mockImplementationOnce(() =>
-        gotMock(otherTokenResult)
+        undiciMock(otherTokenResult)
       );
 
       const result = await vnfAuthenticate('API-IDENTIFIER');
@@ -116,14 +116,14 @@ describe('VNF Identity Provider Authentication', () => {
 
   describe('VNF Blockchain Authenticate', () => {
     it('Blockchain VNF authenticate call should make network request and then use cache', async () => {
-      initHttpClient.mock.mockImplementation(() => gotMock(tokenResult));
+      initHttpClient.mock.mockImplementation(() => undiciMock(tokenResult));
       const authenticate = initAuthenticateVnfBlockchainClient(fastify, {});
       const result1 = await authenticate();
       expect(result1).toEqual(tokenResult.access_token);
-      expect(gotMockPost.mock.callCount()).toEqual(1);
+      expect(undiciMockPost.mock.callCount()).toEqual(1);
       const result2 = await authenticate();
       expect(result2).toEqual(tokenResult.access_token);
-      expect(gotMockPost.mock.callCount()).toEqual(1);
+      expect(undiciMockPost.mock.callCount()).toEqual(1);
     });
   });
 

@@ -26,10 +26,10 @@ const isTokenCached = (tokensCache, audience) =>
 
 const initAuthenticateVnfClient = (fastify) => {
   return async ({ audience, clientId, clientSecret }, req) => {
-    const request = initHttpClient(fastify.config)(req);
+    const httpClient = initHttpClient(fastify.config)(req);
 
     if (!isTokenCached(fastify.vnfAuthTokensCache, audience)) {
-      const authResult = await request
+      const response = await httpClient
         .post(fastify.config.vnfOAuthTokensEndpoint, {
           form: {
             grant_type: 'client_credentials',
@@ -37,8 +37,9 @@ const initAuthenticateVnfClient = (fastify) => {
             client_secret: clientSecret,
             audience,
           },
-        })
-        .json();
+        });
+
+      const authResult = await response.json();
 
       // eslint-disable-next-line better-mutation/no-mutation
       fastify.vnfAuthTokensCache.set(audience, {
