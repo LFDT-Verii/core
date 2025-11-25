@@ -177,7 +177,7 @@ const initHttpClient = (options) => {
           url,
           {
             ...reqOptions,
-            headers: adjustContentType(reqOptions?.headers || {}, payload),
+            headers: setContentType(reqOptions?.headers || {}, payload),
           },
           HTTP_VERBS.POST,
           host,
@@ -191,7 +191,7 @@ const initHttpClient = (options) => {
   };
 };
 
-const adjustContentType = (headers, payload) => {
+const setContentType = (headers, payload) => {
   if (isObject(payload) && !headers['content-type']) {
     return { ...headers, 'content-type': 'application/json' };
   }
