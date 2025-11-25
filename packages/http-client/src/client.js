@@ -175,7 +175,10 @@ const initHttpClient = (options) => {
       post: (url, payload, reqOptions) =>
         request(
           url,
-          reqOptions,
+          {
+            ...reqOptions,
+            headers: adjustContentType(reqOptions?.headers || {}, payload),
+          },
           HTTP_VERBS.POST,
           host,
           context,
@@ -186,6 +189,14 @@ const initHttpClient = (options) => {
       responseType: 'promise',
     };
   };
+};
+
+const adjustContentType = (headers, payload) => {
+  if (isObject(payload) && !headers['content-type']) {
+    return { ...headers, 'content-type': 'application/json' };
+  }
+
+  return headers;
 };
 
 const parseOptions = (options) => {
