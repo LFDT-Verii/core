@@ -36,7 +36,7 @@ const initAuthenticateVnfClient = (fastify) => {
           client_id: clientId,
           client_secret: clientSecret,
           audience,
-        },
+        }
       );
 
       const authResult = await response.json();
