@@ -32,12 +32,10 @@ const initAuthenticateVnfClient = (fastify) => {
       const response = await httpClient.post(
         fastify.config.vnfOAuthTokensEndpoint,
         {
-          form: {
-            grant_type: 'client_credentials',
-            client_id: clientId,
-            client_secret: clientSecret,
-            audience,
-          },
+          grant_type: 'client_credentials',
+          client_id: clientId,
+          client_secret: clientSecret,
+          audience,
         }
       );
 
