@@ -33,7 +33,6 @@ const {
 } = require('../src/client');
 
 describe('Http Client Package', () => {
-  describe('Parse prefix url', () => {});
   describe('Build URL', () => {
     const origin = 'https://www.example.com';
     const origin2 = 'https://www.other.com';
@@ -48,13 +47,13 @@ describe('Http Client Package', () => {
           '/api/v1',
         ]);
       });
-      it('should resolve host with empty root path and url with search params?query=1', () => {
+      it('should resolve host with empty root path and url with search params', () => {
         expect(buildUrl({ origin, rootPath: '' }, '/api/v1?query=1')).toEqual([
           origin,
           '/api/v1?query=1',
         ]);
       });
-      it('should resolve host with /api root path and with options search params', () => {
+      it('should resolve host without root path and with options search params', () => {
         expect(
           buildUrl({ origin, rootPath: '' }, '/api2/v1', {
             searchParams: new URLSearchParams('x=1&y=2'),

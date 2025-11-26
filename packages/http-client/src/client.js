@@ -135,7 +135,7 @@ const initHttpClient = (options) => {
           host,
           context,
           isObject(payload) ? JSON.stringify(payload) : payload,
-          calcContentType(reqOptions, payload)
+          calcContentType(payload, reqOptions?.headers)
         ),
       delete: (url, reqOptions = {}) =>
         request(url, reqOptions, HTTP_VERBS.DELETE, host, context),
@@ -144,10 +144,10 @@ const initHttpClient = (options) => {
   };
 };
 
-const calcContentType = ({ headers }, payload) =>
-  isObject(payload) && !headers?.['content-type']
+const calcContentType = (payload, headers = {}) =>
+  isObject(payload) && !headers['content-type']
     ? 'application/json'
-    : headers?.['content-type'];
+    : headers['content-type'];
 
 const parseArgs = (presetHost, args) => {
   if (args.length === 1) {
@@ -229,6 +229,11 @@ const parsePrefixUrl = (prefixUrl) => {
 const buildUrl = (host, url, reqOptions) => {
   if (/https?:\/\//.test(url)) {
     return parseFullURL(url, reqOptions);
+  }
+  if (!host) {
+    throw new Error(
+      'HttpClient: Cannot build URL without prefixUrl or full url'
+    );
   }
   return [host.origin, buildRelativePath(host.rootPath ?? '', url, reqOptions)];
 };
