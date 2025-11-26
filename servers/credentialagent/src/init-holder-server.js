@@ -73,6 +73,10 @@ const initHolderServer = (fastify) => {
         cache: fastify.cache,
         isTest: fastify.config.isTest,
       },
+      requestDecorator: (req) =>
+        req.tenant?.webhookUrl
+          ? fastify.baseVendorFetch(req.tenant.webhookUrl, req)
+          : fastify.baseVendorFetch(req),
     })
     .register(httpClientPlugin, {
       name: 'registrarFetch',

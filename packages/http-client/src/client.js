@@ -22,74 +22,28 @@ const {
   getGlobalDispatcher,
 } = require('undici');
 const { createOidcInterceptor } = require('undici-oidc-interceptor');
-const { map } = require('lodash/fp');
 const { isObject } = require('lodash');
 const pkg = require('../package.json');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
-const registeredPrefixUrls = new Map();
 
 const initCache = () => new cacheStores.MemoryCacheStore();
-
-const buildInterceptors = ({
-  isTest,
-  cache,
-  tokensEndpoint,
-  clientId,
-  clientSecret,
-  scopes,
-  audience,
-}) => {
-  const requiredInterceptors = [
-    interceptors.responseError(),
-    ...addCache(cache),
-  ];
-
-  if (tokensEndpoint) {
-    const origins = map(
-      (url) => url.origin,
-      registeredPrefixUrls.values().toArray()
-    );
-    const oidcInterceptor = createOidcInterceptor({
-      idpTokenUrl: tokensEndpoint,
-      clientId,
-      clientSecret,
-      retryOnStatusCodes: [401],
-      scope: scopes,
-      audience,
-      urls: origins,
-    });
-    requiredInterceptors.push(oidcInterceptor);
-  }
-
-  if (!isTest) {
-    requiredInterceptors.push(
-      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false })
-    );
-  }
-
-  return requiredInterceptors;
-};
 
 const initHttpClient = (options) => {
   const { prefixUrl, isTest, bearerToken } = options;
 
   const { clientOptions, traceIdHeader, customHeaders } = parseOptions(options);
 
-  // register prefixUrl
-  if (prefixUrl) {
-    const parsedPrefixUrl = parsePrefixUrl(prefixUrl);
-    registeredPrefixUrls.set(prefixUrl, parsedPrefixUrl);
-  }
+  const presetHost = prefixUrl != null ? parsePrefixUrl(prefixUrl) : undefined;
 
-  let agent;
+  const baseAgent = isTest ? getGlobalDispatcher() : new Agent(clientOptions);
+  const agent = baseAgent.compose(buildInterceptorChain(presetHost, options));
 
-  if (isTest) {
-    const existingAgent = getGlobalDispatcher();
-    agent = existingAgent.compose(buildInterceptors(options));
-  } else {
-    agent = new Agent(clientOptions).compose(buildInterceptors(options));
-  }
+  const defaultReqHeaders = {
+    'user-agent': USER_AGENT_HEADER,
+    ...customHeaders,
+    ...buildBearerAuthorizationHeader(bearerToken),
+  };
 
   const request = async (
     url,
@@ -97,16 +51,11 @@ const initHttpClient = (options) => {
     method,
     host,
     { traceId, log },
-    body
+    body,
+    contentType
   ) => {
     const reqId = nanoid();
-    const reqHeaders = {
-      'user-agent': USER_AGENT_HEADER,
-      [traceIdHeader]: traceId,
-      ...customHeaders,
-      ...reqOptions?.headers,
-      ...buildBearerAuthorizationHeader(bearerToken),
-    };
+    const reqHeaders = buildReqHeaders(reqOptions, contentType, traceId);
     const [origin, path] = buildUrl(host, url, reqOptions);
 
     log.info({ origin, path, url, reqId, reqHeaders }, 'HttpClient request');
@@ -161,42 +110,55 @@ const initHttpClient = (options) => {
     }
   };
 
-  return (...args) => {
-    let host;
-    let context = args[0];
-    if (args.length === 2) {
-      host = registeredPrefixUrls.get(args[0]) ?? parsePrefixUrl(args[0]);
-      context = args[1];
+  const buildReqHeaders = (reqOptions, contentType, traceId) => {
+    const reqHeaders = {
+      ...defaultReqHeaders,
+      ...(reqOptions.headers ?? {}),
+      [traceIdHeader]: traceId,
+    };
+    if (contentType) {
+      reqHeaders['content-type'] = contentType;
     }
+    return reqHeaders;
+  };
 
+  return (...args) => {
+    const { host, context } = parseArgs(presetHost, args);
     return {
-      get: (url, reqOptions) =>
+      get: (url, reqOptions = {}) =>
         request(url, reqOptions, HTTP_VERBS.GET, host, context),
-      post: (url, payload, reqOptions) =>
+      post: (url, payload, reqOptions = {}) =>
         request(
           url,
-          {
-            ...reqOptions,
-            headers: setContentType(reqOptions?.headers || {}, payload),
-          },
+          reqOptions,
           HTTP_VERBS.POST,
           host,
           context,
-          isObject(payload) ? JSON.stringify(payload) : payload
+          isObject(payload) ? JSON.stringify(payload) : payload,
+          calcContentType(payload, reqOptions?.headers)
         ),
-      delete: (url, reqOptions) =>
+      delete: (url, reqOptions = {}) =>
         request(url, reqOptions, HTTP_VERBS.DELETE, host, context),
       responseType: 'promise',
     };
   };
 };
 
-const setContentType = (headers, payload) => {
-  if (isObject(payload) && !headers['content-type']) {
-    return { ...headers, 'content-type': 'application/json' };
-  }
+const calcContentType = (payload, headers = {}) =>
+  isObject(payload) && !headers['content-type']
+    ? 'application/json'
+    : headers['content-type'];
 
-  return headers;
+const parseArgs = (presetHost, args) => {
+  if (args.length === 1) {
+    return { host: presetHost, context: args[0] };
+  }
+  if (args.length === 2) {
+    return { host: parsePrefixUrl(args[0]), context: args[1] };
+  }
+  throw new Error(
+    `HttpClient: Expected 1 or 2 arguments, received ${args.length}`
+  );
 };
 
 const parseOptions = (options) => {
@@ -216,6 +178,47 @@ const parseOptions = (options) => {
   };
 };
 
+const buildInterceptorChain = (
+  host,
+  {
+    isTest,
+    cache: cacheStore,
+    tokensEndpoint,
+    clientId,
+    clientSecret,
+    scopes,
+    audience,
+  }
+) => {
+  const chain = [];
+  if (!isTest) {
+    chain.push(
+      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false })
+    );
+  }
+
+  chain.push(interceptors.responseError());
+
+  if (cacheStore != null) {
+    chain.push(interceptors.cache({ store: cacheStore, methods: ['GET'] }));
+  }
+
+  if (tokensEndpoint && host != null) {
+    const oidcInterceptor = createOidcInterceptor({
+      idpTokenUrl: tokensEndpoint,
+      clientId,
+      clientSecret,
+      retryOnStatusCodes: [401],
+      scope: scopes,
+      audience,
+      urls: [host.origin],
+    });
+    chain.push(oidcInterceptor);
+  }
+
+  return chain;
+};
+
 const parsePrefixUrl = (prefixUrl) => {
   const url = new URL(prefixUrl);
   return {
@@ -226,34 +229,45 @@ const parsePrefixUrl = (prefixUrl) => {
 };
 
 const buildUrl = (host, url, reqOptions) => {
-  const fullUrl = reqOptions?.prefixUrl
-    ? new URL(url, reqOptions.prefixUrl).toString()
-    : url;
-
-  return host && !reqOptions?.prefixUrl
-    ? [host.origin, buildRelativePath(host.rootPath, url, reqOptions)]
-    : parseFullURL(fullUrl, reqOptions);
+  if (/https?:\/\//.test(url)) {
+    return parseFullURL(url, reqOptions);
+  }
+  if (!host) {
+    throw new Error(
+      'HttpClient: Cannot build URL without prefixUrl or full url'
+    );
+  }
+  return [host.origin, buildRelativePath(host.rootPath ?? '', url, reqOptions)];
 };
 
 const parseFullURL = (url, reqOptions) => {
   const { origin, pathname, searchParams } = new URL(url);
   return [
     origin,
-    addSearchParams(pathname, reqOptions?.searchParams || `${searchParams}`),
+    addSearchParams(pathname, searchParams, reqOptions?.searchParams),
   ];
 };
 
-const buildRelativePath = (rootPath, url, reqOptions) =>
-  addSearchParams(
-    `${rootPath}${url.charAt[0] === '/' ? '' : '/'}${url}`,
+const buildRelativePath = (rootPath, url, reqOptions) => {
+  const relativePath = `${rootPath}${url.charAt(0) === '/' ? '' : '/'}${url}`;
+  const [pathname, searchParamsString] = relativePath.split('?');
+
+  return addSearchParams(
+    pathname,
+    new URLSearchParams(searchParamsString),
     reqOptions?.searchParams
   );
+};
 
-const addSearchParams = (path, searchParams) =>
-  searchParams?.size || searchParams?.length ? `${path}?${searchParams}` : path;
-
-const addCache = (store) =>
-  store ? [interceptors.cache({ store, methods: ['GET'] })] : [];
+const addSearchParams = (path, searchParams, additionalParams) => {
+  const params = additionalParams?.size
+    ? new URLSearchParams([
+        ...Array.from(searchParams.entries()),
+        ...Array.from(additionalParams.entries()),
+      ])
+    : searchParams;
+  return params?.size ? `${path}?${params}` : path;
+};
 
 const buildBearerAuthorizationHeader = (token) =>
   token ? { Authorization: `Bearer ${token}` } : {};
@@ -264,4 +278,10 @@ const HTTP_VERBS = {
   DELETE: 'DELETE',
 };
 
-module.exports = { initHttpClient, parseOptions, parsePrefixUrl, initCache };
+module.exports = {
+  initHttpClient,
+  parseOptions,
+  parsePrefixUrl,
+  initCache,
+  buildUrl,
+};

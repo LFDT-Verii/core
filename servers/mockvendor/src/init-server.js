@@ -27,7 +27,7 @@ const initServer = (server) => {
         )
         .decorateRequest('agentFetch', null)
         .addHook('preValidation', async (req) => {
-          req.agentFetch = server.baseAgentFetch(server.config.agentUrl, req);
+          req.agentFetch = server.baseAgentFetch(req);
         })
     );
 };

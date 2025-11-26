@@ -31,7 +31,7 @@ const verifyVeriiCredentials = async (
   });
 
   // eslint-disable-next-line better-mutation/no-mutation
-  context.registrarFetch = httpClient(context.config.registrarUrl, context);
+  context.registrarFetch = httpClient(context);
   if (context?.tenant?.id == null) {
     // eslint-disable-next-line better-mutation/no-mutation
     context.tenant = { did: relyingParty.did };

@@ -36,7 +36,7 @@ describe('create client accounts', () => {
     const fineractFetch = initHttpClient({
       prefixUrl: testHost,
       isTest: true,
-    })(testHost, baseContext);
+    })(baseContext);
     context = { ...baseContext, fineractFetch };
   });
 
