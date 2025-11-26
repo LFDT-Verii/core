@@ -29,9 +29,106 @@ const {
   parseOptions,
   parsePrefixUrl,
   initCache,
+  buildUrl,
 } = require('../src/client');
 
 describe('Http Client Package', () => {
+  describe('Parse prefix url', () => {});
+  describe('Build URL', () => {
+    const origin = 'https://www.example.com';
+    const origin2 = 'https://www.other.com';
+
+    describe('Build URL using host', () => {
+      it('should resolve host with omitted root path', () => {
+        expect(buildUrl({ origin }, 'api/v1')).toEqual([origin, '/api/v1']);
+      });
+      it('should resolve host with empty root path', () => {
+        expect(buildUrl({ origin, rootPath: '' }, 'api/v1')).toEqual([
+          origin,
+          '/api/v1',
+        ]);
+      });
+      it('should resolve host with empty root path and url with search params?query=1', () => {
+        expect(buildUrl({ origin, rootPath: '' }, '/api/v1?query=1')).toEqual([
+          origin,
+          '/api/v1?query=1',
+        ]);
+      });
+      it('should resolve host with /api root path and with options search params', () => {
+        expect(
+          buildUrl({ origin, rootPath: '' }, '/api2/v1', {
+            searchParams: new URLSearchParams('x=1&y=2'),
+          })
+        ).toEqual([origin, '/api2/v1?x=1&y=2']);
+      });
+      it('should resolve host with /api root path', () => {
+        expect(buildUrl({ origin, rootPath: '/api' }, 'v1')).toEqual([
+          origin,
+          '/api/v1',
+        ]);
+      });
+      it('should resolve host with /api root path and url with search params', () => {
+        expect(buildUrl({ origin, rootPath: '/api' }, '/v1?query=1')).toEqual([
+          origin,
+          '/api/v1?query=1',
+        ]);
+      });
+      it('should resolve host with /api root path and with options search params', () => {
+        expect(
+          buildUrl({ origin, rootPath: '/api' }, '/v1', {
+            searchParams: new URLSearchParams('x=1&y=2'),
+          })
+        ).toEqual([origin, '/api/v1?x=1&y=2']);
+      });
+    });
+
+    describe('Build URL ignoring host with full url is used', () => {
+      it('should resolve host with empty root path', () => {
+        expect(buildUrl({ origin, rootPath: '' }, `${origin2}/api/v1`)).toEqual(
+          [origin2, '/api/v1']
+        );
+      });
+      it('should resolve host with /api root path', () => {
+        expect(
+          buildUrl({ origin, rootPath: '/api' }, `${origin2}/api2/v1`)
+        ).toEqual([origin2, '/api2/v1']);
+      });
+      it('should resolve host with /api root path and url with search params', () => {
+        expect(
+          buildUrl({ origin, rootPath: '/api' }, `${origin2}/api2/v1?query=1`)
+        ).toEqual([origin2, '/api2/v1?query=1']);
+      });
+      it('should resolve host with /api root path and with options search params', () => {
+        expect(
+          buildUrl({ origin, rootPath: '/api' }, `${origin2}/api2/v1`, {
+            searchParams: new URLSearchParams('x=1&y=2'),
+          })
+        ).toEqual([origin2, '/api2/v1?x=1&y=2']);
+      });
+    });
+
+    describe('Build URL without host with full url is used', () => {
+      it('should resolve host with omitted root path', () => {
+        expect(buildUrl(undefined, `${origin}/api/v1`)).toEqual([
+          origin,
+          '/api/v1',
+        ]);
+      });
+      it('should resolve host with /api root path and url with search params', () => {
+        expect(buildUrl(undefined, `${origin}/api2/v1?query=1`)).toEqual([
+          origin,
+          '/api2/v1?query=1',
+        ]);
+      });
+      it('should resolve host with /api root path and with options search params', () => {
+        expect(
+          buildUrl(undefined, `${origin2}/api2/v1`, {
+            searchParams: new URLSearchParams('x=1&y=2'),
+          })
+        ).toEqual([origin2, '/api2/v1?x=1&y=2']);
+      });
+    });
+  });
   describe('Http client prefixUrl parsing', () => {
     const origin = 'https://www.example.com';
 

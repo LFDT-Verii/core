@@ -33,7 +33,7 @@ describe('create clients', () => {
     const fineractFetch = initHttpClient({
       prefixUrl: testHost,
       isTest: true,
-    })(testHost, baseContext);
+    })(baseContext);
     context = { ...baseContext, fineractFetch };
   });
 

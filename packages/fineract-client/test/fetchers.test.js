@@ -52,7 +52,7 @@ describe('fineract client test suite', () => {
     fineractFetch = initHttpClient({
       prefixUrl: testHost,
       isTest: true,
-    })(testHost, { log: console });
+    })({ log: console });
   });
 
   beforeEach(async () => {

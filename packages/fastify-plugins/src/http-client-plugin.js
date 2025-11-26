@@ -21,18 +21,15 @@ const fp = require('fastify-plugin');
 const httpClientPlugin = async (fastify, { name, options }) => {
   const fastifyDecoration = `base${name[0].toUpperCase()}${name.slice(1)}`;
   const requestDecoration = name;
-  const { prefixUrl } = options;
   fastify
     .decorate(
       fastifyDecoration,
-      () => initHttpClient({ ...options, cache: fastify.cache }),
+      initHttpClient({ ...options, cache: fastify.cache }),
       ['cache']
     )
     .decorateRequest(requestDecoration, null)
     .addHook('preValidation', async (req) => {
-      req[requestDecoration] = prefixUrl
-        ? fastify[fastifyDecoration]()(prefixUrl, req)
-        : fastify[fastifyDecoration]()(req);
+      req[requestDecoration] = fastify[fastifyDecoration](req);
     });
 };
 
