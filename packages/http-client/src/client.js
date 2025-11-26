@@ -156,7 +156,9 @@ const parseArgs = (presetHost, args) => {
   if (args.length === 2) {
     return { host: parsePrefixUrl(args[0]), context: args[1] };
   }
-  throw new Error(`HttpClient: Expected 1 or 2 arguments, received ${args.length}`);
+  throw new Error(
+    `HttpClient: Expected 1 or 2 arguments, received ${args.length}`
+  );
 };
 
 const parseOptions = (options) => {
