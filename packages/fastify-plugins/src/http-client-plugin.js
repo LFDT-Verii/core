@@ -18,7 +18,10 @@
 const { initHttpClient } = require('@verii/http-client');
 const fp = require('fastify-plugin');
 
-const httpClientPlugin = async (fastify, { name, options }) => {
+const httpClientPlugin = async (
+  fastify,
+  { name, options, requestDecorator }
+) => {
   const fastifyDecoration = `base${name[0].toUpperCase()}${name.slice(1)}`;
   const requestDecoration = name;
   fastify
@@ -29,7 +32,9 @@ const httpClientPlugin = async (fastify, { name, options }) => {
     )
     .decorateRequest(requestDecoration, null)
     .addHook('preValidation', async (req) => {
-      req[requestDecoration] = fastify[fastifyDecoration](req);
+      req[requestDecoration] = requestDecorator
+        ? requestDecorator(req)
+        : fastify[fastifyDecoration](req);
     });
 };
 

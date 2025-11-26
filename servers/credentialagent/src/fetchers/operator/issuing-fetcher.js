@@ -18,16 +18,12 @@ const { setAuthHeader } = require('./webhook-auth-header');
 const { handleVendorError } = require('./vendor-errors-handler');
 
 const requestOffersFromVendor = async (payload, context) => {
-  const { tenant, vendorFetch } = context;
-  const { webhookUrl } = tenant;
+  const { vendorFetch } = context;
 
   try {
     return vendorFetch.post('issuing/generate-offers', payload, {
       responseType: 'json',
-      ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
-      headers: {
-        ...setAuthHeader(context),
-      },
+      headers: setAuthHeader(context),
     });
   } catch (error) {
     handleVendorError(error);
@@ -37,16 +33,12 @@ const requestOffersFromVendor = async (payload, context) => {
 };
 
 const issuedCredentialsNotificationCallback = async (payload, context) => {
-  const { tenant, vendorFetch } = context;
-  const { webhookUrl } = tenant;
+  const { vendorFetch } = context;
 
   try {
     return vendorFetch.post('issuing/receive-issued-credentials', payload, {
       responseType: 'json',
-      ...(webhookUrl ? { prefixUrl: webhookUrl } : {}),
-      headers: {
-        ...setAuthHeader(context),
-      },
+      headers: setAuthHeader(context),
     });
   } catch (error) {
     handleVendorError(error);

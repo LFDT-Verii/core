@@ -85,6 +85,10 @@ const initServer = (server) => {
         cache: server.cache,
         isTest: server.config.isTest,
       },
+      requestDecorator: (req) =>
+        req.tenant?.webhookUrl
+          ? server.baseVendorFetch(req.tenant.webhookUrl, req)
+          : server.baseVendorFetch(req),
     })
     .register(httpClientPlugin, {
       name: 'registrarFetch',
