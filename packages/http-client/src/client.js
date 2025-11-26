@@ -135,9 +135,7 @@ const initHttpClient = (options) => {
           host,
           context,
           isObject(payload) ? JSON.stringify(payload) : payload,
-          isObject(payload)
-            ? 'application/json'
-            : reqOptions?.headers?.['content-type']
+          calcContentType(reqOptions, payload)
         ),
       delete: (url, reqOptions = {}) =>
         request(url, reqOptions, HTTP_VERBS.DELETE, host, context),
@@ -145,6 +143,11 @@ const initHttpClient = (options) => {
     };
   };
 };
+
+const calcContentType = ({ headers }, payload) =>
+  isObject(payload) && !headers?.['content-type']
+    ? 'application/json'
+    : headers?.['content-type'];
 
 const parseArgs = (presetHost, args) => {
   if (args.length === 1) {
