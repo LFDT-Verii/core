@@ -10883,10 +10883,10 @@ global-directory@^4.0.1:
   dependencies:
     ini "4.1.1"
 
-global-jsdom@26.0.0:
-  version "26.0.0"
-  resolved "https://registry.npmjs.org/global-jsdom/-/global-jsdom-26.0.0.tgz#fcddd40f81ff11531e5ce87e1a377af016018e98"
-  integrity sha512-BqXpTNZFjP40N+s4k8Bk9HS8GFVPJB/+TKtwcShM84wLv6C5dH9o1dydI3pL6potanhfDiIAVDbaaGj/uSdRSA==
+global-jsdom@27.0.0:
+  version "27.0.0"
+  resolved "https://registry.npmjs.org/global-jsdom/-/global-jsdom-27.0.0.tgz#ba075dee6381389b1b5a05144f43f6ebed04a697"
+  integrity sha512-0lIJfZACEKdBZ1VKSY2L4T2sYhnQ4VfzbULUiEMPcUa3ZWv4ywOCNZAibZyKIDwysIr+WjRyM4U9L9vM6oQQ+Q==
 
 global-modules@^1.0.0:
   version "1.0.0"
