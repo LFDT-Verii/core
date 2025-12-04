@@ -1,14 +1,14 @@
 /**
  * Copyright 2023 Velocity Team
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an 'AS IS' BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -83,16 +83,18 @@ const appRedirectController = async (fastify) => {
               },
               inspectorDid: { type: 'array', items: { type: 'string' } },
               providers: {
-                type: 'array', items: {
-                  type: 'object', properties: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
                     name: { type: 'string' },
                     logo: { type: 'string' },
                     category: { type: 'string' },
-                    id: { type: 'string' }
+                    id: { type: 'string' },
                   },
-                  required: ['name', 'id', 'logo', 'category']
-                }
-              }
+                  required: ['name', 'id', 'logo', 'category'],
+                },
+              },
             },
             required: ['request_uri', 'exchange_type'],
           },
@@ -126,7 +128,9 @@ const appRedirectController = async (fastify) => {
         const csp = `${cspStyleSrc} ${cspScriptSrc}`;
         reply.header('Content-Security-Policy', csp);
         return reply.view('app-redirect', {
-          ...exchangeType === EXCHANGE_TYPE.claim ? { reclaimWizardDeeplink: deeplink } : { deeplink },
+          ...(exchangeType === EXCHANGE_TYPE.claim
+            ? { reclaimWizardDeeplink: deeplink }
+            : { deeplink }),
           scriptUrl,
           scriptNonce: resourceNonce,
           styleSheetUrl,
@@ -136,7 +140,11 @@ const appRedirectController = async (fastify) => {
 };
 
 const validateInspectorDid = ({ exchangeType, inspectorDid }) => {
-  if ((exchangeType === EXCHANGE_TYPE.inspect || exchangeType === EXCHANGE_TYPE.claim) && isEmpty(inspectorDid)) {
+  if (
+    (exchangeType === EXCHANGE_TYPE.inspect ||
+      exchangeType === EXCHANGE_TYPE.claim) &&
+    isEmpty(inspectorDid)
+  ) {
     throw new Error.BadRequest(
       'inspectorDid should be present for exchange_type = "inspect"'
     );
@@ -155,7 +163,7 @@ const processingLinks = (context) => {
       request_uri: requestUriItems,
       inspectorDid: inspectorDidItems = [],
       vendorOriginContext: vendorOriginContextItems = [],
-      providers,
+      providers: providersItems,
     },
   } = context;
 
@@ -165,21 +173,29 @@ const processingLinks = (context) => {
       requestUri: value,
       vendorOriginContext: vendorOriginContextItems[index],
       inspectorDid: inspectorDidItems[index],
-      ...(!!providers ? { providers } : {}),
+      ...(providersItems ? { providers: providersItems } : {}),
     }))
   )(requestUriItems);
 
   const deeplink = createDeepLinkUrl(exchangeType, context);
-  forEach(({ requestUri, inspectorDid, vendorOriginContext, providers }) => {
-    const appendParams = flow(
-      appendSearchParam('request_uri', requestUri),
-      appendSearchParam('inspectorDid', inspectorDid),
-      appendSearchParam('vendorOriginContext', vendorOriginContext),
-      providers ? appendSearchParam('providers', providers) : identity
-    );
+  forEach(
+    ({
+      requestUri,
+      inspectorDid,
+      vendorOriginContext,
+      providers: providersItem,
+    }) => {
+      const appendParams = flow(
+        appendSearchParam('request_uri', requestUri),
+        appendSearchParam('inspectorDid', inspectorDid),
+        appendSearchParam('vendorOriginContext', vendorOriginContext),
+        providersItem ? appendSearchParam('providers', providersItem) : identity
+      );
 
-    appendParams(deeplink);
-  }, parsedLinks);
+      appendParams(deeplink);
+    },
+    parsedLinks
+  );
 
   return { deeplink };
 };

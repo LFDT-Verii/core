@@ -225,6 +225,7 @@ describe('app redirect controller test', () => {
       'http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId';
     const response = await fastify.injectJson({
       method: 'GET',
+      // eslint-disable-next-line max-len
       url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123providers=%5B%7B%22logo%22%3A%22https%3A//upload.wikimedia.org/wikipedia/commons/a/aa/LinkedIn_2021.svg%22%2C%22name%22%3A%22LinkedIn%22%2C%22category%22%3A%22Personal%20Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D%2C%7B%22logo%22%3A%22https%3A//logos-world.net/wp-content/uploads/2020/11/GitHub-Emblem.png%22%2C%22name%22%3A%22GitHub%22%2C%22category%22%3A%22User%20Profile%22%2C%22id%22%3A%226d3f6753-7ee6-49ee-a545-62f1b1822ae5%22%7D%5D`,
     });
 
