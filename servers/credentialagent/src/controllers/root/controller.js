@@ -22,6 +22,7 @@ const {
   forEach,
   isEmpty,
   values,
+  identity,
 } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const fastifyView = require('@fastify/view');
@@ -81,6 +82,17 @@ const appRedirectController = async (fastify) => {
                 items: { type: 'string' },
               },
               inspectorDid: { type: 'array', items: { type: 'string' } },
+              providers: {
+                type: 'array', items: {
+                  type: 'object', properties: {
+                    name: { type: 'string' },
+                    logo: { type: 'string' },
+                    category: { type: 'string' },
+                    id: { type: 'string' }
+                  },
+                  required: ['name', 'id', 'logo', 'category']
+                }
+              }
             },
             required: ['request_uri', 'exchange_type'],
           },
@@ -114,7 +126,7 @@ const appRedirectController = async (fastify) => {
         const csp = `${cspStyleSrc} ${cspScriptSrc}`;
         reply.header('Content-Security-Policy', csp);
         return reply.view('app-redirect', {
-          deeplink,
+          ...exchangeType === EXCHANGE_TYPE.claim ? { reclaimWizardDeeplink: deeplink } : { deeplink },
           scriptUrl,
           scriptNonce: resourceNonce,
           styleSheetUrl,
@@ -124,7 +136,7 @@ const appRedirectController = async (fastify) => {
 };
 
 const validateInspectorDid = ({ exchangeType, inspectorDid }) => {
-  if (exchangeType === EXCHANGE_TYPE.inspect && isEmpty(inspectorDid)) {
+  if ((exchangeType === EXCHANGE_TYPE.inspect || exchangeType === EXCHANGE_TYPE.claim) && isEmpty(inspectorDid)) {
     throw new Error.BadRequest(
       'inspectorDid should be present for exchange_type = "inspect"'
     );
@@ -143,6 +155,7 @@ const processingLinks = (context) => {
       request_uri: requestUriItems,
       inspectorDid: inspectorDidItems = [],
       vendorOriginContext: vendorOriginContextItems = [],
+      providers,
     },
   } = context;
 
@@ -152,16 +165,20 @@ const processingLinks = (context) => {
       requestUri: value,
       vendorOriginContext: vendorOriginContextItems[index],
       inspectorDid: inspectorDidItems[index],
+      ...(!!providers ? { providers } : {}),
     }))
   )(requestUriItems);
 
   const deeplink = createDeepLinkUrl(exchangeType, context);
-  forEach(({ requestUri, inspectorDid, vendorOriginContext }) => {
-    flow(
+  forEach(({ requestUri, inspectorDid, vendorOriginContext, providers }) => {
+    const appendParams = flow(
       appendSearchParam('request_uri', requestUri),
       appendSearchParam('inspectorDid', inspectorDid),
-      appendSearchParam('vendorOriginContext', vendorOriginContext)
-    )(deeplink);
+      appendSearchParam('vendorOriginContext', vendorOriginContext),
+      providers ? appendSearchParam('providers', providers) : identity
+    );
+
+    appendParams(deeplink);
   }, parsedLinks);
 
   return { deeplink };
