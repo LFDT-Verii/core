@@ -17577,9 +17577,9 @@ tweetnacl@^1.0.3:
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==
 
 twilio@^5.10.1:
-  version "5.10.5"
-  resolved "https://registry.npmjs.org/twilio/-/twilio-5.10.5.tgz#736c033dd68fe4d301f08f82efc6ca04605fc565"
-  integrity sha512-CX288HQbVZgTYF29FOD4ZEnIB5rNKKHyooRnSHwy6NV/E8+ZKvM045FccqmK7BQwyv0DIyCBub373w/pZWus2A==
+  version "5.10.7"
+  resolved "https://registry.npmjs.org/twilio/-/twilio-5.10.7.tgz#bc30b7657529fd1987e6b91e686dd369c4042a62"
+  integrity sha512-pELNeyQqkJMW/UkbcdNGDfOjMyt1FXoYOKXBDqOViHmcdJ04cq8Ty3VsrEAabi97YesK3T2v5KP5XKPY8uUx9w==
   dependencies:
     axios "^1.12.0"
     dayjs "^1.11.9"
