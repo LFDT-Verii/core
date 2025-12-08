@@ -18106,9 +18106,9 @@ wcwidth@^1.0.0, wcwidth@^1.0.1:
     defaults "^1.0.3"
 
 web-did-resolver@^2.0.27:
-  version "2.0.31"
-  resolved "https://registry.npmjs.org/web-did-resolver/-/web-did-resolver-2.0.31.tgz#39bbfb466900cf82b3db4e167f6d4aee4bdca74c"
-  integrity sha512-alYii1EzapRM4Umlkp0xxbqFUV9ZWPxFxJBzHlrATQz7IEa04s8CICYBcwUkY94cTIjW+Rnvli8/Q9SXRbN74w==
+  version "2.0.32"
+  resolved "https://registry.npmjs.org/web-did-resolver/-/web-did-resolver-2.0.32.tgz#6c86c1797cd651620aa311a94660e0a51131b334"
+  integrity sha512-L91/ApTmDjgzS0UDstTKn3kN/1hlQBnVcUN8K29e3xhVBpPktHYC6uvVAQ8ohbIg9D6wrrbaBQvfRArDxgJG2g==
   dependencies:
     cross-fetch "^4.1.0"
     did-resolver "^4.1.0"
