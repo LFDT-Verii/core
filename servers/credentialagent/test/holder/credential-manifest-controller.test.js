@@ -108,7 +108,6 @@ describe('get credential manifests', () => {
       types: [{ type: 'EmailV1.0' }],
       vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
       purpose: 'Identification',
-      duration: '6y',
     });
     exchange = await persistOfferExchange({ tenant, disclosure });
 
@@ -176,7 +175,6 @@ describe('get credential manifests', () => {
         types: [{ type: 'EmailV1.0' }],
         vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        duration: '6y',
       });
 
       nockRegistrarGetOrganizationDidDoc(nonDidTenant.did, orgDidDoc);
@@ -729,8 +727,6 @@ describe('get credential manifests', () => {
         types: [{ type: 'EmailV1.0' }],
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        deactivationDate: '2025-12-01T00:00:00.000Z',
-        duration: '6y',
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
@@ -893,8 +889,6 @@ describe('get credential manifests', () => {
         types: [{ type: 'EmailV1.0' }],
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        deactivationDate: '2025-12-01T00:00:00.000Z',
-        duration: '6y',
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
@@ -1077,7 +1071,6 @@ describe('get credential manifests', () => {
         types: [{ type: 'EmailV1.0' }],
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        duration: '6y',
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         customTenant.did,
@@ -1203,8 +1196,6 @@ describe('get credential manifests', () => {
         description: 'Integrated Credential Issuance disclosure',
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'fooPurpose from disclosure',
-        deactivationDate: '2025-12-01T00:00:00.000Z',
-        duration: '6y',
         presentationDefinition: omit(['purpose'], samplePresentationDefinition),
       });
       nockRegistrarGetOrganizationVerifiedProfile(
@@ -1387,8 +1378,6 @@ describe('get credential manifests', () => {
         description: 'Integrated Credential Issuance disclosure',
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        deactivationDate: '2025-12-01T00:00:00.000Z',
-        duration: '6y',
         presentationDefinition: {
           ...samplePresentationDefinition,
           purpose: 'fooPurpose',
@@ -1718,7 +1707,6 @@ describe('get credential manifests', () => {
         types: [{ type: 'EmailV1.0' }],
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        duration: '6y',
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         customTenant.did,
@@ -2088,7 +2076,6 @@ describe('get credential manifests', () => {
         types: [{ type: 'EmailV1.0' }],
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        duration: '6y',
       });
       const customExchange = await persistOfferExchange({
         tenant,
@@ -2251,7 +2238,6 @@ describe('get credential manifests', () => {
         types: [{ type: 'EmailV1.0' }],
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        duration: '6y',
       });
       const customExchange = await persistOfferExchange({
         tenant,
@@ -2971,7 +2957,6 @@ describe('get credential manifests', () => {
           types: [{ type: 'EmailV1.0' }],
           vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
           purpose: 'Identification',
-          duration: '6y',
           tenantId: new ObjectId(tenant._id),
           vendorDisclosureId: 'HR-PKG-USPS-CLRK',
           termsUrl: 'https://www.lipsum.com/feed/html',
@@ -3046,7 +3031,6 @@ describe('get credential manifests', () => {
         types: [{ type: 'EmailV1.0' }],
         vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
         purpose: 'Identification',
-        duration: '6y',
       });
 
       expect(tenant.defaultIssuingDisclosureId).toBeUndefined();
