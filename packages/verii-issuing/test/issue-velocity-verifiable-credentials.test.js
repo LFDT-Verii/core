@@ -67,6 +67,7 @@ const {
 const {
   mongoAllocationListQueries,
 } = require('../src/adapters/mongo-allocation-list-queries');
+const { calcAlgTypeName } = require('../src/utils/calc-alg-type-name');
 
 const METADATA_LIST_CONTRACT_ADDRESS = '0xabcdef';
 
@@ -167,13 +168,28 @@ describe('issuing velocity verifiable credentials', () => {
       await verifyCredentialAndAddEntryExpectations(
         credentials[i],
         mockAddCredentialMetadataEntry.mock.calls[i].arguments,
-        { issuerEntity, caoEntity, offer: offers[i], userId }
+        {
+          issuerEntity,
+          caoEntity,
+          offer: offers[i],
+          userId,
+          credentialTypesMap,
+        }
       );
     }
-    await verifyCreateMetadataListCalledOnce(
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(2);
+    await verifyCreateMetadataListCall(
+      mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      mockCreateCredentialMetadataList,
+      ALG_TYPE.HEX_AES_256,
+      { issuerEntity, caoEntity }
+    );
+    await verifyCreateMetadataListCall(
+      mockCreateCredentialMetadataList.mock.calls[1],
+      issuer,
+      mockAddCredentialMetadataEntry.mock.calls[2].arguments[0].listId,
+      ALG_TYPE.COSEKEY_AES_256,
       { issuerEntity, caoEntity }
     );
 
@@ -182,8 +198,26 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
   });
 
-  it('should create vcs with context in credentialSubject', async () => {
+  it('should create vcs with context in credentialSubject (allocatation lists exists)', async () => {
     context.config.credentialSubjectContext = true;
+    allocationsCollection.insertOne({
+      tenantId: issuer.id,
+      entityName: 'HEX_AES_256_MetadataListAllocations',
+      freeIndexes: [1, 2],
+      currentListId: 999,
+      operatorAddress: issuerEntity.primaryAddress,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    allocationsCollection.insertOne({
+      tenantId: issuer.id,
+      entityName: 'COSEKEY_AES_256_MetadataListAllocations',
+      freeIndexes: [99, 100],
+      currentListId: 777,
+      operatorAddress: issuerEntity.primaryAddress,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
     const offers = map(offerFactory, [
       {
@@ -230,13 +264,8 @@ describe('issuing velocity verifiable credentials', () => {
         context
       );
     }
-    await verifyCreateMetadataListCalledOnce(
-      issuer,
-      mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      mockCreateCredentialMetadataList,
-      { issuerEntity, caoEntity }
-    );
 
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(0);
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
     ]);
@@ -279,11 +308,14 @@ describe('issuing velocity verifiable credentials', () => {
         { issuerEntity, caoEntity, offer: offers[i], userId }
       );
     }
-    await verifyCreateMetadataListCalledOnce(
+
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(1);
+    await verifyCreateMetadataListCall(
+      mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      mockCreateCredentialMetadataList,
-      { caoEntity, issuerEntity }
+      ALG_TYPE.HEX_AES_256,
+      { issuerEntity, caoEntity }
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
@@ -333,11 +365,14 @@ describe('issuing velocity verifiable credentials', () => {
         { issuerEntity, caoEntity, offer: offers[i], userId }
       );
     }
-    await verifyCreateMetadataListCalledOnce(
+
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(1);
+    await verifyCreateMetadataListCall(
+      mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      mockCreateCredentialMetadataList,
-      { caoEntity, issuerEntity }
+      ALG_TYPE.HEX_AES_256,
+      { issuerEntity, caoEntity }
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
@@ -371,23 +406,22 @@ const buildContext = ({ issuerEntity, caoEntity, ...args }) => ({
   ...args,
 });
 
-const verifyCreateMetadataListCalledOnce = async (
+const verifyCreateMetadataListCall = async (
+  call,
   issuer,
   listId,
-  mockFn,
+  algType,
   { issuerEntity, caoEntity }
 ) => {
-  expect(mockFn.mock.callCount()).toEqual(1);
-  const args = mockFn.mock.calls[0].arguments;
-  expect(args).toEqual([
+  expect(call.arguments).toEqual([
     issuer.dltPrimaryAddress,
     listId,
     expect.any(String),
     caoEntity.did,
-    ALG_TYPE.COSEKEY_AES_256,
+    algType,
   ]);
 
-  const issuerAttestationJwtVc = args[2];
+  const issuerAttestationJwtVc = call.arguments[2];
   const { header, payload } = await jwtVerify(
     issuerAttestationJwtVc,
     issuerEntity.keyPair.publicKey
@@ -455,7 +489,7 @@ const verifyCredentialAndAddEntryExpectations = async (
     }),
     hashOffer(offer),
     caoEntity.did,
-    ALG_TYPE.COSEKEY_AES_256,
+    ALG_TYPE[calcAlgTypeName(credentialTypeMetadata[extractOfferType(offer)])],
   ]);
 
   const { publicKey } = first(credentialMetadataArgs);

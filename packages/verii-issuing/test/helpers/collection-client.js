@@ -30,7 +30,7 @@ const collectionClient = async ({
   const collection = {
     insertOne: (obj, ...args) =>
       collectionConnection
-        .insertOne(factory(obj), ...args)
+        .insertOne(factory ? factory(obj) : obj, ...args)
         .then((result) => result.insertedId),
     insertMany: (objs, ...args) =>
       collectionConnection
