@@ -245,8 +245,7 @@ const initMetadataRegistry = async (
 
     const multiToken = ':multi:';
     if (did.indexOf(multiToken) === -1) {
-      const [, , , accountId, listId, index, contentHash] = did.split(':');
-      return [{ accountId, listId, index, contentHash }];
+      return [parseSingleVelocityDid(did)];
     }
 
     const [, entriesPart] = did.split(multiToken);
@@ -254,6 +253,10 @@ const initMetadataRegistry = async (
       const [accountId, listId, index, contentHash] = entryString.split(':');
       return { accountId, listId, index, contentHash };
     }, entriesPart.split(';'));
+  };
+  const parseSingleVelocityDid = (did) => {
+    const [, , , accountId, listId, index, contentHash] = did.split(':');
+    return { accountId, listId, index, contentHash };
   };
 
   const resolvePublicKey = async ({ id, entry, secret }) => {
@@ -367,8 +370,14 @@ const initMetadataRegistry = async (
 
     const credentialEntries = await Promise.all(
       mapWithIndex(async (entry, i) => {
-        const id = toDID(indexEntries[i]).toLowerCase();
-        const credential = find((c) => c.id.toLowerCase() === id, credentials);
+        const credential = find((c) => {
+          const credentialIndexEntry = parseSingleVelocityDid(c.id);
+          return (
+            credentialIndexEntry.accountId === indexEntries[i].accountId &&
+            credentialIndexEntry.listId === indexEntries[i].listId &&
+            credentialIndexEntry.index === indexEntries[i].index
+          );
+        }, credentials);
         const secret =
           indexEntries[i].contentHash != null
             ? await deriveEncryptionSecretFromPassword(
@@ -377,7 +386,7 @@ const initMetadataRegistry = async (
             : await deriveEncryptionSecret(credential);
         return {
           entry,
-          id,
+          id: credential.id,
           credentialType: credential.credentialType,
           secret,
         };
@@ -445,14 +454,6 @@ const initMetadataRegistry = async (
     );
 
     return tx.wait();
-  };
-
-  const toDID = ({ accountId, listId, index, contentHash }) => {
-    if (contentHash != null) {
-      return `did:velocity:v2:${accountId}:${listId}:${index}:${contentHash}`;
-    }
-
-    return `did:velocity:v2:${accountId}:${listId}:${index}`;
   };
 
   const pullCreatedMetadataListEvents = pullEvents('CreatedMetadataList');
