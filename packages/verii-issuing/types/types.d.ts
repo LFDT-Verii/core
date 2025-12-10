@@ -131,6 +131,7 @@ export interface AllocationListEntry {
   isNewList: boolean;
   listId: number;
   index: number;
+  algType?: string;
 }
 
 export interface CredentialOffer extends BaseCredential {
