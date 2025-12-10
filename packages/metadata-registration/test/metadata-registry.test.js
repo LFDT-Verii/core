@@ -761,9 +761,25 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
     });
 
     [
-      { listId: 3, didSuffix: null, title: 'without a didSuffix' },
-      { listId: 4, didSuffix: password, title: 'using a didSuffix' },
-    ].forEach(({ listId, didSuffix, title }) => {
+      {
+        listId: 3,
+        didSuffix: null,
+        resolveWithSuffix: false,
+        title: 'without a didSuffix',
+      },
+      {
+        listId: 5,
+        didSuffix: password,
+        resolveWithSuffix: false,
+        title: 'using a didSuffix, but not for resolution',
+      },
+      {
+        listId: 6,
+        didSuffix: password,
+        resolveWithSuffix: true,
+        title: 'using a didSuffix',
+      },
+    ].forEach(({ listId, didSuffix, resolveWithSuffix, title }) => {
       describe(`Resolve DID ${title} from legacy credential metadata entry`, () => {
         let credential;
         let indexEntry;
@@ -782,8 +798,11 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             id: buildDid(indexEntry),
             credentialType: defaultCredentialType,
           };
-          if (didSuffix == null) {
+          if (didSuffix == null || !resolveWithSuffix) {
             credential.contentHash = password;
+          }
+          if (!resolveWithSuffix) {
+            indexEntry = indexEntry.slice(0, -1);
           }
 
           await operatorMetadataRegistryClient.createCredentialMetadataList(
@@ -810,7 +829,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         it('Create and resolve did', async () => {
           const didDocument =
             await operatorMetadataRegistryClient.resolveDidDocument({
-              did: credential.id,
+              did: buildDid(indexEntry),
               credentials: [credential],
               burnerDid,
               caoDid: 'did:velocity:99',
@@ -862,13 +881,13 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             primaryAddress,
             listId,
             2342,
-            didSuffix == null ? null : badContentHash,
+            didSuffix == null || !resolveWithSuffix ? null : badContentHash,
           ];
           const badCredential = {
             id: buildDid(badIndexEntry),
             credentialType: defaultCredentialType,
           };
-          if (didSuffix == null) {
+          if (didSuffix == null || !resolveWithSuffix) {
             badCredential.contentHash = badContentHash;
           }
           const didDocument =
@@ -919,10 +938,12 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             caoDid
           );
           const credentialData = {
-            id: buildDid(badIndexEntry),
+            id: buildDid(
+              resolveWithSuffix ? badIndexEntry : badIndexEntry.slice(0, -1)
+            ),
             credentialType: regularIssuingCredentialType,
           };
-          if (didSuffix == null) {
+          if (didSuffix == null || !resolveWithSuffix) {
             credentialData.contentHash = password;
           }
 
@@ -945,7 +966,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             credentialType: 'Wrong type!',
           };
           const result = operatorMetadataRegistryClient.resolveDidDocument({
-            did: badCredential.id,
+            did: buildDid(indexEntry),
             credentials: [badCredential],
             burnerDid,
             caoDid: 'did:velocity:99',
@@ -961,7 +982,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             credentialType: null,
           };
           const result = operatorMetadataRegistryClient.resolveDidDocument({
-            did: badCredential.id,
+            did: buildDid(indexEntry),
             credentials: [badCredential],
             burnerDid,
             caoDid: 'did:velocity:99',
@@ -978,7 +999,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             return;
           }
           const result = operatorMetadataRegistryClient.resolveDidDocument({
-            did: badCredential.id,
+            did: buildDid(indexEntry),
             credentials: [badCredential],
             burnerDid,
             caoDid: 'did:velocity:99',
