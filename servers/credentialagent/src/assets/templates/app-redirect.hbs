@@ -9,15 +9,7 @@
 </head>
 
 <body>
-<div id="vnf-wallet-selection"
-    {{#if deeplink}}
-     data-deeplink="{{deeplink}}"
-    {{/if}}
-    {{#if reclaimWizardDeeplink}}
-     data-reclaim="{{reclaimWizardDeeplink}}"
-    {{/if}}
-     data-automode>
-</div>
+    <div id="vnf-wallet-selection" data-deeplink="{{deeplink}}" data-automode></div>
     <script src="{{scriptUrl}}" nonce="{{scriptNonce}}"></script>
 </body>
 

@@ -128,9 +128,7 @@ const appRedirectController = async (fastify) => {
         const csp = `${cspStyleSrc} ${cspScriptSrc}`;
         reply.header('Content-Security-Policy', csp);
         return reply.view('app-redirect', {
-          ...(exchangeType === EXCHANGE_TYPE.claim
-            ? { reclaimWizardDeeplink: deeplink }
-            : { deeplink }),
+          deeplink,
           scriptUrl,
           scriptNonce: resourceNonce,
           styleSheetUrl,
