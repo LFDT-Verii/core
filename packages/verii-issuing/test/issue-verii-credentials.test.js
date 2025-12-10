@@ -198,7 +198,7 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
   });
 
-  it('should create vcs with context in credentialSubject (allocatation lists exists)', async () => {
+  it('should create vcs with context in credentialSubject (allocation lists exists)', async () => {
     context.config.credentialSubjectContext = true;
     allocationsCollection.insertOne({
       tenantId: issuer.id,

@@ -136,12 +136,12 @@ const anchorVeriiCredentials = async (credentialMetadatas, issuer, context) => {
 };
 
 /**
- * Gets the new list entry. Since the number of entries per list is 10k then only one will ever be returned
+ * Gets the new list entries. Multiple new list entries can be returned, especially when different algorithm types are used.
  * @param {AllocationListEntry[]} entries the entries
- * @returns {AllocationListEntry[] | undefined} returns the new list entries if they exist, otherwise empty array
+ * @returns {AllocationListEntry[]} returns the new list entries if they exist, otherwise an empty array
  */
 const getNewListEntries = (entries) =>
-  entries?.filter((entry) => entry.isNewList);
+  entries.filter((entry) => entry.isNewList);
 
 module.exports = {
   anchorVeriiCredentials,
