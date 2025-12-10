@@ -134,7 +134,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'inspectorDid should be present for exchange_type = "inspect"'
+      'inspectorDid should be present for exchange_type = "claim.wizard"'
     );
   });
 
