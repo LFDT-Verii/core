@@ -342,7 +342,7 @@ describe('vc-api credentials endpoints', () => {
             expect.any(Object),
             expect.any(String),
             'did:ion:cao',
-            'cosekey:aes-256-gcm',
+            'aes-256-gcm',
           ],
         ]);
       });
