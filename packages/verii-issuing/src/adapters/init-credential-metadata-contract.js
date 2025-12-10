@@ -15,10 +15,7 @@
  *
  */
 
-const {
-  initMetadataRegistry,
-  ALG_TYPE,
-} = require('@verii/metadata-registration');
+const { initMetadataRegistry } = require('@verii/metadata-registration');
 const { jsonLdToUnsignedVcJwtContent, hexFromJwk } = require('@verii/jwt');
 const { KeyAlgorithms, initCallWithKmsKey } = require('@verii/crypto');
 const { buildIssuerVcUrl } = require('./build-issuer-vc-url');
@@ -30,7 +27,7 @@ const { buildIssuerVcUrl } = require('./build-issuer-vc-url');
  * @param {Context} context the context
  * @returns {Promise<{
  *    addEntry: function(CredentialMetadata): Promise<void>,
- *    createList: function(number): Promise<boolean>
+ *    createList: function(number, string): Promise<boolean>
  *    }>} the contract interface to create metadata
  */
 const initCredentialMetadataContract = async (issuer, context) => {
@@ -60,14 +57,15 @@ const initCredentialMetadataContract = async (issuer, context) => {
         metadata,
         metadata.contentHash,
         caoDid,
-        ALG_TYPE.COSEKEY_AES_256
+        metadata.algType
       ),
     /**
      * List to create on the dlt
      * @param {number} listId list id to create
+     * @param {string} algType the alg type
      * @returns {Promise<boolean>} true if a list was created, false if it already existed
      */
-    createList: async (listId) => {
+    createList: async (listId, algType) => {
       const accountId = issuer.dltPrimaryAddress;
       const { payload, header } = jsonLdToUnsignedVcJwtContent(
         {
@@ -92,7 +90,7 @@ const initCredentialMetadataContract = async (issuer, context) => {
         listId,
         issuerVC,
         caoDid,
-        ALG_TYPE.COSEKEY_AES_256
+        algType
       );
     },
   };

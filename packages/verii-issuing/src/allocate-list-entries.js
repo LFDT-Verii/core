@@ -15,10 +15,13 @@
  *
  */
 
-/** @import { Context, Issuer, AllocationListEntry, AllocationListQueries } from "../../types/types" */
+/** @import { Context, CredentialOffer, CredentialTypeMetadata, Issuer, AllocationListEntry, AllocationListQueries } from "../../types/types" */
 
+const { extractCredentialType } = require('@verii/vc-checks');
+const { ALG_TYPE } = require('@verii/metadata-registration');
 const { allocateArray } = require('./utils/allocate-array');
 const { generateListIndex } = require('./utils/generate-list-index');
+const { calcAlgTypeName } = require('./utils/calc-alg-type-name');
 /**
  * Allocates list entries
  * @param {number} total the number of entries required (typically the number of offers)
@@ -28,7 +31,7 @@ const { generateListIndex } = require('./utils/generate-list-index');
  * @param {Context} context the context
  * @returns {Promise<AllocationListEntry[]>} the allocated entries
  */
-const allocateListEntries = async (
+const allocateGenericListEntries = async (
   total,
   issuer,
   entityName,
@@ -41,6 +44,41 @@ const allocateListEntries = async (
       // eslint-disable-next-line no-await-in-loop
       await allocateListEntry(issuer, entityName, listSize, context)
     );
+  }
+  return entries;
+};
+
+/**
+ * Generates metadata list entries. Different lists for each different algorithm used.
+ * @param {CredentialOffer[]} offers  array of offers
+ * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types
+ * @param {Issuer}  issuer the issuer
+ * @param {number} listSize the list size
+ * @param {Context} context the context
+ * @returns {Promise<AllocationListEntry[]>} the allocated entries
+ */
+const allocateMetadataListEntries = async (
+  offers,
+  credentialTypesMap,
+  issuer,
+  listSize,
+  context
+) => {
+  const entries = [];
+  for (let i = 0; i < offers.length; i += 1) {
+    const algTypeName = calcAlgTypeName(
+      credentialTypesMap?.[extractCredentialType(offers[i])]
+    );
+    entries.push({
+      algType: ALG_TYPE[algTypeName],
+      // eslint-disable-next-line no-await-in-loop
+      ...(await allocateListEntry(
+        issuer,
+        `${algTypeName}_MetadataListAllocations`,
+        listSize,
+        context
+      )),
+    });
   }
   return entries;
 };
@@ -71,6 +109,7 @@ const allocateListEntry = async (issuer, entityName, listSize, context) => {
 };
 
 module.exports = {
-  allocateListEntries,
+  allocateGenericListEntries,
+  allocateMetadataListEntries,
   allocateListEntry,
 };
