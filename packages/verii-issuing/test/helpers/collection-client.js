@@ -30,11 +30,14 @@ const collectionClient = async ({
   const collection = {
     insertOne: (obj, ...args) =>
       collectionConnection
-        .insertOne(factory(obj), ...args)
+        .insertOne(factory ? factory(obj) : obj, ...args)
         .then((result) => result.insertedId),
     insertMany: (objs, ...args) =>
       collectionConnection
-        .insertMany(map(factory, objs), ...args)
+        .insertMany(
+          map((obj) => (factory ? factory(obj) : obj), objs),
+          ...args
+        )
         .then((result) => Object.values(result.insertedIds)),
     insert: (...args) => collectionConnection.insertOne(...args),
     findByIds: (ids, projection = defaultProjection) =>
