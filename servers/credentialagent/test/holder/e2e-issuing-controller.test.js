@@ -275,12 +275,14 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
 
     const metadataListAllocation = await mongoDb()
       .collection('allocations')
-      .findOne({ entityName: 'metadataListAllocations' });
+      .findOne({
+        entityName: 'HEX_AES_256_MetadataListAllocations',
+      });
     expect(metadataListAllocation).toEqual({
       _id: expect.any(ObjectId),
       createdAt: expect.any(Date),
       currentListId: expect.any(Number),
-      entityName: 'metadataListAllocations',
+      entityName: 'HEX_AES_256_MetadataListAllocations',
       freeIndexes: expect.any(Array),
       operatorAddress: toEthereumAddress(operatorKeyPair.publicKey),
       tenantId: new ObjectId(tenant._id),
@@ -330,12 +332,12 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
 
     const metadataListAllocation = await mongoDb()
       .collection('allocations')
-      .findOne({ entityName: 'metadataListAllocations' });
+      .findOne({ entityName: 'HEX_AES_256_MetadataListAllocations' });
     expect(metadataListAllocation).toEqual({
       _id: expect.any(ObjectId),
       createdAt: expect.any(Date),
       currentListId: expect.any(Number),
-      entityName: 'metadataListAllocations',
+      entityName: 'HEX_AES_256_MetadataListAllocations',
       freeIndexes: expect.any(Array),
       operatorAddress: toEthereumAddress(operatorKeyPair.publicKey),
       tenantId: new ObjectId(tenant._id),
@@ -385,12 +387,12 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
 
     const metadataListAllocation = await mongoDb()
       .collection('allocations')
-      .findOne({ entityName: 'metadataListAllocations' });
+      .findOne({ entityName: 'HEX_AES_256_MetadataListAllocations' });
     expect(metadataListAllocation).toEqual({
       _id: expect.any(ObjectId),
       createdAt: expect.any(Date),
       currentListId: expect.any(Number),
-      entityName: 'metadataListAllocations',
+      entityName: 'HEX_AES_256_MetadataListAllocations',
       freeIndexes: expect.any(Array),
       operatorAddress: toEthereumAddress(operatorKeyPair.publicKey),
       tenantId: new ObjectId(tenant._id),
