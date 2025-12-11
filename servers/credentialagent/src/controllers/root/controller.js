@@ -22,6 +22,7 @@ const {
   forEach,
   isEmpty,
   values,
+  identity,
 } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const fastifyView = require('@fastify/view');
@@ -81,6 +82,19 @@ const appRedirectController = async (fastify) => {
                 items: { type: 'string' },
               },
               inspectorDid: { type: 'array', items: { type: 'string' } },
+              providers: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' },
+                    logo: { type: 'string' },
+                    category: { type: 'string' },
+                    id: { type: 'string' },
+                  },
+                  required: ['name', 'id', 'logo', 'category'],
+                },
+              },
             },
             required: ['request_uri', 'exchange_type'],
           },
@@ -124,9 +138,13 @@ const appRedirectController = async (fastify) => {
 };
 
 const validateInspectorDid = ({ exchangeType, inspectorDid }) => {
-  if (exchangeType === EXCHANGE_TYPE.inspect && isEmpty(inspectorDid)) {
+  if (
+    (exchangeType === EXCHANGE_TYPE.inspect ||
+      exchangeType === EXCHANGE_TYPE.claim) &&
+    isEmpty(inspectorDid)
+  ) {
     throw new Error.BadRequest(
-      'inspectorDid should be present for exchange_type = "inspect"'
+      `inspectorDid should be present for exchange_type = "${exchangeType}"`
     );
   }
   if (exchangeType === EXCHANGE_TYPE.issue && !isEmpty(inspectorDid)) {
@@ -143,6 +161,7 @@ const processingLinks = (context) => {
       request_uri: requestUriItems,
       inspectorDid: inspectorDidItems = [],
       vendorOriginContext: vendorOriginContextItems = [],
+      providers: providersItems,
     },
   } = context;
 
@@ -152,17 +171,29 @@ const processingLinks = (context) => {
       requestUri: value,
       vendorOriginContext: vendorOriginContextItems[index],
       inspectorDid: inspectorDidItems[index],
+      ...(providersItems ? { providers: providersItems } : {}),
     }))
   )(requestUriItems);
 
   const deeplink = createDeepLinkUrl(exchangeType, context);
-  forEach(({ requestUri, inspectorDid, vendorOriginContext }) => {
-    flow(
-      appendSearchParam('request_uri', requestUri),
-      appendSearchParam('inspectorDid', inspectorDid),
-      appendSearchParam('vendorOriginContext', vendorOriginContext)
-    )(deeplink);
-  }, parsedLinks);
+  forEach(
+    ({
+      requestUri,
+      inspectorDid,
+      vendorOriginContext,
+      providers: providersItem,
+    }) => {
+      const appendParams = flow(
+        appendSearchParam('request_uri', requestUri),
+        appendSearchParam('inspectorDid', inspectorDid),
+        appendSearchParam('vendorOriginContext', vendorOriginContext),
+        providersItem ? appendSearchParam('providers', providersItem) : identity
+      );
+
+      appendParams(deeplink);
+    },
+    parsedLinks
+  );
 
   return { deeplink };
 };

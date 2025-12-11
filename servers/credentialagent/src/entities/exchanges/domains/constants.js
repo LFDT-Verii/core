@@ -17,6 +17,7 @@
 const EXCHANGE_TYPE = {
   inspect: 'inspect',
   issue: 'issue',
+  claim: 'claim.wizard',
 };
 
 module.exports = {
