@@ -110,7 +110,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      `inspectorDid should not be present for exchange_type = "issue"`
+      'inspectorDid should not be present for exchange_type = "issue"'
     );
   });
 
@@ -122,7 +122,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      `inspectorDid should be present for exchange_type = 'inspect'`
+      'inspectorDid should be present for exchange_type = "inspect"'
     );
   });
 
@@ -134,7 +134,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      `inspectorDid should be present for exchange_type = 'claim.wizard'`
+      'inspectorDid should be present for exchange_type = "claim.wizard"'
     );
   });
 

@@ -135,7 +135,7 @@ const validateInspectorDid = ({ exchangeType, inspectorDid }) => {
     isEmpty(inspectorDid)
   ) {
     throw new Error.BadRequest(
-      `inspectorDid should be present for exchange_type = '${exchangeType}'`
+      `inspectorDid should be present for exchange_type = "${exchangeType}"`
     );
   }
   if (exchangeType === EXCHANGE_TYPE.issue && !isEmpty(inspectorDid)) {
