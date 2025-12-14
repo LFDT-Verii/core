@@ -218,7 +218,7 @@ describe('app redirect controller test', () => {
     expect(scriptTag.attr('data-automode')).toEqual('');
   });
 
-  it('should include vnf wallet selection mount point if claim.wizard', async () => {
+  it('should include vnf wallet selection mount point if claim.wizard with one provider', async () => {
     setupNock();
     const url =
       // eslint-disable-next-line max-len
@@ -226,7 +226,7 @@ describe('app redirect controller test', () => {
     const response = await fastify.injectJson({
       method: 'GET',
       // eslint-disable-next-line max-len
-      url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123providers=%5B%7B%22logo%22%3A%22https%3A//upload.wikimedia.org/wikipedia/commons/a/aa/LinkedIn_2021.svg%22%2C%22name%22%3A%22LinkedIn%22%2C%22category%22%3A%22Personal%20Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D%2C%7B%22logo%22%3A%22https%3A//logos-world.net/wp-content/uploads/2020/11/GitHub-Emblem.png%22%2C%22name%22%3A%22GitHub%22%2C%22category%22%3A%22User%20Profile%22%2C%22id%22%3A%226d3f6753-7ee6-49ee-a545-62f1b1822ae5%22%7D%5D`,
+      url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123&providers=%7B%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22name%22%3A%22LinkedIn%22%2C%22category%22%3A%22Personal%20Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D`,
     });
 
     expect(response.statusCode).toEqual(200);
@@ -235,8 +235,98 @@ describe('app redirect controller test', () => {
     const scriptTag = $('html > body > #vnf-wallet-selection');
     const deeplink =
       // eslint-disable-next-line max-len
-      'velocity-test://claim.wizard?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId&inspectorDid=321123providers%3D%5B%7B%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22name%22%3A%22LinkedIn%22%2C%22category%22%3A%22Personal+Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D%2C%7B%22logo%22%3A%22https%3A%2F%2Flogos-world.net%2Fwp-content%2Fuploads%2F2020%2F11%2FGitHub-Emblem.png%22%2C%22name%22%3A%22GitHub%22%2C%22category%22%3A%22User+Profile%22%2C%22id%22%3A%226d3f6753-7ee6-49ee-a545-62f1b1822ae5%22%7D%5D';
+      'velocity-test://claim.wizard?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId&inspectorDid=321123&providers=%5B%7B%22name%22%3A%22LinkedIn%22%2C%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22category%22%3A%22Personal+Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D%5D';
     expect(scriptTag.attr('data-deeplink')).toEqual(deeplink);
     expect(scriptTag.attr('data-automode')).toEqual('');
+  });
+
+  it('should throw if claim.wizard and provider is missing required properties: id', async () => {
+    setupNock();
+    const url =
+      // eslint-disable-next-line max-len
+      'http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId';
+    const response = await fastify.injectJson({
+      method: 'GET',
+      // eslint-disable-next-line max-len
+      url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123&providers=%7B%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22name%22%3A%22LinkedIn%22%7D`,
+    });
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.json.message).toEqual(
+      'Provider at index 0 missing required property: id'
+    );
+  });
+
+  it('should throw if claim.wizard and provider is missing required properties: name', async () => {
+    setupNock();
+    const url =
+      // eslint-disable-next-line max-len
+      'http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId';
+    const response = await fastify.injectJson({
+      method: 'GET',
+      // eslint-disable-next-line max-len
+      url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123&providers=%7B%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22id%22%3A%22LinkedIn%22%7D`,
+    });
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.json.message).toEqual(
+      'Provider at index 0 missing required property: name'
+    );
+  });
+
+  it('should throw if claim.wizard and provider is missing required properties: logo', async () => {
+    setupNock();
+    const url =
+      // eslint-disable-next-line max-len
+      'http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId';
+    const response = await fastify.injectJson({
+      method: 'GET',
+      // eslint-disable-next-line max-len
+      url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123&providers=%7B%22name%22%3A%22LinkedIn%22%2C%22category%22%3A%22Personal%20Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D`,
+    });
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.json.message).toEqual(
+      'Provider at index 0 missing required property: logo'
+    );
+  });
+
+  it('should include vnf wallet selection mount point if claim.wizard with multiple providers', async () => {
+    setupNock();
+    const url =
+      // eslint-disable-next-line max-len
+      'http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId';
+    const response = await fastify.injectJson({
+      method: 'GET',
+      // eslint-disable-next-line max-len
+      url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123&providers=%7B%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22name%22%3A%22LinkedIn%22%2C%22category%22%3A%22Personal%20Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D&providers=%7B%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22name%22%3A%22LinkedIn%22%2C%22category%22%3A%22Personal%20Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D`,
+    });
+
+    expect(response.statusCode).toEqual(200);
+    const $ = cheerio.load(response.body);
+
+    const scriptTag = $('html > body > #vnf-wallet-selection');
+    const deeplink =
+      // eslint-disable-next-line max-len
+      'velocity-test://claim.wizard?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId&inspectorDid=321123&providers=%5B%7B%22name%22%3A%22LinkedIn%22%2C%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22category%22%3A%22Personal+Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D%2C%7B%22name%22%3A%22LinkedIn%22%2C%22logo%22%3A%22https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fa%2Faa%2FLinkedIn_2021.svg%22%2C%22category%22%3A%22Personal+Records%22%2C%22id%22%3A%22a9f1063c-06b7-476a-8410-9ff6e427e637%22%7D%5D';
+    expect(scriptTag.attr('data-deeplink')).toEqual(deeplink);
+    expect(scriptTag.attr('data-automode')).toEqual('');
+  });
+
+  it('should throw an error if claim.wizard and empty providers', async () => {
+    setupNock();
+    const url =
+      // eslint-disable-next-line max-len
+      'http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId';
+    const response = await fastify.injectJson({
+      method: 'GET',
+      // eslint-disable-next-line max-len
+      url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123`,
+    });
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.json.message).toEqual(
+      'providers parameter is required for exchange_type = "claim.wizard"'
+    );
   });
 });
