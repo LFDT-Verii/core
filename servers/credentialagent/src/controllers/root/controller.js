@@ -1,14 +1,14 @@
 /**
  * Copyright 2023 Velocity Team
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an 'AS IS' BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -135,7 +135,7 @@ const validateInspectorDid = ({ exchangeType, inspectorDid }) => {
     isEmpty(inspectorDid)
   ) {
     throw new Error.BadRequest(
-      `inspectorDid should be present for exchange_type = "${exchangeType}"`
+      `inspectorDid should be present for exchange_type = '${exchangeType}'`
     );
   }
   if (exchangeType === EXCHANGE_TYPE.issue && !isEmpty(inspectorDid)) {
@@ -180,7 +180,9 @@ const processingLinks = (context) => {
         appendSearchParam('request_uri', requestUri),
         appendSearchParam('inspectorDid', inspectorDid),
         appendSearchParam('vendorOriginContext', vendorOriginContext),
-        providersItem ? appendSearchParam('providers', JSON.stringify(providersItem)) : identity
+        providersItem
+          ? appendSearchParam('providers', JSON.stringify(providersItem))
+          : identity
       );
 
       appendParams(deeplink);
@@ -190,7 +192,6 @@ const processingLinks = (context) => {
 
   return { deeplink };
 };
-
 
 const parseProviders = (providersItems, exchangeType) => {
   if (exchangeType !== EXCHANGE_TYPE.claim) {
@@ -203,12 +204,14 @@ const parseProviders = (providersItems, exchangeType) => {
     );
   }
 
-  const normalizedProviders = Array.isArray(providersItems) ? providersItems : [providersItems];
+  const normalizedProviders = Array.isArray(providersItems)
+    ? providersItems
+    : [providersItems];
 
   let parsedProviders;
 
   try {
-    parsedProviders = normalizedProviders.map(provider => {
+    parsedProviders = normalizedProviders.map((provider) => {
       if (typeof provider === 'string') {
         return JSON.parse(provider);
       }
@@ -222,12 +225,16 @@ const parseProviders = (providersItems, exchangeType) => {
 
   return parsedProviders.map((item, index) => {
     if (!item || typeof item !== 'object') {
-      throw new Error.BadRequest(`Provider at index ${index} must be an object`);
+      throw new Error.BadRequest(
+        `Provider at index ${index} must be an object`
+      );
     }
 
     for (const prop of PROVIDERS_REQUIRED_PROPS) {
       if (!item[prop] || typeof item[prop] !== 'string') {
-        throw new Error.BadRequest(`Provider at index ${index} missing required property: ${prop}`);
+        throw new Error.BadRequest(
+          `Provider at index ${index} missing required property: ${prop}`
+        );
       }
     }
 
@@ -235,10 +242,12 @@ const parseProviders = (providersItems, exchangeType) => {
       name: item.name,
       logo: item.logo,
       category: item.category,
-      id: item.id
+      id: item.id,
     };
   });
 };
+
+// eslint-disable-next-line better-mutation/no-mutation
 appRedirectController.prefixOverride = '';
 
 module.exports = appRedirectController;
