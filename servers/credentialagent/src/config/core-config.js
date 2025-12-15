@@ -138,6 +138,10 @@ const coreConfig = {
     .default('true')
     .asBool(),
   vendorUrl: env.get('VENDOR_URL').asString(),
+  includeContentHashInCredentialId: env
+    .get('INCLUDE_CONTENT_HASH_IN_CREDENTIAL_ID')
+    .default('true')
+    .asBool(),
 };
 
 module.exports = { coreConfig };

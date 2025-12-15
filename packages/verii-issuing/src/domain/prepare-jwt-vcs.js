@@ -72,7 +72,8 @@ const prepareJwtVcs = async (
       const credentialId = buildVelocityCredentialMetadataDID(
         metadataEntry,
         issuer,
-        metadata.contentHash
+        metadata.contentHash,
+        context.config.includeContentHashInCredentialId
       );
       const revocationUrl = buildRevocationUrl(
         revocationListEntries[i],
@@ -107,11 +108,22 @@ const prepareJwtVcs = async (
  * @param {AllocationListEntry} entry the list entry
  * @param {Issuer} issuer the issuer
  * @param {string} contentHash the content hash of the credential
+ * @param {boolean} includeContentHashInCredentialId whether to include the content hash in the id
  * @returns {string} the DID URI for the location on the credential metadata list
  */
-const buildVelocityCredentialMetadataDID = (entry, issuer, contentHash) =>
-  `did:velocity:v2:${toLower(issuer.dltPrimaryAddress)}:${entry.listId}:${
-    entry.index
-  }:${contentHash}`;
+const buildVelocityCredentialMetadataDID = (
+  entry,
+  issuer,
+  contentHash,
+  includeContentHashInCredentialId
+) => {
+  const id = `did:velocity:v2:${toLower(issuer.dltPrimaryAddress)}:${
+    entry.listId
+  }:${entry.index}`;
+  if (includeContentHashInCredentialId) {
+    return `${id}:${contentHash}`;
+  }
+  return id;
+};
 
 module.exports = { prepareJwtVcs };
