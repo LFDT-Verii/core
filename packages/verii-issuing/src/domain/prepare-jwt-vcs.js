@@ -119,7 +119,7 @@ const buildVelocityCredentialMetadataDID = (
 ) => {
   const id = `did:velocity:v2:${toLower(issuer.dltPrimaryAddress)}:${
     entry.listId
-  }`;
+  }:${entry.index}`;
   if (includeContentHashInCredentialId) {
     return `${id}:${contentHash}`;
   }
