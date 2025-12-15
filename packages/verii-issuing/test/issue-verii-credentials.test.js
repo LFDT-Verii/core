@@ -402,6 +402,7 @@ const buildContext = ({ issuerEntity, caoEntity, ...args }) => ({
     metadataRegistryContractAddress: METADATA_LIST_CONTRACT_ADDRESS,
     credentialExtensionsContextUrl:
       'https://lib.test/contexts/credential-extensions-2022.jsonld.json',
+    includeContentHashInCredentialId: true,
   },
   ...args,
 });
