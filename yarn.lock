@@ -15561,12 +15561,11 @@ quick-lru@^5.1.1, quick-lru@~5.1.1:
   resolved "https://registry.npmjs.org/quick-lru/-/quick-lru-5.1.1.tgz#366493e6b3e42a3a6885e2e99d18f80fb7a8c932"
   integrity sha512-WuyALRjWPDGtt/wzJiadO5AXY+8hZ80hVpe6MyivgraREW751X3SbhRvG3eLKOYN+8VEvqLcf3wdnt44Z4S4SA==
 
-ra-core@^5.13.1, ra-core@^5.5.2:
-  version "5.13.1"
-  resolved "https://registry.npmjs.org/ra-core/-/ra-core-5.13.1.tgz#200f905c40346ecf0be949bf14e572bd638a69c0"
-  integrity sha512-7pjERvKNtFaeTg2OvZS2uKUQt3G4OnZFfZLKrGpc4dzLzWj7CRwG+7YCcc/Q69yw2fhA7eJCBJtTfJl+EEncCw==
+ra-core@^5.13.4, ra-core@^5.5.2:
+  version "5.13.4"
+  resolved "https://registry.npmjs.org/ra-core/-/ra-core-5.13.4.tgz#3c44174f77049e3abc942867b94e12ae9271a24f"
+  integrity sha512-f8tcZOi6og8VKRbbuictj9+gYzXWE+f4fI7m6hqhLrNHSkVcyqK8/A/Vs/feY16W9R1oMWWW0a0SCrZSdPqfcg==
   dependencies:
-    "@tanstack/react-query" "^5.83.0"
     date-fns "^3.6.0"
     eventemitter3 "^5.0.1"
     inflection "^3.0.0"
@@ -15576,42 +15575,41 @@ ra-core@^5.13.1, ra-core@^5.5.2:
     react-error-boundary "^4.0.13"
     react-is "^18.2.0 || ^19.0.0"
 
-ra-data-fakerest@^5.13.1:
-  version "5.13.1"
-  resolved "https://registry.npmjs.org/ra-data-fakerest/-/ra-data-fakerest-5.13.1.tgz#3f3240968751d150ee377736476c033b1283b304"
-  integrity sha512-pKxPL1/MvZe54LOPgTmFpuNREkFQeWvvCpgLu2QdEHjn+OGt3EZ5N8710Vr+nBP2OBjSiRyHGfc8+vrtgEL3aw==
+ra-data-fakerest@^5.13.4:
+  version "5.13.4"
+  resolved "https://registry.npmjs.org/ra-data-fakerest/-/ra-data-fakerest-5.13.4.tgz#cc459fea48276aca822672a5035354a964912d0f"
+  integrity sha512-rNgqcuFvJGw7O6MJLAC4EgUCq4ovXqccQSypARn+zuZ9yVKFXz0GQRBOwTKUN46356awjLdpcDZeYKxSgyu5Tg==
   dependencies:
     fakerest "^4.0.1"
 
 ra-data-local-storage@^5.5.2:
-  version "5.13.1"
-  resolved "https://registry.npmjs.org/ra-data-local-storage/-/ra-data-local-storage-5.13.1.tgz#31230967ff42802d87ffbfb42c782c0b2940bc75"
-  integrity sha512-O1ddMIX4l7nGf6R4Bu+MVKRLuB+eyOb7ruEkXK5i784F8SeDDzRtElcCIeV18oD2/3anY4SXEROEhrSRFIvobw==
+  version "5.13.4"
+  resolved "https://registry.npmjs.org/ra-data-local-storage/-/ra-data-local-storage-5.13.4.tgz#239b14593b5710bb91d7883b7459f50f1957bf6e"
+  integrity sha512-lzLsWHhOqnemk2XwyOgKV6l95aw7hbju0SffCr3OoXKnWHs4cyq9Nuk9zfX5JCr5j5Yzmhf+D8tsq5fT41kIQQ==
   dependencies:
     lodash "~4.17.5"
-    ra-data-fakerest "^5.13.1"
+    ra-data-fakerest "^5.13.4"
 
-ra-i18n-polyglot@^5.13.1:
-  version "5.13.1"
-  resolved "https://registry.npmjs.org/ra-i18n-polyglot/-/ra-i18n-polyglot-5.13.1.tgz#cf52ba1cd014a77019e02606105dfba8e1407c96"
-  integrity sha512-/jh7Auir8zSeby3H0sCS4po1pXhvvImcDnQtiUzwa8P0vK/nFd22s2BxENOkq/XtGf0nSLGu7odCLkimtTH6QQ==
+ra-i18n-polyglot@^5.13.4:
+  version "5.13.4"
+  resolved "https://registry.npmjs.org/ra-i18n-polyglot/-/ra-i18n-polyglot-5.13.4.tgz#b436d641264d8dc1f0e486370071d733ea71de2a"
+  integrity sha512-ICylRO2/u81xSJH3N4UCqvL4ZIu2jB6vI0XLMhROGEKuzts64IcJJj4j+kLwNdYrdQhAhgB/8BvW/skJ5fJifQ==
   dependencies:
     node-polyglot "^2.2.2"
-    ra-core "^5.13.1"
+    ra-core "^5.13.4"
 
-ra-language-english@^5.13.1:
-  version "5.13.1"
-  resolved "https://registry.npmjs.org/ra-language-english/-/ra-language-english-5.13.1.tgz#c19895f352cfcdc13c1ac9b0490a57254855d73e"
-  integrity sha512-JGe29ujMdsOCaP/6Cz5Q/jIUwUw/NOTqIj5S0ZQHY4KzMQUCiv/5BQhma4GjmAvD2mbQFBRF1mN1Sf3rgfZXXg==
+ra-language-english@^5.13.4:
+  version "5.13.4"
+  resolved "https://registry.npmjs.org/ra-language-english/-/ra-language-english-5.13.4.tgz#132be04505fbbf55d4d43aaac9c6d47498397c55"
+  integrity sha512-19LmkWFsr1HpiF1Am/vkRUf+h/nwiwS89F04AmJQbCRjm3Gn97/fbv10xW0zwYDSVmiLIrbmuktZ1zO5j068fg==
   dependencies:
-    ra-core "^5.13.1"
+    ra-core "^5.13.4"
 
-ra-ui-materialui@^5.13.1:
-  version "5.13.1"
-  resolved "https://registry.npmjs.org/ra-ui-materialui/-/ra-ui-materialui-5.13.1.tgz#90df3628280881a6fe6d77ed55932b47285706a7"
-  integrity sha512-T2/aD20Kd1s+FhcpjRCTANhtHN8+CNDEdOx3XnDjRZ4x13+7ryz1rQ7/gYvmO2Hi3n97jyVqOgg/ydRjEUOPzQ==
+ra-ui-materialui@^5.13.4:
+  version "5.13.4"
+  resolved "https://registry.npmjs.org/ra-ui-materialui/-/ra-ui-materialui-5.13.4.tgz#9fd26b6fb69e5166526905b2c8c15f6f43c1859b"
+  integrity sha512-mhP/7LWcdbsxn2Kw1mSMADdFHNOt0clECHsAzWg7/eC7ETTpAt6AvXNczX5lHFdP8m2ST6o+mDJYae6JNlc4Hg==
   dependencies:
-    "@tanstack/react-query" "^5.83.0"
     autosuggest-highlight "^3.1.1"
     clsx "^2.1.1"
     css-mediaquery "^0.1.2"
@@ -15662,19 +15660,19 @@ raw-body@2.5.2:
     unpipe "1.0.0"
 
 react-admin@^5.5.2, react-admin@^5.8.2:
-  version "5.13.1"
-  resolved "https://registry.npmjs.org/react-admin/-/react-admin-5.13.1.tgz#4f86ee7b3fd0a8b9edef56fde96fe576cbc409b2"
-  integrity sha512-osauKBeJ01KU6yUe5fpPngd1RwCk5THUt2IpZNicU5oNuwfoTygHY1M7ervX38TDMziW0juOmATR3FTeIuZIsA==
+  version "5.13.4"
+  resolved "https://registry.npmjs.org/react-admin/-/react-admin-5.13.4.tgz#09e538330e6d6dd89ccd6d21b7d2f6b0227718c3"
+  integrity sha512-kX06cuJx2Wwq3CuU8h01v+PgLngugY9Ajy2sFigXerGy6qnet/65JqBQbFksXoSm7Bu1hXlyGWdjN0XwN3B3DA==
   dependencies:
     "@emotion/react" "^11.14.0"
     "@emotion/styled" "^11.14.0"
     "@mui/icons-material" "^5.16.12 || ^6.0.0 || ^7.0.0"
     "@mui/material" "^5.16.12 || ^6.0.0 || ^7.0.0"
     "@tanstack/react-query" "^5.83.0"
-    ra-core "^5.13.1"
-    ra-i18n-polyglot "^5.13.1"
-    ra-language-english "^5.13.1"
-    ra-ui-materialui "^5.13.1"
+    ra-core "^5.13.4"
+    ra-i18n-polyglot "^5.13.4"
+    ra-language-english "^5.13.4"
+    ra-ui-materialui "^5.13.4"
     react-hook-form "^7.65.0"
     react-router "^6.28.1 || ^7.1.1"
     react-router-dom "^6.28.1 || ^7.1.1"
