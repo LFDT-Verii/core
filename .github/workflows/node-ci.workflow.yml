@@ -284,7 +284,7 @@ jobs:
         pattern: test-*
         merge-multiple: true
     - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@34d7c956a59aed1bfebf31df77b8de55db9bbaaf # v2
+      uses: EnricoMi/publish-unit-test-result-action@27d65e188ec43221b20d26de30f4892fad91df2f # v2
       with:
         test_changes_limit: 0
         json_thousands_separator: ","
@@ -298,14 +298,14 @@ jobs:
         pattern: codecov-*
         merge-multiple: true
     - name: Upload coverage for PR
-      uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
+      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: lcov.info,!tools
         flags: pull_request
       if: github.event_name == 'pull_request'
     - name: Upload coverage for All
-      uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5
+      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: lcov.info,!tools
