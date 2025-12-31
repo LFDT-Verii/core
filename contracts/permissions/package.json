@@ -19,7 +19,7 @@
   "dependencies": {},
   "devDependencies": {
     "@openzeppelin/contracts": "4.9.6",
-    "@openzeppelin/contracts-upgradeable": "4.9.6",
+    "@openzeppelin/contracts-upgradeable": "5.4.0",
     "@openzeppelin/truffle-upgrades": "1.21.0",
     "@truffle/hdwallet-provider": "1.7.0",
     "ethers": "6.15.0",
