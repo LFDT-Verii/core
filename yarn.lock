@@ -368,7 +368,7 @@
     "@smithy/util-utf8" "^4.2.0"
     tslib "^2.6.2"
 
-"@aws-sdk/client-s3@^3.731.1", "@aws-sdk/client-s3@^3.933.0":
+"@aws-sdk/client-s3@3.971.0", "@aws-sdk/client-s3@^3.731.1":
   version "3.971.0"
   resolved "https://registry.npmjs.org/@aws-sdk/client-s3/-/client-s3-3.971.0.tgz#2e12e17e75b186d563c2e203fb4b213b3a973942"
   integrity sha512-BBUne390fKa4C4QvZlUZ5gKcu+Uyid4IyQ20N4jl0vS7SK2xpfXlJcgKqPW5ts6kx6hWTQBk6sH5Lf12RvuJxg==
