@@ -25,7 +25,7 @@
     "@verii/jwt": "0.5.0-build",
     "@verii/contract-permissions": "^0.5.0-build",
     "eth-url-parser": "1.0.4",
-    "lodash": "4.17.21"
+    "lodash": "4.17.23"
   },
   "devDependencies": {
     "@spencejs/spence-config": "0.10.2",
