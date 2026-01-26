@@ -47,7 +47,7 @@
     "depcheck": "1.4.7",
     "husky": "4.3.8",
     "lerna": "8.2.4",
-    "lodash-es": "4.17.22",
+    "lodash-es": "4.17.23",
     "nx": "19.5.3",
     "typescript": "5.9.3"
   },
