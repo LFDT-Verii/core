@@ -119,6 +119,7 @@ Solidity contracts under `contracts/` use Truffle. Key contracts:
 
 ### Commits
 Uses Conventional Commits (`@commitlint/config-conventional`). Format: `type(scope): description`
+Signoff commits
 
 ## Requirements
 
