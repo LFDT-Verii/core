@@ -18,7 +18,6 @@ import { register } from 'node:module';
 import { afterEach } from 'node:test';
 import { cleanup } from '@testing-library/react';
 
-register('../../tooling/resolvers/react-admin-resolver.mjs', import.meta.url);
 register('../../tooling/resolvers/alias-resolver.mjs', import.meta.url);
 register('../../tooling/resolvers/css-resolver.mjs', import.meta.url);
 register('../../tooling/resolvers/jsx-loader.mjs', import.meta.url);
