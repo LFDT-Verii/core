@@ -67,7 +67,7 @@ All migrations are run in a particular environment. Default is localdev
 MIGRATION_ENV=<env> yarn migrate:status
 ```
 ```bash
-MIGRATION_ENV=<env> yarn migrate:up yarn    # Run migrations
+MIGRATION_ENV=<env> yarn migrate:up        # Run migrations
 ```
 ```bash
 MIGRATION_ENV=<env> yarn migrate:down       # Rollback last migration
