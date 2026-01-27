@@ -17,7 +17,6 @@ on:
         - release
 env:
   LERNA_VERSION: '9.0.3'
-  NX_VERSION: '20.8.0'
   DIST_TAG: 'prerelease'
   NODE_VERSION: '22.x'
   VERSION_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.version-type || format('{0}', 'prerelease') }}
@@ -69,9 +68,6 @@ jobs:
       # Install Lerna
       - name: Install Lerna
         run: yarn global add lerna@${{ env.LERNA_VERSION }}
-      # Install Nx
-      - name: Install Nx
-        run: yarn global add nx@
       # Set Version
       - name: Set Version
         run: lerna version --no-git-tag-version --no-push --exact --yes ${{ env.NPM_VER_NUM }}
