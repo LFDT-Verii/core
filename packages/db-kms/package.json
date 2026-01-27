@@ -4,6 +4,7 @@
   "description": "KMS plugin that uses a db",
   "main": "index.js",
   "license": "Apache-2.0",
+  "repository": "https://github.com/LFDT-Verii/core",
   "publishConfig": {
     "access": "public"
   },

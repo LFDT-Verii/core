@@ -3,6 +3,7 @@
   "version": "0.5.0-build",
   "description": "Velocity Schema and Document Library",
   "license": "Apache-2.0",
+  "repository": "https://github.com/LFDT-Verii/core",
   "publishConfig": {
     "access": "public"
   },
