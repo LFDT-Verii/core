@@ -47,9 +47,9 @@
     "cross-env": "10.1.0",
     "depcheck": "1.4.7",
     "husky": "4.3.8",
-    "lerna": "8.2.4",
+    "lerna": "9.0.3",
     "lodash-es": "4.17.23",
-    "nx": "19.5.3",
+    "nx": "20.8.0",
     "typescript": "5.9.3"
   },
   "workspaces": [
