@@ -50,7 +50,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
-          scope: '@${{ env.TARGET_ORG }}'
       # Get yarn cache directory path
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
