@@ -102,8 +102,8 @@ Solidity contracts under `contracts/` use Truffle. Key contracts:
 - Single quotes, trailing commas
 
 ### Commits
-Use `--signoff` for all commits
-Uses Conventional Commits (`@commitlint/config-conventional`). Format: `type(scope): description`
+- Use `--signoff` for all commits
+- Uses Conventional Commits (`@commitlint/config-conventional`). Format: `type(scope): description`
 
 ## Requirements
 
