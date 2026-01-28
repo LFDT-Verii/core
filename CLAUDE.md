@@ -12,7 +12,6 @@ Verii is a Verifiable Credentials (VC) platform monorepo containing libraries, s
 ```bash
 yarn build              # Build all packages
 yarn build:affected     # Build only packages affected by changes
-yarn build:lib          # Build library packages only (tagged with lib)
 ```
 
 ### Setup test environment
@@ -41,22 +40,8 @@ yarn nx run <package>:test
 ```bash
 node --test --experimental-test-module-mocks 'path/to/file.test.js'
 ```
-
 Tests use Node.js built-in test runner (`node --test`), not Jest. Some tests require MongoDB replica set and/or Besu blockchain node running locally.
-
-### Linting
-```bash
-yarn lint               # Lint all packages
-yarn lint:fix           # Lint and auto-fix all packages
-yarn lint:affected      # Lint only affected packages
-```
-
-### Docker (for local development)
-```bash
-yarn start              # docker-compose up
-yarn start:rebuild      # docker-compose up --build
-yarn stop               # docker-compose down -v
-```
+Use the compatible matchers from the `expect` package
 
 ### Credential Agent Migrations
 cd servers/credentialagent
@@ -66,12 +51,11 @@ All migrations are run in a particular environment. Default is localdev
 ```bash
 MIGRATION_ENV=<env> yarn migrate:status
 ```
+#### Run migration
 ```bash
 MIGRATION_ENV=<env> yarn migrate:up        # Run migrations
 ```
-```bash
-MIGRATION_ENV=<env> yarn migrate:down       # Rollback last migration
-```
+#### Create a new migration
 ```bash
 MIGRATION_ENV=<env> yarn migrate:create     # Create new migration
 ```
@@ -107,6 +91,7 @@ Solidity contracts under `contracts/` use Truffle. Key contracts:
 - `verification-coupon` - Verification payment
 
 ## Code Conventions
+- In server code prefer using `lodash/fp`
 
 ### Linting Rules (enforced by ESLint)
 - Immutability: `better-mutation` plugin enforces no mutations (exceptions in tests)
@@ -115,11 +100,10 @@ Solidity contracts under `contracts/` use Truffle. Key contracts:
 - Max nesting depth: 2
 - Max line length: 150
 - Single quotes, trailing commas
-- No `for...in` loops (use Object.keys/values/entries)
 
 ### Commits
+Use `--signoff` for all commits
 Uses Conventional Commits (`@commitlint/config-conventional`). Format: `type(scope): description`
-Signoff commits
 
 ## Requirements
 
