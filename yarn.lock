@@ -16088,7 +16088,7 @@ qr-image@~3.2.0:
   resolved "https://registry.npmjs.org/qr-image/-/qr-image-3.2.0.tgz#9fa8295beae50c4a149cf9f909a1db464a8672e8"
   integrity sha512-rXKDS5Sx3YipVsqmlMJsJsk6jXylEpiHRC2+nJy66fxA5ExYyGa4PqwteW69SaVmAb2OQ18HbYriT7cGQMbduw==
 
-qs@6.13.0, qs@6.14.1, qs@^6.5.2, qs@^6.9.4, qs@~6.5.2:
+qs@6.13.0, qs@6.14.1, qs@^6.14.1, qs@^6.5.2, qs@~6.5.2:
   version "6.14.1"
   resolved "https://registry.npmjs.org/qs/-/qs-6.14.1.tgz#a41d85b9d3902f31d27861790506294881871159"
   integrity sha512-4EK3+xJl8Ts67nLYNwqw/dsFVnCf+qR7RgXSK9jEEm9unao3njwMDdmsdvoKBKHzxd7tCYz5e5M+SnMjdtXGQQ==
@@ -18175,15 +18175,15 @@ tweetnacl@^1.0.3:
   integrity sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==
 
 twilio@^5.10.1:
-  version "5.10.7"
-  resolved "https://registry.npmjs.org/twilio/-/twilio-5.10.7.tgz#bc30b7657529fd1987e6b91e686dd369c4042a62"
-  integrity sha512-pELNeyQqkJMW/UkbcdNGDfOjMyt1FXoYOKXBDqOViHmcdJ04cq8Ty3VsrEAabi97YesK3T2v5KP5XKPY8uUx9w==
+  version "5.12.0"
+  resolved "https://registry.npmjs.org/twilio/-/twilio-5.12.0.tgz#10dcdbdc084c79c4c4b2065ed1062abfab030560"
+  integrity sha512-ZAKnDKcWvJSb90xQS13QB5KQOeMJPzsRPHxZqju8i5ALg3D4hNwAF9bpytVTxTJV99BL4Rn6Un+ZtXjGeMpjvQ==
   dependencies:
     axios "^1.12.0"
     dayjs "^1.11.9"
     https-proxy-agent "^5.0.0"
     jsonwebtoken "^9.0.2"
-    qs "^6.9.4"
+    qs "^6.14.1"
     scmp "^2.1.0"
     xmlbuilder "^13.0.2"
 
