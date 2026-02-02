@@ -63,7 +63,7 @@ export const didJwkFrom = (json: Dictionary<any>): VCLDidJwk => {
 };
 
 export const presentationRequestDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLPresentationRequestDescriptor => {
   const deepLink = deepLinkFrom(json.deepLink);
   const didJwk = didJwkFrom(json.didJwk);
@@ -73,7 +73,7 @@ export const presentationRequestDescriptorFrom = (
     didJwk,
     json.remoteCryptoServicesToken
       ? new VCLToken(json.remoteCryptoServicesToken)
-      : null
+      : null,
   );
 };
 
@@ -82,12 +82,12 @@ export const authTokenFrom = (json?: Dictionary<any>): VCLAuthToken => {
     json?.payload ?? {},
     json?.authTokenUri,
     json?.walletDid,
-    json?.relyingPartyDid
+    json?.relyingPartyDid,
   );
 };
 
 export const presentationSubmissionFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLPresentationSubmission => {
   const presentationRequestJson = json.presentationRequest;
   const { verifiableCredentials } = json;
@@ -99,48 +99,48 @@ export const presentationSubmissionFrom = (
     didJwkFrom(presentationRequestJson.didJwk),
     json.remoteCryptoServicesToken
       ? new VCLToken(json.remoteCryptoServicesToken)
-      : null
+      : null,
   );
   return new VCLPresentationSubmission(
     presentationRequest,
-    verifiableCredentials
+    verifiableCredentials,
   );
 };
 
 export const submissionResultFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLSubmissionResult => {
   const submissionResultJson = json;
   return new VCLSubmissionResult(
     tokenFrom(submissionResultJson.sessionToken.value) ?? new VCLToken(''),
     new VCLExchange(submissionResultJson.exchange),
     submissionResultJson.jti,
-    submissionResultJson.submissionId
+    submissionResultJson.submissionId,
   );
 };
 
 export const organizationsSearchDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLOrganizationsSearchDescriptor => {
   return new VCLOrganizationsSearchDescriptor(
-    new VCLFilter(json.filter.did, null, null)
+    new VCLFilter(json.filter.did, null, null),
   );
 };
 
 const credentialManifestDescriptorByDeepLinkFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLCredentialManifestDescriptorByDeepLink => {
   return new VCLCredentialManifestDescriptorByDeepLink(
     deepLinkFrom(json.deepLink),
     VCLIssuingType.Career,
     null,
     didJwkFrom(json.didJwk),
-    null
+    null,
   );
 };
 
 const credentialManifestDescriptorByServiceFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLCredentialManifestDescriptorByService => {
   return new VCLCredentialManifestDescriptorByService(
     new VCLService(json.service),
@@ -148,12 +148,12 @@ const credentialManifestDescriptorByServiceFrom = (
     json.credentialTypes,
     null,
     didJwkFrom(json.didJwk),
-    json.did
+    json.did,
   );
 };
 
 const credentialManifestDescriptorRefreshFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLCredentialManifestDescriptor => {
   return new VCLCredentialManifestDescriptorRefresh(
     json.service,
@@ -162,12 +162,12 @@ const credentialManifestDescriptorRefreshFrom = (
     json.did,
     json.remoteCryptoServicesToken
       ? new VCLToken(json.remoteCryptoServicesToken)
-      : null
+      : null,
   );
 };
 
 export const credentialManifestDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLCredentialManifestDescriptor => {
   if (json.credentialIds) {
     return credentialManifestDescriptorRefreshFrom(json);
@@ -179,7 +179,7 @@ export const credentialManifestDescriptorFrom = (
 };
 
 export const credentialManifestFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLCredentialManifest => {
   return new VCLCredentialManifest(
     jwtFromJson(json.jwt),
@@ -189,74 +189,74 @@ export const credentialManifestFrom = (
     didJwkFrom(json.didJwk),
     json.remoteCryptoServicesToken
       ? new VCLToken(json.remoteCryptoServicesToken)
-      : null
+      : null,
   );
 };
 
 export const generateOffersDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLGenerateOffersDescriptor => {
   const credentialManifest = credentialManifestFrom(json.credentialManifest);
   const identificationVerifiableCredentials =
     json.identificationVerifiableCredentials.map((vc: Dictionary<any>) =>
-      VCLVerifiableCredential.fromJSON(vc)
+      VCLVerifiableCredential.fromJSON(vc),
     );
   return new VCLGenerateOffersDescriptor(
     credentialManifest,
     json.types,
     null,
-    identificationVerifiableCredentials
+    identificationVerifiableCredentials,
   );
 };
 
 export const finalizeOffersDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLFinalizeOffersDescriptor => {
   const credentialManifest = credentialManifestFrom(json.credentialManifest);
   return new VCLFinalizeOffersDescriptor(
     credentialManifest,
     json.challenge,
     json.approvedOfferIds,
-    json.rejectedOfferIds
+    json.rejectedOfferIds,
   );
 };
 
 export const authTokenDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLAuthTokenDescriptor => {
   if (json.presentationRequest != null) {
     return new VCLAuthTokenDescriptor(
       new VCLPresentationRequest(
         VCLJwt.fromEncodedJwt(json.presentationRequest.jwt.encodedJwt),
         new VCLVerifiedProfile(
-          json.presentationRequest.verifiedProfile.payload
+          json.presentationRequest.verifiedProfile.payload,
         ),
         new VCLDeepLink(json.presentationRequest.deepLink.value),
         null,
-        didJwkFrom(json.presentationRequest.didJwk.payload)
+        didJwkFrom(json.presentationRequest.didJwk.payload),
       ),
-      json.refreshToken
+      json.refreshToken,
     );
   }
   return new VCLAuthTokenDescriptor(
     json.authTokenUri,
     json.refreshToken,
     json.walletDid,
-    json.relyingPartyDid
+    json.relyingPartyDid,
   );
 };
 
 export const credentialTypesUIFormSchemaDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLCredentialTypesUIFormSchemaDescriptor => {
   return new VCLCredentialTypesUIFormSchemaDescriptor(
     json.credentialType,
-    json.countryCode
+    json.countryCode,
   );
 };
 
 export const verifiedProfileDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLVerifiedProfileDescriptor => {
   return new VCLVerifiedProfileDescriptor(json.did);
 };
@@ -266,7 +266,7 @@ export const jwtDescriptorFrom = (json: Dictionary<any>): VCLJwtDescriptor => {
 };
 
 export const didJwkDescriptorFrom = (
-  json: Dictionary<any>
+  json: Dictionary<any>,
 ): VCLDidJwkDescriptor => {
   return new VCLDidJwkDescriptor(json.signatureAlgorithm, null);
 };

@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import VCLPushDelegate from '../../../../src/api/entities/VCLPushDelegate';
 import { DeepLinkMocks } from './DeepLinkMocks';
 
@@ -16,7 +15,7 @@ class CredentialManifestDescriptorMocks {
 
     static PushDelegate = new VCLPushDelegate(
         'https://devservices.velocitycareerlabs.io/api/push-gateway',
-        'if0123asd129smw321'
+        'if0123asd129smw321',
     );
 
     static IssuingServiceEndPoint = `https://devagent.velocitycareerlabs.io/api/holder/v0.6/org/${this.IssuerDid}/issue/get-credential-manifest`;

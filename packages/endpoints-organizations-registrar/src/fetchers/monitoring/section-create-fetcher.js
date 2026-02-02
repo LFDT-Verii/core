@@ -1,6 +1,6 @@
 const createSection = async (
   { orgName, statusPageId },
-  { betterUptimeFetch }
+  { betterUptimeFetch },
 ) => {
   const payload = {
     name: orgName,
@@ -9,7 +9,7 @@ const createSection = async (
 
   const response = await betterUptimeFetch.post(
     `status-pages/${statusPageId}/sections`,
-    payload
+    payload,
   );
 
   return response.json();

@@ -24,7 +24,7 @@ const mockSetRevokedStatusSigned = mock.fn(() => Promise.resolve({}));
 const initRevocationRegistry = mock.fn(() =>
   Promise.resolve({
     setRevokedStatusSigned: mockSetRevokedStatusSigned,
-  })
+  }),
 );
 mock.module('@verii/metadata-registration', {
   namedExports: { initRevocationRegistry },
@@ -163,7 +163,7 @@ describe('Credentials checking tests', () => {
     });
 
     expect(
-      initRevocationRegistry.mock.calls.map((call) => call.arguments)
+      initRevocationRegistry.mock.calls.map((call) => call.arguments),
     ).toEqual([
       [
         expect.objectContaining({
@@ -174,7 +174,7 @@ describe('Credentials checking tests', () => {
     ]);
 
     expect(
-      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments)
+      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         accountId: primaryAddress,
@@ -221,7 +221,7 @@ describe('Credentials checking tests', () => {
       type: ['SomeType'],
       credentialStatus: {
         id: `ethereum:0xB457b50B6914A17Be513eD17c4aF9A9FECDB164C/getRevokedStatus?address=${toEthereumAddress(
-          hexFromJwk(fallbackKeyPair.publicKey, false)
+          hexFromJwk(fallbackKeyPair.publicKey, false),
         )}&listId=1000257453&index=5682`,
       },
       exchange,
@@ -250,7 +250,7 @@ describe('Credentials checking tests', () => {
     });
 
     expect(
-      initRevocationRegistry.mock.calls.map((call) => call.arguments)
+      initRevocationRegistry.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       expect.objectContaining({
         privateKey: hexFromJwk(fallbackKeyPair.privateKey),
@@ -258,7 +258,7 @@ describe('Credentials checking tests', () => {
       expect.any(Object),
     ]);
     expect(
-      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments)
+      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         accountId: primaryAddress,
@@ -314,7 +314,7 @@ describe('Credentials checking tests', () => {
     });
 
     expect(
-      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments)
+      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         accountId: primaryAddress,
@@ -368,7 +368,7 @@ describe('Credentials checking tests', () => {
       updatedAt: expect.any(Date),
     });
     expect(
-      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments)
+      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         accountId: primaryAddress,
@@ -442,7 +442,7 @@ describe('Credentials checking tests', () => {
     });
 
     expect(
-      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments)
+      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         accountId: primaryAddress,
@@ -491,7 +491,7 @@ describe('Credentials checking tests', () => {
     });
 
     expect(
-      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments)
+      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         accountId: primaryAddress,
@@ -540,7 +540,7 @@ describe('Credentials checking tests', () => {
 
   it('Should return 500 when the blockchain doesnt respond', async () => {
     mockSetRevokedStatusSigned.mock.mockImplementationOnce(() =>
-      Promise.reject(new Error('Transaction failed'))
+      Promise.reject(new Error('Transaction failed')),
     );
     const response = await fastify.injectJson({
       method: 'POST',
@@ -554,11 +554,11 @@ describe('Credentials checking tests', () => {
         error: 'Internal Server Error',
         errorCode: 'missing_error_code',
         message: expect.stringContaining('Transaction failed'),
-      })
+      }),
     );
 
     expect(
-      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments)
+      mockSetRevokedStatusSigned.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         accountId: primaryAddress,

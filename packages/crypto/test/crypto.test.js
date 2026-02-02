@@ -67,7 +67,7 @@ describe('Crypto tests', () => {
 
   it('create commitment', () => {
     const result = createCommitment(
-      Buffer.from('af9d043d9e7879f5fc93febb7baaf0ad7bc98ce4', 'hex')
+      Buffer.from('af9d043d9e7879f5fc93febb7baaf0ad7bc98ce4', 'hex'),
     );
     expect(result).toEqual('EiClnKu9zDe5G2fqOO/joEySuuAkfdk6oowSPvKFrf0wGA==');
   });
@@ -151,7 +151,7 @@ describe('Crypto tests', () => {
       expect(() =>
         generateKeyPair({
           curve: 'abc',
-        })
+        }),
       ).toThrow('Invalid EC curve name');
     });
   });
@@ -159,7 +159,7 @@ describe('Crypto tests', () => {
   describe('generateJWAKeyPair', () => {
     it('should generate a secp256k1 key', () => {
       expect(
-        generateJWAKeyPair({ algorithm: 'ec', curve: 'secp256k1' })
+        generateJWAKeyPair({ algorithm: 'ec', curve: 'secp256k1' }),
       ).toEqual({
         publicKey: {
           crv: 'secp256k1',
@@ -219,7 +219,7 @@ describe('Crypto tests', () => {
   describe('pem / hex conversions', () => {
     it('should generate pems for hex public keys', () => {
       expect(publicKeyHexToPem(publicKey)).toEqual(
-        expect.stringContaining('BEGIN PUBLIC KEY')
+        expect.stringContaining('BEGIN PUBLIC KEY'),
       );
     });
   });
@@ -240,7 +240,7 @@ describe('Crypto tests', () => {
       const signature = signPayload(payload, privateKey);
       expect(signature).toEqual(
         // eslint-disable-next-line max-len
-        '304502202f13bea623e1ff6c9ca5e75ef47761e9e42f669cbe504f2b51f3ee59f407f72a022100e0ec7879886ec6333a0a17348ff1cd29dc68a1a73ac822ca0fc55f588a85b98d'
+        '304502202f13bea623e1ff6c9ca5e75ef47761e9e42f669cbe504f2b51f3ee59f407f72a022100e0ec7879886ec6333a0a17348ff1cd29dc68a1a73ac822ca0fc55f588a85b98d',
       );
       const verifiedPayload = verifyPayload(payload, signature, publicKey);
       expect(verifiedPayload).toEqual(true);
@@ -278,7 +278,7 @@ describe('Crypto tests', () => {
         .update(payload)
         .verify(
           publicKeyHexToPem(publicKeyHex),
-          Buffer.from(signature, 'base64')
+          Buffer.from(signature, 'base64'),
         );
 
       expect(isSignatureValid).toBe(true);
@@ -297,7 +297,7 @@ describe('Crypto tests', () => {
         .update(JSON.stringify({ message: 'TEST MESSAGE 2' }))
         .verify(
           publicKeyHexToPem(publicKeyHex),
-          Buffer.from(signature, 'base64')
+          Buffer.from(signature, 'base64'),
         );
       expect(isSignatureValid).toBe(false);
     });
@@ -314,7 +314,7 @@ describe('Crypto tests', () => {
       const isSignatureValid = verifyBase64Signature(
         payload,
         signature,
-        publicKeyHex
+        publicKeyHex,
       );
 
       expect(isSignatureValid).toBe(true);
@@ -330,7 +330,7 @@ describe('Crypto tests', () => {
       const isSignatureValid = verifyBase64Signature(
         JSON.stringify({ message: 'TEST MESSAGE 2' }),
         signature,
-        publicKeyHex
+        publicKeyHex,
       );
       expect(isSignatureValid).toBe(false);
     });
@@ -355,10 +355,10 @@ describe('Crypto tests', () => {
       const result1 = calculateDigest('sha384', 'base64')(value);
       const result2 = calculateDigest('sha256', 'hex')(value);
       expect(result1).toEqual(
-        '7YRfi08qbV2oajvskDUtkW1qZuNCDXIOFkOa3yOPEpGCyMZPxOyMHmUGvCtIiLr5'
+        '7YRfi08qbV2oajvskDUtkW1qZuNCDXIOFkOa3yOPEpGCyMZPxOyMHmUGvCtIiLr5',
       );
       expect(result2).toEqual(
-        'c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646'
+        'c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646',
       );
     });
 

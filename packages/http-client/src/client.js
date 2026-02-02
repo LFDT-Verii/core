@@ -52,7 +52,7 @@ const initHttpClient = (options) => {
     host,
     { traceId, log },
     body,
-    contentType
+    contentType,
   ) => {
     const reqId = nanoid();
     const reqHeaders = buildReqHeaders(reqOptions, contentType, traceId);
@@ -81,13 +81,13 @@ const initHttpClient = (options) => {
             const bodyJson = await rawBody.json();
             log.info(
               { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
-              'HttpClient response'
+              'HttpClient response',
             );
             return bodyJson;
           } catch (error) {
             log.error(
               { origin, url, reqId, statusCode, resHeaders, error },
-              'JSON parsing error'
+              'JSON parsing error',
             );
 
             return {};
@@ -97,7 +97,7 @@ const initHttpClient = (options) => {
           const bodyText = await rawBody.text();
           log.info(
             { origin, url, reqId, statusCode, resHeaders, body: bodyText },
-            'HttpClient response'
+            'HttpClient response',
           );
           return bodyText;
         },
@@ -135,7 +135,7 @@ const initHttpClient = (options) => {
           host,
           context,
           isObject(payload) ? JSON.stringify(payload) : payload,
-          calcContentType(payload, reqOptions?.headers)
+          calcContentType(payload, reqOptions?.headers),
         ),
       delete: (url, reqOptions = {}) =>
         request(url, reqOptions, HTTP_VERBS.DELETE, host, context),
@@ -157,7 +157,7 @@ const parseArgs = (presetHost, args) => {
     return { host: parsePrefixUrl(args[0]), context: args[1] };
   }
   throw new Error(
-    `HttpClient: Expected 1 or 2 arguments, received ${args.length}`
+    `HttpClient: Expected 1 or 2 arguments, received ${args.length}`,
   );
 };
 
@@ -188,12 +188,12 @@ const buildInterceptorChain = (
     clientSecret,
     scopes,
     audience,
-  }
+  },
 ) => {
   const chain = [];
   if (!isTest) {
     chain.push(
-      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false })
+      interceptors.dns({ maxTTL: 300000, maxItems: 2000, dualStack: false }),
     );
   }
 
@@ -234,7 +234,7 @@ const buildUrl = (host, url, reqOptions) => {
   }
   if (!host) {
     throw new Error(
-      'HttpClient: Cannot build URL without prefixUrl or full url'
+      'HttpClient: Cannot build URL without prefixUrl or full url',
     );
   }
   return [host.origin, buildRelativePath(host.rootPath ?? '', url, reqOptions)];
@@ -255,7 +255,7 @@ const buildRelativePath = (rootPath, url, reqOptions) => {
   return addSearchParams(
     pathname,
     new URLSearchParams(searchParamsString),
-    reqOptions?.searchParams
+    reqOptions?.searchParams,
   );
 };
 

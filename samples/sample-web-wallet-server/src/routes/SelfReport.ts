@@ -11,8 +11,8 @@ export default async function selfReportRoutes(fastify) {
     try {
       reply.send(
         await req.vclSdk.getCredentialTypesUIFormSchema(
-          credentialTypesUIFormSchemaDescriptorFrom(req.body)
-        )
+          credentialTypesUIFormSchemaDescriptorFrom(req.body),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);

@@ -44,7 +44,7 @@ describe('Accepted Offer managment', () => {
           updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
           ...acceptedOffer,
         },
-      ])
+      ]),
     );
   });
 });

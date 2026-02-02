@@ -50,7 +50,7 @@ const sendServicesActivatedEmailToCAOsMatcher = (organization) => ({
 
 const expectedInvitationSentEmail = (
   signupUrl = '',
-  toAddress = 'test@email.com'
+  toAddress = 'test@email.com',
 ) => ({
   Destination: {
     ToAddresses: [toAddress],
@@ -113,8 +113,8 @@ const expectedSignatoryApprovalEmail = (
   inviterOrg,
   orgForApproval,
   messageMatcher = expect.stringMatching(
-    /You are the authorized signatory for your organization\.[^]*<a href="\S+\/signatories\/approve[^]*<a href="\S+\/signatories\/reject/
-  )
+    /You are the authorized signatory for your organization\.[^]*<a href="\S+\/signatories\/approve[^]*<a href="\S+\/signatories\/reject/,
+  ),
 ) => {
   const requester = inviterOrg
     ? inviterOrg.profile.name
@@ -133,8 +133,8 @@ const expectedSignatoryApprovalEmail = (
       Subject: {
         Data: expect.stringMatching(
           new RegExp(
-            `${requester} is requesting your approval to register ${orgForApproval.profile.name} on the Velocity Network`
-          )
+            `${requester} is requesting your approval to register ${orgForApproval.profile.name} on the Velocity Network`,
+          ),
         ),
       },
     },
@@ -187,8 +187,8 @@ const expectedSupportEmail = (orgName = 'Test Organization') => ({
       Raw: {
         Data: expect.stringMatching(
           new RegExp(
-            `Organization ${orgName} was created by[\\S\\s]*and an approval request was sent to`
-          )
+            `Organization ${orgName} was created by[\\S\\s]*and an approval request was sent to`,
+          ),
         ),
       },
     },
@@ -219,13 +219,13 @@ const expectedServiceActivationRequiredEmail = {
 const expectedSignatoryReminderEmail = (
   inviterOrg,
   orgForApproval,
-  messageMatcher
+  messageMatcher,
 ) => expectedSignatoryApprovalEmail(inviterOrg, orgForApproval, messageMatcher);
 
 const expectedSupportMaxSignatoryReminderReachedEmailParams = () => [
   expect.stringMatching(/LocalDevNet: Maximum signatory reminder alert/),
   expect.stringMatching(
-    /The Velocity Network has sent the maximum number of reminder emails to/
+    /The Velocity Network has sent the maximum number of reminder emails to/,
   ),
 ];
 

@@ -2,9 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { Box, Autocomplete, Typography, useTheme, TextField, Button } from '@mui/material';
 import { useDataProvider } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
-// eslint-disable-next-line import/extensions
 import parse from 'autosuggest-highlight/parse/index.js';
-// eslint-disable-next-line import/extensions
 import match from 'autosuggest-highlight/match/index.js';
 import { Add as AddIcon } from '@mui/icons-material';
 import PropTypes from 'prop-types';
@@ -17,6 +15,7 @@ const ERRORS = {
   REQUIRED: 'Required',
 };
 
+// eslint-disable-next-line complexity
 const AutoCompleteOrganizationName = ({ defaultValue }) => {
   const form = useFormContext();
   const [value, setValue] = useState(defaultValue);
@@ -160,7 +159,6 @@ const AutoCompleteOrganizationName = ({ defaultValue }) => {
                   <div>
                     {parts.map((part, index) => (
                       <Typography
-                        /* eslint-disable-next-line react/no-array-index-key */
                         key={index}
                         style={{ fontWeight: part.highlight ? 700 : 400 }}
                         variant="pl"

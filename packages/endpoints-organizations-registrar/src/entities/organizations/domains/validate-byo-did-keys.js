@@ -16,7 +16,7 @@ const validateByoDidKeys = (keys) => {
   }
   const dlt = find(
     (key) => key.purposes.includes(KeyPurposes.DLT_TRANSACTIONS),
-    keys
+    keys,
   );
   if (isEmpty(dlt)) {
     throw newError(400, 'Keys must include DLT_TRANSACTIONS purpose', {

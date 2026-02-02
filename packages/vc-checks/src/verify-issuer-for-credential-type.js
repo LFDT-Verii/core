@@ -24,7 +24,7 @@ const verifyIssuerForCredentialType = (
   credential,
   issuerId,
   { issuerAccreditation, credentialTypeMetadata },
-  { log, config }
+  { log, config },
 ) => {
   const { permittedVelocityServiceCategory } = issuerAccreditation;
 
@@ -41,7 +41,7 @@ const verifyIssuerForCredentialType = (
   if (
     some(
       (category) => startsWith('Notary', category),
-      permittedVelocityServiceCategory
+      permittedVelocityServiceCategory,
     )
   ) {
     return true;
@@ -50,7 +50,7 @@ const verifyIssuerForCredentialType = (
   if (includes(ServiceCategories.Issuer, permittedVelocityServiceCategory)) {
     return verifyPrimarySourceIssuer(
       { credential, issuerId, credentialTypeMetadata },
-      { log, config }
+      { log, config },
     );
   }
 

@@ -16,11 +16,11 @@
 
 const getCredentialDisplayDescriptor = async (
   schemaName,
-  { libFetch, cache }
+  { libFetch, cache },
 ) => {
   const response = await libFetch.get(
     `display-descriptors/${schemaName}.descriptor.json`,
-    { cache }
+    { cache },
   );
   return response.json();
 };

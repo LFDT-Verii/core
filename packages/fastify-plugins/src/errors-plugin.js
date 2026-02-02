@@ -83,7 +83,7 @@ const errorsPlugin = (fastify, options, next) => {
       addValidationErrorCode,
       (err) => ensureErrorCode(err, fastify),
       (err) => addRequestId(err, request),
-      (err) => transformToInternalServerError(err, fastify)
+      (err) => transformToInternalServerError(err, fastify),
     )(_error.processedError || _error);
 
     sendError(error);

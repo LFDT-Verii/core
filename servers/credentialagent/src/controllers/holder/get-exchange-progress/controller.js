@@ -43,7 +43,7 @@ const getExchangeProgressController = async (fastify) => {
         },
       }),
     },
-    async ({ exchange }) => buildExchangeProgress(exchange)
+    async ({ exchange }) => buildExchangeProgress(exchange),
   );
 };
 

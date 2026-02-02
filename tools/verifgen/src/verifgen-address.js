@@ -20,12 +20,12 @@ program
   .option(
     '-b, --public-key-file <filename>',
     'Input public key file name',
-    'pub.key'
+    'pub.key',
   )
   .option(
     '-a, --address-file <filename>',
     'Output account address file name',
-    'account.address'
+    'account.address',
   )
   .action(() => {
     const options = program.opts();

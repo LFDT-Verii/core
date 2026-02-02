@@ -30,11 +30,12 @@ const {
 
 const buildIdentityDoc = (credentials, context) =>
   reduce(
+    // eslint-disable-next-line complexity
     (acc, { credential, credentialChecks }) => {
       const docCredential = buildDocCredential(
         credential,
         credentialChecks,
-        context
+        context,
       );
 
       if (['PhoneV1.0', 'Phone'].includes(docCredential.credentialType)) {
@@ -54,7 +55,7 @@ const buildIdentityDoc = (credentials, context) =>
         ...extractFieldsFromIdCredential(
           docCredential.credentialType,
           credential,
-          context
+          context,
         ),
       };
     },
@@ -65,7 +66,7 @@ const buildIdentityDoc = (credentials, context) =>
       idDocumentCredentials: [],
       phoneCredentials: [],
     },
-    credentials
+    credentials,
   );
 
 const buildDocCredential = (credential, credentialChecks, context) => {
@@ -92,7 +93,7 @@ const buildDocCredential = (credential, credentialChecks, context) => {
 const addWebhookSpecificFields = (
   credential,
   credentialChecks,
-  { config: { identifyWebhookVersion } }
+  { config: { identifyWebhookVersion } },
 ) => {
   if (identifyWebhookVersion === 2) {
     return {
@@ -106,12 +107,14 @@ const addWebhookSpecificFields = (
   return credential.credentialSubject; // credentialSubject hoisted in older versions. Remove by 01/01/2023
 };
 
+// eslint-disable-next-line complexity
 const extractValidUntil = (credential) =>
   credential?.credentialSubject?.validity?.validUntil ??
   credential?.credentialSubject?.validUntil ??
   credential?.validUntil ??
   credential?.expirationDate;
 
+// eslint-disable-next-line complexity
 const extractValidFrom = (credential) =>
   credential?.credentialSubject?.validity?.validFrom ??
   credential?.credentialSubject?.validFrom ??

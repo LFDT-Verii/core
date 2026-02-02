@@ -30,7 +30,7 @@ const createRevocationList = async (listId, issuer, context) => {
   const revocationRegistry = await getRevocationRegistry(issuer, context);
   try {
     await revocationRegistry.addRevocationListSigned(listId, caoDid);
-  } catch (err) {
+  } catch {
     await revocationRegistry.addWalletToRegistrySigned({ caoDid });
     await revocationRegistry.addRevocationListSigned(listId, caoDid);
   }

@@ -62,12 +62,12 @@ export interface KMS {
   signJwt: (
     payload: Record<string, unknown>,
     keyId: Id,
-    options: Record<string, string>
+    options: Record<string, string>,
   ) => Promise<string>;
   verifyJwt: (
     jwt: string,
     keyId: Id,
-    options: Record<string, string>
+    options: Record<string, string>,
   ) => { headers: Record<string, string>; payload: Record<string, unknown> };
 }
 

@@ -4,7 +4,7 @@ const { initContractClient } = require('./contract');
 
 const initContractWithTransactingClient = async (
   { privateKey, contractAddress, rpcProvider, contractAbi },
-  context
+  context,
 ) => {
   const transactingWallet = Wallet.createRandom();
   const operatorWallet = new Wallet(privateKey, rpcProvider);
@@ -16,7 +16,7 @@ const initContractWithTransactingClient = async (
         rpcProvider,
         contractAbi,
       },
-      context
+      context,
     ),
     signature: signArguments(operatorWallet, {
       address: transactingWallet.address,

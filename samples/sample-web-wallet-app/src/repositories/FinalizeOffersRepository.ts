@@ -10,7 +10,7 @@ import fetcher from '../network/Fetcher';
 
 export const finalizeOffers = async (
   finalizeOffersDescriptor: Dictionary<any>,
-  sessionToken: Dictionary<any>
+  sessionToken: Dictionary<any>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: Urls.finalizeOffers,

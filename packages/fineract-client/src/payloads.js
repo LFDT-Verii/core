@@ -146,7 +146,7 @@ const initBuildBatchCreateCreditsAccountPayload =
           submittedOnDate,
           productId,
           autoApproveAndActivate,
-        })
+        }),
       ),
     };
   };
@@ -164,7 +164,7 @@ const initBuildBatchTransferCreditsPayload =
           toAccount,
           amount,
           description,
-        })
+        }),
       ),
     };
   };
@@ -177,7 +177,7 @@ const initBuildBatchBurnVouchersPayload =
       relativeUrl: `vouchers/${clientId}`,
       method: 'POST',
       body: JSON.stringify(
-        buildBurnVouchersPayload({ quantity, submittedOnDate })
+        buildBurnVouchersPayload({ quantity, submittedOnDate }),
       ),
     };
   };

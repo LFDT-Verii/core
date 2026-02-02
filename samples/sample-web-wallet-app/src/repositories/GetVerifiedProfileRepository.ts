@@ -9,7 +9,7 @@ import Urls from '../network/Urls';
 import fetcher from '../network/Fetcher';
 
 export const getVerifiedProfile = async (
-  verifiedProfileDescriptor: Dictionary<any>
+  verifiedProfileDescriptor: Dictionary<any>,
 ): Promise<any> => {
   const config = {
     url: Urls.getVerifiedProfile,

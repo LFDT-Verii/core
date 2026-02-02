@@ -11,7 +11,7 @@ import VCLLog from './VCLLog';
 import VCLError from '../../api/entities/error/VCLError';
 
 export const getQueryParamsFromString = (
-    srcStr: string
+    srcStr: string,
 ): Map<string, string> => {
     const result = new Map<string, string>();
 
@@ -33,9 +33,10 @@ export const getQueryParamsFromString = (
 
 export const appendQueryParamsToString = (
     srcStr: Nullish<string>,
-    queryParams: string
+    queryParams: string,
 ): string => {
     return (
+        // eslint-disable-next-line no-unsafe-optional-chaining
         srcStr?.valueOf() +
         (getQueryParamsFromString(decodeURI(srcStr?.valueOf() ?? '')).size
             ? '&'
@@ -46,7 +47,7 @@ export const appendQueryParamsToString = (
 
 export const getUrlSubPathFromString = (
     srcStr: Nullish<string>,
-    subPathPrefix: string
+    subPathPrefix: string,
 ): Nullish<string> => {
     return decodeURI(srcStr?.valueOf() ?? '')
         .split('/')
@@ -66,22 +67,22 @@ export const equalsToDate = (date1: Date, date2: Date): boolean => {
         Date.UTC(
             date1.getUTCFullYear(),
             date1.getUTCMonth(),
-            date1.getUTCDate()
-        )
+            date1.getUTCDate(),
+        ),
     );
     const check = new Date(
         Date.UTC(
             date2.getUTCFullYear(),
             date2.getUTCMonth(),
-            date2.getUTCDate()
-        )
+            date2.getUTCDate(),
+        ),
     );
     return selfCopy === check;
 };
 
 export const ensureDefined = <T>(
     value: T | null | undefined,
-    name: string
+    name: string,
 ): T => {
     if (value == null) {
         throw new VCLError(`${name} is required`);

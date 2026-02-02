@@ -82,7 +82,7 @@ describe('Invitations controller test suite', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -104,7 +104,7 @@ describe('Invitations controller test suite', () => {
           errorCode: 'invitation_expired',
           message: 'Invitation has expired',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -155,7 +155,7 @@ describe('Invitations controller test suite', () => {
       expect(response.json).toEqual({
         invitation: invitationResponseExpectation(
           invitation,
-          inviterOrganization
+          inviterOrganization,
         ),
       });
 
@@ -219,7 +219,7 @@ describe('Invitations controller test suite', () => {
       expect(response.json).toEqual({
         invitation: invitationResponseExpectation(
           invitation,
-          inviterOrganization
+          inviterOrganization,
         ),
       });
 
@@ -280,7 +280,7 @@ describe('Invitations controller test suite', () => {
       expect(response.json).toEqual({
         invitation: invitationResponseExpectation(
           invitation,
-          inviterOrganization
+          inviterOrganization,
         ),
       });
 
@@ -322,7 +322,7 @@ describe('Invitations controller test suite', () => {
           expiresAt: expect.any(Date),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -364,7 +364,7 @@ describe('Invitations controller test suite', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
       const invitationFromDb = await invitationsRepo
         .collection()
@@ -407,7 +407,7 @@ describe('Invitations controller test suite', () => {
 const invitationResponseExpectation = (
   invitation,
   inviterOrganization,
-  overrides
+  overrides,
 ) => {
   return {
     ...omit(['_id'], invitation),

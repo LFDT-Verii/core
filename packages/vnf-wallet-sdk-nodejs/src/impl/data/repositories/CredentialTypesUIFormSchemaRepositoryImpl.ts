@@ -15,20 +15,18 @@ import Request from '../infrastructure/network/Request';
 import Urls, { HeaderKeys, HeaderValues, Params } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class CredentialTypesUIFormSchemaRepositoryImpl
-    implements CredentialTypesUIFormSchemaRepository
-{
+export default class CredentialTypesUIFormSchemaRepositoryImpl implements CredentialTypesUIFormSchemaRepository {
     constructor(private readonly networkService: NetworkService) {}
 
     async getCredentialTypesUIFormSchema(
         credentialTypesUIFormSchemaDescriptor: VCLCredentialTypesUIFormSchemaDescriptor,
-        countries: VCLCountries
+        countries: VCLCountries,
     ): Promise<VCLCredentialTypesUIFormSchema> {
         const credentialTypesFormSchemaResponse =
             await this.networkService.sendRequest({
                 endpoint: Urls.CredentialTypesFormSchema.replace(
                     Params.CredentialType,
-                    credentialTypesUIFormSchemaDescriptor.credentialType
+                    credentialTypesUIFormSchemaDescriptor.credentialType,
                 ),
                 method: HttpMethod.GET,
                 contentType: Request.ContentTypeApplicationJson,
@@ -41,15 +39,15 @@ export default class CredentialTypesUIFormSchemaRepositoryImpl
             });
 
         const country = countries.countryByCode(
-            credentialTypesUIFormSchemaDescriptor.countryCode
+            credentialTypesUIFormSchemaDescriptor.countryCode,
         );
 
         return new VCLCredentialTypesUIFormSchema(
             this.parseCredentialTypesUIFormSchema(
                 countries,
                 credentialTypesFormSchemaResponse?.payload,
-                country?.regions
-            )
+                country?.regions,
+            ),
         );
     }
 
@@ -57,9 +55,10 @@ export default class CredentialTypesUIFormSchemaRepositoryImpl
     private parseCredentialTypesUIFormSchema(
         countries: VCLCountries,
         formSchemaDict: Dictionary<any>,
-        regions: Nullish<VCLRegions>
+        regions: Nullish<VCLRegions>,
     ): Dictionary<any> {
         let formSchemaDictCP = JSON.parse(JSON.stringify(formSchemaDict));
+
         for (const key of Object.keys(formSchemaDictCP)) {
             const valueDict = formSchemaDictCP[key];
             if (typeof valueDict === 'object') {
@@ -72,7 +71,7 @@ export default class CredentialTypesUIFormSchemaRepositoryImpl
                             allCountries,
                             key,
                             valueDict,
-                            formSchemaDictCP
+                            formSchemaDictCP,
                         );
                     }
                 } else if (
@@ -85,7 +84,7 @@ export default class CredentialTypesUIFormSchemaRepositoryImpl
                             allRegions,
                             key,
                             valueDict,
-                            formSchemaDictCP
+                            formSchemaDictCP,
                         );
                     }
                 } else {
@@ -93,7 +92,7 @@ export default class CredentialTypesUIFormSchemaRepositoryImpl
                         this.parseCredentialTypesUIFormSchema(
                             countries,
                             valueDict,
-                            regions
+                            regions,
                         );
                 }
             }
@@ -105,14 +104,14 @@ export default class CredentialTypesUIFormSchemaRepositoryImpl
         places: VCLPlace[],
         key: string,
         valueDict: Dictionary<any>,
-        formSchemaDict: Dictionary<any>
+        formSchemaDict: Dictionary<any>,
     ): Dictionary<any> {
         const formSchemaDictCP = JSON.parse(JSON.stringify(formSchemaDict));
         const valueDictHasKeyUiEnum = Object.keys(valueDict).includes(
-            VCLCredentialTypesUIFormSchema.KeyUiEnum
+            VCLCredentialTypesUIFormSchema.KeyUiEnum,
         );
         const valueDictHasKeyUiNames = Object.keys(valueDict).includes(
-            VCLCredentialTypesUIFormSchema.KeyUiNames
+            VCLCredentialTypesUIFormSchema.KeyUiNames,
         );
 
         if (valueDictHasKeyUiEnum || valueDictHasKeyUiNames) {

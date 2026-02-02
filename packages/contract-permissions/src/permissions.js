@@ -20,7 +20,7 @@ const contractAbi = require('./contracts/permissions.json');
 
 const initPermissions = async (
   { privateKey, contractAddress, rpcProvider },
-  context
+  context,
 ) => {
   const { log } = context;
   log.info({ func: 'initPermission', privateKey, contractAddress });
@@ -32,7 +32,7 @@ const initPermissions = async (
       rpcProvider,
       contractAbi,
     },
-    context
+    context,
   );
 
   const updateAddressScopes = async ({
@@ -49,7 +49,7 @@ const initPermissions = async (
     const tx = await contractClient.updateAddressScopes(
       address,
       scopesToAdd,
-      scopesToRemove
+      scopesToRemove,
     );
     await tx.wait();
   };
@@ -76,7 +76,7 @@ const initPermissions = async (
     const tx = await contractClient.addPrimary(
       primary,
       permissioning,
-      rotation
+      rotation,
     );
     await tx.wait();
   };
@@ -98,7 +98,7 @@ const initPermissions = async (
     const tx = await contractClient.rotateOperatorKey(
       primary,
       newOperator,
-      oldOperator
+      oldOperator,
     );
     await tx.wait();
   };
@@ -117,7 +117,7 @@ const initPermissions = async (
     const tx = await contractClient.rotatePermissioning(
       primary,
       newPermissioning,
-      newRotation
+      newRotation,
     );
     await tx.wait();
   };

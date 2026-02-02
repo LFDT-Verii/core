@@ -42,8 +42,8 @@ const initCredentialMetadataContract = async (issuer, context) => {
           contractAddress: config.metadataRegistryContractAddress,
           rpcProvider,
         },
-        context
-      )
+        context,
+      ),
   );
 
   return {
@@ -57,7 +57,7 @@ const initCredentialMetadataContract = async (issuer, context) => {
         metadata,
         metadata.contentHash,
         caoDid,
-        metadata.algType
+        metadata.algType,
       ),
     /**
      * List to create on the dlt
@@ -76,13 +76,13 @@ const initCredentialMetadataContract = async (issuer, context) => {
           credentialSubject: { listId, accountId },
         },
         KeyAlgorithms.SECP256K1,
-        issuer.issuingServiceDIDKeyId
+        issuer.issuingServiceDIDKeyId,
       );
 
       const issuerVC = await context.kms.signJwt(
         payload,
         issuer.issuingServiceKMSKeyId,
-        header
+        header,
       );
 
       return credentialMetadataRegistry.createCredentialMetadataList(
@@ -90,7 +90,7 @@ const initCredentialMetadataContract = async (issuer, context) => {
         listId,
         issuerVC,
         caoDid,
-        algType
+        algType,
       );
     },
   };

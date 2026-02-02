@@ -41,10 +41,10 @@ describe('RPC Provider Plugin', () => {
     };
     rpcProviderPlugin(fakeServer);
     expect(
-      fakeServer.decorateRequest.mock.calls.map((call) => call.arguments)
+      fakeServer.decorateRequest.mock.calls.map((call) => call.arguments),
     ).toEqual([['rpcProvider', null]]);
     expect(fakeServer.addHook.mock.calls.map((call) => call.arguments)).toEqual(
-      [['preValidation', expect.any(Function)]]
+      [['preValidation', expect.any(Function)]],
     );
   });
 

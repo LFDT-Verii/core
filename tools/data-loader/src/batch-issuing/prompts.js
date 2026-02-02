@@ -11,10 +11,10 @@ const disclosureListQuestion = (disclosures) => ({
     map((disclosure) => ({
       name: `${disclosure.purpose}, ${format(
         parseISO(disclosure.createdAt),
-        'MMM d yyyy h:mma'
+        'MMM d yyyy h:mma',
       )}`,
       value: disclosure.id,
-    }))
+    })),
   )(disclosures),
 });
 

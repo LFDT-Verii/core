@@ -26,7 +26,7 @@ const initKmsClient = ({ awsRegion, awsEndpoint }) => {
     buildClientConfig({
       awsRegion,
       awsEndpoint,
-    })
+    }),
   );
 
   const encrypt = async (keyId, plaintext) => {

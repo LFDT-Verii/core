@@ -11,7 +11,7 @@ const doGenerateJwt = async (selfsign, issuer, credentialType, credential) => {
     credential,
     credentialType,
     issuer.did.id,
-    credentialDid.id
+    credentialDid.id,
   );
 
   if (selfsign) {
@@ -26,7 +26,7 @@ const doGenerateJwt = async (selfsign, issuer, credentialType, credential) => {
     jwt: await generateCredentialJwt(
       payload,
       credentialPrivateKey,
-      `${credentialDid.id}#key-1`
+      `${credentialDid.id}#key-1`,
     ),
     credentialDid,
   };
@@ -56,7 +56,7 @@ const generateCredential = async (
   selfsign,
   issuerPersona,
   credentialType,
-  outputPrefix
+  outputPrefix,
 ) => {
   const issuerPrefix = issuerPersona || (selfsign ? 'self' : 'issuer');
 
@@ -65,15 +65,15 @@ const generateCredential = async (
     const credential = JSON.parse(
       common.readFile(
         loadCredentialSource(sourceTemplate),
-        'Source template not found'
-      )
+        'Source template not found',
+      ),
     );
 
     const result = await doGenerateJwt(
       selfsign,
       issuer,
       credentialType,
-      credential
+      credential,
     );
 
     writeFiles(outputPrefix, result);
@@ -104,7 +104,7 @@ program
   .option(
     '-o, --output-prefix <filename>',
     'Output credential file prefix',
-    'credential'
+    'credential',
   )
   .action((sourceTemplate) => {
     const options = program.opts();
@@ -113,7 +113,7 @@ program
       options.selfSign,
       options.issuerPersona,
       options.credentialType,
-      options.outputPrefix
+      options.outputPrefix,
     );
   })
   .parse(process.argv);

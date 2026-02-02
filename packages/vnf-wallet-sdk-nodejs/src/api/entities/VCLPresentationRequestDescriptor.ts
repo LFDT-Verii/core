@@ -10,9 +10,10 @@ export default class VCLPresentationRequestDescriptor {
 
     constructor(
         public readonly deepLink: VCLDeepLink,
+        // eslint-disable-next-line default-param-last
         public readonly pushDelegate: Nullish<VCLPushDelegate> = null,
         public readonly didJwk: VCLDidJwk,
-        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null
+        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {
         this.did = this.deepLink.did;
     }
@@ -22,7 +23,7 @@ export default class VCLPresentationRequestDescriptor {
         if (queryParams) {
             return appendQueryParamsToString(
                 this.deepLink.requestUri,
-                queryParams
+                queryParams,
             );
         }
         return this.deepLink.requestUri;

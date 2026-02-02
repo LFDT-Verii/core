@@ -28,7 +28,7 @@ const verificationKeyType = 'EcdsaSecp256k1VerificationKey2019';
 const signatureKeyType = 'EcdsaSecp256k1Signature2019';
 
 const generateDidInfo = (
-  { did: existingDid, keyId } = { did: null, keyId: 'key-1' }
+  { did: existingDid, keyId } = { did: null, keyId: 'key-1' },
 ) => {
   const { privateKey, publicKey } = generateKeyPair();
   const did = existingDid || `did:velocity:${toEthereumAddress(publicKey)}`;
@@ -46,7 +46,7 @@ const generatePublicKeySection = (
   kid,
   keyController,
   publicKeyHex,
-  immutable
+  immutable,
 ) => {
   const publicKey = {
     id: kid,
@@ -151,7 +151,7 @@ const extractVerificationKey = (didDoc, kid) => {
   return reduce(
     (acc, extractor) => acc ?? extractor(didDoc, kid),
     null,
-    extractors
+    extractors,
   );
 };
 

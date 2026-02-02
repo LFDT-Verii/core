@@ -24,7 +24,7 @@ const {
 const ensureTenantDefaultIssuingDisclosureIdPlugin = (
   fastify,
   options,
-  next
+  next,
 ) => {
   fastify.addHook('preValidation', async (req) => {
     const { tenant, repos } = req;
@@ -47,7 +47,7 @@ const ensureTenantDefaultIssuingDisclosureIdPlugin = (
     });
     req.tenant = await req.repos.tenants.setDefaultIssuingDisclosure(
       tenant._id,
-      isEmpty(disclosures) ? null : disclosures[0]._id
+      isEmpty(disclosures) ? null : disclosures[0]._id,
     );
   });
   next();
@@ -55,6 +55,6 @@ const ensureTenantDefaultIssuingDisclosureIdPlugin = (
 
 module.exports = {
   ensureTenantDefaultIssuingDisclosureIdPlugin: fp(
-    ensureTenantDefaultIssuingDisclosureIdPlugin
+    ensureTenantDefaultIssuingDisclosureIdPlugin,
   ),
 };

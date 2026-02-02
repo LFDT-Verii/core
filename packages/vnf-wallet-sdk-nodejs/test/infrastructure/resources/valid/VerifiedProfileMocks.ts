@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 class VerifiedProfileMocks {
     static readonly ExpectedId =
         'did:velocity:0x2bef092530ccc122f5fe439b78eddf6010685e88';

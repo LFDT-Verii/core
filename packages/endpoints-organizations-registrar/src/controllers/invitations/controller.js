@@ -72,7 +72,7 @@ const invitationsController = async (fastify) => {
           });
         }
         return { invitation };
-      }
+      },
     );
 };
 

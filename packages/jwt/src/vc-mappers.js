@@ -24,7 +24,7 @@ const { keyAlgorithmToJoseAlg } = require('./core');
 const jsonLdToUnsignedVcJwtContent = (
   jsonldCredential,
   signatureAlgorithm,
-  kid
+  kid,
 ) => {
   const header = {
     kid,
@@ -33,8 +33,8 @@ const jsonLdToUnsignedVcJwtContent = (
   };
   const iat = getUnixTime(
     new Date(
-      jsonldCredential.issued ?? jsonldCredential.issuanceDate ?? new Date()
-    )
+      jsonldCredential.issued ?? jsonldCredential.issuanceDate ?? new Date(),
+    ),
   );
   const payload = {
     vc: {

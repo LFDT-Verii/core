@@ -11,6 +11,6 @@ module.exports = (app, opts, next = () => {}) => {
       entityName: 'credentialSubmission',
       extensions: [autoboxIdsExtension],
     },
-    app
+    app,
   );
 };

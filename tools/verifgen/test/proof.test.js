@@ -46,7 +46,7 @@ describe('Test proof cli tool', () => {
         challenge: 'abc',
         persona: 'not-exist',
         audience: 'http://test.com',
-      })
+      }),
     ).rejects.toThrow('Persona not-exist DID File not found');
   });
 
@@ -60,10 +60,10 @@ describe('Test proof cli tool', () => {
     expect(proof).toBeDefined();
     const parsedJwt = await jwtVerify(
       proof,
-      jwkFromSecp256k1Key(keyPair.publicKey, false)
+      jwkFromSecp256k1Key(keyPair.publicKey, false),
     );
     const expectedKid = getDidUriFromJwk(
-      jwkFromSecp256k1Key(keyPair.publicKey, false)
+      jwkFromSecp256k1Key(keyPair.publicKey, false),
     );
     expect(parsedJwt).toStrictEqual({
       header: {
@@ -85,7 +85,7 @@ describe('Test proof cli tool', () => {
     const name = 'persona2';
     await fs.writeFile(
       `${currentDir}/${name}.prv.key.json`,
-      JSON.stringify(persona2Keypair.privateKey)
+      JSON.stringify(persona2Keypair.privateKey),
     );
     await fs.writeFile(`${currentDir}/${name}.did`, JSON.stringify({}));
     const proof = await generateProof({
@@ -116,7 +116,7 @@ describe('Test proof cli tool', () => {
     const name = 'persona2';
     await fs.writeFile(
       `${currentDir}/${name}.prv.key.json`,
-      JSON.stringify(persona2Keypair.privateKey)
+      JSON.stringify(persona2Keypair.privateKey),
     );
     await fs.writeFile(`${currentDir}/${name}.did`, JSON.stringify({}));
     const proof = await generateProof({

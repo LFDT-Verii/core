@@ -36,15 +36,15 @@ describe('get expiration date from credential', () => {
     };
 
     expect(expirationDate).toEqual(
-      credentialSubjectNotExpired.validity.validUntil
+      credentialSubjectNotExpired.validity.validUntil,
     );
 
     expect(getExpirationDateFromCredential(outOfSubject)).toEqual(
-      outOfSubject.expirationDate
+      outOfSubject.expirationDate,
     );
 
     expect(
-      getExpirationDateFromCredential({ validUntil: '2012-11-12' })
+      getExpirationDateFromCredential({ validUntil: '2012-11-12' }),
     ).toEqual('2012-11-12');
 
     expect(getExpirationDateFromCredential({})).toEqual(undefined);

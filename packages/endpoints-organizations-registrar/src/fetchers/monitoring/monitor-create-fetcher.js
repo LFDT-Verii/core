@@ -1,6 +1,6 @@
 const createMonitor = async (
   { monitorType, url, pronounceableName, requiredKeyword },
-  { betterUptimeFetch }
+  { betterUptimeFetch },
 ) => {
   const payload = {
     monitor_type: monitorType,

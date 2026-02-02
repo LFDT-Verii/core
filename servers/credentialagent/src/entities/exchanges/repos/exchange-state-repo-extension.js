@@ -32,14 +32,14 @@ const exchangeStateRepoExtension = (parent) => ({
         ],
         ...val,
       },
-      ...args
+      ...args,
     );
   },
   addState: async (
     exchangeId,
     state,
     $set,
-    projection = parent.defaultColumnsSelection
+    projection = parent.defaultColumnsSelection,
   ) => {
     let updateStatement = {
       $push: { events: { state, timestamp: new Date() } },
@@ -59,7 +59,7 @@ const exchangeStateRepoExtension = (parent) => ({
           returnDocument: 'after',
           includeResultMetadata: true,
           projection,
-        }
+        },
       );
 
     if (isEmpty(result.value)) {

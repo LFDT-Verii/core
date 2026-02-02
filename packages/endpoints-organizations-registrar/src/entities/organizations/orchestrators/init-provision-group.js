@@ -19,7 +19,7 @@ const initProvisionGroup = async (fastify) => {
       ) {
         await repos.groups.addDidToGroupOfUser(
           user.sub,
-          organization.didDoc.id
+          organization.didDoc.id,
         );
       } else if (hasAdminOrganizationScope(user)) {
         await repos.groups.createGroup(organization.didDoc.id);

@@ -10,31 +10,31 @@ describe('OrganizationsUseCase Tests', () => {
     const subject = new OrganizationsUseCaseImpl(
         new OrganizationsRepositoryImpl(
             new NetworkServiceSuccess(
-                OrganizationsMocks.OrganizationJsonResultStr
-            )
-        )
+                OrganizationsMocks.OrganizationJsonResultStr,
+            ),
+        ),
     );
 
     test('testSearchForOrganizationsSuccess', async () => {
         const orgs = await subject.searchForOrganizations(
-            new VCLOrganizationsSearchDescriptor(null, null, null, '')
+            new VCLOrganizationsSearchDescriptor(null, null, null, ''),
         );
         const serviceCredentialAgentIssuer =
             orgs.all[0].serviceCredentialAgentIssuers[0];
         expect(serviceCredentialAgentIssuer.payload).toStrictEqual(
-            OrganizationsMocks.ServiceJson
+            OrganizationsMocks.ServiceJson,
         );
         expect(serviceCredentialAgentIssuer.id).toEqual(
-            OrganizationsMocks.ServiceJson[VCLService.KeyId]
+            OrganizationsMocks.ServiceJson[VCLService.KeyId],
         );
         expect(serviceCredentialAgentIssuer.type).toEqual(
-            OrganizationsMocks.ServiceJson[VCLService.KeyType]
+            OrganizationsMocks.ServiceJson[VCLService.KeyType],
         );
         expect(serviceCredentialAgentIssuer.credentialTypes).toStrictEqual(
-            OrganizationsMocks.ServiceJson[VCLService.KeyCredentialTypes]
+            OrganizationsMocks.ServiceJson[VCLService.KeyCredentialTypes],
         );
         expect(serviceCredentialAgentIssuer.serviceEndpoint).toEqual(
-            OrganizationsMocks.ServiceEndpoint
+            OrganizationsMocks.ServiceEndpoint,
         );
     });
 });

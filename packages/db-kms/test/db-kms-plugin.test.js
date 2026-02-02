@@ -91,7 +91,7 @@ describe('dbKmsPlugin Fastify Plugin', () => {
       {},
     ]);
     expect(
-      initCallWithKmsKey.mock.calls.map((call) => call.arguments)
+      initCallWithKmsKey.mock.calls.map((call) => call.arguments),
     ).toContainEqual([expect.any(Object)]);
   });
 });

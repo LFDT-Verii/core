@@ -24,6 +24,6 @@ module.exports = (app, opts, next = () => {}) => {
       },
       extensions: [autoboxIdsExtension],
     },
-    app
+    app,
   );
 };

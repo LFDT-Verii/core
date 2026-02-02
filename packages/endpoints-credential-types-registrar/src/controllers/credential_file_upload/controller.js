@@ -95,7 +95,7 @@ const controller = async (fastify) => {
           file,
           credentialFileType,
         },
-        req
+        req,
       );
 
       const s3Key = generateCredentialFileName({
@@ -118,7 +118,7 @@ const controller = async (fastify) => {
       return {
         fileMetadata: credentialFileData,
       };
-    }
+    },
   );
 };
 

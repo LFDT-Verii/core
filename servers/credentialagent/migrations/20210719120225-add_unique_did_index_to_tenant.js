@@ -30,7 +30,7 @@ module.exports = {
       console.log(`${resultsArray.length} duplicates found.`);
       // eslint-disable-next-line no-console
       console.log(
-        'Please remove the following duplicate tenants before re-running the migration'
+        'Please remove the following duplicate tenants before re-running the migration',
       );
       each((result) => {
         // eslint-disable-next-line no-console

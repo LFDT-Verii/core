@@ -23,7 +23,7 @@ const {
 const createFineractClient = async (
   { profile, didDoc },
   isStakingAccountRequired,
-  context
+  context,
 ) => {
   const now = new Date();
 
@@ -43,20 +43,20 @@ const createFineractClient = async (
         },
       ],
     },
-    context
+    context,
   );
 
   const escrowAccountId = await createEscrowAccount(
     clientId,
     didDoc.id,
-    context
+    context,
   );
 
   if (isStakingAccountRequired) {
     const stakesAccountId = await createStakesAccount(
       clientId,
       didDoc.id,
-      context
+      context,
     );
 
     return {

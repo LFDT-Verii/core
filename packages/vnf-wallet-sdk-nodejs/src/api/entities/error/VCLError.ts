@@ -12,12 +12,13 @@ export default class VCLError extends Error {
 
     statusCode: Nullish<number> = null;
 
+    // eslint-disable-next-line complexity
     constructor(
         error: Nullish<string> = null,
         errorCode: string = VCLErrorCode.SdkError.toString(),
         requestId: Nullish<string> = null,
         message: Nullish<string> = null,
-        statusCode: Nullish<number> = null
+        statusCode: Nullish<number> = null,
     ) {
         super(message ?? '');
         this.error = error;
@@ -36,6 +37,7 @@ export default class VCLError extends Error {
         return VCLError.fromJson(payloadJson);
     }
 
+    // eslint-disable-next-line complexity
     static fromJson(payloadJson: Dictionary<any>): VCLError {
         const result = new VCLError(
             payloadJson?.[VCLError.KeyError],
@@ -43,7 +45,7 @@ export default class VCLError extends Error {
                 VCLErrorCode.SdkError.toString(),
             payloadJson?.[VCLError.KeyRequestId],
             payloadJson?.[VCLError.KeyMessage],
-            payloadJson?.[VCLError.KeyStatusCode]
+            payloadJson?.[VCLError.KeyStatusCode],
         );
         result.payload = JSON.stringify(payloadJson);
 
@@ -59,7 +61,7 @@ export default class VCLError extends Error {
             VCLError.findErrorCode(error),
             error.requestId,
             error.message,
-            statusCode ?? error.statusCode
+            statusCode ?? error.statusCode,
         );
     }
 

@@ -15,14 +15,14 @@ const checkOrgIssuerMatch = ({ issuer }, trustedIssuer) => {
 
 const runAllOrgChecks = async (
   { signedCredential, rootJwk, rootDid },
-  context
+  context,
 ) => {
   const decodedCredential = await decodeCredentialJwt(signedCredential);
 
   const tamperingCheck = await checkJwsVcTampering(
     signedCredential,
     rootJwk,
-    context
+    context,
   );
 
   if (tamperingCheck !== CheckResults.PASS) {

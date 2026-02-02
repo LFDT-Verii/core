@@ -25,5 +25,5 @@ import type { KMS, Context } from './types';
 
 export default function initDbKms(
   fastify: FastifyInstance,
-  kmsOptions: Record<string, string>
+  kmsOptions: Record<string, string>,
 ): (ctx: Context) => KMS;

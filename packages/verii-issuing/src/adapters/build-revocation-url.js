@@ -31,7 +31,7 @@ const REVOCATION_STATUS_CONTRACT_FUNCTION_NAME = 'getRevokedStatus';
 const buildRevocationUrl = (
   entry,
   issuer,
-  { config: { revocationContractAddress } }
+  { config: { revocationContractAddress } },
 ) =>
   ethUrlParser.build({
     scheme: 'ethereum',

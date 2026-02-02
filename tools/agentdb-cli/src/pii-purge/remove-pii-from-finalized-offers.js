@@ -21,7 +21,7 @@ const removePiiFromFinalizedOffers = async ({ db }) => {
   await collection.bulkWrite(updates);
   forEach(
     ({ _id }) => printInfo(`Offer with _id (${_id.toString()}) was updated`),
-    offers
+    offers,
   );
 };
 

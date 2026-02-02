@@ -16,7 +16,7 @@
 
 const setTenantDefaultIssuingDisclosure = async (
   { disclosure, setIssuingDefault },
-  req
+  req,
 ) => {
   const { repos, tenant } = req;
   if (disclosure.configurationType !== 'issuing' || !setIssuingDefault) {

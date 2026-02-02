@@ -29,7 +29,7 @@ const setAuthHeader = ({ tenant, config }) => {
     return {
       Authorization: `Bearer ${decrypt(
         webhookAuth.bearerToken,
-        config.mongoSecret
+        config.mongoSecret,
       )}`,
     };
   }

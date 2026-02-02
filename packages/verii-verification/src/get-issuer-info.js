@@ -3,13 +3,13 @@ const { jwtDecode } = require('@verii/jwt');
 const getIssuerInfo = async (
   issuerVc,
   { resolveKid, getOrganizationVerifiedProfile },
-  context
+  context,
 ) => {
   const { header, payload } = jwtDecode(issuerVc);
   const issuerPublicKey = await resolveKid({ kid: header.kid }, context);
   const organizationVerifiedProfile = await getOrganizationVerifiedProfile(
     payload.iss,
-    context
+    context,
   );
 
   return {

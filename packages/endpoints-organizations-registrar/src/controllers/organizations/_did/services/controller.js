@@ -61,7 +61,7 @@ const servicesController = async (fastify) => {
           },
         }),
       },
-      async (req) => getService(req.params.did, req.params.serviceId, req)
+      async (req) => getService(req.params.did, req.params.serviceId, req),
     )
     .post(
       '/',
@@ -118,7 +118,7 @@ const servicesController = async (fastify) => {
         const response = await addService(req.params.did, req.body, req);
         reply.code(201);
         return response;
-      }
+      },
     )
     .put(
       '/:serviceId',
@@ -153,7 +153,7 @@ const servicesController = async (fastify) => {
         }),
       },
       async (req) =>
-        updateService(req.params.did, req.params.serviceId, req.body, req)
+        updateService(req.params.did, req.params.serviceId, req.body, req),
     )
     .delete(
       '/:serviceId',
@@ -188,7 +188,7 @@ const servicesController = async (fastify) => {
       async (req, reply) => {
         await deleteService(req.params.did, req.params.serviceId, req);
         return reply.status(204).send();
-      }
+      },
     );
 };
 

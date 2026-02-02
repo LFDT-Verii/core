@@ -20,7 +20,7 @@ describe('VCLError Tests', () => {
             ErrorMocks.ErrorCode,
             ErrorMocks.RequestId,
             ErrorMocks.Message,
-            ErrorMocks.StatusCode
+            ErrorMocks.StatusCode,
         );
 
         expect(error.error).toEqual(ErrorMocks.Error);
@@ -35,20 +35,20 @@ describe('VCLError Tests', () => {
         const errorJsonObject = error.jsonObject;
 
         expect(errorJsonObject[VCLError.KeyPayload]).toEqual(
-            ErrorMocks.Payload
+            ErrorMocks.Payload,
         );
         expect(errorJsonObject[VCLError.KeyError]).toEqual(ErrorMocks.Error);
         expect(errorJsonObject[VCLError.KeyErrorCode]).toEqual(
-            ErrorMocks.ErrorCode
+            ErrorMocks.ErrorCode,
         );
         expect(errorJsonObject[VCLError.KeyRequestId]).toEqual(
-            ErrorMocks.RequestId
+            ErrorMocks.RequestId,
         );
         expect(errorJsonObject[VCLError.KeyMessage]).toEqual(
-            ErrorMocks.Message
+            ErrorMocks.Message,
         );
         expect(errorJsonObject[VCLError.KeyStatusCode]).toEqual(
-            ErrorMocks.StatusCode
+            ErrorMocks.StatusCode,
         );
     });
 
@@ -58,22 +58,22 @@ describe('VCLError Tests', () => {
             ErrorMocks.ErrorCode,
             ErrorMocks.RequestId,
             ErrorMocks.Message,
-            ErrorMocks.StatusCode
+            ErrorMocks.StatusCode,
         );
         const errorJsonObject = error.jsonObject;
 
         expect(errorJsonObject[VCLError.KeyError]).toEqual(ErrorMocks.Error);
         expect(errorJsonObject[VCLError.KeyErrorCode]).toEqual(
-            ErrorMocks.ErrorCode
+            ErrorMocks.ErrorCode,
         );
         expect(errorJsonObject[VCLError.KeyRequestId]).toEqual(
-            ErrorMocks.RequestId
+            ErrorMocks.RequestId,
         );
         expect(errorJsonObject[VCLError.KeyMessage]).toEqual(
-            ErrorMocks.Message
+            ErrorMocks.Message,
         );
         expect(errorJsonObject[VCLError.KeyStatusCode]).toEqual(
-            ErrorMocks.StatusCode
+            ErrorMocks.StatusCode,
         );
     });
 
@@ -81,7 +81,7 @@ describe('VCLError Tests', () => {
         const error = VCLError.fromJson(ErrorMocks.SomeErrorJson);
 
         expect(JSON.parse(error.payload ?? '{}')).toStrictEqual(
-            ErrorMocks.SomeErrorJson
+            ErrorMocks.SomeErrorJson,
         );
         expect(error.error).toEqual(ErrorMocks.SomeErrorJson.error);
         expect(error.errorCode).toEqual(ErrorMocks.SomeErrorJson.errorCode);

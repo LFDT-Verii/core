@@ -14,7 +14,7 @@ export default class VCLExchange {
         id: string,
         type: string,
         disclosureComplete: boolean,
-        exchangeComplete: boolean
+        exchangeComplete: boolean,
     );
 
     constructor(payload: Dictionary<any>);

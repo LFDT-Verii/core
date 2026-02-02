@@ -79,15 +79,15 @@ const fullOrganizationController = async (fastify) => {
       async (req) => {
         const { repos, query } = req;
         const organizations = await repos.organizations.find(
-          transformToFinder(query)
+          transformToFinder(query),
         );
         return {
           result: map(
             (organization) => buildFullOrganizationResponse({ organization }),
-            organizations
+            organizations,
           ),
         };
-      }
+      },
     )
     .get(
       '/:did',
@@ -124,7 +124,7 @@ const fullOrganizationController = async (fastify) => {
       async ({ repos, params }) => {
         const organization = await repos.organizations.findOneByDid(params.did);
         return buildFullOrganizationResponse({ organization });
-      }
+      },
     )
     .post(
       '/',
@@ -227,7 +227,7 @@ const fullOrganizationController = async (fastify) => {
               invitationCode,
               profile,
             },
-            req
+            req,
           );
         reply.code(201);
         return buildFullOrganizationResponse({
@@ -238,7 +238,7 @@ const fullOrganizationController = async (fastify) => {
           authClients,
           messageCode,
         });
-      }
+      },
     );
 };
 
@@ -276,10 +276,10 @@ const buildNewFullOrganizationSchema = (profileRef) => ({
 });
 
 const newFullOrganizationSchema = buildNewFullOrganizationSchema(
-  'organization-profile-creation#'
+  'organization-profile-creation#',
 );
 const newKybFullOrganizationSchema = buildNewFullOrganizationSchema(
-  'organization-kyb-profile-creation#'
+  'organization-kyb-profile-creation#',
 );
 
 module.exports = fullOrganizationController;

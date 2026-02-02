@@ -39,7 +39,7 @@ const initFetchers = (options) => {
       printInfo('Retrieving disclosure list');
       const url = new URL(
         `tenants/${param}/disclosures`,
-        credentialAgentTenantGot.defaults.options.prefixUrl
+        credentialAgentTenantGot.defaults.options.prefixUrl,
       );
 
       if (!isEmpty(vendorEndpoints)) {
@@ -66,7 +66,7 @@ const initFetchers = (options) => {
     },
     createOffer: async (exchange, newOffer) => {
       printInfo(
-        `Adding offer ${newOffer.offerId} to exchange id: ${exchange.id}`
+        `Adding offer ${newOffer.offerId} to exchange id: ${exchange.id}`,
       );
       return credentialAgentTenantGot
         .post(`tenants/${param}/exchanges/${exchange.id}/offers`, {
@@ -78,8 +78,8 @@ const initFetchers = (options) => {
       printInfo(
         `Completing exchange id: ${exchange.id} with offers ${map(
           'id',
-          offers
-        )}`
+          offers,
+        )}`,
       );
       return credentialAgentTenantGot
         .post(`tenants/${param}/exchanges/${exchange.id}/offers/complete`)
@@ -88,7 +88,7 @@ const initFetchers = (options) => {
     loadExchangeQrcode: async (exchange) =>
       (
         await credentialAgentTenantGot.get(
-          `tenants/${param}/exchanges/${exchange.id}/qrcode.png`
+          `tenants/${param}/exchanges/${exchange.id}/qrcode.png`,
         )
       ).rawBody,
     loadExchangeDeeplink: async (exchange) =>
@@ -98,7 +98,7 @@ const initFetchers = (options) => {
     loadDisclosureQrcode: async (disclosure) =>
       (
         await credentialAgentTenantGot.get(
-          `tenants/${param}/disclosures/${disclosure.id}/qrcode.png`
+          `tenants/${param}/disclosures/${disclosure.id}/qrcode.png`,
         )
       ).rawBody,
     loadDisclosureDeeplink: async (disclosure) =>

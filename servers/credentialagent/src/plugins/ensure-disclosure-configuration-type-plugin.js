@@ -24,6 +24,6 @@ const ensureDisclosureConfigurationTypePlugin = (fastify, options, next) => {
 
 module.exports = {
   ensureDisclosureConfigurationTypePlugin: fp(
-    ensureDisclosureConfigurationTypePlugin
+    ensureDisclosureConfigurationTypePlugin,
   ),
 };

@@ -86,8 +86,8 @@ const setMockVerifyCredentials = (checkResults = DEFAULT_CREDENTIAL_CHECKS) => {
       credentials.map((credential) => ({
         credential: decodeCredentialJwt(credential),
         credentialChecks: checkResults,
-      }))
-    )
+      })),
+    ),
   );
 };
 
@@ -158,7 +158,7 @@ describe('submit identification disclosure', () => {
             issuerCategory: 'ContactIssuer',
           },
         ],
-        { 'cache-control': 'max-age=3600' }
+        { 'cache-control': 'max-age=3600' },
       );
   });
 
@@ -197,7 +197,7 @@ describe('submit identification disclosure', () => {
 
       const presentationEmail = await generateKYCPresentation(
         exchange,
-        'email'
+        'email',
       );
 
       const response = await fastify.injectJson({
@@ -216,7 +216,7 @@ describe('submit identification disclosure', () => {
           message: 'Presentation doesnt contain value at $.doesntexist',
           statusCode: 400,
           errorCode: 'presentation_credential_jsonpath_empty',
-        })
+        }),
       );
 
       const exchangeDBResult = await mongoDb()
@@ -248,7 +248,7 @@ describe('submit identification disclosure', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -280,7 +280,7 @@ describe('submit identification disclosure', () => {
 
       const presentationEmail = await generateKYCPresentation(
         exchange,
-        'email'
+        'email',
       );
 
       const response = await fastify.injectJson({
@@ -299,7 +299,7 @@ describe('submit identification disclosure', () => {
             'Credential Agent only supports "pick" or "all" for "identityMatchers.rule"',
           statusCode: 500,
           errorCode: 'missing_error_code',
-        })
+        }),
       );
     });
 
@@ -337,7 +337,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -395,7 +395,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -413,7 +413,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -471,7 +471,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -484,7 +484,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -502,7 +502,7 @@ describe('submit identification disclosure', () => {
             errorCode: 'integrated_identification_user_not_found',
             message: 'User Not Found',
             statusCode: 401,
-          })
+          }),
         );
 
         const exchangeDBResult = await mongoDb()
@@ -534,7 +534,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -551,7 +551,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -593,7 +593,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -610,7 +610,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -628,7 +628,7 @@ describe('submit identification disclosure', () => {
             errorCode: 'presentation_credential_bad_issuer',
             message: 'presentation_credential_bad_issuer',
             statusCode: 401,
-          })
+          }),
         );
 
         const exchangeDBResult = await mongoDb()
@@ -660,7 +660,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -677,7 +677,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -719,7 +719,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -736,7 +736,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -778,7 +778,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -795,7 +795,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -837,7 +837,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -866,7 +866,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -936,7 +936,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
     });
@@ -977,7 +977,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'driversLicense'
+          'driversLicense',
         );
 
         const response = await fastify.injectJson({
@@ -1035,7 +1035,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
       it('identifier based matching should 401 if user not found', async () => {
@@ -1047,7 +1047,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'driversLicense'
+          'driversLicense',
         );
 
         const response = await fastify.injectJson({
@@ -1065,7 +1065,7 @@ describe('submit identification disclosure', () => {
             errorCode: 'integrated_identification_user_not_found',
             message: 'User Not Found',
             statusCode: 401,
-          })
+          }),
         );
 
         const exchangeDBResult = await mongoDb()
@@ -1097,7 +1097,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
     });
@@ -1139,7 +1139,7 @@ describe('submit identification disclosure', () => {
       it('given name matching should 200 if user found', async () => {
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'idDocument'
+          'idDocument',
         );
 
         const response = await fastify.injectJson({
@@ -1152,7 +1152,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: exchange._id,
           },
@@ -1204,7 +1204,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
       it('given name matching on all docs should 200 if user found', async () => {
@@ -1223,7 +1223,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: exchange._id,
           },
@@ -1275,7 +1275,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
       it('given name matching should 401 if user not found', async () => {
@@ -1287,7 +1287,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           noMatchExchange,
-          'idDocument'
+          'idDocument',
         );
 
         const response = await fastify.injectJson({
@@ -1300,7 +1300,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: noMatchExchange._id,
           },
@@ -1312,7 +1312,7 @@ describe('submit identification disclosure', () => {
             errorCode: 'integrated_identification_user_not_found',
             message: 'User Not Found',
             statusCode: 401,
-          })
+          }),
         );
 
         const exchangeDBResult = await mongoDb()
@@ -1344,7 +1344,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
     });
@@ -1382,7 +1382,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -1395,7 +1395,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: exchange._id,
           },
@@ -1408,7 +1408,7 @@ describe('submit identification disclosure', () => {
               'Credential Agent only supports "pick" or "all" for "identityMatchers.rule"',
             statusCode: 500,
             errorCode: 'missing_error_code',
-          })
+          }),
         );
       });
 
@@ -1435,7 +1435,7 @@ describe('submit identification disclosure', () => {
           {
             tenant,
             disclosure,
-          }
+          },
         );
 
         await persistOfferExchange({
@@ -1452,7 +1452,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchangeWithoutIdentityMatcherValues,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -1465,7 +1465,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: exchangeWithoutIdentityMatcherValues._id,
           },
@@ -1519,7 +1519,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
     });
@@ -1559,7 +1559,7 @@ describe('submit identification disclosure', () => {
       });
       const presentationIdDocument = await generateKYCPresentation(
         emptyDisclosureExchange,
-        'nothing'
+        'nothing',
       );
       presentationIdDocument.presentation.vendorOriginContext = '123';
 
@@ -1584,7 +1584,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -1613,7 +1613,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(emptyDisclosureExchange._id) })
+          .findOne({ _id: new ObjectId(emptyDisclosureExchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
@@ -1624,8 +1624,8 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_RECEIVED,
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.IDENTIFIED,
-          ]
-        )
+          ],
+        ),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [],
@@ -1643,7 +1643,7 @@ describe('submit identification disclosure', () => {
     it('should 200 when sub is new', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       let identifyWebhookPayload;
@@ -1667,7 +1667,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -1696,14 +1696,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationIdDocument, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [],
@@ -1761,7 +1761,7 @@ describe('submit identification disclosure', () => {
 
       const presentationIdDocument = await generateKYCPresentation(
         customExchange,
-        'idDocument'
+        'idDocument',
       );
 
       let identifyWebhookPayload;
@@ -1785,7 +1785,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -1814,14 +1814,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(customExchange._id) })
+          .findOne({ _id: new ObjectId(customExchange._id) }),
       ).toEqual(
         expectedExchange(customTenant, customExchange, presentationIdDocument, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(nockWebhook.isDone()).toEqual(true);
       expect(identifyWebhookPayload).toEqual({
@@ -1884,7 +1884,7 @@ describe('submit identification disclosure', () => {
 
       const presentationIdDocument = await generateKYCPresentation(
         customExchange,
-        'idDocument'
+        'idDocument',
       );
 
       let identifyWebhookPayload;
@@ -1910,7 +1910,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -1943,14 +1943,14 @@ describe('submit identification disclosure', () => {
         tenantId: customTenant._id,
       });
       expect(identityWebhookHeaders.get('Authorization')).toEqual(
-        'Bearer secret'
+        'Bearer secret',
       );
     });
 
     it('should 200 when identifying email and a coupon was not provided', async () => {
       const presentationEmail = await generateKYCPresentation(
         exchange,
-        'email'
+        'email',
       );
       initVerificationCoupon.mock.mockImplementation(() => ({
         getCoupon: () => Promise.resolve(null),
@@ -1976,7 +1976,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationEmail.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2006,14 +2006,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationEmail, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [
@@ -2045,7 +2045,7 @@ describe('submit identification disclosure', () => {
     it('should 200 when identifying email', async () => {
       const presentationEmail = await generateKYCPresentation(
         exchange,
-        'email'
+        'email',
       );
 
       let identifyWebhookPayload;
@@ -2068,7 +2068,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationEmail.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2098,14 +2098,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationEmail, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [
@@ -2134,7 +2134,7 @@ describe('submit identification disclosure', () => {
     it('should 200 when identifying whatever with logo and email', async () => {
       const presentationEmail = await generateKYCPresentation(
         exchange,
-        'whateverWithLogoName'
+        'whateverWithLogoName',
       );
 
       let identifyWebhookPayload;
@@ -2157,7 +2157,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationEmail.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2187,14 +2187,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationEmail, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [
@@ -2225,7 +2225,7 @@ describe('submit identification disclosure', () => {
     it('should 200 when identifying legacy email', async () => {
       const presentationEmail = await generateKYCPresentation(
         exchange,
-        'legacyEmail'
+        'legacyEmail',
       );
 
       let identifyWebhookPayload;
@@ -2248,7 +2248,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationEmail.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2278,14 +2278,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationEmail, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [
@@ -2314,7 +2314,7 @@ describe('submit identification disclosure', () => {
     it('should 200 when identifying phone', async () => {
       const presentationPhone = await generateKYCPresentation(
         exchange,
-        'phone'
+        'phone',
       );
 
       let identifyWebhookPayload;
@@ -2337,7 +2337,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationPhone.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2367,14 +2367,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationPhone, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         phoneCredentials: [
@@ -2403,7 +2403,7 @@ describe('submit identification disclosure', () => {
     it('should 200 when identifying VerificationIdentifier', async () => {
       const presentationVerificationIdentifier = await generateKYCPresentation(
         exchange,
-        'verificationIdentifier'
+        'verificationIdentifier',
       );
 
       let identifyWebhookPayload;
@@ -2426,7 +2426,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationVerificationIdentifier.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2456,14 +2456,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationVerificationIdentifier, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         phones: [],
@@ -2522,7 +2522,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentation.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2552,14 +2552,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentation, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [
@@ -2613,7 +2613,7 @@ describe('submit identification disclosure', () => {
 
       const presentationWhatever = await generateKYCPresentation(
         exchange,
-        'whateverIdentifier'
+        'whateverIdentifier',
       );
 
       const response = await fastify.injectJson({
@@ -2626,7 +2626,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationWhatever.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2662,14 +2662,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationWhatever, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
     });
 
@@ -2677,7 +2677,7 @@ describe('submit identification disclosure', () => {
       const presentationMixed = await generateKYCPresentation(
         exchange,
         ['idDocument', 'phone'],
-        { isBrokeVCS: true }
+        { isBrokeVCS: true },
       );
 
       let identifyWebhookPayload;
@@ -2698,7 +2698,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationMixed.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2729,14 +2729,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationMixed, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
 
       expect(identifyWebhookPayload).toEqual({
@@ -2790,7 +2790,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationMixed.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2820,14 +2820,14 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentationMixed, [
           ExchangeStates.NEW,
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
 
       expect(identifyWebhookPayload).toEqual({
@@ -2905,7 +2905,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationMixed.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -2942,7 +2942,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
 
       expect(identifyWebhookPayload).toEqual({
@@ -3000,7 +3000,7 @@ describe('submit identification disclosure', () => {
     it('should 200 when sub is existing', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       const existingUser = await persistVendorUserIdMapping({ tenant });
@@ -3024,7 +3024,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3063,7 +3063,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [],
@@ -3125,7 +3125,7 @@ describe('submit identification disclosure', () => {
 
       const presentationIdDocument = await generateKYCPresentation(
         customExchange,
-        'idDocument'
+        'idDocument',
       );
 
       const existingUser = await persistVendorUserIdMapping({
@@ -3151,7 +3151,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: customExchange._id,
         },
@@ -3190,7 +3190,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [],
@@ -3225,7 +3225,7 @@ describe('submit identification disclosure', () => {
     it('should return 400 when jwt_vp kid is invalid', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(200, {});
@@ -3240,7 +3240,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             'WRONG',
             holderKeys.privateKey,
-            'MISSING'
+            'MISSING',
           ),
           exchange_id: exchange._id,
         },
@@ -3253,14 +3253,14 @@ describe('submit identification disclosure', () => {
           errorCode: 'presentation_malformed',
           message: 'kid_must_be_did',
           statusCode: 400,
-        })
+        }),
       );
     });
 
     it('should return 400 when jwt_vp is self signed', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(200, {});
@@ -3284,14 +3284,14 @@ describe('submit identification disclosure', () => {
           errorCode: 'presentation_malformed',
           message: 'jwt_vp must not be self signed',
           statusCode: 400,
-        })
+        }),
       );
     });
 
     it('should return 400 when jwt_vp is different key', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(200, {});
@@ -3299,7 +3299,7 @@ describe('submit identification disclosure', () => {
       const jwtVp = await presentationIdDocument.sign(
         holderKid,
         invalidKey,
-        holderDid
+        holderDid,
       );
 
       const response = await fastify.injectJson({
@@ -3321,14 +3321,14 @@ describe('submit identification disclosure', () => {
           errorCode: 'presentation_malformed',
           message: 'Malformed jwt_vp property: signature verification failed',
           statusCode: 400,
-        })
+        }),
       );
     });
 
     it('should return 400 when no exchange', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -3340,7 +3340,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: 'no-exchange',
         },
@@ -3352,7 +3352,7 @@ describe('submit identification disclosure', () => {
           errorCode: 'exchange_not_found',
           message: 'Exchange no-exchange not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -3373,7 +3373,7 @@ describe('submit identification disclosure', () => {
 
       const presentationIdDocument = await generateKYCPresentation(
         preAuthExchange,
-        'idDocument'
+        'idDocument',
       ); // .override({ vendorOriginContext: 'foo' });
 
       const identifyWebhookNock = nock(mockVendorUrl)
@@ -3390,7 +3390,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: preAuthExchange._id,
         },
@@ -3404,21 +3404,21 @@ describe('submit identification disclosure', () => {
           errorCode: 'presentation_request_invalid',
           message:
             'Presentation for a preauth disclosure must contain a vendorOriginContext',
-        })
+        }),
       );
 
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(preAuthExchange._id) })
+          .findOne({ _id: new ObjectId(preAuthExchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
           preAuthExchange,
           null,
           [ExchangeStates.NEW, ExchangeStates.NOT_IDENTIFIED],
-          'Presentation for a preauth disclosure must contain a vendorOriginContext'
-        )
+          'Presentation for a preauth disclosure must contain a vendorOriginContext',
+        ),
       );
       expect(identifyWebhookNock.isDone()).toEqual(false);
     });
@@ -3426,7 +3426,7 @@ describe('submit identification disclosure', () => {
     it('should return 401 when vendor responds with no user', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(200, {});
@@ -3441,7 +3441,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3452,7 +3452,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
@@ -3464,15 +3464,15 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.NOT_IDENTIFIED,
           ],
-          'user not found - vendorUserId property should be a string value'
-        )
+          'user not found - vendorUserId property should be a string value',
+        ),
       );
     });
 
     it('should return 401 when vendor responds with no vendorUserId', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl)
@@ -3489,7 +3489,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3499,7 +3499,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
@@ -3511,15 +3511,15 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.NOT_IDENTIFIED,
           ],
-          'user not found - vendorUserId property should be a string value'
-        )
+          'user not found - vendorUserId property should be a string value',
+        ),
       );
     });
 
     it('should return 401 when vendor responds with non-string vendorUserId', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl)
@@ -3536,7 +3536,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3547,7 +3547,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
@@ -3559,15 +3559,15 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.NOT_IDENTIFIED,
           ],
-          'user not found - vendorUserId property should be a string value'
-        )
+          'user not found - vendorUserId property should be a string value',
+        ),
       );
     });
 
     it('should 401 in case user not found', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(404);
@@ -3582,7 +3582,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3593,7 +3593,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
@@ -3605,8 +3605,8 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.NOT_IDENTIFIED,
           ],
-          'user not found'
-        )
+          'user not found',
+        ),
       );
     });
 
@@ -3614,7 +3614,7 @@ describe('submit identification disclosure', () => {
       const existingUser = await persistVendorUserIdMapping({ tenant });
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(200, {
@@ -3631,7 +3631,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -3641,16 +3641,16 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
-        expectedExchange(tenant, exchange, undefined, [ExchangeStates.NEW])
+        expectedExchange(tenant, exchange, undefined, [ExchangeStates.NEW]),
       );
     });
 
     it('should 500 in other cases', async () => {
       const presentationIdDocument = await generateKYCPresentation(
         exchange,
-        'idDocument'
+        'idDocument',
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(500);
@@ -3665,7 +3665,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3676,7 +3676,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
@@ -3688,15 +3688,15 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.UNEXPECTED_ERROR,
           ],
-          expect.stringContaining('Error')
-        )
+          expect.stringContaining('Error'),
+        ),
       );
     });
 
     it('should 409 if the exact same presentation twice', async () => {
       const presentationEmail = await generateKYCPresentation(
         exchange,
-        'email'
+        'email',
       );
 
       nock(mockVendorUrl)
@@ -3714,7 +3714,7 @@ describe('submit identification disclosure', () => {
         jwt_vp: await presentationEmail.sign(
           holderKid,
           holderKeys.privateKey,
-          holderDid
+          holderDid,
         ),
         exchange_id: exchange._id,
       };
@@ -3751,13 +3751,13 @@ describe('submit identification disclosure', () => {
           errorCode: 'presentation_duplicate',
           message: 'Presentation has already been submitted',
           statusCode: 409,
-        })
+        }),
       );
     });
 
     it('should be able to identify twice on the same exchange', async () => {
       const presentations = await Promise.all(
-        map(() => generateKYCPresentation(exchange, 'email'), [1, 1])
+        map(() => generateKYCPresentation(exchange, 'email'), [1, 1]),
       );
       let identifyWebhookPayload;
       nock(mockVendorUrl)
@@ -3782,7 +3782,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentations[0].sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3807,7 +3807,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentations[1].sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3838,7 +3838,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(tenant, exchange, presentations[1], [
           ExchangeStates.NEW,
@@ -3848,7 +3848,7 @@ describe('submit identification disclosure', () => {
           ExchangeStates.DISCLOSURE_RECEIVED,
           ExchangeStates.DISCLOSURE_CHECKED,
           ExchangeStates.IDENTIFIED,
-        ])
+        ]),
       );
 
       expect(identifyWebhookPayload).toEqual({
@@ -3877,7 +3877,7 @@ describe('submit identification disclosure', () => {
 
     it('should be able found on second attempt', async () => {
       const presentations = await Promise.all(
-        map(() => generateKYCPresentation(exchange, 'email'), [1, 1])
+        map(() => generateKYCPresentation(exchange, 'email'), [1, 1]),
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(404);
@@ -3893,7 +3893,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentations[0].sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3919,7 +3919,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentations[1].sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -3949,7 +3949,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
@@ -3964,8 +3964,8 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.IDENTIFIED,
           ],
-          'user not found'
-        )
+          'user not found',
+        ),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [
@@ -3993,7 +3993,7 @@ describe('submit identification disclosure', () => {
 
     it('should be able to recover from a 500 and identify the second time', async () => {
       const presentations = await Promise.all(
-        map(() => generateKYCPresentation(exchange, 'email'), [1, 1])
+        map(() => generateKYCPresentation(exchange, 'email'), [1, 1]),
       );
 
       nock(mockVendorUrl).post(identifyUserOnVendorEndpoint).reply(500);
@@ -4009,7 +4009,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentations[0].sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -4035,7 +4035,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentations[1].sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
           exchange_id: exchange._id,
         },
@@ -4065,7 +4065,7 @@ describe('submit identification disclosure', () => {
       expect(
         await mongoDb()
           .collection('exchanges')
-          .findOne({ _id: new ObjectId(exchange._id) })
+          .findOne({ _id: new ObjectId(exchange._id) }),
       ).toEqual(
         expectedExchange(
           tenant,
@@ -4080,8 +4080,8 @@ describe('submit identification disclosure', () => {
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.IDENTIFIED,
           ],
-          expect.stringContaining('Error')
-        )
+          expect.stringContaining('Error'),
+        ),
       );
       expect(identifyWebhookPayload).toEqual({
         emailCredentials: [
@@ -4124,7 +4124,7 @@ describe('submit identification disclosure', () => {
       it('should 200 when identifying phone with version 1 of the webhook', async () => {
         const presentationPhone = await generateKYCPresentation(
           exchange,
-          'phone'
+          'phone',
         );
 
         let identifyWebhookPayload;
@@ -4194,7 +4194,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
         expect(identifyWebhookPayload).toEqual({
           phoneCredentials: [
@@ -4291,7 +4291,7 @@ describe('submit identification disclosure', () => {
             ...credentialTypesObject,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
-          })
+          }),
         );
         expect(identifyWebhookPayload).toEqual({
           phoneCredentials: [
@@ -4343,7 +4343,7 @@ describe('submit identification disclosure', () => {
         });
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         const response = await fastify.injectJson({
@@ -4356,7 +4356,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: exchange._id,
           },
@@ -4369,12 +4369,12 @@ describe('submit identification disclosure', () => {
             message: 'presentation_credential_bad_issuer',
             statusCode: 401,
             errorCode: 'presentation_credential_bad_issuer',
-          })
+          }),
         );
         expect(
           await mongoDb()
             .collection('exchanges')
-            .findOne({ _id: new ObjectId(exchange._id) })
+            .findOne({ _id: new ObjectId(exchange._id) }),
         ).toEqual(
           expectedExchange(
             tenant,
@@ -4386,8 +4386,8 @@ describe('submit identification disclosure', () => {
               ExchangeStates.DISCLOSURE_CHECKED,
               ExchangeStates.NOT_IDENTIFIED,
             ],
-            'presentation_credential_bad_issuer'
-          )
+            'presentation_credential_bad_issuer',
+          ),
         );
       });
       it('should 200 when autoIdentityCheck is off, vendorEndpoint is issuing-identification and credential has invalid check result', async () => {
@@ -4401,7 +4401,7 @@ describe('submit identification disclosure', () => {
         });
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         let identifyWebhookPayload;
@@ -4424,7 +4424,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: exchange._id,
           },
@@ -4454,14 +4454,14 @@ describe('submit identification disclosure', () => {
         expect(
           await mongoDb()
             .collection('exchanges')
-            .findOne({ _id: new ObjectId(exchange._id) })
+            .findOne({ _id: new ObjectId(exchange._id) }),
         ).toEqual(
           expectedExchange(tenant, exchange, presentationEmail, [
             ExchangeStates.NEW,
             ExchangeStates.DISCLOSURE_RECEIVED,
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.IDENTIFIED,
-          ])
+          ]),
         );
         expect(identifyWebhookPayload).toEqual({
           emailCredentials: [
@@ -4516,7 +4516,7 @@ describe('submit identification disclosure', () => {
           {
             tenant,
             disclosure,
-          }
+          },
         );
 
         await persistOfferExchange({
@@ -4533,7 +4533,7 @@ describe('submit identification disclosure', () => {
 
         const presentationEmail = await generateKYCPresentation(
           exchangeWithoutIdentityMatcherValues,
-          'email'
+          'email',
         );
         setMockVerifyCredentials({
           ...DEFAULT_CREDENTIAL_CHECKS,
@@ -4554,7 +4554,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: exchangeWithoutIdentityMatcherValues._id,
           },
@@ -4586,7 +4586,7 @@ describe('submit identification disclosure', () => {
             .collection('exchanges')
             .findOne({
               _id: new ObjectId(exchangeWithoutIdentityMatcherValues._id),
-            })
+            }),
         ).toEqual(
           expectedExchange(
             tenant,
@@ -4597,8 +4597,8 @@ describe('submit identification disclosure', () => {
               ExchangeStates.DISCLOSURE_RECEIVED,
               ExchangeStates.DISCLOSURE_CHECKED,
               ExchangeStates.IDENTIFIED,
-            ]
-          )
+            ],
+          ),
         );
       });
       it('should 200 when autoIdentityCheck is on and credential has N/A expiration', async () => {
@@ -4608,7 +4608,7 @@ describe('submit identification disclosure', () => {
         });
         const presentationEmail = await generateKYCPresentation(
           exchange,
-          'email'
+          'email',
         );
 
         let identifyWebhookPayload;
@@ -4631,7 +4631,7 @@ describe('submit identification disclosure', () => {
             jwt_vp: await presentationEmail.sign(
               holderKid,
               holderKeys.privateKey,
-              holderDid
+              holderDid,
             ),
             exchange_id: exchange._id,
           },
@@ -4661,14 +4661,14 @@ describe('submit identification disclosure', () => {
         expect(
           await mongoDb()
             .collection('exchanges')
-            .findOne({ _id: new ObjectId(exchange._id) })
+            .findOne({ _id: new ObjectId(exchange._id) }),
         ).toEqual(
           expectedExchange(tenant, exchange, presentationEmail, [
             ExchangeStates.NEW,
             ExchangeStates.DISCLOSURE_RECEIVED,
             ExchangeStates.DISCLOSURE_CHECKED,
             ExchangeStates.IDENTIFIED,
-          ])
+          ]),
         );
         expect(identifyWebhookPayload).toEqual({
           emailCredentials: [
@@ -4737,7 +4737,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -4749,7 +4749,7 @@ describe('submit identification disclosure', () => {
           message: 'presentation @context is not set correctly',
           statusCode: 400,
           errorCode: 'presentation_invalid',
-        })
+        }),
       );
     });
     it('should 400 when @context is an array and is incorrect value', async () => {
@@ -4768,7 +4768,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -4780,7 +4780,7 @@ describe('submit identification disclosure', () => {
           message: 'presentation @context is not set correctly',
           statusCode: 400,
           errorCode: 'presentation_invalid',
-        })
+        }),
       );
     });
 
@@ -4800,7 +4800,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -4812,7 +4812,7 @@ describe('submit identification disclosure', () => {
           message: 'presentation @context is not set correctly',
           statusCode: 400,
           errorCode: 'presentation_invalid',
-        })
+        }),
       );
     });
 
@@ -4836,7 +4836,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -4863,7 +4863,7 @@ describe('submit identification disclosure', () => {
           jwt_vp: await presentationIdDocument.sign(
             holderKid,
             holderKeys.privateKey,
-            holderDid
+            holderDid,
           ),
         },
       });
@@ -4886,5 +4886,5 @@ const expectedExchange = (tenant, exchange, presentationWrapper, states, err) =>
       ...credentialTypesObject,
       err,
       updatedAt: expect.any(Date),
-    })
+    }),
   );

@@ -39,29 +39,29 @@ describe('COSE key tests', () => {
         EC2KeyParameters.X,
         Buffer.from(
           '143329cce7868e416927599cf65a34f3ce2ffda55a7eca69ed8919a394d42f0f',
-          'hex'
-        )
+          'hex',
+        ),
       )
       .setParam(
         EC2KeyParameters.Y,
         Buffer.from(
           '60f7f1a780d8a783bfb7a2dd6b2796e8128dbbcef9d3d168db9529971a36e7b9',
-          'hex'
-        )
+          'hex',
+        ),
       )
       .setParam(
         EC2KeyParameters.D,
         Buffer.from(
           '6c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19',
-          'hex'
-        )
+          'hex',
+        ),
       );
     const expected =
       // eslint-disable-next-line max-len
       'a6010203262001215820143329cce7868e416927599cf65a34f3ce2ffda55a7eca69ed8919a394d42f0f22582060f7f1a780d8a783bfb7a2dd6b2796e8128dbbcef9d3d168db9529971a36e7b92358206c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19';
     expect(Buffer.from(await key.toBytes()).toString('hex')).toEqual(expected);
     expect(Buffer.from(key.getSecret()).toString('hex')).toEqual(
-      '6c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19'
+      '6c1382765aec5358f117733d281c1c7bdc39884d04a45a1e6c67c858bc206c19',
     );
     expect((await key.toBytes()).length).toEqual(112);
 
@@ -81,14 +81,13 @@ describe('COSE key tests', () => {
       .setParam(EC2KeyParameters.X, Buffer.from(point.x, 'hex'))
       .setParam(
         EC2KeyParameters.Y,
-        isEcYValueEven(Buffer.from(point.y, 'hex'))
+        isEcYValueEven(Buffer.from(point.y, 'hex')),
       );
     const expected =
-      // eslint-disable-next-line max-len
       'a5010203262001215820143329cce7868e416927599cf65a34f3ce2ffda55a7eca69ed8919a394d42f0f22f4';
     expect(Buffer.from(await key.toBytes()).toString('hex')).toEqual(expected);
     expect(
-      Buffer.from(key.getParam(EC2KeyParameters.X)).toString('hex')
+      Buffer.from(key.getParam(EC2KeyParameters.X)).toString('hex'),
     ).toEqual(point.x);
     expect(key.getParam(EC2KeyParameters.Y)).toEqual(false);
     expect((await key.toBytes()).length).toEqual(44);
@@ -96,8 +95,8 @@ describe('COSE key tests', () => {
       deriveEcYValue(
         'P-256',
         Buffer.from(point.x, 'hex'),
-        key.getParam(EC2KeyParameters.Y)
-      ).toString('hex')
+        key.getParam(EC2KeyParameters.Y),
+      ).toString('hex'),
     ).toEqual(point.y);
 
     const key2 = await CoseKey.fromBytes(Buffer.from(expected, 'hex'));
@@ -125,10 +124,10 @@ describe('COSE key tests', () => {
     expect(Buffer.from(await key.toBytes()).toString('hex')).toEqual(expected);
     expect((await key.toBytes()).length).toEqual(77);
     expect(
-      Buffer.from(key.getParam(EC2KeyParameters.X)).toString('base64url')
+      Buffer.from(key.getParam(EC2KeyParameters.X)).toString('base64url'),
     ).toEqual(secp256k1Key.x);
     expect(
-      Buffer.from(key.getParam(EC2KeyParameters.Y)).toString('base64url')
+      Buffer.from(key.getParam(EC2KeyParameters.Y)).toString('base64url'),
     ).toEqual(secp256k1Key.y);
     const key2 = await CoseKey.fromBytes(Buffer.from(expected, 'hex'));
     expect(Buffer.from(await key2.toBytes()).toString('hex')).toEqual(expected);
@@ -142,15 +141,14 @@ describe('COSE key tests', () => {
       .setParam(EC2KeyParameters.X, Buffer.from(secp256k1Key.x, 'base64url'))
       .setParam(
         EC2KeyParameters.Y,
-        isEcYValueEven(Buffer.from(secp256k1Key.y, 'base64url'))
+        isEcYValueEven(Buffer.from(secp256k1Key.y, 'base64url')),
       );
     expect(key.alg).toEqual(Algorithms.ES256);
     const expected =
-      // eslint-disable-next-line max-len
       'a5010203262001215820367e19155d840392799d37c11b83f4729bc8ad58a415c0a24f7df6162831a89d22f4';
     expect(Buffer.from(await key.toBytes()).toString('hex')).toEqual(expected);
     expect(
-      Buffer.from(key.getParam(EC2KeyParameters.X)).toString('base64url')
+      Buffer.from(key.getParam(EC2KeyParameters.X)).toString('base64url'),
     ).toEqual(secp256k1Key.x);
     expect(key.getParam(EC2KeyParameters.Y)).toEqual(false);
     expect((await key.toBytes()).length).toEqual(44);
@@ -158,8 +156,8 @@ describe('COSE key tests', () => {
       deriveEcYValue(
         'secp256k1',
         Buffer.from(key.getParam(EC2KeyParameters.X)).toString('hex'),
-        key.getParam(EC2KeyParameters.Y)
-      ).toString('base64url')
+        key.getParam(EC2KeyParameters.Y),
+      ).toString('base64url'),
     ).toEqual(secp256k1Key.y);
 
     const key2 = await CoseKey.fromBytes(Buffer.from(expected, 'hex'));

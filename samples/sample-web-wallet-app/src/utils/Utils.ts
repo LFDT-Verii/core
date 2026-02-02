@@ -6,9 +6,9 @@
  */
 import { Dictionary } from '../Types';
 
-// eslint-disable-next-line complexity
 export const getApprovedRejectedOfferIdsMock = (
-  offers: Dictionary<any>
+  offers: Dictionary<any>,
+  // eslint-disable-next-line complexity
 ): [string[], string[]] => {
   const approvedOfferIds: string[] = [];
   const rejectedOfferIds: string[] = [];

@@ -11,19 +11,19 @@ program
   .requiredOption('-n, --new-key <newKey>', 'New encryption key')
   .requiredOption(
     '-u, --mongo-uri <mongoUri>',
-    'The url of the mongo database for credential agent'
+    'The url of the mongo database for credential agent',
   )
   .option(
     '-c, --collection <collection>',
-    'Override the default collection to update'
+    'Override the default collection to update',
   )
   .option(
     '-p, --secret-prop <secretProp>',
-    'Override the default encrypted property on the collection'
+    'Override the default encrypted property on the collection',
   )
   .option(
     '--dry-run',
-    'Attempt re-encryption but not actually update the database'
+    'Attempt re-encryption but not actually update the database',
   )
   .action(async () => {
     const options = program.opts();
@@ -40,7 +40,7 @@ program
         {
           ...options,
           db: client.db(),
-        }
+        },
       );
     } catch (error) {
       printError('rotate-key Script Failure');

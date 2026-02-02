@@ -20,6 +20,7 @@ const multitenantExtension =
   ({ repoProp = 'tenantId', tenantProp = '_id', migrateFrom } = {}) =>
   (parent, context) => {
     return {
+      // eslint-disable-next-line complexity
       prepFilter: (filter) => {
         if (context?.tenant?.[tenantProp] == null && filter[repoProp] == null) {
           throw new Error(`context.tenant[${tenantProp}] is undefined`);
@@ -50,6 +51,7 @@ const multitenantExtension =
 
         return parent.prepFilter(preppedFilter);
       },
+      // eslint-disable-next-line complexity
       prepModification: (val, ...args) => {
         if (context?.tenant?.[tenantProp] == null && val[repoProp] == null) {
           throw new Error(`context.tenant[${tenantProp}] is undefined`);

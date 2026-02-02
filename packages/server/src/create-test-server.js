@@ -116,7 +116,7 @@ const testVnfAuthenticationPlugin = fp(
       });
     next();
   },
-  { name: 'velocityIdp' }
+  { name: 'velocityIdp' },
 );
 
 module.exports = { createTestServer };

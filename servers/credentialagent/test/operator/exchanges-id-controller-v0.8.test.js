@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 

@@ -31,7 +31,7 @@ module.exports = (app) =>
     async (overrides, { getOrBuild }) => {
       const organization = await getOrBuild(
         'organization',
-        initOrganizationFactory(app)
+        initOrganizationFactory(app),
       );
       const kmsEntry = await getOrBuild('kmsEntry', initKmsFactory(app));
       return {
@@ -51,5 +51,5 @@ module.exports = (app) =>
         type: 'EcdsaSecp256k1VerificationKey2019',
         ...overrides(),
       };
-    }
+    },
   );

@@ -23,11 +23,15 @@ const checkFailedMessage = (reason, id, value) =>
 
 const buildFailedCheckResultError = (
   { credential, credentialChecks },
-  { log }
+  { log },
 ) => {
   if (credentialChecks.UNTAMPERED !== CredentialCheckResultValue.PASS) {
     log.error(
-      checkFailedMessage('tampered', credential.id, credentialChecks.UNTAMPERED)
+      checkFailedMessage(
+        'tampered',
+        credential.id,
+        credentialChecks.UNTAMPERED,
+      ),
     );
     return newError(401, 'presentation_credential_tampered', {
       errorCode: 'presentation_credential_failed_tampered',
@@ -38,8 +42,8 @@ const buildFailedCheckResultError = (
       checkFailedMessage(
         'trusted_issuer',
         credential.id,
-        credentialChecks.TRUSTED_ISSUER
-      )
+        credentialChecks.TRUSTED_ISSUER,
+      ),
     );
     return newError(401, 'presentation_credential_bad_issuer', {
       errorCode: 'presentation_credential_bad_issuer',
@@ -47,7 +51,7 @@ const buildFailedCheckResultError = (
   }
   if (credentialChecks.UNREVOKED !== CredentialCheckResultValue.PASS) {
     log.error(
-      checkFailedMessage('revoked', credential.id, credentialChecks.UNREVOKED)
+      checkFailedMessage('revoked', credential.id, credentialChecks.UNREVOKED),
     );
     return newError(401, 'presentation_credential_revoked', {
       errorCode: 'presentation_credential_revoked',
@@ -62,7 +66,7 @@ const buildFailedCheckResultError = (
     log.error(
       checkFailedMessage('expired', credential.id, credentialChecks.UNEXPIRED, [
         CredentialCheckResultValue.NOT_APPLICABLE,
-      ])
+      ]),
     );
     return newError(401, 'presentation_credential_expired', {
       errorCode: 'presentation_credential_expired',
@@ -79,8 +83,8 @@ const buildFailedCheckResultError = (
         'trusted_holder',
         credential.id,
         credentialChecks.TRUSTED_HOLDER,
-        [CredentialCheckResultValue.NOT_APPLICABLE]
-      )
+        [CredentialCheckResultValue.NOT_APPLICABLE],
+      ),
     );
     return newError(401, 'presentation_credential_bad_holder', {
       errorCode: 'presentation_credential_bad_holder',

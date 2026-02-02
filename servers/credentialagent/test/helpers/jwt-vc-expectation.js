@@ -59,7 +59,7 @@ const jwtVcExpectation = ({
           'replaces',
           'relatedResource',
         ],
-        credential.content
+        credential.content,
       ),
       '@context': uniq(
         compact([
@@ -67,7 +67,7 @@ const jwtVcExpectation = ({
           ...credentialSubjectContext,
           ...castArray(credential.content['@context']),
           'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
-        ])
+        ]),
       ),
       id: credentialId,
       type: [
@@ -89,7 +89,7 @@ const jwtVcExpectation = ({
       },
       credentialStatus: {
         id: expect.stringMatching(
-          '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-zA-F]+&listId=\\d+&index=\\d+$'
+          '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-zA-F]+&listId=\\d+&index=\\d+$',
         ),
         type: VelocityRevocationListType,
       },

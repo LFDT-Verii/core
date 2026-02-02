@@ -56,7 +56,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
     permissionsContractAddress = await deployPermissionContract();
     revocationRegistryContractAddress = await deployRevocationContract(
       permissionsContractAddress,
-      context
+      context,
     );
     const { primaryAddress, operatorKeyPair } =
       await initializationPermissions();
@@ -82,7 +82,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
             contractAddress: revocationRegistryContractAddress,
             rpcProvider,
           },
-          context
+          context,
         );
       await expect(funcWithoutPrefix()).resolves.not.toThrow();
 
@@ -94,7 +94,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
             contractAddress: revocationRegistryContractAddress,
             rpcProvider,
           },
-          context
+          context,
         );
       await expect(funcWithPrefix()).resolves.not.toThrow();
     });
@@ -108,10 +108,10 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
           contractAddress: revocationRegistryContractAddress,
           rpcProvider,
         },
-        context
+        context,
       );
       await expect(
-        revocationRegistryClient.addRevocationListSigned(42, 'did:velocity:99')
+        revocationRegistryClient.addRevocationListSigned(42, 'did:velocity:99'),
       ).rejects.not.toBe(null);
     });
 
@@ -121,10 +121,10 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
 
       await revocationRegistry.addRevocationListSigned(
         listId,
-        'did:velocity:99'
+        'did:velocity:99',
       );
       const initialStatus = await revocationRegistry.getRevokedStatus(
-        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
+        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
       );
       expect(initialStatus).toEqual(0n);
       await revocationRegistry.setRevokedStatusSigned({
@@ -134,7 +134,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         caoDid: 'did:velocity:99',
       });
       const updatedStatus = await revocationRegistry.getRevokedStatus(
-        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
+        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
       );
       expect(updatedStatus).toEqual(1n);
     });
@@ -144,7 +144,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
       const index = 24;
       await revocationRegistry.addRevocationListSigned(
         listId,
-        'did:velocity:99'
+        'did:velocity:99',
       );
       await revocationRegistry.setRevokedStatusSigned({
         accountId: defaultPrimaryAddress,
@@ -158,11 +158,11 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
           contractAddress: revocationRegistryContractAddress,
           rpcProvider,
         },
-        context
+        context,
       );
 
       const status = await revocationRegistryNoKey.getRevokedStatus(
-        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
+        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
       );
       expect(status).toEqual(1n);
     });
@@ -174,10 +174,10 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
       const url = revocationRegistry.getRevokeUrl(
         defaultPrimaryAddress,
         listId,
-        index
+        index,
       );
       expect(url).toEqual(
-        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
+        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
       );
     });
 
@@ -187,8 +187,8 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
           {
             rpcProvider,
           },
-          context
-        )
+          context,
+        ),
       ).rejects.toThrow('Check the required parameters: contractAddress');
     });
 
@@ -196,7 +196,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
       await expect(async () =>
         revocationRegistry.addWalletToRegistrySigned({
           caoDid: 'did:velocity:99',
-        })
+        }),
       ).rejects.toThrow(/execution reverted: "wallet already in registry"/);
     });
 
@@ -206,15 +206,15 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
 
       await revocationRegistry.addRevocationListSigned(
         listId,
-        'did:velocity:99'
+        'did:velocity:99',
       );
 
       await expect(async () =>
         revocationRegistry.getRevokedStatus(
           `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${
             listId + 1
-          }&index=${index}`
-        )
+          }&index=${index}`,
+        ),
       ).rejects.toThrow(/revocation list with given id does not exist/);
     });
 
@@ -224,7 +224,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
 
       await revocationRegistry.addRevocationListSigned(
         listId,
-        'did:velocity:99'
+        'did:velocity:99',
       );
 
       await expect(async () =>
@@ -233,7 +233,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
           listId,
           index,
           caoDid: 'did:velocity:99',
-        })
+        }),
       ).rejects.toThrow(/execution reverted: "list index out of bound"/);
     });
 
@@ -243,26 +243,26 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
 
       await revocationRegistry.addRevocationListSigned(
         listId,
-        'did:velocity:99'
+        'did:velocity:99',
       );
 
       expect(() => {
         revocationRegistry.getRevokedStatus(
-          `ethereum:${revocationRegistryContractAddress}/invalidMethod?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
+          `ethereum:${revocationRegistryContractAddress}/invalidMethod?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
         );
       }).toThrow(
-        'Wrong url, please check the params: scheme, target_address, function_name'
+        'Wrong url, please check the params: scheme, target_address, function_name',
       );
       expect(() => {
         revocationRegistry.getRevokedStatus(
-          `ethereum:${defaultPrimaryAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
+          `ethereum:${defaultPrimaryAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
         );
       }).toThrow(
-        'Wrong url, please check the params: scheme, target_address, function_name'
+        'Wrong url, please check the params: scheme, target_address, function_name',
       );
       expect(() => {
         revocationRegistry.getRevokedStatus(
-          `eth:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`
+          `eth:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
         );
       }).toThrow('Not an Ethereum URI');
     });
@@ -274,7 +274,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
     before(async () => {
       await revocationRegistry.addRevocationListSigned(
         listId,
-        'did:velocity:99'
+        'did:velocity:99',
       );
       await revocationRegistry.setRevokedStatusSigned({
         accountId: defaultPrimaryAddress,
@@ -295,7 +295,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         aggregateArrayOfEvents = aggregateArrayOfEvents.concat(eventsSet);
       }
       expect(last(aggregateArrayOfEvents).args[0]).toEqual(
-        defaultPrimaryAddress
+        defaultPrimaryAddress,
       );
       expect(last(aggregateArrayOfEvents).fragment.name).toEqual('WalletAdded');
     });
@@ -311,11 +311,11 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         aggregateArrayOfEvents = aggregateArrayOfEvents.concat(eventsSet);
       }
       expect(last(aggregateArrayOfEvents).args[0]).toEqual(
-        defaultPrimaryAddress
+        defaultPrimaryAddress,
       );
       expect(toNumber(last(aggregateArrayOfEvents).args[1])).toEqual(listId);
       expect(last(aggregateArrayOfEvents).fragment.name).toEqual(
-        'RevocationListCreate'
+        'RevocationListCreate',
       );
     });
 
@@ -330,12 +330,12 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         aggregateArrayOfEvents = aggregateArrayOfEvents.concat(eventsSet);
       }
       expect(last(aggregateArrayOfEvents).args[0]).toEqual(
-        defaultPrimaryAddress
+        defaultPrimaryAddress,
       );
       expect(toNumber(last(aggregateArrayOfEvents).args[1])).toEqual(listId);
       expect(last(aggregateArrayOfEvents).args[2]).toEqual(index);
       expect(last(aggregateArrayOfEvents).fragment.name).toEqual(
-        'RevokedStatusUpdate'
+        'RevokedStatusUpdate',
       );
     });
   });
@@ -347,7 +347,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         contractAddress: revocationRegistryContractAddress,
         rpcProvider,
       },
-      context
+      context,
     );
     await revocationRegistryClient.addWalletToRegistrySigned({
       caoDid: 'did:velocity:99',
@@ -365,7 +365,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         contractAddress: permissionsContractAddress,
         rpcProvider,
       },
-      context
+      context,
     );
 
     await permissionsContractRootClient.addPrimary({
@@ -384,7 +384,7 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
         contractAddress: permissionsContractAddress,
         rpcProvider,
       },
-      context
+      context,
     );
 
     const operatorKeyPair = generateKeyPair();

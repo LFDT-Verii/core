@@ -36,7 +36,7 @@ const credentialTypesController = async (fastify) => {
         await validateCredentialTypeMetadata(body, req);
         const result = await repos.credentialSchemas.insert({ ...body });
         return reply.code(201).send(result);
-      }
+      },
     )
     .get(
       '/',
@@ -69,7 +69,7 @@ const credentialTypesController = async (fastify) => {
         }
 
         return repos.credentialSchemas.find({ filter });
-      }
+      },
     );
 
   fastify
@@ -109,10 +109,10 @@ const credentialTypesController = async (fastify) => {
         await validateCredentialTypeMetadata(body, req);
         const result = await repos.credentialSchemas.update(
           req.params.id,
-          body
+          body,
         );
         return reply.code(200).send(result);
-      }
+      },
     )
     .get(
       '/:id',
@@ -121,7 +121,7 @@ const credentialTypesController = async (fastify) => {
           response: { 200: { $ref: 'credential-type#' } },
         }),
       },
-      (req) => req.repos.credentialSchemas.findById(req.params.id)
+      (req) => req.repos.credentialSchemas.findById(req.params.id),
     )
     .delete(
       '/:id',
@@ -149,7 +149,7 @@ const credentialTypesController = async (fastify) => {
         await verifyGroupAndCredentialType(req);
         await repos.credentialSchemas.del(req.params.id);
         reply.code(204);
-      }
+      },
     );
 };
 

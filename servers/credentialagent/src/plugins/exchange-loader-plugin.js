@@ -17,6 +17,7 @@
 const newError = require('http-errors');
 const fp = require('fastify-plugin');
 
+// eslint-disable-next-line complexity
 const parseExchangeId = ({ params, query, body }) =>
   params?.exchangeId ??
   query?.exchangeId ??

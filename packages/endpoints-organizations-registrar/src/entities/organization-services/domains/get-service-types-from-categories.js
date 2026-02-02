@@ -5,7 +5,7 @@ const {
 
 const serviceCategoriesToServiceTypes = flatMap(
   (currentServiceCategory) =>
-    ServiceTypesOfServiceCategory[currentServiceCategory]
+    ServiceTypesOfServiceCategory[currentServiceCategory],
 );
 
 const getServiceTypesFromCategories = ({ filter } = {}) => {

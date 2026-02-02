@@ -11,18 +11,18 @@ const validateServicesForDelete = ({
     if (!serviceExists(didDoc, serviceId)) {
       throw newError(
         400,
-        `Service ${serviceId} was not found in organization ${didDoc.id}`
+        `Service ${serviceId} was not found in organization ${didDoc.id}`,
       );
     }
     if (
       !find(
         (activeServiceId) => activeServiceId === serviceId,
-        activatedServiceIds
+        activatedServiceIds,
       )
     ) {
       throw newError(
         400,
-        `Service ${serviceId} was not found in activated services of the organization ${didDoc.id}`
+        `Service ${serviceId} was not found in activated services of the organization ${didDoc.id}`,
       );
     }
   }, servicesIds);

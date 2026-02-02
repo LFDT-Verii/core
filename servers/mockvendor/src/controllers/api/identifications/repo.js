@@ -17,6 +17,6 @@ module.exports = (app, opts, next = () => {}) => {
         createdAt: 1,
       },
     },
-    app
+    app,
   );
 };

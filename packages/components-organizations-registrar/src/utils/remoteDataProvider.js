@@ -93,7 +93,6 @@ const remoteDataProvider = (config, auth) => {
         }
 
         const fullUrl = new URL(url);
-        // eslint-disable-next-line better-mutation/no-mutation
         fullUrl.search = new URLSearchParams({ 'page.size': 1000 }).toString();
 
         return client(fullUrl).then(({ json }) => {

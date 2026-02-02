@@ -17,9 +17,9 @@ const rootRoutes = async (fastify) => {
       reply
         .status(200)
         .send(
-          `Welcome to VelocityCore Registrar\nVersion: ${fastify.config.version}\n`
+          `Welcome to VelocityCore Registrar\nVersion: ${fastify.config.version}\n`,
         );
-    }
+    },
   );
 };
 

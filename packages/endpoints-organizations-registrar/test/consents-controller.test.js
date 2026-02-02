@@ -67,7 +67,7 @@ describe('Registrar Consents controller', () => {
         errorCode: 'request_validation_failed',
         message: "body must have required property 'version'",
         statusCode: 400,
-      })
+      }),
     );
   });
 
@@ -84,7 +84,7 @@ describe('Registrar Consents controller', () => {
         message: 'Unauthorized',
         errorCode: 'missing_error_code',
         statusCode: 401,
-      })
+      }),
     );
   });
 
@@ -165,7 +165,7 @@ describe('Registrar Consents controller', () => {
         ...omit(['id'], response.json.consent),
         _id: expect.any(ObjectId),
         consentId: response.json.consent.id,
-      })
+      }),
     );
   });
 
@@ -205,7 +205,7 @@ describe('Registrar Consents controller', () => {
           userId: testReadOrganizationsUser.sub,
           createdAt: expect.anything(),
         },
-      ])
+      ]),
     );
   });
 

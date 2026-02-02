@@ -14,7 +14,7 @@ module.exports = (context) => ({
   properties: {
     ...omit(
       ['offerCreationDate', 'offerExpirationDate'],
-      newVendorOfferSchema.properties
+      newVendorOfferSchema.properties,
     ),
   },
   required: [
@@ -24,7 +24,7 @@ module.exports = (context) => ({
         'credentialSubject',
         ...(context.config.omitOfferId ? [] : ['offerId']),
       ],
-      newVendorOfferSchema.required
+      newVendorOfferSchema.required,
     ),
   ],
 });

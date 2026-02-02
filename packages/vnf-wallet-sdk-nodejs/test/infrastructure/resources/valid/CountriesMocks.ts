@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 export class CountriesMocks {
     static readonly AfghanistanRegion1Name: string = 'Balkh Province';
 

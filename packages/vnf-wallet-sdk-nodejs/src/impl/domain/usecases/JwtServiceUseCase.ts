@@ -9,13 +9,13 @@ export default interface JwtServiceUseCase {
     verifyJwt(
         jwt: VCLJwt,
         publicJwk: Nullish<VCLPublicJwk>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<boolean>;
 
     generateSignedJwt(
         jwtDescriptor: VCLJwtDescriptor,
         didJwk: VCLDidJwk,
         nonce: Nullish<string>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<VCLJwt>;
 }

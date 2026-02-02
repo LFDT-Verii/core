@@ -1,5 +1,5 @@
 import { TextInput, SaveButton, required } from 'react-admin';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import PropTypes from 'prop-types';
 import { Stack } from '@mui/material';
 import { useIsIssuingInspection } from '@/pages/services/hooks/useIsIssuingInspection.js';

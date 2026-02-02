@@ -47,7 +47,7 @@ describe('Responses test suite', () => {
           fieldName,
           data,
         },
-        context
+        context,
       );
       expect(result).toEqual({
         test: [data[0], data[1]],
@@ -72,7 +72,7 @@ describe('Responses test suite', () => {
           fieldName,
           data,
         },
-        context
+        context,
       );
       expect(result).toEqual({
         test: [],
@@ -108,7 +108,7 @@ describe('Responses test suite', () => {
           fieldName,
           data,
         },
-        context
+        context,
       );
       expect(result).toEqual({
         test: [data[0], data[1]],
@@ -143,7 +143,7 @@ describe('Responses test suite', () => {
           fieldName,
           data,
         },
-        context
+        context,
       );
       expect(result).toEqual({
         test: [data[0], data[1]],
@@ -173,7 +173,7 @@ describe('Responses test suite', () => {
           fieldName,
           data,
         },
-        context
+        context,
       );
       expect(result).toEqual({
         test: data,

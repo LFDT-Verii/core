@@ -48,11 +48,12 @@ const batchOperations = async (
     clientVoucherBurns = [],
     transactionalBatch = true,
   },
-  { fineractFetch }
+  { fineractFetch },
+  // eslint-disable-next-line complexity
 ) => {
   const batchId = random(0, Number.MAX_SAFE_INTEGER);
   const buildBatchTransferCreditsPayload = initBuildBatchTransferCreditsPayload(
-    { requestId: batchId }
+    { requestId: batchId },
   );
   const buildBatchCreateClientPayload = initBuildBatchCreateClientPayload({
     requestId: batchId,
@@ -69,17 +70,17 @@ const batchOperations = async (
   const batchedTransfers = map(buildBatchTransferCreditsPayload, transfers);
   const batchedClientsToCreate = map(
     buildBatchCreateClientPayload,
-    clientsToCreate
+    clientsToCreate,
   );
 
   const batchedCreditAccountsToCreate = map(
     buildBatchCreateCreditsAccountPayload,
-    creditAccountsToCreate
+    creditAccountsToCreate,
   );
 
   const batchedClientBurnVouchers = map(
     buildBatchBurnVouchersPayload,
-    clientVoucherBurns
+    clientVoucherBurns,
   );
 
   const queryParams = new URLSearchParams();
@@ -93,7 +94,7 @@ const batchOperations = async (
       ...batchedClientsToCreate,
       ...batchedCreditAccountsToCreate,
       ...batchedClientBurnVouchers,
-    ]
+    ],
   );
   const result = await response.json();
   if (transactionalBatch && firstStatusCode(result) >= 400) {
@@ -124,7 +125,7 @@ const handleBatchResponseItemBody = (responseItem) => {
         savingsId: parsedBody.savingsId ? `${parsedBody.savingsId}` : undefined,
       },
     };
-  } catch (e) {
+  } catch {
     return {
       body: { message: responseItem.body },
     };
@@ -137,7 +138,7 @@ const batchTransferCredits = async ({ transfers }, { fineractFetch }) => {
 
 const createClient = async (
   { fullName, mobileNumber, externalId, activationDate, submittedOnDate },
-  { fineractFetch }
+  { fineractFetch },
 ) => {
   const payload = buildCreateClientPayload({
     fullName,
@@ -148,7 +149,7 @@ const createClient = async (
   });
   const response = await fineractFetch.post(
     'fineract-provider/api/v1/clients',
-    payload
+    payload,
   );
   const { clientId } = await response.json();
   return { clientId: `${clientId}` };
@@ -156,7 +157,7 @@ const createClient = async (
 
 const createCreditsAccount = async (
   { clientId, externalId, submittedOnDate, productId, autoApproveAndActivate },
-  { fineractFetch }
+  { fineractFetch },
 ) => {
   const payload = buildCreateCreditsAccountPayload({
     clientId,
@@ -167,7 +168,7 @@ const createCreditsAccount = async (
   });
   const response = await fineractFetch.post(
     'fineract-provider/api/v1/savingsaccounts',
-    payload
+    payload,
   );
   const { savingsId } = await response.json();
   return { tokenAccountId: `${savingsId}` };
@@ -175,7 +176,7 @@ const createCreditsAccount = async (
 
 const createVouchers = async (
   { quantity, clientId, expiry, bundleId },
-  { fineractFetch }
+  { fineractFetch },
 ) => {
   const payload = {
     couponBundleId: bundleId,
@@ -188,14 +189,14 @@ const createVouchers = async (
   };
   const response = await fineractFetch.post(
     `fineract-provider/api/v1/datatables/Voucher/${clientId}?genericResultSet=true`,
-    payload
+    payload,
   );
   return response.text();
 };
 
 const getClientVoucherBalance = async ({ clientId }, { fineractFetch }) => {
   const response = await fineractFetch.get(
-    `fineract-provider/api/v1/vouchers/${clientId}/balance`
+    `fineract-provider/api/v1/vouchers/${clientId}/balance`,
   );
   const result = await response.json();
   return {
@@ -206,7 +207,7 @@ const getClientVoucherBalance = async ({ clientId }, { fineractFetch }) => {
 
 const getCreditsAccount = async ({ accountId }, { fineractFetch }) => {
   const response = await fineractFetch.get(
-    `fineract-provider/api/v1/savingsaccounts/${accountId}?associations=all`
+    `fineract-provider/api/v1/savingsaccounts/${accountId}?associations=all`,
   );
   return response.json();
 };
@@ -221,7 +222,8 @@ const getCreditsAccountTransactions = async (
     transfersOnly,
     descriptions,
   },
-  { fineractFetch }
+  { fineractFetch },
+  // eslint-disable-next-line complexity
 ) => {
   const searchParams = new URLSearchParams();
   searchParams.set('dateFormat', 'yyyy-MM-dd');
@@ -244,11 +246,11 @@ const getCreditsAccountTransactions = async (
   }
   forEach(
     (description) => searchParams.append('description', description),
-    descriptions
+    descriptions,
   );
 
   const response = await fineractFetch.get(
-    `fineract-provider/api/v1/savingsaccounts/${accountId}/transactions?${searchParams.toString()}`
+    `fineract-provider/api/v1/savingsaccounts/${accountId}/transactions?${searchParams.toString()}`,
   );
   const result = await response.json();
   return {
@@ -263,7 +265,7 @@ const getCreditsAccountTransactions = async (
 
 const transferCredits = async (
   { fromAccount, toAccount, amount, description },
-  { fineractFetch }
+  { fineractFetch },
 ) => {
   const now = new Date();
   const payload = {
@@ -281,7 +283,7 @@ const transferCredits = async (
   };
   const response = await fineractFetch.post(
     'fineract-provider/api/v1/accounttransfers',
-    payload
+    payload,
   );
   await response.json();
   return {};
@@ -296,7 +298,7 @@ const mapVoucher = ({ expiry, ...voucher }) => ({
 
 const getVouchers = async ({ clientId }, { fineractFetch }) => {
   const response = await fineractFetch.get(
-    `fineract-provider/api/v1/datatables/Voucher/${clientId}`
+    `fineract-provider/api/v1/datatables/Voucher/${clientId}`,
   );
   const result = await response.json();
 
@@ -305,7 +307,7 @@ const getVouchers = async ({ clientId }, { fineractFetch }) => {
 
 const getExpiringVouchers = async ({ clientId, days }, { fineractFetch }) => {
   const response = await fineractFetch.get(
-    `fineract-provider/api/v1/vouchers/${clientId}/expiring/${days}`
+    `fineract-provider/api/v1/vouchers/${clientId}/expiring/${days}`,
   );
   return response.json();
 };

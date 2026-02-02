@@ -27,14 +27,14 @@ const signatoryStatusStateRepoExtension = (parent) => ({
         authCodes: [{ code: authCode, timestamp }],
         ...val,
       },
-      ...args
+      ...args,
     );
   },
   addState: async (
     _idOrFilter,
     state,
     $set,
-    projection = parent.defaultColumnsSelection
+    projection = parent.defaultColumnsSelection,
   ) => {
     const eventsArr = [{ state, timestamp: new Date() }];
     if (
@@ -75,7 +75,7 @@ const signatoryStatusStateRepoExtension = (parent) => ({
     _id,
     state,
     authCode,
-    projection = parent.defaultColumnsSelection
+    projection = parent.defaultColumnsSelection,
   ) => {
     const timestamp = new Date();
     const result = await parent.collection().findOneAndUpdate(
@@ -90,7 +90,7 @@ const signatoryStatusStateRepoExtension = (parent) => ({
         returnDocument: 'after',
         includeResultMetadata: true,
         projection,
-      }
+      },
     );
     return result.value;
   },

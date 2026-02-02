@@ -44,7 +44,7 @@ const initAddServiceToOrganization = async (fastify) => {
 
     const createdService = await repos.organizations.addService(
       organization._id,
-      newService
+      newService,
     );
 
     if (!organization.didNotCustodied) {
@@ -70,7 +70,7 @@ const initAddServiceToOrganization = async (fastify) => {
       const stakesAccountId = await createStakesAccount(
         organization.ids.fineractClientId,
         organization.didDoc.id,
-        context
+        context,
       );
 
       await context.repos.organizations.update(organization._id, {
@@ -82,14 +82,14 @@ const initAddServiceToOrganization = async (fastify) => {
     const newActivatedServiceIds = activateServices(
       organization.didDoc.id,
       [createdService],
-      context
+      context,
     );
 
     const createdAuthClients = await provisionAuth0Clients(
       organization,
       [createdService],
       newActivatedServiceIds,
-      context
+      context,
     );
 
     const organizationModifications =
@@ -98,7 +98,7 @@ const initAddServiceToOrganization = async (fastify) => {
         services: concat(organization.services, [createdService]),
         activatedServiceIds: concat(
           organization.activatedServiceIds ?? [],
-          newActivatedServiceIds
+          newActivatedServiceIds,
         ),
         authClients: concat(organization.authClients ?? [], createdAuthClients),
       });
@@ -116,7 +116,7 @@ const initAddServiceToOrganization = async (fastify) => {
         adminEmail: 1,
         ids: 1,
         authClients: 1,
-      }
+      },
     );
 
     if (!isEmpty(newActivatedServiceIds)) {
@@ -124,7 +124,7 @@ const initAddServiceToOrganization = async (fastify) => {
         {
           organization: activatedOrganization,
         },
-        context
+        context,
       );
     }
 

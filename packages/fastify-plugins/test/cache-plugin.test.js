@@ -27,7 +27,7 @@ const buildFastify = () => {
   const fastify = require('fastify')()
     .register(cachePlugin)
     .decorate('baseRequest', () =>
-      initHttpClient({ cache: fastify.cache, isTest: true })
+      initHttpClient({ cache: fastify.cache, isTest: true }),
     )
     .addHook('preValidation', async (req) => {
       req.fetch = fastify.baseRequest()(req);
@@ -67,7 +67,7 @@ describe('cache-plugin test suite', () => {
     cachePlugin(fakeServer, {}, () => {});
     expect(mockDecorate.mock.callCount()).toEqual(1);
     expect(
-      mockDecorate.mock.calls.map((call) => call.arguments)
+      mockDecorate.mock.calls.map((call) => call.arguments),
     ).toContainEqual(['cache', expect.any(Object)]);
   });
 
@@ -98,7 +98,7 @@ describe('cache-plugin test suite', () => {
       path: '/user',
     });
     const cachedResponseText = JSON.parse(
-      Buffer.from(cachedResponse.body[0]).toString()
+      Buffer.from(cachedResponse.body[0]).toString(),
     );
 
     expect(cachedResponse.body.length).toEqual(1);

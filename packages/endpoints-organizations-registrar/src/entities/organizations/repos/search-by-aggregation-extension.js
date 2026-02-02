@@ -67,7 +67,7 @@ const transformIdFilter = (input) =>
 const buildServiceAggregationStage = (serviceTypes) => {
   const [issuerServiceTypes, nonIssuerServiceTypes] = partition(
     (s) => ISSUER_SERVICE_TYPES.includes(s),
-    serviceTypes
+    serviceTypes,
   );
 
   const projectStage = {
@@ -105,7 +105,7 @@ const buildSortStage = (input) => {
   const $sort = reduce(
     (acc, el) => ({ ...acc, ...{ [el[0]]: el[1] } }),
     {},
-    transformToSortDocument(input)
+    transformToSortDocument(input),
   );
 
   return { $sort };

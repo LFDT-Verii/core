@@ -76,7 +76,7 @@ const initUserManagement = async ({
         { id },
         {
           blocked: true,
-        }
+        },
       );
     }
   };
@@ -127,7 +127,7 @@ const initUserManagement = async ({
 
     return pick(
       ['email', 'givenName', 'familyName', 'id', 'isRegistered'],
-      user
+      user,
     );
   };
 
@@ -141,7 +141,7 @@ const initUserManagement = async ({
         per_page: perPage,
         // sort: 'date:-1',
         // include_totals: true,
-      }
+      },
     );
     return roles;
   };
@@ -154,6 +154,7 @@ const initUserManagement = async ({
   };
 };
 
+// eslint-disable-next-line complexity
 const isUserAccessPermitted = (user, context) =>
   context != null &&
   (context.scope == null ||

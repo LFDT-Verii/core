@@ -27,7 +27,7 @@ program
   .usage('[options]')
   .option(
     '-p, --print-template <template-name>',
-    'Prints content of sample template <template-name>'
+    'Prints content of sample template <template-name>',
   )
   .action(() => {
     const options = program.opts();

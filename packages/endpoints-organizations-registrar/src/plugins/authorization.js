@@ -26,7 +26,7 @@ const verifyUserOrganizationWriteAuthorized = async (ctx) => {
           RegistrarScopes.WriteOrganizations,
           RegistrarScopes.AdminOrganizations,
         ],
-      })
+      }),
     );
   }
 
@@ -46,7 +46,7 @@ const verifyUserOrganizationWriteAuthorized = async (ctx) => {
         dids: method === 'POST' ? ['new'] : userGroup.dids,
         groupId: userGroup.groupId,
       },
-      ctx
+      ctx,
     );
     return true;
   }
@@ -67,7 +67,7 @@ const verifyUserOrganizationReadAuthorized = async (ctx) => {
           RegistrarScopes.ReadOrganizations,
           RegistrarScopes.AdminOrganizations,
         ],
-      })
+      }),
     );
   }
 
@@ -106,7 +106,7 @@ const verifyAuthorizedWriteUsers = async (ctx) => {
           RegistrarScopes.WriteUsers,
           RegistrarScopes.AdminUsers,
         ],
-      })
+      }),
     );
   }
 
@@ -119,7 +119,7 @@ const verifyAuthorizedWriteUsers = async (ctx) => {
       ...group,
       userId: isCreateMethod(method, params?.id) ? 'new' : params.id,
     },
-    ctx
+    ctx,
   );
   return true;
 };
@@ -138,7 +138,7 @@ const verifyAuthorizedReadUsers = async (ctx) => {
     throw new newError.Forbidden(
       UserErrorMessages.MISSING_REQUIRED_SCOPES_TEMPLATE({
         requiredScopes: [RegistrarScopes.ReadUsers, RegistrarScopes.AdminUsers],
-      })
+      }),
     );
   }
 
@@ -152,7 +152,7 @@ const verifyAuthorizedReadUsers = async (ctx) => {
 const validateUserGroupIdClaim = (user, orgGroup, orgDid) => {
   if (!user[VNF_GROUP_ID_CLAIM]) {
     throw new newError.NotFound(
-      UserErrorMessages.USER_MUST_HAVE_GROUP_CLAIM({ user })
+      UserErrorMessages.USER_MUST_HAVE_GROUP_CLAIM({ user }),
     );
   }
   if (orgGroup != null && user[VNF_GROUP_ID_CLAIM] !== orgGroup.groupId) {
@@ -161,7 +161,7 @@ const validateUserGroupIdClaim = (user, orgGroup, orgDid) => {
         user,
         group: orgGroup,
         did: orgDid,
-      })
+      }),
     );
   }
 };
@@ -172,7 +172,7 @@ const validateUserIsGroupClientAdmin = (user, group) => {
       UserErrorMessages.USER_NOT_GROUP_CLIENT_ADMIN({
         user,
         group,
-      })
+      }),
     );
   }
 };
@@ -181,7 +181,7 @@ const loadGroupByDid = async (did, { repos }) => {
   const group = await repos.groups.findGroupByDid(did);
   if (group == null) {
     throw new newError.NotFound(
-      GroupErrorMessages.ORGANIZATION_GROUP_NOT_FOUND({ did })
+      GroupErrorMessages.ORGANIZATION_GROUP_NOT_FOUND({ did }),
     );
   }
   return group;
@@ -193,7 +193,7 @@ const loadGroupByUserClaim = async (user, { repos }) => {
   } catch (ex) {
     if (ex.status === 404) {
       throw new newError.Forbidden(
-        UserErrorMessages.USER_INVALID_GROUP_CLAIM({ user })
+        UserErrorMessages.USER_INVALID_GROUP_CLAIM({ user }),
       );
     }
     throw ex;
@@ -215,6 +215,7 @@ const isParamIdYourself = (user, params) =>
 
 const isCreateMethod = (method, paramId) => method === 'POST' && !paramId;
 
+// eslint-disable-next-line complexity
 const decorateScope = ({ dids, groupId, userId }, ctx) => {
   // eslint-disable-next-line better-mutation/no-mutation
   ctx.scope = {

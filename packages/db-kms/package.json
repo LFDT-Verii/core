@@ -11,7 +11,7 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
     "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
-    "lint": "eslint --ext .js .",
+    "lint": "eslint .",
     "lint:ci": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix ."
   },
@@ -26,12 +26,12 @@
   },
   "devDependencies": {
     "@spencejs/spence-config": "0.10.2",
-    "@verii/tests-helpers": "0.5.0-build",
-    "@verii/test-regexes": "0.5.0-build",
-    "@typescript-eslint/parser": "8.54.0",
     "@typescript-eslint/eslint-plugin": "8.54.0",
+    "@typescript-eslint/parser": "8.54.0",
+    "@verii/test-regexes": "0.5.0-build",
+    "@verii/tests-helpers": "0.5.0-build",
     "eslint": "9.39.2",
-    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",
     "eslint-plugin-better-mutation": "2.1.0",
@@ -39,13 +39,17 @@
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
     "eslint-plugin-prettier": "5.5.5",
     "eslint-watch": "8.0.0",
-    "fastify": "5.6.2",
-    "mongodb": "6.20.0",
     "expect": "30.2.0",
+    "fastify": "5.6.2",
+    "globals": "16.5.0",
+    "mongodb": "6.20.0",
     "prettier": "3.8.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.36.0"
   },
   "nx": {
-    "tags": ["lib"]
+    "tags": [
+      "lib"
+    ]
   }
 }

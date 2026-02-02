@@ -22,23 +22,23 @@ describe('CredentialsByDeepLinkVerifier', () => {
     const deepLink = CredentialManifestDescriptorMocks.DeepLink;
     const credentials = [
         VCLJwt.fromEncodedJwt(
-            CredentialMocks.JwtCredentialEmploymentPastFromRegularIssuer
+            CredentialMocks.JwtCredentialEmploymentPastFromRegularIssuer,
         ),
         VCLJwt.fromEncodedJwt(
-            CredentialMocks.JwtCredentialEducationDegreeRegistrationFromRegularIssuer
+            CredentialMocks.JwtCredentialEducationDegreeRegistrationFromRegularIssuer,
         ),
     ];
 
     test('testVerifyCredentialsSuccess', async () => {
         subject = new CredentialsByDeepLinkVerifierImpl(
             new ResolveDidDocumentRepositoryImpl(
-                new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-            )
+                new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+            ),
         );
 
         const isVerified = await subject.verifyCredentials(
             credentials,
-            deepLink
+            deepLink,
         );
         expect(isVerified).toBeTruthy();
     });
@@ -47,19 +47,19 @@ describe('CredentialsByDeepLinkVerifier', () => {
         subject = new CredentialsByDeepLinkVerifierImpl(
             new ResolveDidDocumentRepositoryImpl(
                 new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentWithWrongDidMock
-                )
-            )
+                    DidDocumentMocks.DidDocumentWithWrongDidMock,
+                ),
+            ),
         );
         try {
             const isVerified = await subject.verifyCredentials(
                 credentials,
-                deepLink
+                deepLink,
             );
             expect(isVerified).toBeFalsy();
         } catch (error: any) {
             expect(error.errorCode).toEqual(
-                VCLErrorCode.MismatchedCredentialIssuerDid
+                VCLErrorCode.MismatchedCredentialIssuerDid,
             );
         }
     });

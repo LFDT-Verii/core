@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -179,7 +178,7 @@ describe('disclosures management', () => {
                 ['carmen.jones@example.com'],
               ],
             },
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -198,7 +197,7 @@ describe('disclosures management', () => {
             errorCode: 'request_validation_failed',
             message:
               'body/identityMatchers/rules/0/rule must be equal to one of the allowed values',
-          })
+          }),
         );
       });
 
@@ -209,7 +208,7 @@ describe('disclosures management', () => {
             tenant,
             vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
             offerMode: 'preloaded',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -230,7 +229,7 @@ describe('disclosures management', () => {
             errorCode: 'disclosure_configuration_type_required',
             message: 'Disclosure configuration type required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -245,7 +244,7 @@ describe('disclosures management', () => {
         nockVerifiedProfile(customTenant.did);
         const payload = _.omit(
           ['tenantId'],
-          await newDisclosure({ customTenant })
+          await newDisclosure({ customTenant }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -263,7 +262,7 @@ describe('disclosures management', () => {
             errorCode: 'vendor_url_required',
             message: 'Vendor URL is required',
             statusCode: 400,
-          })
+          }),
         );
         fastify.resetOverrides();
       });
@@ -276,7 +275,7 @@ describe('disclosures management', () => {
             offerMode: 'preloaded',
             commercialEntityName: 'abc',
             commercialEntityLogo: 'dsa',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -293,7 +292,7 @@ describe('disclosures management', () => {
             errorCode: 'invalid_commercial_entity',
             message: 'Invalid commercial entity',
             statusCode: 400,
-          })
+          }),
         );
         expect(nockVP.isDone()).toBe(true);
       });
@@ -305,7 +304,7 @@ describe('disclosures management', () => {
           await newDisclosure({
             tenant,
             offerMode: 'preloaded',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -321,7 +320,7 @@ describe('disclosures management', () => {
             error: 'Internal Server Error',
             errorCode: 'missing_error_code',
             statusCode: 500,
-          })
+          }),
         );
       }, 20000);
 
@@ -333,7 +332,7 @@ describe('disclosures management', () => {
             offerMode: 'preloaded',
             commercialEntityName: 'not-match',
             commercialEntityLogo: 'https://www.example.com/logo.png',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -350,7 +349,7 @@ describe('disclosures management', () => {
             errorCode: 'invalid_commercial_entity',
             message: 'Invalid commercial entity',
             statusCode: 400,
-          })
+          }),
         );
         expect(nockVP.isDone()).toBe(true);
       });
@@ -363,7 +362,7 @@ describe('disclosures management', () => {
             offerMode: 'preloaded',
             commercialEntityName: 'abc',
             commercialEntityLogo: 'dsa',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -380,7 +379,7 @@ describe('disclosures management', () => {
             errorCode: 'invalid_commercial_entity',
             message: 'Invalid commercial entity',
             statusCode: 400,
-          })
+          }),
         );
         expect(nockAltVP.isDone()).toBe(true);
       });
@@ -390,7 +389,7 @@ describe('disclosures management', () => {
       it('should 400 when types are not provided', async () => {
         const payload = _.omit(
           ['tenantId', 'types'],
-          await newDisclosure({ tenant })
+          await newDisclosure({ tenant }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -408,14 +407,14 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'Types should has minimum one item',
-          })
+          }),
         );
       });
 
       it('should 400 when empty types is provided', async () => {
         const payload = _.flow(
           _.omit(['tenantId']),
-          _.set('types', [])
+          _.set('types', []),
         )(await newDisclosure({ tenant }));
         const response = await fastify.injectJson({
           method: 'POST',
@@ -433,14 +432,14 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/types must NOT have fewer than 1 items',
-          })
+          }),
         );
       });
 
       it('should 400 when empty object provided in types array', async () => {
         const payload = _.flow(
           _.omit(['tenantId']),
-          _.set('types', [{}])
+          _.set('types', [{}]),
         )(await newDisclosure({ tenant }));
         const response = await fastify.injectJson({
           method: 'POST',
@@ -458,7 +457,7 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: "body should have required property 'types'",
-          })
+          }),
         );
       });
 
@@ -470,7 +469,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.INSPECTION,
             identificationMethods: ['verifiable_presentation'],
             vendorEndpoint: 'receive-applicant',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -488,7 +487,7 @@ describe('disclosures management', () => {
             errorCode: 'duration_required',
             message: 'Duration is required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -500,7 +499,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.INSPECTION,
             identificationMethods: ['verifiable_presentation'],
             vendorEndpoint: 'receive-applicant',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -518,7 +517,7 @@ describe('disclosures management', () => {
             errorCode: 'purpose_required',
             message: 'Purpose is required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -532,7 +531,7 @@ describe('disclosures management', () => {
               vendorEndpoint: 'issuing-identification',
               setIssuingDefault: true,
               feed: true,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -551,14 +550,14 @@ describe('disclosures management', () => {
             errorCode: 'issuing_feed_not_supported',
             message: 'Issuing feeds are not supported',
             statusCode: 400,
-          })
+          }),
         );
       });
 
       it('should create a particular disclosure with offerMode', async () => {
         const payload = _.omit(
           ['tenantId'],
-          await newDisclosure({ tenant, offerMode: 'preloaded' })
+          await newDisclosure({ tenant, offerMode: 'preloaded' }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -601,7 +600,7 @@ describe('disclosures management', () => {
             offerMode: 'preloaded',
             commercialEntityName,
             commercialEntityLogo,
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -650,7 +649,7 @@ describe('disclosures management', () => {
         nockVerifiedProfile(customTenant.did);
         const payload = _.omit(
           ['tenantId'],
-          await newDisclosure({ tenant: customTenant, offerMode: 'preloaded' })
+          await newDisclosure({ tenant: customTenant, offerMode: 'preloaded' }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -692,7 +691,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               feed: true,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -708,7 +707,7 @@ describe('disclosures management', () => {
         expect(response.json).toEqual({
           ..._.omit(
             ['presentationDefinition.submission_requirements[0].foo'],
-            payload
+            payload,
           ),
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           identificationMethods: ['verifiable_presentation'],
@@ -750,7 +749,7 @@ describe('disclosures management', () => {
             error: 'Bad Request',
             message:
               'body/offerMode must be equal to one of the allowed values',
-          })
+          }),
         );
       });
 
@@ -759,7 +758,7 @@ describe('disclosures management', () => {
           ['tenantId'],
           await newDisclosure({
             tenant,
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -780,7 +779,7 @@ describe('disclosures management', () => {
             errorCode: 'issuing_default_not_compatible',
             message: 'The default disclosure cannot be of type "inspection"',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -791,7 +790,7 @@ describe('disclosures management', () => {
             tenant,
             vendorEndpoint: VendorEndpoint.RECEIVE_APPLICANT,
             configurationType: ConfigurationType.ISSUING,
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -809,7 +808,7 @@ describe('disclosures management', () => {
             errorCode: 'disclosure_invalid',
             message: 'Disclosure configuration type invalid',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -821,7 +820,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.ISSUING,
             vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
             offerMode: 'preloaded',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -843,7 +842,7 @@ describe('disclosures management', () => {
             message:
               'The first "issuing" configuration created must be set as the default.',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -855,7 +854,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.ISSUING,
             identificationMethods: ['preauth'],
             vendorEndpoint: 'issuing-identification',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -873,7 +872,7 @@ describe('disclosures management', () => {
             errorCode: 'offer_mode_required',
             message: 'Offer mode is required',
             statusCode: 400,
-          })
+          }),
         );
       });
     });
@@ -884,7 +883,7 @@ describe('disclosures management', () => {
           await newDisclosure({
             tenant,
             identificationMethods: ['verifiable_presentation'],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -902,7 +901,7 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'Types should has minimum one item',
-          })
+          }),
         );
       });
       it('should 400 if identificationMethods is set to [verifiable_presentation] and empty types is passed', async () => {
@@ -911,7 +910,7 @@ describe('disclosures management', () => {
             tenant,
             identificationMethods: ['verifiable_presentation'],
             types: [],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -929,7 +928,7 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/types must NOT have fewer than 1 items',
-          })
+          }),
         );
       });
 
@@ -939,7 +938,7 @@ describe('disclosures management', () => {
           await newDisclosure({
             tenant,
             identificationMethods: ['verifiable_presentation'],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -999,7 +998,7 @@ describe('disclosures management', () => {
               { type: 'PhoneV1.0' },
               { type: 'IdDocumentV1.0' },
             ],
-          })
+          }),
         );
 
         const response = await fastify.injectJson({
@@ -1037,7 +1036,7 @@ describe('disclosures management', () => {
               { type: 'PhoneV1.0' },
               { type: 'IdDocumentV1.0' },
             ],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1094,7 +1093,7 @@ describe('disclosures management', () => {
               { type: 'PhoneV1.0' },
               { type: 'IdDocumentV1.0' },
             ],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1153,7 +1152,7 @@ describe('disclosures management', () => {
               { type: 'PhoneV1.0' },
               { type: 'IdDocumentV1.0' },
             ],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1184,7 +1183,7 @@ describe('disclosures management', () => {
           .collection('tenants')
           .findOne({ _id: new ObjectId(tenant._id) });
         expect(dbResult.defaultIssuingDisclosureId.toString()).toStrictEqual(
-          response.json.id.toString()
+          response.json.id.toString(),
         );
       });
 
@@ -1208,7 +1207,7 @@ describe('disclosures management', () => {
               { type: 'PhoneV1.0' },
               { type: 'IdDocumentV1.0' },
             ],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1246,7 +1245,7 @@ describe('disclosures management', () => {
           await newDisclosure({
             tenant,
             identificationMethods: ['verifiable_presentation'],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1294,7 +1293,7 @@ describe('disclosures management', () => {
             vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
             configurationType: ConfigurationType.ISSUING,
             setIssuingDefault: true,
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1313,7 +1312,7 @@ describe('disclosures management', () => {
             message:
               'When using { "vendorEndpoint": "integrated-issuing-identification" } "identityMatchers" property is required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1336,7 +1335,7 @@ describe('disclosures management', () => {
               ],
               vendorUserIdIndex: 0,
             },
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1397,7 +1396,7 @@ describe('disclosures management', () => {
               ],
               vendorUserIdIndex: 0,
             },
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1450,7 +1449,7 @@ describe('disclosures management', () => {
             vendorEndpoint: 'issuing-identification',
             setIssuingDefault: true,
             offerMode: 'preloaded',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1469,7 +1468,7 @@ describe('disclosures management', () => {
             message:
               "body may not have property 'setIssuingDefault' when 'identificationMode' is set to 'preauth'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1479,7 +1478,7 @@ describe('disclosures management', () => {
             tenant,
             identificationMethods: ['preauth'],
             types: [{ type: 'PastEmploymentPosition' }],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1498,7 +1497,7 @@ describe('disclosures management', () => {
             error: 'Bad Request',
             message:
               "body may not have property 'types' when 'identificationMode' is set to 'preauth'",
-          })
+          }),
         );
       });
 
@@ -1514,7 +1513,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.ISSUING,
             vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
             offerMode: 'preloaded',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1558,7 +1557,7 @@ describe('disclosures management', () => {
         });
         nockVerifiedProfile(tenant.did);
         const payload = _.flow(
-          _.omit(['tenantId', 'purpose', 'duration', 'types'])
+          _.omit(['tenantId', 'purpose', 'duration', 'types']),
         )(
           await newDisclosure({
             tenant,
@@ -1566,7 +1565,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.ISSUING,
             vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
             offerMode: 'preloaded',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1618,7 +1617,7 @@ describe('disclosures management', () => {
             offerMode: 'webhook',
             termsUrl:
               'https://www.velocityexperiencecenter.com/terms-and-conditions-vnf',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -1680,7 +1679,7 @@ describe('disclosures management', () => {
             message:
               "body may only have one property of 'types' or 'presentationDefinition'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1695,7 +1694,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -1713,17 +1712,16 @@ describe('disclosures management', () => {
             error: 'Bad Request',
             errorCode: 'request_validation_failed',
             message:
-              // eslint-disable-next-line max-len
               'body/presentationDefinition/input_descriptors must NOT have fewer than 1 items',
             statusCode: 400,
-          })
+          }),
         );
       });
 
       it('should 400 when presentationDefinition.input_descriptors.*.group is missing/empty and submission_requirements is non-empty', async () => {
         const inputDescriptors = _.map(
           _.omit(['group']),
-          samplePresentationDefinition.input_descriptors
+          samplePresentationDefinition.input_descriptors,
         );
         const presentationDefinition = {
           input_descriptors: inputDescriptors,
@@ -1736,7 +1734,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -1754,17 +1752,16 @@ describe('disclosures management', () => {
             error: 'Bad Request',
             errorCode: 'request_validation_failed',
             message:
-              // eslint-disable-next-line max-len
               'presentationDefinition input_descriptors[*].group is required when submission_requirements are sent',
             statusCode: 400,
-          })
+          }),
         );
       });
 
       it('should 400 when submission_requirements.*.rule is missing', async () => {
         const submissionRequirements = _.map(
           _.omit(['rule']),
-          samplePresentationDefinition.submission_requirements
+          samplePresentationDefinition.submission_requirements,
         );
         const presentationDefinition = {
           input_descriptors: samplePresentationDefinition.input_descriptors,
@@ -1776,7 +1773,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -1796,14 +1793,14 @@ describe('disclosures management', () => {
             message:
               "body/presentationDefinition/submission_requirements/0 must have required property 'rule'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
       it('should 400 when submission_requirements.*.from is missing', async () => {
         const submissionRequirements = _.map(
           _.omit(['from']),
-          samplePresentationDefinition.submission_requirements
+          samplePresentationDefinition.submission_requirements,
         );
         const presentationDefinition = {
           input_descriptors: samplePresentationDefinition.input_descriptors,
@@ -1815,7 +1812,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -1833,10 +1830,9 @@ describe('disclosures management', () => {
             error: 'Bad Request',
             errorCode: 'request_validation_failed',
             message:
-              // eslint-disable-next-line max-len
               "body/presentationDefinition/submission_requirements/0 must have required property 'from'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1851,7 +1847,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -1886,7 +1882,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -1921,7 +1917,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -1950,7 +1946,7 @@ describe('disclosures management', () => {
           ...samplePresentationDefinition,
           input_descriptors: _.map(
             _.set('foo', 'foo'),
-            samplePresentationDefinition.input_descriptors
+            samplePresentationDefinition.input_descriptors,
           ),
         };
         const payload = {
@@ -1959,7 +1955,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -1979,7 +1975,7 @@ describe('disclosures management', () => {
               'presentationDefinition.input_descriptors[1].foo',
               'presentationDefinition.input_descriptors[2].foo',
             ],
-            payload
+            payload,
           ),
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           identificationMethods: ['verifiable_presentation'],
@@ -1995,7 +1991,7 @@ describe('disclosures management', () => {
           ...samplePresentationDefinition,
           input_descriptors: _.map(
             _.set('format', 'fooFormat'),
-            samplePresentationDefinition.input_descriptors
+            samplePresentationDefinition.input_descriptors,
           ),
         };
         const payload = {
@@ -2004,7 +2000,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -2024,7 +2020,7 @@ describe('disclosures management', () => {
               'presentationDefinition.input_descriptors[1].format',
               'presentationDefinition.input_descriptors[2].format',
             ],
-            payload
+            payload,
           ),
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           identificationMethods: ['verifiable_presentation'],
@@ -2046,7 +2042,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -2062,7 +2058,7 @@ describe('disclosures management', () => {
         expect(response.json).toEqual({
           ..._.omit(
             ['presentationDefinition.submission_requirements[0].foo'],
-            payload
+            payload,
           ),
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           identificationMethods: ['verifiable_presentation'],
@@ -2083,7 +2079,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -2099,7 +2095,7 @@ describe('disclosures management', () => {
         expect(response.json).toEqual({
           ..._.omit(
             ['presentationDefinition.submission_requirements[0].foo'],
-            payload
+            payload,
           ),
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           identificationMethods: ['verifiable_presentation'],
@@ -2115,7 +2111,7 @@ describe('disclosures management', () => {
           ...samplePresentationDefinition,
           submission_requirements: _.map(
             _.set('foo', 'foo'),
-            samplePresentationDefinition.submission_requirements
+            samplePresentationDefinition.submission_requirements,
           ),
         };
         const payload = {
@@ -2124,7 +2120,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -2140,7 +2136,7 @@ describe('disclosures management', () => {
         expect(response.json).toEqual({
           ..._.omit(
             ['presentationDefinition.submission_requirements[0].foo'],
-            payload
+            payload,
           ),
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           identificationMethods: ['verifiable_presentation'],
@@ -2156,7 +2152,7 @@ describe('disclosures management', () => {
           ...samplePresentationDefinition,
           submission_requirements: _.map(
             _.set('from_nested', 'foo'),
-            samplePresentationDefinition.submission_requirements
+            samplePresentationDefinition.submission_requirements,
           ),
         };
         const payload = {
@@ -2165,7 +2161,7 @@ describe('disclosures management', () => {
             await newDisclosure({
               tenant,
               presentationDefinition,
-            })
+            }),
           ),
         };
         const response = await fastify.injectJson({
@@ -2181,7 +2177,7 @@ describe('disclosures management', () => {
         expect(response.json).toEqual({
           ..._.omit(
             ['presentationDefinition.submission_requirements[0].from_nested'],
-            payload
+            payload,
           ),
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           identificationMethods: ['verifiable_presentation'],
@@ -2251,7 +2247,7 @@ describe('disclosures management', () => {
               'configurationType',
               'vendorEndpoint',
             ],
-            disclosures.a
+            disclosures.a,
           ),
           vendorEndpoint: VendorEndpoint.RECEIVE_APPLICANT,
           configurationType: ConfigurationType.ISSUING,
@@ -2269,7 +2265,7 @@ describe('disclosures management', () => {
             errorCode: 'disclosure_invalid',
             message: 'Disclosure configuration type invalid',
             statusCode: 400,
-          })
+          }),
         );
       });
     });
@@ -2294,7 +2290,7 @@ describe('disclosures management', () => {
             message:
               'body/offerMode must be equal to one of the allowed values',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -2303,7 +2299,7 @@ describe('disclosures management', () => {
           ['tenantId'],
           await persistDisclosure({
             tenant,
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -2324,7 +2320,7 @@ describe('disclosures management', () => {
             errorCode: 'issuing_default_not_compatible',
             message: 'The default disclosure cannot be of type "inspection"',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -2336,7 +2332,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.INSPECTION,
             vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
             offerMode: 'preloaded',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -2359,7 +2355,7 @@ describe('disclosures management', () => {
             message:
               'The first "issuing" configuration created must be set as the default.',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -2392,7 +2388,7 @@ describe('disclosures management', () => {
             errorCode: 'invalid_commercial_entity',
             message: 'Invalid commercial entity',
             statusCode: 400,
-          })
+          }),
         );
         expect(nockVP.isDone()).toBeTruthy();
       });
@@ -2434,7 +2430,7 @@ describe('disclosures management', () => {
         });
 
         expect(tenantDb.defaultIssuingDisclosureId.toString()).toEqual(
-          disclosure._id
+          disclosure._id,
         );
       });
 
@@ -2511,8 +2507,8 @@ describe('disclosures management', () => {
         nockVP = nock('http://oracle.localhost.test')
           .get(
             `/api/v0.6/organizations/${encodeURIComponent(
-              tenant.did
-            )}/verified-profile`
+              tenant.did,
+            )}/verified-profile`,
           )
           .reply(
             200,
@@ -2534,7 +2530,7 @@ describe('disclosures management', () => {
                 ],
               },
             },
-            { 'cache-control': 'max-age=60' }
+            { 'cache-control': 'max-age=60' },
           );
 
         const response = await fastify.injectJson({
@@ -2590,7 +2586,7 @@ describe('disclosures management', () => {
         const updatePayload = {
           ..._.omit(
             ['createdAt', 'updatedAt', '_id', 'configurationType'],
-            disclosures.a
+            disclosures.a,
           ),
           description: 'update test',
         };
@@ -2653,7 +2649,7 @@ describe('disclosures management', () => {
         });
 
         expect(tenantDb.defaultIssuingDisclosureId.toString()).toEqual(
-          tenant.defaultIssuingDisclosureId.toString()
+          tenant.defaultIssuingDisclosureId.toString(),
         );
       });
 
@@ -2693,7 +2689,7 @@ describe('disclosures management', () => {
               $set: {
                 defaultIssuingDisclosureId: new ObjectId(disclosure1._id),
               },
-            }
+            },
           );
         const disclosure2 = await persistDisclosure({
           tenant,
@@ -2711,7 +2707,7 @@ describe('disclosures management', () => {
           },
         });
         expect(tenantDb1.defaultIssuingDisclosureId.toString()).toEqual(
-          disclosure1._id
+          disclosure1._id,
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -2738,7 +2734,7 @@ describe('disclosures management', () => {
         });
 
         expect(tenantDb2.defaultIssuingDisclosureId.toString()).toEqual(
-          disclosure2._id
+          disclosure2._id,
         );
       });
     });
@@ -2751,7 +2747,7 @@ describe('disclosures management', () => {
           configurationType: ConfigurationType.INSPECTION,
         });
         const updatePayload = _.flow(
-          _.omit(['createdAt', 'updatedAt', '_id', 'types'])
+          _.omit(['createdAt', 'updatedAt', '_id', 'types']),
         )(disclosure);
 
         const response = await fastify.injectJson({
@@ -2769,14 +2765,14 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/types must NOT have fewer than 1 items',
-          })
+          }),
         );
       });
 
       it('should 400 if identificationMethods is set to [verifiable_presentation] and empty types is passed', async () => {
         const updatePayload = _.flow(
           _.omit(['createdAt', 'updatedAt', '_id']),
-          _.set('types', [])
+          _.set('types', []),
         )(disclosures.a);
 
         const response = await fastify.injectJson({
@@ -2791,7 +2787,7 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/types must NOT have fewer than 1 items',
-          })
+          }),
         );
       });
 
@@ -2803,7 +2799,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.INSPECTION,
             identificationMethods: ['verifiable_presentation'],
             vendorEndpoint: 'receive-applicant',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -2824,7 +2820,7 @@ describe('disclosures management', () => {
             errorCode: 'duration_required',
             message: 'Duration is required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -2835,7 +2831,7 @@ describe('disclosures management', () => {
             tenant,
             configurationType: ConfigurationType.INSPECTION,
             vendorEndpoint: VendorEndpoint.RECEIVE_CHECKED_CREDENTIALS,
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -2856,7 +2852,7 @@ describe('disclosures management', () => {
             errorCode: 'purpose_required',
             message: 'Purpose is required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -2867,7 +2863,7 @@ describe('disclosures management', () => {
             tenant,
             configurationType: ConfigurationType.INSPECTION,
             vendorEndpoint: VendorEndpoint.RECEIVE_CHECKED_CREDENTIALS,
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -2888,7 +2884,7 @@ describe('disclosures management', () => {
             errorCode: 'request_validation_failed',
             message: "body should have required property 'types'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -2902,7 +2898,7 @@ describe('disclosures management', () => {
         const updatePayload = _.flow(
           _.omit(['createdAt', 'updatedAt', '_id']),
           _.set('description', 'new description'),
-          _.set('feed', false)
+          _.set('feed', false),
         )(disclosure);
 
         const response = await fastify.injectJson({
@@ -2918,7 +2914,7 @@ describe('disclosures management', () => {
             errorCode: 'feed_property_cannot_be_modified',
             message: 'feed property cannot be modified',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -2931,7 +2927,7 @@ describe('disclosures management', () => {
 
         const updatePayload = _.flow(
           _.omit(['createdAt', 'updatedAt', '_id']),
-          _.set('description', 'new description')
+          _.set('description', 'new description'),
         )(disclosure);
 
         const response = await fastify.injectJson({
@@ -2961,7 +2957,7 @@ describe('disclosures management', () => {
             feed: false,
             identificationMethods: ['verifiable_presentation'],
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
 
@@ -2975,7 +2971,7 @@ describe('disclosures management', () => {
 
         const updatePayload = _.flow(
           _.omit(['createdAt', 'updatedAt', '_id']),
-          _.set('description', 'new description')
+          _.set('description', 'new description'),
         )(disclosure);
 
         const response = await fastify.injectJson({
@@ -3003,7 +2999,7 @@ describe('disclosures management', () => {
             tenantId: tenant._id,
             identificationMethods: ['verifiable_presentation'],
             updatedAt: expect.any(Date),
-          })
+          }),
         );
       });
     });
@@ -3016,7 +3012,7 @@ describe('disclosures management', () => {
           configurationType: ConfigurationType.INSPECTION,
         });
         const updatePayload = _.flow(
-          _.omit(['createdAt', 'updatedAt', '_id', 'types'])
+          _.omit(['createdAt', 'updatedAt', '_id', 'types']),
         )(disclosure);
 
         const response = await fastify.injectJson({
@@ -3034,14 +3030,14 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/types must NOT have fewer than 1 items',
-          })
+          }),
         );
       });
 
       it('should 400 if identificationMethods is set to [verifiable_presentation] and empty types is passed', async () => {
         const updatePayload = _.flow(
           _.omit(['createdAt', 'updatedAt', '_id']),
-          _.set('types', [])
+          _.set('types', []),
         )(disclosures.a);
 
         const response = await fastify.injectJson({
@@ -3056,7 +3052,7 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/types must NOT have fewer than 1 items',
-          })
+          }),
         );
       });
 
@@ -3068,7 +3064,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.INSPECTION,
             identificationMethods: ['verifiable_presentation'],
             vendorEndpoint: 'receive-applicant',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -3089,7 +3085,7 @@ describe('disclosures management', () => {
             errorCode: 'duration_required',
             message: 'Duration is required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -3101,7 +3097,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.INSPECTION,
             identificationMethods: ['verifiable_presentation'],
             vendorEndpoint: 'receive-applicant',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -3122,7 +3118,7 @@ describe('disclosures management', () => {
             errorCode: 'purpose_required',
             message: 'Purpose is required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -3134,7 +3130,7 @@ describe('disclosures management', () => {
             configurationType: ConfigurationType.INSPECTION,
             identificationMethods: ['verifiable_presentation'],
             vendorEndpoint: 'receive-applicant',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -3155,14 +3151,14 @@ describe('disclosures management', () => {
             errorCode: 'request_validation_failed',
             message: "body should have required property 'types'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
       it('should 200 and update the disclosure with identificationMethods set to [verifiable_presentation]', async () => {
         const updatePayload = _.flow(
           _.omit(['createdAt', 'updatedAt', '_id']),
-          _.set('identificationMethods', ['verifiable_presentation'])
+          _.set('identificationMethods', ['verifiable_presentation']),
         )(disclosures.a);
 
         const response = await fastify.injectJson({
@@ -3208,7 +3204,7 @@ describe('disclosures management', () => {
             vendorEndpoint: VendorEndpoint.INTEGRATED_ISSUING_IDENTIFICATION,
             configurationType: ConfigurationType.ISSUING,
             setIssuingDefault: true,
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -3227,7 +3223,7 @@ describe('disclosures management', () => {
             message:
               'When using { "vendorEndpoint": "integrated-issuing-identification" } "identityMatchers" property is required',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -3250,7 +3246,7 @@ describe('disclosures management', () => {
               ],
               vendorUserIdIndex: 0,
             },
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -3300,7 +3296,7 @@ describe('disclosures management', () => {
         const updatePayload = _.flow(
           _.omit(['createdAt', 'updatedAt', '_id']),
           _.set('types', []),
-          _.set('identificationMethods', ['preauth'])
+          _.set('identificationMethods', ['preauth']),
         )(disclosures.a);
 
         const response = await fastify.injectJson({
@@ -3315,7 +3311,7 @@ describe('disclosures management', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/types must NOT have fewer than 1 items',
-          })
+          }),
         );
       });
 
@@ -3324,7 +3320,7 @@ describe('disclosures management', () => {
           await persistDisclosure({
             tenant,
             identificationMethods: ['preauth'],
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -3346,7 +3342,7 @@ describe('disclosures management', () => {
             error: 'Bad Request',
             message:
               "body may not have property 'types' when 'identificationMode' is set to 'preauth'",
-          })
+          }),
         );
       });
 
@@ -3359,7 +3355,7 @@ describe('disclosures management', () => {
             identificationMethods: ['preauth'],
             vendorEndpoint: 'issuing-identification',
             offerMode: 'preloaded',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'PUT',
@@ -3381,7 +3377,7 @@ describe('disclosures management', () => {
             message:
               "body may not have property 'setIssuingDefault' when 'identificationMode' is set to 'preauth'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -3394,7 +3390,7 @@ describe('disclosures management', () => {
           identificationMethods: ['preauth'],
         });
         const updatePayload = _.flow(
-          _.omit(['createdAt', 'updatedAt', '_id', 'types'])
+          _.omit(['createdAt', 'updatedAt', '_id', 'types']),
         )(preauthDisclosure);
 
         const response = await fastify.injectJson({
@@ -3457,7 +3453,7 @@ describe('disclosures management', () => {
             message:
               "body may only have one property of 'types' or 'presentationDefinition'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -3673,7 +3669,7 @@ describe('disclosures management', () => {
       });
 
       expect(tenantDb.defaultIssuingDisclosureId.toString()).toBe(
-        disclosure._id.toString()
+        disclosure._id.toString(),
       );
     });
 
@@ -3741,7 +3737,7 @@ describe('disclosures management', () => {
       const response = await fastify.injectJson({
         method: 'GET',
         url: `${disclosureUrl(
-          tenant
+          tenant,
         )}?vendorEndpoint=receive-applicant-789&vendorEndpoint=mock`,
       });
       expect(response.statusCode).toEqual(200);
@@ -3760,7 +3756,7 @@ describe('disclosures management', () => {
             feed: false,
             ..._.omit(['_id'], disclosure),
           },
-        ])
+        ]),
       );
     });
 
@@ -3773,7 +3769,7 @@ describe('disclosures management', () => {
         .collection('disclosures')
         .updateOne(
           { _id: new ObjectId(oldFormatDisclosure._id) },
-          { $unset: { sendPushOnVerification: '' } }
+          { $unset: { sendPushOnVerification: '' } },
         );
 
       const response = await fastify.injectJson({
@@ -3810,7 +3806,7 @@ describe('disclosures management', () => {
             feed: false,
             ..._.omit(['_id'], disclosures.e),
           },
-        ])
+        ]),
       );
     });
   });
@@ -3837,7 +3833,7 @@ describe('disclosures management', () => {
       expect(response.statusCode).toEqual(200);
       expect(response.body).toEqual(
         // eslint-disable-next-line max-len
-        `velocity-test://inspect?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${urlEncodedDid}%2Finspect%2Fget-presentation-request%3Fid%3D${createResponse.json.id}&inspectorDid=${urlEncodedDid}`
+        `velocity-test://inspect?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${urlEncodedDid}%2Finspect%2Fget-presentation-request%3Fid%3D${createResponse.json.id}&inspectorDid=${urlEncodedDid}`,
       );
     });
 
@@ -3865,7 +3861,7 @@ describe('disclosures management', () => {
       const urlEncodedDid = encodeURIComponent(tenant.did);
       expect(response.body).toEqual(
         // eslint-disable-next-line max-len
-        `velocity-test://inspect?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${urlEncodedDid}%2Finspect%2Fget-presentation-request%3Fid%3D${createResponse.json.id}&inspectorDid=${urlEncodedDid}&vendorOriginContext=${vendorOriginContext}`
+        `velocity-test://inspect?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${urlEncodedDid}%2Finspect%2Fget-presentation-request%3Fid%3D${createResponse.json.id}&inspectorDid=${urlEncodedDid}&vendorOriginContext=${vendorOriginContext}`,
       );
     });
 
@@ -3877,7 +3873,7 @@ describe('disclosures management', () => {
           vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
           configurationType: ConfigurationType.ISSUING,
           offerMode: 'preloaded',
-        })
+        }),
       );
 
       const createResponse = await fastify.injectJson({
@@ -3903,7 +3899,7 @@ describe('disclosures management', () => {
         // eslint-disable-next-line max-len
         `velocity-test://issue?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${urlEncodedDid}%2Fissue%2Fget-credential-manifest%3Fid%3D${
           createResponse.json.id
-        }&issuerDid=${encodeURIComponent(tenant.did)}`
+        }&issuerDid=${encodeURIComponent(tenant.did)}`,
       );
     });
 
@@ -3915,7 +3911,7 @@ describe('disclosures management', () => {
           vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
           configurationType: ConfigurationType.ISSUING,
           offerMode: 'preloaded',
-        })
+        }),
       );
 
       const createResponse = await fastify.injectJson({
@@ -3943,7 +3939,7 @@ describe('disclosures management', () => {
         // eslint-disable-next-line max-len
         `velocity-test://issue?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${urlEncodedDid}%2Fissue%2Fget-credential-manifest%3Fid%3D${
           createResponse.json.id
-        }&issuerDid=${encodeURIComponent(tenant.did)}&vendorOriginContext=123`
+        }&issuerDid=${encodeURIComponent(tenant.did)}&vendorOriginContext=123`,
       );
     });
 
@@ -3966,7 +3962,7 @@ describe('disclosures management', () => {
             ],
             vendorUserIdIndex: 0,
           },
-        })
+        }),
       );
 
       const createResponse = await fastify.injectJson({
@@ -3992,7 +3988,7 @@ describe('disclosures management', () => {
         // eslint-disable-next-line max-len
         `velocity-test://issue?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${urlEncodedDid}%2Fissue%2Fget-credential-manifest%3Fid%3D${
           createResponse.json.id
-        }&issuerDid=${encodeURIComponent(tenant.did)}`
+        }&issuerDid=${encodeURIComponent(tenant.did)}`,
       );
     });
 
@@ -4140,7 +4136,7 @@ describe('disclosures management', () => {
           message: 'Disclosure cannot be deleted',
           statusCode: 400,
           errorCode: 'default_disclosure_cannot_be_deleted',
-        })
+        }),
       );
 
       expect(
@@ -4148,7 +4144,7 @@ describe('disclosures management', () => {
           .collection('disclosures')
           .countDocuments({
             _id: new ObjectId(disclosures.a._id),
-          })
+          }),
       ).toEqual(1);
     });
 
@@ -4166,7 +4162,7 @@ describe('disclosures management', () => {
           message: 'Disclosure cannot be deleted',
           statusCode: 400,
           errorCode: 'disclosure_with_feeds_cannot_be_deleted',
-        })
+        }),
       );
 
       expect(
@@ -4174,7 +4170,7 @@ describe('disclosures management', () => {
           .collection('disclosures')
           .countDocuments({
             _id: new ObjectId(disclosures.a._id),
-          })
+          }),
       ).toEqual(1);
     });
 
@@ -4188,7 +4184,7 @@ describe('disclosures management', () => {
       await expect(
         mongoDb()
           .collection('disclosures')
-          .findOne({ _id: new ObjectId(disclosures.a._id) })
+          .findOne({ _id: new ObjectId(disclosures.a._id) }),
       ).resolves.toEqual(null);
     });
   });

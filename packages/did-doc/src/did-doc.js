@@ -54,19 +54,19 @@ const serviceExists = (didDoc, serviceId) => {
   const normalizedServiceId = toRelativeServiceId(serviceId);
   return find(
     (service) => toRelativeServiceId(service.id) === normalizedServiceId,
-    didDoc.service
+    didDoc.service,
   );
 };
 
 const extractService = (didDoc, serviceId) => {
   ensurePlainObject(
     didDoc,
-    'didDoc must be a type that represents an organization document'
+    'didDoc must be a type that represents an organization document',
   );
 
   ensureString(
     serviceId,
-    'serviceId must be a string containing an organization service ID'
+    'serviceId must be a string containing an organization service ID',
   );
 
   const existingService = serviceExists(didDoc, serviceId);
@@ -100,7 +100,7 @@ const addServiceToDidDoc = ({ didDoc, service }) => {
     castArray,
     (services) => buildServices(services),
     concat(didDoc.service),
-    compact
+    compact,
   )(service);
   const newDoc = {
     ...didDoc,
@@ -113,7 +113,7 @@ const addServiceToDidDoc = ({ didDoc, service }) => {
 const addKeysToDidDoc = ({ didDoc, keys }) => {
   const newVerificationMethods = buildVerificationMethod(keys, didDoc.id);
   const verificationMethod = (didDoc.verificationMethod ?? []).concat(
-    newVerificationMethods
+    newVerificationMethods,
   );
   const assertionMethod = buildAssertionMethod(verificationMethod);
   const newDoc = {
@@ -127,7 +127,7 @@ const addKeysToDidDoc = ({ didDoc, keys }) => {
 
 const buildAlsoKnownAs = (alsoKnownAs) => {
   return flow(castArray, compact, (aka) => (isEmpty(aka) ? undefined : aka))(
-    alsoKnownAs
+    alsoKnownAs,
   );
 };
 
@@ -149,7 +149,7 @@ const buildVerificationMethod = (keys, did) => {
         [publicKeyTypeToProp[type]]: pick(['crv', 'x', 'y', 'kty'])(publicKey),
       };
     }),
-    compact
+    compact,
   )(keys);
 };
 
@@ -190,7 +190,7 @@ const updateServicesOnDidDoc = ({ didDoc, services }) => {
     concat(didDoc.service),
     groupBy('id'),
     map(last),
-    compact
+    compact,
   )(services);
   const newDoc = {
     ...didDoc,

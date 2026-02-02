@@ -9,13 +9,13 @@ const {
 const task = 'send-reminders';
 const sendReminders = async (
   sendEmailToSignatoryForOrganizationApproval,
-  req
+  req,
 ) => {
   const currentTime = new Date();
   const { repos, config, log } = req;
   const { signatoryLinkResend } = config;
   const signatoryStatuses = await repos.signatoryStatus.findByEvent(
-    subMinutes(signatoryLinkResend, currentTime)
+    subMinutes(signatoryLinkResend, currentTime),
   );
   if (isEmpty(signatoryStatuses)) {
     log.info({ task, message: 'No signatory reminders to send' });
@@ -26,7 +26,7 @@ const sendReminders = async (
     await sendReminder(
       signatoryStatusDoc,
       sendEmailToSignatoryForOrganizationApproval,
-      req
+      req,
     );
   }
 };
@@ -34,7 +34,7 @@ const sendReminders = async (
 const sendReminder = async (
   signatoryStatusDoc,
   sendEmailToSignatoryForOrganizationApproval,
-  context
+  context,
 ) => {
   const { repos, config, log } = context;
   try {
@@ -48,7 +48,7 @@ const sendReminder = async (
         SignatoryEventStatus.REMINDER_ERROR,
         {
           error: 'Organization not found',
-        }
+        },
       );
       return;
     }
@@ -56,19 +56,19 @@ const sendReminder = async (
     if (size(signatoryStatusDoc.events) >= config.signatoryMaxReminderCount) {
       await repos.signatoryStatus.addState(
         signatoryStatusDoc._id,
-        SignatoryEventStatus.MAX_REACHED
+        SignatoryEventStatus.MAX_REACHED,
       );
       await context.sendSupportEmail(
         await context.renderTemplate(
           'support-signatory-max-reminders-reached-email-subject',
-          { organization, netPrefix: getSubjectNetPrefix(context.config) }
+          { organization, netPrefix: getSubjectNetPrefix(context.config) },
         ),
         await context.renderTemplate(
           'support-signatory-max-reminders-reached-email-body',
           {
             organization,
-          }
-        )
+          },
+        ),
       );
       return;
     }
@@ -80,12 +80,12 @@ const sendReminder = async (
         authCode,
         isReminder: true,
       },
-      context
+      context,
     );
     await repos.signatoryStatus.addStateAndCode(
       signatoryStatusDoc._id,
       SignatoryEventStatus.LINK_SENT,
-      authCode
+      authCode,
     );
   } catch (error) {
     log.error({ err: error });
@@ -94,7 +94,7 @@ const sendReminder = async (
       SignatoryEventStatus.REMINDER_ERROR,
       {
         error: error.message,
-      }
+      },
     );
   }
 };

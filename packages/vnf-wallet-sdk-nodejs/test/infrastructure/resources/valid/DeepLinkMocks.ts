@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import { VCLDeepLink } from '../../../../src';
 
 export class DeepLinkMocks {
@@ -26,11 +24,11 @@ export class DeepLinkMocks {
         '{"SubjectKey":{"BusinessUnit":"ZC","KeyCode":"54514480"},"Token":"832077a4"}';
 
     static PresentationRequestRequestDecodedUriStr = decodeURIComponent(
-        `https://agent.velocitycareerlabs.io/api/holder/v0.6/org/${DeepLinkMocks.InspectorDid}/inspect/get-presentation-request?id=62e0e80c5ebfe73230b0becc&inspectorDid=${DeepLinkMocks.InspectorDid}&vendorOriginContext=%7B%22SubjectKey%22%3A%7B%22BusinessUnit%22%3A%22ZC%22,%22KeyCode%22%3A%2254514480%22%7D,%22Token%22%3A%22832077a4%22%7D`
+        `https://agent.velocitycareerlabs.io/api/holder/v0.6/org/${DeepLinkMocks.InspectorDid}/inspect/get-presentation-request?id=62e0e80c5ebfe73230b0becc&inspectorDid=${DeepLinkMocks.InspectorDid}&vendorOriginContext=%7B%22SubjectKey%22%3A%7B%22BusinessUnit%22%3A%22ZC%22,%22KeyCode%22%3A%2254514480%22%7D,%22Token%22%3A%22832077a4%22%7D`,
     );
 
     static PresentationRequestRequestDecodedUriWithIdStr = decodeURIComponent(
-        `https://agent.velocitycareerlabs.io/api/holder/v0.6/org/${DeepLinkMocks.InspectorId}/inspect/get-presentation-request?id=62e0e80c5ebfe73230b0becc&inspectorDid=${DeepLinkMocks.InspectorDid}&vendorOriginContext=%7B%22SubjectKey%22%3A%7B%22BusinessUnit%22%3A%22ZC%22,%22KeyCode%22%3A%2254514480%22%7D,%22Token%22%3A%22832077a4%22%7D`
+        `https://agent.velocitycareerlabs.io/api/holder/v0.6/org/${DeepLinkMocks.InspectorId}/inspect/get-presentation-request?id=62e0e80c5ebfe73230b0becc&inspectorDid=${DeepLinkMocks.InspectorDid}&vendorOriginContext=%7B%22SubjectKey%22%3A%7B%22BusinessUnit%22%3A%22ZC%22,%22KeyCode%22%3A%2254514480%22%7D,%22Token%22%3A%22832077a4%22%7D`,
     );
 
     static PresentationRequestRequestUriStr =
@@ -66,28 +64,28 @@ export class DeepLinkMocks {
     static CredentialManifestDeepLinkMainNetStr = `${DeepLinkMocks.MainNetProtocol}://issue?request_uri=${DeepLinkMocks.CredentialManifestRequestUriStr}`;
 
     static CredentialManifestDeepLinkDevNet = new VCLDeepLink(
-        DeepLinkMocks.CredentialManifestDeepLinkDevNetStr
+        DeepLinkMocks.CredentialManifestDeepLinkDevNetStr,
     );
 
     static CredentialManifestDeepLinkMainNetWithIdStr = `${DeepLinkMocks.MainNetProtocol}://issue?request_uri=${DeepLinkMocks.CredentialManifestRequestUriWithIdStr}`;
 
     static CredentialManifestDeepLinkTestNet = new VCLDeepLink(
-        DeepLinkMocks.CredentialManifestDeepLinkTestNetStr
+        DeepLinkMocks.CredentialManifestDeepLinkTestNetStr,
     );
 
     static CredentialManifestDeepLinkMainNet = new VCLDeepLink(
-        DeepLinkMocks.CredentialManifestDeepLinkMainNetStr
+        DeepLinkMocks.CredentialManifestDeepLinkMainNetStr,
     );
 
     static CredentialManifestDeepLinkMainNetWithId = new VCLDeepLink(
-        DeepLinkMocks.CredentialManifestDeepLinkMainNetWithIdStr
+        DeepLinkMocks.CredentialManifestDeepLinkMainNetWithIdStr,
     );
 
     static PresentationRequestDeepLinkDevNet = new VCLDeepLink(
-        DeepLinkMocks.PresentationRequestDeepLinkDevNetStr
+        DeepLinkMocks.PresentationRequestDeepLinkDevNetStr,
     );
 
     static PresentationRequestDeepLinkMainNetWithId = new VCLDeepLink(
-        DeepLinkMocks.PresentationRequestDeepLinkMainNetWithIdStr
+        DeepLinkMocks.PresentationRequestDeepLinkMainNetWithIdStr,
     );
 }

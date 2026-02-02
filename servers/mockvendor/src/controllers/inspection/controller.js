@@ -16,7 +16,7 @@ module.exports = async (fastify) => {
     const { body, repos } = request;
     await repos.applicants.findById(body.vendorApplicantId);
     const inserted = await repos.credentialSubmissions.insertMany(
-      prepCreds(body)
+      prepCreds(body),
     );
     return { numProcessed: inserted.length };
   });
@@ -24,7 +24,7 @@ module.exports = async (fastify) => {
   fastify.post('/receive-unchecked-credentials', async (request) => {
     const { body, repos } = request;
     const inserted = await repos.credentialSubmissions.insertMany(
-      prepCreds(body)
+      prepCreds(body),
     );
     return { numProcessed: inserted.length };
   });
@@ -32,7 +32,7 @@ module.exports = async (fastify) => {
   fastify.post('/receive-checked-credentials', async (request) => {
     const { body, repos } = request;
     const inserted = await repos.credentialSubmissions.insertMany(
-      prepCreds(body)
+      prepCreds(body),
     );
     return { numProcessed: inserted.length };
   });

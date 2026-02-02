@@ -31,7 +31,7 @@ const initTenantFactory = (app) =>
         primaryAddress: `0x${didSuffix}`,
         ...overrides(),
       };
-    }
+    },
   );
 
 module.exports = { initTenantFactory };

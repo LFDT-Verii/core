@@ -27,7 +27,7 @@ const initVerifyAccessToken = (options) => {
     } catch (e) {
       context.log.warn(
         { accessToken: context.accessToken, err: e },
-        'User in sub claim not found'
+        'User in sub claim not found',
       );
       throw e;
     }
@@ -79,7 +79,7 @@ const verifyAccessTokenPlugin = async (fastify, options) => {
   }
   fastify.addHook(
     options.hook ?? 'preValidation',
-    initVerifyAccessToken(options)
+    initVerifyAccessToken(options),
   );
 };
 

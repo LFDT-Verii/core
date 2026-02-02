@@ -90,7 +90,7 @@ describe('Normalization test suite', () => {
     expect(toDidUrl('did:ion:456', '#blah')).toEqual('did:ion:456#blah');
     expect(toDidUrl('did:ion:789#', '#blah')).toEqual('did:ion:789##blah');
     expect(toDidUrl('did:ion:789', 'did:ion:456#blah')).toEqual(
-      'did:ion:456#blah'
+      'did:ion:456#blah',
     );
   });
 });

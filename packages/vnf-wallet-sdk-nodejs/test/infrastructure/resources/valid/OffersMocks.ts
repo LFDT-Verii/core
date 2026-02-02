@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 export class OffersMocks {
     static readonly challenge = 'Ctw3Ghcj6YVBnG2v';
 

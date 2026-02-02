@@ -20,12 +20,12 @@ const { ObjectId } = require('mongodb');
 const filterObjectIds = (offerIds, exchange) => {
   const exchangeOfferIds = map(
     (offerId) => offerId.toString(),
-    exchange.offerIds
+    exchange.offerIds,
   );
 
   return flow(
     filter((id) => includes(id, exchangeOfferIds)),
-    map((v) => new ObjectId(v))
+    map((v) => new ObjectId(v)),
   )(offerIds);
 };
 

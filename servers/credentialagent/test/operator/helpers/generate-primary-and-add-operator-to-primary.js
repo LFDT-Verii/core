@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 const { rootPrivateKey } = require('@verii/sample-data');
 const { initPermissions } = require('@verii/contract-permissions');
 const { generateKeyPair } = require('@verii/crypto');
@@ -23,7 +22,7 @@ const { initProvider } = require('@verii/base-contract-io');
 
 const generatePrimaryAndAddOperatorToPrimary = async (
   operatorAddress,
-  context
+  context,
 ) => {
   const {
     config: { permissionsContractAddress, rpcUrl },
@@ -36,7 +35,7 @@ const generatePrimaryAndAddOperatorToPrimary = async (
       contractAddress: permissionsContractAddress,
       rpcProvider,
     },
-    { ...context, repos: {} }
+    { ...context, repos: {} },
   );
   const primaryKeyPair = generateKeyPair();
   const primaryPublicAddress = toEthereumAddress(primaryKeyPair.publicKey);
@@ -51,7 +50,7 @@ const generatePrimaryAndAddOperatorToPrimary = async (
       contractAddress: permissionsContractAddress,
       rpcProvider,
     },
-    { ...context, repos: {} }
+    { ...context, repos: {} },
   );
   await permissionContract.addOperatorKey({
     primary: primaryPublicAddress,

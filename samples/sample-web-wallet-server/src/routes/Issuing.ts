@@ -16,8 +16,8 @@ export default async function issuingRoutes(fastify) {
     try {
       reply.send(
         await req.vclSdk.getCredentialManifest(
-          credentialManifestDescriptorFrom(req.body)
-        )
+          credentialManifestDescriptorFrom(req.body),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);
@@ -26,7 +26,7 @@ export default async function issuingRoutes(fastify) {
   fastify.post('/generateOffers', async (req, reply) => {
     try {
       reply.send(
-        await req.vclSdk.generateOffers(generateOffersDescriptorFrom(req.body))
+        await req.vclSdk.generateOffers(generateOffersDescriptorFrom(req.body)),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);
@@ -37,8 +37,8 @@ export default async function issuingRoutes(fastify) {
       reply.send(
         await req.vclSdk.checkForOffers(
           generateOffersDescriptorFrom(req.body),
-          tokenFrom(req.body.sessionToken)
-        )
+          tokenFrom(req.body.sessionToken),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);
@@ -49,8 +49,8 @@ export default async function issuingRoutes(fastify) {
       reply.send(
         await req.vclSdk.finalizeOffers(
           finalizeOffersDescriptorFrom(req.body.finalizeOffersDescriptor),
-          tokenFrom(req.body.sessionToken)
-        )
+          tokenFrom(req.body.sessionToken),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);

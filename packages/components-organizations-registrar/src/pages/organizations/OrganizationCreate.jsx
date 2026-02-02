@@ -131,7 +131,7 @@ const OrganizationCreate = ({
         setHasOrganisations(
           Boolean(
             tokenDecoded['http://velocitynetwork.foundation/groupId'] ||
-              tokenDecoded.scope.includes('admin'),
+            tokenDecoded.scope.includes('admin'),
           ),
         );
       } catch (e) {
@@ -180,6 +180,7 @@ const OrganizationCreate = ({
     }
   };
 
+  // eslint-disable-next-line complexity
   const onCreate = async (serviceData) => {
     setCreateRequestLoading(true);
     const organization = {
@@ -224,290 +225,293 @@ const OrganizationCreate = ({
 
         <Form record={initialRecord} onSubmit={goToCreateServiceStep} noValidate mode="onTouched">
           <FormDataConsumer>
-            {({ formData }) => (
-              <>
-                <Grid container spacing={4} rowSpacing={1}>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack container flex={1} flexDirection="column">
-                      <Grid size={{ xs: 12 }}>
-                        <Stack flexDirection="row" gap={1.75}>
+            {
+              // eslint-disable-next-line complexity
+              ({ formData }) => (
+                <>
+                  <Grid container spacing={4} rowSpacing={1}>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack container flex={1} flexDirection="column">
+                        <Grid size={{ xs: 12 }}>
+                          <Stack flexDirection="row" gap={1.75}>
+                            <TextInput
+                              fullWidth
+                              label="Legal Name"
+                              source="profile.name"
+                              validate={validateName}
+                            />
+                          </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          <Stack flexDirection="row" gap={1.75}>
+                            <TextInput
+                              fullWidth
+                              label="Website"
+                              source="profile.website"
+                              validate={[...validateWebsiteStrict, required()]}
+                            />
+                            <Box mt={2}>
+                              <Tooltip title={WEBSITE_HINT}>
+                                <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                              </Tooltip>
+                            </Box>
+                          </Stack>
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
                           <TextInput
                             fullWidth
-                            label="Legal Name"
-                            source="profile.name"
-                            validate={validateName}
+                            label="Address"
+                            source="profile.physicalAddress.line1"
+                            validate={[required(), maxLength(1024)]}
                           />
-                        </Stack>
-                      </Grid>
-                      <Grid size={{ xs: 12 }}>
-                        <Stack flexDirection="row" gap={1.75}>
-                          <TextInput
-                            fullWidth
-                            label="Website"
-                            source="profile.website"
-                            validate={[...validateWebsiteStrict, required()]}
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          <AutocompleteInput
+                            label="Country"
+                            source="profile.location.countryCode"
+                            choices={countryCodes}
+                            validate={required()}
                           />
-                          <Box mt={2}>
-                            <Tooltip title={WEBSITE_HINT}>
-                              <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                            </Tooltip>
-                          </Box>
-                        </Stack>
-                      </Grid>
-                      <Grid size={{ xs: 12 }}>
+                        </Grid>
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }} pb={1}>
+                      <CustomImageInput label={false} editMode addTo="profile" />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <TextInput
+                        fullWidth
+                        label="LinkedIn Page"
+                        source="profile.linkedInProfile"
+                        validate={[...validateWebsite, required()]}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <LinkedInRegistrationInput
+                        formData={formData.profile}
+                        source="profile.registrationNumbers"
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
                         <TextInput
                           fullWidth
-                          label="Address"
-                          source="profile.physicalAddress.line1"
-                          validate={[required(), maxLength(1024)]}
+                          label="Support Email"
+                          source="profile.contactEmail"
+                          validate={validateEmail}
                         />
-                      </Grid>
-                      <Grid size={{ xs: 12 }}>
-                        <AutocompleteInput
-                          label="Country"
-                          source="profile.location.countryCode"
-                          choices={countryCodes}
-                          validate={required()}
+                        <Box mt={2}>
+                          <Tooltip title={SUPPORT_EMAIL_HINT}>
+                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                          </Tooltip>
+                        </Box>
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="Technical Contact Email"
+                          source="profile.technicalEmail"
+                          validate={validateEmail}
                         />
-                      </Grid>
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }} pb={1}>
-                    <CustomImageInput label={false} editMode addTo="profile" />
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <TextInput
-                      fullWidth
-                      label="LinkedIn Page"
-                      source="profile.linkedInProfile"
-                      validate={[...validateWebsite, required()]}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <LinkedInRegistrationInput
-                      formData={formData.profile}
+                        <Box mt={2}>
+                          <Tooltip title={TECHNICAL_EMAIL_HINT}>
+                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                          </Tooltip>
+                        </Box>
+                      </Stack>
+                    </Grid>
+                    <AuthorityRegistrationNumbersInput
                       source="profile.registrationNumbers"
+                      orientation="horizontal"
                     />
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
+                    <Grid size={{ xs: 12 }}>
                       <TextInput
                         fullWidth
-                        label="Support Email"
-                        source="profile.contactEmail"
-                        validate={validateEmail}
+                        multiline
+                        label="Short Description"
+                        placeholder={organizationPlaceholder}
+                        source="profile.description"
+                        validate={required()}
                       />
-                      <Box mt={2}>
-                        <Tooltip title={SUPPORT_EMAIL_HINT}>
-                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                        </Tooltip>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="Technical Contact Email"
-                        source="profile.technicalEmail"
-                        validate={validateEmail}
-                      />
-                      <Box mt={2}>
-                        <Tooltip title={TECHNICAL_EMAIL_HINT}>
-                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                        </Tooltip>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                  <AuthorityRegistrationNumbersInput
-                    source="profile.registrationNumbers"
-                    orientation="horizontal"
-                  />
-                  <Grid size={{ xs: 12 }}>
-                    <TextInput
-                      fullWidth
-                      multiline
-                      label="Short Description"
-                      placeholder={organizationPlaceholder}
-                      source="profile.description"
-                      validate={required()}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant="h5">Key individuals</Typography>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <Typography variant="body1" my={2} sx={sx.sectionTitle}>
-                        Administrator’s Details
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="h5">Key individuals</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <Typography variant="body1" my={2} sx={sx.sectionTitle}>
+                          Administrator’s Details
+                        </Typography>
+                        <Box mt={2}>
+                          <Tooltip title={ADMINISTRATOR_DETAILS_HINT}>
+                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                          </Tooltip>
+                        </Box>
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <Typography variant="body1" my={2} sx={sx.sectionTitle}>
+                          Signatory Authority’s Details
+                        </Typography>
+                        <Box mt={2}>
+                          <Tooltip title={SIGNATORY_DETAILS_HINT}>
+                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                          </Tooltip>
+                        </Box>
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="First name"
+                          source="profile.adminGivenName"
+                          validate={[maxLength(1024), required()]}
+                          defaultValue={userData ? userData.givenName : ''}
+                        />
+                      </Stack>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="Last name"
+                          source="profile.adminFamilyName"
+                          validate={[maxLength(1024), required()]}
+                          defaultValue={userData ? userData.familyName : ''}
+                        />
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="First name"
+                          source="profile.signatoryGivenName"
+                          validate={[maxLength(1024), required()]}
+                        />
+                      </Stack>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="Last name"
+                          source="profile.signatoryFamilyName"
+                          validate={[maxLength(1024), required()]}
+                        />
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="Job Title"
+                          source="profile.adminTitle"
+                          validate={[maxLength(1024), required()]}
+                        />
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="Job Title"
+                          source="profile.signatoryTitle"
+                          validate={[maxLength(1024), required()]}
+                        />
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="Email"
+                          source="profile.adminEmail"
+                          validate={validateEmail}
+                          defaultValue={userData ? userData.email : ''}
+                        />
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 6 }}>
+                      <Stack flexDirection="row" gap={1.75}>
+                        <TextInput
+                          fullWidth
+                          label="Email"
+                          source="profile.signatoryEmail"
+                          validate={validateEmail}
+                        />
+                        <Box mt={2}>
+                          <Tooltip title={SIGNATORY_EMAIL_HINT}>
+                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                          </Tooltip>
+                        </Box>
+                      </Stack>
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="h4" mb={2} mt={4}>
+                        Commercial Names
                       </Typography>
-                      <Box mt={2}>
-                        <Tooltip title={ADMINISTRATOR_DETAILS_HINT}>
-                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                        </Tooltip>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <Typography variant="body1" my={2} sx={sx.sectionTitle}>
-                        Signatory Authority’s Details
-                      </Typography>
-                      <Box mt={2}>
-                        <Tooltip title={SIGNATORY_DETAILS_HINT}>
-                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                        </Tooltip>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="First name"
-                        source="profile.adminGivenName"
-                        validate={[maxLength(1024), required()]}
-                        defaultValue={userData ? userData.givenName : ''}
-                      />
-                    </Stack>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="Last name"
-                        source="profile.adminFamilyName"
-                        validate={[maxLength(1024), required()]}
-                        defaultValue={userData ? userData.familyName : ''}
-                      />
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="First name"
-                        source="profile.signatoryGivenName"
-                        validate={[maxLength(1024), required()]}
-                      />
-                    </Stack>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="Last name"
-                        source="profile.signatoryFamilyName"
-                        validate={[maxLength(1024), required()]}
-                      />
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="Job Title"
-                        source="profile.adminTitle"
-                        validate={[maxLength(1024), required()]}
-                      />
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="Job Title"
-                        source="profile.signatoryTitle"
-                        validate={[maxLength(1024), required()]}
-                      />
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="Email"
-                        source="profile.adminEmail"
-                        validate={validateEmail}
-                        defaultValue={userData ? userData.email : ''}
-                      />
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 6 }}>
-                    <Stack flexDirection="row" gap={1.75}>
-                      <TextInput
-                        fullWidth
-                        label="Email"
-                        source="profile.signatoryEmail"
-                        validate={validateEmail}
-                      />
-                      <Box mt={2}>
-                        <Tooltip title={SIGNATORY_EMAIL_HINT}>
-                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                        </Tooltip>
-                      </Box>
-                    </Stack>
-                  </Grid>
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant="h4" mb={2} mt={4}>
-                      Commercial Names
-                    </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12 }}>
-                    <ArrayInput
-                      source="profile.commercialEntities"
-                      defaultValue={defaultBrandValue}
-                      sx={{ '& .RaArrayInput-label': { display: 'none' } }}
-                    >
-                      <SimpleFormIterator
-                        addButton={
-                          <PlusButtonBlock
-                            style={sx.plusButtonBlock}
-                            disabled={!allBrandsFilled(formData.profile.commercialEntities)}
-                            position={formData.profile?.commercialEntities?.length}
-                          />
-                        }
-                        disableAdd={isAddBrandDisabled(formData.profile.commercialEntities)}
-                        fullWidth
-                        sx={sx.brandList}
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <ArrayInput
+                        source="profile.commercialEntities"
+                        defaultValue={defaultBrandValue}
+                        sx={{ '& .RaArrayInput-label': { display: 'none' } }}
                       >
-                        <FormDataConsumer>
-                          {({ scopedFormData }) => {
-                            return (
-                              <OrganizationBrand
-                                formData={formData}
-                                scopedFormData={scopedFormData}
-                              />
-                            );
-                          }}
-                        </FormDataConsumer>
-                      </SimpleFormIterator>
-                    </ArrayInput>
+                        <SimpleFormIterator
+                          addButton={
+                            <PlusButtonBlock
+                              style={sx.plusButtonBlock}
+                              disabled={!allBrandsFilled(formData.profile.commercialEntities)}
+                              position={formData.profile?.commercialEntities?.length}
+                            />
+                          }
+                          disableAdd={isAddBrandDisabled(formData.profile.commercialEntities)}
+                          fullWidth
+                          sx={sx.brandList}
+                        >
+                          <FormDataConsumer>
+                            {({ scopedFormData }) => {
+                              return (
+                                <OrganizationBrand
+                                  formData={formData}
+                                  scopedFormData={scopedFormData}
+                                />
+                              );
+                            }}
+                          </FormDataConsumer>
+                        </SimpleFormIterator>
+                      </ArrayInput>
+                    </Grid>
                   </Grid>
-                </Grid>
-                <Box display="flex" justifyContent="center" pt={4}>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    size="large"
-                    sx={sx.cancelButton}
-                    onClick={() => (hasOrganisations ? navigate('/') : logout())}
-                  >
-                    Cancel
-                  </Button>
-                  <OrganizationSubmitButton />
-                </Box>
-                <CreateServiceComponent
-                  isModalOpened={/create\/service/.test(location.pathname) || isServiceCreated}
-                  isSending={isCreateRequestLoading}
-                  onClose={onClose}
-                  onCreate={onCreate}
-                  isCreated={isServiceCreated}
-                  secretKeys={secretKeys}
-                  did={did}
-                  selectedServiceType={serviceType}
-                  setSelectedServiceType={setServiceType}
-                  selectedCAO={selectedCAO}
-                  setSelectedCAO={setSelectedCAO}
-                />
-              </>
-            )}
+                  <Box display="flex" justifyContent="center" pt={4}>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="large"
+                      sx={sx.cancelButton}
+                      onClick={() => (hasOrganisations ? navigate('/') : logout())}
+                    >
+                      Cancel
+                    </Button>
+                    <OrganizationSubmitButton />
+                  </Box>
+                  <CreateServiceComponent
+                    isModalOpened={/create\/service/.test(location.pathname) || isServiceCreated}
+                    isSending={isCreateRequestLoading}
+                    onClose={onClose}
+                    onCreate={onCreate}
+                    isCreated={isServiceCreated}
+                    secretKeys={secretKeys}
+                    did={did}
+                    selectedServiceType={serviceType}
+                    setSelectedServiceType={setServiceType}
+                    selectedCAO={selectedCAO}
+                    setSelectedCAO={setSelectedCAO}
+                  />
+                </>
+              )
+            }
           </FormDataConsumer>
         </Form>
       </Stack>

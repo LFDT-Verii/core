@@ -28,7 +28,7 @@ const validateService = (service, caoServiceRefs, context) => {
 const validateServices = (services, caoServiceRefs, context) => {
   forEach(
     (service) => validateService(service, caoServiceRefs, context),
-    services
+    services,
   );
 };
 
@@ -36,7 +36,7 @@ const validateAdditionalService = (
   service,
   existingServices,
   caoServiceRefs,
-  context
+  context,
 ) => {
   validateService(service, caoServiceRefs, context);
   validateServiceIdUniqueness(service, existingServices);

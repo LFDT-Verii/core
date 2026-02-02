@@ -34,6 +34,7 @@ import { useAuth } from '@/utils/auth/AuthContext.js';
 import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
 
+// eslint-disable-next-line complexity
 const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
   const { code } = useParams();
   const refresh = useRefresh();
@@ -76,6 +77,7 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
       id: code,
     },
     {
+      // eslint-disable-next-line complexity
       onError: (error) => {
         if (error?.body?.statusCode === 404) {
           setIsOpenNotExistingPopup(true);
@@ -106,7 +108,7 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
         setHasOrganisations(
           Boolean(
             tokenDecoded['http://velocitynetwork.foundation/groupId'] ||
-              tokenDecoded.scope.includes('admin'),
+            tokenDecoded.scope.includes('admin'),
           ),
         );
       } catch (e) {
@@ -128,6 +130,7 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
   useEffect(() => {
     if (secretKeys) {
       if (InterceptOnCreate) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsInterceptOnCreateOpen(true);
       } else {
         setIsOpenSecretPopup(true);
@@ -152,6 +155,7 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoader(isLoading || invitationIsLoading || isLoadingOrgData || isUserDataLoading);
   }, [isLoading, invitationIsLoading, isLoadingOrgData, isUserDataLoading]);
 

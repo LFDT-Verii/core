@@ -1,11 +1,8 @@
 export const toBase64 = (file) =>
   new Promise((resolve, reject) => {
-    // eslint-disable-next-line no-undef
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
-    // eslint-disable-next-line better-mutation/no-mutation
     reader.onload = () => resolve(reader.result);
-    // eslint-disable-next-line better-mutation/no-mutation
     reader.onerror = reject;
   });
 

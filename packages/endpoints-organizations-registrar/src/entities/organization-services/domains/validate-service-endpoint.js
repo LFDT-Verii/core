@@ -5,7 +5,8 @@ const { isIssuingOrInspectionService } = require('./is-service-category');
 
 const validateServiceEndpoint = (
   service,
-  issuingAndInspectionRequiresCaoServiceRef = false
+  issuingAndInspectionRequiresCaoServiceRef = false,
+  // eslint-disable-next-line complexity
 ) => {
   if (isEmpty(service.serviceEndpoint)) {
     throw newError(400, 'Service must have a serviceEndpoint', {

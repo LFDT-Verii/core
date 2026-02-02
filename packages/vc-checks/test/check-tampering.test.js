@@ -33,7 +33,7 @@ describe('tampering checks', () => {
     signedCredential = await generateCredentialJwt(
       credentialUnexpired,
       keyPair.privateJwk,
-      'KID'
+      'KID',
     );
   });
 
@@ -41,7 +41,7 @@ describe('tampering checks', () => {
     const otherCredential = await generateCredentialJwt(
       { ...credentialUnexpired, issuer: 'TAMPERED' },
       keyPair.privateJwk,
-      'KID'
+      'KID',
     );
 
     const tamperedCredential = signedCredential
@@ -53,7 +53,7 @@ describe('tampering checks', () => {
     const result = await checkJwsVcTampering(
       tamperedCredential,
       keyPair.publicJwk,
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.FAIL);
@@ -63,7 +63,7 @@ describe('tampering checks', () => {
     const result = await checkJwsVcTampering(
       signedCredential,
       keyPair.publicJwk,
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.PASS);

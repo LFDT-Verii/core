@@ -14,6 +14,7 @@ export default class VCLJwtDescriptor {
          * @type string
          * @public
          */
+        // eslint-disable-next-line default-param-last
         public jti: string = randomUUID().toString(),
         /**
          * iss is the did of the wallet owner
@@ -26,6 +27,6 @@ export default class VCLJwtDescriptor {
          * @type string
          * @public
          */
-        public aud: Nullish<string> = null
+        public aud: Nullish<string> = null,
     ) {}
 }

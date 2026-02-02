@@ -22,7 +22,7 @@ export default class VCLOrganization {
             const serviceJsonArr = (this.payload[VCLOrganization.KeyService] ??
                 []) as Dictionary<any>[];
             if (serviceJsonArr) {
-                // eslint-disable-next-line guard-for-in,max-depth,no-restricted-syntax
+                // eslint-disable-next-line guard-for-in,no-restricted-syntax,max-depth
                 for (const i in serviceJsonArr) {
                     const it = serviceJsonArr[i];
                     // eslint-disable-next-line max-depth
@@ -34,7 +34,7 @@ export default class VCLOrganization {
         } catch (error) {
             VCLLog.error(
                 error,
-                'Error while parsing service credential agent issuers'
+                'Error while parsing service credential agent issuers',
             );
         }
 

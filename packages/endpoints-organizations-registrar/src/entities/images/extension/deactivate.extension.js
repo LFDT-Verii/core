@@ -18,7 +18,7 @@ const deactivateExtension = (parent) => ({
           updatedAt: new Date(),
           state: ImageState.INACTIVE,
         },
-      }
+      },
     );
   },
   extensions: parent.extensions.concat(['deactivate']),

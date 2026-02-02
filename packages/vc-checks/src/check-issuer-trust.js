@@ -24,7 +24,7 @@ const checkIssuerTrust = async (
   credential,
   issuerId,
   dependencies,
-  context
+  context,
 ) => {
   const { log } = context;
 
@@ -43,7 +43,7 @@ const checkIssuerTrust = async (
   } catch (err) {
     log.error(
       { err, credential, dependencies },
-      'Check issuer credentials: the issuer chain failed for the issuer VC'
+      'Check issuer credentials: the issuer chain failed for the issuer VC',
     );
     if (err.message === 'unresolved_credential_subject_context') {
       return CheckResults.DEPENDENCY_RESOLUTION_ERROR;

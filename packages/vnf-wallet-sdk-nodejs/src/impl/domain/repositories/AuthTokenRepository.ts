@@ -9,6 +9,6 @@ import VCLAuthTokenDescriptor from '../../../api/entities/VCLAuthTokenDescriptor
 
 export default interface AuthTokenRepository {
     getAuthToken(
-        authTokenDescriptor: VCLAuthTokenDescriptor
+        authTokenDescriptor: VCLAuthTokenDescriptor,
     ): Promise<VCLAuthToken>;
 }

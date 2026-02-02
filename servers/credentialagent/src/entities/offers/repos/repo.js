@@ -84,7 +84,7 @@ module.exports = (app, options, next = () => {}) => {
             }),
           findUniquePreparedOffers: async (
             { vendorUserId, types, offerHashes, exchangeId = null },
-            { log }
+            { log },
           ) => {
             let mongoFilter = {
               'credentialSubject.vendorUserId': vendorUserId,
@@ -112,7 +112,7 @@ module.exports = (app, options, next = () => {}) => {
             credential,
             consentedAt,
             digestSRI,
-            context
+            context,
           ) => {
             const { config } = context;
             const updates = {
@@ -129,7 +129,7 @@ module.exports = (app, options, next = () => {}) => {
                   'type',
                   '@context',
                 ],
-                credential
+                credential,
               ),
             };
             if (config.autocleanFinalizedOfferPii) {
@@ -152,14 +152,14 @@ module.exports = (app, options, next = () => {}) => {
                   rejectedAt: { $exists: false },
                 },
               },
-              updates
+              updates,
             );
           },
         }),
         cleanPiiExtension,
       ],
     },
-    app
+    app,
   );
 };
 

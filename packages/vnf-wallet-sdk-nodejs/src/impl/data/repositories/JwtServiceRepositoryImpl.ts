@@ -11,7 +11,7 @@ import VCLToken from '../../../api/entities/VCLToken';
 export default class JwtServiceRepositoryImpl implements JwtServiceRepository {
     constructor(
         private readonly jwtSignService: VCLJwtSignService,
-        private readonly jwtVerifyService: VCLJwtVerifyService
+        private readonly jwtVerifyService: VCLJwtVerifyService,
     ) {}
 
     async decode(encodedJwt: string): Promise<VCLJwt> {
@@ -21,12 +21,12 @@ export default class JwtServiceRepositoryImpl implements JwtServiceRepository {
     async verifyJwt(
         jwt: VCLJwt,
         publicJwk: Nullish<VCLPublicJwk>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<boolean> {
         return this.jwtVerifyService.verify(
             jwt,
             publicJwk,
-            remoteCryptoServicesToken
+            remoteCryptoServicesToken,
         );
     }
 
@@ -34,13 +34,13 @@ export default class JwtServiceRepositoryImpl implements JwtServiceRepository {
         jwtDescriptor: VCLJwtDescriptor,
         didJwk: VCLDidJwk,
         nonce: Nullish<string>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<VCLJwt> {
         return this.jwtSignService.sign(
             jwtDescriptor,
             didJwk,
             nonce,
-            remoteCryptoServicesToken
+            remoteCryptoServicesToken,
         );
     }
 }

@@ -51,7 +51,7 @@ describe('identifications endpoints', () => {
               ...record,
               id: record._id,
             };
-          })
+          }),
         )(records),
       });
     });

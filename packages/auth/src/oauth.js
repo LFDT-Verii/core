@@ -6,7 +6,7 @@ const fastifyAuth0 = require('fastify-auth0-verify');
 const ERROR_MESSAGES = {
   MISSING_REQUIRED_SCOPES_TEMPLATE: ({ requiredScopes }) =>
     `User must have one of the following scopes: ${JSON.stringify(
-      requiredScopes
+      requiredScopes,
     )}`,
 };
 
@@ -15,7 +15,7 @@ const initHasMatchingScope = (targetScopes) => (user) => {
   const userScopes = scope.split(' ');
   return some(
     (userScope) => targetScopes.includes(trim(userScope)),
-    userScopes
+    userScopes,
   );
 };
 
@@ -29,7 +29,7 @@ const verifyAccessToken = (requiredScopes = []) => {
     await req.server.authenticate(req, reply);
     if (!hasMatchingScope(req.user)) {
       throw new newError.Forbidden(
-        ERROR_MESSAGES.MISSING_REQUIRED_SCOPES_TEMPLATE({ requiredScopes })
+        ERROR_MESSAGES.MISSING_REQUIRED_SCOPES_TEMPLATE({ requiredScopes }),
       );
     }
   };

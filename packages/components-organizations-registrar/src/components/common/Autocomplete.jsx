@@ -2,7 +2,7 @@ import { useEffect, useCallback, useMemo, forwardRef } from 'react';
 import { AutocompleteInput, useInput } from 'react-admin';
 import PropTypes from 'prop-types';
 
-// eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
+// eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions,complexity
 const Autocomplete = forwardRef(function Autocomplete(
   {
     label,

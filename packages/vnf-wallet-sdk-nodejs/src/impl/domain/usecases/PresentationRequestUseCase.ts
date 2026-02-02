@@ -5,6 +5,6 @@ import VCLVerifiedProfile from '../../../api/entities/VCLVerifiedProfile';
 export default interface PresentationRequestUseCase {
     getPresentationRequest(
         presentationRequestDescriptor: VCLPresentationRequestDescriptor,
-        verifiedProfile: VCLVerifiedProfile
+        verifiedProfile: VCLVerifiedProfile,
     ): Promise<VCLPresentationRequest>;
 }

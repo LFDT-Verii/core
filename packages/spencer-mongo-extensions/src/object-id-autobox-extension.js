@@ -21,7 +21,7 @@ const { initAutoboxFieldsExtension } = require('./autobox-fields-extension');
 const initObjectIdAutoboxExtension = (propOrProps) => {
   const autoboxFieldsExtension = initAutoboxFieldsExtension(
     propOrProps,
-    objectIdAutobox
+    objectIdAutobox,
   );
   return (parent) => {
     const { prepFilter, prepModification } = autoboxFieldsExtension(parent);

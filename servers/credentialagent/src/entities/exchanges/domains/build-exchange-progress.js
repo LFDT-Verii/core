@@ -50,7 +50,7 @@ const buildCompletionStates = (exchange) =>
       return acc;
     },
     { exchangeComplete: false, disclosureComplete: false },
-    exchange.events
+    exchange.events,
   );
 
 module.exports = { buildExchangeProgress };

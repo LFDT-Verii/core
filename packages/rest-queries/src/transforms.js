@@ -18,7 +18,7 @@ const { flow, reduce, omit, set, isNumber } = require('lodash/fp');
 
 const initTransformToFinder = (targetRepo, overrides) => {
   const baseTransformToFilterDocument = initTransformToFilterDocument(
-    targetRepo?.collection
+    targetRepo?.collection,
   );
   const transformToFilterDocument = overrides?.transformToFilterDocument
     ? flow(overrides.transformToFilterDocument, baseTransformToFilterDocument)
@@ -37,7 +37,7 @@ const initTransformToFinder = (targetRepo, overrides) => {
 const convertDate = (suffix) =>
   flow(
     (date) => `${date}${suffix}`,
-    (timestamp) => new Date(timestamp)
+    (timestamp) => new Date(timestamp),
   );
 
 const toStartOfDay = convertDate('T00:00:00.000Z');
@@ -52,7 +52,7 @@ const initTransformToFilterDocument =
     if (filter) {
       baseMongoFilterObj = omit(
         ['q', 'fromDate', 'toDate', 'prevPageToken', 'nextPageToken'],
-        filter
+        filter,
       );
     }
 
@@ -78,14 +78,14 @@ const buildDateRangeFilter = ({ filter, targetCollection }) => {
     mongoFilterObj = set(
       `${targetCollection.timestampKeys.createdAt}.$gte`,
       toStartOfDay(filter.fromDate),
-      mongoFilterObj
+      mongoFilterObj,
     );
   }
   if (filter?.toDate) {
     mongoFilterObj = set(
       `${targetCollection.timestampKeys.createdAt}.$lte`,
       toEndOfDay(filter.toDate),
-      mongoFilterObj
+      mongoFilterObj,
     );
   }
   return mongoFilterObj;
@@ -101,7 +101,7 @@ const transformToSortDocument = ({ sort } = {}) => {
       ];
     },
     [],
-    sort
+    sort,
   );
   return [...mongoSortObj, defaultMongoSortTuple];
 };
@@ -113,6 +113,7 @@ const transformToPageSize = ({ page } = {}) => {
   return page.size;
 };
 
+// eslint-disable-next-line complexity
 const transformToDocumentSkip = ({ page } = {}) => {
   if (page?.nextPageToken || page?.prevPageToken) {
     return Number(page?.nextPageToken) || Number(page?.prevPageToken);

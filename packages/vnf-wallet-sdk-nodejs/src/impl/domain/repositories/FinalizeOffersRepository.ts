@@ -7,6 +7,6 @@ export default interface FinalizeOffersRepository {
     finalizeOffers(
         finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
         sessionToken: VCLToken,
-        proof: Nullish<VCLJwt>
+        proof: Nullish<VCLJwt>,
     ): Promise<VCLJwt[]>;
 }

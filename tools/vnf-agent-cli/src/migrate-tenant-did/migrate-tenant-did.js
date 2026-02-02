@@ -2,6 +2,7 @@ const { warn } = require('console');
 const { filter, flow, groupBy } = require('lodash/fp');
 
 const initFetchers = (options) => {
+  // eslint-disable-next-line default-param-last
   const initFetch = (pathname, httpVerb = 'GET', body) => {
     return async () => {
       const urlObj = new URL(options.endpoint);
@@ -55,10 +56,10 @@ const summarize = (preTenants, postTenants, context) => {
   const toOperatorUrl = initToOperatorApiUrl(context);
   const refreshedTenants = flow(
     groupBy('id'),
-    filter((group) => group[0].did !== group[1].did)
+    filter((group) => group[0].did !== group[1].did),
   )([...preTenants, ...postTenants]);
   context.log.info(
-    `Refreshed ${refreshedTenants.length} out of ${preTenants.length} tenants\n`
+    `Refreshed ${refreshedTenants.length} out of ${preTenants.length} tenants\n`,
   );
   for (const refreshedTenant of refreshedTenants) {
     const [preTenant, postTenant] = refreshedTenant;
@@ -71,7 +72,7 @@ const summarize = (preTenants, postTenants, context) => {
         oldUrl: toOperatorUrl(preTenant.did),
         newUrl: toOperatorUrl(postTenant.id),
       },
-      '\n'
+      '\n',
     );
   }
 };

@@ -16,13 +16,13 @@ export default class VCLOffer {
         return issuerObject && issuerObject[VCLOffer.CodingKeys.KeyId]
             ? issuerObject[VCLOffer.CodingKeys.KeyId]
             : this.payload
-            ? this.payload[VCLOffer.CodingKeys.KeyIssuer] ?? ''
-            : '';
+              ? (this.payload[VCLOffer.CodingKeys.KeyIssuer] ?? '')
+              : '';
     }
 
     get id(): string {
         return this.payload
-            ? this.payload[VCLOffer.CodingKeys.KeyId] ?? ''
+            ? (this.payload[VCLOffer.CodingKeys.KeyId] ?? '')
             : '';
     }
 

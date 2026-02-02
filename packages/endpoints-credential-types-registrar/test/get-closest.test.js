@@ -30,7 +30,7 @@ describe('get closest string test suite', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toBe(
-        "Cannot read properties of undefined (reading 'length')"
+        "Cannot read properties of undefined (reading 'length')",
       );
     }
   });

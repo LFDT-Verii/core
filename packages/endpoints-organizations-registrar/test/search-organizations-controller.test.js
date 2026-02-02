@@ -51,7 +51,7 @@ const publicProfileMatcher = (profile) =>
       'signatoryTitle',
       'signatoryEmail',
     ],
-    profile
+    profile,
   );
 
 const searchResult = (org, services = [], transformServices = true) => {
@@ -86,7 +86,7 @@ describe('Organizations Test Suite', () => {
 
   const persistIndexedOrganizationWithServices = async (
     identifier,
-    services
+    services,
   ) => {
     const newServices = mapWithIndex((service, idx) => {
       return {
@@ -150,9 +150,8 @@ describe('Organizations Test Suite', () => {
       let organization;
       before(async () => {
         await clearDb();
-        ({ organization } = await persistIndexedOrganizationWithIssuerService(
-          0
-        ));
+        ({ organization } =
+          await persistIndexedOrganizationWithIssuerService(0));
       });
 
       it('Should return a list with items when there is at least one organization', async () => {
@@ -275,7 +274,7 @@ describe('Organizations Test Suite', () => {
         const newOrg = await newOrganization();
         const orgProfile = omit(
           ['id', 'createdAt', 'updatedAt'],
-          newOrg.profile
+          newOrg.profile,
         );
         const service = {
           id: '#credentialagent-999',
@@ -339,7 +338,7 @@ describe('Organizations Test Suite', () => {
                 },
               },
               [],
-              false
+              false,
             ),
             searchResult(organization, services),
           ],
@@ -353,7 +352,7 @@ describe('Organizations Test Suite', () => {
             {
               'didDoc.id': organization.didDoc.id,
             },
-            { $set: { activatedServiceIds: [] } }
+            { $set: { activatedServiceIds: [] } },
           );
 
         const response = await fastify.injectJson({
@@ -430,7 +429,7 @@ describe('Organizations Test Suite', () => {
                 {
                   ...omit(
                     ['updatedAt', 'createdAt'],
-                    newOrganization2.services[0]
+                    newOrganization2.services[0],
                   ),
                   // eslint-disable-next-line max-len
                   serviceEndpoint: `https://agent.samplevendor127.com/api/holder/v0.6/org/${newOrganization2.didDoc.id}/issue/get-credential-manifest`,
@@ -445,7 +444,7 @@ describe('Organizations Test Suite', () => {
                 {
                   ...omit(
                     ['updatedAt', 'createdAt'],
-                    newOrganization1.services[0]
+                    newOrganization1.services[0],
                   ),
                   // eslint-disable-next-line max-len
                   serviceEndpoint: `https://agent.samplevendor987.com/api/holder/v0.6/org/${newOrganization1.didDoc.id}/issue/get-credential-manifest`,
@@ -562,7 +561,7 @@ describe('Organizations Test Suite', () => {
         expect(response.json).toEqual({
           result: map(
             (org) => searchResult(org, servicesByOrg[org.didDoc.id]),
-            [orgs[3], orgs[2], orgs[0]]
+            [orgs[3], orgs[2], orgs[0]],
           ),
         });
       });
@@ -607,9 +606,9 @@ describe('Organizations Test Suite', () => {
                     serviceEndpoint: 'https://agent.samplecao.com/cao',
                   },
                 ],
-                true
+                true,
               ),
-            [issuingOrg]
+            [issuingOrg],
           ),
         });
       });
@@ -656,9 +655,9 @@ describe('Organizations Test Suite', () => {
                     serviceEndpoint: 'https://agent.samplecao.com/cao',
                   },
                 ],
-                true
+                true,
               ),
-            [issuingOrg]
+            [issuingOrg],
           ),
         });
       });
@@ -688,7 +687,7 @@ describe('Organizations Test Suite', () => {
               searchResult(org, [
                 { ...issuingService, ...issuingService.didDocumentService },
               ]),
-            [issuingOrg]
+            [issuingOrg],
           ),
         });
       });
@@ -723,7 +722,7 @@ describe('Organizations Test Suite', () => {
               searchResult(org, [
                 { ...issuingService, ...issuingService.didDocumentService },
               ]),
-            [issuingOrg]
+            [issuingOrg],
           ),
         });
       });
@@ -773,12 +772,12 @@ describe('Organizations Test Suite', () => {
               searchResult(
                 org,
                 [{ ...service, ...service.didDocumentService }],
-                false
+                false,
               ),
             [
               [legacyIssuingOrg, legacyIssuingService],
               [issuingOrg, issuingService],
-            ]
+            ],
           ),
         });
       });
@@ -793,7 +792,7 @@ describe('Organizations Test Suite', () => {
         expect(response.json).toEqual({
           result: map(
             (org) => searchResult(org, servicesByOrg[org.didDoc.id]),
-            [orgs[2], orgs[0]]
+            [orgs[2], orgs[0]],
           ),
         });
       });
@@ -905,7 +904,7 @@ describe('Organizations Test Suite', () => {
         expect(response.json).toEqual({
           result: flow(
             map((org) => searchResult(org, servicesByOrg[org.didDoc.id])),
-            reverse
+            reverse,
           )([orgs[0], orgs[1], orgs[2]]),
         });
       });
@@ -920,7 +919,7 @@ describe('Organizations Test Suite', () => {
         expect(response.json).toEqual({
           result: flow(
             map((org) => searchResult(org, servicesByOrg[org.didDoc.id])),
-            reverse
+            reverse,
           )(orgs),
         });
       });
@@ -960,7 +959,7 @@ describe('Organizations Test Suite', () => {
               },
               orgs[2],
               orgs[0],
-            ]
+            ],
           ),
         });
       });

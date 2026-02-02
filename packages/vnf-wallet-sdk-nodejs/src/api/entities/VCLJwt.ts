@@ -28,8 +28,8 @@ export default class VCLJwt {
                 new SignedJWT(
                     encodedJwtArr[0] ?? '',
                     encodedJwtArr[1] ?? '',
-                    encodedJwtArr[2] ?? ''
-                )
+                    encodedJwtArr[2] ?? '',
+                ),
             );
         } catch (e) {
             VCLLog.error(e);
@@ -98,7 +98,7 @@ export class SignedJWT {
     constructor(
         public readonly header: string,
         public readonly payload: string,
-        public readonly signature: string
+        public readonly signature: string,
     ) {}
 
     static parse(s: string): Nullish<SignedJWT> {
@@ -106,13 +106,13 @@ export class SignedJWT {
         return new SignedJWT(
             splitted[0] ?? '',
             splitted[1] ?? '',
-            splitted[2] ?? ''
+            splitted[2] ?? '',
         );
     }
 
     serialize() {
         const items = [this.header, this.payload, this.signature].filter(
-            (item) => item.length
+            (item) => item.length,
         );
         return items.join('.');
     }

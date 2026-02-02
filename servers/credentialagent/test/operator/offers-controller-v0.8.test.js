@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const {
   after,
   afterEach,
@@ -166,7 +165,7 @@ describe('vendor offer management', () => {
         'isDuplicate',
         'exchangeId',
       ],
-      await newOffer(overrides)
+      await newOffer(overrides),
     );
 
   afterEach(() => {
@@ -213,7 +212,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -225,7 +224,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -262,7 +261,7 @@ describe('vendor offer management', () => {
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           exchangeId,
-        })
+        }),
       );
 
       expect(getSchemaNock.pendingMocks()).toHaveLength(1);
@@ -308,7 +307,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -320,7 +319,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -357,7 +356,7 @@ describe('vendor offer management', () => {
           issuer: {
             id: tenant.did,
           },
-        })
+        }),
       );
     });
 
@@ -453,7 +452,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -465,7 +464,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -518,7 +517,7 @@ describe('vendor offer management', () => {
             relatedResource[1],
             relatedResource[2],
           ],
-        })
+        }),
       );
     });
 
@@ -540,7 +539,7 @@ describe('vendor offer management', () => {
         .get('/schemas/open-badge-v3.0-schema.json')
         .reply(
           200,
-          require('../combined/schemas/open-badge-credential.schema.json')
+          require('../combined/schemas/open-badge-credential.schema.json'),
         );
 
       const response = await fastify.injectJson({
@@ -622,7 +621,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -634,7 +633,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -672,7 +671,7 @@ describe('vendor offer management', () => {
             id: tenant.did,
           },
           ...resourceReference,
-        })
+        }),
       );
     });
 
@@ -730,7 +729,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -742,7 +741,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -780,7 +779,7 @@ describe('vendor offer management', () => {
           issuer: {
             id: tenant.did,
           },
-        })
+        }),
       );
     });
 
@@ -825,7 +824,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -837,7 +836,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -874,7 +873,7 @@ describe('vendor offer management', () => {
           issuer: {
             id: tenant.did,
           },
-        })
+        }),
       );
     });
 
@@ -913,7 +912,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -925,7 +924,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -961,7 +960,7 @@ describe('vendor offer management', () => {
           issuer: {
             id: tenant.did,
           },
-        })
+        }),
       );
     });
 
@@ -1006,7 +1005,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1018,7 +1017,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -1057,7 +1056,7 @@ describe('vendor offer management', () => {
             name: 'image',
             image: 'http://image.com',
           },
-        })
+        }),
       );
     });
 
@@ -1097,7 +1096,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1109,7 +1108,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -1144,7 +1143,7 @@ describe('vendor offer management', () => {
           updatedAt: expect.any(Date),
           exchangeId,
           issuer,
-        })
+        }),
       );
     });
 
@@ -1204,7 +1203,7 @@ describe('vendor offer management', () => {
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           exchangeId,
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -1291,7 +1290,7 @@ describe('vendor offer management', () => {
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           exchangeId,
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -1452,7 +1451,7 @@ describe('vendor offer management', () => {
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           exchangeId,
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -1480,7 +1479,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1492,7 +1491,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -1546,7 +1545,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1558,7 +1557,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const offerFromDb = await offerCollection.findOne({
@@ -1597,7 +1596,7 @@ describe('vendor offer management', () => {
             name: 'name',
             image: 'logo',
           },
-        })
+        }),
       );
     });
 
@@ -1635,7 +1634,7 @@ describe('vendor offer management', () => {
           errorCode: 'invalid_commercial_entity',
           message: 'Invalid commercial entity',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -1662,12 +1661,12 @@ describe('vendor offer management', () => {
           message:
             "'$.credentialSubject' must have required property 'startMonthYear'",
           statusCode: 400,
-        })
+        }),
       );
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1679,7 +1678,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -1706,12 +1705,12 @@ describe('vendor offer management', () => {
           errorCode: 'missing_error_code',
           message:
             'failed to resolve http://mock.com/schemas/past-employment-position',
-        })
+        }),
       );
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1723,7 +1722,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -1733,7 +1732,7 @@ describe('vendor offer management', () => {
       const getSchemaNock = nockRegistrarAppSchemaName({
         responseJson: omit(
           ['$id'],
-          require('../combined/schemas/past-employment-position-with-uri-id.schema')
+          require('../combined/schemas/past-employment-position-with-uri-id.schema'),
         ),
       });
 
@@ -1755,12 +1754,12 @@ describe('vendor offer management', () => {
           errorCode: 'missing_error_code',
           message:
             'http://mock.com/schemas/past-employment-position $id field missing',
-        })
+        }),
       );
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1772,7 +1771,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -1801,12 +1800,12 @@ describe('vendor offer management', () => {
           error: 'Bad Request',
           errorCode: 'missing_error_code',
           message: 'PastEmploymentPosition is not a recognized credential type',
-        })
+        }),
       );
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1818,7 +1817,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(getCredentialTypesNock.isDone()).toEqual(true);
@@ -1841,7 +1840,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1853,7 +1852,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -1867,7 +1866,7 @@ describe('vendor offer management', () => {
       });
 
       const offer = flow(
-        set('credentialSubject.vendorUserId', user.vendorUserId)
+        set('credentialSubject.vendorUserId', user.vendorUserId),
       )(await newVendorOffer());
       const offerHash = hashOffer({
         ...offer,
@@ -1879,7 +1878,7 @@ describe('vendor offer management', () => {
 
       await exchangeCollection.updateOne(
         { _id: new ObjectId(exchangeId) },
-        { $set: { offerHashes: [offerHash] } }
+        { $set: { offerHashes: [offerHash] } },
       );
 
       const response = await fastify.injectJson({
@@ -1894,7 +1893,7 @@ describe('vendor offer management', () => {
     it('/offers should return 400 when credentialSubject.vendorUserId is missing', async () => {
       const offer = omit(
         ['credentialSubject.vendorUserId'],
-        await newVendorOffer()
+        await newVendorOffer(),
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -1906,7 +1905,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1924,7 +1923,7 @@ describe('vendor offer management', () => {
           tenantId: new ObjectId(tenant._id),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -1934,7 +1933,7 @@ describe('vendor offer management', () => {
         omit(['isDuplicate', 'contentHash', 'exchangeId']),
         set('credentialSubject.vendorUserId', user.vendorUserId),
         set('expirationDate', new Date()),
-        set('validUntil', new Date())
+        set('validUntil', new Date()),
       )(offer);
       const response = await fastify.injectJson({
         method: 'POST',
@@ -1946,7 +1945,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1958,7 +1957,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -1968,7 +1967,7 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant, exchange: { id: 'some_exchange_id' } },
-          ''
+          '',
         ),
         payload: {
           ...set('credentialSubject.vendorUserId', user.vendorUserId, offer),
@@ -1979,7 +1978,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -1991,7 +1990,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -2001,12 +2000,12 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant: { _id: new ObjectId() }, exchange },
-          ''
+          '',
         ),
         payload: set(
           'credentialSubject.vendorUserId',
           user.vendorUserId,
-          offer
+          offer,
         ),
       });
 
@@ -2014,7 +2013,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -2026,7 +2025,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -2064,7 +2063,7 @@ describe('vendor offer management', () => {
           errorCode: 'invalid_commercial_entity',
           message: 'Invalid commercial entity',
           statusCode: 400,
-        })
+        }),
       );
     });
   });
@@ -2075,7 +2074,7 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant, exchange: { id: 'EXCHANGE-ID' } },
-          'complete'
+          'complete',
         ),
         payload: {
           purpose: ['push'],
@@ -2090,7 +2089,7 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant, exchange: { id: new ObjectId() } },
-          'complete'
+          'complete',
         ),
         payload: {
           purpose: ['push'],
@@ -2118,7 +2117,7 @@ describe('vendor offer management', () => {
     it('/offers/complete 200 with offers and push notification', async () => {
       nockRegistrarGetOrganizationDidDoc(
         intermediateIssuer.id,
-        intermediateIssuer
+        intermediateIssuer,
       );
       let parsedBody;
       const nockedPushEndpoint = nock(testPushEndpointURL.origin)
@@ -2156,7 +2155,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(pushExchange._id),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(pushExchange._id),
@@ -2179,14 +2178,14 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
     it('/offers/complete 200 with no offers and push notification', async () => {
       nockRegistrarGetOrganizationDidDoc(
         intermediateIssuer.id,
-        intermediateIssuer
+        intermediateIssuer,
       );
       let parsedBody;
 
@@ -2209,7 +2208,7 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant, exchange: receivedEmptyExchange },
-          'complete'
+          'complete',
         ),
         payload: {},
       });
@@ -2232,7 +2231,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(receivedEmptyExchange._id),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(receivedEmptyExchange._id),
@@ -2259,14 +2258,14 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
     it('/offers/complete should not fail if push failed', async () => {
       nockRegistrarGetOrganizationDidDoc(
         intermediateIssuer.id,
-        intermediateIssuer
+        intermediateIssuer,
       );
       let parsedBody;
 
@@ -2289,7 +2288,7 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant, exchange: receivedEmptyExchange },
-          'complete'
+          'complete',
         ),
         payload: {},
       });
@@ -2312,7 +2311,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(receivedEmptyExchange._id),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(receivedEmptyExchange._id),
@@ -2339,14 +2338,14 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
     it('/offers/complete should not fail if push failed', async () => {
       nockRegistrarGetOrganizationDidDoc(
         intermediateIssuer.id,
-        intermediateIssuer
+        intermediateIssuer,
       );
       let parsedBody;
 
@@ -2369,7 +2368,7 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant, exchange: receivedEmptyExchange },
-          'complete'
+          'complete',
         ),
         payload: {},
       });
@@ -2392,7 +2391,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(receivedEmptyExchange._id),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(receivedEmptyExchange._id),
@@ -2419,7 +2418,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -2447,7 +2446,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(exchangeId),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(exchangeId),
@@ -2465,14 +2464,14 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
     it('/offers/complete 200 with no offers and no push notification due to missing pushDelegate.pushUrl', async () => {
       nockRegistrarGetOrganizationDidDoc(
         intermediateIssuer.id,
-        intermediateIssuer
+        intermediateIssuer,
       );
       let parsedBody;
 
@@ -2494,7 +2493,7 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant, exchange: receivedEmptyExchange },
-          'complete'
+          'complete',
         ),
         payload: {},
       });
@@ -2506,7 +2505,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(receivedEmptyExchange._id),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(receivedEmptyExchange._id),
@@ -2531,14 +2530,14 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
     it('/offers/complete 200 with no offers and no push notification due to missing pushDelegate', async () => {
       nockRegistrarGetOrganizationDidDoc(
         intermediateIssuer.id,
-        intermediateIssuer
+        intermediateIssuer,
       );
       let parsedBody;
 
@@ -2557,7 +2556,7 @@ describe('vendor offer management', () => {
         method: 'POST',
         url: exchangeOffersUrl(
           { tenant, exchange: receivedEmptyExchange },
-          'complete'
+          'complete',
         ),
         payload: {},
       });
@@ -2569,7 +2568,7 @@ describe('vendor offer management', () => {
       expect(
         await exchangeCollection.findOne({
           _id: new ObjectId(receivedEmptyExchange._id),
-        })
+        }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(receivedEmptyExchange._id),
@@ -2591,7 +2590,7 @@ describe('vendor offer management', () => {
           ...credentialTypesObject,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
   });
@@ -2618,7 +2617,7 @@ describe('vendor offer management', () => {
           method: 'GET',
           url: exchangesUrl(
             { tenant, exchange: { _id: 'EXCHANGE_ID' } },
-            'qrcode.uri'
+            'qrcode.uri',
           ),
           headers: {
             authorization: `Bearer ${testAuthToken}`,
@@ -2643,7 +2642,7 @@ describe('vendor offer management', () => {
           method: 'GET',
           url: exchangesUrl(
             { tenant, exchange: receivedExchange },
-            'qrcode.uri'
+            'qrcode.uri',
           ),
           headers: {
             authorization: `Bearer ${testAuthToken}`,
@@ -2653,13 +2652,13 @@ describe('vendor offer management', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(
           `velocity-test://issue?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${encodeURIComponent(
-            tenant.did
+            tenant.did,
           )}%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D${
             receivedExchange._id
           }%26credential_types%3DPastEmploymentPosition&issuerDid=${tenant.did.replace(
             /:/g,
-            '%3A'
-          )}`
+            '%3A',
+          )}`,
         );
       });
 
@@ -2668,7 +2667,7 @@ describe('vendor offer management', () => {
           method: 'GET',
           url: exchangesUrl(
             { tenant, exchange: receivedExchange },
-            'qrcode.uri?vendorOriginContext=123'
+            'qrcode.uri?vendorOriginContext=123',
           ),
           headers: {
             authorization: `Bearer ${testAuthToken}`,
@@ -2678,13 +2677,13 @@ describe('vendor offer management', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(
           `velocity-test://issue?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${encodeURIComponent(
-            tenant.did
+            tenant.did,
           )}%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D${
             receivedExchange._id
           }%26credential_types%3DPastEmploymentPosition&issuerDid=${tenant.did.replace(
             /:/g,
-            '%3A'
-          )}&vendorOriginContext=123`
+            '%3A',
+          )}&vendorOriginContext=123`,
         );
       });
 
@@ -2699,7 +2698,7 @@ describe('vendor offer management', () => {
           method: 'GET',
           url: exchangesUrl(
             { tenant, exchange: receivedExchange },
-            'qrcode.uri'
+            'qrcode.uri',
           ),
           headers: {
             authorization: `Bearer ${testAuthToken}`,
@@ -2709,13 +2708,13 @@ describe('vendor offer management', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(
           `velocity-test://issue?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${encodeURIComponent(
-            tenant.did
+            tenant.did,
           )}%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D${
             receivedExchange._id
           }%26credential_types%3DCurrentEmploymentPosition%26credential_types%3DPastEmploymentPosition&issuerDid=${tenant.did.replace(
             /:/g,
-            '%3A'
-          )}`
+            '%3A',
+          )}`,
         );
       });
       it('should return a URI representing an exchange with multiple offers with the same types', async () => {
@@ -2728,7 +2727,7 @@ describe('vendor offer management', () => {
           method: 'GET',
           url: exchangesUrl(
             { tenant, exchange: receivedExchange },
-            'qrcode.uri'
+            'qrcode.uri',
           ),
           headers: {
             authorization: `Bearer ${testAuthToken}`,
@@ -2738,13 +2737,13 @@ describe('vendor offer management', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.body).toEqual(
           `velocity-test://issue?request_uri=http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2F${encodeURIComponent(
-            tenant.did
+            tenant.did,
           )}%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D${
             receivedExchange._id
           }%26credential_types%3DPastEmploymentPosition&issuerDid=${tenant.did.replace(
             /:/g,
-            '%3A'
-          )}`
+            '%3A',
+          )}`,
         );
       });
     });
@@ -2754,7 +2753,7 @@ describe('vendor offer management', () => {
           method: 'GET',
           url: exchangesUrl(
             { tenant, exchange: receivedExchange },
-            'qrcode.png'
+            'qrcode.png',
           ),
           headers: {
             authorization: `Bearer ${testAuthToken}`,
@@ -2859,7 +2858,7 @@ describe('vendor offer management', () => {
             sort: {
               _id: 1,
             },
-          }
+          },
         )
         .toArray();
       expect(offersDb).toHaveLength(6);
@@ -2880,7 +2879,7 @@ describe('vendor offer management', () => {
             sort: {
               _id: 1,
             },
-          }
+          },
         )
         .toArray();
       for (const offer of othersOffersDb) {
@@ -2918,7 +2917,7 @@ describe('vendor offer management', () => {
             vendorUserId:
               offerWithCustomDisclosure.credentialSubject.vendorUserId,
           },
-        ])
+        ]),
       );
     });
 
@@ -2949,7 +2948,7 @@ describe('vendor offer management', () => {
           {
             vendorUserId: offerRejected.credentialSubject.vendorUserId,
           },
-        ])
+        ]),
       );
     });
 
@@ -2978,7 +2977,7 @@ describe('vendor offer management', () => {
           {
             vendorUserId: oldestOffer.credentialSubject.vendorUserId,
           },
-        ])
+        ]),
       );
     });
 
@@ -3018,7 +3017,7 @@ describe('vendor offer management', () => {
           {
             vendorUserId: customOffer.credentialSubject.vendorUserId,
           },
-        ])
+        ]),
       );
     });
   });

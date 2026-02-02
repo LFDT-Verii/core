@@ -26,6 +26,6 @@ module.exports = (app, options, next = () => {}) => {
       mutable: false,
       extensions: [autoboxIdsExtension, registrarConsentRepoExtension],
     },
-    app
+    app,
   );
 };

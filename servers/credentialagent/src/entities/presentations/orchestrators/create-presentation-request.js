@@ -35,7 +35,7 @@ const createPresentationRequest = async (disclosure, exchange, context) => {
     presentation_definition: await buildPresentationDefinition(
       disclosure,
       exchange,
-      context
+      context,
     ),
   };
 };
@@ -60,8 +60,8 @@ const buildPresentationDefinition = async (disclosure, exchange, context) => {
     map(
       ({ type }) =>
         getCredentialTypeDescriptor({ type, includeDisplay: false }, context),
-      disclosure.types
-    )
+      disclosure.types,
+    ),
   );
 
   return {
@@ -72,7 +72,7 @@ const buildPresentationDefinition = async (disclosure, exchange, context) => {
     input_descriptors: buildInputDescriptors(disclosure.types, rawDescriptors),
     submission_requirements: buildSubmissionRequirements(
       exchange,
-      rawDescriptors
+      rawDescriptors,
     ),
   };
 };
@@ -88,7 +88,8 @@ const buildMetadata = (
   disclosure,
   exchange,
   orgProfile,
-  { config: { hostUrl }, tenant }
+  { config: { hostUrl }, tenant },
+  // eslint-disable-next-line complexity
 ) => {
   const baseUrl = `${hostUrl}/api/holder/v0.6/org/${encodeURI(tenant.did)}`;
 

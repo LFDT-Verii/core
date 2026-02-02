@@ -11,7 +11,7 @@ import {
   VCLXVnfProtocolVersion,
   vnfProtocolVersionFromString,
 } from '@verii/vnf-nodejs-wallet-sdk';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 require('dotenv').config({ path: '.local.env' });
 
 type GlobalConfigType = {
@@ -28,10 +28,10 @@ const GlobalConfig: GlobalConfigType = {
   port: env.get('PORT').required().asIntPositive(),
   host: env.get('HOST').required().asString(),
   environment: environmentFromString(
-    env.get('ENVIRONMENT').required().asString()
+    env.get('ENVIRONMENT').required().asString(),
   ),
   xVnfProtocolVersion: vnfProtocolVersionFromString(
-    env.get('X_VNF_PROTOCOL').required().asString()
+    env.get('X_VNF_PROTOCOL').required().asString(),
   ),
   isDebugOn: env.get('IS_DEBUG_ON').required().asBool(),
 };

@@ -13,5 +13,5 @@ module.exports = (app) =>
         issuer: { id: 'did:velocity:issuer' },
         ...overrides(),
       };
-    }
+    },
   );

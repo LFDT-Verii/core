@@ -10,6 +10,6 @@ import VCLJwt from '../../../api/entities/VCLJwt';
 export default interface CredentialsByDeepLinkVerifier {
     verifyCredentials(
         jwtCredentials: VCLJwt[],
-        deepLink: VCLDeepLink
+        deepLink: VCLDeepLink,
     ): Promise<boolean>;
 }

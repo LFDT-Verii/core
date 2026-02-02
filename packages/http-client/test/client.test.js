@@ -57,7 +57,7 @@ describe('Http Client Package', () => {
         expect(
           buildUrl({ origin, rootPath: '' }, '/api2/v1', {
             searchParams: new URLSearchParams('x=1&y=2'),
-          })
+          }),
         ).toEqual([origin, '/api2/v1?x=1&y=2']);
       });
       it('should resolve host with /api root path', () => {
@@ -76,7 +76,7 @@ describe('Http Client Package', () => {
         expect(
           buildUrl({ origin, rootPath: '/api' }, '/v1', {
             searchParams: new URLSearchParams('x=1&y=2'),
-          })
+          }),
         ).toEqual([origin, '/api/v1?x=1&y=2']);
       });
     });
@@ -84,24 +84,24 @@ describe('Http Client Package', () => {
     describe('Build URL ignoring host with full url is used', () => {
       it('should resolve host with empty root path', () => {
         expect(buildUrl({ origin, rootPath: '' }, `${origin2}/api/v1`)).toEqual(
-          [origin2, '/api/v1']
+          [origin2, '/api/v1'],
         );
       });
       it('should resolve host with /api root path', () => {
         expect(
-          buildUrl({ origin, rootPath: '/api' }, `${origin2}/api2/v1`)
+          buildUrl({ origin, rootPath: '/api' }, `${origin2}/api2/v1`),
         ).toEqual([origin2, '/api2/v1']);
       });
       it('should resolve host with /api root path and url with search params', () => {
         expect(
-          buildUrl({ origin, rootPath: '/api' }, `${origin2}/api2/v1?query=1`)
+          buildUrl({ origin, rootPath: '/api' }, `${origin2}/api2/v1?query=1`),
         ).toEqual([origin2, '/api2/v1?query=1']);
       });
       it('should resolve host with /api root path and with options search params', () => {
         expect(
           buildUrl({ origin, rootPath: '/api' }, `${origin2}/api2/v1`, {
             searchParams: new URLSearchParams('x=1&y=2'),
-          })
+          }),
         ).toEqual([origin2, '/api2/v1?x=1&y=2']);
       });
     });
@@ -123,7 +123,7 @@ describe('Http Client Package', () => {
         expect(
           buildUrl(undefined, `${origin2}/api2/v1`, {
             searchParams: new URLSearchParams('x=1&y=2'),
-          })
+          }),
         ).toEqual([origin2, '/api2/v1?x=1&y=2']);
       });
     });
@@ -169,11 +169,11 @@ describe('Http Client Package', () => {
       expect(
         parseOptions({
           requestTimeout: 3,
-        })
+        }),
       ).toEqual(
         expectedHttpOptions({
           'clientOptions.bodyTimeout': 3,
-        })
+        }),
       );
     });
     it('should create a client with rejectUnauthorized false', () => {
@@ -181,12 +181,12 @@ describe('Http Client Package', () => {
         parseOptions({
           requestTimeout: 2,
           tlsRejectUnauthorized: false,
-        })
+        }),
       ).toEqual(
         expectedHttpOptions({
           'clientOptions.bodyTimeout': 2,
           'clientOptions.connect.rejectUnauthorized': false,
-        })
+        }),
       );
     });
   });

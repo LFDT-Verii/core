@@ -33,10 +33,10 @@ const toJwk = (coseKey) => {
     return {
       kty: 'RSA',
       n: Buffer.from(coseKey.getParam(RSAKeyParameters.N)).toString(
-        'base64url'
+        'base64url',
       ),
       e: Buffer.from(coseKey.getParam(RSAKeyParameters.E)).toString(
-        'base64url'
+        'base64url',
       ),
     };
   }
@@ -75,7 +75,7 @@ const fromJwk = (jwk) => {
         EC2KeyParameters.Crv,
         jwk.crv === 'secp256k1'
           ? EllipticCurves.Secp256k1
-          : EllipticCurves.P_256
+          : EllipticCurves.P_256,
       )
       .setParam(EC2KeyParameters.X, Buffer.from(jwk.x, 'base64url'))
       .setParam(EC2KeyParameters.Y, y);

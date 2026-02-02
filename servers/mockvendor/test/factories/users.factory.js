@@ -20,5 +20,5 @@ module.exports = (app) =>
         label: 'test-label',
         ...overrides(),
       };
-    }
+    },
   );

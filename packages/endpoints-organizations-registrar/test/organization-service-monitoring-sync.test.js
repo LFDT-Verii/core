@@ -34,9 +34,10 @@ const serviceAgentVersionMock = '0.9.0-build.abc12345';
 
 const setServicePingNock = (
   serviceEndpoint,
+  // eslint-disable-next-line default-param-last
   versionFlag = true,
   statusCode,
-  delay = 10
+  delay = 10,
 ) => {
   const uri = new URL(serviceEndpoint);
   const version = versionFlag ? `\nVersion: ${serviceAgentVersionMock}` : '';
@@ -49,7 +50,7 @@ const setServicePingNock = (
     .delay(delay)
     .reply(
       statusCode != null ? statusCode : 200,
-      `Welcome to Credential APIs\nHost: https://devagent.velocitycareerlabs.io ${version}`
+      `Welcome to Credential APIs\nHost: https://devagent.velocitycareerlabs.io ${version}`,
     );
 };
 
@@ -248,7 +249,7 @@ const setGetMonitorsNock = (dids, serviceIds) => {
             },
           },
         }),
-        didArray
+        didArray,
       ),
     });
 };
@@ -257,7 +258,7 @@ const getUrlFailNock = (host, url) => () => nock(host).get(url).reply(500, '');
 
 const setGetSectionsFailNock = getUrlFailNock(
   'https://betteruptime.com',
-  /api\/v2\/status-pages\/\d{6}\/sections/
+  /api\/v2\/status-pages\/\d{6}\/sections/,
 );
 
 const nockExecuted = (pendingMockString) => (nockScope) => {
@@ -268,7 +269,7 @@ const nockExecuted = (pendingMockString) => (nockScope) => {
 const getServiceVersionNockExecuted = (uri) => nockExecuted(`GET ${uri}`);
 
 const postMonitorNockExecuted = nockExecuted(
-  'POST https://betteruptime.com:443/api/v2/monitors'
+  'POST https://betteruptime.com:443/api/v2/monitors',
 );
 
 describe('Monitoring Test Suite', () => {
@@ -400,7 +401,7 @@ describe('Monitoring Test Suite', () => {
         const serviceVersion0Nock = setServicePingNock(
           serviceEndpoints[0],
           undefined,
-          500
+          500,
         );
         const serviceVersion1Nock = setServicePingNock(serviceEndpoints[1]);
         setGetMonitorsNock([], []);
@@ -417,13 +418,13 @@ describe('Monitoring Test Suite', () => {
         expect(response.statusCode).toEqual(204);
         expect(
           getServiceVersionNockExecuted(serviceEndpoints[0])(
-            serviceVersion0Nock
-          )
+            serviceVersion0Nock,
+          ),
         ).toEqual(true);
         expect(
           getServiceVersionNockExecuted(serviceEndpoints[1])(
-            serviceVersion1Nock
-          )
+            serviceVersion1Nock,
+          ),
         ).toEqual(true);
         for (const monitorEventNock of monitorEventNocks) {
           expect(postMonitorNockExecuted(monitorEventNock)).toEqual(true);

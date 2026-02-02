@@ -79,10 +79,10 @@ describe('Verify credentials', () => {
         Promise.resolve({
           id: issuerDid,
           publicKey: [{ id: '#key-1', publicKeyJwk: orgKeyPair.publicJwk }],
-        })
+        }),
       ),
       getOrganizationVerifiedProfile: mock.fn(() =>
-        Promise.resolve(mockGetOrganizationVerifiedProfile)
+        Promise.resolve(mockGetOrganizationVerifiedProfile),
       ),
       getCredentialTypeMetadata: mock.fn(() =>
         Promise.resolve([
@@ -102,7 +102,7 @@ describe('Verify credentials', () => {
               ['credentialSubject', 'issuer', 'id'],
             ],
           },
-        ])
+        ]),
       ),
     };
     context = {
@@ -197,12 +197,12 @@ describe('Verify credentials', () => {
         openBadgeVc = await generateCredentialJwt(
           openBadgeCredential,
           orgKeyPair.privateJwk,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
         idVc = await generateCredentialJwt(
           idCredential,
           orgKeyPair.privateJwk,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
       });
 
@@ -214,7 +214,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -246,7 +246,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltOperatorKMSKeyId: orgKeyPair.publicKey },
           },
           fetchers,
-          kmsContext
+          kmsContext,
         );
 
         expect(result).toEqual([
@@ -262,10 +262,10 @@ describe('Verify credentials', () => {
           },
         ]);
         expect(
-          initMetadataRegistry.mock.calls.map((call) => call.arguments)
+          initMetadataRegistry.mock.calls.map((call) => call.arguments),
         ).toEqual([[{ privateKey: orgKeyPair.privateKey }, kmsContext]]);
         expect(
-          resolveDidDocument.mock.calls.map((call) => call.arguments)
+          resolveDidDocument.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -292,7 +292,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -321,7 +321,7 @@ describe('Verify credentials', () => {
         const legacyOpenBadgeVc = await generateCredentialJwt(
           legacyOpenBadgeCredential,
           orgKeyPair.privateJwk,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
 
         const result = await verifyCredentials(
@@ -331,7 +331,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -356,7 +356,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -388,7 +388,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltOperatorKMSKeyId: orgKeyPair.publicKey },
           },
           fetchers,
-          kmsContext
+          kmsContext,
         );
 
         expect(result).toEqual([
@@ -404,10 +404,10 @@ describe('Verify credentials', () => {
           },
         ]);
         expect(
-          initMetadataRegistry.mock.calls.map((call) => call.arguments)
+          initMetadataRegistry.mock.calls.map((call) => call.arguments),
         ).toEqual([[{ privateKey: orgKeyPair.privateKey }, kmsContext]]);
         expect(
-          resolveDidDocument.mock.calls.map((call) => call.arguments)
+          resolveDidDocument.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -434,7 +434,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -463,7 +463,7 @@ describe('Verify credentials', () => {
         const legacyOpenBadgeVc = await generateCredentialJwt(
           legacyOpenBadgeCredential,
           orgKeyPair.privateJwk,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
 
         const result = await verifyCredentials(
@@ -473,7 +473,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -506,7 +506,7 @@ describe('Verify credentials', () => {
               },
             ],
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -531,7 +531,7 @@ describe('Verify credentials', () => {
             expectedHolderDid: issuerDidJwk,
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -560,7 +560,7 @@ describe('Verify credentials', () => {
         const legacyOpenBadgeVc = await generateCredentialJwt(
           legacyOpenBadgeCredential,
           orgKeyPair.privateJwk,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
 
         const result = await verifyCredentials(
@@ -570,7 +570,7 @@ describe('Verify credentials', () => {
             expectedHolderDid: issuerDidJwk,
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -598,7 +598,7 @@ describe('Verify credentials', () => {
         const vcWithArrayOfStatus = await generateCredentialJwt(
           credentialWithArrayOfStatus,
           orgKeyPair.privateKey,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
         const result = await verifyCredentials(
           {
@@ -607,7 +607,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -635,11 +635,11 @@ describe('Verify credentials', () => {
               'credentialSubject.id',
               'vnfProtocolVersion',
             ],
-            openBadgeCredential
+            openBadgeCredential,
           ),
           expirationDate: flow(
             setMilliseconds(0),
-            addHours(10)
+            addHours(10),
           )(new Date()).toISOString(),
         };
         const signedCredential = await jwtSign(
@@ -650,12 +650,12 @@ describe('Verify credentials', () => {
             iat: new Date(unsignedCredential.issuanceDate),
             exp: new Date(unsignedCredential.expirationDate),
             kid: `${did}#0`,
-          }
+          },
         );
         const result = await verifyCredentials(
           { credentials: [signedCredential] },
           fetchers,
-          context
+          context,
         );
         const { header } = jwtDecode(signedCredential);
         expect(header).toEqual({
@@ -683,10 +683,10 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
         expect(
-          resolveDidDocument.mock.calls.map((call) => call.arguments)
+          resolveDidDocument.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             did: `did:velocity:v2:multi:${openBadgeCredential.id
@@ -710,7 +710,7 @@ describe('Verify credentials', () => {
         const unsignedCredential = {
           ...omit(
             ['credentialSubject.id', 'vnfProtocolVersion'],
-            openBadgeCredential
+            openBadgeCredential,
           ),
           id: credentialId,
           credentialStatus: { type: 'WalletStatusList', id: '123' },
@@ -723,12 +723,12 @@ describe('Verify credentials', () => {
             jti: credentialId,
             iat: new Date(openBadgeCredential.issuanceDate),
             jwk: keyPair.publicJwk,
-          }
+          },
         );
         const result = await verifyCredentials(
           { credentials: [signedCredential] },
           fetchers,
-          context
+          context,
         );
         const { header } = jwtDecode(signedCredential);
         expect(header).toEqual({
@@ -762,7 +762,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
         expect(result).toEqual([
           {
@@ -785,7 +785,7 @@ describe('Verify credentials', () => {
           ...omit(['id'], openBadgeCredential),
           expirationDate: flow(
             setMilliseconds(0),
-            addHours(10)
+            addHours(10),
           )(new Date()).toISOString(),
         };
         const signedCredential = await jwtSign(
@@ -796,12 +796,12 @@ describe('Verify credentials', () => {
             iat: new Date(unsignedCredential.issuanceDate),
             exp: new Date(unsignedCredential.expirationDate),
             kid: `${didWeb}#key-1`,
-          }
+          },
         );
         const result = await verifyCredentials(
           { credentials: [signedCredential] },
           fetchers,
-          context
+          context,
         );
         const { header } = jwtDecode(signedCredential);
         expect(header).toEqual({
@@ -837,8 +837,8 @@ describe('Verify credentials', () => {
               relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
             },
             fetchers,
-            context
-          )
+            context,
+          ),
         ).resolves.toEqual([
           {
             credential: idCredential,
@@ -857,7 +857,7 @@ describe('Verify credentials', () => {
         const signedCredential = await generateCredentialJwt(
           idCredential,
           generateKeyPair({ format: 'jwk' }).privateKey,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
         const result = await verifyCredentials(
           {
@@ -866,7 +866,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -918,13 +918,13 @@ describe('Verify credentials', () => {
               await generateCredentialJwt(
                 openBadgeCredential,
                 orgKeyPair.privateJwk,
-                credentialDid
+                credentialDid,
               ),
             ],
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toMatchObject([
@@ -949,7 +949,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           { ...fetchers, resolveDid: () => Promise.reject(new Error()) },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -977,7 +977,7 @@ describe('Verify credentials', () => {
             ...fetchers,
             getCredentialTypeMetadata: () => Promise.reject(new Error()),
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -1007,7 +1007,7 @@ describe('Verify credentials', () => {
               id: 'did:ion:otherDid',
             }),
           },
-          context
+          context,
         );
 
         expect(result).toMatchObject([
@@ -1035,7 +1035,7 @@ describe('Verify credentials', () => {
             ...fetchers,
             getOrganizationVerifiedProfile: async () => ({}),
           },
-          context
+          context,
         );
 
         expect(result).toMatchObject([
@@ -1068,7 +1068,7 @@ describe('Verify credentials', () => {
               },
             ],
           },
-          context
+          context,
         );
 
         expect(result).toMatchObject([
@@ -1092,7 +1092,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -1117,7 +1117,7 @@ describe('Verify credentials', () => {
         const signedCredential = await generateCredentialJwt(
           credentialWithVnfProtocolV1,
           orgKeyPair.privateJwk,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
 
         const result = await verifyCredentials(
@@ -1126,7 +1126,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -1155,7 +1155,7 @@ describe('Verify credentials', () => {
         const vcWithoutCorrectStatus = await generateCredentialJwt(
           credentialWithoutCorrectStatus,
           orgKeyPair.privateKey,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
         const result = await verifyCredentials(
           {
@@ -1164,7 +1164,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -1193,7 +1193,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -1222,7 +1222,7 @@ describe('Verify credentials', () => {
             relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
           },
           fetchers,
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -1238,7 +1238,7 @@ describe('Verify credentials', () => {
           },
         ]);
       });
-    })
+    }),
   );
 });
 

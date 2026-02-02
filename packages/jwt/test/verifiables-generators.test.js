@@ -53,7 +53,7 @@ describe('Verifiable Generator Tests', () => {
       const result = await generateCredentialJwt(
         minimalJsonLdCredential,
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       const verified = await jwtVerify(result, keyPair.publicKey);
 
@@ -79,7 +79,7 @@ describe('Verifiable Generator Tests', () => {
         minimalJsonLdCredential,
         keyPair.privateKey,
         'KEY-ID',
-        KeyAlgorithms.ES256
+        KeyAlgorithms.ES256,
       );
       const verified = await jwtVerify(result, keyPair.publicKey);
 
@@ -111,7 +111,7 @@ describe('Verifiable Generator Tests', () => {
         minimalJsonLdCredential,
         keyPair.privateKey,
         'KEY-ID',
-        KeyAlgorithms.RS256
+        KeyAlgorithms.RS256,
       );
       const verified = await jwtVerify(result, keyPair.publicKey);
 
@@ -145,7 +145,7 @@ describe('Verifiable Generator Tests', () => {
       const result = await generateCredentialJwt(
         maximalJsonLdCredential,
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       const verified = await jwtVerify(result, keyPair.publicKey);
 
@@ -179,7 +179,7 @@ describe('Verifiable Generator Tests', () => {
           issuer: minimalJsonLdCredential.issuer.id,
         },
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       const verified = await jwtVerify(result, keyPair.publicKey);
 
@@ -211,7 +211,7 @@ describe('Verifiable Generator Tests', () => {
       });
       const result = await generatePresentationJwt(
         presentation,
-        keyPair.privateKey
+        keyPair.privateKey,
       );
       const verified = await jwtVerify(result, keyPair.publicKey, {
         complete: true,
@@ -240,7 +240,7 @@ describe('Verifiable Generator Tests', () => {
         presentation,
         keyPair.privateKey,
         null,
-        KeyAlgorithms.ES256
+        KeyAlgorithms.ES256,
       );
       const verified = await jwtVerify(result, keyPair.publicKey, {
         complete: true,
@@ -269,7 +269,7 @@ describe('Verifiable Generator Tests', () => {
         presentation,
         keyPair.privateKey,
         null,
-        KeyAlgorithms.RS256
+        KeyAlgorithms.RS256,
       );
       const verified = await jwtVerify(result, keyPair.publicKey, {
         complete: true,

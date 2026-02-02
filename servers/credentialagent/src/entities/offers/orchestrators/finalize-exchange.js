@@ -22,12 +22,12 @@ const finalizeExchange = async (exchange, newFinalizedOfferIds, context) => {
 
   const finalizedOfferIds = concat(
     exchange.finalizedOfferIds ?? [],
-    newFinalizedOfferIds
+    newFinalizedOfferIds,
   );
 
   const remainingOfferIds = difference(
     map(toString, exchange.offerIds),
-    map(toString, finalizedOfferIds)
+    map(toString, finalizedOfferIds),
   );
 
   if (

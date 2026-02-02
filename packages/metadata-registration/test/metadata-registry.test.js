@@ -55,7 +55,7 @@ const testListAlgType = '0x6b86';
 const testListVersion = '0xa38d';
 const regularIssuingCredentialType = 'AssessmentV1.1';
 const regularIssuingCredentialTypeHash = get2BytesHash(
-  regularIssuingCredentialType
+  regularIssuingCredentialType,
 );
 const identityIssuingCredentialTypeHash = '0xdeef';
 const contactIssuingCredentialTypeHash = '0x4ffb';
@@ -141,13 +141,13 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
     const permissionsAddress = await deployPermissionContract();
     const verificationCouponAddress = await deployVerificationCouponContract(
       permissionsAddress,
-      context
+      context,
     );
     metadataAddress = await deployMetadataContract(
       freeCredentialTypesList,
       verificationCouponAddress,
       permissionsAddress,
-      context
+      context,
     );
 
     const primaryKeyPair = generateKeyPair();
@@ -162,7 +162,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         contractAddress: verificationCouponAddress,
         rpcProvider,
       },
-      context
+      context,
     );
 
     deployerPermissionsClient = await initPermissions(
@@ -171,7 +171,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         contractAddress: permissionsAddress,
         rpcProvider,
       },
-      context
+      context,
     );
     await deployerPermissionsClient.addPrimary({
       primary: primaryAddress,
@@ -185,7 +185,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         contractAddress: permissionsAddress,
         rpcProvider,
       },
-      context
+      context,
     );
     await operatorPermissionsClient.addOperatorKey({
       primary: primaryAddress,
@@ -207,7 +207,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         contractAddress: metadataAddress,
         rpcProvider,
       },
-      context
+      context,
     );
   });
 
@@ -244,7 +244,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           primaryAddress,
           1001,
           vc,
-          caoDid
+          caoDid,
         );
       expect(result).toEqual(true);
     });
@@ -256,7 +256,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           2001,
           vc,
           caoDid,
-          ALG_TYPE.COSEKEY_AES_256
+          ALG_TYPE.COSEKEY_AES_256,
         );
       expect(result).toEqual(true);
     });
@@ -269,7 +269,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           vc,
           caoDid,
           '',
-          ''
+          '',
         );
       expect(result).toEqual(true);
     });
@@ -279,7 +279,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         primaryAddress,
         listId,
         vc,
-        caoDid
+        caoDid,
       );
 
       const result =
@@ -287,7 +287,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           primaryAddress,
           listId,
           vc,
-          caoDid
+          caoDid,
         );
       expect(result).toEqual(false);
     });
@@ -319,7 +319,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           listId,
           vc,
           caoDid,
-          algType
+          algType,
         );
       });
 
@@ -334,7 +334,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             metadata,
             password,
             caoDid,
-            algType
+            algType,
           );
 
         expect(result0).toEqual(true);
@@ -352,7 +352,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             metadata,
             password,
             caoDid,
-            algType
+            algType,
           );
         expect(result).toEqual(true);
       });
@@ -362,7 +362,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           baseCredentialMetadata,
           password,
           caoDid,
-          algType
+          algType,
         );
 
         const result =
@@ -370,7 +370,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             baseCredentialMetadata,
             password,
             caoDid,
-            algType
+            algType,
           );
         await expect(result).rejects.toThrow('Index already used');
       });
@@ -387,8 +387,8 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             metadata,
             password,
             caoDid,
-            algType
-          )
+            algType,
+          ),
         ).rejects.toThrow('Index already used');
       });
 
@@ -407,7 +407,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             metadata,
             password,
             caoDid,
-            algType
+            algType,
           );
 
           await deployerPermissionsClient.addAddressScope({
@@ -441,7 +441,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             metadata,
             password,
             caoDid,
-            algType
+            algType,
           );
           expect(true).toEqual('should have thrown');
         } catch (e) {
@@ -464,7 +464,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             metadata,
             password,
             caoDid,
-            algType
+            algType,
           );
           expect(true).toEqual('should have thrown');
         } catch (e) {
@@ -482,7 +482,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
       ];
       const did = buildMultiDid(indexEntries, 'did:wrongformat:');
       expect(() =>
-        operatorMetadataRegistryClient.parseVelocityV2Did(did)
+        operatorMetadataRegistryClient.parseVelocityV2Did(did),
       ).toThrow(`Wrong did ${did}`);
     });
 
@@ -493,7 +493,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
       ];
       const did = buildMultiDid(indexEntries);
       await expect(
-        operatorMetadataRegistryClient.parseVelocityV2Did(did)
+        operatorMetadataRegistryClient.parseVelocityV2Did(did),
       ).toEqual(
         map(
           ([accountId, listId, index, contentHash]) => ({
@@ -502,8 +502,8 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             index,
             contentHash,
           }),
-          indexEntries
-        )
+          indexEntries,
+        ),
       );
     });
   });
@@ -512,28 +512,28 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
     it('Check the credential types list when all are free', async () => {
       const checkList = await Promise.all(
         freeCredentialTypesList.map((type) =>
-          operatorMetadataRegistryClient.isFreeCredentialType(type)
-        )
+          operatorMetadataRegistryClient.isFreeCredentialType(type),
+        ),
       );
       expect(checkList.every((check) => check)).toEqual(true);
       expect(
         await operatorMetadataRegistryClient.isFreeCredentialTypeList(
-          freeCredentialTypesList
-        )
+          freeCredentialTypesList,
+        ),
       ).toEqual(true);
     });
     it('Check the credential types list when one of them is not free', async () => {
       const checkList = await Promise.all(
         [...freeCredentialTypesList, 'NotFreeType'].map((type) =>
-          operatorMetadataRegistryClient.isFreeCredentialType(type)
-        )
+          operatorMetadataRegistryClient.isFreeCredentialType(type),
+        ),
       );
       expect(checkList.every((check) => check)).toEqual(false);
       expect(
         await operatorMetadataRegistryClient.isFreeCredentialTypeList([
           ...freeCredentialTypesList,
           'NotFreeType',
-        ])
+        ]),
       ).toEqual(false);
     });
   });
@@ -558,7 +558,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         primaryAddress,
         1,
         vc,
-        caoDid
+        caoDid,
       );
       await operatorMetadataRegistryClient.setEntrySigned(
         regularIssuingCredentialTypeHash,
@@ -566,7 +566,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         1,
         1,
         traceId,
-        caoDid
+        caoDid,
       );
       await operatorMetadataRegistryClient.setEntrySigned(
         identityIssuingCredentialTypeHash,
@@ -574,7 +574,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         1,
         2,
         traceId,
-        caoDid
+        caoDid,
       );
       await operatorMetadataRegistryClient.setEntrySigned(
         contactIssuingCredentialTypeHash,
@@ -582,14 +582,14 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         1,
         3,
         traceId,
-        caoDid
+        caoDid,
       );
     });
 
     it('Check if the metadata list exists', async () => {
       const result = await operatorMetadataRegistryClient.isExistMetadataList(
         1,
-        primaryAddress
+        primaryAddress,
       );
       expect(result).toEqual(true);
     });
@@ -597,7 +597,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
     it('Check if the metadata list does not exist', async () => {
       const result = await operatorMetadataRegistryClient.isExistMetadataList(
         42,
-        primaryAddress
+        primaryAddress,
       );
       expect(result).toEqual(false);
     });
@@ -617,22 +617,22 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           entryIndexes,
           traceId,
           caoDid,
-          burnerDid
+          burnerDid,
         );
         await expect(
           operatorMetadataRegistryClient.getPaidEntriesSigned(
             entryIndexes,
             traceId,
             caoDid,
-            burnerDid
-          )
+            burnerDid,
+          ),
         ).rejects.toThrow('No available tokens');
         const contractError = await operatorMetadataRegistryClient
           .getPaidEntriesSigned(entryIndexes, traceId, caoDid, burnerDid)
           .catch((error) => error);
         expect(contractError.reason).toEqual('No available tokens');
         await expect(
-          deployerVerificationCouponClient.getCoupon(operatorAddress)
+          deployerVerificationCouponClient.getCoupon(operatorAddress),
         ).rejects.toThrow('No available tokens');
       });
       it('Get an paid entry', async () => {
@@ -642,18 +642,17 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             entryIndexes,
             traceId,
             caoDid,
-            burnerDid
+            burnerDid,
           );
         entries.map((entry, i) =>
-          expect(JSON.parse(JSON.stringify(entry))).toEqual(expectedEntries[i])
+          expect(JSON.parse(JSON.stringify(entry))).toEqual(expectedEntries[i]),
         );
       });
       it('Get an entry without coupon if the credential type is free', async () => {
         const entryIndexes = [[primaryAddress, 1, 2]];
 
-        const entries = await operatorMetadataRegistryClient.getFreeEntries(
-          entryIndexes
-        );
+        const entries =
+          await operatorMetadataRegistryClient.getFreeEntries(entryIndexes);
         entries.map((entry) =>
           expect(JSON.parse(JSON.stringify(entry))).toEqual([
             testListAlgType,
@@ -661,7 +660,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             testListVersion,
             bytes,
             bytes2,
-          ])
+          ]),
         );
       });
 
@@ -676,10 +675,10 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             entryIndexes,
             traceId,
             caoDid,
-            burnerDid
+            burnerDid,
           );
         entries.map((entry, i) =>
-          expect(JSON.parse(JSON.stringify(entry))).toEqual(expectedEntries[i])
+          expect(JSON.parse(JSON.stringify(entry))).toEqual(expectedEntries[i]),
         );
       });
     });
@@ -724,7 +723,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           });
         const entriesJson = map(
           (entry) => JSON.parse(JSON.stringify(entry)),
-          entries
+          entries,
         );
         expect(entriesJson).toEqual(expectedEntries);
       });
@@ -744,7 +743,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             burnerDid,
           });
         entries.map((entry) =>
-          expect(JSON.parse(JSON.stringify(entry))).toEqual(expectedEntries[1])
+          expect(JSON.parse(JSON.stringify(entry))).toEqual(expectedEntries[1]),
         );
       });
 
@@ -809,12 +808,12 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             primaryAddress,
             listId,
             vc,
-            caoDid
+            caoDid,
           );
           await operatorMetadataRegistryClient.addCredentialMetadataEntry(
             credentialMetadata,
             password,
-            caoDid
+            caoDid,
           );
         });
         beforeEach(async () => {
@@ -927,7 +926,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             vc,
             caoDid,
             'unsupported algorithm',
-            '1'
+            '1',
           );
           await operatorMetadataRegistryClient.setEntrySigned(
             regularIssuingCredentialTypeHash,
@@ -935,11 +934,11 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             badIndexEntry[1],
             badIndexEntry[2],
             traceId,
-            caoDid
+            caoDid,
           );
           const credentialData = {
             id: buildDid(
-              resolveWithSuffix ? badIndexEntry : badIndexEntry.slice(0, -1)
+              resolveWithSuffix ? badIndexEntry : badIndexEntry.slice(0, -1),
             ),
             credentialType: regularIssuingCredentialType,
           };
@@ -956,7 +955,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           });
 
           await expect(result).rejects.toThrow(
-            'Unsupported algorithm (0x682d). Valid values are aes-256-gcm (0xa38d) or cosekey:aes-256-gcm (0xd19a)'
+            'Unsupported algorithm (0x682d). Valid values are aes-256-gcm (0xa38d) or cosekey:aes-256-gcm (0xd19a)',
           );
         });
 
@@ -973,7 +972,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           });
 
           await expect(result).rejects.toThrow(
-            'Invalid hash credentialType "Wrong type!"'
+            'Invalid hash credentialType "Wrong type!"',
           );
         });
         it('Missed credential type field in VC', async () => {
@@ -989,7 +988,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           });
 
           await expect(result).rejects.toThrow(
-            `Could not resolve credential type from VC with ${badCredential.id}`
+            `Could not resolve credential type from VC with ${badCredential.id}`,
           );
         });
 
@@ -1006,7 +1005,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           });
 
           await expect(result).rejects.toThrow(
-            `Could not resolve content hash from VC with ${badCredential.id}`
+            `Could not resolve content hash from VC with ${badCredential.id}`,
           );
         });
       });
@@ -1028,7 +1027,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           publicKey: keyPair.publicKey,
           credentialTypeEncoded: get2BytesHash(defaultCredentialType),
         }),
-        keyPairs
+        keyPairs,
       );
 
       before(async () => {
@@ -1037,12 +1036,12 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           first(credentialMetadatas).listId,
           vc,
           caoDid,
-          ALG_TYPE.COSEKEY_AES_256
+          ALG_TYPE.COSEKEY_AES_256,
         );
         credentialIds = map(
           (credentialMetadata) =>
             `did:velocity:v2:${primaryAddress}:${credentialMetadata.listId}:${credentialMetadata.index}:${password}`,
-          credentialMetadatas
+          credentialMetadatas,
         );
 
         for (const credentialMetadata of credentialMetadatas) {
@@ -1051,7 +1050,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             credentialMetadata,
             password,
             caoDid,
-            ALG_TYPE.COSEKEY_AES_256
+            ALG_TYPE.COSEKEY_AES_256,
           );
         }
       });
@@ -1096,7 +1095,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             id,
             credentialType: defaultCredentialType,
           }),
-          credentialIds
+          credentialIds,
         );
         const indexEntries = [
           [
@@ -1162,7 +1161,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             !i
               ? `${multiDid}:${accountId}:${listId}:${index}:${pass}`
               : `${multiDid};${accountId}:${listId}:${index}:${pass}`,
-          'did:velocity:v2:multi'
+          'did:velocity:v2:multi',
         );
         const credential = {
           id: `did:velocity:v2:${entryIndexes[0][0]}:${entryIndexes[0][1]}:${entryIndexes[0][2]}:${entryIndexes[0][3]}`,
@@ -1205,13 +1204,13 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           vc,
           caoDid,
           'unsupported algorithm',
-          '1'
+          '1',
         );
         await operatorMetadataRegistryClient.addCredentialMetadataEntry(
           { ...credentialMetadatas[0], listId },
           password,
           caoDid,
-          ALG_TYPE.COSEKEY_AES_256
+          ALG_TYPE.COSEKEY_AES_256,
         );
 
         const credentialData = {
@@ -1230,7 +1229,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         });
 
         await expect(result).rejects.toThrow(
-          'Unsupported algorithm (0x682d). Valid values are aes-256-gcm (0xa38d) or cosekey:aes-256-gcm (0xd19a)'
+          'Unsupported algorithm (0x682d). Valid values are aes-256-gcm (0xa38d) or cosekey:aes-256-gcm (0xd19a)',
         );
       });
 
@@ -1247,7 +1246,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         });
 
         await expect(result).rejects.toThrow(
-          'Invalid hash credentialType "Wrong type!"'
+          'Invalid hash credentialType "Wrong type!"',
         );
       });
       it('Missed credential type field in VC', async () => {
@@ -1263,7 +1262,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         });
 
         await expect(result).rejects.toThrow(
-          `Could not resolve credential type from VC with ${credentialIds[0]}`
+          `Could not resolve credential type from VC with ${credentialIds[0]}`,
         );
       });
 
@@ -1281,7 +1280,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
         });
 
         await expect(result).rejects.toThrow(
-          `Could not resolve content hash from VC with ${did}`
+          `Could not resolve content hash from VC with ${did}`,
         );
       });
     });
@@ -1299,15 +1298,15 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           aggregateArrayOfEvents = aggregateArrayOfEvents.concat(eventsSet);
         }
         expect(aggregateArrayOfEvents[0].args.sender.toLowerCase()).toEqual(
-          primaryAddress.toLowerCase()
+          primaryAddress.toLowerCase(),
         );
 
         expect(aggregateArrayOfEvents[0].args.issuerVc).toEqual(bytes2);
         expect(aggregateArrayOfEvents[0].args.sender.toLowerCase()).toEqual(
-          primaryAddress.toLowerCase()
+          primaryAddress.toLowerCase(),
         );
         expect(aggregateArrayOfEvents[0].fragment.name).toEqual(
-          'CreatedMetadataList'
+          'CreatedMetadataList',
         );
       });
 
@@ -1323,11 +1322,11 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
           aggregateArrayOfEvents = aggregateArrayOfEvents.concat(eventsSet);
         }
         expect(aggregateArrayOfEvents[0].args.sender.toLowerCase()).toEqual(
-          primaryAddress.toLowerCase()
+          primaryAddress.toLowerCase(),
         );
         expect(aggregateArrayOfEvents[0].args.issuerVc).toEqual(bytes2);
         expect(aggregateArrayOfEvents[0].fragment.name).toEqual(
-          'AddedCredentialMetadata'
+          'AddedCredentialMetadata',
         );
       });
     });
@@ -1343,7 +1342,7 @@ const buildMultiDid = (indexEntries, didPrefix = 'did:velocity:v2:multi:') =>
   reduce(
     (multiDid, indexEntry) => `${buildDid(indexEntry, multiDid)};`,
     didPrefix,
-    indexEntries
+    indexEntries,
   ).slice(0, -1);
 
 const didValidation = expect.stringMatching(/^did:velocity:v2:/);

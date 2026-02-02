@@ -15,7 +15,7 @@ const initReadEventsFromBlock = async (context) => {
       contractAddress: config.couponContractAddress,
       rpcProvider: context.rpcProvider,
     },
-    context
+    context,
   );
 
   return async (block) => {
@@ -24,7 +24,7 @@ const initReadEventsFromBlock = async (context) => {
 };
 const syncBurnsWithFineract = async (
   { burnerDidToBundleMap, organizationsMap, burnEvents },
-  context
+  context,
 ) => {
   const { log } = context;
   if (burnerDidToBundleMap.size === 0) {
@@ -43,12 +43,12 @@ const syncBurnsWithFineract = async (
   log.info({ task, voucherQuantitiesToBurn });
   const batchResponses = await batchOperations(
     { clientVoucherBurns: voucherQuantitiesToBurn, transactionalBatch: false },
-    context
+    context,
   );
 
   for (const [payload, batchResponse] of zip(
     voucherQuantitiesToBurn,
-    batchResponses
+    batchResponses,
   )) {
     if (batchResponse.statusCode >= 400)
       log.warn({
@@ -63,7 +63,7 @@ const syncBurnsWithFineract = async (
 
 const writeBurnsToDatabase = async (
   { burnerDidToBundleMap, organizationsMap },
-  context
+  context,
 ) => {
   const { repos } = context;
   if (burnerDidToBundleMap.size === 0) {
@@ -89,7 +89,7 @@ const writeBurnsToDatabase = async (
             $inc: {
               'couponBundle.used': count,
             },
-          }
+          },
         );
 
         return repos.burnedCoupons.insert({
@@ -112,7 +112,7 @@ const processEventGenerator = async ({ eventsCursor }, context) => {
   for await (const selectedEvents of eventsCursor()) {
     const mappedEvents = map(
       (evt) => mapCouponBurned(evt, context),
-      selectedEvents
+      selectedEvents,
     );
     burnEvents = [...burnEvents, ...mappedEvents];
     numberOfEventsRead += selectedEvents.length;
@@ -147,9 +147,8 @@ const handleCouponsBurnedVerificationEvent = async (context) => {
   const lastReadBlock = await readLastSuccessfulBlock();
   log.info({ task, lastReadBlock });
   const initialBlockNumber = lastReadBlock + 1;
-  const { eventsCursor, latestBlock } = await readEventsFromBlock(
-    initialBlockNumber
-  );
+  const { eventsCursor, latestBlock } =
+    await readEventsFromBlock(initialBlockNumber);
 
   const { numberOfEventsRead, burnEvents, burnerDidToBundleMap } =
     await processEventGenerator({ eventsCursor }, context);
@@ -160,7 +159,7 @@ const handleCouponsBurnedVerificationEvent = async (context) => {
   });
 
   const organizations = await repos.organizations.findByDids(
-    Array.from(burnerDidToBundleMap.keys())
+    Array.from(burnerDidToBundleMap.keys()),
   );
   const organizationsMap = new Map();
   for (const organization of organizations) {
@@ -172,11 +171,11 @@ const handleCouponsBurnedVerificationEvent = async (context) => {
 
   await writeBurnsToDatabase(
     { burnerDidToBundleMap, organizationsMap },
-    context
+    context,
   );
   await syncBurnsWithFineract(
     { burnerDidToBundleMap, organizationsMap, burnEvents },
-    context
+    context,
   );
 
   log.info({ task, latestBlock });

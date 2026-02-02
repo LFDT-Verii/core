@@ -77,7 +77,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
     permissionsContractAddress = await deployPermissionContract();
     verificationCouponAddress = await deployVerificationCouponContract(
       permissionsContractAddress,
-      context
+      context,
     );
 
     verificationCouponAdmin = await initVerificationCoupon(
@@ -86,7 +86,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         contractAddress: verificationCouponAddress,
         rpcProvider,
       },
-      context
+      context,
     );
 
     deployerPermissionsContractInstance = await initPermissions(
@@ -95,7 +95,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         contractAddress: permissionsContractAddress,
         rpcProvider,
       },
-      context
+      context,
     );
     verificationCoupon = await initVerificationCouponClient();
   });
@@ -124,7 +124,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
       const { bundleId } = await verificationCouponAdmin.mint({
         toAddress: primaryAddress,
         expirationTime: new Date(
-          Date.now() - 24 * 60 * 60 * 1000
+          Date.now() - 24 * 60 * 60 * 1000,
         ).toISOString(),
         quantity: 1,
         ownerDid,
@@ -144,7 +144,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         traceId,
         caoDid,
         burnerDid,
-        operatorAddress
+        operatorAddress,
       );
       expect(mintEvent.bundleId).toEqual(burnCouponEvent.bundleId);
       expect(toHexString(burnCouponEvent.balance)).toEqual('0x00');
@@ -162,7 +162,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         traceId,
         caoDid,
         burnerDid,
-        operatorAddress
+        operatorAddress,
       );
       await expect(
         verificationCoupon.burn(
@@ -170,8 +170,8 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
           traceId,
           caoDid,
           burnerDid,
-          operatorAddress
-        )
+          operatorAddress,
+        ),
       ).rejects.toThrow(/execution reverted: "Burn: bundle has no balance"/);
     });
   });
@@ -189,7 +189,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         traceId,
         caoDid,
         burnerDid,
-        operatorAddress
+        operatorAddress,
       );
     });
 
@@ -204,10 +204,10 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         aggregateArrayOfEvents = aggregateArrayOfEvents.concat(eventsSet);
       }
       expect(toHexString(aggregateArrayOfEvents[0].args.bundleId)).toEqual(
-        '0x00'
+        '0x00',
       );
       expect(aggregateArrayOfEvents[0].fragment.name).toEqual(
-        'MintCouponBundle'
+        'MintCouponBundle',
       );
     });
 
@@ -222,13 +222,13 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         aggregateArrayOfEvents = aggregateArrayOfEvents.concat(eventsSet);
       }
       expect(toHexString(aggregateArrayOfEvents[0].args.bundleId)).toEqual(
-        '0x02'
+        '0x02',
       );
       const dateOnEvent = new Date(
-        toNumber(aggregateArrayOfEvents[0].args.expirationTime) * 1000
+        toNumber(aggregateArrayOfEvents[0].args.expirationTime) * 1000,
       );
       expect(startOfSecond(dateOnEvent)).toEqual(
-        startOfSecond(new Date(expirationTimeNumber))
+        startOfSecond(new Date(expirationTimeNumber)),
       );
 
       expect(aggregateArrayOfEvents[0].fragment.name).toEqual('BurnCoupon');
@@ -265,10 +265,10 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
           traceId,
           caoDid,
           burnerDid,
-          operatorAddress
+          operatorAddress,
         );
         expect(toNumber(burnEvent.bundleId)).toEqual(
-          toNumber(mintEvent.bundleId)
+          toNumber(mintEvent.bundleId),
         );
         // eslint-disable-next-line no-await-in-loop
         const mintEvent2 = await verificationCouponAdmin.mint({
@@ -285,7 +285,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
     });
     it('Process an error if the account without tokens', async () => {
       expect(verificationCoupon.getCoupon(operatorAddress)).rejects.toThrow(
-        'No available tokens'
+        'No available tokens',
       );
     });
 
@@ -298,17 +298,17 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
       });
 
       const accountWithoutTokens = toEthereumAddress(
-        generateKeyPair().publicKey
+        generateKeyPair().publicKey,
       );
       expect(
-        verificationCoupon.getCoupon(accountWithoutTokens)
+        verificationCoupon.getCoupon(accountWithoutTokens),
       ).rejects.toThrow('Permissions: operator not pointing to a primary');
     });
 
     it('Throw an error if the params invalid', async () => {
       const invalidAddress = 42;
       await expect(
-        verificationCoupon.getCoupon(invalidAddress)
+        verificationCoupon.getCoupon(invalidAddress),
       ).rejects.toThrow(/unsupported addressable value/);
     });
   });
@@ -339,7 +339,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         contractAddress: permissionsContractAddress,
         rpcProvider,
       },
-      context
+      context,
     );
     await operatorPermissionsContractClient.addOperatorKey({
       primary: primaryAddress,
@@ -352,7 +352,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         contractAddress: verificationCouponAddress,
         rpcProvider,
       },
-      context
+      context,
     );
   };
 });

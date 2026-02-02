@@ -54,7 +54,7 @@ describe('Organizations Domain function tests', () => {
 
       const { jwtVc } = await buildProfileVerifiableCredential(
         rootIssuerProfile,
-        rootIssuer
+        rootIssuer,
       );
       expect(jwtVc).toEqual(expect.stringMatching(JWT_FORMAT));
     });

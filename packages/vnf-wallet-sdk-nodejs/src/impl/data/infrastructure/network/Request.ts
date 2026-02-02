@@ -8,7 +8,7 @@ export default class Request {
         readonly body?: Nullish<any>,
         readonly headers?: { [key: string]: string },
         readonly useCaches?: boolean,
-        readonly contentType?: Nullish<string>
+        readonly contentType?: Nullish<string>,
     ) {
         if (this.useCaches == null) {
             this.useCaches = true;

@@ -4,7 +4,7 @@ const {
 
 const inviteeInvitationEmail = async (
   { inviterOrganization, inviteeEmail, uri },
-  context
+  context,
 ) => ({
   subject: await context.renderTemplate('invitee-invitation-email-subject', {
     inviterOrganization,

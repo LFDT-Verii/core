@@ -13,20 +13,18 @@ import CredentialIssuerVerifier from '../../domain/verifiers/CredentialIssuerVer
 import VCLJwtDescriptor from '../../../api/entities/VCLJwtDescriptor';
 import { Nullish } from '../../../api/VCLTypes';
 
-export default class FinalizeOffersUseCaseImpl
-    implements FinalizeOffersUseCase
-{
+export default class FinalizeOffersUseCaseImpl implements FinalizeOffersUseCase {
     constructor(
         private finalizeOffersRepository: FinalizeOffersRepository,
         private jwtServiceRepository: JwtServiceRepository,
         private credentialIssuerVerifier: CredentialIssuerVerifier,
         private credentialDidVerifier: CredentialDidVerifier,
-        private credentialsByDeepLinkVerifier: CredentialsByDeepLinkVerifier
+        private credentialsByDeepLinkVerifier: CredentialsByDeepLinkVerifier,
     ) {}
 
     async finalizeOffers(
         finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
-        sessionToken: VCLToken
+        sessionToken: VCLToken,
     ): Promise<VCLJwtVerifiableCredentials> {
         try {
             if (finalizeOffersDescriptor.challenge) {
@@ -35,21 +33,21 @@ export default class FinalizeOffersUseCaseImpl
                         null,
                         randomUUID().toString(),
                         finalizeOffersDescriptor.didJwk.did,
-                        finalizeOffersDescriptor.aud
+                        finalizeOffersDescriptor.aud,
                     ),
                     finalizeOffersDescriptor.didJwk,
                     finalizeOffersDescriptor.challenge,
-                    finalizeOffersDescriptor.remoteCryptoServicesToken
+                    finalizeOffersDescriptor.remoteCryptoServicesToken,
                 );
                 return await this.finalizeOffersInvoke(
                     finalizeOffersDescriptor,
                     sessionToken,
-                    proof
+                    proof,
                 );
             }
             return await this.finalizeOffersInvoke(
                 finalizeOffersDescriptor,
-                sessionToken
+                sessionToken,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);
@@ -59,29 +57,29 @@ export default class FinalizeOffersUseCaseImpl
     async finalizeOffersInvoke(
         finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
         sessionToken: VCLToken,
-        proof: Nullish<VCLJwt> = null
+        proof: Nullish<VCLJwt> = null,
     ): Promise<VCLJwtVerifiableCredentials> {
         const jwtCredentials =
             await this.finalizeOffersRepository.finalizeOffers(
                 finalizeOffersDescriptor,
                 sessionToken,
-                proof
+                proof,
             );
         if (
             await this.verifyCredentialsByDeepLink(
                 jwtCredentials,
-                finalizeOffersDescriptor
+                finalizeOffersDescriptor,
             )
         ) {
             if (
                 await this.verifyCredentialsByIssuer(
                     jwtCredentials,
-                    finalizeOffersDescriptor
+                    finalizeOffersDescriptor,
                 )
             ) {
                 return this.verifyCredentialByDid(
                     jwtCredentials,
-                    finalizeOffersDescriptor
+                    finalizeOffersDescriptor,
                 );
             }
         }
@@ -90,13 +88,13 @@ export default class FinalizeOffersUseCaseImpl
 
     async verifyCredentialsByDeepLink(
         jwtCredentials: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
+        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<boolean> {
         const { deepLink } = finalizeOffersDescriptor.credentialManifest;
         if (deepLink) {
             return this.credentialsByDeepLinkVerifier.verifyCredentials(
                 jwtCredentials,
-                deepLink
+                deepLink,
             );
         }
         // Deep link was not provided => nothing to verify
@@ -105,21 +103,21 @@ export default class FinalizeOffersUseCaseImpl
 
     async verifyCredentialsByIssuer(
         jwtCredentials: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
+        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<boolean> {
         return this.credentialIssuerVerifier.verifyCredentials(
             jwtCredentials,
-            finalizeOffersDescriptor
+            finalizeOffersDescriptor,
         );
     }
 
     async verifyCredentialByDid(
         encodedJwtCredentialsList: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
+        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<VCLJwtVerifiableCredentials> {
         return this.credentialDidVerifier.verifyCredentials(
             encodedJwtCredentialsList,
-            finalizeOffersDescriptor
+            finalizeOffersDescriptor,
         );
     }
 }

@@ -46,12 +46,12 @@ const decodeJwk = async (algType, rawKeyBuffer, secret) => {
   if (algType === get2BytesHash(ALG_TYPE.HEX_AES_256)) {
     return jwkFromSecp256k1Key(
       decrypt(rawKeyBuffer.toString('base64'), secret),
-      false
+      false,
     );
   }
   if (algType === get2BytesHash(ALG_TYPE.COSEKEY_AES_256)) {
     const coseKey = await CoseKey.fromBytes(
-      decryptBuffer(rawKeyBuffer, secret)
+      decryptBuffer(rawKeyBuffer, secret),
     );
     return toJwk(coseKey);
   }

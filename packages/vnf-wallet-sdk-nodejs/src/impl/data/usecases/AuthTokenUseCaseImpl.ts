@@ -14,11 +14,11 @@ export default class AuthTokenUseCaseImpl implements AuthTokenUseCase {
     constructor(private readonly authTokenRepository: AuthTokenRepository) {}
 
     async getAuthToken(
-        authTokenDescriptor: VCLAuthTokenDescriptor
+        authTokenDescriptor: VCLAuthTokenDescriptor,
     ): Promise<VCLAuthToken> {
         try {
             return await this.authTokenRepository.getAuthToken(
-                authTokenDescriptor
+                authTokenDescriptor,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);

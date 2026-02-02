@@ -20,7 +20,7 @@ module.exports = (app, options, next = () => {}) => {
       },
       extensions: [autoboxIdsExtension, findersExtension, modifiersExtensions],
     },
-    app
+    app,
   );
 };
 
@@ -81,7 +81,7 @@ const modifiersExtensions = (parent) => {
         $set: {
           updatedAt: new Date(),
         },
-      }
+      },
     );
   };
   const addUserToGroupClientAdmins = async (groupId, userId) => {
@@ -100,7 +100,7 @@ const modifiersExtensions = (parent) => {
         $set: {
           updatedAt: new Date(),
         },
-      }
+      },
     );
   };
 

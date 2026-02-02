@@ -9,7 +9,7 @@ import fetcher from '../network/Fetcher';
 import { Dictionary } from '../Types';
 
 export const getCredentialTypesUIFormSchema = async (
-  credentialTypesUIFormSchemaDescriptor: Dictionary<any>
+  credentialTypesUIFormSchemaDescriptor: Dictionary<any>,
 ): Promise<any> => {
   const config = {
     url: Urls.getCredentialTypesUIFormSchema,

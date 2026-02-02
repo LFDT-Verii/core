@@ -36,7 +36,7 @@ const signatoriesController = async (fastify) => {
         }
       }, 0);
       return {};
-    }
+    },
   );
 };
 

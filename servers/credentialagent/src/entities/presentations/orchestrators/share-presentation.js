@@ -73,7 +73,7 @@ const sharePresentation = async (presentation, context) => {
       presentationId,
       presentationIssuer,
     },
-    context
+    context,
   );
 
   const user = vendorUser
@@ -86,7 +86,7 @@ const sharePresentation = async (presentation, context) => {
 
   const completedExchange = await repos.exchanges.addState(
     exchange._id,
-    completionState
+    completionState,
   );
 
   return {
@@ -105,7 +105,7 @@ const doSharePresentation = async (
     presentationIssuer,
     disclosure,
   },
-  context
+  context,
 ) => {
   const { exchange, tenant, repos } = context;
   const { vendorEndpoint } = disclosure;
@@ -117,7 +117,7 @@ const doSharePresentation = async (
   if (vendorEndpoint === VendorEndpoint.RECEIVE_UNCHECKED_CREDENTIALS) {
     await repos.exchanges.addState(
       exchange._id,
-      ExchangeStates.DISCLOSURE_UNCHECKED
+      ExchangeStates.DISCLOSURE_UNCHECKED,
     );
     await sendCredentials(
       disclosure.vendorEndpoint,
@@ -127,7 +127,7 @@ const doSharePresentation = async (
         credentials: uncheckedCredentials,
         rawCredentials,
       },
-      context
+      context,
     );
 
     return { checkedCredentials: [] };
@@ -147,12 +147,12 @@ const doSharePresentation = async (
       getCredentialTypeMetadata,
       resolveDid,
     },
-    context
+    context,
   );
 
   await repos.exchanges.addState(
     exchange._id,
-    ExchangeStates.DISCLOSURE_CHECKED
+    ExchangeStates.DISCLOSURE_CHECKED,
   );
 
   if (isIssuingDisclosure(disclosure)) {
@@ -160,7 +160,7 @@ const doSharePresentation = async (
       disclosure,
       vendorOriginContext,
       checkedCredentials,
-      context
+      context,
     );
   }
 
@@ -174,7 +174,7 @@ const doSharePresentation = async (
       rawCredentials,
       paymentRequired: checkPaymentRequirement(checkedCredentials),
     },
-    context
+    context,
   );
 
   await sendPushVerification({ tenant, disclosure, exchange }, context);
@@ -185,13 +185,13 @@ const buildRawCredentials = (uncheckedCredentials, vcJwts) => {
   const credentialSchemaUris = map('id', uncheckedCredentials);
   return map(
     (i) => ({ id: credentialSchemaUris[i], rawCredential: vcJwts[i] }),
-    range(0, vcJwts.length)
+    range(0, vcJwts.length),
   );
 };
 
 const sendPushVerification = async (
   { disclosure, exchange, tenant },
-  context
+  context,
 ) => {
   const { pushDelegate } = exchange;
   if (
@@ -215,7 +215,7 @@ const sendPushVerification = async (
       },
     },
     pushDelegate,
-    context
+    context,
   );
 };
 

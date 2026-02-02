@@ -92,7 +92,7 @@ describe('oauth module', () => {
           {
             onRequest: instance.verifyAccessToken([]),
           },
-          async () => 'OK'
+          async () => 'OK',
         );
       });
 
@@ -121,7 +121,7 @@ describe('oauth module', () => {
           {
             onRequest: instance.verifyAccessToken(['read:users']),
           },
-          async () => 'OK'
+          async () => 'OK',
         );
       });
 
@@ -150,7 +150,7 @@ describe('oauth module', () => {
           {
             onRequest: instance.verifyAccessToken([]),
           },
-          async () => 'OK'
+          async () => 'OK',
         );
       });
 
@@ -179,7 +179,7 @@ describe('oauth module', () => {
           {
             onRequest: instance.verifyAccessToken(['read:users']),
           },
-          async () => 'OK'
+          async () => 'OK',
         );
       });
 
@@ -211,7 +211,7 @@ describe('oauth module', () => {
               'read:users',
             ]),
           },
-          async () => 'OK'
+          async () => 'OK',
         );
       });
 
@@ -240,7 +240,7 @@ describe('oauth module', () => {
           {
             onRequest: instance.verifyAccessToken(['write:users']),
           },
-          async () => 'OK'
+          async () => 'OK',
         );
       });
 

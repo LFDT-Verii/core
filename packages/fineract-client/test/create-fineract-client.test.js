@@ -87,7 +87,7 @@ describe('create clients', () => {
         didDoc,
       },
       false,
-      context
+      context,
     );
     expect(result).toEqual(expectResults);
     expect(webhookPayloads).toEqual([
@@ -142,7 +142,7 @@ describe('create clients', () => {
         didDoc,
       },
       true,
-      context
+      context,
     );
     expect(result).toEqual(expectResults);
     expect(webhookPayloads).toEqual([

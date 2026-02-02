@@ -4,7 +4,6 @@
  * Copyright 2022 Velocity Career Labs inc.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import Urls, { HeaderValues } from '../../src/impl/data/repositories/Urls';
@@ -51,24 +50,24 @@ describe('UrlsTest', () => {
     const verifyUrlsPrefix = (registrarPrefix: string) => {
         expect(Urls.CredentialTypes.startsWith(registrarPrefix)).toEqual(true);
         expect(Urls.CredentialTypeSchemas.startsWith(registrarPrefix)).toEqual(
-            true
+            true,
         );
         expect(Urls.Countries.startsWith(registrarPrefix)).toEqual(true);
         expect(Urls.Organizations.startsWith(registrarPrefix)).toEqual(true);
         expect(Urls.ResolveKid.startsWith(registrarPrefix)).toEqual(true);
         expect(
-            Urls.CredentialTypesFormSchema.startsWith(registrarPrefix)
+            Urls.CredentialTypesFormSchema.startsWith(registrarPrefix),
         ).toEqual(true);
     };
 
     test('testXVnfProtocolVersion', () => {
         GlobalConfig.setXVnfProtocolVersion(
-            VCLXVnfProtocolVersion.XVnfProtocolVersion1
+            VCLXVnfProtocolVersion.XVnfProtocolVersion1,
         );
         expect(HeaderValues.XVnfProtocolVersion).toEqual('1.0');
 
         GlobalConfig.setXVnfProtocolVersion(
-            VCLXVnfProtocolVersion.XVnfProtocolVersion2
+            VCLXVnfProtocolVersion.XVnfProtocolVersion2,
         );
         expect(HeaderValues.XVnfProtocolVersion).toEqual('2.0');
     });

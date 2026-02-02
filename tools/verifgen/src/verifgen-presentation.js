@@ -25,14 +25,14 @@ const generatePresentation = async ({
     const credentials = map(
       (credentialSource) =>
         common.readFile(`${credentialSource}`, 'JWT not found'),
-      credentialSources
+      credentialSources,
     );
 
     const presentationRequest = JSON.parse(
       common.readFile(
         `${presentationRequestFilename}`,
-        'Presentation Request not found'
-      )
+        'Presentation Request not found',
+      ),
     );
 
     const { issuer, privateKey } = loadIssuerData(issuerPersona);
@@ -49,7 +49,7 @@ const generatePresentation = async ({
         : generatePresentationJwt(
             payload,
             issuer.privateKey,
-            `${parsedIssuer}#0`
+            `${parsedIssuer}#0`,
           );
     const presentationJwt = await generatePresentationJwtFunction;
 
@@ -64,6 +64,7 @@ const createPayload = ({
   presentationRequest,
   issuer,
   vendorOriginContext,
+  // eslint-disable-next-line complexity
 }) => {
   const presentationDefinition =
     presentationRequest?.presentation_request?.presentation_definition ??
@@ -82,7 +83,7 @@ const createPayload = ({
           path: `$.verifiableCredential[${i}]`,
           format: 'jwt_vc',
         }),
-        credentials
+        credentials,
       ),
     },
   };
@@ -126,18 +127,18 @@ program
   .option(
     '-r, --request <presentation-request-filename>',
     'Presentation Request',
-    'presentation-request.json'
+    'presentation-request.json',
   )
   .option('-i, --issuer-persona <persona>', 'Issuer Persona')
   .option('-p, --protocol-version <protocolVersion>', 'VNF protocol version', 1)
   .option(
     '-o, --output-presentation-fileprefix <filename>',
     'Output presentation JWT file prefix',
-    'presentation'
+    'presentation',
   )
   .option(
     '-v, --vendor-origin-context <vendor-origin-context>',
-    'A preauthorization code or access token'
+    'A preauthorization code or access token',
   )
   .action(() => {
     const options = program.opts();

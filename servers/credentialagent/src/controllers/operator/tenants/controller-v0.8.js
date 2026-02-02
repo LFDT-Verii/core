@@ -33,7 +33,7 @@ const areKidFragmentsUnique = (keys) => {
       return [...arr, key.kidFragment];
     },
     [],
-    keys
+    keys,
   );
   return uniq(kidFragments).length === kidFragments.length;
 };
@@ -44,7 +44,7 @@ const validateAllPurposes = (keys) => {
       return [...arr, ...key.purposes];
     },
     [],
-    keys
+    keys,
   );
   if (hasDuplicatePurposes(allPurposes)) {
     throw newError(400, KeyErrorMessages.DUPLICATE_PURPOSE_DETECTED);
@@ -88,13 +88,13 @@ const tenantController = async (fastify) => {
           keys,
           webhookAuth,
         },
-        req
+        req,
       );
 
       const { createdAt, _id } = insertedTenant;
       reply.code(201);
       return { createdAt, id: _id };
-    }
+    },
   );
 
   fastify.get(
@@ -116,9 +116,9 @@ const tenantController = async (fastify) => {
       const tenants = await req.repos.tenants.find({ filter });
       return map(
         (tenant) => ({ ...tenant, serviceIds: buildServiceIds(tenant) }),
-        tenants
+        tenants,
       );
-    }
+    },
   );
 
   fastify.post(
@@ -151,7 +151,7 @@ const tenantController = async (fastify) => {
     async (req) => {
       await refreshTenantDids(req.body, req);
       return {};
-    }
+    },
   );
 };
 

@@ -31,8 +31,8 @@ describe('Generate a W3C VC-JWT v1.1 from a jsonld vc', () => {
       jsonLdToUnsignedVcJwtContent(
         minimalJsonLdCredential,
         KeyAlgorithms.SECP256K1,
-        'did:example#key-id'
-      )
+        'did:example#key-id',
+      ),
     ).toEqual({
       header: { typ: 'JWT', kid: 'did:example#key-id', alg: 'ES256K' },
       payload: {
@@ -50,8 +50,8 @@ describe('Generate a W3C VC-JWT v1.1 from a jsonld vc', () => {
       jsonLdToUnsignedVcJwtContent(
         maximalJsonLdCredential,
         KeyAlgorithms.RS256,
-        'did:example#key-id'
-      )
+        'did:example#key-id',
+      ),
     ).toEqual({
       header: { typ: 'JWT', kid: 'did:example#key-id', alg: 'RS256' },
       payload: {

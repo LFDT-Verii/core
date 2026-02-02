@@ -63,7 +63,7 @@ describe('Issuing Exchanges routes', () => {
               issuer: { id: tenantDID },
               vendorUserId: issuingExchange.vendorUserId,
             },
-          ])
+          ]),
         );
       });
       it('should be able to get a delayed offer by issuer', async () => {
@@ -87,7 +87,7 @@ describe('Issuing Exchanges routes', () => {
               issuer: { id: tenantDID },
               vendorUserId: issuingExchange.vendorUserId,
             },
-          ])
+          ]),
         );
       });
       it('should be able to get a delayed offer by vendorUserId', async () => {
@@ -111,7 +111,7 @@ describe('Issuing Exchanges routes', () => {
               issuer: { id: tenantDID },
               vendorUserId: issuingExchange.vendorUserId,
             },
-          ])
+          ]),
         );
       });
     });
@@ -132,7 +132,7 @@ describe('Issuing Exchanges routes', () => {
 
         nock('http://credentialagent.localhost.test')
           .post(
-            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/offers`
+            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/offers`,
           )
           .reply(200, {
             ...offer,
@@ -143,13 +143,13 @@ describe('Issuing Exchanges routes', () => {
 
         nock('http://credentialagent.localhost.test')
           .post(
-            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/offers/complete`
+            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/offers/complete`,
           )
           .reply(200, { offerIds: [offerId] });
 
         nock('http://credentialagent.localhost.test')
           .get(
-            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/qrcode.png`
+            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/qrcode.png`,
           )
           .reply(200, imageBytes, { 'Content-Type': 'image/png' });
 
@@ -166,7 +166,7 @@ describe('Issuing Exchanges routes', () => {
         expect(response.statusCode).toEqual(200);
         expect(Buffer.byteLength(response.rawPayload)).toEqual(4);
         expect(
-          await mongoDb().collection('issuingExchanges').findOne({})
+          await mongoDb().collection('issuingExchanges').findOne({}),
         ).toEqual({
           exchangeId,
           tenantDID: tenant.did,
@@ -196,7 +196,7 @@ describe('Issuing Exchanges routes', () => {
 
         nock('http://credentialagent.localhost.test')
           .post(
-            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/offers`
+            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/offers`,
           )
           .reply(200, {
             ...offer,
@@ -207,13 +207,13 @@ describe('Issuing Exchanges routes', () => {
 
         nock('http://credentialagent.localhost.test')
           .post(
-            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/offers/complete`
+            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/offers/complete`,
           )
           .reply(200, { offerIds: [offerId] });
 
         nock('http://credentialagent.localhost.test')
           .get(
-            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/qrcode.png?vendorOriginContext=123`
+            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${exchangeId}/qrcode.png?vendorOriginContext=123`,
           )
           .reply(200, imageBytes, { 'Content-Type': 'image/png' });
 
@@ -230,7 +230,7 @@ describe('Issuing Exchanges routes', () => {
         expect(response.statusCode).toEqual(200);
         expect(Buffer.byteLength(response.rawPayload)).toEqual(4);
         expect(
-          await mongoDb().collection('issuingExchanges').findOne({})
+          await mongoDb().collection('issuingExchanges').findOne({}),
         ).toEqual({
           exchangeId,
           tenantDID: tenant.did,
@@ -286,7 +286,7 @@ describe('Issuing Exchanges routes', () => {
 
         nock('http://credentialagent.localhost.test')
           .post(
-            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${issuingExchange.exchangeId}/offers`
+            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${issuingExchange.exchangeId}/offers`,
           )
           .reply(200, {
             ...offer,
@@ -297,7 +297,7 @@ describe('Issuing Exchanges routes', () => {
 
         nock('http://credentialagent.localhost.test')
           .post(
-            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${issuingExchange.exchangeId}/offers/complete`
+            `/operator-api/v0.8/tenants/${tenant.did}/exchanges/${issuingExchange.exchangeId}/offers/complete`,
           )
           .reply(200, { offerIds: [offerId] });
       });

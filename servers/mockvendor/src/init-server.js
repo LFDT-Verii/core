@@ -23,12 +23,12 @@ const initServer = (server) => {
             ...server.config,
             prefixUrl: server.config.agentUrl,
             cache: server.cache,
-          })
+          }),
         )
         .decorateRequest('agentFetch', null)
         .addHook('preValidation', async (req) => {
           req.agentFetch = server.baseAgentFetch(req);
-        })
+        }),
     );
 };
 

@@ -23,6 +23,6 @@ module.exports = {
   loadLocalizableFormSchemaFile:
     loadLocalizableCredentialFile('formSchemaUrls'),
   loadLocalizableDisplayDescriptorFile: loadLocalizableCredentialFile(
-    'displayDescriptorUrls'
+    'displayDescriptorUrls',
   ),
 };

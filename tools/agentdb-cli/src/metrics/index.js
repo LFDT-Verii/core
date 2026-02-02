@@ -9,19 +9,19 @@ program
   .usage('[options]')
   .requiredOption(
     '-u, --mongo-uri <mongoUri>',
-    'The url of the mongo database for credential agent'
+    'The url of the mongo database for credential agent',
   )
   .requiredOption(
     '-s, --start <start>',
-    'The start date for filter (ISO 8601 Timestamp)'
+    'The start date for filter (ISO 8601 Timestamp)',
   )
   .requiredOption(
     '-e, --end <end>',
-    'The end date for filter (ISO 8601 Timestamp)'
+    'The end date for filter (ISO 8601 Timestamp)',
   )
   .requiredOption(
     '-d, --did <did>',
-    'The did of the tenant on credential agent'
+    'The did of the tenant on credential agent',
   )
   .action(async () => {
     const options = program.opts();
@@ -34,7 +34,7 @@ program
       const end = new Date(options.end);
       const { total, unique } = await getMetrics(
         { start, end, did: options.did },
-        { db: client.db() }
+        { db: client.db() },
       );
       printInfo('Metrics Script Success:');
       printInfo(`Start Date: ${start.toString()}`);

@@ -45,17 +45,17 @@ const formSchemasRoutes = async (fastify) => {
           credentialType: credentialTypeMetadata,
           locale,
         },
-        req
+        req,
       );
       return reply
         .header(
           CachingConstants.CACHE_CONTROL_HEADER,
-          CachingConstants.MAX_AGE_CACHE_CONTROL
+          CachingConstants.MAX_AGE_CACHE_CONTROL,
         )
         .code(200)
         .type('application/json; charset=utf-8')
         .send(json, { override: true });
-    }
+    },
   );
 };
 

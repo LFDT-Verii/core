@@ -46,14 +46,14 @@ module.exports = async (fastify) => {
         filter = set(
           'createdAt.$gte',
           startOfDay(new Date(query.dateFrom)),
-          filter
+          filter,
         );
       }
       if (!isEmpty(query.dateUntil)) {
         filter = set(
           'createdAt.$lte',
           endOfDay(new Date(query.dateFrom)),
-          filter
+          filter,
         );
       }
       const identifications = await repos.identifications.find({
@@ -62,6 +62,6 @@ module.exports = async (fastify) => {
       });
 
       return { identifications };
-    }
+    },
   );
 };

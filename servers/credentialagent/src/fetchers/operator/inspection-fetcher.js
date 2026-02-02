@@ -24,7 +24,7 @@ const sendCredentials = async (vendorEndpoint, payload, context) => {
     const response = await vendorFetch.post(
       `inspection/${vendorEndpoint}`,
       payload,
-      { headers: setAuthHeader(context) }
+      { headers: setAuthHeader(context) },
     );
 
     const { numProcessed } = await response.json();

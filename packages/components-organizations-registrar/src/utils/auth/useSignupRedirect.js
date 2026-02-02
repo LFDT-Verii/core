@@ -38,11 +38,9 @@ const useSignupRedirect = ({ auth, options = {} }) => {
       return;
     }
 
-    // eslint-disable-next-line no-undef
     localStorage.setItem(redirectKey, location.pathname);
 
     auth.logout().then(() => {
-      // eslint-disable-next-line no-undef
       window.location.replace(decodeURIComponent(signupUrl));
     });
   }, [signupUrl, signupUrlParam, redirectKey, location, auth]);
@@ -52,11 +50,9 @@ const useSignupRedirect = ({ auth, options = {} }) => {
       return;
     }
 
-    // eslint-disable-next-line no-undef
     const returnTo = localStorage.getItem(redirectKey) || location.pathname;
 
     auth.login({ appState: { returnTo } }).then(() => {
-      // eslint-disable-next-line no-undef
       localStorage.removeItem(redirectKey);
     });
   }, [signupUrl, auth.isLoading, auth.isAuthenticated, auth, location, redirectKey]);

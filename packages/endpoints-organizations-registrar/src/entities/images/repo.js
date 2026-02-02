@@ -38,6 +38,6 @@ module.exports = (app, options, next = () => {}) => {
         deactivateExtension,
       ],
     },
-    app
+    app,
   );
 };

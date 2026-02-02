@@ -6,7 +6,7 @@ import { Nullish } from '../../../api/VCLTypes';
 
 export default class CredentialTypesModelImpl implements CredentialTypesModel {
     constructor(
-        private readonly credentialTypesUseCase: CredentialTypesUseCase
+        private readonly credentialTypesUseCase: CredentialTypesUseCase,
     ) {}
 
     data: Nullish<VCLCredentialTypes>;

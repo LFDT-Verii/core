@@ -31,10 +31,10 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
         VCLJwt.fromEncodedJwt(CredentialManifestMocks.JwtCredentialManifest1),
         null,
         new VCLVerifiedProfile(
-            JSON.parse(VerifiedProfileMocks.VerifiedProfileOfRegularIssuer)
+            JSON.parse(VerifiedProfileMocks.VerifiedProfileOfRegularIssuer),
         ),
         deepLink,
-        DidJwkMocks.DidJwk
+        DidJwkMocks.DidJwk,
     );
 
     test('testVerifyCredentialManifestSuccess', async () => {
@@ -43,7 +43,7 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
         const isVerified = await subject.verifyCredentialManifest(
             credentialManifest,
             deepLink,
-            DidDocumentMocks.DidDocumentMock
+            DidDocumentMocks.DidDocumentMock,
         );
         expect(isVerified).toBeTruthy();
     });
@@ -54,12 +54,12 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
             const isVerified = await subject.verifyCredentialManifest(
                 credentialManifest,
                 deepLink,
-                DidDocumentMocks.DidDocumentWithWrongDidMock
+                DidDocumentMocks.DidDocumentWithWrongDidMock,
             );
             expect(isVerified).toBeFalsy();
         } catch (error: any) {
             expect(error.errorCode).toEqual(
-                VCLErrorCode.MismatchedRequestIssuerDid
+                VCLErrorCode.MismatchedRequestIssuerDid,
             );
         }
     });

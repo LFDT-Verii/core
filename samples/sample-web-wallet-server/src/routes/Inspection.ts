@@ -17,8 +17,8 @@ export default async function inspectionRoutes(fastify) {
     try {
       reply.send(
         await req.vclSdk.getPresentationRequest(
-          presentationRequestDescriptorFrom(req.body)
-        )
+          presentationRequestDescriptorFrom(req.body),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);
@@ -29,8 +29,8 @@ export default async function inspectionRoutes(fastify) {
       reply.send(
         await req.vclSdk.submitPresentation(
           presentationSubmissionFrom(req.body.presentationSubmission),
-          authTokenFrom(req.body.authToken)
-        )
+          authTokenFrom(req.body.authToken),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);
@@ -42,9 +42,9 @@ export default async function inspectionRoutes(fastify) {
         await req.vclSdk.getExchangeProgress(
           new VCLExchangeDescriptor(
             presentationSubmissionFrom(req.body.presentationSubmission),
-            submissionResultFrom(req.body.submissionResult)
-          )
-        )
+            submissionResultFrom(req.body.submissionResult),
+          ),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);

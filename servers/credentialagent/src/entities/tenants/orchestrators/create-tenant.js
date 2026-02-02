@@ -26,7 +26,7 @@ const {
 
 const createTenant = async (
   { did, serviceIds, webhookUrl, keys, webhookAuth },
-  context
+  context,
 ) => {
   const organizationDidDoc = await getOrganizationDidDoc(did, context);
 
@@ -53,8 +53,8 @@ const createTenant = async (
             encoding: KeyEncodings.JWK,
             tenantId: _id,
           }),
-        validatedKeys
-      )
+        validatedKeys,
+      ),
     );
 
     await tryingToInsertPrimaryAddress(insertedTenant, validatedKeys, context);
@@ -65,7 +65,7 @@ const createTenant = async (
 const tryingToInsertPrimaryAddress = async (tenant, insertedKeys, context) => {
   const dltExist = some(
     ({ purposes }) => includes(KeyPurposes.DLT_TRANSACTIONS, purposes),
-    insertedKeys
+    insertedKeys,
   );
   if (dltExist) {
     await addPrimaryAddressToTenant(tenant, context);

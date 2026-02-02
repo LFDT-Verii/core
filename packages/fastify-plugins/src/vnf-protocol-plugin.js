@@ -18,7 +18,7 @@ const { fastifyVersionPluginFactory } = require('./version-plugin-factory');
 
 const vnfProtocolVersionPlugin = fastifyVersionPluginFactory(
   'x-vnf-protocol-version',
-  'vnfProtocolVersion'
+  'vnfProtocolVersion',
 );
 
 module.exports = { vnfProtocolVersionPlugin };

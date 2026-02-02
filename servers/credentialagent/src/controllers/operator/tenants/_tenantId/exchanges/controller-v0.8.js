@@ -81,7 +81,7 @@ const exchangeController = async (fastify) => {
       const { _id } = await repos.exchanges.insertWithInitialState(exchange);
       reply.code(201);
       return { id: _id };
-    }
+    },
   );
 
   const validateExchange = (exchange, disclosure) => {
@@ -94,7 +94,7 @@ const exchangeController = async (fastify) => {
 
     if (isEmpty(exchange.identityMatcherValues)) {
       throw newError.BadRequest(
-        ExchangeErrors.IDENTITY_MATCHER_VALUES_REQUIRED
+        ExchangeErrors.IDENTITY_MATCHER_VALUES_REQUIRED,
       );
     }
 
@@ -112,7 +112,7 @@ const exchangeController = async (fastify) => {
         (typeof row[index] === 'string' && isEmpty(row[index]))
       ) {
         throw newError.BadRequest(
-          ExchangeErrors.IDENTITY_MATCHER_VALUE_REQUIRED(index)
+          ExchangeErrors.IDENTITY_MATCHER_VALUE_REQUIRED(index),
         );
       }
     }
@@ -120,7 +120,7 @@ const exchangeController = async (fastify) => {
 
   const resolveDisclosure = async (
     { type, disclosureId },
-    { repos, tenant }
+    { repos, tenant },
   ) => {
     if (!isEmpty(disclosureId)) {
       return repos.disclosures.findById(disclosureId);
@@ -135,12 +135,12 @@ const exchangeController = async (fastify) => {
           vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
         },
       },
-      { _id: 1 }
+      { _id: 1 },
     );
 
     if (isEmpty(disclosure)) {
       throw new newError.BadRequest(
-        ExchangeErrors.IDENTIFICATION_DISCLOSURE_MISSING_TEMPLATE(tenant)
+        ExchangeErrors.IDENTIFICATION_DISCLOSURE_MISSING_TEMPLATE(tenant),
       );
     }
     return disclosure;

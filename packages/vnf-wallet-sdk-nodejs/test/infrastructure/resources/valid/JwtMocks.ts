@@ -1,6 +1,5 @@
 import VCLJwt, { SignedJWT } from '../../../../src/api/entities/VCLJwt';
 import VCLPublicJwk from '../../../../src/api/entities/VCLPublicJwk';
-/* eslint-disable max-len */
 
 class JwtMocks {
     static AdamSmithEmailJwt =
@@ -29,7 +28,7 @@ class JwtMocks {
     static SignedJWT = new SignedJWT(
         this.splittedPresentationRequestJwt[0],
         this.splittedPresentationRequestJwt[1],
-        this.splittedPresentationRequestJwt[2]
+        this.splittedPresentationRequestJwt[2],
     );
 
     static PublicJwk = VCLPublicJwk.fromString(this.JWK);

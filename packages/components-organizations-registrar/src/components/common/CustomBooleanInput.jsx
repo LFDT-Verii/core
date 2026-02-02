@@ -25,6 +25,7 @@ import FormGroup from '@mui/material/FormGroup';
 import { FieldTitle, sanitizeInputRestProps, InputHelperText, useInput } from 'react-admin';
 import { Checkbox } from '@mui/material';
 
+// eslint-disable-next-line complexity
 const CustomBooleanInput = (props) => {
   const {
     className,
@@ -122,6 +123,7 @@ CustomBooleanInput.propTypes = {
   resource: PropTypes.string,
   source: PropTypes.string,
   validate: PropTypes.oneOfType([PropTypes.func, PropTypes.array]),
+  // eslint-disable-next-line react/forbid-prop-types
   sx: PropTypes.object,
 };
 

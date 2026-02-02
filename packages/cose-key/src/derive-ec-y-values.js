@@ -49,7 +49,7 @@ const deriveEcYValue = (crv, x, yIsEven) => {
   let bigY = modPow(
     bigX ** 3n - bigX * curveParams[crv].a + curveParams[crv].b,
     curveParams[crv].pIdent,
-    curveParams[crv].prime
+    curveParams[crv].prime,
   );
 
   // If the parity doesn't match it's the *other* root

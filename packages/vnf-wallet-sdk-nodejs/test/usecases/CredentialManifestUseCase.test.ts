@@ -27,23 +27,24 @@ describe('CredentialManifestUseCase Tests', () => {
     let subject1: CredentialManifestUseCase;
     let subject2: CredentialManifestUseCase;
 
+    // eslint-disable-next-line complexity
     test('testGetCredentialManifestSuccess', async () => {
         subject1 = new CredentialManifestUseCaseImpl(
             new CredentialManifestRepositoryImpl(
                 new NetworkServiceSuccess(
-                    JSON.parse(CredentialManifestMocks.CredentialManifest1)
-                )
+                    JSON.parse(CredentialManifestMocks.CredentialManifest1),
+                ),
             ),
             new ResolveDidDocumentRepositoryImpl(
                 new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentMock.payload
-                )
+                    DidDocumentMocks.DidDocumentMock.payload,
+                ),
             ),
             new JwtServiceRepositoryImpl(
                 new JwtSignServiceMock(''),
-                new JwtVerifyServiceMock()
+                new JwtVerifyServiceMock(),
             ),
-            new CredentialManifestByDeepLinkVerifierImpl()
+            new CredentialManifestByDeepLinkVerifierImpl(),
         );
 
         try {
@@ -53,31 +54,31 @@ describe('CredentialManifestUseCase Tests', () => {
                     VCLIssuingType.Career,
                     null,
                     DidJwkMocks.DidJwk,
-                    new VCLToken('some token')
+                    new VCLToken('some token'),
                 ),
                 new VCLVerifiedProfile(
                     JSON.parse(
-                        VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1
-                    )
-                )
+                        VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1,
+                    ),
+                ),
             );
             expect(credentialManifest?.jwt.encodedJwt).toEqual(
-                CredentialManifestMocks.JwtCredentialManifest1
+                CredentialManifestMocks.JwtCredentialManifest1,
             );
             expect(credentialManifest?.jwt.header).toStrictEqual(
-                JSON.parse(CredentialManifestMocks.Header)
+                JSON.parse(CredentialManifestMocks.Header),
             );
             expect(credentialManifest?.jwt.payload).toStrictEqual(
-                JSON.parse(CredentialManifestMocks.Payload)
+                JSON.parse(CredentialManifestMocks.Payload),
             );
             expect(credentialManifest?.jwt.signature).toEqual(
-                CredentialManifestMocks.Signature
+                CredentialManifestMocks.Signature,
             );
             expect(credentialManifest?.didJwk).toStrictEqual(
-                DidJwkMocks.DidJwk
+                DidJwkMocks.DidJwk,
             );
             expect(
-                credentialManifest?.remoteCryptoServicesToken?.value
+                credentialManifest?.remoteCryptoServicesToken?.value,
             ).toEqual('some token');
         } catch (error) {
             expect(error).toBeNull();
@@ -87,18 +88,18 @@ describe('CredentialManifestUseCase Tests', () => {
     test('testGetCredentialManifestFailure', async () => {
         subject2 = new CredentialManifestUseCaseImpl(
             new CredentialManifestRepositoryImpl(
-                new NetworkServiceSuccess(JSON.parse('{"wrong": "payload"}'))
+                new NetworkServiceSuccess(JSON.parse('{"wrong": "payload"}')),
             ),
             new ResolveDidDocumentRepositoryImpl(
                 new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentMock.payload
-                )
+                    DidDocumentMocks.DidDocumentMock.payload,
+                ),
             ),
             new JwtServiceRepositoryImpl(
                 new JwtSignServiceMock(''),
-                new JwtVerifyServiceMock()
+                new JwtVerifyServiceMock(),
             ),
-            new CredentialManifestByDeepLinkVerifierImpl()
+            new CredentialManifestByDeepLinkVerifierImpl(),
         );
 
         try {
@@ -107,13 +108,13 @@ describe('CredentialManifestUseCase Tests', () => {
                     DeepLinkMocks.CredentialManifestDeepLinkDevNet,
                     VCLIssuingType.Career,
                     null,
-                    DidJwkMocks.DidJwk
+                    DidJwkMocks.DidJwk,
                 ),
                 new VCLVerifiedProfile(
                     JSON.parse(
-                        VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1
-                    )
-                )
+                        VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1,
+                    ),
+                ),
             );
             expect(true).toEqual(false);
         } catch (error: any) {

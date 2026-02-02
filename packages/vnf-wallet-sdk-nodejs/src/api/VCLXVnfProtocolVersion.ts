@@ -1,11 +1,10 @@
-// eslint-disable-next-line no-shadow
 enum VCLXVnfProtocolVersion {
     XVnfProtocolVersion1 = '1.0',
     XVnfProtocolVersion2 = '2.0',
 }
 
 export const vnfProtocolVersionFromString = (
-    vnfProtocolVersion: string
+    vnfProtocolVersion: string,
 ): VCLXVnfProtocolVersion => {
     switch (vnfProtocolVersion) {
         case '1.0':

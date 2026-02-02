@@ -29,18 +29,18 @@ describe('Derive EC Y Coordinates', () => {
       const isYEven = isEcYValueEven(Buffer.from(publicKey.y, 'base64url'));
 
       expect(
-        Buffer.from(publicKey.x, 'base64url').toString('hex').length
+        Buffer.from(publicKey.x, 'base64url').toString('hex').length,
       ).toEqual(64);
       expect(
-        Buffer.from(publicKey.y, 'base64url').toString('hex').length
+        Buffer.from(publicKey.y, 'base64url').toString('hex').length,
       ).toEqual(64);
 
       expect(
         deriveEcYValue(
           publicKey.crv,
           Buffer.from(publicKey.x, 'base64url'),
-          isYEven
-        ).toString('hex')
+          isYEven,
+        ).toString('hex'),
       ).toEqual(Buffer.from(publicKey.y, 'base64url').toString('hex'));
     });
   });

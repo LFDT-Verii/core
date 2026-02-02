@@ -54,7 +54,7 @@ const signerMetricsController = async (fastify) => {
           : { status: HealthStates.Up };
 
       return status;
-    }
+    },
   );
 
   fastify.get(
@@ -83,7 +83,7 @@ const signerMetricsController = async (fastify) => {
       const metrics = await getSignerMetrics();
       const nodeMetrics = flow(
         filter((metric) => metric.address === address),
-        first
+        first,
       )(metrics);
       const nodesCount = metrics.length;
       const blockNumber = await getBlockNumber();
@@ -97,8 +97,8 @@ const signerMetricsController = async (fastify) => {
         fromBigNumber(
           subtractBigNumbers(
             toBigNumber(blockNumber),
-            toBigNumber(nodeMetrics.lastProposedBlockNumber, 16)
-          )
+            toBigNumber(nodeMetrics.lastProposedBlockNumber, 16),
+          ),
         ) >
         nodesCount * blocksDeltaMultiplier
           ? { status: HealthStates.Down }
@@ -110,7 +110,7 @@ const signerMetricsController = async (fastify) => {
       });
 
       return status;
-    }
+    },
   );
 };
 

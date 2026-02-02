@@ -37,8 +37,8 @@ describe('throw error on failed check result', () => {
             UNEXPIRED: CredentialCheckResultValue.FAIL,
           },
         },
-        { log: console }
-      )
+        { log: console },
+      ),
     ).toEqual(new Error('presentation_credential_tampered'));
   });
   it('should throw if bad issuer', () => {
@@ -54,8 +54,8 @@ describe('throw error on failed check result', () => {
             UNEXPIRED: CredentialCheckResultValue.FAIL,
           },
         },
-        { log: console }
-      )
+        { log: console },
+      ),
     ).toEqual(new Error('presentation_credential_bad_issuer'));
   });
   it('should throw if credential revoked', () => {
@@ -71,8 +71,8 @@ describe('throw error on failed check result', () => {
             UNEXPIRED: CredentialCheckResultValue.FAIL,
           },
         },
-        { log: console }
-      )
+        { log: console },
+      ),
     ).toEqual(new Error('presentation_credential_revoked'));
   });
   it('should throw if credential expired', () => {
@@ -88,8 +88,8 @@ describe('throw error on failed check result', () => {
             UNEXPIRED: CredentialCheckResultValue.FAIL,
           },
         },
-        { log: console }
-      )
+        { log: console },
+      ),
     ).toEqual(new Error('presentation_credential_expired'));
   });
   it('should throw if bad holder', () => {
@@ -105,8 +105,8 @@ describe('throw error on failed check result', () => {
             UNEXPIRED: CredentialCheckResultValue.PASS,
           },
         },
-        { log: console }
-      )
+        { log: console },
+      ),
     ).toEqual(new Error('presentation_credential_bad_holder'));
   });
   it('should not throw if check results pass', () => {
@@ -122,8 +122,8 @@ describe('throw error on failed check result', () => {
             UNEXPIRED: CredentialCheckResultValue.PASS,
           },
         },
-        { log: console }
-      )
+        { log: console },
+      ),
     ).toBeUndefined();
   });
 });

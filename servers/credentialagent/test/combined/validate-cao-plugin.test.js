@@ -52,10 +52,10 @@ describe('validate cao plugin test suite', () => {
           ...fastify.config,
           caoDid: 'didtest',
         },
-      })
+      }),
     ).rejects.toThrow(
       // eslint-disable-next-line max-len
-      'The provided CAO is not permitted to operator on the network. Make sure the organization exists on the registrar and is approved for Credential Agent Operation'
+      'The provided CAO is not permitted to operator on the network. Make sure the organization exists on the registrar and is approved for Credential Agent Operation',
     );
   });
 
@@ -70,10 +70,10 @@ describe('validate cao plugin test suite', () => {
           ...fastify.config,
           caoDid: 'didtest',
         },
-      })
+      }),
     ).rejects.toThrow(
       // eslint-disable-next-line max-len
-      'The provided CAO is not permitted to operator on the network. Make sure the organization exists on the registrar and is approved for Credential Agent Operation'
+      'The provided CAO is not permitted to operator on the network. Make sure the organization exists on the registrar and is approved for Credential Agent Operation',
     );
   });
 
@@ -126,7 +126,7 @@ describe('validate cao plugin test suite', () => {
         addHook: mockAddHook,
       },
       {},
-      () => {}
+      () => {},
     );
     expect(mockAddHook.mock.callCount()).toEqual(0);
   });
@@ -141,7 +141,7 @@ describe('validate cao plugin test suite', () => {
         addHook: mockAddHook,
       },
       {},
-      () => {}
+      () => {},
     );
     expect(mockAddHook.mock.callCount()).toEqual(1);
   });

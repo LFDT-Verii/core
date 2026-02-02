@@ -64,7 +64,7 @@ describe('Get exchange progress test suite', () => {
       '30d',
       null,
       exchangePrivateKey,
-      exchangeKeyDatum.kidFragment
+      exchangeKeyDatum.kidFragment,
     );
 
   before(async () => {
@@ -152,7 +152,7 @@ describe('Get exchange progress test suite', () => {
       '30d',
       null,
       exchangePrivateKey,
-      exchangeKeyDatum.kidFragment
+      exchangeKeyDatum.kidFragment,
     );
     const response = await fastify.injectJson({
       method: 'GET',

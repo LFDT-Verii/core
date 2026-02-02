@@ -22,7 +22,7 @@ const controller = async (fastify) => {
         kid,
         did,
       };
-    }
+    },
   );
 };
 

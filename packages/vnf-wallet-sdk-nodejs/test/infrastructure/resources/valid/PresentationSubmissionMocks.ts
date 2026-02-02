@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import VCLPresentationRequest from '../../../../src/api/entities/VCLPresentationRequest';
 import VCLPushDelegate from '../../../../src/api/entities/VCLPushDelegate';
 import { DeepLinkMocks } from './DeepLinkMocks';
@@ -11,7 +9,7 @@ import { DidJwkMocks } from './DidJwkMocks';
 class PresentationSubmissionMocks {
     static PushDelegate = new VCLPushDelegate(
         'https://devservices.velocitycareerlabs.io/api/push-gateway',
-        'if0123asd129smw321'
+        'if0123asd129smw321',
     );
 
     static PresentationSubmissionResultStr =
@@ -32,13 +30,13 @@ class PresentationSubmissionMocks {
         new VCLVerifiedProfile({}),
         DeepLinkMocks.CredentialManifestDeepLinkMainNet,
         this.PushDelegate,
-        DidJwkMocks.DidJwk
+        DidJwkMocks.DidJwk,
     );
 
     static SelectionsList = [
         new VCLVerifiableCredential(
             'IdDocument',
-            JwtMocks.AdamSmithIdDocumentJwt
+            JwtMocks.AdamSmithIdDocumentJwt,
         ),
         new VCLVerifiableCredential('Email', JwtMocks.AdamSmithEmailJwt),
     ];

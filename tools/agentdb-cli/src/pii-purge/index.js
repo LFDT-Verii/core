@@ -11,7 +11,7 @@ program
   .usage('[options]')
   .requiredOption(
     '-u, --mongo-uri <mongoUri>',
-    'The url of the mongo database for credential agent'
+    'The url of the mongo database for credential agent',
   )
   .action(async () => {
     const options = program.opts();

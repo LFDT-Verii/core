@@ -85,23 +85,23 @@ const credentialManifestController = async (fastify) => {
           pushDelegate,
           credentialTypes,
           id,
-          req
+          req,
         );
         const disclosure = await repos.disclosures.findById(
-          exchange.disclosureId
+          exchange.disclosureId,
         );
 
         // eslint-disable-next-line better-mutation/no-mutation
         req.exchange = exchange; // added onto the request for the exchange error handler
         await ensureExchangeStateValid(
           ExchangeErrorCodeState.EXCHANGE_INVALID,
-          req
+          req,
         );
 
         const presentationRequest = await createPresentationRequest(
           disclosure,
           exchange,
-          req
+          req,
         );
 
         const credentialTypeDescriptors = await Promise.all(
@@ -109,10 +109,10 @@ const credentialManifestController = async (fastify) => {
             (type) =>
               getCredentialTypeDescriptor(
                 { type, locale, includeDisplay: true },
-                req
+                req,
               ),
-            credentialTypes
-          )
+            credentialTypes,
+          ),
         );
 
         const credentialManifest = {
@@ -121,14 +121,13 @@ const credentialManifestController = async (fastify) => {
           issuer: { id: tenant.did },
         };
 
-        // eslint-disable-next-line camelcase
         return {
           issuing_request:
             !isProd && req.query.format === 'json'
               ? credentialManifest
               : await signExchangeResponse(credentialManifest, {}, req),
         };
-      }
+      },
     );
 };
 
@@ -149,7 +148,7 @@ const findOrCreateExchange = async (
   pushDelegate,
   credentialTypes,
   disclosureId,
-  context
+  context,
 ) => {
   const { repos } = context;
 
@@ -162,7 +161,7 @@ const findOrCreateExchange = async (
         protocolMetadata: {
           protocol: ExchangeProtocols.VNF_API,
         },
-      }
+      },
     );
   }
 
@@ -186,7 +185,7 @@ const findOrCreateExchange = async (
         protocol: ExchangeProtocols.VNF_API,
       },
     },
-    [ExchangeStates.CREDENTIAL_MANIFEST_REQUESTED]
+    [ExchangeStates.CREDENTIAL_MANIFEST_REQUESTED],
   );
 };
 

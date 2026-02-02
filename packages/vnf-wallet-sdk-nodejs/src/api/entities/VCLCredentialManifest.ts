@@ -10,9 +10,10 @@ export default class VCLCredentialManifest {
         public readonly jwt: VCLJwt,
         public readonly vendorOriginContext: Nullish<string>,
         public readonly verifiedProfile: VCLVerifiedProfile,
+        // eslint-disable-next-line default-param-last
         public readonly deepLink: Nullish<VCLDeepLink> = null,
         public readonly didJwk: VCLDidJwk,
-        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null
+        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {}
 
     get iss(): string {

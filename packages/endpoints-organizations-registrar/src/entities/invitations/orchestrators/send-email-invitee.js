@@ -5,7 +5,7 @@ const initSendEmailInvitee = (fastify) => {
 
   return async (
     { ticket, inviteeEmail, inviterOrganization, code },
-    context
+    context,
   ) => {
     try {
       const uri = buildInvitationUrl({ code, ticket }, context);
@@ -17,8 +17,8 @@ const initSendEmailInvitee = (fastify) => {
             inviterOrganization,
             uri,
           },
-          context
-        )
+          context,
+        ),
       );
       return 'invitation_sent';
     } catch (error) {

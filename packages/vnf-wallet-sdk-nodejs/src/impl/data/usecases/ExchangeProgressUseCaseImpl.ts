@@ -4,19 +4,17 @@ import ExchangeProgressRepository from '../../domain/repositories/ExchangeProgre
 import ExchangeProgressUseCase from '../../domain/usecases/ExchangeProgressUseCase';
 import VCLError from '../../../api/entities/error/VCLError';
 
-export default class ExchangeProgressUseCaseImpl
-    implements ExchangeProgressUseCase
-{
+export default class ExchangeProgressUseCaseImpl implements ExchangeProgressUseCase {
     constructor(
-        private exchangeProgressRepository: ExchangeProgressRepository
+        private exchangeProgressRepository: ExchangeProgressRepository,
     ) {}
 
     async getExchangeProgress(
-        exchangeDescriptor: VCLExchangeDescriptor
+        exchangeDescriptor: VCLExchangeDescriptor,
     ): Promise<VCLExchange> {
         try {
             return await this.exchangeProgressRepository.getExchangeProgress(
-                exchangeDescriptor
+                exchangeDescriptor,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);

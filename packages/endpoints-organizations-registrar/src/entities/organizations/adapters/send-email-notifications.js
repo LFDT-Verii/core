@@ -39,14 +39,14 @@ const initSendEmailNotifications = async (initCtx) => {
 
   const shouldSendEmailForServicesActivated = (
     activatedServiceIds,
-    userEmails
+    userEmails,
   ) => {
     return activatedServiceIds.length > 0 && !isEmpty(userEmails);
   };
 
   const shouldSendEmailForServicesNeedActivation = (
     addedServices,
-    activatedServiceIds
+    activatedServiceIds,
   ) => {
     return (
       addedServices.length > 0 &&
@@ -62,7 +62,8 @@ const initSendEmailNotifications = async (initCtx) => {
       activatedServiceIds = [],
       isCreateOrganization = false,
     },
-    ctx
+    ctx,
+    // eslint-disable-next-line complexity
   ) => {
     const emailToServiceNeedActivation = isCreateOrganization
       ? emailToSupportForOrgRegisteredAndServicesNeedActivation
@@ -78,12 +79,12 @@ const initSendEmailNotifications = async (initCtx) => {
           organization,
           activatedServiceIds,
           emails: userEmails,
-        })
+        }),
       );
     } else if (
       shouldSendEmailForServicesNeedActivation(
         addedServices,
-        activatedServiceIds
+        activatedServiceIds,
       )
     ) {
       await initCtx.sendEmail(
@@ -92,8 +93,8 @@ const initSendEmailNotifications = async (initCtx) => {
             organization,
             addedServices,
           },
-          ctx
-        )
+          ctx,
+        ),
       );
     }
   };
@@ -105,12 +106,12 @@ const initSendEmailNotifications = async (initCtx) => {
       activatedServiceIds,
       isCreateOrganization = false,
     },
-    ctx
+    ctx,
   ) => {
     const { repos, user, log } = ctx;
     const group = await repos.groups.findGroupByUserIdAndDid(
       user.sub,
-      organization.didDoc.id
+      organization.didDoc.id,
     );
     if (!group) {
       const message = 'There was no group for organization';
@@ -119,7 +120,7 @@ const initSendEmailNotifications = async (initCtx) => {
           did: organization.didDoc.id,
           user: user.sub,
         },
-        message
+        message,
       );
       return;
     }
@@ -127,7 +128,7 @@ const initSendEmailNotifications = async (initCtx) => {
     const { clientAdminIds } = group;
     const userEmails = map(
       'email',
-      await getUsersByIds({ userIds: clientAdminIds })
+      await getUsersByIds({ userIds: clientAdminIds }),
     );
 
     await sendServiceNotification(
@@ -138,13 +139,13 @@ const initSendEmailNotifications = async (initCtx) => {
         activatedServiceIds,
         isCreateOrganization,
       }),
-      ctx
+      ctx,
     );
   };
 
   const sendOrganizationCreatedNotification = async (
     { organization },
-    context
+    context,
   ) => {
     const csvFile = await parseProfileToCsv(organization.profile);
     await initCtx.sendEmail({
@@ -153,13 +154,13 @@ const initSendEmailNotifications = async (initCtx) => {
         {
           organization,
           netPrefix: getSubjectNetPrefix(context.config),
-        }
+        },
       ),
       message: await context.renderTemplate(
         'support-organization-created-body',
         {
           organization,
-        }
+        },
       ),
       sender: config.noReplyEmail,
       ccs: config.organizationCreationEmailCcList,
@@ -172,11 +173,12 @@ const initSendEmailNotifications = async (initCtx) => {
 
   const sendEmailToSignatoryForOrganizationApproval = async (
     { organization, authCode, isReminder = false },
-    context
+    context,
+    // eslint-disable-next-line complexity
   ) => {
     const invitation = await optional(
       () => context.repos.invitations.findById(organization.invitationId),
-      [organization.invitationId]
+      [organization.invitationId],
     );
     const inviterOrganization = invitation?.inviterDid
       ? await context.repos.organizations.findOneByDid(invitation.inviterDid)

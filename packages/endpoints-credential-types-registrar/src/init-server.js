@@ -45,7 +45,7 @@ const initServer = (server) => {
       name: 'fetch',
       options: pick(
         ['nodeEnv', 'requestTimeout', 'traceIdHeader', 'isTest'],
-        server.config
+        server.config,
       ),
     })
     .register(credentialTypesRegistrarEndpoints);

@@ -24,7 +24,7 @@ const { registeredCredentialTypesPreHandler } = require('../../plugins');
 
 const invitationsController = async (fastify) => {
   const transformToFinder = initTransformToFinder(
-    await tableRegistry.invitations()
+    await tableRegistry.invitations(),
   );
 
   const getOrCreateAuth0User = await initGetOrCreateAuth0User(fastify);
@@ -93,7 +93,7 @@ const invitationsController = async (fastify) => {
 
       forEach(
         (service) => validateInviteeService(service, caoServiceRefs, req),
-        inviteeService
+        inviteeService,
       );
 
       // create auth0 user
@@ -101,7 +101,7 @@ const invitationsController = async (fastify) => {
         inviteeEmail,
         keyIndividuals.adminGivenName,
         keyIndividuals.adminFamilyName,
-        req
+        req,
       );
 
       // send invitation to user
@@ -127,13 +127,13 @@ const invitationsController = async (fastify) => {
           ticket,
           code,
         },
-        req
+        req,
       );
       return {
         invitation,
         messageCode,
       };
-    }
+    },
   );
 
   fastify.get(
@@ -190,7 +190,7 @@ const invitationsController = async (fastify) => {
       return {
         invitations,
       };
-    }
+    },
   );
 };
 

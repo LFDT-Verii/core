@@ -43,7 +43,7 @@ describe('FinalizeOffersUseCase Tests', () => {
 
     const jwtServiceRepository = new JwtServiceRepositoryImpl(
         new JwtSignServiceMock(),
-        new JwtVerifyServiceMock()
+        new JwtVerifyServiceMock(),
     );
 
     const didJwk = DidJwkMocks.DidJwk;
@@ -52,14 +52,14 @@ describe('FinalizeOffersUseCase Tests', () => {
     let finalizeOffersDescriptorFailed: VCLFinalizeOffersDescriptor;
     let finalizeOffersDescriptorPassed: VCLFinalizeOffersDescriptor;
     const vclJwtFailed = VCLJwt.fromEncodedJwt(
-        CredentialManifestMocks.JwtCredentialManifest1
+        CredentialManifestMocks.JwtCredentialManifest1,
     );
     const vclJwtPassed = VCLJwt.fromEncodedJwt(
-        CredentialManifestMocks.JwtCredentialManifestFromRegularIssuer
+        CredentialManifestMocks.JwtCredentialManifestFromRegularIssuer,
     );
 
     const credentialsAmount = JSON.parse(
-        CredentialMocks.JwtCredentialsFromRegularIssuer
+        CredentialMocks.JwtCredentialsFromRegularIssuer,
     ).length;
 
     before(async () => {
@@ -69,25 +69,25 @@ describe('FinalizeOffersUseCase Tests', () => {
                 '',
                 new VCLVerifiedProfile(
                     JSON.parse(
-                        VerifiedProfileMocks.VerifiedProfileIssuerJsonStr2
-                    )
+                        VerifiedProfileMocks.VerifiedProfileIssuerJsonStr2,
+                    ),
                 ),
                 null,
-                didJwk
+                didJwk,
             ),
             [],
             [],
-            []
+            [],
         );
         const offers = await new GenerateOffersUseCaseImpl(
             new GenerateOffersRepositoryImpl(
-                new NetworkServiceSuccess(GenerateOffersMocks.GeneratedOffers)
+                new NetworkServiceSuccess(GenerateOffersMocks.GeneratedOffers),
             ),
             new OffersByDeepLinkVerifierImpl(
                 new ResolveDidDocumentRepositoryImpl(
-                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-                )
-            )
+                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+                ),
+            ),
         ).generateOffers(generateOffersDescriptor, new VCLToken(''));
 
         expect(offers.challenge).toEqual(GenerateOffersMocks.Challenge);
@@ -96,32 +96,32 @@ describe('FinalizeOffersUseCase Tests', () => {
             vclJwtFailed,
             null,
             new VCLVerifiedProfile(
-                JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr2)
+                JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr2),
             ),
             null,
-            didJwk
+            didJwk,
         );
         credentialManifestPassed = new VCLCredentialManifest(
             vclJwtPassed,
             null,
             new VCLVerifiedProfile(
-                JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr2)
+                JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr2),
             ),
             null,
-            didJwk
+            didJwk,
         );
 
         finalizeOffersDescriptorFailed = new VCLFinalizeOffersDescriptor(
             credentialManifestFailed,
             offers.challenge!,
             [],
-            []
+            [],
         );
         finalizeOffersDescriptorPassed = new VCLFinalizeOffersDescriptor(
             credentialManifestPassed,
             offers.challenge!,
             [],
-            []
+            [],
         );
     });
 
@@ -129,35 +129,35 @@ describe('FinalizeOffersUseCase Tests', () => {
         subject1 = new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(
                 new NetworkServiceSuccess(
-                    JSON.parse(CredentialMocks.JwtCredentialsFromRegularIssuer)
-                )
+                    JSON.parse(CredentialMocks.JwtCredentialsFromRegularIssuer),
+                ),
             ),
             jwtServiceRepository,
             new CredentialIssuerVerifierImpl(
                 new CredentialTypesModelMock(
-                    CredentialTypesModelMock.IssuerCategoryRegularIssuer
+                    CredentialTypesModelMock.IssuerCategoryRegularIssuer,
                 ),
                 new NetworkServiceSuccess(
-                    JSON.parse(JsonLdMocks.Layer1v10Jsonld)
-                )
+                    JSON.parse(JsonLdMocks.Layer1v10Jsonld),
+                ),
             ),
             new CredentialDidVerifierImpl(),
             new CredentialsByDeepLinkVerifierImpl(
                 new ResolveDidDocumentRepositoryImpl(
-                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-                )
-            )
+                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+                ),
+            ),
         );
 
         try {
             await subject1.finalizeOffers(
                 finalizeOffersDescriptorFailed,
-                new VCLToken('')
+                new VCLToken(''),
             );
             expect(true).toEqual(false);
         } catch (error: any) {
             expect(error.errorCode).toEqual(
-                VCLErrorCode.IssuerRequiresNotaryPermission
+                VCLErrorCode.IssuerRequiresNotaryPermission,
             );
         }
     });
@@ -166,47 +166,47 @@ describe('FinalizeOffersUseCase Tests', () => {
         subject2 = new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(
                 new NetworkServiceSuccess(
-                    JSON.parse(CredentialMocks.JwtCredentialsFromRegularIssuer)
-                )
+                    JSON.parse(CredentialMocks.JwtCredentialsFromRegularIssuer),
+                ),
             ),
             jwtServiceRepository,
             new CredentialIssuerVerifierImpl(
                 new CredentialTypesModelMock(
-                    CredentialTypesModelMock.IssuerCategoryRegularIssuer
+                    CredentialTypesModelMock.IssuerCategoryRegularIssuer,
                 ),
                 new NetworkServiceSuccess(
-                    JSON.parse(JsonLdMocks.Layer1v10Jsonld)
-                )
+                    JSON.parse(JsonLdMocks.Layer1v10Jsonld),
+                ),
             ),
             new CredentialDidVerifierImpl(),
             new CredentialsByDeepLinkVerifierImpl(
                 new ResolveDidDocumentRepositoryImpl(
-                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-                )
-            )
+                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+                ),
+            ),
         );
 
         const finalizeOffers = await subject2.finalizeOffers(
             finalizeOffersDescriptorPassed,
-            new VCLToken('')
+            new VCLToken(''),
         );
 
         expect(finalizeOffers.passedCredentials.length).toEqual(
-            credentialsAmount
+            credentialsAmount,
         );
         expect(
             finalizeOffers.passedCredentials.some(
                 (cred) =>
                     cred.encodedJwt ===
-                    CredentialMocks.JwtCredentialEducationDegreeRegistrationFromRegularIssuer
-            )
+                    CredentialMocks.JwtCredentialEducationDegreeRegistrationFromRegularIssuer,
+            ),
         ).toEqual(true);
         expect(
             finalizeOffers.passedCredentials.some(
                 (cred) =>
                     cred.encodedJwt ===
-                    CredentialMocks.JwtCredentialEmploymentPastFromRegularIssuer
-            )
+                    CredentialMocks.JwtCredentialEmploymentPastFromRegularIssuer,
+            ),
         ).toEqual(true);
         expect(finalizeOffers.failedCredentials.length).toEqual(0);
     });
@@ -215,29 +215,29 @@ describe('FinalizeOffersUseCase Tests', () => {
         subject3 = new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(
                 new NetworkServiceSuccess(
-                    JSON.parse(CredentialMocks.JwtEmptyCredentials)
-                )
+                    JSON.parse(CredentialMocks.JwtEmptyCredentials),
+                ),
             ),
             jwtServiceRepository,
             new CredentialIssuerVerifierImpl(
                 new CredentialTypesModelMock(
-                    CredentialTypesModelMock.IssuerCategoryRegularIssuer
+                    CredentialTypesModelMock.IssuerCategoryRegularIssuer,
                 ),
                 new NetworkServiceSuccess(
-                    JSON.parse(JsonLdMocks.Layer1v10Jsonld)
-                )
+                    JSON.parse(JsonLdMocks.Layer1v10Jsonld),
+                ),
             ),
             new CredentialDidVerifierImpl(),
             new CredentialsByDeepLinkVerifierImpl(
                 new ResolveDidDocumentRepositoryImpl(
-                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-                )
-            )
+                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+                ),
+            ),
         );
 
         const finalizeOffers = await subject3.finalizeOffers(
             finalizeOffersDescriptorPassed,
-            new VCLToken('')
+            new VCLToken(''),
         );
 
         expect(finalizeOffers.failedCredentials.length).toEqual(0);
@@ -247,29 +247,29 @@ describe('FinalizeOffersUseCase Tests', () => {
     test('testFailure', async () => {
         subject4 = new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(
-                new NetworkServiceSuccess({ payload: 'wrong payload' })
+                new NetworkServiceSuccess({ payload: 'wrong payload' }),
             ),
             jwtServiceRepository,
             new CredentialIssuerVerifierImpl(
                 new CredentialTypesModelMock(
-                    CredentialTypesModelMock.IssuerCategoryRegularIssuer
+                    CredentialTypesModelMock.IssuerCategoryRegularIssuer,
                 ),
                 new NetworkServiceSuccess(
-                    JSON.parse(JsonLdMocks.Layer1v10Jsonld)
-                )
+                    JSON.parse(JsonLdMocks.Layer1v10Jsonld),
+                ),
             ),
             new CredentialDidVerifierImpl(),
             new CredentialsByDeepLinkVerifierImpl(
                 new ResolveDidDocumentRepositoryImpl(
-                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-                )
-            )
+                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+                ),
+            ),
         );
 
         try {
             await subject4.finalizeOffers(
                 finalizeOffersDescriptorPassed,
-                new VCLToken('')
+                new VCLToken(''),
             );
             expect(true).toEqual(false);
         } catch (error: any) {

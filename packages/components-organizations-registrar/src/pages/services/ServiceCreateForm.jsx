@@ -82,6 +82,7 @@ const ServiceCreateForm = ({ onServiceCreated, services, InterceptOnCreate }) =>
 
   useEffect(() => {
     if (InterceptOnCreate && serviceId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsInterceptOnCreateOpen(true);
     }
   }, [InterceptOnCreate, serviceId]);
@@ -109,7 +110,7 @@ const ServiceCreateForm = ({ onServiceCreated, services, InterceptOnCreate }) =>
         setSelectedCAO(service.serviceEndpoint.split('#')[0]);
       }
       onServiceCreated();
-    } catch (e) {
+    } catch {
       setCreateServiceInProgress(false);
     }
   };

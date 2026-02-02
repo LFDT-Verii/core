@@ -155,6 +155,7 @@ const CustomImageInput = ({
   useEffect(() => {
     if (imageHeight && imageWidth) {
       if (imageHeight < 300 || imageWidth < 300) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setErrorMessage(isSVG ? ERRORS.svgSize : ERRORS.minSize);
       } else if (imageHeight > 400 || imageWidth > 400) {
         setErrorMessage(ERRORS.maxSize);
@@ -169,6 +170,7 @@ const CustomImageInput = ({
   // Upload valid image
   useEffect(() => {
     if (acceptedFile && !errorMessage && imageShow && imageExtension && !imageMetadata) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       handleSetupImageUpload(acceptedFile, imageExtension);
     }
   }, [
@@ -188,6 +190,7 @@ const CustomImageInput = ({
 
   useEffect(() => {
     if (errorMessage) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsDropAccepted(false);
       setImageSrc(null);
       setIsImageLoading(false);
@@ -202,8 +205,9 @@ const CustomImageInput = ({
       !timerIdUploadStatus &&
       !errorMessage
     ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsImageLoading(true);
-      // eslint-disable-next-line better-mutation/no-mutation
+
       const timer = setInterval(
         () => updateImageUploadStatus(imageMetadata.url, timer),
         IMAGE_STATUS_REFETCH_INTERVAL,
