@@ -29,7 +29,7 @@
     "quick-lru": "~5.1.1"
   },
   "devDependencies": {
-    "eslint": "8.57.1",
+    "eslint": "9.26.0",
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-config-prettier": "8.10.2",
     "eslint-plugin-autofix": "1.1.0",
