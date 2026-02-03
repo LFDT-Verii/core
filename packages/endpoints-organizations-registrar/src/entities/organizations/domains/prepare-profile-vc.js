@@ -12,7 +12,7 @@ const initPrepareProfileVc = (fastify) => {
   return async (didDoc, profile) => {
     const { jwtVc, credentialId } = await buildProfileVerifiableCredential(
       profile,
-      didDoc
+      didDoc,
     );
 
     const vcUrl = buildProfileVcUrl(didDoc, credentialId);

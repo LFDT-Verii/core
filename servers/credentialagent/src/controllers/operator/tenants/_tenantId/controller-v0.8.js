@@ -40,7 +40,7 @@ const tenantController = async (fastify) => {
   const getOrgServiceTypes = (didDoc, serviceIds) => {
     const services = map(
       (serviceId) => extractService(serviceId)(didDoc),
-      serviceIds
+      serviceIds,
     );
 
     const serviceTypes = flow(map('type'), uniq)(services);
@@ -55,7 +55,7 @@ const tenantController = async (fastify) => {
 
     const { serviceTypes, credentialTypes } = getOrgServiceTypes(
       didDoc,
-      serviceIds
+      serviceIds,
     );
 
     return {
@@ -87,7 +87,7 @@ const tenantController = async (fastify) => {
 
       if (isEmpty(didDoc)) {
         throw new newError.NotFound(
-          `Organization with DID "${didDoc.id}" was not found on the blockchain`
+          `Organization with DID "${didDoc.id}" was not found on the blockchain`,
         );
       }
 
@@ -101,7 +101,7 @@ const tenantController = async (fastify) => {
       });
 
       return req.repos.tenants.update(tenant._id, updatedTenant);
-    }
+    },
   );
 
   fastify.get(
@@ -131,11 +131,11 @@ const tenantController = async (fastify) => {
               tenant.did,
               await resolveDid(tenant.did, req),
               buildServiceIds(tenant),
-              req
+              req,
             )
           : {}),
       };
-    }
+    },
   );
 
   fastify.delete(
@@ -159,7 +159,7 @@ const tenantController = async (fastify) => {
       await repos.groups.deleteTenant(tenant.did);
 
       reply.code(204);
-    }
+    },
   );
 
   fastify.post(
@@ -210,7 +210,7 @@ const tenantController = async (fastify) => {
       return {
         numCleaned,
       };
-    }
+    },
   );
 };
 

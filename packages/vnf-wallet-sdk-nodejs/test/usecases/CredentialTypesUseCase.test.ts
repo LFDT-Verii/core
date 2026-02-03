@@ -10,14 +10,14 @@ describe('CredentialTypesUseCaseImpl Tests', () => {
     const subject1 = new CredentialTypesUseCaseImpl(
         new CredentialTypesRepositoryImpl(
             new NetworkServiceSuccess(
-                JSON.parse(CredentialTypesMocks.CredentialTypesJsonStr)
-            )
-        )
+                JSON.parse(CredentialTypesMocks.CredentialTypesJsonStr),
+            ),
+        ),
     );
     const subject2 = new CredentialTypesUseCaseImpl(
         new CredentialTypesRepositoryImpl(
-            new NetworkServiceSuccess({ wrong: 'payload' })
-        )
+            new NetworkServiceSuccess({ wrong: 'payload' }),
+        ),
     );
 
     test('testGetCountriesSuccess', async () => {
@@ -25,11 +25,14 @@ describe('CredentialTypesUseCaseImpl Tests', () => {
 
         compareCredentialTypes(
             credentialTypes.all!,
-            getExpectedCredentialTypesArr()
+
+            getExpectedCredentialTypesArr(),
         );
+
         compareCredentialTypes(
             credentialTypes.recommendedTypes!,
-            getExpectedRecommendedCredentialTypesArr()
+
+            getExpectedRecommendedCredentialTypesArr(),
         );
     });
 
@@ -44,29 +47,29 @@ describe('CredentialTypesUseCaseImpl Tests', () => {
 
     const compareCredentialTypes = (
         credentialTypesArr1: VCLCredentialType[],
-        credentialTypesArr2: VCLCredentialType[]
+        credentialTypesArr2: VCLCredentialType[],
     ) => {
         for (let i = 0; i < credentialTypesArr1.length; i++) {
             expect(credentialTypesArr1[i].payload).toStrictEqual(
-                credentialTypesArr2[i].payload
+                credentialTypesArr2[i].payload,
             );
             expect(credentialTypesArr1[i].id).toEqual(
-                credentialTypesArr2[i].id
+                credentialTypesArr2[i].id,
             );
             expect(credentialTypesArr1[i].schema).toEqual(
-                credentialTypesArr2[i].schema
+                credentialTypesArr2[i].schema,
             );
             expect(credentialTypesArr1[i].createdAt).toEqual(
-                credentialTypesArr2[i].createdAt
+                credentialTypesArr2[i].createdAt,
             );
             expect(credentialTypesArr1[i].schemaName).toEqual(
-                credentialTypesArr2[i].schemaName
+                credentialTypesArr2[i].schemaName,
             );
             expect(credentialTypesArr1[i].credentialType).toEqual(
-                credentialTypesArr2[i].credentialType
+                credentialTypesArr2[i].credentialType,
             );
             expect(credentialTypesArr1[i].recommended).toEqual(
-                credentialTypesArr2[i].recommended
+                credentialTypesArr2[i].recommended,
             );
         }
     };

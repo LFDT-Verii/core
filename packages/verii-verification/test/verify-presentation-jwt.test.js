@@ -38,12 +38,12 @@ describe('verify presentation jwt', () => {
       const presentation = await generateDocJwt(
         payload,
         keyPair.privateKey,
-        options
+        options,
       );
       expect(
         await verifyVerifiablePresentationJwt(presentation, {
           vnfProtocolVersion: 1,
-        })
+        }),
       ).toEqual({
         ...payload.vp,
         id: options.jti,
@@ -68,12 +68,12 @@ describe('verify presentation jwt', () => {
       const presentation = await generateDocJwt(
         payload,
         keyPair.privateKey,
-        options
+        options,
       );
       expect(
         await verifyVerifiablePresentationJwt(presentation, {
           vnfProtocolVersion: 2,
-        })
+        }),
       ).toEqual({
         ...payload.vp,
         id: options.jti,
@@ -89,14 +89,14 @@ describe('verify presentation jwt', () => {
       const presentation = await generateDocJwt(
         payload,
         wrongKeyPair.privateKey,
-        options
+        options,
       );
       await expect(() =>
         verifyVerifiablePresentationJwt(presentation, {
           vnfProtocolVersion: 2,
-        })
+        }),
       ).rejects.toEqual(
-        new Error('Malformed jwt_vp property: signature verification failed')
+        new Error('Malformed jwt_vp property: signature verification failed'),
       );
     });
 
@@ -104,12 +104,12 @@ describe('verify presentation jwt', () => {
       const presentation = await generateDocJwt(
         payload,
         keyPair.privateKey,
-        omit(['kid'], options)
+        omit(['kid'], options),
       );
       await expect(() =>
         verifyVerifiablePresentationJwt(presentation, {
           vnfProtocolVersion: 2,
-        })
+        }),
       ).rejects.toEqual(new Error('jwt_vp must not be self signed'));
     });
   });

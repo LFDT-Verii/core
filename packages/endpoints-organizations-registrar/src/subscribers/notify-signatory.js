@@ -43,9 +43,9 @@ const notifySignatory = async (fastify) => {
             organization,
             authCode,
           },
-          context
+          context,
         );
-      }
+      },
     );
 };
 module.exports = notifySignatory;

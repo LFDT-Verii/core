@@ -24,18 +24,18 @@ describe('OffersByDeepLinkVerifierTest', () => {
     const offers = new VCLOffers(
         GenerateOffersMocks.RealOffersJson,
         VCLOffers.offersFromJsonArray(
-            GenerateOffersMocks.RealOffersJson[VCLOffers.CodingKeys.KeyOffers]
+            GenerateOffersMocks.RealOffersJson[VCLOffers.CodingKeys.KeyOffers],
         ),
         0,
         new VCLToken(''),
-        ''
+        '',
     );
 
     test('testVerifyOffersSuccess', async () => {
         subject = new OffersByDeepLinkVerifierImpl(
             new ResolveDidDocumentRepositoryImpl(
-                new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-            )
+                new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+            ),
         );
 
         const isVerified = await subject.verifyOffers(offers, deepLink);
@@ -46,16 +46,16 @@ describe('OffersByDeepLinkVerifierTest', () => {
         subject = new OffersByDeepLinkVerifierImpl(
             new ResolveDidDocumentRepositoryImpl(
                 new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentWithWrongDidMock
-                )
-            )
+                    DidDocumentMocks.DidDocumentWithWrongDidMock,
+                ),
+            ),
         );
         try {
             const isVerified = await subject.verifyOffers(offers, deepLink);
             expect(isVerified).toBeFalsy();
         } catch (error: any) {
             expect(error.errorCode).toEqual(
-                VCLErrorCode.MismatchedOfferIssuerDid
+                VCLErrorCode.MismatchedOfferIssuerDid,
             );
         }
     });

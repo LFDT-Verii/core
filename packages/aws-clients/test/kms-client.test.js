@@ -60,13 +60,13 @@ describe('kms-client test suite', () => {
   describe('encrypt', () => {
     it('should throw error if argument keyId is missing', async () => {
       await expect(kmsClient.encrypt(undefined, 'secret-text')).rejects.toThrow(
-        "exception while calling kms.Encrypt: expected string or bytes-like object, got 'NoneType'"
+        "exception while calling kms.Encrypt: expected string or bytes-like object, got 'NoneType'",
       );
     });
 
     it('should throw error if argument plaintext is missing', async () => {
       await expect(kmsClient.encrypt(aliasName, undefined)).rejects.toThrow(
-        'The first argument must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object. Received undefined'
+        'The first argument must be of type string or an instance of Buffer, ArrayBuffer, or Array or an Array-like Object. Received undefined',
       );
     });
 
@@ -77,20 +77,20 @@ describe('kms-client test suite', () => {
       });
       const response = await kmsClient.encrypt(
         aliasName,
-        hexFromJwk(privateKey)
+        hexFromJwk(privateKey),
       );
       expect(response.CiphertextBlob).toBeDefined();
       expect(response.CiphertextBlob.toString()).not.toBe(
-        hexFromJwk(privateKey)
+        hexFromJwk(privateKey),
       );
       const decryptResult = await testClient.send(
         new DecryptCommand({
           CiphertextBlob: response.CiphertextBlob,
-        })
+        }),
       );
 
       expect(Buffer.from(decryptResult.Plaintext).toString()).toEqual(
-        hexFromJwk(privateKey)
+        hexFromJwk(privateKey),
       );
     });
   });
@@ -98,7 +98,7 @@ describe('kms-client test suite', () => {
   describe('decrypt', () => {
     it('should throw error if argument ciphertext is missing', async () => {
       await expect(kmsClient.decrypt(undefined)).rejects.toThrow(
-        "LocalStack is unable to deserialize the ciphertext blob. Perhaps the blob didn't come from LocalStack"
+        "LocalStack is unable to deserialize the ciphertext blob. Perhaps the blob didn't come from LocalStack",
       );
     });
 
@@ -109,11 +109,11 @@ describe('kms-client test suite', () => {
       });
       const response = await kmsClient.encrypt(
         aliasName,
-        hexFromJwk(privateKey)
+        hexFromJwk(privateKey),
       );
       const decryptResult = await kmsClient.decrypt(response.CiphertextBlob);
       expect(decryptResult.Plaintext.toString()).toEqual(
-        hexFromJwk(privateKey)
+        hexFromJwk(privateKey),
       );
     });
   });

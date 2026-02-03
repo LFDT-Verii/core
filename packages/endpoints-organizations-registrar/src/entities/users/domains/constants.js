@@ -31,7 +31,7 @@ const UserErrorMessages = {
     `User ${user?.sub} (group claim ${user[VNF_GROUP_ID_CLAIM]}) access forbidden to organization ${did} (groupId ${group?.groupId})`,
   MISSING_REQUIRED_SCOPES_TEMPLATE: ({ requiredScopes }) =>
     `User must have one of the following scopes: ${JSON.stringify(
-      requiredScopes
+      requiredScopes,
     )}`,
   USER_CANNOT_SPECIFY_GROUP_ID: 'User must not contain a "groupId"',
   USER_MUST_SPECIFY_GROUP_ID: 'User must specify a "groupId"',

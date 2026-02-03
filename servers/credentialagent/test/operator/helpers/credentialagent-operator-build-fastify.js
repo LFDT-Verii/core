@@ -28,7 +28,7 @@ const mongoConnection = buildMongoConnection('test-credential-agent');
 module.exports = (overrideConfig = {}) =>
   flow(
     createTestServer,
-    initOperatorServer
+    initOperatorServer,
   )({
     ...operatorConfig,
     ...overrideConfig,

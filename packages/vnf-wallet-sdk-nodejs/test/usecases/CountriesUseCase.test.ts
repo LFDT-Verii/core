@@ -11,15 +11,15 @@ describe('CredentialManifestUseCase Tests', () => {
 
     const subject = new CountriesUseCaseImpl(
         new CountriesRepositoryImpl(
-            new NetworkServiceSuccess(expectedCountriesPayload)
-        )
+            new NetworkServiceSuccess(expectedCountriesPayload),
+        ),
     );
 
     test('testGetCountriesSuccess', async () => {
         const countries = await subject.getCountries();
 
         const receivedCountriesPayload = countries?.all?.map(
-            (country) => country.payload
+            (country) => country.payload,
         );
         expect(receivedCountriesPayload).toEqual(expectedCountriesPayload);
     });

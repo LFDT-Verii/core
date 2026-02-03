@@ -27,6 +27,7 @@ const generateOrganizationKeyMatcher = ({
   type = 'JsonWebKey2020',
   withKidFragment = false,
   withPrivateKey = false,
+  // eslint-disable-next-line complexity
 }) => {
   const baseMatcher = {
     algorithm: 'SECP256K1',
@@ -39,7 +40,7 @@ const generateOrganizationKeyMatcher = ({
     baseMatcher.didDocumentKey = {
       id: kid,
       type: expect.stringMatching(
-        /^(JsonWebKey2020|Ed25519VerificationKey2018|EcdsaSecp256k1VerificationKey2019|SECP256K1)$/
+        /^(JsonWebKey2020|Ed25519VerificationKey2018|EcdsaSecp256k1VerificationKey2019|SECP256K1)$/,
       ),
       controller: expect.any(String),
       ...(type === 'JsonWebKey2020'

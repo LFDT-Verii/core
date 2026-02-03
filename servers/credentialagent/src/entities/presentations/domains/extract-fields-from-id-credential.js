@@ -20,7 +20,7 @@ const idCredentialMapper = (credential) =>
   flow(
     pick(['firstName', 'lastName', 'middleNames', 'address', 'dob']),
     omitBy(isNil),
-    mapValues((val) => sample(val?.localized) ?? val) // extracts out firstName.localized.en = "Sam" or otherwise assumes its a string.
+    mapValues((val) => sample(val?.localized) ?? val), // extracts out firstName.localized.en = "Sam" or otherwise assumes its a string.
   )(credential?.credentialSubject);
 
 const extractFieldsFromIdCredential = (credentialType, credential) => {

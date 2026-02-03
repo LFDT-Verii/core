@@ -5,19 +5,17 @@ import VerifiedProfileRepository from '../../domain/repositories/VerifiedProfile
 import Urls, { HeaderKeys, HeaderValues, Params } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class VerifiedProfileRepositoryImpl
-    implements VerifiedProfileRepository
-{
+export default class VerifiedProfileRepositoryImpl implements VerifiedProfileRepository {
     constructor(private readonly networkService: NetworkService) {}
 
     async getVerifiedProfile(
-        verifiedProfileDescriptor: VCLVerifiedProfileDescriptor
+        verifiedProfileDescriptor: VCLVerifiedProfileDescriptor,
     ): Promise<VCLVerifiedProfile> {
         const verifiedProfileResponse = await this.networkService.sendRequest({
             method: HttpMethod.GET,
             endpoint: Urls.VerifiedProfile.replace(
                 Params.Did,
-                verifiedProfileDescriptor.did
+                verifiedProfileDescriptor.did,
             ),
             body: null,
             headers: {

@@ -21,7 +21,7 @@ const decryptField = ({ encryptedField, oldKey, entry }, options) => {
     return decryptCollection(encryptedField, oldKey);
   } catch (e) {
     printInfo(
-      `Error decrypting '${options.secretProp}' field of _id: ${entry._id}`
+      `Error decrypting '${options.secretProp}' field of _id: ${entry._id}`,
     );
     throw e;
   }
@@ -31,7 +31,7 @@ const reencryptCollectionField = async (
   newKey,
   _collection,
   secretProp,
-  { db, ...options }
+  { db, ...options },
 ) => {
   const currentTime = new Date();
 
@@ -52,9 +52,9 @@ const reencryptCollectionField = async (
           decryptField({ encryptedField, oldKey, entry }, options),
         (decryptedField) => encryptCollection(decryptedField, newKey),
         (encryptedField) =>
-          updateProp(entry._id, secretPropKey, encryptedField, currentTime)
+          updateProp(entry._id, secretPropKey, encryptedField, currentTime),
       )(entry),
-    entries
+    entries,
   );
   const printEntries = () => {
     each((eW) => printInfo(`${get('_id', eW)}`), entries);
@@ -65,7 +65,7 @@ const reencryptCollectionField = async (
     printInfo(
       `Dry Run: would have rotated encryption of ${size(entries)} ${
         options.collection
-      }`
+      }`,
     );
     return;
   }
@@ -75,7 +75,7 @@ const reencryptCollectionField = async (
   printInfo(
     `Rotated encryption of ${size(entries)} '${secretPropKey}' fields in ${
       options.collection
-    }`
+    }`,
   );
 };
 

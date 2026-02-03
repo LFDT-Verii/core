@@ -38,7 +38,7 @@ const resolveDidController = async (fastify) => {
         params: { did },
       } = req;
       return resolveDid(did, req);
-    }
+    },
   );
 };
 

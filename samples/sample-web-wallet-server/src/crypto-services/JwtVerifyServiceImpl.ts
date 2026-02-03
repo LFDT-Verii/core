@@ -16,7 +16,7 @@ import { verifyJwtFetcher } from './fetchers';
 export class JwtVerifyServiceImpl implements VCLJwtVerifyService {
   async verify(
     jwt: VCLJwt,
-    publicJwk: Nullish<VCLPublicJwk>
+    publicJwk: Nullish<VCLPublicJwk>,
   ): Promise<boolean> {
     const verificationJson = await verifyJwtFetcher(jwt, publicJwk);
     return (verificationJson.verified as boolean) ?? false;

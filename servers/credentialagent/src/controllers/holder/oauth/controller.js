@@ -90,11 +90,10 @@ const controller = async (fastify) => {
           refreshToken: reqRefreshToken,
           clientId,
         },
-        req
+        req,
       );
-      const user = await repos.vendorUserIdMappings.findOrInsertVendorUser(
-        feed
-      );
+      const user =
+        await repos.vendorUserIdMappings.findOrInsertVendorUser(feed);
 
       const refreshToken = buildRefreshToken();
       await repos.feeds.update(`${feed._id}`, { clientId, refreshToken });
@@ -103,20 +102,20 @@ const controller = async (fastify) => {
         `${user._id}`,
         null,
         null,
-        req
+        req,
       );
       return {
         access_token: accessToken,
         refresh_token: refreshToken,
         token_type: 'Bearer',
       };
-    }
+    },
   );
 };
 
 const matchFeed = async (
   { grantType, authorizationCode, refreshToken, clientId },
-  ctx
+  ctx,
 ) => {
   const { repos } = ctx;
   const filter =

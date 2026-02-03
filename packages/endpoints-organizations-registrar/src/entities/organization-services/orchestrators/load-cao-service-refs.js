@@ -42,11 +42,11 @@ const buildReferenceCaoServices = ({ caoServiceIds, caoOrganizations }) => {
       }, caoOrganizations);
       const caoService = find(
         { id: serviceFragment },
-        caoOrganization?.services
+        caoOrganization?.services,
       );
       return [caoServiceId, { caoOrganization, caoService }];
     }),
-    fromPairs
+    fromPairs,
   )(caoServiceIds);
 };
 

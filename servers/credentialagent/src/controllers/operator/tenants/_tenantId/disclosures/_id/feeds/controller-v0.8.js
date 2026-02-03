@@ -65,7 +65,7 @@ const operatorFeedsController = async (fastify) => {
       return {
         feeds,
       };
-    }
+    },
   );
 
   fastify.get(
@@ -92,7 +92,7 @@ const operatorFeedsController = async (fastify) => {
       const { repos } = req;
       const feeds = await repos.feeds.find();
       return { feeds };
-    }
+    },
   );
 
   fastify.get(
@@ -115,7 +115,7 @@ const operatorFeedsController = async (fastify) => {
       const { params, repos } = req;
       const feed = await repos.feeds.findById(params.feedId);
       return { feed };
-    }
+    },
   );
 
   fastify.delete(
@@ -133,7 +133,7 @@ const operatorFeedsController = async (fastify) => {
       await repos.feeds.del(params.feedId);
       reply.code(204);
       return {};
-    }
+    },
   );
 
   fastify.put(
@@ -186,13 +186,13 @@ const operatorFeedsController = async (fastify) => {
           projection: repos.feeds.defaultColumnsSelection,
           returnDocument: 'after',
           includeResultMetadata: true,
-        }
+        },
       );
       if (!updateResult.value) {
         throw newError(404, `feed ${params.feedId} not found`);
       }
       return { feed: updateResult.value };
-    }
+    },
   );
 };
 

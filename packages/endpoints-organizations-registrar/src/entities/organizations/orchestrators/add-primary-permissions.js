@@ -3,7 +3,7 @@ const { initPermissions } = require('@verii/contract-permissions');
 
 const addPrimaryPermissions = async (
   { primaryAccount, rotationKeyPair, permissioningKeyPair },
-  context
+  context,
 ) => {
   const {
     config: { rootPrivateKey, permissionsContractAddress },
@@ -16,7 +16,7 @@ const addPrimaryPermissions = async (
       contractAddress: permissionsContractAddress,
       rpcProvider,
     },
-    context
+    context,
   );
   await permissionRootContract.addPrimary({
     primary: primaryAccount,

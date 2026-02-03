@@ -47,6 +47,6 @@ module.exports = (app, options, next = () => {}) => {
         }),
       ],
     },
-    app
+    app,
   );
 };

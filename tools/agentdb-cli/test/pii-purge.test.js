@@ -17,7 +17,7 @@ describe('pii-purge test suite', () => {
   let persistOffer;
   before(async () => {
     client = await initMongoClient(
-      buildMongoConnection('test-credentialagent')
+      buildMongoConnection('test-credentialagent'),
     );
     db = client.db();
     persistOffer = persistOfferFactory(db);

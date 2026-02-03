@@ -40,20 +40,20 @@ module.exports = async (fastify) => {
         filter = set(
           'createdAt.$gte',
           startOfDay(new Date(query.dateFrom)),
-          filter
+          filter,
         );
       }
       if (!isEmpty(query.dateUntil)) {
         filter = set(
           'createdAt.$lte',
           endOfDay(new Date(query.dateFrom)),
-          filter
+          filter,
         );
       }
       return repos.credentialSubmissions.find({
         filter,
         sort: { createdAt: -1 },
       });
-    }
+    },
   );
 };

@@ -13,7 +13,7 @@ const normalizeUri = (uri: string): string => {
         .forEach((key) => {
             sortedAndDecodedParams.set(
                 key,
-                decodeURIComponent(queryParams.get(key) as string)
+                decodeURIComponent(queryParams.get(key) as string),
             );
         });
     url.search = sortedAndDecodedParams.toString();

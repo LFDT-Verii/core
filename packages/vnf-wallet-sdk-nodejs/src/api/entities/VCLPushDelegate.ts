@@ -3,7 +3,7 @@ import { Dictionary } from '../VCLTypes';
 export default class VCLPushDelegate {
     constructor(
         public readonly pushUrl: string,
-        public readonly pushToken: string
+        public readonly pushToken: string,
     ) {}
 
     static readonly KeyPushUrl = 'pushUrl';

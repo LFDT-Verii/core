@@ -75,8 +75,8 @@ const nockCredentialTypes = (times = 2) => {
       every(
         (credentialType) =>
           includes(credentialType, Object.keys(credentialTypeMetadata)),
-        castArray(query.credentialType)
-      )
+        castArray(query.credentialType),
+      ),
     )
     .times(times)
     .reply(200, (request) => {
@@ -84,7 +84,7 @@ const nockCredentialTypes = (times = 2) => {
       const searchParamsString = request.url.substring(questionMarkIdx);
       const query = new URLSearchParams(searchParamsString);
       return Object.values(
-        pick(query.getAll('credentialType'), credentialTypeMetadata)
+        pick(query.getAll('credentialType'), credentialTypeMetadata),
       );
     });
 };

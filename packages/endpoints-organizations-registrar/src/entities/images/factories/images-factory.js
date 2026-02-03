@@ -39,5 +39,5 @@ module.exports = (app) =>
         updatedAt: new Date(),
         ...overrides(),
       };
-    }
+    },
   );

@@ -337,17 +337,17 @@ const generateKYCPresentation = (exchange, idDocTypes, options) => {
 const generatePresentation = (exchange) => {
   return doGeneratePresentation(
     [credential1, credential2, credential3, credential4],
-    exchange
+    exchange,
   );
 };
 
 const doGeneratePresentation = async (
   credentials,
   exchange,
-  options = { isBrokeVCS: false }
+  options = { isBrokeVCS: false },
 ) => {
   const signedCredentials = await Promise.all(
-    map((c) => generateCredentialJwt(c, privateKey), credentials)
+    map((c) => generateCredentialJwt(c, privateKey), credentials),
   );
 
   const publicJwk = jwkFromSecp256k1Key(publicKey, false);
@@ -365,8 +365,8 @@ const doGeneratePresentation = async (
           ...fromPairs(
             mapWithIndex(
               (c, i) => [`signedCredential${i + 1}`, c],
-              signedCredentials
-            )
+              signedCredentials,
+            ),
           ),
           presentation_submission: {
             id: nanoid(),
@@ -377,7 +377,7 @@ const doGeneratePresentation = async (
                 path: `$.signedCredential${i + 1}`,
                 format: 'jwt_vc',
               }),
-              signedCredentials
+              signedCredentials,
             ),
           },
         }
@@ -399,7 +399,7 @@ const doGeneratePresentation = async (
                 path: `$.verifiableCredential[${i}]`,
                 format: 'jwt_vc',
               }),
-              signedCredentials
+              signedCredentials,
             ),
           },
         };

@@ -18,11 +18,12 @@ import { GlobalConfig } from '../../GlobalConfig';
 export const generateSignedJwtFetcher = async (
   jwtDescriptor: VCLJwtDescriptor,
   didJwk: VCLDidJwk,
-  nonce: Nullish<string>
+  nonce: Nullish<string>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: getJwtSignServiceUrl(GlobalConfig.environment),
     method: 'POST',
+
     data: generateJwtPayloadToSign(jwtDescriptor, nonce, didJwk),
   };
   return fetcher(config);
@@ -31,7 +32,7 @@ export const generateSignedJwtFetcher = async (
 const generateJwtPayloadToSign = (
   jwtDescriptor: VCLJwtDescriptor,
   nonce: Nullish<string>,
-  didJwk: VCLDidJwk
+  didJwk: VCLDidJwk,
 ): Dictionary<any> => {
   const payload: Dictionary<any> = jwtDescriptor.payload
     ? { ...jwtDescriptor.payload }

@@ -2,6 +2,6 @@ import VCLCredentialTypeSchema from '../../../api/entities/VCLCredentialTypeSche
 
 export default interface CredentialTypeSchemaRepository {
     getCredentialTypeSchema(
-        schemaName: string
+        schemaName: string,
     ): Promise<VCLCredentialTypeSchema>;
 }

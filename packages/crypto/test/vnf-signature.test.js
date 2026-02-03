@@ -45,7 +45,8 @@ describe('vnf signature library', () => {
         timestamp: expect.any(Number),
         vnfSignature: expect.any(String),
         headerValue: expect.stringMatching(
-          new RegExp('t=\\d+,v1=[A-Za-z0-9/+=]+')
+          // eslint-disable-next-line prefer-regex-literals
+          new RegExp('t=\\d+,v1=[A-Za-z0-9/+=]+'),
         ),
       });
       const [timestamp, vnfSignature] = result.headerValue.split(',');
@@ -56,7 +57,7 @@ describe('vnf signature library', () => {
         .update(`${timestampValue}.${canonicalize(payload)}`)
         .verify(
           publicKeyHexToPem(publicKey),
-          Buffer.from(vnfSignatureValue, 'base64')
+          Buffer.from(vnfSignatureValue, 'base64'),
         );
       expect(isSignatureValid).toBe(true);
     });
@@ -75,7 +76,7 @@ describe('vnf signature library', () => {
       currentTimestamp = Date.now();
       signature = signAndEncodeBase64(
         `${currentTimestamp}.${canonicalize(body)}`,
-        privateKey
+        privateKey,
       );
       proof = `t=${currentTimestamp},v1=${signature}`;
     });
@@ -90,7 +91,7 @@ describe('vnf signature library', () => {
 
     it('should fail to verify if the body has been tampered', () => {
       expect(verifyVnfSignature({ ...body, x: 2 }, proof, { config })).toEqual(
-        false
+        false,
       );
     });
 
@@ -99,13 +100,13 @@ describe('vnf signature library', () => {
         verifyVnfSignature(
           body,
           `noTimestamp=${currentTimestamp},v1=${signature}`,
-          { config }
-        )
+          { config },
+        ),
       ).toEqual(false);
       expect(
         verifyVnfSignature(body, `t=${currentTimestamp},noSig=${signature}`, {
           config,
-        })
+        }),
       ).toEqual(false);
       expect(
         verifyVnfSignature(
@@ -113,8 +114,8 @@ describe('vnf signature library', () => {
           `prefix=0,t=${currentTimestamp},v1=${signature}`,
           {
             config,
-          }
-        )
+          },
+        ),
       ).toEqual(false);
     });
 
@@ -122,7 +123,7 @@ describe('vnf signature library', () => {
       expect(
         verifyVnfSignature(body, proof, {
           publicKey: generateKeyPair().publicKey,
-        })
+        }),
       ).toEqual(false);
     });
   });

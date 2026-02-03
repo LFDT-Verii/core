@@ -26,18 +26,18 @@ const initCreateFineractAccount =
         submittedOnDate: new Date(),
         productId,
       },
-      context
+      context,
     );
     return tokenAccountId;
   };
 
 const createStakesAccount = initCreateFineractAccount(
   ProductIds.STAKES,
-  '#stakes-account'
+  '#stakes-account',
 );
 const createEscrowAccount = initCreateFineractAccount(
   ProductIds.ESCROW,
-  '#escrow-account'
+  '#escrow-account',
 );
 
 module.exports = {

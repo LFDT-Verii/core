@@ -6,13 +6,11 @@ import PresentationRequestRepository from '../../domain/repositories/Presentatio
 import { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class PresentationRequestRepositoryImpl
-    implements PresentationRequestRepository
-{
+export default class PresentationRequestRepositoryImpl implements PresentationRequestRepository {
     constructor(private readonly networkService: NetworkService) {}
 
     async getPresentationRequest(
-        presentationRequestDescriptor: VCLPresentationRequestDescriptor
+        presentationRequestDescriptor: VCLPresentationRequestDescriptor,
     ): Promise<string> {
         const { endpoint } = presentationRequestDescriptor;
         if (!endpoint) {

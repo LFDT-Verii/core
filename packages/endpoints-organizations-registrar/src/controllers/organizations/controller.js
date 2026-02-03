@@ -88,13 +88,12 @@ const organizationController = async (fastify) => {
         const { repos, query } = req;
         const serviceTypes = getServiceTypesFromCategories(query);
 
-        let organizations = await repos.organizations.searchByAggregation(
-          query
-        );
+        let organizations =
+          await repos.organizations.searchByAggregation(query);
 
         organizations = map(
           (org) => organizationWithAlternativeDidDoc(org, req),
-          organizations
+          organizations,
         );
 
         const caoServiceRefs = query.noServiceEndpointTransform
@@ -111,13 +110,13 @@ const organizationController = async (fastify) => {
               organization.services,
               serviceTypes,
               caoServiceRefs,
-              req
+              req,
             ),
           }),
-          organizations
+          organizations,
         );
         return { result };
-      }
+      },
     )
     .get(
       '/',
@@ -154,12 +153,12 @@ const organizationController = async (fastify) => {
         const { repos, query } = req;
         const organizations = await repos.organizations.find(
           custodiedFinder(initTransformOrganizationFilter(query)),
-          { didDoc: 1 }
+          { didDoc: 1 },
         );
         return {
           result: map('didDoc', organizations),
         };
-      }
+      },
     )
     .put(
       '/profile/:did',
@@ -225,12 +224,12 @@ const organizationController = async (fastify) => {
             ids: 1,
             createdAt: 1,
             updatedAt: 1,
-          }
+          },
         );
 
         if (organization == null) {
           throw newError.NotFound(
-            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND
+            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND,
           );
         }
 
@@ -244,12 +243,12 @@ const organizationController = async (fastify) => {
 
         const { jwtVc, credentialId, vcUrl } = await prepareProfileVc(
           organization.didDoc,
-          { ...organization.profile, ...modifiedProfile }
+          { ...organization.profile, ...modifiedProfile },
         );
 
         const prefixedModification = mapKeys(
           (k) => `profile.${k}`,
-          modifiedProfile
+          modifiedProfile,
         );
 
         const updatedOrganization = await repos.organizations.update(
@@ -259,14 +258,14 @@ const organizationController = async (fastify) => {
             normalizedProfileName: normalizeProfileName(profile.name),
             signedProfileVcJwt: { signedCredential: jwtVc, credentialId },
             verifiableCredentialJwt: vcUrl,
-          }
+          },
         );
         if (organization.profile.logo !== profile.logo) {
           await repos.images.activate(profile.logo);
           await repos.images.deactivate(organization.profile.logo);
         }
         return buildProfileResponse(updatedOrganization, true);
-      }
+      },
     )
     .post(
       '/monitoring/sync',
@@ -289,7 +288,7 @@ const organizationController = async (fastify) => {
       async (req, reply) => {
         reply.code(204);
         return synchronizeMonitors(req);
-      }
+      },
     );
 };
 

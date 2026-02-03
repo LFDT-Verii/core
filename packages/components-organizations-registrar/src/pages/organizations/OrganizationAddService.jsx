@@ -82,6 +82,7 @@ const OrganizationAddService = ({
 
   useEffect(() => {
     if (InterceptOnCreate && isCreated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsInterceptOnCreateOpen(true);
     }
   }, [InterceptOnCreate, isCreated]);

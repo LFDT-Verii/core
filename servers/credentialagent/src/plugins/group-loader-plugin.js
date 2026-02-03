@@ -27,7 +27,7 @@ const loadGroup = async (db, req) => {
     {
       _id: 1,
       dids: 1,
-    }
+    },
   );
 };
 

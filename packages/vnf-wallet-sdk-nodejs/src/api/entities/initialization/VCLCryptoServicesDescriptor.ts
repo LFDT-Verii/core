@@ -13,13 +13,13 @@ export default class VCLCryptoServicesDescriptor {
     constructor(
         keyService: VCLKeyService,
         jwtSignService: VCLJwtSignService,
-        jwtVerifyService: VCLJwtVerifyService
+        jwtVerifyService: VCLJwtVerifyService,
     ) {
         this.keyService = ensureDefined(keyService, 'keyService');
         this.jwtSignService = ensureDefined(jwtSignService, 'jwtSignService');
         this.jwtVerifyService = ensureDefined(
             jwtVerifyService,
-            'jwtVerifyService'
+            'jwtVerifyService',
         );
     }
 }

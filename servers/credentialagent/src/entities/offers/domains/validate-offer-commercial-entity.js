@@ -1,6 +1,7 @@
 const newError = require('http-errors');
 const { isEmpty } = require('lodash/fp');
 
+// eslint-disable-next-line complexity
 const validateOfferCommercialEntity = (offer, disclosure = {}) => {
   const { commercialEntityName, commercialEntityLogo } = disclosure;
   const { issuer } = offer;

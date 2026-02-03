@@ -52,7 +52,7 @@ describe('Did doc functions test suite', () => {
             },
           ],
           alsoKnownAs: 'did:foo2:bar',
-        })
+        }),
       ).toThrow('DID Document id is not valid');
     });
     it('should error if did doc contains duplicate services', () => {
@@ -73,7 +73,7 @@ describe('Did doc functions test suite', () => {
               serviceEndpoint: 'fooServiceEndpoint',
             },
           ],
-        })
+        }),
       ).toThrow('DID Document services not unique');
     });
     it('should return a did doc with keys, services, and alsoKnownAs', () => {

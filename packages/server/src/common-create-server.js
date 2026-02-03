@@ -117,12 +117,12 @@ const commonCreateServer = (config, log) => {
         if (error.validation) {
           req.log.warn(
             { req: req.raw, body, res: reply.raw, err: error },
-            error && error.message
+            error && error.message,
           );
         } else {
           req.log.error(
             { req: req.raw, body, res: reply.raw, err: error },
-            error && error.message
+            error && error.message,
           );
         }
       })

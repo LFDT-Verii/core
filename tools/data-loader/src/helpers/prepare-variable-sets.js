@@ -4,7 +4,7 @@ const { getColName } = require('./load-csv');
 const prepareVariableSets = async (
   csvHeaders,
   csvRows,
-  { vendorUseridColumn, vars, did }
+  { vendorUseridColumn, vars, did },
 ) => {
   const overrideVars = { ...vars };
   if (did != null) {
@@ -16,7 +16,7 @@ const prepareVariableSets = async (
       ...overrideVars,
       vendorUserId: csvRow[getColName(csvHeaders, vendorUseridColumn)],
     }),
-    csvRows
+    csvRows,
   );
 };
 

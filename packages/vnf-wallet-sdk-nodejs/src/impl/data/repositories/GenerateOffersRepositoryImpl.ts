@@ -7,14 +7,12 @@ import GenerateOffersRepository from '../../domain/repositories/GenerateOffersRe
 import { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class GenerateOffersRepositoryImpl
-    implements GenerateOffersRepository
-{
+export default class GenerateOffersRepositoryImpl implements GenerateOffersRepository {
     constructor(private networkService: NetworkService) {}
 
     async generateOffers(
         generateOffersDescriptor: VCLGenerateOffersDescriptor,
-        sessionToken: VCLToken
+        sessionToken: VCLToken,
     ): Promise<VCLOffers> {
         const offersResponse = await this.networkService.sendRequest({
             endpoint: generateOffersDescriptor.checkOffersUri,
@@ -30,7 +28,7 @@ export default class GenerateOffersRepositoryImpl
             return VCLOffers.fromPayload(
                 offersResponse.payload,
                 offersResponse.code,
-                sessionToken
+                sessionToken,
             );
         }
         throw new VCLError('Offers did not returned.');

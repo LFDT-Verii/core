@@ -6,7 +6,7 @@ const reencrypt = async (
   newKey,
   collection,
   secretProp,
-  { db, ...options }
+  { db, ...options },
 ) => {
   await reencryptCollectionField(
     oldKey,
@@ -16,7 +16,7 @@ const reencrypt = async (
     {
       db,
       ...options,
-    }
+    },
   );
 
   if (!collection && !secretProp) {
@@ -28,7 +28,7 @@ const reencrypt = async (
       {
         db,
         ...options,
-      }
+      },
     );
   }
 };

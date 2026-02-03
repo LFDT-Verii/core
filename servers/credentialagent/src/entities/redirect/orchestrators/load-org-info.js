@@ -1,6 +1,7 @@
 const { getOrganizationVerifiedProfile } = require('@verii/common-fetchers');
 const { isEmpty } = require('lodash/fp');
 
+// eslint-disable-next-line complexity
 const loadOrgInfo = async (did, context) => {
   const {
     config: { appRedirectLogoFallbackUrl, vnfDid },
@@ -27,7 +28,7 @@ const loadOrgInfo = async (did, context) => {
       orgLogoUrl: appRedirectLogoFallbackUrl,
       orgName: 'no name',
     };
-  } catch (e) {
+  } catch {
     return {
       orgLogoUrl: appRedirectLogoFallbackUrl,
       orgName: 'no name',

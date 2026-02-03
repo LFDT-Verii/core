@@ -26,10 +26,10 @@ const { keyAlgorithmToJoseAlg } = require('@verii/jwt');
 const { credentialTypeMetadata } = require('./credential-types-map');
 const { hashOffer } = require('../../src/domain/hash-offer');
 
-// eslint-disable-next-line complexity
 const jwtVcExpectation = (
   { issuerEntity, offer, credentialId, userId, issuer, payload = {} },
-  context
+  context,
+  // eslint-disable-next-line complexity
 ) => {
   const typeMetadata = credentialTypeMetadata[extractOfferType(offer)];
   const contextExpectation = uniq(
@@ -38,12 +38,12 @@ const jwtVcExpectation = (
       ...castArray(typeMetadata.jsonldContext),
       ...castArray(offer['@context']),
       'https://lib.test/contexts/credential-extensions-2022.jsonld.json',
-    ])
+    ]),
   );
   return {
     header: {
       alg: keyAlgorithmToJoseAlg(
-        typeMetadata.defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1
+        typeMetadata.defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1,
       ),
       kid: `${credentialId}#key-1`,
       typ: 'JWT',
@@ -64,7 +64,7 @@ const jwtVcExpectation = (
             'replaces',
             'relatedResource',
           ],
-          offer
+          offer,
         ),
         credentialSubject: {
           id: userId,
@@ -111,7 +111,7 @@ const jwtVcExpectation = (
 
 const velocityCredentialStatus = ({ primaryAddress }) => ({
   id: expect.stringMatching(
-    `^ethereum:0x1234/getRevokedStatus\\?address=${primaryAddress}&listId=\\d+&index=\\d+$`
+    `^ethereum:0x1234/getRevokedStatus\\?address=${primaryAddress}&listId=\\d+&index=\\d+$`,
   ),
   type: VelocityRevocationListType,
 });

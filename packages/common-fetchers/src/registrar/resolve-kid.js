@@ -16,7 +16,7 @@
 
 const resolveKid = async ({ kid }, { registrarFetch }) => {
   const response = await registrarFetch.get(
-    `api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=jwk`
+    `api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=jwk`,
   );
   return response.json();
 };

@@ -65,14 +65,14 @@ describe('dlt list allocation', () => {
     issuer = {
       id: nanoid(),
       dltOperatorAddress: toEthereumAddress(
-        hexFromJwk(keyPair.publicKey, false)
+        hexFromJwk(keyPair.publicKey, false),
       ),
     };
 
     context = {
       allocationListQueries: mongoAllocationListQueries(
         mongoClient.db('test-collections'),
-        collectionName
+        collectionName,
       ),
       kms: {
         exportKeyOrSecret: (keyId) => {
@@ -108,7 +108,7 @@ describe('dlt list allocation', () => {
         issuer,
         entityName,
         10000,
-        context
+        context,
       );
 
       const metadataListAfter = await allocations.findById(dbId);
@@ -121,7 +121,7 @@ describe('dlt list allocation', () => {
           operatorAddress: issuer.dltOperatorAddress,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
       expect(metadataListEntry).toEqual({
         index: first(metadataListBefore.freeIndexes),
@@ -141,7 +141,7 @@ describe('dlt list allocation', () => {
         { ...omit('dltOperatorAddress', issuer), dltOperatorKMSKeyId },
         entityName,
         10000,
-        context
+        context,
       );
 
       const metadataListAfter = await allocations.findById(dbId);
@@ -154,7 +154,7 @@ describe('dlt list allocation', () => {
           operatorAddress: issuer.dltOperatorAddress,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
       expect(metadataListEntry).toEqual({
         index: first(metadataListBefore.freeIndexes),
@@ -176,7 +176,7 @@ describe('dlt list allocation', () => {
         issuer,
         entityName,
         10000,
-        context
+        context,
       );
       expect(metadataListEntry).toEqual({
         index: first(initialList.freeIndexes),
@@ -195,7 +195,7 @@ describe('dlt list allocation', () => {
           operatorAddress: issuer.dltOperatorAddress,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
   });
@@ -214,7 +214,7 @@ describe('dlt list allocation', () => {
         issuer,
         entityName,
         10000,
-        context
+        context,
       );
       expect(metadataListEntry).toEqual({
         index: expect.any(Number),
@@ -222,7 +222,7 @@ describe('dlt list allocation', () => {
         isNewList: true,
       });
       expect(metadataListEntry.listId).not.toEqual(
-        altMetadataList.currentListId
+        altMetadataList.currentListId,
       );
 
       // new allocation list created
@@ -239,7 +239,7 @@ describe('dlt list allocation', () => {
           operatorAddress: issuer.dltOperatorAddress,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -256,7 +256,7 @@ describe('dlt list allocation', () => {
         issuer,
         entityName,
         10000,
-        context
+        context,
       );
       expect(metadataListEntry).toEqual({
         index: expect.any(Number),
@@ -264,7 +264,7 @@ describe('dlt list allocation', () => {
         isNewList: true,
       });
       expect(metadataListEntry.listId).not.toEqual(
-        altMetadataList.currentListId
+        altMetadataList.currentListId,
       );
 
       // new allocation list created
@@ -281,7 +281,7 @@ describe('dlt list allocation', () => {
           operatorAddress: issuer.dltOperatorAddress,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -297,7 +297,7 @@ describe('dlt list allocation', () => {
         issuer,
         entityName,
         10000,
-        context
+        context,
       );
       expect(metadataListEntry).toEqual({
         index: expect.any(Number),
@@ -305,7 +305,7 @@ describe('dlt list allocation', () => {
         isNewList: true,
       });
       expect(metadataListEntry.listId).not.toEqual(
-        altMetadataList.currentListId
+        altMetadataList.currentListId,
       );
 
       // new allocation list created
@@ -322,7 +322,7 @@ describe('dlt list allocation', () => {
           operatorAddress: issuer.dltOperatorAddress,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -339,7 +339,7 @@ describe('dlt list allocation', () => {
         { ...omit('dltOperatorAddress', issuer), dltOperatorKMSKeyId },
         entityName,
         10000,
-        context
+        context,
       );
       expect(metadataListEntry).toEqual({
         index: expect.any(Number),
@@ -347,7 +347,7 @@ describe('dlt list allocation', () => {
         isNewList: true,
       });
       expect(metadataListEntry.listId).not.toEqual(
-        altMetadataList.currentListId
+        altMetadataList.currentListId,
       );
 
       // new allocation list created
@@ -364,7 +364,7 @@ describe('dlt list allocation', () => {
           operatorAddress: issuer.dltOperatorAddress,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -380,7 +380,7 @@ describe('dlt list allocation', () => {
         issuer,
         entityName,
         10000,
-        context
+        context,
       );
       expect(metadataListEntry).toEqual({
         index: first(metadataList1Before.freeIndexes),
@@ -393,14 +393,14 @@ describe('dlt list allocation', () => {
           ...metadataList1Before,
           freeIndexes: [],
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const metadataListEntry2 = await allocateListEntry(
         issuer,
         entityName,
         10000,
-        context
+        context,
       );
 
       expect(metadataListEntry2).toEqual({
@@ -416,7 +416,7 @@ describe('dlt list allocation', () => {
       expect(newAllocation._id).toEqual(expect.any(ObjectId));
       expect(newAllocation._id).not.toEqual(dbId);
       expect(newAllocation.currentListId).not.toEqual(
-        metadataList1Before.currentListId
+        metadataList1Before.currentListId,
       );
       expect(newAllocation.freeIndexes).toHaveLength(9999);
     });
@@ -431,7 +431,7 @@ describe('dlt list allocation', () => {
         issuer,
         entityName,
         10000,
-        context
+        context,
       );
 
       expect(metadataListEntry).toEqual({
@@ -450,7 +450,7 @@ describe('dlt list allocation', () => {
           tenantId: issuer.id,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const newAllocation = await allocations.collection().findOne({
@@ -460,7 +460,7 @@ describe('dlt list allocation', () => {
       expect(newAllocation._id).toEqual(expect.any(ObjectId));
       expect(newAllocation._id).not.toEqual(dbId);
       expect(newAllocation.currentListId).not.toEqual(
-        metadataList1Before.currentListId
+        metadataList1Before.currentListId,
       );
       expect(newAllocation.freeIndexes).toHaveLength(9999);
     });

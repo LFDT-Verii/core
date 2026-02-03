@@ -4,7 +4,7 @@ import VCLSubmissionResult from './VCLSubmissionResult';
 export default class VCLExchangeDescriptor {
     constructor(
         public readonly presentationSubmission: VCLPresentationSubmission,
-        public readonly submissionResult: VCLSubmissionResult
+        public readonly submissionResult: VCLSubmissionResult,
     ) {}
 
     get processUri() {

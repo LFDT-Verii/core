@@ -30,14 +30,9 @@ const wrapValidationError = (result, dataVar = '') => {
     return result;
   }
   const error = new Error(schemaErrorsText(result, dataVar));
-
-  // eslint-disable-next-line better-mutation/no-mutation
   error.statusCode = 400;
-  // eslint-disable-next-line better-mutation/no-mutation
   error.code = 'FST_ERR_VALIDATION';
-  // eslint-disable-next-line better-mutation/no-mutation
   error.validation = result;
-  // eslint-disable-next-line better-mutation/no-mutation
   error.validationContext = dataVar;
   return error;
 };
@@ -83,6 +78,7 @@ const initValidation = (ajv) => {
     return { isValid, error };
   };
 
+  // eslint-disable-next-line default-param-last
   const validateJSONBySchema = (json = {}, schema) => {
     const validate = ajv.compile(schema);
     const valid = validate(json);

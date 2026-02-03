@@ -34,7 +34,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadRequest(
-        'DNS Error - Please verify that that the server has access to an internal DNS server, and that the vendor gateway api has an entry'
+        'DNS Error - Please verify that that the server has access to an internal DNS server, and that the vendor gateway api has an entry',
       ),
     });
   });
@@ -50,7 +50,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
+        'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings',
       ),
     });
   });
@@ -66,7 +66,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
+        'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings',
       ),
     });
   });
@@ -82,7 +82,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
+        'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings',
       ),
     });
   });
@@ -98,7 +98,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings'
+        'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings',
       ),
     });
   });
@@ -115,7 +115,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        'Bad request sent from credential agent to vendor gateway (this should be raised with velocity support).'
+        'Bad request sent from credential agent to vendor gateway (this should be raised with velocity support).',
       ),
     });
   });
@@ -132,7 +132,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        'Bad authentication of the server. Please review the supported authentication methods for the agent.'
+        'Bad authentication of the server. Please review the supported authentication methods for the agent.',
       ),
     });
   });
@@ -149,7 +149,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        'Bad authentication of the server. Please review the supported authentication methods for the agent.'
+        'Bad authentication of the server. Please review the supported authentication methods for the agent.',
       ),
     });
   });
@@ -167,7 +167,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        `Missing implementation of the endpoint '${urlPath}'.`
+        `Missing implementation of the endpoint '${urlPath}'.`,
       ),
     });
   });
@@ -183,7 +183,7 @@ describe('Vendor Errors Handler', () => {
     expect(result).toThrow({
       ...error,
       processedError: new newError.BadGateway(
-        'Unexpected error received connecting to vendor gateway.'
+        'Unexpected error received connecting to vendor gateway.',
       ),
     });
   });

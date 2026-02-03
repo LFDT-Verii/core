@@ -40,8 +40,8 @@ const initPermissionsContractByKeyId = async (keyId, context) => {
         contractAddress: config.permissionsContractAddress,
         rpcProvider,
       },
-      context
-    )
+      context,
+    ),
   );
 };
 

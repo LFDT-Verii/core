@@ -8,13 +8,13 @@ export default class VCLOffers {
         public readonly all: VCLOffer[],
         public readonly responseCode: number,
         public readonly sessionToken: VCLToken,
-        public readonly challenge: Nullish<string> = null
+        public readonly challenge: Nullish<string> = null,
     ) {}
 
     static readonly fromPayload = (
         payload: Dictionary<any>,
         responseCode: number,
-        sessionToken: VCLToken
+        sessionToken: VCLToken,
     ): VCLOffers => {
         if (payload) {
             if (Array.isArray(payload)) {
@@ -22,24 +22,24 @@ export default class VCLOffers {
                     { [VCLOffers.CodingKeys.KeyOffers]: payload },
                     VCLOffers.offersFromJsonArray(payload),
                     responseCode,
-                    sessionToken
+                    sessionToken,
                 );
             }
             return new VCLOffers(
                 payload,
                 VCLOffers.offersFromJsonArray(
-                    payload[VCLOffers.CodingKeys.KeyOffers] ?? []
+                    payload[VCLOffers.CodingKeys.KeyOffers] ?? [],
                 ),
                 responseCode,
                 sessionToken,
-                payload[VCLOffers.CodingKeys.KeyChallenge]
+                payload[VCLOffers.CodingKeys.KeyChallenge],
             );
         }
         return new VCLOffers({}, [], responseCode, sessionToken);
     };
 
     static readonly offersFromJsonArray = (
-        offersJsonArray: Dictionary<any>[]
+        offersJsonArray: Dictionary<any>[],
     ): VCLOffer[] => {
         return offersJsonArray
             .filter((offerJsonObject) => offerJsonObject != null)

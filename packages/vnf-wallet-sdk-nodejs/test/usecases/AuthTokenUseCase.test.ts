@@ -22,8 +22,8 @@ describe('AuthTokenUseCaseTest', () => {
     test('testGetAuthTokenSuccess', async () => {
         subject = new AuthTokenUseCaseImpl(
             new AuthTokenRepositoryImpl(
-                new NetworkServiceSuccess(expectedAuthToken.payload)
-            )
+                new NetworkServiceSuccess(expectedAuthToken.payload),
+            ),
         );
         try {
             const authToken = await subject.getAuthToken(
@@ -31,8 +31,8 @@ describe('AuthTokenUseCaseTest', () => {
                     'token uri',
                     'wallet did',
                     'wallet did',
-                    'relying party did'
-                )
+                    'relying party did',
+                ),
             );
             expect(authToken).toEqual(expectedAuthToken);
         } catch (error) {
@@ -43,8 +43,8 @@ describe('AuthTokenUseCaseTest', () => {
     test('testGetAuthTokenFailure', async () => {
         subject = new AuthTokenUseCaseImpl(
             new AuthTokenRepositoryImpl(
-                new NetworkServiceSuccess({ payload: 'Wrong payload' })
-            )
+                new NetworkServiceSuccess({ payload: 'Wrong payload' }),
+            ),
         );
 
         try {

@@ -62,17 +62,17 @@ const generateSimpleKYCPresentation = (idDocTypes, options) => {
   return doSimpleGeneratePresentation(
     selectedCredentials,
     'fooDefinitionId',
-    options
+    options,
   );
 };
 
 const doSimpleGeneratePresentation = async (
   credentials,
   definitionId,
-  options = { isBrokeVCS: false }
+  options = { isBrokeVCS: false },
 ) => {
   const signedCredentials = await Promise.all(
-    map((c) => generateCredentialJwt(c, privateKey), credentials)
+    map((c) => generateCredentialJwt(c, privateKey), credentials),
   );
 
   const presentation = {
@@ -92,7 +92,7 @@ const doSimpleGeneratePresentation = async (
           path: `$.verifiableCredential[${i}]`,
           format: 'jwt_vc',
         }),
-        signedCredentials
+        signedCredentials,
       ),
     },
   };

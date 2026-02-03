@@ -1,6 +1,6 @@
 const addMonitorToStatusPage = async (
   { resourceId, publicName, statusPageId, statusPageSectionId },
-  { betterUptimeFetch }
+  { betterUptimeFetch },
 ) => {
   const payload = {
     resource_id: resourceId,
@@ -12,7 +12,7 @@ const addMonitorToStatusPage = async (
 
   const response = await betterUptimeFetch.post(
     `status-pages/${statusPageId}/resources`,
-    payload
+    payload,
   );
 
   return response.json();

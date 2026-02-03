@@ -5,6 +5,6 @@ import VCLSignatureAlgorithm from '../VCLSignatureAlgorithm';
 export default class VCLDidJwkDescriptor {
     constructor(
         public signatureAlgorithm: VCLSignatureAlgorithm = VCLSignatureAlgorithm.ES256,
-        public remoteCryptoServicesToken: Nullish<VCLToken> = null
+        public remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {}
 }

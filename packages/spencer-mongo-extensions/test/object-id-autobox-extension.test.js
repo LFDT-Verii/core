@@ -85,7 +85,7 @@ describe('autobox field extension', () => {
       };
       const objectIdAutoboxExtension = initObjectIdAutoboxExtension('bar');
       expect(
-        objectIdAutoboxExtension(mockParent).prepModification(val)
+        objectIdAutoboxExtension(mockParent).prepModification(val),
       ).toEqual({
         foo: 'foo',
       });
@@ -96,7 +96,7 @@ describe('autobox field extension', () => {
       };
       const objectIdAutoboxExtension = initObjectIdAutoboxExtension('foo');
       expect(
-        objectIdAutoboxExtension(mockParent).prepModification(val)
+        objectIdAutoboxExtension(mockParent).prepModification(val),
       ).toEqual({
         foo: 'foo',
       });
@@ -109,7 +109,7 @@ describe('autobox field extension', () => {
       };
       const objectIdAutoboxExtension = initObjectIdAutoboxExtension('foo');
       expect(
-        objectIdAutoboxExtension(mockParent).prepModification(val)
+        objectIdAutoboxExtension(mockParent).prepModification(val),
       ).toEqual({
         foo: objectId,
       });
@@ -126,7 +126,7 @@ describe('autobox field extension', () => {
         'bar',
       ]);
       expect(
-        objectIdAutoboxExtension(mockParent).prepModification(val)
+        objectIdAutoboxExtension(mockParent).prepModification(val),
       ).toEqual({
         foo: objectId,
         bar: objectId,

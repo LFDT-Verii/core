@@ -5,9 +5,7 @@ import Request from '../infrastructure/network/Request';
 import Urls, { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class CredentialTypesRepositoryImpl
-    implements CredentialTypesRepository
-{
+export default class CredentialTypesRepositoryImpl implements CredentialTypesRepository {
     constructor(private readonly networkService: NetworkService) {}
 
     async getCredentialTypes(): Promise<VCLCredentialTypes> {

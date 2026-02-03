@@ -7,7 +7,6 @@
 import { Dictionary, Nullish } from '../VCLTypes';
 import VCLPresentationRequest from './VCLPresentationRequest';
 
-// eslint-disable-next-line no-shadow
 export enum GrantType {
     AuthorizationCode = 'authorization_code',
     RefreshToken = 'refresh_token',
@@ -29,12 +28,12 @@ export default class VCLAuthTokenDescriptor {
         refreshToken?: Nullish<string>,
         walletDid?: Nullish<string>,
         relyingPartyDid?: Nullish<string>,
-        vendorOriginContext?: Nullish<string>
+        vendorOriginContext?: Nullish<string>,
     );
 
     constructor(
         presentationRequest: VCLPresentationRequest,
-        refreshToken?: Nullish<string>
+        refreshToken?: Nullish<string>,
     );
 
     constructor(
@@ -42,7 +41,7 @@ export default class VCLAuthTokenDescriptor {
         refreshToken?: Nullish<string>,
         walletDid?: Nullish<string>,
         relyingPartyDid?: Nullish<string>,
-        vendorOriginContext?: Nullish<string>
+        vendorOriginContext?: Nullish<string>,
     ) {
         if (
             authTokenUriOrPresentationRequest instanceof VCLPresentationRequest

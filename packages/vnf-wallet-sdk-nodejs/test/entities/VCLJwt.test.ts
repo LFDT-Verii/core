@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import VCLJwt from '../../src/api/entities/VCLJwt';
@@ -25,15 +23,15 @@ describe('test jwt', () => {
         const subject = VCLJwt.fromEncodedJwt(jwtWtithKidStr);
 
         expect(subject.header).toStrictEqual(
-            JSON.parse('{"alg":"HS256","typ":"JWT","kid":"some_kid"}')
+            JSON.parse('{"alg":"HS256","typ":"JWT","kid":"some_kid"}'),
         );
         expect(subject.payload).toStrictEqual(
             JSON.parse(
-                '{"sub":"1234567890","name":"John Doe","iat":1516239022}'
-            )
+                '{"sub":"1234567890","name":"John Doe","iat":1516239022}',
+            ),
         );
         expect(subject.signature).toStrictEqual(
-            'lGqyFj2RpmostxLvCcMFym9kWM0bzQcty9a81EdzrhM'
+            'lGqyFj2RpmostxLvCcMFym9kWM0bzQcty9a81EdzrhM',
         );
         expect(subject.encodedJwt).toStrictEqual(jwtWtithKidStr);
         expect(subject.jwk).toStrictEqual({});
@@ -45,22 +43,22 @@ describe('test jwt', () => {
 
         expect(subject.header).toStrictEqual(
             JSON.parse(
-                '{"alg":"HS256","typ":"JWT","jwk":{"kty":"RSA","use":"sig","kid":"some_kid","n":"zg7-8aYrxuV7H4t...","e":"AQAB"}}'
-            )
+                '{"alg":"HS256","typ":"JWT","jwk":{"kty":"RSA","use":"sig","kid":"some_kid","n":"zg7-8aYrxuV7H4t...","e":"AQAB"}}',
+            ),
         );
         expect(subject.payload).toStrictEqual(
             JSON.parse(
-                '{"sub":"1234567890","name":"John Doe","iat":1516239022}'
-            )
+                '{"sub":"1234567890","name":"John Doe","iat":1516239022}',
+            ),
         );
         expect(subject.signature).toStrictEqual(
-            'ijeuQTlhK7jpYkRmD_yWFKtluFWLEhjdieZJxkTc9fY'
+            'ijeuQTlhK7jpYkRmD_yWFKtluFWLEhjdieZJxkTc9fY',
         );
         expect(subject.encodedJwt).toStrictEqual(jwtWtihJwkStr);
         expect(subject.jwk).toStrictEqual(
             JSON.parse(
-                '{"kty":"RSA","use":"sig","kid":"some_kid","n":"zg7-8aYrxuV7H4t...","e":"AQAB"}'
-            )
+                '{"kty":"RSA","use":"sig","kid":"some_kid","n":"zg7-8aYrxuV7H4t...","e":"AQAB"}',
+            ),
         );
         expect(subject.kid).toStrictEqual('some_kid');
     });

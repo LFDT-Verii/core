@@ -6,7 +6,7 @@ const signAddress = ({ address, signerWallet }) =>
 const signArguments = (signerWallet, argumentModel) => {
   const encodedArgs = AbiCoder.defaultAbiCoder().encode(
     Object.keys(argumentModel),
-    Object.values(argumentModel)
+    Object.values(argumentModel),
   );
   const hash = keccak256(encodedArgs);
   return signerWallet.signingKey.sign(hash).serialized;

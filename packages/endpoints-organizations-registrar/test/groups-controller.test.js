@@ -79,7 +79,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: "body must have required property 'groupId'",
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -104,7 +104,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/groupId must be string',
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -128,7 +128,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: "body must have required property 'dids'",
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -153,7 +153,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/dids must NOT have fewer than 1 items',
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -178,7 +178,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/dids must be array',
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -203,7 +203,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/dids/0 must be string',
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -227,7 +227,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: "body must have required property 'clientAdminIds'",
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -252,7 +252,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/clientAdminIds must be array',
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -277,7 +277,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/clientAdminIds/0 must be string',
-          })
+          }),
         );
         const count = await groupsRepo.count({});
         expect(count).toEqual(0);
@@ -303,7 +303,7 @@ describe('Groups Test Suite', () => {
             statusCode: 409,
             error: 'Conflict',
             message: 'Group with the same group id already exist.',
-          })
+          }),
         );
       });
       it('Should create a group', async () => {
@@ -351,7 +351,7 @@ describe('Groups Test Suite', () => {
             statusCode: 404,
             error: 'Not Found',
             message: `Group ${missingDid} not found`,
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toEqual(mongoify(group));
@@ -379,7 +379,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: "body must have required property 'dids'",
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toEqual(mongoify(group));
@@ -408,7 +408,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/dids must NOT have fewer than 1 items',
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toEqual(mongoify(group));
@@ -437,7 +437,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/dids must be array',
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toEqual(mongoify(group));
@@ -466,7 +466,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/dids/0 must be string',
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toEqual(mongoify(group));
@@ -494,7 +494,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: "body must have required property 'clientAdminIds'",
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toEqual(mongoify(group));
@@ -523,7 +523,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/clientAdminIds must be array',
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toEqual(mongoify(group));
@@ -552,7 +552,7 @@ describe('Groups Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: 'body/clientAdminIds/0 must be string',
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toEqual(mongoify(group));
@@ -684,7 +684,7 @@ describe('Groups Test Suite', () => {
             statusCode: 404,
             error: 'Not Found',
             message: `Group ${did} not found`,
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toBeNull();
@@ -723,7 +723,7 @@ describe('Groups Test Suite', () => {
             statusCode: 404,
             error: 'Not Found',
             message: `Group ${did} not found`,
-          })
+          }),
         );
         const groupFromDb = await groupsRepo.findOne();
         expect(groupFromDb).toBeNull();

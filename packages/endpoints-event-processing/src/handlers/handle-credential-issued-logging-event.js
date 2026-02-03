@@ -26,7 +26,7 @@ const initReadEventsFromBlock = async (context) => {
       contractAddress: config.metadataRegistryContractAddress,
       rpcProvider: context.rpcProvider,
     },
-    context
+    context,
   );
 
   return async (block) => {
@@ -46,7 +46,7 @@ const handleCredentialIssuedLoggingEvent = async (context) => {
   log.info({ task, lastReadBlock });
 
   const { eventsCursor, latestBlock } = await readEventsFromBlock(
-    lastReadBlock + 1
+    lastReadBlock + 1,
   );
   let numberOfEventsRead = 0;
   for await (const events of eventsCursor()) {

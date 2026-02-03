@@ -14,14 +14,15 @@ import {
 export const generatePresentationSubmissionResult = (
     jsonObj: Dictionary<any>,
     jti: string,
-    submissionId: string
+    submissionId: string,
 ): VCLSubmissionResult => {
     const exchangeJsonObj = jsonObj[VCLSubmissionResult.KeyExchange];
     return new VCLSubmissionResult(
         new VCLToken(jsonObj[VCLSubmissionResult.KeyToken]),
+
         expectedExchange(exchangeJsonObj),
         jti,
-        submissionId
+        submissionId,
     );
 };
 const expectedExchange = (exchangeJsonObj: Dictionary<any>): VCLExchange => {
@@ -29,6 +30,6 @@ const expectedExchange = (exchangeJsonObj: Dictionary<any>): VCLExchange => {
         exchangeJsonObj[VCLExchange.KeyId],
         exchangeJsonObj[VCLExchange.KeyType],
         exchangeJsonObj[VCLExchange.KeyDisclosureComplete],
-        exchangeJsonObj[VCLExchange.KeyExchangeComplete]
+        exchangeJsonObj[VCLExchange.KeyExchangeComplete],
     );
 };

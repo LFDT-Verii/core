@@ -29,7 +29,7 @@ const mockInitSendError = mock.fn(() =>
     finishProfiling: () => {
       console.log('fake finish sentry profiling');
     },
-  })
+  }),
 );
 
 mock.module('@verii/error-aggregation', {
@@ -63,7 +63,7 @@ const mockAuth0GetUsers = mock.fn(() =>
     data: {
       email: `${mockAuth0GetUsers.mock.callCount()}@localhost.test`,
     },
-  })
+  }),
 );
 
 class ManagementClient {
@@ -96,7 +96,7 @@ const mockInitPermission = mock.fn(() =>
     addPrimary: mockAddPrimary,
     addOperatorKey: mockAddOperator,
     removeOperatorKey: mockRemoveOperator,
-  })
+  }),
 );
 mock.module('@verii/contract-permissions', {
   namedExports: {
@@ -213,7 +213,7 @@ describe('Organization Keys Test Suite', () => {
   beforeEach(async () => {
     mockCreateStakesAccount.mock.resetCalls();
     mockCreateStakesAccount.mock.mockImplementation(() =>
-      Promise.resolve('foo')
+      Promise.resolve('foo'),
     );
     mockRemoveOperator.mock.resetCalls();
     nock.cleanAll();
@@ -802,7 +802,7 @@ describe('Organization Keys Test Suite', () => {
             kid: kidFragment,
             purpose,
             publicKey: organizationKey.publicKey,
-          })
+          }),
         );
       });
 
@@ -952,7 +952,7 @@ describe('Organization Keys Test Suite', () => {
 
         expect(response.statusCode).toEqual(404);
         expect(response.json.message).toEqual(
-          entityErrorMessages.ORGANIZATION_NOT_FOUND
+          entityErrorMessages.ORGANIZATION_NOT_FOUND,
         );
       });
 
@@ -1084,7 +1084,7 @@ describe('Organization Keys Test Suite', () => {
             error: 'Bad Request',
             errorCode: 'missing_error_code',
             message: 'ISSUING_METADATA Key may not be removed',
-          })
+          }),
         );
 
         expect(mockRemoveOperator.mock.callCount()).toEqual(0);
@@ -1172,11 +1172,11 @@ describe('Organization Keys Test Suite', () => {
 
         expect(mockRemoveOperator.mock.callCount()).toEqual(1);
         expect(
-          mockRemoveOperator.mock.calls.map((call) => call.arguments)
+          mockRemoveOperator.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             operator: toEthereumAddress(
-              hexFromJwk(removedKey.publicKey, false)
+              hexFromJwk(removedKey.publicKey, false),
             ),
             primary: organization.ids.ethereumAccount,
           },
@@ -1313,7 +1313,7 @@ describe('Organization Keys Test Suite', () => {
             errorCode: 'organization_not_found',
             message: 'Organization not found',
             statusCode: 404,
-          })
+          }),
         );
       });
       it('Should return 404 when key not found', async () => {
@@ -1329,7 +1329,7 @@ describe('Organization Keys Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'Key not found',
             statusCode: 404,
-          })
+          }),
         );
       });
 
@@ -1494,7 +1494,7 @@ describe('Organization Keys Test Suite', () => {
             purposes: [purpose],
           });
         expect(orgKeyFromDb).toMatchObject(
-          mapResponseKeyToDbKey(response.json.key)
+          mapResponseKeyToDbKey(response.json.key),
         );
 
         expect(nockData.isDone()).toEqual(true);
@@ -1647,7 +1647,7 @@ describe('Organization Keys Test Suite', () => {
         const response = await fastify.injectJson({
           method: 'DELETE',
           url: `${baseUrl}/${did}/keys/${encodeURIComponent(
-            expectedDidWebDoc.verificationMethod[0].id
+            expectedDidWebDoc.verificationMethod[0].id,
           )}`,
         });
 
@@ -1655,14 +1655,14 @@ describe('Organization Keys Test Suite', () => {
 
         expect(mockRemoveOperator.mock.callCount()).toEqual(1);
         expect(
-          mockRemoveOperator.mock.calls.map((call) => call.arguments)
+          mockRemoveOperator.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             operator: toEthereumAddress(
               hexFromJwk(
                 expectedDidWebDoc.verificationMethod[0].publicKeyJwk,
-                false
-              )
+                false,
+              ),
             ),
             primary: organization.ids.ethereumAccount,
           },

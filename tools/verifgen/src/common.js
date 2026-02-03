@@ -60,7 +60,7 @@ const generateDid = (controller = {}) => {
     didObject,
     proofController,
     proofSigningKey,
-    `${proofController}#key-1`
+    `${proofController}#key-1`,
   );
 
   return { privateKey, publicKey, address, did, didObject };
@@ -69,7 +69,7 @@ const generateDid = (controller = {}) => {
 const loadPersonaFiles = (persona) => {
   return {
     did: JSON.parse(
-      readFile(`${persona}.did`, `Persona ${persona} DID File not found`)
+      readFile(`${persona}.did`, `Persona ${persona} DID File not found`),
     ),
     privateKey: loadPersonaPrivateKey(persona),
   };

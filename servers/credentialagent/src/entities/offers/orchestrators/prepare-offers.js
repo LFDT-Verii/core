@@ -26,7 +26,7 @@ const prepareOffers = async (offers, context) => {
   const credentialRefsMap = await loadCredentialRefs(offers, context);
 
   return Promise.all(
-    map((offer) => buildOffer(offer, credentialRefsMap, context), offers)
+    map((offer) => buildOffer(offer, credentialRefsMap, context), offers),
   );
 };
 

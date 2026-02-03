@@ -181,7 +181,7 @@ describe('Schema Management', () => {
           errorCode: 'missing_error_code',
           message: "Schema courses not found. Did you mean 'course'?",
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -336,14 +336,14 @@ describe('Schema Management', () => {
           errorCode: 'missing_error_code',
           message: "Schema courses not found. Did you mean 'course'?",
           statusCode: 404,
-        })
+        }),
       );
     });
   });
 
   const responseHeadersExpectation = (response) => {
     expect(response.headers['cache-control']).toEqual(
-      'public,max-age=31536000,immutable'
+      'public,max-age=31536000,immutable',
     );
   };
 });
@@ -371,5 +371,5 @@ const samplePayload = (overrides) =>
         didDoc: { id: 'did:key:1234' },
       }),
     },
-    overrides
+    overrides,
   );

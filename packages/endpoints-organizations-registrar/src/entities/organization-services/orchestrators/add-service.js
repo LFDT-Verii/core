@@ -57,28 +57,28 @@ const initAddService = async (fastify) => {
     }
     const invitation = await acceptInvitation(
       newService.invitationCode,
-      context
+      context,
     );
     const newOrganizationService = buildOrganizationService(
       omit(['invitationCode'], newService),
-      invitation
+      invitation,
     );
 
     const caoServiceRefs = await loadCaoServiceRefs(
       [newOrganizationService],
-      context
+      context,
     );
     validateAdditionalService(
       newOrganizationService,
       organization.services,
       caoServiceRefs,
-      context
+      context,
     );
 
     const { authClient, createdService, newActivatedServiceIds } =
       await addServiceToOrganization(
         { organization, newService: newOrganizationService, invitation },
-        context
+        context,
       );
 
     await publish(
@@ -91,7 +91,7 @@ const initAddService = async (fastify) => {
         activatedServiceIds: newActivatedServiceIds,
         caoServiceRefs,
       },
-      context
+      context,
     );
 
     return {

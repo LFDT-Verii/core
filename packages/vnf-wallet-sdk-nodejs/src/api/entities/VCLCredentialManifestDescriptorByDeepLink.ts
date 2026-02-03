@@ -9,10 +9,12 @@ import VCLToken from './VCLToken';
 export default class VCLCredentialManifestDescriptorByDeepLink extends VCLCredentialManifestDescriptor {
     constructor(
         deeplink: VCLDeepLink,
+        // eslint-disable-next-line default-param-last
         issuingType: VCLIssuingType = VCLIssuingType.Career,
+        // eslint-disable-next-line default-param-last
         pushDelegate: Nullish<VCLPushDelegate> = null,
         didJwk: VCLDidJwk,
-        remoteCryptoServicesToken: Nullish<VCLToken> = null
+        remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {
         super(
             deeplink.requestUri,
@@ -22,7 +24,7 @@ export default class VCLCredentialManifestDescriptorByDeepLink extends VCLCreden
             deeplink.vendorOriginContext,
             deeplink,
             didJwk,
-            remoteCryptoServicesToken
+            remoteCryptoServicesToken,
         );
     }
 }

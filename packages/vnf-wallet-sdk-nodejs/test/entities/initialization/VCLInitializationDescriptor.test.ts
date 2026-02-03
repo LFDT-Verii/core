@@ -21,7 +21,7 @@ describe('VCLInitializationDescriptor tests', () => {
     const cryptoServicesDescriptor = new VCLCryptoServicesDescriptor(
         new KeyServiceMock(),
         new JwtSignServiceMock(),
-        new JwtVerifyServiceMock()
+        new JwtVerifyServiceMock(),
     );
 
     test('should create an instance with specified values: Dev, XVnfProtocolVersion1', () => {
@@ -31,13 +31,13 @@ describe('VCLInitializationDescriptor tests', () => {
         const subject = new VCLInitializationDescriptor(
             environment,
             xVnfProtocolVersion,
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
 
         expect(subject.environment).toStrictEqual(environment);
         expect(subject.xVnfProtocolVersion).toStrictEqual(xVnfProtocolVersion);
         expect(subject.cryptoServicesDescriptor).toStrictEqual(
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
     });
 
@@ -48,13 +48,13 @@ describe('VCLInitializationDescriptor tests', () => {
         const subject = new VCLInitializationDescriptor(
             environment,
             xVnfProtocolVersion,
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
 
         expect(subject.environment).toStrictEqual(environment);
         expect(subject.xVnfProtocolVersion).toStrictEqual(xVnfProtocolVersion);
         expect(subject.cryptoServicesDescriptor).toStrictEqual(
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
     });
 
@@ -65,13 +65,13 @@ describe('VCLInitializationDescriptor tests', () => {
         const subject = new VCLInitializationDescriptor(
             environment,
             xVnfProtocolVersion,
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
 
         expect(subject.environment).toStrictEqual(environment);
         expect(subject.xVnfProtocolVersion).toStrictEqual(xVnfProtocolVersion);
         expect(subject.cryptoServicesDescriptor).toStrictEqual(
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
     });
 
@@ -82,13 +82,13 @@ describe('VCLInitializationDescriptor tests', () => {
         const subject = new VCLInitializationDescriptor(
             environment,
             xVnfProtocolVersion,
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
 
         expect(subject.environment).toStrictEqual(environment);
         expect(subject.xVnfProtocolVersion).toStrictEqual(xVnfProtocolVersion);
         expect(subject.cryptoServicesDescriptor).toStrictEqual(
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
     });
 
@@ -99,13 +99,13 @@ describe('VCLInitializationDescriptor tests', () => {
         const subject = new VCLInitializationDescriptor(
             environment,
             xVnfProtocolVersion,
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
 
         expect(subject.environment).toStrictEqual(environment);
         expect(subject.xVnfProtocolVersion).toStrictEqual(xVnfProtocolVersion);
         expect(subject.cryptoServicesDescriptor).toStrictEqual(
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
     });
 
@@ -116,13 +116,13 @@ describe('VCLInitializationDescriptor tests', () => {
         const subject = new VCLInitializationDescriptor(
             environment,
             xVnfProtocolVersion,
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
 
         expect(subject.environment).toStrictEqual(environment);
         expect(subject.xVnfProtocolVersion).toStrictEqual(xVnfProtocolVersion);
         expect(subject.cryptoServicesDescriptor).toStrictEqual(
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
     });
 
@@ -133,13 +133,13 @@ describe('VCLInitializationDescriptor tests', () => {
         const subject = new VCLInitializationDescriptor(
             environment,
             xVnfProtocolVersion,
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
 
         expect(subject.environment).toStrictEqual(environment);
         expect(subject.xVnfProtocolVersion).toStrictEqual(xVnfProtocolVersion);
         expect(subject.cryptoServicesDescriptor).toStrictEqual(
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
     });
 
@@ -150,13 +150,13 @@ describe('VCLInitializationDescriptor tests', () => {
         const subject = new VCLInitializationDescriptor(
             environment,
             xVnfProtocolVersion,
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
 
         expect(subject.environment).toStrictEqual(environment);
         expect(subject.xVnfProtocolVersion).toStrictEqual(xVnfProtocolVersion);
         expect(subject.cryptoServicesDescriptor).toStrictEqual(
-            cryptoServicesDescriptor
+            cryptoServicesDescriptor,
         );
     });
 });

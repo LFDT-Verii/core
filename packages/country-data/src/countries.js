@@ -37,7 +37,7 @@ const getNameOfCountry = getName;
 
 const countryCodesObject = countryCodes.customList(
   'countryCode',
-  '+{countryCallingCode}'
+  '+{countryCallingCode}',
 );
 
 const ERROR_MESSAGE_LANGUAGE_CODE_IS_MALFORMATTED =
@@ -68,7 +68,7 @@ const getCountries = async (languageCode) => {
       regions: buildRegions(iso31662DB.getRegionsFor(key)),
       callingCode: getPhoneCodeOfCountry(key),
     }),
-    keys(countryCodesObj)
+    keys(countryCodesObj),
   );
   return countries;
 };
@@ -81,7 +81,7 @@ const initBuildRegions = (languageCode) => (rawRegions) => {
       name: getRegionName(region, languageCode),
       code: region.iso,
     })),
-    sortBy(['code'])
+    sortBy(['code']),
   )(rawRegions);
 };
 

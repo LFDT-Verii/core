@@ -1,4 +1,3 @@
-/* eslint-disable better-mutation/no-mutation */
 /**
  * Copyright 2023 Velocity Team
  *
@@ -15,7 +14,6 @@
  * limitations under the License.
  */
 const download = (fileName, onLoading, onError, onClick, callback) => {
-  // eslint-disable-next-line no-undef
   const request = new XMLHttpRequest();
   request.responseType = 'blob';
   request.open('GET', fileName);
@@ -41,7 +39,6 @@ const download = (fileName, onLoading, onError, onClick, callback) => {
 };
 /* eslint-disable better-mutation/no-mutation */
 const downloadTxtAsFile = (text, name) => {
-  // eslint-disable-next-line no-undef
   const a = document.createElement('a');
   const file = new Blob([text], { type: 'application/json' });
 

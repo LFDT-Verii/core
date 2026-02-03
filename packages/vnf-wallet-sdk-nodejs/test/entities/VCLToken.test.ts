@@ -19,7 +19,7 @@ describe('VCLToken Tests', () => {
 
         expect(subject.value).toEqual(TokenMocks.TokenJwt1.encodedJwt);
         expect(subject.jwtValue.encodedJwt).toEqual(
-            TokenMocks.TokenJwt1.encodedJwt
+            TokenMocks.TokenJwt1.encodedJwt,
         );
         expect(subject.expiresIn).toEqual(BigInt(1704020514));
     });

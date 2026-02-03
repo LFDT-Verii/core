@@ -26,7 +26,7 @@ const initFeedFactory = (app) => {
     const tenant = await getOrBuild('tenant', initTenantFactory(app));
     const disclosure = await getOrBuild(
       'disclosure',
-      initDisclosureFactory(app)
+      initDisclosureFactory(app),
     );
 
     return {

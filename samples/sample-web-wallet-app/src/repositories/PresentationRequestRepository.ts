@@ -10,7 +10,7 @@ import { Dictionary } from '../Types';
 
 export const getPresentationRequest = async (
   deepLink: Dictionary<any>,
-  didJwk: Dictionary<any>
+  didJwk: Dictionary<any>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: Urls.getPresentationRequest,

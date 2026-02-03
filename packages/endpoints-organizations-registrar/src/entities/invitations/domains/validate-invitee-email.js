@@ -8,7 +8,7 @@ const validateInviteeEmail = (email) => {
       'The email address is invalid and the invitation was not sent',
       {
         errorCode: 'bad_invitee_email',
-      }
+      },
     );
   }
 };

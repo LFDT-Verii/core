@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-shadow
 enum VCLEnvironment {
     Prod = 'prod',
     Staging = 'staging',

@@ -63,7 +63,7 @@ describe('Auto Schema Plugin', () => {
     };
 
     await expect(autoSchemaPlugin(fakeServerError)).rejects.toEqual(
-      Error('autoSchemaPlugin requires a schema with id "error"')
+      Error('autoSchemaPlugin requires a schema with id "error"'),
     );
   });
 
@@ -127,7 +127,7 @@ describe('Auto Schema Plugin', () => {
   it('autoSchema should add default error 500 if response 200 is set', async () => {
     await autoSchemaPlugin(fakeServer);
     expect(
-      fakeServer.autoSchema({ response: { 200: { type: 'string' } } })
+      fakeServer.autoSchema({ response: { 200: { type: 'string' } } }),
     ).toEqual({
       response: { 200: { type: 'string' }, '5xx': { $ref: 'error#' } },
     });
@@ -137,7 +137,7 @@ describe('Auto Schema Plugin', () => {
     expect(
       fakeServer.autoSchema({
         body: { type: 'string' },
-      })
+      }),
     ).toEqual({
       body: { type: 'string' },
       response: { 400: { $ref: 'error#' }, '5xx': { $ref: 'error#' } },
@@ -149,7 +149,7 @@ describe('Auto Schema Plugin', () => {
     expect(
       fakeServer.autoSchema({
         body: { type: 'string' },
-      })
+      }),
     ).toEqual({
       body: { type: 'string' },
       response: { 422: { $ref: 'error#' }, '5xx': { $ref: 'error#' } },
@@ -160,7 +160,7 @@ describe('Auto Schema Plugin', () => {
     expect(
       fakeServer.autoSchema({
         params: { type: 'string' },
-      })
+      }),
     ).toEqual({
       params: { type: 'string' },
       response: { 404: { $ref: 'error#' }, '5xx': { $ref: 'error#' } },
@@ -172,7 +172,7 @@ describe('Auto Schema Plugin', () => {
     expect(
       fakeServer.autoSchema({
         query: { type: 'string' },
-      })
+      }),
     ).toEqual({
       query: { type: 'string' },
       response: { 400: { $ref: 'error#' }, '5xx': { $ref: 'error#' } },

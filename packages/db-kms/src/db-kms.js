@@ -108,7 +108,7 @@ const initDbKms = (fastify, kmsOptions = {}) => {
           curve: 1,
           [repoOptions.keyProp]: 1,
           [repoOptions.secretProp]: 1,
-        }
+        },
       );
 
     /**
@@ -125,7 +125,7 @@ const initDbKms = (fastify, kmsOptions = {}) => {
           ...repo.defaultColumnsSelection,
           [repoOptions.keyProp]: 1,
           [repoOptions.secretProp]: 1,
-        }
+        },
       );
       if (isEmpty(dbEntity)) {
         return null;
@@ -145,7 +145,7 @@ const initDbKms = (fastify, kmsOptions = {}) => {
       return jwtSign(
         payload,
         key[repoOptions.secretProp] ?? key[repoOptions.keyProp],
-        options
+        options,
       );
     };
 
@@ -161,7 +161,7 @@ const initDbKms = (fastify, kmsOptions = {}) => {
       return jwtVerify(
         jwt,
         key[repoOptions.secretProp] ?? key[repoOptions.keyProp],
-        options
+        options,
       );
     };
 
@@ -174,7 +174,7 @@ const initDbKms = (fastify, kmsOptions = {}) => {
     const encryptString = async (plainText, keyId) => {
       const key = await loadKey(keyId);
       const hex = hexFromJwk(
-        key[repoOptions.secretProp] ?? key[repoOptions.keyProp]
+        key[repoOptions.secretProp] ?? key[repoOptions.keyProp],
       );
       return encrypt(plainText, hex);
     };
@@ -188,7 +188,7 @@ const initDbKms = (fastify, kmsOptions = {}) => {
     const decryptString = async (encrypted, keyId) => {
       const key = await loadKey(keyId);
       const hex = hexFromJwk(
-        key[repoOptions.secretProp] ?? key[repoOptions.keyProp]
+        key[repoOptions.secretProp] ?? key[repoOptions.keyProp],
       );
       return decrypt(encrypted, hex);
     };

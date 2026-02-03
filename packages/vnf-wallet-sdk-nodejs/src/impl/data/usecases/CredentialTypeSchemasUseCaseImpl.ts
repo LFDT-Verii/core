@@ -7,12 +7,10 @@ import CredentialTypeSchemasUseCase from '../../domain/usecases/CredentialTypeSc
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLLog from '../../utils/VCLLog';
 
-export default class CredentialTypeSchemasUseCaseImpl
-    implements CredentialTypeSchemasUseCase
-{
+export default class CredentialTypeSchemasUseCaseImpl implements CredentialTypeSchemasUseCase {
     constructor(
         private readonly credentialTypeSchemaRepository: CredentialTypeSchemaRepository,
-        private readonly credentialTypes: VCLCredentialTypes
+        private readonly credentialTypes: VCLCredentialTypes,
     ) {}
 
     async getCredentialTypeSchemas(): Promise<VCLCredentialTypeSchemas> {
@@ -36,12 +34,12 @@ export default class CredentialTypeSchemasUseCaseImpl
                     credentialTypeSchemasMap[schemaName] =
                         // eslint-disable-next-line no-await-in-loop
                         await this.credentialTypeSchemaRepository.getCredentialTypeSchema(
-                            schemaName
+                            schemaName,
                         );
                 } catch (error: any) {
                     VCLLog.error(
                         error,
-                        `Error fetching schema for ${schemaName}`
+                        `Error fetching schema for ${schemaName}`,
                     );
                 }
             }

@@ -41,7 +41,7 @@ module.exports = (app, options, next = () => {}) => {
         setConfigurationType,
       ],
     },
-    app
+    app,
   );
 };
 
@@ -83,7 +83,7 @@ const disclosureExtensions = (parent) => ({
           },
         },
       },
-      opts
+      opts,
     ),
   updateDisclosure: async ({ id, body }) => {
     const updateDoc = {

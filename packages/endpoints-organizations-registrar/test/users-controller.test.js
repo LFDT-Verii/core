@@ -14,14 +14,12 @@
  * limitations under the License.
  *
  */
-// eslint-disable-next-line max-classes-per-file
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const { testRegistrarUser } = require('@verii/tests-helpers');
 const {
   VNF_GROUP_ID_CLAIM,
-  // eslint-disable-next-line import/order
 } = require('../src/entities/oauth/domain/constants');
 
 const mockAuth0CreateUser = mock.fn(async () => {
@@ -37,7 +35,7 @@ const mockUser = {
 };
 
 const mockAuth0AddRoleToUser = mock.fn(() =>
-  Promise.resolve({ data: { undefined } })
+  Promise.resolve({ data: { undefined } }),
 );
 const mockAuth0GetUser = mock.fn(() => Promise.resolve({ data: mockUser }));
 const mockAuth0UpdateUser = mock.fn(async ({ id }, obj) => ({
@@ -48,7 +46,7 @@ const mockAuth0UpdateUser = mock.fn(async ({ id }, obj) => ({
 }));
 
 const mockAuth0GetUserRoles = mock.fn(() =>
-  Promise.resolve({ data: [{ id: 'rol_sQZLrbwBEblVBNDj' }] })
+  Promise.resolve({ data: [{ id: 'rol_sQZLrbwBEblVBNDj' }] }),
 );
 
 const mockAuth0CreatePasswordChangeTicket = mock.fn(() =>
@@ -56,7 +54,7 @@ const mockAuth0CreatePasswordChangeTicket = mock.fn(() =>
     data: {
       ticket: 'http://localhost/ticket',
     },
-  })
+  }),
 );
 
 class ManagementClient {
@@ -181,7 +179,7 @@ describe('Users Registrar Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: expect.stringContaining('body/email must match pattern'),
-          })
+          }),
         );
       });
 
@@ -202,7 +200,7 @@ describe('Users Registrar Test Suite', () => {
             error: 'Bad Request',
             message:
               'body/registrarRole must be equal to one of the allowed values',
-          })
+          }),
         );
       });
 
@@ -228,7 +226,7 @@ describe('Users Registrar Test Suite', () => {
             error: 'Bad Request',
             message:
               'body/tokenWalletRole must be equal to one of the allowed values',
-          })
+          }),
         );
       });
 
@@ -253,7 +251,7 @@ describe('Users Registrar Test Suite', () => {
             error: 'Bad Request',
             message:
               'body/registrarRole must be equal to one of the allowed values',
-          })
+          }),
         );
       });
 
@@ -292,7 +290,7 @@ describe('Users Registrar Test Suite', () => {
             error: 'Not Found',
             message: 'Group some-group-id not found',
             statusCode: 404,
-          })
+          }),
         );
 
         expect(mockAuth0CreateUser.mock.callCount()).toEqual(0);
@@ -324,7 +322,7 @@ describe('Users Registrar Test Suite', () => {
             statusCode: 403,
             error: 'Forbidden',
             message: UserErrorMessages.USER_CANNOT_SPECIFY_GROUP_ID,
-          })
+          }),
         );
       });
 
@@ -349,7 +347,7 @@ describe('Users Registrar Test Suite', () => {
             statusCode: 403,
             error: 'Forbidden',
             message: UserErrorMessages.USER_MUST_SPECIFY_GROUP_ID,
-          })
+          }),
         );
       });
 
@@ -375,7 +373,7 @@ describe('Users Registrar Test Suite', () => {
             error: 'Bad Request',
             message:
               'body/registrarRole must be equal to one of the allowed values',
-          })
+          }),
         );
       });
 
@@ -399,7 +397,7 @@ describe('Users Registrar Test Suite', () => {
             statusCode: 400,
             error: 'Bad Request',
             message: "body must have required property 'groupId'",
-          })
+          }),
         );
       });
 
@@ -459,7 +457,7 @@ describe('Users Registrar Test Suite', () => {
         expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
         expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
         expect(
-          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments,
         ).toEqual([
           {
             user_id: response.json.id,
@@ -496,7 +494,7 @@ describe('Users Registrar Test Suite', () => {
         const group = await groupsRepo.findOne();
 
         expect(new Date(group.updatedAt).getTime()).toBeGreaterThan(
-          new Date(updatedAtInitial).getTime()
+          new Date(updatedAtInitial).getTime(),
         );
       });
 
@@ -531,7 +529,7 @@ describe('Users Registrar Test Suite', () => {
         expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
         expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
         expect(
-          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments,
         ).toEqual([
           {
             user_id: response.json.id,
@@ -570,7 +568,7 @@ describe('Users Registrar Test Suite', () => {
         expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
         expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
         expect(
-          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments,
         ).toEqual([
           {
             user_id: response.json.id,
@@ -609,7 +607,7 @@ describe('Users Registrar Test Suite', () => {
         expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
         expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
         expect(
-          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments,
         ).toEqual([
           {
             user_id: response.json.id,
@@ -648,7 +646,7 @@ describe('Users Registrar Test Suite', () => {
 
       it('Should 201 even when email notification to user fails', async () => {
         mockSESSendEmail.mock.mockImplementationOnce(() =>
-          Promise.reject(new Error('mock error'))
+          Promise.reject(new Error('mock error')),
         );
         const payload = {
           ...baseCreateUserPayload,
@@ -672,7 +670,7 @@ describe('Users Registrar Test Suite', () => {
         expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(1);
         expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
         expect(
-          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments,
         ).toEqual([
           {
             user_id: response.json.id,
@@ -711,7 +709,7 @@ describe('Users Registrar Test Suite', () => {
         expect(mockAuth0AddRoleToUser.mock.callCount()).toEqual(2);
         expect(mockAuth0CreatePasswordChangeTicket.mock.callCount()).toEqual(1);
         expect(
-          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments
+          last(mockAuth0CreatePasswordChangeTicket.mock.calls).arguments,
         ).toEqual([
           {
             user_id: response.json.id,
@@ -744,7 +742,7 @@ describe('Users Registrar Test Suite', () => {
             message: 'User not found',
             error: 'Not Found',
             statusCode: 404,
-          })
+          }),
         );
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
         expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
@@ -791,7 +789,7 @@ describe('Users Registrar Test Suite', () => {
             message: 'User not found',
             error: 'Not Found',
             statusCode: 404,
-          })
+          }),
         );
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
         expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
@@ -822,7 +820,7 @@ describe('Users Registrar Test Suite', () => {
             message: 'User Not Found',
             error: 'Not Found',
             statusCode: 404,
-          })
+          }),
         );
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
         expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
@@ -874,7 +872,7 @@ describe('Users Registrar Test Suite', () => {
     describe('User email test', () => {
       it('should generate emailToUserForUserInvite', async () => {
         const { emailToUserForUserInvite } = initUserRegistrarEmails(
-          fastify.config
+          fastify.config,
         );
         const user = {
           givenName: 'givenName',
@@ -914,7 +912,7 @@ describe('Users Registrar Test Suite', () => {
 
       it('should generate emailToUserForUserInvite without token wallet role', async () => {
         const { emailToUserForUserInvite } = initUserRegistrarEmails(
-          fastify.config
+          fastify.config,
         );
         const user = {
           givenName: 'givenName',
@@ -944,7 +942,7 @@ describe('Users Registrar Test Suite', () => {
 
       it('should generate emailToUserForUserInvite with token wallet role', async () => {
         const { emailToUserForUserInvite } = initUserRegistrarEmails(
-          fastify.config
+          fastify.config,
         );
         const user = {
           givenName: 'givenName',

@@ -23,7 +23,7 @@ const { initCreateAuth0User } = require('./create-auth0-user');
 const initGetOrCreateAuth0User = async (fastify) => {
   const createAuth0User = await initCreateAuth0User(fastify);
   const { createPasswordChangeTicket } = await initAuth0Provisioner(
-    fastify.config
+    fastify.config,
   );
   const { getUserByEmail } = await initUserManagement(fastify.config);
 
@@ -53,7 +53,7 @@ const initGetOrCreateAuth0User = async (fastify) => {
         registrarRole: RoleNames.RegistrarClientAdmin,
         tokenWalletRole: RoleNames.TokenWalletClientFinanceAdmin,
       },
-      req
+      req,
     );
 
     return { user, ticket };

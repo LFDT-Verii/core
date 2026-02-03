@@ -37,7 +37,7 @@ module.exports = (app, options, next = () => {}) => {
         feedExtensions,
       ],
     },
-    app
+    app,
   );
 };
 

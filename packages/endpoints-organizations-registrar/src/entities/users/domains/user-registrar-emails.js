@@ -1,10 +1,9 @@
-/* eslint-disable max-len */
 const { reduce, compact } = require('lodash/fp');
 
 const renderInviteTextTokenWalletRole = (
   tokenWalletRole,
   organizations,
-  config
+  config,
 ) => {
   const hasRole = compact(tokenWalletRole).length;
 
@@ -18,7 +17,7 @@ ${reduce(
   (text, org) =>
     `${text}<a href='${config.tokenWalletBaseUrl}/o/${org.didDoc.id}'>${org.profile.name}</a> <br>`,
   '',
-  organizations
+  organizations,
 )}`;
 };
 

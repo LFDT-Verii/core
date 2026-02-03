@@ -1,6 +1,5 @@
 import { Dictionary } from '../VCLTypes';
 
-// eslint-disable-next-line no-shadow
 enum Format {
     jwk = 'jwk',
     hex = 'hex',
@@ -11,7 +10,7 @@ enum Format {
 export default class VCLPublicJwk {
     private constructor(
         public valueStr: string,
-        public valueJson: Dictionary<any>
+        public valueJson: Dictionary<any>,
     ) {}
 
     static readonly Format = Format;

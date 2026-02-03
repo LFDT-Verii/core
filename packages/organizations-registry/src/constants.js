@@ -102,7 +102,7 @@ const IssuingAndInspectionCategories = [
 const ServiceTypeToCategoryMap = flow(
   toPairs,
   flatMap(([category, types]) => map((type) => [type, category], types)),
-  fromPairs
+  fromPairs,
 )(ServiceTypesOfServiceCategory);
 
 const OrganizationDidDocErrorMessages = {

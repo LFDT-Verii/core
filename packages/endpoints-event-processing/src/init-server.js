@@ -37,7 +37,7 @@ const initServer = (server) => {
       .register(basicAuth, {
         validate: initBasicAuthValidate(
           server.config.basicAuthUsername,
-          server.config.basicAuthPassword
+          server.config.basicAuthPassword,
         ),
       });
   }

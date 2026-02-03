@@ -67,14 +67,14 @@ const issuedCredentialsController = async (fastify) => {
             did: credentialId,
           },
         },
-        { _id: 1, credentialStatus: 1, exchangeId: 1, did: 1, type: 1 }
+        { _id: 1, credentialStatus: 1, exchangeId: 1, did: 1, type: 1 },
       );
       if (!offer) {
         throw newError.NotFound(`Credential ${credentialId} not found`);
       }
       if (isEmpty(offer.credentialStatus)) {
         throw newError.BadRequest(
-          `Credential status not found for ${credentialId}`
+          `Credential status not found for ${credentialId}`,
         );
       }
       if (offer.credentialStatus.revokedAt) {
@@ -85,7 +85,7 @@ const issuedCredentialsController = async (fastify) => {
       await setRevokedTime(credentialId, req);
       const { pushToken, pushUrl, exchange } = await getPushDelegate(
         offer,
-        req
+        req,
       );
       if (!pushToken || !pushUrl) {
         return {};
@@ -97,17 +97,17 @@ const issuedCredentialsController = async (fastify) => {
           offer,
           ...body,
         },
-        { ...req, exchange }
+        { ...req, exchange },
       );
       const [{ notifiedOfRevocationAt }] = await setNotifiedTime(
         credentialId,
         offer,
-        req
+        req,
       );
       return {
         notifiedOfRevocationAt,
       };
-    }
+    },
   );
 
   fastify.get(
@@ -174,13 +174,13 @@ const issuedCredentialsController = async (fastify) => {
 
       const credentials = await repos.offers.find(
         filter,
-        issuedCredentialProjection
+        issuedCredentialProjection,
       );
 
       return {
         issuedCredentials: map(buildIssuedCredential(req), credentials),
       };
-    }
+    },
   );
 
   const setRevokedOnChain = async (credentialStatusUrl, context) => {
@@ -197,7 +197,7 @@ const issuedCredentialsController = async (fastify) => {
 
     const revocationRegistry = await getRevocationRegistry(
       { dltOperatorKMSKeyId: tenantKeysByPurpose[purpose].keyId },
-      context
+      context,
     );
     return revocationRegistry.setRevokedStatusSigned({
       accountId: tenant.primaryAddress,
@@ -226,7 +226,7 @@ const issuedCredentialsController = async (fastify) => {
   };
   const triggerPush = async (
     { offer, linkedOffer, message, pushToken },
-    context
+    context,
   ) => {
     const { tenant } = context;
     const notificationType = linkedOffer
@@ -248,7 +248,7 @@ const issuedCredentialsController = async (fastify) => {
         },
       },
       context.exchange.pushDelegate,
-      context
+      context,
     );
   };
 
@@ -261,7 +261,7 @@ const issuedCredentialsController = async (fastify) => {
       },
       {
         'credentialStatus.revokedAt': new Date(),
-      }
+      },
     );
 
   const setNotifiedTime = async (credentialId, offer, { repos }) =>
@@ -273,7 +273,7 @@ const issuedCredentialsController = async (fastify) => {
       },
       {
         notifiedOfRevocationAt: new Date(),
-      }
+      },
     );
 };
 
@@ -282,7 +282,7 @@ const buildIssuedCredential =
   (credential) => {
     const issuedCredential = omitBy(
       (v, k) => isNil(v) || k === 'issued',
-      credential
+      credential,
     );
     // eslint-disable-next-line better-mutation/no-mutation
     issuedCredential.id = credential.did;

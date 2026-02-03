@@ -29,7 +29,7 @@ const hashOffer = (offer) =>
   flow(
     pick(['credentialSubject', 'validFrom', 'expirationDate', 'validUntil']),
     canonicalize,
-    hashAndEncodeHex
+    hashAndEncodeHex,
   )(offer);
 
 module.exports = { hashOffer };

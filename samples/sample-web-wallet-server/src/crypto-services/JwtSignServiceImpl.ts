@@ -18,12 +18,12 @@ export class JwtSignServiceImpl implements VCLJwtSignService {
   async sign(
     jwtDescriptor: VCLJwtDescriptor,
     didJwk: VCLDidJwk,
-    nonce: Nullish<string>
+    nonce: Nullish<string>,
   ): Promise<VCLJwt> {
     const jwtJson = await generateSignedJwtFetcher(
       jwtDescriptor,
       didJwk,
-      nonce
+      nonce,
     );
     return VCLJwt.fromEncodedJwt(jwtJson.compactJwt as string);
   }

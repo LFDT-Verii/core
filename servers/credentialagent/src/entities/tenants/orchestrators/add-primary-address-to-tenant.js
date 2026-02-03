@@ -36,7 +36,7 @@ const addPrimaryAddressToTenant = async ({ _id }, context) => {
       contractAddress,
       rpcProvider,
     },
-    context
+    context,
   );
   const primaryAddress = await permissionContract.lookupPrimary(publicAddress);
   await repos.tenants.update(_id, {

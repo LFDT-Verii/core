@@ -7,6 +7,6 @@ export default interface VCLJwtVerifyService {
     verify(
         jwt: VCLJwt,
         publicJwk: Nullish<VCLPublicJwk>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<boolean>;
 }

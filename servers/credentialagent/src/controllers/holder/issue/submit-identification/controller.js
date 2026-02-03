@@ -27,7 +27,7 @@ const controller = async (fastify) => {
         // eslint-disable-next-line better-mutation/no-mutation
         req.body.vp = await verifyVerifiablePresentationJwt(
           req.body.jwt_vp,
-          req
+          req,
         );
       },
       schema: fastify.autoSchema({
@@ -54,7 +54,7 @@ const controller = async (fastify) => {
         },
       }),
     },
-    async (req) => handlePresentationSubmission(req.body.vp, req)
+    async (req) => handlePresentationSubmission(req.body.vp, req),
   );
 };
 

@@ -3,7 +3,7 @@ const { addKeysToDidDoc } = require('@verii/did-doc');
 
 const addKeyToDidDoc = async (
   { organization, kidFragment, publicKey },
-  { repos }
+  { repos },
 ) => {
   const { didDoc, newVerificationMethods } = addKeysToDidDoc({
     didDoc: organization.didDoc,

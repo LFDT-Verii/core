@@ -92,14 +92,16 @@ const onGetPresentationRequest = async () => {
   try {
     const presentationRequest = await getPresentationRequest(
       { value: deepLinkValue },
-      didJwk
+      didJwk,
     );
+
     await onSubmitPresentation(presentationRequest);
   } catch (error: any) {
     console.log('VCL Presentation Request failed:', JSON.stringify(error));
   }
 };
 
+// eslint-disable-next-line complexity
 const onSubmitPresentation = async (presentationRequest: Dictionary<any>) => {
   const presentationSubmission = {
     presentationRequest,
@@ -116,6 +118,7 @@ const onSubmitPresentation = async (presentationRequest: Dictionary<any>) => {
 
     if (!verifyToken(authToken?.accessToken)) {
       console.log('VCL Auth Token is expired');
+
       // eslint-disable-next-line max-depth
       try {
         authToken = await getAuthToken({ presentationRequest });
@@ -128,20 +131,21 @@ const onSubmitPresentation = async (presentationRequest: Dictionary<any>) => {
   try {
     const presentationSubmissionResult = await submitPresentation(
       presentationSubmission,
-      authToken
+      authToken,
     );
     console.log(
       'VCL Presentation submission result:',
-      JSON.stringify(presentationSubmissionResult)
+      JSON.stringify(presentationSubmissionResult),
     );
 
     const exchangeDescriptor = {
       presentationSubmission,
       submissionResult: presentationSubmissionResult,
     };
+
     await onGetExchangeProgress(
       exchangeDescriptor,
-      presentationSubmissionResult
+      presentationSubmissionResult,
     );
   } catch (error: any) {
     console.log('VCL Exchange progress error:', JSON.stringify(error));
@@ -150,7 +154,7 @@ const onSubmitPresentation = async (presentationRequest: Dictionary<any>) => {
 
 const onGetExchangeProgress = async (
   presentationRequest: Dictionary<any>,
-  submissionResult: Dictionary<any>
+  submissionResult: Dictionary<any>,
 ) => {
   try {
     const exchangeProgress = await getExchangeProgress(
@@ -158,7 +162,7 @@ const onGetExchangeProgress = async (
         verifiableCredentials: Constants.getIdentificationList(environment),
         presentationRequest,
       },
-      submissionResult
+      submissionResult,
     );
     console.log('exchange progress: ', exchangeProgress);
   } catch (error) {
@@ -174,9 +178,10 @@ const onGetCredentialManifestByDeepLink = async () => {
   try {
     const credentialManifest = await getCredentialManifestByDeepLink(
       { value: deepLinkValue },
-      didJwk
+      didJwk,
     );
     console.log('credential manifest: ', credentialManifest);
+
     await onGenerateOffers(credentialManifest);
   } catch (error) {
     console.log('Error getting credential manifest by deep link: ', error);
@@ -187,7 +192,7 @@ const onGetOrganizationsThenCredentialManifestByService = async () => {
   searchForOrganizations(
     environment === Environment.Dev.valueOf()
       ? Constants.OrganizationsSearchDescriptorByDidDev
-      : Constants.OrganizationsSearchDescriptorByDidStaging
+      : Constants.OrganizationsSearchDescriptorByDidStaging,
   )
     .then((organizations) => {
       console.log('organizations: ', organizations);
@@ -202,6 +207,7 @@ const onGetOrganizationsThenCredentialManifestByService = async () => {
       })
         .then((credentialManifest) => {
           console.log('credential manifest: ', credentialManifest);
+
           onGenerateOffers(credentialManifest);
         })
         .catch((error) => {
@@ -223,6 +229,7 @@ const onGenerateOffers = async (credentialManifest: Dictionary<any>) => {
   try {
     const offers = await generateOffers(generateOffersDescriptor);
     console.log('generate offers: ', offers);
+
     await onCheckOffers(generateOffersDescriptor, offers.sessionToken);
   } catch (error) {
     console.log('Error generating offers: ', error);
@@ -231,11 +238,12 @@ const onGenerateOffers = async (credentialManifest: Dictionary<any>) => {
 
 const onCheckOffers = async (
   generateOffersDescriptor: Dictionary<any>,
-  sessionToken: Dictionary<any>
+  sessionToken: Dictionary<any>,
 ) => {
   try {
     const offers = await checkOffers(generateOffersDescriptor, sessionToken);
     console.log('check offers: ', offers);
+
     await onFinalizeOffers(generateOffersDescriptor.credentialManifest, offers);
   } catch (error) {
     console.log('Error checking offers: ', error);
@@ -244,7 +252,7 @@ const onCheckOffers = async (
 
 const onFinalizeOffers = async (
   credentialManifest: Dictionary<any>,
-  offers: Dictionary<any>
+  offers: Dictionary<any>,
 ) => {
   const approvedRejectedOfferIds = getApprovedRejectedOfferIdsMock(offers);
   const finalizeOffersDescriptor = {
@@ -256,7 +264,7 @@ const onFinalizeOffers = async (
   try {
     const credentials = await finalizeOffers(
       finalizeOffersDescriptor,
-      offers.sessionToken
+      offers.sessionToken,
     );
     console.log('credentials: ', credentials);
   } catch (error) {
@@ -272,7 +280,7 @@ const onGetCredentialTypesUIFormSchema = async () => {
     });
     console.log(
       'credential types UI form schema: ',
-      credentialTypesUIFormSchema
+      credentialTypesUIFormSchema,
     );
   } catch (error) {
     console.log('Error getting credential types UI form schema: ', error);
@@ -288,12 +296,12 @@ const onRefreshCredentials = async () => {
     });
     console.log(
       'credential manifest to refresh credentials: ',
-      credentialManifest
+      credentialManifest,
     );
   } catch (error) {
     console.log(
       'Error getting credential manifest to refresh credentials: ',
-      error
+      error,
     );
   }
 };
@@ -301,7 +309,7 @@ const onRefreshCredentials = async () => {
 const onGetVerifiedProfile = async () => {
   try {
     const verifiedProfile = await getVerifiedProfile(
-      Constants.getVerifiedProfileDescriptor(environment)
+      Constants.getVerifiedProfileDescriptor(environment),
     );
     console.log('verified profile: ', verifiedProfile);
   } catch (error) {
@@ -313,7 +321,7 @@ const onVerifyJwt = async () => {
   try {
     const isVerified = await verifyJwt(
       Constants.SomeJwt,
-      Constants.SomePublicJwk
+      Constants.SomePublicJwk,
     );
     console.log('is verified: ', isVerified);
   } catch (error) {
@@ -329,7 +337,7 @@ const onGenerateSignedJwt = async () => {
         iss: 'iss123',
         jti: 'jti123',
       },
-      didJwk
+      didJwk,
     );
     console.log('signed jwt: ', signedJwt);
   } catch (error) {

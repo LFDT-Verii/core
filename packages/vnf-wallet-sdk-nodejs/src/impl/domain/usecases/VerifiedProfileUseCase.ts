@@ -3,6 +3,6 @@ import VCLVerifiedProfileDescriptor from '../../../api/entities/VCLVerifiedProfi
 
 export default interface VerifiedProfileUseCase {
     getVerifiedProfile(
-        verifiedProfileDescriptor: VCLVerifiedProfileDescriptor
+        verifiedProfileDescriptor: VCLVerifiedProfileDescriptor,
     ): Promise<VCLVerifiedProfile>;
 }

@@ -18,7 +18,7 @@ module.exports = (initializer = identity) =>
   flow(
     createTestServer,
     initServer,
-    initializer
+    initializer,
   )({
     ...createConfig(require('../../package.json')),
     mongoConnection,

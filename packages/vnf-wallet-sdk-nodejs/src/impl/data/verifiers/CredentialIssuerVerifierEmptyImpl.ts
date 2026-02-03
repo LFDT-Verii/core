@@ -8,12 +8,10 @@ import CredentialIssuerVerifier from '../../domain/verifiers/CredentialIssuerVer
 import VCLJwt from '../../../api/entities/VCLJwt';
 import VCLFinalizeOffersDescriptor from '../../../api/entities/VCLFinalizeOffersDescriptor';
 
-export default class CredentialIssuerVerifierEmptyImpl
-    implements CredentialIssuerVerifier
-{
+export default class CredentialIssuerVerifierEmptyImpl implements CredentialIssuerVerifier {
     async verifyCredentials(
         jwtCredentials: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
+        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<boolean> {
         return true;
     }

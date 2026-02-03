@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-// eslint-disable-next-line max-classes-per-file
 const { beforeEach, describe, it, mock, after } = require('node:test');
 const { expect } = require('expect');
 
@@ -72,7 +71,7 @@ describe('Email notifications test suite', () => {
     await sendEmail(params);
 
     expect(
-      mockSESSendEmail.mock.calls.map((call) => call.arguments)
+      mockSESSendEmail.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         Source: 'fooSender',
@@ -106,7 +105,7 @@ describe('Email notifications test suite', () => {
     });
 
     expect(
-      mockSESSendEmail.mock.calls.map((call) => call.arguments)
+      mockSESSendEmail.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       expect.objectContaining({
         Source: 'fooSender',
@@ -143,7 +142,7 @@ describe('Email notifications test suite', () => {
     await sendEmail(params);
 
     expect(
-      mockSESv2SendEmail.mock.calls.map((call) => call.arguments)
+      mockSESv2SendEmail.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         FromEmailAddress: 'fooSender',
@@ -179,7 +178,7 @@ describe('Email notifications test suite', () => {
     });
 
     expect(
-      mockSESv2SendEmail.mock.calls.map((call) => call.arguments)
+      mockSESv2SendEmail.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         FromEmailAddress: 'fooSender',
@@ -211,7 +210,7 @@ describe('Email notifications test suite', () => {
     await sendEmail({ ...params, html: true });
 
     expect(
-      mockSESv2SendEmail.mock.calls.map((call) => call.arguments)
+      mockSESv2SendEmail.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         FromEmailAddress: 'fooSender',
@@ -246,7 +245,7 @@ describe('Email notifications test suite', () => {
     });
 
     expect(
-      mockSESSendEmail.mock.calls.map((call) => call.arguments)
+      mockSESSendEmail.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         Source: 'fooSender',
@@ -280,7 +279,7 @@ describe('Email notifications test suite', () => {
     });
 
     expect(
-      mockSESv2SendEmail.mock.calls.map((call) => call.arguments)
+      mockSESv2SendEmail.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         FromEmailAddress: 'fooSender',

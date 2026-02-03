@@ -10,16 +10,16 @@ import VCLLog from './VCLLog';
 
 export class ProfileServiceTypeVerifier {
     constructor(
-        private readonly verifiedProfileUseCase: VerifiedProfileUseCase
+        private readonly verifiedProfileUseCase: VerifiedProfileUseCase,
     ) {}
 
     async verifyServiceTypeOfVerifiedProfile(
         verifiedProfileDescriptor: VCLVerifiedProfileDescriptor,
-        expectedServiceTypes: VCLServiceTypes
+        expectedServiceTypes: VCLServiceTypes,
     ): Promise<VCLVerifiedProfile> {
         const verifiedProfile =
             await this.verifiedProfileUseCase.getVerifiedProfile(
-                verifiedProfileDescriptor
+                verifiedProfileDescriptor,
             );
 
         await this.verifyServiceType(verifiedProfile, expectedServiceTypes);
@@ -29,7 +29,7 @@ export class ProfileServiceTypeVerifier {
 
     toJsonString(
         profileName: Nullish<string>,
-        message: Nullish<string>
+        message: Nullish<string>,
     ): string {
         try {
             const jsonObject: Dictionary<any> = {};
@@ -48,11 +48,11 @@ export class ProfileServiceTypeVerifier {
 
     async verifyServiceType(
         verifiedProfile: VCLVerifiedProfile,
-        expectedServiceTypes: VCLServiceTypes
+        expectedServiceTypes: VCLServiceTypes,
     ): Promise<boolean> {
         if (
             verifiedProfile.serviceTypes.containsAtLeastOneOf(
-                expectedServiceTypes
+                expectedServiceTypes,
             )
         ) {
             return true;
@@ -63,9 +63,9 @@ export class ProfileServiceTypeVerifier {
             null,
             this.toJsonString(
                 verifiedProfile.name,
-                `Wrong service type - expected: ${expectedServiceTypes.all}, found: ${verifiedProfile.serviceTypes.all}`
+                `Wrong service type - expected: ${expectedServiceTypes.all}, found: ${verifiedProfile.serviceTypes.all}`,
             ),
-            VCLStatusCode.VerificationError
+            VCLStatusCode.VerificationError,
         );
     }
 }

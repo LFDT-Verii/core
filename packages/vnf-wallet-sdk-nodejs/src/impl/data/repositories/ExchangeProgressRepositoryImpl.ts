@@ -6,13 +6,11 @@ import ExchangeProgressRepository from '../../domain/repositories/ExchangeProgre
 import { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class ExchangeProgressRepositoryImpl
-    implements ExchangeProgressRepository
-{
+export default class ExchangeProgressRepositoryImpl implements ExchangeProgressRepository {
     constructor(private networkService: NetworkService) {}
 
     async getExchangeProgress(
-        exchangeDescriptor: VCLExchangeDescriptor
+        exchangeDescriptor: VCLExchangeDescriptor,
     ): Promise<VCLExchange> {
         const exchangeProgressResponse = await this.networkService.sendRequest({
             method: HttpMethod.GET,
@@ -34,7 +32,7 @@ export default class ExchangeProgressRepositoryImpl
             exchangeJsonObj[VCLExchange.KeyId],
             exchangeJsonObj[VCLExchange.KeyType],
             exchangeJsonObj[VCLExchange.KeyDisclosureComplete],
-            exchangeJsonObj[VCLExchange.KeyExchangeComplete]
+            exchangeJsonObj[VCLExchange.KeyExchangeComplete],
         );
     }
 }

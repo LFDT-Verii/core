@@ -28,7 +28,7 @@ const controller = async (fastify) => {
         jwk: publicKey,
         keyId: id,
       };
-    }
+    },
   );
 };
 

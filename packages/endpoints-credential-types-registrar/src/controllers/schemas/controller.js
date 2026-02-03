@@ -31,15 +31,15 @@ const schemasController = async (fastify) => {
 
         const { schemaUrl } =
           await repos.credentialSchemas.findCredentialTypeMetadataBySchemaName(
-            schemaName
+            schemaName,
           );
         reply.header(
           CachingConstants.CACHE_CONTROL_HEADER,
-          CachingConstants.MAX_AGE_CACHE_CONTROL
+          CachingConstants.MAX_AGE_CACHE_CONTROL,
         );
         const json = await fetchJson(schemaUrl, req);
         return reply.type('application/json; charset=UTF-8').send(json);
-      }
+      },
     )
     // replace with calls to `get-credential-type-descriptors`
     .get(
@@ -96,10 +96,10 @@ const schemasController = async (fastify) => {
         return reply
           .header(
             CachingConstants.CACHE_CONTROL_HEADER,
-            CachingConstants.MAX_AGE_CACHE_CONTROL
+            CachingConstants.MAX_AGE_CACHE_CONTROL,
           )
           .send({ schemaFileNames });
-      }
+      },
     )
     .post(
       '/:schemaName/validate',
@@ -138,7 +138,7 @@ const schemasController = async (fastify) => {
         }
 
         return { valid: true };
-      }
+      },
     );
 };
 

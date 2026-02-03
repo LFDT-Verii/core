@@ -23,7 +23,7 @@ const prepareLinkedCredentialsForHolder = (linkedCredentials) => {
 
   const result = flow(
     reject((linkedCredential) => linkedCredential.invalidAt != null),
-    map(omit(['linkedCredentialId']))
+    map(omit(['linkedCredentialId'])),
   )(linkedCredentials);
 
   if (isEmpty(result)) {

@@ -44,7 +44,7 @@ const initBuildOrganizationModificationsOnServiceChange = (fastify) => {
 
     const activatedServices = selectActivatedServices(
       activatedServiceIds,
-      services ?? organization.services
+      services ?? organization.services,
     );
     modifications.activatedServiceIds = map('id', activatedServices);
 
@@ -60,7 +60,7 @@ const initBuildOrganizationModificationsOnServiceChange = (fastify) => {
 
     const { jwtVc, credentialId, vcUrl } = await prepareProfileVc(
       didDoc,
-      modifications.profile
+      modifications.profile,
     );
 
     modifications.signedProfileVcJwt = {

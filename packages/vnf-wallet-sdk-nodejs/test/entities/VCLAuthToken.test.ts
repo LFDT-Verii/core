@@ -45,7 +45,7 @@ describe('VCLAuthToken', () => {
         const token = new VCLAuthToken(
             payload,
             undefined,
-            'did:wallet:override'
+            'did:wallet:override',
         );
         expect(token.walletDid).toEqual('did:wallet:override');
         expect(token.payload).toEqual(payload);
@@ -56,7 +56,7 @@ describe('VCLAuthToken', () => {
             payload,
             undefined,
             undefined,
-            'did:party:override'
+            'did:party:override',
         );
         expect(token.relyingPartyDid).toEqual('did:party:override');
         expect(token.payload).toEqual(payload);

@@ -21,7 +21,7 @@ const extractCredentialType = flow(
   get('type'),
   castArray,
   filter((item) => item !== 'VerifiableCredential'),
-  first
+  first,
 );
 
 module.exports = {

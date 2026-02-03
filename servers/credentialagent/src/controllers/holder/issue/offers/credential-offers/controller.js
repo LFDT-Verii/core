@@ -49,7 +49,7 @@ const { requestOffersFromVendor } = require('../../../../../fetchers');
 
 const controller = async (fastify) => {
   fastify.addHook('preHandler', async (req) =>
-    ensureExchangeStateValid(ExchangeErrorCodeState.OFFERS_CLIAMED_SYNCH, req)
+    ensureExchangeStateValid(ExchangeErrorCodeState.OFFERS_CLIAMED_SYNCH, req),
   );
   const validateOffer = initValidateOffer(fastify);
 
@@ -103,6 +103,7 @@ const controller = async (fastify) => {
         },
       }),
     },
+    // eslint-disable-next-line complexity
     async (req, reply) => {
       const {
         user: { vendorUserId },
@@ -115,7 +116,7 @@ const controller = async (fastify) => {
 
       await repos.exchanges.addState(
         exchange._id,
-        ExchangeStates.OFFERS_REQUESTED
+        ExchangeStates.OFFERS_REQUESTED,
       );
 
       const offerMode = loadOfferMode(req);
@@ -129,14 +130,14 @@ const controller = async (fastify) => {
           types,
           offerHashes,
         },
-        req
+        req,
       );
 
       if (status === 202) {
         await repos.exchanges.addState(
           exchange._id,
           ExchangeStates.OFFERS_WAITING_ON_VENDOR,
-          { offerHashes, vendorUserId }
+          { offerHashes, vendorUserId },
         );
       } else {
         const $set = {
@@ -155,7 +156,7 @@ const controller = async (fastify) => {
         await repos.exchanges.addState(
           exchange._id,
           ExchangeStates.OFFERS_SENT,
-          $set
+          $set,
         );
       }
 
@@ -167,7 +168,7 @@ const controller = async (fastify) => {
         challenge: isEmpty(holderOffers) ? undefined : challenge,
         offers: holderOffers,
       };
-    }
+    },
   );
 
   const loadOfferMode = (context) => {
@@ -185,7 +186,7 @@ const controller = async (fastify) => {
 
   const loadAllOffers = async (
     { vendorUserId, types, offerHashes },
-    context
+    context,
   ) => {
     const { exchange } = context;
     const skipVendorOffers =
@@ -198,18 +199,18 @@ const controller = async (fastify) => {
         offerHashes,
         skipVendorOffers,
       },
-      context
+      context,
     );
   };
 
   const loadWebhookOffers = async (
     { vendorUserId, types, offerHashes },
-    context
+    context,
   ) => {
     const { exchange } = context;
     const skipPrepreparedOffers = !some(
       { state: ExchangeStates.OFFERS_RECEIVED },
-      exchange.events
+      exchange.events,
     );
     return loadOffers(
       {
@@ -218,13 +219,13 @@ const controller = async (fastify) => {
         offerHashes,
         skipPrepreparedOffers,
       },
-      context
+      context,
     );
   };
 
   const loadPreparedOffers = async (
     { vendorUserId, types, offerHashes },
-    context
+    context,
   ) =>
     loadOffers(
       {
@@ -233,17 +234,17 @@ const controller = async (fastify) => {
         offerHashes,
         skipVendorOffers: true,
       },
-      context
+      context,
     );
 
   const loadLegacyOffers = async (
     { vendorUserId, types, offerHashes },
-    context
+    context,
   ) => {
     const { exchange } = context;
     const skipVendorOffers = some(
       { state: ExchangeStates.OFFERS_RECEIVED },
-      exchange.events
+      exchange.events,
     );
     return loadOffers(
       {
@@ -253,7 +254,7 @@ const controller = async (fastify) => {
         filterByExchange: true,
         skipVendorOffers,
       },
-      context
+      context,
     );
   };
 
@@ -266,7 +267,8 @@ const controller = async (fastify) => {
       skipVendorOffers = false,
       skipPrepreparedOffers = false,
     },
-    context
+    context,
+    // eslint-disable-next-line complexity
   ) => {
     const vendorOfferResults = skipVendorOffers
       ? { offers: [], status: 200 }
@@ -282,17 +284,17 @@ const controller = async (fastify) => {
             types,
             offerHashes: concat(
               offerHashes,
-              map('contentHash.value', vendorOfferResults.offers)
+              map('contentHash.value', vendorOfferResults.offers),
             ),
             exchangeId: filterByExchange ? context.exchange._id : undefined,
           },
-          context
+          context,
         );
     return {
       ...vendorOfferResults,
       offers: mapOffer(
         [...vendorOfferResults.offers, ...preparedOffers],
-        context
+        context,
       ),
     };
   };
@@ -318,7 +320,7 @@ const controller = async (fastify) => {
           ? offer.issuer
           : offer.issuer.id.toString(),
       }),
-      offers
+      offers,
     );
   };
 
@@ -346,7 +348,7 @@ const controller = async (fastify) => {
 
     const countOffersWithoutOfferId = flow(
       filter(({ offerId }) => isNil(offerId)),
-      size
+      size,
     )(vendorOffers);
     if (countOffersWithoutOfferId) {
       const err = `${countOffersWithoutOfferId} offer(s) without offerId received from vendor`;
@@ -356,7 +358,7 @@ const controller = async (fastify) => {
         {
           vendorUserId,
           err,
-        }
+        },
       );
       throw newError(500, err, {
         errorCode: 'upstream_offers_offer_id_missing',
@@ -366,17 +368,17 @@ const controller = async (fastify) => {
     const validatedOffersWithStatuses = await buildVendorOfferStatuses(
       vendorOffers,
       offerHashes,
-      context
+      context,
     );
 
     const vendorOfferStatuses = flow(
       map(([{ offerId }, status]) => [offerId, status]),
-      fromPairs
+      fromPairs,
     )(validatedOffersWithStatuses);
 
     const validOffers = flow(
       filter(([, status]) => status === 'OK'),
-      map(([offer]) => offer)
+      map(([offer]) => offer),
     )(validatedOffersWithStatuses);
 
     if (isEmpty(validOffers)) {
@@ -400,7 +402,7 @@ const controller = async (fastify) => {
           vendorOffer,
           true,
           false,
-          context
+          context,
         );
         if (includes(hashOffer(validatedOffer), offerHashes)) {
           return [validatedOffer, 'Duplicate'];
@@ -428,7 +430,7 @@ const validateInvalidWebhookOffers = (vendorOfferStatuses, context) => {
 
   const allValid = all(
     (status) => status === 'OK',
-    values(vendorOfferStatuses)
+    values(vendorOfferStatuses),
   );
 
   if (!errorOnInvalidWebhookOffers || allValid) {

@@ -9,7 +9,7 @@ import Urls from '../network/Urls';
 import fetcher from '../network/Fetcher';
 
 export const searchForOrganizations = async (
-  organizationDescriptor: Dictionary<any>
+  organizationDescriptor: Dictionary<any>,
 ): Promise<any> => {
   const config = {
     url: Urls.searchForOrganizations,

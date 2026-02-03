@@ -15,7 +15,7 @@ const context = { log: console };
 const verifyVcs = async (presentation, issuerChains, credentialDids) => {
   const buildDidChain = () => issuerChains;
   const verifyIssuerChain = initVerifyIssuerChain(
-    extractVerificationKey(get('publicKey[0].id', last(issuerChains)))
+    extractVerificationKey(get('publicKey[0].id', last(issuerChains))),
   );
   const { verifiableCredential } = decodePresentationJwt(presentation);
 
@@ -28,7 +28,7 @@ const verifyVcs = async (presentation, issuerChains, credentialDids) => {
       });
 
       return doVerifyCredentialChecks(credential, context);
-    }, verifiableCredential)
+    }, verifiableCredential),
   );
 };
 
@@ -37,7 +37,7 @@ const verifyPresentation = async (presentation, issuerChains) => {
 
   const presentationJwt = common.readFile(
     presentationJwtFile,
-    'Presentation JWT not found'
+    'Presentation JWT not found',
   );
   const credentials = await verifyVcs(presentationJwt, issuerChains);
 
@@ -48,15 +48,15 @@ const verifyPresentation = async (presentation, issuerChains) => {
           credential,
           credentialChecks,
         }),
-        credentials
-      )
-    )
+        credentials,
+      ),
+    ),
   );
 
   if (
     all(
       (credential) => credential.credentialChecks.UNTAMPERED === 'PASS',
-      credentials
+      credentials,
     )
   ) {
     console.info('Presentation credentials look good');
@@ -102,7 +102,7 @@ const verify = async (credentialSource, presentation, issuerPersonas) => {
     const issuerChains = map(
       (issuerPersona) =>
         JSON.parse(common.readFile(`${issuerPersona}.did`, 'DID not found')),
-      issuerPersonas
+      issuerPersonas,
     );
 
     if (credentialSource) {
@@ -127,7 +127,7 @@ program
     return verify(
       options.credentialSource,
       options.presentation,
-      options.issuerPersonas
+      options.issuerPersonas,
     );
   })
   .parse(process.argv);

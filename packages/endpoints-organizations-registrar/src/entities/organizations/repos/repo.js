@@ -45,7 +45,7 @@ module.exports = (app, options, next = () => {}) => {
         findCaosExtension,
       ],
     },
-    app
+    app,
   );
 };
 const servicesExtensions = (parent) => ({
@@ -76,7 +76,7 @@ const servicesExtensions = (parent) => ({
         $push: {
           services: addedService,
         },
-      }
+      },
     );
     return addedService;
   },
@@ -92,7 +92,7 @@ const servicesExtensions = (parent) => ({
           'services.$': updatedService,
           updatedAt: updatedService.updatedAt, // bubble up the updatedAt timestamp to the root object
         },
-      }
+      },
     );
 
     return updatedService;
@@ -109,7 +109,7 @@ const findersExtension = (parent) => ({
           },
         }),
       },
-      ...options
+      ...options,
     ),
   findOneByDid: async (did, ...options) => {
     const organization = await parent.findOne(
@@ -118,7 +118,7 @@ const findersExtension = (parent) => ({
           'didDoc.id': did,
         }),
       },
-      ...options
+      ...options,
     );
     if (isEmpty(organization)) {
       throw newError(404, OrganizationErrorMessages.ORGANIZATION_NOT_FOUND, {
@@ -148,7 +148,7 @@ const scopeFilterExtension = (parent, context) => {
         transformDidFilter({
           ...filter,
           'didDoc.id': { $in: context.scope.dids },
-        })
+        }),
       );
     },
     extensions: parent.extensions.concat(['scopeFilterExtension']),

@@ -20,7 +20,7 @@ const { credentialUnexpired } = require('@verii/sample-data');
 
 const minimalJsonLdCredential = omit(
   ['expirationDate', 'issuanceDate'],
-  credentialUnexpired
+  credentialUnexpired,
 );
 
 const maximalJsonLdCredential = {

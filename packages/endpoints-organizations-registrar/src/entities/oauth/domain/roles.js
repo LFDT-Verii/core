@@ -66,7 +66,7 @@ const roleNamesToRoleObj = (roleNames) => {
       registrarRole: undefined,
       tokenWalletRole: undefined,
     },
-    roleNames
+    roleNames,
   );
 };
 

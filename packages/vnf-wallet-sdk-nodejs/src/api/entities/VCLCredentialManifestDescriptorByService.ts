@@ -11,12 +11,15 @@ export default class VCLCredentialManifestDescriptorByService extends VCLCredent
 
     constructor(
         service: VCLService,
+        // eslint-disable-next-line default-param-last
         issuingType: VCLIssuingType = VCLIssuingType.Career,
+        // eslint-disable-next-line default-param-last
         credentialTypes: Nullish<string[]> = null,
+        // eslint-disable-next-line default-param-last
         pushDelegate: Nullish<VCLPushDelegate> = null,
         didJwk: VCLDidJwk,
         did: string,
-        remoteCryptoServicesToken: Nullish<VCLToken> = null
+        remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {
         super(
             service.serviceEndpoint,
@@ -26,7 +29,7 @@ export default class VCLCredentialManifestDescriptorByService extends VCLCredent
             null,
             null,
             didJwk,
-            remoteCryptoServicesToken
+            remoteCryptoServicesToken,
         );
         this.didInput = did;
     }

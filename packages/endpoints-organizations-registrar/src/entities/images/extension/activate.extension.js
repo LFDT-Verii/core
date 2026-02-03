@@ -26,7 +26,7 @@ const activateExtension = (parent) => ({
           updatedAt: current,
           state: ImageState.ACTIVE,
         },
-      }
+      },
     );
   },
   extensions: parent.extensions.concat(['activate']),

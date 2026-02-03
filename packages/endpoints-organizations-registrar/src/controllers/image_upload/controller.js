@@ -41,7 +41,7 @@ const imageUploadController = async (fastify) => {
       return {
         imageMetadata,
       };
-    }
+    },
   );
 };
 

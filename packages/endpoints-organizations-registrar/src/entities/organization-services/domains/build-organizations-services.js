@@ -22,7 +22,6 @@ const buildOrganizationService = (service, invitation) => {
     id: toRelativeServiceId(service.id),
   };
   if (invitation != null) {
-    // eslint-disable-next-line better-mutation/no-mutation
     organizationService.invitationId = invitation._id;
   }
   return organizationService;

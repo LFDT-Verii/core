@@ -19,7 +19,7 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
 
     beforeEach(() => {
         mockedCountries = jsonArrToCountries(
-            JSON.parse(CredentialTypesUIFormSchemaMocks.CountriesJson)
+            JSON.parse(CredentialTypesUIFormSchemaMocks.CountriesJson),
         );
     });
 
@@ -28,18 +28,18 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             new CredentialTypesUIFormSchemaRepositoryImpl(
                 new NetworkServiceSuccess(
                     JSON.parse(
-                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonFull
-                    )
-                )
-            )
+                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonFull,
+                    ),
+                ),
+            ),
         );
 
         const response = await subject.getCredentialTypesUIFormSchema(
             new VCLCredentialTypesUIFormSchemaDescriptor(
                 'some type',
-                VCLCountryCodes.CA
+                VCLCountryCodes.CA,
             ),
-            mockedCountries
+            mockedCountries,
         );
 
         const addressJsonObj = response?.payload.place;
@@ -49,31 +49,31 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             addressJsonObj[VCLCredentialTypesUIFormSchema.KeyAddressRegion];
 
         const expectedAddressCountryCodes = JSON.stringify(
-            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum]
+            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum],
         );
         const expectedAddressCountryNames = JSON.stringify(
-            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames]
+            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames],
         );
 
         const expectedAddressRegionCodes = JSON.stringify(
-            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum]
+            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum],
         );
         const expectedAddressRegionNames = JSON.stringify(
-            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames]
+            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames],
         );
 
         // Assert
         expect(expectedAddressCountryCodes).toEqual(
-            CredentialTypesUIFormSchemaMocks.CountryCodes
+            CredentialTypesUIFormSchemaMocks.CountryCodes,
         );
         expect(expectedAddressCountryNames).toEqual(
-            CredentialTypesUIFormSchemaMocks.CountryNames
+            CredentialTypesUIFormSchemaMocks.CountryNames,
         );
         expect(expectedAddressRegionCodes).toEqual(
-            CredentialTypesUIFormSchemaMocks.CanadaRegionCodes
+            CredentialTypesUIFormSchemaMocks.CanadaRegionCodes,
         );
         expect(expectedAddressRegionNames).toEqual(
-            CredentialTypesUIFormSchemaMocks.CanadaRegionNames
+            CredentialTypesUIFormSchemaMocks.CanadaRegionNames,
         );
     });
 
@@ -83,19 +83,19 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             new CredentialTypesUIFormSchemaRepositoryImpl(
                 new NetworkServiceSuccess(
                     JSON.parse(
-                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyCountries
-                    )
-                )
-            )
+                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyCountries,
+                    ),
+                ),
+            ),
         );
 
         // Action
         const response = await subject.getCredentialTypesUIFormSchema(
             new VCLCredentialTypesUIFormSchemaDescriptor(
                 'some type',
-                VCLCountryCodes.CA
+                VCLCountryCodes.CA,
             ),
-            mockedCountries
+            mockedCountries,
         );
 
         const addressJsonObj = response?.payload.place;
@@ -105,10 +105,10 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             addressJsonObj[VCLCredentialTypesUIFormSchema.KeyAddressRegion];
 
         const expectedAddressCountryCodes = JSON.stringify(
-            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum]
+            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum],
         );
         const expectedAddressCountryNames = JSON.stringify(
-            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames]
+            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames],
         );
 
         const expectedAddressRegionCodes =
@@ -118,10 +118,10 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
 
         // Assert
         expect(expectedAddressCountryCodes).toEqual(
-            CredentialTypesUIFormSchemaMocks.CountryCodes
+            CredentialTypesUIFormSchemaMocks.CountryCodes,
         );
         expect(expectedAddressCountryNames).toEqual(
-            CredentialTypesUIFormSchemaMocks.CountryNames
+            CredentialTypesUIFormSchemaMocks.CountryNames,
         );
         expect(expectedAddressRegionCodes).toBeFalsy();
         expect(expectedAddressRegionNames).toBeFalsy();
@@ -133,19 +133,19 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             new CredentialTypesUIFormSchemaRepositoryImpl(
                 new NetworkServiceSuccess(
                     JSON.parse(
-                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyRegions
-                    )
-                )
-            )
+                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyRegions,
+                    ),
+                ),
+            ),
         );
 
         // Action
         const response = await subject.getCredentialTypesUIFormSchema(
             new VCLCredentialTypesUIFormSchemaDescriptor(
                 'some type',
-                VCLCountryCodes.CA
+                VCLCountryCodes.CA,
             ),
-            mockedCountries
+            mockedCountries,
         );
 
         const addressJsonObj = response?.payload.place;
@@ -160,20 +160,20 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames];
 
         const expectedAddressRegionCodes = JSON.stringify(
-            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum]
+            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum],
         );
         const expectedAddressRegionNames = JSON.stringify(
-            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames]
+            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames],
         );
 
         // Assert
         expect(expectedAddressCountryCodes).toBeFalsy();
         expect(expectedAddressCountryNames).toBeFalsy();
         expect(expectedAddressRegionCodes).toEqual(
-            CredentialTypesUIFormSchemaMocks.CanadaRegionCodes
+            CredentialTypesUIFormSchemaMocks.CanadaRegionCodes,
         );
         expect(expectedAddressRegionNames).toEqual(
-            CredentialTypesUIFormSchemaMocks.CanadaRegionNames
+            CredentialTypesUIFormSchemaMocks.CanadaRegionNames,
         );
     });
 
@@ -183,19 +183,19 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             new CredentialTypesUIFormSchemaRepositoryImpl(
                 new NetworkServiceSuccess(
                     JSON.parse(
-                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyEnums
-                    )
-                )
-            )
+                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyEnums,
+                    ),
+                ),
+            ),
         );
 
         // Action
         const response = await subject.getCredentialTypesUIFormSchema(
             new VCLCredentialTypesUIFormSchemaDescriptor(
                 'some type',
-                VCLCountryCodes.CA
+                VCLCountryCodes.CA,
             ),
-            mockedCountries
+            mockedCountries,
         );
 
         const addressJsonObj = response?.payload.place;
@@ -205,24 +205,24 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             addressJsonObj[VCLCredentialTypesUIFormSchema.KeyAddressRegion];
 
         const expectedAddressCountryCodes = JSON.stringify(
-            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum]
+            addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum],
         );
         const expectedAddressCountryNames =
             addressCountryJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames];
 
         const expectedAddressRegionCodes = JSON.stringify(
-            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum]
+            addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiEnum],
         );
         const expectedAddressRegionNames =
             addressRegionJsonObj[VCLCredentialTypesUIFormSchema.KeyUiNames];
 
         // Assert
         expect(expectedAddressCountryCodes).toEqual(
-            CredentialTypesUIFormSchemaMocks.CountryCodes
+            CredentialTypesUIFormSchemaMocks.CountryCodes,
         );
         expect(expectedAddressCountryNames).toBeFalsy();
         expect(expectedAddressRegionCodes).toEqual(
-            CredentialTypesUIFormSchemaMocks.CanadaRegionCodes
+            CredentialTypesUIFormSchemaMocks.CanadaRegionCodes,
         );
         expect(expectedAddressRegionNames).toBeFalsy();
     });
@@ -230,8 +230,8 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
     const jsonArrToCountries = (countriesJsonArr: any[]): VCLCountries => {
         return new VCLCountries(
             countriesJsonArr.map((countryJsonObj) =>
-                parseCountry(countryJsonObj)
-            )
+                parseCountry(countryJsonObj),
+            ),
         );
     };
 
@@ -241,15 +241,19 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             regions = new VCLRegions(
                 countryJsonObj.regions.map(
                     (regionObj: any) =>
-                        new VCLRegion(regionObj, regionObj.code, regionObj.name)
-                )
+                        new VCLRegion(
+                            regionObj,
+                            regionObj.code,
+                            regionObj.name,
+                        ),
+                ),
             );
         }
         return new VCLCountry(
             countryJsonObj,
             countryJsonObj.code,
             countryJsonObj.name,
-            regions
+            regions,
         );
     };
 });

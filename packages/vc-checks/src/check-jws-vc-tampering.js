@@ -24,7 +24,7 @@ const checkJwsVcTampering = async (jwt, verificationKey, { log }) => {
   } catch (error) {
     log.error(
       { credentialId: decodeCredentialJwt(jwt).id, verificationKey },
-      `jwt tamper check failed: ${error.message}`
+      `jwt tamper check failed: ${error.message}`,
     );
     return verificationKey == null
       ? CheckResults.DATA_INTEGRITY_ERROR

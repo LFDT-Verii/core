@@ -120,7 +120,7 @@ const buildOfferWrite = (offerDoc, didMap) => {
           updatedAt: new Date(),
           credentialSubject: leafMap(
             (val) => (val === oldDid ? preferredDid : val),
-            offerDoc.credentialSubject
+            offerDoc.credentialSubject,
           ),
         }),
       },

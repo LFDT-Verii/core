@@ -56,7 +56,7 @@ describe('Image-processing test suite', () => {
     it('should return image format', () => {
       const format = getImageFormat(
         { ContentType: 'image/png' },
-        { format: ExtensionTypes.PNG }
+        { format: ExtensionTypes.PNG },
       );
       expect(format).toBe(ExtensionTypes.PNG);
     });

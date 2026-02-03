@@ -24,7 +24,8 @@ const initCreateAuth0User = async (fastify) => {
 
   return async (
     { userPayload, registrarRole = null, tokenWalletRole = null, groupId },
-    context
+    context,
+    // eslint-disable-next-line complexity
   ) => {
     const { tokenWalletBaseUrl, registrarAppUiUrl } = fastify.config;
     const { repos } = context;
@@ -33,7 +34,7 @@ const initCreateAuth0User = async (fastify) => {
     const roles = compact([registrarRole, tokenWalletRole]);
 
     await Promise.all(
-      map((roleName) => addRoleToAuth0User({ user, roleName }), roles)
+      map((roleName) => addRoleToAuth0User({ user, roleName }), roles),
     );
 
     if (groupId != null && registrarRole === RoleNames.RegistrarClientAdmin) {

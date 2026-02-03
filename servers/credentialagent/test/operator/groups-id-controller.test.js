@@ -52,7 +52,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'group_does_not_exist',
           message: 'Group does not exist',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should return a group', async () => {
@@ -87,7 +87,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'group_does_not_exist',
           message: 'Group does not exist',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should throw error if a slug already exists', async () => {
@@ -113,7 +113,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'slug_already_exist',
           message: 'Group with the given SLUG already exists',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('should update a group', async () => {
@@ -156,7 +156,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'group_does_not_exist',
           message: 'Group does not exist',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should throw error if a group has tenants', async () => {
@@ -176,7 +176,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'group_has_tenants',
           message: 'Group has tenants associated with it',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('should delete a group', async () => {
@@ -215,7 +215,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'group_does_not_exist',
           message: 'Group does not exist',
           statusCode: 404,
-        })
+        }),
       );
       const groupDb = await groupRepo.count({ filter: {} });
       expect(groupDb).toBe(0);
@@ -241,7 +241,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'did_already_in_group',
           message: 'Did already linked to a group',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('should add a did to a group if a did already linked to the same group', async () => {

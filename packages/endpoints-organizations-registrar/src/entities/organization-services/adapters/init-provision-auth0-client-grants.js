@@ -33,11 +33,11 @@ const initProvisionAuth0ClientGrants =
         const service = find({ id: authClient.serviceId }, services);
         const clientGrant = await provisionAuth0SystemClientGrants(
           authClient.clientId,
-          service?.type
+          service?.type,
         );
 
         return { ...authClient, clientGrantIds: [clientGrant.id] };
-      }, authClients)
+      }, authClients),
     );
   };
 

@@ -18,6 +18,7 @@ import { fetchUtils } from 'react-admin';
 
 const httpClient =
   (config, auth) =>
+  // eslint-disable-next-line complexity
   async (url, options = {}) => {
     if (!options.headers) {
       // eslint-disable-next-line better-mutation/no-mutation

@@ -21,7 +21,7 @@ const { ExchangeStates } = require('./states');
 const ensureExchangeStateValid = (errorCode, { exchange }) => {
   const hasCompleteOrErrorEvent = some(
     { state: ExchangeStates.COMPLETE },
-    exchange.events
+    exchange.events,
   );
 
   if (hasCompleteOrErrorEvent) {

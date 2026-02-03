@@ -70,7 +70,7 @@ const initEncryptPropExtension = ({
     insert: async (value, requestedProjection) => {
       const insertedVal = await parent.insert(
         value,
-        convertProjection(requestedProjection)
+        convertProjection(requestedProjection),
       );
       return decryptProp(insertedVal);
     },

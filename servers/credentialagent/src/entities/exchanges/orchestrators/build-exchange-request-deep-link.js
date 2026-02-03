@@ -24,7 +24,7 @@ const { ExchangeStates } = require('../domains/states');
 const validateExchange = (exchange) => {
   if (last(exchange.events).state !== ExchangeStates.OFFERS_RECEIVED) {
     throw new newError.BadRequest(
-      'Exchange in invalid state. Perhaps you forgot to call /offers/complete'
+      'Exchange in invalid state. Perhaps you forgot to call /offers/complete',
     );
   }
 };
@@ -35,7 +35,7 @@ const buildExchangeRequestDeepLink = async (context) => {
 
   const offers = await repos.offers.find(
     { filter: { exchangeId: exchange._id } },
-    { type: 1 }
+    { type: 1 },
   );
   const types = flow(map('type.0'), uniq)(offers);
   return buildIssuingDeepLink(
@@ -43,7 +43,7 @@ const buildExchangeRequestDeepLink = async (context) => {
     exchange._id,
     types,
     query.vendorOriginContext,
-    context
+    context,
   );
 };
 

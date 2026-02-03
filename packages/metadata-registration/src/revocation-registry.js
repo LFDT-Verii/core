@@ -25,7 +25,7 @@ const contractAbi = require('./contracts/revocation-registry.json');
 
 const initRevocationRegistry = async (
   { privateKey, contractAddress, rpcProvider },
-  context
+  context,
 ) => {
   const { log } = context;
   log.info({ privateKey, contractAddress }, 'initRevocationRegistry');
@@ -37,7 +37,7 @@ const initRevocationRegistry = async (
       rpcProvider,
       contractAbi,
     },
-    context
+    context,
   );
 
   const addWalletToRegistrySigned = async ({ caoDid }) => {
@@ -51,12 +51,12 @@ const initRevocationRegistry = async (
           rpcProvider,
           contractAbi,
         },
-        context
+        context,
       );
     const tx = await transactingClient.contractClient.addWalletSigned(
       traceId,
       caoDid,
-      signature
+      signature,
     );
     const txResult = await tx.wait();
     return { txResult };
@@ -73,13 +73,13 @@ const initRevocationRegistry = async (
           rpcProvider,
           contractAbi,
         },
-        context
+        context,
       );
     const tx = await transactingClient.contractClient.addRevocationListSigned(
       listId,
       traceId,
       caoDid,
-      signature
+      signature,
     );
     const txResult = await tx.wait();
     return { txResult };
@@ -115,14 +115,14 @@ const initRevocationRegistry = async (
           rpcProvider,
           contractAbi,
         },
-        context
+        context,
       );
     const tx = await transactingClient.contractClient.setRevokedStatusSigned(
       listId,
       index,
       traceId,
       caoDid,
-      signature
+      signature,
     );
     const txResult = await tx.wait();
     return {
@@ -147,7 +147,7 @@ const initRevocationRegistry = async (
       scheme !== 'ethereum'
     ) {
       throw new Error(
-        'Wrong url, please check the params: scheme, target_address, function_name'
+        'Wrong url, please check the params: scheme, target_address, function_name',
       );
     }
 
@@ -156,7 +156,7 @@ const initRevocationRegistry = async (
 
   const setPermissionsAddress = async (permissionsContractAddress) => {
     const tx = await contractClient.setPermissionsAddress(
-      permissionsContractAddress
+      permissionsContractAddress,
     );
 
     return tx.wait();

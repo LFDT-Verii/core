@@ -29,7 +29,7 @@ describe('replace item', () => {
       { x: 2 },
     ]);
     expect(
-      replaceItem({ x: 2 }, { y: 1 }, [{ x: 1 }, { x: 2 }, { x: 3 }])
+      replaceItem({ x: 2 }, { y: 1 }, [{ x: 1 }, { x: 2 }, { x: 3 }]),
     ).toEqual([{ x: 1 }, { y: 1 }, { x: 3 }]);
   });
 });

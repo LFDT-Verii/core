@@ -12,5 +12,5 @@ module.exports = (app) =>
         offerIds: ['5539e308-6f2f-4d01-b946-5ca4ba7fee20'],
         ...overrides(),
       };
-    }
+    },
   );

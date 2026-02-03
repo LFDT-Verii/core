@@ -217,7 +217,7 @@ describe('DID Documents Common', () => {
       const section = generatePublicKeySection(
         'KID',
         'CONTROLLER',
-        'PUBLIC-KEY-HEX'
+        'PUBLIC-KEY-HEX',
       );
 
       expect(section).toEqual({
@@ -286,7 +286,7 @@ describe('DID Documents Common', () => {
       const proof = generateProof(
         payload,
         rootPrivateKey,
-        'VERIFICATION-METHOD'
+        'VERIFICATION-METHOD',
       );
       const testProof = {
         type: signatureKeyType,

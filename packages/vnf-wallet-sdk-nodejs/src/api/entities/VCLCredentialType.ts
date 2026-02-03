@@ -1,6 +1,7 @@
 import { Dictionary, Nullish } from '../VCLTypes';
 
 export default class VCLCredentialType {
+    // eslint-disable-next-line complexity
     constructor(
         public payload: Dictionary<any>,
         public id: Nullish<string> = null,
@@ -8,7 +9,7 @@ export default class VCLCredentialType {
         public createdAt: Nullish<string> = null,
         public schemaName: Nullish<string> = null,
         public credentialType: Nullish<string> = null,
-        public recommended: boolean = false
+        public recommended: boolean = false,
     ) {}
 
     // CodingKeys

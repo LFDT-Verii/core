@@ -15,19 +15,19 @@ describe('VCLCredentialManifestDescriptorByDeepLink Tests', () => {
             CredentialManifestDescriptorMocks.DeepLink,
             VCLIssuingType.Career,
             new VCLPushDelegate('some_url', 'some_token'),
-            DidJwkMocks.DidJwk
+            DidJwkMocks.DidJwk,
         );
 
         expect(subject.endpoint).toEqual(
             `${decodeURIComponent(
-                CredentialManifestDescriptorMocks.DeepLinkRequestUri
-            )}&push_delegate.push_url=some_url&push_delegate.push_token=some_token`
+                CredentialManifestDescriptorMocks.DeepLinkRequestUri,
+            )}&push_delegate.push_url=some_url&push_delegate.push_token=some_token`,
         );
         expect.stringMatching(
-            encodeURI(CredentialManifestDescriptorMocks.DeepLinkRequestUri)
+            encodeURI(CredentialManifestDescriptorMocks.DeepLinkRequestUri),
         );
         expect(subject.did).toEqual(
-            CredentialManifestDescriptorMocks.IssuerDid
+            CredentialManifestDescriptorMocks.IssuerDid,
         );
         expect(subject.issuingType).toEqual(VCLIssuingType.Career);
         expect(subject.pushDelegate?.pushUrl).toEqual('some_url');
@@ -39,11 +39,11 @@ describe('VCLCredentialManifestDescriptorByDeepLink Tests', () => {
             DeepLinkMocks.CredentialManifestDeepLinkMainNetWithId,
             VCLIssuingType.Career,
             new VCLPushDelegate('some_url', 'some_token'),
-            DidJwkMocks.DidJwk
+            DidJwkMocks.DidJwk,
         );
 
         expect(decodeURIComponent(subject.endpoint!)!).toEqual(
-            `${DeepLinkMocks.CredentialManifestRequestDecodedUriWithIdStr}&push_delegate.push_url=some_url&push_delegate.push_token=some_token`
+            `${DeepLinkMocks.CredentialManifestRequestDecodedUriWithIdStr}&push_delegate.push_url=some_url&push_delegate.push_token=some_token`,
         );
         expect(subject.did).toEqual(DeepLinkMocks.IssuerDid);
         expect(subject.pushDelegate?.pushUrl).toEqual('some_url');

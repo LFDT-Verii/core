@@ -54,7 +54,7 @@ async function validateCao() {
         throw new Error(caoErrorMessage);
       default:
         context.log.warn(
-          'The registrar was not available for the request. Please check your firewall settings.'
+          'The registrar was not available for the request. Please check your firewall settings.',
         );
         break;
     }
@@ -69,7 +69,7 @@ const checkServiceCategories = (profile, caoErrorMessage) => {
   if (
     !includes(
       ServiceCategories.CredentialAgentOperator,
-      profile?.credentialSubject?.permittedVelocityServiceCategory
+      profile?.credentialSubject?.permittedVelocityServiceCategory,
     )
   ) {
     throw new Error(caoErrorMessage);

@@ -15,12 +15,12 @@ describe('ExchangeProgressUseCase Tests', () => {
     const subject1 = new ExchangeProgressUseCaseImpl(
         new ExchangeProgressRepositoryImpl(
             new NetworkServiceSuccess(
-                ExchangeProgressMocks.ExchangeProgressJson
-            )
-        )
+                ExchangeProgressMocks.ExchangeProgressJson,
+            ),
+        ),
     );
     const subject2 = new ExchangeProgressUseCaseImpl(
-        new ExchangeProgressRepositoryImpl(new NetworkServiceSuccess(''))
+        new ExchangeProgressRepositoryImpl(new NetworkServiceSuccess('')),
     );
     const exchangeDescriptor = {
         exchangeId: '',
@@ -32,16 +32,16 @@ describe('ExchangeProgressUseCase Tests', () => {
         const exchange = await subject1.getExchangeProgress(exchangeDescriptor);
 
         expect(exchange.id).toEqual(
-            ExchangeProgressMocks.ExchangeProgressJson.id
+            ExchangeProgressMocks.ExchangeProgressJson.id,
         );
         expect(exchange.type).toEqual(
-            ExchangeProgressMocks.ExchangeProgressJson.type
+            ExchangeProgressMocks.ExchangeProgressJson.type,
         );
         expect(exchange.exchangeComplete).toEqual(
-            ExchangeProgressMocks.ExchangeProgressJson.exchangeComplete
+            ExchangeProgressMocks.ExchangeProgressJson.exchangeComplete,
         );
         expect(exchange.disclosureComplete).toEqual(
-            ExchangeProgressMocks.ExchangeProgressJson.disclosureComplete
+            ExchangeProgressMocks.ExchangeProgressJson.disclosureComplete,
         );
     });
 

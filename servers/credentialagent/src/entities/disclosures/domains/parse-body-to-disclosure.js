@@ -8,7 +8,7 @@ const parseBodyToDisclosure = (body, context) => {
   return flow(
     dateify(['deactivationDate']),
     omit(['setIssuingDefault']),
-    set('configurationType', getDisclosureConfigurationType(body, context))
+    set('configurationType', getDisclosureConfigurationType(body, context)),
   )(body);
 };
 

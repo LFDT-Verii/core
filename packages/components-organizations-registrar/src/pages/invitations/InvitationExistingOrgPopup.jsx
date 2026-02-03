@@ -11,6 +11,7 @@ import { dataResources } from '../../utils/remoteDataProvider.js';
 import Loading from '../../components/Loading.jsx';
 import { getNewServiceIndex } from '../../utils/invitations.js';
 
+// eslint-disable-next-line complexity
 const InvitationExistingOrgPopup = () => {
   const [searchParams] = useSearchParams();
   const redirect = useRedirect();
@@ -58,7 +59,7 @@ const InvitationExistingOrgPopup = () => {
         setLoading(false);
         handleClose();
       }
-    } catch (e) {
+    } catch {
       setLoading(false);
     }
   }, [createService, handleClose, invitationData]);

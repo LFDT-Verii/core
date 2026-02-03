@@ -11,7 +11,7 @@ const parseProfileToCsv = async (organizationProfile) => {
         ...removeLinkedInRegistrationNumber(profile),
       }))(organizationProfile),
     ],
-    ['registrationNumbers', 'commercialEntities']
+    ['registrationNumbers', 'commercialEntities'],
   );
   return csvFile;
 };
@@ -21,7 +21,7 @@ const buildPermittedVelocityServiceCategory = (profile) => {
   if (profile?.permittedVelocityServiceCategory != null) {
     obj.permittedVelocityServiceCategory = join(
       ', ',
-      profile.permittedVelocityServiceCategory
+      profile.permittedVelocityServiceCategory,
     );
   }
   return obj;
@@ -31,7 +31,7 @@ const removeLinkedInRegistrationNumber = (profile) => {
   return {
     registrationNumbers: reject(
       { authority: Authorities.LinkedIn },
-      profile.registrationNumbers
+      profile.registrationNumbers,
     ),
   };
 };

@@ -21,7 +21,7 @@ const extractService = (serviceId) => {
   const normalizedServiceId = toRelativeServiceId(serviceId);
   return flow(
     get('service'),
-    find((service) => toRelativeServiceId(service.id) === normalizedServiceId)
+    find((service) => toRelativeServiceId(service.id) === normalizedServiceId),
   );
 };
 module.exports = { extractService };

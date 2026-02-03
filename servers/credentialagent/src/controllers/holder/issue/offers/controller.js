@@ -35,7 +35,7 @@ const controller = async (fastify) => {
   const { addDocSchema } = fastify;
 
   fastify.addHook('preHandler', async (req) =>
-    ensureExchangeStateValid(ExchangeErrorCodeState.EXCHANGE_INVALID, req)
+    ensureExchangeStateValid(ExchangeErrorCodeState.EXCHANGE_INVALID, req),
   );
 
   addDocSchema(newOfferRelatedResourceSchema);
@@ -86,7 +86,7 @@ const controller = async (fastify) => {
 
       await repos.exchanges.addState(
         exchange._id,
-        ExchangeStates.CLAIMING_IN_PROGRESS
+        ExchangeStates.CLAIMING_IN_PROGRESS,
       );
 
       await rejectOffers(exchange, rejectedOfferIds, req);
@@ -94,16 +94,16 @@ const controller = async (fastify) => {
       const signedCredentials = await approveOffers(
         approvedOfferIds,
         body.proof,
-        req
+        req,
       );
 
       await finalizeExchange(
         exchange,
         concat(approvedOfferIds, rejectedOfferIds),
-        req
+        req,
       );
       return signedCredentials;
-    }
+    },
   );
 
   const rejectOffers = async (exchange, offerIds, context) => {
@@ -130,7 +130,7 @@ const approveOffers = async (offerIds, proof, context) => {
   }
   log.info(
     { credentialSubjectId: subject?.id, offers },
-    'issuing these offers'
+    'issuing these offers',
   );
 
   checkOffersToBeApproved(offers);
@@ -141,13 +141,13 @@ const approveOffers = async (offerIds, proof, context) => {
 const initCheckOffers = (prop, errorMessageSuffix) => (offers) => {
   const errorOfferIds = flow(
     filter((offer) => !!offer[prop]),
-    map('_id')
+    map('_id'),
   )(offers);
 
   if (!isEmpty(errorOfferIds)) {
     throw newError(
       400,
-      buildCheckOffersErrorMessage(errorOfferIds, errorMessageSuffix)
+      buildCheckOffersErrorMessage(errorOfferIds, errorMessageSuffix),
     );
   }
 };

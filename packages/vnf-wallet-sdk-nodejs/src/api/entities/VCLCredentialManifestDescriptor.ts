@@ -10,15 +10,21 @@ import {
 } from '../../impl/utils/HelperFunctions';
 
 export default class VCLCredentialManifestDescriptor {
+    // eslint-disable-next-line complexity
     constructor(
+        // eslint-disable-next-line default-param-last
         public readonly uri: Nullish<string> = null,
+        // eslint-disable-next-line default-param-last
         public readonly issuingType: VCLIssuingType = VCLIssuingType.Career,
+        // eslint-disable-next-line default-param-last
         public readonly credentialTypes: Nullish<string[]> = null,
+        // eslint-disable-next-line default-param-last
         public readonly pushDelegate: Nullish<VCLPushDelegate> = null,
+        // eslint-disable-next-line default-param-last
         public readonly vendorOriginContext: Nullish<string> = null,
         public readonly deepLink: Nullish<VCLDeepLink>,
         public readonly didJwk: VCLDidJwk,
-        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null
+        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {}
 
     get did() {
@@ -41,7 +47,7 @@ export default class VCLCredentialManifestDescriptor {
                     (it) =>
                         `${
                             VCLCredentialManifestDescriptor.KeyCredentialTypes
-                        }=${encodeURIComponent(it)}`
+                        }=${encodeURIComponent(it)}`,
                 )
                 .join('&');
         }
@@ -56,7 +62,7 @@ export default class VCLCredentialManifestDescriptor {
         }
 
         const qParams = [pCredentialTypes, pPushDelegate].filter(
-            (it) => it && it !== ''
+            (it) => it && it !== '',
         );
 
         return qParams.length > 0 ? qParams.join('&') : null;

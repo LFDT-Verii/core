@@ -45,7 +45,7 @@ const initSendSmsNotification =
         apiVersion: '2010-03-31',
         awsRegion,
         awsEndpoint,
-      })
+      }),
     );
     const { sendTwilioSms } = createTwilioClient({
       twilioAccountSid,
@@ -69,7 +69,7 @@ const initSendSmsNotification =
             StringValue: 'Transactional',
           },
         },
-      })
+      }),
     );
   };
 

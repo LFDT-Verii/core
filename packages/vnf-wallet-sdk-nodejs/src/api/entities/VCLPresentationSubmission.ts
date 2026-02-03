@@ -7,7 +7,7 @@ export default class VCLPresentationSubmission extends VCLSubmission {
 
     constructor(
         presentationRequest: VCLPresentationRequest,
-        verifiableCredentials: VCLVerifiableCredential[]
+        verifiableCredentials: VCLVerifiableCredential[],
     ) {
         super(
             presentationRequest.submitPresentationUri,
@@ -17,7 +17,7 @@ export default class VCLPresentationSubmission extends VCLSubmission {
             presentationRequest.pushDelegate,
             presentationRequest.vendorOriginContext,
             presentationRequest.didJwk,
-            presentationRequest.remoteCryptoServicesToken
+            presentationRequest.remoteCryptoServicesToken,
         );
         this.progressUri = presentationRequest.progressUri;
     }

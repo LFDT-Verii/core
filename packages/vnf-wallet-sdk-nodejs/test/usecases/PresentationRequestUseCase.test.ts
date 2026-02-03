@@ -32,20 +32,20 @@ describe('PresentationRequestUseCase Tests', () => {
             new PresentationRequestRepositoryImpl(
                 new NetworkServiceSuccess(
                     JSON.parse(
-                        PresentationRequestMocks.EncodedPresentationRequestResponse
-                    )
-                )
+                        PresentationRequestMocks.EncodedPresentationRequestResponse,
+                    ),
+                ),
             ),
             new ResolveDidDocumentRepositoryImpl(
                 new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentMock.payload
-                )
+                    DidDocumentMocks.DidDocumentMock.payload,
+                ),
             ),
             new JwtServiceRepositoryImpl(
                 new JwtSignServiceMock(''),
-                new JwtVerifyServiceMock()
+                new JwtVerifyServiceMock(),
             ),
-            new PresentationRequestByDeepLinkVerifierImpl()
+            new PresentationRequestByDeepLinkVerifierImpl(),
         );
 
         const presentationRequest = await subject1.getPresentationRequest(
@@ -53,18 +53,18 @@ describe('PresentationRequestUseCase Tests', () => {
                 DeepLinkMocks.PresentationRequestDeepLinkDevNet,
                 new VCLPushDelegate(pushUrl, pushToken),
                 DidJwkMocks.DidJwk,
-                new VCLToken('some token')
+                new VCLToken('some token'),
             ),
-            new VCLVerifiedProfile({})
+            new VCLVerifiedProfile({}),
         );
         expect(presentationRequest.jwt).toStrictEqual(
-            PresentationRequestMocks.PresentationRequestJwt
+            PresentationRequestMocks.PresentationRequestJwt,
         );
         expect(presentationRequest.pushDelegate?.pushUrl).toEqual(pushUrl);
         expect(presentationRequest.pushDelegate?.pushToken).toEqual(pushToken);
         expect(presentationRequest.didJwk).toStrictEqual(DidJwkMocks.DidJwk);
         expect(presentationRequest.remoteCryptoServicesToken?.value).toEqual(
-            'some token'
+            'some token',
         );
     });
 
@@ -73,18 +73,18 @@ describe('PresentationRequestUseCase Tests', () => {
         const pushToken = 'push_token';
         subject2 = new PresentationRequestUseCaseImpl(
             new PresentationRequestRepositoryImpl(
-                new NetworkServiceSuccess(JSON.parse('{"wrong": "payload"}'))
+                new NetworkServiceSuccess(JSON.parse('{"wrong": "payload"}')),
             ),
             new ResolveDidDocumentRepositoryImpl(
                 new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentMock.payload
-                )
+                    DidDocumentMocks.DidDocumentMock.payload,
+                ),
             ),
             new JwtServiceRepositoryImpl(
                 new JwtSignServiceMock(''),
-                new JwtVerifyServiceMock()
+                new JwtVerifyServiceMock(),
             ),
-            new PresentationRequestByDeepLinkVerifierImpl()
+            new PresentationRequestByDeepLinkVerifierImpl(),
         );
         try {
             await subject2.getPresentationRequest(
@@ -92,9 +92,9 @@ describe('PresentationRequestUseCase Tests', () => {
                     DeepLinkMocks.PresentationRequestDeepLinkDevNet,
                     new VCLPushDelegate(pushUrl, pushToken),
                     DidJwkMocks.DidJwk,
-                    new VCLToken('some token')
+                    new VCLToken('some token'),
                 ),
-                new VCLVerifiedProfile({})
+                new VCLVerifiedProfile({}),
             );
             expect(true).toEqual(false);
         } catch (error: any) {

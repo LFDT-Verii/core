@@ -76,7 +76,7 @@ dotenv.config({
     '..',
     'samples',
     'sample-registrar-server',
-    '.localdev.env'
+    '.localdev.env',
   ),
   processEnv: e2eEnv,
 });
@@ -192,7 +192,7 @@ describe('org registration and issuing e2e', () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authJson.access_token}`,
         },
-      }
+      },
     ).then((r) => r.json());
 
     // json response checks
@@ -214,7 +214,7 @@ describe('org registration and issuing e2e', () => {
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
     const quantity = 100;
     const expiry = addMonths(3, new Date());
@@ -244,13 +244,13 @@ describe('org registration and issuing e2e', () => {
           Authorization: `Bearer ${fineractAuthJson.access_token}`,
           'fineract-platform-tenantid': 'default',
         },
-      }
+      },
     );
     expect(createVoucherResponse.status).toEqual(200);
     await expect(createVoucherResponse.json()).resolves.toEqual({
       clientId: parseInt(
         createFullOrganizationResponse.ids.fineractClientId,
-        10
+        10,
       ),
       officeId: 1,
       resourceId: expect.any(Number),
@@ -265,7 +265,7 @@ describe('org registration and issuing e2e', () => {
           Authorization: `Bearer ${fineractAuthJson.access_token}`,
           'fineract-platform-tenantid': 'default',
         },
-      }
+      },
     );
     await expect(balanceQuery2Response.json()).resolves.toEqual({
       balance: 100,
@@ -282,7 +282,7 @@ describe('org registration and issuing e2e', () => {
             KeyPurposes.EXCHANGES,
             KeyPurposes.ISSUING_METADATA,
           ].includes(first(purposes)),
-        keys
+        keys,
       ),
     };
 
@@ -297,7 +297,7 @@ describe('org registration and issuing e2e', () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${OPERATOR_API_TOKEN}`,
         },
-      }
+      },
     );
     expect(createTenantResponse.status).toEqual(201);
     const createTenantJson = await createTenantResponse.json();
@@ -441,7 +441,7 @@ describe('org registration and issuing e2e', () => {
           authorization: `Bearer ${OPERATOR_API_TOKEN}`,
         },
         body: JSON.stringify(disclosure),
-      }
+      },
     );
 
     expect(createDisclosureResponse.status).toEqual(201);
@@ -466,7 +466,7 @@ const initMintBundle = async () => {
       contractAddress: e2eEnv.COUPON_CONTRACT_ADDRESS,
       rpcProvider,
     },
-    { log: console, traceId: nanoid() }
+    { log: console, traceId: nanoid() },
   );
 
   return mint;

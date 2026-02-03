@@ -32,7 +32,7 @@ module.exports = (app) =>
       if (!resolvedOverrides.skipOrganization) {
         organization = await getOrBuild(
           'organization',
-          initOrganizationFactory(app)
+          initOrganizationFactory(app),
         );
       }
 
@@ -44,5 +44,5 @@ module.exports = (app) =>
         clientAdminIds: [],
         ...resolvedOverrides,
       };
-    }
+    },
   );

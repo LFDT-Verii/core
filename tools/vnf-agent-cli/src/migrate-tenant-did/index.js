@@ -8,19 +8,19 @@ program
   .usage('[options]')
   .requiredOption(
     '-e, --endpoint <url>',
-    'Credential Agent Endpoint to call to execute the issuing'
+    'Credential Agent Endpoint to call to execute the issuing',
   )
   .requiredOption(
     '-a, --auth-token <url>',
-    'Bearer Auth Token to be used on the Agent API'
+    'Bearer Auth Token to be used on the Agent API',
   )
   .option(
     '-d, --did <did>',
-    'The did of tenant that should be migrated. Cannot be combined with --all flag'
+    'The did of tenant that should be migrated. Cannot be combined with --all flag',
   )
   .option(
     '--all',
-    'Runs did migration for all tenants on agent. Cannot be combined with --did flag'
+    'Runs did migration for all tenants on agent. Cannot be combined with --did flag',
   )
   .action(async () => {
     const options = program.opts();

@@ -56,7 +56,7 @@ const verifyProofStructure = (proof) => {
 const decodeHeader = (jwt) => {
   try {
     return jwtHeaderDecode(jwt);
-  } catch (error) {
+  } catch {
     throw newError(400, 'proof.jwt is missing', {
       errorCode: 'bad_proof_jwt',
     });
@@ -75,19 +75,19 @@ const resolveJwk = async ({ jwt }) => {
   if (kid != null) {
     try {
       const didDocument = await resolveDidJwkDocument(
-        extractDidJwkWithoutSuffix(kid)
+        extractDidJwkWithoutSuffix(kid),
       );
       return {
         did: didDocument.id,
         jwk: first(didDocument.verificationMethod).publicKeyJwk,
       };
-    } catch (error) {
+    } catch {
       throw newError(
         400,
         'kid in the jwt does not resolve to a supported DID document. (kid should be a did:jwk)',
         {
           errorCode: 'proof_invalid_kid',
-        }
+        },
       );
     }
   }
@@ -104,13 +104,13 @@ const verifyProofJwt = async (
   { challenge, challengeIssuedAt },
   { jwt },
   jwk,
-  { config: { hostUrl, oidcTokensExpireIn } }
+  { config: { hostUrl, oidcTokensExpireIn } },
 ) => {
   let payload;
   try {
     const { payload: verifiedPayload } = await jwtVerify(jwt, jwk);
     payload = verifiedPayload;
-  } catch (error) {
+  } catch {
     throw newError(400, "proof.jwt isn't a jwt or signature is not correct", {
       errorCode: 'proof_bad_jwt',
     });
@@ -128,7 +128,7 @@ const verifyProofJwt = async (
       'The nonce in the jwt does not match the supplied c_nonce',
       {
         errorCode: 'proof_challenge_mismatch',
-      }
+      },
     );
   }
 

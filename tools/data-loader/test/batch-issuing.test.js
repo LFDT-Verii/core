@@ -25,7 +25,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/batch-vars-offerids.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -35,7 +35,7 @@ describe('batch issuing test', () => {
     };
 
     await expect(() => runBatchIssuing(options)).rejects.toThrow(
-      "Mug2.1 doesn't exist. Please use one of EmailV1.0,PhoneV1.0,DriversLicenseV1.0"
+      "Mug2.1 doesn't exist. Please use one of EmailV1.0,PhoneV1.0,DriversLicenseV1.0",
     );
   });
   it("should fail if options doesn't have 'did' or `tenant'", async () => {
@@ -43,7 +43,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/batch-vars-offerids.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       termsUrl: 'http://example.com/terms.html',
       idCredentialType: 'Mug2.1',
@@ -52,7 +52,7 @@ describe('batch issuing test', () => {
     };
 
     await expect(() => runBatchIssuing(options)).rejects.toThrow(
-      'one of "--tenant" or "--did" is required'
+      'one of "--tenant" or "--did" is required',
     );
   });
 
@@ -61,7 +61,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/batch-vars-offerids.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -71,7 +71,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -148,7 +148,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/batch-vars-offerids.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -160,7 +160,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -235,7 +235,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/batch-vars-offerids.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -247,7 +247,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -322,7 +322,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/batch-vars-offerids.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -334,7 +334,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -410,7 +410,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/phones-batch-vars-offerids.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/phone-offer.template.json'
+        'data/phone-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -421,7 +421,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -497,7 +497,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/driver-license-variables.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/driver-license-offer.template.json'
+        'data/driver-license-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -508,7 +508,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -585,7 +585,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/id-document-variables.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/id-document-offer.template.json'
+        'data/id-document-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -596,7 +596,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -673,7 +673,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/resident-permit-variables.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/resident-permit-offer.template.json'
+        'data/resident-permit-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -684,7 +684,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -761,7 +761,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/passport-variables.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/passport-offer.template.json'
+        'data/passport-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -772,7 +772,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -849,7 +849,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/national-id-card-variables.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/national-id-card-offer.template.json'
+        'data/national-id-card-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -860,7 +860,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -937,7 +937,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/proof-of-age-variables.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/proof-of-age-offer.template.json'
+        'data/proof-of-age-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -948,7 +948,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -1025,7 +1025,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/variables.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -1037,7 +1037,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -1114,7 +1114,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/with-bom.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -1126,7 +1126,7 @@ describe('batch issuing test', () => {
 
     const updates = await runBatchIssuing(options);
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeLessThan(Date.now());
 
     expect(updates).toEqual({
@@ -1203,7 +1203,7 @@ describe('batch issuing test', () => {
       csvFilename: path.join(__dirname, 'data/variables.csv'),
       offerTemplateFilename: path.join(
         __dirname,
-        'data/email-offer.template.json'
+        'data/email-offer.template.json',
       ),
       tenant: 'foo',
       termsUrl: 'http://example.com/terms.html',
@@ -1294,7 +1294,7 @@ describe('batch issuing test', () => {
     });
 
     expect(
-      new Date(updates.disclosureRequest.activationDate).getTime()
+      new Date(updates.disclosureRequest.activationDate).getTime(),
     ).toBeGreaterThan(Date.now());
   });
 
@@ -1306,7 +1306,7 @@ describe('batch issuing test', () => {
       const tenant = '123';
       nock(agentUrl)
         .get(
-          `/operator-api/v0.8/tenants/${tenant}/disclosures?vendorEndpoint=integrated-issuing-identification`
+          `/operator-api/v0.8/tenants/${tenant}/disclosures?vendorEndpoint=integrated-issuing-identification`,
         )
         .reply(200, existingDisclosures);
 
@@ -1314,7 +1314,7 @@ describe('batch issuing test', () => {
         csvFilename: path.join(__dirname, 'data/variables.csv'),
         offerTemplateFilename: path.join(
           __dirname,
-          'data/email-offer.template.json'
+          'data/email-offer.template.json',
         ),
         tenant,
         termsUrl: 'http://example.com/terms.html',
@@ -1333,7 +1333,7 @@ describe('batch issuing test', () => {
       const tenant = '123';
       nock(agentUrl)
         .get(
-          `/operator-api/v0.8/tenants/${tenant}/disclosures?vendorEndpoint=integrated-issuing-identification`
+          `/operator-api/v0.8/tenants/${tenant}/disclosures?vendorEndpoint=integrated-issuing-identification`,
         )
         .reply(200, existingDisclosures);
 
@@ -1341,7 +1341,7 @@ describe('batch issuing test', () => {
         csvFilename: path.join(__dirname, 'data/variables.csv'),
         offerTemplateFilename: path.join(
           __dirname,
-          'data/email-offer.template.json'
+          'data/email-offer.template.json',
         ),
         tenant,
         termsUrl: 'http://example.com/terms.html',
@@ -1401,7 +1401,7 @@ describe('batch issuing test', () => {
       const did = 'did:sap:123';
       nock(agentUrl)
         .get(
-          `/operator-api/v0.8/tenants/${did}/disclosures?vendorEndpoint=integrated-issuing-identification`
+          `/operator-api/v0.8/tenants/${did}/disclosures?vendorEndpoint=integrated-issuing-identification`,
         )
         .reply(200, existingDisclosures);
 
@@ -1409,7 +1409,7 @@ describe('batch issuing test', () => {
         csvFilename: path.join(__dirname, 'data/variables.csv'),
         offerTemplateFilename: path.join(
           __dirname,
-          'data/email-offer.template.json'
+          'data/email-offer.template.json',
         ),
         did,
         termsUrl: 'http://example.com/terms.html',

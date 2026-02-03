@@ -51,14 +51,14 @@ describe('Blockchain Health', () => {
   describe('Consensus Health', () => {
     it('Should return UP if last block is from last few seconds', async () => {
       initGetBlockNumber.mock.mockImplementationOnce(() =>
-        Promise.resolve(() => Promise.resolve(1))
+        Promise.resolve(() => Promise.resolve(1)),
       );
       initGetBlock.mock.mockImplementationOnce(() =>
         Promise.resolve(() =>
           Promise.resolve({
             timestamp: Math.floor(new Date().getTime() / 1000),
-          })
-        )
+          }),
+        ),
       );
 
       const response = await fastify.injectJson({
@@ -71,14 +71,14 @@ describe('Blockchain Health', () => {
 
     it('Should return DOWN too much time has passed since last block', async () => {
       initGetBlockNumber.mock.mockImplementationOnce(() =>
-        Promise.resolve(() => Promise.resolve(1))
+        Promise.resolve(() => Promise.resolve(1)),
       );
       initGetBlock.mock.mockImplementationOnce(() =>
         Promise.resolve(() =>
           Promise.resolve({
             timestamp: 1,
-          })
-        )
+          }),
+        ),
       );
 
       const response = await fastify.injectJson({
@@ -97,11 +97,11 @@ describe('Blockchain Health', () => {
           Promise.resolve([
             { address: nodeAddress, lastProposedBlockNumber: '0x1' },
             { address: '0x1', lastProposedBlockNumber: '0x2' },
-          ])
-        )
+          ]),
+        ),
       );
       initGetBlockNumber.mock.mockImplementationOnce(() =>
-        Promise.resolve(() => Promise.resolve(2))
+        Promise.resolve(() => Promise.resolve(2)),
       );
 
       const response = await fastify.injectJson({
@@ -118,11 +118,11 @@ describe('Blockchain Health', () => {
           Promise.resolve([
             { address: nodeAddress, lastProposedBlockNumber: '0x1' },
             { address: '0x1', lastProposedBlockNumber: '0x2' },
-          ])
-        )
+          ]),
+        ),
       );
       initGetBlockNumber.mock.mockImplementationOnce(() =>
-        Promise.resolve(() => Promise.resolve(8))
+        Promise.resolve(() => Promise.resolve(8)),
       );
 
       const response = await fastify.injectJson({

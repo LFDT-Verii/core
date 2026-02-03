@@ -48,7 +48,7 @@ const signatoriesController = async (fastify) => {
       const organization = await repos.organizations.findOneByDid(did);
       await validateAuthCode(organization, authCode, req);
       await sendEmail(
-        signatoryApproveOrganizationEmail({ organization, response }, req)
+        signatoryApproveOrganizationEmail({ organization, response }, req),
       );
       if (response === 'approve') {
         await approveReminder(organization, req);
@@ -56,7 +56,7 @@ const signatoriesController = async (fastify) => {
         await rejectReminder(organization, req);
       }
       return {};
-    }
+    },
   );
 };
 

@@ -47,7 +47,7 @@ const JSON_VC_PATHS = flatMap(
     'credentials[*]',
     'offer',
     'offers[*]',
-  ]
+  ],
 );
 
 const SECURITY_PATHS = [
@@ -160,7 +160,7 @@ const loggerProvider = ({
       serializers,
       redact,
     },
-    destination ?? prettyPrint(nodeEnv)
+    destination ?? prettyPrint(nodeEnv),
   );
 };
 

@@ -30,7 +30,7 @@ const encryptSecret = ({ value, context, secretPropName, format }) => {
         format === 'jwk' ? JSON.stringify(secret) : secret;
       return encryptCollection(serializedValue, context.config.mongoSecret);
     },
-    (secret) => set(secretPropName, secret, value)
+    (secret) => set(secretPropName, secret, value),
   )(value);
 };
 
@@ -49,7 +49,7 @@ const initFindOneAndDecryptSecret =
     if (item == null) {
       throw newError(
         404,
-        `No ${itemType} matching the filter ${JSON.stringify(filter)} was found`
+        `No ${itemType} matching the filter ${JSON.stringify(filter)} was found`,
       );
     }
     const secretValue = get(secretPropName, item);
@@ -57,13 +57,13 @@ const initFindOneAndDecryptSecret =
       throw newError(
         500,
         `No ${secretPropName} set on ${itemType} matching the filter ${JSON.stringify(
-          filter
-        )}`
+          filter,
+        )}`,
       );
     }
     let decryptedValue = decryptCollection(
       secretValue,
-      context.config.mongoSecret
+      context.config.mongoSecret,
     );
     if (format === 'jwk') {
       decryptedValue = JSON.parse(decryptedValue);
@@ -93,14 +93,14 @@ const initFindAndDecryptSecret =
         throw newError(
           500,
           `No ${secretPropName} set on ${itemType} matching the filter ${JSON.stringify(
-            filter
+            filter,
           )}`,
-          { errorCode: 'tenant_exchanges_key_missing' }
+          { errorCode: 'tenant_exchanges_key_missing' },
         );
       }
       let decryptedValue = decryptCollection(
         secretValue,
-        context.config.mongoSecret
+        context.config.mongoSecret,
       );
       if (format === 'jwk') {
         decryptedValue = JSON.parse(decryptedValue);

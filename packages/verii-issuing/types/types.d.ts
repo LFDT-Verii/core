@@ -13,13 +13,13 @@ export interface DbKey {
 export interface AllocationListQueries {
   allocateNextEntry: (
     entityName: string,
-    issuer: Issuer
+    issuer: Issuer,
   ) => AllocationListEntry;
   createNewAllocationList: (
     entityName: string,
     issuer: Issuer,
     newListId: number,
-    allocations: number[]
+    allocations: number[],
   ) => AllocationListEntry;
 }
 

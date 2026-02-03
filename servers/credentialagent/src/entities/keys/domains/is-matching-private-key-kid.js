@@ -32,7 +32,7 @@ const isMatchingPrivateKeyKid = async (doc, key, kid) => {
   try {
     await jwtVerify(signedValue, jwkFromSecp256k1Key(verificationKey, false));
     return true;
-  } catch (ex) {
+  } catch {
     return false;
   }
 };

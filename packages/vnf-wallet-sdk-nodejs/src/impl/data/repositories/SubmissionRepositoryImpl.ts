@@ -15,7 +15,7 @@ export default class SubmissionRepositoryImpl implements SubmissionRepository {
     async submit(
         submission: VCLSubmission,
         jwt: VCLJwt,
-        accessToken?: Nullish<VCLToken>
+        accessToken?: Nullish<VCLToken>,
     ): Promise<VCLSubmissionResult> {
         const submissionResponse = await this.networkService.sendRequest({
             endpoint: submission.submitUri,
@@ -26,7 +26,7 @@ export default class SubmissionRepositoryImpl implements SubmissionRepository {
         return this.parse(
             submissionResponse.payload,
             submission.jti,
-            submission.submissionId
+            submission.submissionId,
         );
     }
 
@@ -47,21 +47,21 @@ export default class SubmissionRepositoryImpl implements SubmissionRepository {
             exchangeJsonObj[VCLExchange.KeyId] ?? '',
             exchangeJsonObj[VCLExchange.KeyType] ?? '',
             exchangeJsonObj[VCLExchange.KeyDisclosureComplete] ?? false,
-            exchangeJsonObj[VCLExchange.KeyExchangeComplete] ?? false
+            exchangeJsonObj[VCLExchange.KeyExchangeComplete] ?? false,
         );
     }
 
     private parse(
         jsonObj: Dictionary<any>,
         jti: string,
-        submissionId: string
+        submissionId: string,
     ): VCLSubmissionResult {
         const exchangeJsonObj = jsonObj[VCLSubmissionResult.KeyExchange];
         return new VCLSubmissionResult(
             new VCLToken(jsonObj[VCLSubmissionResult.KeyToken]),
             this.parseExchange(exchangeJsonObj),
             jti,
-            submissionId
+            submissionId,
         );
     }
 }

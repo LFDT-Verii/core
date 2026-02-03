@@ -14,13 +14,11 @@
  * limitations under the License.
  *
  */
-// eslint-disable-next-line max-classes-per-file
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const {
   sendReminders: originalSendReminders,
-  // eslint-disable-next-line import/order
 } = require('../src/entities/signatories/orchestrators/send-reminders');
 
 class SESClient {}
@@ -139,7 +137,7 @@ describe('signatoriesController', () => {
       expect(response.statusCode).toEqual(200);
       expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
-        expectedSignatoryApprovedEmail(organization)
+        expectedSignatoryApprovedEmail(organization),
       );
     });
 
@@ -213,7 +211,7 @@ describe('signatoriesController', () => {
           errorCode: 'unauthorized',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
 
@@ -243,7 +241,7 @@ describe('signatoriesController', () => {
           errorCode: 'auth_code_must_be_most_recent',
           message: 'Please use the latest email sent.',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -283,7 +281,7 @@ describe('signatoriesController', () => {
           errorCode: 'signatory_status_already_complete',
           message: 'Signatory has already signed',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -309,7 +307,7 @@ describe('signatoriesController', () => {
           errorCode: 'auth_code_expired',
           message: 'Auth code has expired.',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -325,7 +323,7 @@ describe('signatoriesController', () => {
           errorCode: 'organization_not_found',
           message: 'Organization not found',
           statusCode: 404,
-        })
+        }),
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
@@ -344,7 +342,7 @@ describe('signatoriesController', () => {
       expect(response.statusCode).toEqual(200);
       expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
-        expectedSignatoryRejectedEmail(organization)
+        expectedSignatoryRejectedEmail(organization),
       );
     });
 
@@ -406,7 +404,7 @@ describe('signatoriesController', () => {
           errorCode: 'unauthorized',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
 
@@ -436,7 +434,7 @@ describe('signatoriesController', () => {
           errorCode: 'auth_code_must_be_most_recent',
           message: 'Please use the latest email sent.',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -466,7 +464,7 @@ describe('signatoriesController', () => {
           errorCode: 'signatory_status_already_complete',
           message: 'Signatory has already signed',
           statusCode: 400,
-        })
+        }),
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
@@ -493,7 +491,7 @@ describe('signatoriesController', () => {
           errorCode: 'auth_code_expired',
           message: 'Auth code has expired.',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -509,7 +507,7 @@ describe('signatoriesController', () => {
           errorCode: 'organization_not_found',
           message: 'Organization not found',
           statusCode: 404,
-        })
+        }),
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
@@ -518,7 +516,7 @@ describe('signatoriesController', () => {
   describe('POST /send-reminder', () => {
     it('should return 200', async () => {
       mockSendReminders.mock.mockImplementationOnce(() =>
-        Promise.resolve(undefined)
+        Promise.resolve(undefined),
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -530,7 +528,7 @@ describe('signatoriesController', () => {
 
     it('1234 should return 200 if something went wrong', async () => {
       mockSendReminders.mock.mockImplementationOnce(() =>
-        Promise.reject(new Error('Something went wrong'))
+        Promise.reject(new Error('Something went wrong')),
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -543,7 +541,7 @@ describe('signatoriesController', () => {
     it('should not send emails if there are no signatory reminders', async () => {
       await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
-        testContext
+        testContext,
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
@@ -610,14 +608,14 @@ describe('signatoriesController', () => {
       });
       await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
-        testContext
+        testContext,
       );
 
       expect(mockSESSendEmail.mock.calls.map((call) => call.arguments)).toEqual(
         [
           [expectedSignatoryReminderEmail(inviterOrganization, organization2)],
           [expectedSignatoryReminderEmail(inviterOrganization, organization1)],
-        ]
+        ],
       );
 
       const signatoryStatus3Db = await signatoryStatusRepo.findOne({
@@ -738,12 +736,12 @@ describe('signatoriesController', () => {
       });
       await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
-        testContext
+        testContext,
       );
 
       expect(mockSESSendEmail.mock.calls).toEqual([]);
       expect(
-        mockSendSupportEmail.mock.calls.map((call) => call.arguments)
+        mockSendSupportEmail.mock.calls.map((call) => call.arguments),
       ).toEqual([expectedSupportMaxSignatoryReminderReachedEmailParams()]);
 
       const signatoryStatusDb1 = await signatoryStatusRepo.findOne({
@@ -805,7 +803,7 @@ describe('signatoriesController', () => {
       });
       await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
-        testContext
+        testContext,
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       expect(mockSESSendEmail.mock.calls[0].arguments).toEqual([
@@ -827,7 +825,7 @@ describe('signatoriesController', () => {
       });
       await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
-        testContext
+        testContext,
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
@@ -845,7 +843,7 @@ describe('signatoriesController', () => {
       });
       await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
-        testContext
+        testContext,
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(0);
     });
@@ -871,11 +869,11 @@ describe('signatoriesController', () => {
         ],
       });
       mockSESSendEmail.mock.mockImplementationOnce(() =>
-        Promise.reject(new Error('Failed to send email'))
+        Promise.reject(new Error('Failed to send email')),
       );
       await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
-        testContext
+        testContext,
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(1);
       const signatoryReminderDb = await signatoryStatusRepo.findOne({
@@ -924,7 +922,7 @@ describe('signatoriesController', () => {
       });
       await originalSendReminders(
         sendEmailToSignatoryForOrganizationApproval,
-        testContext
+        testContext,
       );
       expect(mockSESSendEmail.mock.callCount()).toEqual(0);
       const signatoryReminderDb = await signatoryStatusRepo.findOne({

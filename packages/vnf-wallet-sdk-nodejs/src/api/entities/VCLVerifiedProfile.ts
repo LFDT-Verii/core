@@ -28,14 +28,14 @@ export default class VCLVerifiedProfile {
         this.serviceTypes = this.retrieveServiceTypes(
             this.credentialSubject
                 ? this.credentialSubject[VCLVerifiedProfile.KeyServiceType]
-                : []
+                : [],
         );
     }
 
     retrieveServiceTypes(serviceCategoriesJsonArr: any[]) {
         const result = (serviceCategoriesJsonArr ?? []).map(
             (category) =>
-                VCLServiceType[category as keyof typeof VCLServiceType]
+                VCLServiceType[category as keyof typeof VCLServiceType],
         );
         return new VCLServiceTypes(result);
     }

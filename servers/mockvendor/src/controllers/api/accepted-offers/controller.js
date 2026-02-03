@@ -4,6 +4,6 @@ module.exports = async (fastify) => {
     {
       onRequest: fastify.verifyAdmin,
     },
-    async ({ repos }) => repos.acceptedOffers.find({ sort: { createdAt: -1 } })
+    async ({ repos }) => repos.acceptedOffers.find({ sort: { createdAt: -1 } }),
   );
 };

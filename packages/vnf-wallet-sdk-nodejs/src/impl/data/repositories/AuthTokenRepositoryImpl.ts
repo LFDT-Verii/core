@@ -19,7 +19,7 @@ export default class AuthTokenRepositoryImpl implements AuthTokenRepository {
     constructor(private readonly networkService: NetworkService) {}
 
     async getAuthToken(
-        authTokenDescriptor: VCLAuthTokenDescriptor
+        authTokenDescriptor: VCLAuthTokenDescriptor,
     ): Promise<VCLAuthToken> {
         const { authTokenUri } = authTokenDescriptor;
         if (authTokenUri == null) {
@@ -42,7 +42,7 @@ export default class AuthTokenRepositoryImpl implements AuthTokenRepository {
                 authTokenResponse.payload,
                 authTokenUri,
                 authTokenDescriptor.walletDid,
-                authTokenDescriptor.relyingPartyDid
+                authTokenDescriptor.relyingPartyDid,
             );
         } catch (e) {
             VCLLog.error('AuthTokenRepositoryImpl.getAuthToken', e);

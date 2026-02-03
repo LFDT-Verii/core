@@ -39,14 +39,14 @@ const initDisclosureFactory = (app) => {
     const configurationType = await getOrBuild('configurationType', () =>
       includes(vendorEndpoint, VendorEndpointCategory.INSPECTION)
         ? ConfigurationType.INSPECTION
-        : ConfigurationType.ISSUING
+        : ConfigurationType.ISSUING,
     );
 
     let types;
     if (
       !includes(
         IdentificationMethods.PREAUTH,
-        disclosureOverrides.identificationMethods
+        disclosureOverrides.identificationMethods,
       )
     ) {
       types = [

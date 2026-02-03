@@ -191,7 +191,7 @@ describe('db kms', () => {
   describe('exporting keys & secrets', () => {
     it('should return null if key or secret not found', async () => {
       await expect(
-        kms.exportKeyOrSecret(new ObjectId().toString())
+        kms.exportKeyOrSecret(new ObjectId().toString()),
       ).resolves.toBeNull();
     });
   });
@@ -202,10 +202,10 @@ describe('db kms', () => {
     const payload = { iss: 'http://example.com', user: { id: '1234' } };
     before(async () => {
       keys = await Promise.all(
-        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs))
+        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs)),
       );
       alternativeKeys = await Promise.all(
-        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs))
+        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs)),
       );
     });
 
@@ -217,10 +217,10 @@ describe('db kms', () => {
         expect(result).toEqual(expect.any(String));
         expect(jwtDecode(result)).toEqual(expectedDecodedJwt({ alg: 'ES256' }));
         await expect(kms.verifyJwt(result, keys[0].id)).resolves.toEqual(
-          expectedDecodedJwt({ alg: 'ES256' })
+          expectedDecodedJwt({ alg: 'ES256' }),
         );
         await expect(() =>
-          kms.verifyJwt(result, alternativeKeys[0].id)
+          kms.verifyJwt(result, alternativeKeys[0].id),
         ).rejects.toThrow(new Error('signature verification failed'));
       });
       it('should sign a jwt using a secp256k1 key and be verifiable by the correct key', async () => {
@@ -229,13 +229,13 @@ describe('db kms', () => {
         });
         expect(result).toEqual(expect.any(String));
         expect(jwtDecode(result)).toEqual(
-          expectedDecodedJwt({ alg: 'ES256K' })
+          expectedDecodedJwt({ alg: 'ES256K' }),
         );
         await expect(kms.verifyJwt(result, keys[1].id)).resolves.toEqual(
-          expectedDecodedJwt({ alg: 'ES256K' })
+          expectedDecodedJwt({ alg: 'ES256K' }),
         );
         await expect(() =>
-          kms.verifyJwt(result, alternativeKeys[1].id)
+          kms.verifyJwt(result, alternativeKeys[1].id),
         ).rejects.toThrow(new Error('signature verification failed'));
       });
       it('should sign a jwt using a rs256 key and be verifiable by the correct key', async () => {
@@ -245,10 +245,10 @@ describe('db kms', () => {
         expect(result).toEqual(expect.any(String));
         expect(jwtDecode(result)).toEqual(expectedDecodedJwt({ alg: 'RS256' }));
         await expect(kms.verifyJwt(result, keys[2].id)).resolves.toEqual(
-          expectedDecodedJwt({ alg: 'RS256' })
+          expectedDecodedJwt({ alg: 'RS256' }),
         );
         await expect(() =>
-          kms.verifyJwt(result, alternativeKeys[2].id)
+          kms.verifyJwt(result, alternativeKeys[2].id),
         ).rejects.toThrow(new Error('signature verification failed'));
       });
     });
@@ -265,10 +265,10 @@ describe('db kms', () => {
     const plainText = 'foo';
     before(async () => {
       keys = await Promise.all(
-        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs))
+        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs)),
       );
       alternativeKeys = await Promise.all(
-        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs))
+        map((keySpec) => kms.createKey(keySpec), Object.values(keySpecs)),
       );
     });
 
@@ -277,7 +277,7 @@ describe('db kms', () => {
         const encryptedText = await kms.encryptString(plainText, keys[0].id);
         const decryptedText = await kms.decryptString(
           encryptedText,
-          keys[0].id
+          keys[0].id,
         );
         expect(encryptedText).toEqual(expect.any(String));
         expect(decryptedText).toEqual(plainText);
@@ -287,9 +287,9 @@ describe('db kms', () => {
         const encryptedText = await kms.encryptString(plainText, keys[0].id);
         expect(encryptedText).toEqual(expect.any(String));
         await expect(() =>
-          kms.decryptString(encryptedText, alternativeKeys[0].id)
+          kms.decryptString(encryptedText, alternativeKeys[0].id),
         ).rejects.toThrow(
-          new Error('Unsupported state or unable to authenticate data')
+          new Error('Unsupported state or unable to authenticate data'),
         );
       });
     });

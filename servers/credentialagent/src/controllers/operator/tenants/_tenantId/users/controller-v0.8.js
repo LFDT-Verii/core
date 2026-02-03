@@ -38,8 +38,8 @@ const vendorUserIdMappingController = async (fastify) => {
     async ({ body, repos }) =>
       repos.vendorUserIdMappings.upsert(
         body.id || body.email,
-        omit(['id'], body)
-      )
+        omit(['id'], body),
+      ),
   );
 
   fastify.get(
@@ -56,7 +56,7 @@ const vendorUserIdMappingController = async (fastify) => {
         },
       }),
     },
-    async ({ repos }) => repos.vendorUserIdMappings.find({})
+    async ({ repos }) => repos.vendorUserIdMappings.find({}),
   );
 
   fastify.get(
@@ -69,7 +69,8 @@ const vendorUserIdMappingController = async (fastify) => {
         },
       }),
     },
-    async ({ params: { id }, repos }) => repos.vendorUserIdMappings.findById(id)
+    async ({ params: { id }, repos }) =>
+      repos.vendorUserIdMappings.findById(id),
   );
 
   fastify.delete(
@@ -85,7 +86,7 @@ const vendorUserIdMappingController = async (fastify) => {
     async ({ params: { id }, repos }, reply) => {
       reply.status(204);
       return repos.vendorUserIdMappings.del(id);
-    }
+    },
   );
 };
 

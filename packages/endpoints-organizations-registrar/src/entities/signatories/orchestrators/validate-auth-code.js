@@ -31,7 +31,7 @@ const validateAuthCode = async (organization, authCode, context) => {
 
   const latestAuthCode = flow(
     sortBy(['timestamp']),
-    last
+    last,
   )(signatoryStatus.authCodes);
 
   if (latestAuthCode.code !== authCode) {
@@ -41,7 +41,7 @@ const validateAuthCode = async (organization, authCode, context) => {
   }
 
   const isTimestampExpired = isBefore(
-    subMinutes(config.signatoryLinkExpiration, new Date())
+    subMinutes(config.signatoryLinkExpiration, new Date()),
   );
 
   if (isTimestampExpired(new Date(latestAuthCode.timestamp))) {

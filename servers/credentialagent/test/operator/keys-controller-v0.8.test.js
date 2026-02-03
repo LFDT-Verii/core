@@ -73,7 +73,7 @@ describe('Tenant keys test suite', () => {
     ({ orgDoc, orgKey, orgPublicKey } = await createOrgDoc());
     const deployedContract = await deployTestPermissionsContract(
       rootPrivateKey,
-      fastify.config.rpcUrl
+      fastify.config.rpcUrl,
     );
     fastify.config.permissionsContractAddress =
       await deployedContract.getAddress();
@@ -86,7 +86,7 @@ describe('Tenant keys test suite', () => {
     };
     primaryAddress = await generatePrimaryAndAddOperatorToPrimary(
       toEthereumAddress(orgPublicKey),
-      baseContext
+      baseContext,
     );
     tenantRepo = tenantRepoPlugin(baseContext)();
   }, 10000);
@@ -130,8 +130,8 @@ describe('Tenant keys test suite', () => {
               createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
             };
           },
-          [key1, key2]
-        )
+          [key1, key2],
+        ),
       );
     });
 
@@ -151,7 +151,7 @@ describe('Tenant keys test suite', () => {
             tenantId: fooTenant._id,
           })} not found`,
           statusCode: 404,
-        })
+        }),
       );
     });
   });
@@ -179,7 +179,7 @@ describe('Tenant keys test suite', () => {
             tenantId: fooTenant._id,
           })} not found`,
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -223,7 +223,7 @@ describe('Tenant keys test suite', () => {
     it('should 400 with an unrecognized purpose', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: ['unrecognized-purpose'] })
+        await newKey({ tenant, purposes: ['unrecognized-purpose'] }),
       );
 
       const response = await fastify.injectJson({
@@ -242,7 +242,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized purpose detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -268,7 +268,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'request_validation_failed',
           message: 'body/purposes must NOT have fewer than 1 items',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -281,7 +281,7 @@ describe('Tenant keys test suite', () => {
         await newKey({
           tenant,
           purposes: ['DLT_TRANSACTIONS', 'DLT_TRANSACTIONS'],
-        })
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -300,7 +300,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Duplicate key purposes detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -310,7 +310,7 @@ describe('Tenant keys test suite', () => {
     it('should 400 with unrecognized algorithm', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, algorithm: 'unrecognized-algorithm' })
+        await newKey({ tenant, algorithm: 'unrecognized-algorithm' }),
       );
 
       const response = await fastify.injectJson({
@@ -329,7 +329,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized algorithm',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -339,7 +339,7 @@ describe('Tenant keys test suite', () => {
     it('should 400 with unrecognized encoding', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, encoding: 'unrecognized-encoding' })
+        await newKey({ tenant, encoding: 'unrecognized-encoding' }),
       );
 
       const response = await fastify.injectJson({
@@ -358,7 +358,7 @@ describe('Tenant keys test suite', () => {
           message: 'Unrecognized encoding',
           errorCode: 'missing_error_code',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -369,7 +369,7 @@ describe('Tenant keys test suite', () => {
       await persistKey({ tenant });
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, kidFragment: '#key2' })
+        await newKey({ tenant, kidFragment: '#key2' }),
       );
 
       const response = await fastify.injectJson({
@@ -388,9 +388,9 @@ describe('Tenant keys test suite', () => {
           statusCode: 409,
           error: 'Conflict',
           message: `Key with a purpose from ${JSON.stringify(
-            key1.purposes
+            key1.purposes,
           )} already exists`,
-        })
+        }),
       );
       const count = await mongoDb().collection('keys').countDocuments();
       expect(count).toEqual(1);
@@ -416,7 +416,7 @@ describe('Tenant keys test suite', () => {
           statusCode: 409,
           error: 'Conflict',
           message: `Key with kidFragment ${key1.kidFragment} already exists`,
-        })
+        }),
       );
       const count = await mongoDb().collection('keys').countDocuments();
       expect(count).toEqual(1);
@@ -475,7 +475,7 @@ describe('Tenant keys test suite', () => {
     it('should 201 adding a key with 1 purpose to the tenant', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: ['DLT_TRANSACTIONS'] })
+        await newKey({ tenant, purposes: ['DLT_TRANSACTIONS'] }),
       );
 
       const response = await fastify.injectJson({
@@ -531,7 +531,7 @@ describe('Tenant keys test suite', () => {
 
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] })
+        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] }),
       );
 
       const response = await fastify.injectJson({
@@ -553,7 +553,7 @@ describe('Tenant keys test suite', () => {
       tenantRepo.update(tenant._id, { primaryAddress: '' });
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] })
+        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] }),
       );
 
       const response = await fastify.injectJson({
@@ -588,7 +588,7 @@ describe('Tenant keys test suite', () => {
             KeyPurposes.ROTATION,
             KeyPurposes.PERMISSIONING,
           ],
-        })
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -614,7 +614,7 @@ describe('Tenant keys test suite', () => {
       const prevPrimaryAddress = tenant1.primaryAddress;
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] })
+        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] }),
       );
 
       const response = await fastify.injectJson({
@@ -641,7 +641,7 @@ describe('Tenant keys test suite', () => {
       const response = await fastify.injectJson({
         method: 'DELETE',
         url: `${buildKeysUrl({ tenant: fooTenant })}/${encodeURIComponent(
-          key1.kidFragment
+          key1.kidFragment,
         )}`,
       });
 
@@ -654,7 +654,7 @@ describe('Tenant keys test suite', () => {
           })} not found`,
           errorCode: 'tenant_not_found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -678,7 +678,7 @@ describe('Tenant keys test suite', () => {
       const response = await fastify.injectJson({
         method: 'DELETE',
         url: `${buildKeysUrl({ tenant })}/${encodeURIComponent(
-          key1.kidFragment
+          key1.kidFragment,
         )}`,
       });
 
@@ -721,7 +721,7 @@ describe('Tenant keys test suite', () => {
       };
       primaryAddress = await generatePrimaryAndAddOperatorToPrimary(
         toEthereumAddress(orgPublicKey),
-        baseContext
+        baseContext,
       );
       tenant = await persistTenant({
         did: 'did:web:123',
@@ -917,7 +917,7 @@ describe('Tenant keys test suite', () => {
             tenantId: fooTenant._id,
           })} not found`,
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -961,7 +961,7 @@ describe('Tenant keys test suite', () => {
     it('should 400 with an unrecognized purpose', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: ['unrecognized-purpose'] })
+        await newKey({ tenant, purposes: ['unrecognized-purpose'] }),
       );
 
       const response = await fastify.injectJson({
@@ -980,7 +980,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized purpose detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -1006,7 +1006,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'request_validation_failed',
           message: 'body/purposes must NOT have fewer than 1 items',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -1019,7 +1019,7 @@ describe('Tenant keys test suite', () => {
         await newKey({
           tenant,
           purposes: ['DLT_TRANSACTIONS', 'DLT_TRANSACTIONS'],
-        })
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -1038,7 +1038,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Duplicate key purposes detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -1048,7 +1048,7 @@ describe('Tenant keys test suite', () => {
     it('should 400 with unrecognized algorithm', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, algorithm: 'unrecognized-algorithm' })
+        await newKey({ tenant, algorithm: 'unrecognized-algorithm' }),
       );
 
       const response = await fastify.injectJson({
@@ -1067,7 +1067,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized algorithm',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -1077,7 +1077,7 @@ describe('Tenant keys test suite', () => {
     it('should 400 with unrecognized encoding', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, encoding: 'unrecognized-encoding' })
+        await newKey({ tenant, encoding: 'unrecognized-encoding' }),
       );
 
       const response = await fastify.injectJson({
@@ -1096,7 +1096,7 @@ describe('Tenant keys test suite', () => {
           message: 'Unrecognized encoding',
           errorCode: 'missing_error_code',
           statusCode: 400,
-        })
+        }),
       );
 
       const count = await mongoDb().collection('keys').countDocuments();
@@ -1123,7 +1123,7 @@ describe('Tenant keys test suite', () => {
           errorCode: 'private_key_not_found',
           message: 'Private key not found',
           statusCode: 400,
-        })
+        }),
       );
     });
   });

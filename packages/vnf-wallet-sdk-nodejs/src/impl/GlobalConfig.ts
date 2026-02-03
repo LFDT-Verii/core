@@ -47,7 +47,7 @@ export default class GlobalConfig {
         isDebugOn = false,
         currentEnvironment: VCLEnvironment = VCLEnvironment.Prod,
         xVnfProtocolVersion: VCLXVnfProtocolVersion = VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-        isDirectIssuerOn = true
+        isDirectIssuerOn = true,
     ) {
         GlobalConfig.setIsDebugOn(isDebugOn);
         GlobalConfig.setCurrentEnvironment(currentEnvironment);

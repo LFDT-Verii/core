@@ -3,6 +3,6 @@ import VCLExchangeDescriptor from '../../../api/entities/VCLExchangeDescriptor';
 
 export default interface ExchangeProgressRepository {
     getExchangeProgress(
-        exchangeDescriptor: VCLExchangeDescriptor
+        exchangeDescriptor: VCLExchangeDescriptor,
     ): Promise<VCLExchange>;
 }

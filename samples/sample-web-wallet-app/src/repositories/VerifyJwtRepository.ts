@@ -10,7 +10,7 @@ import fetcher from '../network/Fetcher';
 
 export const verifyJwt = async (
   jwt: Dictionary<any>,
-  publicJwk: Dictionary<any>
+  publicJwk: Dictionary<any>,
 ): Promise<any> => {
   const config = {
     url: Urls.verifyJwt,

@@ -9,7 +9,7 @@ const validateServiceKeyPurposes = (registeredService, keys) => {
   // gets a single key for each required purpose
   const registeredKeys = flow(
     map(findKeyWithRequiredPurpose(keys)),
-    compact
+    compact,
   )(requiredPurposes);
 
   // if the number of found keys doesnt equal the number required, then its an error

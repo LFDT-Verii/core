@@ -33,7 +33,7 @@ describe('CORS plugin Test Suite', () => {
     };
     await corsPlugin(fakeServer, {}, () => {});
     expect(
-      fakeServer.register.mock.calls.map((call) => call.arguments)
+      fakeServer.register.mock.calls.map((call) => call.arguments),
     ).toEqual([[expect.any(Function), expect.any(Function)]]);
     const mockRequest = {
       routeOptions: {},
@@ -41,10 +41,10 @@ describe('CORS plugin Test Suite', () => {
     const mockCorsCallback = mock.fn();
     fakeServer.register.mock.calls[0].arguments[1]()(
       mockRequest,
-      mockCorsCallback
+      mockCorsCallback,
     );
     expect(
-      mockCorsCallback.mock.calls.map((call) => call.arguments)
+      mockCorsCallback.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       null,
       {

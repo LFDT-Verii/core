@@ -46,6 +46,7 @@ const ServicesList = ({
   CreateComponent = ServiceCreateForm,
   DeleteComponent = ServicesDelete,
   AdditionalServiceProperties = {},
+  // eslint-disable-next-line complexity
 }) => {
   const [params, setParams] = useSearchParams();
   const currentlyEditableServiceId = params.get('id');
@@ -114,7 +115,7 @@ const ServicesList = ({
         },
         { returnPromise: true },
       );
-    } catch (e) {
+    } catch {
       return {
         serviceEndpoint: SAVE_ERROR_MESSAGE,
       };
@@ -172,6 +173,7 @@ const ServicesList = ({
       </Stack>
       {isLoadingVisible && <Loading sx={{ pt: '60px' }} />}
       {!isLoadingVisible &&
+        // eslint-disable-next-line complexity
         servicesActivated.map((service) => (
           <ListItem
             key={service.id}
@@ -229,6 +231,7 @@ ServicesList.propTypes = {
   EditComponent: PropTypes.elementType,
   CreateComponent: PropTypes.elementType,
   DeleteComponent: PropTypes.elementType,
+  // eslint-disable-next-line react/forbid-prop-types
   AdditionalServiceProperties: PropTypes.object,
 };
 

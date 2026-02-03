@@ -12,10 +12,12 @@ export default class VCLSubmission {
         public readonly exchangeId: string,
         public readonly presentationDefinitionId: string,
         public readonly verifiableCredentials: VCLVerifiableCredential[],
+        // eslint-disable-next-line default-param-last
         public readonly pushDelegate: Nullish<VCLPushDelegate> = null,
+        // eslint-disable-next-line default-param-last
         public readonly vendorOriginContext: Nullish<string> = null,
         public readonly didJwk: VCLDidJwk,
-        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null
+        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {}
 
     readonly jti = crypto.randomUUID().toString();

@@ -23,7 +23,7 @@ const generateAccessToken = (
   subject,
   disclosure,
   exchange,
-  { kms, tenant, tenantKeysByPurpose, config }
+  { kms, tenant, tenantKeysByPurpose, config },
 ) => {
   const accessTokensSecret = tenantKeysByPurpose[KeyPurposes.EXCHANGES];
   return kms.signJwt({}, accessTokensSecret.keyId, {

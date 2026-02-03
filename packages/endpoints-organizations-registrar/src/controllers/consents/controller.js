@@ -62,7 +62,7 @@ const consentsController = async (fastify) => {
             repos.organizations.findOneByDid(did, {
               _id: 1,
             }),
-          [did]
+          [did],
         );
 
         const { consentId, ...consent } =
@@ -78,7 +78,7 @@ const consentsController = async (fastify) => {
             ...consent,
           },
         };
-      }
+      },
     )
     .get(
       '/',
@@ -99,7 +99,7 @@ const consentsController = async (fastify) => {
           filter: { userId: user.sub },
         });
         return consents;
-      }
+      },
     );
 };
 

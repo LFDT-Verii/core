@@ -16,7 +16,6 @@ const HolderWalletSelection = ({ inProgress }) => {
       />
       <Stack flexDirection="row" gap={1.75} mb={3.5} mt={1}>
         <FormDataConsumer>
-          {/* eslint-disable-next-line complexity */}
           {({ formData }) => (
             <CustomImageInput
               label={false}

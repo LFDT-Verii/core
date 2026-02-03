@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -106,7 +105,7 @@ describe('Tenant management Test Suite', () => {
       });
       expect(response.statusCode).toEqual(404);
       expect(response.json.message).toEqual(
-        `Tenant ${JSON.stringify({ tenantId: tenant._id })} not found`
+        `Tenant ${JSON.stringify({ tenantId: tenant._id })} not found`,
       );
     });
 
@@ -151,7 +150,7 @@ describe('Tenant management Test Suite', () => {
           errorCode: 'request_validation_failed',
           message: 'body/webhookUrl must match format "uri"',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -247,7 +246,7 @@ describe('Tenant management Test Suite', () => {
 
       const decryptedBearerToken = decrypt(
         updatedTenant.webhookAuth.bearerToken,
-        fastify.config.mongoSecret
+        fastify.config.mongoSecret,
       );
       expect(decryptedBearerToken).toBe('secretToken');
 
@@ -490,7 +489,7 @@ describe('Tenant management Test Suite', () => {
     it('should be able to get a full tenant profile by did', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         orgDoc.id,
-        rootIssuerVerifiedProfile
+        rootIssuerVerifiedProfile,
       );
 
       const tenant = await persistTenant({
@@ -523,7 +522,7 @@ describe('Tenant management Test Suite', () => {
     it("should be able to get a full tenant profile by id when it's missing a service ID", async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         orgDoc.id,
-        rootIssuerVerifiedProfile
+        rootIssuerVerifiedProfile,
       );
 
       const tenant = await persistTenant({
@@ -616,8 +615,8 @@ describe('Tenant management Test Suite', () => {
           map((tenant) => ({
             ...omit(['_id'], tenant),
           })),
-          sortBy((t) => -new Date(t.createdAt).getTime())
-        )(tenants)
+          sortBy((t) => -new Date(t.createdAt).getTime()),
+        )(tenants),
       );
     });
 
@@ -652,8 +651,8 @@ describe('Tenant management Test Suite', () => {
             ...omit(['_id', 'serviceId'], tenant),
             serviceIds: [tenant.serviceId],
           })),
-          sortBy((t) => -new Date(t.createdAt).getTime())
-        )(tenants)
+          sortBy((t) => -new Date(t.createdAt).getTime()),
+        )(tenants),
       );
     });
 
@@ -684,8 +683,8 @@ describe('Tenant management Test Suite', () => {
           map((tenant) => ({
             ...omit(['_id'], tenant),
           })),
-          sortBy((t) => -new Date(t.createdAt).getTime())
-        )(tenants)
+          sortBy((t) => -new Date(t.createdAt).getTime()),
+        )(tenants),
       );
     });
   });
@@ -726,7 +725,7 @@ describe('Tenant management Test Suite', () => {
       });
       expect(response.statusCode).toEqual(404);
       expect(response.json.message).toEqual(
-        `Tenant ${JSON.stringify({ tenantId: tenant._id })} not found`
+        `Tenant ${JSON.stringify({ tenantId: tenant._id })} not found`,
       );
     });
   });

@@ -129,7 +129,7 @@ describe('Form schemas', () => {
         message: 'Form schemas not found',
         errorCode: 'form_schemas_not_found',
         statusCode: 404,
-      })
+      }),
     );
     expect(fetchNock.isDone()).toBeFalsy();
   });

@@ -29,12 +29,12 @@ const createCredentialAgentOffers = async (
   offers,
   tenantDID,
   exchangeId,
-  context
+  context,
 ) => {
   const { repos } = context;
 
   const insertedOffers = await repos.offers.insertMany(
-    map(prepOffer(exchangeId, tenantDID), offers)
+    map(prepOffer(exchangeId, tenantDID), offers),
   );
 
   await Promise.all(
@@ -46,10 +46,10 @@ const createCredentialAgentOffers = async (
             exchangeId,
             tenantDID,
           },
-          context
+          context,
         ),
-      insertedOffers
-    )
+      insertedOffers,
+    ),
   );
   await completeSubmitOffer({ exchangeId, tenantDID }, context);
   return { exchangeId, tenantDID, offers: insertedOffers };
@@ -102,7 +102,7 @@ const controller = async (fastify) => {
           },
         }),
       });
-    }
+    },
   );
   fastify.post(
     '/:tenantDID/:exchangeId/push-offers',
@@ -147,11 +147,11 @@ const controller = async (fastify) => {
         castArray(offer),
         tenantDID,
         exchangeId,
-        req
+        req,
       );
 
       return offers;
-    }
+    },
   );
 
   fastify.post(
@@ -200,18 +200,18 @@ const controller = async (fastify) => {
         castArray(offer),
         tenantDID,
         exchangeId,
-        req
+        req,
       );
 
       const response = await getExchangeQrCode(
         tenantDID,
         exchangeId,
         vendorOriginContext,
-        req
+        req,
       );
 
       return reply.type('image/png').send(response.rawBody);
-    }
+    },
   );
 };
 

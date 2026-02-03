@@ -167,7 +167,7 @@ export const SIGNATORY_EMAIL_HINT = 'Please ensure that the email address provid
 export const parseJwt = (token) => {
   try {
     return JSON.parse(atob(token.split('.')[1]));
-  } catch (e) {
+  } catch {
     return null;
   }
 };

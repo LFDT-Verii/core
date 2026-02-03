@@ -5,7 +5,7 @@ import VCLVerifiableCredential from './VCLVerifiableCredential';
 export default class VCLIdentificationSubmission extends VCLSubmission {
     constructor(
         public readonly credentialManifest: VCLCredentialManifest,
-        public readonly verifiableCredentials: VCLVerifiableCredential[]
+        public readonly verifiableCredentials: VCLVerifiableCredential[],
     ) {
         super(
             credentialManifest.submitPresentationUri,
@@ -15,7 +15,7 @@ export default class VCLIdentificationSubmission extends VCLSubmission {
             null,
             credentialManifest.vendorOriginContext,
             credentialManifest.didJwk,
-            credentialManifest.remoteCryptoServicesToken
+            credentialManifest.remoteCryptoServicesToken,
         );
     }
 }

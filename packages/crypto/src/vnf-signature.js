@@ -28,7 +28,7 @@ const buildVnfSignature = (payload, { config }) => {
   const timestamp = Date.now();
   const vnfSignature = signAndEncodeBase64(
     buildTimestampedPayload(timestamp, payload),
-    config.vnfHeaderSignatureSigningKey
+    config.vnfHeaderSignatureSigningKey,
   );
   return {
     headerValue: `t=${timestamp},v1=${vnfSignature}`,
@@ -48,7 +48,7 @@ const verifyVnfSignature = (payload, headerValue, { config }) => {
     return verifyBase64Signature(
       buildTimestampedPayload(timestamp, payload),
       vnfSignature,
-      config.vnfHeaderSignatureVerificationKey
+      config.vnfHeaderSignatureVerificationKey,
     );
   } catch {
     return false;
