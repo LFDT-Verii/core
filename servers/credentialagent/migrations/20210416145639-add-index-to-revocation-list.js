@@ -20,7 +20,7 @@ module.exports = {
   },
 
   down: async (db) => {
-    db.collection('revocationLists').dropIndex({
+    await db.collection('revocationLists').dropIndex({
       tenantId: 1,
     });
   },

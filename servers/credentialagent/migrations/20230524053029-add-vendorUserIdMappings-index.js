@@ -25,7 +25,7 @@ module.exports = {
   },
 
   down: async (db) => {
-    db.collection('vendorUserIdMappings').dropIndexes({
+    await db.collection('vendorUserIdMappings').dropIndexes({
       vendorUserIdIndex: 1,
     });
   },

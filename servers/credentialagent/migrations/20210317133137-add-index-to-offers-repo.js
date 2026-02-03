@@ -46,7 +46,7 @@ module.exports = {
   },
 
   down: async (db) => {
-    db.collection('offers').dropIndexes({
+    await db.collection('offers').dropIndexes({
       exchangeIdIndex: 1,
       issuerIndex: 1,
       offerIdIndex: 1,

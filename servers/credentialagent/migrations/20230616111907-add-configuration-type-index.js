@@ -25,7 +25,7 @@ module.exports = {
   },
 
   down: async (db) => {
-    db.collection('disclosures').dropIndexes({
+    await db.collection('disclosures').dropIndexes({
       disclosureConfigurationTypeIndex: 1,
     });
   },
