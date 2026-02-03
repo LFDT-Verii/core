@@ -14,7 +14,7 @@ const { validateByoDidKeys, normalizeProfileName } = require('../domains');
 
 const buildNonCustodiedOrganization = async (
   { byoDid, byoKeys, serviceEndpoints, profile, invitation },
-  context
+  context,
 ) => {
   const { repos } = context;
 
@@ -40,15 +40,15 @@ const buildNonCustodiedOrganization = async (
           kidFragment: byoKey.kidFragment,
         }),
       }),
-      byoKeys
-    )
+      byoKeys,
+    ),
   );
 
   const preparedServices = map((serviceEndpoint) => {
     const byoDidDocService = validateByoDidDocService(
       didDocument,
       serviceEndpoint.id,
-      newKeys
+      newKeys,
     );
     return {
       ...omit(['id'], serviceEndpoint),

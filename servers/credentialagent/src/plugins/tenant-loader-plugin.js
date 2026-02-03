@@ -61,7 +61,7 @@ const loadTenantKeysByPurpose = async (db, context) => {
   const tenantKeys = await tenantKeysCollection
     .find(
       { tenantId: tenant._id },
-      { projection: { _id: 1, purposes: 1, kidFragment: 1, publicKey: 1 } }
+      { projection: { _id: 1, purposes: 1, kidFragment: 1, publicKey: 1 } },
     )
     .toArray();
 
@@ -70,7 +70,7 @@ const loadTenantKeysByPurpose = async (db, context) => {
       const key = { keyId: _id, kidFragment, publicKey };
       return map((purpose) => [purpose, key], purposes);
     }),
-    fromPairs
+    fromPairs,
   )(tenantKeys);
 };
 

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -122,7 +121,7 @@ describe('issued credentials management', () => {
       .collection('offers')
       .updateOne(
         { _id: new ObjectId(credentialCredentialStatusNull._id) },
-        { $set: { credentialStatus: null } }
+        { $set: { credentialStatus: null } },
       );
   });
 
@@ -164,7 +163,7 @@ describe('issued credentials management', () => {
         method: 'GET',
         url: issuedCredentialsUrl(
           tenant,
-          `?vendorOfferId=${credential.offerId}`
+          `?vendorOfferId=${credential.offerId}`,
         ),
       });
 
@@ -219,7 +218,7 @@ describe('issued credentials management', () => {
         method: 'GET',
         url: issuedCredentialsUrl(
           tenant,
-          `?vendorUserId=${newCredential.credentialSubject.vendorUserId}`
+          `?vendorUserId=${newCredential.credentialSubject.vendorUserId}`,
         ),
       });
 
@@ -240,7 +239,7 @@ describe('issued credentials management', () => {
         method: 'GET',
         url: issuedCredentialsUrl(
           tenant,
-          `?vendorOfferId=${credential.offerId}&vendorUserId=${credential.credentialSubject.vendorUserId}`
+          `?vendorOfferId=${credential.offerId}&vendorUserId=${credential.credentialSubject.vendorUserId}`,
         ),
       });
 
@@ -321,7 +320,7 @@ describe('issued credentials management', () => {
         method: 'GET',
         url: issuedCredentialsUrl(
           tenant,
-          `?vendorOfferId=${anotherOffer.offerId}`
+          `?vendorOfferId=${anotherOffer.offerId}`,
         ),
       });
 
@@ -348,7 +347,7 @@ describe('issued credentials management', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(response.json.issuedCredentials).not.toEqual(
-        expect.arrayContaining([incorrectOffer])
+        expect.arrayContaining([incorrectOffer]),
       );
     });
     it('should return paginated list', async () => {
@@ -362,14 +361,14 @@ describe('issued credentials management', () => {
         method: 'GET',
         url: issuedCredentialsUrl(
           tenant,
-          `?page.size=1&page.skip=0&vendorUserId=${credential2.credentialSubject.vendorUserId}`
+          `?page.size=1&page.skip=0&vendorUserId=${credential2.credentialSubject.vendorUserId}`,
         ),
       });
       const response1 = await fastify.injectJson({
         method: 'GET',
         url: issuedCredentialsUrl(
           tenant,
-          `?page.size=1&page.skip=1&vendorUserId=${credential2.credentialSubject.vendorUserId}`
+          `?page.size=1&page.skip=1&vendorUserId=${credential2.credentialSubject.vendorUserId}`,
         ),
       });
 

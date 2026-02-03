@@ -57,7 +57,7 @@ const transformIdFilter = (input) =>
 const buildRegistrarServiceElemMatch = (input, serviceTypes) => {
   const [issuerServiceTypes, nonIssuerServiceTypes] = partition(
     (s) => ISSUER_SERVICE_TYPES.includes(s),
-    serviceTypes
+    serviceTypes,
   );
 
   if (isEmpty(issuerServiceTypes)) {
@@ -99,7 +99,7 @@ const initTransformOrganizationFilter = () =>
   initTransformToFinder(tableRegistry.organizations(), {
     transformToFilterDocument: flow(
       transformIdFilter,
-      transformServiceTypeFilter
+      transformServiceTypeFilter,
     ),
   });
 

@@ -87,7 +87,7 @@ const controller = async (fastify) => {
       return {
         imageMetadata,
       };
-    }
+    },
   );
 };
 

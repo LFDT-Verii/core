@@ -17,7 +17,7 @@
 const pChar = '[A-Za-z0-9._:?=&%;-]';
 const methodChar = '[a-z0-9]';
 const DID_WITH_SERVICE_FRAGMENT = new RegExp(
-  `^(did:${methodChar}+:${pChar}+)(#${pChar}+)$`
+  `^(did:${methodChar}+:${pChar}+)(#${pChar}+)$`,
 );
 
 const splitDidUrlWithFragment = (didWithFragment) => {

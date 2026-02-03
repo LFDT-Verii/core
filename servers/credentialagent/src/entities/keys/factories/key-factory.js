@@ -32,7 +32,7 @@ const initKeysFactory = (app) => {
   return register('key', async (overrides, { getOrBuild }) => {
     const tenant = await getOrBuild('tenant', initTenantFactory(app));
     const keyPair = await getOrBuild('keyPair', () =>
-      generateKeyPair({ format: 'jwk' })
+      generateKeyPair({ format: 'jwk' }),
     );
     return {
       item: {

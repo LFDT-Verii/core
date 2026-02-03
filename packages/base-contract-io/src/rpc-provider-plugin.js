@@ -23,7 +23,7 @@ const setProvider = (fastify, req) => {
   req.rpcProvider = initProvider(
     fastify.config.rpcUrl,
     req.vnfBlockchainAuthenticate,
-    fastify.config.chainId
+    fastify.config.chainId,
   );
 };
 

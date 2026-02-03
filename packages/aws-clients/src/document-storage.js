@@ -29,8 +29,8 @@ const createDynamoDbDocumentClient = ({ awsRegion, awsEndpoint }) =>
         apiVersion: '2012-08-10',
         awsRegion,
         awsEndpoint,
-      })
-    )
+      }),
+    ),
   );
 
 const initReadDocument =
@@ -45,7 +45,7 @@ const initReadDocument =
       new GetCommand({
         TableName: table,
         Key: key,
-      })
+      }),
     );
   };
 
@@ -61,7 +61,7 @@ const initWriteDocument =
       new PutCommand({
         TableName: table,
         Item: document,
-      })
+      }),
     );
   };
 

@@ -68,6 +68,7 @@ const dsaJwaConfigMap = {
   },
 };
 
+// eslint-disable-next-line complexity
 const generateKeyPair = (options = {}) => {
   const { format = 'hex', type = 'ec' } = options;
   const specificOptions =
@@ -117,12 +118,12 @@ const prepareSignedValue = (payload, options) => {
   const hexOptions = flow(
     sanitizeOptions,
     ensureStringified,
-    hashAndEncodeHex
+    hashAndEncodeHex,
   )(options);
   const hexPayload = flow(
     sanitizePayload,
     ensureStringified,
-    hashAndEncodeHex
+    hashAndEncodeHex,
   )(payload);
   return hashAndEncodeHex(`${hexOptions}${hexPayload}`);
 };
@@ -174,7 +175,7 @@ const verifyBase64Signature = (value, signature, publicKey) => {
         key: publicKeyHexToPem(publicKey),
       },
       signature,
-      'base64'
+      'base64',
     );
 };
 
@@ -186,7 +187,7 @@ const encrypt = (text, secret) =>
 
 const decryptBuffer = (encrypted, secret) =>
   doDecrypt(encrypted, secret, (encryptedBuffer, decipher) =>
-    Buffer.concat([decipher.update(encryptedBuffer), decipher.final()])
+    Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]),
   );
 
 const decrypt = (encrypted, secret) => {
@@ -196,7 +197,7 @@ const decrypt = (encrypted, secret) => {
     secret,
     (encryptedBuffer, decipher) =>
       decipher.update(encryptedBuffer, 'binary', 'utf8') +
-      decipher.final('utf8')
+      decipher.final('utf8'),
   );
 };
 
@@ -224,7 +225,7 @@ const doDecrypt = (encrypted, secret, callback) => {
 const generateRandomNumber = (length) =>
   randomNumber(
     parseInt(`1${'0'.repeat(length - 1)}`, 10),
-    parseInt('9'.repeat(length), 10)
+    parseInt('9'.repeat(length), 10),
   );
 
 const isStringHex = (str) => HEX_FORMAT.test(str);

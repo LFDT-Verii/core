@@ -49,7 +49,7 @@ const initDeleteService = async (fastify) => {
     const services = remove({ id: relativeServiceId }, organization.services);
     if (services.length === organization.services.length) {
       throw new newError.NotFound(
-        `Service ${relativeServiceId} was not found in organization ${organization.didDoc.id}`
+        `Service ${relativeServiceId} was not found in organization ${organization.didDoc.id}`,
       );
     }
 
@@ -57,7 +57,7 @@ const initDeleteService = async (fastify) => {
       organization._id,
       {
         services,
-      }
+      },
     );
 
     if (!organization.didNotCustodied) {
@@ -73,7 +73,7 @@ const initDeleteService = async (fastify) => {
     // Update Profile
     const activatedServiceIds = pull(
       relativeServiceId,
-      organization.activatedServiceIds
+      organization.activatedServiceIds,
     );
 
     const organizationModifications =
@@ -85,14 +85,14 @@ const initDeleteService = async (fastify) => {
     const updatedOrganizationWithRemovedService =
       await repos.organizations.update(
         organization._id,
-        organizationModifications
+        organizationModifications,
       );
 
     await updateBlockchainPermissionsFromPermittedServices(
       {
         organization: updatedOrganizationWithRemovedService,
       },
-      context
+      context,
     );
 
     // Update Auth0
@@ -103,11 +103,11 @@ const initDeleteService = async (fastify) => {
         oldServices: organization.services,
         newServices: updatedOrganization.services,
       },
-      'Updating "authClients"'
+      'Updating "authClients"',
     );
     const [authClientsToDelete, remainingAuthClients] = partition(
       { serviceId: relativeServiceId },
-      organization.authClients
+      organization.authClients,
     );
 
     try {
@@ -129,7 +129,7 @@ const initDeleteService = async (fastify) => {
           orgId: organization.didDoc.id,
           serviceId: relativeServiceId,
         },
-        context
+        context,
       );
     } catch (error) {
       const message = 'Failed to remove organization service monitor';

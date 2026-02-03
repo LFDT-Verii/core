@@ -28,7 +28,7 @@ const triggerIssuedCredentialsWebhook = async (approvedOffers, context) => {
         tenantId: tenant._id,
         exchangeId: exchange._id,
       },
-      context
+      context,
     );
   } catch (err) {
     const message = 'callback call failed with an error';
@@ -51,7 +51,7 @@ const buildIssuedCredential =
     // eslint-disable-next-line better-mutation/no-mutation
     issuedCredential.credentialSubject = pick(
       'vendorUserId',
-      credential.credentialSubject
+      credential.credentialSubject,
     );
     if (config.vendorCredentialsIncludeIssuedClaim) {
       // eslint-disable-next-line better-mutation/no-mutation

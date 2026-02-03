@@ -15,9 +15,10 @@ export default class VCLPresentationRequest {
         public readonly jwt: VCLJwt,
         public readonly verifiedProfile: VCLVerifiedProfile,
         public readonly deepLink: VCLDeepLink,
+        // eslint-disable-next-line default-param-last
         public readonly pushDelegate: Nullish<VCLPushDelegate> = null,
         public readonly didJwk: VCLDidJwk,
-        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null
+        public readonly remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {
         this.feed = this.getFeed();
         this.vendorOriginContext = this.getVendorOriginContext();

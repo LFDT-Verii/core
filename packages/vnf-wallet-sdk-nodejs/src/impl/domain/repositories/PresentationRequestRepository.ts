@@ -2,6 +2,6 @@ import VCLPresentationRequestDescriptor from '../../../api/entities/VCLPresentat
 
 export default interface PresentationRequestRepository {
     getPresentationRequest(
-        presentationRequestDescriptor: VCLPresentationRequestDescriptor
+        presentationRequestDescriptor: VCLPresentationRequestDescriptor,
     ): Promise<string>;
 }

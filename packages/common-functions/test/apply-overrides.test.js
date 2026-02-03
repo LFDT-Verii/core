@@ -46,8 +46,8 @@ describe('apply overrides', () => {
     expect(
       applyOverrides(
         { hello: 'world' },
-        { x: 1, combined: ({ hello, x }) => `${hello}-${x}` }
-      )
+        { x: 1, combined: ({ hello, x }) => `${hello}-${x}` },
+      ),
     ).toEqual({
       hello: 'world',
       x: 1,

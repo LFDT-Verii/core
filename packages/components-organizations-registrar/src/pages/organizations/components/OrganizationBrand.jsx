@@ -6,6 +6,7 @@ import { maxLength, required } from 'ra-core';
 import CustomImageInput from '../../../components/common/CustomImageInput/index.jsx';
 
 /* eslint-disable react/prop-types */
+// eslint-disable-next-line complexity
 export const OrganizationBrand = ({ formData, scopedFormData }) => {
   let brandNameValidate = [maxLength(100)];
   if (scopedFormData && scopedFormData.logo) {

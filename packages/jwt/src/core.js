@@ -66,7 +66,7 @@ const jwtSign = async (
     expiresIn,
     alg: optionsAlg,
     ...options
-  } = {}
+  } = {},
 ) => {
   try {
     const wrapper =
@@ -80,7 +80,7 @@ const jwtSign = async (
       setOptionalExpirationTime(exp ?? expiresIn),
       setOptionalSubject(subject),
       setIssuedAt(iat),
-      setProtectedHeader({ typ: 'JWT', alg, ...options })
+      setProtectedHeader({ typ: 'JWT', alg, ...options }),
     )(wrapper);
 
     return jwt.sign(key);
@@ -91,7 +91,7 @@ const jwtSign = async (
           payload,
           keyOrSecret,
           options,
-        })}`
+        })}`,
       );
       console.error(error);
     }
@@ -220,7 +220,7 @@ const prepAlgAndKey = async (keyOrSecret, optionsAlg) =>
       }
     : {
         alg: keyAlgorithmToJoseAlg(
-          keyOrSecret.alg ?? optionsAlg ?? DEFAULT_ASYMMETRIC_ALG
+          keyOrSecret.alg ?? optionsAlg ?? DEFAULT_ASYMMETRIC_ALG,
         ),
         key: await toKeyObject(keyOrSecret),
       };

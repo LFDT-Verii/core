@@ -24,7 +24,7 @@ const {
 
 const addOperatorKeys = async (
   { primaryAccount, organization, permissioningKeyId, dltKeys },
-  context
+  context,
 ) => {
   const permissionContract =
     permissioningKeyId != null
@@ -38,8 +38,8 @@ const addOperatorKeys = async (
           primary: primaryAccount,
           operator: toEthereumAddress(dltPublicKey),
         }),
-      dltKeys
-    )
+      dltKeys,
+    ),
   );
 };
 

@@ -17,7 +17,7 @@
 const buildVendorData = (
   disclosure,
   vendorOriginContext,
-  { tenant, exchange }
+  { tenant, exchange },
 ) => ({
   tenantId: tenant._id,
   tenantDID: tenant.did,

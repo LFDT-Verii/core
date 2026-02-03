@@ -26,7 +26,7 @@ const repo = (app, opts, next = () => {}) => {
       },
       extensions: [autoboxIdsExtension],
     },
-    app
+    app,
   );
 };
 

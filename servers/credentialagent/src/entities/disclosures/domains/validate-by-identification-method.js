@@ -28,7 +28,7 @@ const validateByVerifiablePresentationMethod = (disclosure) => {
   if (
     !includes(
       IdentificationMethods.VERIFIABLE_PRESENTATION,
-      disclosure.identificationMethods
+      disclosure.identificationMethods,
     )
   ) {
     return;
@@ -58,7 +58,7 @@ const validateByPreauthMethod = (disclosure, setIssuingDefault) => {
       DisclosureErrors.PREAUTH_TYPES_MAY_NOT_BE_SET_ISSUING_DEFAULT,
       {
         errorCode: 'request_validation_failed',
-      }
+      },
     );
   }
 };

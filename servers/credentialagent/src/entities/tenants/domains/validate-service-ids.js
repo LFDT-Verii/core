@@ -22,11 +22,11 @@ const validateServiceIds = (doc, serviceIds) => {
   if (!isEmpty(serviceIds)) {
     const firstMissingServiceId = find(
       (serviceId) => extractService(serviceId)(doc) == null,
-      serviceIds
+      serviceIds,
     );
     if (firstMissingServiceId) {
       throw new newError.BadRequest(
-        `ServiceId ${firstMissingServiceId} is not on did document for did: ${doc.id}`
+        `ServiceId ${firstMissingServiceId} is not on did document for did: ${doc.id}`,
       );
     }
   }

@@ -87,7 +87,7 @@ module.exports = async (fastify) => {
           createdAt: 0,
           updatedAt: 0,
           offerId: omitOfferId ? 0 : null,
-        })
+        }),
       );
       if (!isEmpty(offers) || noOffers200) {
         return { offers };
@@ -99,7 +99,7 @@ module.exports = async (fastify) => {
       });
 
       return reply.status(202).send({});
-    }
+    },
   );
 
   fastify.post('/receive-issued-credentials', async (req) => {

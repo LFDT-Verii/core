@@ -65,7 +65,7 @@ describe('did-jwt', () => {
     const keyPair = await generateKeyPair('EdDSA', { crv: 'Ed25519' });
     const publicKey = await exportJWK(keyPair.publicKey);
     expect(getDidUriFromJwk(publicKey)).toMatch(
-      /did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3.*/
+      /did:jwk:eyJjcnYiOiJFZDI1NTE5Iiwia3.*/,
     );
   });
 
@@ -73,19 +73,19 @@ describe('did-jwt', () => {
     const keyPair = await generateKeyPair('ES256');
     const publicKey = await exportJWK(keyPair.publicKey);
     expect(getDidUriFromJwk(publicKey)).toMatch(
-      /did:jwk:eyJjcnYiOiJQLTI1NiIsIm.*/
+      /did:jwk:eyJjcnYiOiJQLTI1NiIsIm.*/,
     );
   });
 
   it('should convert jwks to did documents', async () => {
     expect(await getDidJwkDocument(es256PublicJwk)).toEqual(
-      expectedDidDoc(es256DidUri, es256PublicJwk)
+      expectedDidDoc(es256DidUri, es256PublicJwk),
     );
     expect(await getDidJwkDocument(es256KPublicJwk)).toEqual(
-      expectedDidDoc(es256kDidUri, es256KPublicJwk)
+      expectedDidDoc(es256kDidUri, es256KPublicJwk),
     );
     expect(await getDidJwkDocument(scrambledEs256KPublicJwk)).toEqual(
-      expectedDidDoc(es256kDidUri, es256KPublicJwk)
+      expectedDidDoc(es256kDidUri, es256KPublicJwk),
     );
   });
 
@@ -99,10 +99,10 @@ describe('did-jwt', () => {
 
   it('should resolve did uris to did documents', async () => {
     expect(await resolveDidJwkDocument(es256DidUri)).toEqual(
-      expectedDidDoc(es256DidUri, es256PublicJwk)
+      expectedDidDoc(es256DidUri, es256PublicJwk),
     );
     expect(await resolveDidJwkDocument(es256kDidUri)).toEqual(
-      expectedDidDoc(es256kDidUri, es256KPublicJwk)
+      expectedDidDoc(es256kDidUri, es256KPublicJwk),
     );
   });
 });

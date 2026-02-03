@@ -25,7 +25,7 @@ const uriToDidWeb = (uri) => {
     split('/'),
     compact,
     map(encodeURIComponent),
-    join(':')
+    join(':'),
   )(url.pathname);
   return `${did}:${path}`;
 };

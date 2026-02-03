@@ -1,3 +1,6 @@
 export default class Response {
-    constructor(readonly payload: any, readonly code: number) {}
+    constructor(
+        readonly payload: any,
+        readonly code: number,
+    ) {}
 }

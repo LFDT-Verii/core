@@ -39,13 +39,13 @@ const createVerifiableCredentials = async (
   offers,
   credentialSubjectId,
   consentedAt,
-  context
+  context,
 ) => {
   const { exchange, repos, config } = context;
 
   const issuableOffers = map((offer) => {
     const linkedCredentials = prepareLinkedCredentialsForHolder(
-      offer.linkedCredentials
+      offer.linkedCredentials,
     );
     return isEmpty(linkedCredentials) ? offer : { ...offer, linkedCredentials };
   }, offers);
@@ -53,7 +53,7 @@ const createVerifiableCredentials = async (
   const jwtVcs = await doIssueVerifiableCredentials(
     issuableOffers,
     credentialSubjectId,
-    context
+    context,
   );
 
   const updatedOffers = await Promise.all(
@@ -65,9 +65,9 @@ const createVerifiableCredentials = async (
         jwtDecode(jwtVcs[i]).payload.vc,
         consentedAt,
         digestSRI,
-        context
+        context,
       );
-    }, issuableOffers)
+    }, issuableOffers),
   );
 
   if (config.triggerOffersAcceptedWebhook && size(updatedOffers) > 0) {
@@ -80,7 +80,7 @@ const createVerifiableCredentials = async (
 const doIssueVerifiableCredentials = async (
   offers,
   credentialSubjectId,
-  context
+  context,
 ) => {
   const { tenant, tenantKeysByPurpose } = context;
 
@@ -93,7 +93,7 @@ const doIssueVerifiableCredentials = async (
   // eslint-disable-next-line better-mutation/no-mutation
   context.allocationListQueries = mongoAllocationListQueries(
     mongoDb(),
-    'allocations'
+    'allocations',
   );
 
   return issueVeriiCredentials(
@@ -107,7 +107,7 @@ const doIssueVerifiableCredentials = async (
       issuingServiceKMSKeyId: issuerServiceKey.keyId,
       issuingServiceDIDKeyId: toDidUrl(
         tenant.did,
-        issuerServiceKey.kidFragment
+        issuerServiceKey.kidFragment,
       ),
       dltOperatorAddress:
         dltOperatorKey.publicKey != null
@@ -116,7 +116,7 @@ const doIssueVerifiableCredentials = async (
       dltOperatorKMSKeyId: dltOperatorKey.keyId,
       dltPrimaryAddress: tenant.primaryAddress,
     },
-    context
+    context,
   ).catch((e) => {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':

@@ -31,7 +31,7 @@ const updateOrErrorExtension = (parent) => ({
       {
         returnDocument: 'after',
         includeResultMetadata: true,
-      }
+      },
     );
     if (isEmpty(result.value)) {
       throw newError(404, 'Group does not exist', {

@@ -136,7 +136,7 @@ describe('Public Key Resolution', () => {
     });
 
     expect(response.body).toEqual(
-      JSON.stringify(jwkFromSecp256k1Key(publicKeyHex0, false))
+      JSON.stringify(jwkFromSecp256k1Key(publicKeyHex0, false)),
     );
   });
 
@@ -210,7 +210,7 @@ describe('Public Key Resolution', () => {
     });
 
     expect(response.body).toEqual(
-      bs58.encode(Buffer.from(publicKeyHex0, 'hex'))
+      bs58.encode(Buffer.from(publicKeyHex0, 'hex')),
     );
   });
 
@@ -276,7 +276,7 @@ describe('Public Key Resolution', () => {
           errorCode: 'did_resolution_failed',
           message: 'Could not resolve did:web:example.com',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -302,7 +302,7 @@ describe('Public Key Resolution', () => {
           errorCode: 'missing_error_code',
           message: 'Public key was not found in document did:web:example.com',
           statusCode: 404,
-        })
+        }),
       );
       expect(nockData.isDone()).toBeTruthy();
     });
@@ -325,7 +325,7 @@ describe('Public Key Resolution', () => {
       expect(nockData.isDone()).toBeTruthy();
 
       expect(response.body).toBe(
-        publicKeyHexToPem(hexFromJwk(keyPair.publicKey, false))
+        publicKeyHexToPem(hexFromJwk(keyPair.publicKey, false)),
       );
     });
 
@@ -348,7 +348,7 @@ describe('Public Key Resolution', () => {
       expect(nockData.isDone()).toBeTruthy();
 
       expect(response.body).toBe(
-        publicKeyHexToPem(hexFromJwk(keyPair.publicKey, false))
+        publicKeyHexToPem(hexFromJwk(keyPair.publicKey, false)),
       );
     });
 
@@ -390,7 +390,7 @@ describe('Public Key Resolution', () => {
       expect(nockData.isDone()).toBeTruthy();
 
       expect(response.body).toEqual(
-        bs58.encode(Buffer.from(hexFromJwk(keyPair.publicKey, false), 'hex'))
+        bs58.encode(Buffer.from(hexFromJwk(keyPair.publicKey, false), 'hex')),
       );
     });
 

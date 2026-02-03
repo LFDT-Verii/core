@@ -34,6 +34,6 @@ module.exports = (app, options, next = () => {}) => {
         initObjectIdAutoboxExtension('clientId'),
       ],
     },
-    app
+    app,
   );
 };

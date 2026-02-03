@@ -29,11 +29,11 @@ const initLoadSchemaValidate = ({
   const loadCredentialTypeFromRegistrar = async (credentialType, context) => {
     const credentialTypeMetadataList = await getCredentialTypeMetadata(
       [credentialType],
-      context
+      context,
     );
     if (isEmpty(credentialTypeMetadataList)) {
       throw newError.BadRequest(
-        `${credentialType} is not a recognized credential type`
+        `${credentialType} is not a recognized credential type`,
       );
     }
     return first(credentialTypeMetadataList);
@@ -42,23 +42,23 @@ const initLoadSchemaValidate = ({
   const loadSchemaFromRegistrar = async (schemaUrl, context) => {
     try {
       return await fetchJson(schemaUrl, context);
-    } catch (e) {
+    } catch {
       throw newError.BadGateway(`failed to resolve ${schemaUrl}`);
     }
   };
   return async (credentialType, context) => {
     const credentialTypeMetadata = await loadCredentialTypeFromRegistrar(
       credentialType,
-      context
+      context,
     );
 
     const schema = await loadSchemaFromRegistrar(
       credentialTypeMetadata.schemaUrl,
-      context
+      context,
     );
     if (schema.$id == null) {
       throw newError.BadGateway(
-        `${credentialTypeMetadata.schemaUrl} $id field missing`
+        `${credentialTypeMetadata.schemaUrl} $id field missing`,
       );
     }
     if (!hasDocSchema(schema.$id)) {

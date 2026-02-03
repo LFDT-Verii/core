@@ -1,7 +1,7 @@
 const submitCreateExchange = async (tenantDID, type, { agentFetch }) => {
   const response = await agentFetch.post(
     `operator-api/v0.8/tenants/${tenantDID}/exchanges`,
-    { type }
+    { type },
   );
 
   return response.json();
@@ -11,24 +11,24 @@ const getExchangeQrCode = (
   tenantDID,
   exchangeId,
   vendorOriginContext,
-  { agentFetch }
+  { agentFetch },
 ) => {
   const urlSearchParams = new URLSearchParams();
   if (vendorOriginContext != null) {
     urlSearchParams.set('vendorOriginContext', vendorOriginContext);
   }
   return agentFetch.get(
-    `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/qrcode.png?${urlSearchParams.toString()}`
+    `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/qrcode.png?${urlSearchParams.toString()}`,
   );
 };
 
 const submitOffer = async (
   { offer, tenantDID, exchangeId },
-  { agentFetch }
+  { agentFetch },
 ) => {
   const response = await agentFetch.post(
     `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers`,
-    offer
+    offer,
   );
 
   return response.json();
@@ -36,10 +36,10 @@ const submitOffer = async (
 
 const completeSubmitOffer = async (
   { exchangeId, tenantDID },
-  { agentFetch }
+  { agentFetch },
 ) => {
   const response = await agentFetch.post(
-    `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers/complete`
+    `operator-api/v0.8/tenants/${tenantDID}/exchanges/${exchangeId}/offers/complete`,
   );
 
   return response.json();

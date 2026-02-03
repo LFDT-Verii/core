@@ -32,7 +32,7 @@ module.exports = async (fastify) => {
       const offers = isArray(body) ? body : [body];
       const preppedOffers = map(prepOffer, offers);
       return repos.offers.insertMany(preppedOffers);
-    }
+    },
   );
   fastify.put(
     '/:id',
@@ -46,7 +46,7 @@ module.exports = async (fastify) => {
         repos,
       } = req;
       return repos.offers.update(id, body);
-    }
+    },
   );
   fastify.get(
     '/:id',
@@ -59,7 +59,7 @@ module.exports = async (fastify) => {
         repos,
       } = req;
       return repos.offers.findById(id);
-    }
+    },
   );
   fastify.get(
     '',
@@ -69,7 +69,7 @@ module.exports = async (fastify) => {
     async ({ repos }) => {
       const offers = await repos.offers.find({});
       return offers;
-    }
+    },
   );
   fastify.delete(
     '/:id',
@@ -82,6 +82,6 @@ module.exports = async (fastify) => {
         repos,
       } = req;
       return repos.offers.del(id);
-    }
+    },
   );
 };

@@ -72,12 +72,12 @@ const serviceTypesController = async (fastify) => {
           notary: isNotary(serviceType),
           credentialGroup: CredentialGroupToServiceTypeMap[serviceType],
         }),
-        ServiceTypes
+        ServiceTypes,
       );
       return {
         serviceTypes,
       };
-    }
+    },
   );
 };
 

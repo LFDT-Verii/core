@@ -29,7 +29,7 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
         const isVerified = await subject.verifyPresentationRequest(
             presentationRequest,
             deepLink,
-            DidDocumentMocks.DidDocumentMock
+            DidDocumentMocks.DidDocumentMock,
         );
         expect(isVerified).toBeTruthy();
     });
@@ -40,12 +40,12 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
             const isVerified = await subject.verifyPresentationRequest(
                 presentationRequest,
                 deepLink,
-                DidDocumentMocks.DidDocumentWithWrongDidMock
+                DidDocumentMocks.DidDocumentWithWrongDidMock,
             );
             expect(isVerified).toBeFalsy();
         } catch (error: any) {
             expect(error.errorCode).toEqual(
-                VCLErrorCode.MismatchedPresentationRequestInspectorDid
+                VCLErrorCode.MismatchedPresentationRequestInspectorDid,
             );
         }
     });

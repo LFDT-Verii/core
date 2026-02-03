@@ -36,7 +36,7 @@ mock.module('../../src/fetchers/push-gateway/push-fetcher.js', {
     sendPush: mockSendPush,
   },
 });
-// eslint-disable-next-line import/order
+
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const { ObjectId } = require('mongodb');
 const { map } = require('lodash/fp');
@@ -140,7 +140,7 @@ describe('Credentials checking tests', () => {
           default:
             return Promise.resolve([checkResult]);
         }
-      }
+      },
     );
   });
 
@@ -179,7 +179,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      "body/pushData must have required property 'sendPush'"
+      "body/pushData must have required property 'sendPush'",
     );
   });
 
@@ -203,7 +203,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      "body/pushData must have required property 'exchangeId'"
+      "body/pushData must have required property 'exchangeId'",
     );
   });
 
@@ -229,7 +229,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      "body/pushData/pushDelegate must have required property 'pushUrl'"
+      "body/pushData/pushDelegate must have required property 'pushUrl'",
     );
   });
 
@@ -257,7 +257,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      "body/pushData/pushDelegate must have required property 'pushToken'"
+      "body/pushData/pushDelegate must have required property 'pushToken'",
     );
   });
 
@@ -317,7 +317,7 @@ describe('Credentials checking tests', () => {
 
     expect(mockSendPush.mock.callCount()).toEqual(0);
     expect(
-      mockVerifyCredentials.mock.calls.map((call) => call.arguments)
+      mockVerifyCredentials.mock.calls.map((call) => call.arguments),
     ).toEqual([
       [
         {
@@ -335,7 +335,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
 
@@ -378,7 +378,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
   it('Should return credential checks and send pushNotification if pushData is present (sendPush is true)', async () => {
@@ -419,7 +419,7 @@ describe('Credentials checking tests', () => {
 
     expect(mockSendPush.mock.callCount()).toEqual(1);
     expect(
-      mockSendPush.mock.calls.map((call) => call.arguments)
+      mockSendPush.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         data: {
@@ -437,7 +437,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
   it('Should send pushNotification if pushData is true but disclosure is true', async () => {
@@ -489,7 +489,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
   it('Should send pushNotification if pushData is false but disclosure is true', async () => {
@@ -540,7 +540,7 @@ describe('Credentials checking tests', () => {
 
     expect(mockSendPush.mock.callCount()).toEqual(1);
     expect(
-      mockSendPush.mock.calls.map((call) => call.arguments)
+      mockSendPush.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         data: {
@@ -558,7 +558,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
   it('Should send pushNotification if pushData is false but disclosure is true and disclosure does not have', async () => {
@@ -609,7 +609,7 @@ describe('Credentials checking tests', () => {
 
     expect(mockSendPush.mock.callCount()).toEqual(1);
     expect(
-      mockSendPush.mock.calls.map((call) => call.arguments)
+      mockSendPush.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         data: {
@@ -627,7 +627,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
   it('Should not send pushNotification if pushData is true and sendPushOnVerification is not present', async () => {
@@ -650,7 +650,7 @@ describe('Credentials checking tests', () => {
       .collection('disclosures')
       .updateOne(
         { _id: new ObjectId(disclosure._id) },
-        { $unset: { sendPushOnVerification: '' } }
+        { $unset: { sendPushOnVerification: '' } },
       );
 
     await persistKey({
@@ -682,7 +682,7 @@ describe('Credentials checking tests', () => {
 
     expect(mockSendPush.mock.callCount()).toEqual(1);
     expect(
-      mockSendPush.mock.calls.map((call) => call.arguments)
+      mockSendPush.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         data: {
@@ -700,7 +700,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
   it('Should not send pushNotification sendPushOnVerification is true and has corrupted pushDelegate', async () => {
@@ -754,7 +754,7 @@ describe('Credentials checking tests', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
   it('Should send pushNotification sendPushOnVerification is true and has corrupted pushDelegate and pushData is correct', async () => {
@@ -813,7 +813,7 @@ describe('Credentials checking tests', () => {
       image: 'https://velocity.com/image.png',
     });
     expect(response.json.credentials[0].credentialChecks).toEqual(
-      checkResult.credentialChecks
+      checkResult.credentialChecks,
     );
   });
 
@@ -848,7 +848,7 @@ describe('Credentials checking tests', () => {
         errorCode: 'payment_required',
         message: 'No voucher was provided to process the request',
         statusCode: 400,
-      })
+      }),
     );
   });
 });

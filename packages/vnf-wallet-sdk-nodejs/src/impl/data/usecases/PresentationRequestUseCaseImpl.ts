@@ -11,23 +11,21 @@ import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDo
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 import VCLLog from '../../utils/VCLLog';
 
-export default class PresentationRequestUseCaseImpl
-    implements PresentationRequestUseCase
-{
+export default class PresentationRequestUseCaseImpl implements PresentationRequestUseCase {
     constructor(
         private presentationRequestRepository: PresentationRequestRepository,
         private resolveDidDocumentRepository: ResolveDidDocumentRepository,
         private jwtServiceRepository: JwtServiceRepository,
-        private presentationRequestByDeepLinkVerifier: PresentationRequestByDeepLinkVerifier
+        private presentationRequestByDeepLinkVerifier: PresentationRequestByDeepLinkVerifier,
     ) {}
 
     async getPresentationRequest(
         presentationRequestDescriptor: VCLPresentationRequestDescriptor,
-        verifiedProfile: VCLVerifiedProfile
+        verifiedProfile: VCLVerifiedProfile,
     ): Promise<VCLPresentationRequest> {
         const encodedJwtStr =
             await this.presentationRequestRepository.getPresentationRequest(
-                presentationRequestDescriptor
+                presentationRequestDescriptor,
             );
         const jwt = await this.jwtServiceRepository.decode(encodedJwtStr);
         const presentationRequest = new VCLPresentationRequest(
@@ -36,57 +34,57 @@ export default class PresentationRequestUseCaseImpl
             presentationRequestDescriptor.deepLink,
             presentationRequestDescriptor.pushDelegate,
             presentationRequestDescriptor.didJwk,
-            presentationRequestDescriptor.remoteCryptoServicesToken
+            presentationRequestDescriptor.remoteCryptoServicesToken,
         );
         const didDocument =
             await this.resolveDidDocumentRepository.resolveDidDocument(
-                presentationRequest.iss
+                presentationRequest.iss,
             );
         const { kid } = presentationRequest.jwt;
         const publicJwk = didDocument.getPublicJwk(kid);
         if (publicJwk == null) {
             throw new VCLError(
-                `Public JWK not found for kid: ${kid} in DID Document: ${didDocument}`
+                `Public JWK not found for kid: ${kid} in DID Document: ${didDocument}`,
             );
         }
         return this.verifyPresentationRequest(
             publicJwk,
             presentationRequest,
-            didDocument
+            didDocument,
         );
     }
 
     async verifyPresentationRequest(
         publicJwk: VCLPublicJwk,
         presentationRequest: VCLPresentationRequest,
-        didDocument: VCLDidDocument
+        didDocument: VCLDidDocument,
     ): Promise<VCLPresentationRequest> {
         await this.jwtServiceRepository.verifyJwt(
             presentationRequest.jwt,
             publicJwk,
-            presentationRequest.remoteCryptoServicesToken
+            presentationRequest.remoteCryptoServicesToken,
         );
         const isVerified =
             await this.presentationRequestByDeepLinkVerifier.verifyPresentationRequest(
                 presentationRequest,
                 presentationRequest.deepLink,
-                didDocument
+                didDocument,
             );
         VCLLog.info(
-            `Presentation request by deep link verification result: ${isVerified}`
+            `Presentation request by deep link verification result: ${isVerified}`,
         );
         return this.onVerificationSuccess(isVerified, presentationRequest);
     }
 
     async onVerificationSuccess(
         isVerified: boolean,
-        presentationRequest: VCLPresentationRequest
+        presentationRequest: VCLPresentationRequest,
     ): Promise<VCLPresentationRequest> {
         if (isVerified) {
             return presentationRequest;
         }
         throw new VCLError(
-            `Failed  to verify: ${presentationRequest.jwt.payload}`
+            `Failed  to verify: ${presentationRequest.jwt.payload}`,
         );
     }
 }

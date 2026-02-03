@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -91,7 +90,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'disclosure foo not found',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 400 if disclosure.feed is not "true"', async () => {
@@ -113,7 +112,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'disclosure_feed_not_true',
           message: 'Disclosure feed must be true',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('should 200 and return feeds of disclosure', async () => {
@@ -171,7 +170,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'disclosure foo not found',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 404 if feed does not exist', async () => {
@@ -190,7 +189,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'feed foo not found',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 404 if feed exists, but is not related to the disclosure', async () => {
@@ -212,7 +211,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: `feed ${feed._id} not found`,
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 400 if disclosure.feed is not "true"', async () => {
@@ -234,7 +233,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'disclosure_feed_not_true',
           message: 'Disclosure feed must be true',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('should 200 and return feed', async () => {
@@ -283,7 +282,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'disclosure foo not found',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 404 if feed does not exist', async () => {
@@ -302,7 +301,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'feed foo not found',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 404 if feed exists, but is not related to the disclosure', async () => {
@@ -324,7 +323,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: `feed ${feed._id} not found`,
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 400 if disclosure.feed is not "true"', async () => {
@@ -346,7 +345,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'disclosure_feed_not_true',
           message: 'Disclosure feed must be true',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('should 204 delete the feed', async () => {
@@ -389,7 +388,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'disclosure foo not found',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 404 if feed exists but is not related to the disclosure', async () => {
@@ -419,7 +418,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: `feed ${feed._id} not found`,
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 404 if feed does not exist', async () => {
@@ -442,7 +441,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'feed foo not found',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 400 if disclosure.feed is not "true"', async () => {
@@ -468,7 +467,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'disclosure_feed_not_true',
           message: 'Disclosure feed must be true',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('should 200 and strip additional properties, update feed, and clear feed.clientId', async () => {
@@ -510,7 +509,7 @@ describe('CRUD Feeds Test Suite', () => {
             ...feed1,
             tenantId: tenant._id,
             disclosureId: disclosure._id,
-          })
+          }),
         ),
         preauthCode: 'barPreauthCode',
         updatedAt: expect.any(Date),
@@ -540,7 +539,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'disclosure foo not found',
           statusCode: 404,
-        })
+        }),
       );
     });
     it('should 400 if disclosure.feed is not "true"', async () => {
@@ -569,7 +568,7 @@ describe('CRUD Feeds Test Suite', () => {
           errorCode: 'disclosure_feed_not_true',
           message: 'Disclosure feed must be true',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('should 200 and strip additional properties and create feeds', async () => {
@@ -632,7 +631,7 @@ describe('CRUD Feeds Test Suite', () => {
               ...response.json.feeds[0],
               tenantId: tenant._id,
               disclosureId: disclosure._id,
-            })
+            }),
           ),
           _id: new ObjectId(response.json.feeds[0].id),
         },
@@ -642,7 +641,7 @@ describe('CRUD Feeds Test Suite', () => {
               ...response.json.feeds[1],
               tenantId: tenant._id,
               disclosureId: disclosure._id,
-            })
+            }),
           ),
           _id: new ObjectId(response.json.feeds[1].id),
         },

@@ -20,8 +20,8 @@ export default async function cryptoServicesRoutes(fastify) {
         await req.vclSdk.verifyJwt(
           jwtFromJson(req.body.jwt),
           publicJwkFrom(req.body.publicJwk),
-          tokenFrom(req.body.remoteCryptoServicesToken)
-        )
+          tokenFrom(req.body.remoteCryptoServicesToken),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);
@@ -33,8 +33,8 @@ export default async function cryptoServicesRoutes(fastify) {
         await req.vclSdk.generateSignedJwt(
           jwtDescriptorFrom(req.body.jwtDescriptor),
           didJwkFrom(req.body.didJwk),
-          tokenFrom(req.body.remoteCryptoServicesToken)
-        )
+          tokenFrom(req.body.remoteCryptoServicesToken),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);
@@ -43,7 +43,7 @@ export default async function cryptoServicesRoutes(fastify) {
   fastify.post('/generateDidJwk', async (req, reply) => {
     try {
       reply.send(
-        await req.vclSdk.generateDidJwk(didJwkDescriptorFrom(req.body))
+        await req.vclSdk.generateDidJwk(didJwkDescriptorFrom(req.body)),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);

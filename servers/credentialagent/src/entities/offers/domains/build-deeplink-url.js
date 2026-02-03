@@ -23,7 +23,7 @@ const { VendorEndpointCategory } = require('../../disclosures');
 
 const createPresentationRequestUrl = (
   suffix,
-  { tenant, config: { hostUrl } }
+  { tenant, config: { hostUrl } },
 ) => new URL(`${hostUrl}/api/holder/v0.6/org/${tenant.did}/${suffix}`);
 
 const createDeepLinkUrl = (suffix, { config: { deepLinkProtocol } }) =>
@@ -32,7 +32,7 @@ const createDeepLinkUrl = (suffix, { config: { deepLinkProtocol } }) =>
 const buildDisclosureRequestDeepLink = (
   disclosure,
   vendorOriginContext,
-  context
+  context,
 ) => {
   if (includes(disclosure.vendorEndpoint, VendorEndpointCategory.ISSUING)) {
     return buildIssuingDeepLink(
@@ -40,24 +40,24 @@ const buildDisclosureRequestDeepLink = (
       null,
       null,
       vendorOriginContext,
-      context
+      context,
     );
   }
 
   return buildPresentationRequestDeepLink(
     disclosure._id,
     vendorOriginContext,
-    context
+    context,
   );
 };
 
 const buildPresentationRequestDeepLink = (
   disclosureId,
   vendorOriginContext,
-  context
+  context,
 ) => {
   const presentationRequestUrl = flow(appendSearchParam('id', disclosureId))(
-    createPresentationRequestUrl('inspect/get-presentation-request', context)
+    createPresentationRequestUrl('inspect/get-presentation-request', context),
   );
 
   const deepLink = generateDeepLink(
@@ -67,7 +67,7 @@ const buildPresentationRequestDeepLink = (
       inspectorDid: context.tenant.did,
     },
     'inspect',
-    context
+    context,
   );
 
   return deepLink.toString();
@@ -78,12 +78,12 @@ const buildIssuingDeepLink = (
   exchangeId,
   types,
   vendorOriginContext,
-  context
+  context,
 ) => {
   const credentialManifestUrl = flow(
     appendSearchParam('id', disclosureId),
     appendSearchParam('exchange_id', exchangeId),
-    appendSearchParamArray('credential_types', types)
+    appendSearchParamArray('credential_types', types),
   )(createPresentationRequestUrl('issue/get-credential-manifest', context));
 
   const deepLink = generateDeepLink(
@@ -93,7 +93,7 @@ const buildIssuingDeepLink = (
       issuerDid: context.tenant.did,
     },
     'issue',
-    context
+    context,
   );
 
   return deepLink.toString();
@@ -102,13 +102,13 @@ const buildIssuingDeepLink = (
 const generateDeepLink = (
   { requestUri, vendorOriginContext, inspectorDid, issuerDid },
   type,
-  context
+  context,
 ) =>
   flow(
     appendSearchParam('request_uri', requestUri),
     appendSearchParam('inspectorDid', inspectorDid),
     appendSearchParam('issuerDid', issuerDid),
-    appendSearchParam('vendorOriginContext', vendorOriginContext)
+    appendSearchParam('vendorOriginContext', vendorOriginContext),
   )(createDeepLinkUrl(type, context));
 
 module.exports = {

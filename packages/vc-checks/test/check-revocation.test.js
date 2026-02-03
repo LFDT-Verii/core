@@ -33,7 +33,7 @@ describe('revocation checks', () => {
 
   it('Should return FAIL when revocation status fails to resolve', async () => {
     const result = checkCredentialStatus(
-      CredentialStatus.DEPENDENCY_RESOLUTION_ERROR
+      CredentialStatus.DEPENDENCY_RESOLUTION_ERROR,
     );
     expect(result).toEqual(CheckResults.FAIL);
   });

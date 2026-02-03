@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import VCLJwt from '../../../../src/api/entities/VCLJwt';
 import { VCLAuthToken, VCLToken } from '../../../../src';
 

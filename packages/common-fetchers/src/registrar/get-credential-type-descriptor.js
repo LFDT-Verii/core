@@ -16,7 +16,8 @@
 
 const getCredentialTypeDescriptor = async (
   { type, locale, includeDisplay },
-  { registrarFetch, cache }
+  { registrarFetch, cache },
+  // eslint-disable-next-line complexity
 ) => {
   const path = `api/v0.6/credential-type-descriptors/${type}`;
   const searchParams = new URLSearchParams();

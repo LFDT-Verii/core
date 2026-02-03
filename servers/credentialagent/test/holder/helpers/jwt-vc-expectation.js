@@ -46,7 +46,7 @@ const jwtVcExpectation = ({
       ...credentialTypeContext,
       ...castArray(offer['@context']),
       'https://lib.test/contexts/credential-extensions-2022.jsonld.json',
-    ])
+    ]),
   );
   return {
     header: {
@@ -69,7 +69,7 @@ const jwtVcExpectation = ({
             'replaces',
             'relatedResource',
           ],
-          offer
+          offer,
         ),
         '@context': credentialContextExpectation,
         vnfProtocolVersion: offer.vnfProtocolVersion ?? 1,
@@ -92,7 +92,7 @@ const jwtVcExpectation = ({
         },
         credentialStatus: {
           id: expect.stringMatching(
-            '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-zA-F]+&listId=\\d+&index=\\d+$'
+            '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-zA-F]+&listId=\\d+&index=\\d+$',
           ),
           type: VelocityRevocationListType,
         },

@@ -21,15 +21,16 @@ const newError = require('http-errors');
 
 const signExchangeResponse = async (
   exchangeResponse,
+  // eslint-disable-next-line default-param-last
   options = {},
-  { kms, tenant, tenantKeysByPurpose }
+  { kms, tenant, tenantKeysByPurpose },
 ) => {
   const exchangesKey = tenantKeysByPurpose[KeyPurposes.EXCHANGES];
   if (exchangesKey == null) {
     throw newError(
       500,
       `No key matching the filter {"tenantId":"${tenant._id}","purposes":"EXCHANGES"} was found`,
-      { errorCode: 'tenant_exchanges_key_missing' }
+      { errorCode: 'tenant_exchanges_key_missing' },
     );
   }
   return kms.signJwt(exchangeResponse, exchangesKey.keyId, {

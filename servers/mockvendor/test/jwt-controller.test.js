@@ -41,8 +41,8 @@ describe('JWT Controller Test Suite', () => {
               message: "body must have required property 'payload'",
               statusCode: 400,
             },
-            { omits: ['requestId', 'errorCode'] }
-          )
+            { omits: ['requestId', 'errorCode'] },
+          ),
         );
       });
 
@@ -69,8 +69,8 @@ describe('JWT Controller Test Suite', () => {
                 "body/options must have required property 'kid', body/options/keyId must NOT have fewer than 1 characters, body/options must match exactly one schema in oneOf",
               statusCode: 400,
             },
-            { omits: ['requestId', 'errorCode'] }
-          )
+            { omits: ['requestId', 'errorCode'] },
+          ),
         );
       });
 
@@ -97,8 +97,8 @@ describe('JWT Controller Test Suite', () => {
                 "body/options/kid must NOT have fewer than 1 characters, body/options must have required property 'keyId', body/options must match exactly one schema in oneOf",
               statusCode: 400,
             },
-            { omits: ['requestId', 'errorCode'] }
-          )
+            { omits: ['requestId', 'errorCode'] },
+          ),
         );
       });
 
@@ -129,8 +129,8 @@ describe('JWT Controller Test Suite', () => {
               message: 'Key pair not found',
               statusCode: 400,
             },
-            { omits: ['requestId', 'errorCode'] }
-          )
+            { omits: ['requestId', 'errorCode'] },
+          ),
         );
       });
 
@@ -156,8 +156,8 @@ describe('JWT Controller Test Suite', () => {
               message: 'Key pair not found',
               statusCode: 400,
             },
-            { omits: ['requestId', 'errorCode'] }
-          )
+            { omits: ['requestId', 'errorCode'] },
+          ),
         );
       });
 
@@ -183,7 +183,7 @@ describe('JWT Controller Test Suite', () => {
 
         const { payload, header } = await jwtVerify(
           response.json.compactJwt,
-          keyPair.privateKey
+          keyPair.privateKey,
         );
         expect(payload.abc).toEqual('abv');
         expect(header.jwk).toEqual(keyPair.publicKey);
@@ -211,7 +211,7 @@ describe('JWT Controller Test Suite', () => {
 
         const { payload, header } = await jwtVerify(
           response.json.compactJwt,
-          keyPair.privateKey
+          keyPair.privateKey,
         );
         expect(payload.abc).toEqual('abv');
         expect(header.jwk).toEqual(keyPair.publicKey);
@@ -234,8 +234,8 @@ describe('JWT Controller Test Suite', () => {
               message: "body must have required property 'jwt'",
               statusCode: 400,
             },
-            { omits: ['requestId', 'errorCode'] }
-          )
+            { omits: ['requestId', 'errorCode'] },
+          ),
         );
       });
 

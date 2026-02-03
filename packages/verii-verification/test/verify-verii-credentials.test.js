@@ -69,10 +69,10 @@ describe('Verify verii credentials', () => {
   };
 
   const resolveDidPath = `/api/v0.6/resolve-did/${encodeURIComponent(
-    issuerDid
+    issuerDid,
   )}`;
   const verifiedProfilePath = `/api/v0.6/organizations/${encodeURIComponent(
-    issuerDid
+    issuerDid,
   )}/verified-profile`;
   const credentialTypePath = '/api/v0.6/credential-types';
 
@@ -190,7 +190,7 @@ describe('Verify verii credentials', () => {
         openBadgeVc = await generateCredentialJwt(
           openBadgeCredential,
           orgKeyPair.privateJwk,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
       });
 
@@ -204,7 +204,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -231,7 +231,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -258,7 +258,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -274,10 +274,10 @@ describe('Verify verii credentials', () => {
           },
         ]);
         expect(
-          initMetadataRegistry.mock.calls.map((call) => call.arguments)
+          initMetadataRegistry.mock.calls.map((call) => call.arguments),
         ).toEqual([[{ privateKey: orgKeyPair.privateKey }, context]]);
         expect(
-          resolveVelocityDidDocument.mock.calls.map((call) => call.arguments)
+          resolveVelocityDidDocument.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -306,7 +306,7 @@ describe('Verify verii credentials', () => {
             },
             expectedHolderDid: issuerDidJwk,
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -334,7 +334,7 @@ describe('Verify verii credentials', () => {
         const vcWithArrayOfStatus = await generateCredentialJwt(
           credentialWithArrayOfStatus,
           orgKeyPair.privateKey,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
         const result = await verifyVeriiCredentials(
           {
@@ -345,7 +345,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -372,7 +372,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -403,7 +403,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
         expect(result).toEqual([
           {
@@ -426,7 +426,7 @@ describe('Verify verii credentials', () => {
           ...omit(['id'], openBadgeCredential),
           expirationDate: flow(
             setMilliseconds(0),
-            addHours(10)
+            addHours(10),
           )(new Date()).toISOString(),
         };
         const signedCredential = await jwtSign(
@@ -437,7 +437,7 @@ describe('Verify verii credentials', () => {
             iat: new Date(unsignedCredential.issuanceDate),
             exp: new Date(unsignedCredential.expirationDate),
             kid: `${didWeb}#key-1`,
-          }
+          },
         );
         const result = await verifyVeriiCredentials(
           {
@@ -447,7 +447,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
         const { header } = jwtDecode(signedCredential);
         expect(header).toEqual({
@@ -485,8 +485,8 @@ describe('Verify verii credentials', () => {
                 dltOperatorKMSKeyId: 'keyid-1',
               },
             },
-            context
-          )
+            context,
+          ),
         ).resolves.toEqual([
           {
             credential: openBadgeCredential,
@@ -505,7 +505,7 @@ describe('Verify verii credentials', () => {
         const signedCredential = await generateCredentialJwt(
           openBadgeCredential,
           generateKeyPair({ format: 'jwk' }).privateKey,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
         const result = await verifyVeriiCredentials(
           {
@@ -516,7 +516,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -566,7 +566,7 @@ describe('Verify verii credentials', () => {
               await generateCredentialJwt(
                 openBadgeCredential,
                 orgKeyPair.privateJwk,
-                credentialDid
+                credentialDid,
               ),
             ],
             relyingParty: {
@@ -574,7 +574,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toMatchObject([
@@ -609,7 +609,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -643,7 +643,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toMatchObject([
@@ -679,7 +679,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -715,7 +715,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toMatchObject([
@@ -761,7 +761,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -796,7 +796,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toMatchObject([
@@ -822,7 +822,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -851,7 +851,7 @@ describe('Verify verii credentials', () => {
         const vcWithoutCorrectStatus = await generateCredentialJwt(
           credentialWithoutCorrectStatus,
           orgKeyPair.privateKey,
-          `${credentialDid}#key`
+          `${credentialDid}#key`,
         );
         const result = await verifyVeriiCredentials(
           {
@@ -862,7 +862,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -893,7 +893,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([
@@ -924,7 +924,7 @@ describe('Verify verii credentials', () => {
               dltOperatorKMSKeyId: 'keyid-1',
             },
           },
-          context
+          context,
         );
 
         expect(result).toEqual([

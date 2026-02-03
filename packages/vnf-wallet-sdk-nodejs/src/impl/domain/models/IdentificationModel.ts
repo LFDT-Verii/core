@@ -7,6 +7,6 @@ import Model from './Model';
 export default interface IdentificationModel extends Model<VCLToken> {
     submit(
         identificationSubmission: VCLIdentificationSubmission,
-        didJwk: VCLDidJwk
+        didJwk: VCLDidJwk,
     ): Promise<VCLSubmissionResult>;
 }

@@ -24,7 +24,7 @@ register('../../tooling/resolvers/jsx-loader.mjs', import.meta.url);
 
 afterEach(cleanup);
 
-// eslint-disable-next-line better-mutation/no-mutation,no-undef
+// eslint-disable-next-line better-mutation/no-mutation
 global.Event = window.Event;
-// eslint-disable-next-line better-mutation/no-mutation,no-undef
+// eslint-disable-next-line better-mutation/no-mutation
 global.CustomEvent = window.CustomEvent;

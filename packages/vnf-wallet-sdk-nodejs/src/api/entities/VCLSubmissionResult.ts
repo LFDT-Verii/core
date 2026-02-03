@@ -6,7 +6,7 @@ export default class VCLSubmissionResult {
         public readonly sessionToken: VCLToken,
         public readonly exchange: VCLExchange,
         public readonly jti: string,
-        public readonly submissionId: string
+        public readonly submissionId: string,
     ) {}
 
     static readonly KeyToken = 'token';

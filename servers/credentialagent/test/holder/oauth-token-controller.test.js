@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -104,7 +103,7 @@ describe('Holder Oauth Token Test Suite', () => {
             // eslint-disable-next-line max-len
             "body must have required property 'authorization_code', body must have required property 'refresh_token', body must match exactly one schema in oneOf",
           statusCode: 400,
-        })
+        }),
       );
     });
     it("/token should 400 if grant_type:'refresh_token' and refresh_token is missing", async () => {
@@ -126,7 +125,7 @@ describe('Holder Oauth Token Test Suite', () => {
             // eslint-disable-next-line max-len
             "body must have required property 'authorization_code', body must have required property 'refresh_token', body must match exactly one schema in oneOf",
           statusCode: 400,
-        })
+        }),
       );
     });
     it("/token should 400 if audience does not match tenant's did", async () => {
@@ -147,7 +146,7 @@ describe('Holder Oauth Token Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'Bad audience',
           statusCode: 400,
-        })
+        }),
       );
     });
     it('/token should 401 if authorization_code does not match up to a feed', async () => {
@@ -168,7 +167,7 @@ describe('Holder Oauth Token Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('/token should 401 if refresh_token does not match up to a feed', async () => {
@@ -189,7 +188,7 @@ describe('Holder Oauth Token Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('/token should 401 if client_id does not match up to a feed', async () => {
@@ -210,7 +209,7 @@ describe('Holder Oauth Token Test Suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('/token should 200 if authorization_code matches preauthCode of feed', async () => {
@@ -260,16 +259,16 @@ describe('Holder Oauth Token Test Suite', () => {
           subject: `${dbUserOfFeed._id}`,
           maxTokenAge: '1 minute',
           requiredClaims: ['nbf', 'exp', 'jti'],
-        }
+        },
       );
       expect(header.kid).toEqual('#ID2');
       expect(payload.nbf).toEqual(payload.iat);
       const currentTime = new Date();
       expect(payload.exp).toBeLessThanOrEqual(
-        getUnixTime(addDays(7, currentTime))
+        getUnixTime(addDays(7, currentTime)),
       );
       expect(payload.exp).toBeGreaterThanOrEqual(
-        getUnixTime(addDays(7, startOfTestTimestamp))
+        getUnixTime(addDays(7, startOfTestTimestamp)),
       );
       expect(payload.jti).toHaveLength(21);
 
@@ -289,7 +288,7 @@ describe('Holder Oauth Token Test Suite', () => {
           disclosureId: disclosure._id,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const dbLeastRecentFeed = await mongoDb()
@@ -306,7 +305,7 @@ describe('Holder Oauth Token Test Suite', () => {
           disclosureId: disclosure._id,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
     it('/token should 200 if refresh_token and client_id match up to a feed', async () => {
@@ -359,16 +358,16 @@ describe('Holder Oauth Token Test Suite', () => {
           subject: `${dbUserOfFeed._id}`,
           maxTokenAge: '1 minute',
           requiredClaims: ['nbf', 'exp', 'jti'],
-        }
+        },
       );
       expect(header.kid).toEqual('#ID2');
       expect(payload.nbf).toEqual(payload.iat);
       const currentTime = new Date();
       expect(payload.exp).toBeLessThanOrEqual(
-        getUnixTime(addDays(7, currentTime))
+        getUnixTime(addDays(7, currentTime)),
       );
       expect(payload.exp).toBeGreaterThanOrEqual(
-        getUnixTime(addDays(7, startOfTestTimestamp))
+        getUnixTime(addDays(7, startOfTestTimestamp)),
       );
       expect(payload.jti).toHaveLength(21);
 
@@ -388,7 +387,7 @@ describe('Holder Oauth Token Test Suite', () => {
           disclosureId: disclosure._id,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       const dbLeastRecentFeed = await mongoDb()
@@ -407,7 +406,7 @@ describe('Holder Oauth Token Test Suite', () => {
           disclosureId: disclosure._id,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
   });

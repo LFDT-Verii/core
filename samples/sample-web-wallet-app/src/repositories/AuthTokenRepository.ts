@@ -10,7 +10,7 @@ import Urls from '../network/Urls';
 import fetcher from '../network/Fetcher';
 
 export const getAuthToken = async (
-  authTokenDescriptor: Dictionary<any>
+  authTokenDescriptor: Dictionary<any>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: Urls.getAuthToken,

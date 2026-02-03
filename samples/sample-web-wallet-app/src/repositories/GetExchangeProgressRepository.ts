@@ -10,7 +10,7 @@ import Urls from '../network/Urls';
 
 export const getExchangeProgress = async (
   presentationSubmission: Dictionary<any>,
-  submissionResult: Dictionary<any>
+  submissionResult: Dictionary<any>,
 ): Promise<any> => {
   const config = {
     url: Urls.getExchangeProgress,

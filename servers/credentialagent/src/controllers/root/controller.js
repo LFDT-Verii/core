@@ -58,9 +58,9 @@ const appRedirectController = async (fastify) => {
         reply
           .status(200)
           .send(
-            `Welcome to Credential APIs\nHost: ${fastify.config.hostUrl}\nVersion: ${fastify.config.version}\n`
+            `Welcome to Credential APIs\nHost: ${fastify.config.hostUrl}\nVersion: ${fastify.config.version}\n`,
           );
-      }
+      },
     )
     .get(
       '/app-redirect',
@@ -124,7 +124,7 @@ const appRedirectController = async (fastify) => {
           scriptNonce: resourceNonce,
           styleSheetUrl,
         });
-      }
+      },
     );
 };
 
@@ -135,12 +135,12 @@ const validateInspectorDid = ({ exchangeType, inspectorDid }) => {
     isEmpty(inspectorDid)
   ) {
     throw new Error.BadRequest(
-      `inspectorDid should be present for exchange_type = "${exchangeType}"`
+      `inspectorDid should be present for exchange_type = "${exchangeType}"`,
     );
   }
   if (exchangeType === EXCHANGE_TYPE.issue && !isEmpty(inspectorDid)) {
     throw new Error.BadRequest(
-      'inspectorDid should not be present for exchange_type = "issue"'
+      'inspectorDid should not be present for exchange_type = "issue"',
     );
   }
 };
@@ -165,7 +165,7 @@ const processingLinks = (context) => {
       vendorOriginContext: vendorOriginContextItems[index],
       inspectorDid: inspectorDidItems[index],
       ...(parsedProviders ? { providers: parsedProviders } : {}),
-    }))
+    })),
   )(requestUriItems);
 
   const deeplink = createDeepLinkUrl(exchangeType, context);
@@ -182,12 +182,12 @@ const processingLinks = (context) => {
         appendSearchParam('vendorOriginContext', vendorOriginContext),
         providersItem
           ? appendSearchParam('providers', JSON.stringify(providersItem))
-          : identity
+          : identity,
       );
 
       appendParams(deeplink);
     },
-    parsedLinks
+    parsedLinks,
   );
 
   return { deeplink };
@@ -200,7 +200,7 @@ const parseProviders = (providersItems, exchangeType) => {
 
   if (!providersItems) {
     throw new Error.BadRequest(
-      'providers parameter is required for exchange_type = "claim.wizard"'
+      'providers parameter is required for exchange_type = "claim.wizard"',
     );
   }
 
@@ -217,7 +217,7 @@ const parseProviders = (providersItems, exchangeType) => {
       }
       return provider;
     });
-  } catch (error) {
+  } catch {
     throw new Error.BadRequest('Invalid JSON format for providers parameter');
   }
 
@@ -226,14 +226,14 @@ const parseProviders = (providersItems, exchangeType) => {
   return parsedProviders.map((item, index) => {
     if (!item || typeof item !== 'object') {
       throw new Error.BadRequest(
-        `Provider at index ${index} must be an object`
+        `Provider at index ${index} must be an object`,
       );
     }
 
     for (const prop of PROVIDERS_REQUIRED_PROPS) {
       if (!item[prop] || typeof item[prop] !== 'string') {
         throw new Error.BadRequest(
-          `Provider at index ${index} missing required property: ${prop}`
+          `Provider at index ${index} missing required property: ${prop}`,
         );
       }
     }

@@ -187,7 +187,7 @@ describe('Resolve did test suite', () => {
       const response = await fastify.injectJson({
         method: 'GET',
         url: `${baseUrl}/${encodeURIComponent(
-          'did:web:localhost%3A8081:d:www.acmecorp.com'
+          'did:web:localhost%3A8081:d:www.acmecorp.com',
         )}`,
       });
 
@@ -212,7 +212,7 @@ describe('Resolve did test suite', () => {
       const response = await fastify.injectJson({
         method: 'GET',
         url: `${baseUrl}/${encodeURIComponent(
-          'did:web:nock.test%3A8000:test'
+          'did:web:nock.test%3A8000:test',
         )}`,
       });
 
@@ -283,7 +283,7 @@ describe('Resolve did test suite', () => {
           errorCode: 'did_resolution_failed',
           message: 'Could not resolve did:web:nock.test',
           statusCode: 404,
-        })
+        }),
       );
       expect(nockData.isDone()).toBe(true);
     });
@@ -316,7 +316,7 @@ describe('Resolve did test suite', () => {
           errorCode: 'did_resolution_failed',
           message: 'Could not resolve did:web:nock.test',
           statusCode: 404,
-        })
+        }),
       );
       expect(nockData.isDone()).toBe(true);
     });

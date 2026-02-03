@@ -11,9 +11,7 @@ import NetworkService from '../../domain/infrastructure/network/NetworkService';
 import Urls, { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class ResolveDidDocumentRepositoryImpl
-    implements ResolveDidDocumentRepository
-{
+export default class ResolveDidDocumentRepositoryImpl implements ResolveDidDocumentRepository {
     constructor(private readonly networkService: NetworkService) {}
 
     async resolveDidDocument(did: string): Promise<VCLDidDocument> {

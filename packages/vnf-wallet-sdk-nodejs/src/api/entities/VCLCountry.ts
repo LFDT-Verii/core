@@ -7,7 +7,7 @@ export default class VCLCountry extends VCLPlace {
         public payload: Dictionary<any>,
         public code: string,
         public name: string,
-        public regions: Nullish<VCLRegions>
+        public regions: Nullish<VCLRegions>,
     ) {
         super(payload, code, name);
     }

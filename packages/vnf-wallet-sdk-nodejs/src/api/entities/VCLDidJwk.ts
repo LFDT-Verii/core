@@ -11,7 +11,7 @@ export default class VCLDidJwk {
         public readonly did: string,
         public readonly publicJwk: VCLPublicJwk,
         public readonly kid: string,
-        public readonly keyId: string
+        public readonly keyId: string,
     ) {}
 
     // companion object
@@ -31,7 +31,7 @@ export default class VCLDidJwk {
         static generateDidJwk = async (ecKey: KeyPairKeyObjectResult) => {
             const publicJwk = await exportJWK(ecKey.publicKey);
             return `${VCLDidJwk.DidJwkPrefix}${base64url.encode(
-                canonicalize(publicJwk)!
+                canonicalize(publicJwk)!,
             )}`;
         };
 
@@ -50,7 +50,7 @@ export default class VCLDidJwk {
             didJwkJson[VCLDidJwk.KeyDid],
             VCLPublicJwk.fromJSON(didJwkJson[VCLDidJwk.KeyPublicJwk]),
             didJwkJson[VCLDidJwk.KeyKid],
-            didJwkJson[VCLDidJwk.KeyKeyId]
+            didJwkJson[VCLDidJwk.KeyKeyId],
         );
     }
 }

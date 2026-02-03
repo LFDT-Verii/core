@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
-
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -52,28 +50,28 @@ describe('setConfigurationType tests suite', () => {
         {
           vendorEndpoint: VendorEndpoint.RECEIVE_APPLICANT,
         },
-        'insert'
-      )
+        'insert',
+      ),
     ).toEqual(
       {
         configurationType: 'inspection',
         vendorEndpoint: VendorEndpoint.RECEIVE_APPLICANT,
       },
-      'insert'
+      'insert',
     );
     expect(
       extension.prepModification(
         {
           vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
         },
-        'update'
-      )
+        'update',
+      ),
     ).toEqual(
       {
         configurationType: 'issuing',
         vendorEndpoint: VendorEndpoint.ISSUING_IDENTIFICATION,
       },
-      'update'
+      'update',
     );
   });
 });

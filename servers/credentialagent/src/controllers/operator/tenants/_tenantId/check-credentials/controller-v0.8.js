@@ -108,7 +108,7 @@ const inspectionController = async (fastify) => {
           getOrganizationVerifiedProfile,
           getCredentialTypeMetadata,
         },
-        req
+        req,
       );
       if (checkPaymentRequirement(credentialsAndChecks)) {
         throw httpError(400, 'No voucher was provided to process the request', {
@@ -129,15 +129,15 @@ const inspectionController = async (fastify) => {
             ...credential,
             credentialChecks,
           }),
-          credentialsAndChecks
+          credentialsAndChecks,
         ),
       };
-    }
+    },
   );
 
   const sendPushVerification = async (
     { exchangeId, pushDelegate },
-    context
+    context,
   ) => {
     return sendPush(
       {
@@ -151,10 +151,11 @@ const inspectionController = async (fastify) => {
         },
       },
       pushDelegate,
-      context
+      context,
     );
   };
 
+  // eslint-disable-next-line default-param-last, complexity
   const getPushDelegate = async (pushData = {}, { repos }) => {
     const { pushDelegate, exchangeId } = pushData;
 

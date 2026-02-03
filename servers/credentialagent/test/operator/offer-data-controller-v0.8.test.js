@@ -30,6 +30,7 @@ const buildCsvResponse = (offers) => {
     // eslint-disable-next-line max-len
     '"1. Offer Accepted","2. User","3. Offer ID","4. Credential Type","5. Offer Creation Date","6. Offer Claim Date","7. Revocation Status","8. Issuer ID"';
 
+  // eslint-disable-next-line complexity
   offers.forEach((offer) => {
     csv += `\r\n"${offer.did || '-'}","${
       offer.credentialSubject?.vendorUserId || '-'
@@ -64,7 +65,7 @@ describe('Get Offers Data controller Test Suit', () => {
         .collection('offers')
         .updateOne(
           { _id: new ObjectId(offer._id) },
-          { $set: { createdAt: offerData.createdAt } }
+          { $set: { createdAt: offerData.createdAt } },
         );
     }
     return offer;
@@ -136,9 +137,9 @@ describe('Get Offers Data controller Test Suit', () => {
           flow(
             update('createdAt', dateToIso),
             update('consentedAt', dateToIso),
-            update('credentialStatus.revokedAt', dateToIso)
-          )
-        )
+            update('credentialStatus.revokedAt', dateToIso),
+          ),
+        ),
       );
   });
 
@@ -151,11 +152,11 @@ describe('Get Offers Data controller Test Suit', () => {
     expect(response.statusCode).toEqual(200);
 
     expect(response.body).toEqual(
-      buildCsvResponse([offer1, offer2, offer3, offer4, offer5, offer6])
+      buildCsvResponse([offer1, offer2, offer3, offer4, offer5, offer6]),
     );
 
     expect(response.headers['content-disposition']).toEqual(
-      'attachment; filename=get-offers.csv'
+      'attachment; filename=get-offers.csv',
     );
     expect(response.headers['content-type']).toEqual('text/csv');
   });
@@ -171,7 +172,7 @@ describe('Get Offers Data controller Test Suit', () => {
     expect(response.body).toEqual(buildCsvResponse([offer2, offer4, offer5]));
 
     expect(response.headers['content-disposition']).toEqual(
-      'attachment; filename=get-offers.csv'
+      'attachment; filename=get-offers.csv',
     );
     expect(response.headers['content-type']).toEqual('text/csv');
   });
@@ -196,7 +197,7 @@ describe('Get Offers Data controller Test Suit', () => {
     expect(response.statusCode).toEqual(200);
 
     expect(response.body).toEqual(
-      buildCsvResponse([offer2, offer3, offer4, offer5])
+      buildCsvResponse([offer2, offer3, offer4, offer5]),
     );
   });
 

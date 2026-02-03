@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-shadow
 enum VCLErrorCode {
     // Initialization
     RemoteServicesUrlsNotFount = 'remote_services_urls_not_found',

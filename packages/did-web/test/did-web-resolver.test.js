@@ -28,7 +28,7 @@ describe('Did web resolver test suite', () => {
       await expect(() => resolveDidWeb(did)).rejects.toThrow(
         newError(400, `Could not resolve ${did}`, {
           errorCode: 'did_resolution_failed',
-        })
+        }),
       );
     });
 

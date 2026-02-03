@@ -8,11 +8,11 @@ export default class OrganizationsUseCaseImpl implements OrganizationsUseCase {
     constructor(private organizationsRepository: OrganizationsRepository) {}
 
     async searchForOrganizations(
-        organizationsSearchDescriptor: VCLOrganizationsSearchDescriptor
+        organizationsSearchDescriptor: VCLOrganizationsSearchDescriptor,
     ): Promise<VCLOrganizations> {
         try {
             return await this.organizationsRepository.searchForOrganizations(
-                organizationsSearchDescriptor
+                organizationsSearchDescriptor,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);

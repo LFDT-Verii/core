@@ -7,7 +7,7 @@ export default class VCLFinalizeOffersDescriptor {
         public readonly credentialManifest: VCLCredentialManifest,
         public readonly challenge: Nullish<string>,
         public readonly approvedOfferIds: string[],
-        public readonly rejectedOfferIds: string[]
+        public readonly rejectedOfferIds: string[],
     ) {}
 
     get didJwk() {

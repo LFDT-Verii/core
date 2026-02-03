@@ -25,7 +25,7 @@ const validatePresentationDefinition = (disclosure) => {
 
   if (inputDescriptorWithoutGroup(inputDescriptors)) {
     return throwValidationError(
-      DisclosureErrors.PRESENTATION_DEFINITION_GROUP_IF_SUBMISSION_REQUIREMENTS
+      DisclosureErrors.PRESENTATION_DEFINITION_GROUP_IF_SUBMISSION_REQUIREMENTS,
     );
   }
   return true;
@@ -35,7 +35,7 @@ const validatePresentationDefinitionXorTypes = (disclosure) => {
   const { presentationDefinition, types } = disclosure;
   if (presentationDefinition && types) {
     return throwValidationError(
-      DisclosureErrors.PRESENTATION_DEFINITION_XOR_TYPES
+      DisclosureErrors.PRESENTATION_DEFINITION_XOR_TYPES,
     );
   }
   return true;

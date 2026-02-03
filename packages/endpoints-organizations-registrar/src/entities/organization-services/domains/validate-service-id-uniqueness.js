@@ -9,7 +9,7 @@ const validateServiceIdUniqueness = (newService, existingServices = []) => {
 
   if (matchingService != null) {
     throw newError.BadRequest(
-      OrganizationRegistryErrorMessages.SERVICE_ID_ALREADY_EXISTS
+      OrganizationRegistryErrorMessages.SERVICE_ID_ALREADY_EXISTS,
     );
   }
 };

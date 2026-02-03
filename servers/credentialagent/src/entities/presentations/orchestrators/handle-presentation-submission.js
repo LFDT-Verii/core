@@ -21,7 +21,7 @@ const { generateAccessToken } = require('../../tokens');
 const handlePresentationSubmission = async (presentation, context) => {
   const { exchange, user, disclosure } = await sharePresentation(
     presentation,
-    context
+    context,
   );
 
   if (context.user) {
@@ -35,7 +35,7 @@ const handlePresentationSubmission = async (presentation, context) => {
     user?._id,
     disclosure,
     exchange,
-    context
+    context,
   );
 
   return {

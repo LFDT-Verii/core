@@ -32,7 +32,7 @@ const shareIdentificationCredentials = async (
   disclosure,
   vendorOriginContext,
   checkedCredentials,
-  context
+  context,
 ) => {
   if (context.config.autoIdentityCheck) {
     throwOnFailedCheckResultError(checkedCredentials, context);
@@ -44,7 +44,7 @@ const shareIdentificationCredentials = async (
       ? await sendIdentification(
           identityDoc,
           buildVendorData(disclosure, vendorOriginContext, context),
-          context
+          context,
         )
       : await matchIdentityOnExchange(identityDoc, disclosure, context);
 
@@ -54,6 +54,7 @@ const shareIdentificationCredentials = async (
   };
 };
 
+// eslint-disable-next-line complexity
 const sendIdentification = async (identityDoc, vendorData, context) => {
   const { tenant, exchange } = context;
   const payload = {
@@ -87,7 +88,7 @@ const sendIdentification = async (identityDoc, vendorData, context) => {
       {
         exchangeErrorState: ExchangeStates.NOT_IDENTIFIED,
         errorCode: 'upstream_userid_not_string',
-      }
+      },
     );
   }
 

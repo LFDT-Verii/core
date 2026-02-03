@@ -29,7 +29,6 @@ const initProvider = (rpcUrl, authenticate, chainId) => {
   const options = network ? { staticNetwork: network } : undefined;
   const connection = new ethers.FetchRequest(rpcUrl);
 
-  // eslint-disable-next-line better-mutation/no-mutation
   connection.preflightFunc = async (innerConn) => {
     innerConn.setHeader('Authorization', `Bearer ${await authenticate()}`);
 
@@ -38,7 +37,6 @@ const initProvider = (rpcUrl, authenticate, chainId) => {
 
   const provider = new ethers.JsonRpcProvider(connection, network, options);
 
-  // eslint-disable-next-line better-mutation/no-mutation
   provider.pollingInterval = 1000;
 
   return provider;
@@ -50,7 +48,7 @@ const queryBlockRange = async (contract, event, currBlock, latestBlock) => {
   return contract.queryFilter(
     event,
     currBlock,
-    endBlock < latestBlock ? endBlock : latestBlock
+    endBlock < latestBlock ? endBlock : latestBlock,
   );
 };
 
@@ -73,7 +71,7 @@ const initPullLogEntries =
 
 const initContractClient = async (
   { privateKey, contractAddress, rpcProvider, contractAbi },
-  context
+  context,
 ) => {
   context.log.info({ privateKey, contractAddress }, 'initContractClient');
   if (!contractAddress) {
@@ -87,7 +85,7 @@ const initContractClient = async (
   const contractClient = new ethers.Contract(
     contractAddress,
     contractAbi.abi,
-    wallet || rpcProvider
+    wallet || rpcProvider,
   );
 
   const pullEvents = initPullLogEntries(contractClient);

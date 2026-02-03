@@ -41,13 +41,13 @@ describe('autobox field extension', () => {
       };
       const autoboxExtension = initAutoboxFieldsExtension(
         'bar',
-        testAutoboxFunc
+        testAutoboxFunc,
       );
       expect(autoboxExtension(mockParent).prepFilter(filter)).toEqual({
         foo: 1,
       });
       expect(testAutoboxFunc.mock.calls.map((call) => call.arguments)).toEqual(
-        []
+        [],
       );
     });
     it('should call autoboxing function for every prop that is present', () => {
@@ -58,7 +58,7 @@ describe('autobox field extension', () => {
       };
       const autoboxExtension = initAutoboxFieldsExtension(
         ['foo', 'bar'],
-        testAutoboxFunc
+        testAutoboxFunc,
       );
       expect(autoboxExtension(mockParent).prepFilter(filter)).toEqual({
         foo: '1',
@@ -79,15 +79,15 @@ describe('autobox field extension', () => {
       };
       const autoboxExtension = initAutoboxFieldsExtension(
         'bar',
-        testAutoboxFunc
+        testAutoboxFunc,
       );
       expect(
-        autoboxExtension(mockParent).prepModification(modification)
+        autoboxExtension(mockParent).prepModification(modification),
       ).toEqual({
         foo: 1,
       });
       expect(testAutoboxFunc.mock.calls.map((call) => call.arguments)).toEqual(
-        []
+        [],
       );
     });
     it('should call autoboxing function for every prop that is present', () => {
@@ -98,10 +98,10 @@ describe('autobox field extension', () => {
       };
       const autoboxExtension = initAutoboxFieldsExtension(
         ['foo', 'bar'],
-        testAutoboxFunc
+        testAutoboxFunc,
       );
       expect(
-        autoboxExtension(mockParent).prepModification(modification)
+        autoboxExtension(mockParent).prepModification(modification),
       ).toEqual({
         foo: '1',
         bar: 'false',

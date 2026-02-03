@@ -16,13 +16,13 @@ describe('GlobalConfig', () => {
             false,
             VCLEnvironment.Prod,
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-            true
+            true,
         );
 
         expect(GlobalConfig.IsDebugOn).toEqual(false);
         expect(GlobalConfig.CurrentEnvironment).toEqual(VCLEnvironment.Prod);
         expect(GlobalConfig.XVnfProtocolVersion).toEqual(
-            VCLXVnfProtocolVersion.XVnfProtocolVersion1
+            VCLXVnfProtocolVersion.XVnfProtocolVersion1,
         );
         expect(GlobalConfig.IsDirectIssuerOn).toEqual(true);
     });
@@ -32,12 +32,12 @@ describe('GlobalConfig', () => {
             true,
             VCLEnvironment.Staging,
             VCLXVnfProtocolVersion.XVnfProtocolVersion2,
-            false
+            false,
         );
 
         expect(GlobalConfig.CurrentEnvironment).toEqual(VCLEnvironment.Staging);
         expect(GlobalConfig.XVnfProtocolVersion).toEqual(
-            VCLXVnfProtocolVersion.XVnfProtocolVersion2
+            VCLXVnfProtocolVersion.XVnfProtocolVersion2,
         );
         expect(GlobalConfig.IsDirectIssuerOn).toEqual(false);
         expect(GlobalConfig.IsDebugOn).toEqual(true);
@@ -49,13 +49,13 @@ describe('GlobalConfig', () => {
             false,
             VCLEnvironment.Prod,
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-            true
+            true,
         );
         GlobalConfig.init(
             true,
             VCLEnvironment.Dev,
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-            true
+            true,
         );
         expect(GlobalConfig.IsDebugOn).toEqual(true);
         expect(GlobalConfig.IsLoggerOn).toEqual(true);
@@ -66,7 +66,7 @@ describe('GlobalConfig', () => {
             true,
             VCLEnvironment.Prod,
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-            true
+            true,
         );
 
         expect(GlobalConfig.IsDebugOn).toEqual(true);
@@ -78,7 +78,7 @@ describe('GlobalConfig', () => {
             false,
             VCLEnvironment.Prod,
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-            true
+            true,
         );
 
         expect(GlobalConfig.IsDebugOn).toEqual(false);
@@ -90,7 +90,7 @@ describe('GlobalConfig', () => {
             false,
             VCLEnvironment.Staging,
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-            true
+            true,
         );
 
         expect(GlobalConfig.IsDebugOn).toEqual(false);
@@ -102,7 +102,7 @@ describe('GlobalConfig', () => {
             false,
             VCLEnvironment.Qa,
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-            true
+            true,
         );
 
         expect(GlobalConfig.IsDebugOn).toEqual(false);
@@ -114,7 +114,7 @@ describe('GlobalConfig', () => {
             false,
             VCLEnvironment.Dev,
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
-            true
+            true,
         );
 
         expect(GlobalConfig.IsDebugOn).toEqual(false);

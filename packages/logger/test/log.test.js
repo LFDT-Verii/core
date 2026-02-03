@@ -155,7 +155,7 @@ describe('Test pino logger provider with redaction', () => {
 
     expect(logStream.toString()).toMatch(
       // eslint-disable-next-line max-len
-      '"secret":"...shhh...","allowedToLog":"123","vclOauthClientSecret":"...shhh...","vnfBrokerClientSecret":"...shhh...","stripeWebhookEndpointSecret":"...shhh...","vclServiceDeskToken":"...shhh..."'
+      '"secret":"...shhh...","allowedToLog":"123","vclOauthClientSecret":"...shhh...","vnfBrokerClientSecret":"...shhh...","stripeWebhookEndpointSecret":"...shhh...","vclServiceDeskToken":"...shhh..."',
     );
   });
 
@@ -178,7 +178,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"keys":[{"key":"...shhh..."}],"body":{"keys":[{"key":"...shhh..."}]}'
+      '"keys":[{"key":"...shhh..."}],"body":{"keys":[{"key":"...shhh..."}]}',
     );
   });
 
@@ -193,7 +193,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"access_token":"...shhh...","body":{"access_token":"...shhh..."}'
+      '"access_token":"...shhh...","body":{"access_token":"...shhh..."}',
     );
   });
 
@@ -209,7 +209,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"Authorization":"...shhh...","headers":{"Authorization":"...shhh...","authorization":"...shhh..."}'
+      '"Authorization":"...shhh...","headers":{"Authorization":"...shhh...","authorization":"...shhh..."}',
     );
   });
 
@@ -242,7 +242,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"authClients":[{"clientSecret":"...shhh..."}],"body":{"authClients":[{"clientSecret":"...shhh..."}]}'
+      '"authClients":[{"clientSecret":"...shhh..."}],"body":{"authClients":[{"clientSecret":"...shhh..."}]}',
     );
   });
 
@@ -261,7 +261,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"authClient":{"clientSecret":"...shhh..."},"body":{"authClient":{"clientSecret":"...shhh..."}}'
+      '"authClient":{"clientSecret":"...shhh..."},"body":{"authClient":{"clientSecret":"...shhh..."}}',
     );
   });
 
@@ -271,7 +271,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"stripeSecretKey":"...shhh...","allowedToLog":"123"'
+      '"stripeSecretKey":"...shhh...","allowedToLog":"123"',
     );
   });
 
@@ -286,7 +286,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"token":"...shhh...","body":{"token":"...shhh..."}}'
+      '"token":"...shhh...","body":{"token":"...shhh..."}}',
     );
   });
 
@@ -305,7 +305,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"key":{"key":"...shhh..."},"body":{"key":{"key":"...shhh..."}}'
+      '"key":{"key":"...shhh..."},"body":{"key":{"key":"...shhh..."}}',
     );
   });
 
@@ -321,7 +321,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"relatedResource":{"id":"...shhh...","foo":"bar"}'
+      '"relatedResource":{"id":"...shhh...","foo":"bar"}',
     );
   });
 
@@ -340,7 +340,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"relatedResource":[{"id":"...shhh...","foo":"bar"},{"id":"...shhh..."}]'
+      '"relatedResource":[{"id":"...shhh...","foo":"bar"},{"id":"...shhh..."}]',
     );
   });
 
@@ -358,7 +358,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"credentials":[{"credentialSubject":"...shhh..."'
+      '"credentials":[{"credentialSubject":"...shhh..."',
     );
   });
 
@@ -376,7 +376,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":{"credential":{"credentialSubject":"...shhh..."}}'
+      '"body":{"credential":{"credentialSubject":"...shhh..."}}',
     );
   });
 
@@ -392,7 +392,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"credential":{"credentialSubject":"...shhh..."}'
+      '"credential":{"credentialSubject":"...shhh..."}',
     );
   });
 
@@ -412,7 +412,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":{"credentials":[{"credentialSubject":"...shhh..."'
+      '"body":{"credentials":[{"credentialSubject":"...shhh..."',
     );
   });
 
@@ -431,7 +431,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":{"credentialSubject":"...shhh..."},"credentialSubject":"...shhh..."}'
+      '"body":{"credentialSubject":"...shhh..."},"credentialSubject":"...shhh..."}',
     );
   });
 
@@ -449,7 +449,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":[{"credentialSubject":"...shhh..."}]'
+      '"body":[{"credentialSubject":"...shhh..."}]',
     );
   });
 
@@ -469,7 +469,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"credentialEntries":[{"credential":{"credentialSubject":"...shhh..."}}]'
+      '"credentialEntries":[{"credential":{"credentialSubject":"...shhh..."}}]',
     );
   });
 
@@ -489,7 +489,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}]}'
+      '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}]}',
     );
   });
 
@@ -509,7 +509,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":{"idDocumentCredentials":[{"credentialSubject":"...shhh..."}]}'
+      '"body":{"idDocumentCredentials":[{"credentialSubject":"...shhh..."}]}',
     );
   });
 
@@ -530,7 +530,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":{"phoneCredentials":[{"credentialSubject":"...shhh..."}],"phones":["...shhh..."]}'
+      '"body":{"phoneCredentials":[{"credentialSubject":"...shhh..."}],"phones":["...shhh..."]}',
     );
   });
 
@@ -551,7 +551,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}],"emails":["...shhh..."]}'
+      '"body":{"emailCredentials":[{"credentialSubject":"...shhh..."}],"emails":["...shhh..."]}',
     );
   });
 
@@ -571,7 +571,7 @@ describe('Test pino logger provider with redaction', () => {
     log.info(dataForLog);
 
     expect(logStream.toString()).toMatch(
-      '"body":{"issuedCredentials":[{"credentialSubject":"...shhh..."}]}'
+      '"body":{"issuedCredentials":[{"credentialSubject":"...shhh..."}]}',
     );
   });
 

@@ -38,7 +38,7 @@ const exchangeController = async (fastify) => {
           id: exchange._id,
         },
       };
-    }
+    },
   );
   fastify.get(
     '/deep-link',
@@ -63,10 +63,10 @@ const exchangeController = async (fastify) => {
       const exchangeDeepLink = await buildExchangeRequestDeepLink(req);
       const httpProtocolDeepLink = velocityProtocolUriToHttpUri(
         exchangeDeepLink,
-        req
+        req,
       );
       return { deepLink: httpProtocolDeepLink };
-    }
+    },
   );
 };
 

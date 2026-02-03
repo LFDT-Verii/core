@@ -46,7 +46,7 @@ const initCreateOrganization = async (fastify) => {
 
   return async (
     { byoDid, byoKeys, serviceEndpoints, profile, invitationCode },
-    context
+    context,
   ) => {
     const { repos, kms, user } = context;
 
@@ -64,7 +64,7 @@ const initCreateOrganization = async (fastify) => {
           profile,
           invitation,
         },
-        context
+        context,
       );
 
     const organization = await repos.organizations.insert(newOrganization);
@@ -73,7 +73,7 @@ const initCreateOrganization = async (fastify) => {
     const activatedServiceIds = activateServices(
       organization,
       organization.services,
-      context
+      context,
     );
 
     if (!isEmpty(organization.services)) {
@@ -92,7 +92,7 @@ const initCreateOrganization = async (fastify) => {
       organization,
       organization.services,
       activatedServiceIds,
-      context
+      context,
     );
 
     const primaryKeyPair = generateKeyPair({ format: 'jwk' });
@@ -100,7 +100,7 @@ const initCreateOrganization = async (fastify) => {
     const fineractIds = await createFineractClient(
       organization,
       some(isNodeOperator, organization.services),
-      context
+      context,
     );
 
     const organizationModifications =
@@ -118,7 +118,7 @@ const initCreateOrganization = async (fastify) => {
       });
     const finalOrganization = await repos.organizations.update(
       organization._id,
-      organizationModifications
+      organizationModifications,
     );
 
     const permissioningKeyPair = generateKeyPair({ format: 'jwk' });
@@ -140,7 +140,7 @@ const initCreateOrganization = async (fastify) => {
         permissioningKeyPair,
         newKeys,
       },
-      context
+      context,
     );
 
     const keySpecs = [
@@ -168,16 +168,16 @@ const initCreateOrganization = async (fastify) => {
         buildOrganizationKey(
           finalOrganization._id,
           finalOrganization.didDoc.id,
-          spec
+          spec,
         ),
-      keySpecs
+      keySpecs,
     );
 
     await repos.organizationKeys.insertMany(keys);
 
     const dltKeys = filter(
       ({ purposes }) => includes(KeyPurposes.DLT_TRANSACTIONS, purposes),
-      keys
+      keys,
     );
     await addOperatorKeys(
       {
@@ -186,12 +186,12 @@ const initCreateOrganization = async (fastify) => {
         permissioningKeyId: permissioningKeyEntry._id,
         dltKeys,
       },
-      context
+      context,
     );
 
     await updateBlockchainPermissionsFromPermittedServices(
       { organization: finalOrganization },
-      context
+      context,
     );
 
     await repos.images.activate(finalOrganization.profile.logo);
@@ -206,7 +206,7 @@ const initCreateOrganization = async (fastify) => {
         activatedServiceIds,
         caoServiceRefs,
       },
-      context
+      context,
     );
 
     return {

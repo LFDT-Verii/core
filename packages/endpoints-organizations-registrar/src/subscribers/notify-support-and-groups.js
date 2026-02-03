@@ -35,7 +35,7 @@ const notifySupportAndGroups = async (fastify) => {
       'created',
       async (
         { payload: { organization, addedServices, activatedServiceIds } },
-        context
+        context,
       ) => {
         return Promise.all([
           sendOrganizationCreatedNotification({ organization }, context),
@@ -46,17 +46,17 @@ const notifySupportAndGroups = async (fastify) => {
               activatedServiceIds,
               isCreateOrganization: true,
             },
-            context
+            context,
           ),
         ]);
-      }
+      },
     )
     .subscribe(
       'services',
       'added',
       async (
         { payload: { organization, addedServices, activatedServiceIds } },
-        context
+        context,
       ) => {
         await sendServiceNotificationToGroup(
           {
@@ -65,20 +65,20 @@ const notifySupportAndGroups = async (fastify) => {
             activatedServiceIds,
             isCreateOrganization: false,
           },
-          context
+          context,
         );
-      }
+      },
     )
     .subscribe(
       'services',
       'activated',
       async ({ payload: { organization, activatedServiceIds } }, context) => {
         const { clientAdminIds } = await context.repos.groups.findGroupByDid(
-          organization.didDoc.id
+          organization.didDoc.id,
         );
         const userEmails = map(
           'email',
-          await getUsersByIds({ userIds: clientAdminIds })
+          await getUsersByIds({ userIds: clientAdminIds }),
         );
         await sendServiceNotification(
           {
@@ -86,9 +86,9 @@ const notifySupportAndGroups = async (fastify) => {
             userEmails,
             activatedServiceIds,
           },
-          context
+          context,
         );
-      }
+      },
     );
 };
 

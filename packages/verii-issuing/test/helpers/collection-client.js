@@ -36,7 +36,7 @@ const collectionClient = async ({
       collectionConnection
         .insertMany(
           map((obj) => (factory ? factory(obj) : obj), objs),
-          ...args
+          ...args,
         )
         .then((result) => Object.values(result.insertedIds)),
     insert: (...args) => collectionConnection.insertOne(...args),
@@ -49,7 +49,7 @@ const collectionClient = async ({
   };
   if (extensions != null) {
     for (const [extensionName, extension] of Object.entries(
-      extensions(collection)
+      extensions(collection),
     )) {
       collection[extensionName] = extension;
     }

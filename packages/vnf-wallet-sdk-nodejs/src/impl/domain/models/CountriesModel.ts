@@ -3,5 +3,4 @@ import Initializable from './Initializable';
 import Model from './Model';
 
 export default interface CountriesModel
-    extends Model<VCLCountries>,
-        Initializable<VCLCountries> {}
+    extends Model<VCLCountries>, Initializable<VCLCountries> {}

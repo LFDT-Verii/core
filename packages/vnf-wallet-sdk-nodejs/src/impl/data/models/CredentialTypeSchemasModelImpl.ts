@@ -4,11 +4,9 @@ import CredentialTypeSchemasModel from '../../domain/models/CredentialTypeSchema
 import CredentialTypeSchemasUseCase from '../../domain/usecases/CredentialTypeSchemasUseCase';
 import { Nullish } from '../../../api/VCLTypes';
 
-export default class CredentialTypeSchemasModelImpl
-    implements CredentialTypeSchemasModel
-{
+export default class CredentialTypeSchemasModelImpl implements CredentialTypeSchemasModel {
     constructor(
-        private readonly credentialTypeSchemasUseCase: CredentialTypeSchemasUseCase
+        private readonly credentialTypeSchemasUseCase: CredentialTypeSchemasUseCase,
     ) {}
 
     data: Nullish<VCLCredentialTypeSchemas>;

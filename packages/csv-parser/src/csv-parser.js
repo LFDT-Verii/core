@@ -75,7 +75,7 @@ const buildFields = (item, rootPathKeys = []) =>
       return [...arrFields, newField];
     },
     [],
-    keys(item)
+    keys(item),
   );
 
 const mapLabelsAndValues = (data) => {

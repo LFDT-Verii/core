@@ -19,7 +19,7 @@ const { ServiceTypeToCategoryMap, ServiceCategories } = require('./constants');
 
 const categorizeServices = flow(
   map((service) =>
-    service.type ? ServiceTypeToCategoryMap[service.type] : null
+    service.type ? ServiceTypeToCategoryMap[service.type] : null,
   ),
   compact,
   (categories) => {
@@ -31,14 +31,14 @@ const categorizeServices = flow(
           ServiceCategories.ContactIssuer,
           ServiceCategories.NotaryContactIssuer,
         ]),
-      categories
+      categories,
     );
     if (isNewIdentityIssuerCategory) {
       return [...categories, ServiceCategories.IdentityIssuer];
     }
     return categories;
   },
-  uniq
+  uniq,
 );
 
 module.exports = {

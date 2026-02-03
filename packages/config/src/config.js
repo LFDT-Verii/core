@@ -71,7 +71,7 @@ module.exports = {
         'PhoneV1.0',
         'ProofOfAgeV1.0',
         'VerificationIdentifier',
-      ].join(',')
+      ].join(','),
     )
     .asArray(),
   ajvOptions: {

@@ -7,6 +7,7 @@ import Request from './Request';
 import { HttpMethod } from './HttpMethod';
 
 export default class NetworkServiceImpl implements NetworkService {
+    // eslint-disable-next-line complexity
     async sendRequestRaw(request: Request): Promise<Response> {
         const MAX_AGE = 60 * 60 * 24; // 24 hours
 

@@ -55,7 +55,7 @@ describe('encoding and decoding of jwks for blockchains', () => {
   describe('encodeJwk', () => {
     it('throws if HEX_AES_256 is used with a non-secp256k1 key', async () => {
       await expect(() =>
-        encodeJwk(ALG_TYPE.HEX_AES_256, es256Jwk, secret)
+        encodeJwk(ALG_TYPE.HEX_AES_256, es256Jwk, secret),
       ).rejects.toThrow('Hex encoding is only supported for secp256k1 keys');
     });
 
@@ -63,7 +63,7 @@ describe('encoding and decoding of jwks for blockchains', () => {
       const buffer = await encodeJwk(
         ALG_TYPE.COSEKEY_AES_256,
         es256Jwk,
-        secret
+        secret,
       );
       expect(buffer.length).toEqual(138);
       expect(Buffer.isBuffer(buffer)).toBe(true);
@@ -73,7 +73,7 @@ describe('encoding and decoding of jwks for blockchains', () => {
       const buffer = await encodeJwk(
         ALG_TYPE.COSEKEY_AES_256,
         rs256Jwk,
-        secret
+        secret,
       );
       expect(buffer.length).toEqual(236);
     });
@@ -82,7 +82,7 @@ describe('encoding and decoding of jwks for blockchains', () => {
       const buffer = await encodeJwk(
         ALG_TYPE.COSEKEY_AES_256,
         es256kJwk,
-        secret
+        secret,
       );
       expect(buffer.length).toEqual(138);
       expect(Buffer.isBuffer(buffer)).toBe(true);
@@ -98,7 +98,7 @@ describe('encoding and decoding of jwks for blockchains', () => {
   describe('decodeJwk', () => {
     it('decodes a raw hex key using HEX_AES_256 algType', async () => {
       await expect(() =>
-        decodeJwk('SOME_OTHER_TYPE', Buffer.from('deadbeef', 'hex'), secret)
+        decodeJwk('SOME_OTHER_TYPE', Buffer.from('deadbeef', 'hex'), secret),
       ).rejects.toThrow();
     });
 
@@ -106,12 +106,12 @@ describe('encoding and decoding of jwks for blockchains', () => {
       const encoded = await encodeJwk(
         ALG_TYPE.COSEKEY_AES_256,
         es256kJwk,
-        secret
+        secret,
       );
       const result = await decodeJwk(
         get2BytesHash(ALG_TYPE.COSEKEY_AES_256),
         encoded,
-        secret
+        secret,
       );
 
       expect(result).toEqual(es256kJwk);
@@ -121,12 +121,12 @@ describe('encoding and decoding of jwks for blockchains', () => {
       const encoded = await encodeJwk(
         ALG_TYPE.COSEKEY_AES_256,
         es256Jwk,
-        secret
+        secret,
       );
       const result = await decodeJwk(
         get2BytesHash(ALG_TYPE.COSEKEY_AES_256),
         encoded,
-        secret
+        secret,
       );
 
       expect(result).toEqual(es256Jwk);
@@ -136,12 +136,12 @@ describe('encoding and decoding of jwks for blockchains', () => {
       const encoded = await encodeJwk(
         ALG_TYPE.COSEKEY_AES_256,
         rs256Jwk,
-        secret
+        secret,
       );
       const result = await decodeJwk(
         get2BytesHash(ALG_TYPE.COSEKEY_AES_256),
         encoded,
-        secret
+        secret,
       );
 
       expect(result).toEqual(rs256Jwk);
@@ -154,14 +154,14 @@ describe('encoding and decoding of jwks for blockchains', () => {
           Buffer.from(new Uint16Array([9999]).buffer), // unknown alg encoding
           Buffer.from(`,x=${Buffer.from('abc').toString('base64url')}`),
         ]),
-        secret
+        secret,
       );
       await expect(() =>
         decodeJwk(
           get2BytesHash(ALG_TYPE.COSEKEY_AES_256),
           invalidBuffer,
-          secret
-        )
+          secret,
+        ),
       ).rejects.toThrow(/CBOR decode error/);
     });
   });
@@ -171,7 +171,7 @@ describe('encoding and decoding of jwks for blockchains', () => {
       // serialize jwk, encrypt and convert to hex
       const legacyEncryptedPK = `0x${Buffer.from(
         encrypt(hexFromJwk(es256kJwk, false), secret),
-        'base64'
+        'base64',
       ).toString('hex')}`;
 
       // new create buffer & decryptJwk
@@ -179,7 +179,7 @@ describe('encoding and decoding of jwks for blockchains', () => {
       const decodedJwk = await decodeJwk(
         get2BytesHash(ALG_TYPE.HEX_AES_256),
         encryptedPublicKey,
-        secret
+        secret,
       );
       expect(decodedJwk).toEqual({ ...es256kJwk, use: 'sig' });
     });
@@ -189,14 +189,14 @@ describe('encoding and decoding of jwks for blockchains', () => {
       const newKeyAsBuffer = await encodeJwk(
         ALG_TYPE.HEX_AES_256,
         es256kJwk,
-        secret
+        secret,
       );
       const newKeyAsHex = `0x${newKeyAsBuffer.toString('hex')}`;
 
       // legacy covert, decrypt and deserialize
       const encryptedPublicKey = Buffer.from(
         newKeyAsHex.slice(2),
-        'hex'
+        'hex',
       ).toString('base64');
       const rawKey = decrypt(encryptedPublicKey, secret);
       expect(jwkFromSecp256k1Key(rawKey, false)).toEqual({

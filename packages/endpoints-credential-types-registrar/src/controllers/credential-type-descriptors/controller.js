@@ -51,8 +51,8 @@ const credentialTypeDescriptorController = async (fastify) => {
       if (credentialTypeMetadata == null) {
         throw newError.NotFound(
           CredentialTypeErrorMessages.CREDENTIAL_TYPE_NOT_FOUND_TEMPLATE(
-            credentialType
-          )
+            credentialType,
+          ),
         );
       }
 
@@ -72,17 +72,17 @@ const credentialTypeDescriptorController = async (fastify) => {
             credentialType: credentialTypeMetadata,
             locale,
           },
-          req
+          req,
         );
       }
 
       return reply
         .header(
           CachingConstants.CACHE_CONTROL_HEADER,
-          CachingConstants.MAX_AGE_CACHE_CONTROL
+          CachingConstants.MAX_AGE_CACHE_CONTROL,
         )
         .send(response);
-    }
+    },
   );
 };
 

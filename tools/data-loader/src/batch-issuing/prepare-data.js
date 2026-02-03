@@ -24,7 +24,7 @@ const prepareExchangeOffers = async (csvHeaders, csvRows, options) => {
       }),
       newExchange: prepareNewExchange({ variableSet, ...options }),
     }),
-    variableSets
+    variableSets,
   );
 };
 
@@ -59,7 +59,7 @@ const validateVariableSet = (variableSet) => {
 const validateVendorUserIdVariable = (vendorUserId) => {
   if (isEmpty(vendorUserId)) {
     throw new Error(
-      'vendorUserId variable must exist. Use the -u <column> option'
+      'vendorUserId variable must exist. Use the -u <column> option',
     );
   }
 };
@@ -85,8 +85,8 @@ const validateVendorUserIdInOffer = (offer, variableSet) => {
   if (!includes(value, variableSet)) {
     throw new Error(
       `${VENDOR_USER_ID_PATH}: ${value} cannot be hardcoded and must be defined in ${JSON.stringify(
-        variableSet
-      )})`
+        variableSet,
+      )})`,
     );
   }
 };
@@ -125,7 +125,7 @@ const prepareNewDisclosureRequest = (
     vendorUseridColumn,
     authTokenExpiresIn,
     ...options
-  }
+  },
 ) => {
   const activationDate = computeActivationDate(options);
 

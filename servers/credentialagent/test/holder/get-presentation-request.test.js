@@ -61,7 +61,7 @@ expect.extend(
     // which means specific test schemas need to be created.
     // This is good for testing specific conditions for definition schemas.
     schemas: [presentationDefinitionV1Schema],
-  })
+  }),
 );
 
 describe('presentation request', () => {
@@ -149,7 +149,7 @@ describe('presentation request', () => {
             issuerCategory: 'ContactIssuer',
           },
         ],
-        { 'cache-control': 'max-age=3600' }
+        { 'cache-control': 'max-age=3600' },
       );
   });
 
@@ -189,7 +189,7 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(404);
@@ -200,7 +200,7 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           'did:test:not-found',
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(404);
@@ -209,8 +209,8 @@ describe('presentation request', () => {
       nock('http://oracle.localhost.test')
         .get(
           `/api/v0.6/organizations/${encodeURIComponent(
-            tenant.did
-          )}/verified-profile`
+            tenant.did,
+          )}/verified-profile`,
         )
         .reply(404);
       const q = { disclosureId: disclosure._id };
@@ -218,7 +218,7 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(500);
@@ -226,7 +226,7 @@ describe('presentation request', () => {
     it('should 500 if tenant doesnt have a private key defined', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         nonDidTenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: nonDisclosure._id };
@@ -234,7 +234,7 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           nonDidTenant.did,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(500);
@@ -263,7 +263,7 @@ describe('presentation request', () => {
     it('should 200 if many types are defined', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: disclosure._id };
@@ -271,13 +271,13 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(200);
       const { payload: responsePayload } = await jwtVerify(
         response.json.presentation_request,
-        orgDidDoc.publicKey[0].publicKeyJwk
+        orgDidDoc.publicKey[0].publicKeyJwk,
       );
       expect(responsePayload).toMatchSchema(presentationRequestSchema);
       expect(responsePayload).toEqual({
@@ -288,16 +288,16 @@ describe('presentation request', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${inspectUrl(
             tenant.did,
-            '/submit-presentation'
+            '/submit-presentation',
           )}`,
         },
         presentation_definition: {
@@ -308,7 +308,7 @@ describe('presentation request', () => {
             jwt_vp: { alg: ['secp256k1'] },
           },
           input_descriptors: disclosure.types.map(
-            ({ type }) => typesToInputDescriptors[type]
+            ({ type }) => typesToInputDescriptors[type],
           ),
           submission_requirements: [
             {
@@ -350,7 +350,7 @@ describe('presentation request', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: disclosure._id };
@@ -358,13 +358,13 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(200);
       const { payload: responsePayload } = await jwtVerify(
         response.json.presentation_request,
-        orgDidDoc.publicKey[0].publicKeyJwk
+        orgDidDoc.publicKey[0].publicKeyJwk,
       );
       expect(responsePayload).toMatchSchema(presentationRequestSchema);
       expect(responsePayload).toEqual({
@@ -375,16 +375,16 @@ describe('presentation request', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${inspectUrl(
             tenant.did,
-            '/submit-presentation'
+            '/submit-presentation',
           )}`,
         },
         presentation_definition: {
@@ -466,7 +466,7 @@ describe('presentation request', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: disclosure._id };
@@ -474,7 +474,7 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant._id,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(200);
@@ -500,7 +500,7 @@ describe('presentation request', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         customTenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: disclosure._id };
@@ -508,7 +508,7 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           didAlias,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(200);
@@ -523,7 +523,7 @@ describe('presentation request', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: disclosure._id };
@@ -531,13 +531,13 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(200);
       const { payload: responsePayload } = await jwtVerify(
         response.json.presentation_request,
-        orgDidDoc.publicKey[0].publicKeyJwk
+        orgDidDoc.publicKey[0].publicKeyJwk,
       );
       expect(responsePayload).toMatchSchema(presentationRequestSchema);
       expect(responsePayload).toEqual({
@@ -548,16 +548,16 @@ describe('presentation request', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${inspectUrl(
             tenant.did,
-            '/submit-presentation'
+            '/submit-presentation',
           )}`,
         },
         presentation_definition: {
@@ -632,7 +632,7 @@ describe('presentation request', () => {
     it('should return 200 with stringified jwt if query parameter format is `json`', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: disclosure._id };
@@ -640,7 +640,7 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}&format=json`
+          `/get-presentation-request?id=${q.disclosureId}&format=json`,
         ),
       });
       expect(response.statusCode).toEqual(200);
@@ -657,16 +657,16 @@ describe('presentation request', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${inspectUrl(
             tenant.did,
-            '/submit-presentation'
+            '/submit-presentation',
           )}`,
         },
         presentation_definition: {
@@ -677,7 +677,7 @@ describe('presentation request', () => {
             jwt_vp: { alg: ['secp256k1'] },
           },
           input_descriptors: disclosure.types.map(
-            ({ type }) => typesToInputDescriptors[type]
+            ({ type }) => typesToInputDescriptors[type],
           ),
           submission_requirements: [
             {
@@ -694,7 +694,7 @@ describe('presentation request', () => {
       fastify = await buildFastify({ ...holderConfig, isProd: true });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: disclosure._id };
@@ -702,12 +702,12 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}&format=json`
+          `/get-presentation-request?id=${q.disclosureId}&format=json`,
         ),
       });
       expect(response.statusCode).toEqual(200);
       expect(response.json.presentation_request).toEqual(
-        expect.stringMatching(JWT_FORMAT)
+        expect.stringMatching(JWT_FORMAT),
       );
       await fastify.close();
       fastify = await buildFastify();
@@ -721,7 +721,7 @@ describe('presentation request', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
       const q = { disclosureId: disclosure._id };
@@ -729,13 +729,13 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(200);
       const { payload: responsePayload } = await jwtVerify(
         response.json.presentation_request,
-        orgDidDoc.publicKey[0].publicKeyJwk
+        orgDidDoc.publicKey[0].publicKeyJwk,
       );
       expect(responsePayload).toMatchSchema(presentationRequestSchema);
       expect(responsePayload).toEqual({
@@ -746,16 +746,16 @@ describe('presentation request', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${inspectUrl(
             tenant.did,
-            '/submit-presentation'
+            '/submit-presentation',
           )}`,
         },
         presentation_definition: {
@@ -766,7 +766,7 @@ describe('presentation request', () => {
             jwt_vp: { alg: ['secp256k1'] },
           },
           input_descriptors: disclosure.types.map(
-            ({ type }) => typesToInputDescriptors[type]
+            ({ type }) => typesToInputDescriptors[type],
           ),
           submission_requirements: [
             {
@@ -805,7 +805,7 @@ describe('presentation request', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nockRegistrarGetCredentialTypes();
 
@@ -814,13 +814,13 @@ describe('presentation request', () => {
         method: 'GET',
         url: inspectUrl(
           tenant.did,
-          `/get-presentation-request?id=${q.disclosureId}`
+          `/get-presentation-request?id=${q.disclosureId}`,
         ),
       });
       expect(response.statusCode).toEqual(200);
       const { payload: responsePayload } = await jwtVerify(
         response.json.presentation_request,
-        orgDidDoc.publicKey[0].publicKeyJwk
+        orgDidDoc.publicKey[0].publicKeyJwk,
       );
       expect(responsePayload).toMatchSchema(presentationRequestSchema);
       expect(responsePayload).toEqual({
@@ -831,16 +831,16 @@ describe('presentation request', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${inspectUrl(
             tenant.did,
-            '/submit-presentation'
+            '/submit-presentation',
           )}`,
           feed: true,
         },
@@ -852,7 +852,7 @@ describe('presentation request', () => {
             jwt_vp: { alg: ['secp256k1'] },
           },
           input_descriptors: disclosure.types.map(
-            ({ type }) => typesToInputDescriptors[type]
+            ({ type }) => typesToInputDescriptors[type],
           ),
           submission_requirements: [
             {
@@ -890,7 +890,7 @@ describe('presentation request', () => {
 const nockRegistrarGetCredentialTypes = () =>
   nock('http://oracle.localhost.test')
     .get(
-      '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=false'
+      '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=false',
     )
     .reply(200, {
       id: 'PastEmploymentPosition',
@@ -902,7 +902,7 @@ const nockRegistrarGetCredentialTypes = () =>
       ],
     })
     .get(
-      '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=false'
+      '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=false',
     )
     .reply(200, {
       id: 'CurrentEmploymentPosition',

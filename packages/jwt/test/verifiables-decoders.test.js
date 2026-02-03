@@ -63,7 +63,7 @@ describe('Verifiable Decoder Tests', () => {
       const credentialJwt = await generateCredentialJwt(
         credential,
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       const decoded = decodeCredentialJwt(credentialJwt);
 
@@ -73,7 +73,7 @@ describe('Verifiable Decoder Tests', () => {
       const credentialJwt = await generateCredentialJwt(
         { vc: credential },
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       const decoded = decodeCredentialJwt(credentialJwt);
 
@@ -89,7 +89,7 @@ describe('Verifiable Decoder Tests', () => {
           },
         },
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       const decoded = decodeCredentialJwt(credentialJwt);
 
@@ -105,11 +105,11 @@ describe('Verifiable Decoder Tests', () => {
       const credentialJwt = await generateCredentialJwt(
         credential,
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       const decoded = await verifyCredentialJwt(
         credentialJwt,
-        keyPair.publicKey
+        keyPair.publicKey,
       );
 
       expect(decoded).toEqual(credential);
@@ -118,11 +118,11 @@ describe('Verifiable Decoder Tests', () => {
       const credentialJwt = await generateCredentialJwt(
         { vc: credential },
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       const decoded = await verifyCredentialJwt(
         credentialJwt,
-        keyPair.publicKey
+        keyPair.publicKey,
       );
 
       expect(decoded).toEqual(credential);
@@ -133,10 +133,10 @@ describe('Verifiable Decoder Tests', () => {
       const credentialJwt = await generateCredentialJwt(
         { vc: credential },
         keyPair.privateKey,
-        'KEY-ID'
+        'KEY-ID',
       );
       await expect(async () =>
-        verifyCredentialJwt(credentialJwt, wrongPublicKey)
+        verifyCredentialJwt(credentialJwt, wrongPublicKey),
       ).rejects.toThrow(new Error('signature verification failed'));
     });
   });
@@ -145,7 +145,7 @@ describe('Verifiable Decoder Tests', () => {
     it('Should decode presentation', async () => {
       const presentationJwt = await generatePresentationJwt(
         presentation,
-        keyPair.privateKey
+        keyPair.privateKey,
       );
       const jwk = jwkFromSecp256k1Key(keyPair.publicKey, false);
 
@@ -166,7 +166,7 @@ describe('Verifiable Decoder Tests', () => {
           vp: {
             ...omit(
               ['id', 'issuer', 'verifier', 'expirationDate'],
-              presentation
+              presentation,
             ),
           },
         },
@@ -189,7 +189,7 @@ describe('Verifiable Decoder Tests', () => {
       };
       const presentationJwt = await generatePresentationJwt(
         presentationWrapper,
-        keyPair.privateKey
+        keyPair.privateKey,
       );
 
       const verified = decodePresentationJwt(presentationJwt);
@@ -205,7 +205,7 @@ describe('Verifiable Decoder Tests', () => {
     it('Should verify presentation', async () => {
       const presentationJwt = await generatePresentationJwt(
         presentation,
-        keyPair.privateKey
+        keyPair.privateKey,
       );
       const verified = await verifyPresentationJwt(presentationJwt);
 
@@ -226,7 +226,7 @@ describe('Verifiable Decoder Tests', () => {
       };
       const presentationJwt = await generatePresentationJwt(
         presentationWrapper,
-        keyPair.privateKey
+        keyPair.privateKey,
       );
 
       const verified = await verifyPresentationJwt(presentationJwt);
@@ -241,11 +241,11 @@ describe('Verifiable Decoder Tests', () => {
       const { publicKey: wrongPublicKey } = generateKeyPair();
       const presentationJwt = await generatePresentationJwt(
         presentation,
-        keyPair.privateKey
+        keyPair.privateKey,
       );
 
       await expect(async () =>
-        verifyPresentationJwt(presentationJwt, wrongPublicKey)
+        verifyPresentationJwt(presentationJwt, wrongPublicKey),
       ).rejects.toThrow(new Error('signature verification failed'));
     });
   });

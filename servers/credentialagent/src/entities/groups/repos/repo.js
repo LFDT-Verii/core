@@ -33,6 +33,6 @@ module.exports = (app, options, next = () => {}) => {
       },
       extensions: [updateOrErrorExtension, deleteTenantExtension],
     },
-    app
+    app,
   );
 };

@@ -17,7 +17,7 @@ const loadJsonFile = async (schemaName) => {
   const relativePath = `schemas/${schemaName}.schema.json`;
   const str = await readFile(
     path.join(__dirname, `../../../samples/sample-lib-app/${relativePath}`),
-    { encoding: 'utf-8' }
+    { encoding: 'utf-8' },
   );
 
   return JSON.parse(str);
@@ -75,7 +75,7 @@ module.exports = {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-      })
+      }),
     );
     await db.collection('credentialSchemas').insertMany(insertions);
   },

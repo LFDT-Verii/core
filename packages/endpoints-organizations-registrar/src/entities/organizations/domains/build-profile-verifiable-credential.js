@@ -26,7 +26,7 @@ const initBuildProfileVerifiableCredential =
     const jwtVc = await generateCredentialJwt(
       credential,
       rootPrivateKey,
-      rootKid
+      rootKid,
     );
     return { jwtVc, credentialId: id };
   };

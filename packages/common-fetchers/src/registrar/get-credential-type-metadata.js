@@ -18,15 +18,15 @@ const { flow, uniq, map } = require('lodash/fp');
 
 const getCredentialTypeMetadata = async (
   credentialTypes,
-  { registrarFetch, cache }
+  { registrarFetch, cache },
 ) => {
   const path = 'api/v0.6/credential-types';
   const options = {
     searchParams: new URLSearchParams(
       flow(
         uniq,
-        map((type) => ['credentialType', type])
-      )(credentialTypes)
+        map((type) => ['credentialType', type]),
+      )(credentialTypes),
     ),
     cache,
   };

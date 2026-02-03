@@ -33,7 +33,7 @@ describe('generate doc jwt', () => {
       });
       const verified = await jwtVerify(
         result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false)
+        jwkFromSecp256k1Key(keyPair.publicKey, false),
       );
 
       expect(verified).toEqual({
@@ -68,7 +68,7 @@ describe('generate doc jwt', () => {
       });
       const verified = await jwtVerify(
         result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false)
+        jwkFromSecp256k1Key(keyPair.publicKey, false),
       );
 
       expect(verified).toEqual({
@@ -91,7 +91,7 @@ describe('generate doc jwt', () => {
       const result = await generateDocJwt(doc, keyPair.privateKey);
       const verified = await jwtVerify(
         result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false)
+        jwkFromSecp256k1Key(keyPair.publicKey, false),
       );
 
       expect(verified).toEqual({

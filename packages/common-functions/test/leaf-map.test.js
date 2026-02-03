@@ -46,7 +46,7 @@ describe('leafMap Test Suite', () => {
         arr: ['bar', { foo: 'bar' }, null],
         foo: 'bar',
         bar: 'foo',
-      })
+      }),
     ).toEqual({
       arr: ['baz', { foo: 'baz' }, null],
       foo: 'baz',

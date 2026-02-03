@@ -4,7 +4,7 @@ const { extractServiceEndpointDid } = require('./extract-service-endpoint-did');
 const extractCaoServiceRefs = flow(
   map(extractServiceEndpointDid),
   compact,
-  uniq
+  uniq,
 );
 
 module.exports = { extractCaoServiceRefs };

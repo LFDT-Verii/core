@@ -22,12 +22,12 @@ const { generateLinkCode } = require('./generate-link-code');
 const buildOffer = (offer, credentialRefsMap, { tenant, exchange }) => {
   const { relatedResource, replaces } = flow(
     pick(['relatedResource', 'replaces']),
-    mapValues(map(buildRelatedResource(credentialRefsMap)))
+    mapValues(map(buildRelatedResource(credentialRefsMap))),
   )(offer);
 
   const linkedCredentials = buildLinkedCredentials(
     offer.linkedCredentials,
-    credentialRefsMap
+    credentialRefsMap,
   );
 
   const { linkCode, linkCodeCommitment } = generateLinkCode();

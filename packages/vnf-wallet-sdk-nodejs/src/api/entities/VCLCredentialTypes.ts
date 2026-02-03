@@ -4,7 +4,7 @@ import VCLCredentialType from './VCLCredentialType';
 export default class VCLCredentialTypes {
     constructor(
         public payload: Dictionary<any>,
-        public all: Nullish<VCLCredentialType[]>
+        public all: Nullish<VCLCredentialType[]>,
     ) {}
 
     get recommendedTypes(): Nullish<VCLCredentialType[]> {
@@ -22,9 +22,9 @@ export default class VCLCredentialTypes {
                     item[VCLCredentialType.KeyCreatedAt],
                     item[VCLCredentialType.KeySchemaName],
                     item[VCLCredentialType.KeyCredentialType],
-                    item[VCLCredentialType.KeyRecommended]
+                    item[VCLCredentialType.KeyRecommended],
                 );
-            })
+            }),
         );
     }
 }

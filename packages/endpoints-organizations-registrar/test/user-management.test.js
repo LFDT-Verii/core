@@ -18,7 +18,7 @@ const { before, beforeEach, describe, it, mock, after } = require('node:test');
 const { expect } = require('expect');
 
 const mockAuth0UpdateUser = mock.fn(({ id }, obj) =>
-  Promise.resolve({ data: { user_id: id, ...obj } })
+  Promise.resolve({ data: { user_id: id, ...obj } }),
 );
 const mockAuth0GetUserRoles = mock.fn(() => Promise.resolve({ data: [] }));
 const mockAuth0GetUserByEmail = mock.fn(() => Promise.resolve({ data: [] }));
@@ -82,7 +82,7 @@ describe('user management test suite', () => {
       const func = () =>
         softDeleteUser(
           { id: 'foo' },
-          { scope: { userId: 'otherUser', groupId: 'otherGroup' } }
+          { scope: { userId: 'otherUser', groupId: 'otherGroup' } },
         );
       await expect(func()).resolves.toEqual(undefined);
       expect(mockAuth0UpdateUser.mock.callCount()).toEqual(0);
@@ -108,7 +108,7 @@ describe('user management test suite', () => {
               userId: 'otherUser',
               groupId: auth0User.app_metadata.groupId,
             },
-          }
+          },
         );
       await expect(func()).resolves.toEqual(undefined);
       expect(last(mockAuth0UpdateUser.mock.calls).arguments).toEqual([
@@ -125,7 +125,7 @@ describe('user management test suite', () => {
         Promise.resolve([
           { id: testConfig.auth0ClientAdminRoleId },
           { id: testConfig.auth0ClientFinanceAdminRoleId },
-        ])
+        ]),
       );
       const { getUser } = userManagementClient;
       const func = () => getUser({ id: 'foo' });
@@ -153,14 +153,14 @@ describe('user management test suite', () => {
             { id: testConfig.auth0ClientAdminRoleId },
             { id: testConfig.auth0ClientFinanceAdminRoleId },
           ],
-        })
+        }),
       );
       const { getUserWithRoles } = userManagementClient;
       expect(await getUserWithRoles({ id: 'foo' }, {})).toEqual(
         expectedUser(auth0User, {
           registrarRole: RoleNames.RegistrarClientAdmin,
           tokenWalletRole: RoleNames.TokenWalletClientFinanceAdmin,
-        })
+        }),
       );
       expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
         {
@@ -181,26 +181,26 @@ describe('user management test suite', () => {
     });
     it('get user with superuser role', async () => {
       mockAuth0GetUserRoles.mock.mockImplementation(() =>
-        Promise.resolve({ data: [{ id: testConfig.auth0SuperuserRoleId }] })
+        Promise.resolve({ data: [{ id: testConfig.auth0SuperuserRoleId }] }),
       );
       const { getUserWithRoles } = userManagementClient;
       expect(await getUserWithRoles({ id: 'foo' }, {})).toEqual(
         expectedUser(auth0User, {
           registrarRole: RoleNames.Superuser,
-        })
+        }),
       );
     });
     it('get user with clientsystemuser role', async () => {
       mockAuth0GetUserRoles.mock.mockImplementation(() =>
         Promise.resolve({
           data: [{ id: testConfig.auth0ClientSystemUserRoleId }],
-        })
+        }),
       );
       const { getUserWithRoles } = userManagementClient;
       expect(await getUserWithRoles({ id: 'foo' }, {})).toEqual(
         expectedUser(auth0User, {
           tokenWalletRole: RoleNames.TokenWalletClientSystemUser,
-        })
+        }),
       );
     });
   });
@@ -210,7 +210,7 @@ describe('user management test suite', () => {
     before(() => {
       minimalAuth0User = omit(['given_name', 'logins_count'], auth0User);
       mockAuth0GetUserByEmail.mock.mockImplementation(() =>
-        Promise.resolve({ data: [minimalAuth0User] })
+        Promise.resolve({ data: [minimalAuth0User] }),
       );
     });
     it('get user by email for same user', async () => {
@@ -218,7 +218,7 @@ describe('user management test suite', () => {
       expect(
         await getUserByEmail('test@email.com', {
           scope: { userId: auth0User.user_id },
-        })
+        }),
       ).toEqual([expectedUser(minimalAuth0User)]);
       expect(last(mockAuth0GetUserByEmail.mock.calls).arguments).toEqual([
         { email: 'test@email.com' },
@@ -231,7 +231,7 @@ describe('user management test suite', () => {
       expect(
         await getUserByEmail('test@email.com', {
           scope: { groupId: auth0User.app_metadata.groupId },
-        })
+        }),
       ).toEqual([expectedUser(minimalAuth0User)]);
       expect(last(mockAuth0GetUserByEmail.mock.calls).arguments).toEqual([
         { email: 'test@email.com' },
@@ -243,7 +243,7 @@ describe('user management test suite', () => {
       const { getUserByEmail } = userManagementClient;
       expect(await getUserByEmail('test@email.com')).toEqual([
         expectedUser(
-          pick(['user_id', 'family_name', 'email'], minimalAuth0User)
+          pick(['user_id', 'family_name', 'email'], minimalAuth0User),
         ),
       ]);
       expect(last(mockAuth0GetUserByEmail.mock.calls).arguments).toEqual([

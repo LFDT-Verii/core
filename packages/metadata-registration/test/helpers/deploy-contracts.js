@@ -37,14 +37,14 @@ const { privateKey: deployerPrivateKey } = generateKeyPair();
 const deployPermissionContract = async () => {
   const permissionsContract = await deployTestPermissionsContract(
     deployerPrivateKey,
-    rpcUrl
+    rpcUrl,
   );
   return permissionsContract.getAddress();
 };
 
 const deployVerificationCouponContract = async (
   permissionsAddress,
-  context
+  context,
 ) => {
   const name = 'Velocity Verification Coupon';
   const baseTokenURI = 'https://www.velocitynetwork.foundation/';
@@ -53,7 +53,7 @@ const deployVerificationCouponContract = async (
     verificationCouponAbi,
     deployerPrivateKey,
     rpcUrl,
-    (contract) => contract.initialize(name, baseTokenURI)
+    (contract) => contract.initialize(name, baseTokenURI),
   );
 
   const verificationCouponAddress =
@@ -64,11 +64,11 @@ const deployVerificationCouponContract = async (
       contractAddress: verificationCouponAddress,
       rpcProvider,
     },
-    context
+    context,
   );
 
   await deployerVerificationCouponClient.setPermissionsAddress(
-    permissionsAddress
+    permissionsAddress,
   );
   return verificationCouponAddress;
 };
@@ -77,7 +77,7 @@ const deployMetadataContract = async (
   freeCredentialTypes,
   verficationCouponAddress,
   permissionsAddress,
-  context
+  context,
 ) => {
   const metadataRegistryContract = await deployContract(
     metadataRegistryAbi,
@@ -86,8 +86,8 @@ const deployMetadataContract = async (
     async (contract) =>
       contract.initialize(
         verficationCouponAddress,
-        freeCredentialTypes.map(get2BytesHash)
-      )
+        freeCredentialTypes.map(get2BytesHash),
+      ),
   );
   const contractMetadataAddress = await metadataRegistryContract.getAddress();
 
@@ -97,22 +97,22 @@ const deployMetadataContract = async (
       contractAddress: contractMetadataAddress,
       rpcProvider,
     },
-    context
+    context,
   );
   await metadataRegistryDeployerClient.setPermissionsAddress(
-    permissionsAddress
+    permissionsAddress,
   );
   return contractMetadataAddress;
 };
 
 const deployRevocationContract = async (
   permissionsContractAddress,
-  context
+  context,
 ) => {
   const revocationRegistryContract = await deployContract(
     revocationRegistryAbi,
     deployerPrivateKey,
-    rpcUrl
+    rpcUrl,
   );
   const revocationRegistryContractAddress =
     await revocationRegistryContract.getAddress();
@@ -123,10 +123,10 @@ const deployRevocationContract = async (
       contractAddress: revocationRegistryContractAddress,
       rpcProvider,
     },
-    context
+    context,
   );
   await deployerRevocationRegistry.setPermissionsAddress(
-    permissionsContractAddress
+    permissionsContractAddress,
   );
   return revocationRegistryContractAddress;
 };

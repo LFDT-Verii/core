@@ -65,6 +65,7 @@ const InvitationsListContainer = ({
 
   useEffect(() => {
     if (invitations.length < ROWS_PER_PAGE) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPagesCount(currentPage * ROWS_PER_PAGE + invitations.length);
     }
   }, [currentPage, invitations]);

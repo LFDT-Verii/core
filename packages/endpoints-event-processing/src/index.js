@@ -15,7 +15,6 @@
  *
  */
 
-/* eslint-disable global-require */
 module.exports = {
   ...require('./event-processing-endpoints'),
   ...require('./config/config'),

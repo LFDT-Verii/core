@@ -8,11 +8,11 @@ const { identityCategories } = require('./constants');
 
 const validateServiceCredentialType = (
   newService,
-  { registeredCredentialTypes, config: { idCredentialTypes } }
+  { registeredCredentialTypes, config: { idCredentialTypes } },
 ) => {
   const expectedCredentialTypes = computeExpectedCredentialTypes(
     newService.type,
-    { registeredCredentialTypes, idCredentialTypes }
+    { registeredCredentialTypes, idCredentialTypes },
   );
   if (expectedCredentialTypes == null) {
     return;
@@ -20,18 +20,18 @@ const validateServiceCredentialType = (
 
   const unsupportedCredentialTypes = difference(
     newService.credentialTypes,
-    expectedCredentialTypes
+    expectedCredentialTypes,
   );
   if (!isEmpty(unsupportedCredentialTypes)) {
     throw newError.BadRequest(
-      `Cannot add issuer that issues unsupported credential types ${unsupportedCredentialTypes}`
+      `Cannot add issuer that issues unsupported credential types ${unsupportedCredentialTypes}`,
     );
   }
 };
 
 const computeExpectedCredentialTypes = (
   type,
-  { registeredCredentialTypes, idCredentialTypes }
+  { registeredCredentialTypes, idCredentialTypes },
 ) => {
   if (identityCategories.includes(type)) {
     return idCredentialTypes;

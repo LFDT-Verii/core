@@ -22,7 +22,7 @@ const findOrInsertVendorUserRepoExtension = (parent, { tenant }) => ({
         tenantId: tenant._id,
       },
       ['vendorUserId', 'tenantId'],
-      { _id: 1 }
+      { _id: 1 },
     ),
   extensions: parent.extensions.concat(['findOrInsertVendorUserRepoExtension']),
 });

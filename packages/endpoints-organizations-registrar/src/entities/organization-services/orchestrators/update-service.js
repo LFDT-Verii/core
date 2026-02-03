@@ -37,12 +37,12 @@ const updateService = async (did, serviceId, replacementService, context) => {
   // TODO remove and replace with schema update
   if (!isEmpty(replacementService.id)) {
     throw newError.BadRequest(
-      OrganizationServiceErrorMessages.SERVICE_ID_CANNOT_BE_UPDATED
+      OrganizationServiceErrorMessages.SERVICE_ID_CANNOT_BE_UPDATED,
     );
   }
   if (!isEmpty(replacementService.type)) {
     throw newError.BadRequest(
-      OrganizationServiceErrorMessages.SERVICE_TYPE_CANNOT_BE_UPDATED
+      OrganizationServiceErrorMessages.SERVICE_TYPE_CANNOT_BE_UPDATED,
     );
   }
 
@@ -52,14 +52,14 @@ const updateService = async (did, serviceId, replacementService, context) => {
       serviceId: `#${serviceId}`,
       updates: replacementService,
     },
-    context
+    context,
   );
   return buildPublicService(service);
 };
 
 const updateOrganizationService = async (
   { organization, serviceId, updates },
-  context
+  context,
 ) => {
   const { repos } = context;
   const didDocument = organization.didNotCustodied
@@ -70,11 +70,11 @@ const updateOrganizationService = async (
   const existingDidDocService = serviceExists(didDocument, serviceId);
   const existingDbService = find(
     { id: toRelativeServiceId(serviceId) },
-    organization.services
+    organization.services,
   );
   if (isEmpty(existingDidDocService) || isEmpty(existingDbService)) {
     throw new newError.NotFound(
-      `Service ${serviceId} was not found in organization ${organization.didDoc.id}`
+      `Service ${serviceId} was not found in organization ${organization.didDoc.id}`,
     );
   }
 

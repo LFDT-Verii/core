@@ -37,7 +37,7 @@ const сontroller = async (fastify) => {
           credentialType: credentialTypeMetadata,
           locale,
         },
-        req
+        req,
       );
       if (isEmpty(json)) {
         throw newError(404, 'Form schemas not found', {
@@ -45,7 +45,7 @@ const сontroller = async (fastify) => {
         });
       }
       return reply.type('application/json; charset=utf-8').send(json);
-    }
+    },
   );
 };
 

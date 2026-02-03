@@ -32,7 +32,10 @@ const loadNonce = (options) => {
   }
 
   const response = JSON.parse(
-    common.readFile(`${options.response}`, 'Generate Offers Response not found')
+    common.readFile(
+      `${options.response}`,
+      'Generate Offers Response not found',
+    ),
   );
   return response.challenge;
 };
@@ -45,7 +48,7 @@ const buildProofJwt = async ({ nonce, keyPair, typ, options }) => {
     {
       kid: `${kid}#0`,
       typ,
-    }
+    },
   );
   return jwt;
 };

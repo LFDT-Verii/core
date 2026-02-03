@@ -32,7 +32,7 @@ const { initS3Client } = require('../src/s3-client');
 
 const deleteS3Object = async (s3Client, bucketName) => {
   const data = await s3Client.send(
-    new ListObjectsCommand({ Bucket: bucketName })
+    new ListObjectsCommand({ Bucket: bucketName }),
   );
 
   // Check if data.Contents exists and is not empty
@@ -42,7 +42,7 @@ const deleteS3Object = async (s3Client, bucketName) => {
       new DeleteObjectsCommand({
         Bucket: bucketName,
         Delete: { Objects: objects },
-      })
+      }),
     );
   }
 };
@@ -89,13 +89,13 @@ describe('S3 client', () => {
     });
 
     expect(signedLink).toContain(
-      'http://localhost:4566/mockedbucket/mocked_key?X-Amz-Algorithm=AWS4-HMAC-SHA256'
+      'http://localhost:4566/mockedbucket/mocked_key?X-Amz-Algorithm=AWS4-HMAC-SHA256',
     );
   });
 
   it('Should get object', async () => {
     const file = await fs.readFile(
-      `${path.dirname(__dirname)}/test/helpers/img.png`
+      `${path.dirname(__dirname)}/test/helpers/img.png`,
     );
     await originalS3Client.send(
       new PutObjectCommand({
@@ -103,7 +103,7 @@ describe('S3 client', () => {
         Key: 'img.png',
         Body: file,
         ContentType: 'image/png',
-      })
+      }),
     );
     const object = await client.getObject({
       bucket,
@@ -114,7 +114,7 @@ describe('S3 client', () => {
 
   it('Should delete object', async () => {
     const file = await fs.readFile(
-      `${path.dirname(__dirname)}/test/helpers/img.png`
+      `${path.dirname(__dirname)}/test/helpers/img.png`,
     );
     await originalS3Client.send(
       new PutObjectCommand({
@@ -122,7 +122,7 @@ describe('S3 client', () => {
         Key: 'img.png',
         Body: file,
         ContentType: 'image/png',
-      })
+      }),
     );
     await client.deleteObject({
       bucket,
@@ -141,7 +141,7 @@ describe('S3 client', () => {
 
   it('Should put object', async () => {
     const file = await fs.readFile(
-      `${path.dirname(__dirname)}/test/helpers/img.png`
+      `${path.dirname(__dirname)}/test/helpers/img.png`,
     );
     await client.putObject({
       bucket,
@@ -153,7 +153,7 @@ describe('S3 client', () => {
       new GetObjectCommand({
         Bucket: bucket,
         Key: 'img.png',
-      })
+      }),
     );
     expect(object).toBeDefined();
   });

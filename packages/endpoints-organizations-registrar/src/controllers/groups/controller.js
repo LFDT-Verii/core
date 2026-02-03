@@ -28,7 +28,7 @@ const groupsController = async (fastify) => {
         return user?.[VNF_GROUP_ID_CLAIM]
           ? [await repos.groups.findGroupByGroupId(user[VNF_GROUP_ID_CLAIM])]
           : repos.groups.find();
-      }
+      },
     );
 
   fastify
@@ -59,7 +59,7 @@ const groupsController = async (fastify) => {
         const { params, repos } = req;
         const { groupId } = params;
         return repos.groups.findGroupByGroupId(groupId);
-      }
+      },
     )
     .post(
       '/',
@@ -87,7 +87,7 @@ const groupsController = async (fastify) => {
         const group = await repos.groups.insert(body);
         reply.code(201);
         return group;
-      }
+      },
     )
     .put(
       '/:groupId',
@@ -120,7 +120,7 @@ const groupsController = async (fastify) => {
         } = req;
         const { _id } = await repos.groups.findGroupByGroupId(groupId);
         return repos.groups.update(_id, body);
-      }
+      },
     )
     .delete(
       '/:groupId',
@@ -150,7 +150,7 @@ const groupsController = async (fastify) => {
         const { _id } = await repos.groups.findGroupByGroupId(groupId);
         await repos.groups.del(_id);
         return reply.status(204).send(undefined);
-      }
+      },
     );
 
   const validateGroupId = async (groupId, ctx) => {
@@ -163,7 +163,7 @@ const groupsController = async (fastify) => {
 
     if (group) {
       throw new newError.Conflict(
-        'Group with the same group id already exist.'
+        'Group with the same group id already exist.',
       );
     }
   };

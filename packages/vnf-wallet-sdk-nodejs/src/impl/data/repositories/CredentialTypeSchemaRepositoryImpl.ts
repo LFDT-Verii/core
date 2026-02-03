@@ -4,21 +4,19 @@ import CredentialTypeSchemaRepository from '../../domain/repositories/Credential
 import Urls, { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class CredentialTypeSchemaRepositoryImpl
-    implements CredentialTypeSchemaRepository
-{
+export default class CredentialTypeSchemaRepositoryImpl implements CredentialTypeSchemaRepository {
     constructor(private networkService: NetworkService) {}
 
     getCredentialTypeSchema(
-        schemaName: string
+        schemaName: string,
     ): Promise<VCLCredentialTypeSchema> {
         return this.fetchCredentialTypeSchema(
-            Urls.CredentialTypeSchemas + schemaName
+            Urls.CredentialTypeSchemas + schemaName,
         );
     }
 
     private async fetchCredentialTypeSchema(
-        endpoint: string
+        endpoint: string,
     ): Promise<VCLCredentialTypeSchema> {
         const credentialTypeSchemaResponse =
             await this.networkService.sendRequest({
@@ -33,7 +31,7 @@ export default class CredentialTypeSchemaRepositoryImpl
                 contentType: null,
             });
         return new VCLCredentialTypeSchema(
-            credentialTypeSchemaResponse.payload
+            credentialTypeSchemaResponse.payload,
         );
     }
 }

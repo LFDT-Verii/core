@@ -79,12 +79,12 @@ const mapPermissionsToServiceTypes = (permittedVelocityServiceCategories) => {
     }),
     flatten,
     uniq,
-    compact
+    compact,
   )(permittedVelocityServiceCategories);
   const permissionsToAdd = permissionsOfCategories;
   const permissionsToRemove = pullAll(
     permissionsOfCategories,
-    values(AddressScopePermissions)
+    values(AddressScopePermissions),
   );
 
   return {
@@ -95,7 +95,7 @@ const mapPermissionsToServiceTypes = (permittedVelocityServiceCategories) => {
 
 const updateBlockchainPermissionsFromPermittedServices = async (
   { organization },
-  ctx
+  ctx,
 ) => {
   const { config, rpcProvider } = ctx;
   const { rootPrivateKey, permissionsContractAddress } = config;
@@ -110,7 +110,7 @@ const updateBlockchainPermissionsFromPermittedServices = async (
       contractAddress: permissionsContractAddress,
       rpcProvider,
     },
-    ctx
+    ctx,
   );
 
   const { permissionsToAdd, permissionsToRemove } =

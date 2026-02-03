@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-// eslint-disable-next-line max-classes-per-file
 const { after, mock, describe, it } = require('node:test');
 const { expect } = require('expect');
 

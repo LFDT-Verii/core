@@ -19,7 +19,6 @@ import { useLocation } from 'react-router';
 import { useGetOne, useCreateController, useRedirect, useRefresh } from 'react-admin';
 import { Box, Typography, Button } from '@mui/material';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-// eslint-disable-next-line import/no-extraneous-dependencies
 
 import Popup from '../../components/common/Popup.jsx';
 import CreateInvitationForOrganization from '../../components/organizations/CreateInvitationForOrganization.jsx';
@@ -90,6 +89,7 @@ const InvitationCreateForm = () => {
   useEffect(() => {
     if (openedStateRef.current === false && isModalOpened) {
       redirect('/invitations/create/step-1');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setServiceData(null);
       setKeyIndividualsData(null);
       setOrganizationProfileData(null);

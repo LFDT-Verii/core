@@ -42,7 +42,6 @@ mock.module('../../src/fetchers/push-gateway/push-fetcher.js', {
   },
 });
 
-// eslint-disable-next-line import/order
 const buildFastify = require('./helpers/credentialagent-holder-build-fastify');
 const { subHours, getUnixTime } = require('date-fns/fp');
 const { ObjectId } = require('mongodb');
@@ -207,7 +206,7 @@ describe('presentation submission', () => {
             issuerCategory: 'ContactIssuer',
           },
         ],
-        { 'cache-control': 'max-age=3600' }
+        { 'cache-control': 'max-age=3600' },
       );
 
     disclosureExchange = await persistDisclosureExchange({
@@ -252,7 +251,6 @@ describe('presentation submission', () => {
       expect(response.statusCode).toEqual(400);
     });
     it('should 400 if the presentation_submission is invalid', async () => {
-      // eslint-disable-next-line camelcase
       const presentationBuilder = (
         await generatePresentation(disclosureExchange)
       ).delete('presentation_submission.descriptor_map');
@@ -357,7 +355,7 @@ describe('presentation submission', () => {
         },
       });
       const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange
+        disclosurePresentationExchange,
       );
       let webhookPayload;
 
@@ -395,7 +393,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -403,7 +401,7 @@ describe('presentation submission', () => {
             issuer: isString(vc.issuer) ? { id: vc.issuer } : vc.issuer,
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -440,7 +438,7 @@ describe('presentation submission', () => {
         },
       });
       const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange
+        disclosurePresentationExchange,
       );
       let webhookPayload;
 
@@ -489,7 +487,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -497,7 +495,7 @@ describe('presentation submission', () => {
             issuer: isString(vc.issuer) ? { id: vc.issuer } : vc.issuer,
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
       const dbLeastRecentFeed = await mongoDb()
@@ -552,7 +550,7 @@ describe('presentation submission', () => {
         },
       });
       const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange
+        disclosurePresentationExchange,
       );
 
       const webhookNock = await nock(webhookUrl)
@@ -591,7 +589,7 @@ describe('presentation submission', () => {
         },
       });
       const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange
+        disclosurePresentationExchange,
       );
       let webhookPayload;
 
@@ -614,7 +612,7 @@ describe('presentation submission', () => {
       expect(response.statusCode).toEqual(200);
       expect(mockSendPush.mock.callCount()).toEqual(1);
       expect(
-        mockSendPush.mock.calls.map((call) => call.arguments)
+        mockSendPush.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           data: {
@@ -646,7 +644,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -655,7 +653,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             ...checkResult,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -673,7 +671,7 @@ describe('presentation submission', () => {
         },
       });
       const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange
+        disclosurePresentationExchange,
       );
       let webhookPayload;
       const holderKeyPair = generateKeyPair({ format: 'jwk' });
@@ -683,7 +681,7 @@ describe('presentation submission', () => {
       const holderSignedPresentation = await presentationBuilder.sign(
         holderKid,
         holderKeyPair.privateKey,
-        holderDidJwk
+        holderDidJwk,
       );
       nock(mockVendorUrl)
         .post(sendCredentialsCheckedEndpoint)
@@ -722,7 +720,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -731,7 +729,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             ...checkResult,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
 
@@ -766,7 +764,7 @@ describe('presentation submission', () => {
         },
       });
       const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange
+        disclosurePresentationExchange,
       );
       let webhookPayload;
 
@@ -804,7 +802,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -813,7 +811,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             ...checkResult,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -836,7 +834,7 @@ describe('presentation submission', () => {
         },
       });
       const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange
+        disclosurePresentationExchange,
       );
       let webhookPayload;
 
@@ -874,7 +872,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -883,7 +881,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             ...checkResult,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -927,7 +925,7 @@ describe('presentation submission', () => {
         },
       });
       const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange
+        disclosurePresentationExchange,
       );
 
       const nockWebhook = await nock(webhookUrl)
@@ -1001,9 +999,8 @@ describe('presentation submission', () => {
           protocol: ExchangeProtocols.VNF_API,
         },
       });
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       const response = await fastify.injectJson({
         method: 'POST',
         url: inspectUrl(tenant, '/submit-presentation'),
@@ -1019,14 +1016,13 @@ describe('presentation submission', () => {
           errorCode: 'disclosure_not_active',
           message: 'Disclosure is not active',
           statusCode: 400,
-        })
+        }),
       );
     });
 
     it('should 200 if the presentation submission maps to a standard vp', async () => {
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       let webhookPayload;
 
       nock(mockVendorUrl)
@@ -1056,12 +1052,12 @@ describe('presentation submission', () => {
       });
 
       expect(
-        await jwtVerify(response.json.token, tenantKeyPair.publicKey)
+        await jwtVerify(response.json.token, tenantKeyPair.publicKey),
       ).toEqual(
         jwtAccessTokenExpectation(tenant, null, {
           jti: disclosureExchange._id.toString(),
           sub: expect.stringMatching(/anonymous|/),
-        })
+        }),
       );
       const dbExchange = await mongoDb()
         .collection('exchanges')
@@ -1106,7 +1102,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -1115,7 +1111,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             ...checkResult,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -1150,9 +1146,8 @@ describe('presentation submission', () => {
           protocol: ExchangeProtocols.VNF_API,
         },
       });
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       const dbDisclosureBeforeRequest = await mongoDb()
         .collection('disclosures')
         .findOne({
@@ -1186,12 +1181,12 @@ describe('presentation submission', () => {
       });
 
       expect(
-        await jwtVerify(response.json.token, tenantKeyPair.publicKey)
+        await jwtVerify(response.json.token, tenantKeyPair.publicKey),
       ).toEqual(
         jwtAccessTokenExpectation(tenant, null, {
           jti: disclosureExchange._id.toString(),
           sub: expect.stringMatching(/anonymous|/),
-        })
+        }),
       );
       const dbDisclosureAfterRequest = await mongoDb()
         .collection('disclosures')
@@ -1233,9 +1228,8 @@ describe('presentation submission', () => {
           protocol: ExchangeProtocols.VNF_API,
         },
       });
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       const dbDisclosureBeforeRequest = await mongoDb()
         .collection('disclosures')
         .findOne({
@@ -1269,12 +1263,12 @@ describe('presentation submission', () => {
       });
 
       expect(
-        await jwtVerify(response.json.token, tenantKeyPair.publicKey)
+        await jwtVerify(response.json.token, tenantKeyPair.publicKey),
       ).toEqual(
         jwtAccessTokenExpectation(tenant, null, {
           jti: disclosureExchange._id.toString(),
           sub: expect.stringMatching(/anonymous|/),
-        })
+        }),
       );
 
       const dbDisclosureAfterRequest = await mongoDb()
@@ -1299,11 +1293,10 @@ describe('presentation submission', () => {
               UNREVOKED: 'NOT_CHECKED',
             },
           }));
-        }
+        },
       );
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       let webhookPayload;
 
       nock(mockVendorUrl)
@@ -1333,12 +1326,12 @@ describe('presentation submission', () => {
       });
 
       expect(
-        await jwtVerify(response.json.token, tenantKeyPair.publicKey)
+        await jwtVerify(response.json.token, tenantKeyPair.publicKey),
       ).toEqual(
         jwtAccessTokenExpectation(tenant, null, {
           jti: disclosureExchange._id.toString(),
           sub: expect.stringMatching(/anonymous|/),
-        })
+        }),
       );
 
       const dbExchange = await mongoDb()
@@ -1384,7 +1377,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -1393,7 +1386,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             ...checkResultPaymentRequired,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -1413,11 +1406,10 @@ describe('presentation submission', () => {
             credential: decodeCredentialJwt(credential),
             credentialChecks,
           }));
-        }
+        },
       );
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       let webhookPayload;
 
       nock(mockVendorUrl)
@@ -1452,7 +1444,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -1461,7 +1453,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             credentialChecks,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -1481,11 +1473,10 @@ describe('presentation submission', () => {
             credential: decodeCredentialJwt(credential),
             credentialChecks,
           }));
-        }
+        },
       );
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       let webhookPayload;
 
       nock(mockVendorUrl)
@@ -1520,7 +1511,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -1529,15 +1520,14 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             credentialChecks,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
 
     it('should be backwards compatible with the vp_jwt prop', async () => {
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       let webhookPayload;
 
       nock(mockVendorUrl)
@@ -1600,7 +1590,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -1609,7 +1599,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             ...checkResult,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -1619,9 +1609,8 @@ describe('presentation submission', () => {
         .times(2)
         .reply(200, sendCredentialsPayload);
 
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
 
       const selfSignedPresentation = await presentationBuilder.selfSign();
       const responses = await Promise.all([
@@ -1644,7 +1633,7 @@ describe('presentation submission', () => {
       ]);
 
       expect(map('statusCode', responses)).toEqual(
-        expect.arrayContaining([200, 409])
+        expect.arrayContaining([200, 409]),
       );
 
       const dbExchange = await mongoDb()
@@ -1683,12 +1672,10 @@ describe('presentation submission', () => {
         .times(2)
         .reply(200, sendCredentialsPayload);
 
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
-      const presentationBuilder2 = await generatePresentation(
-        disclosureExchange2
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
+      const presentationBuilder2 =
+        await generatePresentation(disclosureExchange2);
       const response = await fastify.injectJson({
         method: 'POST',
         url: inspectUrl(tenant, '/submit-presentation'),
@@ -1770,9 +1757,8 @@ describe('presentation submission', () => {
       expect(nockContext.pendingMocks()).toHaveLength(0);
     });
     it('should 200 if the presentation submission maps to a standard vp and contains a vendorOriginContext', async () => {
-      const presentationBuilder = await generatePresentation(
-        disclosureExchange
-      );
+      const presentationBuilder =
+        await generatePresentation(disclosureExchange);
       presentationBuilder.presentation.vendorOriginContext = '123';
 
       let webhookPayload;
@@ -1804,12 +1790,12 @@ describe('presentation submission', () => {
       });
 
       expect(
-        await jwtVerify(response.json.token, tenantKeyPair.publicKey)
+        await jwtVerify(response.json.token, tenantKeyPair.publicKey),
       ).toEqual(
         jwtAccessTokenExpectation(tenant, null, {
           jti: disclosureExchange._id.toString(),
           sub: expect.stringMatching(/anonymous|/),
-        })
+        }),
       );
 
       const dbExchange = await mongoDb()
@@ -1856,7 +1842,7 @@ describe('presentation submission', () => {
             rawCredential:
               presentationBuilder.presentation.verifiableCredential[i],
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
         credentials: map(
           ({ vc }) => ({
@@ -1865,7 +1851,7 @@ describe('presentation submission', () => {
             issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
             ...checkResult,
           }),
-          presentationBuilder.credentials
+          presentationBuilder.credentials,
         ),
       });
     });
@@ -1900,7 +1886,7 @@ describe('presentation submission', () => {
           message: 'presentation @context is not set correctly',
           statusCode: 400,
           errorCode: 'presentation_invalid',
-        })
+        }),
       );
     });
     it('should 400 when @context is an array and is incorrect value', async () => {
@@ -1924,7 +1910,7 @@ describe('presentation submission', () => {
           message: 'presentation @context is not set correctly',
           statusCode: 400,
           errorCode: 'presentation_invalid',
-        })
+        }),
       );
     });
     it('should 400 when @context is an empty array', async () => {
@@ -1948,7 +1934,7 @@ describe('presentation submission', () => {
           message: 'presentation @context is not set correctly',
           statusCode: 400,
           errorCode: 'presentation_invalid',
-        })
+        }),
       );
     });
     it('should 200 when @context is a string and is correct value', async () => {
@@ -2029,7 +2015,7 @@ describe('presentation submission', () => {
           errorCode: 'unauthorized',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('should 401 if user is not found', async () => {
@@ -2054,7 +2040,7 @@ describe('presentation submission', () => {
           issuer: 'did:foo:foo',
           audience: 'did:foo:foo',
           expiresIn: '1h',
-        }
+        },
       );
       const builder = await generatePresentation(disclosureExchange);
 
@@ -2077,7 +2063,7 @@ describe('presentation submission', () => {
           errorCode: 'unauthorized',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('should 401 if auth jwt is tampered', async () => {
@@ -2102,7 +2088,7 @@ describe('presentation submission', () => {
           issuer: 'did:foo:foo',
           audience: 'did:foo:foo',
           expiresIn: '1h',
-        }
+        },
       );
       const tamperedJwt = tamperJwt(signedJwt, { foo: 'bar' });
       const builder = await generatePresentation(disclosureExchange);
@@ -2126,7 +2112,7 @@ describe('presentation submission', () => {
           errorCode: 'unauthorized',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('should 401 if auth jwt is expired', async () => {
@@ -2152,7 +2138,7 @@ describe('presentation submission', () => {
           issuer: tenant.did,
           audience: tenant.did,
           exp: getUnixTime(subHours(1)(new Date())),
-        }
+        },
       );
       const builder = await generatePresentation(disclosureExchange);
 
@@ -2175,7 +2161,7 @@ describe('presentation submission', () => {
           errorCode: 'unauthorized',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('should 401 if auth jwt audience is not the tenant', async () => {
@@ -2200,7 +2186,7 @@ describe('presentation submission', () => {
           issuer: tenant.did,
           audience: 'did:foo:foo',
           expiresIn: '1h',
-        }
+        },
       );
       const builder = await generatePresentation(disclosureExchange);
 
@@ -2223,7 +2209,7 @@ describe('presentation submission', () => {
           errorCode: 'unauthorized',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('should 401 if auth jwt issuer is not the tenant', async () => {
@@ -2248,7 +2234,7 @@ describe('presentation submission', () => {
           issuer: 'did:foo:foo',
           audience: tenant.did,
           expiresIn: '1h',
-        }
+        },
       );
       const builder = await generatePresentation(disclosureExchange);
 
@@ -2271,7 +2257,7 @@ describe('presentation submission', () => {
           errorCode: 'unauthorized',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
     it('should 200 if auth jwt is valid', async () => {
@@ -2301,7 +2287,7 @@ describe('presentation submission', () => {
           issuer: tenant.did,
           audience: tenant.did,
           expiresIn: '1h',
-        }
+        },
       );
       const builder = await generatePresentation(disclosureExchange);
 

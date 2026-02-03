@@ -53,10 +53,10 @@ describe('offers test suite', () => {
       },
     ]);
     expect(updatedOffers[0].updatedAt.getTime()).toBeGreaterThan(
-      offer1.updatedAt.getTime()
+      offer1.updatedAt.getTime(),
     );
     expect(updatedOffers[1].updatedAt.getTime()).toBeGreaterThan(
-      offer2.updatedAt.getTime()
+      offer2.updatedAt.getTime(),
     );
   });
 
@@ -91,10 +91,10 @@ describe('offers test suite', () => {
       },
     ]);
     expect(updatedOffers[0].updatedAt.getTime()).toBeGreaterThan(
-      offer1.updatedAt.getTime()
+      offer1.updatedAt.getTime(),
     );
     expect(updatedOffers[1].updatedAt.getTime()).toEqual(
-      offer2.updatedAt.getTime()
+      offer2.updatedAt.getTime(),
     );
   });
 });

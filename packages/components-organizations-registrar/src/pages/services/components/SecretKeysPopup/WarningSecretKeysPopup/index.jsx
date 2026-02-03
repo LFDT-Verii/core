@@ -97,7 +97,6 @@ const styles = {
 // eslint-disable-next-line better-mutation/no-mutation
 WarningSecretKeysPopup.propTypes = {
   isModalOpened: PropTypes.bool,
-  // eslint-disable-next-line react/forbid-prop-types
   onClose: PropTypes.func,
   title: PropTypes.string,
   subTitle: PropTypes.string,

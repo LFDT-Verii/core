@@ -65,7 +65,7 @@ const invitationController = async (fastify) => {
       return {
         invitation,
       };
-    }
+    },
   );
 
   fastify.put(
@@ -130,7 +130,7 @@ const invitationController = async (fastify) => {
         inviteeEmail,
         invitation.keyIndividuals.adminGivenName,
         invitation.keyIndividuals.adminFamilyName,
-        req
+        req,
       );
 
       await repos.invitations.update(invitation._id, {
@@ -147,7 +147,7 @@ const invitationController = async (fastify) => {
           ticket,
           code,
         },
-        req
+        req,
       );
       return {
         invitation: {
@@ -159,7 +159,7 @@ const invitationController = async (fastify) => {
         },
         messageCode,
       };
-    }
+    },
   );
 
   fastify.delete(
@@ -210,7 +210,7 @@ const invitationController = async (fastify) => {
         deletedBy: user.sub,
       });
       return rep.status(204).send();
-    }
+    },
   );
 };
 

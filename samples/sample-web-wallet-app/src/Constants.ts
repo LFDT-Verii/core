@@ -1,10 +1,10 @@
-/* eslint-disable max-len */
 /**
  * Created by Michael Avoyan on 09/07/2024.
  *
  * Copyright 2022 Velocity Career Labs inc.
  * SPDX-License-Identifier: Apache-2.0
  */
+/* eslint-disable max-len */
 import Environment from './Environment';
 
 export abstract class Constants {

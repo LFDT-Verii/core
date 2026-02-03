@@ -24,7 +24,7 @@ const checkPaymentRequirement = (checkedCredentials) =>
         credential.credentialChecks?.TRUSTED_ISSUER ||
       CheckResults.VOUCHER_RESERVE_EXHAUSTED ===
         credential.credentialChecks?.UNTAMPERED,
-    checkedCredentials
+    checkedCredentials,
   );
 
 module.exports = { checkPaymentRequirement };

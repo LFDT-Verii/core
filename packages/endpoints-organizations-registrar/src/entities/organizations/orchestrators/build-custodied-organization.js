@@ -15,7 +15,7 @@ const {
 
 const buildCustodiedOrganization = async (
   { profile, serviceEndpoints, invitation },
-  context
+  context,
 ) => {
   const newServices = buildOrganizationServices(serviceEndpoints, invitation);
 
@@ -31,8 +31,8 @@ const buildCustodiedOrganization = async (
           algorithm: 'ec',
           curve: 'secp256k1',
         }),
-      newKeyPairs
-    )
+      newKeyPairs,
+    ),
   );
 
   const newKeys = mapWithIndex(
@@ -43,7 +43,7 @@ const buildCustodiedOrganization = async (
       custodied: true,
       publicKey: newKeyPairs[i].publicKey,
     }),
-    keySpecs
+    keySpecs,
   );
 
   const did = buildCustodiedDidWeb(profile, context);

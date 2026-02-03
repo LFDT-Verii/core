@@ -17,9 +17,8 @@
 const { initSendActivationEmailsToCAOs } = require('../entities');
 
 const notifyCaos = async (fastify) => {
-  const sendActivationEmailsToCAOs = await initSendActivationEmailsToCAOs(
-    fastify
-  );
+  const sendActivationEmailsToCAOs =
+    await initSendActivationEmailsToCAOs(fastify);
 
   const eventHandler = (
     {
@@ -30,14 +29,14 @@ const notifyCaos = async (fastify) => {
         caoServiceRefs,
       },
     },
-    context
+    context,
   ) =>
     sendActivationEmailsToCAOs(
       organization,
       addedServices,
       activatedServiceIds,
       caoServiceRefs,
-      context
+      context,
     );
 
   fastify
@@ -49,16 +48,16 @@ const notifyCaos = async (fastify) => {
       'activated',
       (
         { payload: { organization, activatedServiceIds, caoServiceRefs } },
-        context
+        context,
       ) => {
         sendActivationEmailsToCAOs(
           organization,
           organization.services,
           activatedServiceIds,
           caoServiceRefs,
-          context
+          context,
         );
-      }
+      },
     );
 };
 

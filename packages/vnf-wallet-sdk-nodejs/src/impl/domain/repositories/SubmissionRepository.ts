@@ -8,6 +8,6 @@ export default interface SubmissionRepository {
     submit(
         submission: VCLSubmission,
         jwt: VCLJwt,
-        accessToken?: Nullish<VCLToken>
+        accessToken?: Nullish<VCLToken>,
     ): Promise<VCLSubmissionResult>;
 }

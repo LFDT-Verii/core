@@ -30,16 +30,16 @@ const deployContract = async (
   contractAbi,
   deployerPrivateKey,
   deployRpcUrl,
-  initializer
+  initializer,
 ) => {
   const provider = new ethers.JsonRpcProvider(deployRpcUrl);
-  // eslint-disable-next-line better-mutation/no-mutation
+
   provider.pollingInterval = 100;
   const wallet = new ethers.Wallet(`0x${deployerPrivateKey}`, provider);
   const factory = new ethers.ContractFactory(
     contractAbi.abi,
     contractAbi.bytecode,
-    wallet
+    wallet,
   );
   const contract = await factory.deploy();
   await contract.waitForDeployment();
@@ -53,13 +53,13 @@ const deployContract = async (
 const main = async () => {
   console.info(
     `Deploying contract to ${rpcUrl} using key ending with ${privateKey.slice(
-      -4
-    )}`
+      -4,
+    )}`,
   );
   const permissionsContract = await deployContract(
     permissionsContractAbi,
     privateKey,
-    rpcUrl
+    rpcUrl,
   );
   const permissionsContractAddress = await permissionsContract.getAddress();
   console.log(`PERMISSIONS_CONTRACT_ADDRESS=${permissionsContractAddress}`);
@@ -68,10 +68,10 @@ const main = async () => {
     verificationCouponContractAbi,
     privateKey,
     rpcUrl,
-    (contract) => contract.initialize(name, baseTokenURI)
+    (contract) => contract.initialize(name, baseTokenURI),
   );
   await verificationCouponContract.setPermissionsAddress(
-    permissionsContractAddress
+    permissionsContractAddress,
   );
   const verificationCouponAddress =
     await verificationCouponContract.getAddress();
@@ -84,26 +84,26 @@ const main = async () => {
     async (contract) =>
       contract.initialize(
         verificationCouponAddress,
-        freeCredentialTypes.map(get2BytesHash)
-      )
+        freeCredentialTypes.map(get2BytesHash),
+      ),
   );
   await metadataRegistryContract.setPermissionsAddress(
-    permissionsContractAddress
+    permissionsContractAddress,
   );
   const metadataRegistryAddress = await metadataRegistryContract.getAddress();
   await permissionsContract.addAddressScope(
     metadataRegistryAddress,
-    'coupon:burn'
+    'coupon:burn',
   );
   console.log(`METADATA_REGISTRY_CONTRACT_ADDRESS=${metadataRegistryAddress}`);
 
   const revocationRegistryContract = await deployContract(
     revocationRegistryContractAbi,
     privateKey,
-    rpcUrl
+    rpcUrl,
   );
   await revocationRegistryContract.setPermissionsAddress(
-    permissionsContractAddress
+    permissionsContractAddress,
   );
   const revocationRegistryAddress =
     await revocationRegistryContract.getAddress();

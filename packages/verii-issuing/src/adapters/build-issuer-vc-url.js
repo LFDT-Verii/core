@@ -29,7 +29,7 @@ const ethUrlParser = require('eth-url-parser');
 const buildIssuerVcUrl = (
   listId,
   issuer,
-  { config: { metadataRegistryContractAddress } }
+  { config: { metadataRegistryContractAddress } },
 ) =>
   ethUrlParser.build({
     scheme: 'ethereum',

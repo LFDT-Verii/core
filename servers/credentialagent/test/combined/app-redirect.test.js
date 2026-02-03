@@ -33,7 +33,7 @@ const appRedirectUrl = '/app-redirect';
 const setupNock = () => {
   nock('http://oracle.localhost.test')
     .get(
-      '/api/v0.6/organizations/did%3Aion%3A4131209321321323123e/verified-profile'
+      '/api/v0.6/organizations/did%3Aion%3A4131209321321323123e/verified-profile',
     )
     .reply(200, {
       credentialSubject: { logo: '' },
@@ -74,7 +74,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      "querystring must have required property 'request_uri'"
+      "querystring must have required property 'request_uri'",
     );
   });
 
@@ -86,7 +86,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      "querystring must have required property 'exchange_type'"
+      "querystring must have required property 'exchange_type'",
     );
   });
 
@@ -98,7 +98,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'querystring/exchange_type must be equal to one of the allowed values'
+      'querystring/exchange_type must be equal to one of the allowed values',
     );
   });
 
@@ -110,7 +110,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'inspectorDid should not be present for exchange_type = "issue"'
+      'inspectorDid should not be present for exchange_type = "issue"',
     );
   });
 
@@ -122,7 +122,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'inspectorDid should be present for exchange_type = "inspect"'
+      'inspectorDid should be present for exchange_type = "inspect"',
     );
   });
 
@@ -134,7 +134,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'inspectorDid should be present for exchange_type = "claim.wizard"'
+      'inspectorDid should be present for exchange_type = "claim.wizard"',
     );
   });
 
@@ -146,7 +146,7 @@ describe('app redirect controller test', () => {
     });
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'querystring/exchange_type must be equal to one of the allowed values'
+      'querystring/exchange_type must be equal to one of the allowed values',
     );
   });
 
@@ -164,13 +164,13 @@ describe('app redirect controller test', () => {
     expect(response.headers['content-security-policy']).toBeDefined();
 
     const execResult = /script-src 'nonce-([^']*)'/.exec(
-      response.headers['content-security-policy']
+      response.headers['content-security-policy'],
     );
     const nonceFromCspHeader = execResult[1];
 
     const stylesheetTag = $('html > head > link[type="text/css"]');
     expect(stylesheetTag.attr('href')).toEqual(
-      'http://lib.localhost.test/vnf-wallet-selection/site.css'
+      'http://lib.localhost.test/vnf-wallet-selection/site.css',
     );
     expect(stylesheetTag.attr('nonce')).toEqual(nonceFromCspHeader);
   });
@@ -188,13 +188,13 @@ describe('app redirect controller test', () => {
 
     expect(response.headers['content-security-policy']).toBeDefined();
     const execResult = /script-src 'nonce-([^']*)'/.exec(
-      response.headers['content-security-policy']
+      response.headers['content-security-policy'],
     );
     const nonceFromCspHeader = execResult[1];
 
     const scriptTag = $('html > body > script');
     expect(scriptTag.attr('src')).toEqual(
-      'http://lib.localhost.test/vnf-wallet-selection/index.js'
+      'http://lib.localhost.test/vnf-wallet-selection/index.js',
     );
     expect(scriptTag.attr('nonce')).toEqual(nonceFromCspHeader);
   });
@@ -253,7 +253,7 @@ describe('app redirect controller test', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'Provider at index 0 missing required property: id'
+      'Provider at index 0 missing required property: id',
     );
   });
 
@@ -270,7 +270,7 @@ describe('app redirect controller test', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'Provider at index 0 missing required property: name'
+      'Provider at index 0 missing required property: name',
     );
   });
 
@@ -287,7 +287,7 @@ describe('app redirect controller test', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'Provider at index 0 missing required property: logo'
+      'Provider at index 0 missing required property: logo',
     );
   });
 
@@ -320,13 +320,13 @@ describe('app redirect controller test', () => {
       'http%3A%2F%2Flocalhost.test%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3A4131209321321323123e%2Fissue%2Fget-credential-manifest%3Fexchange_id%3D5f123eab4362bb2e%26credential_types%3DPastEmploymentPosition%26id%3DsecretId';
     const response = await fastify.injectJson({
       method: 'GET',
-      // eslint-disable-next-line max-len
+
       url: `${appRedirectUrl}?request_uri=${url}&exchange_type=claim.wizard&inspectorDid=321123`,
     });
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      'providers parameter is required for exchange_type = "claim.wizard"'
+      'providers parameter is required for exchange_type = "claim.wizard"',
     );
   });
 });

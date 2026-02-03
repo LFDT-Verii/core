@@ -37,19 +37,17 @@ const mockBatchOperations = mock.fn(() =>
       statusCode: 200,
       body: '{}',
     },
-  ])
+  ]),
 );
 const eventsWrapper = { events: [] };
 const mockEventCursor = mock.fn(() => ({
-  [Symbol.asyncIterator]() {
-    return {
-      index: -1,
-      next() {
-        this.index += 1;
-        return eventsWrapper.events[this.index];
-      },
-    };
-  },
+  [Symbol.asyncIterator]: () => ({
+    index: -1,
+    next() {
+      this.index += 1;
+      return eventsWrapper.events[this.index];
+    },
+  }),
 }));
 const mockInitVerificationCoupon = mock.fn(() => ({
   pullBurnCouponEvents: () =>
@@ -83,7 +81,6 @@ const {
 const { ObjectId } = require('mongodb');
 const { addDays } = require('date-fns/fp');
 const { mongoify, mongoCloseWrapper } = require('@verii/tests-helpers');
-// eslint-disable-next-line max-len
 const initOrganizationFactory = require('@verii/endpoints-organizations-registrar/src/entities/organizations/factories/organizations-factory');
 const organizationsRepoPlugin = require('@verii/endpoints-organizations-registrar/src/entities/organizations/repos/repo');
 const initPurchaseFactory = require('./factories/purchases-factory');
@@ -200,7 +197,7 @@ describe('Coupons burned event verification task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
 
     const func = async () => handleCouponsBurnedVerificationEvent(testContext);
@@ -210,7 +207,7 @@ describe('Coupons burned event verification task test suite', () => {
 
     expect(mockReadDocument.mock.callCount()).toEqual(1);
     expect(
-      mockReadDocument.mock.calls.map((call) => call.arguments)
+      mockReadDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       { EventName: task },
@@ -218,7 +215,7 @@ describe('Coupons burned event verification task test suite', () => {
 
     expect(mockBatchOperations.mock.callCount()).toEqual(1);
     expect(
-      mockBatchOperations.mock.calls.map((call) => call.arguments)
+      mockBatchOperations.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         clientVoucherBurns: [
@@ -233,7 +230,7 @@ describe('Coupons burned event verification task test suite', () => {
     ]);
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
@@ -286,7 +283,7 @@ describe('Coupons burned event verification task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
     mockBatchOperations.mock.mockImplementationOnce(() =>
       Promise.resolve([
@@ -306,7 +303,7 @@ describe('Coupons burned event verification task test suite', () => {
           statusCode: 400,
           body: 'foo error',
         },
-      ])
+      ]),
     );
 
     const func = async () => handleCouponsBurnedVerificationEvent(testContext);
@@ -315,7 +312,7 @@ describe('Coupons burned event verification task test suite', () => {
 
     expect(mockBatchOperations.mock.callCount()).toEqual(1);
     expect(
-      mockBatchOperations.mock.calls.map((call) => call.arguments)
+      mockBatchOperations.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         clientVoucherBurns: [
@@ -330,7 +327,7 @@ describe('Coupons burned event verification task test suite', () => {
     ]);
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
@@ -360,7 +357,7 @@ describe('Coupons burned event verification task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
 
     await handleCouponsBurnedVerificationEvent(testContext);
@@ -396,7 +393,7 @@ describe('Coupons burned event verification task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
 
     await handleCouponsBurnedVerificationEvent(testContext);
@@ -427,7 +424,7 @@ describe('Coupons burned event verification task test suite', () => {
 
   it('Should successfully handle initial case of no existing blocks', async () => {
     mockReadDocument.mock.mockImplementationOnce(() =>
-      Promise.resolve(undefined)
+      Promise.resolve(undefined),
     );
 
     const func = async () => handleCouponsBurnedVerificationEvent(testContext);
@@ -445,7 +442,7 @@ describe('Coupons burned event verification task test suite', () => {
     expect(mockBatchOperations.mock.callCount()).toEqual(0);
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {

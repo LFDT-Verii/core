@@ -33,7 +33,7 @@ describe('Protected mongo collection functionality test suite', () => {
       const mockSecret = 'secret';
       const encryptedValue = encryptCollection(
         mockSecretPropUnencryptedValue,
-        mockSecret
+        mockSecret,
       );
       const mockContext = {
         config: {
@@ -66,8 +66,8 @@ describe('Protected mongo collection functionality test suite', () => {
         };
         await expect(func).rejects.toThrow(
           `No ${mockItemType} matching the filter ${JSON.stringify(
-            mockFilter
-          )} was found`
+            mockFilter,
+          )} was found`,
         );
       });
 
@@ -89,15 +89,15 @@ describe('Protected mongo collection functionality test suite', () => {
         };
         await expect(func).rejects.toThrow(
           `No ${mockSecretPropName} set on ${mockItemType} matching the filter ${JSON.stringify(
-            mockFilter
-          )}`
+            mockFilter,
+          )}`,
         );
       });
 
       it('findOneAndDecryptSecret should properly decrypt an encrypted property', async () => {
         const mockParent = {
           findOne: mock.fn(() =>
-            Promise.resolve({ [mockSecretPropName]: encryptedValue })
+            Promise.resolve({ [mockSecretPropName]: encryptedValue }),
           ),
         };
 
@@ -128,7 +128,7 @@ describe('Protected mongo collection functionality test suite', () => {
       const mockSecret = 'secret';
       const encryptedValue = encryptCollection(
         JSON.stringify(mockSecretPropUnencryptedValue),
-        mockSecret
+        mockSecret,
       );
       const mockContext = {
         config: {
@@ -160,8 +160,8 @@ describe('Protected mongo collection functionality test suite', () => {
         };
         await expect(func).rejects.toThrow(
           `No ${mockItemType} matching the filter ${JSON.stringify(
-            mockFilter
-          )} was found`
+            mockFilter,
+          )} was found`,
         );
       });
 
@@ -170,7 +170,7 @@ describe('Protected mongo collection functionality test suite', () => {
           findOne: mock.fn(() =>
             Promise.resolve({
               'not-foo': 'not-bar',
-            })
+            }),
           ),
         };
 
@@ -186,15 +186,15 @@ describe('Protected mongo collection functionality test suite', () => {
         };
         await expect(func).rejects.toThrow(
           `No ${mockSecretPropName} set on ${mockItemType} matching the filter ${JSON.stringify(
-            mockFilter
-          )}`
+            mockFilter,
+          )}`,
         );
       });
 
       it('findOneAndDecryptSecret should properly decrypt an encrypted property', async () => {
         const mockParent = {
           findOne: mock.fn(() =>
-            Promise.resolve({ [mockSecretPropName]: encryptedValue })
+            Promise.resolve({ [mockSecretPropName]: encryptedValue }),
           ),
         };
 
@@ -220,7 +220,7 @@ describe('Protected mongo collection functionality test suite', () => {
       const mockSecret = 'secret';
       const encryptedValue = encryptCollection(
         mockSecretPropUnencryptedValue,
-        mockSecret
+        mockSecret,
       );
       const mockContext = {
         config: {
@@ -259,7 +259,7 @@ describe('Protected mongo collection functionality test suite', () => {
               {
                 'not-foo': 'not-bar',
               },
-            ])
+            ]),
           ),
         };
 
@@ -276,15 +276,15 @@ describe('Protected mongo collection functionality test suite', () => {
         };
         await expect(func).rejects.toThrow(
           `No ${mockSecretPropName} set on ${mockItemType} matching the filter ${JSON.stringify(
-            mockFilter
-          )}`
+            mockFilter,
+          )}`,
         );
       });
 
       it('findAndDecryptSecret should properly decrypt an encrypted property', async () => {
         const mockParent = {
           find: mock.fn(() =>
-            Promise.resolve([{ [mockSecretPropName]: encryptedValue }])
+            Promise.resolve([{ [mockSecretPropName]: encryptedValue }]),
           ),
         };
 
@@ -317,7 +317,7 @@ describe('Protected mongo collection functionality test suite', () => {
       const mockSecret = 'secret';
       const encryptedValue = encryptCollection(
         JSON.stringify(mockSecretPropUnencryptedValue),
-        mockSecret
+        mockSecret,
       );
       const mockContext = {
         config: {
@@ -355,7 +355,7 @@ describe('Protected mongo collection functionality test suite', () => {
               {
                 'not-foo': 'not-bar',
               },
-            ])
+            ]),
           ),
         };
 
@@ -371,15 +371,15 @@ describe('Protected mongo collection functionality test suite', () => {
         };
         await expect(func).rejects.toThrow(
           `No ${mockSecretPropName} set on ${mockItemType} matching the filter ${JSON.stringify(
-            mockFilter
-          )}`
+            mockFilter,
+          )}`,
         );
       });
 
       it('findAndDecryptSecret should properly decrypt an encrypted property', async () => {
         const mockParent = {
           find: mock.fn(() =>
-            Promise.resolve([{ [mockSecretPropName]: encryptedValue }])
+            Promise.resolve([{ [mockSecretPropName]: encryptedValue }]),
           ),
         };
 
@@ -407,7 +407,7 @@ describe('Protected mongo collection functionality test suite', () => {
       const mockSecret = 'secret';
       const encryptedValue = encryptCollection(
         mockSecretPropUnencryptedValue,
-        mockSecret
+        mockSecret,
       );
       const mockContext = {
         config: {
@@ -418,7 +418,7 @@ describe('Protected mongo collection functionality test suite', () => {
       it('prepModification should properly decrypt an encrypted property', async () => {
         const mockParent = {
           prepModification: mock.fn(() =>
-            Promise.resolve({ [mockSecretPropName]: encryptedValue })
+            Promise.resolve({ [mockSecretPropName]: encryptedValue }),
           ),
         };
 
@@ -439,7 +439,7 @@ describe('Protected mongo collection functionality test suite', () => {
       it('prepModification should get proper value from provided value', async () => {
         const mockParent = {
           prepModification: mock.fn(() =>
-            Promise.resolve({ [mockSecretPropName]: encryptedValue })
+            Promise.resolve({ [mockSecretPropName]: encryptedValue }),
           ),
         };
 
@@ -470,7 +470,7 @@ describe('Protected mongo collection functionality test suite', () => {
       const mockSecret = 'secret';
       const encryptedValue = encryptCollection(
         JSON.stringify(mockSecretPropUnencryptedValue),
-        mockSecret
+        mockSecret,
       );
       const mockContext = {
         config: {
@@ -481,7 +481,7 @@ describe('Protected mongo collection functionality test suite', () => {
       it('prepModification should properly decrypt an encrypted property', async () => {
         const mockParent = {
           prepModification: mock.fn(() =>
-            Promise.resolve({ [mockSecretPropName]: encryptedValue })
+            Promise.resolve({ [mockSecretPropName]: encryptedValue }),
           ),
         };
 
@@ -501,7 +501,7 @@ describe('Protected mongo collection functionality test suite', () => {
       it('prepModification should get proper value from provided value', async () => {
         const mockParent = {
           prepModification: mock.fn(() =>
-            Promise.resolve({ [mockSecretPropName]: encryptedValue })
+            Promise.resolve({ [mockSecretPropName]: encryptedValue }),
           ),
         };
 

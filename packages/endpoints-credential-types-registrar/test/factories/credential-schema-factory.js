@@ -19,7 +19,7 @@ module.exports = (app) =>
     async (overrides, { getOrBuild }) => {
       const credentialType = await getOrBuild(
         'credentialType',
-        () => 'EducationDegreeGraduationV1.0'
+        () => 'EducationDegreeGraduationV1.0',
       );
 
       const schemaName = endsWith('V1.0', credentialType)
@@ -46,5 +46,5 @@ module.exports = (app) =>
         },
         ...overrides(),
       };
-    }
+    },
   );

@@ -19,23 +19,24 @@ const { extractVerificationKey, isDidMatching } = require('@verii/did-doc');
 
 const verifyBoundIssuerVc = async (
   { issuerDidDocument, boundIssuerVc },
-  { log }
+  { log },
+  // eslint-disable-next-line complexity
 ) => {
   const decodedBoundIssuerVc = safeJwtDecode(boundIssuerVc);
   const kid = decodedBoundIssuerVc?.header?.kid;
   if (kid == null) {
     throw new Error(
-      'verifyBoundIssuerVc: the boundIssuerVc is incorrectly formatted'
+      'verifyBoundIssuerVc: the boundIssuerVc is incorrectly formatted',
     );
   }
 
   try {
     const verificationKey = extractVerificationKey(issuerDidDocument, kid);
     await verifyCredentialJwt(boundIssuerVc, verificationKey);
-  } catch (error) {
+  } catch {
     log.error(
       { decodedBoundIssuerVc },
-      'checkIssuerTrust: the boundIssuerVc does not verify'
+      'checkIssuerTrust: the boundIssuerVc does not verify',
     );
     return false;
   }
@@ -43,7 +44,7 @@ const verifyBoundIssuerVc = async (
   if (!isDidMatching(decodedBoundIssuerVc?.payload?.iss, issuerDidDocument)) {
     log.error(
       { issuerDidDocument, decodedBoundIssuerVc },
-      "checkIssuerTrust: the boundIssuerVc is not for the credential's issuer"
+      "checkIssuerTrust: the boundIssuerVc is not for the credential's issuer",
     );
     return false;
   }

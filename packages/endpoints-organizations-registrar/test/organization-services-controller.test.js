@@ -15,7 +15,6 @@
  *
  */
 
-// eslint-disable-next-line max-classes-per-file
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
@@ -31,7 +30,7 @@ const mockInitSendError = mock.fn(() =>
     finishProfiling: () => {
       console.log('fake finish sentry profiling');
     },
-  })
+  }),
 );
 mock.module('@verii/error-aggregation', {
   namedExports: {
@@ -62,10 +61,10 @@ const mockAuth0UserUpdate = mock.fn(async ({ id }, obj) => {
 const mockAuth0GetUsers = mock.fn(() =>
   Promise.resolve({
     data: [{ email: '0@localhost.test' }, { email: '1@localhost.test' }],
-  })
+  }),
 );
 const mockAuth0GetUser = mock.fn(() =>
-  Promise.resolve({ data: { email: 'admin@localhost.test' } })
+  Promise.resolve({ data: { email: 'admin@localhost.test' } }),
 );
 
 class ManagementClient {
@@ -95,7 +94,7 @@ const mockUpdateAddressScopes = mock.fn(() => Promise.resolve(undefined));
 const mockInitPermission = mock.fn(() =>
   Promise.resolve({
     updateAddressScopes: mockUpdateAddressScopes,
-  })
+  }),
 );
 mock.module('@verii/contract-permissions', {
   namedExports: {
@@ -202,9 +201,10 @@ const serviceAgentVersionMock = '0.9.0-build.abc12345';
 
 const setServicePingNock = (
   url,
+  // eslint-disable-next-line default-param-last
   versionFlag = true,
   statusCode,
-  delay = 10
+  delay = 10,
 ) => {
   const uri = last(url.split('/'));
   const host = url.replace(`/${uri}`, '');
@@ -218,7 +218,7 @@ const setServicePingNock = (
     .delay(delay)
     .reply(
       statusCode != null ? statusCode : 200,
-      `Welcome to Credential APIs\nHost: https://devagent.velocitycareerlabs.io ${version}`
+      `Welcome to Credential APIs\nHost: https://devagent.velocitycareerlabs.io ${version}`,
     );
 };
 
@@ -417,7 +417,7 @@ const setGetMonitorsNock = (dids, serviceIds) => {
             },
           },
         }),
-        didArray
+        didArray,
       ),
     });
 };
@@ -426,12 +426,12 @@ const getUrlFailNock = (host, url) => () => nock(host, {}).get(url).reply(500);
 
 const setGetSectionsFailNock = getUrlFailNock(
   'https://betteruptime.com',
-  /\/api\/v2\/status-pages\/\d{6}\/sections/
+  /\/api\/v2\/status-pages\/\d{6}\/sections/,
 );
 
 const setGetMonitorsFailNock = getUrlFailNock(
   'https://betteruptime.com',
-  '/api/v2/monitors'
+  '/api/v2/monitors',
 );
 
 const nockExecuted = (pendingMockString) => (nockScope) => {
@@ -442,13 +442,13 @@ const nockExecuted = (pendingMockString) => (nockScope) => {
 const getServiceVersionNockExecuted = (uri) => nockExecuted(`GET ${uri}`);
 
 const getSectionsNockExecuted = nockExecuted(
-  'POST https://betteruptime.com:443/api/v2/status-pages\\/\\d{6}\\/sections/'
+  'POST https://betteruptime.com:443/api/v2/status-pages\\/\\d{6}\\/sections/',
 );
 const postMonitorNockExecuted = nockExecuted(
-  'POST https://betteruptime.com:443/api/v2/monitors'
+  'POST https://betteruptime.com:443/api/v2/monitors',
 );
 const monitorDeletionNockExecuted = nockExecuted(
-  'DELETE https://betteruptime.com:443//\\/api\\/v2\\/monitors\\/\\d{6}'
+  'DELETE https://betteruptime.com:443//\\/api\\/v2\\/monitors\\/\\d{6}',
 );
 
 const getConsentsFromDb = ({ _id }) =>
@@ -514,7 +514,7 @@ describe('Organization Services Test Suite', () => {
     mockAuth0ClientCreate.mock.resetCalls();
     mockCreateStakesAccount.mock.resetCalls();
     mockCreateStakesAccount.mock.mockImplementation(() =>
-      Promise.resolve('foo')
+      Promise.resolve('foo'),
     );
     mockAuth0ClientGrantDelete.mock.resetCalls();
     mockAuth0ClientDelete.mock.resetCalls();
@@ -557,7 +557,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -595,12 +595,12 @@ describe('Organization Services Test Suite', () => {
         expect(dbOrg.activatedServiceIds).toEqual(map('id', service));
 
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -653,7 +653,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -679,17 +679,17 @@ describe('Organization Services Test Suite', () => {
 
         expect(mockSESSendEmail.mock.callCount()).toEqual(2);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [sendServicesActivatedEmailMatcher()],
             [
               sendServicesActivatedEmailToCAOsMatcher(
                 caoOrganization,
-                service[0]
+                service[0],
               ),
             ],
-          ])
+          ]),
         );
       });
       it('should activate inactive services and not fail on email reject', async () => {
@@ -729,7 +729,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -743,7 +743,7 @@ describe('Organization Services Test Suite', () => {
           // eslint-disable-next-line prefer-promise-reject-errors
           Promise.reject({
             message: 'JustTest',
-          })
+          }),
         );
         const response = await fastify.injectJson({
           method: 'POST',
@@ -761,17 +761,17 @@ describe('Organization Services Test Suite', () => {
 
         expect(mockSendError.mock.callCount()).toEqual(1);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [sendServicesActivatedEmailMatcher()],
             [
               sendServicesActivatedEmailToCAOsMatcher(
                 caoOrganization,
-                service[0]
+                service[0],
               ),
             ],
-          ])
+          ]),
         );
       });
 
@@ -826,13 +826,13 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'Organization service not found',
             statusCode: 400,
-          })
+          }),
         );
 
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg.activatedServiceIds).toEqual([]);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([]);
       });
 
@@ -853,7 +853,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -875,7 +875,7 @@ describe('Organization Services Test Suite', () => {
         const dbOrg = await getOrganizationFromDb(did);
         expect(dbOrg.activatedServiceIds).toEqual(map('id', service));
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([]);
       });
 
@@ -908,7 +908,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -958,7 +958,7 @@ describe('Organization Services Test Suite', () => {
                 ...buildTestAuthClient(service.id),
                 clientGrantIds: [expect.any(String)],
               }),
-              services
+              services,
             ),
             buildTestAuthClient('unrelated-id'),
           ],
@@ -1020,7 +1020,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -1065,7 +1065,7 @@ describe('Organization Services Test Suite', () => {
                 ...buildTestAuthClient(service.id),
                 clientGrantIds: [expect.any(String)],
               }),
-              services
+              services,
             ),
           ],
           services: expectedServices(services),
@@ -1085,7 +1085,7 @@ describe('Organization Services Test Suite', () => {
 
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             client_id: first(dbOrg.authClients).clientId,
@@ -1112,7 +1112,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -1153,12 +1153,12 @@ describe('Organization Services Test Suite', () => {
         expect(dbOrg.activatedServiceIds).toEqual(map('id', service));
 
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -1192,7 +1192,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -1244,7 +1244,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'service_endpoint_invalid',
             message: 'serviceEndpoint is invalid format',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1315,7 +1315,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'missing_error_code',
             message:
               OrganizationRegistryErrorMessages.SERVICE_ID_ALREADY_EXISTS,
-          })
+          }),
         );
       });
 
@@ -1351,7 +1351,7 @@ describe('Organization Services Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "logoUrl"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -1386,7 +1386,7 @@ describe('Organization Services Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "playStoreUrl"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -1421,7 +1421,7 @@ describe('Organization Services Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "appleAppStoreUrl"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -1456,7 +1456,7 @@ describe('Organization Services Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "appleAppId"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -1491,7 +1491,7 @@ describe('Organization Services Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "googlePlayId"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -1526,7 +1526,7 @@ describe('Organization Services Test Suite', () => {
               errorCode: 'missing_error_code',
               message: 'VlcWebWalletProvider_v1 service type requires "name"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -1560,7 +1560,7 @@ describe('Organization Services Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "supportedExchangeProtocols"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -1659,7 +1659,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -1732,8 +1732,8 @@ describe('Organization Services Test Suite', () => {
           expectedConsents(
             organization,
             [expectedService],
-            testRegistrarSuperUser
-          )
+            testRegistrarSuperUser,
+          ),
         );
       });
 
@@ -1797,18 +1797,18 @@ describe('Organization Services Test Suite', () => {
           expectedConsents(
             organization,
             [expectedService],
-            testWriteOrganizationsUser
-          )
+            testWriteOrganizationsUser,
+          ),
         );
 
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -1854,7 +1854,7 @@ describe('Organization Services Test Suite', () => {
 
           expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
           expect(
-            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
           ).toContainEqual([
             {
               address: organization.ids.ethereumAccount,
@@ -1891,7 +1891,7 @@ describe('Organization Services Test Suite', () => {
 
           expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
           expect(
-            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
           ).toContainEqual([
             {
               address: organization.ids.ethereumAccount,
@@ -1929,7 +1929,7 @@ describe('Organization Services Test Suite', () => {
 
           expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
           expect(
-            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
           ).toContainEqual([
             {
               address: organization.ids.ethereumAccount,
@@ -1967,7 +1967,7 @@ describe('Organization Services Test Suite', () => {
 
           expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
           expect(
-            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
           ).toContainEqual([
             {
               address: organization.ids.ethereumAccount,
@@ -2005,7 +2005,7 @@ describe('Organization Services Test Suite', () => {
 
           expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
           expect(
-            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+            mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
           ).toContainEqual([
             {
               address: organization.ids.ethereumAccount,
@@ -2173,7 +2173,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -2227,7 +2227,11 @@ describe('Organization Services Test Suite', () => {
 
         // consent entity checks
         expect(await getConsentsFromDb(dbOrg)).toEqual(
-          expectedConsents(organization, dbOrg.services, testRegistrarSuperUser)
+          expectedConsents(
+            organization,
+            dbOrg.services,
+            testRegistrarSuperUser,
+          ),
         );
       });
 
@@ -2254,7 +2258,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -2330,7 +2334,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -2407,7 +2411,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -2482,7 +2486,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -2545,7 +2549,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -2666,7 +2670,7 @@ describe('Organization Services Test Suite', () => {
 
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             client_id: response.json.authClient.clientId,
@@ -2676,7 +2680,7 @@ describe('Organization Services Test Suite', () => {
         ]);
 
         expect(
-          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -2704,7 +2708,7 @@ describe('Organization Services Test Suite', () => {
           ],
         ]);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
@@ -2712,7 +2716,7 @@ describe('Organization Services Test Suite', () => {
 
       it('Should add organization service if auth0 client create fail', async () => {
         mockAuth0ClientCreate.mock.mockImplementationOnce(() =>
-          Promise.reject(new Error())
+          Promise.reject(new Error()),
         );
         const organization = await setupOrganizationWithGroup();
         const did = organization.didDoc.id;
@@ -2773,7 +2777,7 @@ describe('Organization Services Test Suite', () => {
         expect(mockSendError.mock.callCount()).toEqual(1);
 
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
@@ -2853,7 +2857,7 @@ describe('Organization Services Test Suite', () => {
 
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             client_id: response.json.authClient.clientId,
@@ -2863,7 +2867,7 @@ describe('Organization Services Test Suite', () => {
         ]);
 
         expect(
-          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -2891,7 +2895,7 @@ describe('Organization Services Test Suite', () => {
           ],
         ]);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
       });
@@ -2951,7 +2955,7 @@ describe('Organization Services Test Suite', () => {
           services: expectedServices([expectedService]),
         });
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
       }, 30000);
 
@@ -3009,13 +3013,13 @@ describe('Organization Services Test Suite', () => {
 
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[expectedServiceActivationRequiredEmail]]);
       }, 20000);
 
       it('Should add service and send "emailToSupportForServicesAddedAndNeedActivation" email', async () => {
         mockAuth0GetUsers.mock.mockImplementationOnce(() =>
-          Promise.resolve([])
+          Promise.resolve([]),
         );
         const organization = await setupOrganizationWithGroup();
         const did = organization.didDoc.id;
@@ -3046,7 +3050,7 @@ describe('Organization Services Test Suite', () => {
         });
 
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[expectedServiceActivationRequiredEmail]]);
       });
 
@@ -3114,7 +3118,7 @@ describe('Organization Services Test Suite', () => {
           services: expectedServices([payload]),
         });
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
       });
 
@@ -3179,7 +3183,7 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [expectedService.id],
         });
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(last(mockCreateStakesAccount.mock.calls).arguments).toEqual([
@@ -3189,7 +3193,7 @@ describe('Organization Services Test Suite', () => {
         ]);
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             client_id: response.json.authClient.clientId,
@@ -3231,7 +3235,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -3306,7 +3310,7 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: ['#credentialagent-1', expectedService.id],
         });
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(last(mockCreateStakesAccount.mock.calls).arguments).toEqual([
@@ -3316,7 +3320,7 @@ describe('Organization Services Test Suite', () => {
         ]);
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             client_id: response.json.authClient.clientId,
@@ -3347,7 +3351,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -3442,7 +3446,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -3531,7 +3535,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -3576,7 +3580,7 @@ describe('Organization Services Test Suite', () => {
             headers: {
               'x-auto-activate': '1',
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -3606,7 +3610,7 @@ describe('Organization Services Test Suite', () => {
             headers: {
               'x-auto-activate': '1',
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -3627,7 +3631,7 @@ describe('Organization Services Test Suite', () => {
               invitationUrl: 'https://someurl.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
         });
         it('Should add service and accept invitation without sending email if inviter service with cao type not exist', async () => {
@@ -3667,7 +3671,7 @@ describe('Organization Services Test Suite', () => {
             headers: {
               'x-auto-activate': '1',
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -3690,11 +3694,11 @@ describe('Organization Services Test Suite', () => {
               invitationUrl: 'https://someurl.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
 
           const organizationFromDb = await organizationsRepo.findById(
-            organization._id
+            organization._id,
           );
           expect(organizationFromDb).toEqual({
             ...mongoify(organization),
@@ -3736,7 +3740,7 @@ describe('Organization Services Test Suite', () => {
           const organization = await setupOrganizationWithGroup();
           const dltKey = extractVerificationMethod(
             organization.didDoc,
-            '#eth-account-key-1'
+            '#eth-account-key-1',
           );
           await persistOrganizationKey({
             organization,
@@ -3759,7 +3763,7 @@ describe('Organization Services Test Suite', () => {
             headers: {
               'x-auto-activate': '1',
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -3782,11 +3786,11 @@ describe('Organization Services Test Suite', () => {
               invitationUrl: 'https://someurl.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
 
           const organizationFromDb = await organizationsRepo.findById(
-            organization._id
+            organization._id,
           );
           expect(organizationFromDb).toEqual({
             ...mongoify(organization),
@@ -3806,12 +3810,12 @@ describe('Organization Services Test Suite', () => {
 
           expect(mockSESSendEmail.mock.callCount()).toEqual(3);
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailToCAOsMatcher(inviterOrganization)],
               [expectedInvitationAcceptanceEmail],
-            ])
+            ]),
           );
         });
 
@@ -3848,7 +3852,7 @@ describe('Organization Services Test Suite', () => {
           });
           const dltKey = extractVerificationMethod(
             organization.didDoc,
-            '#eth-account-key-1'
+            '#eth-account-key-1',
           );
           await persistOrganizationKey({
             organization,
@@ -3875,7 +3879,7 @@ describe('Organization Services Test Suite', () => {
             headers: {
               'x-auto-activate': '0',
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -3884,7 +3888,7 @@ describe('Organization Services Test Suite', () => {
 
           expect(mockSESSendEmail.mock.callCount()).toEqual(1);
           expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
-            expectedServiceActivationRequiredEmail
+            expectedServiceActivationRequiredEmail,
           );
         });
         it('Should send email to CAO on service activation', async () => {
@@ -3909,7 +3913,7 @@ describe('Organization Services Test Suite', () => {
           });
           const dltKey = extractVerificationMethod(
             caoOrg.didDoc,
-            '#eth-account-key-1'
+            '#eth-account-key-1',
           );
           await persistOrganizationKey({
             organization: caoOrg,
@@ -3936,7 +3940,7 @@ describe('Organization Services Test Suite', () => {
             headers: {
               'x-auto-activate': '1',
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -3944,12 +3948,12 @@ describe('Organization Services Test Suite', () => {
           expect(response.statusCode).toEqual(201);
           expect(mockSESSendEmail.mock.callCount()).toEqual(2);
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailMatcher()],
               [sendServicesActivatedEmailToCAOsMatcher(caoOrg)],
-            ])
+            ]),
           );
         });
       });
@@ -4132,7 +4136,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'missing_error_code',
             message:
               OrganizationServiceErrorMessages.SERVICE_ID_CANNOT_BE_UPDATED,
-          })
+          }),
         );
         const orgFromDb = await getOrganizationFromDb(did);
         expect(orgFromDb).toMatchObject({
@@ -4173,7 +4177,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'missing_error_code',
             message:
               OrganizationServiceErrorMessages.SERVICE_TYPE_CANNOT_BE_UPDATED,
-          })
+          }),
         );
         const orgFromDb = await getOrganizationFromDb(did);
         expect(orgFromDb).toMatchObject({
@@ -4233,7 +4237,7 @@ describe('Organization Services Test Suite', () => {
         });
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          'serviceEndpoint is invalid format'
+          'serviceEndpoint is invalid format',
         );
       });
 
@@ -4268,7 +4272,7 @@ describe('Organization Services Test Suite', () => {
         });
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          'VlcHolderAppProvider_v1 service type requires "logoUrl"'
+          'VlcHolderAppProvider_v1 service type requires "logoUrl"',
         );
       });
 
@@ -4335,7 +4339,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'service_endpoint_ref_not_found',
             message: 'Service endpoint is not pointing to CAO',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -4369,7 +4373,7 @@ describe('Organization Services Test Suite', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.json).toEqual(
-          buildPublicService({ ...service[1], ...updatedServiceValues })
+          buildPublicService({ ...service[1], ...updatedServiceValues }),
         );
 
         const orgFromDb = await getOrganizationFromDb(did);
@@ -4423,7 +4427,7 @@ describe('Organization Services Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "logoUrl"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -4458,7 +4462,7 @@ describe('Organization Services Test Suite', () => {
               message:
                 'VlcWebWalletProvider_v1 service type requires "logoUrl"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -4492,7 +4496,7 @@ describe('Organization Services Test Suite', () => {
           });
           expect(response.statusCode).toEqual(200);
           expect(response.json).toEqual(
-            buildPublicService({ ...service, ...updatedServiceValues })
+            buildPublicService({ ...service, ...updatedServiceValues }),
           );
 
           const orgFromDb = await getOrganizationFromDb(organization.didDoc.id);
@@ -4544,7 +4548,7 @@ describe('Organization Services Test Suite', () => {
           });
           expect(response.statusCode).toEqual(200);
           expect(response.json).toEqual(
-            buildPublicService({ ...service, ...updatedServiceValues })
+            buildPublicService({ ...service, ...updatedServiceValues }),
           );
 
           const orgFromDb = await getOrganizationFromDb(organization.didDoc.id);
@@ -4604,7 +4608,7 @@ describe('Organization Services Test Suite', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.json).toEqual(
-          buildPublicService({ ...service, ...updatedServiceValues })
+          buildPublicService({ ...service, ...updatedServiceValues }),
         );
 
         const orgFromDb = await getOrganizationFromDb(did);
@@ -4678,7 +4682,7 @@ describe('Organization Services Test Suite', () => {
         const response = await fastify.injectJson({
           method: 'DELETE',
           url: `${baseUrl}/${organization.didDoc.id}/services/${serviceId.slice(
-            1
+            1,
           )}`,
         });
 
@@ -4761,7 +4765,7 @@ describe('Organization Services Test Suite', () => {
           activatedServiceIds: [],
         });
         expect(
-          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments),
         ).toEqual([[{ client_id: authClients[1].clientId }]]);
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
       });
@@ -4829,22 +4833,22 @@ describe('Organization Services Test Suite', () => {
         });
 
         expect(
-          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
-            authClients[1].clientGrantIds
-          )
+            authClients[1].clientGrantIds,
+          ),
         );
         expect(
-          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments),
         ).toEqual([[{ client_id: authClients[1].clientId }]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -4879,7 +4883,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'organization_not_found',
             message: 'Organization not found',
             statusCode: 404,
-          })
+          }),
         );
       });
 
@@ -4919,7 +4923,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'missing_error_code',
             message: `Service #missing-service-1 was not found in organization ${organization.didDoc.id}`,
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -4956,7 +4960,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -4988,7 +4992,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'missing_error_code',
             message: `Service #credentialagent-3 was not found in activated services of the organization ${organization.didDoc.id}`,
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -5025,7 +5029,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -5083,18 +5087,18 @@ describe('Organization Services Test Suite', () => {
         });
 
         expect(
-          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
-            authClients[0].clientGrantIds
-          )
+            authClients[0].clientGrantIds,
+          ),
         );
         expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -5156,7 +5160,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -5215,18 +5219,18 @@ describe('Organization Services Test Suite', () => {
         });
 
         expect(
-          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
-            authClients[0].clientGrantIds
-          )
+            authClients[0].clientGrantIds,
+          ),
         );
         expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -5287,7 +5291,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -5410,7 +5414,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -5509,7 +5513,7 @@ describe('Organization Services Test Suite', () => {
         });
         const dltKey = extractVerificationMethod(
           organization.didDoc,
-          '#eth-account-key-1'
+          '#eth-account-key-1',
         );
         await persistOrganizationKey({
           organization,
@@ -5610,7 +5614,7 @@ describe('Organization Services Test Suite', () => {
       });
       const dltKey = extractVerificationMethod(
         org1.didDoc,
-        '#eth-account-key-1'
+        '#eth-account-key-1',
       );
       await persistOrganizationKey({
         organization: org1,
@@ -5633,7 +5637,7 @@ describe('Organization Services Test Suite', () => {
       });
       const dltKey2 = extractVerificationMethod(
         org1.didDoc,
-        '#eth-account-key-1'
+        '#eth-account-key-1',
       );
       await persistOrganizationKey({
         organization: org2,
@@ -5657,7 +5661,7 @@ describe('Organization Services Test Suite', () => {
         const serviceVersionNock = setServicePingNock(
           payload.serviceEndpoint,
           undefined,
-          500
+          500,
         );
         const getSectionsNock = setGetMonitorsNock(dids, serviceIds);
         const monitorEventsNock = setMonitorEventsNock();
@@ -5670,8 +5674,8 @@ describe('Organization Services Test Suite', () => {
         expect(response.statusCode).toEqual(201);
         expect(
           getServiceVersionNockExecuted('https://agent.samplevendor.com/acme')(
-            serviceVersionNock
-          )
+            serviceVersionNock,
+          ),
         ).toEqual(true);
         expect(getSectionsNockExecuted(getSectionsNock)).toEqual(true);
         expect(postMonitorNockExecuted(monitorEventsNock)).toEqual(true);
@@ -5694,8 +5698,8 @@ describe('Organization Services Test Suite', () => {
         expect(response.statusCode).toEqual(201);
         expect(
           getServiceVersionNockExecuted('https://agent.samplevendor.com/acme')(
-            serviceVersionNock
-          )
+            serviceVersionNock,
+          ),
         ).toEqual(true);
         expect(getSectionsNockExecuted(failureNock)).toEqual(true);
       }, 20000);
@@ -5872,12 +5876,12 @@ describe('Organization Services Test Suite', () => {
 
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual([[sendServicesActivatedEmailMatcher()]]);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -5899,8 +5903,8 @@ describe('Organization Services Test Suite', () => {
           expectedConsents(
             organization,
             dbOrg.services,
-            testWriteOrganizationsUser
-          )
+            testWriteOrganizationsUser,
+          ),
         );
       }, 30000);
 
@@ -5983,7 +5987,11 @@ describe('Organization Services Test Suite', () => {
 
         // consent entity checks
         expect(await getConsentsFromDb(dbOrg)).toEqual(
-          expectedConsents(organization, dbOrg.services, testRegistrarSuperUser)
+          expectedConsents(
+            organization,
+            dbOrg.services,
+            testRegistrarSuperUser,
+          ),
         );
       });
 
@@ -6087,7 +6095,11 @@ describe('Organization Services Test Suite', () => {
 
         // consent entity checks
         expect(await getConsentsFromDb(dbOrg)).toEqual(
-          expectedConsents(organization, dbOrg.services, testRegistrarSuperUser)
+          expectedConsents(
+            organization,
+            dbOrg.services,
+            testRegistrarSuperUser,
+          ),
         );
       });
 
@@ -6139,7 +6151,7 @@ describe('Organization Services Test Suite', () => {
             message:
               OrganizationRegistryErrorMessages.SERVICE_ID_ALREADY_EXISTS,
             statusCode: 400,
-          })
+          }),
         );
         expect(nockData.isDone()).toEqual(true);
         const dbOrg = await getOrganizationFromDb(did);
@@ -6223,7 +6235,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'did_resolution_failed',
             message: `Could not resolve ${expectedDidWebDoc.id}`,
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -6261,7 +6273,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'No required purpose for service',
             statusCode: 400,
-          })
+          }),
         );
         expect(nockData.isDone()).toEqual(true);
       });
@@ -6389,7 +6401,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'service_endpoint_ref_not_found',
             message: 'Service endpoint is not pointing to CAO',
             statusCode: 400,
-          })
+          }),
         );
       });
     });
@@ -6462,23 +6474,23 @@ describe('Organization Services Test Suite', () => {
         });
         expect(dbOrg.services.length).toEqual(0);
         expect(
-          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
-            authClients[1].clientGrantIds
-          )
+            authClients[1].clientGrantIds,
+          ),
         );
 
         expect(
-          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments),
         ).toEqual([[{ client_id: authClients[1].clientId }]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -6567,23 +6579,23 @@ describe('Organization Services Test Suite', () => {
         });
         expect(dbOrg.services.length).toEqual(1);
         expect(
-          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
-            authClients[1].clientGrantIds
-          )
+            authClients[1].clientGrantIds,
+          ),
         );
 
         expect(
-          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientDelete.mock.calls.map((call) => call.arguments),
         ).toEqual([[{ client_id: authClients[1].clientId }]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organization.ids.ethereumAccount,
@@ -6638,7 +6650,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'Organization service not found',
             statusCode: 404,
-          })
+          }),
         );
       });
     });
@@ -6674,7 +6686,7 @@ describe('Organization Services Test Suite', () => {
             errorCode: 'did_resolution_failed',
             message: `Could not resolve ${organizationWithService.didDoc.id}`,
             statusCode: 400,
-          })
+          }),
         );
       });
       it('Should update organization service', async () => {
@@ -6711,7 +6723,7 @@ describe('Organization Services Test Suite', () => {
           buildPublicService({
             ...service,
             ...updatedServiceValues,
-          })
+          }),
         );
       });
     });
@@ -6796,7 +6808,7 @@ describe('Organization Services Test Suite', () => {
                 ...buildTestAuthClient(s.id),
                 clientGrantIds: [expect.any(String)],
               }),
-              service
+              service,
             ),
             buildTestAuthClient('unrelated-id'),
           ],
@@ -6810,7 +6822,7 @@ describe('Organization Services Test Suite', () => {
           verifiableCredentialJwt: expect.any(String),
           ids: expect.any(Object),
           normalizedProfileName: normalizeProfileName(
-            organizationWithService.profile.name
+            organizationWithService.profile.name,
           ),
           didNotCustodied: true,
           updatedAt: expect.any(Date),
@@ -7049,18 +7061,18 @@ describe('Organization Services Test Suite', () => {
         });
 
         expect(
-          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
             (clientGrantId) => [{ id: clientGrantId }],
-            authClients[0].clientGrantIds
-          )
+            authClients[0].clientGrantIds,
+          ),
         );
         expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: organizationWithService.ids.ethereumAccount,
@@ -7158,7 +7170,7 @@ const expectedServices = (services, { invitation } = {}) => {
         result.invitationId = new ObjectId(invitation._id);
       }
       return result;
-    })
+    }),
   )(services);
 };
 
@@ -7174,5 +7186,5 @@ const expectedConsents = (organization, services, user) =>
       userId: user.sub,
       createdAt: expect.any(Date),
     }),
-    services
+    services,
   );

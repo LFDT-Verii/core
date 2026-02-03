@@ -14,7 +14,7 @@ module.exports = {
   properties: {
     ...omit(
       ['offerCreationDate', 'offerExpirationDate'],
-      newVendorOfferSchema.properties
+      newVendorOfferSchema.properties,
     ),
     label: { type: 'string' },
   },

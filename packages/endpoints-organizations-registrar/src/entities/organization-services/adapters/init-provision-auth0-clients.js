@@ -34,10 +34,10 @@ const initProvisionAuth0Clients =
               organization.didDoc.id,
               organization.profile,
               nodeService,
-              activatedServiceIds.includes(nodeService.id)
-            )
-          )
-        )(services)
+              activatedServiceIds.includes(nodeService.id),
+            ),
+          ),
+        )(services),
       );
     } catch (error) {
       const message = 'Error Provisioning Auth0 Apps';

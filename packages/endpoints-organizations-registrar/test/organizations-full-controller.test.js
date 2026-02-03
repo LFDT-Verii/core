@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-// eslint-disable-next-line max-classes-per-file
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
@@ -30,7 +29,7 @@ const mockInitSendError = mock.fn(() =>
     finishProfiling: () => {
       console.log('fake finish sentry profiling');
     },
-  })
+  }),
 );
 
 mock.module('@verii/error-aggregation', {
@@ -62,10 +61,10 @@ const mockAuth0UserUpdate = mock.fn(async ({ id }, obj) => {
 const mockAuth0GetUsers = mock.fn(() =>
   Promise.resolve({
     data: [{ email: '0@localhost.test' }, { email: '1@localhost.test' }],
-  })
+  }),
 );
 const mockAuth0GetUser = mock.fn(() =>
-  Promise.resolve({ data: { email: 'admin@localhost.test' } })
+  Promise.resolve({ data: { email: 'admin@localhost.test' } }),
 );
 
 class ManagementClient {
@@ -101,7 +100,7 @@ const mockInitPermission = mock.fn(() =>
     addOperatorKey: mockAddOperator,
     removeOperatorKey: mockRemoveOperator,
     updateAddressScopes: mockUpdateAddressScopes,
-  })
+  }),
 );
 mock.module('@verii/contract-permissions', {
   namedExports: {
@@ -241,9 +240,10 @@ const serviceAgentVersionMock = '0.9.0-build.abc12345';
 
 const setServicePingNock = (
   serviceEndpoint,
+  // eslint-disable-next-line default-param-last
   versionFlag = true,
   statusCode,
-  delay = 10
+  delay = 10,
 ) => {
   const uri = new URL(serviceEndpoint);
   const version = versionFlag ? `\nVersion: ${serviceAgentVersionMock}` : '';
@@ -256,7 +256,7 @@ const setServicePingNock = (
     .delay(delay)
     .reply(
       statusCode != null ? statusCode : 200,
-      `Welcome to Credential APIs\nHost: https://devagent.velocitycareerlabs.io ${version}`
+      `Welcome to Credential APIs\nHost: https://devagent.velocitycareerlabs.io ${version}`,
     );
 };
 
@@ -413,7 +413,7 @@ const nockExecuted = (pendingMockString) => (nockScope) => {
 };
 
 const postMonitorNockExecuted = nockExecuted(
-  'POST https://betteruptime.com:443/api/v2/monitors'
+  'POST https://betteruptime.com:443/api/v2/monitors',
 );
 
 const idsMatcher = ({ did, services, includeMongoId = false } = {}) => {
@@ -447,7 +447,7 @@ const publicProfileMatcher = (profile) =>
       'signatoryTitle',
       'signatoryEmail',
     ],
-    profile
+    profile,
   );
 
 describe('Organizations Full Test Suite', () => {
@@ -473,7 +473,7 @@ describe('Organizations Full Test Suite', () => {
 
   const persistIndexedOrganizationWithServices = async (
     identifier,
-    services
+    services,
   ) => {
     const newServices = mapWithIndex((service, idx) => {
       return {
@@ -541,7 +541,7 @@ describe('Organizations Full Test Suite', () => {
         },
         sort,
       },
-      projection
+      projection,
     );
 
     return map((dbKey) => {
@@ -601,7 +601,7 @@ describe('Organizations Full Test Suite', () => {
     mockAuth0UserUpdate.mock.resetCalls();
     mockCreateStakesAccount.mock.resetCalls();
     mockCreateStakesAccount.mock.mockImplementation(() =>
-      Promise.resolve('foo')
+      Promise.resolve('foo'),
     );
     mockInitPermission.mock.resetCalls();
     mockSESSendEmail.mock.resetCalls();
@@ -627,7 +627,7 @@ describe('Organizations Full Test Suite', () => {
     beforeEach(async () => {
       await clearDb();
       mockCreateFineractClient.mock.mockImplementation(
-        () => mockCreateFineractClientReturnValue
+        () => mockCreateFineractClientReturnValue,
       );
     });
 
@@ -703,7 +703,7 @@ describe('Organizations Full Test Suite', () => {
         });
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          'serviceEndpoint is invalid format'
+          'serviceEndpoint is invalid format',
         );
       });
 
@@ -731,7 +731,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'service_endpoint_required',
             message: 'Service must have a serviceEndpoint',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -759,7 +759,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'type_required',
             message: 'Service must have a type',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -784,7 +784,7 @@ describe('Organizations Full Test Suite', () => {
         });
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          'serviceEndpoint is invalid format'
+          'serviceEndpoint is invalid format',
         );
       });
 
@@ -818,7 +818,7 @@ describe('Organizations Full Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "logoUrl"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -852,7 +852,7 @@ describe('Organizations Full Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "playStoreUrl"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -886,7 +886,7 @@ describe('Organizations Full Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "appleAppStoreUrl"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -920,7 +920,7 @@ describe('Organizations Full Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "appleAppId"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -954,7 +954,7 @@ describe('Organizations Full Test Suite', () => {
               message:
                 'VlcHolderAppProvider_v1 service type requires "googlePlayId"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -983,7 +983,7 @@ describe('Organizations Full Test Suite', () => {
               errorCode: 'missing_error_code',
               message: 'VlcWebWalletProvider_v1 service type requires "name"',
               statusCode: 400,
-            })
+            }),
           );
         });
 
@@ -1017,8 +1017,8 @@ describe('Organizations Full Test Suite', () => {
             expectedCreateFullOrganizationResponse(
               did,
               orgProfile,
-              prefixedServices
-            )
+              prefixedServices,
+            ),
           );
 
           const orgFromDb = await getOrganizationFromDb(did);
@@ -1026,7 +1026,7 @@ describe('Organizations Full Test Suite', () => {
             expectedOrganization(did, orgProfile, prefixedServices, {
               activatedServiceIds: [service1.id],
               authClients: response.json.authClients,
-            })
+            }),
           );
         });
       });
@@ -1057,9 +1057,9 @@ describe('Organizations Full Test Suite', () => {
             statusCode: 400,
             errorCode: 'request_validation_failed',
             message: expect.stringMatching(
-              /^body\/profile\/registrationNumbers\/[\d]\/authority must be equal to one of the allowed values$/g
+              /^body\/profile\/registrationNumbers\/[\d]\/authority must be equal to one of the allowed values$/g,
             ),
-          })
+          }),
         );
         const organizationDocumentCount = await mongoDb()
           .collection('organizations')
@@ -1127,7 +1127,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'contactEmail'"
+          "body/profile must have required property 'contactEmail'",
         );
       });
 
@@ -1150,7 +1150,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'description'"
+          "body/profile must have required property 'description'",
         );
       });
 
@@ -1173,7 +1173,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'contactEmail'"
+          "body/profile must have required property 'contactEmail'",
         );
       });
 
@@ -1196,7 +1196,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          'body/profile/contactEmail must match format "email"'
+          'body/profile/contactEmail must match format "email"',
         );
       });
 
@@ -1219,7 +1219,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          'body/profile/technicalEmail must match format "email"'
+          'body/profile/technicalEmail must match format "email"',
         );
       });
 
@@ -1248,7 +1248,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          'body/profile/name must NOT have more than 100 characters'
+          'body/profile/name must NOT have more than 100 characters',
         );
       });
 
@@ -1286,7 +1286,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'name_change_forbidden',
             message: 'Organization name already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1318,7 +1318,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'name_change_forbidden',
             message: 'Organization name already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1349,7 +1349,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'name_change_forbidden',
             message: 'Organization name already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1381,7 +1381,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'name_change_forbidden',
             message: 'Organization name already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1406,7 +1406,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'contactEmail'"
+          "body/profile must have required property 'contactEmail'",
         );
       });
 
@@ -1431,7 +1431,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'technicalEmail'"
+          "body/profile must have required property 'technicalEmail'",
         );
       });
 
@@ -1456,7 +1456,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'description'"
+          "body/profile must have required property 'description'",
         );
       });
 
@@ -1491,7 +1491,7 @@ describe('Organizations Full Test Suite', () => {
             message:
               'body/profile/commercialEntities/0/logo must match format "uri"',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1517,7 +1517,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'adminGivenName'"
+          "body/profile must have required property 'adminGivenName'",
         );
       });
 
@@ -1543,7 +1543,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'adminFamilyName'"
+          "body/profile must have required property 'adminFamilyName'",
         );
       });
 
@@ -1569,7 +1569,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'adminTitle'"
+          "body/profile must have required property 'adminTitle'",
         );
       });
 
@@ -1595,7 +1595,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'adminEmail'"
+          "body/profile must have required property 'adminEmail'",
         );
       });
 
@@ -1621,7 +1621,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'signatoryGivenName'"
+          "body/profile must have required property 'signatoryGivenName'",
         );
       });
 
@@ -1647,7 +1647,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'signatoryFamilyName'"
+          "body/profile must have required property 'signatoryFamilyName'",
         );
       });
 
@@ -1673,7 +1673,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'signatoryTitle'"
+          "body/profile must have required property 'signatoryTitle'",
         );
       });
 
@@ -1699,7 +1699,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'signatoryEmail'"
+          "body/profile must have required property 'signatoryEmail'",
         );
       });
 
@@ -1725,7 +1725,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'physicalAddress'"
+          "body/profile must have required property 'physicalAddress'",
         );
       });
 
@@ -1751,7 +1751,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json.message).toEqual(
-          "body/profile must have required property 'linkedInProfile'"
+          "body/profile must have required property 'linkedInProfile'",
         );
       });
 
@@ -1781,7 +1781,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'image_already_active',
             message: 'Image already active',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1808,7 +1808,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'website_already_exists',
             message: 'Website already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1832,7 +1832,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'website_protocol_must_be_https',
             message: 'Website protocol must be https',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1856,7 +1856,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'website_path_must_be_empty',
             message: 'Website must have empty path after domain',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1880,7 +1880,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'website_path_must_be_empty',
             message: 'Website must have empty path after domain',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1904,7 +1904,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'website_path_must_be_empty',
             message: 'Website must have empty path after domain',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1928,7 +1928,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'website_path_must_be_empty',
             message: 'Website must have empty path after domain',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1955,7 +1955,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'website_path_must_be_empty',
             message: 'Website must have empty path after domain',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -2076,16 +2076,16 @@ describe('Organizations Full Test Suite', () => {
           expectedCreateFullOrganizationResponse(response.json.id, {
             ...orgProfile,
             registrationNumbers,
-          })
+          }),
         );
 
         // organization entity checks
         const orgFromDb = await getOrganizationFromDb(did);
         expect(orgFromDb).toEqual(
-          expectedOrganization(did, { ...orgProfile, registrationNumbers })
+          expectedOrganization(did, { ...orgProfile, registrationNumbers }),
         );
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -2105,14 +2105,14 @@ describe('Organizations Full Test Suite', () => {
         const dbKeys = await getKeysFromDb(orgFromDb);
         expect(dbKeys).toEqual(
           expect.arrayContaining(
-            map(mapResponseKeyToDbKey, reverse(response.json.keys))
-          )
+            map(mapResponseKeyToDbKey, reverse(response.json.keys)),
+          ),
         );
         expect(dbKeys).toHaveLength(5);
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents([])
+          expectedConsents([]),
         );
 
         // group entity checks
@@ -2126,7 +2126,7 @@ describe('Organizations Full Test Suite', () => {
         expect(mockAuth0UserUpdate.mock.callCount()).toEqual(0);
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           expectedAuth0ScopeChanges(orgFromDb.ids.ethereumAccount),
         ]);
@@ -2136,12 +2136,12 @@ describe('Organizations Full Test Suite', () => {
 
         // email checks
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [expectedSupportEmail()],
             [expectedSignatoryApprovalEmail(null, orgFromDb)],
-          ])
+          ]),
         );
 
         expect(parseToCsvSpy.mock.calls[0].arguments).toEqual([
@@ -2151,7 +2151,7 @@ describe('Organizations Full Test Suite', () => {
                 {
                   authority: Authorities.LinkedIn,
                 },
-                registrationNumbers
+                registrationNumbers,
               ),
             }),
           ],
@@ -2197,25 +2197,27 @@ describe('Organizations Full Test Suite', () => {
         // json response checks
         expect(did).toMatch(DID_FORMAT);
         expect(response.json).toEqual(
-          expectedCreateFullOrganizationResponse(did, orgProfile, [service1])
+          expectedCreateFullOrganizationResponse(did, orgProfile, [service1]),
         );
 
         // organization entity checks
         const orgFromDb = await getOrganizationFromDb(did);
         expect(orgFromDb).toEqual(
-          expectedOrganization(did, orgProfile, [service1])
+          expectedOrganization(did, orgProfile, [service1]),
         );
 
         // key entity checks
         const dbKeys = await getKeysFromDb(orgFromDb);
         expect(dbKeys).toEqual(
-          expect.arrayContaining(map(mapResponseKeyToDbKey, response.json.keys))
+          expect.arrayContaining(
+            map(mapResponseKeyToDbKey, response.json.keys),
+          ),
         );
         expect(dbKeys).toHaveLength(5);
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, [service1], testNoGroupRegistrarUser)
+          expectedConsents(orgFromDb, [service1], testNoGroupRegistrarUser),
         );
 
         // group entity checks
@@ -2229,7 +2231,7 @@ describe('Organizations Full Test Suite', () => {
         expect(mockAuth0UserUpdate.mock.callCount()).toEqual(1);
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           expectedAuth0ScopeChanges(orgFromDb.ids.ethereumAccount, [
             'transactions:write',
@@ -2244,12 +2246,12 @@ describe('Organizations Full Test Suite', () => {
         // email checks
         expect(mockSESSendEmail.mock.callCount()).toEqual(3);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [expectedSupportEmail()],
             [expectedSignatoryApprovalEmail(null, orgFromDb)],
-          ])
+          ]),
         );
       });
 
@@ -2305,7 +2307,7 @@ describe('Organizations Full Test Suite', () => {
                 type: 'auth0',
               },
             ],
-          })
+          }),
         );
 
         // organization entity checks
@@ -2313,11 +2315,11 @@ describe('Organizations Full Test Suite', () => {
         expect(orgFromDb).toEqual(
           expectedOrganization(did, orgProfile, services, {
             authClients: response.json.authClients,
-          })
+          }),
         );
 
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -2340,13 +2342,15 @@ describe('Organizations Full Test Suite', () => {
         // key entity checks
         const dbKeys = await getKeysFromDb(orgFromDb);
         expect(dbKeys).toEqual(
-          expect.arrayContaining(map(mapResponseKeyToDbKey, response.json.keys))
+          expect.arrayContaining(
+            map(mapResponseKeyToDbKey, response.json.keys),
+          ),
         );
         expect(dbKeys).toHaveLength(5);
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, services, testNoGroupRegistrarUser)
+          expectedConsents(orgFromDb, services, testNoGroupRegistrarUser),
         );
 
         // group entity checks
@@ -2358,7 +2362,7 @@ describe('Organizations Full Test Suite', () => {
         // auth0 checks
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -2387,7 +2391,7 @@ describe('Organizations Full Test Suite', () => {
         ]);
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             client_id: last(orgFromDb.authClients).clientId,
@@ -2398,7 +2402,7 @@ describe('Organizations Full Test Suite', () => {
         expect(mockAuth0UserUpdate.mock.callCount()).toEqual(1);
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           expectedAuth0ScopeChanges(orgFromDb.ids.ethereumAccount, [
             'transactions:write',
@@ -2413,13 +2417,13 @@ describe('Organizations Full Test Suite', () => {
 
         // email checks
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [expectedSupportEmail()],
             [expectedSignatoryApprovalEmail(null, orgFromDb)],
             [sendServicesActivatedEmailMatcher()],
-          ])
+          ]),
         );
       });
 
@@ -2470,7 +2474,7 @@ describe('Organizations Full Test Suite', () => {
         // json response checks
         expect(did).toMatch(DID_FORMAT);
         expect(response.json).toEqual(
-          expectedCreateFullOrganizationResponse(did, orgProfile, services)
+          expectedCreateFullOrganizationResponse(did, orgProfile, services),
         );
 
         // organization entity checks
@@ -2478,23 +2482,23 @@ describe('Organizations Full Test Suite', () => {
         expect(orgFromDb).toEqual(
           expectedOrganization(did, orgProfile, services, {
             authClients: response.json.authClients,
-          })
+          }),
         );
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, services, testNoGroupRegistrarUser)
+          expectedConsents(orgFromDb, services, testNoGroupRegistrarUser),
         );
 
         expect(mockSESSendEmail.mock.callCount()).toEqual(3);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [sendServicesActivatedEmailMatcher()],
             [expectedSupportEmail()],
             [expectedSignatoryApprovalEmail(null, orgFromDb)],
-          ])
+          ]),
         );
       });
 
@@ -2536,7 +2540,7 @@ describe('Organizations Full Test Suite', () => {
           expectedCreateFullOrganizationResponse(did, orgProfile, services, {
             profile: { permittedVelocityServiceCategory: [] },
             activatedServiceIds: [],
-          })
+          }),
         );
 
         // organization entity checks
@@ -2545,19 +2549,19 @@ describe('Organizations Full Test Suite', () => {
           expectedOrganization(did, orgProfile, services, {
             profile: { permittedVelocityServiceCategory: [] },
             activatedServiceIds: [],
-          })
+          }),
         );
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, services, testNoGroupRegistrarUser)
+          expectedConsents(orgFromDb, services, testNoGroupRegistrarUser),
         );
 
         // auth0 checks
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             address: response.json.ids.ethereumAccount,
@@ -2626,8 +2630,8 @@ describe('Organizations Full Test Suite', () => {
                   type: 'auth0',
                 },
               ],
-            }
-          )
+            },
+          ),
         );
 
         // organization entity checks
@@ -2637,7 +2641,7 @@ describe('Organizations Full Test Suite', () => {
             profile: { permittedVelocityServiceCategory: [] },
             activatedServiceIds: [],
             authClients: response.json.authClients,
-          })
+          }),
         );
 
         // consent entity checks
@@ -2645,8 +2649,8 @@ describe('Organizations Full Test Suite', () => {
           expectedConsents(
             orgFromDb,
             prefixedServices,
-            testNoGroupRegistrarUser
-          )
+            testNoGroupRegistrarUser,
+          ),
         );
 
         expect(postMonitorNockExecuted(monitorNockScope)).toEqual(true);
@@ -2654,13 +2658,13 @@ describe('Organizations Full Test Suite', () => {
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(0);
 
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [expectedSupportEmail('Super Organization')],
             [expectedSignatoryApprovalEmail(null, orgFromDb)],
             [expectedServiceActivationRequiredEmail],
-          ])
+          ]),
         );
       });
 
@@ -2711,7 +2715,7 @@ describe('Organizations Full Test Suite', () => {
                 type: 'auth0',
               },
             ],
-          })
+          }),
         );
 
         // organization entity checks
@@ -2719,16 +2723,16 @@ describe('Organizations Full Test Suite', () => {
         expect(orgFromDb).toEqual(
           expectedOrganization(did, profile, services, {
             authClients: response.json.authClients,
-          })
+          }),
         );
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, services, testWriteOrganizationsUser)
+          expectedConsents(orgFromDb, services, testWriteOrganizationsUser),
         );
 
         expect(
-          mockCreateFineractClient.mock.calls.map((call) => call.arguments)
+          mockCreateFineractClient.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             _id: orgFromDb._id,
@@ -2747,15 +2751,15 @@ describe('Organizations Full Test Suite', () => {
           expect.any(Object),
         ]);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
-          expect.arrayContaining([[sendServicesActivatedEmailMatcher()]])
+          expect.arrayContaining([[sendServicesActivatedEmailMatcher()]]),
         );
         expect(
-          mockAuth0UserUpdate.mock.calls.map((call) => call.arguments)
+          mockAuth0UserUpdate.mock.calls.map((call) => call.arguments),
         ).toEqual([]);
         expect(
-          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -2785,7 +2789,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientGrantCreate.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             client_id: last(orgFromDb.authClients).clientId,
@@ -2854,7 +2858,7 @@ describe('Organizations Full Test Suite', () => {
                 type: 'auth0',
               },
             ],
-          })
+          }),
         );
 
         // organization entity checks
@@ -2862,16 +2866,16 @@ describe('Organizations Full Test Suite', () => {
         expect(orgFromDb).toEqual(
           expectedOrganization(did, profile, services, {
             authClients: response.json.authClients,
-          })
+          }),
         );
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, services, testWriteOrganizationsUser)
+          expectedConsents(orgFromDb, services, testWriteOrganizationsUser),
         );
 
         expect(
-          mockCreateFineractClient.mock.calls.map((call) => call.arguments)
+          mockCreateFineractClient.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             _id: orgFromDb._id,
@@ -2890,15 +2894,15 @@ describe('Organizations Full Test Suite', () => {
           expect.any(Object),
         ]);
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
-          expect.arrayContaining([[sendServicesActivatedEmailMatcher()]])
+          expect.arrayContaining([[sendServicesActivatedEmailMatcher()]]),
         );
         expect(
-          mockAuth0UserUpdate.mock.calls.map((call) => call.arguments)
+          mockAuth0UserUpdate.mock.calls.map((call) => call.arguments),
         ).toEqual([]);
         expect(
-          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -2988,7 +2992,7 @@ describe('Organizations Full Test Suite', () => {
         // json response checks
         expect(did).toMatch(DID_FORMAT);
         expect(response.json).toEqual(
-          expectedCreateFullOrganizationResponse(did, orgProfile)
+          expectedCreateFullOrganizationResponse(did, orgProfile),
         );
 
         // organization entity checks
@@ -2997,11 +3001,11 @@ describe('Organizations Full Test Suite', () => {
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, [], testNoGroupRegistrarUser)
+          expectedConsents(orgFromDb, [], testNoGroupRegistrarUser),
         );
 
         expect(
-          mockCreateFineractClient.mock.calls.map((call) => call.arguments)
+          mockCreateFineractClient.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           {
             _id: orgFromDb._id,
@@ -3066,7 +3070,7 @@ describe('Organizations Full Test Suite', () => {
               tokenAccountId: '12',
               brokerClientId: expect.any(String),
             },
-          })
+          }),
         );
 
         // organization entity checks
@@ -3082,16 +3086,16 @@ describe('Organizations Full Test Suite', () => {
               tokenAccountId: '12',
               brokerClientId: expect.any(ObjectId),
             },
-          })
+          }),
         );
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, services, testWriteOrganizationsUser)
+          expectedConsents(orgFromDb, services, testWriteOrganizationsUser),
         );
 
         expect(
-          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -3151,18 +3155,18 @@ describe('Organizations Full Test Suite', () => {
         expect(response.json).toEqual(
           expectedCreateFullOrganizationResponse(
             did,
-            profileWithYearOnlyDateStrings
-          )
+            profileWithYearOnlyDateStrings,
+          ),
         );
 
         // organization entity checks
         const orgFromDb = await getOrganizationFromDb(did);
         expect(orgFromDb).toEqual(
-          expectedOrganization(did, profileWithYearOnlyDateStrings)
+          expectedOrganization(did, profileWithYearOnlyDateStrings),
         );
 
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
 
         expect(credentialPayload).toEqual({
@@ -3209,18 +3213,18 @@ describe('Organizations Full Test Suite', () => {
         expect(response.json).toEqual(
           expectedCreateFullOrganizationResponse(
             did,
-            profileWithYearAndMonthDateStrings
-          )
+            profileWithYearAndMonthDateStrings,
+          ),
         );
 
         // organization entity checks
         const orgFromDb = await getOrganizationFromDb(did);
         expect(orgFromDb).toEqual(
-          expectedOrganization(did, profileWithYearAndMonthDateStrings)
+          expectedOrganization(did, profileWithYearAndMonthDateStrings),
         );
 
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -3288,7 +3292,7 @@ describe('Organizations Full Test Suite', () => {
               filter: {
                 dids: response.json.id,
               },
-            })
+            }),
           ).resolves.toEqual([
             {
               dids: [response.json.id],
@@ -3303,15 +3307,15 @@ describe('Organizations Full Test Suite', () => {
               filter: {
                 clientAdminIds: testRegistrarSuperUser.sub,
               },
-            })
+            }),
           ).resolves.toBeNull();
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [expectedSupportEmail(orgProfile.name)],
               [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
-            ])
+            ]),
           );
         });
 
@@ -3326,7 +3330,7 @@ describe('Organizations Full Test Suite', () => {
             payload,
             headers: {
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -3367,7 +3371,7 @@ describe('Organizations Full Test Suite', () => {
             headers: {
               'x-auto-activate': '1',
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -3419,7 +3423,7 @@ describe('Organizations Full Test Suite', () => {
           // json response checks
           expect(did).toMatch(DID_FORMAT);
           expect(response.json).toEqual(
-            expectedCreateFullOrganizationResponse(did, profile)
+            expectedCreateFullOrganizationResponse(did, profile),
           );
 
           // organization entity checks
@@ -3427,7 +3431,7 @@ describe('Organizations Full Test Suite', () => {
           expect(orgFromDb).toEqual(expectedOrganization(did, profile));
 
           const credentialPayload = decodeCredentialJwt(
-            orgFromDb.signedProfileVcJwt.signedCredential
+            orgFromDb.signedProfileVcJwt.signedCredential,
           );
           expect(credentialPayload).toEqual({
             credentialSubject: {
@@ -3447,14 +3451,14 @@ describe('Organizations Full Test Suite', () => {
           const dbKeys = await getKeysFromDb(orgFromDb);
           expect(dbKeys).toEqual(
             expect.arrayContaining(
-              map(mapResponseKeyToDbKey, response.json.keys)
-            )
+              map(mapResponseKeyToDbKey, response.json.keys),
+            ),
           );
           expect(dbKeys).toHaveLength(5);
 
           // consent entity checks
           expect(await getConsentsFromDb(orgFromDb)).toEqual(
-            expectedConsents(orgFromDb, [], testNoGroupRegistrarUser)
+            expectedConsents(orgFromDb, [], testNoGroupRegistrarUser),
           );
         });
 
@@ -3480,7 +3484,7 @@ describe('Organizations Full Test Suite', () => {
           // json response checks
           expect(did).toMatch(DID_FORMAT);
           expect(response.json).toEqual(
-            expectedCreateFullOrganizationResponse(did, profile)
+            expectedCreateFullOrganizationResponse(did, profile),
           );
 
           // organization entity checks
@@ -3564,7 +3568,7 @@ describe('Organizations Full Test Suite', () => {
           expect(response.statusCode).toEqual(201);
 
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual([
             [expectedSupportEmail()],
             [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
@@ -3608,15 +3612,15 @@ describe('Organizations Full Test Suite', () => {
               inviteeEmail: 'foo@example.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [expectedSupportEmail()],
               [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
-            ])
+            ]),
           );
         });
 
@@ -3674,14 +3678,14 @@ describe('Organizations Full Test Suite', () => {
               invitationUrl: 'https://someurl.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
           expect(invitationFromDb.acceptedAt.getTime()).toBeGreaterThan(
-            mongoify(invitation).createdAt.getTime()
+            mongoify(invitation).createdAt.getTime(),
           );
 
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual([
             [expectedSupportEmail()],
             [expectedSignatoryApprovalEmail(inviterOrganization, { profile })],
@@ -3754,10 +3758,10 @@ describe('Organizations Full Test Suite', () => {
               invitationUrl: 'https://someurl.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
           expect(invitationFromDb.acceptedAt.getTime()).toBeGreaterThan(
-            mongoify(invitation).createdAt.getTime()
+            mongoify(invitation).createdAt.getTime(),
           );
 
           const did = response.json?.id;
@@ -3765,7 +3769,7 @@ describe('Organizations Full Test Suite', () => {
           // json response checks
           expect(did).toMatch(DID_FORMAT);
           expect(response.json).toEqual(
-            expectedCreateFullOrganizationResponse(did, orgProfile, services)
+            expectedCreateFullOrganizationResponse(did, orgProfile, services),
           );
 
           // organization entity checks
@@ -3773,14 +3777,14 @@ describe('Organizations Full Test Suite', () => {
           expect(orgFromDb).toEqual(
             expectedOrganization(did, orgProfile, services, {
               invitation,
-            })
+            }),
           );
           // consent entity checks
           expect(await getConsentsFromDb(orgFromDb)).toEqual(
-            expectedConsents(orgFromDb, services, testNoGroupRegistrarUser)
+            expectedConsents(orgFromDb, services, testNoGroupRegistrarUser),
           );
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailMatcher(orgFromDb)],
@@ -3789,7 +3793,7 @@ describe('Organizations Full Test Suite', () => {
               [expectedInvitationAcceptanceEmail],
               [expectedSupportEmail()],
               [expectedSignatoryApprovalEmail(inviterOrganization, orgFromDb)],
-            ])
+            ]),
           );
 
           expect(mockSESSendEmail.mock.calls[5].arguments).toEqual([
@@ -3869,10 +3873,10 @@ describe('Organizations Full Test Suite', () => {
               invitationUrl: 'https://someurl.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
           expect(invitationFromDb.acceptedAt.getTime()).toBeGreaterThan(
-            mongoify(invitation).createdAt.getTime()
+            mongoify(invitation).createdAt.getTime(),
           );
 
           const did = response.json?.id;
@@ -3880,7 +3884,7 @@ describe('Organizations Full Test Suite', () => {
           // json response checks
           expect(did).toMatch(DID_FORMAT);
           expect(response.json).toEqual(
-            expectedCreateFullOrganizationResponse(did, orgProfile, services)
+            expectedCreateFullOrganizationResponse(did, orgProfile, services),
           );
 
           // organization entity checks
@@ -3888,15 +3892,15 @@ describe('Organizations Full Test Suite', () => {
           expect(orgFromDb).toEqual(
             expectedOrganization(did, orgProfile, services, {
               invitation,
-            })
+            }),
           );
           // consent entity checks
           expect(await getConsentsFromDb(orgFromDb)).toEqual(
-            expectedConsents(orgFromDb, services, testNoGroupRegistrarUser)
+            expectedConsents(orgFromDb, services, testNoGroupRegistrarUser),
           );
 
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailMatcher(orgFromDb)],
@@ -3905,7 +3909,7 @@ describe('Organizations Full Test Suite', () => {
               [expectedInvitationAcceptanceEmail],
               [expectedSupportEmail()],
               [expectedSignatoryApprovalEmail(inviterOrganization, orgFromDb)],
-            ])
+            ]),
           );
         });
 
@@ -3967,10 +3971,10 @@ describe('Organizations Full Test Suite', () => {
               invitationUrl: 'https://someurl.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
           expect(invitationFromDb.acceptedAt.getTime()).toBeGreaterThan(
-            mongoify(invitation).createdAt.getTime()
+            mongoify(invitation).createdAt.getTime(),
           );
 
           const did = response.json?.id;
@@ -3978,7 +3982,7 @@ describe('Organizations Full Test Suite', () => {
           // json response checks
           expect(did).toMatch(DID_FORMAT);
           expect(response.json).toEqual(
-            expectedCreateFullOrganizationResponse(did, orgProfile, services)
+            expectedCreateFullOrganizationResponse(did, orgProfile, services),
           );
 
           // organization entity checks
@@ -3986,20 +3990,20 @@ describe('Organizations Full Test Suite', () => {
           expect(orgFromDb).toEqual(
             expectedOrganization(did, orgProfile, services, {
               invitation,
-            })
+            }),
           );
           // consent entity checks
           expect(await getConsentsFromDb(orgFromDb)).toEqual(
-            expectedConsents(orgFromDb, services, testNoGroupRegistrarUser)
+            expectedConsents(orgFromDb, services, testNoGroupRegistrarUser),
           );
 
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailMatcher()],
               [expectedSupportEmail()],
-            ])
+            ]),
           );
         });
 
@@ -4076,10 +4080,10 @@ describe('Organizations Full Test Suite', () => {
               invitationUrl: 'https://someurl.com',
               updatedAt: expect.any(Date),
               createdAt: expect.any(Date),
-            })
+            }),
           );
           expect(invitationFromDb.acceptedAt.getTime()).toBeGreaterThan(
-            mongoify(invitation).createdAt.getTime()
+            mongoify(invitation).createdAt.getTime(),
           );
 
           const did = response.json?.id;
@@ -4087,7 +4091,7 @@ describe('Organizations Full Test Suite', () => {
           // json response checks
           expect(did).toMatch(DID_FORMAT);
           expect(response.json).toEqual(
-            expectedCreateFullOrganizationResponse(did, orgProfile, services)
+            expectedCreateFullOrganizationResponse(did, orgProfile, services),
           );
 
           // organization entity checks
@@ -4095,21 +4099,21 @@ describe('Organizations Full Test Suite', () => {
           expect(orgFromDb).toEqual(
             expectedOrganization(did, orgProfile, services, {
               invitation,
-            })
+            }),
           );
           // consent entity checks
           expect(await getConsentsFromDb(orgFromDb)).toEqual(
-            expectedConsents(orgFromDb, services, testNoGroupRegistrarUser)
+            expectedConsents(orgFromDb, services, testNoGroupRegistrarUser),
           );
 
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailMatcher(orgFromDb)],
               [expectedSupportEmail()],
               [expectedSignatoryApprovalEmail(inviterOrganization1, orgFromDb)],
-            ])
+            ]),
           );
         });
 
@@ -4150,12 +4154,12 @@ describe('Organizations Full Test Suite', () => {
           expect(response.statusCode).toEqual(201);
 
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailMatcher()],
               [expectedSupportEmail()],
-            ])
+            ]),
           );
         });
 
@@ -4200,7 +4204,7 @@ describe('Organizations Full Test Suite', () => {
             headers: {
               'x-auto-activate': '1',
               'x-override-oauth-user': JSON.stringify(
-                testWriteOrganizationsUser
+                testWriteOrganizationsUser,
               ),
             },
           });
@@ -4215,29 +4219,29 @@ describe('Organizations Full Test Suite', () => {
               did,
               orgProfile,
               services,
-              {}
-            )
+              {},
+            ),
           );
 
           // organization entity checks
           const orgFromDb = await getOrganizationFromDb(did);
           expect(orgFromDb).toEqual(
-            expectedOrganization(did, orgProfile, services)
+            expectedOrganization(did, orgProfile, services),
           );
           // consent entity checks
           expect(await getConsentsFromDb(orgFromDb)).toEqual(
-            expectedConsents(orgFromDb, services, testWriteOrganizationsUser)
+            expectedConsents(orgFromDb, services, testWriteOrganizationsUser),
           );
 
           expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments)
+            mockSESSendEmail.mock.calls.map((call) => call.arguments),
           ).toEqual(
             expect.arrayContaining([
               [sendServicesActivatedEmailMatcher(orgFromDb)],
               [sendServicesActivatedEmailToCAOsMatcher(orgFromDb)],
               [expectedSupportEmail()],
               [expectedSignatoryApprovalEmail(null, orgFromDb)],
-            ])
+            ]),
           );
         });
       });
@@ -4272,7 +4276,7 @@ describe('Organizations Full Test Suite', () => {
           await persistIndexedOrganizationWithIssuerService(0));
         registrarFormatServices = map(
           omit(['createdAt', 'updatedAt']),
-          services
+          services,
         );
       });
 
@@ -4307,7 +4311,7 @@ describe('Organizations Full Test Suite', () => {
         const newOrg = await newOrganization();
         const orgProfile = omit(
           ['id', 'createdAt', 'updatedAt'],
-          newOrg.profile
+          newOrg.profile,
         );
         const org = await persistOrganization({
           service: [],
@@ -4351,7 +4355,7 @@ describe('Organizations Full Test Suite', () => {
             'contactEmail',
             'description',
           ],
-          org.profile
+          org.profile,
         );
 
         const oldFormatOrganization = await persistOrganization({
@@ -4374,10 +4378,10 @@ describe('Organizations Full Test Suite', () => {
           ],
         });
         expect(response.json.result[0].profile).not.toHaveProperty(
-          'technicalEmail'
+          'technicalEmail',
         );
         expect(response.json.result[0].profile).not.toHaveProperty(
-          'contactEmail'
+          'contactEmail',
         );
       });
 
@@ -4429,7 +4433,7 @@ describe('Organizations Full Test Suite', () => {
         forEach(({ organization, services }) => {
           servicesByOrg[organization.didDoc.id] = map(
             omit(['createdAt', 'updatedAt']),
-            services
+            services,
           );
         }, result);
       });
@@ -4449,10 +4453,10 @@ describe('Organizations Full Test Suite', () => {
             error: 'Forbidden',
             errorCode: 'missing_error_code',
             message: expect.stringMatching(
-              `User auth0|${NANO_ID_FORMAT} has an invalid group claim did:test:1234`
+              `User auth0|${NANO_ID_FORMAT} has an invalid group claim did:test:1234`,
             ),
             statusCode: 403,
-          })
+          }),
         );
       });
 
@@ -4521,7 +4525,7 @@ describe('Organizations Full Test Suite', () => {
         forEach(({ organization, services }) => {
           servicesByOrg[organization.didDoc.id] = map(
             omit(['createdAt', 'updatedAt']),
-            services
+            services,
           );
         }, result);
       });
@@ -4574,7 +4578,7 @@ describe('Organizations Full Test Suite', () => {
                 organization: o,
                 services: servicesByOrg[o.didDoc.id],
               }),
-            [orgs[2], orgs[0]]
+            [orgs[2], orgs[0]],
           ),
         });
       });
@@ -4645,7 +4649,7 @@ describe('Organizations Full Test Suite', () => {
         forEach(({ organization, services }) => {
           servicesByWalletProviderOrg[organization.didDoc.id] = map(
             omit(['createdAt', 'updatedAt']),
-            services
+            services,
           );
         }, result);
         expect(response.statusCode).toEqual(200);
@@ -4656,7 +4660,7 @@ describe('Organizations Full Test Suite', () => {
                 organization: o,
                 services: servicesByWalletProviderOrg[o.didDoc.id],
               }),
-            reverse(result)
+            reverse(result),
           ),
         });
       });
@@ -4687,7 +4691,7 @@ describe('Organizations Full Test Suite', () => {
                 organization: o,
                 services: servicesByOrg[o.didDoc.id],
               }),
-            [orgs[2], orgs[0]]
+            [orgs[2], orgs[0]],
           ),
         });
       });
@@ -4705,9 +4709,9 @@ describe('Organizations Full Test Suite', () => {
               buildFullOrganizationResponse({
                 organization: o,
                 services: servicesByOrg[o.didDoc.id],
-              })
+              }),
             ),
-            reverse
+            reverse,
           )(orgs),
         });
       });
@@ -4725,9 +4729,9 @@ describe('Organizations Full Test Suite', () => {
               buildFullOrganizationResponse({
                 organization: o,
                 services: servicesByOrg[o.didDoc.id],
-              })
+              }),
             ),
-            reverse
+            reverse,
           )(orgs),
         });
       });
@@ -4952,7 +4956,7 @@ describe('Organizations Full Test Suite', () => {
     describe('DID:WEB creation', () => {
       beforeEach(async () => {
         mockCreateFineractClient.mock.mockImplementation(
-          () => mockCreateFineractClientReturnValue
+          () => mockCreateFineractClientReturnValue,
         );
       });
 
@@ -4968,7 +4972,7 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: [KeyPurposes.DLT_TRANSACTIONS],
             },
@@ -4994,16 +4998,18 @@ describe('Organizations Full Test Suite', () => {
         expect(response.json).toEqual(
           expectedCreateFullOrganizationResponse(did, orgProfile, [], {
             keys: payload.keys,
-          })
+          }),
         );
 
         // organization entity checks
         const orgFromDb = await getOrganizationFromDb(did);
         expect(orgFromDb).toEqual(
-          expectedOrganization(did, orgProfile, null, { didNotCustodied: true })
+          expectedOrganization(did, orgProfile, null, {
+            didNotCustodied: true,
+          }),
         );
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -5022,13 +5028,15 @@ describe('Organizations Full Test Suite', () => {
         // key entity checks
         const dbKeys = await getKeysFromDb(orgFromDb);
         expect(dbKeys).toEqual(
-          expect.arrayContaining(map(mapResponseKeyToDbKey, response.json.keys))
+          expect.arrayContaining(
+            map(mapResponseKeyToDbKey, response.json.keys),
+          ),
         );
         expect(dbKeys).toHaveLength(3);
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, [], testNoGroupRegistrarUser)
+          expectedConsents(orgFromDb, [], testNoGroupRegistrarUser),
         );
 
         // group entity checks
@@ -5042,7 +5050,7 @@ describe('Organizations Full Test Suite', () => {
         expect(mockAuth0UserUpdate.mock.callCount()).toEqual(0);
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           expectedAuth0ScopeChanges(orgFromDb.ids.ethereumAccount),
         ]);
@@ -5052,12 +5060,12 @@ describe('Organizations Full Test Suite', () => {
 
         // email checks
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [expectedSupportEmail()],
             [expectedSignatoryApprovalEmail(null, orgFromDb)],
-          ])
+          ]),
         );
 
         expect(nockData.isDone()).toEqual(true);
@@ -5117,19 +5125,19 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: [KeyPurposes.DLT_TRANSACTIONS],
             },
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[1].id
+                expectedDidWebDoc.verificationMethod[1].id,
               ),
               purposes: [KeyPurposes.ISSUING_METADATA],
             },
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[2].id
+                expectedDidWebDoc.verificationMethod[2].id,
               ),
               purposes: [KeyPurposes.EXCHANGES],
             },
@@ -5171,7 +5179,7 @@ describe('Organizations Full Test Suite', () => {
                 type: 'auth0',
               },
             ],
-          })
+          }),
         );
 
         // organization entity checks
@@ -5188,10 +5196,10 @@ describe('Organizations Full Test Suite', () => {
             },
             didNotCustodied: true,
             invitation,
-          })
+          }),
         );
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -5214,13 +5222,15 @@ describe('Organizations Full Test Suite', () => {
         // key entity checks
         const dbKeys = await getKeysFromDb(orgFromDb);
         expect(dbKeys).toEqual(
-          expect.arrayContaining(map(mapResponseKeyToDbKey, response.json.keys))
+          expect.arrayContaining(
+            map(mapResponseKeyToDbKey, response.json.keys),
+          ),
         );
         expect(dbKeys).toHaveLength(5);
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, services, testNoGroupRegistrarUser)
+          expectedConsents(orgFromDb, services, testNoGroupRegistrarUser),
         );
 
         // group entity checks
@@ -5232,7 +5242,7 @@ describe('Organizations Full Test Suite', () => {
         // auth0 checks
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
         expect(
-          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments)
+          mockAuth0ClientCreate.mock.calls.map((call) => call.arguments),
         ).toEqual([
           [
             {
@@ -5262,7 +5272,7 @@ describe('Organizations Full Test Suite', () => {
         expect(mockAuth0UserUpdate.mock.callCount()).toEqual(1);
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           expectedAuth0ScopeChanges(orgFromDb.ids.ethereumAccount, [
             'transactions:write',
@@ -5276,13 +5286,13 @@ describe('Organizations Full Test Suite', () => {
 
         // email checks
         expect(
-          mockSESSendEmail.mock.calls.map((call) => call.arguments)
+          mockSESSendEmail.mock.calls.map((call) => call.arguments),
         ).toEqual(
           expect.arrayContaining([
             [expectedSupportEmail()],
             [sendServicesActivatedEmailMatcher()],
             [expectedSignatoryApprovalEmail(inviterOrganization, orgFromDb)],
-          ])
+          ]),
         );
 
         expect(nockData.isDone()).toEqual(true);
@@ -5364,19 +5374,19 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: [KeyPurposes.DLT_TRANSACTIONS],
             },
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[1].id
+                expectedDidWebDoc.verificationMethod[1].id,
               ),
               purposes: [KeyPurposes.ISSUING_METADATA],
             },
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[2].id
+                expectedDidWebDoc.verificationMethod[2].id,
               ),
               purposes: [KeyPurposes.EXCHANGES],
             },
@@ -5419,7 +5429,7 @@ describe('Organizations Full Test Suite', () => {
                 type: 'auth0',
               },
             ],
-          })
+          }),
         );
 
         // organization entity checks
@@ -5435,10 +5445,10 @@ describe('Organizations Full Test Suite', () => {
               ],
             },
             didNotCustodied: true,
-          })
+          }),
         );
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -5461,13 +5471,15 @@ describe('Organizations Full Test Suite', () => {
         // key entity checks
         const dbKeys = await getKeysFromDb(orgFromDb);
         expect(dbKeys).toEqual(
-          expect.arrayContaining(map(mapResponseKeyToDbKey, response.json.keys))
+          expect.arrayContaining(
+            map(mapResponseKeyToDbKey, response.json.keys),
+          ),
         );
         expect(dbKeys).toHaveLength(5);
 
         // consent entity checks
         expect(await getConsentsFromDb(orgFromDb)).toEqual(
-          expectedConsents(orgFromDb, services, testRegistrarSuperUser)
+          expectedConsents(orgFromDb, services, testRegistrarSuperUser),
         );
 
         expect(mockAuth0UserUpdate.mock.callCount()).toEqual(0);
@@ -5478,7 +5490,7 @@ describe('Organizations Full Test Suite', () => {
 
         expect(mockUpdateAddressScopes.mock.callCount()).toEqual(1);
         expect(
-          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments)
+          mockUpdateAddressScopes.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           expectedAuth0ScopeChanges(orgFromDb.ids.ethereumAccount, [
             'transactions:write',
@@ -5501,7 +5513,7 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: [KeyPurposes.DLT_TRANSACTIONS],
             },
@@ -5529,7 +5541,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'organization_already_exists',
             message: 'Organization already exists',
             statusCode: 400,
-          })
+          }),
         );
         expect(nockData.isDone()).toEqual(false);
       });
@@ -5561,7 +5573,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'Keys are required for BYO DID',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -5576,7 +5588,7 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: ['some-other-purpose'],
             },
@@ -5599,7 +5611,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'Keys must include DLT_TRANSACTIONS purpose',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -5610,7 +5622,7 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: ['DLT_TRANSACTIONS'],
             },
@@ -5633,7 +5645,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'did_resolution_failed',
             message: 'Could not resolve did:web:example.com',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -5650,7 +5662,7 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: ['DLT_TRANSACTIONS'],
             },
@@ -5680,7 +5692,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'Service with ID #acme-1 does not exist',
             statusCode: 400,
-          })
+          }),
         );
         expect(nockData.isDone()).toEqual(true);
       });
@@ -5700,7 +5712,7 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: ['DLT_TRANSACTIONS'],
             },
@@ -5723,7 +5735,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'Key not found in BYO DID',
             statusCode: 400,
-          })
+          }),
         );
         expect(nockData.isDone()).toEqual(true);
       });
@@ -5739,7 +5751,7 @@ describe('Organizations Full Test Suite', () => {
           keys: [
             {
               kidFragment: toRelativeKeyId(
-                expectedDidWebDoc.verificationMethod[0].id
+                expectedDidWebDoc.verificationMethod[0].id,
               ),
               purposes: [KeyPurposes.DLT_TRANSACTIONS],
               custodial: true,
@@ -5764,7 +5776,7 @@ describe('Organizations Full Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'Keys must be non-custodial',
             statusCode: 400,
-          })
+          }),
         );
       });
     });
@@ -5829,34 +5841,34 @@ describe('Organizations Full Test Suite', () => {
     expect(mockAddPrimary.mock.callCount()).toEqual(1);
     const permissioningKey = findKeyByPurpose(
       KeyPurposes.PERMISSIONING,
-      dbKeys
+      dbKeys,
     );
     expect(
-      mockAddPrimary.mock.calls.map((call) => call.arguments)
+      mockAddPrimary.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         primary: organization.ids.ethereumAccount,
         permissioning: toEthereumAddress(
-          hexFromJwk(permissioningKey.publicKey, false)
+          hexFromJwk(permissioningKey.publicKey, false),
         ),
         rotation: toEthereumAddress(
           hexFromJwk(
             findKeyByPurpose(KeyPurposes.ROTATION, dbKeys).publicKey,
-            false
-          )
+            false,
+          ),
         ),
       },
     ]);
     expect(mockAddOperator.mock.callCount()).toEqual(1);
     expect(
-      mockAddOperator.mock.calls.map((call) => call.arguments)
+      mockAddOperator.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         operator: toEthereumAddress(
           hexFromJwk(
             findKeyByPurpose(KeyPurposes.DLT_TRANSACTIONS, dbKeys).publicKey,
-            false
-          )
+            false,
+          ),
         ),
         primary: organization.ids.ethereumAccount,
       },
@@ -5878,10 +5890,11 @@ const expectedServices = (services, invitation) => {
         result.invitationId = new ObjectId(invitation._id);
       }
       return result;
-    })
+    }),
   )(services);
 };
 
+// eslint-disable-next-line complexity
 const expectedOrganization = (did, profile, services = [], overrides = {}) => {
   const didNotCustodied = overrides.didNotCustodied ?? false;
   const result = {
@@ -5890,7 +5903,7 @@ const expectedOrganization = (did, profile, services = [], overrides = {}) => {
       ...profile,
       permittedVelocityServiceCategory: flow(
         map((service) => ServiceTypeToCategoryMap[service.type]),
-        uniq
+        uniq,
       )(services),
       ...(overrides.profile ?? {}),
     },
@@ -5926,7 +5939,7 @@ const expectedCreateFullOrganizationResponse = (
   did,
   profile,
   services = [],
-  overrides = {}
+  overrides = {},
 ) => ({
   id: did,
   profile: {
@@ -5937,7 +5950,7 @@ const expectedCreateFullOrganizationResponse = (
     updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     permittedVelocityServiceCategory: flow(
       map((service) => ServiceTypeToCategoryMap[service.type]),
-      uniq
+      uniq,
     )(services),
     ...(overrides.profile ?? {}),
   },
@@ -5978,7 +5991,7 @@ const expectedCreateFullOrganizationResponse = (
               withKidFragment: true,
               publicKey: true,
             }),
-          overrides.keys
+          overrides.keys,
         )),
     generateOrganizationKeyMatcher({
       kid: expect.stringMatching(/^#vnf-permissioning-[0-9]+$/),
@@ -6064,7 +6077,7 @@ const expectedConsents = (organization, services, user) =>
       userId: user.sub,
       createdAt: expect.any(Date),
     }),
-    services
+    services,
   );
 
 const expectedAuth0ScopeChanges = (address, scopesToAdd = []) => ({

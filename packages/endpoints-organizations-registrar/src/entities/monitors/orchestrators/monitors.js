@@ -31,7 +31,7 @@ const {
 const addMonitor = async ({ orgId, orgName, service }, context) => {
   const monitorParams = await createMonitorParams(
     { orgId, orgName, service },
-    context
+    context,
   );
 
   if (isEmpty(monitorParams)) {
@@ -40,11 +40,11 @@ const addMonitor = async ({ orgId, orgName, service }, context) => {
   const { statusPageId } = first(monitorParams);
   const pageSection = await ensureSectionExists(
     { orgName, statusPageId },
-    context
+    context,
   );
 
   const monitorsAsResourceResponse = await Promise.all(
-    map(async (monitor) => createMonitor(monitor, context), monitorParams)
+    map(async (monitor) => createMonitor(monitor, context), monitorParams),
   );
 
   return Promise.all(
@@ -58,16 +58,16 @@ const addMonitor = async ({ orgId, orgName, service }, context) => {
             statusPageId,
             statusPageSectionId: pageSection.id,
           },
-          context
+          context,
         ),
-      monitorsAsResourceResponse
-    )
+      monitorsAsResourceResponse,
+    ),
   );
 };
 
 const createMonitorParams = async ({ orgId, orgName, service }, ctx) => {
   const monitorNameTemplate = `${getMonitorPrefix(
-    ctx.config
+    ctx.config,
   )}, ${orgName}, ${orgId} : ${service.id}`;
   const monitorParams = [];
 
@@ -108,7 +108,7 @@ const getServiceVersion = async (url, context) => {
 
     const result = filter(
       (value) => includes(versionMark, value.toLowerCase()),
-      contentArray
+      contentArray,
     );
 
     if (isEmpty(result) || first(result) == null) {
@@ -134,8 +134,8 @@ const synchronizeMonitors = async (context) => {
       map(
         async (organization) =>
           ensureMonitorsExist(organization, allMonitorsResponse.data, context),
-        organizations
-      )
+        organizations,
+      ),
     );
   } catch (e) {
     context.log.error(e);
@@ -148,13 +148,13 @@ const findMonitorByPartialMatch = (monitorsArray, { orgId, serviceId }) =>
     (monitor) =>
       includes(orgId, monitor.attributes.pronounceable_name) &&
       includes(serviceId, monitor.attributes.pronounceable_name),
-    monitorsArray
+    monitorsArray,
   );
 
 const ensureMonitorExists = async (
   { orgId, orgName, service },
   monitors,
-  context
+  context,
 ) => {
   const monitorExist = findMonitorByPartialMatch(monitors, {
     orgId,
@@ -172,8 +172,8 @@ const ensureSectionExists = async ({ orgName, statusPageId }, ctx) => {
   let pageSection = first(
     filter(
       (section) => includes(orgName, section.attributes.name),
-      pageSections.data
-    )
+      pageSections.data,
+    ),
   );
 
   if (isEmpty(pageSection)) {
@@ -192,10 +192,10 @@ const ensureMonitorsExist = async (organisation, monitors, context) => {
         ensureMonitorExists(
           { orgId: didDoc.id, orgName: organisation.profile.name, service },
           monitors,
-          context
+          context,
         ),
-      services
-    )
+      services,
+    ),
   );
 };
 
@@ -203,8 +203,8 @@ const addMonitors = async ({ orgId, orgName, orgServices }, context) => {
   return Promise.all(
     map(
       (service) => addMonitor({ orgId, orgName, service }, context),
-      orgServices
-    )
+      orgServices,
+    ),
   );
 };
 const removeMonitor = async ({ orgId, serviceId }, context) => {
@@ -213,14 +213,14 @@ const removeMonitor = async ({ orgId, serviceId }, context) => {
 
   const monitorsToRemove = findMonitorByPartialMatch(
     allMonitorsResponse?.data,
-    { orgId, serviceId }
+    { orgId, serviceId },
   );
 
   return Promise.all(
     map(
       async (monitor) => deleteMonitor({ monitorId: monitor.id }, context),
-      monitorsToRemove
-    )
+      monitorsToRemove,
+    ),
   );
 };
 

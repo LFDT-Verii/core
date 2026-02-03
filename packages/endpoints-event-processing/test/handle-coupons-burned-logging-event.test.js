@@ -24,15 +24,13 @@ const mockLogInfo = mock.fn();
 const eventsWrapper = { events: [] };
 
 const mockEventCursor = mock.fn(() => ({
-  [Symbol.asyncIterator]() {
-    return {
-      index: -1,
-      next() {
-        this.index += 1;
-        return eventsWrapper.events[this.index];
-      },
-    };
-  },
+  [Symbol.asyncIterator]: () => ({
+    index: -1,
+    next() {
+      this.index += 1;
+      return eventsWrapper.events[this.index];
+    },
+  }),
 }));
 const mockInitVerificationCoupon = mock.fn(() => ({
   pullBurnCouponEvents: () =>
@@ -91,7 +89,7 @@ describe('Coupons burned event logging task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
 
     await handleCouponsBurnedLoggingEvent(testContext);
@@ -99,7 +97,7 @@ describe('Coupons burned event logging task test suite', () => {
 
     expect(mockReadDocument.mock.callCount()).toEqual(1);
     expect(
-      mockReadDocument.mock.calls.map((call) => call.arguments)
+      mockReadDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       { EventName: task },
@@ -125,7 +123,7 @@ describe('Coupons burned event logging task test suite', () => {
 
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
@@ -138,7 +136,7 @@ describe('Coupons burned event logging task test suite', () => {
 
   it('Should successfully handle initial case of no existing blocks', async () => {
     mockReadDocument.mock.mockImplementationOnce(() =>
-      Promise.resolve(undefined)
+      Promise.resolve(undefined),
     );
 
     const func = async () => handleCouponsBurnedLoggingEvent(testContext);
@@ -155,7 +153,7 @@ describe('Coupons burned event logging task test suite', () => {
 
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {

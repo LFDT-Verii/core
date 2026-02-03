@@ -26,9 +26,9 @@ const vclSdkPlugin = async (fastify: any) => {
     new VCLCryptoServicesDescriptor(
       new KeyServiceImpl(),
       new JwtSignServiceImpl(),
-      new JwtVerifyServiceImpl()
+      new JwtVerifyServiceImpl(),
     ),
-    GlobalConfig.isDebugOn
+    GlobalConfig.isDebugOn,
   );
 
   try {

@@ -56,7 +56,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
         contractAddress: await contract.getAddress(),
         rpcProvider,
       },
-      context
+      context,
     );
   };
 
@@ -71,19 +71,19 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
     const rootKeyPair = generateKeyPair();
     deployedContract = await deployTestPermissionsContract(
       rootKeyPair.privateKey,
-      rpcUrl
+      rpcUrl,
     );
 
     rootPermissioningContractClient = await clientForAddress(
       rootKeyPair.privateKey,
-      deployedContract
+      deployedContract,
     );
 
     rotationAccount = generateAccount();
     permissioningAccount = generateAccount();
     permissioningContractClient = await clientForAddress(
       permissioningAccount.privateKey,
-      deployedContract
+      deployedContract,
     );
   });
 
@@ -116,7 +116,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           primary: primaryAccount.address,
           rotation: rotationAccount.address,
           permissioning: permissioningAccount.address,
-        })
+        }),
       ).rejects.toThrow(/execution reverted: "Permissions: caller is not VNF"/);
     });
 
@@ -140,7 +140,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
         const checkResult =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo'
+            'foo',
           );
         expect(checkResult).toEqual(true);
       });
@@ -154,7 +154,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
         const checkResult =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo'
+            'foo',
           );
         expect(checkResult).toEqual(false);
       });
@@ -168,12 +168,12 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
         const checkResult1 =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo1'
+            'foo1',
           );
         const checkResult2 =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo2'
+            'foo2',
           );
         expect(checkResult1).toEqual(true);
         expect(checkResult2).toEqual(true);
@@ -188,12 +188,12 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
         const checkResult1 =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo1'
+            'foo1',
           );
         const checkResult2 =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo2'
+            'foo2',
           );
         expect(checkResult1).toEqual(false);
         expect(checkResult2).toEqual(false);
@@ -209,22 +209,22 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
         const checkResult1 =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo1'
+            'foo1',
           );
         const checkResult2 =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo2'
+            'foo2',
           );
         const checkResult3 =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo3'
+            'foo3',
           );
         const checkResult4 =
           await rootPermissioningContractClient.contractClient.checkAddressScope(
             primaryAccount.address,
-            'foo4'
+            'foo4',
           );
         expect(checkResult1).toEqual(true);
         expect(checkResult2).toEqual(true);
@@ -252,13 +252,13 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
     it("Primary's permissioning key should be able to add an operator", async () => {
       const operatorAccount = generateAccount();
       await expect(
-        permissioningContractClient.lookupPrimary(operatorAccount.address)
+        permissioningContractClient.lookupPrimary(operatorAccount.address),
       ).resolves.toEqual(zeroAddress);
 
       await expect(async () =>
         permissioningContractClient.contractClient.checkOperator(
-          operatorAccount.address
-        )
+          operatorAccount.address,
+        ),
       ).rejects.toThrow('Permissions: operator not pointing to a primary');
 
       await permissioningContractClient.addOperatorKey({
@@ -267,13 +267,13 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
       });
 
       await expect(
-        permissioningContractClient.lookupPrimary(operatorAccount.address)
+        permissioningContractClient.lookupPrimary(operatorAccount.address),
       ).resolves.toEqual(primaryAccount.address);
 
       await expect(
         permissioningContractClient.contractClient.checkOperator(
-          operatorAccount.address
-        )
+          operatorAccount.address,
+        ),
       ).resolves.toEqual(primaryAccount.address);
     });
 
@@ -281,7 +281,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
       const { publicKey } = generateKeyPair();
       const address = toEthereumAddress(publicKey);
       await expect(
-        permissioningContractClient.lookupPrimary(address)
+        permissioningContractClient.lookupPrimary(address),
       ).resolves.toEqual(zeroAddress);
     });
 
@@ -292,9 +292,9 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
         rootPermissioningContractClient.addOperatorKey({
           primary: primaryAccount.address,
           operator: testOperatorKey,
-        })
+        }),
       ).rejects.toThrow(
-        /execution reverted: "Permissions: caller is not permissioning key"/
+        /execution reverted: "Permissions: caller is not permissioning key"/,
       );
     });
 
@@ -306,7 +306,7 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
       });
 
       await expect(
-        permissioningContractClient.lookupPrimary(operatorAccount.address)
+        permissioningContractClient.lookupPrimary(operatorAccount.address),
       ).resolves.toEqual(primaryAccount.address);
 
       await permissioningContractClient.removeOperatorKey({
@@ -315,13 +315,13 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
       });
 
       await expect(
-        permissioningContractClient.lookupPrimary(operatorAccount.address)
+        permissioningContractClient.lookupPrimary(operatorAccount.address),
       ).resolves.toEqual(zeroAddress);
 
       await expect(async () =>
         permissioningContractClient.contractClient.checkOperator(
-          operatorAccount.address
-        )
+          operatorAccount.address,
+        ),
       ).rejects.toThrow('Permissions: operator not pointing to a primary');
     });
 
@@ -337,9 +337,9 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
         rootPermissioningContractClient.removeOperatorKey({
           primary: primaryAccount.address,
           operator: testOperatorAccount.address,
-        })
+        }),
       ).rejects.toThrow(
-        /execution reverted: "Permissions: caller is not permissioning key"/
+        /execution reverted: "Permissions: caller is not permissioning key"/,
       );
     });
 
@@ -360,8 +360,8 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
 
       await expect(
         permissioningContractClient.lookupPrimary(
-          newTestOperatorAccount.address
-        )
+          newTestOperatorAccount.address,
+        ),
       ).resolves.toEqual(primaryAccount.address);
     });
 
@@ -379,9 +379,9 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           primary: primaryAccount.address,
           newOperator: newTestOperatorAccount.address,
           oldOperator: testOperatorAccount.address,
-        })
+        }),
       ).rejects.toThrow(
-        /execution reverted: "Permissions: caller is not permissioning key"/
+        /execution reverted: "Permissions: caller is not permissioning key"/,
       );
     });
   });
@@ -401,14 +401,14 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
     it("Primary's Rotation key should be able to rotate Primary's Permissioning key once", async () => {
       const rotationContractClient1 = await clientForAddress(
         rotationAccount.privateKey,
-        deployedContract
+        deployedContract,
       );
 
       const permissioningAccount2 = generateAccount();
       const rotationAccount2 = generateAccount();
       const rotationContractClient2 = await clientForAddress(
         rotationAccount2.privateKey,
-        deployedContract
+        deployedContract,
       );
       const permissioningAccount3 = generateAccount();
       const rotationAccount3 = generateAccount();
@@ -428,9 +428,9 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           primary: primaryAccount.address,
           newPermissioning: permissioningAccount3.address,
           newRotation: rotationAccount3.address,
-        })
+        }),
       ).rejects.toThrow(
-        /execution reverted: "Permissions: caller is not rotation key"/
+        /execution reverted: "Permissions: caller is not rotation key"/,
       );
 
       // rotate using rotationContractClient2 once
@@ -446,9 +446,9 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           primary: primaryAccount.address,
           newPermissioning: permissioningAccount4.address,
           newRotation: rotationAccount4.address,
-        })
+        }),
       ).rejects.toThrow(
-        /execution reverted: "Permissions: caller is not rotation key"/
+        /execution reverted: "Permissions: caller is not rotation key"/,
       );
 
       await expect(async () =>
@@ -456,9 +456,9 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
           primary: primaryAccount.address,
           newPermissioning: permissioningAccount4.address,
           newRotation: rotationAccount4.address,
-        })
+        }),
       ).rejects.toThrow(
-        /execution reverted: "Permissions: caller is not rotation key"/
+        /execution reverted: "Permissions: caller is not rotation key"/,
       );
     });
   });

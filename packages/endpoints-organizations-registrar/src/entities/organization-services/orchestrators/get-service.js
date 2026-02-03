@@ -27,7 +27,7 @@ const getService = async (did, serviceId, context) => {
   const service = find({ id: `#${serviceId}` }, organization.services);
   if (service == null) {
     throw newError.NotFound(
-      OrganizationServiceErrorMessages.ORGANIZATION_SERVICE_NOT_FOUND
+      OrganizationServiceErrorMessages.ORGANIZATION_SERVICE_NOT_FOUND,
     );
   }
   return buildPublicService(service);

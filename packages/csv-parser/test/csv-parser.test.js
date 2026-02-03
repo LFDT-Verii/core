@@ -28,19 +28,19 @@ const {
 describe('Csv parser test suite', () => {
   it('Should throw error if data invalid', async () => {
     await expect(parseToCsv('test')).rejects.toStrictEqual(
-      Error('Data must be array and not empty')
+      Error('Data must be array and not empty'),
     );
     await expect(parseToCsv(undefined)).rejects.toStrictEqual(
-      Error('Data must be array and not empty')
+      Error('Data must be array and not empty'),
     );
     await expect(parseToCsv(null)).rejects.toStrictEqual(
-      Error('Data must be array and not empty')
+      Error('Data must be array and not empty'),
     );
     await expect(parseToCsv(0)).rejects.toStrictEqual(
-      Error('Data must be array and not empty')
+      Error('Data must be array and not empty'),
     );
     await expect(parseToCsv([])).rejects.toStrictEqual(
-      Error('Data must be array and not empty')
+      Error('Data must be array and not empty'),
     );
   });
 
@@ -96,7 +96,7 @@ describe('Csv parser test suite', () => {
     const result = await parseToCsv(data, ['fieldItems']);
     expect(result).toBe(
       // eslint-disable-next-line max-len
-      '"commonField","fieldItems_field1","fieldItems_field2","fieldItems_field3","fieldItems_field4"\r\n"test","test1","test2","-","-"\r\n"-","test3","test4","test5","-"\r\n"-","-","-","-","test6"'
+      '"commonField","fieldItems_field1","fieldItems_field2","fieldItems_field3","fieldItems_field4"\r\n"test","test1","test2","-","-"\r\n"-","test3","test4","test5","-"\r\n"-","-","-","-","test6"',
     );
   });
 });

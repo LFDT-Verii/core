@@ -87,7 +87,7 @@ const assertIntOrText = (value, name) => {
   }
 
   throw new TypeError(
-    `${name} must be an integer or string, but got ${String(value)}`
+    `${name} must be an integer or string, but got ${String(value)}`,
   );
 };
 

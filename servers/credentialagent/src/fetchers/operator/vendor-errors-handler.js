@@ -26,7 +26,7 @@ const handleDnsError = (error) => {
       'DNS Error - Please verify that that the server has access to an internal DNS server, and that the vendor gateway api has an entry',
       {
         errorCode: 'upstream_network_dns_error',
-      }
+      },
     );
 
     throw error;
@@ -46,7 +46,7 @@ const handleConnectivityError = (error) => {
       'Connectivity Error - Unable to connect to the vendor gateway. Please check routing tables and firewall settings',
       {
         errorCode: 'upstream_network_error',
-      }
+      },
     );
 
     throw error;
@@ -61,7 +61,7 @@ const handleBadRequestError = (error) => {
       'Bad request sent from credential agent to vendor gateway (this should be raised with velocity support).',
       {
         errorCode: 'upstream_response_invalid',
-      }
+      },
     );
 
     throw error;
@@ -78,7 +78,7 @@ const handleUnauthorizedForbiddenError = (error) => {
         authenticationDocumentation:
           'https://docs.velocitycareerlabs.io/#/./Authentication',
         errorCode: 'upstream_unauthorized',
-      }
+      },
     );
 
     throw error;
@@ -93,7 +93,7 @@ const handleNotFoundError = (error, endpointPath) => {
       `Missing implementation of the endpoint '${endpointPath}'.`,
       {
         errorCode: 'upstream_webhook_not_implemented',
-      }
+      },
     );
 
     throw error;
@@ -107,7 +107,7 @@ const handleUnexpectedError = (error) => {
     'Unexpected error received connecting to vendor gateway.',
     {
       errorCode: 'upstream_unexpected_error',
-    }
+    },
   );
 
   throw error;

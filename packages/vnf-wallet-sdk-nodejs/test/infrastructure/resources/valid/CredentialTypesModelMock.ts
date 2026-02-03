@@ -9,7 +9,7 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
     constructor(private issuerCategory: string) {}
 
     mockedData = VCLCredentialTypes.fromPayload(
-        CredentialTypesModelMock.Payload
+        CredentialTypesModelMock.Payload,
     );
 
     get data(): VCLCredentialTypes {

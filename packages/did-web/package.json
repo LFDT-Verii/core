@@ -11,9 +11,9 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
     "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
-    "lint": "eslint --ext .js .",
+    "lint": "eslint .",
     "lint:ci": "eslint . --format json >> eslint-results.json",
-    "lint:fix": "eslint --fix --ext .js ."
+    "lint:fix": "eslint --fix ."
   },
   "dependencies": {
     "lodash": "^4.17.21",
@@ -26,6 +26,8 @@
     "nock": "15.0.0-beta.6"
   },
   "nx": {
-    "tags": ["lib"]
+    "tags": [
+      "lib"
+    ]
   }
 }

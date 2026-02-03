@@ -12,33 +12,33 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         subject = new VCLPresentationRequestDescriptor(
             PresentationRequestDescriptorMocks.DeepLink,
             PresentationRequestDescriptorMocks.PushDelegate,
-            DidJwkMocks.DidJwk
+            DidJwkMocks.DidJwk,
         );
 
         const queryParams =
             `${
                 VCLPresentationRequestDescriptor.KeyPushDelegatePushUrl
             }=${encodeURIComponent(
-                PresentationRequestDescriptorMocks.PushDelegate.pushUrl
+                PresentationRequestDescriptorMocks.PushDelegate.pushUrl,
             )}` +
             `&${
                 VCLPresentationRequestDescriptor.KeyPushDelegatePushToken
             }=${encodeURIComponent(
-                PresentationRequestDescriptorMocks.PushDelegate.pushToken
+                PresentationRequestDescriptorMocks.PushDelegate.pushToken,
             )}`;
         const mockEndpoint = `${decodeURIComponent(
-            PresentationRequestDescriptorMocks.RequestUri
+            PresentationRequestDescriptorMocks.RequestUri,
         )}?${queryParams}`;
 
         expect(subject.endpoint).toEqual(mockEndpoint);
         expect(subject.pushDelegate?.pushUrl).toEqual(
-            PresentationRequestDescriptorMocks.PushDelegate.pushUrl
+            PresentationRequestDescriptorMocks.PushDelegate.pushUrl,
         );
         expect(subject.pushDelegate?.pushToken).toEqual(
-            PresentationRequestDescriptorMocks.PushDelegate.pushToken
+            PresentationRequestDescriptorMocks.PushDelegate.pushToken,
         );
         expect(subject.did).toEqual(
-            PresentationRequestDescriptorMocks.InspectorDid
+            PresentationRequestDescriptorMocks.InspectorDid,
         );
     });
 
@@ -46,15 +46,15 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         subject = new VCLPresentationRequestDescriptor(
             PresentationRequestDescriptorMocks.DeepLink,
             null,
-            DidJwkMocks.DidJwk
+            DidJwkMocks.DidJwk,
         );
 
         expect(subject.endpoint).toEqual(
-            decodeURIComponent(PresentationRequestDescriptorMocks.RequestUri)
+            decodeURIComponent(PresentationRequestDescriptorMocks.RequestUri),
         );
         expect(subject.pushDelegate).toBeNull();
         expect(subject.did).toEqual(
-            PresentationRequestDescriptorMocks.InspectorDid
+            PresentationRequestDescriptorMocks.InspectorDid,
         );
     });
 
@@ -62,33 +62,33 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         subject = new VCLPresentationRequestDescriptor(
             PresentationRequestDescriptorMocks.DeepLinkWithQParams,
             PresentationRequestDescriptorMocks.PushDelegate,
-            DidJwkMocks.DidJwk
+            DidJwkMocks.DidJwk,
         );
 
         const queryParams =
             `${
                 VCLPresentationRequestDescriptor.KeyPushDelegatePushUrl
             }=${encodeURIComponent(
-                PresentationRequestDescriptorMocks.PushDelegate.pushUrl
+                PresentationRequestDescriptorMocks.PushDelegate.pushUrl,
             )}` +
             `&${
                 VCLPresentationRequestDescriptor.KeyPushDelegatePushToken
             }=${encodeURIComponent(
-                PresentationRequestDescriptorMocks.PushDelegate.pushToken
+                PresentationRequestDescriptorMocks.PushDelegate.pushToken,
             )}`;
         const mockEndpoint = `${decodeURIComponent(
-            PresentationRequestDescriptorMocks.RequestUri
+            PresentationRequestDescriptorMocks.RequestUri,
         )}?${PresentationRequestDescriptorMocks.QParms}&${queryParams}`;
 
         expect(subject.endpoint).toEqual(mockEndpoint);
         expect(subject.pushDelegate?.pushUrl).toEqual(
-            PresentationRequestDescriptorMocks.PushDelegate.pushUrl
+            PresentationRequestDescriptorMocks.PushDelegate.pushUrl,
         );
         expect(subject.pushDelegate?.pushToken).toEqual(
-            PresentationRequestDescriptorMocks.PushDelegate.pushToken
+            PresentationRequestDescriptorMocks.PushDelegate.pushToken,
         );
         expect(subject.did).toEqual(
-            PresentationRequestDescriptorMocks.InspectorDid
+            PresentationRequestDescriptorMocks.InspectorDid,
         );
     });
 
@@ -96,17 +96,17 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         subject = new VCLPresentationRequestDescriptor(
             PresentationRequestDescriptorMocks.DeepLinkWithQParams,
             null,
-            DidJwkMocks.DidJwk
+            DidJwkMocks.DidJwk,
         );
 
         const mockEndpoint = `${decodeURIComponent(
-            PresentationRequestDescriptorMocks.RequestUri
+            PresentationRequestDescriptorMocks.RequestUri,
         )}?${PresentationRequestDescriptorMocks.QParms}`;
 
         expect(subject.endpoint).toEqual(mockEndpoint);
         expect(subject.pushDelegate).toBeNull();
         expect(subject.did).toEqual(
-            PresentationRequestDescriptorMocks.InspectorDid
+            PresentationRequestDescriptorMocks.InspectorDid,
         );
     });
 
@@ -114,7 +114,7 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         subject = new VCLPresentationRequestDescriptor(
             DeepLinkMocks.PresentationRequestDeepLinkMainNetWithId,
             null,
-            DidJwkMocks.DidJwk
+            DidJwkMocks.DidJwk,
         );
 
         const mockEndpoint =
@@ -124,7 +124,7 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
 
         expect(subject.pushDelegate).toEqual(null);
         expect(subject.did).toEqual(
-            PresentationRequestDescriptorMocks.InspectorDid
+            PresentationRequestDescriptorMocks.InspectorDid,
         );
     });
 });

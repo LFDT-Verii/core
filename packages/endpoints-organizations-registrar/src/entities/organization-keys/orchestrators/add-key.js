@@ -35,6 +35,7 @@ const {
   resolveVerificationMethodFromByoDID,
 } = require('./resolve-verification-method-byo-did');
 
+// eslint-disable-next-line complexity
 const addKey = async (did, newKey, context) => {
   const { repos } = context;
   const organization = await repos.organizations.findOneByDid(did);
@@ -67,11 +68,11 @@ const addKey = async (did, newKey, context) => {
             ? keyPair.publicKey
             : body.publicKey,
         },
-        context
+        context,
       )
     : await resolveVerificationMethodFromByoDID(
         organization.didDoc.id,
-        kidFragment
+        kidFragment,
       );
 
   const newOrganizationKey = buildOrganizationKey(
@@ -83,7 +84,7 @@ const addKey = async (did, newKey, context) => {
       custodied: newKey.custodied,
       kmsKeyId: kmsEntry?.id,
       verificationMethod,
-    }
+    },
   );
 
   await repos.organizationKeys.insert(newOrganizationKey);
@@ -95,7 +96,7 @@ const addKey = async (did, newKey, context) => {
         primaryAccount: organization.ids.ethereumAccount,
         dltKeys: [newOrganizationKey],
       },
-      context
+      context,
     );
   }
   return {
@@ -127,7 +128,7 @@ const checkForKeyDuplication = async (key, organization, { repos }) => {
   if (existingOrganizationKey != null) {
     throw newError(
       409,
-      buildDuplicateKeyErrorString(key, existingOrganizationKey)
+      buildDuplicateKeyErrorString(key, existingOrganizationKey),
     );
   }
 };

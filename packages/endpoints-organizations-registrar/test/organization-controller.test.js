@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-// eslint-disable-next-line max-classes-per-file
 const {
   after,
   afterEach,
@@ -37,7 +36,7 @@ const mockInitSendError = mock.fn(() =>
     finishProfiling: () => {
       console.log('fake finish sentry profiling');
     },
-  })
+  }),
 );
 
 mock.module('@verii/error-aggregation', {
@@ -69,7 +68,7 @@ const mockAuth0UserUpdate = mock.fn(async ({ id }, obj) => {
 const mockAuth0GetUsers = mock.fn(() =>
   Promise.resolve({
     email: `${mockAuth0GetUsers.mock.callCount()}@localhost.test`,
-  })
+  }),
 );
 
 class ManagementClient {
@@ -102,7 +101,7 @@ const mockInitPermission = mock.fn(() =>
     addPrimary: mockAddPrimary,
     addOperatorKey: mockAddOperator,
     removeOperatorKey: mockRemoveOperator,
-  })
+  }),
 );
 mock.module('@verii/contract-permissions', {
   namedExports: {
@@ -194,7 +193,7 @@ const publicProfileMatcher = (profile) =>
       'signatoryTitle',
       'signatoryEmail',
     ],
-    profile
+    profile,
   );
 
 describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
@@ -248,7 +247,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
 
   beforeEach(async () => {
     mockCreateStakesAccount.mock.mockImplementation(() =>
-      Promise.resolve('foo')
+      Promise.resolve('foo'),
     );
     nock.cleanAll();
   });
@@ -268,7 +267,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
       const org = await newOrganization();
       orgProfile = omit(
         ['id', 'createdAt', 'updatedAt', 'website'],
-        org.profile
+        org.profile,
       );
     });
 
@@ -380,7 +379,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'request_validation_failed',
             message: "body must have required property 'technicalEmail'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -410,7 +409,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'request_validation_failed',
             message: "body must have required property 'contactEmail'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -440,7 +439,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'request_validation_failed',
             message: "body must have required property 'description'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -479,7 +478,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'name_change_forbidden',
             message: 'Organization name already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -518,7 +517,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'name_change_forbidden',
             message: 'Organization name already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -558,7 +557,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'request_validation_failed',
             message: 'body/commercialEntities/0/logo must match format "uri"',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -602,7 +601,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'name_change_forbidden',
             message: 'Organization name already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -643,7 +642,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'name_change_forbidden',
             message: 'Organization name already exists',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -675,7 +674,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             message: 'Name change forbidden',
             errorCode: 'name_change_forbidden',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -732,7 +731,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'image_already_active',
             message: 'Image already active',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -762,7 +761,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'website_must_not_be_specified',
             message: 'Website must not be specified',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -920,7 +919,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         });
 
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -967,7 +966,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         });
 
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -1026,7 +1025,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         });
 
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -1065,7 +1064,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         });
 
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -1095,7 +1094,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
           error: 'Not Found',
           errorCode: 'organization_not_found',
           message: 'Organization not found',
-        })
+        }),
       );
     });
 
@@ -1120,7 +1119,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
           error: 'Bad Request',
           message: 'Cant delete. First remove activated services',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -1365,7 +1364,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
           url: `${fullUrl}/${organization.didDoc.id}`,
           headers: {
             'x-override-oauth-user': JSON.stringify(
-              omit([VNF_GROUP_ID_CLAIM], testReadOrganizationsUser)
+              omit([VNF_GROUP_ID_CLAIM], testReadOrganizationsUser),
             ),
           },
         });
@@ -1413,7 +1412,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'organization_not_found',
             message: 'Organization not found',
             statusCode: 404,
-          })
+          }),
         );
       });
 
@@ -1434,7 +1433,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         expect(response.json).toEqual(
           buildFullOrganizationResponse({
             organization: oldFormatOrganization,
-          })
+          }),
         );
       });
 
@@ -1442,7 +1441,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         const org = await newOrganization();
         const orgProfile = omit(
           ['id', 'createdAt', 'updatedAt', 'contactEmail', 'technicalEmail'],
-          org.profile
+          org.profile,
         );
         const expectedOrganization = await persistOrganization({
           ...org,
@@ -1457,7 +1456,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         expect(response.json).toEqual(
           buildFullOrganizationResponse({
             organization: expectedOrganization,
-          })
+          }),
         );
         expect(response.json.profile.technicalEmail).toBeUndefined();
         expect(response.json.profile.contactEmail).toBeUndefined();
@@ -1474,7 +1473,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
           buildFullOrganizationResponse({
             organization,
             services: buildPublicServices(organization.services),
-          })
+          }),
         );
       });
 
@@ -1654,7 +1653,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'request_validation_failed',
             message: "querystring must have required property 'type'",
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1671,7 +1670,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'missing_error_code',
             message: 'Unrecognized Verifiable Credential type',
             statusCode: 400,
-          })
+          }),
         );
       });
 
@@ -1688,7 +1687,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'organization_not_found',
             message: 'Organization not found',
             statusCode: 404,
-          })
+          }),
         );
       });
 
@@ -1764,7 +1763,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'organization_not_found',
             message: 'Organization not found',
             statusCode: 404,
-          })
+          }),
         );
       });
 
@@ -1781,7 +1780,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'missing_error_code',
             message: 'Verifiable Credential not found',
             statusCode: 404,
-          })
+          }),
         );
       });
 
@@ -1807,7 +1806,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
           },
           {
             signedProfileVcJwt: 1,
-          }
+          },
         );
 
         const url = `${baseUrl}/${alsoKnownAs}/resolve-vc/${dbOrg.signedProfileVcJwt.credentialId}`;
@@ -1933,7 +1932,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         const newOrg = await newOrganization();
         const orgProfile = omit(
           ['id', 'createdAt', 'updatedAt'],
-          newOrg.profile
+          newOrg.profile,
         );
         const org = await persistOrganization({
           service: [
@@ -1982,7 +1981,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         const expectedOrg = await persistOrganization({
           profile: omit(
             ['description', 'contactEmail', 'technicalEmail'],
-            newOrg.profile
+            newOrg.profile,
           ),
         });
         const response = await fastify.injectJson({
@@ -2025,7 +2024,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         const expectedOrg = await persistOrganization({
           profile: omit(
             ['description', 'contactEmail', 'technicalEmail'],
-            newOrg.profile
+            newOrg.profile,
           ),
         });
         const response = await fastify.injectJson({
@@ -2168,7 +2167,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         });
 
         const credentialPayload = decodeCredentialJwt(
-          orgFromDb.signedProfileVcJwt.signedCredential
+          orgFromDb.signedProfileVcJwt.signedCredential,
         );
         expect(credentialPayload).toEqual({
           credentialSubject: {
@@ -2201,7 +2200,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             errorCode: 'missing_error_code',
             message: 'Organization not found',
             statusCode: 404,
-          })
+          }),
         );
       });
     });
@@ -2243,7 +2242,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
                 serviceEndpoint: 'https://example2.com',
               },
             ],
-          })
+          }),
         );
       });
 
@@ -2275,9 +2274,9 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
             organization,
             services: map(
               omit(['createdAt', 'updatedAt']),
-              organization.services
+              organization.services,
             ),
-          })
+          }),
         );
       });
     });

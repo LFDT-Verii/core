@@ -17,33 +17,33 @@
 const { curry } = require('lodash/fp');
 
 const setProtectedHeader = curry((options, wrapper) =>
-  wrapper.setProtectedHeader(options)
+  wrapper.setProtectedHeader(options),
 );
 
 const setIssuedAt = curry((iat, wrapper) => wrapper.setIssuedAt(iat));
 
 const setOptionalIssuer = curry((issuer, wrapper) =>
-  issuer != null ? wrapper.setIssuer(issuer) : wrapper
+  issuer != null ? wrapper.setIssuer(issuer) : wrapper,
 );
 
 const setOptionalAudience = curry((audience, wrapper) =>
-  audience != null ? wrapper.setAudience(audience) : wrapper
+  audience != null ? wrapper.setAudience(audience) : wrapper,
 );
 
 const setOptionalNotBefore = curry((nbf, wrapper) =>
-  nbf != null ? wrapper.setNotBefore(nbf) : wrapper
+  nbf != null ? wrapper.setNotBefore(nbf) : wrapper,
 );
 
 const setOptionalJti = curry((jti, wrapper) =>
-  jti != null ? wrapper.setJti(jti) : wrapper
+  jti != null ? wrapper.setJti(jti) : wrapper,
 );
 
 const setOptionalExpirationTime = curry((exp, wrapper) =>
-  exp != null ? wrapper.setExpirationTime(exp) : wrapper
+  exp != null ? wrapper.setExpirationTime(exp) : wrapper,
 );
 
 const setOptionalSubject = curry((subject, wrapper) =>
-  subject != null ? wrapper.setSubject(subject) : wrapper
+  subject != null ? wrapper.setSubject(subject) : wrapper,
 );
 
 module.exports = {

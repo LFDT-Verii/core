@@ -14,9 +14,7 @@
  * limitations under the License.
  *
  */
-// eslint-disable-next-line import/export
 export * from './PrivateAppRoot.jsx';
-// eslint-disable-next-line import/export
 export * from './PublicAppRoot.jsx';
 export * from './utils/auth/AuthContext.js';
 export * from './utils/auth/authScopes.js';

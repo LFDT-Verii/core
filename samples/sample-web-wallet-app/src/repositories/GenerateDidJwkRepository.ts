@@ -9,7 +9,7 @@ import { Dictionary } from '../Types';
 import fetcher from '../network/Fetcher';
 
 export const generateDidJwk = async (
-  generateDidJwkDescriptor: Dictionary<any>
+  generateDidJwkDescriptor: Dictionary<any>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: Urls.generateDidJwk,

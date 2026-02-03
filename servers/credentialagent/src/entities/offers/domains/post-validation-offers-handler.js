@@ -22,7 +22,7 @@ const postValidationOffersHandler = async (req) => {
   if (req.validationError) {
     await repos.exchanges.addState(
       exchange._id,
-      ExchangeStates.OFFER_VALIDATION_ERROR
+      ExchangeStates.OFFER_VALIDATION_ERROR,
     );
     throw new newError.BadRequest(req.validationError);
   }

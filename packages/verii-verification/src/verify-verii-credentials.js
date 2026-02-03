@@ -20,7 +20,7 @@ const { verifyCredentials } = require('./verify-credentials');
 
 const verifyVeriiCredentials = async (
   { credentials, expectedHolderDid, relyingParty },
-  context
+  context,
 ) => {
   const httpClient = initHttpClient({
     nodeEnv: context.config.nodeEnv,
@@ -40,7 +40,7 @@ const verifyVeriiCredentials = async (
   return verifyCredentials(
     { credentials, expectedHolderDid, relyingParty },
     fetchers,
-    context
+    context,
   );
 };
 

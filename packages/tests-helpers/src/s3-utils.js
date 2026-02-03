@@ -6,7 +6,7 @@ const {
 
 const deleteS3Object = async (s3Client, bucketName) => {
   const data = await s3Client.send(
-    new ListObjectsCommand({ Bucket: bucketName })
+    new ListObjectsCommand({ Bucket: bucketName }),
   );
 
   // Check if data.Contents exists and is not empty
@@ -16,7 +16,7 @@ const deleteS3Object = async (s3Client, bucketName) => {
       new DeleteObjectsCommand({
         Bucket: bucketName,
         Delete: { Objects: objects },
-      })
+      }),
     );
   }
 };
@@ -29,7 +29,7 @@ const getObject = async ({ s3Client, bucket, key }) => {
 
   try {
     return await s3Client.send(new GetObjectCommand(params));
-  } catch (e) {
+  } catch {
     return null;
   }
 };

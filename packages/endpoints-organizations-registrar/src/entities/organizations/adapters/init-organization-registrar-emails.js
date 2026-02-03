@@ -34,12 +34,12 @@ const initOrganizationRegistrarEmails = (config) => {
 You are being contacted because you are the admin of ${
           organization.profile.name
         } on Velocity Network ${whichNet(
-          config
+          config,
         )} and your services were just activated!
 <br>
 <br>
 You can now access your organization’s Payments and Rewards Hub account on ${whichNet(
-          config
+          config,
         )}. 
 To do so, please go <a href="${config.tokenWalletBaseUrl}/o/${
           organization.didDoc.id
@@ -53,7 +53,7 @@ Your DID is registered on the Velocity Network ${whichNet(config)} as ${
 <br>
 <br>
 The following services have been activated for you on Velocity Network ${whichNet(
-          config
+          config,
         )}:
 <br>
 <br>
@@ -86,11 +86,11 @@ Hello,
 You are being contacted because you are the admin of ${
         organization.profile.name
       } on Velocity Network ${whichNet(
-        config
+        config,
       )} and a new service has just been added to your organization. 
 
 The following services have been activated for you on Velocity Network ${whichNet(
-        config
+        config,
       )}:
 
 ${JSON.stringify(activatedServiceIds, null, 2)}
@@ -106,7 +106,7 @@ The Velocity Network Registrar`,
     }),
     emailToSupportForOrgRegisteredAndServicesNeedActivation: (
       { organization, addedServices = [] },
-      context
+      context,
     ) => ({
       subject: `${config.nodeEnv.toUpperCase()}: Velocity Services Activation Required`,
       message: `Hello,
@@ -132,7 +132,7 @@ BYTER-9000!
     }),
     emailToSupportForServicesAddedAndNeedActivation: (
       { organization, addedServices = [] },
-      context
+      context,
     ) => ({
       subject: `${config.nodeEnv.toUpperCase()}: Velocity Services Activation Required`,
       message: `Hello,
@@ -185,7 +185,7 @@ ${
 ${map(
   (service) =>
     `${service.type} on the agent ${service.caoService.id} at ${service.caoService.serviceEndpoint}`,
-  services
+  services,
 ).join(' \n')}
 
 The service is still inactive. The foundation staff are reviewing the application and will activate the services on  in the next 72 hours. Upon successful review you will receive confirmation by email.

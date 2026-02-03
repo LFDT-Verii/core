@@ -25,7 +25,7 @@ const corsPlugin = (fastify, options, next) => {
       fastify.config.tokenWalletBaseUrl,
       fastify.config.registrarAppUiUrl,
     ]),
-    compact
+    compact,
   )(fastify.config.allowedCorsOrigins);
   const allowedHeaders = [
     'Authorization',

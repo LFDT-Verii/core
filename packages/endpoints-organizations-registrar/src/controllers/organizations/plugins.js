@@ -3,7 +3,7 @@ const { map } = require('lodash/fp');
 const loadCredentialTypes = async (req) => {
   const allCredentialSchemas = await req.repos.credentialSchemas.find(
     { filter: {} },
-    { credentialType: 1, _id: 0 }
+    { credentialType: 1, _id: 0 },
   );
   return map('credentialType', allCredentialSchemas);
 };

@@ -52,7 +52,7 @@ const operatorDisclosuresController = async (fastify) => {
         },
       }),
     },
-    async ({ repos, params: { id } }) => repos.disclosures.findById(id)
+    async ({ repos, params: { id } }) => repos.disclosures.findById(id),
   );
 
   fastify.put(
@@ -81,7 +81,7 @@ const operatorDisclosuresController = async (fastify) => {
       const disclosure = parseBodyToDisclosure(body, req);
       const verifiedProfile = await getOrganizationVerifiedProfile(
         tenant.did,
-        req
+        req,
       );
       validateDisclosure(disclosure, verifiedProfile, setIssuingDefault, req);
       const updatedDisclosure = await repos.disclosures.updateDisclosure({
@@ -93,10 +93,10 @@ const operatorDisclosuresController = async (fastify) => {
           disclosure: updatedDisclosure,
           setIssuingDefault,
         },
-        req
+        req,
       );
       return updatedDisclosure;
-    }
+    },
   );
 
   fastify.delete(
@@ -144,7 +144,7 @@ const operatorDisclosuresController = async (fastify) => {
 
       await repos.disclosures.del(id);
       reply.code(204);
-    }
+    },
   );
 
   fastify.get(
@@ -174,14 +174,14 @@ const operatorDisclosuresController = async (fastify) => {
           disclosureId: req.params.id,
           vendorOriginContext: query.vendorOriginContext,
         },
-        req
+        req,
       );
       const httpProtocolDeepLink = velocityProtocolUriToHttpUri(
         disclosureDeepLink,
-        req
+        req,
       );
       return { deepLink: httpProtocolDeepLink };
-    }
+    },
   );
 
   fastify.get(
@@ -208,7 +208,7 @@ const operatorDisclosuresController = async (fastify) => {
 
       const uri = await handleDeepLinkRequest(
         { disclosureId: id, vendorOriginContext },
-        req
+        req,
       );
 
       const qrCodeBuffer = qr.imageSync(uri, {
@@ -217,7 +217,7 @@ const operatorDisclosuresController = async (fastify) => {
       });
 
       return reply.type('image/png').send(qrCodeBuffer);
-    }
+    },
   );
   fastify.get(
     '/qrcode.uri',
@@ -243,17 +243,17 @@ const operatorDisclosuresController = async (fastify) => {
 
       const uri = await handleDeepLinkRequest(
         { disclosureId: id, vendorOriginContext },
-        req
+        req,
       );
 
       return reply.type('text/plain').send(uri);
-    }
+    },
   );
 };
 
 const handleDeepLinkRequest = async (
   { disclosureId, vendorOriginContext },
-  context
+  context,
 ) => {
   const { repos } = context;
   // load disclosure to make sure it exists
@@ -264,7 +264,7 @@ const handleDeepLinkRequest = async (
   return buildDisclosureRequestDeepLink(
     disclosure,
     vendorOriginContext,
-    context
+    context,
   );
 };
 

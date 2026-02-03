@@ -40,13 +40,13 @@ const runBatchIssuing = async (opts) => {
   const disclosureRequest = await loadOrPrepareNewDisclosureRequest(
     csvHeaders,
     options,
-    context
+    context,
   );
 
   const newExchangeOffers = await prepareExchangeOffers(
     csvHeaders,
     csvRows,
-    options
+    options,
   );
 
   if (options.dryrun) {
@@ -55,8 +55,8 @@ const runBatchIssuing = async (opts) => {
       JSON.stringify(
         omitBy(isNil, { disclosureRequest, newExchangeOffers }),
         0,
-        2
-      )
+        2,
+      ),
     );
 
     return { disclosureRequest, newExchangeOffers };
@@ -74,13 +74,13 @@ const runBatchIssuing = async (opts) => {
         issuingDisclosure,
         newExchangeOffers,
         options,
-        context
+        context,
       )
     : await runSingleQrCodeBatchIssuing(
         issuingDisclosure,
         newExchangeOffers,
         options,
-        context
+        context,
       );
 
   writeOutput(outputs, {
@@ -105,7 +105,7 @@ const loadExistingDisclosuresIfRequired = async (options, context) => {
     const useNewDisclosure = await askUseNewDisclosure();
     if (!useNewDisclosure)
       throw new Error(
-        'no existing disclosures on the target agent. Use a new disclosure'
+        'no existing disclosures on the target agent. Use a new disclosure',
       );
 
     return [];
@@ -125,7 +125,7 @@ const runLegacyBatchIssuing = async (
   disclosureRequest,
   newExchangeOffers,
   options,
-  context
+  context,
 ) => {
   const outputs = [];
   for (const newExchangeOffer of newExchangeOffers) {
@@ -137,8 +137,8 @@ const runLegacyBatchIssuing = async (
           disclosureRequest,
         },
         options,
-        context
-      )
+        context,
+      ),
     );
   }
 
@@ -149,7 +149,7 @@ const runSingleQrCodeBatchIssuing = async (
   disclosureRequest,
   newExchangeOffers,
   options,
-  context
+  context,
 ) => {
   const outputs = [];
   for (const newExchangeOffer of newExchangeOffers) {
@@ -160,8 +160,8 @@ const runSingleQrCodeBatchIssuing = async (
           ...newExchangeOffer,
           disclosureRequest,
         },
-        context
-      )
+        context,
+      ),
     );
   }
 
@@ -179,7 +179,7 @@ const runSingleQrCodeBatchIssuing = async (
 const loadOrPrepareNewDisclosureRequest = async (
   csvHeaders,
   options,
-  context
+  context,
 ) => {
   const disclosures = await loadExistingDisclosuresIfRequired(options, context);
 
@@ -225,7 +225,7 @@ const writeDisclosureToJson = async (disclosureRequest, options) => {
   const { filePath: disclosureFilePath } = await writeJsonFile(
     disclosureRequest,
     `disclosure-${disclosureRequest.id}`,
-    options
+    options,
   );
   await writeJsonFile(
     {
@@ -235,14 +235,14 @@ const writeDisclosureToJson = async (disclosureRequest, options) => {
       ...options,
     },
     'lastrun',
-    options
+    options,
   );
 };
 
 const createOfferExchangeAndQrCode = async (
   { newExchange, newOffer, disclosureRequest },
   options,
-  context
+  context,
 ) => {
   const { fetchers } = context;
   const { exchange, offer, vendorUserId } = await createOfferExchange(
@@ -251,7 +251,7 @@ const createOfferExchangeAndQrCode = async (
       newOffer,
       disclosureRequest,
     },
-    context
+    context,
   );
 
   const deeplink = await fetchers.loadExchangeDeeplink(exchange);
@@ -259,7 +259,7 @@ const createOfferExchangeAndQrCode = async (
   const { filePath } = await writeQrCodeFile(
     `qrcode-${vendorUserId}`,
     qrcode,
-    options
+    options,
   );
   printInfo(`${vendorUserId} Done. Qrcode file:${filePath}`);
   printInfo('');
@@ -276,7 +276,7 @@ const createOfferExchangeAndQrCode = async (
 
 const createOfferExchange = async (
   { newExchange, newOffer, disclosureRequest },
-  context
+  context,
 ) => {
   const { fetchers } = context;
   const { vendorUserId } = newOffer.credentialSubject;
@@ -297,7 +297,7 @@ const createOfferExchange = async (
 const validateOptions = (options) => {
   if (options.dryrun == null && options.endpoint == null) {
     throw new Error(
-      '"-e" or "--endpoint" is required unless executing a "dryrun"'
+      '"-e" or "--endpoint" is required unless executing a "dryrun"',
     );
   }
   if (options.endpoint != null && options.authToken == null) {
@@ -324,7 +324,7 @@ const validateCredentialType = (idCredentialType) => {
     !allowedIdCredentialTypes.includes(idCredentialType)
   ) {
     throw new Error(
-      `${idCredentialType} doesn't exist. Please use one of ${allowedIdCredentialTypes}`
+      `${idCredentialType} doesn't exist. Please use one of ${allowedIdCredentialTypes}`,
     );
   }
 };

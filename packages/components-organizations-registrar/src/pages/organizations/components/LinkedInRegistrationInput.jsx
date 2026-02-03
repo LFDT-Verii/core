@@ -45,6 +45,7 @@ export const LinkedInRegistrationInput = ({ formData, source = 'registrationNumb
 
 // eslint-disable-next-line better-mutation/no-mutation
 LinkedInRegistrationInput.propTypes = {
+  // eslint-disable-next-line react/forbid-prop-types
   formData: PropTypes.object,
   source: PropTypes.string,
 };

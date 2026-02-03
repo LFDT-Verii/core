@@ -5,6 +5,6 @@ import VCLVerifiedProfile from '../../../api/entities/VCLVerifiedProfile';
 export default interface CredentialManifestUseCase {
     getCredentialManifest(
         credentialManifestDescriptor: VCLCredentialManifestDescriptor,
-        verifiedProfile: VCLVerifiedProfile
+        verifiedProfile: VCLVerifiedProfile,
     ): Promise<VCLCredentialManifest>;
 }

@@ -23,10 +23,10 @@ const { initGetBlockNumber, initGetBlock, sendNoOpTx } = require('../src/eth');
 
 class JsonRpcProvider {}
 JsonRpcProvider.prototype.getBlockNumber = mock.fn(() =>
-  Promise.resolve(blockNumberResult)
+  Promise.resolve(blockNumberResult),
 );
 JsonRpcProvider.prototype.getBlock = mock.fn((blockNumber) =>
-  Promise.resolve({ blockNumber })
+  Promise.resolve({ blockNumber }),
 );
 mock.module('ethers', {
   namedExports: {
@@ -87,7 +87,7 @@ describe('ETH Suite', () => {
       await sendNoOpTx(wallet, nonce);
 
       expect(
-        mockSendTransaction.mock.calls.map((call) => call.arguments)
+        mockSendTransaction.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           to: address,

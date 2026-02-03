@@ -48,7 +48,7 @@ const operatorDisclosuresController = async (fastify) => {
         filter.vendorEndpoint = { $in: req.query.vendorEndpoint };
       }
       return req.repos.disclosures.find({ filter });
-    }
+    },
   );
 
   fastify.post(
@@ -83,17 +83,17 @@ const operatorDisclosuresController = async (fastify) => {
       const disclosure = parseBodyToDisclosure(body, req);
       const verifiedProfile = await getOrganizationVerifiedProfile(
         tenant.did,
-        req
+        req,
       );
       validateDisclosure(disclosure, verifiedProfile, setIssuingDefault, req);
       const newDisclosure = await repos.disclosures.insert(disclosure);
       await setTenantDefaultIssuingDisclosure(
         { disclosure: newDisclosure, setIssuingDefault },
-        req
+        req,
       );
       reply.code(201);
       return newDisclosure;
-    }
+    },
   );
 };
 

@@ -55,7 +55,7 @@ describe('Offer routes', () => {
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(first(response.json)._id) })
+          .findOne({ _id: new ObjectId(first(response.json)._id) }),
       ).toEqual({
         _id: new ObjectId(first(response.json)._id),
         ...mongoify(offer),
@@ -101,7 +101,7 @@ describe('Offer routes', () => {
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(first(response.json)._id) })
+          .findOne({ _id: new ObjectId(first(response.json)._id) }),
       ).toEqual({
         _id: new ObjectId(first(response.json)._id),
         ...mongoify(expectedOfferObj),
@@ -133,7 +133,7 @@ describe('Offer routes', () => {
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(first(response.json)._id) })
+          .findOne({ _id: new ObjectId(first(response.json)._id) }),
       ).toEqual(
         mongoify({
           _id: new ObjectId(first(response.json)._id),
@@ -141,15 +141,15 @@ describe('Offer routes', () => {
           issuer: { name: 'x', bla: 'o' },
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
     it('should be able to create an offer', async (t) => {
       const mockSubmitOffer = t.mock.fn(() =>
-        Promise.resolve(Promise.resolve())
+        Promise.resolve(Promise.resolve()),
       );
       const mockCompleteSubmitOffer = t.mock.fn(() =>
-        Promise.resolve(Promise.resolve())
+        Promise.resolve(Promise.resolve()),
       );
 
       t.mock.module('../src/controllers/api/issuing-exchanges/fetchers.js', {
@@ -183,7 +183,7 @@ describe('Offer routes', () => {
             updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
             createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
           },
-        ])
+        ]),
       );
     });
     it('should be able to get a offer', async () => {
@@ -247,7 +247,7 @@ describe('Offer routes', () => {
             updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
             createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
           },
-        ])
+        ]),
       );
     });
     it('should be able to update a offer', async () => {
@@ -273,7 +273,7 @@ describe('Offer routes', () => {
       expect(getResponsePre.json).toEqual(
         expect.arrayContaining([
           { ...offer2, id: expect.stringMatching(OBJECT_ID_FORMAT) },
-        ])
+        ]),
       );
       const response = await fastify.injectJson({
         method: 'DELETE',
@@ -287,7 +287,7 @@ describe('Offer routes', () => {
       expect(getResponsePost.json).not.toEqual(
         expect.arrayContaining([
           { ...offer2, id: expect.stringMatching(OBJECT_ID_FORMAT) },
-        ])
+        ]),
       );
     });
   });
@@ -525,7 +525,7 @@ describe('Offer routes', () => {
         offers: [],
       });
       expect(Date.now().valueOf() - startTimestamp).toBeGreaterThanOrEqual(
-        3000
+        3000,
       );
     });
 
@@ -588,7 +588,7 @@ describe('Offer routes', () => {
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
         offers: expect.arrayContaining(
-          map(expectedOffer, [offers[0], offers[2]])
+          map(expectedOffer, [offers[0], offers[2]]),
         ),
       });
     });
@@ -608,7 +608,7 @@ describe('Offer routes', () => {
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
         offers: expect.arrayContaining(
-          map(expectedOffer, [offers[0], offers[2]])
+          map(expectedOffer, [offers[0], offers[2]]),
         ),
       });
       expect(response.json.offers).toHaveLength(2);

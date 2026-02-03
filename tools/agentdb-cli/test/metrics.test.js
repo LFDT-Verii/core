@@ -13,7 +13,7 @@ describe('metrics test suite', () => {
 
   before(async () => {
     client = await initMongoClient(
-      buildMongoConnection('test-credentialagent')
+      buildMongoConnection('test-credentialagent'),
     );
     db = client.db();
     persistOffer = persistOfferFactory(db);

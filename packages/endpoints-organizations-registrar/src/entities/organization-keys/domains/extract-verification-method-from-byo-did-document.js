@@ -22,7 +22,7 @@ const { isEmpty } = require('lodash/fp');
 const extractVerificationMethodFromByoDID = ({ didDocument, kidFragment }) => {
   const verificationMethod = extractVerificationMethod(
     didDocument,
-    kidFragment
+    kidFragment,
   );
   if (isEmpty(verificationMethod)) {
     throw newError(400, 'Key not found in BYO DID', {

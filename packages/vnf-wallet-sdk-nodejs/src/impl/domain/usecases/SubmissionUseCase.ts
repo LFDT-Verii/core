@@ -6,6 +6,6 @@ import VCLAuthToken from '../../../api/entities/VCLAuthToken';
 export default interface SubmissionUseCase {
     submit(
         submission: VCLSubmission,
-        authToken?: Nullish<VCLAuthToken>
+        authToken?: Nullish<VCLAuthToken>,
     ): Promise<VCLSubmissionResult>;
 }

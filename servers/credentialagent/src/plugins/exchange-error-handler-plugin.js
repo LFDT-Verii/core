@@ -29,7 +29,7 @@ const exchangeErrorHandlerPlugin = (fastify, options, next) => {
         calcExchangeErrorState(err.exchangeErrorState, err.statusCode),
         {
           err: err.message,
-        }
+        },
       );
     } catch (dbError) {
       log.error(dbError, 'DB Error when setting error state');

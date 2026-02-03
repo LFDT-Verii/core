@@ -39,7 +39,7 @@ import VCLAuthToken from './entities/VCLAuthToken';
 
 export default interface VCL {
     initialize(
-        initializationDescriptor: VCLInitializationDescriptor
+        initializationDescriptor: VCLInitializationDescriptor,
     ): Promise<Nullish<VCLError>>;
 
     get countries(): Nullish<VCLCountries>;
@@ -49,63 +49,63 @@ export default interface VCL {
     get credentialTypeSchemas(): Nullish<VCLCredentialTypeSchemas>;
 
     getPresentationRequest(
-        presentationRequestDescriptor: VCLPresentationRequestDescriptor
+        presentationRequestDescriptor: VCLPresentationRequestDescriptor,
     ): Promise<VCLPresentationRequest>;
 
     submitPresentation(
         presentationSubmission: VCLPresentationSubmission,
-        authToken?: Nullish<VCLAuthToken>
+        authToken?: Nullish<VCLAuthToken>,
     ): Promise<VCLSubmissionResult>;
 
     getExchangeProgress(
-        exchangeDescriptor: VCLExchangeDescriptor
+        exchangeDescriptor: VCLExchangeDescriptor,
     ): Promise<VCLExchange>;
 
     searchForOrganizations(
-        organizationsSearchDescriptor: VCLOrganizationsSearchDescriptor
+        organizationsSearchDescriptor: VCLOrganizationsSearchDescriptor,
     ): Promise<VCLOrganizations>;
 
     getCredentialManifest(
-        credentialManifestDescriptor: VCLCredentialManifestDescriptor
+        credentialManifestDescriptor: VCLCredentialManifestDescriptor,
     ): Promise<VCLCredentialManifest>;
 
     generateOffers(
-        generateOffersDescriptor: VCLGenerateOffersDescriptor
+        generateOffersDescriptor: VCLGenerateOffersDescriptor,
     ): Promise<VCLOffers>;
 
     checkForOffers(
         generateOffersDescriptor: VCLGenerateOffersDescriptor,
-        sessionToken: VCLToken
+        sessionToken: VCLToken,
     ): Promise<VCLOffers>;
 
     finalizeOffers(
         finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
-        sessionToken: VCLToken
+        sessionToken: VCLToken,
     ): Promise<VCLJwtVerifiableCredentials>;
 
     getAuthToken(
-        authTokenDescriptor: VCLAuthTokenDescriptor
+        authTokenDescriptor: VCLAuthTokenDescriptor,
     ): Promise<VCLAuthToken>;
 
     getCredentialTypesUIFormSchema(
-        credentialTypesUIFormSchemaDescriptor: VCLCredentialTypesUIFormSchemaDescriptor
+        credentialTypesUIFormSchemaDescriptor: VCLCredentialTypesUIFormSchemaDescriptor,
     ): Promise<VCLCredentialTypesUIFormSchema>;
 
     getVerifiedProfile(
-        verifiedProfileDescriptor: VCLVerifiedProfileDescriptor
+        verifiedProfileDescriptor: VCLVerifiedProfileDescriptor,
     ): Promise<VCLVerifiedProfile>;
 
     verifyJwt(
         jwt: VCLJwt,
         publicJwk: Nullish<VCLPublicJwk>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<boolean>;
 
     generateSignedJwt(
         jwtDescriptor: VCLJwtDescriptor,
         didJwk: VCLDidJwk,
         nonce: Nullish<string>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<VCLJwt>;
 
     generateDidJwk(didJwkDescriptor: VCLDidJwkDescriptor): Promise<VCLDidJwk>;

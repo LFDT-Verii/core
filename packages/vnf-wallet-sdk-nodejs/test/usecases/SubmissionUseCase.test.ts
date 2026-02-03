@@ -34,14 +34,14 @@ describe('PresentationSubmission Tests', () => {
             new VCLVerifiedProfile({}),
             new VCLDeepLink(''),
             null,
-            didJwk
+            didJwk,
         ),
-        []
+        [],
     );
     const expectedSubmissionResult = generatePresentationSubmissionResult(
         PresentationSubmissionMocks.PresentationSubmissionResultJson,
         presentationSubmission.jti,
-        presentationSubmission.submissionId
+        presentationSubmission.submissionId,
     );
 
     const expectedHeadersWithoutAccessToken = {
@@ -54,22 +54,22 @@ describe('PresentationSubmission Tests', () => {
 
     beforeEach(() => {
         networkServiceSuccess = new NetworkServiceSuccess(
-            PresentationSubmissionMocks.PresentationSubmissionResultJson
+            PresentationSubmissionMocks.PresentationSubmissionResultJson,
         );
         subject = new PresentationSubmissionUseCaseImpl(
             new SubmissionRepositoryImpl(networkServiceSuccess),
             new JwtServiceRepositoryImpl(
                 new JwtSignServiceMock(
-                    PresentationSubmissionMocks.JwtEncodedSubmission
+                    PresentationSubmissionMocks.JwtEncodedSubmission,
                 ),
-                new JwtVerifyServiceMock()
-            )
+                new JwtVerifyServiceMock(),
+            ),
         );
     });
 
     test('testSubmitPresentationSuccess', async () => {
         const presentationSubmissionResult = await subject.submit(
-            presentationSubmission
+            presentationSubmission,
         );
 
         expect(presentationSubmissionResult).toEqual(expectedSubmissionResult);
@@ -77,14 +77,14 @@ describe('PresentationSubmission Tests', () => {
         expect(networkServiceSuccess.sendRequestCalled).toEqual(true);
         expect(networkServiceSuccess.request).toBeDefined();
         expect(networkServiceSuccess.request!.headers).toEqual(
-            expectedHeadersWithoutAccessToken
+            expectedHeadersWithoutAccessToken,
         );
     });
 
     test('testSubmitPresentationTypeFeedSuccess', async () => {
         const presentationSubmissionResult = await subject.submit(
             presentationSubmission,
-            authToken
+            authToken,
         );
 
         expect(presentationSubmissionResult).toEqual(expectedSubmissionResult);
@@ -92,7 +92,7 @@ describe('PresentationSubmission Tests', () => {
         expect(networkServiceSuccess.sendRequestCalled).toEqual(true);
         expect(networkServiceSuccess.request).toBeDefined();
         expect(networkServiceSuccess.request!.headers!).toEqual(
-            expectedHeadersWithAccessToken
+            expectedHeadersWithAccessToken,
         );
     });
 });

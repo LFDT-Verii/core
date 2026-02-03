@@ -24,6 +24,7 @@ const nockRegistrarAppSchemaName = ({
   repeatCount = 1,
   statusCode = 200,
   responseJson,
+  // eslint-disable-next-line complexity
 } = {}) => {
   (nockInstance ?? nock(basePath))
     .get('/api/v0.6/credential-types')
@@ -41,8 +42,8 @@ const nockRegistrarAppSchemaName = ({
     .times(repeatCount)
     .reply(
       statusCode,
-      // eslint-disable-next-line import/no-dynamic-require
-      responseJson ?? require(`../schemas/${schemaName}.schema.json`)
+
+      responseJson ?? require(`../schemas/${schemaName}.schema.json`),
     );
 };
 module.exports = {

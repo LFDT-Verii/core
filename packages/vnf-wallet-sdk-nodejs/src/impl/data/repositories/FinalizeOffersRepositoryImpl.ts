@@ -14,7 +14,7 @@ export class FinalizeOffersRepositoryImpl implements FinalizeOffersRepository {
     async finalizeOffers(
         finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
         sessionToken: VCLToken,
-        proof: Nullish<VCLJwt> = null
+        proof: Nullish<VCLJwt> = null,
     ): Promise<VCLJwt[]> {
         const finalizedOffersResponse = await this.networkService.sendRequest({
             endpoint: finalizeOffersDescriptor.finalizeOffersUri,
@@ -31,14 +31,14 @@ export class FinalizeOffersRepositoryImpl implements FinalizeOffersRepository {
             finalizedOffersResponse.payload as Nullish<string[]>;
         if (encodedJwtCredArr) {
             return encodedJwtCredArr.map((encodedJwtCred) =>
-                VCLJwt.fromEncodedJwt(encodedJwtCred)
+                VCLJwt.fromEncodedJwt(encodedJwtCred),
             );
         }
         if (finalizedOffersResponse.payload instanceof Error) {
             throw VCLError.fromError(finalizedOffersResponse.payload);
         }
         throw new VCLError(
-            `Failed to parse: ${finalizedOffersResponse.payload}`
+            `Failed to parse: ${finalizedOffersResponse.payload}`,
         );
     }
 }

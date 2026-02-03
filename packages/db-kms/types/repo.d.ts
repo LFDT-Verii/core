@@ -21,6 +21,6 @@ import { RepoInstance } from '@spencejs/spence-mongo-repos';
 declare function _exports(
   app: FastifyInstance,
   options: Record<string, string>,
-  next?: (err?: Error) => void
+  next?: (err?: Error) => void,
 ): RepoInstance;
 export = _exports;

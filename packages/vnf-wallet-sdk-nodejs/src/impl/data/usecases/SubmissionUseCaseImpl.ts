@@ -11,28 +11,28 @@ import { Nullish } from '../../../api/VCLTypes';
 export default class SubmissionUseCaseImpl implements SubmissionUseCase {
     constructor(
         private submissionRepository: SubmissionRepository,
-        private jwtServiceRepository: JwtServiceRepository
+        private jwtServiceRepository: JwtServiceRepository,
     ) {}
 
     async submit(
         submission: VCLSubmission,
-        authToken?: Nullish<VCLAuthToken>
+        authToken?: Nullish<VCLAuthToken>,
     ): Promise<VCLSubmissionResult> {
         try {
             const jwt = await this.jwtServiceRepository.generateSignedJwt(
                 new VCLJwtDescriptor(
                     submission.generatePayload(submission.didJwk.did),
                     submission.jti,
-                    submission.didJwk.did
+                    submission.didJwk.did,
                 ),
                 submission.didJwk,
                 null,
-                submission.remoteCryptoServicesToken
+                submission.remoteCryptoServicesToken,
             );
             return await this.submissionRepository.submit(
                 submission,
                 jwt,
-                authToken?.accessToken
+                authToken?.accessToken,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);

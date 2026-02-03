@@ -20,7 +20,7 @@ const { VendorEndpointCategory, ConfigurationType } = require('./constants');
 
 const getDisclosureConfigurationType = (
   disclosure,
-  { config: { disclosureCredentialTypeRequired } }
+  { config: { disclosureCredentialTypeRequired } },
 ) => {
   const { configurationType, vendorEndpoint } = disclosure;
   const isEmptyConfigurationType = isEmpty(configurationType);
@@ -33,7 +33,7 @@ const getDisclosureConfigurationType = (
 
   const isExist = includes(
     vendorEndpoint,
-    VendorEndpointCategory[upperCase(configurationType)]
+    VendorEndpointCategory[upperCase(configurationType)],
   );
 
   if (!isEmptyConfigurationType && !isExist) {

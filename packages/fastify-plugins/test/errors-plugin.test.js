@@ -53,7 +53,7 @@ describe('Error Handling', () => {
     });
 
     expect(result).toEqual(
-      'https://docs.velocitycareerlabs.io/#/./Issuing?id=step-2-identify-a-person'
+      'https://docs.velocitycareerlabs.io/#/./Issuing?id=step-2-identify-a-person',
     );
   });
 
@@ -65,7 +65,7 @@ describe('Error Handling', () => {
     });
 
     expect(result).toEqual(
-      'https://docs.velocitycareerlabs.io/#/./Issuing?id=step-3-generate-credential-offers'
+      'https://docs.velocitycareerlabs.io/#/./Issuing?id=step-3-generate-credential-offers',
     );
   });
 
@@ -176,7 +176,7 @@ describe('Error Handling', () => {
       preHandlerFunc({ message: 'error message' }, {}, fakeReply);
       expect(fakeSendError.mock.callCount()).toEqual(1);
       expect(
-        fakeSendError.mock.calls.map((call) => call.arguments)
+        fakeSendError.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           message: 'error message',
@@ -185,7 +185,7 @@ describe('Error Handling', () => {
       ]);
       expect(fakeLogError.mock.callCount()).toEqual(1);
       expect(
-        fakeLogError.mock.calls.map((call) => call.arguments)
+        fakeLogError.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           err: {

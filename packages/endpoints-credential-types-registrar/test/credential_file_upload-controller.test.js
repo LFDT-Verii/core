@@ -88,7 +88,6 @@ describe(
       }
 
       fastify = buildFastify((server) => {
-        // eslint-disable-next-line better-mutation/no-mutation
         server.injectMultipart = async ({
           method,
           url,
@@ -142,7 +141,7 @@ describe(
           credentialFileType: 'JsonSchema',
           originalFilename: 'email-v1.0.schema.json',
           file: await fs.readFile(
-            `${path.dirname(__dirname)}/test/data/example.schema.json`
+            `${path.dirname(__dirname)}/test/data/example.schema.json`,
           ),
         },
       });
@@ -150,7 +149,7 @@ describe(
       expect(response.json()).toEqual({
         fileMetadata: {
           url: expect.stringMatching(
-            'http://lib.localhost.test/schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json'
+            'http://lib.localhost.test/schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json',
           ),
           userId: testRegistrarUser.sub,
           credentialFileType: 'JsonSchema',
@@ -166,10 +165,10 @@ describe(
           _id: expect.any(ObjectId),
           userId: testRegistrarUser.sub,
           s3Key: expect.stringMatching(
-            'schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json'
+            'schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json',
           ),
           url: expect.stringMatching(
-            'http://lib.localhost.test/schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json'
+            'http://lib.localhost.test/schemas/[A-Za-z0-9_-]+-email-v1.0.schema.json',
           ),
           credentialFileType: 'JsonSchema',
           createdAt: expect.any(Date),
@@ -195,8 +194,8 @@ describe(
           originalFilename: 'email-v1.0.descriptor.json',
           file: await fs.readFile(
             `${path.dirname(
-              __dirname
-            )}/test/data/display-descriptor.schema.json`
+              __dirname,
+            )}/test/data/display-descriptor.schema.json`,
           ),
         },
       });
@@ -204,7 +203,7 @@ describe(
       expect(response.json()).toEqual({
         fileMetadata: {
           url: expect.stringMatching(
-            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           userId: testRegistrarUser.sub,
           credentialFileType: 'DisplayDescriptor',
@@ -220,10 +219,10 @@ describe(
           _id: expect.any(ObjectId),
           userId: testRegistrarUser.sub,
           s3Key: expect.stringMatching(
-            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           url: expect.stringMatching(
-            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           credentialFileType: 'DisplayDescriptor',
           createdAt: expect.any(Date),
@@ -234,7 +233,7 @@ describe(
       const s3Obj = await getObject({
         s3Client,
         key: expect.stringMatching(
-          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
         ),
         bucket: libS3Bucket,
       });
@@ -251,8 +250,8 @@ describe(
           originalFilename: 'email-v1.0.descriptor.json',
           file: await fs.readFile(
             `${path.dirname(
-              __dirname
-            )}/test/data/display-descriptor.schema.json`
+              __dirname,
+            )}/test/data/display-descriptor.schema.json`,
           ),
         },
       });
@@ -260,7 +259,7 @@ describe(
       expect(response.json()).toEqual({
         fileMetadata: {
           url: expect.stringMatching(
-            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           userId: testRegistrarUser.sub,
           credentialFileType: 'DisplayDescriptor',
@@ -276,10 +275,10 @@ describe(
           _id: expect.any(ObjectId),
           userId: testRegistrarUser.sub,
           s3Key: expect.stringMatching(
-            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           url: expect.stringMatching(
-            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           credentialFileType: 'DisplayDescriptor',
           createdAt: expect.any(Date),
@@ -290,7 +289,7 @@ describe(
       const s3Obj = await getObject({
         s3Client,
         key: expect.stringMatching(
-          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
         ),
         bucket: libS3Bucket,
       });
@@ -307,8 +306,8 @@ describe(
           originalFilename: 'email-v1.0.descriptor.json',
           file: await fs.readFile(
             `${path.dirname(
-              __dirname
-            )}/test/data/certification-v1.1.descriptor.json`
+              __dirname,
+            )}/test/data/certification-v1.1.descriptor.json`,
           ),
         },
       });
@@ -316,7 +315,7 @@ describe(
       expect(response.json()).toEqual({
         fileMetadata: {
           url: expect.stringMatching(
-            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           userId: testRegistrarUser.sub,
           credentialFileType: 'DisplayDescriptor',
@@ -332,10 +331,10 @@ describe(
           _id: expect.any(ObjectId),
           userId: testRegistrarUser.sub,
           s3Key: expect.stringMatching(
-            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           url: expect.stringMatching(
-            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+            'http://lib.localhost.test/display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
           ),
           credentialFileType: 'DisplayDescriptor',
           createdAt: expect.any(Date),
@@ -346,7 +345,7 @@ describe(
       const s3Obj = await getObject({
         s3Client,
         key: expect.stringMatching(
-          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json'
+          'display-descriptors/[A-Za-z0-9_-]+-email-v1.0.descriptor.json',
         ),
         bucket: libS3Bucket,
       });
@@ -362,7 +361,7 @@ describe(
           credentialFileType: 'FormSchema',
           originalFilename: 'email-v1.0.form-schema.json',
           file: await fs.readFile(
-            `${path.dirname(__dirname)}/test/data/example.schema.json`
+            `${path.dirname(__dirname)}/test/data/example.schema.json`,
           ),
         },
       });
@@ -370,7 +369,7 @@ describe(
       expect(response.json()).toEqual({
         fileMetadata: {
           url: expect.stringMatching(
-            'http://lib.localhost.test/form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json'
+            'http://lib.localhost.test/form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json',
           ),
           userId: testRegistrarUser.sub,
           credentialFileType: 'FormSchema',
@@ -386,10 +385,10 @@ describe(
           _id: expect.any(ObjectId),
           userId: testRegistrarUser.sub,
           s3Key: expect.stringMatching(
-            'form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json'
+            'form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json',
           ),
           url: expect.stringMatching(
-            'http://lib.localhost.test/form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json'
+            'http://lib.localhost.test/form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json',
           ),
           credentialFileType: 'FormSchema',
           createdAt: expect.any(Date),
@@ -400,7 +399,7 @@ describe(
       const s3Obj = await getObject({
         s3Client,
         key: expect.stringMatching(
-          'form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json'
+          'form-schemas/[A-Za-z0-9_-]+-email-v1.0.form-schema.json',
         ),
         bucket: libS3Bucket,
       });
@@ -416,7 +415,7 @@ describe(
           credentialFileType: 'JsonldContext',
           originalFilename: 'email-v1.0.jsonld.json',
           file: await fs.readFile(
-            `${path.dirname(__dirname)}/test/data/example.schema.json`
+            `${path.dirname(__dirname)}/test/data/example.schema.json`,
           ),
         },
       });
@@ -424,7 +423,7 @@ describe(
       expect(response.json()).toEqual({
         fileMetadata: {
           url: expect.stringMatching(
-            'http://lib.localhost.test/contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json'
+            'http://lib.localhost.test/contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json',
           ),
           userId: testRegistrarUser.sub,
           credentialFileType: 'JsonldContext',
@@ -440,10 +439,10 @@ describe(
           _id: expect.any(ObjectId),
           userId: testRegistrarUser.sub,
           s3Key: expect.stringMatching(
-            'contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json'
+            'contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json',
           ),
           url: expect.stringMatching(
-            'http://lib.localhost.test/contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json'
+            'http://lib.localhost.test/contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json',
           ),
           credentialFileType: 'JsonldContext',
           createdAt: expect.any(Date),
@@ -454,7 +453,7 @@ describe(
       const s3Obj = await getObject({
         s3Client,
         key: expect.stringMatching(
-          'contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json'
+          'contexts/[A-Za-z0-9_-]+-email-v1.0.jsonld.json',
         ),
         bucket: libS3Bucket,
       });
@@ -470,7 +469,7 @@ describe(
           credentialFileType: 'not-valid',
           originalFilename: 'email-v1.0.jsonld.json',
           file: await fs.readFile(
-            `${path.dirname(__dirname)}/test/data/example.schema.json`
+            `${path.dirname(__dirname)}/test/data/example.schema.json`,
           ),
         },
       });
@@ -483,7 +482,7 @@ describe(
           message:
             'body/credentialFileType must be equal to one of the allowed values',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -495,7 +494,7 @@ describe(
         payload: {
           credentialFileType: 'JsonldContext',
           file: await fs.readFile(
-            `${path.dirname(__dirname)}/test/data/example.schema.json`
+            `${path.dirname(__dirname)}/test/data/example.schema.json`,
           ),
         },
       });
@@ -507,7 +506,7 @@ describe(
           errorCode: 'request_validation_failed',
           message: "body must have required property 'originalFilename'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -520,7 +519,7 @@ describe(
           credentialFileType: 'JsonldContext',
           originalFilename: '',
           file: await fs.readFile(
-            `${path.dirname(__dirname)}/test/data/example.schema.json`
+            `${path.dirname(__dirname)}/test/data/example.schema.json`,
           ),
         },
       });
@@ -533,7 +532,7 @@ describe(
           message:
             'body/originalFilename must NOT have fewer than 1 characters',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -546,7 +545,7 @@ describe(
           credentialFileType: 'FormSchema',
           originalFilename: 'email-v1.0.form-schema.json',
           file: await fs.readFile(
-            `${path.dirname(__dirname)}/test/data/example.schema.json`
+            `${path.dirname(__dirname)}/test/data/example.schema.json`,
           ),
         },
         headers: {
@@ -561,7 +560,7 @@ describe(
           errorCode: 'missing_error_code',
           message: 'Unauthorized',
           statusCode: 401,
-        })
+        }),
       );
     });
 
@@ -574,7 +573,7 @@ describe(
           credentialFileType: 'FormSchema',
           originalFilename: 'email-v1.0.form-schema.json',
           file: await fs.readFile(
-            `${path.dirname(__dirname)}/test/helpers/build-fastify.js`
+            `${path.dirname(__dirname)}/test/helpers/build-fastify.js`,
           ),
         },
       });
@@ -586,7 +585,7 @@ describe(
           errorCode: 'invalid_json',
           message: 'Invalid JSON',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -600,8 +599,8 @@ describe(
           originalFilename: 'email-v1.0.descriptor.json',
           file: await fs.readFile(
             `${path.dirname(
-              __dirname
-            )}/test/data/invalid-display-descriptor.schema.json`
+              __dirname,
+            )}/test/data/invalid-display-descriptor.schema.json`,
           ),
         },
       });
@@ -612,7 +611,7 @@ describe(
           errorCode: 'file_validation_error',
           message: "must have required property 'title'",
           statusCode: 400,
-        })
+        }),
       );
       const credentialFile = await mongoDb()
         .collection('credentialFiles')
@@ -627,5 +626,5 @@ describe(
       });
       expect(s3Obj).toBeNull();
     });
-  }
+  },
 );

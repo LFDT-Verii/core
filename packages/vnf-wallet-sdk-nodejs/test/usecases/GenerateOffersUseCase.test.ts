@@ -23,19 +23,19 @@ describe('GenerateOffersUseCaseTest', () => {
     let subject3: GenerateOffersUseCase;
 
     const verifiedProfile = new VCLVerifiedProfile(
-        JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1)
+        JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1),
     );
 
     it('testGenerateOffers', async () => {
         subject1 = new GenerateOffersUseCaseImpl(
             new GenerateOffersRepositoryImpl(
-                new NetworkServiceSuccess(GenerateOffersMocks.GeneratedOffers)
+                new NetworkServiceSuccess(GenerateOffersMocks.GeneratedOffers),
             ),
             new OffersByDeepLinkVerifierImpl(
                 new ResolveDidDocumentRepositoryImpl(
-                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-                )
-            )
+                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+                ),
+            ),
         );
 
         const generateOffersDescriptor = new VCLGenerateOffersDescriptor(
@@ -45,20 +45,20 @@ describe('GenerateOffersUseCaseTest', () => {
                 verifiedProfile,
                 null,
                 DidJwkMocks.DidJwk,
-                null
+                null,
             ),
             null,
             null,
-            []
+            [],
         );
 
         const offers = await subject1.generateOffers(
             generateOffersDescriptor,
-            CommonMocks.Token
+            CommonMocks.Token,
         );
         expect(offers.payload).toEqual(GenerateOffersMocks.GeneratedOffers);
         expect(offers.all.map((offer) => offer.payload)).toStrictEqual(
-            GenerateOffersMocks.Offers
+            GenerateOffersMocks.Offers,
         );
         expect(offers.challenge).toEqual(GenerateOffersMocks.Challenge);
         expect(offers?.sessionToken).toStrictEqual(CommonMocks.Token);
@@ -68,14 +68,14 @@ describe('GenerateOffersUseCaseTest', () => {
         subject2 = new GenerateOffersUseCaseImpl(
             new GenerateOffersRepositoryImpl(
                 new NetworkServiceSuccess(
-                    GenerateOffersMocks.GeneratedOffersEmptyJsonObj
-                )
+                    GenerateOffersMocks.GeneratedOffersEmptyJsonObj,
+                ),
             ),
             new OffersByDeepLinkVerifierImpl(
                 new ResolveDidDocumentRepositoryImpl(
-                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-                )
-            )
+                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+                ),
+            ),
         );
 
         const generateOffersDescriptor = new VCLGenerateOffersDescriptor(
@@ -84,16 +84,16 @@ describe('GenerateOffersUseCaseTest', () => {
                 null,
                 verifiedProfile,
                 null,
-                DidJwkMocks.DidJwk
+                DidJwkMocks.DidJwk,
             ),
             null,
             null,
-            []
+            [],
         );
 
         const offers = await subject2.generateOffers(
             generateOffersDescriptor,
-            CommonMocks.Token
+            CommonMocks.Token,
         );
         expect(offers.all).toEqual([]);
         expect(offers.challenge).toBeNull();
@@ -104,14 +104,14 @@ describe('GenerateOffersUseCaseTest', () => {
         subject3 = new GenerateOffersUseCaseImpl(
             new GenerateOffersRepositoryImpl(
                 new NetworkServiceSuccess(
-                    GenerateOffersMocks.GeneratedOffersEmptyJsonArr
-                )
+                    GenerateOffersMocks.GeneratedOffersEmptyJsonArr,
+                ),
             ),
             new OffersByDeepLinkVerifierImpl(
                 new ResolveDidDocumentRepositoryImpl(
-                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock)
-                )
-            )
+                    new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
+                ),
+            ),
         );
 
         const generateOffersDescriptor = new VCLGenerateOffersDescriptor(
@@ -121,16 +121,16 @@ describe('GenerateOffersUseCaseTest', () => {
                 verifiedProfile,
                 null,
                 DidJwkMocks.DidJwk,
-                null
+                null,
             ),
             null,
             null,
-            []
+            [],
         );
 
         const offers = await subject3.generateOffers(
             generateOffersDescriptor,
-            CommonMocks.Token
+            CommonMocks.Token,
         );
         expect(offers.all).toEqual([]);
         expect(offers.challenge).toBeNull();

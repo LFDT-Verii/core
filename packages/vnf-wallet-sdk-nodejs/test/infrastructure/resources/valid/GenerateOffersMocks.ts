@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 export class GenerateOffersMocks {
     static readonly Offer1 = { offer1: 'some offer 1' };
 

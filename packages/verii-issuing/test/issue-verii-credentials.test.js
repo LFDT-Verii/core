@@ -36,10 +36,10 @@ mock.module('@verii/metadata-registration', {
 });
 
 mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
-  Promise.resolve(true)
+  Promise.resolve(true),
 );
 mockCreateCredentialMetadataList.mock.mockImplementation(() =>
-  Promise.resolve(true)
+  Promise.resolve(true),
 );
 
 const { KeyAlgorithms } = require('@verii/crypto');
@@ -110,7 +110,7 @@ describe('issuing velocity verifiable credentials', () => {
       caoEntity,
       allocationListQueries: mongoAllocationListQueries(
         mongoClient.db('test-collections'),
-        'allocations'
+        'allocations',
       ),
     });
   });
@@ -159,7 +159,7 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
-      context
+      context,
     );
 
     expect(credentials.length).toEqual(3);
@@ -174,7 +174,7 @@ describe('issuing velocity verifiable credentials', () => {
           offer: offers[i],
           userId,
           credentialTypesMap,
-        }
+        },
       );
     }
     expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(2);
@@ -183,14 +183,14 @@ describe('issuing velocity verifiable credentials', () => {
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
       ALG_TYPE.HEX_AES_256,
-      { issuerEntity, caoEntity }
+      { issuerEntity, caoEntity },
     );
     await verifyCreateMetadataListCall(
       mockCreateCredentialMetadataList.mock.calls[1],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[2].arguments[0].listId,
       ALG_TYPE.COSEKEY_AES_256,
-      { issuerEntity, caoEntity }
+      { issuerEntity, caoEntity },
     );
 
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
@@ -251,7 +251,7 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
-      context
+      context,
     );
 
     expect(credentials.length).toEqual(3);
@@ -261,7 +261,7 @@ describe('issuing velocity verifiable credentials', () => {
         credentials[i],
         mockAddCredentialMetadataEntry.mock.calls[i].arguments,
         { issuerEntity, caoEntity, offer: offers[i], userId },
-        context
+        context,
       );
     }
 
@@ -296,7 +296,7 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
-      context
+      context,
     );
 
     expect(credentials).toEqual([expect.any(String)]);
@@ -305,7 +305,7 @@ describe('issuing velocity verifiable credentials', () => {
       await verifyCredentialAndAddEntryExpectations(
         credentials[i],
         mockAddCredentialMetadataEntry.mock.calls[i].arguments,
-        { issuerEntity, caoEntity, offer: offers[i], userId }
+        { issuerEntity, caoEntity, offer: offers[i], userId },
       );
     }
 
@@ -315,7 +315,7 @@ describe('issuing velocity verifiable credentials', () => {
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
       ALG_TYPE.HEX_AES_256,
-      { issuerEntity, caoEntity }
+      { issuerEntity, caoEntity },
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
@@ -353,7 +353,7 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
-      context
+      context,
     );
 
     expect(credentials).toEqual([expect.any(String)]);
@@ -362,7 +362,7 @@ describe('issuing velocity verifiable credentials', () => {
       await verifyCredentialAndAddEntryExpectations(
         credentials[i],
         mockAddCredentialMetadataEntry.mock.calls[i].arguments,
-        { issuerEntity, caoEntity, offer: offers[i], userId }
+        { issuerEntity, caoEntity, offer: offers[i], userId },
       );
     }
 
@@ -372,7 +372,7 @@ describe('issuing velocity verifiable credentials', () => {
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
       ALG_TYPE.HEX_AES_256,
-      { issuerEntity, caoEntity }
+      { issuerEntity, caoEntity },
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
@@ -412,7 +412,7 @@ const verifyCreateMetadataListCall = async (
   issuer,
   listId,
   algType,
-  { issuerEntity, caoEntity }
+  { issuerEntity, caoEntity },
 ) => {
   expect(call.arguments).toEqual([
     issuer.dltPrimaryAddress,
@@ -425,7 +425,7 @@ const verifyCreateMetadataListCall = async (
   const issuerAttestationJwtVc = call.arguments[2];
   const { header, payload } = await jwtVerify(
     issuerAttestationJwtVc,
-    issuerEntity.keyPair.publicKey
+    issuerEntity.keyPair.publicKey,
   );
   expect(header).toEqual({
     alg: 'ES256K',
@@ -454,7 +454,7 @@ const verifyCredentialAndAddEntryExpectations = async (
   credential,
   credentialMetadataArgs,
   { issuerEntity, caoEntity, offer, userId },
-  context
+  context,
 ) => {
   const jwtVc = jwtDecode(credential);
   expect(jwtVc).toEqual(
@@ -465,25 +465,25 @@ const verifyCredentialAndAddEntryExpectations = async (
         credentialId: jwtVc.payload.jti,
         userId,
       },
-      context
-    )
+      context,
+    ),
   );
   expect(jwtVc.payload.jti).toEqual(
     `did:velocity:v2:${toLower(issuerEntity.primaryAddress)}:${
       credentialMetadataArgs[0].listId
-    }:${credentialMetadataArgs[0].index}:${hashOffer(offer)}`
+    }:${credentialMetadataArgs[0].index}:${hashOffer(offer)}`,
   );
   expect(jwtVc.header.kid).toEqual(
     `did:velocity:v2:${toLower(issuerEntity.primaryAddress)}:${
       credentialMetadataArgs[0].listId
-    }:${credentialMetadataArgs[0].index}:${hashOffer(offer)}#key-1`
+    }:${credentialMetadataArgs[0].index}:${hashOffer(offer)}#key-1`,
   );
   expect(credentialMetadataArgs).toEqual([
     expect.objectContaining({
       credentialType: extractOfferType(offer),
       publicKey: publicJwkMatcher(
         credentialTypeMetadata[extractOfferType(offer)]
-          .defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1
+          .defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1,
       ),
       listId: expect.any(Number),
       index: expect.any(Number),

@@ -18,20 +18,20 @@ const { appendSearchParam } = require('@verii/common-functions');
 
 const getDisclosureQrCodeUri = (
   { did, disclosureId, vendorOriginContext },
-  { config: { hostUrl } }
+  { config: { hostUrl } },
 ) =>
   appendSearchParam(
     'vendorOriginContext',
-    vendorOriginContext
+    vendorOriginContext,
   )(
     new URL(
-      `${hostUrl}/operator-api/v0.8/tenants/${did}/disclosures/${disclosureId}/qrcode.png`
-    )
+      `${hostUrl}/operator-api/v0.8/tenants/${did}/disclosures/${disclosureId}/qrcode.png`,
+    ),
   ).toString();
 
 const getExchnageQrCodeUri = ({ did, exchangeId }, { config: { hostUrl } }) =>
   new URL(
-    `${hostUrl}/operator-api/v0.8/tenants/${did}/exchanges/${exchangeId}/qrcode.png`
+    `${hostUrl}/operator-api/v0.8/tenants/${did}/exchanges/${exchangeId}/qrcode.png`,
   ).toString();
 
 module.exports = { getDisclosureQrCodeUri, getExchnageQrCodeUri };

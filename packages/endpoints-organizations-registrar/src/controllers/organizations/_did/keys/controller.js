@@ -62,7 +62,7 @@ const keysController = async (fastify) => {
         const response = await addKey(req.params.did, req.body, req);
         reply.code(201);
         return response;
-      }
+      },
     )
     .get(
       '/:kid',
@@ -97,7 +97,7 @@ const keysController = async (fastify) => {
       async (req) => {
         const { params } = req;
         return getKey(params.did, params.kid, req);
-      }
+      },
     )
     .delete(
       '/:keyId',
@@ -134,7 +134,7 @@ const keysController = async (fastify) => {
         await deleteKey(req.params.did, req.params.keyId, req);
         reply.code(204);
         return {};
-      }
+      },
     );
 };
 

@@ -73,61 +73,61 @@ import ResolveDidDocumentRepositoryImpl from './data/repositories/ResolveDidDocu
 
 export default class VclBlocksProvider {
     static providePresentationRequestUseCase(
-        cryptoServicesDescriptor: VCLCryptoServicesDescriptor
+        cryptoServicesDescriptor: VCLCryptoServicesDescriptor,
     ): PresentationRequestUseCase {
         return new PresentationRequestUseCaseImpl(
             new PresentationRequestRepositoryImpl(new NetworkServiceImpl()),
             new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
             new JwtServiceRepositoryImpl(
                 cryptoServicesDescriptor.jwtSignService,
-                cryptoServicesDescriptor.jwtVerifyService
+                cryptoServicesDescriptor.jwtVerifyService,
             ),
-            new PresentationRequestByDeepLinkVerifierImpl()
+            new PresentationRequestByDeepLinkVerifierImpl(),
         );
     }
 
     static provideVerifiedProfileUseCase(): VerifiedProfileUseCase {
         return new VerifiedProfileUseCaseImpl(
-            new VerifiedProfileRepositoryImpl(new NetworkServiceImpl())
+            new VerifiedProfileRepositoryImpl(new NetworkServiceImpl()),
         );
     }
 
     static provideJwtServiceUseCase(
-        cryptoServicesDescriptor: VCLCryptoServicesDescriptor
+        cryptoServicesDescriptor: VCLCryptoServicesDescriptor,
     ): JwtServiceUseCase {
         return new JwtServiceUseCaseImpl(
             new JwtServiceRepositoryImpl(
                 cryptoServicesDescriptor.jwtSignService,
-                cryptoServicesDescriptor.jwtVerifyService
-            )
+                cryptoServicesDescriptor.jwtVerifyService,
+            ),
         );
     }
 
     static provideCredentialManifestUseCase(
-        cryptoServicesDescriptor: VCLCryptoServicesDescriptor
+        cryptoServicesDescriptor: VCLCryptoServicesDescriptor,
     ): CredentialManifestUseCase {
         return new CredentialManifestUseCaseImpl(
             new CredentialManifestRepositoryImpl(new NetworkServiceImpl()),
             new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
             new JwtServiceRepositoryImpl(
                 cryptoServicesDescriptor.jwtSignService,
-                cryptoServicesDescriptor.jwtVerifyService
+                cryptoServicesDescriptor.jwtVerifyService,
             ),
-            new CredentialManifestByDeepLinkVerifierImpl()
+            new CredentialManifestByDeepLinkVerifierImpl(),
         );
     }
 
     static provideIdentificationSubmissionUseCase(
-        cryptoServicesDescriptor: VCLCryptoServicesDescriptor
+        cryptoServicesDescriptor: VCLCryptoServicesDescriptor,
     ): IdentificationSubmissionUseCase {
         return new IdentificationSubmissionUseCaseImpl(
             new IdentificationSubmissionRepositoryImpl(
-                new NetworkServiceImpl()
+                new NetworkServiceImpl(),
             ),
             new JwtServiceRepositoryImpl(
                 cryptoServicesDescriptor.jwtSignService,
-                cryptoServicesDescriptor.jwtVerifyService
-            )
+                cryptoServicesDescriptor.jwtVerifyService,
+            ),
         );
     }
 
@@ -135,112 +135,112 @@ export default class VclBlocksProvider {
         return new GenerateOffersUseCaseImpl(
             new GenerateOffersRepositoryImpl(new NetworkServiceImpl()),
             new OffersByDeepLinkVerifierImpl(
-                new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl())
-            )
+                new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
+            ),
         );
     }
 
     static provideFinalizeOffersUseCase(
         credentialTypesModel: CredentialTypesModel,
         cryptoServicesDescriptor: VCLCryptoServicesDescriptor,
-        isDirectIssuerCheckOn
+        isDirectIssuerCheckOn,
     ): FinalizeOffersUseCase {
         let credentialIssuerVerifier: CredentialIssuerVerifier =
             new CredentialIssuerVerifierEmptyImpl();
         if (isDirectIssuerCheckOn) {
             credentialIssuerVerifier = new CredentialIssuerVerifierImpl(
                 credentialTypesModel,
-                new NetworkServiceImpl()
+                new NetworkServiceImpl(),
             );
         }
         return new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(new NetworkServiceImpl()),
             new JwtServiceRepositoryImpl(
                 cryptoServicesDescriptor.jwtSignService,
-                cryptoServicesDescriptor.jwtVerifyService
+                cryptoServicesDescriptor.jwtVerifyService,
             ),
             credentialIssuerVerifier,
             new CredentialDidVerifierImpl(),
             new CredentialsByDeepLinkVerifierImpl(
-                new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl())
-            )
+                new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
+            ),
         );
     }
 
     static providePresentationSubmissionUseCase(
-        cryptoServicesDescriptor: VCLCryptoServicesDescriptor
+        cryptoServicesDescriptor: VCLCryptoServicesDescriptor,
     ): PresentationSubmissionUseCase {
         return new PresentationSubmissionUseCaseImpl(
             new IdentificationSubmissionRepositoryImpl(
-                new NetworkServiceImpl()
+                new NetworkServiceImpl(),
             ),
             new JwtServiceRepositoryImpl(
                 cryptoServicesDescriptor.jwtSignService,
-                cryptoServicesDescriptor.jwtVerifyService
-            )
+                cryptoServicesDescriptor.jwtVerifyService,
+            ),
         );
     }
 
     static provideExchangeProgressUseCase(): ExchangeProgressUseCase {
         return new ExchangeProgressUseCaseImpl(
-            new ExchangeProgressRepositoryImpl(new NetworkServiceImpl())
+            new ExchangeProgressRepositoryImpl(new NetworkServiceImpl()),
         );
     }
 
     static provideOrganizationsUseCase(): OrganizationsUseCase {
         return new OrganizationsUseCaseImpl(
-            new OrganizationsRepositoryImpl(new NetworkServiceImpl())
+            new OrganizationsRepositoryImpl(new NetworkServiceImpl()),
         );
     }
 
     static provideCredentialTypesModel(): CredentialTypesModel {
         return new CredentialTypesModelImpl(
             new CredentialTypesUseCaseImpl(
-                new CredentialTypesRepositoryImpl(new NetworkServiceImpl())
-            )
+                new CredentialTypesRepositoryImpl(new NetworkServiceImpl()),
+            ),
         );
     }
 
     static provideCountriesModel(): CountriesModel {
         return new CountriesModelImpl(
             new CountriesUseCaseImpl(
-                new CountriesRepositoryImpl(new NetworkServiceImpl())
-            )
+                new CountriesRepositoryImpl(new NetworkServiceImpl()),
+            ),
         );
     }
 
     static provideAuthTokenUseCase(): AuthTokenUseCase {
         return new AuthTokenUseCaseImpl(
-            new AuthTokenRepositoryImpl(new NetworkServiceImpl())
+            new AuthTokenRepositoryImpl(new NetworkServiceImpl()),
         );
     }
 
     static provideCredentialTypeSchemasModel(
-        credentialTypes: VCLCredentialTypes
+        credentialTypes: VCLCredentialTypes,
     ): CredentialTypeSchemasModel {
         return new CredentialTypeSchemasModelImpl(
             new CredentialTypeSchemasUseCaseImpl(
                 new CredentialTypeSchemaRepositoryImpl(
-                    new NetworkServiceImpl()
+                    new NetworkServiceImpl(),
                 ),
-                credentialTypes
-            )
+                credentialTypes,
+            ),
         );
     }
 
     static provideCredentialTypesUIFormSchemaUseCase(): CredentialTypesUIFormSchemaUseCase {
         return new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(
-                new NetworkServiceImpl()
-            )
+                new NetworkServiceImpl(),
+            ),
         );
     }
 
     static provideKeyServiceUseCase(
-        cryptoServicesDescriptor: VCLCryptoServicesDescriptor
+        cryptoServicesDescriptor: VCLCryptoServicesDescriptor,
     ): KeyServiceUseCase {
         return new KeyServiceUseCaseImpl(
-            new KeyServiceRepositoryImpl(cryptoServicesDescriptor.keyService)
+            new KeyServiceRepositoryImpl(cryptoServicesDescriptor.keyService),
         );
     }
 }

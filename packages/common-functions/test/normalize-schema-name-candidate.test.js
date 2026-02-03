@@ -54,7 +54,7 @@ describe('schema name normalization test suite', () => {
   });
   it('should handle open badge version 2 display descriptor name with file suffix', () => {
     const name = normalizeDisplayDescriptorName(
-      'open-badge-v2.0.descriptor.json'
+      'open-badge-v2.0.descriptor.json',
     );
     expect(name).toEqual('open-badge-v2.0');
   });

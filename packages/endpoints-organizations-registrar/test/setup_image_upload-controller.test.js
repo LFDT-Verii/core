@@ -59,7 +59,7 @@ describe('Organization setup image upload', () => {
       imageMetadata: {
         uploadUrl: expect.any(String),
         url: expect.stringMatching(
-          /http:\/\/media.localhost.test\/400x400-[A-Za-z0-9_-]+.png/
+          /http:\/\/media.localhost.test\/400x400-[A-Za-z0-9_-]+.png/,
         ),
         userId: testRegistrarSuperUser.sub,
         state: ImageState.PENDING_UPLOAD,
@@ -71,8 +71,8 @@ describe('Organization setup image upload', () => {
     const expectedUrl = new URL(response.json.imageMetadata.uploadUrl);
     expect(expectedUrl.pathname).toEqual(
       expect.stringMatching(
-        /\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.png/
-      )
+        /\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.png/,
+      ),
     );
 
     const image = await mongoDb().collection('images').find({}).toArray();
@@ -127,26 +127,23 @@ describe('Organization setup image upload', () => {
     expect(response.json.imageMetadata.uploadUrl).toEqual(
       expect.stringMatching(
         // eslint-disable-next-line max-len
-        /http:\/\/localhost:4566\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.png\?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=xxx/
-      )
+        /http:\/\/localhost:4566\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.png\?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=xxx/,
+      ),
     );
     expect(response1.json.imageMetadata.uploadUrl).toEqual(
       expect.stringMatching(
-        // eslint-disable-next-line max-len
-        /http:\/\/localhost:4566\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.png/
-      )
+        /http:\/\/localhost:4566\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.png/,
+      ),
     );
     expect(response2.json.imageMetadata.uploadUrl).toEqual(
       expect.stringMatching(
-        // eslint-disable-next-line max-len
-        /http:\/\/localhost:4566\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.jpeg/
-      )
+        /http:\/\/localhost:4566\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.jpeg/,
+      ),
     );
     expect(response3.json.imageMetadata.uploadUrl).toEqual(
       expect.stringMatching(
-        // eslint-disable-next-line max-len
-        /http:\/\/localhost:4566\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.jpg/
-      )
+        /http:\/\/localhost:4566\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.jpg/,
+      ),
     );
 
     const images = await mongoDb().collection('images').find({}).toArray();
@@ -211,7 +208,7 @@ describe('Organization setup image upload', () => {
       imageMetadata: {
         uploadUrl: expect.any(String),
         url: expect.stringMatching(
-          /http:\/\/media.localhost.test\/400x400-[A-Za-z0-9_-]+.jpeg/
+          /http:\/\/media.localhost.test\/400x400-[A-Za-z0-9_-]+.jpeg/,
         ),
         userId: testRegistrarSuperUser.sub,
         uploadSucceeded: false,
@@ -223,8 +220,8 @@ describe('Organization setup image upload', () => {
     const expectedUrl = new URL(response.json.imageMetadata.uploadUrl);
     expect(expectedUrl.pathname).toEqual(
       expect.stringMatching(
-        /\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.jpeg/
-      )
+        /\/mocked_bucket\/temporary\/400x400-[A-Za-z0-9_-]+.jpeg/,
+      ),
     );
 
     const image = await mongoDb().collection('images').find({}).toArray();
@@ -259,7 +256,7 @@ describe('Organization setup image upload', () => {
         errorCode: 'request_validation_failed',
         message: 'body/extension must be equal to one of the allowed values',
         statusCode: 400,
-      })
+      }),
     );
   });
 
@@ -285,7 +282,7 @@ describe('Organization setup image upload', () => {
         errorCode: 'user_not_found',
         message: 'User not found',
         statusCode: 401,
-      })
+      }),
     );
   });
 });

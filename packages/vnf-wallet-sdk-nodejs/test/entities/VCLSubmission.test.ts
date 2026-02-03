@@ -12,7 +12,7 @@ describe('VCLSubmission Tests', () => {
     beforeEach(() => {
         subject = new VCLPresentationSubmission(
             PresentationSubmissionMocks.PresentationRequest,
-            PresentationSubmissionMocks.SelectionsList
+            PresentationSubmissionMocks.SelectionsList,
         );
     });
 
@@ -23,37 +23,37 @@ describe('VCLSubmission Tests', () => {
 
     test('testPushDelegate', () => {
         expect(subject.pushDelegate?.pushUrl).toEqual(
-            PresentationSubmissionMocks.PushDelegate.pushUrl
+            PresentationSubmissionMocks.PushDelegate.pushUrl,
         );
         expect(subject.pushDelegate?.pushToken).toEqual(
-            PresentationSubmissionMocks.PushDelegate.pushToken
+            PresentationSubmissionMocks.PushDelegate.pushToken,
         );
     });
 
     test('testRequestBody', () => {
         const requestBodyJsonObj = subject.generateRequestBody(JwtMocks.JWT);
         expect(requestBodyJsonObj[VCLSubmission.KeyExchangeId]).toEqual(
-            subject.exchangeId
+            subject.exchangeId,
         );
         expect(requestBodyJsonObj[VCLSubmission.KeyContext]).toEqual(
-            VCLSubmission.ValueContextList
+            VCLSubmission.ValueContextList,
         );
 
         const pushDelegateBodyJsonObj =
             requestBodyJsonObj[VCLSubmission.KeyPushDelegate];
 
         expect(pushDelegateBodyJsonObj[VCLPushDelegate.KeyPushUrl]).toEqual(
-            PresentationSubmissionMocks.PushDelegate.pushUrl
+            PresentationSubmissionMocks.PushDelegate.pushUrl,
         );
         expect(pushDelegateBodyJsonObj[VCLPushDelegate.KeyPushToken]).toEqual(
-            PresentationSubmissionMocks.PushDelegate.pushToken
+            PresentationSubmissionMocks.PushDelegate.pushToken,
         );
 
         expect(pushDelegateBodyJsonObj[VCLPushDelegate.KeyPushUrl]).toEqual(
-            subject.pushDelegate?.pushUrl
+            subject.pushDelegate?.pushUrl,
         );
         expect(pushDelegateBodyJsonObj[VCLPushDelegate.KeyPushToken]).toEqual(
-            subject.pushDelegate?.pushToken
+            subject.pushDelegate?.pushToken,
         );
     });
 });

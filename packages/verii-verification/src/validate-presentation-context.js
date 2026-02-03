@@ -24,7 +24,7 @@ const validatePresentationContext = (
       enablePresentationContextValidation,
       presentationContextValue: expectedValue,
     },
-  }
+  },
 ) => {
   if (!enablePresentationContextValidation) {
     return;

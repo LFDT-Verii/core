@@ -29,7 +29,7 @@ module.exports = (app) =>
     async (overrides, { getOrBuild }) => {
       const organization = await getOrBuild(
         'organization',
-        initOrganizationFactory(app)
+        initOrganizationFactory(app),
       );
 
       return {
@@ -49,5 +49,5 @@ module.exports = (app) =>
         ],
         ...overrides(),
       };
-    }
+    },
   );

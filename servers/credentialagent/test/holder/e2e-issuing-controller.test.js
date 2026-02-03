@@ -96,17 +96,17 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
     const permissionsAddress = await deployPermissionContract();
     const verificationCouponAddress = await deployVerificationCouponContract(
       permissionsAddress,
-      contractContext
+      contractContext,
     );
     const revocationContractAddress = await deployRevocationContract(
       permissionsAddress,
-      contractContext
+      contractContext,
     );
     const metadataRegistryContractAddress = await deployMetadataContract(
       freeCredentialTypesList,
       verificationCouponAddress,
       permissionsAddress,
-      contractContext
+      contractContext,
     );
 
     contractContext.config = {
@@ -120,7 +120,7 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
         contractAddress: permissionsAddress,
         rpcProvider,
       },
-      contractContext
+      contractContext,
     );
     await deployerPermissionsClient.addAddressScope({
       address: metadataRegistryContractAddress,
@@ -184,7 +184,7 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
         contractAddress: permissionsAddress,
         rpcProvider,
       },
-      contractContext
+      contractContext,
     );
     await operatorPermissionsClient.addOperatorKey({
       primary: tenant.primaryAddress,
@@ -242,7 +242,7 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
       .collection('exchanges')
       .updateOne(
         { _id: new ObjectId(exchange._id) },
-        { $set: { offerIds: { $push: [new ObjectId(val._id)] } } }
+        { $set: { offerIds: { $push: [new ObjectId(val._id)] } } },
       );
     return val;
   };
@@ -270,7 +270,7 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
         tenant,
         credentialId: vc.payload.jti,
         offer,
-      })
+      }),
     );
 
     const metadataListAllocation = await mongoDb()
@@ -327,7 +327,7 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
         tenant,
         credentialId: vc.payload.jti,
         offer,
-      })
+      }),
     );
 
     const metadataListAllocation = await mongoDb()
@@ -382,7 +382,7 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
         tenant,
         credentialId: vc.payload.jti,
         offer,
-      })
+      }),
     );
 
     const metadataListAllocation = await mongoDb()
@@ -427,5 +427,5 @@ const genAuthToken = async (tenant, tenantKeys, exchange, user, keyPair) =>
     '30d',
     null,
     keyPair.privateKey,
-    tenantKeys.kidFragment
+    tenantKeys.kidFragment,
   );

@@ -59,7 +59,6 @@ module.exports = async (fastify) => {
     .autoSchemaPreset({ tags: ['registrar_organizations'] })
     .register(CredentialTypesPlugin)
     .register(
-      // eslint-disable-next-line import/no-dynamic-require
-      require(fastify.config.kmsPluginModule)[fastify.config.kmsPlugin]
+      require(fastify.config.kmsPluginModule)[fastify.config.kmsPlugin],
     );
 };

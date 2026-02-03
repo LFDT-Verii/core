@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import VCLPushDelegate from '../../../../src/api/entities/VCLPushDelegate';
 import {
     VCLCredentialManifest,
@@ -25,12 +23,12 @@ export class IdentificationSubmissionMocks {
     };
 
     static DidJwk = VCLDidJwk.fromJSON(
-        IdentificationSubmissionMocks.DidJwkJson
+        IdentificationSubmissionMocks.DidJwkJson,
     );
 
     static PushDelegate = new VCLPushDelegate(
         'https://devservices.velocitycareerlabs.io/api/push-gateway',
-        'if0123asd129smw321'
+        'if0123asd129smw321',
     );
 
     static VerifiableProfileJson = {
@@ -72,28 +70,28 @@ export class IdentificationSubmissionMocks {
     };
 
     static VerifiedProfile = new VCLVerifiedProfile(
-        IdentificationSubmissionMocks.VerifiableProfileJson
+        IdentificationSubmissionMocks.VerifiableProfileJson,
     );
 
     static DeepLinkStr =
         'velocity-network-devnet://issue?request_uri=https%3A%2F%2Fdevagent.velocitycareerlabs.io%2Fapi%2Fholder%2Fv0.6%2Forg%2Fdid%3Aion%3AEiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA%2Fissue%2Fget-credential-manifest%3Fid%3D6384a3ad148b1991687f67c9%26credential_types%3DEmploymentPastV1.1%26issuerDid%3Ddid%3Aion%3AEiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA';
 
     static DeepLink = new VCLDeepLink(
-        IdentificationSubmissionMocks.DeepLinkStr
+        IdentificationSubmissionMocks.DeepLinkStr,
     );
 
     static CredentialManifestJwtStr =
         'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksiLCJraWQiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEjZXhjaGFuZ2Uta2V5LTEifQ.eyJleGNoYW5nZV9pZCI6IjY2NGVmZjg5OTQ4MTMxMzQ2Y2EzYzc1NyIsIm1ldGFkYXRhIjp7ImNsaWVudF9uYW1lIjoiVW5pdmVyc2l0eSBvZiBNYXNzYWNodXNldHRzIEFtaGVyc3QiLCJsb2dvX3VyaSI6Imh0dHBzOi8vdXBsb2FkLndpa2ltZWRpYS5vcmcvd2lraXBlZGlhL2NvbW1vbnMvNC80Zi9VTWFzc19TZWFsX01lZGl1bV9QTVNfMjAyLnBuZyIsInRvc191cmkiOiJodHRwczovL3d3dy52ZWxvY2l0eWV4cGVyaWVuY2VjZW50ZXIuY29tL3Rlcm1zLWFuZC1jb25kaXRpb25zLXZuZiIsIm1heF9yZXRlbnRpb25fcGVyaW9kIjoiNm0iLCJwcm9ncmVzc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9nZXQtZXhjaGFuZ2UtcHJvZ3Jlc3MiLCJzdWJtaXRfcHJlc2VudGF0aW9uX3VyaSI6Imh0dHBzOi8vZGV2YWdlbnQudmVsb2NpdHljYXJlZXJsYWJzLmlvL2FwaS9ob2xkZXIvdjAuNi9vcmcvZGlkOmlvbjpFaUFwTUxkTWI0TlBiOHNhZTktaFhHSFA3OVcxZ2lzQXBWU0U4MFVTUEVidEpBL2lzc3VlL3N1Ym1pdC1pZGVudGlmaWNhdGlvbiIsImNoZWNrX29mZmVyc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9pc3N1ZS9jcmVkZW50aWFsLW9mZmVycyIsImZpbmFsaXplX29mZmVyc191cmkiOiJodHRwczovL2RldmFnZW50LnZlbG9jaXR5Y2FyZWVybGFicy5pby9hcGkvaG9sZGVyL3YwLjYvb3JnL2RpZDppb246RWlBcE1MZE1iNE5QYjhzYWU5LWhYR0hQNzlXMWdpc0FwVlNFODBVU1BFYnRKQS9pc3N1ZS9maW5hbGl6ZS1vZmZlcnMifSwicHJlc2VudGF0aW9uX2RlZmluaXRpb24iOnsiaWQiOiI2NjRlZmY4OTk0ODEzMTM0NmNhM2M3NTcuNjM4NGEzYWQxNDhiMTk5MTY4N2Y2N2M5IiwicHVycG9zZSI6IkNyZWRlbnRpYWxzIG9mZmVyIiwibmFtZSI6IlNoYXJlIHlvdXIgSWQsIEVtYWlsIGFuZCBQaG9uZSBOdW1iZXIgdG8gZmFjaWxpdGF0ZSB0aGUgc2VhcmNoIGZvciB5b3VyIGNhcmVlciBjcmVkZW50aWFscyIsImZvcm1hdCI6eyJqd3RfdnAiOnsiYWxnIjpbInNlY3AyNTZrMSJdfX0sImlucHV0X2Rlc2NyaXB0b3JzIjpbeyJpZCI6IkVtYWlsVjEuMCIsIm5hbWUiOiJFbWFpbCIsInNjaGVtYSI6W3sidXJpIjoiaHR0cHM6Ly9kZXZsaWIudmVsb2NpdHluZXR3b3JrLmZvdW5kYXRpb24vc2NoZW1hcy9lbWFpbC12MS4wLnNjaGVtYS5qc29uIn1dLCJncm91cCI6WyJBIl19XSwic3VibWlzc2lvbl9yZXF1aXJlbWVudHMiOlt7InJ1bGUiOiJhbGwiLCJmcm9tIjoiQSIsIm1pbiI6MX1dfSwib3V0cHV0X2Rlc2NyaXB0b3JzIjpbeyJpZCI6IkVtcGxveW1lbnRQYXN0VjEuMSIsIm5hbWUiOiJQYXN0IGVtcGxveW1lbnQgcG9zaXRpb24iLCJzY2hlbWEiOlt7InVyaSI6Imh0dHBzOi8vZGV2bGliLnZlbG9jaXR5bmV0d29yay5mb3VuZGF0aW9uL3NjaGVtYXMvZW1wbG95bWVudC1wYXN0LXYxLjEuc2NoZW1hLmpzb24ifV0sImRpc3BsYXkiOnsidGl0bGUiOnsicGF0aCI6WyIkLmxlZ2FsRW1wbG95ZXIubmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9LCJmYWxsYmFjayI6Ii0ifSwic3VidGl0bGUiOnsicGF0aCI6WyIkLnJvbGUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifSwiZmFsbGJhY2siOiItIn0sInN1bW1hcnlfZGV0YWlsIjp7InBhdGgiOlsiJC5wbGFjZS5uYW1lIl0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn0sImZhbGxiYWNrIjoicGxhY2UuYWRkcmVzc0xvY2FsaXR5In0sImRlc2NyaXB0aW9uIjp7InRleHQiOiJQYXN0IGVtcGxveW1lbnQgcG9zaXRpb24ifSwibG9nbyI6eyJwYXRoIjpbIiQubGVnYWxFbXBsb3llci5pbWFnZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6InVyaSJ9fSwicHJvcGVydGllcyI6W3sibGFiZWwiOiJSb2xlIiwicGF0aCI6WyIkLnJvbGUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IlJvbGUgZGVzY3JpcHRpb24iLCJwYXRoIjpbIiQuZGVzY3JpcHRpb24iXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IlN0YXJ0IGRhdGUiLCJwYXRoIjpbIiQuc3RhcnREYXRlIl0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIiwiZm9ybWF0IjoiZGF0ZSJ9fSx7ImxhYmVsIjoiRW5kIGRhdGUiLCJwYXRoIjpbIiQuZW5kRGF0ZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyIsImZvcm1hdCI6ImRhdGUifX0seyJsYWJlbCI6IlBsYWNlIG9mIHdvcmsiLCJwYXRoIjpbIiQucGxhY2UubmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiQ2l0eSBvZiB3b3JrIiwicGF0aCI6WyIkLnBsYWNlLmFkZHJlc3NMb2NhbGl0eSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiU3RhdGUgb3IgcmVnaW9uIG9mIHdvcmsiLCJwYXRoIjpbIiQucGxhY2UuYWRkcmVzc1JlZ2lvbiJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiQ291bnRyeSBvZiB3b3JrIiwicGF0aCI6WyIkLnBsYWNlLmFkZHJlc3NDb3VudHJ5Il0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn19LHsibGFiZWwiOiJFbXBsb3ltZW50IHR5cGUiLCJwYXRoIjpbIiQuZW1wbG95bWVudFR5cGVbKl0iXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6IkZpcnN0IG5hbWUiLCJwYXRoIjpbIiQucmVjaXBpZW50LmdpdmVuTmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiTWlkZGxlIG5hbWUiLCJwYXRoIjpbIiQucmVjaXBpZW50Lm1pZGRsZU5hbWUiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6Ikxhc3QgbmFtZSIsInBhdGgiOlsiJC5yZWNpcGllbnQuZmFtaWx5TmFtZSJdLCJzY2hlbWEiOnsidHlwZSI6InN0cmluZyJ9fSx7ImxhYmVsIjoiTmFtZSBwcmVmaXgiLCJwYXRoIjpbIiQucmVjaXBpZW50Lm5hbWVQcmVmaXgiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmcifX0seyJsYWJlbCI6Ik5hbWUgc3VmZml4IiwicGF0aCI6WyIkLnJlY2lwaWVudC5uYW1lU3VmZml4Il0sInNjaGVtYSI6eyJ0eXBlIjoic3RyaW5nIn19LHsibGFiZWwiOiJMZWFybiBtb3JlIGFib3V0IHRoZSBjcmVkZW50aWFsIiwicGF0aCI6WyIkLmFsaWdubWVudFswXS50YXJnZXRVcmwiXSwic2NoZW1hIjp7InR5cGUiOiJzdHJpbmciLCJmb3JtYXQiOiJ1cmkifX1dfX1dLCJpc3N1ZXIiOnsiaWQiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEifSwibmJmIjoxNzE2NDUzMjU5LCJpc3MiOiJkaWQ6aW9uOkVpQXBNTGRNYjROUGI4c2FlOS1oWEdIUDc5VzFnaXNBcFZTRTgwVVNQRWJ0SkEiLCJleHAiOjE3MTcwNTgwNTksImlhdCI6MTcxNjQ1MzI1OX0';
 
     static CredentialManifestJwt = VCLJwt.fromEncodedJwt(
-        IdentificationSubmissionMocks.CredentialManifestJwtStr
+        IdentificationSubmissionMocks.CredentialManifestJwtStr,
     );
 
     static RemoteCryptoServicesTokenStr =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
     static RemoteCryptoServicesToken = new VCLToken(
-        IdentificationSubmissionMocks.RemoteCryptoServicesTokenStr
+        IdentificationSubmissionMocks.RemoteCryptoServicesTokenStr,
     );
 
     static CredentialManifest = new VCLCredentialManifest(
@@ -102,7 +100,7 @@ export class IdentificationSubmissionMocks {
         IdentificationSubmissionMocks.VerifiedProfile,
         IdentificationSubmissionMocks.DeepLink,
         IdentificationSubmissionMocks.DidJwk,
-        IdentificationSubmissionMocks.RemoteCryptoServicesToken
+        IdentificationSubmissionMocks.RemoteCryptoServicesToken,
     );
 
     static AdamSmithDriversLicenseJwt =
@@ -117,15 +115,15 @@ export class IdentificationSubmissionMocks {
     static IdentificationList = [
         new VCLVerifiableCredential(
             'PhoneV1.0',
-            IdentificationSubmissionMocks.AdamSmithPhoneJwt
+            IdentificationSubmissionMocks.AdamSmithPhoneJwt,
         ),
         new VCLVerifiableCredential(
             'EmailV1.0',
-            IdentificationSubmissionMocks.AdamSmithEmailJwt
+            IdentificationSubmissionMocks.AdamSmithEmailJwt,
         ),
         new VCLVerifiableCredential(
             'DriversLicenseV1.0',
-            IdentificationSubmissionMocks.AdamSmithDriversLicenseJwt
+            IdentificationSubmissionMocks.AdamSmithDriversLicenseJwt,
         ),
     ];
 }

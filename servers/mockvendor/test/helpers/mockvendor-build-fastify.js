@@ -1,9 +1,5 @@
 const { createTestServer } = require('@verii/server-provider');
-const {
-  loadTestEnv,
-  buildMongoConnection,
-  // eslint-disable-next-line import/no-extraneous-dependencies
-} = require('@verii/tests-helpers');
+const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
 
 loadTestEnv();
 
@@ -15,7 +11,7 @@ const { initServer } = require('../../src/init-server');
 module.exports = () =>
   flow(
     createTestServer,
-    initServer
+    initServer,
   )({
     ...config,
     mongoConnection,

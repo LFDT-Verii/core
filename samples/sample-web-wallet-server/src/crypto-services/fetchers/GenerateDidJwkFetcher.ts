@@ -11,7 +11,7 @@ import fetcher from './Fetcher';
 import { GlobalConfig } from '../../GlobalConfig';
 
 export const generateDidJwkFetcher = async (
-  didJwkDescriptor: VCLDidJwkDescriptor
+  didJwkDescriptor: VCLDidJwkDescriptor,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: getCreateDidKeyServiceUrl(GlobalConfig.environment),

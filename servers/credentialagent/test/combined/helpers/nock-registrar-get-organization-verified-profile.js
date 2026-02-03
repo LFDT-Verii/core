@@ -18,13 +18,13 @@ const nock = require('nock');
 
 const nockRegistrarGetOrganizationVerifiedProfile = (
   tenantDid,
-  verifiedProfile
+  verifiedProfile,
 ) => {
   nock('http://oracle.localhost.test')
     .get(
       `/api/v0.6/organizations/${encodeURIComponent(
-        tenantDid
-      )}/verified-profile`
+        tenantDid,
+      )}/verified-profile`,
     )
     .reply(200, verifiedProfile);
 };

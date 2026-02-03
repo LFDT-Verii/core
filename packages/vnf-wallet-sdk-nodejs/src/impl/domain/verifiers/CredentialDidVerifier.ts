@@ -11,6 +11,6 @@ import VCLJwt from '../../../api/entities/VCLJwt';
 export default interface CredentialDidVerifier {
     verifyCredentials(
         jwtCredentials: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
+        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<VCLJwtVerifiableCredentials>;
 }

@@ -1,6 +1,6 @@
 const getAllSections = async (statusPageId, { betterUptimeFetch }) => {
   const response = await betterUptimeFetch.get(
-    `status-pages/${statusPageId}/sections`
+    `status-pages/${statusPageId}/sections`,
   );
 
   return response.json();

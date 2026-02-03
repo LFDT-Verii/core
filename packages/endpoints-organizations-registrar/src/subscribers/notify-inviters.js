@@ -22,7 +22,7 @@ const notifyInviters = async (fastify) => {
 
   const eventHandler = (
     { payload: { organization, invitation, addedServices, caoServiceRefs } },
-    context
+    context,
   ) =>
     sendEmailInvitationAcceptedToInviter(
       {
@@ -31,7 +31,7 @@ const notifyInviters = async (fastify) => {
         addedServices,
         caoServiceRefs,
       },
-      context
+      context,
     );
 
   fastify

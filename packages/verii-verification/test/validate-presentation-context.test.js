@@ -37,14 +37,14 @@ describe('validate presentation context', () => {
             enablePresentationContextValidation: false,
             presentationContextValue: 'http://example.com/presentation.jsonld',
           },
-        }
-      )
+        },
+      ),
     ).toBeUndefined();
   });
   describe('string presentation context', () => {
     it('should fail empty presentation', () => {
       expect(() => validatePresentationContext({}, { config })).toThrow(
-        new Error('presentation @context is not set correctly')
+        new Error('presentation @context is not set correctly'),
       );
     });
     it('should fail string presentation context', () => {
@@ -53,8 +53,8 @@ describe('validate presentation context', () => {
           {
             '@context': 'http://example.com/other.jsonld',
           },
-          { config }
-        )
+          { config },
+        ),
       ).toThrow(new Error('presentation @context is not set correctly'));
     });
     it('should pass string presentation context', () => {
@@ -63,15 +63,15 @@ describe('validate presentation context', () => {
           {
             '@context': 'http://example.com/presentation.jsonld',
           },
-          { config }
-        )
+          { config },
+        ),
       ).toBeUndefined();
     });
   });
   describe('array presentation context', () => {
     it('should fail empty presentation', () => {
       expect(() => validatePresentationContext({}, { config })).toThrow(
-        new Error('presentation @context is not set correctly')
+        new Error('presentation @context is not set correctly'),
       );
     });
     it('should fail array presentation context', () => {
@@ -83,8 +83,8 @@ describe('validate presentation context', () => {
               'http://example.com/omega.jsonld',
             ],
           },
-          { config }
-        )
+          { config },
+        ),
       ).toThrow(new Error('presentation @context is not set correctly'));
     });
     it('should pass array presentation context', () => {
@@ -97,8 +97,8 @@ describe('validate presentation context', () => {
               'http://example.com/omega.jsonld',
             ],
           },
-          { config }
-        )
+          { config },
+        ),
       ).toBeUndefined();
     });
   });

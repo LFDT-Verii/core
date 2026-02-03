@@ -30,6 +30,6 @@ module.exports = (app, options, next = () => {}) => {
       },
       extensions: [autoboxIdsExtension, signatoryStatusStateRepoExtension],
     },
-    app
+    app,
   );
 };

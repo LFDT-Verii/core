@@ -14,8 +14,8 @@ export default async function otherRoutes(fastify) {
     try {
       reply.send(
         await req.vclSdk.searchForOrganizations(
-          organizationsSearchDescriptorFrom(req.body)
-        )
+          organizationsSearchDescriptorFrom(req.body),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);
@@ -25,8 +25,8 @@ export default async function otherRoutes(fastify) {
     try {
       reply.send(
         await req.vclSdk.getVerifiedProfile(
-          verifiedProfileDescriptorFrom(req.body)
-        )
+          verifiedProfileDescriptorFrom(req.body),
+        ),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);

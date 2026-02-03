@@ -44,7 +44,7 @@ const initServer = (server) => {
     return reply
       .status(200)
       .send(
-        `Welcome to Test Host: ${server.config.appHost}:${server.config.appPort}\n`
+        `Welcome to Test Host: ${server.config.appHost}:${server.config.appPort}\n`,
       );
   });
   return server;
@@ -78,10 +78,10 @@ describe(
       const serverCertificate = fs.readFileSync(serverCertificateFilePath);
       const serverCertificateKeyFilePath = path.join(
         __dirname,
-        'localhost.key'
+        'localhost.key',
       );
       const serverCertificateKey = fs.readFileSync(
-        serverCertificateKeyFilePath
+        serverCertificateKeyFilePath,
       );
       const config = buildConfig();
       config.serverCertificateKey = serverCertificateKey;
@@ -118,10 +118,10 @@ describe(
       const serverCertificate = fs.readFileSync(serverCertificateFilePath);
       const serverCertificateKeyFilePath = path.join(
         __dirname,
-        'localhost.key'
+        'localhost.key',
       );
       const serverCertificateKey = fs.readFileSync(
-        serverCertificateKeyFilePath
+        serverCertificateKeyFilePath,
       );
 
       const config = buildConfig();
@@ -144,10 +144,10 @@ describe(
       const serverCertificate = fs.readFileSync(serverCertificateFilePath);
       const serverCertificateKeyFilePath = path.join(
         __dirname,
-        'localhost.key'
+        'localhost.key',
       );
       const serverCertificateKey = fs.readFileSync(
-        serverCertificateKeyFilePath
+        serverCertificateKeyFilePath,
       );
 
       const config = buildConfig();
@@ -168,5 +168,5 @@ describe(
       });
       expect(response.statusCode).toEqual(200);
     });
-  }
+  },
 );

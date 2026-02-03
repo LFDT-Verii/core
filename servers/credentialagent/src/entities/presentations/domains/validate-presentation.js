@@ -71,7 +71,7 @@ const validateVendorOriginContext = ({ vendorOriginContext }, disclosure) => {
     throw createError(
       401,
       PresentationErrors.PRESENTATION_PREAUTH_MUST_CONTAIN_VENDOR_ORIGIN_CONTEXT,
-      { errorCode: 'presentation_request_invalid' }
+      { errorCode: 'presentation_request_invalid' },
     );
   }
 };
@@ -86,7 +86,7 @@ const buildCanonicalVp = ({
         throw createError(
           400,
           "Velocity Presentation Submission only supports 'jwt_vc' or 'jwt_vp' inputs",
-          { errorCode: 'presentation_missing_jwtvc_or_jwtvp' }
+          { errorCode: 'presentation_missing_jwtvc_or_jwtvp' },
         );
       }
       const result = getJsonAtPath(descriptor.path, json);
@@ -94,7 +94,7 @@ const buildCanonicalVp = ({
         throw createError(
           400,
           'Velocity Presentation contains path descriptor that is empty',
-          { descriptor, json, errorCode: 'presentation_jsonpath_empty' }
+          { descriptor, json, errorCode: 'presentation_jsonpath_empty' },
         );
       }
       const jwtString = first(result);
@@ -108,7 +108,7 @@ const buildCanonicalVp = ({
         acc.verifiableCredential.push(jwtString);
       } else {
         acc.verifiableCredential = acc.verifiableCredential.concat(
-          payload.vp.verifiableCredential
+          payload.vp.verifiableCredential,
         );
       }
 
@@ -120,7 +120,7 @@ const buildCanonicalVp = ({
       vendorOriginContext: json.vendorOriginContext,
       presentationIssuer: json?.issuer?.id,
     },
-    presentationSubmission.descriptor_map
+    presentationSubmission.descriptor_map,
   );
 
 module.exports = { validatePresentation };

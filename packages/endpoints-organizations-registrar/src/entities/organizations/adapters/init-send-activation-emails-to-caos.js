@@ -34,14 +34,16 @@ const initSendActivationEmailsToCAOs = async (initCtx) => {
   return async (
     organization,
     services,
+    // eslint-disable-next-line default-param-last
     serviceIds = [],
     caoServiceRefs,
-    context
+    context,
   ) => {
     const { repos, log } = context;
 
     const activatedServices = selectActivatedServices(serviceIds, services);
 
+    // eslint-disable-next-line complexity
     const emailRequests = map(async (service) => {
       const caoOrganization =
         caoServiceRefs?.[service.serviceEndpoint]?.caoOrganization;
@@ -50,7 +52,7 @@ const initSendActivationEmailsToCAOs = async (initCtx) => {
       }
 
       const group = await repos.groups.findGroupByDid(
-        caoOrganization.didDoc.id
+        caoOrganization.didDoc.id,
       );
       if (isEmpty(group?.clientAdminIds)) {
         return;
@@ -58,7 +60,7 @@ const initSendActivationEmailsToCAOs = async (initCtx) => {
 
       const emails = map(
         'email',
-        await getUsersByIds({ userIds: group?.clientAdminIds })
+        await getUsersByIds({ userIds: group?.clientAdminIds }),
       );
 
       try {
@@ -69,13 +71,13 @@ const initSendActivationEmailsToCAOs = async (initCtx) => {
               activatedService: service,
               emails,
             },
-            context
-          )
+            context,
+          ),
         );
       } catch (e) {
         sendError(e, { message: e.message });
         log.warn(
-          `Unable to send email for organization ${organization?.didDoc?.id} service ${service?.id}`
+          `Unable to send email for organization ${organization?.didDoc?.id} service ${service?.id}`,
         );
       }
     }, activatedServices);

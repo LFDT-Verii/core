@@ -8,11 +8,11 @@ export default class KeyServiceUseCaseImpl implements KeyServiceUseCase {
     constructor(private readonly keyServiceRepository: KeyServiceRepository) {}
 
     async generateDidJwk(
-        didJwkDescriptor: VCLDidJwkDescriptor
+        didJwkDescriptor: VCLDidJwkDescriptor,
     ): Promise<VCLDidJwk> {
         try {
             return await this.keyServiceRepository.generateDidJwk(
-                didJwkDescriptor
+                didJwkDescriptor,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);

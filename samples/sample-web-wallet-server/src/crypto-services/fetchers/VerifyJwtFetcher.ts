@@ -17,7 +17,7 @@ import { GlobalConfig } from '../../GlobalConfig';
 
 export const verifyJwtFetcher = async (
   jwt: VCLJwt,
-  publicJwk: Nullish<VCLPublicJwk>
+  publicJwk: Nullish<VCLPublicJwk>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: getJwtVerifyServiceUrl(GlobalConfig.environment),

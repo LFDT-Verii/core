@@ -92,17 +92,17 @@ describe('E2E issuing', { timeout: 60000 }, () => {
     const permissionsAddress = await deployPermissionContract();
     const verificationCouponAddress = await deployVerificationCouponContract(
       permissionsAddress,
-      context
+      context,
     );
     revocationContractAddress = await deployRevocationContract(
       permissionsAddress,
-      context
+      context,
     );
     metadataRegistryContractAddress = await deployMetadataContract(
       freeCredentialTypesList,
       verificationCouponAddress,
       permissionsAddress,
-      context
+      context,
     );
 
     const deployerPermissionsClient = await initPermissions(
@@ -111,7 +111,7 @@ describe('E2E issuing', { timeout: 60000 }, () => {
         contractAddress: permissionsAddress,
         rpcProvider,
       },
-      context
+      context,
     );
     await deployerPermissionsClient.addAddressScope({
       address: metadataRegistryContractAddress,
@@ -140,7 +140,7 @@ describe('E2E issuing', { timeout: 60000 }, () => {
         contractAddress: permissionsAddress,
         rpcProvider,
       },
-      context
+      context,
     );
     await operatorPermissionsClient.addOperatorKey({
       primary: issuer.dltPrimaryAddress,
@@ -162,7 +162,7 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       metadataRegistryContractAddress,
       allocationListQueries: mongoAllocationListQueries(
         mongoClient.db('test-collections'),
-        'allocations'
+        'allocations',
       ),
       rpcProvider,
     });
@@ -207,14 +207,13 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       userId,
       credentialTypesMap,
       issuer,
-      context
+      context,
     );
 
     expect(credentials.length).toEqual(offers.length);
     for (let i = 0; i < credentials.length; i += 1) {
       const jwtVc = jwtDecode(credentials[i]);
 
-      // eslint-disable-next-line no-await-in-loop
       jwtVcExpectation({
         issuerEntity,
         offer: offers[i],

@@ -18,6 +18,7 @@ const fp = require('fastify-plugin');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
 
+// eslint-disable-next-line complexity
 const autoSchemaPlugin = async (fastify, opts) => {
   const defaultOptions = {
     errorSchemaId: 'error',
@@ -27,7 +28,7 @@ const autoSchemaPlugin = async (fastify, opts) => {
 
   if (fastify.getSchema(options.errorSchemaId) == null) {
     throw new Error(
-      `autoSchemaPlugin requires a schema with id "${options.errorSchemaId}"`
+      `autoSchemaPlugin requires a schema with id "${options.errorSchemaId}"`,
     );
   }
 

@@ -57,7 +57,7 @@ describe('Registrar messages controller tests', () => {
       const now = Date.now();
       const signature = signAndEncodeBase64(
         `${now}.${canonicalize(payload)}`,
-        vnfHeaderSignatureSigningKey
+        vnfHeaderSignatureSigningKey,
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -136,7 +136,7 @@ describe('Registrar messages controller tests', () => {
 
       const signature = signAndEncodeBase64(
         `${now}.${canonicalize(payload)}`,
-        vnfHeaderSignatureSigningKey
+        vnfHeaderSignatureSigningKey,
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -207,7 +207,7 @@ describe('Registrar messages controller tests', () => {
       const now = Date.now();
       const signature = signAndEncodeBase64(
         `${now}.${canonicalize(payload)}`,
-        vnfHeaderSignatureSigningKey
+        vnfHeaderSignatureSigningKey,
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -251,7 +251,7 @@ describe('Registrar messages controller tests', () => {
       const now = Date.now();
       const signature = signAndEncodeBase64(
         `${now}.${canonicalize(payload)}`,
-        vnfHeaderSignatureSigningKey
+        vnfHeaderSignatureSigningKey,
       );
       const response = await fastify.injectJson({
         method: 'POST',

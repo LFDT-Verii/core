@@ -3,6 +3,6 @@ import { VCLOrganizationsSearchDescriptor } from '../../../api/entities/VCLOrgan
 
 export default interface OrganizationsUseCase {
     searchForOrganizations(
-        organizationsSearchDescriptor: VCLOrganizationsSearchDescriptor
+        organizationsSearchDescriptor: VCLOrganizationsSearchDescriptor,
     ): Promise<VCLOrganizations>;
 }

@@ -13,13 +13,11 @@ import VCLErrorCode from '../../../api/entities/error/VCLErrorCode';
 import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDocumentRepository';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 
-export default class CredentialManifestByDeepLinkVerifierImpl
-    implements CredentialManifestByDeepLinkVerifier
-{
+export default class CredentialManifestByDeepLinkVerifierImpl implements CredentialManifestByDeepLinkVerifier {
     async verifyCredentialManifest(
         credentialManifest: VCLCredentialManifest,
         deepLink: VCLDeepLink,
-        didDocument: VCLDidDocument
+        didDocument: VCLDidDocument,
     ): Promise<boolean> {
         if (deepLink.did === null) {
             await this.onError(`DID not found in deep link: ${deepLink.value}`);
@@ -35,14 +33,14 @@ export default class CredentialManifestByDeepLinkVerifierImpl
         }
         await this.onError(
             `credential manifest: ${credentialManifest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
-            VCLErrorCode.MismatchedRequestIssuerDid
+            VCLErrorCode.MismatchedRequestIssuerDid,
         );
         return false;
     }
 
     private async onError(
         errorMessage: string,
-        errorCode: VCLErrorCode = VCLErrorCode.SdkError
+        errorCode: VCLErrorCode = VCLErrorCode.SdkError,
     ) {
         VCLLog.error(errorMessage);
         throw new VCLError(null, errorCode, null, errorMessage);

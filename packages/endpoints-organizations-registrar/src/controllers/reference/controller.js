@@ -90,10 +90,10 @@ const countriesController = async (fastify) => {
       return reply
         .header(
           CachingConstants.CACHE_CONTROL_HEADER,
-          CachingConstants.MAX_AGE_CACHE_CONTROL
+          CachingConstants.MAX_AGE_CACHE_CONTROL,
         )
         .send(countries);
-    }
+    },
   );
 };
 
