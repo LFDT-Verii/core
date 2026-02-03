@@ -39,7 +39,7 @@ jobs:
         node-version: ['22.x']
     steps:
     - name: Checkout Repo
-      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         fetch-depth: 0
     - name: Use Node.js ${{ matrix.node-version }}
@@ -116,7 +116,7 @@ jobs:
         mongodb-version: ['8.0']
     steps:
     - name: Checkout repo
-      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         fetch-depth: 0
     - name: Use Node.js ${{ matrix.node-version }}
@@ -145,7 +145,7 @@ jobs:
         echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Lint Report
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
         name: lint${{ env.ARTIFACT_NAME }}
         path: |
@@ -161,7 +161,7 @@ jobs:
     if: needs.prepare.outputs.lint-packages != '[]' && !cancelled()
     steps:
     - name: Download All Reports
-      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
       with:
         path: reports
         pattern: lint-*
@@ -185,7 +185,7 @@ jobs:
         mongodb-version: ['8.0']
     steps:
     - name: Checkout repo
-      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         fetch-depth: 0
     - name: Start MongoDB
@@ -250,7 +250,7 @@ jobs:
         echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Test Report
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
         name: test${{ env.ARTIFACT_NAME }}
         path: |
@@ -258,7 +258,7 @@ jobs:
           !node_modules/**/test-results.junit.xml
       if: '!cancelled()'
     - name: Upload Codecov Report
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
         name: codecov${{ env.ARTIFACT_NAME }}
         path: |
@@ -278,7 +278,7 @@ jobs:
     if: needs.prepare.outputs.test-packages != '[]' && !cancelled()
     steps:
     - name: Download All Test Reports
-      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
       with:
         path: test-results
         pattern: test-*
@@ -292,7 +292,7 @@ jobs:
         files: |
           **/test-results.junit.xml
     - name: Download All Codecov Reports
-      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
       with:
         path: codecov-reports
         pattern: codecov-*

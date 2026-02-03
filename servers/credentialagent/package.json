@@ -102,7 +102,7 @@
     "globals": "17.2.0",
     "jest-json-schema": "6.1.0",
     "jose": "5.10.0",
-    "migrate-mongo": "12.1.3",
+    "migrate-mongo": "14.0.7",
     "nanoid-dictionary": "5.0.0",
     "nodemon": "3.1.11",
     "prettier": "3.8.1",
