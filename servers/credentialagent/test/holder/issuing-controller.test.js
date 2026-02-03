@@ -162,7 +162,7 @@ describe('Holder Issuing Test Suite', () => {
       '30d',
       null,
       keyPair.privateKey,
-      tenantKeyDatum.kidFragment
+      tenantKeyDatum.kidFragment,
     );
 
   before(async () => {
@@ -193,10 +193,10 @@ describe('Holder Issuing Test Suite', () => {
       },
     });
     mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
-      Promise.resolve(true)
+      Promise.resolve(true),
     );
     mockCreateCredentialMetadataList.mock.mockImplementation(() =>
-      Promise.resolve(true)
+      Promise.resolve(true),
     );
 
     await mongoDb().collection('offers').deleteMany({});
@@ -306,7 +306,7 @@ describe('Holder Issuing Test Suite', () => {
           user,
           type: ['EducationDegree'],
           credentialSubject: educationDegreeCredentialSubject(user),
-        })
+        }),
       );
 
       await mongoDb()
@@ -320,7 +320,7 @@ describe('Holder Issuing Test Suite', () => {
                 timestamp: new Date(),
               },
             },
-          }
+          },
         );
     });
 
@@ -346,7 +346,7 @@ describe('Holder Issuing Test Suite', () => {
         null,
         getUnixTime(subDays(1)(new Date())),
         keyPair.privateKey,
-        tenantKeyDatum.kidFragment
+        tenantKeyDatum.kidFragment,
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -434,7 +434,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_REQUESTED,
             ExchangeStates.OFFERS_SENT,
           ],
-        })
+        }),
       );
     });
 
@@ -468,7 +468,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_REQUESTED,
             ExchangeStates.OFFERS_SENT,
           ],
-        })
+        }),
       );
     });
 
@@ -508,13 +508,13 @@ describe('Holder Issuing Test Suite', () => {
           errorCode: 'offers_already_cliamed_synch',
           message: `Exchange ${emptyExchange._id} is in an invalid state`,
           statusCode: 400,
-        })
+        }),
       );
       expect(
         await exchangeRepo.findById(
           emptyExchange._id,
-          exchangeRepoDefaultProjection
-        )
+          exchangeRepoDefaultProjection,
+        ),
       ).toEqual(
         exchangeExpectation({
           disclosure,
@@ -531,7 +531,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_SENT,
             ExchangeStates.UNEXPECTED_ERROR,
           ],
-        })
+        }),
       );
     });
 
@@ -547,7 +547,7 @@ describe('Holder Issuing Test Suite', () => {
                 timestamp: new Date(),
               },
             },
-          }
+          },
         );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -601,7 +601,7 @@ describe('Holder Issuing Test Suite', () => {
         },
       });
       expect(response.json.message).toEqual(
-        'Tenant {"tenantId":"did:value"} not found'
+        'Tenant {"tenantId":"did:value"} not found',
       );
       expect(response.statusCode).toEqual(404);
     });
@@ -706,7 +706,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_SENT,
           ],
           offerIds: reverse(map('_id', offers)),
-        })
+        }),
       );
       expect(await exchangeRepo.findById(exchange._id)).toEqual(
         exchangeExpectation({
@@ -723,7 +723,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_RECEIVED,
           ],
           omitList: ['vendorUserId', 'offerIds'],
-        })
+        }),
       );
     });
 
@@ -759,7 +759,7 @@ describe('Holder Issuing Test Suite', () => {
         challenge: expect.any(String),
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -773,7 +773,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_SENT,
           ],
           offerIds: [offer._id],
-        })
+        }),
       );
     });
 
@@ -795,7 +795,7 @@ describe('Holder Issuing Test Suite', () => {
         challenge: expect.any(String),
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -809,7 +809,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_SENT,
           ],
           offerIds: [offers[0]._id],
-        })
+        }),
       );
     });
 
@@ -828,7 +828,7 @@ describe('Holder Issuing Test Suite', () => {
             $set: {
               err: 'Some Error',
             },
-          }
+          },
         );
 
       const response = await fastify.injectJson({
@@ -857,11 +857,11 @@ describe('Holder Issuing Test Suite', () => {
                 'credentialStatus',
                 'contentHash',
               ],
-              offers[1]
+              offers[1],
             ),
             credentialSubject: omit(
               ['vendorUserId'],
-              offers[1].credentialSubject
+              offers[1].credentialSubject,
             ),
             hash: expect.any(String),
             id: expect.stringMatching(OBJECT_ID_FORMAT),
@@ -909,7 +909,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
         offers: expect.arrayContaining(
-          map(offerResponseExpectation, [newerDuplicateOffer, extraOffer])
+          map(offerResponseExpectation, [newerDuplicateOffer, extraOffer]),
         ),
         challenge: expect.any(String),
       });
@@ -926,7 +926,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_SENT,
           ],
           offerIds: [newerDuplicateOffer._id, extraOffer._id],
-        })
+        }),
       );
     });
   });
@@ -961,7 +961,7 @@ describe('Holder Issuing Test Suite', () => {
         offers: [],
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -974,7 +974,7 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_SENT,
           ],
           offerIds: [],
-        })
+        }),
       );
     });
 
@@ -1005,11 +1005,11 @@ describe('Holder Issuing Test Suite', () => {
           message: '2 offer(s) without offerId received from vendor',
           statusCode: 500,
           errorCode: 'upstream_offers_offer_id_missing',
-        })
+        }),
       );
       const exchangeDb = await exchangeRepo.findById(
         exchangeId,
-        exchangeRepoDefaultProjection
+        exchangeRepoDefaultProjection,
       );
       expect(exchangeDb).toEqual(
         exchangeExpectation({
@@ -1029,7 +1029,7 @@ describe('Holder Issuing Test Suite', () => {
             challenge: undefined,
             challengeIssuedAt: undefined,
           },
-        })
+        }),
       );
     });
 
@@ -1074,10 +1074,13 @@ describe('Holder Issuing Test Suite', () => {
           tenant,
           offer: buildCredentialSubjectWithType(offer),
           autocleanFinalizedOfferPii: false,
-        })
+        }),
       );
       expect(
-        await exchangeRepo.findById(exchange._id, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(
+          exchange._id,
+          exchangeRepoDefaultProjection,
+        ),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -1095,7 +1098,7 @@ describe('Holder Issuing Test Suite', () => {
               [offer.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
       expect(sentBody).toEqual({
         exchangeId,
@@ -1137,7 +1140,7 @@ describe('Holder Issuing Test Suite', () => {
         offers: [],
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -1156,7 +1159,7 @@ describe('Holder Issuing Test Suite', () => {
                 "'$.expirationDate' and '$.validUntil' cannot both be set",
             },
           },
-        })
+        }),
       );
     });
 
@@ -1218,10 +1221,13 @@ describe('Holder Issuing Test Suite', () => {
           tenant,
           offer: buildCredentialSubjectWithType(offer),
           autocleanFinalizedOfferPii: false,
-        })
+        }),
       );
       expect(
-        await exchangeRepo.findById(exchange._id, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(
+          exchange._id,
+          exchangeRepoDefaultProjection,
+        ),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -1239,7 +1245,7 @@ describe('Holder Issuing Test Suite', () => {
               [offer.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
       expect(sentBody).toEqual({
         exchangeId,
@@ -1285,7 +1291,7 @@ describe('Holder Issuing Test Suite', () => {
       const customAuthToken = await genAuthToken(
         customTenant,
         customExchange,
-        customUser
+        customUser,
       );
 
       const offer = await newVendorOffer({
@@ -1320,7 +1326,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.statusCode).toEqual(200);
       expect(webhookNock.isDone()).toBe(true);
       expect(identityWebhookHeaders.get('Authorization')).toBe(
-        'Bearer fake-bearer-token'
+        'Bearer fake-bearer-token',
       );
     });
 
@@ -1363,7 +1369,7 @@ describe('Holder Issuing Test Suite', () => {
       const customAuthToken = await genAuthToken(
         customTenant,
         customExchange,
-        customUser
+        customUser,
       );
 
       const offer = await newVendorOffer({
@@ -1437,7 +1443,7 @@ describe('Holder Issuing Test Suite', () => {
       const customAuthToken = await genAuthToken(
         customTenant,
         customExchange,
-        customUser
+        customUser,
       );
 
       const offer = await newVendorOffer({
@@ -1472,7 +1478,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.statusCode).toEqual(200);
       expect(webhookNock.isDone()).toBe(true);
       expect(identityWebhookHeaders.get('Authorization')).toBe(
-        'Bearer fake-bearer-token'
+        'Bearer fake-bearer-token',
       );
     });
 
@@ -1516,7 +1522,7 @@ describe('Holder Issuing Test Suite', () => {
       const customAuthToken = await genAuthToken(
         customTenant,
         customExchange,
-        customUser
+        customUser,
       );
 
       const offer = await newVendorOffer({
@@ -1551,7 +1557,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.statusCode).toEqual(200);
       expect(webhookNock.isDone()).toBe(true);
       expect(identityWebhookHeaders.get('Authorization')).toBe(
-        'Bearer fake-bearer-token'
+        'Bearer fake-bearer-token',
       );
     });
 
@@ -1593,7 +1599,7 @@ describe('Holder Issuing Test Suite', () => {
       const customAuthToken = await genAuthToken(
         customTenant,
         customExchange,
-        customUser
+        customUser,
       );
 
       const offer = await newVendorOffer({
@@ -1627,7 +1633,7 @@ describe('Holder Issuing Test Suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(identityWebhookHeaders.get('Authorization')).toEqual(
-        'Bearer secret'
+        'Bearer secret',
       );
     });
 
@@ -1647,7 +1653,7 @@ describe('Holder Issuing Test Suite', () => {
                 ],
               },
             },
-          }
+          },
         );
 
       const preparedOffer = await persistOffer({
@@ -1728,7 +1734,7 @@ describe('Holder Issuing Test Suite', () => {
           offer: buildCredentialSubjectWithType(offer),
           tenant,
           autocleanFinalizedOfferPii: false,
-        })
+        }),
       );
       expect(await exchangeRepo.findById(exchange._id)).toEqual(
         exchangeExpectation({
@@ -1748,7 +1754,7 @@ describe('Holder Issuing Test Suite', () => {
               [offer.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
       expect(sentBody).toEqual({
         exchangeId,
@@ -1779,7 +1785,7 @@ describe('Holder Issuing Test Suite', () => {
                 ],
               },
             },
-          }
+          },
         );
 
       const preparedOffer = await persistOffer({ tenant, exchange, user });
@@ -1802,7 +1808,7 @@ describe('Holder Issuing Test Suite', () => {
         challenge: expect.any(String),
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -1817,14 +1823,14 @@ describe('Holder Issuing Test Suite', () => {
             ExchangeStates.OFFERS_SENT,
           ],
           offerIds: map('id', response.json.offers),
-        })
+        }),
       );
     });
 
     it('/credential-offers should return an array of offers when exchangeId is not returned by vendor', async () => {
       const offer = omit(
         ['exchangeId'],
-        await newVendorOffer({ tenant, exchange })
+        await newVendorOffer({ tenant, exchange }),
       );
       let sentBody;
       nock(mockVendorUrl)
@@ -1864,10 +1870,10 @@ describe('Holder Issuing Test Suite', () => {
           }),
           tenant,
           autocleanFinalizedOfferPii: false,
-        })
+        }),
       );
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -1885,7 +1891,7 @@ describe('Holder Issuing Test Suite', () => {
               [offer.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
       expect(sentBody).toEqual({
         exchangeId,
@@ -1926,7 +1932,7 @@ describe('Holder Issuing Test Suite', () => {
       const authTokenForOldTenant = await genAuthToken(
         tenantWithVendorOrganizationId,
         exchangeForOldTenant,
-        userForOldTenant
+        userForOldTenant,
       );
 
       const offer = await newVendorOffer({
@@ -2004,7 +2010,7 @@ describe('Holder Issuing Test Suite', () => {
       const authTokenForOldTenant = await genAuthToken(
         tenantWithVendorOrganizationId,
         exchangeForOldTenant,
-        userForOldTenant
+        userForOldTenant,
       );
       const getSchemaNock = nockRegistrarAppSchemaName();
 
@@ -2043,7 +2049,7 @@ describe('Holder Issuing Test Suite', () => {
           errorCode: 'upstream_offers_invalid',
           message: 'Invalid webhook offers',
           statusCode: 400,
-        })
+        }),
       );
 
       expect(sentBody).toEqual({
@@ -2065,7 +2071,7 @@ describe('Holder Issuing Test Suite', () => {
       });
       const exchangedb = await exchangeRepo.findById(
         exchangeForOldTenant._id,
-        exchangeRepoDefaultProjection
+        exchangeRepoDefaultProjection,
       );
       expect(exchangedb).toEqual(
         exchangeExpectation({
@@ -2088,7 +2094,7 @@ describe('Holder Issuing Test Suite', () => {
                 "'$.credentialSubject' must have required property 'companyName', '$.credentialSubject' must have required property 'title', '$.credentialSubject' must have required property 'startMonthYear', '$.credentialSubject' must have required property 'endMonthYear'",
             },
           },
-        })
+        }),
       );
       expect(getSchemaNock.isDone()).toEqual(true);
     });
@@ -2112,7 +2118,7 @@ describe('Holder Issuing Test Suite', () => {
         offers: [],
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -2130,7 +2136,7 @@ describe('Holder Issuing Test Suite', () => {
             challengeIssuedAt: undefined,
           },
           omitList: ['offerIds'],
-        })
+        }),
       );
     });
 
@@ -2171,7 +2177,7 @@ describe('Holder Issuing Test Suite', () => {
         },
       });
       expect(response.json.message).toEqual(
-        'Tenant {"tenantId":"did:value"} not found'
+        'Tenant {"tenantId":"did:value"} not found',
       );
       expect(response.statusCode).toEqual(404);
     });
@@ -2235,7 +2241,10 @@ describe('Holder Issuing Test Suite', () => {
       });
 
       expect(
-        await exchangeRepo.findById(exchange._id, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(
+          exchange._id,
+          exchangeRepoDefaultProjection,
+        ),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -2257,7 +2266,7 @@ describe('Holder Issuing Test Suite', () => {
                 "'$.credentialSubject' must have required property 'title'",
             },
           },
-        })
+        }),
       );
       expect(sentBody).toEqual({
         exchangeId,
@@ -2284,7 +2293,7 @@ describe('Holder Issuing Test Suite', () => {
             offer0,
             omit(
               ['credentialSubject.company', 'credentialSubject.title'],
-              offer1
+              offer1,
             ),
           ],
         });
@@ -2332,7 +2341,7 @@ describe('Holder Issuing Test Suite', () => {
                 "'$.credentialSubject' must have required property 'company', '$.credentialSubject' must have required property 'title'",
             },
           },
-        })
+        }),
       );
 
       expect(sentBody).toEqual({
@@ -2366,7 +2375,7 @@ describe('Holder Issuing Test Suite', () => {
             offer0,
             omit(
               ['credentialSubject.company', 'credentialSubject.title'],
-              offer1
+              offer1,
             ),
           ],
         });
@@ -2404,8 +2413,8 @@ describe('Holder Issuing Test Suite', () => {
             hash: hashOffer(
               omit(
                 ['credentialSubject.company', 'credentialSubject.title'],
-                buildCredentialSubjectWithType(offer1)
-              )
+                buildCredentialSubjectWithType(offer1),
+              ),
             ),
           },
         ],
@@ -2430,7 +2439,7 @@ describe('Holder Issuing Test Suite', () => {
               [offer1.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
 
       expect(sentBody).toEqual({
@@ -2465,7 +2474,7 @@ describe('Holder Issuing Test Suite', () => {
             offer0,
             omit(
               ['credentialSubject.company', 'credentialSubject.title'],
-              offer1
+              offer1,
             ),
           ],
         });
@@ -2513,7 +2522,7 @@ describe('Holder Issuing Test Suite', () => {
                 'failed to resolve http://mock.com/schemas/education-degree',
             },
           },
-        })
+        }),
       );
       expect(sentBody).toEqual({
         exchangeId,
@@ -2554,7 +2563,7 @@ describe('Holder Issuing Test Suite', () => {
           jsonOfferExpectation({
             offer: omit(
               'linkedCredentials',
-              buildCredentialSubjectWithType(replacementOffer)
+              buildCredentialSubjectWithType(replacementOffer),
             ),
             tenant,
           }),
@@ -2564,7 +2573,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(response.json.offers[0].id) })
+          .findOne({ _id: new ObjectId(response.json.offers[0].id) }),
       ).toEqual(
         offerExpectation({
           offer: buildCredentialSubjectWithType(replacementOffer),
@@ -2574,10 +2583,10 @@ describe('Holder Issuing Test Suite', () => {
             'linkedCredentials[0].invalidReason': `Revoked offer ${replacementOffer.linkedCredentials[0].linkedCredentialId} not found`,
           },
           autocleanFinalizedOfferPii: false,
-        })
+        }),
       );
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -2595,7 +2604,7 @@ describe('Holder Issuing Test Suite', () => {
               [replacementOffer.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
     });
 
@@ -2656,7 +2665,7 @@ describe('Holder Issuing Test Suite', () => {
         }),
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -2674,7 +2683,7 @@ describe('Holder Issuing Test Suite', () => {
               [replacementOffer.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
     });
 
@@ -2694,8 +2703,8 @@ describe('Holder Issuing Test Suite', () => {
                 revokedAt: new Date(),
               },
             }),
-          offerDids
-        )
+          offerDids,
+        ),
       );
 
       const vendorOffer = {
@@ -2764,7 +2773,7 @@ describe('Holder Issuing Test Suite', () => {
         challenge: expect.any(String),
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -2783,7 +2792,7 @@ describe('Holder Issuing Test Suite', () => {
               [vendorOffer2.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
     });
 
@@ -2887,13 +2896,16 @@ describe('Holder Issuing Test Suite', () => {
           map(offerResponseExpectation, [
             omit(['issuer.type'], vendorOffer),
             persistedOffer,
-          ])
+          ]),
         ),
         challenge: expect.any(String),
       });
 
       expect(
-        await exchangeRepo.findById(exchange._id, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(
+          exchange._id,
+          exchangeRepoDefaultProjection,
+        ),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -2911,7 +2923,7 @@ describe('Holder Issuing Test Suite', () => {
               [vendorOffer.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -2987,7 +2999,10 @@ describe('Holder Issuing Test Suite', () => {
       });
 
       expect(
-        await exchangeRepo.findById(exchange._id, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(
+          exchange._id,
+          exchangeRepoDefaultProjection,
+        ),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -3005,7 +3020,7 @@ describe('Holder Issuing Test Suite', () => {
               [vendorOffer.offerId]: 'Duplicate',
             },
           },
-        })
+        }),
       );
       expect(getSchemaNock.isDone()).toEqual(true);
     });
@@ -3081,12 +3096,12 @@ describe('Holder Issuing Test Suite', () => {
           map(offerResponseExpectation, [
             omit(['issuer.type'], vendorOffer),
             omit(['issuer.badProperty'], persistedOffer),
-          ])
+          ]),
         ),
       });
       const exchangeFromDb = await exchangeRepo.findById(
         exchange._id,
-        exchangeRepoDefaultProjection
+        exchangeRepoDefaultProjection,
       );
       expect(exchangeFromDb).toEqual(
         exchangeExpectation({
@@ -3107,14 +3122,14 @@ describe('Holder Issuing Test Suite', () => {
             challenge: expect.any(String),
             challengeIssuedAt: expect.any(Number),
           },
-        })
+        }),
       );
       expect(exchangeFromDb.challenge).toHaveLength(16);
       expect(exchangeFromDb.challengeIssuedAt).toBeLessThanOrEqual(
-        getUnixTime(new Date())
+        getUnixTime(new Date()),
       );
       expect(exchangeFromDb.challengeIssuedAt).toBeGreaterThan(
-        getUnixTime(new Date()) - 5
+        getUnixTime(new Date()) - 5,
       );
       expect(getSchemaNock.isDone()).toEqual(true);
     });
@@ -3159,7 +3174,7 @@ describe('Holder Issuing Test Suite', () => {
       const customAuthToken = await genAuthToken(
         customTenant,
         customExchange,
-        customUser
+        customUser,
       );
 
       const offer = await newVendorOffer({
@@ -3252,7 +3267,10 @@ describe('Holder Issuing Test Suite', () => {
       const dbResult = await mongoDb().collection('offers').countDocuments({});
       expect(dbResult).toEqual(2);
       expect(
-        await exchangeRepo.findById(exchange._id, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(
+          exchange._id,
+          exchangeRepoDefaultProjection,
+        ),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -3272,7 +3290,7 @@ describe('Holder Issuing Test Suite', () => {
               [offer.offerId]: 'OK',
             },
           },
-        })
+        }),
       );
       expect(getSchemaNock.isDone()).toEqual(true);
       expect(sentBody).toEqual({
@@ -3310,7 +3328,7 @@ describe('Holder Issuing Test Suite', () => {
                 ],
               },
             },
-          }
+          },
         );
       const preparedOffer = await persistOffer({
         tenant,
@@ -3345,11 +3363,11 @@ describe('Holder Issuing Test Suite', () => {
           {
             ...omit(
               ['_id', 'createdAt', 'linkCode', 'updatedAt', 'contentHash'],
-              preparedOffer
+              preparedOffer,
             ),
             credentialSubject: omit(
               ['vendorUserId'],
-              preparedOffer.credentialSubject
+              preparedOffer.credentialSubject,
             ),
             hash: expect.any(String),
             id: expect.stringMatching(OBJECT_ID_FORMAT),
@@ -3481,7 +3499,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(
         await mongoDb()
           .collection('offers')
-          .countDocuments({ _id: { $exists: true } })
+          .countDocuments({ _id: { $exists: true } }),
       ).toEqual(3);
     });
 
@@ -3501,7 +3519,7 @@ describe('Holder Issuing Test Suite', () => {
                 ],
               },
             },
-          }
+          },
         );
 
       const newExchange = await persistOfferExchange({
@@ -3552,7 +3570,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(
         await mongoDb()
           .collection('offers')
-          .countDocuments({ _id: { $exists: true } })
+          .countDocuments({ _id: { $exists: true } }),
       ).toEqual(3);
     });
   });
@@ -3634,7 +3652,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.json.offers.length).toEqual(2);
       expect(response.json).toEqual({
         offers: expect.arrayContaining(
-          map(offerResponseExpectation, [offer2, offer1])
+          map(offerResponseExpectation, [offer2, offer1]),
         ),
         challenge: expect.any(String),
       });
@@ -3773,12 +3791,12 @@ describe('Holder Issuing Test Suite', () => {
         .get('/schemas/open-badge-v3.0-schema.json')
         .reply(
           200,
-          require('../combined/schemas/open-badge-credential.schema.json')
+          require('../combined/schemas/open-badge-credential.schema.json'),
         );
 
       const openBadgeCredentialOffer = omit(
         ['issuer', 'contentHash'],
-        await newOffer(openBadgeCredentialExample)
+        await newOffer(openBadgeCredentialExample),
       );
       nock(mockVendorUrl)
         .post(requestOffersFromVendorEndpoint)
@@ -4032,7 +4050,7 @@ describe('Holder Issuing Test Suite', () => {
               relatedResource[2],
             ],
           },
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -4139,7 +4157,7 @@ describe('Holder Issuing Test Suite', () => {
           exchange,
           user,
           issuer: { type: 'Brand', image: 'image', name: 'name' },
-        })
+        }),
       );
       nock(mockVendorUrl)
         .post(requestOffersFromVendorEndpoint, (body) => {
@@ -4277,7 +4295,7 @@ describe('Holder Issuing Test Suite', () => {
               image: 'Test Commercial Entity Logo',
             },
           },
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(true);
@@ -4355,7 +4373,7 @@ describe('Holder Issuing Test Suite', () => {
 
       const dbExchangeAfterResponse = await exchangeRepo.findById(
         exchange._id,
-        exchangeRepoDefaultProjection
+        exchangeRepoDefaultProjection,
       );
       expect(dbExchangeAfterResponse).toEqual(
         exchangeExpectation({
@@ -4373,7 +4391,7 @@ describe('Holder Issuing Test Suite', () => {
               [offer2.offerId]: 'Invalid commercial entity',
             },
           },
-        })
+        }),
       );
 
       expect(getSchemaNock.isDone()).toEqual(false);
@@ -4507,7 +4525,7 @@ describe('Holder Issuing Test Suite', () => {
           errorCode: 'exchange_invalid',
           message: `Exchange ${emptyExchange._id} is in an invalid state`,
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -4534,7 +4552,7 @@ describe('Holder Issuing Test Suite', () => {
       await updateExchangeOffersIds(
         exchangeId,
         [offer1._id, offer2._id],
-        [offer1._id]
+        [offer1._id],
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -4549,11 +4567,11 @@ describe('Holder Issuing Test Suite', () => {
       });
       expect(response.statusCode).toEqual(400);
       expect(response.json.message).toEqual(
-        `offer ${offer1._id} has already been rejected`
+        `offer ${offer1._id} has already been rejected`,
       );
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -4570,7 +4588,7 @@ describe('Holder Issuing Test Suite', () => {
             finalizedOfferIds: mapToObjectId([offer1._id]),
             err: `offer ${offer1._id} has already been rejected`,
           },
-        })
+        }),
       );
     });
 
@@ -4585,7 +4603,7 @@ describe('Holder Issuing Test Suite', () => {
       await updateExchangeOffersIds(
         exchangeId,
         [offer1._id, offer2._id],
-        [offer1._id]
+        [offer1._id],
       );
       const response = await fastify.injectJson({
         method: 'POST',
@@ -4602,7 +4620,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.json).toEqual([]);
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -4617,7 +4635,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId([offer1._id, offer1._id]),
           },
-        })
+        }),
       );
     });
 
@@ -4658,7 +4676,7 @@ describe('Holder Issuing Test Suite', () => {
           tenant,
           credentialId: vc.payload.jti,
           offer: offer0,
-        })
+        }),
       );
 
       const dbOffer1Result = await mongoDb()
@@ -4671,12 +4689,12 @@ describe('Holder Issuing Test Suite', () => {
             credentialId: vc.payload.jti,
             offer: offer0,
             tenant,
-          })
-        )
+          }),
+        ),
       );
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -4692,7 +4710,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId([offer0._id]),
           },
-        })
+        }),
       );
     });
 
@@ -4860,8 +4878,8 @@ describe('Holder Issuing Test Suite', () => {
               offer,
               credentialId: jwtVcs[i].payload.jti,
             }),
-          offers
-        )
+          offers,
+        ),
       );
 
       const expectedOffers = mapWithIndex(
@@ -4871,21 +4889,21 @@ describe('Holder Issuing Test Suite', () => {
             offer,
             tenant,
           }),
-        offers
+        offers,
       );
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offers[0]._id) })
+          .findOne({ _id: new ObjectId(offers[0]._id) }),
       ).toEqual(mongoify(expectedOffers[0]));
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offers[1]._id) })
+          .findOne({ _id: new ObjectId(offers[1]._id) }),
       ).toEqual(mongoify(expectedOffers[1]));
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -4901,7 +4919,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId(map('_id', offers)),
           },
-        })
+        }),
       );
 
       notificationEndpointScope.done();
@@ -4917,7 +4935,7 @@ describe('Holder Issuing Test Suite', () => {
               {
                 ...omit(
                   ['credentialSubject', 'did', 'tenantId', 'digestSRI'],
-                  expectedOffer
+                  expectedOffer,
                 ),
                 _id: expectedOffer._id.toString(),
                 consentedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -4925,14 +4943,14 @@ describe('Holder Issuing Test Suite', () => {
                 credentialSubject: {
                   vendorUserId: get(
                     'credentialSubject.vendorUserId',
-                    expectedOffer
+                    expectedOffer,
                   ),
                 },
                 id: expectedOffer.did,
               },
-              false
+              false,
             ),
-          expectedOffers
+          expectedOffers,
         ),
       });
       fastify.resetOverrides();
@@ -4982,8 +5000,8 @@ describe('Holder Issuing Test Suite', () => {
               offer,
               credentialId: jwtVcs[i].payload.jti,
             }),
-          offers
-        )
+          offers,
+        ),
       );
 
       const expectedOffers = mapWithIndex(
@@ -4993,21 +5011,21 @@ describe('Holder Issuing Test Suite', () => {
             offer,
             tenant,
           }),
-        offers
+        offers,
       );
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offers[0]._id) })
+          .findOne({ _id: new ObjectId(offers[0]._id) }),
       ).toEqual(mongoify(expectedOffers[0]));
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offers[1]._id) })
+          .findOne({ _id: new ObjectId(offers[1]._id) }),
       ).toEqual(mongoify(expectedOffers[1]));
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -5023,7 +5041,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId(map('_id', offers)),
           },
-        })
+        }),
       );
 
       notificationEndpointScope.done();
@@ -5039,7 +5057,7 @@ describe('Holder Issuing Test Suite', () => {
               {
                 ...omit(
                   ['credentialSubject', 'did', 'tenantId', 'digestSRI'],
-                  expectedOffer
+                  expectedOffer,
                 ),
                 issued: expect.stringMatching(ISO_DATETIME_FORMAT),
                 _id: expectedOffer._id.toString(),
@@ -5048,14 +5066,14 @@ describe('Holder Issuing Test Suite', () => {
                 credentialSubject: {
                   vendorUserId: get(
                     'credentialSubject.vendorUserId',
-                    expectedOffer
+                    expectedOffer,
                   ),
                 },
                 id: expectedOffer.did,
               },
-              false
+              false,
             ),
-          expectedOffers
+          expectedOffers,
         ),
       });
       fastify.resetOverrides();
@@ -5152,8 +5170,8 @@ describe('Holder Issuing Test Suite', () => {
               offer,
               credentialId: jwtVcs[i].payload.jti,
             }),
-          offers
-        )
+          offers,
+        ),
       );
 
       const expectedOffers = mapWithIndex(
@@ -5163,16 +5181,16 @@ describe('Holder Issuing Test Suite', () => {
             offer,
             tenant,
           }),
-        offers
+        offers,
       );
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offers[0]._id) })
+          .findOne({ _id: new ObjectId(offers[0]._id) }),
       ).toEqual(mongoify(expectedOffers[0]));
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -5188,7 +5206,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId(map('_id', offers)),
           },
-        })
+        }),
       );
 
       notificationEndpointScope.done();
@@ -5204,7 +5222,7 @@ describe('Holder Issuing Test Suite', () => {
               {
                 ...omit(
                   ['credentialSubject', 'did', 'tenantId', 'digestSRI'],
-                  expectedOffer
+                  expectedOffer,
                 ),
                 _id: expectedOffer._id.toString(),
                 consentedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -5212,14 +5230,14 @@ describe('Holder Issuing Test Suite', () => {
                 credentialSubject: {
                   vendorUserId: get(
                     'credentialSubject.vendorUserId',
-                    expectedOffer
+                    expectedOffer,
                   ),
                 },
                 id: expectedOffer.did,
               },
-              false
+              false,
             ),
-          expectedOffers
+          expectedOffers,
         ),
       });
       fastify.resetOverrides();
@@ -5354,7 +5372,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.statusCode).toEqual(200);
       expect(nockWeb.isDone()).toEqual(true);
       expect(identityWebhookHeaders.get('Authorization')).toEqual(
-        'Bearer secret'
+        'Bearer secret',
       );
     });
 
@@ -5397,8 +5415,8 @@ describe('Holder Issuing Test Suite', () => {
               offer,
               credentialId: jwtVcs[i].payload.jti,
             }),
-          offers
-        )
+          offers,
+        ),
       );
 
       const expectedOffers = mapWithIndex(
@@ -5408,21 +5426,21 @@ describe('Holder Issuing Test Suite', () => {
             offer,
             tenant,
           }),
-        offers
+        offers,
       );
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offers[0]._id) })
+          .findOne({ _id: new ObjectId(offers[0]._id) }),
       ).toEqual(mongoify(expectedOffers[0]));
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offers[1]._id) })
+          .findOne({ _id: new ObjectId(offers[1]._id) }),
       ).toEqual(mongoify(expectedOffers[1]));
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -5438,7 +5456,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId(map('_id', offers)),
           },
-        })
+        }),
       );
 
       notificationEndpointScope.done();
@@ -5486,19 +5504,19 @@ describe('Holder Issuing Test Suite', () => {
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offer._id) })
+          .findOne({ _id: new ObjectId(offer._id) }),
       ).toEqual(
         mongoify(
           offerExpectation({
             credentialId: jwtVcs[0].payload.jti,
             offer,
             tenant,
-          })
-        )
+          }),
+        ),
       );
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -5514,7 +5532,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: [new ObjectId(offer._id)],
           },
-        })
+        }),
       );
     });
 
@@ -5542,11 +5560,11 @@ describe('Holder Issuing Test Suite', () => {
           ...offerExpectation({ offer: offer0, tenant }),
           rejectedAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -5562,7 +5580,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId([offer0._id]),
           },
-        })
+        }),
       );
     });
 
@@ -5594,7 +5612,7 @@ describe('Holder Issuing Test Suite', () => {
           ...offerExpectation({ offer: offer0, tenant }),
           rejectedAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        }
+        },
         // })
       );
 
@@ -5606,7 +5624,7 @@ describe('Holder Issuing Test Suite', () => {
           offer: offer2,
           tenant,
           autocleanFinalizedOfferPii: false,
-        })
+        }),
       );
       const dbexchangesResult = await exchangeRepo.findById(exchangeId);
       expect(dbexchangesResult).toEqual(
@@ -5623,7 +5641,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId([offer0._id]),
           },
-        })
+        }),
       );
     });
 
@@ -5667,8 +5685,8 @@ describe('Holder Issuing Test Suite', () => {
             credentialId: vcJwt.payload.jti,
             offer: offers[1],
             tenant,
-          })
-        )
+          }),
+        ),
       );
 
       const dbOffer2Result = await mongoDb()
@@ -5680,7 +5698,7 @@ describe('Holder Issuing Test Suite', () => {
         updatedAt: expect.any(Date),
       });
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -5696,7 +5714,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId(map('_id', offers)),
           },
-        })
+        }),
       );
     });
 
@@ -5719,7 +5737,7 @@ describe('Holder Issuing Test Suite', () => {
       expect(response.json).toHaveLength(0);
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -5734,7 +5752,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: [],
           },
-        })
+        }),
       );
     });
 
@@ -5764,13 +5782,13 @@ describe('Holder Issuing Test Suite', () => {
           tenant,
           credentialId: credential.payload.jti,
           offer: offer0,
-        })
+        }),
       );
 
       expect(
         await mongoDb()
           .collection('offers')
-          .findOne({ _id: new ObjectId(offer0._id) })
+          .findOne({ _id: new ObjectId(offer0._id) }),
       ).toEqual(
         mongoify(
           offerExpectation({
@@ -5778,8 +5796,8 @@ describe('Holder Issuing Test Suite', () => {
             offer: offer0,
             autocleanFinalizedOfferPii: true,
             tenant,
-          })
-        )
+          }),
+        ),
       );
 
       fastify.resetOverrides();
@@ -5818,8 +5836,8 @@ describe('Holder Issuing Test Suite', () => {
             offer: offer0,
             autocleanFinalizedOfferPii: false,
             tenant,
-          })
-        )
+          }),
+        ),
       );
 
       fastify.resetOverrides();
@@ -5853,7 +5871,7 @@ describe('Holder Issuing Test Suite', () => {
           tenant,
           credentialId: vc.payload.jti,
           offer: offer0,
-        })
+        }),
       );
 
       const dbOffer1Result = await mongoDb()
@@ -5866,12 +5884,12 @@ describe('Holder Issuing Test Suite', () => {
             credentialId: vc.payload.jti,
             offer: offer0,
             tenant,
-          })
-        )
+          }),
+        ),
       );
 
       expect(
-        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+        await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection),
       ).toEqual(
         exchangeExpectation({
           user,
@@ -5887,7 +5905,7 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             finalizedOfferIds: mapToObjectId([offer0._id]),
           },
-        })
+        }),
       );
     });
 
@@ -5896,7 +5914,7 @@ describe('Holder Issuing Test Suite', () => {
         await updateExchangeOffersIds(exchangeId, [offer0._id]);
         mockAddCredentialMetadataEntry.mock.mockImplementation(async () => {
           const e = new Error(
-            'Permissions: mock error primary lacks permissions'
+            'Permissions: mock error primary lacks permissions',
           );
           e.errorCode = 'career_issuing_not_permitted';
           return Promise.reject(e);
@@ -5920,7 +5938,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'career_issuing_not_permitted',
             message: 'Permissions: mock error primary lacks permissions',
             statusCode: 502,
-          })
+          }),
         );
 
         const dbOffer1Result = await mongoDb()
@@ -5933,12 +5951,15 @@ describe('Holder Issuing Test Suite', () => {
               offer: offer0,
               autocleanFinalizedOfferPii: false,
               tenant,
-            })
-          )
+            }),
+          ),
         );
 
         expect(
-          await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+          await exchangeRepo.findById(
+            exchangeId,
+            exchangeRepoDefaultProjection,
+          ),
         ).toEqual(
           exchangeExpectation({
             user,
@@ -5954,7 +5975,7 @@ describe('Holder Issuing Test Suite', () => {
             overrides: {
               err: 'Permissions: mock error primary lacks permissions',
             },
-          })
+          }),
         );
       });
 
@@ -5966,7 +5987,7 @@ describe('Holder Issuing Test Suite', () => {
         });
         mockAddCredentialMetadataEntry.mock.mockImplementationOnce(async () => {
           const e = new Error(
-            'Permissions: mock error primary lacks permissions'
+            'Permissions: mock error primary lacks permissions',
           );
           e.errorCode = 'career_issuing_not_permitted';
           throw e;
@@ -5990,7 +6011,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'career_issuing_not_permitted',
             message: 'Permissions: mock error primary lacks permissions',
             statusCode: 502,
-          })
+          }),
         );
 
         const dbOffer0Result = await mongoDb()
@@ -6003,8 +6024,8 @@ describe('Holder Issuing Test Suite', () => {
               offer: offer0,
               autocleanFinalizedOfferPii: false,
               tenant,
-            })
-          )
+            }),
+          ),
         );
 
         const dbOffer1Result = await mongoDb()
@@ -6017,12 +6038,15 @@ describe('Holder Issuing Test Suite', () => {
               offer: offer1,
               autocleanFinalizedOfferPii: false,
               tenant,
-            })
-          )
+            }),
+          ),
         );
 
         expect(
-          await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+          await exchangeRepo.findById(
+            exchangeId,
+            exchangeRepoDefaultProjection,
+          ),
         ).toEqual(
           exchangeExpectation({
             user,
@@ -6038,7 +6062,7 @@ describe('Holder Issuing Test Suite', () => {
             overrides: {
               err: 'Permissions: mock error primary lacks permissions',
             },
-          })
+          }),
         );
       });
 
@@ -6046,7 +6070,7 @@ describe('Holder Issuing Test Suite', () => {
         await updateExchangeOffersIds(exchangeId, [offer0._id]);
         mockAddCredentialMetadataEntry.mock.mockImplementation(async () => {
           const e = new Error(
-            'Permissions: mock error primary lacks permissions'
+            'Permissions: mock error primary lacks permissions',
           );
           e.errorCode = 'identity_issuing_not_permitted';
           throw e;
@@ -6070,7 +6094,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'identity_issuing_not_permitted',
             message: 'Permissions: mock error primary lacks permissions',
             statusCode: 502,
-          })
+          }),
         );
 
         const dbOffer1Result = await mongoDb()
@@ -6083,12 +6107,15 @@ describe('Holder Issuing Test Suite', () => {
               offer: offer0,
               autocleanFinalizedOfferPii: false,
               tenant,
-            })
-          )
+            }),
+          ),
         );
 
         expect(
-          await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+          await exchangeRepo.findById(
+            exchangeId,
+            exchangeRepoDefaultProjection,
+          ),
         ).toEqual(
           exchangeExpectation({
             user,
@@ -6104,7 +6131,7 @@ describe('Holder Issuing Test Suite', () => {
             overrides: {
               err: 'Permissions: mock error primary lacks permissions',
             },
-          })
+          }),
         );
       });
 
@@ -6112,7 +6139,7 @@ describe('Holder Issuing Test Suite', () => {
         await updateExchangeOffersIds(exchangeId, [offer0._id]);
         mockAddCredentialMetadataEntry.mock.mockImplementation(async () => {
           const e = new Error(
-            'Permissions: mock error primary lacks permissions'
+            'Permissions: mock error primary lacks permissions',
           );
           e.errorCode = 'contact_issuing_not_permitted';
           throw e;
@@ -6136,7 +6163,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'contact_issuing_not_permitted',
             message: 'Permissions: mock error primary lacks permissions',
             statusCode: 502,
-          })
+          }),
         );
 
         const dbOffer1Result = await mongoDb()
@@ -6149,12 +6176,15 @@ describe('Holder Issuing Test Suite', () => {
               offer: offer0,
               autocleanFinalizedOfferPii: false,
               tenant,
-            })
-          )
+            }),
+          ),
         );
 
         expect(
-          await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+          await exchangeRepo.findById(
+            exchangeId,
+            exchangeRepoDefaultProjection,
+          ),
         ).toEqual(
           exchangeExpectation({
             user,
@@ -6170,7 +6200,7 @@ describe('Holder Issuing Test Suite', () => {
             overrides: {
               err: 'Permissions: mock error primary lacks permissions',
             },
-          })
+          }),
         );
       });
 
@@ -6198,7 +6228,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'missing_error_code',
             message: 'foo error',
             statusCode: 500,
-          })
+          }),
         );
 
         const dbOffer1Result = await mongoDb()
@@ -6211,12 +6241,15 @@ describe('Holder Issuing Test Suite', () => {
               offer: offer0,
               autocleanFinalizedOfferPii: false,
               tenant,
-            })
-          )
+            }),
+          ),
         );
 
         expect(
-          await exchangeRepo.findById(exchangeId, exchangeRepoDefaultProjection)
+          await exchangeRepo.findById(
+            exchangeId,
+            exchangeRepoDefaultProjection,
+          ),
         ).toEqual(
           exchangeExpectation({
             user,
@@ -6232,7 +6265,7 @@ describe('Holder Issuing Test Suite', () => {
             overrides: {
               err: 'foo error',
             },
-          })
+          }),
         );
       });
     });
@@ -6258,7 +6291,7 @@ describe('Holder Issuing Test Suite', () => {
         mockInitPermissions.mock.mockImplementation(() =>
           Promise.resolve({
             lookupPrimary: mockLookupPrimary,
-          })
+          }),
         );
         const newTenant = await persistTenant({
           primaryAddress: '',
@@ -6285,7 +6318,7 @@ describe('Holder Issuing Test Suite', () => {
         const authTokenForNewTenant = await genAuthToken(
           newTenant,
           exchangeForNewTenant,
-          userForNewTenant
+          userForNewTenant,
         );
 
         const response = await fastify.injectJson({
@@ -6302,7 +6335,7 @@ describe('Holder Issuing Test Suite', () => {
         expect(response.statusCode).toEqual(200);
         expect(mockLookupPrimary.mock.callCount()).toEqual(1);
         expect(
-          mockLookupPrimary.mock.calls.map((call) => call.arguments)
+          mockLookupPrimary.mock.calls.map((call) => call.arguments),
         ).toContainEqual([
           toEthereumAddress(hexFromJwk(keyPair.publicKey, false)),
         ]);
@@ -6312,7 +6345,7 @@ describe('Holder Issuing Test Suite', () => {
         mockInitPermissions.mock.mockImplementation(() =>
           Promise.resolve({
             lookupPrimary: mockLookupPrimary,
-          })
+          }),
         );
         const newTenant = await persistTenant({
           primaryAddress: '',
@@ -6350,7 +6383,7 @@ describe('Holder Issuing Test Suite', () => {
         const authTokenForNewTenant = await genAuthToken(
           newTenant,
           exchangeForNewTenant,
-          userForNewTenant
+          userForNewTenant,
         );
 
         const response = await fastify.injectJson({
@@ -6426,7 +6459,7 @@ describe('Holder Issuing Test Suite', () => {
               jwt: 'jwt',
             },
           },
-          ''
+          '',
         );
         expect(response.statusCode).toEqual(400);
         expect(response.json).toEqual(
@@ -6436,7 +6469,7 @@ describe('Holder Issuing Test Suite', () => {
             message:
               'body/proof/proof_type must be equal to one of the allowed values',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if proof.jwt is null', async () => {
@@ -6455,7 +6488,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'proof_jwt_is_required',
             message: 'proof.jwt is missing',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if proof.jwt is invalid', async () => {
@@ -6474,7 +6507,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'bad_proof_jwt',
             message: 'proof.jwt is missing',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if kid in header is missing', async () => {
@@ -6494,7 +6527,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'proof_one_of_jwk_kid_required',
             message: 'proof.jwt is missing a kid',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if kid in header is invalid', async () => {
@@ -6518,7 +6551,7 @@ describe('Holder Issuing Test Suite', () => {
             message:
               'kid in the jwt does not resolve to a supported DID document. (kid should be a did:jwk)',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if proof is invalid', async () => {
@@ -6542,7 +6575,7 @@ describe('Holder Issuing Test Suite', () => {
             message:
               'kid in the jwt does not resolve to a supported DID document. (kid should be a did:jwk)',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if jwt verification is failed', async () => {
@@ -6565,7 +6598,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'proof_bad_jwt',
             message: "proof.jwt isn't a jwt or signature is not correct",
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if proof audience is invalid', async () => {
@@ -6574,7 +6607,7 @@ describe('Holder Issuing Test Suite', () => {
           proofKeyPair.privateKey,
           {
             kid: `${getDidUriFromJwk(proofKeyPair.publicKey)}#0`,
-          }
+          },
         );
         const response = await postFinalizeOffers({
           exchangeId,
@@ -6591,7 +6624,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'proof_bad_aud',
             message: 'The aud in the jwt is not correct',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if challenge is invalid', async () => {
@@ -6600,7 +6633,7 @@ describe('Holder Issuing Test Suite', () => {
           proofKeyPair.privateKey,
           {
             kid: `${getDidUriFromJwk(proofKeyPair.publicKey)}#0`,
-          }
+          },
         );
         const response = await postFinalizeOffers({
           exchangeId,
@@ -6617,7 +6650,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'proof_challenge_mismatch',
             message: 'The nonce in the jwt does not match the supplied c_nonce',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return error if challenge is expired', async () => {
@@ -6634,7 +6667,7 @@ describe('Holder Issuing Test Suite', () => {
             errorCode: 'proof_challenge_expired',
             message: 'The c_nonce in the jwt has expired',
             statusCode: 400,
-          })
+          }),
         );
       });
       it('should return 200 and approve offer ES256K alg', async () => {
@@ -6661,7 +6694,7 @@ describe('Holder Issuing Test Suite', () => {
             payload: {
               sub: didJwk,
             },
-          })
+          }),
         );
         const dbOffer1Result = await mongoDb()
           .collection('offers')
@@ -6672,12 +6705,12 @@ describe('Holder Issuing Test Suite', () => {
               credentialId: vc.payload.jti,
               offer,
               tenant,
-            })
-          )
+            }),
+          ),
         );
         const dbExchangeResult = await exchangeRepo.findById(
           exchangeId,
-          exchangeRepoDefaultProjection
+          exchangeRepoDefaultProjection,
         );
         expect(dbExchangeResult).toEqual(
           exchangeExpectation({
@@ -6697,7 +6730,7 @@ describe('Holder Issuing Test Suite', () => {
               challengeIssuedAt: exchange.challengeIssuedAt,
               vendorUserId: exchange.vendorUserId,
             },
-          })
+          }),
         );
       });
       it('should return 200 and approve offer ES256', async () => {
@@ -6730,7 +6763,7 @@ describe('Holder Issuing Test Suite', () => {
             payload: {
               sub: didJwk,
             },
-          })
+          }),
         );
         const dbOffer1Result = await mongoDb()
           .collection('offers')
@@ -6741,12 +6774,12 @@ describe('Holder Issuing Test Suite', () => {
               credentialId: vc.payload.jti,
               offer,
               tenant,
-            })
-          )
+            }),
+          ),
         );
         const dbExchangeResult = await exchangeRepo.findById(
           exchangeId,
-          exchangeRepoDefaultProjection
+          exchangeRepoDefaultProjection,
         );
         expect(dbExchangeResult).toEqual(
           exchangeExpectation({
@@ -6766,7 +6799,7 @@ describe('Holder Issuing Test Suite', () => {
               challengeIssuedAt: exchange.challengeIssuedAt,
               vendorUserId: exchange.vendorUserId,
             },
-          })
+          }),
         );
       });
       it('should return 200 and approve offer with credential subject id jwkThumbprint format', async () => {
@@ -6777,7 +6810,7 @@ describe('Holder Issuing Test Suite', () => {
             didJwk,
             proofKeyPair,
             exchange.challenge,
-            false
+            false,
           ),
         });
         const didJwkThumbprint = await jwkThumbprint(proofKeyPair.publicKey);
@@ -6799,7 +6832,7 @@ describe('Holder Issuing Test Suite', () => {
             payload: {
               sub: didJwkThumbprint,
             },
-          })
+          }),
         );
         const dbOffer1Result = await mongoDb()
           .collection('offers')
@@ -6810,12 +6843,12 @@ describe('Holder Issuing Test Suite', () => {
               credentialId: vc.payload.jti,
               offer,
               tenant,
-            })
-          )
+            }),
+          ),
         );
         const dbExchangeResult = await exchangeRepo.findById(
           exchangeId,
-          exchangeRepoDefaultProjection
+          exchangeRepoDefaultProjection,
         );
         expect(dbExchangeResult).toEqual(
           exchangeExpectation({
@@ -6835,7 +6868,7 @@ describe('Holder Issuing Test Suite', () => {
               challengeIssuedAt: exchange.challengeIssuedAt,
               vendorUserId: exchange.vendorUserId,
             },
-          })
+          }),
         );
       });
     });
@@ -6856,7 +6889,7 @@ const jsonOfferExpectation = ({ offer, tenant }) => {
     ];
   }
   return jsonify(
-    omit(['credentialSubject.vendorUserId', 'contentHash'], baseOffer)
+    omit(['credentialSubject.vendorUserId', 'contentHash'], baseOffer),
   );
 };
 
@@ -6903,7 +6936,7 @@ const offerExpectation = ({
         ...credentialTypeContext,
         'https://lib.test/contexts/credential-extensions-2022.jsonld.json',
         ...castArray(offer['@context']),
-      ])
+      ]),
     ),
     type: [first(offer.type), 'VerifiableCredential'],
     credentialSchema: {
@@ -6912,7 +6945,7 @@ const offerExpectation = ({
     },
     credentialStatus: {
       id: expect.stringMatching(
-        '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-z]+&listId=\\d+&index=\\d+$'
+        '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-z]+&listId=\\d+&index=\\d+$',
       ),
       type: VelocityRevocationListType,
     },
@@ -6986,7 +7019,7 @@ const offerResponseExpectation = (o) => ({
       'relatedResource',
       'replaces',
     ],
-    o
+    o,
   ),
   exchangeId: o.exchangeId.toString(),
   hash: hashOffer(o),
@@ -7079,7 +7112,7 @@ const buildProof = async (didJwk, keyPair, challenge, useKid = true) => {
       iss: didJwk,
     },
     keyPair.privateKey,
-    options
+    options,
   );
   return {
     proof_type: 'jwt',

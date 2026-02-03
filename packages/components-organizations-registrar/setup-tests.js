@@ -16,6 +16,7 @@
  */
 import { register } from 'node:module';
 import { afterEach } from 'node:test';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { cleanup } from '@testing-library/react';
 
 register('../../tooling/resolvers/alias-resolver.mjs', import.meta.url);

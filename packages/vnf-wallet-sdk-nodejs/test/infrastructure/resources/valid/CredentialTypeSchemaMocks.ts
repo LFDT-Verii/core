@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { CredentialTypesMocks } from './CredentialTypesMocks';
 import { VCLCredentialTypes } from '../../../../src';
 

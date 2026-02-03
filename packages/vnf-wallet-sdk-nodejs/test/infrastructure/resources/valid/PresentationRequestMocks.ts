@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import {
     VCLDeepLink,
     VCLJwt,
@@ -18,11 +16,11 @@ export class PresentationRequestMocks {
     static readonly EncodedPresentationRequestResponse = `{"presentation_request":"${PresentationRequestMocks.EncodedPresentationRequest}"}`;
 
     static readonly PresentationRequestJwt = VCLJwt.fromEncodedJwt(
-        PresentationRequestMocks.EncodedPresentationRequest
+        PresentationRequestMocks.EncodedPresentationRequest,
     );
 
     static readonly PresentationRequestFeedJwt = VCLJwt.fromEncodedJwt(
-        PresentationRequestMocks.EncodedPresentationRequestFeed
+        PresentationRequestMocks.EncodedPresentationRequestFeed,
     );
 
     static readonly JWK =
@@ -33,7 +31,7 @@ export class PresentationRequestMocks {
         new VCLVerifiedProfile({}),
         new VCLDeepLink(''),
         null,
-        DidJwkMocks.DidJwk
+        DidJwkMocks.DidJwk,
     );
 
     static readonly PresentationRequestFeed = new VCLPresentationRequest(
@@ -41,6 +39,6 @@ export class PresentationRequestMocks {
         new VCLVerifiedProfile({}),
         new VCLDeepLink(''),
         null,
-        DidJwkMocks.DidJwk
+        DidJwkMocks.DidJwk,
     );
 }

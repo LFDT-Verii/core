@@ -58,7 +58,7 @@ const credentialsController = async (fastify) => {
       // temporary validation until JSON-LD is supported natively
       if (options?.format !== CredentialFormat.JWT_VC) {
         throw newError.BadRequest(
-          `options.format must be ${CredentialFormat.JWT_VC}`
+          `options.format must be ${CredentialFormat.JWT_VC}`,
         );
       }
 
@@ -75,35 +75,35 @@ const credentialsController = async (fastify) => {
 
       const [preparedOffer] = await prepareOffers(
         [{ ...offer, offerId: nanoid() }],
-        req
+        req,
       );
 
       const validatedOffer = await validateOffer(
         preparedOffer,
         false,
         true,
-        req
+        req,
       );
 
       const dbOffer = await repos.offers.insert(validatedOffer);
 
       await repos.exchanges.addState(
         exchange._id,
-        ExchangeStates.CLAIMING_IN_PROGRESS
+        ExchangeStates.CLAIMING_IN_PROGRESS,
       );
 
       const vcJwts = await createVerifiableCredentials(
         [dbOffer],
         offer.credentialSubject.id,
         options.consented != null ? new Date(options.consented) : new Date(),
-        req
+        req,
       );
 
       await finalizeExchange(exchange, [dbOffer._id], req);
       // eslint-disable-next-line better-mutation/no-mutation
       reply.statusCode = 201;
       return { verifiableCredential: first(vcJwts) };
-    }
+    },
   );
 };
 

@@ -26,12 +26,12 @@ const loadCredentialRefs = async (offers, context) => {
       replaces,
       map(
         ({ linkedCredentialId }) => ({ id: linkedCredentialId }),
-        linkedCredentials
+        linkedCredentials,
       ),
     ]),
     map('id'),
     compact,
-    uniq
+    uniq,
   )(offers);
 
   const dbOffers = await repos.offers.find(
@@ -47,7 +47,7 @@ const loadCredentialRefs = async (offers, context) => {
       digestSRI: 1,
       linkCode: 1,
       credentialStatus: 1,
-    }
+    },
   );
   return keyBy('did', dbOffers);
 };

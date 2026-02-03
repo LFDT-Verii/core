@@ -21,12 +21,12 @@ const { optional } = require('../src/optional');
 describe('optional Test Suite', () => {
   it('should error when first argument is not a function', () => {
     expect(() => optional(123, [])).toThrow(
-      'First argument must be a function'
+      'First argument must be a function',
     );
   });
   it('should error when second argument is not an array', () => {
     expect(() => optional(() => {}, {})).toThrow(
-      'Second argument must be an array'
+      'Second argument must be an array',
     );
   });
   it('should return null when any parameter is null or undefined', () => {

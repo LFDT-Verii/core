@@ -5,6 +5,6 @@ import VCLCredentialTypesUIFormSchemaDescriptor from '../../../api/entities/VCLC
 export default interface CredentialTypesUIFormSchemaUseCase {
     getCredentialTypesUIFormSchema(
         credentialTypesUIFormSchemaDescriptor: VCLCredentialTypesUIFormSchemaDescriptor,
-        countries: VCLCountries
+        countries: VCLCountries,
     ): Promise<VCLCredentialTypesUIFormSchema>;
 }

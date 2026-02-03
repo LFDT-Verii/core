@@ -28,7 +28,7 @@ const normalizeSchemaNameCandidate = (fileSuffix) => (schemaName) => {
       KEBAB_CASE_VERSIONED_SCHEMA.exec(schemaNameKebab);
     return schemaNameKebab.replace(
       KEBAB_CASE_VERSIONED_SCHEMA,
-      `-v${majorVersion}.${minorVersion}`
+      `-v${majorVersion}.${minorVersion}`,
     );
   }
 

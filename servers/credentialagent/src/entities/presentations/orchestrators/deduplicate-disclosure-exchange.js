@@ -21,7 +21,7 @@ const { ExchangeStates } = require('../../exchanges');
 // TODO refactor as exchange extension
 const deduplicateDisclosureExchange = async (
   presentation,
-  { repos, exchange }
+  { repos, exchange },
 ) => {
   const dbUpdateResult = await repos.exchanges.collection().updateOne(
     {
@@ -39,7 +39,7 @@ const deduplicateDisclosureExchange = async (
           timestamp: new Date(),
         },
       },
-    }
+    },
   );
 
   if (dbUpdateResult.modifiedCount === 0) {

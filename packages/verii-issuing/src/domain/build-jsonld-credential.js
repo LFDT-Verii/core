@@ -42,7 +42,7 @@ const buildJsonLdCredential = (
   contentHash,
   credentialTypeMetadata,
   revocationUrl,
-  context
+  context,
 ) => {
   const {
     config: { credentialExtensionsContextUrl },
@@ -65,7 +65,7 @@ const buildJsonLdCredential = (
       offer,
       credentialSubjectId,
       credentialContexts,
-      context
+      context,
     ),
     credentialSchema: offer.credentialSchema ?? {
       type: 'JsonSchemaValidator2018',
@@ -130,7 +130,7 @@ const buildCredentialSubject = (
   { credentialSubject },
   credentialSubjectId,
   credentialContexts,
-  context
+  context,
 ) => {
   const result = omit(['vendorUserId'], credentialSubject);
   if (!isEmpty(credentialSubjectId)) {
@@ -158,7 +158,7 @@ const buildCredentialStatus = (offer, velocityRevocationUrl) => {
 
   return addToPolymorphicArray(
     velocityCredentialStatus,
-    offer.credentialStatus
+    offer.credentialStatus,
   );
 };
 

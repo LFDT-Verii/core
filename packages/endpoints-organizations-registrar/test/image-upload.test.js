@@ -49,7 +49,7 @@ describe('Organization image upload', () => {
     const response = await fastify.injectJson({
       method: 'GET',
       url: `${baseUrl}/${encodeURIComponent(
-        'http://media.localhost.test/400x400-1234.png'
+        'http://media.localhost.test/400x400-1234.png',
       )}`,
       headers: {
         'x-override-oauth-user': JSON.stringify({
@@ -66,7 +66,7 @@ describe('Organization image upload', () => {
         errorCode: 'image_not_found',
         message: 'Image not found',
         statusCode: 404,
-      })
+      }),
     );
   });
 

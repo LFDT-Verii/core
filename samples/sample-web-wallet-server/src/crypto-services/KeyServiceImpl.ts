@@ -14,7 +14,7 @@ import { generateDidJwkFetcher } from './fetchers';
 
 export class KeyServiceImpl implements VCLKeyService {
   async generateDidJwk(
-    didJwkDescriptor: VCLDidJwkDescriptor
+    didJwkDescriptor: VCLDidJwkDescriptor,
   ): Promise<VCLDidJwk> {
     return VCLDidJwk.fromJSON(await generateDidJwkFetcher(didJwkDescriptor));
   }

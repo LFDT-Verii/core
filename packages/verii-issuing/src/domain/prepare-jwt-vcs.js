@@ -49,7 +49,7 @@ const prepareJwtVcs = async (
   metadataEntries,
   revocationListEntries,
   credentialTypesMap,
-  context
+  context,
 ) => {
   return Promise.all(
     mapWithIndex(async (offer, i) => {
@@ -73,12 +73,12 @@ const prepareJwtVcs = async (
         metadataEntry,
         issuer,
         metadata.contentHash,
-        context.config.includeContentHashInCredentialId
+        context.config.includeContentHashInCredentialId,
       );
       const revocationUrl = buildRevocationUrl(
         revocationListEntries[i],
         issuer,
-        context
+        context,
       );
       const jsonLdCredential = buildJsonLdCredential(
         issuer,
@@ -88,18 +88,18 @@ const prepareJwtVcs = async (
         metadata.contentHash, // TODO remove June 2026
         credentialTypesMap[metadata.credentialType],
         revocationUrl,
-        context
+        context,
       );
 
       const { header, payload } = jsonLdToUnsignedVcJwtContent(
         jsonLdCredential,
         digitalSignatureAlgorithm,
-        `${credentialId}#key-1`
+        `${credentialId}#key-1`,
       );
       const vcJwt = await jwtSign(payload, keyPair.privateKey, header);
 
       return { metadata, jsonLdCredential, vcJwt };
-    }, offers)
+    }, offers),
   );
 };
 
@@ -115,7 +115,7 @@ const buildVelocityCredentialMetadataDID = (
   entry,
   issuer,
   contentHash,
-  includeContentHashInCredentialId
+  includeContentHashInCredentialId,
 ) => {
   const id = `did:velocity:v2:${toLower(issuer.dltPrimaryAddress)}:${
     entry.listId

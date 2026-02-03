@@ -12,22 +12,20 @@ import NetworkService from '../../domain/infrastructure/network/NetworkService';
 import CredentialTypesModel from '../../domain/models/CredentialTypesModel';
 import { getCredentialTypeMetadataByVc } from './VerificationUtils';
 
-export default class CredentialIssuerVerifierImpl
-    implements CredentialIssuerVerifier
-{
+export default class CredentialIssuerVerifierImpl implements CredentialIssuerVerifier {
     constructor(
         private credentialTypesModel: CredentialTypesModel,
-        private networkService: NetworkService
+        private networkService: NetworkService,
     ) {}
 
     async verifyCredentials(
         jwtCredentials: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
+        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<boolean> {
         const verifiedPromises = jwtCredentials.map(async (jwtCredential) => {
             const credentialTypeMetadata = getCredentialTypeMetadataByVc(
                 this.credentialTypesModel.data,
-                jwtCredential
+                jwtCredential,
             );
             return verifyIssuerForCredentialType(
                 jwtCredential.payload.vc,
@@ -41,7 +39,7 @@ export default class CredentialIssuerVerifierImpl
                 {
                     log: console,
                     config: {},
-                }
+                },
             );
         });
         const verified = await Promise.all(verifiedPromises);

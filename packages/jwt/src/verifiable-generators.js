@@ -57,7 +57,7 @@ const generatePresentationJwt = (presentationWrapper, key, kid, alg) => {
     vp: {
       ...omit(
         ['id', 'issuer', 'verifier', 'issued', 'expirationDate'],
-        presentation
+        presentation,
       ),
     },
   };

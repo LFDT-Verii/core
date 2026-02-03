@@ -53,7 +53,7 @@ export default class VCLDeepLink {
 
     retrieveQueryParam(key: string): Nullish<string> {
         return getQueryParamsFromString(decodeURIComponent(this.value))?.get(
-            key
+            key,
         );
     }
 

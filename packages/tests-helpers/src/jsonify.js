@@ -32,7 +32,7 @@ const jsonify = (obj, convertId = true) =>
       return acc;
     },
     {},
-    keys(obj)
+    keys(obj),
   );
 
 module.exports = { jsonify };

@@ -29,7 +29,7 @@ const mockInitSendError = mock.fn(() =>
     finishProfiling: () => {
       console.log('fake finish sentry profiling');
     },
-  })
+  }),
 );
 
 mock.module('@verii/error-aggregation', {
@@ -241,10 +241,10 @@ describe('Authorization Test suite', () => {
         mongoify({
           ...group,
           clientAdminIds: expect.arrayContaining(
-            group.clientAdminIds.concat([testWriteOrganizationsUser.sub])
+            group.clientAdminIds.concat([testWriteOrganizationsUser.sub]),
           ),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -270,7 +270,7 @@ describe('Authorization Test suite', () => {
           ...group,
           clientAdminIds: [testWriteOrganizationsUser.sub],
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -285,9 +285,9 @@ describe('Authorization Test suite', () => {
       };
 
       await expect(() =>
-        verifyUserOrganizationWriteAuthorized(ctx)
+        verifyUserOrganizationWriteAuthorized(ctx),
       ).rejects.toThrow(
-        GroupErrorMessages.ORGANIZATION_GROUP_NOT_FOUND({ did })
+        GroupErrorMessages.ORGANIZATION_GROUP_NOT_FOUND({ did }),
       );
     });
 
@@ -299,11 +299,11 @@ describe('Authorization Test suite', () => {
       };
 
       await expect(() =>
-        verifyUserOrganizationWriteAuthorized(ctx)
+        verifyUserOrganizationWriteAuthorized(ctx),
       ).rejects.toThrow(
         UserErrorMessages.USER_INVALID_GROUP_CLAIM({
           user: testWriteOrganizationsUser,
-        })
+        }),
       );
     });
 
@@ -327,11 +327,11 @@ describe('Authorization Test suite', () => {
       });
 
       await expect(() =>
-        verifyUserOrganizationWriteAuthorized(ctx)
+        verifyUserOrganizationWriteAuthorized(ctx),
       ).rejects.toThrow(
         UserErrorMessages.USER_MUST_HAVE_GROUP_CLAIM({
           user: userWithNoGroupClaim,
-        })
+        }),
       );
     });
 
@@ -361,7 +361,7 @@ describe('Authorization Test suite', () => {
           user: testWriteOrganizationsUser,
           group: orgGroup,
           did: otherDid,
-        })
+        }),
       );
     });
 
@@ -393,7 +393,7 @@ describe('Authorization Test suite', () => {
           user: testWriteOrganizationsUser,
           group: orgGroup,
           did: otherDid,
-        })
+        }),
       );
     });
 
@@ -411,7 +411,7 @@ describe('Authorization Test suite', () => {
             RegistrarScopes.WriteOrganizations,
             RegistrarScopes.AdminOrganizations,
           ],
-        })
+        }),
       );
     });
   });
@@ -496,10 +496,10 @@ describe('Authorization Test suite', () => {
         mongoify({
           ...group,
           clientAdminIds: expect.arrayContaining(
-            group.clientAdminIds.concat([testReadOrganizationsUser.sub])
+            group.clientAdminIds.concat([testReadOrganizationsUser.sub]),
           ),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -525,7 +525,7 @@ describe('Authorization Test suite', () => {
           ...group,
           clientAdminIds: [testReadOrganizationsUser.sub],
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
 
@@ -540,9 +540,9 @@ describe('Authorization Test suite', () => {
       };
 
       await expect(() =>
-        verifyUserOrganizationReadAuthorized(ctx)
+        verifyUserOrganizationReadAuthorized(ctx),
       ).rejects.toThrow(
-        GroupErrorMessages.ORGANIZATION_GROUP_NOT_FOUND({ did })
+        GroupErrorMessages.ORGANIZATION_GROUP_NOT_FOUND({ did }),
       );
     });
 
@@ -554,11 +554,11 @@ describe('Authorization Test suite', () => {
       };
 
       await expect(() =>
-        verifyUserOrganizationReadAuthorized(ctx)
+        verifyUserOrganizationReadAuthorized(ctx),
       ).rejects.toThrow(
         UserErrorMessages.USER_INVALID_GROUP_CLAIM({
           user: testReadOrganizationsUser,
-        })
+        }),
       );
     });
 
@@ -582,11 +582,11 @@ describe('Authorization Test suite', () => {
       });
 
       await expect(() =>
-        verifyUserOrganizationReadAuthorized(ctx)
+        verifyUserOrganizationReadAuthorized(ctx),
       ).rejects.toThrow(
         UserErrorMessages.USER_MUST_HAVE_GROUP_CLAIM({
           user: userWithNoGroupClaim,
-        })
+        }),
       );
     });
 
@@ -607,11 +607,11 @@ describe('Authorization Test suite', () => {
       });
 
       await expect(() =>
-        verifyUserOrganizationReadAuthorized(ctx)
+        verifyUserOrganizationReadAuthorized(ctx),
       ).rejects.toThrow(
         UserErrorMessages.USER_MUST_HAVE_GROUP_CLAIM({
           user: userWithNoGroupClaim,
-        })
+        }),
       );
     });
 
@@ -640,7 +640,7 @@ describe('Authorization Test suite', () => {
           user: testReadOrganizationsUser,
           group: orgGroup,
           did: otherDid,
-        })
+        }),
       );
     });
 
@@ -671,7 +671,7 @@ describe('Authorization Test suite', () => {
           user: testReadOrganizationsUser,
           group: orgGroup,
           did: otherDid,
-        })
+        }),
       );
     });
 
@@ -689,7 +689,7 @@ describe('Authorization Test suite', () => {
             RegistrarScopes.ReadOrganizations,
             RegistrarScopes.AdminOrganizations,
           ],
-        })
+        }),
       );
     });
   });
@@ -709,7 +709,7 @@ describe('Authorization Test suite', () => {
       await expect(func).rejects.toThrow(
         UserErrorMessages.USER_MUST_HAVE_GROUP_CLAIM({
           user: testWriteIAMUser,
-        })
+        }),
       );
     });
 
@@ -820,7 +820,7 @@ describe('Authorization Test suite', () => {
       await expect(() => verifyAuthorizedWriteUsers(ctx)).rejects.toThrow(
         UserErrorMessages.USER_INVALID_GROUP_CLAIM({
           user: testWriteIAMUser,
-        })
+        }),
       );
     });
 
@@ -834,7 +834,7 @@ describe('Authorization Test suite', () => {
       await expect(() => verifyAuthorizedWriteUsers(ctx)).rejects.toThrow(
         UserErrorMessages.USER_INVALID_GROUP_CLAIM({
           user: testWriteIAMUser,
-        })
+        }),
       );
     });
 
@@ -855,7 +855,7 @@ describe('Authorization Test suite', () => {
         UserErrorMessages.USER_NOT_GROUP_CLIENT_ADMIN({
           user: testWriteIAMUser,
           group,
-        })
+        }),
       );
     });
 
@@ -873,7 +873,7 @@ describe('Authorization Test suite', () => {
             RegistrarScopes.WriteUsers,
             RegistrarScopes.AdminUsers,
           ],
-        })
+        }),
       );
     });
   });
@@ -995,7 +995,7 @@ describe('Authorization Test suite', () => {
       await expect(() => verifyAuthorizedReadUsers(ctx)).rejects.toThrow(
         UserErrorMessages.USER_INVALID_GROUP_CLAIM({
           user: testReadIAMUser,
-        })
+        }),
       );
     });
 
@@ -1009,7 +1009,7 @@ describe('Authorization Test suite', () => {
       await expect(() => verifyAuthorizedReadUsers(ctx)).rejects.toThrow(
         UserErrorMessages.USER_INVALID_GROUP_CLAIM({
           user: testReadIAMUser,
-        })
+        }),
       );
     });
 
@@ -1027,7 +1027,7 @@ describe('Authorization Test suite', () => {
             RegistrarScopes.ReadUsers,
             RegistrarScopes.AdminUsers,
           ],
-        })
+        }),
       );
     });
   });

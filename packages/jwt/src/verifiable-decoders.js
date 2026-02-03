@@ -57,6 +57,7 @@ const issuanceDate = (payload, existingIssuanceDate) =>
 const expirationDate = (payload) =>
   payload.exp ? { expirationDate: timestampToIsoDateString(payload.exp) } : {};
 
+// eslint-disable-next-line complexity
 const issuer = ({ iss, vc }) => {
   const issuerPayload = vc?.issuer || {};
 

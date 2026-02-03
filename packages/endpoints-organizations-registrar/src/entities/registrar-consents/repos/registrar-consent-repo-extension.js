@@ -31,7 +31,7 @@ const registrarConsentRepoExtension = (parent) => ({
         type,
         ...rest,
       },
-      ...args
+      ...args,
     );
   },
   registerConsents: (consents, ...args) => {

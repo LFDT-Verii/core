@@ -27,10 +27,10 @@ describe('vnf protocol plugin tests', () => {
     };
     vnfProtocolVersionPlugin(fakeServer, {}, () => {});
     expect(
-      fakeServer.decorateRequest.mock.calls.map((call) => call.arguments)
+      fakeServer.decorateRequest.mock.calls.map((call) => call.arguments),
     ).toEqual([['vnfProtocolVersion', null]]);
     expect(fakeServer.addHook.mock.calls.map((call) => call.arguments)).toEqual(
-      [['onRequest', expect.any(Function)]]
+      [['onRequest', expect.any(Function)]],
     );
   });
 
@@ -52,7 +52,7 @@ describe('vnf protocol plugin tests', () => {
 
     it('defaults to 0 when vnf protocol header is not set', () => {
       expect(
-        fakeServer.decorateRequest.mock.calls.map((call) => call.arguments)
+        fakeServer.decorateRequest.mock.calls.map((call) => call.arguments),
       ).toEqual([['vnfProtocolVersion', null]]);
       const fakeReq = { headers: {} };
       preHandlerFunc(fakeReq);

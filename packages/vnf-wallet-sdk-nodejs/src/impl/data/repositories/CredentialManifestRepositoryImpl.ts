@@ -6,13 +6,11 @@ import CredentialManifestRepository from '../../domain/repositories/CredentialMa
 import { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class CredentialManifestRepositoryImpl
-    implements CredentialManifestRepository
-{
+export default class CredentialManifestRepositoryImpl implements CredentialManifestRepository {
     constructor(private readonly networkService: NetworkService) {}
 
     async getCredentialManifest(
-        credentialManifestDescriptor: VCLCredentialManifestDescriptor
+        credentialManifestDescriptor: VCLCredentialManifestDescriptor,
     ): Promise<string> {
         const { endpoint } = credentialManifestDescriptor;
         if (!endpoint) {

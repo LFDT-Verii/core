@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// eslint-disable-next-line max-classes-per-file
 const {
   afterEach,
   beforeEach,
@@ -97,18 +96,18 @@ describe.skip('Mocked Contract Client Test Suite', () => {
           contractAbi: testEventsAbi,
           rpcProvider: initProvider('foo', authenticate),
         },
-        context
+        context,
       );
     });
 
     it('Should be able to get events', async () => {
       mockGetBlockNumber.mock.mockImplementation(() => Promise.resolve(3432));
       mockQueryFilter.mock.mockImplementation(() =>
-        Promise.resolve(map((n) => ({ event: n }), range(0, 200)))
+        Promise.resolve(map((n) => ({ event: n }), range(0, 200))),
       );
 
       const pullFooEvents = contractWithEventsClient.pullEvents(
-        'CreatedMetadataList'
+        'CreatedMetadataList',
       );
       const { latestBlock, eventsCursor } = await pullFooEvents();
 
@@ -121,43 +120,43 @@ describe.skip('Mocked Contract Client Test Suite', () => {
         1,
         'CreatedMetadataList',
         0,
-        499
+        499,
       );
       expect(mockQueryFilter).toHaveBeenNthCalledWith(
         2,
         'CreatedMetadataList',
         500,
-        999
+        999,
       );
       expect(mockQueryFilter).toHaveBeenNthCalledWith(
         3,
         'CreatedMetadataList',
         1000,
-        1499
+        1499,
       );
       expect(mockQueryFilter).toHaveBeenNthCalledWith(
         4,
         'CreatedMetadataList',
         1500,
-        1999
+        1999,
       );
       expect(mockQueryFilter).toHaveBeenNthCalledWith(
         5,
         'CreatedMetadataList',
         2000,
-        2499
+        2499,
       );
       expect(mockQueryFilter).toHaveBeenNthCalledWith(
         6,
         'CreatedMetadataList',
         2500,
-        2999
+        2999,
       );
       expect(mockQueryFilter).toHaveBeenNthCalledWith(
         7,
         'CreatedMetadataList',
         3000,
-        3432
+        3432,
       );
     });
   });

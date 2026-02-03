@@ -27,13 +27,13 @@ describe('normalizeProfileName Test Suite', () => {
 
   it('name normalization should remove all spaces and make it lowercase', () => {
     expect(normalizeProfileName('  Hello \t \tsecret name   ')).toBe(
-      'hello secret name'
+      'hello secret name',
     );
   });
 
   it('special symbols should not be removed or escaped', () => {
     expect(normalizeProfileName('  Hello? \t *\t\n\nsecret name! ##$$  ')).toBe(
-      'hello? * secret name! ##$$'
+      'hello? * secret name! ##$$',
     );
   });
 });

@@ -14,7 +14,6 @@ import { getTitle, isAddButtonDisabled } from '../../utils/index.js';
 
 const selectedStep = 2;
 
-// eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
 export const ServiceEndpointSelection = ({
   credentialAgentOperators,
   selectedServiceType,

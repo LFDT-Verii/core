@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-// eslint-disable-next-line max-classes-per-file
 const { mock, beforeEach, describe, it, after } = require('node:test');
 const { expect } = require('expect');
 
@@ -76,7 +75,7 @@ describe('SMS Notifications', () => {
             },
           },
         },
-      ]
+      ],
     );
   });
 
@@ -103,7 +102,7 @@ describe('SMS Notifications', () => {
             },
           },
         },
-      ]
+      ],
     );
   });
 
@@ -114,7 +113,7 @@ describe('SMS Notifications', () => {
     });
 
     expect(
-      mockTwilioCreate.mock.calls.map((call) => call.arguments)
+      mockTwilioCreate.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         to: '+65123465',
@@ -139,7 +138,7 @@ describe('SMS Notifications', () => {
 
     expect(mockPublish.mock.callCount()).toEqual(0);
     expect(
-      mockTwilioCreate.mock.calls.map((call) => call.arguments)
+      mockTwilioCreate.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         to: '123465',

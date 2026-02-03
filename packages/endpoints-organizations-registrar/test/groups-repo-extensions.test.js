@@ -126,7 +126,7 @@ describe('Organizations Group related functions test suite', () => {
         mongoify({
           ...group,
           dids: [did],
-        })
+        }),
       );
     });
 
@@ -176,11 +176,11 @@ describe('Organizations Group related functions test suite', () => {
           ...group,
           dids: [groupId, did],
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(new Date(findGroupResult.updatedAt).getTime()).toBeGreaterThan(
-        new Date(group.updatedAt).getTime()
+        new Date(group.updatedAt).getTime(),
       );
     });
   });
@@ -203,11 +203,11 @@ describe('Organizations Group related functions test suite', () => {
           ...group,
           dids: [groupId, did],
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(new Date(findGroupResult.updatedAt).getTime()).toBeGreaterThan(
-        new Date(group.updatedAt).getTime()
+        new Date(group.updatedAt).getTime(),
       );
     });
     it('should create a new group for the user if no group is found', async () => {
@@ -240,11 +240,11 @@ describe('Organizations Group related functions test suite', () => {
           ...group,
           clientAdminIds: [userId],
           updatedAt: expect.any(Date),
-        })
+        }),
       );
 
       expect(new Date(findGroupResult.updatedAt).getTime()).toBeGreaterThan(
-        new Date(group.updatedAt).getTime()
+        new Date(group.updatedAt).getTime(),
       );
     });
     it('should not add user and not error if user already exists in the group', async () => {
@@ -262,7 +262,7 @@ describe('Organizations Group related functions test suite', () => {
         mongoify({
           ...group,
           clientAdminIds: [userId],
-        })
+        }),
       );
     });
   });

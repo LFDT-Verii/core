@@ -31,13 +31,13 @@ describe('categorizeServices', () => {
   });
   it('should handle one service category', () => {
     expect(categorizeServices([{ type: ServiceTypes.InspectionType }])).toEqual(
-      [ServiceCategories.Inspector]
+      [ServiceCategories.Inspector],
     );
     expect(
       categorizeServices([
         { type: ServiceTypes.InspectionType },
         { type: LegacyServiceTypes.InspectionTypeOld },
-      ])
+      ]),
     ).toEqual([ServiceCategories.Inspector]);
   });
   it('should handle many services', () => {
@@ -48,7 +48,7 @@ describe('categorizeServices', () => {
         { type: ServiceTypes.NotaryIssuerType },
         { type: ServiceTypes.CredentialAgentOperatorType },
         { type: LegacyServiceTypes.IssuerType },
-      ])
+      ]),
     ).toEqual([
       ServiceCategories.Inspector,
       ServiceCategories.Issuer,
@@ -62,7 +62,7 @@ describe('categorizeServices', () => {
         { type: ServiceTypes.InspectionType },
         {},
         { type: ServiceTypes.NotaryIssuerType },
-      ])
+      ]),
     ).toEqual([ServiceCategories.Inspector, ServiceCategories.NotaryIssuer]);
   });
   it('should handle services with unknown type', () => {
@@ -71,7 +71,7 @@ describe('categorizeServices', () => {
         { type: ServiceTypes.InspectionType },
         { type: 'Fred' },
         { type: ServiceTypes.NotaryIssuerType },
-      ])
+      ]),
     ).toEqual([ServiceCategories.Inspector, ServiceCategories.NotaryIssuer]);
   });
 });

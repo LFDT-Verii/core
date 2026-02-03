@@ -27,7 +27,7 @@ const transformServiceEndpoint = (service, caoServiceRefs) => {
   return set(
     'serviceEndpoint',
     caoServiceRef.caoService.serviceEndpoint,
-    service
+    service,
   );
 };
 
@@ -36,7 +36,7 @@ const transformProfileService = (
   services,
   serviceTypes,
   caoServiceRefs,
-  { query }
+  { query },
 ) => {
   const pipeline = [
     buildPublicServices,
@@ -47,7 +47,7 @@ const transformProfileService = (
   }
   if (!query.noServiceEndpointTransform) {
     pipeline.push(
-      map((service) => transformServiceEndpoint(service, caoServiceRefs))
+      map((service) => transformServiceEndpoint(service, caoServiceRefs)),
     );
     const convertIssuerService = convertIssuer(organization.didDoc);
     pipeline.push(map((service) => convertIssuerService(service)));

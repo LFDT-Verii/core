@@ -283,6 +283,7 @@ const OrganizationShow = () => {
   );
 };
 
+// eslint-disable-next-line complexity
 const DataItemRegistrationNumbers = ({ fieldType, record, type, ...props }) => {
   const transformedValue =
     record?.profile?.registrationNumbers &&

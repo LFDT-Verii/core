@@ -50,7 +50,7 @@ describe(
     before(async () => {
       await mongoFactoryWrapper(
         'test-contract-with-transacting-client',
-        context
+        context,
       );
     });
 
@@ -74,10 +74,10 @@ describe(
               contractAbi: testEventsAbi,
               rpcProvider,
             },
-            context
+            context,
           );
         expect(func).rejects.toThrow(
-          'Check the required parameters: contractAddress'
+          'Check the required parameters: contractAddress',
         );
       });
 
@@ -91,15 +91,15 @@ describe(
             contractAbi: testEventsAbi,
             rpcProvider,
           },
-          context
+          context,
         );
         contractClient = transactingClient;
 
         expect(contractClient.wallet.provider).toEqual(rpcProvider);
         expect(contractClient.contractClient.runner.provider).toEqual(
-          rpcProvider
+          rpcProvider,
         );
       });
     });
-  }
+  },
 );

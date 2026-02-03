@@ -9,7 +9,7 @@ export default class InitializationWatcher {
 
     onInitializedModel(
         error: VCLError | null,
-        enforceFailure = false
+        enforceFailure = false,
     ): boolean {
         this.initCount += 1;
         if (error) {

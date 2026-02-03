@@ -134,7 +134,7 @@ describe('Credential Submissions', () => {
 
       expect(
         (await fastify.injectJson({ method: 'GET', url: '/api/applicants' }))
-          .json
+          .json,
       ).toEqual([
         {
           ...applicantPayload,
@@ -151,15 +151,15 @@ describe('Credential Submissions', () => {
             method: 'GET',
             url: '/api/credential-submissions',
           })
-        ).json
+        ).json,
       ).toEqual(
         map(
           (credential) => ({
             ...credential,
             vendorApplicantId: applicantResponse.json.vendorApplicantId,
           }),
-          prepareCredentialsApiResponse(credentialsPayload.credentials)
-        )
+          prepareCredentialsApiResponse(credentialsPayload.credentials),
+        ),
       );
     });
   });
@@ -186,7 +186,7 @@ describe('Credential Submissions', () => {
               method: 'GET',
               url: '/api/credential-submissions?vendorDisclosureId=1111',
             })
-          ).json
+          ).json,
         ).toEqual([]);
       });
       it('filter by ids', async () => {
@@ -196,11 +196,11 @@ describe('Credential Submissions', () => {
               method: 'GET',
               url: `/api/credential-submissions?vendorDisclosureId=${payload.vendorDisclosureId}`,
             })
-          ).json
+          ).json,
         ).toEqual(
           expect.arrayContaining(
-            prepareCredentialsApiResponse(payload.credentials)
-          )
+            prepareCredentialsApiResponse(payload.credentials),
+          ),
         );
       });
     });
@@ -213,10 +213,10 @@ describe('Credential Submissions', () => {
               url: `/api/credential-submissions?dateFrom=${flow(
                 endOfDay,
                 addDays(1),
-                formatISOWithOptions({ representation: 'date' })
+                formatISOWithOptions({ representation: 'date' }),
               )(new Date())}`,
             })
-          ).json
+          ).json,
         ).toEqual([]);
       });
       it('filter by dateFrom', async () => {
@@ -226,14 +226,14 @@ describe('Credential Submissions', () => {
               method: 'GET',
               url: `/api/credential-submissions?dateFrom=${flow(
                 startOfDay,
-                formatISOWithOptions({ representation: 'date' })
+                formatISOWithOptions({ representation: 'date' }),
               )(new Date())}`,
             })
-          ).json
+          ).json,
         ).toEqual(
           expect.arrayContaining(
-            prepareCredentialsApiResponse(payload.credentials)
-          )
+            prepareCredentialsApiResponse(payload.credentials),
+          ),
         );
       });
       it('return nothing if none on particular dateUntil', async () => {
@@ -244,10 +244,10 @@ describe('Credential Submissions', () => {
               url: `/api/credential-submissions?dateUntil=${flow(
                 startOfDay,
                 subDays(1),
-                formatISOWithOptions({ representation: 'date' })
+                formatISOWithOptions({ representation: 'date' }),
               )(new Date())}`,
             })
-          ).json
+          ).json,
         ).toEqual([]);
       });
       it('filter by dateUntil', async () => {
@@ -257,14 +257,14 @@ describe('Credential Submissions', () => {
               method: 'GET',
               url: `/api/credential-submissions?dateFrom=${flow(
                 startOfDay,
-                formatISOWithOptions({ representation: 'date' })
+                formatISOWithOptions({ representation: 'date' }),
               )(new Date())}`,
             })
-          ).json
+          ).json,
         ).toEqual(
           expect.arrayContaining(
-            prepareCredentialsApiResponse(payload.credentials)
-          )
+            prepareCredentialsApiResponse(payload.credentials),
+          ),
         );
       });
     });
@@ -292,11 +292,11 @@ describe('Credential Submissions', () => {
             method: 'GET',
             url: '/api/credential-submissions',
           })
-        ).json
+        ).json,
       ).toEqual(
         expect.arrayContaining(
-          prepareCredentialsApiResponse(payload.credentials)
-        )
+          prepareCredentialsApiResponse(payload.credentials),
+        ),
       );
     });
   });
@@ -323,11 +323,11 @@ describe('Credential Submissions', () => {
             method: 'GET',
             url: '/api/credential-submissions',
           })
-        ).json
+        ).json,
       ).toEqual(
         expect.arrayContaining(
-          prepareCredentialsApiResponse(payload.credentials)
-        )
+          prepareCredentialsApiResponse(payload.credentials),
+        ),
       );
     });
   });

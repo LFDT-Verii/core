@@ -115,7 +115,7 @@ describe('credential types endpoints', () => {
           errorCode: 'request_validation_failed',
           message: "body must have required property 'schemaName'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -137,7 +137,7 @@ describe('credential types endpoints', () => {
           errorCode: 'request_validation_failed',
           message: "body must have required property 'layer1'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -158,7 +158,7 @@ describe('credential types endpoints', () => {
           errorCode: 'request_validation_failed',
           message: "body must have required property 'credentialGroup'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -181,7 +181,7 @@ describe('credential types endpoints', () => {
           errorCode: 'request_validation_failed',
           message: "body must have required property 'schemaUrl'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -205,7 +205,7 @@ describe('credential types endpoints', () => {
           errorCode: 'request_validation_failed',
           message: "body must have required property 'displayDescriptorUrls'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -236,7 +236,7 @@ describe('credential types endpoints', () => {
           message:
             "body/displayDescriptorUrls must have required property 'en'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -264,7 +264,7 @@ describe('credential types endpoints', () => {
           errorCode: 'request_validation_failed',
           message: 'body/formSchemaUrls must NOT have fewer than 1 properties',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -294,7 +294,7 @@ describe('credential types endpoints', () => {
           errorCode: 'request_validation_failed',
           message: "body/formSchemaUrls must have required property 'en'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -331,7 +331,7 @@ describe('credential types endpoints', () => {
           errorCode: 'invalid-credential-type-link',
           message: 'Invalid credential type link',
           statusCode: 400,
-        })
+        }),
       );
 
       expect(fetchNock.isDone()).toEqual(true);
@@ -609,7 +609,7 @@ describe('credential types endpoints', () => {
               'https://lib.velocitynetwork.foundation/layer1-v1.1.jsonld.json',
             ],
           },
-          testRegistrarUser
+          testRegistrarUser,
         ),
       ]);
       expect(fetchNock.isDone()).toEqual(true);
@@ -703,11 +703,11 @@ describe('credential types endpoints', () => {
           errorCode: 'invalid-credential-type-link',
           message: 'Invalid credential type link',
           statusCode: 400,
-        })
+        }),
       );
 
       expect(await mongoDb().collection('credentialSchemas').findOne()).toEqual(
-        mongoify(credentialType)
+        mongoify(credentialType),
       );
       expect(fetchNock.isDone()).toEqual(true);
     });
@@ -743,7 +743,7 @@ describe('credential types endpoints', () => {
           errorCode: 'forbidden',
           message: 'You have no rights to modify credential type',
           statusCode: 403,
-        })
+        }),
       );
 
       const credentialSchema = await mongoDb()
@@ -790,7 +790,7 @@ describe('credential types endpoints', () => {
           errorCode: 'missing_error_code',
           message: 'credentialSchemas 123 not found',
           statusCode: 404,
-        })
+        }),
       );
     });
   });
@@ -856,11 +856,11 @@ describe('credential types endpoints', () => {
           errorCode: 'forbidden',
           message: 'You have no rights to modify credential type',
           statusCode: 403,
-        })
+        }),
       );
 
       expect(await mongoDb().collection('credentialSchemas').findOne()).toEqual(
-        mongoify(credentialType)
+        mongoify(credentialType),
       );
     });
     it('should respond 404 to a delete when credential type not found', async () => {
@@ -879,7 +879,7 @@ describe('credential types endpoints', () => {
           errorCode: 'missing_error_code',
           message: 'credentialSchemas 123 not found',
           statusCode: 404,
-        })
+        }),
       );
     });
   });
@@ -904,7 +904,7 @@ describe('credential types endpoints', () => {
       });
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual(
-        expect.arrayContaining(map(convertToJson, credentialTypes))
+        expect.arrayContaining(map(convertToJson, credentialTypes)),
       );
       expect(response.json[0].linkedIn).toEqual(credentialTypes[0].linkedIn);
     });
@@ -929,7 +929,7 @@ describe('credential types endpoints', () => {
         expect.arrayContaining([
           convertToJson(credentialType2),
           convertToJson(credentialType1),
-        ])
+        ]),
       );
     });
     it('should respond 404 to a missing  get one', async () => {

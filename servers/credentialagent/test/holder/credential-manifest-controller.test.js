@@ -130,6 +130,7 @@ describe('get credential manifests', () => {
     return `${baseUrl}?${queryString}`;
   };
 
+  // eslint-disable-next-line default-param-last
   const issuingUrl = (tenantId, suffix = '', queryParams) =>
     tenantUrl({ tenantId, queryParams }, `/issue${suffix}`);
 
@@ -180,12 +181,12 @@ describe('get credential manifests', () => {
       nockRegistrarGetOrganizationDidDoc(nonDidTenant.did, orgDidDoc);
       nockRegistrarGetOrganizationVerifiedProfile(
         nonDidTenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
 
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -203,7 +204,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -221,7 +222,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'CurrentEmploymentPosition',
@@ -254,7 +255,7 @@ describe('get credential manifests', () => {
           errorCode: 'tenant_exchanges_key_missing',
           message: `No key matching the filter {"tenantId":"${nonDidTenant._id.toString()}","purposes":"EXCHANGES"} was found`,
           statusCode: 500,
-        })
+        }),
       );
 
       const dbExchange = await mongoDb()
@@ -293,12 +294,12 @@ describe('get credential manifests', () => {
     it('should 500 when the credential type descriptor retrieval fails', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
 
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -316,7 +317,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(403, {});
 
@@ -455,7 +456,7 @@ describe('get credential manifests', () => {
           errorCode: 'disclosure_not_active',
           message: 'Disclosure is not active',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -479,7 +480,7 @@ describe('get credential manifests', () => {
             $set: {
               defaultIssuingDisclosureId: new ObjectId(customDisclosure._id),
             },
-          }
+          },
         );
 
       const response = await fastify.injectJson({
@@ -496,7 +497,7 @@ describe('get credential manifests', () => {
           errorCode: 'disclosure_not_active',
           message: 'Disclosure is not active',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -519,18 +520,18 @@ describe('get credential manifests', () => {
           errorCode: 'exchange_not_found',
           message: 'Exchange no-exchange-id not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
     it('should 200, when types provided but no exchangeId, no disclosureId', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -543,7 +544,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -561,7 +562,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'CurrentEmploymentPosition',
@@ -663,24 +664,24 @@ describe('get credential manifests', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -730,11 +731,11 @@ describe('get credential manifests', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -747,7 +748,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -830,24 +831,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -873,7 +874,7 @@ describe('get credential manifests', () => {
             tenantId: tenant._id,
             updatedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
 
@@ -892,11 +893,11 @@ describe('get credential manifests', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -909,7 +910,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -992,24 +993,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -1035,7 +1036,7 @@ describe('get credential manifests', () => {
             tenantId: tenant._id,
             updatedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
 
@@ -1074,11 +1075,11 @@ describe('get credential manifests', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         customTenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -1138,24 +1139,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: customTenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: customTenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             customTenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             customTenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             customTenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: customTenant.did,
@@ -1181,7 +1182,7 @@ describe('get credential manifests', () => {
             tenantId: customTenant._id,
             updatedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
 
@@ -1200,11 +1201,11 @@ describe('get credential manifests', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -1217,7 +1218,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -1320,24 +1321,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -1363,7 +1364,7 @@ describe('get credential manifests', () => {
             tenantId: tenant._id,
             updatedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
 
@@ -1385,11 +1386,11 @@ describe('get credential manifests', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -1402,7 +1403,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -1505,24 +1506,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -1548,7 +1549,7 @@ describe('get credential manifests', () => {
             tenantId: tenant._id,
             updatedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
 
@@ -1563,11 +1564,11 @@ describe('get credential manifests', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -1629,24 +1630,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -1672,7 +1673,7 @@ describe('get credential manifests', () => {
             tenantId: tenant._id,
             updatedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
 
@@ -1710,11 +1711,11 @@ describe('get credential manifests', () => {
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         customTenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -1774,24 +1775,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: customTenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: customTenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             customTenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             customTenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             customTenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: customTenant.did,
@@ -1817,18 +1818,18 @@ describe('get credential manifests', () => {
             tenantId: customTenant._id,
             updatedAt: expect.any(Date),
           }),
-        })
+        }),
       );
     });
 
     it('should 200, when no exchangeId, no disclosureId, and an unknown credential type', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -1841,7 +1842,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/WhateverType?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/WhateverType?includeDisplay=true',
         )
         .reply(404, {});
 
@@ -1904,24 +1905,24 @@ describe('get credential manifests', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -1956,12 +1957,12 @@ describe('get credential manifests', () => {
     it('should 200 when no credential types, exchangeId or disclosureId is provided', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
 
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2020,24 +2021,24 @@ describe('get credential manifests', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -2084,11 +2085,11 @@ describe('get credential manifests', () => {
 
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2101,7 +2102,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -2183,24 +2184,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -2246,11 +2247,11 @@ describe('get credential manifests', () => {
 
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2263,7 +2264,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true&locale=en'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true&locale=en',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -2346,24 +2347,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -2397,7 +2398,7 @@ describe('get credential manifests', () => {
     it('should 200, when credential type & push_delegate provided', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
 
       const pushDelegate = {
@@ -2407,7 +2408,7 @@ describe('get credential manifests', () => {
 
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2420,7 +2421,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -2504,24 +2505,24 @@ describe('get credential manifests', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -2558,7 +2559,7 @@ describe('get credential manifests', () => {
     it('should 200, when credential type & invalid push_delegate provided (pushUrl not provided)', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
 
       const pushDelegate = {
@@ -2567,7 +2568,7 @@ describe('get credential manifests', () => {
 
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2580,7 +2581,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -2638,7 +2639,7 @@ describe('get credential manifests', () => {
     it('should 200, when credential type & invalid push_delegate provided (pushToken not provided)', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
 
       const pushDelegate = {
@@ -2647,7 +2648,7 @@ describe('get credential manifests', () => {
 
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2660,7 +2661,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -2718,11 +2719,11 @@ describe('get credential manifests', () => {
     it('should 200 & return `json` when json format query param is used', async () => {
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2735,7 +2736,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -2753,7 +2754,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'CurrentEmploymentPosition',
@@ -2851,24 +2852,24 @@ describe('get credential manifests', () => {
           tos_uri: disclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: disclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
       });
@@ -2879,11 +2880,11 @@ describe('get credential manifests', () => {
       fastify = await buildFastify({ ...holderConfig, isProd: true });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2896,7 +2897,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -2914,7 +2915,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/CurrentEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'CurrentEmploymentPosition',
@@ -2943,7 +2944,7 @@ describe('get credential manifests', () => {
       });
       expect(response.statusCode).toEqual(200);
       expect(response.json.issuing_request).toEqual(
-        expect.stringMatching(JWT_FORMAT)
+        expect.stringMatching(JWT_FORMAT),
       );
       await fastify.close();
       fastify = await buildFastify();
@@ -2972,11 +2973,11 @@ describe('get credential manifests', () => {
 
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -2989,7 +2990,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -3037,11 +3038,11 @@ describe('get credential manifests', () => {
 
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
-        sampleOrganizationVerifiedProfile1
+        sampleOrganizationVerifiedProfile1,
       );
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false'
+          '/api/v0.6/credential-type-descriptors/EmailV1.0?includeDisplay=false',
         )
         .reply(200, {
           id: 'EmailV1.0',
@@ -3054,7 +3055,7 @@ describe('get credential manifests', () => {
         });
       nock('http://oracle.localhost.test')
         .get(
-          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true'
+          '/api/v0.6/credential-type-descriptors/PastEmploymentPosition?includeDisplay=true',
         )
         .reply(200, {
           id: 'PastEmploymentPosition',
@@ -3137,24 +3138,24 @@ describe('get credential manifests', () => {
           tos_uri: customDisclosure.termsUrl,
           auth_token_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/oauth/token'
+            '/oauth/token',
           )}`,
           max_retention_period: customDisclosure.duration,
           progress_uri: `${agentUrl}${tenantUrl(
             { tenantId: tenant.did },
-            '/get-exchange-progress'
+            '/get-exchange-progress',
           )}`,
           submit_presentation_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/submit-identification'
+            '/submit-identification',
           )}`,
           check_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/credential-offers'
+            '/credential-offers',
           )}`,
           finalize_offers_uri: `${agentUrl}${issuingUrl(
             tenant.did,
-            '/finalize-offers'
+            '/finalize-offers',
           )}`,
         },
         iss: tenant.did,
@@ -3168,14 +3169,14 @@ describe('get credential manifests', () => {
         .findOne({ _id: new ObjectId(payload.exchange_id) });
 
       expect(dbExchange.disclosureId.toString()).toEqual(
-        customDisclosure._id.toString()
+        customDisclosure._id.toString(),
       );
 
       const dbTenant = await mongoDb()
         .collection('tenants')
         .findOne({ _id: new ObjectId(tenant._id) });
       expect(dbTenant.defaultIssuingDisclosureId.toString()).toEqual(
-        customDisclosure._id.toString()
+        customDisclosure._id.toString(),
       );
     });
   });

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -85,7 +84,7 @@ describe('vendor exchange creation', () => {
         createdBy: 'velocity.admin@example.com',
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
-      })
+      }),
     );
   });
 
@@ -100,7 +99,7 @@ describe('vendor exchange creation', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      ExchangeErrors.DISCLOSURE_ID_REQUIRED
+      ExchangeErrors.DISCLOSURE_ID_REQUIRED,
     );
   });
 
@@ -142,7 +141,7 @@ describe('vendor exchange creation', () => {
         createdBy: 'velocity.admin@example.com',
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
-      })
+      }),
     );
   });
 
@@ -157,7 +156,7 @@ describe('vendor exchange creation', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json.message).toEqual(
-      ExchangeErrors.IDENTIFICATION_DISCLOSURE_MISSING_TEMPLATE(tenant)
+      ExchangeErrors.IDENTIFICATION_DISCLOSURE_MISSING_TEMPLATE(tenant),
     );
   });
 
@@ -213,7 +212,7 @@ describe('vendor exchange creation', () => {
           createdBy: 'velocity.admin@example.com',
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
     it('should 201 when creating a properly formatted integrated issuing exchange with sparse value array', async () => {
@@ -257,7 +256,7 @@ describe('vendor exchange creation', () => {
           createdBy: 'velocity.admin@example.com',
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-        })
+        }),
       );
     });
     it('should 201 when creating a an integrated issuing exchange with a phone number with a leading plus', async () => {
@@ -335,7 +334,7 @@ describe('vendor exchange creation', () => {
           errorCode: 'missing_error_code',
           message:
             'When disclosure is using the { "vendorEndpoint: "integrated-issuing-identification" } "identityMatcherValues" property is required',
-        })
+        }),
       );
     });
 
@@ -371,7 +370,7 @@ describe('vendor exchange creation', () => {
           error: 'Bad Request',
           errorCode: 'missing_error_code',
           message: '"identityMatcherValues[0]" must contain a value',
-        })
+        }),
       );
     });
 
@@ -390,7 +389,7 @@ describe('vendor exchange creation', () => {
           vendorUserIdIndex: 1,
         },
       });
-      // eslint-disable-next-line no-sparse-arrays
+
       const identityMatcherValues = [10, '', 'adam.smith@example.com', ''];
       const response = await fastify.injectJson({
         method: 'POST',
@@ -409,7 +408,7 @@ describe('vendor exchange creation', () => {
           error: 'Bad Request',
           errorCode: 'missing_error_code',
           message: '"identityMatcherValues[1]" must contain a value',
-        })
+        }),
       );
     });
   });

@@ -29,7 +29,7 @@ const buildDuplicateKeyErrorString = (key, existingKey) => {
     return `Key with kidFragment ${key.kidFragment} already exists`;
   }
   return `Key with a purpose from ${JSON.stringify(
-    key.purposes
+    key.purposes,
   )} already exists`;
 };
 
@@ -59,16 +59,16 @@ const keysController = async (fastify) => {
           encoding: 1,
           kidFragment: 1,
           createdAt: 1,
-        }
+        },
       );
       return map(
         (key) => ({
           ...key,
           encoding: KeyEncodings.HEX,
         }),
-        keys
+        keys,
       );
-    }
+    },
   );
 
   fastify.post(
@@ -106,7 +106,7 @@ const keysController = async (fastify) => {
       if (!isEmpty(preexistingTenantKey)) {
         throw newError(
           409,
-          buildDuplicateKeyErrorString(body, preexistingTenantKey)
+          buildDuplicateKeyErrorString(body, preexistingTenantKey),
         );
       }
 
@@ -130,7 +130,7 @@ const keysController = async (fastify) => {
 
       reply.code(201);
       return { ...key, encoding: KeyEncodings.HEX };
-    }
+    },
   );
 
   fastify.delete(
@@ -160,7 +160,7 @@ const keysController = async (fastify) => {
 
       reply.code(204);
       return null;
-    }
+    },
   );
 };
 

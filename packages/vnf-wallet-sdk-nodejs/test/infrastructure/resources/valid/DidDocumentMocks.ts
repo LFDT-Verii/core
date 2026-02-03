@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 /**
  * Created by Michael Avoyan on 05/06/2025.
  *
@@ -15,10 +14,10 @@ export class DidDocumentMocks {
         '{"id":"did:web:devregistrar.velocitynetwork.foundation:d:example-21.com-8b82ce9a","@context":["https://www.w3.org/ns/did/v1"],"verificationMethod":[{"id":"#vc-signing-key-1","type":"JsonWebKey2020","controller":"did:web:devregistrar.velocitynetwork.foundation:d:example-21.com","publicKeyJwk":{"crv":"secp256k1","kty":"EC","x":"zxjdUmqrJT05dWoxs90Pul3s-e1vA-RNHmBIIovrpCo","y":"SrL1KvHPao0HzTopTo6NehpUu3HCFJl9rrMO8w7ANxo"}},{"id":"#eth-account-key-1","type":"JsonWebKey2020","controller":"did:web:devregistrar.velocitynetwork.foundation:d:example-21.com","publicKeyJwk":{"crv":"secp256k1","kty":"EC","x":"B4dMEhADxRkR_V5Bagw7LKBHS9Fmm8GcKQZDIQzJqSM","y":"tLHI5-_HPqeyvWSVMMeQkVUnUSPusWV_bsCppZXCKFI"}},{"id":"#exchange-key-1","type":"JsonWebKey2020","controller":"did:web:devregistrar.velocitynetwork.foundation:d:example-21.com","publicKeyJwk":{"crv":"secp256k1","kty":"EC","x":"AgczeAUIFv7Edpa28Looj9vl2UezUzy5Cpvty9Y5CwI","y":"FTYMesyp7901_9LAdvJBVfhsYQtaAPCirp7cBfc3wQU"}}],"assertionMethod":["#vc-signing-key-1","#eth-account-key-1","#exchange-key-1"],"alsoKnownAs":["wrong did"],"service":[{"type":"VlcInspector_v1","id":"#vlc-inspector-1","serviceEndpoint":"https://devagent.velocitycareerlabs.io"},{"type":"VlcCareerIssuer_v1","id":"#vlc-issuer-1","serviceEndpoint":"https://devagent.velocitycareerlabs.io"}]}';
 
     static readonly DidDocumentMock = new VCLDidDocument(
-        DidDocumentMocks.DidDocumentMockStr
+        DidDocumentMocks.DidDocumentMockStr,
     );
 
     static readonly DidDocumentWithWrongDidMock = new VCLDidDocument(
-        DidDocumentMocks.DidDocumentWithWrongDidMockStr
+        DidDocumentMocks.DidDocumentWithWrongDidMockStr,
     );
 }

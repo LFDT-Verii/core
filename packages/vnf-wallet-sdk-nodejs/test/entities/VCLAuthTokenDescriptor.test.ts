@@ -13,10 +13,8 @@ import VCLAuthTokenDescriptor, {
 import { PresentationRequestMocks } from '../infrastructure/resources/valid/PresentationRequestMocks';
 
 const authTokenUri =
-    // eslint-disable-next-line max-len
     'https://devagent.velocitycareerlabs.io/api/holder/v0.6/org/did:web:devregistrar.velocitynetwork.foundation:d:example-21.com-8b82ce9a/oauth/token';
 const walletDid =
-    // eslint-disable-next-line max-len
     'did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6InI5ZnlhNTJJbG1UbzN5YlMwd19HZWZlUV9SWDJFSF9ISm1TV3FZWU8ySlkiLCJ5IjoicFFUUmE3R2txYzVrajZvZGVNcXBnVjVUNExqYlphNEY1S1R1MkpEclduYyJ9';
 const relyingPartyDid =
     'did:web:devregistrar.velocitynetwork.foundation:d:example-21.com-8b82ce9a';
@@ -28,13 +26,13 @@ describe('VCLAuthTokenDescriptor', () => {
         it('should correctly assign properties when constructed with a VCLPresentationRequest and optional parameters', () => {
             const descriptor = new VCLAuthTokenDescriptor(
                 PresentationRequestMocks.PresentationRequestFeed,
-                refreshToken
+                refreshToken,
             );
 
             expect((descriptor as any).authTokenUri).toEqual(authTokenUri);
             expect((descriptor as any).walletDid).toEqual(walletDid);
             expect((descriptor as any).relyingPartyDid).toEqual(
-                relyingPartyDid
+                relyingPartyDid,
             );
             expect((descriptor as any).vendorOriginContext).toBeUndefined();
             expect((descriptor as any).refreshToken).toEqual(refreshToken);
@@ -42,35 +40,34 @@ describe('VCLAuthTokenDescriptor', () => {
 
         it('should correctly assign properties when constructed with a VCLPresentationRequest without optional parameters', () => {
             const descriptor = new VCLAuthTokenDescriptor(
-                PresentationRequestMocks.PresentationRequestFeed
+                PresentationRequestMocks.PresentationRequestFeed,
             );
 
             expect((descriptor as any).authTokenUri).toEqual(authTokenUri);
             expect((descriptor as any).walletDid).toEqual(walletDid);
             expect((descriptor as any).relyingPartyDid).toEqual(
-                relyingPartyDid
+                relyingPartyDid,
             );
             expect((descriptor as any).vendorOriginContext).toBeUndefined();
             expect((descriptor as any).refreshToken).toBeUndefined();
         });
 
-        // eslint-disable-next-line max-len
         it('should correctly assign properties when constructed with authTokenUri, walletDid, relyingPartyDid, authorizationCode, and refreshToken', () => {
             const descriptor = new VCLAuthTokenDescriptor(
                 authTokenUri,
                 refreshToken,
                 walletDid,
                 relyingPartyDid,
-                authorizationCode
+                authorizationCode,
             );
 
             expect((descriptor as any).authTokenUri).toEqual(authTokenUri);
             expect((descriptor as any).walletDid).toEqual(walletDid);
             expect((descriptor as any).relyingPartyDid).toEqual(
-                relyingPartyDid
+                relyingPartyDid,
             );
             expect((descriptor as any).authorizationCode).toEqual(
-                authorizationCode
+                authorizationCode,
             );
             expect((descriptor as any).refreshToken).toEqual(refreshToken);
         });
@@ -83,7 +80,7 @@ describe('VCLAuthTokenDescriptor', () => {
                 refreshToken,
                 walletDid,
                 relyingPartyDid,
-                null
+                null,
             );
             const expectedResult = {
                 [VCLAuthTokenDescriptor.KeyGrantType]:
@@ -104,7 +101,7 @@ describe('VCLAuthTokenDescriptor', () => {
                 null,
                 walletDid,
                 relyingPartyDid,
-                authorizationCode
+                authorizationCode,
             );
             const expectedResult = {
                 [VCLAuthTokenDescriptor.KeyGrantType]:
@@ -127,7 +124,7 @@ describe('VCLAuthTokenDescriptor', () => {
                 refreshToken,
                 walletDid,
                 relyingPartyDid,
-                authorizationCode
+                authorizationCode,
             );
             const expectedResult = {
                 [VCLAuthTokenDescriptor.KeyGrantType]:

@@ -10,7 +10,7 @@ import VCLJwt from '../../../api/entities/VCLJwt';
 
 export const getCredentialTypeMetadataByVc = (
     credentialTypes: Nullish<VCLCredentialTypes>,
-    jwtVc: VCLJwt
+    jwtVc: VCLJwt,
 ): Dictionary<any> => {
     if (!credentialTypes || !credentialTypes?.all) return {};
 
@@ -19,7 +19,7 @@ export const getCredentialTypeMetadataByVc = (
     const result = credentialTypes.all.find(
         (credentialTypeObj) =>
             credentialTypeObj.payload?.credentialType?.toLowerCase() ===
-            credentialTypeName?.toLowerCase()
+            credentialTypeName?.toLowerCase(),
     );
     return result?.payload || {};
 };

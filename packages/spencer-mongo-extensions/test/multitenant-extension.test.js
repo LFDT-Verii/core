@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
@@ -55,7 +54,7 @@ describe('multitenant extension', () => {
           tableName: 'foos',
         },
       },
-      {}
+      {},
     );
     const funcPrepFilter = () => extension.prepFilter({ foo: 'bar' });
     expect(funcPrepFilter).toThrow('context.tenant[_id] is undefined');
@@ -97,7 +96,7 @@ describe('multitenant extension', () => {
           name: 'foos',
         },
       },
-      { tenant: tenant1 }
+      { tenant: tenant1 },
     );
     expect(extension.extensions).toEqual(['multitenantExtension']);
     expect(extension.prepModification({ foo: 'bar' })).toEqual({
@@ -123,7 +122,7 @@ describe('multitenant extension', () => {
           name: 'foos',
         },
       },
-      { tenant: tenant1 }
+      { tenant: tenant1 },
     );
     expect(extension.extensions).toEqual(['multitenantExtension']);
     expect(extension.prepModification({ foo: 'bar' })).toEqual({
@@ -151,7 +150,7 @@ describe('multitenant extension', () => {
           name: 'foos',
         },
       },
-      { tenant: tenant1 }
+      { tenant: tenant1 },
     );
     expect(extension.extensions).toEqual(['multitenantExtension']);
     expect(extension.prepModification({ foo: 'bar' })).toEqual({

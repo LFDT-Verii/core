@@ -26,7 +26,7 @@ const initReadEventsFromBlock = async (context) => {
       contractAddress: config.metadataRegistryContractAddress,
       rpcProvider: context.rpcProvider,
     },
-    context
+    context,
   );
 
   return async (block) => {
@@ -35,7 +35,7 @@ const initReadEventsFromBlock = async (context) => {
 };
 const executeTransfers = async (
   { rewardsDictionary, organizations },
-  context
+  context,
 ) => {
   const {
     config: { vnfRewardDispersalAccountId },
@@ -71,7 +71,7 @@ const executeTransfers = async (
       return acc;
     },
     [],
-    organizations
+    organizations,
   );
 
   log.info({ task, transfers });
@@ -81,7 +81,7 @@ const executeTransfers = async (
 
 const eventsToOrganizationTransactions = async (
   { eventsCursor, credentialTypes },
-  context
+  context,
 ) => {
   const {
     config: { issuerRewardAmount, caoRewardAmount },
@@ -102,7 +102,7 @@ const eventsToOrganizationTransactions = async (
     numberOfEventsRead += events.length;
     const validEvents = getRewardableEvents(
       { events, credentialTypes },
-      context
+      context,
     );
     for (const { issuerKey, caoKey, issuerDid, caoDid } of validEvents) {
       dids.push(issuerDid);
@@ -125,12 +125,12 @@ const handleCredentialIssuedRewardsEvent = async (context) => {
   const lastReadBlock = await readLastSuccessfulBlock();
   log.info({ task, lastReadBlock });
   const { eventsCursor, latestBlock } = await readEventsFromBlock(
-    lastReadBlock + 1
+    lastReadBlock + 1,
   );
   const { rewardsDictionary, numberOfEventsRead, dids } =
     await eventsToOrganizationTransactions(
       { eventsCursor, credentialTypes },
-      context
+      context,
     );
   log.info({
     task,
@@ -143,7 +143,7 @@ const handleCredentialIssuedRewardsEvent = async (context) => {
 
   const [organizations, rejectedOrganizations] = partition(
     'ids.tokenAccountId',
-    allOrganizations
+    allOrganizations,
   );
 
   const rejectOrgsCounts = size(rejectedOrganizations);
@@ -163,7 +163,7 @@ const handleCredentialIssuedRewardsEvent = async (context) => {
 const getRewardableEvents = ({ events, credentialTypes }, context) => {
   const [rewardableEvents, unRewardableEvents] = flow(
     map(mapEvent),
-    partition(isRewardedEvent(credentialTypes))
+    partition(isRewardedEvent(credentialTypes)),
   )(events);
   context.log.info({
     rewardableEvents,
@@ -209,7 +209,7 @@ const getCredentialTypes = async (context) => {
       credentialType2BytesHash: get2BytesHash(credentialType),
       layer1,
     }),
-    credentialTypes
+    credentialTypes,
   );
 };
 

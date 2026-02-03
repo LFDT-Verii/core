@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
 

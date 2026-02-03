@@ -57,7 +57,7 @@ describe('Static form schema files tests suite', () => {
         statusCode: 404,
         error: 'Not Found',
         message: 'File not found',
-      })
+      }),
     );
   });
 

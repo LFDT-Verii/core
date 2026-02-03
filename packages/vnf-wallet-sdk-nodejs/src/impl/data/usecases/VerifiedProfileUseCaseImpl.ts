@@ -3,19 +3,17 @@ import VerifiedProfileRepository from '../../domain/repositories/VerifiedProfile
 import VerifiedProfileUseCase from '../../domain/usecases/VerifiedProfileUseCase';
 import VCLError from '../../../api/entities/error/VCLError';
 
-export default class VerifiedProfileUseCaseImpl
-    implements VerifiedProfileUseCase
-{
+export default class VerifiedProfileUseCaseImpl implements VerifiedProfileUseCase {
     constructor(
-        private readonly verifiedProfileRepository: VerifiedProfileRepository
+        private readonly verifiedProfileRepository: VerifiedProfileRepository,
     ) {}
 
     async getVerifiedProfile(
-        verifiedProfileDescriptor: VCLVerifiedProfileDescriptor
+        verifiedProfileDescriptor: VCLVerifiedProfileDescriptor,
     ) {
         try {
             return await this.verifiedProfileRepository.getVerifiedProfile(
-                verifiedProfileDescriptor
+                verifiedProfileDescriptor,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);

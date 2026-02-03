@@ -15,26 +15,26 @@ program
   .usage('[options]')
   .requiredOption(
     '-c, --csv-filename <filename>',
-    'File name containing variables'
+    'File name containing variables',
   )
   .requiredOption(
     '-o, --offer-template-filename <filename>',
-    'File name containing the credential template file'
+    'File name containing the credential template file',
   )
   .option(
     '-p, --person-template-filename <filename>',
-    'File name containing the credential template file'
+    'File name containing the credential template file',
   )
   .option(
     '-e, --endpoint <url>',
-    'Endpoint to call to upload the people and credentials to'
+    'Endpoint to call to upload the people and credentials to',
   )
   .option(
     '-u  --vendor-userid-column <vendorUseridColumn>',
     `the column from the CSV that is users id. Value is made available as "vendorUserId" in the offer template. Accepts 
     header name or index. Default is 0.`,
     parseColumn,
-    '0'
+    '0',
   )
   .option('-t, --auth-token <url>', 'Bearer Auth Token to use')
   .option('-l, --label <label>', 'A label to attach to the documents inserted')

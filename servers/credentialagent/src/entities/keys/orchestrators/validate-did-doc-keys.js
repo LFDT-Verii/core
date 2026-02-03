@@ -18,7 +18,7 @@ const validateDidDocKeys = async (didDoc, keys) => {
     map((key) => {
       const kid = `${didDoc.id}${key.kidFragment}`;
       return isMatchingPrivateKeyKid(didDoc, key.key, kid);
-    }, keysTransformed)
+    }, keysTransformed),
   );
 
   if (some((valid) => !valid, validations)) {
@@ -28,6 +28,7 @@ const validateDidDocKeys = async (didDoc, keys) => {
   return keysTransformed;
 };
 
+// eslint-disable-next-line complexity
 const transformKeys = map((key) => ({
   ...omit(['key', 'hexKey', 'jwk'], key),
   publicKey: transformPublicKeyToJwk(key?.publicKey),

@@ -57,7 +57,7 @@ describe('Search query transformation tests', () => {
       expect(
         initTransformToFinder()({
           sort: [['x', 'DESC']],
-        })
+        }),
       ).toEqual({
         ...defaultFinder,
         sort: [
@@ -73,7 +73,7 @@ describe('Search query transformation tests', () => {
             size: 20,
             skip: 2,
           },
-        })
+        }),
       ).toEqual({ ...defaultFinder, skip: 40, limit: 20 });
     });
     it('should transform a standard query', () => {
@@ -85,7 +85,7 @@ describe('Search query transformation tests', () => {
             size: 20,
             skip: 2,
           },
-        })
+        }),
       ).toEqual({
         filter: { x: 1 },
         sort: [
@@ -111,7 +111,7 @@ describe('Search query transformation tests', () => {
             size: 20,
             skip: 2,
           },
-        })
+        }),
       ).toEqual({
         filter: { y: 2 },
         sort: [
@@ -126,7 +126,7 @@ describe('Search query transformation tests', () => {
       expect(
         initTransformToFinder()({
           filter: { fromDate: '2021-12-01' },
-        })
+        }),
       ).toEqual({
         ...defaultFinder,
         filter: { createdAt: { $gte: new Date('2021-12-01T00:00:00.000Z') } },
@@ -138,7 +138,7 @@ describe('Search query transformation tests', () => {
           collection: { timestampKeys: { createdAt: 'at' } },
         })({
           filter: { fromDate: '2021-12-01' },
-        })
+        }),
       ).toEqual({
         ...defaultFinder,
         filter: { at: { $gte: new Date('2021-12-01T00:00:00.000Z') } },
@@ -371,19 +371,19 @@ describe('Search query transformation tests', () => {
   describe('Date transformations', () => {
     it('should transform a from date', () => {
       expect(
-        initTransformToFilterDocument()({ filter: { fromDate: '2021-12-01' } })
+        initTransformToFilterDocument()({ filter: { fromDate: '2021-12-01' } }),
       ).toEqual({ createdAt: { $gte: new Date('2021-12-01T00:00:00.000Z') } });
     });
     it('should transform a to date', () => {
       expect(
-        initTransformToFilterDocument()({ filter: { toDate: '2021-12-01' } })
+        initTransformToFilterDocument()({ filter: { toDate: '2021-12-01' } }),
       ).toEqual({ createdAt: { $lte: new Date('2021-12-01T23:59:59.999Z') } });
     });
     it('should transform a both dates', () => {
       expect(
         initTransformToFilterDocument()({
           filter: { toDate: '2021-12-01', fromDate: '2021-12-01' },
-        })
+        }),
       ).toEqual({
         createdAt: {
           $gte: new Date('2021-12-01T00:00:00.000Z'),
@@ -395,7 +395,7 @@ describe('Search query transformation tests', () => {
       expect(
         initTransformToFilterDocument({ timestampKeys: { createdAt: 'at' } })({
           filter: { toDate: '2021-12-01', fromDate: '2021-12-01' },
-        })
+        }),
       ).toEqual({
         at: {
           $gte: new Date('2021-12-01T00:00:00.000Z'),
@@ -407,7 +407,7 @@ describe('Search query transformation tests', () => {
       expect(
         initTransformToFilterDocument()({
           filter: { toDate: '2021-12-31', fromDate: '2021-12-01' },
-        })
+        }),
       ).toEqual({
         createdAt: {
           $gte: new Date('2021-12-01T00:00:00.000Z'),

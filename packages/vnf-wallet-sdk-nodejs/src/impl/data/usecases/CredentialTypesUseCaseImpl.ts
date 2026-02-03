@@ -3,9 +3,7 @@ import CredentialTypesRepository from '../../domain/repositories/CredentialTypes
 import { CredentialTypesUseCase } from '../../domain/usecases/CredentialTypesUseCase';
 import VCLError from '../../../api/entities/error/VCLError';
 
-export default class CredentialTypesUseCaseImpl
-    implements CredentialTypesUseCase
-{
+export default class CredentialTypesUseCaseImpl implements CredentialTypesUseCase {
     constructor(private readonly credentialTypes: CredentialTypesRepository) {}
 
     async getCredentialTypes(): Promise<VCLCredentialTypes> {

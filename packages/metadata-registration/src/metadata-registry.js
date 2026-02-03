@@ -40,7 +40,7 @@ const { encodeJwk, decodeJwk } = require('./code-jwk');
 
 const initMetadataRegistry = async (
   { privateKey, contractAddress, rpcProvider },
-  context
+  context,
 ) => {
   const { log } = context;
   log.info({ contractAddress }, 'initMetadataRegistry');
@@ -52,7 +52,7 @@ const initMetadataRegistry = async (
       rpcProvider,
       contractAbi,
     },
-    context
+    context,
   );
 
   // TODO this check should NOT require a contractClient call. All free types should be cached on startup, and reloaded every X (configurable) hours
@@ -70,7 +70,7 @@ const initMetadataRegistry = async (
   const isFreeCredentialTypeList = async (freeCredentialTypesList) => {
     log.info({ freeCredentialTypesList }, 'isFreeCredentialTypeList');
     const checkList = await Promise.all(
-      freeCredentialTypesList.map(isFreeCredentialType)
+      freeCredentialTypesList.map(isFreeCredentialType),
     );
     return checkList.every((check) => check);
   };
@@ -80,11 +80,11 @@ const initMetadataRegistry = async (
     encryptedPK,
     listId,
     index,
-    caoDid
+    caoDid,
   ) => {
     log.info(
       { credentialType, encryptedPK, listId, index, caoDid },
-      'setEntrySigned'
+      'setEntrySigned',
     );
     const { transactingClient, signature } =
       await initContractWithTransactingClient(
@@ -94,7 +94,7 @@ const initMetadataRegistry = async (
           rpcProvider,
           contractAbi,
         },
-        context
+        context,
       );
     const tx = await transactingClient.contractClient.setEntrySigned(
       credentialType,
@@ -103,7 +103,7 @@ const initMetadataRegistry = async (
       index,
       context.traceId,
       caoDid,
-      signature
+      signature,
     );
     const txResult = await tx.wait();
     log.info({ events: txResult.logs }, 'setEntrySigned Complete');
@@ -119,11 +119,11 @@ const initMetadataRegistry = async (
     indexEntries,
     traceId,
     caoDid,
-    burnerDid
+    burnerDid,
   ) => {
     log.info(
       { indexEntries, traceId, caoDid, burnerDid },
-      'getPaidEntriesSigned'
+      'getPaidEntriesSigned',
     );
 
     const { transactingClient, signature } =
@@ -134,7 +134,7 @@ const initMetadataRegistry = async (
           rpcProvider,
           contractAbi,
         },
-        context
+        context,
       );
 
     const tx = await transactingClient.contractClient.getPaidEntriesSigned(
@@ -142,7 +142,7 @@ const initMetadataRegistry = async (
       traceId,
       caoDid,
       burnerDid,
-      signature
+      signature,
     );
     const txResult = await tx.wait();
     return last(txResult.logs)?.args?.credentialMetadataList;
@@ -154,11 +154,11 @@ const initMetadataRegistry = async (
     issuerVC,
     caoDid,
     algType = ALG_TYPE.HEX_AES_256,
-    version = VERSION
+    version = VERSION,
   ) => {
     log.info(
       { listId, issuerVC, caoDid, algType, version },
-      'createCredentialMetadataList'
+      'createCredentialMetadataList',
     );
     const { transactingClient, signature } =
       await initContractWithTransactingClient(
@@ -168,7 +168,7 @@ const initMetadataRegistry = async (
           rpcProvider,
           contractAbi,
         },
-        context
+        context,
       );
 
     try {
@@ -179,7 +179,7 @@ const initMetadataRegistry = async (
         `0x${Buffer.from(issuerVC).toString('hex')}`,
         context.traceId,
         caoDid,
-        signature
+        signature,
       );
       await tx.wait();
       return true;
@@ -195,11 +195,11 @@ const initMetadataRegistry = async (
     { listId, index, credentialTypeEncoded, publicKey },
     password,
     caoDid,
-    algType = ALG_TYPE.HEX_AES_256
+    algType = ALG_TYPE.HEX_AES_256,
   ) => {
     log.info(
       { listId, index, credentialTypeEncoded, caoDid, publicKey, algType },
-      'addCredentialMetadataEntry'
+      'addCredentialMetadataEntry',
     );
     const secret = await deriveEncryptionSecretFromPassword(password);
     const encryptedPK = await encodeJwk(algType, publicKey, secret);
@@ -210,7 +210,7 @@ const initMetadataRegistry = async (
         encryptedPK,
         listId,
         index,
-        caoDid
+        caoDid,
       );
       return true;
     } catch (e) {
@@ -270,14 +270,14 @@ const initMetadataRegistry = async (
       throw new Error(
         `Unsupported algorithm (${algType}). Valid values are ${flow(
           map((type) => `${type} (${get2BytesHash(type)})`),
-          join(' or ')
-        )(Object.values(ALG_TYPE))}`
+          join(' or '),
+        )(Object.values(ALG_TYPE))}`,
       );
     }
 
     const encryptedPublicKey = Buffer.from(
       entry.encryptedPublicKey.slice(2),
-      'hex'
+      'hex',
     );
 
     try {
@@ -326,18 +326,18 @@ const initMetadataRegistry = async (
   }) => {
     log.info(
       { credentials, indexEntries, traceId, caoDid, burnerDid },
-      'resolveContractEntries'
+      'resolveContractEntries',
     );
     const isFree = await flow(
       map(({ id, credentialType }) => {
         if (!credentialType) {
           throw new Error(
-            `Could not resolve credential type from VC with ${id}`
+            `Could not resolve credential type from VC with ${id}`,
           );
         }
         return credentialType;
       }),
-      isFreeCredentialTypeList
+      isFreeCredentialTypeList,
     )(credentials);
     if (isEmpty(indexEntries)) {
       return [];
@@ -381,7 +381,7 @@ const initMetadataRegistry = async (
         const secret =
           indexEntries[i].contentHash != null
             ? await deriveEncryptionSecretFromPassword(
-                indexEntries[i].contentHash
+                indexEntries[i].contentHash,
               )
             : await deriveEncryptionSecret(credential);
         return {
@@ -390,17 +390,17 @@ const initMetadataRegistry = async (
           credentialType: credential.credentialType,
           secret,
         };
-      }, entries)
+      }, entries),
     );
     log.info({ credentialEntries }, 'resolveDidDocument 1');
 
     const publicKeys = await Promise.all(
-      map(resolvePublicKey, credentialEntries)
+      map(resolvePublicKey, credentialEntries),
     );
 
     const [resolvedPublicKeys, unresolvedPublicKeys] = partition(
       ({ publicKeyJwk }) => !!publicKeyJwk,
-      publicKeys
+      publicKeys,
     );
 
     const service = map(resolveService, credentialEntries);
@@ -417,7 +417,7 @@ const initMetadataRegistry = async (
 
     log.info(
       { didDocument, didDocumentMetadata, unresolvedPublicKeys },
-      'resolveDidDocument 3'
+      'resolveDidDocument 3',
     );
 
     if (isEmpty(unresolvedPublicKeys)) {
@@ -435,7 +435,7 @@ const initMetadataRegistry = async (
           id,
           error: RESOLUTION_METADATA_ERROR.DATA_INTEGRITY_ERROR,
         }),
-        unresolvedPublicKeys
+        unresolvedPublicKeys,
       ),
     };
 
@@ -450,7 +450,7 @@ const initMetadataRegistry = async (
 
   const setPermissionsAddress = async (permissionsContractAddress) => {
     const tx = await contractClient.setPermissionsAddress(
-      permissionsContractAddress
+      permissionsContractAddress,
     );
 
     return tx.wait();
@@ -459,7 +459,7 @@ const initMetadataRegistry = async (
   const pullCreatedMetadataListEvents = pullEvents('CreatedMetadataList');
 
   const pullAddedCredentialMetadataEvents = pullEvents(
-    'AddedCredentialMetadata'
+    'AddedCredentialMetadata',
   );
 
   return {
@@ -485,7 +485,7 @@ const deriveEncryptionSecret = async (credential) => {
   const contentHash = credential?.contentHash;
   if (!contentHash) {
     throw new Error(
-      `Could not resolve content hash from VC with ${credential.id}`
+      `Could not resolve content hash from VC with ${credential.id}`,
     );
   }
   return deriveEncryptionSecretFromPassword(contentHash);

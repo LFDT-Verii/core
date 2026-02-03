@@ -10,7 +10,7 @@ import fetcher from '../network/Fetcher';
 
 export const generateSignedJwt = async (
   jwtDescriptor: Dictionary<any>,
-  didJwk: Dictionary<any>
+  didJwk: Dictionary<any>,
 ): Promise<any> => {
   const config = {
     url: Urls.generateSignedJwt,

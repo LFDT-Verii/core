@@ -191,7 +191,7 @@ describe('vc-api credentials endpoints', () => {
           errorCode: 'missing_error_code',
           message: 'options.format must be jwt-vc',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -212,7 +212,7 @@ describe('vc-api credentials endpoints', () => {
           errorCode: 'missing_error_code',
           message: 'options.format must be jwt-vc',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -236,7 +236,7 @@ describe('vc-api credentials endpoints', () => {
           errorCode: 'request_validation_failed',
           message: "body/credential must have required property '@context'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -263,17 +263,17 @@ describe('vc-api credentials endpoints', () => {
           message:
             "'$.credentialSubject' must have required property 'company'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
     describe('successful issuing', () => {
       beforeEach(() => {
         mockCreateCredentialMetadataList.mock.mockImplementation(() =>
-          Promise.resolve(true)
+          Promise.resolve(true),
         );
         mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
-          Promise.resolve(true)
+          Promise.resolve(true),
         );
 
         const nockInstance = nock('http://oracle.localhost.test');
@@ -305,7 +305,7 @@ describe('vc-api credentials endpoints', () => {
             credentialId: vc.payload.jti,
             credential: payload.credential,
             holderDid,
-          })
+          }),
         );
         const dbOffer = await mongoDb()
           .collection('offers')
@@ -316,7 +316,7 @@ describe('vc-api credentials endpoints', () => {
             credential: payload.credential,
             credentialId: vc.payload.jti,
             holderDid,
-          })
+          }),
         );
 
         const dbExchange = await mongoDb()
@@ -331,12 +331,12 @@ describe('vc-api credentials endpoints', () => {
               ExchangeStates.CLAIMING_IN_PROGRESS,
               ExchangeStates.COMPLETE,
             ],
-          })
+          }),
         );
         expect(
           mockAddCredentialMetadataEntry.mock.calls.map(
-            (call) => call.arguments
-          )
+            (call) => call.arguments,
+          ),
         ).toEqual([
           [
             expect.any(Object),
@@ -381,7 +381,7 @@ describe('vc-api credentials endpoints', () => {
             tenant,
             credential: payload.credential,
             credentialId: vc.payload.jti,
-          })
+          }),
         );
 
         const dbExchange = await mongoDb()
@@ -396,7 +396,7 @@ describe('vc-api credentials endpoints', () => {
               ExchangeStates.CLAIMING_IN_PROGRESS,
               ExchangeStates.COMPLETE,
             ],
-          })
+          }),
         );
       });
 
@@ -425,7 +425,7 @@ describe('vc-api credentials endpoints', () => {
             credentialId: vc.payload.jti,
             credential: payload.credential,
             holderDid,
-          })
+          }),
         );
         const dbOffer = await mongoDb()
           .collection('offers')
@@ -439,7 +439,7 @@ describe('vc-api credentials endpoints', () => {
             overrides: {
               consentedAt: payload.options.consented,
             },
-          })
+          }),
         );
 
         const dbExchange = await mongoDb()
@@ -454,7 +454,7 @@ describe('vc-api credentials endpoints', () => {
               ExchangeStates.CLAIMING_IN_PROGRESS,
               ExchangeStates.COMPLETE,
             ],
-          })
+          }),
         );
       });
 
@@ -489,7 +489,7 @@ describe('vc-api credentials endpoints', () => {
             overrides: {
               'payload.exp': getUnixTime(new Date(credential.expirationDate)),
             },
-          })
+          }),
         );
         const dbOffer = await mongoDb()
           .collection('offers')
@@ -500,7 +500,7 @@ describe('vc-api credentials endpoints', () => {
             credential,
             credentialId: vc.payload.jti,
             holderDid,
-          })
+          }),
         );
 
         const dbExchange = await mongoDb()
@@ -515,7 +515,7 @@ describe('vc-api credentials endpoints', () => {
               ExchangeStates.CLAIMING_IN_PROGRESS,
               ExchangeStates.COMPLETE,
             ],
-          })
+          }),
         );
       });
 
@@ -544,7 +544,7 @@ describe('vc-api credentials endpoints', () => {
             credentialId: vc.payload.jti,
             credential: baseCredential,
             holderDid,
-          })
+          }),
         );
         const dbOffer = await mongoDb()
           .collection('offers')
@@ -555,7 +555,7 @@ describe('vc-api credentials endpoints', () => {
             credential: baseCredential,
             credentialId: vc.payload.jti,
             holderDid,
-          })
+          }),
         );
 
         const dbExchange = await mongoDb()
@@ -570,7 +570,7 @@ describe('vc-api credentials endpoints', () => {
               ExchangeStates.CLAIMING_IN_PROGRESS,
               ExchangeStates.COMPLETE,
             ],
-          })
+          }),
         );
       });
 
@@ -633,7 +633,7 @@ describe('vc-api credentials endpoints', () => {
               ],
             },
             holderDid,
-          })
+          }),
         );
         const dbOffer = await mongoDb()
           .collection('offers')
@@ -660,7 +660,7 @@ describe('vc-api credentials endpoints', () => {
             },
             credentialId: vc.payload.jti,
             holderDid,
-          })
+          }),
         );
 
         const dbExchange = await mongoDb()
@@ -675,7 +675,7 @@ describe('vc-api credentials endpoints', () => {
               ExchangeStates.CLAIMING_IN_PROGRESS,
               ExchangeStates.COMPLETE,
             ],
-          })
+          }),
         );
       });
 
@@ -697,7 +697,7 @@ describe('vc-api credentials endpoints', () => {
           .get('/schemas/open-badge-v3.0-schema.json')
           .reply(
             200,
-            require('../combined/schemas/open-badge-credential.schema.json')
+            require('../combined/schemas/open-badge-credential.schema.json'),
           );
 
         const response = await fastify.injectJson({
@@ -723,7 +723,7 @@ describe('vc-api credentials endpoints', () => {
                 payload.credential.credentialStatus,
                 {
                   id: expect.stringMatching(
-                    '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-z]+&listId=\\d+&index=\\d+$'
+                    '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-z]+&listId=\\d+&index=\\d+$',
                   ),
                   type: VelocityRevocationListType,
                 },
@@ -742,7 +742,7 @@ describe('vc-api credentials endpoints', () => {
                 id: 'http://example.com/schema.json',
               },
             },
-          })
+          }),
         );
       });
     });
@@ -803,7 +803,7 @@ const offerExpectation = ({
     linkCode: expect.any(String),
     credentialStatus: {
       id: expect.stringMatching(
-        '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-z]+&listId=\\d+&index=\\d+$'
+        '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-z]+&listId=\\d+&index=\\d+$',
       ),
       type: VelocityRevocationListType,
     },
@@ -853,7 +853,7 @@ const jwtVcExpectation = ({
             ...credentialTypeContext,
             ...castArray(credential['@context']),
             'https://lib.test/contexts/credential-extensions-2022.jsonld.json',
-          ])
+          ]),
         ),
         id: credentialId,
         type: expect.arrayContaining(credential.type),
@@ -873,7 +873,7 @@ const jwtVcExpectation = ({
         ...defaultVnfCredentialExpectations,
         credentialStatus: {
           id: expect.stringMatching(
-            '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-z]+&listId=\\d+&index=\\d+$'
+            '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-z]+&listId=\\d+&index=\\d+$',
           ),
           type: VelocityRevocationListType,
         },
@@ -947,8 +947,8 @@ const nockCredentialTypes = () => {
       every(
         (credentialType) =>
           includes(credentialType, Object.keys(credentialTypeMetadata)),
-        castArray(query.credentialType)
-      )
+        castArray(query.credentialType),
+      ),
     )
     .times(2)
     .reply(200, (request) => {
@@ -956,7 +956,7 @@ const nockCredentialTypes = () => {
       const searchParamsString = request.url.substring(questionMarkIdx);
       const query = new URLSearchParams(searchParamsString);
       return Object.values(
-        pick(query.getAll('credentialType'), credentialTypeMetadata)
+        pick(query.getAll('credentialType'), credentialTypeMetadata),
       );
     });
 };

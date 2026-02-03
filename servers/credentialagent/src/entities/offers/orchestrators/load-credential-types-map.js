@@ -30,11 +30,11 @@ const { extractCredentialType } = require('@verii/vc-checks');
 const loadCredentialTypesMap = async (offers, context) => {
   const offerCredentialTypes = flow(
     map((offer) => extractCredentialType(offer)),
-    uniq
+    uniq,
   )(offers);
   const credentialTypeMetadataList = await getCredentialTypeMetadata(
     offerCredentialTypes,
-    context
+    context,
   );
   return keyBy('credentialType', credentialTypeMetadataList);
 };

@@ -31,8 +31,8 @@ export default class CountriesRepositoryImpl implements CountriesRepository {
 
         return new VCLCountries(
             (countriesResponse.payload as Dictionary<any>[]).map((i) =>
-                this.parseCountry(i)
-            )
+                this.parseCountry(i),
+            ),
         );
     }
 
@@ -46,9 +46,9 @@ export default class CountriesRepositoryImpl implements CountriesRepository {
                     return new VCLRegion(
                         item,
                         item[VCLRegion.KeyCode],
-                        item[VCLRegion.KeyName]
+                        item[VCLRegion.KeyName],
                     );
-                }
+                },
             );
             regions = new VCLRegions(regionList);
         }
@@ -57,7 +57,7 @@ export default class CountriesRepositoryImpl implements CountriesRepository {
             countryJsonObj,
             countryJsonObj[VCLCountry.KeyCode],
             countryJsonObj[VCLCountry.KeyName],
-            regions
+            regions,
         );
     }
 }

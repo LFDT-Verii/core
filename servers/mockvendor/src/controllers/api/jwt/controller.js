@@ -33,7 +33,7 @@ const controller = async (fastify) => {
       return {
         compactJwt,
       };
-    }
+    },
   );
 
   fastify.post(
@@ -62,7 +62,7 @@ const controller = async (fastify) => {
           error: e,
         };
       }
-    }
+    },
   );
 };
 

@@ -19,7 +19,6 @@ const { register } = require('@spencejs/spence-factories');
 const { ObjectId } = require('mongodb');
 const { addDays, addHours } = require('date-fns/fp');
 
-// eslint-disable-next-line max-len
 const initOrganizationFactory = require('@verii/endpoints-organizations-registrar/src/entities/organizations/factories/organizations-factory');
 
 const purchaseRepoPlugin = require('../../src/entities/purchases/repo');
@@ -32,7 +31,7 @@ module.exports = (app) =>
     async (overrides, { getOrBuild }) => {
       const organization = await getOrBuild(
         'organization',
-        initOrganizationFactory(app)
+        initOrganizationFactory(app),
       );
 
       const now = new Date();
@@ -77,5 +76,5 @@ module.exports = (app) =>
         clientId: organization.ids.brokerClientId,
         ...overrideObj,
       };
-    }
+    },
   );

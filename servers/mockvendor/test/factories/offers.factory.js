@@ -60,5 +60,5 @@ module.exports = (app) =>
         offerId: '5539e308-6f2f-4d01-b946-5ca4ba7fee20',
         ...overrides(),
       };
-    }
+    },
   );

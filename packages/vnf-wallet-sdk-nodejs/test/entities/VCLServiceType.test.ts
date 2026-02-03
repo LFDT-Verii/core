@@ -7,89 +7,89 @@ import VCLServiceType, {
 describe('VCLServiceType Tests', () => {
     test('testFromExactString', () => {
         expect(serviceTypeFromString('Inspector')).toEqual(
-            VCLServiceType.Inspector
+            VCLServiceType.Inspector,
         );
         expect(serviceTypeFromString('CareerIssuer')).toEqual(
-            VCLServiceType.CareerIssuer
+            VCLServiceType.CareerIssuer,
         );
         expect(serviceTypeFromString('NotaryIssuer')).toEqual(
-            VCLServiceType.NotaryIssuer
+            VCLServiceType.NotaryIssuer,
         );
         expect(serviceTypeFromString('IdentityIssuer')).toEqual(
-            VCLServiceType.IdentityIssuer
+            VCLServiceType.IdentityIssuer,
         );
         expect(serviceTypeFromString('CareerIssuer')).toEqual(
-            VCLServiceType.CareerIssuer
+            VCLServiceType.CareerIssuer,
         );
         expect(serviceTypeFromString('IdDocumentIssuer')).toEqual(
-            VCLServiceType.IdDocumentIssuer
+            VCLServiceType.IdDocumentIssuer,
         );
         expect(serviceTypeFromString('NotaryIdDocumentIssuer')).toEqual(
-            VCLServiceType.NotaryIdDocumentIssuer
+            VCLServiceType.NotaryIdDocumentIssuer,
         );
         expect(serviceTypeFromString('NotaryContactIssuer')).toEqual(
-            VCLServiceType.NotaryContactIssuer
+            VCLServiceType.NotaryContactIssuer,
         );
         expect(serviceTypeFromString('ContactIssuer')).toEqual(
-            VCLServiceType.ContactIssuer
+            VCLServiceType.ContactIssuer,
         );
         expect(serviceTypeFromString('Issuer')).toEqual(VCLServiceType.Issuer);
         expect(serviceTypeFromString('NotaryWorkPermitIssuer')).toEqual(
-            VCLServiceType.NotaryWorkPermitIssuer
+            VCLServiceType.NotaryWorkPermitIssuer,
         );
         expect(serviceTypeFromString('WorkPermitIssuer')).toEqual(
-            VCLServiceType.WorkPermitIssuer
+            VCLServiceType.WorkPermitIssuer,
         );
         expect(serviceTypeFromString('OtherService')).toEqual(
-            VCLServiceType.Undefined
+            VCLServiceType.Undefined,
         );
         expect(serviceTypeFromString('Undefined')).toEqual(
-            VCLServiceType.Undefined
+            VCLServiceType.Undefined,
         );
     });
 
     test('testFromNonExactString', () => {
         expect(serviceTypeFromString(',dfm%InspectorGH*(T')).toEqual(
-            VCLServiceType.Inspector
+            VCLServiceType.Inspector,
         );
         expect(serviceTypeFromString('234CareerIssuer95R')).toEqual(
-            VCLServiceType.CareerIssuer
+            VCLServiceType.CareerIssuer,
         );
         expect(serviceTypeFromString('*%$NotaryIssuer3k42j2n4')).toEqual(
-            VCLServiceType.NotaryIssuer
+            VCLServiceType.NotaryIssuer,
         );
         expect(serviceTypeFromString('9834RFIdentityIssuer^3&^')).toEqual(
-            VCLServiceType.IdentityIssuer
+            VCLServiceType.IdentityIssuer,
         );
         expect(serviceTypeFromString('iu34CareerIssuer^#4f')).toEqual(
-            VCLServiceType.CareerIssuer
+            VCLServiceType.CareerIssuer,
         );
         expect(serviceTypeFromString('398%IdDocumentIssuer^DDd3')).toEqual(
-            VCLServiceType.IdDocumentIssuer
+            VCLServiceType.IdDocumentIssuer,
         );
         expect(
-            serviceTypeFromString('3kjnke9@NotaryIdDocumentIssuer@%^')
+            serviceTypeFromString('3kjnke9@NotaryIdDocumentIssuer@%^'),
         ).toEqual(VCLServiceType.NotaryIdDocumentIssuer);
         expect(serviceTypeFromString('03fNotaryContactIssuer04gvd')).toEqual(
-            VCLServiceType.NotaryContactIssuer
+            VCLServiceType.NotaryContactIssuer,
         );
         expect(serviceTypeFromString('0fhe3ContactIssuer43f')).toEqual(
-            VCLServiceType.ContactIssuer
+            VCLServiceType.ContactIssuer,
         );
         expect(serviceTypeFromString('eskld#Issuerdkdf')).toEqual(
-            VCLServiceType.Issuer
+            VCLServiceType.Issuer,
         );
         expect(serviceTypeFromString('dfjkn@NotaryWorkPermitIssuer34')).toEqual(
-            VCLServiceType.NotaryWorkPermitIssuer
+            VCLServiceType.NotaryWorkPermitIssuer,
         );
         expect(serviceTypeFromString('dfjkn@WorkPermitIssuer34')).toEqual(
-            VCLServiceType.WorkPermitIssuer
+            VCLServiceType.WorkPermitIssuer,
         );
         expect(serviceTypeFromString('ksdjhkD#OtherService959)%')).toEqual(
-            VCLServiceType.Undefined
+            VCLServiceType.Undefined,
         );
         expect(serviceTypeFromString('#Wfg85$Undefined)%dgsc')).toEqual(
-            VCLServiceType.Undefined
+            VCLServiceType.Undefined,
         );
         expect(serviceTypeFromString('')).toEqual(VCLServiceType.Undefined);
     });

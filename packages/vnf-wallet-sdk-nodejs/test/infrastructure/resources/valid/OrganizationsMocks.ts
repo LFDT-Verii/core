@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 export class OrganizationsMocks {
     static readonly OrganizationJsonStr = {
         id: 'did:velocity:0x571cf9ef33b111b7060942eb43133c0b347c7ca3',

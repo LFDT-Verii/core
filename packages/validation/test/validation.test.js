@@ -71,7 +71,7 @@ describe('validation package', () => {
       addDocSchema(schema);
       const func = () => addDocSchema(schema);
       expect(func).toThrow(
-        'schema with key or id "hello-schema" already exists'
+        'schema with key or id "hello-schema" already exists',
       );
     });
     it('should add a schema even if it already exists if override is set to true', () => {
@@ -123,7 +123,7 @@ describe('validation package', () => {
 
   describe('removeDocSchema', () => {
     const { addDocSchema, getDocValidator, removeDocSchema } = initValidation(
-      new Ajv()
+      new Ajv(),
     );
 
     it('removeDocSchema should remove previously added schema', () => {
@@ -190,7 +190,7 @@ describe('validation package', () => {
 
     it('should show an error text', () => {
       expect(errorsText([expectedValidationError])).toEqual(
-        'data/hello must be string'
+        'data/hello must be string',
       );
     });
   });

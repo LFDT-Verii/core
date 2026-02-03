@@ -5,21 +5,19 @@ import CredentialTypesUIFormSchemaRepository from '../../domain/repositories/Cre
 import CredentialTypesUIFormSchemaUseCase from '../../domain/usecases/CredentialTypesUIFormSchemaUseCase';
 import VCLError from '../../../api/entities/error/VCLError';
 
-export default class CredentialTypesUIFormSchemaUseCaseImpl
-    implements CredentialTypesUIFormSchemaUseCase
-{
+export default class CredentialTypesUIFormSchemaUseCaseImpl implements CredentialTypesUIFormSchemaUseCase {
     constructor(
-        private readonly credentialTypesUIFormSchemaRepository: CredentialTypesUIFormSchemaRepository
+        private readonly credentialTypesUIFormSchemaRepository: CredentialTypesUIFormSchemaRepository,
     ) {}
 
     async getCredentialTypesUIFormSchema(
         credentialTypesUIFormSchemaDescriptor: VCLCredentialTypesUIFormSchemaDescriptor,
-        countries: VCLCountries
+        countries: VCLCountries,
     ): Promise<VCLCredentialTypesUIFormSchema> {
         try {
             return await this.credentialTypesUIFormSchemaRepository.getCredentialTypesUIFormSchema(
                 credentialTypesUIFormSchemaDescriptor,
-                countries
+                countries,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);

@@ -9,7 +9,7 @@ import Urls from '../network/Urls';
 import fetcher from '../network/Fetcher';
 
 export const generateOffers = async (
-  generateOffersDescriptor: Dictionary<any>
+  generateOffersDescriptor: Dictionary<any>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: Urls.generateOffers,

@@ -44,14 +44,14 @@ const issueVeriiCredentials = async (
   credentialSubjectId,
   credentialTypesMap,
   issuer,
-  context
+  context,
 ) => {
   const vcs = await signVeriiCredentials(
     offers,
     credentialSubjectId,
     credentialTypesMap,
     issuer,
-    context
+    context,
   );
 
   await anchorVeriiCredentials(map('metadata', vcs), issuer, context);
@@ -61,7 +61,7 @@ const issueVeriiCredentials = async (
 
 /**
  * Prepares and signs verifiable credentials from local offers without anchoring them to the blockchain.
- * Assumption is that credential offers contain all required fields including @context, type, contentHash
+ * Assumption is that credential offers contain all required fields including '@context', type, contentHash
  * @param {CredentialOffer[]} offers  array of offers
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
@@ -74,26 +74,26 @@ const signVeriiCredentials = async (
   credentialSubjectId,
   credentialTypesMap,
   issuer,
-  context
+  context,
 ) => {
   const metadataEntries = await allocateMetadataListEntries(
     offers,
     credentialTypesMap,
     issuer,
     METADATA_LIST_SIZE,
-    context
+    context,
   );
   const newMetadataListEntries = getNewListEntries(metadataEntries);
   if (newMetadataListEntries.length > 0) {
     const { createList } = await initCredentialMetadataContract(
       issuer,
-      context
+      context,
     );
     for (const newMetadataListEntry of newMetadataListEntries) {
       // eslint-disable-next-line no-await-in-loop
       await createList(
         newMetadataListEntry.listId,
-        newMetadataListEntry.algType
+        newMetadataListEntry.algType,
       );
     }
   }
@@ -104,7 +104,7 @@ const signVeriiCredentials = async (
     issuer,
     'revocationListAllocations',
     REVOCATION_LIST_SIZE,
-    context
+    context,
   );
   const [newRevocationListEntry] = getNewListEntries(revocationListEntries);
   if (newRevocationListEntry != null) {
@@ -118,7 +118,7 @@ const signVeriiCredentials = async (
     metadataEntries,
     revocationListEntries,
     credentialTypesMap,
-    context
+    context,
   );
 };
 

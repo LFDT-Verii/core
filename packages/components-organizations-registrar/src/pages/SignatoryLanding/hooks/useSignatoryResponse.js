@@ -15,6 +15,7 @@ export const useSignatoryResponse = ({ did, authCode, response }) => {
   const [errorCode, setErrorCode] = useState(null);
 
   useEffect(() => {
+    // eslint-disable-next-line complexity
     const addResponse = async () => {
       setIsLoading(true);
       setErrorCode(null);

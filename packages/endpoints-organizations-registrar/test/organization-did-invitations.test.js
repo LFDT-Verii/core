@@ -15,7 +15,6 @@
  *
  */
 
-// eslint-disable-next-line max-classes-per-file
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
@@ -29,7 +28,7 @@ const mockInitSendError = mock.fn(() =>
     finishProfiling: () => {
       console.log('fake finish sentry profiling');
     },
-  })
+  }),
 );
 
 mock.module('@verii/error-aggregation', {
@@ -227,7 +226,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'organization_not_found',
           message: 'Organization not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -252,7 +251,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'invitations_not_supported',
           message: 'CAO service does not exist',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -274,7 +273,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'request_validation_failed',
           message: "body must have required property 'keyIndividuals'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -298,7 +297,7 @@ describe('Organization invitations test suites', () => {
           message:
             "body/keyIndividuals must have required property 'adminFamilyName'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -321,7 +320,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'request_validation_failed',
           message: 'body/keyIndividuals/adminEmail must match format "email"',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -344,7 +343,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'request_validation_failed',
           message: "body/inviteeProfile must have required property 'name'",
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -373,7 +372,7 @@ describe('Organization invitations test suites', () => {
           message:
             'body/inviteeService/0/type must be equal to one of the allowed values',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -401,7 +400,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'service_endpoint_must_be_ref',
           message: 'serviceEndpoint must be a did service reference',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -431,7 +430,7 @@ describe('Organization invitations test suites', () => {
           message:
             'Cannot add issuer that issues unsupported credential types NOT_SUPPORTED',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -466,7 +465,7 @@ describe('Organization invitations test suites', () => {
           message:
             'The email address is invalid and the invitation was not sent',
           statusCode: 400,
-        })
+        }),
       );
 
       expect(response1.statusCode).toEqual(400);
@@ -477,7 +476,7 @@ describe('Organization invitations test suites', () => {
           message:
             'The email address is invalid and the invitation was not sent',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -512,7 +511,7 @@ describe('Organization invitations test suites', () => {
           message:
             'Cannot add issuer that issues unsupported credential types WrongType',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -547,7 +546,7 @@ describe('Organization invitations test suites', () => {
             code: expect.stringMatching(NANO_ID_FORMAT),
             inviterDid: inviterOrganization.didDoc.id,
             invitationUrl: expect.stringMatching(
-              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/,
             ),
             expiresAt: expect.any(String),
             createdAt: expect.any(String),
@@ -588,7 +587,7 @@ describe('Organization invitations test suites', () => {
             code: expect.stringMatching(NANO_ID_FORMAT),
             inviterDid: inviterOrganization.didDoc.id,
             invitationUrl: expect.stringMatching(
-              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/,
             ),
             expiresAt: expect.any(String),
             createdAt: expect.any(String),
@@ -633,7 +632,7 @@ describe('Organization invitations test suites', () => {
           code: expect.stringMatching(NANO_ID_FORMAT),
           inviterDid: inviterOrganization.didDoc.id,
           invitationUrl: expect.stringMatching(
-            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/,
           ),
           expiresAt: expect.any(String),
           createdAt: expect.any(String),
@@ -675,7 +674,7 @@ describe('Organization invitations test suites', () => {
           code: expect.stringMatching(NANO_ID_FORMAT),
           inviterDid: inviterOrganization.didDoc.id,
           invitationUrl: expect.stringMatching(
-            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/,
           ),
           expiresAt: expect.any(String),
           createdAt: expect.any(String),
@@ -690,7 +689,7 @@ describe('Organization invitations test suites', () => {
     it('should send error if send email failed', async () => {
       mockSESSendEmail.mock.mockImplementationOnce(() =>
         // eslint-disable-next-line prefer-promise-reject-errors
-        Promise.reject('mocked error')
+        Promise.reject('mocked error'),
       );
       const service = {
         id: 'issuer-1',
@@ -739,10 +738,10 @@ describe('Organization invitations test suites', () => {
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
       expect(
-        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments),
       ).toContainEqual([{ email: 'test@email.com' }]);
       expect(
-        mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
+        mockAuth0UserCreate.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           app_metadata: { groupId: undefined },
@@ -756,13 +755,13 @@ describe('Organization invitations test suites', () => {
         },
       ]);
       expect(
-        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
       expect(
-        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           mark_email_as_verified: true,
@@ -773,7 +772,7 @@ describe('Organization invitations test suites', () => {
       ]);
 
       expect(
-        mockSendError.mock.calls.map((call) => call.arguments)
+        mockSendError.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         'mocked error',
         {
@@ -832,10 +831,10 @@ describe('Organization invitations test suites', () => {
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
       expect(
-        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments),
       ).toContainEqual([{ email: 'test@email.com' }]);
       expect(
-        mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
+        mockAuth0UserCreate.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           app_metadata: { groupId: undefined },
@@ -849,13 +848,13 @@ describe('Organization invitations test suites', () => {
         },
       ]);
       expect(
-        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
       expect(
-        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           mark_email_as_verified: true,
@@ -865,7 +864,7 @@ describe('Organization invitations test suites', () => {
         },
       ]);
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
-        expectedInvitationSentEmail(response.json.invitation.code)
+        expectedInvitationSentEmail(response.json.invitation.code),
       );
     });
 
@@ -917,10 +916,10 @@ describe('Organization invitations test suites', () => {
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
       expect(
-        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments),
       ).toContainEqual([{ email: 'test@email.com' }]);
       expect(
-        mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
+        mockAuth0UserCreate.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           app_metadata: { groupId: undefined },
@@ -934,13 +933,13 @@ describe('Organization invitations test suites', () => {
         },
       ]);
       expect(
-        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
       expect(
-        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           mark_email_as_verified: true,
@@ -951,7 +950,7 @@ describe('Organization invitations test suites', () => {
       ]);
 
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
-        expectedInvitationSentEmail(response.json.invitation.code)
+        expectedInvitationSentEmail(response.json.invitation.code),
       );
     });
 
@@ -1085,7 +1084,7 @@ describe('Organization invitations test suites', () => {
       expect(mockAuth0ClientAssignRole.mock.callCount()).toEqual(0);
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(0);
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
-        expectedInvitationSentEmail(response.json.invitation.code)
+        expectedInvitationSentEmail(response.json.invitation.code),
       );
     });
 
@@ -1198,7 +1197,7 @@ describe('Organization invitations test suites', () => {
         email: 'test@email.com',
       });
       expect(
-        mockAuth0UserCreate.mock.calls.map((call) => call.arguments)
+        mockAuth0UserCreate.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           app_metadata: { groupId: undefined },
@@ -1212,14 +1211,14 @@ describe('Organization invitations test suites', () => {
         },
       ]);
       expect(
-        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(2);
       expect(
-        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           mark_email_as_verified: true,
@@ -1232,12 +1231,12 @@ describe('Organization invitations test suites', () => {
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
         expectedInvitationSentEmail(
           `${response1.json.invitation.code}?signup_url=${encodeURIComponent(
-            ticket
-          )}`
-        )
+            ticket,
+          )}`,
+        ),
       );
       expect(mockSESSendEmail.mock.calls[1].arguments[0]).toEqual(
-        expectedInvitationSentEmail(response2.json.invitation.code)
+        expectedInvitationSentEmail(response2.json.invitation.code),
       );
     });
   });
@@ -1256,7 +1255,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'organization_not_found',
           message: 'Organization not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -1394,7 +1393,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -1411,7 +1410,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
     });
   });
@@ -1434,7 +1433,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -1476,7 +1475,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
 
       const invitationFromDb = await invitationsRepo
@@ -1685,7 +1684,7 @@ describe('Organization invitations test suites', () => {
           message:
             'The email address is invalid and the invitation was not sent',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -1730,7 +1729,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -1750,7 +1749,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -1795,7 +1794,7 @@ describe('Organization invitations test suites', () => {
           errorCode: 'invitation_not_found',
           message: 'Invitation not found',
           statusCode: 404,
-        })
+        }),
       );
 
       const invitationFromDb = await invitationsRepo
@@ -1896,7 +1895,7 @@ describe('Organization invitations test suites', () => {
           ],
           keyIndividuals: minKeyIndvidiuals,
           invitationUrl: expect.stringMatching(
-            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/,
           ),
           code: expect.stringMatching(NANO_ID_FORMAT),
           createdBy: 'fooUser1',
@@ -1927,7 +1926,7 @@ describe('Organization invitations test suites', () => {
         ],
         keyIndividuals: minKeyIndvidiuals,
         invitationUrl: expect.stringMatching(
-          /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+          /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/,
         ),
         code: expect.stringMatching(NANO_ID_FORMAT),
         createdBy: 'fooUser1',
@@ -1937,7 +1936,7 @@ describe('Organization invitations test suites', () => {
         updatedAt: expect.any(Date),
       });
       expect(dbInvitation.expiresAt.getTime()).toBeGreaterThan(
-        mongoify(invitation).updatedAt.getTime()
+        mongoify(invitation).updatedAt.getTime(),
       );
 
       expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(1);
@@ -1945,16 +1944,16 @@ describe('Organization invitations test suites', () => {
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
       expect(
-        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments),
       ).toContainEqual([{ email: 'email123@email.com' }]);
       expect(
-        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments)
+        mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
         [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
         [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
       ]);
       expect(
-        mockAuth0TicketChange.mock.calls.map((call) => call.arguments)
+        mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
       ).toContainEqual([
         {
           mark_email_as_verified: true,
@@ -1966,10 +1965,10 @@ describe('Organization invitations test suites', () => {
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
         expectedInvitationSentEmail(
           `${response.json.invitation.code}?signup_url=${encodeURIComponent(
-            ticket
+            ticket,
           )}`,
-          'email123@email.com'
-        )
+          'email123@email.com',
+        ),
       );
     });
 
@@ -2036,7 +2035,7 @@ describe('Organization invitations test suites', () => {
           ],
           keyIndividuals,
           invitationUrl: expect.stringMatching(
-            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+            /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/,
           ),
           code: expect.stringMatching(NANO_ID_FORMAT),
           createdBy: 'fooUser1',
@@ -2067,7 +2066,7 @@ describe('Organization invitations test suites', () => {
         ],
         keyIndividuals,
         invitationUrl: expect.stringMatching(
-          /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
+          /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/,
         ),
         code: expect.stringMatching(NANO_ID_FORMAT),
         createdBy: 'fooUser1',
@@ -2077,7 +2076,7 @@ describe('Organization invitations test suites', () => {
         updatedAt: expect.any(Date),
       });
       expect(dbInvitation.expiresAt.getTime()).toBeGreaterThan(
-        mongoify(invitation).updatedAt.getTime()
+        mongoify(invitation).updatedAt.getTime(),
       );
 
       expect(mockAuth0UserGetByEmail.mock.callCount()).toEqual(1);
@@ -2086,15 +2085,15 @@ describe('Organization invitations test suites', () => {
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(1);
 
       expect(
-        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments)
+        mockAuth0UserGetByEmail.mock.calls.map((call) => call.arguments),
       ).toContainEqual([{ email: 'email123@email.com' }]);
       expect(mockSESSendEmail.mock.calls[0].arguments[0]).toEqual(
         expectedInvitationSentEmail(
           `${response.json.invitation.code}?signup_url=${encodeURIComponent(
-            ticket
+            ticket,
           )}`,
-          'email123@email.com'
-        )
+          'email123@email.com',
+        ),
       );
     });
   });

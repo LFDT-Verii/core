@@ -26,7 +26,7 @@ program
   .option(
     '-p, --persona <name>',
     'Name of the persona that the did is being generated for',
-    'self'
+    'self',
   )
   .action(() => generateDidFiles(program.opts()))
   .parse(process.argv);

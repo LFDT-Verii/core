@@ -22,7 +22,7 @@ const { initGetSignerMetrics } = require('../src/ibft');
 
 class JsonRpcProvider {}
 JsonRpcProvider.prototype.send = mock.fn(() =>
-  Promise.resolve(signerMetricsResult)
+  Promise.resolve(signerMetricsResult),
 );
 mock.module('ethers', {
   namedExports: {

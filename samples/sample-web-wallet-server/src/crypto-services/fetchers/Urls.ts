@@ -28,5 +28,5 @@ export const getJwtVerifyServiceUrl = (environment: VCLEnvironment): string =>
   `${getServiceBaseUrl(environment)}/api/jwt/verify`;
 
 export const getCreateDidKeyServiceUrl = (
-  environment: VCLEnvironment
+  environment: VCLEnvironment,
 ): string => `${getServiceBaseUrl(environment)}/api/create_did_key`;

@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import VCLCredentialManifestDescriptorByService from '../../src/api/entities/VCLCredentialManifestDescriptorByService';
@@ -13,7 +11,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
 
     test('testCredentialManifestDescriptorByServiceWithFullInput1Success', () => {
         const service = new VCLService(
-            JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr)
+            JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
         subject = new VCLCredentialManifestDescriptorByService(
             service,
@@ -21,7 +19,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
             CredentialManifestDescriptorMocks.CredentialTypesList,
             CredentialManifestDescriptorMocks.PushDelegate,
             DidJwkMocks.DidJwk,
-            '123'
+            '123',
         );
 
         const credentialTypesQuery = `${
@@ -31,11 +29,11 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
         }=${CredentialManifestDescriptorMocks.CredentialTypesList[1]}&${
             VCLCredentialManifestDescriptorByService.KeyPushDelegatePushUrl
         }=${encodeURIComponent(
-            CredentialManifestDescriptorMocks.PushDelegate.pushUrl
+            CredentialManifestDescriptorMocks.PushDelegate.pushUrl,
         )}&${
             VCLCredentialManifestDescriptorByService.KeyPushDelegatePushToken
         }=${encodeURIComponent(
-            CredentialManifestDescriptorMocks.PushDelegate.pushToken
+            CredentialManifestDescriptorMocks.PushDelegate.pushToken,
         )}`;
         const mockEndpoint = `${CredentialManifestDescriptorMocks.IssuingServiceEndPoint}?${credentialTypesQuery}`;
 
@@ -45,7 +43,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
 
     test('testCredentialManifestDescriptorByServiceWithFullInput2Success', () => {
         const service = new VCLService(
-            JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr)
+            JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
         subject = new VCLCredentialManifestDescriptorByService(
             service,
@@ -53,7 +51,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
             CredentialManifestDescriptorMocks.CredentialTypesList,
             CredentialManifestDescriptorMocks.PushDelegate,
             DidJwkMocks.DidJwk,
-            '123'
+            '123',
         );
 
         const credentialTypesQuery = `${
@@ -63,11 +61,11 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
         }=${CredentialManifestDescriptorMocks.CredentialTypesList[1]}&${
             VCLCredentialManifestDescriptorByService.KeyPushDelegatePushUrl
         }=${encodeURIComponent(
-            CredentialManifestDescriptorMocks.PushDelegate.pushUrl
+            CredentialManifestDescriptorMocks.PushDelegate.pushUrl,
         )}&${
             VCLCredentialManifestDescriptorByService.KeyPushDelegatePushToken
         }=${encodeURIComponent(
-            CredentialManifestDescriptorMocks.PushDelegate.pushToken
+            CredentialManifestDescriptorMocks.PushDelegate.pushToken,
         )}`;
         const mockEndpoint = `${CredentialManifestDescriptorMocks.IssuingServiceEndPoint}?${credentialTypesQuery}`;
 
@@ -77,7 +75,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
 
     test('testCredentialManifestDescriptorByServiceWithPartialInput3Success', () => {
         const service = new VCLService(
-            JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr)
+            JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
         subject = new VCLCredentialManifestDescriptorByService(
             service,
@@ -85,17 +83,17 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
             undefined,
             CredentialManifestDescriptorMocks.PushDelegate,
             DidJwkMocks.DidJwk,
-            '123'
+            '123',
         );
 
         const credentialTypesQuery = `${
             VCLCredentialManifestDescriptorByService.KeyPushDelegatePushUrl
         }=${encodeURIComponent(
-            CredentialManifestDescriptorMocks.PushDelegate.pushUrl
+            CredentialManifestDescriptorMocks.PushDelegate.pushUrl,
         )}&${
             VCLCredentialManifestDescriptorByService.KeyPushDelegatePushToken
         }=${encodeURIComponent(
-            CredentialManifestDescriptorMocks.PushDelegate.pushToken
+            CredentialManifestDescriptorMocks.PushDelegate.pushToken,
         )}`;
         const mockEndpoint = `${CredentialManifestDescriptorMocks.IssuingServiceEndPoint}?${credentialTypesQuery}`;
 
@@ -106,8 +104,8 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
     test('testCredentialManifestDescriptorByServiceWithPartialInput4Success', () => {
         const service = new VCLService(
             JSON.parse(
-                CredentialManifestDescriptorMocks.IssuingServiceWithParamJsonStr
-            )
+                CredentialManifestDescriptorMocks.IssuingServiceWithParamJsonStr,
+            ),
         );
         subject = new VCLCredentialManifestDescriptorByService(
             service,
@@ -115,7 +113,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
             CredentialManifestDescriptorMocks.CredentialTypesList,
             null,
             DidJwkMocks.DidJwk,
-            '123'
+            '123',
         );
 
         const credentialTypesQuery = `${VCLCredentialManifestDescriptorByService.KeyCredentialTypes}=${CredentialManifestDescriptorMocks.CredentialTypesList[0]}&${VCLCredentialManifestDescriptorByService.KeyCredentialTypes}=${CredentialManifestDescriptorMocks.CredentialTypesList[1]}`;
@@ -128,8 +126,8 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
     test('testCredentialManifestDescriptorByServiceWithPartialInput5Success', () => {
         const service = new VCLService(
             JSON.parse(
-                CredentialManifestDescriptorMocks.IssuingServiceWithParamJsonStr
-            )
+                CredentialManifestDescriptorMocks.IssuingServiceWithParamJsonStr,
+            ),
         );
         subject = new VCLCredentialManifestDescriptorByService(
             service,
@@ -137,7 +135,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
             null,
             null,
             DidJwkMocks.DidJwk,
-            '123'
+            '123',
         );
 
         const mockEndpoint =
@@ -149,7 +147,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
 
     test('testCredentialManifestDescriptorByServiceWithPartialInput6Success', () => {
         const service = new VCLService(
-            JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr)
+            JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
         subject = new VCLCredentialManifestDescriptorByService(
             service,
@@ -157,7 +155,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
             null,
             null,
             DidJwkMocks.DidJwk,
-            '123'
+            '123',
         );
 
         const mockEndpoint =

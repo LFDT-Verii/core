@@ -62,7 +62,7 @@ describe('issuer checks', () => {
     boundIssuerVc = await generateCredentialJwt(
       issuerCred,
       issuerKeyPair.privateJwk,
-      issuerKid
+      issuerKid,
     );
     issuerDidDocument = {
       id: issuerDid,
@@ -124,7 +124,7 @@ describe('issuer checks', () => {
           ],
         },
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.FAIL);
@@ -143,7 +143,7 @@ describe('issuer checks', () => {
           verificationMethod: [{ id: '#key-1', publicKeyJwk }],
         },
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.FAIL);
@@ -160,7 +160,7 @@ describe('issuer checks', () => {
           permittedVelocityServiceCategory: [],
         },
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.FAIL);
@@ -174,10 +174,10 @@ describe('issuer checks', () => {
         ...defaultDependencies,
         boundIssuerVc: await generateCredentialJwt(
           issuerCred,
-          issuerKeyPair.privateJwk
+          issuerKeyPair.privateJwk,
         ),
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.DATA_INTEGRITY_ERROR);
@@ -191,7 +191,7 @@ describe('issuer checks', () => {
         },
       },
       issuerKeyPair.privateJwk,
-      issuerKid
+      issuerKid,
     );
 
     const result = await checkIssuerTrust(
@@ -201,7 +201,7 @@ describe('issuer checks', () => {
         ...defaultDependencies,
         boundIssuerVc: otherIssuerCred,
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.FAIL);
@@ -215,7 +215,7 @@ describe('issuer checks', () => {
         ...defaultDependencies,
         boundIssuerVc: 'WRONG_FORMAT',
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.DATA_INTEGRITY_ERROR);
@@ -226,7 +226,7 @@ describe('issuer checks', () => {
     const wrongSigVc = await generateCredentialJwt(
       issuerCred,
       privateJwk,
-      issuerKid
+      issuerKid,
     );
 
     const result = await checkIssuerTrust(
@@ -236,7 +236,7 @@ describe('issuer checks', () => {
         ...defaultDependencies,
         boundIssuerVc: wrongSigVc,
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.FAIL);
@@ -247,7 +247,7 @@ describe('issuer checks', () => {
       identityCredential,
       issuerDid,
       defaultDependencies,
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.PASS);
@@ -264,7 +264,7 @@ describe('issuer checks', () => {
           permittedVelocityServiceCategory: ['NotaryIssuer'],
         },
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.PASS);
@@ -285,7 +285,7 @@ describe('issuer checks', () => {
           permittedVelocityServiceCategory: ['NotaryIdDocumentIssuer'],
         },
       },
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.PASS);
@@ -297,9 +297,9 @@ describe('issuer checks', () => {
       issuerDid,
       omit(
         ['credentialTypeMetadata.primaryOrganizationClaimPaths'],
-        defaultDependencies
+        defaultDependencies,
       ),
-      context
+      context,
     );
 
     expect(result).toEqual(CheckResults.PASS);
@@ -308,7 +308,7 @@ describe('issuer checks', () => {
   describe('checkIdentityIssuer tests suite', () => {
     it('should throw error if `IdentityIssuer` does not exists in `permittedVelocityServiceCategory`', async () => {
       expect(() => checkIdentityIssuer([])).toThrow(
-        'issuer_requires_identity_permission'
+        'issuer_requires_identity_permission',
       );
     });
 
@@ -351,8 +351,8 @@ describe('issuer checks', () => {
               ],
             },
           },
-          testContext
-        )
+          testContext,
+        ),
       ).toThrow('issuer_requires_notary_permission');
     });
 
@@ -380,8 +380,8 @@ describe('issuer checks', () => {
               ],
             },
           },
-          testContext
-        )
+          testContext,
+        ),
       ).toBe(true);
     });
 
@@ -406,8 +406,8 @@ describe('issuer checks', () => {
               ],
             },
           },
-          testContext
-        )
+          testContext,
+        ),
       ).toBe(true);
     });
 
@@ -425,18 +425,18 @@ describe('issuer checks', () => {
                   child1: set(
                     join(
                       '.',
-                      times((i) => `child${i}`, 10000)
+                      times((i) => `child${i}`, 10000),
                     ),
                     {},
-                    {}
+                    {},
                   ),
                   child2: set(
                     join(
                       '.',
-                      times((i) => `child${i}`, 10000)
+                      times((i) => `child${i}`, 10000),
                     ),
                     issuerDid,
-                    {}
+                    {},
                   ),
                   child3: {
                     child2: {
@@ -452,18 +452,18 @@ describe('issuer checks', () => {
                   child4: set(
                     join(
                       '.',
-                      times((i) => `child${i}`, 10000)
+                      times((i) => `child${i}`, 10000),
                     ),
                     {},
-                    {}
+                    {},
                   ),
                   child5: set(
                     join(
                       '.',
-                      times((i) => `child${i}`, 10000)
+                      times((i) => `child${i}`, 10000),
                     ),
                     issuerDid,
-                    {}
+                    {},
                   ),
                 },
               },
@@ -485,8 +485,8 @@ describe('issuer checks', () => {
               ],
             },
           },
-          testContext
-        )
+          testContext,
+        ),
       ).toBe(true);
     });
 
@@ -508,7 +508,7 @@ describe('issuer checks', () => {
           issuerId: issuerDid,
           credentialTypeMetadata: {},
         },
-        testContext
+        testContext,
       );
       expect(result).toBe(true);
     });

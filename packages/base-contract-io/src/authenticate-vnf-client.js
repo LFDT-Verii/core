@@ -36,17 +36,16 @@ const initAuthenticateVnfClient = (fastify) => {
           client_id: clientId,
           client_secret: clientSecret,
           audience,
-        }
+        },
       );
 
       const authResult = await response.json();
 
-      // eslint-disable-next-line better-mutation/no-mutation
       fastify.vnfAuthTokensCache.set(audience, {
         accessToken: authResult.access_token,
         expiresAt: addSeconds(
           authResult.expires_in - TOKEN_EXPIRATION_SAFE_BUFFER,
-          new Date()
+          new Date(),
         ),
       });
     }
@@ -63,7 +62,7 @@ const initAuthenticateVnfBlockchainClient = (fastify, req) => {
         clientId: fastify.config.vnfClientId,
         clientSecret: fastify.config.vnfClientSecret,
       },
-      req
+      req,
     );
 };
 
@@ -74,7 +73,7 @@ const initAuthenticateVnfClientPlugin = (fastify, options, next) => {
     .addHook('preValidation', async (req) => {
       req.vnfBlockchainAuthenticate = initAuthenticateVnfBlockchainClient(
         fastify,
-        req
+        req,
       );
     });
   next();

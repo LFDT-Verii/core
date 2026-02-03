@@ -28,7 +28,7 @@ const mongoConnection = buildMongoConnection('test-credential-agent');
 module.exports = () =>
   flow(
     createTestServer,
-    initServer
+    initServer,
   )({
     ...config,
     mongoConnection,

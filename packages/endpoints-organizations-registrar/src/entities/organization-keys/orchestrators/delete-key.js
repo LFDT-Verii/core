@@ -44,7 +44,7 @@ const deleteKey = async (did, keyId, context) => {
 
   if (!organizationKey) {
     throw new newError.NotFound(
-      `Key ${relativeKeyId} was not found in organization ${did}`
+      `Key ${relativeKeyId} was not found in organization ${did}`,
     );
   }
   if (includes(organizationKey.purposes, KeyPurposes.ISSUING_METADATA)) {
@@ -81,7 +81,7 @@ const removeOperatorKeyFromBlockchain = async (key, organization, context) => {
   }
   const permissionContract = await initPermissionsContract(
     organization,
-    context
+    context,
   );
 
   await permissionContract.removeOperatorKey({

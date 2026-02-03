@@ -113,7 +113,7 @@ describe('Generate authorization token for push gateway', () => {
         audience: 'https:/oracle.vnf',
         jti: traceId,
         subject: exchangeId,
-      })
+      }),
     ).rejects.toThrow();
   });
 });

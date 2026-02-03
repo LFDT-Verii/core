@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 const { parseToCsv } = require('@verii/csv-parser');
 const { csvResponseHook } = require('@verii/fastify-plugins');
 const { toStartOfDay, toEndOfDay } = require('@verii/rest-queries');
@@ -39,7 +38,7 @@ const offerDataController = async (fastify) => {
           createdAt: 1,
           credentialStatus: 1,
           issuer: 1,
-        }
+        },
       );
 
       if (offers.length === 0) {
@@ -56,9 +55,9 @@ const offerDataController = async (fastify) => {
           '6. Offer Claim Date': offer.consentedAt,
           '7. Revocation Status': offer.credentialStatus?.revokedAt,
           '8. Issuer ID': offer.issuer.id,
-        }))
+        })),
       );
-    }
+    },
   );
 };
 

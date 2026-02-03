@@ -39,7 +39,7 @@ export default class VCLDidDocument {
         const publicJwkPayload = verificationMethod
             .filter(
                 (item): item is Record<string, any> =>
-                    typeof item === 'object' && item !== null
+                    typeof item === 'object' && item !== null,
             )
             .find((method) => method[VCLDidDocument.KeyId] === publicJwkId);
 

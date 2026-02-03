@@ -69,7 +69,7 @@ const resolversController = async (fastify) => {
       }
 
       return publicKeyEncoders[format](publicKey);
-    }
+    },
   );
 };
 

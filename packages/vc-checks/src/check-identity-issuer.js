@@ -13,7 +13,7 @@ const checkIdentityIssuer = (permittedVelocityServiceCategory) => {
         ServiceCategories.ContactIssuer,
         ServiceCategories.NotaryContactIssuer,
         ServiceCategories.IdDocumentIssuer,
-      ]
+      ],
     )
   ) {
     return CheckResults.PASS;

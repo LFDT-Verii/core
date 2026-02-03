@@ -13,16 +13,14 @@ import VCLLog from '../../utils/VCLLog';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDocumentRepository';
 
-export default class OffersByDeepLinkVerifierImpl
-    implements OffersByDeepLinkVerifier
-{
+export default class OffersByDeepLinkVerifierImpl implements OffersByDeepLinkVerifier {
     constructor(
-        private readonly resolveDidDocumentRepository: ResolveDidDocumentRepository
+        private readonly resolveDidDocumentRepository: ResolveDidDocumentRepository,
     ) {}
 
     async verifyOffers(
         offers: VCLOffers,
-        deepLink: VCLDeepLink
+        deepLink: VCLDeepLink,
     ): Promise<boolean> {
         if (deepLink.did === null) {
             await this.onError(`DID not found in deep link: ${deepLink.value}`);
@@ -30,25 +28,25 @@ export default class OffersByDeepLinkVerifierImpl
         }
         const didDocument =
             await this.resolveDidDocumentRepository.resolveDidDocument(
-                deepLink.did!
+                deepLink.did!,
             );
         return this.verify(offers, didDocument);
     }
 
     private async verify(
         offers: VCLOffers,
-        didDocument: VCLDidDocument
+        didDocument: VCLDidDocument,
     ): Promise<boolean> {
         const mismatchedOffer = offers.all.find(
             (offer) =>
                 didDocument.id !== offer.issuerId &&
-                !didDocument.alsoKnownAs.includes(offer.issuerId ?? '')
+                !didDocument.alsoKnownAs.includes(offer.issuerId ?? ''),
         );
 
         if (mismatchedOffer) {
             await this.onError(
                 `mismatched credential: ${mismatchedOffer} \ndidDocument: ${didDocument}`,
-                VCLErrorCode.MismatchedOfferIssuerDid
+                VCLErrorCode.MismatchedOfferIssuerDid,
             );
         } else {
             return true;
@@ -58,7 +56,7 @@ export default class OffersByDeepLinkVerifierImpl
 
     private async onError(
         errorMessage: string,
-        errorCode: VCLErrorCode = VCLErrorCode.SdkError
+        errorCode: VCLErrorCode = VCLErrorCode.SdkError,
     ) {
         VCLLog.error(errorMessage);
         throw new VCLError(null, errorCode, null, errorMessage);

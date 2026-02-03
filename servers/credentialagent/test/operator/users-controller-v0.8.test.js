@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// eslint-disable-next-line import/order
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -82,7 +81,7 @@ describe('vendor user id mappings', () => {
         tenantId: tenant._id,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
-      })
+      }),
     );
   });
 
@@ -116,7 +115,7 @@ describe('vendor user id mappings', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual(
-      map((user) => ({ ...omit('_id', user), id: user._id }), [user2, user1])
+      map((user) => ({ ...omit('_id', user), id: user._id }), [user2, user1]),
     );
   });
 

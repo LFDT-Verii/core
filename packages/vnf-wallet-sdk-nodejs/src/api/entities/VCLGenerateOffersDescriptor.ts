@@ -5,9 +5,11 @@ import VCLVerifiableCredential from './VCLVerifiableCredential';
 export default class VCLGenerateOffersDescriptor {
     constructor(
         public readonly credentialManifest: VCLCredentialManifest,
+        // eslint-disable-next-line default-param-last
         public readonly types: Nullish<string[]> = null,
+        // eslint-disable-next-line default-param-last
         public readonly offerHashes: Nullish<string[]> = null,
-        public readonly identificationVerifiableCredentials: VCLVerifiableCredential[]
+        public readonly identificationVerifiableCredentials: VCLVerifiableCredential[],
     ) {}
 
     get payload(): Dictionary<any> {

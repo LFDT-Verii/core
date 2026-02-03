@@ -71,7 +71,7 @@ describe('encrypted prop extension', () => {
 
       expect(modification).toEqual({ encryptedX: expect.any(String), y: 3 });
       expect(
-        JSON.parse(decryptCollection(modification.encryptedX, secret))
+        JSON.parse(decryptCollection(modification.encryptedX, secret)),
       ).toEqual(val.x);
     });
     it('should encrypt identical encrypted prop', () => {
@@ -91,7 +91,7 @@ describe('encrypted prop extension', () => {
 
       expect(modification).toEqual({ x: expect.any(String), y: 3 });
       expect(JSON.parse(decryptCollection(modification.x, secret))).toEqual(
-        val.x
+        val.x,
       );
     });
 
@@ -151,7 +151,7 @@ describe('encrypted prop extension', () => {
 
       expect(insertedVal).toEqual({ _id: expect.any(String), ...val });
       expect(
-        mockParent.insert.mock.calls.map((call) => call.arguments)
+        mockParent.insert.mock.calls.map((call) => call.arguments),
       ).toEqual([[val, undefined]]);
     });
 
@@ -172,7 +172,7 @@ describe('encrypted prop extension', () => {
 
       expect(insertedVal).toEqual({ _id: expect.any(String), ...val });
       expect(
-        mockParent.insert.mock.calls.map((call) => call.arguments)
+        mockParent.insert.mock.calls.map((call) => call.arguments),
       ).toEqual([[val, { encryptedX: 1 }]]);
     });
   });
@@ -194,13 +194,13 @@ describe('encrypted prop extension', () => {
       expect(
         await encryptPropExtension(mockParent).findOneAndDecrypt(
           { filter },
-          { x: 1 }
-        )
+          { x: 1 },
+        ),
       ).toEqual({
         y: 3,
       });
       expect(
-        mockParent.findOne.mock.calls.map((call) => call.arguments)
+        mockParent.findOne.mock.calls.map((call) => call.arguments),
       ).toEqual([[{ filter }, { encryptedX: 1 }]]);
     });
     it('should do nothing if encrypted property is missing from projection', async () => {
@@ -218,14 +218,14 @@ describe('encrypted prop extension', () => {
       expect(
         await encryptPropExtension(mockParent).findOneAndDecrypt(
           { filter },
-          { y: 1 }
-        )
+          { y: 1 },
+        ),
       ).toEqual({
         y: 3,
       });
 
       expect(
-        mockParent.findOne.mock.calls.map((call) => call.arguments)
+        mockParent.findOne.mock.calls.map((call) => call.arguments),
       ).toEqual([[{ filter }, { y: 1 }]]);
     });
 
@@ -242,12 +242,12 @@ describe('encrypted prop extension', () => {
       });
       mockParent.findOne.mock.mockImplementation(() => Promise.resolve(val));
       expect(
-        await encryptPropExtension(mockParent).findOneAndDecrypt({ filter })
+        await encryptPropExtension(mockParent).findOneAndDecrypt({ filter }),
       ).toEqual({
         y: 3,
       });
       expect(
-        mockParent.findOne.mock.calls.map((call) => call.arguments)
+        mockParent.findOne.mock.calls.map((call) => call.arguments),
       ).toEqual([[{ filter }, undefined]]);
     });
     it('should do nothing if result is null', async () => {
@@ -260,10 +260,10 @@ describe('encrypted prop extension', () => {
       });
       mockParent.findOne.mock.mockImplementation(() => Promise.resolve(null));
       expect(
-        await encryptPropExtension(mockParent).findOneAndDecrypt({ filter })
+        await encryptPropExtension(mockParent).findOneAndDecrypt({ filter }),
       ).toEqual(null);
       expect(
-        mockParent.findOne.mock.calls.map((call) => call.arguments)
+        mockParent.findOne.mock.calls.map((call) => call.arguments),
       ).toEqual([[{ filter }, undefined]]);
     });
     it('should decrypt encrypted json', async () => {
@@ -282,14 +282,14 @@ describe('encrypted prop extension', () => {
       expect(
         await encryptPropExtension(mockParent).findOneAndDecrypt(
           { filter },
-          { x: 1 }
-        )
+          { x: 1 },
+        ),
       ).toEqual({
         ...omit(['encryptedX'], val),
         x: { a: 3 },
       });
       expect(
-        mockParent.findOne.mock.calls.map((call) => call.arguments)
+        mockParent.findOne.mock.calls.map((call) => call.arguments),
       ).toEqual([[{ filter }, { encryptedX: 1 }]]);
     });
     it('should decrypt into the same field if so configured', async () => {
@@ -307,13 +307,13 @@ describe('encrypted prop extension', () => {
       expect(
         await encryptPropExtension(mockParent).findOneAndDecrypt(
           { filter },
-          { x: 1 }
-        )
+          { x: 1 },
+        ),
       ).toEqual({
         x: { a: 3 },
       });
       expect(
-        mockParent.findOne.mock.calls.map((call) => call.arguments)
+        mockParent.findOne.mock.calls.map((call) => call.arguments),
       ).toEqual([[{ filter }, { x: 1 }]]);
     });
     it('should decrypt encrypted json at deep paths', async () => {
@@ -336,14 +336,14 @@ describe('encrypted prop extension', () => {
       expect(
         await encryptPropExtension(mockParent).findOneAndDecrypt(
           { filter },
-          { 'a.b.c': 1 }
-        )
+          { 'a.b.c': 1 },
+        ),
       ).toEqual({
         ...omit(['a.b.encryptedC'], val),
         a: { b: { c: { a: 3 } } },
       });
       expect(
-        mockParent.findOne.mock.calls.map((call) => call.arguments)
+        mockParent.findOne.mock.calls.map((call) => call.arguments),
       ).toEqual([[{ filter }, { 'a.b.encryptedC': 1 }]]);
     });
     it('should decrypt encrypted string', async () => {
@@ -362,14 +362,14 @@ describe('encrypted prop extension', () => {
       expect(
         await encryptPropExtension(mockParent).findOneAndDecrypt(
           { filter },
-          { x: 1 }
-        )
+          { x: 1 },
+        ),
       ).toEqual({
         ...omit(['encryptedX'], val),
         x: 'helloworld',
       });
       expect(
-        mockParent.findOne.mock.calls.map((call) => call.arguments)
+        mockParent.findOne.mock.calls.map((call) => call.arguments),
       ).toEqual([[{ filter }, { encryptedX: 1 }]]);
     });
   });

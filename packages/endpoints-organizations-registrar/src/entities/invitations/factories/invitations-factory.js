@@ -44,8 +44,8 @@ module.exports = (app) =>
         createdBy: 'sub-123',
         ...omit(
           ['inviterOrganization', 'inviteeOrganization'],
-          overridesResult
+          overridesResult,
         ),
       };
-    }
+    },
   );

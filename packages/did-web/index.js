@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable global-require */
 module.exports = {
   ...require('./src/did-web'),
   ...require('./src/did-web-resolver'),

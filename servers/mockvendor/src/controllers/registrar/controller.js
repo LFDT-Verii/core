@@ -16,7 +16,7 @@ module.exports = async (fastify) => {
     async (req) => {
       await processingRequest(req);
       return { messageType: 'ack', messageId: req.body.messageId };
-    }
+    },
   );
   fastify.post(
     '/registrar-webhook-delay',
@@ -32,7 +32,7 @@ module.exports = async (fastify) => {
       await wait(30000);
       await processingRequest(req);
       return { messageType: 'ack', messageId: req.body.messageId };
-    }
+    },
   );
   fastify.post(
     '/registrar-webhook-bad-protocol',
@@ -52,7 +52,7 @@ module.exports = async (fastify) => {
     async (req) => {
       await processingRequest(req);
       return { foo: 'foo' };
-    }
+    },
   );
 };
 
@@ -61,7 +61,7 @@ const processingRequest = async (req) => {
   const vnfSignatureVerified = verifyVnfSignature(
     req.body,
     req.headers[VNF_SIGNATURE_HTTP_HEADER_NAME],
-    req
+    req,
   );
   await repos.messages.insert({ ...req.body, vnfSignatureVerified });
 };

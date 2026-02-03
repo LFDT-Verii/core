@@ -1,6 +1,7 @@
 const { some, isEmpty } = require('lodash/fp');
 const newError = require('http-errors');
 
+// eslint-disable-next-line complexity
 const validateCommercialEntity = (disclosure, verifiedProfile) => {
   const { commercialEntityName, commercialEntityLogo } = disclosure;
 
@@ -12,7 +13,7 @@ const validateCommercialEntity = (disclosure, verifiedProfile) => {
     !some(
       ({ name, logo }) =>
         name === commercialEntityName && logo === commercialEntityLogo,
-      verifiedProfile?.credentialSubject?.commercialEntities || []
+      verifiedProfile?.credentialSubject?.commercialEntities || [],
     )
   ) {
     const errorCode = 'invalid_commercial_entity';

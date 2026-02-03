@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 export class CredentialTypesMocks {
     static readonly CredentialType1: string = `
     {

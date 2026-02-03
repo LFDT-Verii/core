@@ -18,11 +18,11 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
             OrganizationsDescriptorMocks.Filter,
             OrganizationsDescriptorMocks.Page,
             OrganizationsDescriptorMocks.Sort,
-            OrganizationsDescriptorMocks.Query
+            OrganizationsDescriptorMocks.Query,
         );
 
         expect(subject.queryParams).toEqual(
-            organizationDescriptorQueryParamsMock
+            organizationDescriptorQueryParamsMock,
         );
     });
 
@@ -36,11 +36,11 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         subject = new VCLOrganizationsSearchDescriptor(
             OrganizationsDescriptorMocks.Filter,
             OrganizationsDescriptorMocks.Page,
-            OrganizationsDescriptorMocks.Sort
+            OrganizationsDescriptorMocks.Sort,
         );
 
         expect(subject.queryParams).toEqual(
-            organizationDescriptorQueryParamsMock
+            organizationDescriptorQueryParamsMock,
         );
     });
 
@@ -55,11 +55,11 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
             OrganizationsDescriptorMocks.Filter,
             OrganizationsDescriptorMocks.Page,
             null,
-            OrganizationsDescriptorMocks.Query
+            OrganizationsDescriptorMocks.Query,
         );
 
         expect(subject.queryParams).toEqual(
-            organizationDescriptorQueryParamsMock
+            organizationDescriptorQueryParamsMock,
         );
     });
 
@@ -74,11 +74,11 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
             OrganizationsDescriptorMocks.Filter,
             null,
             OrganizationsDescriptorMocks.Sort,
-            OrganizationsDescriptorMocks.Query
+            OrganizationsDescriptorMocks.Query,
         );
 
         expect(subject.queryParams).toEqual(
-            organizationDescriptorQueryParamsMock
+            organizationDescriptorQueryParamsMock,
         );
     });
 
@@ -92,11 +92,11 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
             null,
             OrganizationsDescriptorMocks.Page,
             OrganizationsDescriptorMocks.Sort,
-            OrganizationsDescriptorMocks.Query
+            OrganizationsDescriptorMocks.Query,
         );
 
         expect(subject.queryParams).toEqual(
-            organizationDescriptorQueryParamsMock
+            organizationDescriptorQueryParamsMock,
         );
     });
 
@@ -104,11 +104,11 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         const organizationDescriptorQueryParamsMock =
             'filter.did=did:velocity:0x2bef092530ccc122f5fe439b78eddf6010685e88';
         subject = new VCLOrganizationsSearchDescriptor(
-            new VCLFilter(OrganizationsDescriptorMocks.Filter.did)
+            new VCLFilter(OrganizationsDescriptorMocks.Filter.did),
         );
 
         expect(subject.queryParams).toEqual(
-            organizationDescriptorQueryParamsMock
+            organizationDescriptorQueryParamsMock,
         );
     });
 
@@ -117,7 +117,7 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         subject = new VCLOrganizationsSearchDescriptor();
 
         expect(subject.queryParams).toEqual(
-            organizationDescriptorQueryParamsMock
+            organizationDescriptorQueryParamsMock,
         );
     });
 });

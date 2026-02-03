@@ -19,7 +19,7 @@ export default class VCLAuthToken {
         public readonly payload: Dictionary<any>,
         public readonly authTokenUri?: string,
         public readonly walletDid?: Nullish<string>,
-        public readonly relyingPartyDid?: Nullish<string>
+        public readonly relyingPartyDid?: Nullish<string>,
     ) {
         this.accessToken = new VCLToken(payload.access_token);
         this.refreshToken = new VCLToken(payload.refresh_token);

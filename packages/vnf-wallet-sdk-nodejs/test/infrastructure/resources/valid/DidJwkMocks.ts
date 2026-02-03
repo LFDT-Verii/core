@@ -1,5 +1,4 @@
 import { VCLDidJwk } from '../../../../src';
-/* eslint-disable max-len */
 
 class DidJwkMocks {
     static readonly DidJwkStr =

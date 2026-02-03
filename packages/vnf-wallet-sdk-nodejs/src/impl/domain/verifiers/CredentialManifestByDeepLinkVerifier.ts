@@ -12,6 +12,6 @@ export default interface CredentialManifestByDeepLinkVerifier {
     verifyCredentialManifest(
         credentialManifest: VCLCredentialManifest,
         deepLink: VCLDeepLink,
-        didDocument: VCLDidDocument
+        didDocument: VCLDidDocument,
     ): Promise<boolean>;
 }

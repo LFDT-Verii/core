@@ -16,10 +16,10 @@
 
 const getOrganizationVerifiedProfile = async (
   orgDid,
-  { registrarFetch, cache }
+  { registrarFetch, cache },
 ) => {
   const path = `api/v0.6/organizations/${encodeURIComponent(
-    orgDid
+    orgDid,
   )}/verified-profile`;
   const options = { cache };
   if (registrarFetch.responseType === 'promise') {

@@ -74,7 +74,7 @@ const cleanPiiExtension = (parent, context) => ({
           },
         },
       }),
-      offers
+      offers,
     );
     await parent.collection().bulkWrite(updateQueries);
     return offers.length;

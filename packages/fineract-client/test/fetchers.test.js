@@ -89,7 +89,7 @@ describe('fineract client test suite', () => {
           {
             transfers: [transfer1, transfer2],
           },
-          { fineractFetch }
+          { fineractFetch },
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
@@ -139,7 +139,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).rejects.toThrow('Transaction is being rolled back');
@@ -155,7 +155,7 @@ describe('fineract client test suite', () => {
             { statusCode: 200, body: '{"clientId":1}' },
             {
               statusCode: 400,
-              // eslint-disable-next-line max-len
+
               body: '{"foo":"foo"}',
             },
           ];
@@ -179,7 +179,7 @@ describe('fineract client test suite', () => {
         },
         {
           fineractFetch,
-        }
+        },
       );
       expect(webhookPayload).toEqual([
         {
@@ -219,7 +219,7 @@ describe('fineract client test suite', () => {
             { statusCode: 200, body: '{"clientId":1}' },
             {
               statusCode: 400,
-              // eslint-disable-next-line max-len
+
               body: 'foo error',
             },
           ];
@@ -243,7 +243,7 @@ describe('fineract client test suite', () => {
         },
         {
           fineractFetch,
-        }
+        },
       );
       expect(webhookPayload).toEqual([
         {
@@ -302,7 +302,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
@@ -321,7 +321,7 @@ describe('fineract client test suite', () => {
           relativeUrl: 'savingsaccounts',
           method: 'POST',
           body: JSON.stringify(
-            buildCreateCreditsAccountPayload(creditsAccount1)
+            buildCreateCreditsAccountPayload(creditsAccount1),
           ),
         },
       ]);
@@ -348,7 +348,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
@@ -390,7 +390,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual([
@@ -441,7 +441,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
@@ -451,7 +451,7 @@ describe('fineract client test suite', () => {
           relativeUrl: 'savingsaccounts',
           method: 'POST',
           body: JSON.stringify(
-            buildCreateCreditsAccountPayload(creditsAccount1)
+            buildCreateCreditsAccountPayload(creditsAccount1),
           ),
         },
       ]);
@@ -489,7 +489,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual(expect.any(Array));
@@ -531,7 +531,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual({ clientId: '1' });
@@ -545,10 +545,10 @@ describe('fineract client test suite', () => {
         locale: 'en',
         dateFormat: 'yyyy-MM-dd',
         activationDate: expect.stringMatching(
-          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION
+          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION,
         ),
         submittedOnDate: expect.stringMatching(
-          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION
+          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION,
         ),
       });
     });
@@ -580,7 +580,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual({ tokenAccountId: '9' });
@@ -589,7 +589,7 @@ describe('fineract client test suite', () => {
         clientId: Number(clientId),
         dateFormat: 'yyyy-MM-dd',
         submittedOnDate: expect.stringMatching(
-          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION
+          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION,
         ),
         externalId,
         autoApproveAndActivate: true,
@@ -634,7 +634,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual({ tokenAccountId: '9' });
@@ -643,7 +643,7 @@ describe('fineract client test suite', () => {
         clientId: Number(clientId),
         dateFormat: 'yyyy-MM-dd',
         submittedOnDate: expect.stringMatching(
-          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION
+          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION,
         ),
         externalId,
         autoApproveAndActivate: true,
@@ -683,7 +683,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await func();
@@ -700,7 +700,7 @@ describe('fineract client test suite', () => {
       const clientId = '2';
       nock(testHost)
         .post(
-          `/fineract-provider/api/v1/datatables/Voucher/${clientId}?genericResultSet=true`
+          `/fineract-provider/api/v1/datatables/Voucher/${clientId}?genericResultSet=true`,
         )
         .reply(200, async (request) => {
           webhookPayload = await request.json();
@@ -717,7 +717,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual('');
@@ -747,7 +747,7 @@ describe('fineract client test suite', () => {
           { clientId: 1 },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual({
@@ -869,7 +869,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual(testSavingsAccount);
@@ -900,7 +900,7 @@ describe('fineract client test suite', () => {
       };
       nock(testHost)
         .get(
-          `/fineract-provider/api/v1/savingsaccounts/${payload.accountId}/transactions`
+          `/fineract-provider/api/v1/savingsaccounts/${payload.accountId}/transactions`,
         )
         .query(true)
         .reply(200, (request) => {
@@ -936,7 +936,7 @@ describe('fineract client test suite', () => {
       expect(uriCalled).toEqual(
         `https://localhost.test/fineract-provider/api/v1/savingsaccounts/${
           payload.accountId
-        }/transactions?${searchParams.toString()}`
+        }/transactions?${searchParams.toString()}`,
       );
     });
 
@@ -952,7 +952,7 @@ describe('fineract client test suite', () => {
       };
       nock(testHost)
         .get(
-          `/fineract-provider/api/v1/savingsaccounts/${payload.accountId}/transactions`
+          `/fineract-provider/api/v1/savingsaccounts/${payload.accountId}/transactions`,
         )
         .query(true)
         .reply(200, (request) => {
@@ -986,7 +986,7 @@ describe('fineract client test suite', () => {
       expect(uriCalled).toEqual(
         `https://localhost.test/fineract-provider/api/v1/savingsaccounts/${
           payload.accountId
-        }/transactions?${searchParams.toString()}`
+        }/transactions?${searchParams.toString()}`,
       );
     });
   });
@@ -1014,7 +1014,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual({});
@@ -1027,7 +1027,7 @@ describe('fineract client test suite', () => {
         toAccountId: Number(toAccount),
         transferAmount: `${amount}`,
         transferDate: expect.stringMatching(
-          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION
+          ISO_DATETIME_FORMAT_ONLY_DATE_SECTION,
         ),
         dateFormat: 'yyyy-MM-dd',
         transferDescription: description,
@@ -1058,7 +1058,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual([
@@ -1093,7 +1093,7 @@ describe('fineract client test suite', () => {
           },
           {
             fineractFetch,
-          }
+          },
         );
       };
       await expect(func()).resolves.toEqual(testExpiringVouchers);

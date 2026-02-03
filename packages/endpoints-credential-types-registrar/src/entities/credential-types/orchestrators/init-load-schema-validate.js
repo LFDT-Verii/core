@@ -9,7 +9,7 @@ const initLoadSchemaValidate = (fastify) => async (schemaName, context) => {
   ) {
     const { schemaUrl } =
       await repos.credentialSchemas.findCredentialTypeMetadataBySchemaName(
-        schemaName
+        schemaName,
       );
     const jsonSchema = await fetchJson(schemaUrl, context);
     fastify.addDocSchema(jsonSchema);

@@ -18,7 +18,7 @@ const validateGroup = async ({ slug, did }, context) => {
 
   const [groupWithSlug, groupWithDid] = partition(
     (g) => g.slug === slug,
-    groups
+    groups,
   );
 
   if (!isEmpty(groupWithSlug)) {

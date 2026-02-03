@@ -44,7 +44,7 @@ describe('VCLImpl - initGlobalConfigurations()', () => {
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
             mockCryptoServicesDescriptor,
             false,
-            mockLogService
+            mockLogService,
         );
 
         vclImpl.initGlobalConfigurations(initializationDescriptor);
@@ -64,13 +64,13 @@ describe('VCLImpl - initGlobalConfigurations()', () => {
             VCLXVnfProtocolVersion.XVnfProtocolVersion2,
             mockCryptoServicesDescriptor,
             false,
-            mockLogService
+            mockLogService,
         );
 
         vclImpl.initGlobalConfigurations(initializationDescriptor);
 
         expect(VCLLog.LoggerService).toEqual(
-            initializationDescriptor.logService
+            initializationDescriptor.logService,
         );
     });
 });

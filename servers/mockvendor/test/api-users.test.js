@@ -121,7 +121,7 @@ describe('Users API Test Suite', () => {
           updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         },
-      ])
+      ]),
     );
   });
   it('should be able to update a user', async () => {
@@ -153,7 +153,7 @@ describe('Users API Test Suite', () => {
     expect(getResponsePre.json).toEqual(
       expect.arrayContaining([
         { ...user2, id: expect.stringMatching(OBJECT_ID_FORMAT) },
-      ])
+      ]),
     );
     const response = await fastify.injectJson({
       method: 'DELETE',
@@ -167,7 +167,7 @@ describe('Users API Test Suite', () => {
     expect(getResponsePost.json).not.toEqual(
       expect.arrayContaining([
         { ...user2, id: expect.stringMatching(OBJECT_ID_FORMAT) },
-      ])
+      ]),
     );
   });
 });

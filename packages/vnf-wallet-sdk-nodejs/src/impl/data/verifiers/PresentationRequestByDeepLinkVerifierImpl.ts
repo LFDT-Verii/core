@@ -12,13 +12,11 @@ import VCLErrorCode from '../../../api/entities/error/VCLErrorCode';
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 
-export default class PresentationRequestByDeepLinkVerifierImpl
-    implements PresentationRequestByDeepLinkVerifier
-{
+export default class PresentationRequestByDeepLinkVerifierImpl implements PresentationRequestByDeepLinkVerifier {
     async verifyPresentationRequest(
         presentationRequest: VCLPresentationRequest,
         deepLink: VCLDeepLink,
-        didDocument: VCLDidDocument
+        didDocument: VCLDidDocument,
     ): Promise<boolean> {
         if (deepLink.did === null) {
             await this.onError(`DID not found in deep link: ${deepLink.value}`);
@@ -34,14 +32,14 @@ export default class PresentationRequestByDeepLinkVerifierImpl
         }
         await this.onError(
             `mismatched presentation request: ${presentationRequest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
-            VCLErrorCode.MismatchedPresentationRequestInspectorDid
+            VCLErrorCode.MismatchedPresentationRequestInspectorDid,
         );
         return false;
     }
 
     private async onError(
         errorMessage: string,
-        errorCode: VCLErrorCode = VCLErrorCode.SdkError
+        errorCode: VCLErrorCode = VCLErrorCode.SdkError,
     ) {
         VCLLog.error(errorMessage);
         throw new VCLError(null, errorCode, null, errorMessage);

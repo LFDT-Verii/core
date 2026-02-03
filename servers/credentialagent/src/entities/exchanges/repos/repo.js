@@ -39,6 +39,6 @@ module.exports = (app, options, next = () => {}) => {
         multitenantExtension(),
       ],
     },
-    app
+    app,
   );
 };

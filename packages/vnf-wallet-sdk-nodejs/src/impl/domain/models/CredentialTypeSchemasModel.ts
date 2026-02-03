@@ -3,5 +3,6 @@ import Initializable from './Initializable';
 import Model from './Model';
 
 export default interface CredentialTypeSchemasModel
-    extends Model<VCLCredentialTypeSchemas>,
+    extends
+        Model<VCLCredentialTypeSchemas>,
         Initializable<VCLCredentialTypeSchemas> {}

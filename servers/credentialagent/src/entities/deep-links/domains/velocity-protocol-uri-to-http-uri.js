@@ -23,7 +23,7 @@ const velocityProtocolUriToHttpUri = (velocityProtocolDeepLink, context) => {
   });
   httpProtocolDeepLink.searchParams.set(
     'exchange_type',
-    velocityProtocolDeepLinkUri.host
+    velocityProtocolDeepLinkUri.host,
   );
   return httpProtocolDeepLink.href;
 };

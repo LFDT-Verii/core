@@ -45,6 +45,6 @@ module.exports = (app, options, next = () => {}) => {
         addAnonymousUserRepoExtension,
       ],
     },
-    app
+    app,
   );
 };

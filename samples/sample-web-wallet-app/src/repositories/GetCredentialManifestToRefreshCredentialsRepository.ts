@@ -9,7 +9,7 @@ import Urls from '../network/Urls';
 import fetcher from '../network/Fetcher';
 
 export const getCredentialManifestToRefreshCredentials = async (
-  credentialManifestDescriptorRefresh: Dictionary<any>
+  credentialManifestDescriptorRefresh: Dictionary<any>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: Urls.getCredentialManifest,

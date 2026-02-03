@@ -9,6 +9,6 @@ export default interface VCLJwtSignService {
         jwtDescriptor: VCLJwtDescriptor,
         didJwk: VCLDidJwk,
         nonce: Nullish<string>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<VCLJwt>;
 }

@@ -17,6 +17,7 @@
 const { VeriiProtocolVersions } = require('./verii-protocol-versions');
 const { CheckResults } = require('./check-results');
 
+// eslint-disable-next-line complexity
 const checkHolder = (credential, expectedHolderDid, { log }) => {
   const {
     vnfProtocolVersion = VeriiProtocolVersions.PROTOCOL_VERSION_1,
@@ -32,7 +33,7 @@ const checkHolder = (credential, expectedHolderDid, { log }) => {
   ) {
     log.error(
       { credentialSubjectId: credentialSubject?.id, expectedHolderDid },
-      'holder check failed'
+      'holder check failed',
     );
     return CheckResults.FAIL;
   }

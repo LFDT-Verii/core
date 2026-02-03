@@ -32,10 +32,10 @@ describe('kms key callback', () => {
   });
   it('should throw an error if the key cannot be found', async () => {
     mockKms.exportKeyOrSecret.mock.mockImplementationOnce(() =>
-      Promise.reject(new Error('Not Found'))
+      Promise.reject(new Error('Not Found')),
     );
     await expect(callWithKmsKey('1', mock.fn())).rejects.toEqual(
-      new Error('Not Found')
+      new Error('Not Found'),
     );
   });
 
@@ -51,16 +51,16 @@ describe('kms key callback', () => {
     });
     it('should return the callback error', async () => {
       callback.mock.mockImplementationOnce(() =>
-        Promise.reject(new Error('Callback Error'))
+        Promise.reject(new Error('Callback Error')),
       );
       await expect(callWithKmsKey('1', callback)).rejects.toEqual(
-        new Error('Callback Error')
+        new Error('Callback Error'),
       );
     });
     it('should return callback result', async () => {
       callback.mock.mockImplementationOnce(() => Promise.resolve('Happy Days'));
       await expect(callWithKmsKey('1', callback)).resolves.toEqual(
-        'Happy Days'
+        'Happy Days',
       );
     });
   });

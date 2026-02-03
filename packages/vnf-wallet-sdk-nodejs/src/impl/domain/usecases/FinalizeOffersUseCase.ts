@@ -5,6 +5,6 @@ import VCLToken from '../../../api/entities/VCLToken';
 export default interface FinalizeOffersUseCase {
     finalizeOffers(
         finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
-        sessionToken: VCLToken
+        sessionToken: VCLToken,
     ): Promise<VCLJwtVerifiableCredentials>;
 }

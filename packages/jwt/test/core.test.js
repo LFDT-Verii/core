@@ -116,7 +116,7 @@ describe('JWT Tests', () => {
       const result = await jwtSign(genericPayload, secp256kKeyPair.privateKey);
       const verified = await joseJwtVerify(
         result,
-        secp256kJoseKeyPair.publicKey
+        secp256kJoseKeyPair.publicKey,
       );
 
       expect(verified).toEqual({
@@ -273,7 +273,7 @@ describe('JWT Tests', () => {
         .sign(secp256kJoseKeyPair.privateKey);
 
       await expect(() =>
-        jwtVerify(jwt, secp256kKeyPair.publicKey)
+        jwtVerify(jwt, secp256kKeyPair.publicKey),
       ).rejects.toThrow('"exp" claim timestamp check failed');
     });
     it('Should verify JWT using HS384', async () => {
@@ -405,21 +405,21 @@ describe('JWT Tests', () => {
       const publicJwk = jwkFromSecp256k1Key(secp256kKeyPair1.publicKey, false);
       const publicJwkFromPrivateKey = jwkFromSecp256k1Key(
         secp256kKeyPair1.privateKey,
-        false
+        false,
       );
       const jwt = await jwtSign(
         { message: 'HELLO MR NAUGHTY' },
-        jwkFromSecp256k1Key(secp256kKeyPair1.privateKey)
+        jwkFromSecp256k1Key(secp256kKeyPair1.privateKey),
       );
       expect(await jwtVerify(jwt, publicJwkFromPrivateKey)).toEqual(
-        await jwtVerify(jwt, publicJwk)
+        await jwtVerify(jwt, publicJwk),
       );
     });
 
     it('Should fail to verify a modified jwt ', async () => {
       const jwt = await jwtSign(payload, secp256kKeyPair.privateKey);
       await expect(() =>
-        jwtVerify(`${jwt}a`, secp256kKeyPair.publicKey)
+        jwtVerify(`${jwt}a`, secp256kKeyPair.publicKey),
       ).rejects.toThrow('signature verification failed');
     });
 
@@ -431,7 +431,7 @@ describe('JWT Tests', () => {
         alg: 'secp256k1',
       };
       await expect(async () => jwtVerify(jwt, publicJwk)).rejects.toThrow(
-        'signature verification failed'
+        'signature verification failed',
       );
     });
 
@@ -495,7 +495,7 @@ describe('JWT Tests', () => {
     it('should generate hexs for jwk public keys', async () => {
       const { publicKey } = generateKeyPair();
       expect(publicKey).toEqual(
-        await hexFromJwk(jwkFromSecp256k1Key(publicKey, false), false)
+        await hexFromJwk(jwkFromSecp256k1Key(publicKey, false), false),
       );
     });
     it('should generate jwk for hex private keys', async () => {
@@ -506,7 +506,7 @@ describe('JWT Tests', () => {
     it('should generate hexs for jwk private keys', async () => {
       const { privateKey } = generateKeyPair();
       expect(privateKey).toEqual(
-        await hexFromJwk(jwkFromSecp256k1Key(privateKey, true), true)
+        await hexFromJwk(jwkFromSecp256k1Key(privateKey, true), true),
       );
     });
   });
@@ -521,10 +521,10 @@ describe('JWT Tests', () => {
       expect(jwkToPublicBase64Url(publicKey)).toMatch(URLSAFE_BASE64_FORMAT);
       expect(jwkToPublicBase64Url(privateKey)).toMatch(URLSAFE_BASE64_FORMAT);
       expect(base64UrlToJwk(jwkToPublicBase64Url(publicKey))).toEqual(
-        publicKey
+        publicKey,
       );
       expect(base64UrlToJwk(jwkToPublicBase64Url(privateKey))).toEqual(
-        privateKey
+        privateKey,
       );
     });
     it('should convert from rsa jwk to base64url & back', () => {
@@ -536,10 +536,10 @@ describe('JWT Tests', () => {
       expect(jwkToPublicBase64Url(publicKey)).toMatch(URLSAFE_BASE64_FORMAT);
       expect(jwkToPublicBase64Url(privateKey)).toMatch(URLSAFE_BASE64_FORMAT);
       expect(base64UrlToJwk(jwkToPublicBase64Url(publicKey))).toEqual(
-        publicKey
+        publicKey,
       );
       expect(base64UrlToJwk(jwkToPublicBase64Url(privateKey))).toEqual(
-        privateKey
+        privateKey,
       );
     });
   });
@@ -566,11 +566,11 @@ describe('JWT Tests', () => {
       const genericPayload = { field: 'value' };
       const untamperedJwt = await jwtSign(
         genericPayload,
-        secp256kKeyPair.privateKey
+        secp256kKeyPair.privateKey,
       );
       const verified = await jwtVerify(
         untamperedJwt,
-        secp256kKeyPair.publicKey
+        secp256kKeyPair.publicKey,
       );
 
       expect(verified).toEqual(expect.any(Object));
@@ -612,7 +612,7 @@ describe('JWT Tests', () => {
       const serializedPublicJwk = JSON.stringify(publicKey);
       const deSerializedPublicJwk = jwkFromStringified(
         serializedPublicJwk,
-        false
+        false,
       );
       expect(publicKey).toEqual(deSerializedPublicJwk);
     });
@@ -622,7 +622,7 @@ describe('JWT Tests', () => {
       const serializedPrivateJwk = JSON.stringify(privateKey);
       const deSerializedPrivateJwk = jwkFromStringified(
         serializedPrivateJwk,
-        true
+        true,
       );
       expect(privateKey).toEqual(deSerializedPrivateJwk);
     });

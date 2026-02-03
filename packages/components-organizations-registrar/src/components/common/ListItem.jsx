@@ -98,7 +98,6 @@ const ListItem = ({
             </Stack>
 
             {content.map((service, i) => (
-              // eslint-disable-next-line react/no-array-index-key
               <Box key={i}>
                 {service.map(({ name, value, isLink }) => (
                   <Stack flexDirection="row" key={`${id}-${value}`} sx={{ py: 1 }}>

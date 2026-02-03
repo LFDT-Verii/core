@@ -82,7 +82,7 @@ describe('Tenants management Test suite', () => {
 
     const deployedContract = await deployTestPermissionsContract(
       rootPrivateKey,
-      fastify.config.rpcUrl
+      fastify.config.rpcUrl,
     );
     fastify.config.permissionsContractAddress =
       await deployedContract.getAddress();
@@ -95,7 +95,7 @@ describe('Tenants management Test suite', () => {
       {
         config: fastify.config,
         log: fastify.log,
-      }
+      },
     );
   }, 10000);
 
@@ -145,7 +145,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'did_not_found',
           message: 'DID not found on the Velocity network registrar.',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -181,7 +181,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'did_not_found',
           message: 'DID not found on the Velocity network registrar.',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -250,7 +250,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'request_validation_failed',
           message: 'body/keys/0/purposes must NOT have fewer than 1 items',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -299,7 +299,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized purpose detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -348,7 +348,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Duplicate key purposes detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -390,7 +390,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized algorithm',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -432,7 +432,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized encoding',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -481,7 +481,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Duplicate kid fragments purposes detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -524,7 +524,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: `ServiceId ${serviceId} is not on did document for did: ${orgDoc.id}`,
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -566,7 +566,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Private key not matched to document',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -601,7 +601,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'request_validation_failed',
           message: 'body/webhookUrl must match format "uri"',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -630,7 +630,7 @@ describe('Tenants management Test suite', () => {
           message:
             'body/webhookAuth/type must be equal to one of the allowed values',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -689,7 +689,7 @@ describe('Tenants management Test suite', () => {
       });
 
       const updatedTenant = await tenantRepo.findOne(
-        new ObjectId(response.json.id)
+        new ObjectId(response.json.id),
       );
 
       expect(response.statusCode).toEqual(201);
@@ -700,8 +700,8 @@ describe('Tenants management Test suite', () => {
       expect(
         decrypt(
           updatedTenant.webhookAuth.bearerToken,
-          fastify.config.mongoSecret
-        )
+          fastify.config.mongoSecret,
+        ),
       ).toEqual('secret');
     });
 
@@ -766,7 +766,7 @@ describe('Tenants management Test suite', () => {
       });
 
       expect(
-        await findKmsKey({ tenantId: new ObjectId(response.json.id) })
+        await findKmsKey({ tenantId: new ObjectId(response.json.id) }),
       ).toEqual({
         _id: expect.any(ObjectId),
         key: jwkFromSecp256k1Key(orgKey),
@@ -870,7 +870,7 @@ describe('Tenants management Test suite', () => {
             errorCode: 'group_does_not_exist',
             message: 'Group does not exist',
             statusCode: 404,
-          })
+          }),
         );
       });
     });
@@ -933,7 +933,7 @@ describe('Tenants management Test suite', () => {
           controller: 'did:web:123',
           publicKeyJwk: keyPair.publicKey,
         },
-        'did:web:123%3A3000'
+        'did:web:123%3A3000',
       );
       orgPublicKey = hexFromJwk(keyPair.publicKey, false);
 
@@ -942,7 +942,7 @@ describe('Tenants management Test suite', () => {
         {
           config: fastify.config,
           log: fastify.log,
-        }
+        },
       );
     }, 10000);
 
@@ -981,7 +981,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'did_not_found',
           message: 'DID not found on the Velocity network registrar.',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -1017,7 +1017,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'did_not_found',
           message: 'DID not found on the Velocity network registrar.',
           statusCode: 404,
-        })
+        }),
       );
     });
 
@@ -1086,7 +1086,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'request_validation_failed',
           message: 'body/keys/0/purposes must NOT have fewer than 1 items',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -1135,7 +1135,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized purpose detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -1184,7 +1184,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Duplicate key purposes detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -1226,7 +1226,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized algorithm',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -1268,7 +1268,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Unrecognized encoding',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -1317,7 +1317,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Duplicate kid fragments purposes detected',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -1360,7 +1360,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: `ServiceId ${serviceId} is not on did document for did: ${orgDoc.id}`,
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -1402,7 +1402,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'missing_error_code',
           message: 'Private key not matched to document',
           statusCode: 400,
-        })
+        }),
       );
 
       const tenantDocumentsCount = await mongoDb()
@@ -1437,7 +1437,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'request_validation_failed',
           message: 'body/webhookUrl must match format "uri"',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -1466,7 +1466,7 @@ describe('Tenants management Test suite', () => {
           message:
             'body/webhookAuth/type must be equal to one of the allowed values',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -1497,7 +1497,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'private_key_not_found',
           message: 'Private key not found',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -1542,7 +1542,7 @@ describe('Tenants management Test suite', () => {
       });
 
       expect(
-        await findKmsKey({ tenantId: new ObjectId(response.json.id) })
+        await findKmsKey({ tenantId: new ObjectId(response.json.id) }),
       ).toEqual({
         _id: expect.any(ObjectId),
         key: { use: 'sig', ...orgKey },
@@ -1591,7 +1591,7 @@ describe('Tenants management Test suite', () => {
       });
 
       expect(
-        await findKmsKey({ tenantId: new ObjectId(response.json.id) })
+        await findKmsKey({ tenantId: new ObjectId(response.json.id) }),
       ).toEqual({
         _id: expect.any(ObjectId),
         key: orgKey,
@@ -1640,7 +1640,7 @@ describe('Tenants management Test suite', () => {
       });
 
       expect(
-        await findKmsKey({ tenantId: new ObjectId(response.json.id) })
+        await findKmsKey({ tenantId: new ObjectId(response.json.id) }),
       ).toEqual({
         _id: expect.any(ObjectId),
         key: { use: 'sig', ...orgKey },
@@ -1674,7 +1674,7 @@ describe('Tenants management Test suite', () => {
           message:
             "body must have required property 'all', body must have required property 'did', body must match exactly one schema in oneOf",
           statusCode: 400,
-        })
+        }),
       );
     });
     it("should 400 when both 'all' and 'did' props are present in body", async () => {
@@ -1696,7 +1696,7 @@ describe('Tenants management Test suite', () => {
           errorCode: 'request_validation_failed',
           message: 'body must match exactly one schema in oneOf',
           statusCode: 400,
-        })
+        }),
       );
     });
     it("should 400 if 'all' is false", async () => {
@@ -1719,7 +1719,7 @@ describe('Tenants management Test suite', () => {
             // eslint-disable-next-line max-len
             "body/all must be equal to one of the allowed values, body must have required property 'did', body must match exactly one schema in oneOf",
           statusCode: 400,
-        })
+        }),
       );
     });
     it("should 400 if 'all' is true and no tenants", async () => {
@@ -1738,11 +1738,9 @@ describe('Tenants management Test suite', () => {
         errorResponseMatcher({
           error: 'Bad Request',
           errorCode: 'missing_error_code',
-          message:
-            // eslint-disable-next-line max-len
-            'No tenants to refresh',
+          message: 'No tenants to refresh',
           statusCode: 400,
-        })
+        }),
       );
     });
     it("should 400 if 'did' is provided and no tenants", async () => {
@@ -1761,11 +1759,9 @@ describe('Tenants management Test suite', () => {
         errorResponseMatcher({
           error: 'Bad Request',
           errorCode: 'missing_error_code',
-          message:
-            // eslint-disable-next-line max-len
-            'No tenants to refresh',
+          message: 'No tenants to refresh',
           statusCode: 400,
-        })
+        }),
       );
     });
     it("should 200 if 'all' is true and not update anything if no preferred dids are found", async () => {
@@ -1804,7 +1800,7 @@ describe('Tenants management Test suite', () => {
         .collection('tenants')
         .findOne(
           { _id: new ObjectId(tenant1._id) },
-          { projection: { did: 1, aliases: 1 } }
+          { projection: { did: 1, aliases: 1 } },
         );
       expect(tenant1FromDb).toEqual({
         _id: new ObjectId(tenant1._id),
@@ -1814,7 +1810,7 @@ describe('Tenants management Test suite', () => {
         .collection('offers')
         .findOne(
           { _id: new ObjectId(offer1._id) },
-          { projection: { 'issuer.id': 1 } }
+          { projection: { 'issuer.id': 1 } },
         );
       expect(offer1FromDb).toEqual({
         _id: new ObjectId(offer1._id),
@@ -1890,7 +1886,7 @@ describe('Tenants management Test suite', () => {
         .collection('tenants')
         .findOne(
           { _id: new ObjectId(tenant1._id) },
-          { projection: { did: 1, dids: 1, serviceIds: 1 } }
+          { projection: { did: 1, dids: 1, serviceIds: 1 } },
         );
       expect(tenant1FromDb).toEqual({
         _id: new ObjectId(tenant1._id),
@@ -1902,7 +1898,7 @@ describe('Tenants management Test suite', () => {
         .collection('tenants')
         .findOne(
           { _id: new ObjectId(tenant2._id) },
-          { projection: { did: 1, dids: 1 } }
+          { projection: { did: 1, dids: 1 } },
         );
       expect(tenant2FromDb).toEqual({
         _id: new ObjectId(tenant2._id),
@@ -1913,7 +1909,7 @@ describe('Tenants management Test suite', () => {
         .collection('tenants')
         .findOne(
           { _id: new ObjectId(tenant3._id) },
-          { projection: { did: 1, aliases: 1 } }
+          { projection: { did: 1, aliases: 1 } },
         );
       expect(tenant3FromDb).toEqual({
         _id: new ObjectId(tenant3._id),
@@ -1923,7 +1919,7 @@ describe('Tenants management Test suite', () => {
         .collection('offers')
         .findOne(
           { _id: new ObjectId(offer1._id) },
-          { projection: { 'issuer.id': 1 } }
+          { projection: { 'issuer.id': 1 } },
         );
       expect(offer1FromDb).toEqual({
         _id: new ObjectId(offer1._id),
@@ -1935,7 +1931,7 @@ describe('Tenants management Test suite', () => {
         .collection('offers')
         .findOne(
           { _id: new ObjectId(offer2._id) },
-          { projection: { 'issuer.id': 1, 'credentialSubject.foo': 1 } }
+          { projection: { 'issuer.id': 1, 'credentialSubject.foo': 1 } },
         );
       expect(offer2FromDb).toEqual({
         _id: new ObjectId(offer2._id),
@@ -2000,7 +1996,7 @@ describe('Tenants management Test suite', () => {
         .collection('tenants')
         .findOne(
           { _id: new ObjectId(tenant1._id) },
-          { projection: { did: 1, dids: 1, serviceIds: 1 } }
+          { projection: { did: 1, dids: 1, serviceIds: 1 } },
         );
       expect(tenant1FromDb).toEqual({
         _id: new ObjectId(tenant1._id),
@@ -2012,7 +2008,7 @@ describe('Tenants management Test suite', () => {
         .collection('tenants')
         .findOne(
           { _id: new ObjectId(tenant2._id) },
-          { projection: { did: 1, dids: 1, serviceIds: 1 } }
+          { projection: { did: 1, dids: 1, serviceIds: 1 } },
         );
       expect(tenant2FromDb).toEqual({
         _id: new ObjectId(tenant2._id),
@@ -2023,7 +2019,7 @@ describe('Tenants management Test suite', () => {
         .collection('offers')
         .findOne(
           { _id: new ObjectId(offer1._id) },
-          { projection: { 'issuer.id': 1 } }
+          { projection: { 'issuer.id': 1 } },
         );
       expect(offer1FromDb).toEqual({
         _id: new ObjectId(offer1._id),
@@ -2035,7 +2031,7 @@ describe('Tenants management Test suite', () => {
         .collection('offers')
         .findOne(
           { _id: new ObjectId(offer2._id) },
-          { projection: { 'issuer.id': 1 } }
+          { projection: { 'issuer.id': 1 } },
         );
       expect(offer2FromDb).toEqual({
         _id: new ObjectId(offer2._id),
@@ -2053,15 +2049,14 @@ describe.skip('Private key to ethereum account test suite', () => {
     // It will fail and should be skipped,
     // but running it should recreate the error observed on mainnet
 
-    // eslint-disable-next-line no-plusplus
     for (let i = 0; i < 300; i++) {
       const keyPairJwkInternal = generateKeyPair({ format: 'jwk' });
       const privateJwkInternalToHex = hexFromJwk(
         keyPairJwkInternal.privateKey,
-        true
+        true,
       );
       const publicFromPrivateHex = publicKeyFromPrivateKey(
-        privateJwkInternalToHex
+        privateJwkInternalToHex,
       );
       const ethAccountFromPrivate = toEthereumAddress(privateJwkInternalToHex);
 
@@ -2076,12 +2071,11 @@ describe.skip('Private key to ethereum account test suite', () => {
     // hexes coming directly out of generateKeyPair
     // results seem the same, possibly slightly more common
 
-    // eslint-disable-next-line no-plusplus
     for (let i = 0; i < 300; i++) {
       const keyPairHexInternal = generateKeyPair({ format: 'hex' });
       const privateJwkInternalToHex = keyPairHexInternal.privateKey;
       const publicFromPrivateHex = publicKeyFromPrivateKey(
-        privateJwkInternalToHex
+        privateJwkInternalToHex,
       );
       const ethAccountFromPrivate = toEthereumAddress(privateJwkInternalToHex);
 

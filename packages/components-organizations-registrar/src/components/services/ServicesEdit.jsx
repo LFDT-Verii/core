@@ -16,7 +16,7 @@
 
 import { useState, useCallback } from 'react';
 import { Form } from 'react-admin';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import PropTypes from 'prop-types';
 import { useIsIssuingInspection } from '@/pages/services/hooks/useIsIssuingInspection.js';
 import { FormContent } from '@/components/services/ServiceEditContent.jsx';

@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-shadow
 enum VCLServiceType {
     Inspector = 'Inspector',
     Issuer = 'Issuer',

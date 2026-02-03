@@ -30,7 +30,7 @@ describe('Refresh token extension test suite', () => {
     expect(
       extension.prepFilter({
         foo: 'bar',
-      })
+      }),
     ).toEqual({
       foo: 'bar',
     });
@@ -59,7 +59,7 @@ describe('Refresh token extension test suite', () => {
     expect(
       extension.prepModification({
         foo: 'bar',
-      })
+      }),
     ).toEqual({
       foo: 'bar',
     });

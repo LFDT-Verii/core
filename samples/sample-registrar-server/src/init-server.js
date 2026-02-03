@@ -32,7 +32,7 @@ const initServer = (server) => {
       .register(basicAuth, {
         validate: initBasicAuthValidate(
           server.config.basicAuthUsername,
-          server.config.basicAuthPassword
+          server.config.basicAuthPassword,
         ),
       });
   }
@@ -53,7 +53,7 @@ const initServer = (server) => {
       name: 'fetch',
       options: pick(
         ['nodeEnv', 'requestTimeout', 'traceIdHeader', 'isTest'],
-        server.config
+        server.config,
       ),
     })
     .register(httpClientPlugin, {

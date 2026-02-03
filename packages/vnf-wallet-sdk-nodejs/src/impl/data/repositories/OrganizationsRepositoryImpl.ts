@@ -7,13 +7,11 @@ import OrganizationsRepository from '../../domain/repositories/OrganizationsRepo
 import Urls, { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 
-export default class OrganizationsRepositoryImpl
-    implements OrganizationsRepository
-{
+export default class OrganizationsRepositoryImpl implements OrganizationsRepository {
     constructor(private networkService: NetworkService) {}
 
     async searchForOrganizations(
-        organizationsSearchDescriptor: VCLOrganizationsSearchDescriptor
+        organizationsSearchDescriptor: VCLOrganizationsSearchDescriptor,
     ): Promise<VCLOrganizations> {
         const endpoint = organizationsSearchDescriptor.queryParams
             ? `${Urls.Organizations}?${organizationsSearchDescriptor.queryParams}`

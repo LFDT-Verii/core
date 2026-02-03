@@ -54,7 +54,7 @@ const mongoAllocationListQueries = (db, collectionName) => {
         upsert: false,
         returnNewDocument: false,
         includeResultMetadata: true,
-      }
+      },
     );
     return {
       listId: result.value.currentListId,
@@ -77,7 +77,7 @@ const mongoAllocationListQueries = (db, collectionName) => {
     issuer,
     newListId,
     allocations,
-    context
+    context,
   ) => {
     const operatorAddress = await getOperatorAddress(issuer, context);
     await db.collection(collectionName).insertOne({

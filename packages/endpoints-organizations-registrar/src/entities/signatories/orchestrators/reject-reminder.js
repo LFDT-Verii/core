@@ -8,7 +8,7 @@ const rejectReminder = async (organization, req) => {
     SignatoryEventStatus.REJECTED,
     {
       rejectedAt: currentTime,
-    }
+    },
   );
 };
 

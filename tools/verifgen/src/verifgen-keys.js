@@ -20,12 +20,12 @@ program
   .option(
     '-b, --public-key-file <filename>',
     'Output public key file name',
-    'pub.key'
+    'pub.key',
   )
   .option(
     '-v, --private-key-file <filename>',
     'Output private key file name',
-    'prv.key'
+    'prv.key',
   )
   .action(() => {
     const options = program.opts();

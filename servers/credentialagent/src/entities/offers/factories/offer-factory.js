@@ -29,21 +29,21 @@ const initOfferFactory = (app) => {
     const tenant = await getOrBuild('tenant', initTenantFactory(app));
     const exchange = await getOrBuild(
       'exchange',
-      initOfferExchangeFactory(app)
+      initOfferExchangeFactory(app),
     );
     const user = await getOrBuild('user', initUserFactory(app));
     const unsetVendorUserId = await getOrBuild('_unsetVendorUserId', () => {});
     const credentialSubjectTitle = await getOrBuild(
       'credentialSubjectTitle',
-      () => 'Director, Communications (HoloLens & Mixed Reality Experiences)'
+      () => 'Director, Communications (HoloLens & Mixed Reality Experiences)',
     );
     const credentialSubjectType = await getOrBuild(
       'credentialSubjectType',
-      () => null
+      () => null,
     );
     const credentialSchemaContext = await getOrBuild(
       'credentialSchemaContext',
-      () => undefined
+      () => undefined,
     );
     const credentialSubjectDefault = {
       company: tenant.did,
@@ -85,7 +85,7 @@ const initOfferFactory = (app) => {
       vendorUserId: user.vendorUserId,
       ...(await getOrBuild(
         'credentialSubject',
-        () => credentialSubjectDefault
+        () => credentialSubjectDefault,
       )),
     };
 

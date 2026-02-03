@@ -20,7 +20,7 @@ const fp = require('fastify-plugin');
 
 const httpClientPlugin = async (
   fastify,
-  { name, options, requestDecorator }
+  { name, options, requestDecorator },
 ) => {
   const fastifyDecoration = `base${name[0].toUpperCase()}${name.slice(1)}`;
   const requestDecoration = name;
@@ -28,7 +28,7 @@ const httpClientPlugin = async (
     .decorate(
       fastifyDecoration,
       initHttpClient({ ...options, cache: fastify.cache }),
-      ['cache']
+      ['cache'],
     )
     .decorateRequest(requestDecoration, null)
     .addHook('preValidation', async (req) => {

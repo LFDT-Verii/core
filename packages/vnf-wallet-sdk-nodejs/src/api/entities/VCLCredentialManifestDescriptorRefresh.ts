@@ -13,7 +13,7 @@ export default class VCLCredentialManifestDescriptorRefresh extends VCLCredentia
         public readonly credentialIds: string[],
         didJwk: VCLDidJwk,
         did: string,
-        remoteCryptoServicesToken: Nullish<VCLToken> = null
+        remoteCryptoServicesToken: Nullish<VCLToken> = null,
     ) {
         super(
             service.serviceEndpoint,
@@ -23,7 +23,7 @@ export default class VCLCredentialManifestDescriptorRefresh extends VCLCredentia
             null,
             null,
             didJwk,
-            remoteCryptoServicesToken
+            remoteCryptoServicesToken,
         );
         this.didInput = did;
     }
@@ -53,7 +53,7 @@ export default class VCLCredentialManifestDescriptorRefresh extends VCLCredentia
                 (it) =>
                     `${
                         VCLCredentialManifestDescriptorRefresh.KeyCredentialId
-                    }=${encodeURIComponent(it)}`
+                    }=${encodeURIComponent(it)}`,
             )
             .join('&');
 

@@ -36,13 +36,13 @@ const allocateGenericListEntries = async (
   issuer,
   entityName,
   listSize,
-  context
+  context,
 ) => {
   const entries = [];
   for (let i = 0; i < total; i += 1) {
     entries.push(
       // eslint-disable-next-line no-await-in-loop
-      await allocateListEntry(issuer, entityName, listSize, context)
+      await allocateListEntry(issuer, entityName, listSize, context),
     );
   }
   return entries;
@@ -62,12 +62,12 @@ const allocateMetadataListEntries = async (
   credentialTypesMap,
   issuer,
   listSize,
-  context
+  context,
 ) => {
   const entries = [];
   for (let i = 0; i < offers.length; i += 1) {
     const algTypeName = calcAlgTypeName(
-      credentialTypesMap?.[extractCredentialType(offers[i])]
+      credentialTypesMap?.[extractCredentialType(offers[i])],
     );
     entries.push({
       algType: ALG_TYPE[algTypeName],
@@ -76,7 +76,7 @@ const allocateMetadataListEntries = async (
         issuer,
         `${algTypeName}_MetadataListAllocations`,
         listSize,
-        context
+        context,
       )),
     });
   }
@@ -95,7 +95,7 @@ const allocateListEntry = async (issuer, entityName, listSize, context) => {
   const { allocationListQueries: queries } = context;
   try {
     return await queries.allocateNextEntry(entityName, issuer, context);
-  } catch (error) {
+  } catch {
     const allocations = allocateArray(listSize);
     const newListId = generateListIndex();
     return queries.createNewAllocationList(
@@ -103,7 +103,7 @@ const allocateListEntry = async (issuer, entityName, listSize, context) => {
       issuer,
       newListId,
       allocations,
-      context
+      context,
     );
   }
 };

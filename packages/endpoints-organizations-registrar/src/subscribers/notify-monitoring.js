@@ -20,7 +20,7 @@ const { addMonitors } = require('../entities');
 const notifyMonitoring = async (fastify) => {
   const eventHandler = (
     { payload: { organization, addedServices } },
-    context
+    context,
   ) =>
     addMonitors(
       {
@@ -28,7 +28,7 @@ const notifyMonitoring = async (fastify) => {
         orgName: organization.profile.name,
         orgServices: addedServices,
       },
-      context
+      context,
     );
 
   fastify

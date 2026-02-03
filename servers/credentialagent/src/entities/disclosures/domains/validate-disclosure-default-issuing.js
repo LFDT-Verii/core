@@ -21,11 +21,11 @@ const {
   IdentificationMethods,
 } = require('./constants');
 
-// eslint-disable-next-line complexity
 const validateDisclosureDefaultIssuing = (
   disclosure,
   tenant,
-  setIssuingDefault
+  setIssuingDefault,
+  // eslint-disable-next-line complexity
 ) => {
   const { defaultIssuingDisclosureId } = tenant;
   const { identificationMethods } = disclosure;
@@ -37,7 +37,7 @@ const validateDisclosureDefaultIssuing = (
       'The default disclosure cannot be of type "inspection"',
       {
         errorCode: 'issuing_default_not_compatible',
-      }
+      },
     );
   }
 
@@ -45,7 +45,7 @@ const validateDisclosureDefaultIssuing = (
     some(
       (identificationMethod) =>
         identificationMethod === IdentificationMethods.PREAUTH,
-      identificationMethods
+      identificationMethods,
     )
   ) {
     return;
@@ -61,7 +61,7 @@ const validateDisclosureDefaultIssuing = (
       'The first "issuing" configuration created must be set as the default.',
       {
         errorCode: 'first_issuing_configuration_must_be_default',
-      }
+      },
     );
   }
 };

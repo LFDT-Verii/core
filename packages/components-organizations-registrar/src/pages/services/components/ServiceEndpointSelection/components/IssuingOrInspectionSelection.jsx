@@ -28,7 +28,6 @@ const IssuingOrInspectionSelection = ({ credentialAgentOperators, inProgress }) 
           value={selectedCAO}
           onChange={setSelectedCAO}
           items={credentialAgentOperators}
-          /* eslint-disable-next-line react/no-unstable-nested-components */
           stringValue={(item) => (
             <Box sx={styles.menuItemLogo} component="div">
               <span>{item.name}</span>

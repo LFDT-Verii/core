@@ -112,7 +112,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'slug_already_exist',
           message: 'Group with the given SLUG already exists',
           statusCode: 400,
-        })
+        }),
       );
     });
 
@@ -141,7 +141,7 @@ describe('Groups controller test suite', () => {
           errorCode: 'did_already_exist',
           message: 'Group with the given DID already exists',
           statusCode: 400,
-        })
+        }),
       );
     });
   });

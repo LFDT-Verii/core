@@ -15,7 +15,7 @@ const signatoryApproveOrganizationEmail = (
     },
     response,
   },
-  { config }
+  { config },
 ) => ({
   subject: `${titleMap[response]} of registration by ${name}`,
   // eslint-disable-next-line max-len

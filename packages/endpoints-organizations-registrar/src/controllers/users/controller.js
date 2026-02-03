@@ -14,7 +14,7 @@ const {
 const userController = async (fastify) => {
   const createAuth0User = await initCreateAuth0User(fastify);
   const { getUserWithRoles, softDeleteUser } = await initUserManagement(
-    fastify.config
+    fastify.config,
   );
 
   const { emailToUserForUserInvite } = initUserRegistrarEmails(fastify.config);
@@ -64,12 +64,12 @@ const userController = async (fastify) => {
           tokenWalletRole,
           groupId,
         },
-        req
+        req,
       );
 
       const organizations = await getOrganizationsByGroupId(
         { groupId, tokenWalletRole },
-        req
+        req,
       );
 
       try {
@@ -89,7 +89,7 @@ const userController = async (fastify) => {
 
       reply.code(201);
       return { ...user, registrarRole, tokenWalletRole, groupId };
-    }
+    },
   );
 
   fastify.get(
@@ -125,12 +125,12 @@ const userController = async (fastify) => {
       const user = await getUserWithRoles({ id: params.id }, req);
       if (scope?.groupId != null && user.groupId !== scope.groupId) {
         log.warn(
-          `${agent.sub} (group ${scope.groupId} does not have access to user ${user.id} with group ${user.groupId}`
+          `${agent.sub} (group ${scope.groupId} does not have access to user ${user.id} with group ${user.groupId}`,
         );
         throw newError.NotFound('User Not Found');
       }
       return user;
-    }
+    },
   );
 
   fastify.delete(
@@ -164,19 +164,20 @@ const userController = async (fastify) => {
     async (req, reply) => {
       await softDeleteUser({ id: req.params.id }, req);
       return reply.status(204).send();
-    }
+    },
   );
 
+  // eslint-disable-next-line complexity
   const computeGroupId = async (user, bodyGroupId, { scope, log, repos }) => {
     if (scope?.groupId != null) {
       if (bodyGroupId !== scope.groupId) {
         log.error(
-          `User scope.groupId is "${scope.groupId}" doesnt matching requested groupId "${bodyGroupId}"`
+          `User scope.groupId is "${scope.groupId}" doesnt matching requested groupId "${bodyGroupId}"`,
         );
         throw newError.Forbidden(
           bodyGroupId === 'new'
             ? UserErrorMessages.USER_MUST_SPECIFY_GROUP_ID
-            : UserErrorMessages.USER_CANNOT_SPECIFY_GROUP_ID
+            : UserErrorMessages.USER_CANNOT_SPECIFY_GROUP_ID,
         );
       }
     } else if (bodyGroupId !== 'new') {
@@ -201,12 +202,12 @@ const userController = async (fastify) => {
         organizations,
         registrarRole,
         tokenWalletRole,
-      })
+      }),
     );
   };
   const getOrganizationsByGroupId = async (
     { groupId, tokenWalletRole },
-    context
+    context,
   ) => {
     if (!groupId || !tokenWalletRole) return [];
 

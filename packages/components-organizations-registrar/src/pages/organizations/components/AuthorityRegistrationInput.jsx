@@ -11,7 +11,7 @@ import {
   FormDataConsumer,
 } from 'react-admin';
 import InfoIcon from '@mui/icons-material/Info';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { useFormContext } from 'react-hook-form';
 import {
   DUNS_HINT,

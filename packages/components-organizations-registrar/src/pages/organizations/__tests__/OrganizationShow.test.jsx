@@ -1,4 +1,3 @@
-/* eslint-disable import/first */
 import { describe, test, mock } from 'node:test';
 import { expect } from 'expect';
 
@@ -169,13 +168,12 @@ describe.skip('OrganizationShow', () => {
   test('title of Copy button changes to Copied on click', async (t) => {
     const writeText = t.mock.fn();
 
-    // eslint-disable-next-line better-mutation/no-mutating-functions
     Object.assign(navigator, {
       clipboard: {
         writeText,
       },
     });
-    // eslint-disable-next-line no-undef
+
     navigator.clipboard.writeText.mock.mockImplementation(() => Promise.resolve('123'));
     render(
       <AdminContext

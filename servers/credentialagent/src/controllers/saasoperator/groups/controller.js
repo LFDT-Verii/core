@@ -28,7 +28,7 @@ const controller = async (fastify) => {
       return {
         groups: map(formatGroup, groups),
       };
-    }
+    },
   );
 
   fastify.post(
@@ -58,7 +58,7 @@ const controller = async (fastify) => {
       return {
         group: formatGroup(newGroup),
       };
-    }
+    },
   );
 };
 

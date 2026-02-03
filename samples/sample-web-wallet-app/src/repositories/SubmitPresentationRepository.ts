@@ -10,7 +10,7 @@ import { Dictionary } from '../Types';
 
 export const submitPresentation = async (
   presentationSubmission: Dictionary<any>,
-  authToken?: Dictionary<any>
+  authToken?: Dictionary<any>,
 ): Promise<Dictionary<any>> => {
   const config = {
     url: Urls.submitPresentation,

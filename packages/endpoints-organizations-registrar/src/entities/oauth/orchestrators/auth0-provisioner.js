@@ -62,7 +62,7 @@ const initAuth0Provisioner = async ({
       { id: user.sub },
       {
         app_metadata: { groupId: did },
-      }
+      },
     );
   };
 
@@ -70,7 +70,7 @@ const initAuth0Provisioner = async ({
     did,
     profile,
     service,
-    provisionClientGrant
+    provisionClientGrant,
   ) => {
     const clientDetails = buildClientDetails(did, profile, service);
     if (clientDetails == null) {
@@ -112,7 +112,7 @@ const initAuth0Provisioner = async ({
     if (provisionClientGrant) {
       const clientGrant = await provisionAuth0SystemClientGrants(
         auth0Client.client_id,
-        service.type
+        service.type,
       );
       response.clientGrantIds = [clientGrant.id];
     }
@@ -166,7 +166,7 @@ const initAuth0Provisioner = async ({
         app_metadata: {
           groupId: user.groupId,
         },
-      }
+      },
     );
     return {
       ...user,
@@ -177,7 +177,7 @@ const initAuth0Provisioner = async ({
   const getUsersByIds = async ({ userIds, fields = ['email'] }) => {
     const query = join(
       ' OR ',
-      map((userId) => `user_id:${userId}`, userIds)
+      map((userId) => `user_id:${userId}`, userIds),
     );
     const { data: users } = await auth0ManagementClient.getUsers({
       search_engine: 'v3',
@@ -196,7 +196,7 @@ const initAuth0Provisioner = async ({
       },
       {
         roles: [roleNameToRoleId(roleName)],
-      }
+      },
     );
     return roles;
   };
@@ -211,7 +211,7 @@ const initAuth0Provisioner = async ({
         result_url: resultUrl,
         mark_email_as_verified: true,
         ttl_sec: 604800,
-      }
+      },
     );
     return ticket;
   };
@@ -234,7 +234,7 @@ const initAuth0Provisioner = async ({
 
     if (
       ServiceTypesOfServiceCategory[ServiceCategories.NodeOperator].includes(
-        service?.type
+        service?.type,
       )
     ) {
       return {
@@ -253,7 +253,9 @@ const initAuth0Provisioner = async ({
     if (
       includes(
         serviceType,
-        ServiceTypesOfServiceCategory[ServiceCategories.CredentialAgentOperator]
+        ServiceTypesOfServiceCategory[
+          ServiceCategories.CredentialAgentOperator
+        ],
       )
     ) {
       return {
@@ -264,7 +266,7 @@ const initAuth0Provisioner = async ({
 
     if (
       ServiceTypesOfServiceCategory[ServiceCategories.NodeOperator].includes(
-        serviceType
+        serviceType,
       )
     ) {
       return {

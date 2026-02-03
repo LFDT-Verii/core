@@ -22,12 +22,12 @@ export default class VCLLog {
     };
 
     static warn: LogFn = (obj: any, msg?: string, ...args: any[]) => {
-        // eslint-disable-next-line no-unused-expressions
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         GlobalConfig.IsLoggerOn && this.LoggerService.warn(obj, msg, ...args);
     };
 
     static info: LogFn = (obj: any, msg?: string, ...args: any[]) => {
-        // eslint-disable-next-line no-unused-expressions
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         GlobalConfig.IsLoggerOn && this.LoggerService.info(obj, msg, ...args);
     };
 }

@@ -36,7 +36,6 @@ const { absBigNumber } = require('../src');
 
 describe('math test suite', () => {
   describe('toBigNumber test suite', () => {
-    // eslint-disable-next-line max-len
     it('should return Bignumber if String value is passed', () => {
       const bigNumberX = toBigNumber('000999.550000000');
       expect(bigNumberX instanceof BigNumber).toEqual(true);
@@ -190,7 +189,7 @@ describe('math test suite', () => {
       const result = maximumBigNumber(
         toBigNumber(-1),
         toBigNumber(1),
-        toBigNumber(3)
+        toBigNumber(3),
       );
       expect(result instanceof BigNumber).toEqual(true);
       expect(`${result}`).toEqual('3');

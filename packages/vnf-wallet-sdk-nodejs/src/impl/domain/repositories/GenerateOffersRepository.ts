@@ -5,6 +5,6 @@ import VCLToken from '../../../api/entities/VCLToken';
 export default interface GenerateOffersRepository {
     generateOffers(
         generateOffersDescriptor: VCLGenerateOffersDescriptor,
-        sessionToken: VCLToken
+        sessionToken: VCLToken,
     ): Promise<VCLOffers>;
 }

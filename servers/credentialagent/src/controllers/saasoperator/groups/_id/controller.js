@@ -28,7 +28,7 @@ const controller = async (fastify) => {
       const { params } = req;
       const group = await findGroupOrError(params.id, req);
       return { group: formatGroup(group) };
-    }
+    },
   );
 
   fastify.delete(
@@ -52,7 +52,7 @@ const controller = async (fastify) => {
       }
       await repos.groups.del(params.id);
       rep.code(204);
-    }
+    },
   );
 
   fastify.put(
@@ -85,7 +85,7 @@ const controller = async (fastify) => {
         $set: { slug: body.slug },
       });
       return { group: formatGroup(updatedGroup) };
-    }
+    },
   );
 
   fastify.post(
@@ -114,7 +114,7 @@ const controller = async (fastify) => {
         $addToSet: { dids: did },
       });
       rep.code(204).send();
-    }
+    },
   );
 };
 

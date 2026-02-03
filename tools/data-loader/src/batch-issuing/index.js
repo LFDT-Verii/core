@@ -15,27 +15,27 @@ program
   .usage('[options]')
   .requiredOption(
     '-c, --csv-filename <filename>',
-    'file name containing variables'
+    'file name containing variables',
   )
   .requiredOption(
     '-o, --offer-template-filename <filename>',
-    'file name containing the credential template file'
+    'file name containing the credential template file',
   )
   .requiredOption(
     '-p, --path <path>',
-    'the output directory to use where QR codes and output state files are stored'
+    'the output directory to use where QR codes and output state files are stored',
   )
   .requiredOption(
     '-t, --terms-url <termsUrl>',
-    'the url to the T&Cs that holder must consent to'
+    'the url to the T&Cs that holder must consent to',
   )
   .option(
     '-d, --did <did>',
-    'DID of the issuing organization. One of `tenant` or `did` must be specified.'
+    'DID of the issuing organization. One of `tenant` or `did` must be specified.',
   )
   .option(
     '-n, --tenant <tenantId>',
-    "Id of the issuing organization's tenant. One of `tenant` or `did` must be specified."
+    "Id of the issuing organization's tenant. One of `tenant` or `did` must be specified.",
   )
   .option(
     '-m, --identifier-match-column <identifierMatchColumn>',
@@ -43,62 +43,62 @@ program
     For example this should be the email column if matching against an Email credential type, or the phone number if 
     matching against a Phone credential type. Accepts header name or index. Default is 0.`,
     parseColumn,
-    0
+    0,
   )
   .option(
     '-u, --vendor-userid-column <vendorUseridColumn>',
     `the column from the CSV that is users id. Value is made available as "vendorUserId" in the offer template. Accepts 
     header name or index. Default is 0.`,
     parseColumn,
-    0
+    0,
   )
   .option(
     '-e, --endpoint <url>',
-    'Credential Agent Endpoint to call to execute the issuing'
+    'Credential Agent Endpoint to call to execute the issuing',
   )
   .option(
     '-a, --auth-token <url>',
-    'Bearer Auth Token to be used on the Agent API'
+    'Bearer Auth Token to be used on the Agent API',
   )
   .option('-l, --label <label>', 'A label to attach to the documents inserted')
   .option(
     '-v, --var <var...>',
-    'A variable that will be injected into the credential template renderer. use name=value'
+    'A variable that will be injected into the credential template renderer. use name=value',
   )
   .option(
     '-y, --credential-type <idCredentialType>',
     'the credential type used for identifying the user. Default is EmailV1.0.',
-    'EmailV1.0'
+    'EmailV1.0',
   )
   .option(
     '--purpose <purpose>',
-    'The purpose to display to the user. Use a maximum for 64 chars. Default is "Career Credential Issuing"'
+    'The purpose to display to the user. Use a maximum for 64 chars. Default is "Career Credential Issuing"',
   )
   .option(
     '--authTokenExpiresIn <authTokenExpiresIn>',
     'The number of minutes that the offer will be available for after activation. Default is 365 days.',
-    '525600'
+    '525600',
   )
   .option('--new', 'Use a new disclosure for batch issuing')
   .option(
     '-i, --disclosure [disclosure]',
-    'An existing disclosure to use for the batch issuing'
+    'An existing disclosure to use for the batch issuing',
   )
   .option(
     '--legacy',
-    'the target credential agent is running in the "LEGACY" offer type mode. Default is false'
+    'the target credential agent is running in the "LEGACY" offer type mode. Default is false',
   )
   .option(
     '-x --outputcsv',
-    "if passed an output csv is generated including the vendor's user id as the first column and the generated qrcode filename and deeplink"
+    "if passed an output csv is generated including the vendor's user id as the first column and the generated qrcode filename and deeplink",
   )
   .option(
     '--x-name <outputCsvName>',
-    'The file name for the output CSV. Default is "output"'
+    'The file name for the output CSV. Default is "output"',
   )
   .option(
     '--dryrun',
-    'if passed in then a dry run executes showing how the data will be formatted'
+    'if passed in then a dry run executes showing how the data will be formatted',
   )
   .action(async () => {
     const options = program.opts();

@@ -26,7 +26,7 @@ describe('url utils', () => {
   describe('appendSearchParam', () => {
     it('should append params', () => {
       expect(
-        appendSearchParam('a', 1)(new URL('http://example.com/path')).href
+        appendSearchParam('a', 1)(new URL('http://example.com/path')).href,
       ).toEqual('http://example.com/path?a=1');
     });
   });
@@ -34,7 +34,7 @@ describe('url utils', () => {
     it('should append array params', () => {
       expect(
         appendSearchParamArray('a', [1, 2])(new URL('http://example.com/path'))
-          .href
+          .href,
       ).toEqual('http://example.com/path?a=1&a=2');
     });
   });

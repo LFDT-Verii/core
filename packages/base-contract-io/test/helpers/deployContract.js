@@ -20,16 +20,15 @@ const deployContract = async (
   contractAbi,
   deployerPrivateKey,
   rpcUrl,
-  initializer
+  initializer,
 ) => {
   const provider = new ethers.JsonRpcProvider(rpcUrl);
-  // eslint-disable-next-line better-mutation/no-mutation
   provider.pollingInterval = 100;
   const wallet = new ethers.Wallet(`0x${deployerPrivateKey}`, provider);
   const factory = new ethers.ContractFactory(
     contractAbi.abi,
     contractAbi.bytecode,
-    wallet
+    wallet,
   );
   const contract = await factory.deploy();
   await contract.waitForDeployment();

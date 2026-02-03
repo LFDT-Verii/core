@@ -9,7 +9,7 @@ class OrganizationsDescriptorMocks {
     static Filter = new VCLFilter(
         'did:velocity:0x2bef092530ccc122f5fe439b78eddf6010685e88',
         new VCLServiceTypes([VCLServiceType.Inspector]),
-        ['EducationDegree']
+        ['EducationDegree'],
     );
 
     static Page = new VCLPage('1', '1');

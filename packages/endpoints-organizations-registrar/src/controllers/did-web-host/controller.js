@@ -54,7 +54,7 @@ const didWebHostController = async (fastify) => {
       const did = uriToDidWeb(urlObj.href);
       const organization = await repos.organizations.findOneByDid(did);
       return organization.didDoc;
-    }
+    },
   );
 };
 

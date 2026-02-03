@@ -40,37 +40,37 @@ const addInvitationBodySchema = {
               ...values(
                 ServiceTypesOfServiceCategory[
                   ServiceCategories.IdDocumentIssuer
-                ]
+                ],
               ),
               ...values(
                 ServiceTypesOfServiceCategory[
                   ServiceCategories.NotaryIdDocumentIssuer
-                ]
+                ],
               ),
               ...values(
-                ServiceTypesOfServiceCategory[ServiceCategories.ContactIssuer]
+                ServiceTypesOfServiceCategory[ServiceCategories.ContactIssuer],
               ),
               ...values(
                 ServiceTypesOfServiceCategory[
                   ServiceCategories.NotaryContactIssuer
-                ]
+                ],
               ),
               ...values(
-                ServiceTypesOfServiceCategory[ServiceCategories.Inspector]
+                ServiceTypesOfServiceCategory[ServiceCategories.Inspector],
               ),
               ...values(
-                ServiceTypesOfServiceCategory[ServiceCategories.Issuer]
+                ServiceTypesOfServiceCategory[ServiceCategories.Issuer],
               ),
               ...values(
-                ServiceTypesOfServiceCategory[ServiceCategories.NotaryIssuer]
+                ServiceTypesOfServiceCategory[ServiceCategories.NotaryIssuer],
               ),
               ...values(
-                ServiceTypesOfServiceCategory[ServiceCategories.IdentityIssuer]
+                ServiceTypesOfServiceCategory[ServiceCategories.IdentityIssuer],
               ),
               ...values(
                 ServiceTypesOfServiceCategory[
                   ServiceCategories.HolderAppProvider
-                ]
+                ],
               ),
             ],
             minLength: 1,
@@ -93,7 +93,7 @@ const addInvitationBodySchema = {
       properties: {
         ...omit(
           keyIndividualProperties,
-          organizationProfileBaseSchema.properties
+          organizationProfileBaseSchema.properties,
         ),
         type: omit(['default'], organizationProfileBaseSchema.properties.type),
       },
@@ -106,7 +106,7 @@ const addInvitationBodySchema = {
       type: 'object',
       properties: pick(
         keyIndividualProperties,
-        organizationProfileBaseSchema.properties
+        organizationProfileBaseSchema.properties,
       ),
       required: ['adminGivenName', 'adminFamilyName', 'adminEmail'],
     },

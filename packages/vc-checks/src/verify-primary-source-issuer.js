@@ -18,18 +18,18 @@ const { flow, get, map, compact } = require('lodash/fp');
 
 const verifyPrimarySourceIssuer = (
   { credential, issuerId, credentialTypeMetadata },
-  { log }
+  { log },
 ) => {
   if (credentialTypeMetadata.primaryOrganizationClaimPaths == null) {
     log.info(
-      `${credential.type} metadata does not contain "primaryOrganizationClaimPaths"`
+      `${credential.type} metadata does not contain "primaryOrganizationClaimPaths"`,
     );
     return true;
   }
 
   const credentialClaims = flow(
     map((claimPath) => getCredentialClaim(credential, claimPath)),
-    compact
+    compact,
   )(credentialTypeMetadata.primaryOrganizationClaimPaths);
 
   if (credentialClaims.length > 0 && !credentialClaims.includes(issuerId)) {

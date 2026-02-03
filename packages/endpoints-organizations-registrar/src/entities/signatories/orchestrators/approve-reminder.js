@@ -9,7 +9,7 @@ const approveReminder = async (organization, req) => {
     SignatoryEventStatus.APPROVED,
     {
       approvedAt: currentTime,
-    }
+    },
   );
   await repos.registrarConsents.registerConsent({
     userId: organization.profile.signatoryEmail,

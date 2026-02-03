@@ -87,11 +87,11 @@ const organizationController = async (fastify) => {
         });
         if (organization == null) {
           throw newError.NotFound(
-            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND
+            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND,
           );
         }
         return organization.didDoc;
-      }
+      },
     )
     .get(
       '/resolve-vc',
@@ -124,12 +124,12 @@ const organizationController = async (fastify) => {
 
         if (isEmpty(orgDoc)) {
           throw newError.NotFound(
-            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND
+            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND,
           );
         }
         if (query.type !== VerifiableCredentialTypes.BASIC_PROFILE_V1_0) {
           throw newError.BadRequest(
-            OrganizationErrorMessages.UNRECOGNIZED_VERIFIABLE_CREDENTIAL_TYPE
+            OrganizationErrorMessages.UNRECOGNIZED_VERIFIABLE_CREDENTIAL_TYPE,
           );
         }
         if (orgDoc?.signedProfileVcJwt?.signedCredential == null) {
@@ -141,7 +141,7 @@ const organizationController = async (fastify) => {
             vc: orgDoc.signedProfileVcJwt.signedCredential,
           },
         ];
-      }
+      },
     )
     .get(
       '/resolve-vc/:id',
@@ -168,7 +168,7 @@ const organizationController = async (fastify) => {
 
         if (isEmpty(orgDoc)) {
           throw newError.NotFound(
-            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND
+            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND,
           );
         }
 
@@ -176,14 +176,14 @@ const organizationController = async (fastify) => {
 
         if (credentialId !== params.id) {
           throw newError.NotFound(
-            OrganizationErrorMessages.VERIFIABLE_CREDENTIAL_NOT_FOUND
+            OrganizationErrorMessages.VERIFIABLE_CREDENTIAL_NOT_FOUND,
           );
         }
         return {
           format: VerifiableCredentialFormats.JWT_VC,
           vc: signedCredential,
         };
-      }
+      },
     )
     .get(
       '/verified-profile',
@@ -211,7 +211,7 @@ const organizationController = async (fastify) => {
             rootDid: config.rootDid,
             rootJwk: jwkFromSecp256k1Key(config.rootPrivateKey, false),
           },
-          req
+          req,
         );
 
         const decodedCredential = await decodeCredentialJwt(signedCredential);
@@ -226,7 +226,7 @@ const organizationController = async (fastify) => {
           credentialChecks,
           credentialSubject: buildPublicProfile(profile),
         };
-      }
+      },
     )
     .post(
       '/deactivate-services',
@@ -284,7 +284,7 @@ const organizationController = async (fastify) => {
         } = req;
         const servicesIds = flow(
           map(toRelativeServiceId),
-          uniq
+          uniq,
         )(bodyServicesIds ?? []);
 
         const organization = await repos.organizations.findOneByDid(
@@ -296,12 +296,12 @@ const organizationController = async (fastify) => {
             profile: 1,
             didNotCustodied: 1,
             services: 1,
-          }
+          },
         );
 
         if (organization == null) {
           throw newError.NotFound(
-            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND
+            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND,
           );
         }
 
@@ -317,7 +317,7 @@ const organizationController = async (fastify) => {
 
         const activatedServiceIds = pullAll(
           servicesIds,
-          organization.activatedServiceIds
+          organization.activatedServiceIds,
         );
 
         const organizationModifications =
@@ -328,14 +328,14 @@ const organizationController = async (fastify) => {
 
         const updatedOrganization = await repos.organizations.update(
           organization._id,
-          organizationModifications
+          organizationModifications,
         );
 
         await updateBlockchainPermissionsFromPermittedServices(
           {
             organization: updatedOrganization,
           },
-          req
+          req,
         );
 
         const removeGrant = async (serviceId) => {
@@ -347,7 +347,7 @@ const organizationController = async (fastify) => {
           });
           const [authClientsToDelete, remainingAuthClients] = partition(
             { serviceId: toRelativeServiceId(serviceId) },
-            org.authClients
+            org.authClients,
           );
           const authClientToDelete = first(authClientsToDelete);
           try {
@@ -386,7 +386,7 @@ const organizationController = async (fastify) => {
           createdAt: updatedOrg.createdAt,
           updatedAt: updatedOrg.updatedAt,
         };
-      }
+      },
     )
     .post(
       '/activate-services',
@@ -459,12 +459,12 @@ const organizationController = async (fastify) => {
             services: 1,
             updatedAt: 1,
             createdAt: 1,
-          }
+          },
         );
 
         const serviceIdsToActivate = difference(
           serviceIds,
-          organization.activatedServiceIds
+          organization.activatedServiceIds,
         );
         if (isEmpty(serviceIdsToActivate)) {
           return {};
@@ -473,11 +473,11 @@ const organizationController = async (fastify) => {
         if (
           !all(
             (id) => some({ id }, organization.services),
-            serviceIdsToActivate
+            serviceIdsToActivate,
           )
         ) {
           throw newError.BadRequest(
-            OrganizationServiceErrorMessages.ORGANIZATION_SERVICE_NOT_FOUND
+            OrganizationServiceErrorMessages.ORGANIZATION_SERVICE_NOT_FOUND,
           );
         }
 
@@ -496,12 +496,12 @@ const organizationController = async (fastify) => {
         // Update Profile
         const activatedServiceIds = flow(
           concat(organization.activatedServiceIds ?? []),
-          uniq
+          uniq,
         )(serviceIdsToActivate);
 
         const authClients = await provisionAuth0ClientGrants(
           organization,
-          activatedServiceIds
+          activatedServiceIds,
         );
 
         const organizationModifications =
@@ -513,23 +513,23 @@ const organizationController = async (fastify) => {
 
         const updatedOrganization = await repos.organizations.update(
           organization._id,
-          organizationModifications
+          organizationModifications,
         );
 
         await updateBlockchainPermissionsFromPermittedServices(
           {
             organization: updatedOrganization,
           },
-          req
+          req,
         );
 
         try {
           const caoServiceRefs = await loadCaoServiceRefs(
             filter(
               (service) => activatedServiceIds.includes(service.id),
-              organization.services
+              organization.services,
             ),
-            req
+            req,
           );
           await publish(
             'services',
@@ -539,7 +539,7 @@ const organizationController = async (fastify) => {
               activatedServiceIds: serviceIdsToActivate,
               caoServiceRefs,
             },
-            req
+            req,
           );
         } catch (error) {
           const message =
@@ -559,7 +559,7 @@ const organizationController = async (fastify) => {
           createdAt: updatedOrganization.createdAt,
           updatedAt: updatedOrganization.updatedAt,
         };
-      }
+      },
     )
     .delete(
       '/',
@@ -585,7 +585,7 @@ const organizationController = async (fastify) => {
 
         if (orgToDelete == null) {
           throw newError.NotFound(
-            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND
+            OrganizationErrorMessages.ORGANIZATION_NOT_FOUND,
           );
         }
         if (orgToDelete.activatedServiceIds.length > 0) {
@@ -603,14 +603,14 @@ const organizationController = async (fastify) => {
           {
             $pull: { dids: orgToDelete.didDoc.id },
             $set: { updatedAt: new Date() },
-          }
+          },
         );
 
         const modifiedProfile = { ...orgToDelete, deletedAt: new Date() };
         repos.organizations.update(orgToDelete._id, modifiedProfile);
 
         return reply.status(204).send();
-      }
+      },
     );
 };
 

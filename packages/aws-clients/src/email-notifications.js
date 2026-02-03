@@ -34,7 +34,7 @@ const createSesClient = ({ awsRegion, awsEndpoint }) =>
       apiVersion: '2010-12-01',
       awsRegion,
       awsEndpoint,
-    })
+    }),
   );
 
 const createSesV2Client = ({ awsRegion }) =>
@@ -42,12 +42,11 @@ const createSesV2Client = ({ awsRegion }) =>
     buildClientConfig({
       apiVersion: '2019-09-27',
       awsRegion,
-    })
+    }),
   );
 
 const initSendEmailNotification =
   ({ awsRegion, awsEndpoint }) =>
-  // eslint-disable-next-line complexity
   async ({
     subject,
     message,
@@ -60,6 +59,7 @@ const initSendEmailNotification =
     attachmentName,
     contentType,
     html = false,
+    // eslint-disable-next-line complexity
   }) => {
     const destination = {};
 
@@ -113,7 +113,7 @@ const initSendEmailNotification =
                   }),
             },
           },
-        })
+        }),
       );
     } else {
       const awsSesV2 = createSesV2Client({
@@ -154,7 +154,7 @@ const initSendEmailNotification =
                   },
                 }),
           },
-        })
+        }),
       );
     }
   };

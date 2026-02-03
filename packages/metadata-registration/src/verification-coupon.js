@@ -20,7 +20,7 @@ const contractAbi = require('./contracts/verification-coupon.json');
 
 const initVerificationCoupon = async (
   { privateKey, contractAddress, rpcProvider },
-  context
+  context,
 ) => {
   const { log } = context;
   log.info({ privateKey, contractAddress }, 'initVerificationCoupon');
@@ -32,7 +32,7 @@ const initVerificationCoupon = async (
       rpcProvider,
       contractAbi,
     },
-    context
+    context,
   );
 
   const isExpired = (tokenId) => {
@@ -48,7 +48,7 @@ const initVerificationCoupon = async (
       Math.floor(Date.parse(expirationTime) / 1000),
       quantity,
       traceId,
-      ownerDid
+      ownerDid,
     );
 
     const transactionReceipt = await tx.wait();
@@ -63,7 +63,7 @@ const initVerificationCoupon = async (
       traceId,
       caoDid,
       burnerDid,
-      burnAddress
+      burnAddress,
     );
 
     const transactionReceipt = await tx.wait();
@@ -73,7 +73,7 @@ const initVerificationCoupon = async (
 
   const setPermissionsAddress = async (permissionsContractAddress) => {
     const tx = await contractClient.setPermissionsAddress(
-      permissionsContractAddress
+      permissionsContractAddress,
     );
 
     return tx.wait();

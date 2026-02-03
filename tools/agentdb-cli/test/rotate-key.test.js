@@ -71,7 +71,7 @@ describe('rotate-key test suite', () => {
 
   before(async () => {
     client = await initMongoClient(
-      buildMongoConnection('test-credentialagent')
+      buildMongoConnection('test-credentialagent'),
     );
     db = client.db();
     persistKey = persistKeyFactory(db);
@@ -99,7 +99,7 @@ describe('rotate-key test suite', () => {
       newKey,
       testOptions.collection,
       testOptions.secretProp,
-      { db, ...testOptions }
+      { db, ...testOptions },
     );
   });
 
@@ -110,7 +110,7 @@ describe('rotate-key test suite', () => {
       newKey,
       testOptions.collection,
       testOptions.secretProp,
-      { db, ...testOptions }
+      { db, ...testOptions },
     );
     const updatedKey = await db.collection('keys').findOne(key._id);
     expect(decryptCollection(updatedKey.key, newKey)).toEqual(decryptedKey);
@@ -127,7 +127,7 @@ describe('rotate-key test suite', () => {
         db,
         ...testOptions,
         dryRun: true,
-      }
+      },
     );
     const updatedKey = await db.collection('keys').findOne(key._id);
     expect(updatedKey.key).toEqual(key.key);
@@ -145,7 +145,7 @@ describe('rotate-key test suite', () => {
       newKey,
       testOptions.collection,
       testOptions.secretProp,
-      { db, ...testOptions }
+      { db, ...testOptions },
     );
 
     const updatedFoo = await db.collection('foos').findOne(foo._id);
@@ -166,12 +166,12 @@ describe('rotate-key test suite', () => {
       newKey,
       testOptions.collection,
       testOptions.secretProp,
-      { db, ...testOptions }
+      { db, ...testOptions },
     );
 
     const updatedTenant = await db.collection('tenants').findOne(tenant._id);
     expect(
-      decryptCollection(updatedTenant.webhookAuth.bearerToken, newKey)
+      decryptCollection(updatedTenant.webhookAuth.bearerToken, newKey),
     ).toEqual(decryptedTenant);
 
     expect(updatedTenant.webhookAuth).toEqual({
@@ -188,10 +188,10 @@ describe('rotate-key test suite', () => {
         newKey,
         testOptions.collection,
         testOptions.secretProp,
-        { db, ...testOptions }
+        { db, ...testOptions },
       );
     await expect(exec).rejects.toThrow(
-      'Unsupported state or unable to authenticate data'
+      'Unsupported state or unable to authenticate data',
     );
   });
 
@@ -207,7 +207,7 @@ describe('rotate-key test suite', () => {
     expect(decryptCollection(updatedKey.key, newKey)).toEqual(decryptedKey);
 
     expect(
-      decryptCollection(updatedTenant.webhookAuth.bearerToken, newKey)
+      decryptCollection(updatedTenant.webhookAuth.bearerToken, newKey),
     ).toEqual(decryptedTenant);
 
     expect(updatedTenant.webhookAuth).toEqual({
@@ -231,7 +231,7 @@ describe('rotate-key test suite', () => {
       expect(decryptCollection(updatedKey.key, newKey)).toEqual(decryptedKey);
 
       expect(
-        decryptCollection(updatedTenant.webhookAuth.bearerToken, newKey)
+        decryptCollection(updatedTenant.webhookAuth.bearerToken, newKey),
       ).toEqual(decryptedTenant);
 
       expect(updatedTenant.webhookAuth).toEqual({
@@ -254,7 +254,7 @@ describe('rotate-key test suite', () => {
       expect(decryptCollection(sameKey.key, oldKey)).toEqual(decryptedKey);
 
       expect(
-        decryptCollection(updatedTenant.webhookAuth.bearerToken, newKey)
+        decryptCollection(updatedTenant.webhookAuth.bearerToken, newKey),
       ).toEqual(decryptedTenant);
     });
 
@@ -271,7 +271,7 @@ describe('rotate-key test suite', () => {
 
       expect(decryptCollection(updatedKey.key, newKey)).toEqual(decryptedKey);
       expect(
-        decryptCollection(sameTenant.webhookAuth.bearerToken, oldKey)
+        decryptCollection(sameTenant.webhookAuth.bearerToken, oldKey),
       ).toEqual(decryptedTenant);
     });
 
@@ -288,7 +288,7 @@ describe('rotate-key test suite', () => {
 
       expect(decryptCollection(updatedKey.key, newKey)).toEqual(decryptedKey);
       expect(
-        decryptCollection(sameTenant.webhookAuth.bearerToken, oldKey)
+        decryptCollection(sameTenant.webhookAuth.bearerToken, oldKey),
       ).toEqual(decryptedTenant);
     });
   });

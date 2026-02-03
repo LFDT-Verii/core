@@ -11,21 +11,21 @@ const isIssuingOrInspectionService = (service) =>
   service?.type != null &&
   includes(
     ServiceTypeToCategoryMap[service.type],
-    IssuingAndInspectionCategories
+    IssuingAndInspectionCategories,
   );
 
 const isCaoService = (service) =>
   service != null &&
   includes(
     service.type,
-    ServiceTypesOfServiceCategory[ServiceCategories.CredentialAgentOperator]
+    ServiceTypesOfServiceCategory[ServiceCategories.CredentialAgentOperator],
   );
 
 const isNodeOperator = (service) =>
   service != null &&
   includes(
     service.type,
-    ServiceTypesOfServiceCategory[ServiceCategories.NodeOperator]
+    ServiceTypesOfServiceCategory[ServiceCategories.NodeOperator],
   );
 
 module.exports = { isIssuingOrInspectionService, isCaoService, isNodeOperator };

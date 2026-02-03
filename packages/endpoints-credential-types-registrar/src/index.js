@@ -15,7 +15,6 @@
  *
  */
 
-/* eslint-disable global-require */
 module.exports = {
   ...require('./credential-types-registrar-endpoints'),
   ...require('./helpers'),

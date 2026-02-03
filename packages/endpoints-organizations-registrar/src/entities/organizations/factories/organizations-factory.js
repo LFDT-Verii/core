@@ -15,7 +15,6 @@
  *
  */
 
-/* eslint-disable complexity */
 const { compact, filter, flow, map } = require('lodash/fp');
 const { register } = require('@spencejs/spence-factories');
 const { createDidDoc, toRelativeServiceId } = require('@verii/did-doc');
@@ -53,18 +52,18 @@ module.exports = (app) => {
       const nonce = generateKeyPair().privateKey;
       const website = await getOrBuild(
         'website',
-        () => `https://www.${nonce}.organization.com`
+        () => `https://www.${nonce}.organization.com`,
       );
       const did = await getOrBuild('did', () => `did:test:${nonce}`);
       const alsoKnownAs = await getOrBuild('alsoKnownAs', () => undefined);
       const didNotCustodied = await getOrBuild('didNotCustodied', () => false);
       const services = await getOrBuild('service', () => []);
       const activatedServiceIds = await getOrBuild('activatedServiceIds', () =>
-        flow(map('id'), compact, map(toRelativeServiceId))(services)
+        flow(map('id'), compact, map(toRelativeServiceId))(services),
       );
       const activatedServices = filter(
         (s) => activatedServiceIds.includes(s.id),
-        services
+        services,
       );
       const { publicKey: ethereumKey } = generateKeyPair({ format: 'jwk' });
       const { publicKey: dltTransactionsPublicKey } = generateKeyPair({
@@ -103,15 +102,15 @@ module.exports = (app) => {
       };
       const commercialEntities = await getOrBuild(
         'commercialEntities',
-        () => undefined
+        () => undefined,
       );
       const skipTechnicalEmail = await getOrBuild(
         'skipTechnicalEmail',
-        () => false
+        () => false,
       );
       const skipContactEmail = await getOrBuild(
         'skipContactEmail',
-        () => false
+        () => false,
       );
       const ovverideObj = overrides();
       const profile = ovverideObj.profile || {
@@ -155,7 +154,7 @@ module.exports = (app) => {
 
       const { jwtVc, credentialId } = await buildProfileVerifiableCredential(
         profile,
-        didDoc
+        didDoc,
       );
       const verifiableCredentialJwt = buildProfileVcUrl(didDoc, credentialId);
       return {
@@ -170,11 +169,11 @@ module.exports = (app) => {
         activatedServiceIds,
         didNotCustodied,
         normalizedProfileName: await getOrBuild('normalizedProfileName', () =>
-          normalizeProfileName(profile.name)
+          normalizeProfileName(profile.name),
         ),
         ids,
         ...ovverideObj,
       };
-    }
+    },
   );
 };

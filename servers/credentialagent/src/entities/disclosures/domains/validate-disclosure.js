@@ -19,7 +19,7 @@ const validateDisclosure = (
   disclosure,
   verifiedProfile,
   setIssuingDefault,
-  context
+  context,
 ) => {
   const { tenant } = context;
   validateVendorWebhook(tenant, context);

@@ -54,12 +54,12 @@ const findExchange = async (docValue, rule, context) => {
 const matchIdentityOnExchange = async (
   identityDoc,
   { identityMatchers },
-  context
+  context,
 ) => {
   const { vendorUserIdIndex } = identityMatchers;
   const { docValue, rule } = validatePresentation(
     identityDoc,
-    identityMatchers
+    identityMatchers,
   );
 
   const matchingExchange = await findExchange(docValue, rule, context);
@@ -85,7 +85,7 @@ const validatePresentation = (identityDoc, identityMatchers) => {
     throw newError(
       400,
       PresentationErrors.PRESENTATION_JSON_PATH_MISSING(rule),
-      { errorCode: 'presentation_credential_jsonpath_empty' }
+      { errorCode: 'presentation_credential_jsonpath_empty' },
     );
   }
 
@@ -105,7 +105,7 @@ const evalRule = (docValue, { rule, valueIndex }, values) => {
     }
     default: {
       throw newError.InternalServerError(
-        PresentationErrors.INVALID_INTEGRATED_IDENTIFICATION_RULE
+        PresentationErrors.INVALID_INTEGRATED_IDENTIFICATION_RULE,
       );
     }
   }

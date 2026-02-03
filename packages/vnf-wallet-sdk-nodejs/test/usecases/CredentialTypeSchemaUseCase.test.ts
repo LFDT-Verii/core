@@ -7,13 +7,13 @@ import { CredentialTypeSchemaMocks } from '../infrastructure/resources/valid/Cre
 
 describe('CredentialTypeSchemaUseCase Tests', () => {
     const expectedCredentialTypeSchemasPayload = JSON.parse(
-        CredentialTypeSchemaMocks.CredentialTypeSchemaJson
+        CredentialTypeSchemaMocks.CredentialTypeSchemaJson,
     );
     const subject = new CredentialTypeSchemasUseCaseImpl(
         new CredentialTypeSchemaRepositoryImpl(
-            new NetworkServiceSuccess(expectedCredentialTypeSchemasPayload)
+            new NetworkServiceSuccess(expectedCredentialTypeSchemasPayload),
         ),
-        CredentialTypeSchemaMocks.CredentialTypes
+        CredentialTypeSchemaMocks.CredentialTypes,
     );
 
     test('testGetCredentialTypeSchemas', async () => {
@@ -22,7 +22,7 @@ describe('CredentialTypeSchemaUseCase Tests', () => {
         expect(
             credTypeSchemas.all[
                 CredentialTypeSchemaMocks.CredentialType.schemaName
-            ]?.payload
+            ]?.payload,
         ).toStrictEqual(expectedCredentialTypeSchemasPayload);
     });
 });

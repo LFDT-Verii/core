@@ -10,6 +10,6 @@ import VCLFinalizeOffersDescriptor from '../../../api/entities/VCLFinalizeOffers
 export default interface CredentialIssuerVerifier {
     verifyCredentials(
         jwtCredentials: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
+        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<boolean>;
 }

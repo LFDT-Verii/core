@@ -20,7 +20,7 @@ const validatePublicKeyAndEncoding = (key) => {
   if (!isStringHex(key.publicKey)) {
     throw newError(
       400,
-      KeyErrorMessages.PUBLIC_KEY_ENCODING_DOES_NOT_MATCH_SPECIFIED_ENCODING
+      KeyErrorMessages.PUBLIC_KEY_ENCODING_DOES_NOT_MATCH_SPECIFIED_ENCODING,
     );
   }
 };

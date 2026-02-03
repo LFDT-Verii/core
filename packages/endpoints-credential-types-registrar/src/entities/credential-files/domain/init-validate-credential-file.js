@@ -20,7 +20,7 @@ const initValidateCredentialFile =
 
     try {
       credentialFile = JSON.parse(file.toString());
-    } catch (error) {
+    } catch {
       throw newError(400, 'Invalid JSON', {
         errorCode: 'invalid_json',
       });

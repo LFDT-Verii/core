@@ -12,7 +12,7 @@ describe('VCLSubmissionResult Tests', () => {
             new VCLToken('token123'),
             new VCLExchange('id123', 'type123', true, true),
             'jti123',
-            'submissionId123'
+            'submissionId123',
         );
     });
 

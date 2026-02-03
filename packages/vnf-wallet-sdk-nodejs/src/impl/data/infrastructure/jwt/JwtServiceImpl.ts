@@ -1,14 +1,13 @@
-/* eslint-disable */
-import { jwtVerify, base64url, JWK, exportJWK, SignJWT, importJWK } from "jose";
-import util from "util";
-import VCLDidJwk from "../../../../api/entities/VCLDidJwk";
-import VCLDidJwkDescriptor from "../../../../api/entities/VCLDidJwkDescriptor";
-import VCLJwt, { SignedJWT } from "../../../../api/entities/VCLJwt";
-import VCLJwtDescriptor from "../../../../api/entities/VCLJwtDescriptor";
+import { jwtVerify, base64url, JWK, exportJWK, SignJWT, importJWK } from 'jose';
+import util from 'util';
+import VCLDidJwk from '../../../../api/entities/VCLDidJwk';
+import VCLDidJwkDescriptor from '../../../../api/entities/VCLDidJwkDescriptor';
+import VCLJwt, { SignedJWT } from '../../../../api/entities/VCLJwt';
+import VCLJwtDescriptor from '../../../../api/entities/VCLJwtDescriptor';
 // import JwtService from "../../../domain/infrastructure/jwt/JwtService";
-import crypto from "crypto";
-import canonicalize from "canonicalize";
-import VCLPublicJwk from "../../../../api/entities/VCLPublicJwk";
+import crypto from 'crypto';
+import canonicalize from 'canonicalize';
+import VCLPublicJwk from '../../../../api/entities/VCLPublicJwk';
 /* 
 export default class JwtServiceImpl implements JwtService {
     parse(jwt: string): Nullish<SignedJWT> {

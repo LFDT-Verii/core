@@ -28,7 +28,7 @@ const generateTestAccessToken = (
   expiresIn,
   exp,
   privateKey,
-  kid
+  kid,
 ) => {
   const tokenPayload = payload != null ? { ...payload } : {};
   if (scope != null) {

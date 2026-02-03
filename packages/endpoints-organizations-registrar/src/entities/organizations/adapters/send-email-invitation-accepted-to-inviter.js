@@ -27,7 +27,7 @@ const mergeCaoServices = async (addedServices, caoServiceRefs) => {
       const caoService = caoServiceRefs[service.serviceEndpoint]?.caoService;
       return isEmpty(caoService) ? null : { ...service, caoService };
     }),
-    compact
+    compact,
   )(addedServices);
 };
 
@@ -35,7 +35,7 @@ const initSendEmailInvitationAcceptedToInviter = async (fastify) => {
   const { sendEmail } = fastify;
   const { getUsersByIds } = await initAuth0Provisioner(fastify.config);
   const { emailToGroupForInvitationAccepted } = initOrganizationRegistrarEmails(
-    fastify.config
+    fastify.config,
   );
 
   return async (data, context) => {
@@ -56,11 +56,11 @@ const initSendEmailInvitationAcceptedToInviter = async (fastify) => {
     }
     const emails = map(
       'email',
-      await getUsersByIds({ userIds: group.clientAdminIds })
+      await getUsersByIds({ userIds: group.clientAdminIds }),
     );
 
     await sendEmail(
-      emailToGroupForInvitationAccepted({ organization, services, emails })
+      emailToGroupForInvitationAccepted({ organization, services, emails }),
     );
   };
 };

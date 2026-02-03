@@ -17,7 +17,7 @@ const findCredentialTypeMetadataBySchemaNameExtension = (parent) => ({
       const closestSchemaName = getClosest(schemaName, schemaNameList);
 
       throw new createError.NotFound(
-        `Schema ${schemaName} not found. Did you mean '${closestSchemaName}'?`
+        `Schema ${schemaName} not found. Did you mean '${closestSchemaName}'?`,
       );
     }
 

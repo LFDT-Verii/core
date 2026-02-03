@@ -26,6 +26,7 @@ export const resolve = async (specifier, ctx, nextResolve) => {
   if (specifier.startsWith(`${SRC_ALIAS}/`)) {
     let resolvedPath = path.join(
       SRC_PATH,
+      // eslint-disable-next-line prettier/prettier
       specifier.slice(SRC_ALIAS.length + 1)
     );
     const ext = extname(specifier);
@@ -43,7 +44,7 @@ export const resolve = async (specifier, ctx, nextResolve) => {
         url: fileUrl,
         shortCircuit: true,
       };
-    } catch (e) {
+    } catch {
       throw new Error(`Cannot resolve alias path: ${specifier}`);
     }
   }

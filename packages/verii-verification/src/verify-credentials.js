@@ -54,7 +54,7 @@ const { resolveDidJwkDocument, toDidUrl } = require('@verii/did-doc');
 const verifyCredentials = async (
   { credentials: jwtVcs, expectedHolderDid, relyingParty },
   fetchers,
-  context
+  context,
 ) => {
   const credentialDataList = mapWithIndex(buildCredentialDataFromJwtVc, jwtVcs);
 
@@ -82,19 +82,19 @@ const verifyCredentials = async (
             boundIssuerVcsMap: keyRefs.boundIssuerVcsMap,
             ...issuerRefs,
           },
-          context
+          context,
         ),
         TRUSTED_HOLDER: checkHolder(
           data.credential,
           expectedHolderDid,
-          context
+          context,
         ),
         UNREVOKED: runCredentialStatusCheck(data, credentialStatusRefs),
         UNEXPIRED: checkExpiration(data.credential),
       };
 
       return { credentialChecks, credential: data.credential };
-    }, credentialDataList)
+    }, credentialDataList),
   );
 };
 
@@ -118,18 +118,18 @@ const isDidVelocityCredential = ({ kid }) => startsWith('did:velocity:', kid);
 const resolveKeyRefs = async (credentialDataList, relyingParty, context) => {
   const [velocityCredentialDataList, otherCredentialDataList] = flow(
     filter(({ keyMetadata }) => keyMetadata.kid != null),
-    partition(({ keyMetadata }) => isDidVelocityCredential(keyMetadata))
+    partition(({ keyMetadata }) => isDidVelocityCredential(keyMetadata)),
   )(credentialDataList);
 
   const resolutions = await Promise.all([
     resolveVelocityDidDocument(
       velocityCredentialDataList,
       relyingParty,
-      context
+      context,
     ),
     ...map(
       (credentialData) => resolveOtherDidDocument(credentialData, context),
-      otherCredentialDataList
+      otherCredentialDataList,
     ),
   ]);
 
@@ -143,12 +143,12 @@ const resolveKeyRefs = async (credentialDataList, relyingParty, context) => {
       return acc;
     },
     {},
-    resolutions
+    resolutions,
   );
 
   const boundIssuerVcsMap = keyBy(
     ({ id }) => toLower(id),
-    first(resolutions)?.didDocumentMetadata?.boundIssuerVcs
+    first(resolutions)?.didDocumentMetadata?.boundIssuerVcs,
   );
 
   return {
@@ -161,7 +161,7 @@ const resolveKeyRefs = async (credentialDataList, relyingParty, context) => {
 const resolveVelocityDidDocument = async (
   credentialData,
   relyingParty,
-  context
+  context,
 ) => {
   if (isEmpty(credentialData)) {
     return {};
@@ -172,7 +172,7 @@ const resolveVelocityDidDocument = async (
   let dltPrivateKey = relyingParty.dltPrivateKey;
   if (dltPrivateKey == null) {
     const { privateJwk: dltJwk } = await kms.exportKeyOrSecret(
-      relyingParty.dltOperatorKMSKeyId
+      relyingParty.dltOperatorKMSKeyId,
     );
     dltPrivateKey = hexFromJwk(dltJwk);
   }
@@ -183,7 +183,7 @@ const resolveVelocityDidDocument = async (
       privateKey: dltPrivateKey,
       rpcProvider,
     },
-    context
+    context,
   );
   const verificationCoupon = await initVerificationCoupon(
     {
@@ -191,12 +191,12 @@ const resolveVelocityDidDocument = async (
       privateKey: dltPrivateKey,
       rpcProvider,
     },
-    context
+    context,
   );
   try {
     const multiDid = `did:velocity:v2:multi:${flow(
       map(({ id }) => id.split(':v2:')[1]),
-      join(';')
+      join(';'),
     )(credentialData)}`;
 
     const { didDocument, didDocumentMetadata, didResolutionMetadata } =
@@ -210,7 +210,7 @@ const resolveVelocityDidDocument = async (
 
     log.info(
       { didDocument, didDocumentMetadata, didResolutionMetadata },
-      'did:velocity doc resolved'
+      'did:velocity doc resolved',
     );
 
     return { didDocument, didDocumentMetadata };
@@ -228,7 +228,7 @@ const resolveOtherDidDocument = async ({ keyMetadata }, { log }) => {
   try {
     const didDocument = await resolveDidJwkDocument(keyMetadata.kid);
     return { didDocument };
-  } catch (err) {
+  } catch {
     log.error({ keyMetadata }, 'did method not supported');
     return { errors: { keyResolutionError: true } };
   }
@@ -247,15 +247,15 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
               fetchers
                 .getOrganizationVerifiedProfile(issuerId, context)
                 .catch(() => {}),
-            issuerIds
-          )
+            issuerIds,
+          ),
         ),
         Promise.all(
           map(
             (issuerId) =>
               fetchers.resolveDid(issuerId, context).catch(() => {}),
-            issuerIds
-          )
+            issuerIds,
+          ),
         ),
         fetchers.getCredentialTypeMetadata(credentialTypes, context),
       ]);
@@ -265,7 +265,7 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
       issuerDidDocumentMap: keyBy('id', issuerDidDocuments),
       credentialTypeMetadatasMap: keyBy(
         'credentialType',
-        credentialTypeMetadatas
+        credentialTypeMetadatas,
       ),
     };
   } catch (error) {
@@ -281,8 +281,8 @@ const resolveCredentialStatuses = async (credentialData, context) => {
       map(
         ({ credential }) =>
           resolveCredentialStatus(credential.credentialStatus),
-        credentialData
-      )
+        credentialData,
+      ),
     );
     return { credentialStatuses };
   } catch {
@@ -299,7 +299,7 @@ const initResolveCredentialStatus = async (context) => {
 
   const { getRevokedStatus } = await initRevocationRegistry(
     { contractAddress: revocationContractAddress, rpcProvider },
-    context
+    context,
   );
 
   return async (credentialStatusEntries) => {
@@ -323,7 +323,8 @@ const initResolveCredentialStatus = async (context) => {
 const runTamperingCheck = (
   { jwtVc, keyMetadata },
   { keyMap, errors },
-  context
+  context,
+  // eslint-disable-next-line complexity
 ) => {
   if (errors?.vouchersExhausted) {
     return CheckResults.VOUCHER_RESERVE_EXHAUSTED;
@@ -348,7 +349,8 @@ const runIssuerTrustCheck = (
     credentialTypeMetadatasMap,
     errors,
   },
-  context
+  context,
+  // eslint-disable-next-line complexity
 ) => {
   const { log } = context;
   if (errors?.metadataRetrievalError) {
@@ -369,7 +371,7 @@ const runIssuerTrustCheck = (
   if (some(isEmpty, Object.values(resolvedDeps))) {
     log.error(
       { id, credential, issuerId, credentialType, resolvedDeps },
-      'runIssuerTrustCheck: resolvedDeps failed'
+      'runIssuerTrustCheck: resolvedDeps failed',
     );
     return Promise.resolve(CheckResults.FAIL);
   }

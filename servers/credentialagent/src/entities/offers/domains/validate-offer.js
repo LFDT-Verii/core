@@ -27,14 +27,14 @@ const {
 
 const initValidateOffer = (fastify) => {
   const vendorOfferValidator = fastify.getDocValidator(
-    newVendorOfferSchema.$id
+    newVendorOfferSchema.$id,
   );
 
   const createSchemaValidator = initLoadSchemaValidate(fastify);
 
   const createValidationError = (validator, path = '$') => {
     return newError.BadRequest(
-      fastify.errorsText(validator.errors, { dataVar: `'${path}'` })
+      fastify.errorsText(validator.errors, { dataVar: `'${path}'` }),
     );
   };
 
@@ -42,7 +42,8 @@ const initValidateOffer = (fastify) => {
     offer,
     isValidateVendorOffer,
     forceCredentialSubjectValidation,
-    context
+    context,
+    // eslint-disable-next-line complexity
   ) => {
     if (isValidateVendorOffer && !vendorOfferValidator(offer)) {
       throw createValidationError(vendorOfferValidator);
@@ -54,7 +55,7 @@ const initValidateOffer = (fastify) => {
     const credentialSubject = omit(['vendorUserId'], offer.credentialSubject);
     const validator = await createSchemaValidator(
       extractCredentialType(offer),
-      context
+      context,
     );
     validator(credentialSubject);
     const validatedOffer = {
@@ -82,7 +83,7 @@ const initValidateOffer = (fastify) => {
 const validateExpirationDates = (offer) => {
   if (offer.expirationDate != null && offer.validUntil != null) {
     throw newError.BadRequest(
-      "'$.expirationDate' and '$.validUntil' cannot both be set"
+      "'$.expirationDate' and '$.validUntil' cannot both be set",
     );
   }
 };

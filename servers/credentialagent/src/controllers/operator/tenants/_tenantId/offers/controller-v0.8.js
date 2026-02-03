@@ -67,7 +67,7 @@ const offerExchangeController = async (fastify) => {
         vendorOffer,
         false,
         false,
-        req
+        req,
       );
 
       const preparedOffers = await prepareOffers([validatedOffer], req);
@@ -75,11 +75,11 @@ const offerExchangeController = async (fastify) => {
       const offer = first(preparedOffers);
       if (includes(offer.contentHash.value, exchange.offerHashes)) {
         throw newError.UnprocessableEntity(
-          'Wallet already contains this offer'
+          'Wallet already contains this offer',
         );
       }
       return repos.offers.insert(offer);
-    }
+    },
   );
 
   fastify.post(
@@ -110,20 +110,20 @@ const offerExchangeController = async (fastify) => {
       const orgDoc = await resolveDid(tenant.did, req);
       if (isEmpty(orgDoc)) {
         throw new newError.NotFound(
-          `No organization found for issuer ${tenant.did}`
+          `No organization found for issuer ${tenant.did}`,
         );
       }
 
       const offers = await repos.offers.find(
         { filter: { exchangeId: exchange._id } },
-        { _id: 1, issuer: 1, offerId: 1, type: 1 }
+        { _id: 1, issuer: 1, offerId: 1, type: 1 },
       );
 
       if (isEmpty(offers)) {
         if (!canPushNotification(exchange)) {
           await repos.exchanges.addState(
             exchange._id,
-            ExchangeStates.NO_OFFERS_RECEIVED
+            ExchangeStates.NO_OFFERS_RECEIVED,
           );
           await repos.exchanges.addState(exchange._id, ExchangeStates.COMPLETE);
           return {};
@@ -140,13 +140,13 @@ const offerExchangeController = async (fastify) => {
             },
           },
           req.exchange.pushDelegate,
-          req
+          req,
         );
         const pushSentAt = new Date();
         await repos.exchanges.addState(
           exchange._id,
           ExchangeStates.NO_OFFERS_RECEIVED,
-          { pushSentAt }
+          { pushSentAt },
         );
         await repos.exchanges.addState(exchange._id, ExchangeStates.COMPLETE);
         return {
@@ -156,7 +156,7 @@ const offerExchangeController = async (fastify) => {
 
       await repos.exchanges.addState(
         exchange._id,
-        ExchangeStates.OFFERS_RECEIVED
+        ExchangeStates.OFFERS_RECEIVED,
       );
 
       const offerIds = map('_id', offers);
@@ -179,7 +179,7 @@ const offerExchangeController = async (fastify) => {
           },
         },
         req.exchange.pushDelegate,
-        req
+        req,
       );
       const pushSentAt = new Date();
       await repos.exchanges.update(exchange._id, { pushSentAt });
@@ -187,7 +187,7 @@ const offerExchangeController = async (fastify) => {
         offerIds,
         pushSentAt,
       };
-    }
+    },
   );
 
   fastify
@@ -214,7 +214,7 @@ const offerExchangeController = async (fastify) => {
       async (req, reply) => {
         const uri = await buildExchangeRequestDeepLink(req);
         return reply.type('text/plain').send(uri);
-      }
+      },
     )
     .get(
       '/qrcode.png',
@@ -244,7 +244,7 @@ const offerExchangeController = async (fastify) => {
         });
 
         return reply.type('image/png').send(qrCodeBuffer);
-      }
+      },
     );
 };
 

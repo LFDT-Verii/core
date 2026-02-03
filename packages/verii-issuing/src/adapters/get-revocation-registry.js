@@ -40,8 +40,8 @@ const getRevocationRegistry = (issuer, context) => {
         rpcProvider,
         privateKey: hexFromJwk(key.privateJwk),
       },
-      context
-    )
+      context,
+    ),
   );
 };
 

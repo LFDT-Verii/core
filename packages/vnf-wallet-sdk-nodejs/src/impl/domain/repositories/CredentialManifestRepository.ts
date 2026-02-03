@@ -2,6 +2,6 @@ import VCLCredentialManifestDescriptor from '../../../api/entities/VCLCredential
 
 export default interface CredentialManifestRepository {
     getCredentialManifest(
-        credentialManifestDescriptor: VCLCredentialManifestDescriptor
+        credentialManifestDescriptor: VCLCredentialManifestDescriptor,
     ): Promise<string>;
 }

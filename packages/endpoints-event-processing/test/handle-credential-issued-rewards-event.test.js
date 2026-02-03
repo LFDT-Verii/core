@@ -22,15 +22,13 @@ const mockWriteDocument = mock.fn();
 const mockBatchTransferCredits = mock.fn(() => Promise.resolve([]));
 const eventsWrapper = { events: [] };
 const mockEventCursor = mock.fn(() => ({
-  [Symbol.asyncIterator]() {
-    return {
-      index: -1,
-      next() {
-        this.index += 1;
-        return eventsWrapper.events[this.index];
-      },
-    };
-  },
+  [Symbol.asyncIterator]: () => ({
+    index: -1,
+    next() {
+      this.index += 1;
+      return eventsWrapper.events[this.index];
+    },
+  }),
 }));
 
 const mockInitMetadataRegistry = mock.fn(async () => ({
@@ -66,7 +64,6 @@ const {
 } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { mongoCloseWrapper } = require('@verii/tests-helpers');
-// eslint-disable-next-line max-len
 const initOrganizationFactory = require('@verii/endpoints-organizations-registrar/src/entities/organizations/factories/organizations-factory');
 const organizationsRepoPlugin = require('@verii/endpoints-organizations-registrar/src/entities/organizations/repos/repo');
 const initCredentialSchemaFactory = require('../../endpoints-credential-types-registrar/test/factories/credential-schema-factory');
@@ -127,7 +124,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
               ev.args[6],
             ],
           }),
-          sampleCredentialEventsArray
+          sampleCredentialEventsArray,
         ),
       },
       { done: true },
@@ -152,10 +149,10 @@ describe('Credential issued event rewards distribution task test suite', () => {
       }),
     ]);
     credentialSchemaHashLayer1 = get2BytesHash(
-      credentialSchemas[0].credentialType
+      credentialSchemas[0].credentialType,
     );
     credentialSchemaHashLayer2 = get2BytesHash(
-      credentialSchemas[1].credentialType
+      credentialSchemas[1].credentialType,
     );
     organizations = await Promise.all([
       persistOrganization(),
@@ -193,7 +190,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
 
     const eventsForMock = [
@@ -307,7 +304,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
 
     expect(mockReadDocument.mock.callCount()).toEqual(1);
     expect(
-      mockReadDocument.mock.calls.map((call) => call.arguments)
+      mockReadDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       { EventName: task },
@@ -315,7 +312,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
 
     expect(mockBatchTransferCredits.mock.callCount()).toEqual(1);
     expect(
-      mockBatchTransferCredits.mock.calls.map((call) => call.arguments)
+      mockBatchTransferCredits.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         transfers: expect.arrayContaining([
@@ -343,7 +340,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
     ]);
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
@@ -361,7 +358,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
 
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
@@ -371,7 +368,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
 
     expect(mockReadDocument.mock.callCount()).toEqual(1);
     expect(
-      mockReadDocument.mock.calls.map((call) => call.arguments)
+      mockReadDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       { EventName: task },
@@ -379,7 +376,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
 
     expect(mockBatchTransferCredits.mock.callCount()).toEqual(1);
     expect(
-      mockBatchTransferCredits.mock.calls.map((call) => call.arguments)
+      mockBatchTransferCredits.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         transfers: expect.arrayContaining([
@@ -407,7 +404,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
     ]);
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
@@ -424,7 +421,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
     const eventsForMock = [
       {
@@ -535,7 +532,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
 
     expect(mockReadDocument.mock.callCount()).toEqual(1);
     expect(
-      mockReadDocument.mock.calls.map((call) => call.arguments)
+      mockReadDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       { EventName: task },
@@ -543,7 +540,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
 
     expect(mockBatchTransferCredits.mock.callCount()).toEqual(1);
     expect(
-      mockBatchTransferCredits.mock.calls.map((call) => call.arguments)
+      mockBatchTransferCredits.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         transfers: expect.arrayContaining([
@@ -566,7 +563,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
 
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
@@ -584,7 +581,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
           EventName: task,
           BlockNumber: 1,
         },
-      })
+      }),
     );
     const eventsForMock = [
       {
@@ -695,7 +692,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
 
     expect(mockReadDocument.mock.callCount()).toEqual(1);
     expect(
-      mockReadDocument.mock.calls.map((call) => call.arguments)
+      mockReadDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       { EventName: task },
@@ -704,7 +701,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
     expect(mockBatchTransferCredits.mock.callCount()).toEqual(0);
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {
@@ -734,7 +731,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
           $unset: {
             ids: '',
           },
-        }
+        },
       );
     const func = async () => handleCredentialIssuedRewardsEvent(testContext);
 
@@ -750,7 +747,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
     expect(mockBatchTransferCredits.mock.callCount()).toEqual(0);
     expect(mockWriteDocument.mock.callCount()).toEqual(1);
     expect(
-      mockWriteDocument.mock.calls.map((call) => call.arguments)
+      mockWriteDocument.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       testContext.config.dynamoDbTableEventBlock,
       {

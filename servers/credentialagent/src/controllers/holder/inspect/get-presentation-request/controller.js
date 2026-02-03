@@ -75,7 +75,7 @@ const controller = async (fastify) => {
           protocolMetadata: {
             protocol: ExchangeProtocols.VNF_API,
           },
-        })
+        }),
       );
       // eslint-disable-next-line better-mutation/no-mutation
       req.exchange = exchange; // exchange is added onto the request for the exchange error handler
@@ -83,17 +83,16 @@ const controller = async (fastify) => {
       const presentationRequest = await createPresentationRequest(
         disclosure,
         exchange,
-        req
+        req,
       );
 
-      // eslint-disable-next-line camelcase
       return {
         presentation_request:
           !isProd && req.query.format === 'json'
             ? presentationRequest
             : await signExchangeResponse(presentationRequest, {}, req),
       };
-    }
+    },
   );
 };
 

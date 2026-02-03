@@ -11,7 +11,7 @@ export default async function authTokenRoutes(fastify) {
   fastify.post('/getAuthToken', async (req, reply) => {
     try {
       reply.send(
-        await req.vclSdk.getAuthToken(authTokenDescriptorFrom(req.body))
+        await req.vclSdk.getAuthToken(authTokenDescriptorFrom(req.body)),
       );
     } catch (error: any) {
       reply.status(error.statusCode ?? 500).send(error);

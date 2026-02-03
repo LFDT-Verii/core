@@ -10,18 +10,16 @@ import VCLJwtVerifiableCredentials from '../../../api/entities/VCLJwtVerifiableC
 import VCLJwt from '../../../api/entities/VCLJwt';
 import VCLFinalizeOffersDescriptor from '../../../api/entities/VCLFinalizeOffersDescriptor';
 
-export default class CredentialDidVerifierImpl
-    implements CredentialDidVerifier
-{
+export default class CredentialDidVerifierImpl implements CredentialDidVerifier {
     async verifyCredentials(
         jwtCredentials: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor
+        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<VCLJwtVerifiableCredentials> {
         const { passedCredentials, failedCredentials } = jwtCredentials.reduce(
             (acc, jwtCredential) => {
                 const isValid = this.verifyCredential(
                     jwtCredential,
-                    finalizeOffersDescriptor.issuerId
+                    finalizeOffersDescriptor.issuerId,
                 );
 
                 return isValid
@@ -43,12 +41,12 @@ export default class CredentialDidVerifierImpl
             {
                 passedCredentials: [] as VCLJwt[],
                 failedCredentials: [] as VCLJwt[],
-            }
+            },
         );
 
         return new VCLJwtVerifiableCredentials(
             passedCredentials,
-            failedCredentials
+            failedCredentials,
         );
     }
 

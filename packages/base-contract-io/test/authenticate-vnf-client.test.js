@@ -81,7 +81,7 @@ describe('VNF Identity Provider Authentication', () => {
       };
 
       initHttpClient.mock.mockImplementationOnce(() =>
-        undiciMock(otherTokenResult)
+        undiciMock(otherTokenResult),
       );
 
       const result = await vnfAuthenticate('API-IDENTIFIER');
@@ -94,7 +94,7 @@ describe('VNF Identity Provider Authentication', () => {
         undiciMock({
           ...tokenResult,
           expires_in: 0,
-        })
+        }),
       );
 
       await vnfAuthenticate('API-IDENTIFIER');
@@ -105,7 +105,7 @@ describe('VNF Identity Provider Authentication', () => {
       };
 
       initHttpClient.mock.mockImplementationOnce(() =>
-        undiciMock(otherTokenResult)
+        undiciMock(otherTokenResult),
       );
 
       const result = await vnfAuthenticate('API-IDENTIFIER');
@@ -138,7 +138,7 @@ describe('VNF Identity Provider Authentication', () => {
       });
 
       expect(
-        decorateRequest.mock.calls.map((call) => call.arguments)
+        decorateRequest.mock.calls.map((call) => call.arguments),
       ).toContainEqual(['vnfBlockchainAuthenticate', null]);
       expect(addHook.mock.calls.map((call) => call.arguments)).toContainEqual([
         'preValidation',

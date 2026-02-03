@@ -17,7 +17,7 @@ export class VCLOrganizationsSearchDescriptor {
          * Matches on partials strings
          * Prefer results that are the first word of the name, or first letter of a word
          */
-        public readonly query: Nullish<string> = null
+        public readonly query: Nullish<string> = null,
     ) {
         this.queryParams = this.generateQueryParams();
     }
@@ -47,7 +47,7 @@ export class VCLOrganizationsSearchDescriptor {
                 (list, index) =>
                     `${
                         VCLOrganizationsSearchDescriptor.KeySort
-                    }[${index}]=${list.join(',')}`
+                    }[${index}]=${list.join(',')}`,
             )
             ?.join('&');
         const pPageSkip =
@@ -64,7 +64,7 @@ export class VCLOrganizationsSearchDescriptor {
         const pQuery =
             this.query &&
             `${VCLOrganizationsSearchDescriptor.KeyQueryQ}=${encodeURIComponent(
-                this.query
+                this.query,
             )}`;
 
         const qParams = [
@@ -107,7 +107,7 @@ export class VCLFilter {
         /**
          * Filters organizations based on credential types e.g. [EducationDegree]
          */
-        public readonly credentialTypes: Nullish<string[]> = null
+        public readonly credentialTypes: Nullish<string[]> = null,
     ) {}
 }
 
@@ -120,6 +120,6 @@ export class VCLPage {
         /**
          * The objectId to skip
          */
-        public readonly skip: Nullish<string> = null
+        public readonly skip: Nullish<string> = null,
     ) {}
 }

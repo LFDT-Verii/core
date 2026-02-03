@@ -7,26 +7,24 @@ import VCLError from '../../../api/entities/error/VCLError';
 import OffersByDeepLinkVerifier from '../../domain/verifiers/OffersByDeepLinkVerifier';
 import VCLLog from '../../utils/VCLLog';
 
-export default class GenerateOffersUseCaseImpl
-    implements GenerateOffersUseCase
-{
+export default class GenerateOffersUseCaseImpl implements GenerateOffersUseCase {
     constructor(
         private generateOffersRepository: GenerateOffersRepository,
-        private offersByDeepLinkVerifier: OffersByDeepLinkVerifier
+        private offersByDeepLinkVerifier: OffersByDeepLinkVerifier,
     ) {}
 
     async generateOffers(
         generateOffersDescriptor: VCLGenerateOffersDescriptor,
-        sessionToken: VCLToken
+        sessionToken: VCLToken,
     ): Promise<VCLOffers> {
         try {
             const offers = await this.generateOffersRepository.generateOffers(
                 generateOffersDescriptor,
-                sessionToken
+                sessionToken,
             );
             return await this.verifyOffersByDeepLink(
                 offers,
-                generateOffersDescriptor
+                generateOffersDescriptor,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);
@@ -35,12 +33,12 @@ export default class GenerateOffersUseCaseImpl
 
     async verifyOffersByDeepLink(
         offers: VCLOffers,
-        generateOffersDescriptor: VCLGenerateOffersDescriptor
+        generateOffersDescriptor: VCLGenerateOffersDescriptor,
     ): Promise<VCLOffers> {
         if (generateOffersDescriptor.credentialManifest.deepLink != null) {
             const isVerified = await this.offersByDeepLinkVerifier.verifyOffers(
                 offers,
-                generateOffersDescriptor.credentialManifest.deepLink
+                generateOffersDescriptor.credentialManifest.deepLink,
             );
             VCLLog.info(`Offers deep link verification result: ${isVerified}`);
         } else {

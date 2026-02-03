@@ -19,9 +19,7 @@ const initReactAdminAuthProvider = (auth) => ({
   login: async () => {},
   // called when the user clicks on the logout button
   logout: (...args) => {
-    // eslint-disable-next-line no-undef
     localStorage.removeItem('RaStore.selectedOrganization');
-    // eslint-disable-next-line no-undef
     localStorage.removeItem('RaStore.agreedTermsAndConditionVersion');
     return auth.logout(...args);
   },

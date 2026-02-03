@@ -14,13 +14,13 @@ export default class JwtServiceUseCaseImpl implements JwtServiceUseCase {
     async verifyJwt(
         jwt: VCLJwt,
         publicJwk: Nullish<VCLPublicJwk>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ) {
         try {
             return await this.jwtServiceRepository.verifyJwt(
                 jwt,
                 publicJwk,
-                remoteCryptoServicesToken
+                remoteCryptoServicesToken,
             );
         } catch (error: any) {
             throw VCLError.fromError(error);
@@ -31,13 +31,13 @@ export default class JwtServiceUseCaseImpl implements JwtServiceUseCase {
         jwtDescriptor: VCLJwtDescriptor,
         didJwk: VCLDidJwk,
         nonce: Nullish<string>,
-        remoteCryptoServicesToken: Nullish<VCLToken>
+        remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<VCLJwt> {
         return this.jwtServiceRepository.generateSignedJwt(
             jwtDescriptor,
             didJwk,
             nonce,
-            remoteCryptoServicesToken
+            remoteCryptoServicesToken,
         );
     }
 }

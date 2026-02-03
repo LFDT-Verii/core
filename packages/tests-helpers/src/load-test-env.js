@@ -19,7 +19,7 @@ const path = require('path');
 
 const loadTestEnv = (
   envFile = path.resolve(__dirname, '..', '.env.test'),
-  override = true
+  override = true,
 ) => {
   dotenv.config({ path: envFile, override });
 };

@@ -35,6 +35,6 @@ module.exports = (app, options, next = () => {}) => {
       },
       extensions: [autoboxIdsExtension, multitenantExtension()],
     },
-    app
+    app,
   );
 };

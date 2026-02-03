@@ -33,7 +33,7 @@ const validateDisclosureByConfigurationType = (disclosure) => {
   const { configurationType, identificationMethods } = disclosure;
   const isVerifiablePresentationMode = includes(
     'verifiable_presentation',
-    identificationMethods
+    identificationMethods,
   );
   ValidationByConfigurationType[
     isVerifiablePresentationMode

@@ -21,7 +21,7 @@ const newError = require('http-errors');
 
 const verifyVerifiablePresentationJwt = async (
   presentationJwt,
-  { vnfProtocolVersion }
+  { vnfProtocolVersion },
 ) => {
   if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
     return wrapVerifyPresentationJwt(presentationJwt);

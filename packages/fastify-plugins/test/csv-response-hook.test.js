@@ -12,7 +12,7 @@ const buildFastify = () => {
     },
     (_, res) => {
       res.send('test');
-    }
+    },
   );
 
   fastify.get(
@@ -22,7 +22,7 @@ const buildFastify = () => {
     },
     () => {
       throw new Error('test');
-    }
+    },
   );
 
   return fastify;
@@ -48,7 +48,7 @@ describe('csvResponseHook Test Suite', () => {
 
     expect(response.statusCode).toEqual(200);
     expect(response.headers['content-disposition']).toEqual(
-      'attachment; filename=test.csv'
+      'attachment; filename=test.csv',
     );
     expect(response.headers['content-type']).toEqual('text/csv');
   });
@@ -62,7 +62,7 @@ describe('csvResponseHook Test Suite', () => {
     expect(response.statusCode).toEqual(500);
     expect(response.headers['content-disposition']).toBeUndefined();
     expect(response.headers['content-type']).toEqual(
-      'application/json; charset=utf-8'
+      'application/json; charset=utf-8',
     );
   });
 });

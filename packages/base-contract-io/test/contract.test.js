@@ -52,7 +52,7 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
 
   const deployContractThatHasEvents = () =>
     deployContract(testEventsAbi, deployerPrivateKey, rpcUrl, (contract) =>
-      contract.initialize(randomAccount, ['0x2c26'])
+      contract.initialize(randomAccount, ['0x2c26']),
     );
 
   before(async () => {
@@ -83,10 +83,10 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
             contractAbi: testEventsAbi,
             rpcProvider,
           },
-          context
+          context,
         );
       expect(func).rejects.toThrow(
-        'Check the required parameters: contractAddress'
+        'Check the required parameters: contractAddress',
       );
     });
 
@@ -100,12 +100,12 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
           contractAbi: testEventsAbi,
           rpcProvider,
         },
-        context
+        context,
       );
 
       expect(contractClient.wallet.provider).toEqual(rpcProvider);
       expect(contractClient.contractClient.runner.provider).toEqual(
-        rpcProvider
+        rpcProvider,
       );
     });
   });
@@ -124,13 +124,13 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
           contractAbi: testEventsAbi,
           rpcProvider,
         },
-        context
+        context,
       );
     });
 
     it('Should be able to get events', async () => {
       const pullFooEvents = contractWithEventsClient.pullEvents(
-        'CreatedMetadataList'
+        'CreatedMetadataList',
       );
       const { latestBlock, eventsCursor } = await pullFooEvents();
 

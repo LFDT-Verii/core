@@ -44,10 +44,10 @@ describe('Send Email and SMS Plugins', () => {
     const fakeServer = { config: { hi: 1 }, decorate: mock.fn(() => {}) };
     await sendEmailPlugin(fakeServer);
     expect(
-      initSendEmailNotification.mock.calls.map((call) => call.arguments)
+      initSendEmailNotification.mock.calls.map((call) => call.arguments),
     ).toEqual([[fakeServer.config]]);
     expect(
-      fakeServer.decorate.mock.calls.map((call) => call.arguments)
+      fakeServer.decorate.mock.calls.map((call) => call.arguments),
     ).toEqual([['sendEmail', 'sendEmailFn']]);
   });
 
@@ -55,10 +55,10 @@ describe('Send Email and SMS Plugins', () => {
     const fakeServer = { config: {}, decorate: mock.fn(() => {}) };
     await sendSmsPlugin(fakeServer);
     expect(
-      initSendSmsNotification.mock.calls.map((call) => call.arguments)
+      initSendSmsNotification.mock.calls.map((call) => call.arguments),
     ).toEqual([[fakeServer.config]]);
     expect(
-      fakeServer.decorate.mock.calls.map((call) => call.arguments)
+      fakeServer.decorate.mock.calls.map((call) => call.arguments),
     ).toEqual([['sendSms', 'sendSmsFn']]);
   });
 });

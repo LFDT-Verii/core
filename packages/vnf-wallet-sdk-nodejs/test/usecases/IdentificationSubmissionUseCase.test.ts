@@ -23,81 +23,81 @@ describe('PresentationSubmission Tests', () => {
     jwtSignServiceMock.sign = mock.fn(() =>
         Promise.resolve(
             VCLJwt.fromEncodedJwt(
-                PresentationSubmissionMocks.JwtEncodedSubmission
-            )
-        )
+                PresentationSubmissionMocks.JwtEncodedSubmission,
+            ),
+        ),
     );
     const jwtVerifyServiceMock = new JwtVerifyServiceMock();
     const jwtServiceRepository = new JwtServiceRepositoryImpl(
         jwtSignServiceMock,
-        jwtVerifyServiceMock
+        jwtVerifyServiceMock,
     );
     const submissionRepository = new SubmissionRepositoryImpl(
         new NetworkServiceSuccess(
-            PresentationSubmissionMocks.PresentationSubmissionResultJson
-        )
+            PresentationSubmissionMocks.PresentationSubmissionResultJson,
+        ),
     );
     const subject = new IdentificationSubmissionUseCaseImpl(
         submissionRepository,
-        jwtServiceRepository
+        jwtServiceRepository,
     );
     const identificationSubmission = new VCLIdentificationSubmission(
         IdentificationSubmissionMocks.CredentialManifest,
-        IdentificationSubmissionMocks.IdentificationList
+        IdentificationSubmissionMocks.IdentificationList,
     );
 
     const expectedExchange = (
-        exchangeJsonObj: Dictionary<any>
+        exchangeJsonObj: Dictionary<any>,
     ): VCLExchange => {
         return new VCLExchange(
             exchangeJsonObj[VCLExchange.KeyId],
             exchangeJsonObj[VCLExchange.KeyType],
             exchangeJsonObj[VCLExchange.KeyDisclosureComplete],
-            exchangeJsonObj[VCLExchange.KeyExchangeComplete]
+            exchangeJsonObj[VCLExchange.KeyExchangeComplete],
         );
     };
     const generateIdentificationSubmissionResult = (
         jsonObj: Dictionary<any>,
         jti: string,
-        submissionId: string
+        submissionId: string,
     ): VCLSubmissionResult => {
         const exchangeJsonObj = jsonObj[VCLSubmissionResult.KeyExchange];
         return new VCLSubmissionResult(
             new VCLToken(jsonObj[VCLSubmissionResult.KeyToken]),
             expectedExchange(exchangeJsonObj),
             jti,
-            submissionId
+            submissionId,
         );
     };
     const expectedPresentationSubmissionResult =
         generateIdentificationSubmissionResult(
             PresentationSubmissionMocks.PresentationSubmissionResultJson,
             identificationSubmission.jti,
-            identificationSubmission.submissionId
+            identificationSubmission.submissionId,
         );
 
     test('testIdentificationSubmissionDidJwk', async () => {
         expect(
-            IdentificationSubmissionMocks.CredentialManifest.didJwk
+            IdentificationSubmissionMocks.CredentialManifest.didJwk,
         ).toStrictEqual(IdentificationSubmissionMocks.DidJwk);
         expect(identificationSubmission.didJwk).toStrictEqual(
-            IdentificationSubmissionMocks.DidJwk
+            IdentificationSubmissionMocks.DidJwk,
         );
     });
 
     test('testIdentificationSubmissionSuccess', async () => {
         const identificationSubmissionResult = await subject.submit(
-            identificationSubmission
+            identificationSubmission,
         );
 
         expect(jwtSignServiceMock.sign.mock.callCount()).toEqual(1);
         expect(jwtSignServiceMock.sign.mock.calls[0].arguments).toEqual([
             new VCLJwtDescriptor(
                 identificationSubmission.generatePayload(
-                    identificationSubmission.didJwk.did
+                    identificationSubmission.didJwk.did,
                 ),
                 identificationSubmission.jti,
-                identificationSubmission.didJwk.did
+                identificationSubmission.didJwk.did,
             ),
             identificationSubmission.didJwk,
             null,
@@ -105,7 +105,7 @@ describe('PresentationSubmission Tests', () => {
         ]);
 
         expect(identificationSubmissionResult).toEqual(
-            expectedPresentationSubmissionResult
+            expectedPresentationSubmissionResult,
         );
     });
 });

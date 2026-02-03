@@ -32,6 +32,6 @@ module.exports = async (fastify) => {
     .addSchema(velocityPresentationSubmissionResponseSchema)
     .register(exchangeLoaderPlugin)
     .addHook('preHandler', async (req) =>
-      ensureExchangeStateValid(ExchangeErrorCodeState.EXCHANGE_INVALID, req)
+      ensureExchangeStateValid(ExchangeErrorCodeState.EXCHANGE_INVALID, req),
     );
 };
