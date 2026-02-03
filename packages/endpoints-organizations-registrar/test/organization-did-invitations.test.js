@@ -546,7 +546,7 @@ describe('Organization invitations test suites', () => {
             code: expect.stringMatching(NANO_ID_FORMAT),
             inviterDid: inviterOrganization.didDoc.id,
             invitationUrl: expect.stringMatching(
-              /http:\/\/localhost.test\/invitations\/[_a-zA-Z0-9]+/,
+              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
             ),
             expiresAt: expect.any(String),
             createdAt: expect.any(String),
@@ -587,7 +587,7 @@ describe('Organization invitations test suites', () => {
             code: expect.stringMatching(NANO_ID_FORMAT),
             inviterDid: inviterOrganization.didDoc.id,
             invitationUrl: expect.stringMatching(
-              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9]+/,
+              /http:\/\/localhost.test\/invitations\/[a-zA-Z0-9_-]+/
             ),
             expiresAt: expect.any(String),
             createdAt: expect.any(String),
