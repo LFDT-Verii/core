@@ -21,7 +21,7 @@
     "@verii/crypto": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
-    "@aws-sdk/client-s3": "^3.731.1",
+    "@aws-sdk/client-s3": "3.981.0",
     "dotenv": "^16.0.0",
     "env-var": "^7.0.0",
     "expect": "30.2.0",
