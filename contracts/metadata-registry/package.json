@@ -27,7 +27,7 @@
     "@verii/verification-coupon-contract": "^0.5.0-build",
     "@verii/permissions-contract": "^0.5.0-build",
     "@verii/signature-verification-library": "^0.5.0-build",
-    "ethers": "6.15.0",
+    "ethers": "6.16.0",
     "ganache": "7.9.2",
     "lodash": "4.17.23",
     "truffle": "5.11.5",
