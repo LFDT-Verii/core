@@ -20,7 +20,7 @@
     "@verii/crypto": "0.5.0-build",
     "http-errors": "^2.0.0",
     "lodash": "^4.17.21",
-    "mongodb": "6.20.0"
+    "mongodb": "6.21.0"
   },
   "devDependencies": {
     "@spencejs/spence-config": "0.10.2",
