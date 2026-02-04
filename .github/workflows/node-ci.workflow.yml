@@ -39,7 +39,7 @@ jobs:
         node-version: ['22.x']
     steps:
     - name: Checkout Repo
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         fetch-depth: 0
     - name: Use Node.js ${{ matrix.node-version }}
@@ -51,7 +51,7 @@ jobs:
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5
+      uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -63,7 +63,7 @@ jobs:
       run: yarn install --frozen-lockfile --prefer-offline
     - name: Save yarn Cache
       id: cache-yarn-save
-      uses: actions/cache/save@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5
+      uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -116,7 +116,7 @@ jobs:
         mongodb-version: ['8.0']
     steps:
     - name: Checkout repo
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         fetch-depth: 0
     - name: Use Node.js ${{ matrix.node-version }}
@@ -128,7 +128,7 @@ jobs:
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5
+      uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -185,7 +185,7 @@ jobs:
         mongodb-version: ['8.0']
     steps:
     - name: Checkout repo
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         fetch-depth: 0
     - name: Start MongoDB
@@ -222,7 +222,7 @@ jobs:
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5
+      uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
