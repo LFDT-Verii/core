@@ -22,7 +22,7 @@
     "@verii/http-client": "^0.5.0-build",
     "date-fns": "^4.0.0",
     "fastify-plugin": "^5.0.0",
-    "ethers": "6.15.0",
+    "ethers": "6.16.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

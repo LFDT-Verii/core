@@ -19,7 +19,7 @@
   "dependencies": {
     "@verii/jwt": "0.5.0-build",
     "lodash": "^4.17.21",
-    "ethers": "~6.15.0"
+    "ethers": "~6.16.0"
   },
   "resolutions": {
     "elliptic": "^6.6.1"
