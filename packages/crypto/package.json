@@ -22,7 +22,7 @@
     "argon2": "0.44.0",
     "bigint-crypto-utils": "3.3.0",
     "canonicalize": "^2.1.0",
-    "cborg": "4.2.18",
+    "cborg": "4.5.8",
     "elliptic": "^6.6.1",
     "lodash": "^4.17.21",
     "random-number-csprng": "^1.0.2"
