@@ -57,7 +57,7 @@
     "eslint-watch": "8.0.0",
     "expect": "30.2.0",
     "form-data": "4.0.5",
-    "globals": "17.2.0",
+    "globals": "17.3.0",
     "mongodb": "6.21.0",
     "nock": "15.0.0-beta.6",
     "prettier": "3.8.1"
