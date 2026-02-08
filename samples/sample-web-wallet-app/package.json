@@ -21,7 +21,7 @@
     "@types/node": "22.19.7",
     "@types/react": "18.3.27",
     "@types/react-dom": "18.3.7",
-    "@vitejs/plugin-react-swc": "4.2.2",
+    "@vitejs/plugin-react-swc": "4.2.3",
     "eslint": "9.39.2",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
