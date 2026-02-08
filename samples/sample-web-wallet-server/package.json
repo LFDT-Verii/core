@@ -33,7 +33,7 @@
     "fastify-plugin": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "22.19.7",
+    "@types/node": "22.19.9",
     "eslint": "9.39.2",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
