@@ -16,6 +16,7 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
+const ethers = require('ethers');
 
 const { generateKeyPair } = require('@verii/crypto');
 const { initContractClient, initProvider } = require('../index');
@@ -119,5 +120,63 @@ describe('Contract Client Nonce Management', { timeout: 120000 }, () => {
     });
 
     expect(failures).toEqual([]);
+  });
+
+  it('resyncs cached signer nonce after external wallet transactions', async () => {
+    const { privateKey: deployerPrivateKey } = generateKeyPair();
+    const rpcProvider = initProvider(rpcUrl, authenticate);
+    const contract = await deployContract(
+      testNoEventsAbi,
+      deployerPrivateKey,
+      rpcUrl,
+    );
+
+    const { contractClient } = await initContractClient(
+      {
+        privateKey: deployerPrivateKey,
+        contractAddress: await contract.getAddress(),
+        rpcProvider,
+        contractAbi: testNoEventsAbi,
+        cacheSigner: true,
+      },
+      {
+        log: {
+          info: () => {},
+          error: () => {},
+        },
+      },
+    );
+
+    await (
+      await contractClient.addAddressScope(
+        targetAddress,
+        `nonce-sync-initial-${Date.now()}`,
+      )
+    ).wait();
+
+    const externalWallet = new ethers.Wallet(
+      `0x${deployerPrivateKey}`,
+      new ethers.JsonRpcProvider(rpcUrl),
+    );
+    await (
+      await externalWallet.sendTransaction({
+        to: targetAddress,
+        value: 0n,
+      })
+    ).wait();
+
+    let sendError;
+    try {
+      await (
+        await contractClient.addAddressScope(
+          targetAddress,
+          `nonce-sync-follow-up-${Date.now()}`,
+        )
+      ).wait();
+    } catch (error) {
+      sendError = error;
+    }
+
+    expect(sendError).toBeUndefined();
   });
 });
