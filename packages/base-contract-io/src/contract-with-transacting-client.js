@@ -15,6 +15,7 @@ const initContractWithTransactingClient = async (
         contractAddress,
         rpcProvider,
         contractAbi,
+        cacheSigner: false,
       },
       context,
     ),
