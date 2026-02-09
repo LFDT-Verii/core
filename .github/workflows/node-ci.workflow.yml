@@ -81,9 +81,42 @@ jobs:
       with:
         main-branch-name: ${{ github.base_ref || steps.split-branch-name.outputs.fragment }}
       if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
-    - name: Get Lint Affected Packages
+    - name: Get Lint Modified Packages
       run: |
-        echo LINT_PACKAGES_LIST=$(yarn --silent nx show projects --affected --with-target lint --json) >> $GITHUB_ENV
+        set -euo pipefail
+
+        mapfile -t MODIFIED_FILES < <(git diff --name-only "$NX_BASE" "$NX_HEAD")
+        if [ ${#MODIFIED_FILES[@]} -eq 0 ]; then
+          echo "LINT_PACKAGES_LIST=[]" >> "$GITHUB_ENV"
+          exit 0
+        fi
+
+        LINT_PROJECTS_JSON=$(yarn --silent nx show projects --with-target lint --json)
+        mapfile -t LINT_PROJECTS < <(echo "$LINT_PROJECTS_JSON" | jq -r '.[]')
+
+        MODIFIED_LINT_PROJECTS=()
+        for PROJECT in "${LINT_PROJECTS[@]}"; do
+          PROJECT_ROOT=$(yarn --silent nx show project "$PROJECT" --json | jq -r '.root')
+          if [[ "$PROJECT_ROOT" == "." ]]; then
+            MODIFIED_LINT_PROJECTS+=("$PROJECT")
+            continue
+          fi
+
+          for FILE in "${MODIFIED_FILES[@]}"; do
+            if [[ "$FILE" == "$PROJECT_ROOT" || "$FILE" == "$PROJECT_ROOT/"* ]]; then
+              MODIFIED_LINT_PROJECTS+=("$PROJECT")
+              break
+            fi
+          done
+        done
+
+        if [ ${#MODIFIED_LINT_PROJECTS[@]} -eq 0 ]; then
+          LINT_PACKAGES_LIST='[]'
+        else
+          LINT_PACKAGES_LIST=$(printf '%s\n' "${MODIFIED_LINT_PROJECTS[@]}" | jq -R . | jq -cs .)
+        fi
+
+        echo "LINT_PACKAGES_LIST=$LINT_PACKAGES_LIST" >> "$GITHUB_ENV"
       if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     - name: Get Lint All Packages
       run: |
@@ -321,4 +354,3 @@ jobs:
     - name: Fail on Failure or Draft PR
       run: exit 1
       if: ${{ contains(needs.*.result, 'failure') }}
-
