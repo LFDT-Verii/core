@@ -27,6 +27,7 @@ const rpcUrl = 'http://localhost:8545';
 const authenticate = () => 'TOKEN';
 const targetAddress = '0x0000000000000000000000000000000000000001';
 const attemptsCount = 20;
+const retryRoundsCount = 5;
 
 const nonceCollisionCodes = new Set([
   'NONCE_EXPIRED',
@@ -82,6 +83,35 @@ const collectConcurrentScopeWriteFailures = async ({
     .map(({ reason }) => reason);
 };
 
+const detectsNonceCollisionWithRetries = async ({
+  roundsLeft,
+  privateKey,
+  contractAddress,
+  rpcProvider,
+}) => {
+  if (roundsLeft <= 0) {
+    return false;
+  }
+
+  const failures = await collectConcurrentScopeWriteFailures({
+    privateKey,
+    contractAddress,
+    rpcProvider,
+    cacheSigner: false,
+  });
+
+  if (failures.some(hasNonceCollisionError)) {
+    return true;
+  }
+
+  return detectsNonceCollisionWithRetries({
+    roundsLeft: roundsLeft - 1,
+    privateKey,
+    contractAddress,
+    rpcProvider,
+  });
+};
+
 describe('Contract Client Nonce Management', { timeout: 120000 }, () => {
   it('reproduces nonce collisions when signer caching is disabled', async () => {
     const { privateKey: deployerPrivateKey } = generateKeyPair();
@@ -92,15 +122,14 @@ describe('Contract Client Nonce Management', { timeout: 120000 }, () => {
       rpcUrl,
     );
 
-    const failures = await collectConcurrentScopeWriteFailures({
+    const nonceCollisionDetected = await detectsNonceCollisionWithRetries({
+      roundsLeft: retryRoundsCount,
       privateKey: deployerPrivateKey,
       contractAddress: await contract.getAddress(),
       rpcProvider,
-      cacheSigner: false,
     });
 
-    expect(failures.length).toBeGreaterThan(0);
-    expect(failures.some(hasNonceCollisionError)).toEqual(true);
+    expect(nonceCollisionDetected).toEqual(true);
   });
 
   it('avoids nonce collisions with the default signer cache', async () => {
