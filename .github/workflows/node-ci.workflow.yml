@@ -91,28 +91,36 @@ jobs:
           exit 0
         fi
 
-        LINT_PROJECTS_JSON=$(yarn --silent nx show projects --with-target lint --json)
-        mapfile -t LINT_PROJECTS < <(echo "$LINT_PROJECTS_JSON" | jq -r '.[]')
+        has_modified_path_for_root() {
+          local project_root="$1"
+          local file
 
-        MODIFIED_LINT_PROJECTS=()
-        for PROJECT in "${LINT_PROJECTS[@]}"; do
-          PROJECT_ROOT=$(yarn --silent nx show project "$PROJECT" --json | jq -r '.root')
-          if [[ "$PROJECT_ROOT" == "." ]]; then
-            MODIFIED_LINT_PROJECTS+=("$PROJECT")
-            continue
+          if [[ "$project_root" == "." ]]; then
+            return 0
           fi
 
-          for FILE in "${MODIFIED_FILES[@]}"; do
-            if [[ "$FILE" == "$PROJECT_ROOT" || "$FILE" == "$PROJECT_ROOT/"* ]]; then
-              MODIFIED_LINT_PROJECTS+=("$PROJECT")
-              break
+          for file in "${MODIFIED_FILES[@]}"; do
+            if [[ "$file" == "$project_root" || "$file" == "$project_root/"* ]]; then
+              return 0
             fi
           done
-        done
 
-        if [ ${#MODIFIED_LINT_PROJECTS[@]} -eq 0 ]; then
-          LINT_PACKAGES_LIST='[]'
-        else
+          return 1
+        }
+
+        mapfile -t MODIFIED_LINT_PROJECTS < <(
+          yarn --silent nx show projects --with-target lint --json \
+            | jq -r '.[]' \
+            | while IFS= read -r project; do
+                project_root=$(yarn --silent nx show project "$project" --json | jq -r '.root')
+                if has_modified_path_for_root "$project_root"; then
+                  printf '%s\n' "$project"
+                fi
+              done
+        )
+
+        LINT_PACKAGES_LIST='[]'
+        if [ ${#MODIFIED_LINT_PROJECTS[@]} -gt 0 ]; then
           LINT_PACKAGES_LIST=$(printf '%s\n' "${MODIFIED_LINT_PROJECTS[@]}" | jq -R . | jq -cs .)
         fi
 
