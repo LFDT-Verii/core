@@ -18,6 +18,8 @@ const { rangeStep } = require('lodash/fp');
 const ethers = require('ethers');
 
 const QueryMaxBlocks = 500;
+const signerByProvider = new WeakMap();
+const signerWithoutProvider = new Map();
 
 const ensureHexPrefix = (privateKey) => {
   const prefix = privateKey?.startsWith('0x') ? '' : '0x';
@@ -70,7 +72,7 @@ const initPullLogEntries =
   };
 
 const initContractClient = async (
-  { privateKey, contractAddress, rpcProvider, contractAbi },
+  { privateKey, contractAddress, rpcProvider, contractAbi, cacheSigner = true },
   context,
 ) => {
   context.log.info({ privateKey, contractAddress }, 'initContractClient');
@@ -79,7 +81,7 @@ const initContractClient = async (
   }
 
   const wallet = privateKey
-    ? new ethers.Wallet(ensureHexPrefix(privateKey), rpcProvider)
+    ? initWalletSigner(ensureHexPrefix(privateKey), rpcProvider, cacheSigner)
     : null;
 
   const contractClient = new ethers.Contract(
@@ -93,6 +95,44 @@ const initContractClient = async (
   context.log.info('initContractClient done');
 
   return { wallet, contractClient, pullEvents };
+};
+
+const initWalletSigner = (privateKey, rpcProvider, cacheSigner) => {
+  const baseWallet = new ethers.Wallet(privateKey, rpcProvider);
+
+  if (!cacheSigner) {
+    return baseWallet;
+  }
+  const signerCache = getSignerCache(rpcProvider);
+  const signerCacheKey =
+    baseWallet.signingKey.publicKey?.toLowerCase() ??
+    baseWallet.address.toLowerCase();
+  if (signerCache.has(signerCacheKey)) {
+    return signerCache.get(signerCacheKey);
+  }
+
+  const signer = new ethers.NonceManager(baseWallet);
+
+  signerCache.set(signerCacheKey, signer);
+
+  return signer;
+};
+
+const getSignerCache = (rpcProvider) => {
+  if (
+    rpcProvider == null ||
+    (typeof rpcProvider !== 'object' && typeof rpcProvider !== 'function')
+  ) {
+    return signerWithoutProvider;
+  }
+
+  if (signerByProvider.has(rpcProvider)) {
+    return signerByProvider.get(rpcProvider);
+  }
+
+  const signerCache = new Map();
+  signerByProvider.set(rpcProvider, signerCache);
+  return signerCache;
 };
 
 module.exports = {
