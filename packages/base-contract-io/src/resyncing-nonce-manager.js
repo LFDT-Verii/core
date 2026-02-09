@@ -15,6 +15,7 @@
  */
 
 const ethers = require('ethers');
+const { enqueue } = require('./sequential-promise-queue');
 
 const nonceConflictErrorCodes = new Set([
   'NONCE_EXPIRED',
@@ -93,11 +94,11 @@ class ResyncingNonceManager extends ethers.NonceManager {
       }
     };
 
-    const txPromise = this.sendQueue.then(sendWithRetry, sendWithRetry);
-    this.sendQueue = txPromise.then(
-      () => undefined,
-      () => undefined,
+    const { taskPromise: txPromise, nextQueue } = enqueue(
+      this.sendQueue,
+      sendWithRetry,
     );
+    this.sendQueue = nextQueue;
     return txPromise;
   }
 }
