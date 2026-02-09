@@ -25,10 +25,11 @@ const deployContract = async (
   const provider = new ethers.JsonRpcProvider(rpcUrl);
   provider.pollingInterval = 100;
   const wallet = new ethers.Wallet(`0x${deployerPrivateKey}`, provider);
+  const managedWallet = new ethers.NonceManager(wallet);
   const factory = new ethers.ContractFactory(
     contractAbi.abi,
     contractAbi.bytecode,
-    wallet,
+    managedWallet,
   );
   const contract = await factory.deploy();
   await contract.waitForDeployment();
