@@ -99,19 +99,18 @@ const initContractClient = async (
 };
 
 const initWalletSigner = (privateKey, rpcProvider, cacheSigner) => {
-  const baseWallet = new ethers.Wallet(privateKey, rpcProvider);
-
   if (!cacheSigner) {
-    return baseWallet;
+    return new ethers.Wallet(privateKey, rpcProvider);
   }
+
   const signerCache = getSignerCache(rpcProvider);
-  const signerCacheKey =
-    baseWallet.signingKey.publicKey?.toLowerCase() ??
-    baseWallet.address.toLowerCase();
+  const signerCacheKey = ethers.computeAddress(privateKey).toLowerCase();
+
   if (signerCache.has(signerCacheKey)) {
     return signerCache.get(signerCacheKey);
   }
 
+  const baseWallet = new ethers.Wallet(privateKey, rpcProvider);
   const signer = new ResyncingNonceManager(baseWallet);
 
   signerCache.set(signerCacheKey, signer);
