@@ -66,15 +66,20 @@ class ResyncingNonceManager extends ethers.NonceManager {
     const sendOnce = async () => {
       const noncePromise = this.getNonce('pending');
       this.increment();
-      const nonce = await noncePromise;
-      const populatedTransaction = await this.signer.populateTransaction({
-        ...(tx || {}),
-        nonce,
-      });
-      return this.signer.sendTransaction({
-        ...populatedTransaction,
-        nonce,
-      });
+      try {
+        const nonce = await noncePromise;
+        const populatedTransaction = await this.signer.populateTransaction({
+          ...(tx || {}),
+          nonce,
+        });
+        return this.signer.sendTransaction({
+          ...populatedTransaction,
+          nonce,
+        });
+      } catch (error) {
+        this.reset();
+        throw error;
+      }
     };
 
     const sendWithRetry = async () => {
