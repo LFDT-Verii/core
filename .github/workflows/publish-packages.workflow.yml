@@ -73,7 +73,7 @@ jobs:
         run: echo "LERNA_BIN=$(yarn global bin)/lerna" >> $GITHUB_ENV
       # Set Version
       - name: Set Version
-        run: "$LERNA_BIN" version --no-git-tag-version --no-push --exact --yes ${{ env.NPM_VER_NUM }}
+        run: '"$LERNA_BIN" version --no-git-tag-version --no-push --exact --yes ${{ env.NPM_VER_NUM }}'
       # Git Set Identity
       - name: Git Identity
         run: |
@@ -90,6 +90,6 @@ jobs:
       # Lerna v9+ has native support for npm trusted publishing
       # See: https://lerna.js.org/docs/features/version-and-publish
       - name: Publish NpmJS
-        run: "$LERNA_BIN" publish --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"
+        run: '"$LERNA_BIN" publish --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"'
         env:
           NPM_CONFIG_PROVENANCE: true
