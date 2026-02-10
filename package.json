@@ -19,7 +19,6 @@
     "test:affected": "cross-env NODE_ENV=test nx affected --target=test",
     "depcheck": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --oneline",
     "depcheck-ci": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --json",
-    "update-version": "lerna publish --skip-git --skip-npm --force-publish '*'",
     "check-packages": "yarn clean && yarn compile && yarn test && yarn lint",
     "check-licenses": "yarn licenses list --production --json | grep table | node ./check-license.js",
     "start": "docker-compose up",
@@ -48,7 +47,6 @@
     "cross-env": "10.1.0",
     "depcheck": "1.4.7",
     "husky": "4.3.8",
-    "lerna": "9.0.3",
     "lodash-es": "4.17.23",
     "nx": "21.6.10",
     "typescript": "5.9.3"
