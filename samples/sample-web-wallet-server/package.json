@@ -26,7 +26,7 @@
     "@fastify/cors": "^11.0.0",
     "@verii/vc-checks": "0.5.0-build",
     "@verii/vnf-nodejs-wallet-sdk": "0.5.0-build",
-    "axios": "^1.7.9",
+    "axios": "^1.13.5",
     "env-var": "^7.5.0",
     "dotenv": "^16.4.7",
     "fastify": "^5.0.0",
