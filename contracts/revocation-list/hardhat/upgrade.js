@@ -1,0 +1,74 @@
+const path = require('path');
+const { ethers, upgrades } = require('hardhat');
+const {
+  getChainId,
+  readManifest,
+  resolveProxyAddress,
+} = require('../../hardhat.deploy-utils');
+
+const packageDir = path.resolve(__dirname, '..');
+const permissionsPackageDir = path.resolve(__dirname, '../../permissions');
+
+const resolvePermissionsAddress = (chainId) => {
+  const manifestData = readManifest(permissionsPackageDir, chainId);
+  return resolveProxyAddress({
+    envVar: 'PERMISSIONS_PROXY_ADDRESS',
+    manifest: manifestData?.manifest,
+    preferredIndex: 0,
+    fallback: 'first',
+    label: 'permissions proxy',
+  });
+};
+
+const resolveRevocationAddress = (chainId) => {
+  const manifestData = readManifest(packageDir, chainId);
+  return resolveProxyAddress({
+    envVar: 'REVOCATION_PROXY_ADDRESS',
+    manifest: manifestData?.manifest,
+    preferredIndex: 0,
+    fallback: 'first',
+    label: 'revocation proxy',
+  });
+};
+
+async function main() {
+  const chainId = await getChainId(ethers);
+  const proxyAddress = resolveRevocationAddress(chainId);
+  if (!proxyAddress) {
+    throw new Error(
+      'Revocation proxy address is required (set REVOCATION_PROXY_ADDRESS or provide revocation manifest)',
+    );
+  }
+
+  const RevocationRegistry = await ethers.getContractFactory(
+    'RevocationRegistry',
+  );
+  const instance = await upgrades.upgradeProxy(proxyAddress, RevocationRegistry, {
+    kind: 'transparent',
+  });
+  await instance.waitForDeployment();
+
+  const permissionsAddress = resolvePermissionsAddress(chainId);
+  if (!permissionsAddress) {
+    throw new Error(
+      'Permissions proxy address is required (set PERMISSIONS_PROXY_ADDRESS or provide permissions manifest)',
+    );
+  }
+
+  const currentPermissionsAddress = await instance.getPermissionsAddress();
+  if (
+    currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase()
+  ) {
+    const setPermissionsTx = await instance.setPermissionsAddress(
+      permissionsAddress,
+    );
+    await setPermissionsTx.wait();
+  }
+
+  console.log(`REVOCATION_PROXY_ADDRESS=${await instance.getAddress()}`);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
