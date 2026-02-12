@@ -8,3 +8,18 @@ Contains Verii's Core Components
 - Registrar endpoints
 - Credential agent
 - Mock vendor
+
+## Development
+
+```bash
+yarn install
+yarn build
+yarn test
+yarn lint
+```
+
+## Package Publishing
+
+- Package publishing is handled by GitHub Actions via `.github/workflows/publish-packages.workflow.yml`.
+- The workflow installs `lerna` globally in CI and runs publish from there.
+- The root repo does not rely on a local `lerna` dependency for publishing.
