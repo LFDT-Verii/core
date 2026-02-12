@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "truffle test --migrate-none",
+    "test": "hardhat test",
+    "test:truffle": "truffle test --migrate-none",
     "build": "truffle compile --all",
     "build:hardhat": "hardhat compile",
     "clean:hardhat": "hardhat clean",

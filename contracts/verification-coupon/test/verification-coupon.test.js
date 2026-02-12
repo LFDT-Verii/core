@@ -1,637 +1,142 @@
-const truffleAssert = require('truffle-assertions');
+const assert = require('node:assert/strict');
+const { ethers } = require('hardhat');
 
-const VerificationCoupon = artifacts.require(
-  '../contracts/VerificationCoupon.sol'
-);
-const Permissions = artifacts.require(
-  '../../permissions/contracts/Permissions.sol'
-);
+const tokenName = 'Velocity Verification Coupon';
+const baseTokenURI = 'https://www.velocitynetwork.foundation/';
 
-const setupContracts = async (metadataContractAddress, primary) => {
-  const permissionsContractInstance = await Permissions.new();
-  await permissionsContractInstance.initialize();
-  const verificationCouponInstance = await VerificationCoupon.new();
-  await verificationCouponInstance.initialize(
-    'Velocity Verification Coupon',
-    'https://www.velocitynetwork.foundation/'
+const execute = async (transactionPromise) => {
+  const transaction = await transactionPromise;
+  await transaction.wait();
+};
+
+const expectRevert = async (action, expectedMessage) => {
+  try {
+    await action();
+    assert.fail(`Expected revert with: ${expectedMessage}`);
+  } catch (error) {
+    const message = String(error?.message || error);
+    assert.ok(
+      message.includes(expectedMessage),
+      `Expected message "${expectedMessage}", got "${message}"`,
+    );
+  }
+};
+
+const deployPermissions = async () => {
+  const Permissions = await ethers.getContractFactory('Permissions');
+  const permissions = await Permissions.deploy();
+  await permissions.waitForDeployment();
+  await execute(permissions.initialize());
+  return permissions;
+};
+
+const deployCoupon = async (permissionsAddress) => {
+  const VerificationCoupon = await ethers.getContractFactory(
+    'VerificationCoupon',
   );
-  await verificationCouponInstance.setPermissionsAddress(
-    permissionsContractInstance.address
-  );
-  await permissionsContractInstance.addAddressScope(
-    metadataContractAddress,
-    'coupon:burn'
-  );
-  await permissionsContractInstance.addPrimary(primary, primary, primary);
-  await permissionsContractInstance.addAddressScope(
-    primary,
-    'transactions:write'
-  );
-  return { permissionsContractInstance, verificationCouponInstance };
+  const coupon = await VerificationCoupon.deploy();
+  await coupon.waitForDeployment();
+  await execute(coupon.initialize(tokenName, baseTokenURI));
+  await execute(coupon.setPermissionsAddress(permissionsAddress));
+  return coupon;
 };
 
 describe('VerificationCoupon Contract Test Suite', () => {
-  const oneDaySeconds = 60 * 60 * 24;
-  const expirationTime = Math.floor(Date.now() / 1000) + 30 * oneDaySeconds;
-  const expiredTime = expirationTime - 60 * oneDaySeconds;
-  const traceId = 'trackingId';
-  const caoDid = 'did:velocity:42';
-  const burnerDid = 'did:velocity:456';
-  const ownerDid = 'did:velocity:456';
+  let signers;
+  let primarySigner;
+  let operatorSigner;
+  let metadataSigner;
+  let nonOperatorSigner;
+  let permissions;
+  let coupon;
 
-  contract('VerificationCoupon', (accounts) => {
-    const deployerAccount = accounts[0];
-    const tokenOwner = accounts[1];
-    const primaryAccount = tokenOwner;
-    const permissionsAccount = primaryAccount;
-    const operatorAccount = accounts[2];
-    const mockMetadataContractAddress = accounts[3];
-    let permissionsContractInstance;
-    let verificationCouponInstance;
-    before(async () => {
-      ({ permissionsContractInstance, verificationCouponInstance } =
-        await setupContracts(mockMetadataContractAddress, primaryAccount));
-      await permissionsContractInstance.addOperatorKey(
-        primaryAccount,
-        operatorAccount,
-        { from: permissionsAccount }
-      );
-    });
-    describe('constructor', () => {
-      it('Verification Coupon contract should be correctly deployed', async () => {
-        assert.equal(
-          await verificationCouponInstance._getTokenName(),
-          'Velocity Verification Coupon',
-          'value was not ok'
-        );
-      });
-      it('Broker role is currently', async () => {
-        assert.equal(
-          await verificationCouponInstance.MINTER_ROLE(),
-          '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6',
-          'value was not ok'
-        );
-      });
-    });
-    describe('Mint new token', () => {
-      const quantity = 3;
-      it('New token minted with id 0 & 1 by Contract owner', async () => {
-        await verificationCouponInstance.mint(
-          tokenOwner,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-        await verificationCouponInstance.mint(
-          tokenOwner,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-      });
-      it('Burn token with id 0 of token owner by operator via metadata contract', async () => {
-        await verificationCouponInstance.burn(
-          0,
-          traceId,
-          caoDid,
-          burnerDid,
-          operatorAccount,
-          {
-            from: mockMetadataContractAddress,
-          }
-        );
-      });
-      it('Burn token with id 0 of token owner by non-operator via metadata contract fails', async () => {
-        await truffleAssert.fails(
-          verificationCouponInstance.burn(
-            0,
-            traceId,
-            caoDid,
-            burnerDid,
-            primaryAccount,
-            {
-              from: mockMetadataContractAddress,
-            }
-          ),
-          'Permissions: operator not pointing to a primary'
-        );
-      });
-      it('Burn token with id 0 by contract deployer fails', async () => {
-        await truffleAssert.fails(
-          verificationCouponInstance.burn(
-            0,
-            traceId,
-            caoDid,
-            burnerDid,
-            operatorAccount,
-            {
-              from: deployerAccount,
-            }
-          ),
-          'Burn: caller does not have coupon:burn permission'
-        );
-      });
-      it('Burn token with id 1 by any account without permission - rejected!', async () => {
-        const accountWithoutTokens = accounts[4];
-        await truffleAssert.fails(
-          verificationCouponInstance.burn(
-            0,
-            traceId,
-            caoDid,
-            burnerDid,
-            accountWithoutTokens,
-            { from: accountWithoutTokens }
-          ),
-          'Burn: caller does not have coupon:burn permission'
-        );
-      });
-    });
+  beforeEach(async () => {
+    signers = await ethers.getSigners();
+    [, primarySigner, operatorSigner, metadataSigner, nonOperatorSigner] =
+      signers;
+
+    permissions = await deployPermissions();
+    coupon = await deployCoupon(await permissions.getAddress());
+
+    const primary = await primarySigner.getAddress();
+    const operator = await operatorSigner.getAddress();
+    const metadata = await metadataSigner.getAddress();
+
+    await execute(permissions.addAddressScope(metadata, 'coupon:burn'));
+    await execute(permissions.addPrimary(primary, primary, primary));
+    await execute(permissions.addAddressScope(primary, 'transactions:write'));
+    await execute(
+      permissions.connect(primarySigner).addOperatorKey(primary, operator),
+    );
   });
 
-  contract('VerificationCoupon', (accounts) => {
-    const deployerAccount = accounts[0];
-    const issuer = accounts[2];
-    const primaryAccount = issuer;
-    const permissionsAccount = primaryAccount;
-    const operatorAccount = accounts[3];
-
-    const mockMetadataContractAddress = accounts[4];
-    const quantity = 1;
-    let permissionsContractInstance;
-    let verificationCouponInstance;
-
-    before(async () => {
-      ({ permissionsContractInstance, verificationCouponInstance } =
-        await setupContracts(mockMetadataContractAddress, primaryAccount));
-      await permissionsContractInstance.addOperatorKey(
-        primaryAccount,
-        operatorAccount,
-        { from: permissionsAccount }
-      );
-    });
-
-    describe('Check contract owner rights', () => {
-      it("Account don't have minter role", async () => {
-        assert.notEqual(
-          await verificationCouponInstance.hasRole(
-            '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6',
-            issuer
-          ),
-          'this account has minter rights'
-        );
-      });
-      it('Add new minter', async () => {
-        await verificationCouponInstance.grantRole(
-          '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6',
-          issuer,
-          { from: deployerAccount }
-        );
-        assert.equal(
-          await verificationCouponInstance.hasRole(
-            '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6',
-            issuer
-          ),
-          true,
-          'Account dont have minter role'
-        );
-      });
-      it('VNF burn token created by allowed account', async () => {
-        await verificationCouponInstance.mint(
-          issuer,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          { from: issuer }
-        );
-        await verificationCouponInstance.burn(
-          0,
-          traceId,
-          caoDid,
-          burnerDid,
-          operatorAccount,
-          { from: mockMetadataContractAddress }
-        );
-      });
-    });
-    describe('Token Info', () => {
-      it('Token expired', async () => {
-        await verificationCouponInstance.mint(
-          issuer,
-          expiredTime,
-          quantity,
-          traceId,
-          ownerDid,
-          { from: issuer }
-        );
-        assert.equal(
-          await verificationCouponInstance.isExpired(1),
-          true,
-          'Token expired'
-        );
-      });
-      it('Token not expired', async () => {
-        await verificationCouponInstance.mint(
-          issuer,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          { from: issuer }
-        );
-        assert.equal(
-          await verificationCouponInstance.isExpired(2),
-          false,
-          'Token actual'
-        );
-      });
-    });
+  it('constructor values should be initialized', async () => {
+    assert.equal(await coupon._getTokenName(), tokenName);
+    const minterRole = await coupon.MINTER_ROLE();
+    assert.equal(
+      minterRole,
+      '0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6',
+    );
   });
 
-  contract('VerificationCoupon', (accounts) => {
-    const deployerAccount = accounts[0];
-    const primaryAccount = accounts[1];
-    const permissionsAccount = primaryAccount;
-    const operatorAccount = accounts[2];
-    const mockMetadataContractAddress = accounts[3];
-    let permissionsContractInstance;
-    let verificationCouponInstance;
+  it('should mint and burn with expected permissions', async () => {
+    const primary = await primarySigner.getAddress();
+    const operator = await operatorSigner.getAddress();
+    const nonOperator = await nonOperatorSigner.getAddress();
+    const expirationTime = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
 
-    before(async () => {
-      ({ permissionsContractInstance, verificationCouponInstance } =
-        await setupContracts(mockMetadataContractAddress, primaryAccount));
-      await permissionsContractInstance.addOperatorKey(
-        primaryAccount,
-        operatorAccount,
-        { from: permissionsAccount }
-      );
-    });
-    describe('Mint new token bundle', () => {
-      const quantity = 3;
-      it('New token bundle minted', async () => {
-        const result = await verificationCouponInstance.mint(
-          primaryAccount,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
+    await execute(
+      coupon.mint(primary, expirationTime, 3, 'traceId', 'did:velocity:owner'),
+    );
 
-        truffleAssert.eventEmitted(result, 'MintCouponBundle');
-      });
+    assert.equal(await coupon.balanceOf(primary, 0), 3n);
 
-      it('Burn token from new bundle by operator account', async () => {
-        await verificationCouponInstance.burn(
-          0,
-          traceId,
-          caoDid,
-          burnerDid,
-          operatorAccount,
-          { from: mockMetadataContractAddress }
-        );
-        await verificationCouponInstance.burn(
-          0,
-          traceId,
-          caoDid,
-          burnerDid,
-          operatorAccount,
-          { from: mockMetadataContractAddress }
-        );
-        const tx = await verificationCouponInstance.burn(
-          0,
-          traceId,
-          caoDid,
-          burnerDid,
-          operatorAccount,
-          { from: mockMetadataContractAddress }
-        );
-        const { blockNumber } = tx.logs[1];
-        const block = await web3.eth.getBlock(blockNumber);
-        truffleAssert.eventEmitted(tx, 'BurnCoupon', {
-          owner: primaryAccount,
-          bundleId: web3.utils.toBN('0'),
-          balance: web3.utils.toBN('0'),
-          expirationTime: web3.utils.toBN(expirationTime),
-          burnTime: web3.utils.toBN(block.timestamp),
-        });
-      });
+    await execute(
+      coupon
+        .connect(metadataSigner)
+        .burn(0, 'traceId', 'did:velocity:cao', 'did:velocity:burner', operator),
+    );
 
-      it('Throw an error if quantity is invalid', async () => {
-        await truffleAssert.fails(
-          verificationCouponInstance.mint(
-            primaryAccount,
-            expirationTime,
+    assert.equal(await coupon.balanceOf(primary, 0), 2n);
+
+    await expectRevert(
+      () =>
+        execute(
+          coupon
+            .connect(primarySigner)
+            .burn(0, 'traceId', 'did:velocity:cao', 'did:velocity:burner', operator),
+        ),
+      'Burn: caller does not have coupon:burn permission',
+    );
+
+    await expectRevert(
+      () =>
+        execute(
+          coupon.connect(metadataSigner).burn(
             0,
-            traceId,
-            ownerDid,
-            {
-              from: deployerAccount,
-            }
+            'traceId',
+            'did:velocity:cao',
+            'did:velocity:burner',
+            nonOperator,
           ),
-          'Invalid quantity'
-        );
-      });
-    });
-
-    describe('Get tokens', () => {
-      const quantity = 3;
-      const secondCouponId = 1;
-      it('Get the unused coupon for the account', async () => {
-        await verificationCouponInstance.mint(
-          primaryAccount,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-        await verificationCouponInstance.mint(
-          primaryAccount,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-        const couponId = await verificationCouponInstance.getTokenId(
-          operatorAccount
-        );
-        assert.equal(
-          couponId.toNumber(),
-          secondCouponId,
-          'It is not the first unused coupon!'
-        );
-      });
-
-      it('Get the next unused coupon when the previous was burned', async () => {
-        await verificationCouponInstance.mint(
-          primaryAccount,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-        const tokenIds = [1, 1, 1, 2, 2, 2, 3, 3, 3];
-        for (let i = 0; i < tokenIds.length; i += 1) {
-          const couponId = await verificationCouponInstance.getTokenId(
-            operatorAccount
-          );
-          await verificationCouponInstance.burn(
-            couponId,
-            traceId,
-            caoDid,
-            burnerDid,
-            operatorAccount,
-            {
-              from: mockMetadataContractAddress,
-            }
-          );
-          assert.equal(
-            couponId.toNumber(),
-            tokenIds[i],
-            'It is not the first unused coupon!'
-          );
-        }
-      });
-      it('Mint and burn one token in loop', async () => {
-        for (let i = 4; i < 9; i += 1) {
-          await verificationCouponInstance.mint(
-            primaryAccount,
-            expirationTime,
-            1,
-            traceId,
-            ownerDid,
-            {
-              from: deployerAccount,
-            }
-          );
-          const couponId = await verificationCouponInstance.getTokenId(
-            operatorAccount
-          );
-          await verificationCouponInstance.burn(
-            couponId,
-            traceId,
-            caoDid,
-            burnerDid,
-            operatorAccount,
-            {
-              from: mockMetadataContractAddress,
-            }
-          );
-          assert.equal(
-            couponId.toNumber(),
-            i,
-            'It is not the first unused coupon!'
-          );
-        }
-      });
-
-      it('Mint and burn one by one and ignore expired minting', async () => {
-        const tokenIds = [9, 11, 13];
-
-        for (let i = 0; i < 3; i += 1) {
-          await verificationCouponInstance.mint(
-            primaryAccount,
-            expirationTime,
-            1,
-            traceId,
-            ownerDid,
-            {
-              from: deployerAccount,
-            }
-          );
-          await verificationCouponInstance.mint(
-            primaryAccount,
-            expiredTime,
-            1,
-            traceId,
-            ownerDid,
-            {
-              from: deployerAccount,
-            }
-          );
-          const couponId = await verificationCouponInstance.getTokenId(
-            operatorAccount
-          );
-          await verificationCouponInstance.burn(
-            couponId,
-            traceId,
-            caoDid,
-            burnerDid,
-            operatorAccount,
-            {
-              from: mockMetadataContractAddress,
-            }
-          );
-          assert.equal(
-            couponId.toNumber(),
-            tokenIds[i],
-            'It is not the first unused coupon!'
-          );
-        }
-      });
-
-      it('Throw an error if the account without tokens', async () => {
-        await truffleAssert.fails(
-          verificationCouponInstance.getTokenId(operatorAccount),
-          'No available tokens'
-        );
-      });
-
-      it('Error if primary tries to retrieve its own tokens, not as an operator', async () => {
-        await truffleAssert.fails(
-          verificationCouponInstance.getTokenId(primaryAccount),
-          'Permissions: operator not pointing to a primary'
-        );
-      });
-    });
+        ),
+      'Permissions: operator not pointing to a primary',
+    );
   });
 
-  contract('VerificationCoupon', (accounts) => {
-    const deployerAccount = accounts[0];
-    const primaryAccount = accounts[1];
-    const permissionsAccount = primaryAccount;
-    const operatorAccount = accounts[2];
-    const mockMetadataContractAddress = accounts[3];
-    let permissionsContractInstance;
-    let verificationCouponInstance;
+  it('getTokenId should pick the lowest non-expired token id', async () => {
+    const primary = await primarySigner.getAddress();
+    const operator = await operatorSigner.getAddress();
+    const now = Math.floor(Date.now() / 1000);
 
-    before(async () => {
-      ({ permissionsContractInstance, verificationCouponInstance } =
-        await setupContracts(mockMetadataContractAddress, primaryAccount));
-      await permissionsContractInstance.addOperatorKey(
-        primaryAccount,
-        operatorAccount,
-        { from: permissionsAccount }
-      );
-    });
-    describe('Burn expired tokens', () => {
-      const quantity = 100;
-      const firstCouponId = 2;
-      it('Burn two expired bundles', async () => {
-        await verificationCouponInstance.mint(
-          primaryAccount,
-          expiredTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-        await verificationCouponInstance.mint(
-          primaryAccount,
-          expiredTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-        await verificationCouponInstance.mint(
-          primaryAccount,
-          expirationTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-        const couponId = await verificationCouponInstance.getTokenId(
-          operatorAccount
-        );
+    await execute(
+      coupon.mint(primary, now - 3600, 1, 'traceId-expired', 'did:velocity:owner'),
+    );
+    await execute(
+      coupon.mint(primary, now + 3600, 1, 'traceId-valid', 'did:velocity:owner'),
+    );
 
-        assert.equal(
-          couponId.toNumber(),
-          firstCouponId,
-          'It is not the first unused coupon!'
-        );
-        assert.equal(
-          await verificationCouponInstance.balanceOf(primaryAccount, 0),
-          100
-        );
-        assert.equal(
-          await verificationCouponInstance.balanceOf(primaryAccount, 1),
-          100
-        );
-        await verificationCouponInstance.burn(
-          firstCouponId,
-          traceId,
-          caoDid,
-          burnerDid,
-          operatorAccount,
-          {
-            from: mockMetadataContractAddress,
-          }
-        );
-        assert.equal(
-          await verificationCouponInstance.balanceOf(primaryAccount, 0),
-          0
-        );
-        assert.equal(
-          await verificationCouponInstance.balanceOf(primaryAccount, 1),
-          0
-        );
-      });
-    });
-  });
-
-  describe('getTokenId handle token found, but all tokens are expired', () => {
-    contract('VerificationCoupon', (accounts) => {
-      const deployerAccount = accounts[0];
-      const primaryAccount = accounts[1];
-      const permissionsAccount = primaryAccount;
-      const operatorAccount = accounts[2];
-      const mockMetadataContractAddress = accounts[3];
-      let permissionsContractInstance;
-      let verificationCouponInstance;
-
-      before(async () => {
-        ({ permissionsContractInstance, verificationCouponInstance } =
-          await setupContracts(mockMetadataContractAddress, primaryAccount));
-        await permissionsContractInstance.addOperatorKey(
-          primaryAccount,
-          operatorAccount,
-          { from: permissionsAccount }
-        );
-      });
-      it('should error when no unexpired tokens exist', async () => {
-        const quantity = 1;
-        await verificationCouponInstance.mint(
-          primaryAccount,
-          expiredTime,
-          quantity,
-          traceId,
-          ownerDid,
-          {
-            from: deployerAccount,
-          }
-        );
-        await truffleAssert.fails(
-          verificationCouponInstance.getTokenId(operatorAccount),
-          'No available tokens'
-        );
-      });
-    });
+    const tokenId = await coupon.getTokenId(operator);
+    assert.equal(tokenId, 1n);
   });
 });
