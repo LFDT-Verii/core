@@ -204,7 +204,7 @@ describe('VerificationCoupon Contract Test Suite', () => {
         );
       });
 
-      it('Burn token with id 1 by any account without permission - rejected!', async () => {
+      it('Burn token with id 0 by any account without permission - rejected!', async () => {
         const accountWithoutTokens = await signers[4].getAddress();
         await expectRevert(
           () =>

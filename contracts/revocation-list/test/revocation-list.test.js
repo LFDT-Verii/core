@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const { ethers, network } = require('hardhat');
+const { ethers } = require('hardhat');
 const { Wallet, AbiCoder, keccak256 } = require('ethers');
 const { signAddress } = require('@verii/blockchain-functions');
 
@@ -106,11 +106,6 @@ describe('Revocation Registry', () => {
     randomTxAccount = await randomTxSigner.getAddress();
     randomNonTxAccount = await randomNonTxSigner.getAddress();
 
-    // Required for signed-flow parity under Hardhat accounts.
-    await network.provider.send('hardhat_setBalance', [
-      operatorWallet.address,
-      '0x1000000000000000000',
-    ]);
   });
 
   describe('Set permission address', () => {
@@ -452,7 +447,7 @@ describe('Revocation Registry', () => {
         );
       });
 
-      it('Should fail if wallet not in the regstry', async () => {
+      it('Should fail if wallet not in the registry', async () => {
         await expectRevert(
           () =>
             revocationRegistryInstance
@@ -462,7 +457,7 @@ describe('Revocation Registry', () => {
         );
       });
 
-      it('Should get corect numbers', async () => {
+      it('Should get correct numbers', async () => {
         await execute(
           revocationRegistryInstance
             .connect(operatorSigner)
