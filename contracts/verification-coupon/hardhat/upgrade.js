@@ -22,16 +22,13 @@ const resolvePermissionsAddress = (chainId) => {
 
 const resolveCouponProxyAddress = (chainId) => {
   const manifestData = readManifest(packageDir, chainId);
-  if (!manifestData) {
-    return null;
-  }
 
   const explicitIndex = Number(process.env.COUPON_PROXY_INDEX);
   const preferredIndex = Number.isInteger(explicitIndex) ? explicitIndex : 1;
 
   return resolveProxyAddress({
     envVar: 'COUPON_PROXY_ADDRESS',
-    manifest: manifestData.manifest,
+    manifest: manifestData?.manifest,
     preferredIndex,
     fallback: 'last',
     label: 'verification-coupon proxy',

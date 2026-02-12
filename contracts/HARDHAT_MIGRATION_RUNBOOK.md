@@ -50,8 +50,7 @@ For verification-coupon, proxy selection defaults to index `1` for upgrades (leg
 
 ## Engineering Wrapper
 Primary operator entrypoint is in `engineering`:
-- `/Users/andresolave/Projects/velocity/engineering/deploy/scripts/release.sh`
+- `../engineering/deploy/scripts/release.sh`
 
 Recommended pre-deploy command:
-- `/Users/andresolave/Projects/velocity/engineering/deploy/scripts/release.sh --chain-id 1480 --verii-ref <sha> --env dev --mode upgrade --dry-run`
-
+- `../engineering/deploy/scripts/release.sh --chain-id 1480 --verii-ref <sha> --env dev --mode upgrade --dry-run`

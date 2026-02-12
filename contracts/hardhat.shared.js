@@ -23,13 +23,18 @@ const toNumber = (value) => {
   return Number.isFinite(parsedValue) ? parsedValue : undefined;
 };
 
-const buildHttpNetwork = ({ rpcUrl, privateKey, chainId }) => {
+const buildHttpNetwork = ({ rpcUrl, privateKey, privateKeyEnvName, chainId }) => {
   if (!rpcUrl) {
     return null;
   }
 
   const networkConfig = { url: rpcUrl };
   const normalizedPrivateKey = normalizePrivateKey(privateKey);
+  if (privateKey && !normalizedPrivateKey) {
+    throw new Error(
+      `Invalid private key value for ${privateKeyEnvName || 'network config'}`,
+    );
+  }
   if (normalizedPrivateKey) {
     networkConfig.accounts = [normalizedPrivateKey];
   }
@@ -55,6 +60,7 @@ const buildNetworks = () => {
     privateKey:
       process.env.HARDHAT_LOCALDOCKER_PRIVATE_KEY ||
       DEFAULT_LOCALDOCKER_PRIVATE_KEY,
+    privateKeyEnvName: 'HARDHAT_LOCALDOCKER_PRIVATE_KEY',
     chainId: process.env.HARDHAT_LOCALDOCKER_CHAIN_ID || '2020',
   });
 
@@ -66,6 +72,7 @@ const buildNetworks = () => {
     const network = buildHttpNetwork({
       rpcUrl: process.env[`HARDHAT_${name}_RPC_URL`],
       privateKey: process.env[`HARDHAT_${name}_PRIVATE_KEY`],
+      privateKeyEnvName: `HARDHAT_${name}_PRIVATE_KEY`,
       chainId: process.env[`HARDHAT_${name}_CHAIN_ID`],
     });
 

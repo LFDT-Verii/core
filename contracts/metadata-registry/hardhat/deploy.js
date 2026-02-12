@@ -18,10 +18,11 @@ const freeCredentialTypes = [
   'IdDocument',
   'IdDocumentV1.0',
   'PassportV1.0',
-  'DrivingLicenseV1.0',
+  'DriversLicenseV1.0',
   'NationalIdCardV1.0',
   'ProofOfAgeV1.0',
   'ResidentPermitV1.0',
+  'VerificationIdentifier',
 ];
 
 const resolvePermissionsAddress = (chainId) => {
