@@ -1,15 +1,7 @@
-const truffleAssert = require('truffle-assertions');
+const assert = require('node:assert/strict');
+const { ethers } = require('hardhat');
 const { keccak256, AbiCoder, Wallet } = require('ethers');
 const { signAddress } = require('@verii/blockchain-functions');
-
-const MetadataRegistry = artifacts.require('../contracts/MetadataRegistry.sol');
-const VerificationCoupon = artifacts.require(
-  '../../verification-coupon/contracts/VerificationCoupon.sol'
-);
-const Permissions = artifacts.require(
-  '../../permissions/contracts/Permissions'
-);
-
 const { map } = require('lodash/fp');
 const { createHash } = require('crypto');
 
@@ -34,6 +26,12 @@ const traceId = 'trackingId';
 const caoDid = 'did:velocity:42';
 const burnerDid = 'did:velocity:321';
 const ownerDid = 'did:velocity:123';
+const operatorWallet = new Wallet(
+  '0x33f46d353f191f8067dc7d256e9d9ee7a2a3300649ff7c70fe1cd7e5d5237da5',
+);
+const impersonatorWallet = new Wallet(
+  '0x4c30c0c2c34f080b4d7dd150f7afa66c3fe000fb037592516f9b85c031e4b6b3',
+);
 const freeCredentialTypesList = [
   'Email',
   'EmailV1.0',
@@ -49,73 +47,294 @@ const freeCredentialTypesList = [
 ];
 const freeCredentialTypesBytes2 = map(get2BytesHash, freeCredentialTypesList);
 
-const setupContracts = async (primaryAccount, operatorAccount) => {
-  const permissionsInstance = await Permissions.new();
-  await permissionsInstance.initialize();
+const execute = async (txPromise) => {
+  const tx = await txPromise;
+  return tx.wait();
+};
 
-  const verificationCouponInstance = await VerificationCoupon.new();
-  await verificationCouponInstance.initialize(
-    'Velocity Verification Coupon',
-    'https://www.velocitynetwork.foundation/'
-  );
-  await verificationCouponInstance.setPermissionsAddress(
-    permissionsInstance.address
-  );
-  const metadataRegistryInstance = await MetadataRegistry.new();
-  await metadataRegistryInstance.initialize(
-    verificationCouponInstance.address,
-    freeCredentialTypesBytes2
-  );
-  await permissionsInstance.addAddressScope(
-    metadataRegistryInstance.address,
-    'coupon:burn'
+const expectRevert = async (action, expectedMessage) => {
+  try {
+    await action();
+    assert.fail(`Expected revert with: ${expectedMessage}`);
+  } catch (error) {
+    const message = String(error?.message || error);
+    const expectedMessages = Array.isArray(expectedMessage)
+      ? expectedMessage
+      : [expectedMessage];
+    assert.ok(
+      expectedMessages.some((value) => message.includes(value)),
+      `Expected one of "${expectedMessages.join('" or "')}", got "${message}"`,
+    );
+  }
+};
+
+const normalizeEntries = (entries) =>
+  entries.map((entry) => [
+    entry.version,
+    entry.credentialType,
+    entry.algType,
+    entry.encryptedPublicKey,
+    entry.issuerVc,
+  ]);
+
+const signerByAddress = async (signers) =>
+  new Map(
+    await Promise.all(
+      signers.map(async (signer) => [
+        (await signer.getAddress()).toLowerCase(),
+        signer,
+      ]),
+    ),
   );
 
-  await metadataRegistryInstance.setPermissionsAddress(
-    permissionsInstance.address
+const isOverridesObject = (value) =>
+  Boolean(
+    value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      (Object.prototype.hasOwnProperty.call(value, 'from') ||
+        Object.prototype.hasOwnProperty.call(value, 'value') ||
+        Object.prototype.hasOwnProperty.call(value, 'gasLimit') ||
+        Object.prototype.hasOwnProperty.call(value, 'gasPrice') ||
+        Object.prototype.hasOwnProperty.call(value, 'nonce') ||
+        Object.prototype.hasOwnProperty.call(value, 'maxFeePerGas') ||
+        Object.prototype.hasOwnProperty.call(value, 'maxPriorityFeePerGas')),
   );
 
-  await permissionsInstance.addPrimary(
-    primaryAccount,
-    primaryAccount,
-    primaryAccount
-  );
-  await permissionsInstance.addAddressScope(
-    primaryAccount,
-    'transactions:write'
-  );
-  await permissionsInstance.addOperatorKey(primaryAccount, operatorAccount, {
-    from: primaryAccount,
+const parseContractLogs = (receipt, contract) =>
+  receipt.logs
+    .map((log) => {
+      try {
+        const parsed = contract.interface.parseLog(log);
+        return {
+          event: parsed.name,
+          args: parsed.args,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+const wrapContract = async (contract, signersByAddress) => {
+  const address = await contract.getAddress();
+  return new Proxy(contract, {
+    get(target, prop, receiver) {
+      if (prop === 'address') {
+        return address;
+      }
+
+      if (prop === 'getAddress') {
+        return async () => address;
+      }
+
+      if (typeof prop !== 'string') {
+        return Reflect.get(target, prop, receiver);
+      }
+
+      const original = target[prop];
+      if (typeof original !== 'function') {
+        return original;
+      }
+
+      let fragment = null;
+      try {
+        fragment = target.interface.getFunction(prop);
+      } catch {
+        fragment = null;
+      }
+
+      if (!fragment) {
+        return original.bind(target);
+      }
+
+      const invoke = async (args, forceCall = false) => {
+        let callArgs = [...args];
+        let signer = null;
+        let overrides = null;
+
+        const maybeOverrides = callArgs[callArgs.length - 1];
+        if (isOverridesObject(maybeOverrides)) {
+          callArgs = callArgs.slice(0, -1);
+          const { from, ...rest } = maybeOverrides;
+          if (from) {
+            signer = signersByAddress.get(String(from).toLowerCase()) || null;
+          }
+          if (Object.keys(rest).length > 0) {
+            overrides = rest;
+          }
+        }
+
+        const connected = signer ? target.connect(signer) : target;
+        const finalArgs = overrides ? [...callArgs, overrides] : callArgs;
+
+        const isRead = ['view', 'pure'].includes(fragment.stateMutability);
+        if (forceCall || isRead) {
+          return connected[prop](...finalArgs);
+        }
+
+        const tx = await connected[prop](...finalArgs);
+        const receipt = await tx.wait();
+        return {
+          ...receipt,
+          logs: parseContractLogs(receipt, target),
+        };
+      };
+
+      const wrappedMethod = (...args) => invoke(args, false);
+      wrappedMethod.call = (...args) => invoke(args, true);
+      return wrappedMethod;
+    },
   });
+};
+
+const truffleAssert = {
+  fails: async (promiseOrAction, expectedMessage) => {
+    if (typeof promiseOrAction === 'function') {
+      await expectRevert(promiseOrAction, expectedMessage);
+      return;
+    }
+    await expectRevert(() => promiseOrAction, expectedMessage);
+  },
+  eventEmitted: (receipt, eventName, expectedArgs = null) => {
+    const event = (receipt?.logs || []).find((log) => log.event === eventName);
+    assert.ok(event, `${eventName} event was not emitted`);
+
+    if (expectedArgs) {
+      Object.entries(expectedArgs).forEach(([key, value]) => {
+        const actual = event.args[key];
+        if (typeof value === 'bigint') {
+          assert.equal(actual, value);
+          return;
+        }
+        assert.equal(actual, value);
+      });
+    }
+    return true;
+  },
+};
+
+const setupContracts = async ({
+  deployerSigner,
+  primarySigner,
+  primaryAccount,
+  operatorAccount,
+  signersByAddress,
+}) => {
+  const Permissions = await ethers.getContractFactory('Permissions', deployerSigner);
+  const permissionsInstance = await Permissions.deploy();
+  await permissionsInstance.waitForDeployment();
+  await execute(permissionsInstance.initialize());
+
+  const VerificationCoupon = await ethers.getContractFactory(
+    'VerificationCoupon',
+    deployerSigner,
+  );
+  const verificationCouponInstance = await VerificationCoupon.deploy();
+  await verificationCouponInstance.waitForDeployment();
+  await execute(
+    verificationCouponInstance.initialize(
+      'Velocity Verification Coupon',
+      'https://www.velocitynetwork.foundation/',
+    ),
+  );
+  await execute(
+    verificationCouponInstance.setPermissionsAddress(
+      await permissionsInstance.getAddress(),
+    ),
+  );
+
+  const MetadataRegistry = await ethers.getContractFactory(
+    'MetadataRegistry',
+    deployerSigner,
+  );
+  const metadataRegistryInstance = await MetadataRegistry.deploy();
+  await metadataRegistryInstance.waitForDeployment();
+  await execute(
+    metadataRegistryInstance.initialize(
+      await verificationCouponInstance.getAddress(),
+      freeCredentialTypesBytes2,
+    ),
+  );
+  await execute(
+    permissionsInstance.addAddressScope(
+      await metadataRegistryInstance.getAddress(),
+      'coupon:burn',
+    ),
+  );
+  await execute(
+    metadataRegistryInstance.setPermissionsAddress(
+      await permissionsInstance.getAddress(),
+    ),
+  );
+  await execute(
+    permissionsInstance.addPrimary(primaryAccount, primaryAccount, primaryAccount),
+  );
+  await execute(
+    permissionsInstance.addAddressScope(primaryAccount, 'transactions:write'),
+  );
+  await execute(
+    permissionsInstance
+      .connect(primarySigner)
+      .addOperatorKey(primaryAccount, operatorAccount),
+  );
+  await execute(
+    permissionsInstance
+      .connect(primarySigner)
+      .addOperatorKey(primaryAccount, operatorWallet.address),
+  );
+
+  const wrappedVerificationCouponInstance = await wrapContract(
+    verificationCouponInstance,
+    signersByAddress,
+  );
+  const wrappedMetadataRegistryInstance = await wrapContract(
+    metadataRegistryInstance,
+    signersByAddress,
+  );
+  const wrappedPermissionsInstance = await wrapContract(
+    permissionsInstance,
+    signersByAddress,
+  );
 
   return {
-    verificationCouponInstance,
-    metadataRegistryInstance,
-    permissionsInstance,
+    verificationCouponInstance: wrappedVerificationCouponInstance,
+    metadataRegistryInstance: wrappedMetadataRegistryInstance,
+    permissionsInstance: wrappedPermissionsInstance,
   };
 };
-contract('MetadataRegistry', async (accounts) => {
-  const deployerAccount = accounts[0];
-  const primaryAccount = accounts[1];
-  const operatorAccount = accounts[2];
-  const randomTxAccount = accounts[3];
-  const randomNonTxAccount = accounts[4];
-  const operatorWallet = new Wallet(
-    '0x33f46d353f191f8067dc7d256e9d9ee7a2a3300649ff7c70fe1cd7e5d5237da5'
-  );
-  const impersonatorWallet = new Wallet(
-    '0x4c30c0c2c34f080b4d7dd150f7afa66c3fe000fb037592516f9b85c031e4b6b3'
-  );
 
-  describe('Validate the create list and set entry functions', async () => {
+describe('MetadataRegistry', () => {
+  let signers;
+  let signersByAddress;
+  let accounts;
+  let deployerSigner;
+  let primarySigner;
+  let deployerAccount;
+  let primaryAccount;
+  let operatorAccount;
+  let randomTxAccount;
+  let randomNonTxAccount;
+
+  before(async () => {
+    signers = await ethers.getSigners();
+    [
+      deployerSigner,
+      primarySigner,
+    ] = signers;
+    signersByAddress = await signerByAddress(signers);
+    accounts = await Promise.all(signers.map((signer) => signer.getAddress()));
+    [deployerAccount, primaryAccount, operatorAccount, randomTxAccount, randomNonTxAccount] =
+      accounts;
+  });
+
+  describe('Validate the create list and set entry functions', () => {
     let verificationCouponInstance;
     let metadataRegistryInstance;
     let permissionsInstance;
 
-    before(async () => {
-      ({verificationCouponInstance, metadataRegistryInstance, permissionsInstance} = await setupContracts(primaryAccount, operatorAccount))
-    });
     beforeEach(async () => {
+      ({verificationCouponInstance, metadataRegistryInstance, permissionsInstance} = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress }));
       await permissionsInstance.addAddressScope(
           primaryAccount,
           'credential:issue'
@@ -129,19 +348,61 @@ contract('MetadataRegistry', async (accounts) => {
           'credential:contactissue'
       );
     });
+
+    const createMetadataList = async (listId = 1) =>
+      metadataRegistryInstance.newMetadataList(
+        listId,
+        testListAlgType,
+        testListVersion,
+        bytes,
+        traceId,
+        caoDid,
+        { from: operatorAccount },
+      );
+
+    const addEntry = async ({
+      listId = 1,
+      index = 0,
+      credentialType = regularIssuingCredentialTypeHash,
+    } = {}) =>
+      metadataRegistryInstance.setEntry(
+        credentialType,
+        bytes,
+        listId,
+        index,
+        traceId,
+        caoDid,
+        { from: operatorAccount },
+      );
     it('Deploy Verification Coupon & Metadata Registry', async () => {
-      verificationCouponInstance = await VerificationCoupon.new();
+      const VerificationCoupon = await ethers.getContractFactory(
+        'VerificationCoupon',
+        deployerSigner,
+      );
+      verificationCouponInstance = await VerificationCoupon.deploy();
+      verificationCouponInstance = await wrapContract(
+        verificationCouponInstance,
+        signersByAddress,
+      );
       await verificationCouponInstance.initialize(
         'Velocity Verification Coupon',
-        'https://www.velocitynetwork.foundation/'
+        'https://www.velocitynetwork.foundation/',
       );
-      metadataRegistryInstance = await MetadataRegistry.new();
+      const MetadataRegistry = await ethers.getContractFactory(
+        'MetadataRegistry',
+        deployerSigner,
+      );
+      metadataRegistryInstance = await MetadataRegistry.deploy();
+      metadataRegistryInstance = await wrapContract(
+        metadataRegistryInstance,
+        signersByAddress,
+      );
       await metadataRegistryInstance.initialize(
         verificationCouponInstance.address,
-        freeCredentialTypesBytes2
+        freeCredentialTypesBytes2,
       );
       await metadataRegistryInstance.setPermissionsAddress(
-        permissionsInstance.address
+        permissionsInstance.address,
       );
     });
     it('Method isExistMetadataList returns false when the account and list were not created', async () => {
@@ -188,7 +449,7 @@ contract('MetadataRegistry', async (accounts) => {
           '',
           { from: randomTxAccount }
         ),
-        'invalid arrayify value'
+        ['invalid arrayify value', 'invalid BytesLike value']
       );
     });
     it('newMetadataListSigned should fail with bad signature length', async () => {
@@ -203,7 +464,7 @@ contract('MetadataRegistry', async (accounts) => {
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6c',
           { from: randomTxAccount }
         ),
-        'invalid signature length'
+        ['invalid signature length', 'invalid BytesLike value']
       );
     });
     it('newMetadataListSigned should fail with arbitrary signature', async () => {
@@ -295,6 +556,7 @@ contract('MetadataRegistry', async (accounts) => {
       truffleAssert.eventEmitted(result, 'CreatedMetadataList');
     });
     it('Check if the metadata list exist', async () => {
+      await createMetadataList(1);
       const result = await metadataRegistryInstance.isExistMetadataList(
         primaryAccount,
         1
@@ -309,20 +571,14 @@ contract('MetadataRegistry', async (accounts) => {
       assert.equal(result, false);
     });
     it('Create list with the created already listId throws an error', async () => {
+      await createMetadataList(1);
       await truffleAssert.fails(
-        metadataRegistryInstance.newMetadataList(
-          1,
-          testListAlgType,
-          testListVersion,
-          bytes,
-          traceId,
-          caoDid,
-          { from: operatorAccount }
-        ),
+        createMetadataList(1),
         'List id already used'
       );
     });
     it('setEntry should set entries on the existing list using operator as transactor', async () => {
+      await createMetadataList(1);
       const results = [];
       for (let i = 0; i <= 2; i++) {
         results.push(
@@ -342,14 +598,15 @@ contract('MetadataRegistry', async (accounts) => {
       txs.forEach((result, i) => {
         truffleAssert.eventEmitted(result, 'AddedCredentialMetadata', {
           sender: primaryAccount,
-          listId: web3.utils.toBN('1'),
-          index: web3.utils.toBN(i),
+          listId: 1n,
+          index: BigInt(i),
           traceId,
           caoDid,
         });
       });
     });
     it('setEntrySigned should set 3 entries on the existing list using operator as signer', async () => {
+      await createMetadataList(1);
       const results = [];
       const signature = signAddress({
         address: randomTxAccount,
@@ -375,14 +632,15 @@ contract('MetadataRegistry', async (accounts) => {
       txs.forEach((result, i) => {
         truffleAssert.eventEmitted(result, 'AddedCredentialMetadata', {
           sender: primaryAccount,
-          listId: web3.utils.toBN('1'),
-          index: web3.utils.toBN(i + 3),
+          listId: 1n,
+          index: BigInt(i + 3),
           traceId,
           caoDid,
         });
       });
     });
     it('setEntrySigned should fallback to regular issuing permission if credentialType is not known', async () => {
+      await createMetadataList(1);
       const signature = signAddress({
         address: randomTxAccount,
         signerWallet: operatorWallet,
@@ -399,13 +657,14 @@ contract('MetadataRegistry', async (accounts) => {
       )
       truffleAssert.eventEmitted(tx, 'AddedCredentialMetadata', {
         sender: primaryAccount,
-        listId: web3.utils.toBN('1'),
-        index: web3.utils.toBN('6'),
+        listId: 1n,
+        index: 6n,
         traceId,
         caoDid,
       });
     });
     it('setEntrySigned should fail if primary lacks regular issuing permissions', async () => {
+      await createMetadataList(1);
       await permissionsInstance.removeAddressScope(
           primaryAccount,
           'credential:issue'
@@ -427,6 +686,7 @@ contract('MetadataRegistry', async (accounts) => {
       ), 'Permissions: primary of operator lacks credential:issue permission')
     });
     it('setEntrySigned should fail if primary lacks contact issuing permissions', async () => {
+      await createMetadataList(1);
       await permissionsInstance.removeAddressScope(
           primaryAccount,
           'credential:contactissue'
@@ -448,6 +708,7 @@ contract('MetadataRegistry', async (accounts) => {
       ), 'Permissions: primary of operator lacks credential:contactissue permission')
     });
     it('setEntrySigned should fail if primary lacks identity issuing permissions', async () => {
+      await createMetadataList(1);
       await permissionsInstance.removeAddressScope(
           primaryAccount,
           'credential:identityissue'
@@ -480,7 +741,7 @@ contract('MetadataRegistry', async (accounts) => {
           '',
           { from: randomTxAccount }
         ),
-        'invalid arrayify value'
+        ['invalid arrayify value', 'invalid BytesLike value']
       );
     });
     it('setEntrySigned should fail with bad signature length', async () => {
@@ -495,7 +756,7 @@ contract('MetadataRegistry', async (accounts) => {
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6c',
           { from: randomTxAccount }
         ),
-        'invalid signature length'
+        ['invalid signature length', 'invalid BytesLike value']
       );
     });
     it('setEntrySigned should fail with arbitrary signature', async () => {
@@ -590,6 +851,7 @@ contract('MetadataRegistry', async (accounts) => {
       );
     });
     it('setEntry should fail with an invalid index of an existing list', async () => {
+      await createMetadataList(1);
       await truffleAssert.fails(
         metadataRegistryInstance.setEntry(
           regularIssuingCredentialTypeHash,
@@ -604,6 +866,8 @@ contract('MetadataRegistry', async (accounts) => {
       );
     });
     it('setEntry should fail with a previously used index of an existing list', async () => {
+      await createMetadataList(1);
+      await addEntry({ listId: 1, index: 1 });
       await truffleAssert.fails(
         metadataRegistryInstance.setEntry(
           regularIssuingCredentialTypeHash,
@@ -619,19 +883,27 @@ contract('MetadataRegistry', async (accounts) => {
     });
   });
 
-  describe('Set permission address', async () => {
+  describe('Set permission address', () => {
     let verificationCouponInstance;
     let permissionsInstance;
 
-    before(async () => {
-      ({verificationCouponInstance, permissionsInstance} = await setupContracts(primaryAccount, operatorAccount))
+    beforeEach(async () => {
+      ({verificationCouponInstance, permissionsInstance} = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress }));
     });
 
     it('Should allow setup permission if there is no address', async () => {
-      const metadataRegistryInstance = await MetadataRegistry.new();
+      const MetadataRegistry = await ethers.getContractFactory(
+        'MetadataRegistry',
+        deployerSigner,
+      );
+      let metadataRegistryInstance = await MetadataRegistry.deploy();
+      metadataRegistryInstance = await wrapContract(
+        metadataRegistryInstance,
+        signersByAddress,
+      );
       await metadataRegistryInstance.initialize(
         verificationCouponInstance.address,
-        freeCredentialTypesBytes2
+        freeCredentialTypesBytes2,
       );
 
       await metadataRegistryInstance.setPermissionsAddress(
@@ -640,18 +912,26 @@ contract('MetadataRegistry', async (accounts) => {
       );
 
       await truffleAssert.fails(
-        metadataRegistryInstance.setPermissionsAddress(permissionsInstance, {
+        metadataRegistryInstance.setPermissionsAddress(permissionsInstance.address, {
           from: operatorAccount,
         }),
-        'Permissions: caller is not VNF'
+        'Permissions: caller is not VNF',
       );
     });
 
     it('Should not allow setup permission if caller is not VNF', async () => {
-      const metadataRegistryInstance = await MetadataRegistry.new();
+      const MetadataRegistry = await ethers.getContractFactory(
+        'MetadataRegistry',
+        deployerSigner,
+      );
+      let metadataRegistryInstance = await MetadataRegistry.deploy();
+      metadataRegistryInstance = await wrapContract(
+        metadataRegistryInstance,
+        signersByAddress,
+      );
       await metadataRegistryInstance.initialize(
         verificationCouponInstance.address,
-        freeCredentialTypesBytes2
+        freeCredentialTypesBytes2,
       );
 
       await metadataRegistryInstance.setPermissionsAddress(
@@ -662,43 +942,53 @@ contract('MetadataRegistry', async (accounts) => {
       await truffleAssert.fails(
         metadataRegistryInstance.setPermissionsAddress(
           permissionsInstance.address,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'Permissions: caller is not VNF'
+        'Permissions: caller is not VNF',
       );
     });
 
     it('Should allow setup permission if caller is VNF', async () => {
-      const metadataRegistryInstance = await MetadataRegistry.new();
+      const MetadataRegistry = await ethers.getContractFactory(
+        'MetadataRegistry',
+        deployerSigner,
+      );
+      let metadataRegistryInstance = await MetadataRegistry.deploy();
+      metadataRegistryInstance = await wrapContract(
+        metadataRegistryInstance,
+        signersByAddress,
+      );
       await metadataRegistryInstance.initialize(
         verificationCouponInstance.address,
-        freeCredentialTypesBytes2
+        freeCredentialTypesBytes2,
       );
 
       await metadataRegistryInstance.setPermissionsAddress(
         permissionsInstance.address,
-        { from: primaryAccount }
+        { from: primaryAccount },
       );
-      expect(await metadataRegistryInstance.getPermissionsAddress()).equal(
-        permissionsInstance.address
+      assert.equal(
+        await metadataRegistryInstance.getPermissionsAddress(),
+        permissionsInstance.address,
       );
 
       await metadataRegistryInstance.setPermissionsAddress(accounts[3], {
         from: deployerAccount,
       });
-      expect(await metadataRegistryInstance.getPermissionsAddress()).equal(
-        accounts[3]
+      assert.equal(
+        await metadataRegistryInstance.getPermissionsAddress(),
+        accounts[3],
       );
     });
   });
 
-  describe('Get entries with coupon', async () => {
+  describe('Get entries with coupon', () => {
     let verificationCouponInstance;
     let metadataRegistryInstance;
     let permissionsInstance;
     let couponId;
-    before(async () => {
-      ({verificationCouponInstance, metadataRegistryInstance, permissionsInstance} = await setupContracts(primaryAccount, operatorAccount))
+    beforeEach(async () => {
+      ({verificationCouponInstance, metadataRegistryInstance, permissionsInstance} = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress }))
       await permissionsInstance.addAddressScope(
           primaryAccount,
           'credential:issue'
@@ -719,7 +1009,7 @@ contract('MetadataRegistry', async (accounts) => {
       );
       couponId = (
         await verificationCouponInstance.getTokenId(operatorAccount)
-      ).toNumber();
+      );
       await metadataRegistryInstance.newMetadataList(
         1,
         testListAlgType,
@@ -767,7 +1057,7 @@ contract('MetadataRegistry', async (accounts) => {
           '',
           { from: randomTxAccount }
         ),
-        'invalid arrayify value'
+        ['invalid arrayify value', 'invalid BytesLike value']
       );
     });
     it('getPaidEntriesSigned should fail with bad signature length', async () => {
@@ -780,7 +1070,7 @@ contract('MetadataRegistry', async (accounts) => {
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6c',
           { from: randomTxAccount }
         ),
-        'invalid signature length'
+        ['invalid signature length', 'invalid BytesLike value']
       );
     });
     it('getPaidEntriesSigned should fail with arbitrary signature', async () => {
@@ -872,7 +1162,7 @@ contract('MetadataRegistry', async (accounts) => {
         primaryAccount,
         couponId
       );
-      assert.equal(balance.toNumber(), 99);
+      assert.equal(Number(balance), 99);
     });
 
     it('Get one entry from to the existing list and check that the coupon was burned', async () => {
@@ -895,7 +1185,7 @@ contract('MetadataRegistry', async (accounts) => {
         primaryAccount,
         couponId
       );
-      assert.equal(balance.toNumber(), 98);
+      assert.equal(Number(balance), 99);
     });
     it('Get multiple entries from to the existing list and check that the coupon was burned', async () => {
       assert.equal(
@@ -923,7 +1213,7 @@ contract('MetadataRegistry', async (accounts) => {
         primaryAccount,
         couponId
       );
-      assert.equal(balance.toNumber(), 97);
+      assert.equal(Number(balance), 99);
     });
     it('Get duplicated entries if two duplicated Credential Identifiers were requested', async () => {
       assert.equal(
@@ -950,7 +1240,7 @@ contract('MetadataRegistry', async (accounts) => {
         primaryAccount,
         couponId
       );
-      assert.equal(balance.toNumber(), 96);
+      assert.equal(Number(balance), 99);
     });
     it('Get an entry throws error on condition: accountId is not exist', async () => {
       assert.equal(
@@ -976,7 +1266,7 @@ contract('MetadataRegistry', async (accounts) => {
         primaryAccount,
         couponId
       );
-      assert.equal(balance.toNumber(), 96);
+      assert.equal(Number(balance), 100);
     });
     it('Get an entry throws error on condition: listId is not exist', async () => {
       assert.equal(
@@ -1002,7 +1292,7 @@ contract('MetadataRegistry', async (accounts) => {
         primaryAccount,
         couponId
       );
-      assert.equal(balance.toNumber(), 96);
+      assert.equal(Number(balance), 100);
     });
     it('Get an entry throws error on condition: index is not exist', async () => {
       assert.equal(
@@ -1029,16 +1319,16 @@ contract('MetadataRegistry', async (accounts) => {
         primaryAccount,
         couponId
       );
-      assert.equal(balance.toNumber(), 96);
+      assert.equal(Number(balance), 100);
     });
   });
 
-  describe('Get entries with coupon fails', async () => {
+  describe('Get entries with coupon fails', () => {
     let verificationCouponInstance;
     let metadataRegistryInstance;
 
-    before(async () => {
-      const contracts = await setupContracts(primaryAccount, operatorAccount);
+    beforeEach(async () => {
+      const contracts = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress });
       ({verificationCouponInstance, metadataRegistryInstance} = contracts);
 
       const {permissionsInstance} = contracts;
@@ -1180,7 +1470,7 @@ contract('MetadataRegistry', async (accounts) => {
       );
       const couponId = (
         await verificationCouponInstance.getTokenId(operatorAccount)
-      ).toNumber();
+      );
       await assert.equal(
         await verificationCouponInstance.isExpired(couponId),
         false
@@ -1200,12 +1490,12 @@ contract('MetadataRegistry', async (accounts) => {
     });
   });
 
-  describe('Get entries with free types', async () => {
+  describe('Get entries with free types', () => {
     let verificationCouponInstance;
     let metadataRegistryInstance;
 
-    before(async () => {
-      const contracts = await setupContracts(primaryAccount, operatorAccount);
+    beforeEach(async () => {
+      const contracts = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress });
       ({verificationCouponInstance, metadataRegistryInstance} = contracts);
 
       const {permissionsInstance} = contracts;
@@ -1275,17 +1565,17 @@ contract('MetadataRegistry', async (accounts) => {
       );
     });
     it('Get one entry from the existing list ', async () => {
-      const entries = await metadataRegistryInstance.getFreeEntries.call(
+      const entries = await metadataRegistryInstance.getFreeEntries(
         [[primaryAccount, 1, 1]],
         { from: operatorAccount }
       );
 
-      assert.deepEqual(entries, [
+      assert.deepEqual(normalizeEntries(entries), [
         [testListVersion, freeCredentialTypesBytes2[0], testListAlgType, bytes, bytes],
       ]);
     });
     it('Get multiple entries from to the existing list', async () => {
-      const entries = await metadataRegistryInstance.getFreeEntries.call(
+      const entries = await metadataRegistryInstance.getFreeEntries(
         [
           [primaryAccount, 1, 1],
           [primaryAccount, 1, 2],
@@ -1294,7 +1584,7 @@ contract('MetadataRegistry', async (accounts) => {
         { from: operatorAccount }
       );
       assert.deepEqual(
-        entries,
+        normalizeEntries(entries),
         [0, 1, 2].map((i) => [
           testListVersion,
           freeCredentialTypesBytes2[i],
@@ -1307,7 +1597,7 @@ contract('MetadataRegistry', async (accounts) => {
 
     it('Throws an error when the creadential type is not free', async () => {
       await truffleAssert.fails(
-        metadataRegistryInstance.getFreeEntries.call([[primaryAccount, 1, 4]], {
+        metadataRegistryInstance.getFreeEntries([[primaryAccount, 1, 4]], {
           from: operatorAccount,
         }),
         'Only free creadential types is allowed without coupon'
@@ -1352,7 +1642,7 @@ contract('MetadataRegistry', async (accounts) => {
     });
   });
 
-  describe('Update the free types', async () => {
+  describe('Update the free types', () => {
     let metadataRegistryInstance;
     const newFreeCredentialTypesList = ['NewType1', 'NewType2', 'NewType3'];
     const newFreeCredentialTypesBytes2 = map(
@@ -1360,7 +1650,7 @@ contract('MetadataRegistry', async (accounts) => {
       newFreeCredentialTypesList
     );
     beforeEach(async () => {
-      ({metadataRegistryInstance} = await setupContracts(primaryAccount, operatorAccount));
+      ({metadataRegistryInstance} = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress }));
     });
     it('Add new free types', async () => {
       const isFreeBefore = await metadataRegistryInstance.isFreeCredentialType(
@@ -1414,11 +1704,11 @@ contract('MetadataRegistry', async (accounts) => {
     });
   });
 
-  describe('Change verification coupon address', async () => {
+  describe('Change verification coupon address', () => {
     let verificationCouponInstance;
     let metadataRegistryInstance;
-    before(async () => {
-      const contracts = await setupContracts(primaryAccount, operatorAccount);
+    beforeEach(async () => {
+      const contracts = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress });
       ({verificationCouponInstance, metadataRegistryInstance} = contracts);
 
       const {permissionsInstance} = contracts;
@@ -1488,13 +1778,21 @@ contract('MetadataRegistry', async (accounts) => {
       );
     });
     it('Set new verification coupon address', async () => {
-      const verificationCouponInstance2 = await VerificationCoupon.new();
+      const VerificationCoupon = await ethers.getContractFactory(
+        'VerificationCoupon',
+        deployerSigner,
+      );
+      let verificationCouponInstance2 = await VerificationCoupon.deploy();
+      verificationCouponInstance2 = await wrapContract(
+        verificationCouponInstance2,
+        signersByAddress,
+      );
       await verificationCouponInstance2.initialize(
         'Velocity Verification Coupon',
-        'https://www.velocitynetwork.foundation/'
+        'https://www.velocitynetwork.foundation/',
       );
       await metadataRegistryInstance.setCouponAddress(
-        verificationCouponInstance2.address
+        verificationCouponInstance2.address,
       );
     });
     it('Fails if account is not admin', async () => {
