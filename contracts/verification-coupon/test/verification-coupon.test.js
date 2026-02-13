@@ -91,10 +91,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
     let operatorSigner;
     let metadataSigner;
 
-    let deployerAccount;
     let tokenOwner;
     let primaryAccount;
-    let permissionsAccount;
     let operatorAccount;
     let mockMetadataContractAddress;
 
@@ -105,10 +103,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
       signers = await ethers.getSigners();
       [deployerSigner, primarySigner, operatorSigner, metadataSigner] = signers;
 
-      deployerAccount = await deployerSigner.getAddress();
       tokenOwner = await primarySigner.getAddress();
       primaryAccount = tokenOwner;
-      permissionsAccount = primaryAccount;
       operatorAccount = await operatorSigner.getAddress();
       mockMetadataContractAddress = await metadataSigner.getAddress();
 
@@ -232,10 +228,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
     let operatorSigner;
     let metadataSigner;
 
-    let deployerAccount;
     let issuer;
     let primaryAccount;
-    let permissionsAccount;
     let operatorAccount;
     let mockMetadataContractAddress;
 
@@ -247,10 +241,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
       signers = await ethers.getSigners();
       [deployerSigner, , issuerSigner, operatorSigner, metadataSigner] = signers;
 
-      deployerAccount = await deployerSigner.getAddress();
       issuer = await issuerSigner.getAddress();
       primaryAccount = issuer;
-      permissionsAccount = primaryAccount;
       operatorAccount = await operatorSigner.getAddress();
       mockMetadataContractAddress = await metadataSigner.getAddress();
 
@@ -339,9 +331,7 @@ describe('VerificationCoupon Contract Test Suite', () => {
     let operatorSigner;
     let metadataSigner;
 
-    let deployerAccount;
     let primaryAccount;
-    let permissionsAccount;
     let operatorAccount;
     let mockMetadataContractAddress;
 
@@ -352,9 +342,7 @@ describe('VerificationCoupon Contract Test Suite', () => {
       signers = await ethers.getSigners();
       [deployerSigner, primarySigner, operatorSigner, metadataSigner] = signers;
 
-      deployerAccount = await deployerSigner.getAddress();
       primaryAccount = await primarySigner.getAddress();
-      permissionsAccount = primaryAccount;
       operatorAccount = await operatorSigner.getAddress();
       mockMetadataContractAddress = await metadataSigner.getAddress();
 
@@ -582,9 +570,7 @@ describe('VerificationCoupon Contract Test Suite', () => {
     let operatorSigner;
     let metadataSigner;
 
-    let deployerAccount;
     let primaryAccount;
-    let permissionsAccount;
     let operatorAccount;
     let mockMetadataContractAddress;
 
@@ -595,9 +581,7 @@ describe('VerificationCoupon Contract Test Suite', () => {
       signers = await ethers.getSigners();
       [deployerSigner, primarySigner, operatorSigner, metadataSigner] = signers;
 
-      deployerAccount = await deployerSigner.getAddress();
       primaryAccount = await primarySigner.getAddress();
-      permissionsAccount = primaryAccount;
       operatorAccount = await operatorSigner.getAddress();
       mockMetadataContractAddress = await metadataSigner.getAddress();
 
@@ -683,9 +667,7 @@ describe('VerificationCoupon Contract Test Suite', () => {
       let operatorSigner;
       let metadataSigner;
 
-      let deployerAccount;
       let primaryAccount;
-      let permissionsAccount;
       let operatorAccount;
       let mockMetadataContractAddress;
 
@@ -696,9 +678,7 @@ describe('VerificationCoupon Contract Test Suite', () => {
         signers = await ethers.getSigners();
         [deployerSigner, primarySigner, operatorSigner, metadataSigner] = signers;
 
-        deployerAccount = await deployerSigner.getAddress();
         primaryAccount = await primarySigner.getAddress();
-        permissionsAccount = primaryAccount;
         operatorAccount = await operatorSigner.getAddress();
         mockMetadataContractAddress = await metadataSigner.getAddress();
 
