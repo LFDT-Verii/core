@@ -42,19 +42,23 @@ async function main() {
   await instance.waitForDeployment();
 
   const permissionsAddress = resolvePermissionsAddress(chainId);
-  if (permissionsAddress) {
-    let shouldUpdatePermissionsAddress = true;
-    if (typeof instance.getPermissionsAddress === 'function') {
-      const currentPermissionsAddress = await instance.getPermissionsAddress();
-      shouldUpdatePermissionsAddress =
-        !currentPermissionsAddress ||
-        currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase();
-    }
+  if (!permissionsAddress) {
+    throw new Error(
+      'Permissions proxy address is required (set PERMISSIONS_PROXY_ADDRESS or provide permissions manifest)',
+    );
+  }
 
-    if (shouldUpdatePermissionsAddress) {
-      const tx = await instance.setPermissionsAddress(permissionsAddress);
-      await tx.wait();
-    }
+  let shouldUpdatePermissionsAddress = true;
+  if (typeof instance.getPermissionsAddress === 'function') {
+    const currentPermissionsAddress = await instance.getPermissionsAddress();
+    shouldUpdatePermissionsAddress =
+      !currentPermissionsAddress ||
+      currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase();
+  }
+
+  if (shouldUpdatePermissionsAddress) {
+    const tx = await instance.setPermissionsAddress(permissionsAddress);
+    await tx.wait();
   }
 
   console.log(`COUPON_PROXY_ADDRESS=${await instance.getAddress()}`);
