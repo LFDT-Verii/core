@@ -3,22 +3,11 @@ const { ethers, upgrades } = require('hardhat');
 const {
   getChainId,
   readManifest,
+  resolvePermissionsAddress,
   resolveProxyAddress,
 } = require('../../hardhat.deploy-utils');
 
 const packageDir = path.resolve(__dirname, '..');
-const permissionsPackageDir = path.resolve(__dirname, '../../permissions');
-
-const resolvePermissionsAddress = (chainId) => {
-  const manifestData = readManifest(permissionsPackageDir, chainId);
-  return resolveProxyAddress({
-    envVar: 'PERMISSIONS_PROXY_ADDRESS',
-    manifest: manifestData?.manifest,
-    preferredIndex: 0,
-    fallback: 'first',
-    label: 'permissions proxy',
-  });
-};
 
 const resolveCouponProxyAddress = (chainId) => {
   const manifestData = readManifest(packageDir, chainId);
@@ -54,11 +43,15 @@ async function main() {
 
   const permissionsAddress = resolvePermissionsAddress(chainId);
   if (permissionsAddress) {
-    const currentPermissionsAddress = await instance.getPermissionsAddress?.();
-    if (
-      !currentPermissionsAddress ||
-      currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase()
-    ) {
+    let shouldUpdatePermissionsAddress = true;
+    if (typeof instance.getPermissionsAddress === 'function') {
+      const currentPermissionsAddress = await instance.getPermissionsAddress();
+      shouldUpdatePermissionsAddress =
+        !currentPermissionsAddress ||
+        currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase();
+    }
+
+    if (shouldUpdatePermissionsAddress) {
       const tx = await instance.setPermissionsAddress(permissionsAddress);
       await tx.wait();
     }

@@ -3,22 +3,11 @@ const { ethers, upgrades } = require('hardhat');
 const {
   getChainId,
   readManifest,
+  resolvePermissionsAddress,
   resolveProxyAddress,
 } = require('../../hardhat.deploy-utils');
 
 const packageDir = path.resolve(__dirname, '..');
-const permissionsPackageDir = path.resolve(__dirname, '../../permissions');
-
-const resolvePermissionsAddress = (chainId) => {
-  const manifestData = readManifest(permissionsPackageDir, chainId);
-  return resolveProxyAddress({
-    envVar: 'PERMISSIONS_PROXY_ADDRESS',
-    manifest: manifestData?.manifest,
-    preferredIndex: 0,
-    fallback: 'first',
-    label: 'permissions proxy',
-  });
-};
 
 const resolveRevocationAddress = (chainId) => {
   const manifestData = readManifest(packageDir, chainId);

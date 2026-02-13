@@ -3,23 +3,12 @@ const { ethers, upgrades } = require('hardhat');
 const {
   getChainId,
   readManifest,
+  resolvePermissionsAddress,
   resolveProxyAddress,
 } = require('../../hardhat.deploy-utils');
 
-const permissionsPackageDir = path.resolve(__dirname, '../../permissions');
 const tokenName = 'Velocity Verification Coupon';
 const baseTokenURI = 'https://www.velocitynetwork.foundation/';
-
-const resolvePermissionsAddress = (chainId) => {
-  const manifestData = readManifest(permissionsPackageDir, chainId);
-  return resolveProxyAddress({
-    envVar: 'PERMISSIONS_PROXY_ADDRESS',
-    manifest: manifestData?.manifest,
-    preferredIndex: 0,
-    fallback: 'first',
-    label: 'permissions proxy',
-  });
-};
 
 async function main() {
   const chainId = await getChainId(ethers);

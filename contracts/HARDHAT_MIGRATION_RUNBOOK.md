@@ -19,7 +19,7 @@ Networks are configured from environment variables in `contracts/hardhat.shared.
 
 - `localdocker`
   - `HARDHAT_LOCALDOCKER_RPC_URL` (default `http://localhost:8545`)
-  - `HARDHAT_LOCALDOCKER_PRIVATE_KEY`
+  - `HARDHAT_LOCALDOCKER_PRIVATE_KEY` (defaults to a local test key in `contracts/hardhat.shared.js`; set explicitly outside local test contexts)
   - `HARDHAT_LOCALDOCKER_CHAIN_ID` (default `2020`)
 - `dev|qa|staging|prod`
   - `HARDHAT_<ENV>_RPC_URL`

@@ -4,10 +4,10 @@ const {
   get2BytesHash,
   getChainId,
   readManifest,
+  resolvePermissionsAddress,
   resolveProxyAddress,
 } = require('../../hardhat.deploy-utils');
 
-const permissionsPackageDir = path.resolve(__dirname, '../../permissions');
 const couponPackageDir = path.resolve(__dirname, '../../verification-coupon');
 
 const freeCredentialTypes = [
@@ -25,21 +25,10 @@ const freeCredentialTypes = [
   'VerificationIdentifier',
 ];
 
-const resolvePermissionsAddress = (chainId) => {
-  const manifestData = readManifest(permissionsPackageDir, chainId);
-  return resolveProxyAddress({
-    envVar: 'PERMISSIONS_PROXY_ADDRESS',
-    manifest: manifestData?.manifest,
-    preferredIndex: 0,
-    fallback: 'first',
-    label: 'permissions proxy',
-  });
-};
-
 const resolveCouponAddress = (chainId) => {
   const manifestData = readManifest(couponPackageDir, chainId);
   const explicitIndex = Number(process.env.COUPON_PROXY_INDEX);
-  const preferredIndex = Number.isInteger(explicitIndex) ? explicitIndex : 1;
+  const preferredIndex = Number.isInteger(explicitIndex) ? explicitIndex : 0;
   return resolveProxyAddress({
     envVar: 'COUPON_PROXY_ADDRESS',
     manifest: manifestData?.manifest,
