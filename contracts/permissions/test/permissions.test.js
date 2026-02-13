@@ -5,8 +5,7 @@ const zeroAddress = ethers.ZeroAddress;
 
 const execute = async (txPromise) => {
   const tx = await txPromise;
-  await tx.wait();
-  return tx;
+  return tx.wait();
 };
 
 const expectRevert = async (action, expectedMessage) => {
