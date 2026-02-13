@@ -4,6 +4,11 @@ const { keccak256, AbiCoder, Wallet } = require('ethers');
 const { signAddress } = require('@verii/blockchain-functions');
 const { map } = require('lodash/fp');
 const { createHash } = require('crypto');
+const {
+  execute,
+  expectRevert,
+  findEvent,
+} = require('../../test-utils');
 
 const get2BytesHash = (value) => {
   return `0x${createHash('sha256').update(value).digest('hex').slice(0, 4)}`;
@@ -46,27 +51,6 @@ const freeCredentialTypesList = [
   'ResidentPermitV1.0',
 ];
 const freeCredentialTypesBytes2 = map(get2BytesHash, freeCredentialTypesList);
-
-const execute = async (txPromise) => {
-  const tx = await txPromise;
-  return tx.wait();
-};
-
-const expectRevert = async (action, expectedMessage) => {
-  try {
-    await action();
-    assert.fail(`Expected revert with: ${expectedMessage}`);
-  } catch (error) {
-    const message = String(error?.message || error);
-    const expectedMessages = Array.isArray(expectedMessage)
-      ? expectedMessage
-      : [expectedMessage];
-    assert.ok(
-      expectedMessages.some((value) => message.includes(value)),
-      `Expected one of "${expectedMessages.join('" or "')}", got "${message}"`,
-    );
-  }
-};
 
 const normalizeEntries = (entries) =>
   entries.map((entry) => [
@@ -186,32 +170,6 @@ const wrapContract = async (contract, signersByAddress) => {
       return wrappedMethod;
     },
   });
-};
-
-const truffleAssert = {
-  fails: async (promiseOrAction, expectedMessage) => {
-    if (typeof promiseOrAction === 'function') {
-      await expectRevert(promiseOrAction, expectedMessage);
-      return;
-    }
-    await expectRevert(() => promiseOrAction, expectedMessage);
-  },
-  eventEmitted: (receipt, eventName, expectedArgs = null) => {
-    const event = (receipt?.logs || []).find((log) => log.event === eventName);
-    assert.ok(event, `${eventName} event was not emitted`);
-
-    if (expectedArgs) {
-      Object.entries(expectedArgs).forEach(([key, value]) => {
-        const actual = event.args[key];
-        if (typeof value === 'bigint') {
-          assert.equal(actual, value);
-          return;
-        }
-        assert.equal(actual, value);
-      });
-    }
-    return true;
-  },
 };
 
 const setupContracts = async ({
@@ -413,7 +371,7 @@ describe('MetadataRegistry', () => {
       assert.equal(result, false);
     });
     it('Create new metadata list should fail if not an operator', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.newMetadataList(
           1,
           testListAlgType,
@@ -435,10 +393,15 @@ describe('MetadataRegistry', () => {
         caoDid,
         { from: operatorAccount }
       );
-      truffleAssert.eventEmitted(result, 'CreatedMetadataList');
+      const event = findEvent(
+        result,
+        metadataRegistryInstance,
+        'CreatedMetadataList',
+      );
+      assert.ok(event, 'CreatedMetadataList event was not emitted');
     });
     it('newMetadataListSigned should fail with empty signature', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.newMetadataListSigned(
           1,
           nonExistentCredentialTypeHash,
@@ -453,7 +416,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('newMetadataListSigned should fail with bad signature length', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.newMetadataListSigned(
           1,
           nonExistentCredentialTypeHash,
@@ -468,7 +431,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('newMetadataListSigned should fail with arbitrary signature', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.newMetadataListSigned(
           1,
           nonExistentCredentialTypeHash,
@@ -487,7 +450,7 @@ describe('MetadataRegistry', () => {
         address: randomNonTxAccount,
         signerWallet: operatorWallet,
       });
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.newMetadataListSigned(
           1,
           nonExistentCredentialTypeHash,
@@ -505,7 +468,7 @@ describe('MetadataRegistry', () => {
       const encodedArgs = AbiCoder.defaultAbiCoder().encode(['uint256'], [10]);
       const hash = keccak256(encodedArgs);
       const signature = operatorWallet.signingKey.sign(hash).serialized;
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.newMetadataListSigned(
           1,
           nonExistentCredentialTypeHash,
@@ -524,7 +487,7 @@ describe('MetadataRegistry', () => {
         address: randomNonTxAccount,
         signerWallet: impersonatorWallet,
       });
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.newMetadataListSigned(
           1,
           nonExistentCredentialTypeHash,
@@ -553,7 +516,12 @@ describe('MetadataRegistry', () => {
         signature,
         { from: randomTxAccount }
       );
-      truffleAssert.eventEmitted(result, 'CreatedMetadataList');
+      const event = findEvent(
+        result,
+        metadataRegistryInstance,
+        'CreatedMetadataList',
+      );
+      assert.ok(event, 'CreatedMetadataList event was not emitted');
     });
     it('Check if the metadata list exist', async () => {
       await createMetadataList(1);
@@ -572,7 +540,7 @@ describe('MetadataRegistry', () => {
     });
     it('Create list with the created already listId throws an error', async () => {
       await createMetadataList(1);
-      await truffleAssert.fails(
+      await expectRevert(
         createMetadataList(1),
         'List id already used'
       );
@@ -596,13 +564,17 @@ describe('MetadataRegistry', () => {
 
       const txs = await Promise.all(results);
       txs.forEach((result, i) => {
-        truffleAssert.eventEmitted(result, 'AddedCredentialMetadata', {
-          sender: primaryAccount,
-          listId: 1n,
-          index: BigInt(i),
-          traceId,
-          caoDid,
-        });
+        const event = findEvent(
+          result,
+          metadataRegistryInstance,
+          'AddedCredentialMetadata',
+        );
+        assert.ok(event, 'AddedCredentialMetadata event was not emitted');
+        assert.equal(event.args.sender, primaryAccount);
+        assert.equal(event.args.listId, 1n);
+        assert.equal(event.args.index, BigInt(i));
+        assert.equal(event.args.traceId, traceId);
+        assert.equal(event.args.caoDid, caoDid);
       });
     });
     it('setEntrySigned should set 3 entries on the existing list using operator as signer', async () => {
@@ -630,13 +602,17 @@ describe('MetadataRegistry', () => {
 
       const txs = await Promise.all(results);
       txs.forEach((result, i) => {
-        truffleAssert.eventEmitted(result, 'AddedCredentialMetadata', {
-          sender: primaryAccount,
-          listId: 1n,
-          index: BigInt(i + 3),
-          traceId,
-          caoDid,
-        });
+        const event = findEvent(
+          result,
+          metadataRegistryInstance,
+          'AddedCredentialMetadata',
+        );
+        assert.ok(event, 'AddedCredentialMetadata event was not emitted');
+        assert.equal(event.args.sender, primaryAccount);
+        assert.equal(event.args.listId, 1n);
+        assert.equal(event.args.index, BigInt(i + 3));
+        assert.equal(event.args.traceId, traceId);
+        assert.equal(event.args.caoDid, caoDid);
       });
     });
     it('setEntrySigned should fallback to regular issuing permission if credentialType is not known', async () => {
@@ -655,13 +631,17 @@ describe('MetadataRegistry', () => {
           signature,
           { from: randomTxAccount }
       )
-      truffleAssert.eventEmitted(tx, 'AddedCredentialMetadata', {
-        sender: primaryAccount,
-        listId: 1n,
-        index: 6n,
-        traceId,
-        caoDid,
-      });
+      const event = findEvent(
+        tx,
+        metadataRegistryInstance,
+        'AddedCredentialMetadata',
+      );
+      assert.ok(event, 'AddedCredentialMetadata event was not emitted');
+      assert.equal(event.args.sender, primaryAccount);
+      assert.equal(event.args.listId, 1n);
+      assert.equal(event.args.index, 6n);
+      assert.equal(event.args.traceId, traceId);
+      assert.equal(event.args.caoDid, caoDid);
     });
     it('setEntrySigned should fail if primary lacks regular issuing permissions', async () => {
       await createMetadataList(1);
@@ -674,7 +654,7 @@ describe('MetadataRegistry', () => {
         address: randomTxAccount,
         signerWallet: operatorWallet,
       });
-      await truffleAssert.fails(metadataRegistryInstance.setEntrySigned(
+      await expectRevert(metadataRegistryInstance.setEntrySigned(
           regularIssuingCredentialTypeHash,
           bytes,
           1,
@@ -696,7 +676,7 @@ describe('MetadataRegistry', () => {
         address: randomTxAccount,
         signerWallet: operatorWallet,
       });
-      await truffleAssert.fails(metadataRegistryInstance.setEntrySigned(
+      await expectRevert(metadataRegistryInstance.setEntrySigned(
           contactIssuingCredentialTypeHash,
           bytes,
           1,
@@ -718,7 +698,7 @@ describe('MetadataRegistry', () => {
         address: randomTxAccount,
         signerWallet: operatorWallet,
       });
-      await truffleAssert.fails(metadataRegistryInstance.setEntrySigned(
+      await expectRevert(metadataRegistryInstance.setEntrySigned(
           identityIssuingCredentialTypeHash,
           bytes,
           1,
@@ -730,7 +710,7 @@ describe('MetadataRegistry', () => {
       ), 'Permissions: primary of operator lacks credential:identityissue permission')
     });
     it('setEntrySigned should fail with empty signature', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntrySigned(
           nonExistentCredentialTypeHash,
           bytes,
@@ -745,7 +725,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('setEntrySigned should fail with bad signature length', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntrySigned(
           nonExistentCredentialTypeHash,
           bytes,
@@ -760,7 +740,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('setEntrySigned should fail with arbitrary signature', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntrySigned(
           nonExistentCredentialTypeHash,
           bytes,
@@ -779,7 +759,7 @@ describe('MetadataRegistry', () => {
         address: randomNonTxAccount,
         signerWallet: operatorWallet,
       });
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntrySigned(
           nonExistentCredentialTypeHash,
           bytes,
@@ -797,7 +777,7 @@ describe('MetadataRegistry', () => {
       const encodedArgs = AbiCoder.defaultAbiCoder().encode(['uint256'], [10]);
       const hash = keccak256(encodedArgs);
       const signature = operatorWallet.signingKey.sign(hash).serialized;
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntrySigned(
           nonExistentCredentialTypeHash,
           bytes,
@@ -816,7 +796,7 @@ describe('MetadataRegistry', () => {
         address: randomNonTxAccount,
         signerWallet: impersonatorWallet,
       });
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntrySigned(
           nonExistentCredentialTypeHash,
           bytes,
@@ -831,7 +811,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('setEntry should fail to a non-existent list', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntry(
           regularIssuingCredentialTypeHash,
           bytes,
@@ -845,14 +825,14 @@ describe('MetadataRegistry', () => {
       );
     });
     it('setEntry should fail if not operator', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntry(nonExistentCredentialTypeHash, bytes, 2, 1, traceId, caoDid),
         'Permissions: operator not pointing to a primary'
       );
     });
     it('setEntry should fail with an invalid index of an existing list', async () => {
       await createMetadataList(1);
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntry(
           regularIssuingCredentialTypeHash,
           bytes,
@@ -868,7 +848,7 @@ describe('MetadataRegistry', () => {
     it('setEntry should fail with a previously used index of an existing list', async () => {
       await createMetadataList(1);
       await addEntry({ listId: 1, index: 1 });
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setEntry(
           regularIssuingCredentialTypeHash,
           bytes,
@@ -911,7 +891,7 @@ describe('MetadataRegistry', () => {
         { from: operatorAccount }
       );
 
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setPermissionsAddress(permissionsInstance.address, {
           from: operatorAccount,
         }),
@@ -939,7 +919,7 @@ describe('MetadataRegistry', () => {
         { from: primaryAccount }
       );
 
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setPermissionsAddress(
           permissionsInstance.address,
           { from: operatorAccount },
@@ -1048,7 +1028,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('getPaidEntriesSigned should fail with empty signature', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntriesSigned(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1061,7 +1041,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('getPaidEntriesSigned should fail with bad signature length', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntriesSigned(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1074,7 +1054,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('getPaidEntriesSigned should fail with arbitrary signature', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntriesSigned(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1091,7 +1071,7 @@ describe('MetadataRegistry', () => {
         address: randomNonTxAccount,
         signerWallet: operatorWallet,
       });
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntriesSigned(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1107,7 +1087,7 @@ describe('MetadataRegistry', () => {
       const encodedArgs = AbiCoder.defaultAbiCoder().encode(['uint256'], [10]);
       const hash = keccak256(encodedArgs);
       const signature = operatorWallet.signingKey.sign(hash).serialized;
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntriesSigned(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1124,7 +1104,7 @@ describe('MetadataRegistry', () => {
         address: randomNonTxAccount,
         signerWallet: impersonatorWallet,
       });
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntriesSigned(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1248,7 +1228,7 @@ describe('MetadataRegistry', () => {
         false,
         'Coupon should not be expired'
       );
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntries(
           [
             [primaryAccount, 1, 4],
@@ -1274,7 +1254,7 @@ describe('MetadataRegistry', () => {
         false,
         'Coupon should not be expired'
       );
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntries(
           [
             [primaryAccount, 2, 1],
@@ -1301,7 +1281,7 @@ describe('MetadataRegistry', () => {
         'Coupon should not be expired'
       );
 
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntries(
           [
             [accounts[0], 1, 1],
@@ -1380,11 +1360,11 @@ describe('MetadataRegistry', () => {
     });
 
     it('Throws an error when the coupon was not exist', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         verificationCouponInstance.getTokenId(operatorAccount),
         'No available tokens'
       );
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntries(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1421,11 +1401,11 @@ describe('MetadataRegistry', () => {
         { from: operatorAccount }
       );
 
-      await truffleAssert.fails(
+      await expectRevert(
         verificationCouponInstance.getTokenId(operatorAccount),
         'No available tokens'
       );
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntries(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1596,7 +1576,7 @@ describe('MetadataRegistry', () => {
     });
 
     it('Throws an error when the creadential type is not free', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getFreeEntries([[primaryAccount, 1, 4]], {
           from: operatorAccount,
         }),
@@ -1605,7 +1585,7 @@ describe('MetadataRegistry', () => {
     });
 
     it('Throws an error for credential types at the index', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntries(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1617,7 +1597,7 @@ describe('MetadataRegistry', () => {
     });
 
     it('Throws an error a caller is not an operator', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntries(
           [[primaryAccount, 1, 4]],
           traceId,
@@ -1629,7 +1609,7 @@ describe('MetadataRegistry', () => {
     });
 
     it('Throws an error when the creadential type is free but getPaidEntries is used', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.getPaidEntries(
           [[primaryAccount, 1, 1]],
           traceId,
@@ -1680,13 +1660,13 @@ describe('MetadataRegistry', () => {
       assert.equal(isFreeAfter, false);
     });
     it('Fail if it is not VNF to add or remove free types', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.addFreeTypes(newFreeCredentialTypesBytes2, {
           from: accounts[3],
         }),
         'The caller is not VNF'
       );
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.removeFreeTypes(newFreeCredentialTypesBytes2, {
           from: accounts[3],
         }),
@@ -1796,7 +1776,7 @@ describe('MetadataRegistry', () => {
       );
     });
     it('Fails if account is not admin', async () => {
-      await truffleAssert.fails(
+      await expectRevert(
         metadataRegistryInstance.setCouponAddress(
           verificationCouponInstance.address,
           {
