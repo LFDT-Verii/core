@@ -1,37 +1,6 @@
 const assert = require('node:assert/strict');
 const { ethers } = require('hardhat');
-
-const execute = async (txPromise) => {
-  const tx = await txPromise;
-  return tx.wait();
-};
-
-const expectRevert = async (action, expectedMessage) => {
-  try {
-    await action();
-    assert.fail(`Expected revert with: ${expectedMessage}`);
-  } catch (error) {
-    const message = String(error?.message || error);
-    assert.ok(
-      message.includes(expectedMessage),
-      `Expected message "${expectedMessage}", got "${message}"`,
-    );
-  }
-};
-
-const findEvent = (receipt, contract, eventName) => {
-  for (const log of receipt.logs) {
-    try {
-      const parsed = contract.interface.parseLog(log);
-      if (parsed?.name === eventName) {
-        return parsed;
-      }
-    } catch {
-      // ignore non-matching logs
-    }
-  }
-  return null;
-};
+const { execute, expectRevert, findEvent } = require('../../test-utils');
 
 const setupContracts = async ({
   metadataContractAddress,

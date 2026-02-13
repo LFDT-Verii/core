@@ -2,41 +2,7 @@ const assert = require('node:assert/strict');
 const { ethers } = require('hardhat');
 const { Wallet, AbiCoder, keccak256 } = require('ethers');
 const { signAddress } = require('@verii/blockchain-functions');
-
-const execute = async (txPromise) => {
-  const tx = await txPromise;
-  return tx.wait();
-};
-
-const expectRevert = async (action, expectedMessage) => {
-  try {
-    await action();
-    assert.fail(`Expected revert with: ${expectedMessage}`);
-  } catch (error) {
-    const message = String(error?.message || error);
-    const expectedMessages = Array.isArray(expectedMessage)
-      ? expectedMessage
-      : [expectedMessage];
-    assert.ok(
-      expectedMessages.some((value) => message.includes(value)),
-      `Expected one of "${expectedMessages.join('" or "')}", got "${message}"`,
-    );
-  }
-};
-
-const findEvent = (receipt, contract, eventName) => {
-  for (const log of receipt.logs) {
-    try {
-      const parsed = contract.interface.parseLog(log);
-      if (parsed?.name === eventName) {
-        return parsed;
-      }
-    } catch {
-      // ignore non-matching log
-    }
-  }
-  return null;
-};
+const { execute, expectRevert, findEvent } = require('../../test-utils');
 
 const setupContracts = async ({ primary, deployerSigner }) => {
   const Permissions = await ethers.getContractFactory('Permissions', deployerSigner);
