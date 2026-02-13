@@ -71,9 +71,7 @@ describe('Revocation Registry', () => {
   let primarySigner;
   let operatorSigner;
   let randomTxSigner;
-  let randomNonTxSigner;
 
-  let tokenOwner;
   let primaryAccount;
   let operatorAccount;
   let randomTxAccount;
@@ -93,14 +91,12 @@ describe('Revocation Registry', () => {
       primarySigner,
       operatorSigner,
       randomTxSigner,
-      randomNonTxSigner,
     ] = signers;
 
-    tokenOwner = await primarySigner.getAddress();
-    primaryAccount = tokenOwner;
+    primaryAccount = await primarySigner.getAddress();
     operatorAccount = await operatorSigner.getAddress();
     randomTxAccount = await randomTxSigner.getAddress();
-    randomNonTxAccount = await randomNonTxSigner.getAddress();
+    randomNonTxAccount = await signers[4].getAddress();
 
   });
 

@@ -241,7 +241,6 @@ describe('Permissions test suite', () => {
     let accounts;
     let signers;
 
-    let vnfAddress;
     let primary1;
     let permissioning1;
     let rotation1;
@@ -256,7 +255,6 @@ describe('Permissions test suite', () => {
       signers = await ethers.getSigners();
       accounts = signers.map((signer) => signer.address);
 
-      vnfAddress = accounts[0];
       primary1 = accounts[1];
       permissioning1 = accounts[2];
       rotation1 = accounts[3];
