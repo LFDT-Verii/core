@@ -462,11 +462,18 @@ describe('MetadataRegistry', () => {
           'AddedCredentialMetadata',
         );
         assert.ok(event, 'AddedCredentialMetadata event was not emitted');
-        assert.equal(event.args.sender, primaryAccount);
-        assert.equal(event.args.listId, 1n);
-        assert.equal(event.args.index, BigInt(i));
-        assert.equal(event.args.traceId, traceId);
-        assert.equal(event.args.caoDid, caoDid);
+        assert.deepStrictEqual(
+          event.args.toObject(),
+          {
+            sender: primaryAccount,
+            listId: 1n,
+            index: BigInt(i),
+            credentialType: regularIssuingCredentialTypeHash,
+            issuerVc: bytes,
+            traceId,
+            caoDid,
+          },
+        );
       });
     });
     it('setEntrySigned should set 3 entries on the existing list using operator as signer', async () => {
@@ -500,11 +507,18 @@ describe('MetadataRegistry', () => {
           'AddedCredentialMetadata',
         );
         assert.ok(event, 'AddedCredentialMetadata event was not emitted');
-        assert.equal(event.args.sender, primaryAccount);
-        assert.equal(event.args.listId, 1n);
-        assert.equal(event.args.index, BigInt(i + 3));
-        assert.equal(event.args.traceId, traceId);
-        assert.equal(event.args.caoDid, caoDid);
+        assert.deepStrictEqual(
+          event.args.toObject(),
+          {
+            sender: primaryAccount,
+            listId: 1n,
+            index: BigInt(i + 3),
+            credentialType: regularIssuingCredentialTypeHash,
+            issuerVc: bytes,
+            traceId,
+            caoDid,
+          },
+        );
       });
     });
     it('setEntrySigned should fallback to regular issuing permission if credentialType is not known', async () => {
@@ -529,11 +543,18 @@ describe('MetadataRegistry', () => {
         'AddedCredentialMetadata',
       );
       assert.ok(event, 'AddedCredentialMetadata event was not emitted');
-      assert.equal(event.args.sender, primaryAccount);
-      assert.equal(event.args.listId, 1n);
-      assert.equal(event.args.index, 6n);
-      assert.equal(event.args.traceId, traceId);
-      assert.equal(event.args.caoDid, caoDid);
+      assert.deepStrictEqual(
+        event.args.toObject(),
+        {
+          sender: primaryAccount,
+          listId: 1n,
+          index: 6n,
+          credentialType: nonExistentCredentialTypeHash,
+          issuerVc: bytes,
+          traceId,
+          caoDid,
+        },
+      );
     });
     it('setEntrySigned should fail if primary lacks regular issuing permissions', async () => {
       await createMetadataList(1);
