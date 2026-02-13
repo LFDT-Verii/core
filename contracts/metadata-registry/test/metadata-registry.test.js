@@ -221,6 +221,7 @@ describe('MetadataRegistry', () => {
         deployerSigner,
       );
       verificationCouponInstance = await VerificationCoupon.deploy();
+      await verificationCouponInstance.waitForDeployment();
       verificationCouponInstance = await wrapContract(
         verificationCouponInstance,
         signersByAddress,
@@ -234,6 +235,7 @@ describe('MetadataRegistry', () => {
         deployerSigner,
       );
       metadataRegistryInstance = await MetadataRegistry.deploy();
+      await metadataRegistryInstance.waitForDeployment();
       metadataRegistryInstance = await wrapContract(
         metadataRegistryInstance,
         signersByAddress,
@@ -781,6 +783,7 @@ describe('MetadataRegistry', () => {
         deployerSigner,
       );
       let metadataRegistryInstance = await MetadataRegistry.deploy();
+      await metadataRegistryInstance.waitForDeployment();
       metadataRegistryInstance = await wrapContract(
         metadataRegistryInstance,
         signersByAddress,
@@ -809,6 +812,7 @@ describe('MetadataRegistry', () => {
         deployerSigner,
       );
       let metadataRegistryInstance = await MetadataRegistry.deploy();
+      await metadataRegistryInstance.waitForDeployment();
       metadataRegistryInstance = await wrapContract(
         metadataRegistryInstance,
         signersByAddress,
@@ -838,6 +842,7 @@ describe('MetadataRegistry', () => {
         deployerSigner,
       );
       let metadataRegistryInstance = await MetadataRegistry.deploy();
+      await metadataRegistryInstance.waitForDeployment();
       metadataRegistryInstance = await wrapContract(
         metadataRegistryInstance,
         signersByAddress,
@@ -1073,7 +1078,7 @@ describe('MetadataRegistry', () => {
     });
     it('Get multiple entries from to the existing list and check that the coupon was burned', async () => {
       assert.equal(
-        await verificationCouponInstance.isExpired(0),
+        await verificationCouponInstance.isExpired(couponId),
         false,
         'Coupon should not be expired'
       );
@@ -1101,7 +1106,7 @@ describe('MetadataRegistry', () => {
     });
     it('Get duplicated entries if two duplicated Credential Identifiers were requested', async () => {
       assert.equal(
-        await verificationCouponInstance.isExpired(0),
+        await verificationCouponInstance.isExpired(couponId),
         false,
         'Coupon should not be expired'
       );
@@ -1128,7 +1133,7 @@ describe('MetadataRegistry', () => {
     });
     it('Get an entry throws error on condition: accountId is not exist', async () => {
       assert.equal(
-        await verificationCouponInstance.isExpired(0),
+        await verificationCouponInstance.isExpired(couponId),
         false,
         'Coupon should not be expired'
       );
@@ -1154,7 +1159,7 @@ describe('MetadataRegistry', () => {
     });
     it('Get an entry throws error on condition: listId is not exist', async () => {
       assert.equal(
-        await verificationCouponInstance.isExpired(0),
+        await verificationCouponInstance.isExpired(couponId),
         false,
         'Coupon should not be expired'
       );
@@ -1180,7 +1185,7 @@ describe('MetadataRegistry', () => {
     });
     it('Get an entry throws error on condition: index is not exist', async () => {
       assert.equal(
-        await verificationCouponInstance.isExpired(0),
+        await verificationCouponInstance.isExpired(couponId),
         false,
         'Coupon should not be expired'
       );
@@ -1667,6 +1672,7 @@ describe('MetadataRegistry', () => {
         deployerSigner,
       );
       let verificationCouponInstance2 = await VerificationCoupon.deploy();
+      await verificationCouponInstance2.waitForDeployment();
       verificationCouponInstance2 = await wrapContract(
         verificationCouponInstance2,
         signersByAddress,

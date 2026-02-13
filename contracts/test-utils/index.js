@@ -146,7 +146,14 @@ const wrapContract = async (contract, signersByAddress) => {
         const finalArgs = overrides ? [...callArgs, overrides] : callArgs;
 
         const isRead = ['view', 'pure'].includes(fragment.stateMutability);
-        if (forceCall || isRead) {
+        if (forceCall) {
+          if (isRead) {
+            return connected[prop](...finalArgs);
+          }
+          return connected[prop].staticCall(...finalArgs);
+        }
+
+        if (isRead) {
           return connected[prop](...finalArgs);
         }
 
