@@ -4,6 +4,7 @@ require('@openzeppelin/hardhat-upgrades');
 
 const DEFAULT_LOCALDOCKER_PRIVATE_KEY =
   '0x071d76d6395c725960f2f6343bd26cc56173679b3ae33292d99d7abc289832bf';
+// This is a deterministic localdocker test key only, used for local chains.
 
 const normalizePrivateKey = (privateKey) => {
   if (!privateKey) {

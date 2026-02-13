@@ -88,6 +88,8 @@ const resolveProxyAddress = ({
   return ensureAddress(selectedProxy.address, `${label} manifest proxy`);
 };
 
+// Metadata registry stores credential types as bytes2 values, so we
+// intentionally keep only the first 2 bytes (4 hex chars) of the digest.
 const get2BytesHash = (value) =>
   `0x${createHash('sha256').update(value).digest('hex').slice(0, 4)}`;
 

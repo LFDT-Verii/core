@@ -41,6 +41,12 @@ Upgrade flows:
 - `yarn contracts:upgrade:hardhat:staging`
 - `yarn contracts:upgrade:hardhat:prod`
 
+All root deploy/upgrade commands are chained with `&&` (fail-fast). If a step fails,
+earlier steps may already be on-chain. Recovery flow:
+1. Fix the failing step (env var, permissions, manifest, or script issue).
+2. Re-run the same root deploy/upgrade command.
+3. Verify all expected proxy addresses and required scope bindings after rerun.
+
 ## Address Resolution
 Deploy/upgrade scripts resolve proxy addresses from:
 1. Explicit env vars (e.g. `PERMISSIONS_PROXY_ADDRESS`, `COUPON_PROXY_ADDRESS`, `METADATA_PROXY_ADDRESS`, `REVOCATION_PROXY_ADDRESS`)

@@ -78,11 +78,18 @@ async function main() {
     'coupon:burn',
   );
   if (!hasBurnScope) {
-    const addScopeTx = await permissions.addAddressScope(
-      metadataAddress,
-      'coupon:burn',
-    );
-    await addScopeTx.wait();
+    try {
+      const addScopeTx = await permissions.addAddressScope(
+        metadataAddress,
+        'coupon:burn',
+      );
+      await addScopeTx.wait();
+    } catch (error) {
+      throw new Error(
+        `Failed to grant 'coupon:burn' scope to metadata registry at ${metadataAddress} via permissions proxy ${permissionsAddress}. ` +
+          `Ensure the deployer is authorized to modify scopes. Original error: ${error && error.message ? error.message : String(error)}`,
+      );
+    }
   }
 
   console.log(`METADATA_PROXY_ADDRESS=${metadataAddress}`);
