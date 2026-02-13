@@ -25,6 +25,8 @@ const resolveCouponProxyAddress = (chainId) => {
 };
 
 async function main() {
+  const [deployer] = await ethers.getSigners();
+  const deployerAddress = await deployer.getAddress();
   const chainId = await getChainId(ethers);
   const proxyAddress = resolveCouponProxyAddress(chainId);
   if (!proxyAddress) {
@@ -48,17 +50,28 @@ async function main() {
     );
   }
 
-  let shouldUpdatePermissionsAddress = true;
-  if (typeof instance.getPermissionsAddress === 'function') {
-    const currentPermissionsAddress = await instance.getPermissionsAddress();
-    shouldUpdatePermissionsAddress =
-      !currentPermissionsAddress ||
-      currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase();
-  }
+  const vnfAddress = await instance.getVNF();
+  const canUpdatePermissions =
+    vnfAddress &&
+    deployerAddress &&
+    vnfAddress.toLowerCase() === deployerAddress.toLowerCase();
+  if (!canUpdatePermissions) {
+    console.warn(
+      `Skipping coupon permissions update: deployer ${deployerAddress} is not VNF ${vnfAddress}.`,
+    );
+  } else {
+    let shouldUpdatePermissionsAddress = true;
+    if (typeof instance.getPermissionsAddress === 'function') {
+      const currentPermissionsAddress = await instance.getPermissionsAddress();
+      shouldUpdatePermissionsAddress =
+        !currentPermissionsAddress ||
+        currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase();
+    }
 
-  if (shouldUpdatePermissionsAddress) {
-    const tx = await instance.setPermissionsAddress(permissionsAddress);
-    await tx.wait();
+    if (shouldUpdatePermissionsAddress) {
+      const tx = await instance.setPermissionsAddress(permissionsAddress);
+      await tx.wait();
+    }
   }
 
   console.log(`COUPON_PROXY_ADDRESS=${await instance.getAddress()}`);
