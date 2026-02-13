@@ -24,22 +24,25 @@ const expectRevert = async (action, expectedMessage) => {
 describe('VNF functions', () => {
   describe('Permissions', () => {
     let permissionsContractInstance;
-    let accounts;
     let signers;
     let vnfAddress;
     let mockAddress1;
 
-    it('Should deploy the permissions contract', async () => {
+    before(async () => {
       signers = await ethers.getSigners();
-      accounts = signers.map((signer) => signer.address);
-
-      vnfAddress = accounts[0];
-      mockAddress1 = accounts[1];
+      [vnfAddress, mockAddress1] = await Promise.all([
+        signers[0].getAddress(),
+        signers[1].getAddress(),
+      ]);
 
       const Permissions = await ethers.getContractFactory('Permissions');
       permissionsContractInstance = await Permissions.deploy();
       await permissionsContractInstance.waitForDeployment();
       await execute(permissionsContractInstance.initialize());
+    });
+
+    it('Should deploy the permissions contract', async () => {
+      assert.notEqual(await permissionsContractInstance.getAddress(), zeroAddress);
     });
 
     it('Should have initialized the contract with the VNF address', async () => {
@@ -83,22 +86,25 @@ describe('VNF functions', () => {
 describe('Address -> Scopes mappings test suite', () => {
   describe('Permissions', () => {
     let permissionsContractInstance;
-    let accounts;
     let signers;
     let vnfAddress;
     let mockAddress1;
 
-    it('Should deploy the permissions contract', async () => {
+    before(async () => {
       signers = await ethers.getSigners();
-      accounts = signers.map((signer) => signer.address);
-
-      vnfAddress = accounts[0];
-      mockAddress1 = accounts[1];
+      [vnfAddress, mockAddress1] = await Promise.all([
+        signers[0].getAddress(),
+        signers[1].getAddress(),
+      ]);
 
       const Permissions = await ethers.getContractFactory('Permissions');
       permissionsContractInstance = await Permissions.deploy();
       await permissionsContractInstance.waitForDeployment();
       await execute(permissionsContractInstance.initialize());
+    });
+
+    it('Should deploy the permissions contract', async () => {
+      assert.notEqual(await permissionsContractInstance.getAddress(), zeroAddress);
     });
 
     it('Should return an empty addressToPermissions map', async () => {
@@ -237,7 +243,6 @@ describe('Address -> Scopes mappings test suite', () => {
 describe('Permissions test suite', () => {
   describe('Permissions', () => {
     let permissionsContractInstance;
-    let accounts;
     let signers;
 
     let primary1;
@@ -250,23 +255,36 @@ describe('Permissions test suite', () => {
     let permissioning2;
     let rotation2;
 
-    it('Should deploy the permissions contract', async () => {
+    before(async () => {
       signers = await ethers.getSigners();
-      accounts = signers.map((signer) => signer.address);
-
-      primary1 = accounts[1];
-      permissioning1 = accounts[2];
-      rotation1 = accounts[3];
-      permissioning2 = accounts[4];
-      rotation2 = accounts[5];
-      operator1 = accounts[6];
-      operator2 = accounts[7];
-      unknown1 = accounts[8];
+      [
+        primary1,
+        permissioning1,
+        rotation1,
+        permissioning2,
+        rotation2,
+        operator1,
+        operator2,
+        unknown1,
+      ] = await Promise.all([
+        signers[1].getAddress(),
+        signers[2].getAddress(),
+        signers[3].getAddress(),
+        signers[4].getAddress(),
+        signers[5].getAddress(),
+        signers[6].getAddress(),
+        signers[7].getAddress(),
+        signers[8].getAddress(),
+      ]);
 
       const Permissions = await ethers.getContractFactory('Permissions');
       permissionsContractInstance = await Permissions.deploy();
       await permissionsContractInstance.waitForDeployment();
       await execute(permissionsContractInstance.initialize());
+    });
+
+    it('Should deploy the permissions contract', async () => {
+      assert.notEqual(await permissionsContractInstance.getAddress(), zeroAddress);
     });
 
     it('Adding a primary account should fail when called by non VNF address', async () => {
