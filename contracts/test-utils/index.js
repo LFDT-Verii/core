@@ -54,6 +54,16 @@ const normalizeEntries = (entries) =>
     entry.issuerVc,
   ]);
 
+const signerByAddress = async (signers) =>
+  new Map(
+    await Promise.all(
+      signers.map(async (signer) => [
+        (await signer.getAddress()).toLowerCase(),
+        signer,
+      ]),
+    ),
+  );
+
 const isOverridesObject = (value) =>
   Boolean(
     value &&
@@ -160,6 +170,7 @@ module.exports = {
   expectRevert,
   findEvent,
   normalizeEntries,
+  signerByAddress,
   isOverridesObject,
   parseContractLogs,
   wrapContract,

@@ -9,6 +9,7 @@ const {
   expectRevert,
   findEvent,
   normalizeEntries,
+  signerByAddress,
   wrapContract,
 } = require('../../test-utils');
 
@@ -53,16 +54,6 @@ const freeCredentialTypesList = [
   'ResidentPermitV1.0',
 ];
 const freeCredentialTypesBytes2 = map(get2BytesHash, freeCredentialTypesList);
-
-const signerByAddress = async (signers) =>
-  new Map(
-    await Promise.all(
-      signers.map(async (signer) => [
-        (await signer.getAddress()).toLowerCase(),
-        signer,
-      ]),
-    ),
-  );
 
 const setupContracts = async ({
   deployerSigner,
