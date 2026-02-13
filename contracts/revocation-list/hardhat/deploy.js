@@ -1,9 +1,7 @@
-const path = require('path');
 const { ethers, upgrades } = require('hardhat');
 const {
   getChainId,
   resolvePermissionsAddress,
-  resolveProxyAddress,
 } = require('../../hardhat.deploy-utils');
 
 async function main() {

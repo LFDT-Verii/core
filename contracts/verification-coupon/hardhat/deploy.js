@@ -1,10 +1,7 @@
-const path = require('path');
 const { ethers, upgrades } = require('hardhat');
 const {
   getChainId,
-  readManifest,
   resolvePermissionsAddress,
-  resolveProxyAddress,
 } = require('../../hardhat.deploy-utils');
 
 const tokenName = 'Velocity Verification Coupon';
