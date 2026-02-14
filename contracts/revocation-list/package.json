@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test-bg": "ganache --miner.defaultGasPrice=0 --miner.blockGasLimit=0x1ffffffffffffe --miner.defaultTransactionGasLimit=0x1ffffffffffffe --miner.callGasLimit=0x1ffffffffffffe --wallet.mnemonic=foo",
-    "test": "npm run test-bg > test-logs.txt & truffle test --migrate-none --bail",
+    "test": "hardhat test",
+    "test:truffle": "truffle test --migrate-none --bail",
     "build": "truffle compile --all",
     "build:hardhat": "hardhat compile",
     "clean:hardhat": "hardhat clean",
@@ -44,7 +44,6 @@
     "@verii/permissions-contract": "^0.5.0-build",
     "@verii/signature-verification-library": "^0.5.0-build",
     "ethers": "6.16.0",
-    "ganache": "7.9.2",
     "truffle": "5.11.5",
     "truffle-assertions": "0.9.2"
   }
