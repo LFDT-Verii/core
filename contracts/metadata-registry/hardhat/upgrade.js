@@ -44,22 +44,24 @@ async function main() {
     );
   }
 
+  const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
   const currentPermissionsAddress = await instance.getPermissionsAddress();
   if (
     currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase()
   ) {
-    try {
-      await instance.setPermissionsAddress.staticCall(permissionsAddress);
-    } catch (error) {
-      const originalMessage =
-        error && typeof error.message === 'string'
-          ? error.message
-          : String(error);
-      throw new Error(
-        `Cannot update metadata permissions address from ${currentPermissionsAddress} to ${permissionsAddress}. ` +
-          `Signer ${deployerAddress} is not authorized to call setPermissionsAddress. ` +
-          `Run with an authorized signer. Original error: ${originalMessage}`,
-      );
+    const isInitialSet =
+      currentPermissionsAddress ===
+      '0x0000000000000000000000000000000000000000';
+
+    if (!isInitialSet) {
+      const currentVNF = await permissions.getVNF();
+      if (currentVNF.toLowerCase() !== deployerAddress.toLowerCase()) {
+        throw new Error(
+          `Cannot update permissions address from ${currentPermissionsAddress} to ${permissionsAddress}: ` +
+            `deployer ${deployerAddress} is not the current Permissions VNF (${currentVNF}). ` +
+            'Run this script with the VNF signer or update the permissions address via the authorized VNF.',
+        );
+      }
     }
 
     const setPermissionsTx = await instance.setPermissionsAddress(
@@ -67,8 +69,6 @@ async function main() {
     );
     await setPermissionsTx.wait();
   }
-
-  const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
   const metadataAddress = await instance.getAddress();
   const hasBurnScope = await permissions.checkAddressScope(
     metadataAddress,
