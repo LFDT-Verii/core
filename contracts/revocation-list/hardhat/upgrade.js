@@ -46,7 +46,6 @@ async function main() {
     );
   }
 
-  const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
   const currentPermissionsAddress = await instance.getPermissionsAddress();
   if (
     currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase()
@@ -56,6 +55,10 @@ async function main() {
       '0x0000000000000000000000000000000000000000';
 
     if (!isInitialSet) {
+      const permissions = await ethers.getContractAt(
+        'Permissions',
+        permissionsAddress,
+      );
       const currentVNF = await permissions.getVNF();
       if (currentVNF.toLowerCase() !== deployerAddress.toLowerCase()) {
         throw new Error(
