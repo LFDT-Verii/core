@@ -55,8 +55,8 @@ Deploy/upgrade scripts resolve proxy addresses from:
 For verification-coupon, proxy selection defaults to index `1` for upgrades (legacy V2 behavior). Override with `COUPON_PROXY_INDEX` when needed.
 
 ## Engineering Wrapper
-Primary operator entrypoint is in `engineering`:
-- `../engineering/deploy/scripts/release.sh`
+The primary operator entrypoint lives in a separate engineering deployment repository (not in this contracts repo).
+See the `deploy/scripts/release.sh` wrapper in that repository for orchestration of these Hardhat flows.
 
-Recommended pre-deploy command:
-- `../engineering/deploy/scripts/release.sh --chain-id 1480 --verii-ref <sha> --env dev --mode upgrade --dry-run`
+Recommended pre-deploy command (run from the root of the engineering deployment repository):
+- `./deploy/scripts/release.sh --chain-id 1480 --verii-ref <sha> --env dev --mode upgrade --dry-run`
