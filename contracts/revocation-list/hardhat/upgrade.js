@@ -21,6 +21,8 @@ const resolveRevocationAddress = (chainId) => {
 };
 
 async function main() {
+  const [deployer] = await ethers.getSigners();
+  const deployerAddress = await deployer.getAddress();
   const chainId = await getChainId(ethers);
   const proxyAddress = resolveRevocationAddress(chainId);
   if (!proxyAddress) {
@@ -48,6 +50,20 @@ async function main() {
   if (
     currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase()
   ) {
+    try {
+      await instance.setPermissionsAddress.staticCall(permissionsAddress);
+    } catch (error) {
+      const originalMessage =
+        error && typeof error.message === 'string'
+          ? error.message
+          : String(error);
+      throw new Error(
+        `Cannot update revocation permissions address from ${currentPermissionsAddress} to ${permissionsAddress}. ` +
+          `Signer ${deployerAddress} is not authorized to call setPermissionsAddress. ` +
+          `Run with an authorized signer. Original error: ${originalMessage}`,
+      );
+    }
+
     const setPermissionsTx = await instance.setPermissionsAddress(
       permissionsAddress,
     );

@@ -50,28 +50,32 @@ async function main() {
     );
   }
 
-  const vnfAddress = await instance.getVNF();
-  const canUpdatePermissions =
-    vnfAddress &&
-    deployerAddress &&
-    vnfAddress.toLowerCase() === deployerAddress.toLowerCase();
-  if (!canUpdatePermissions) {
-    console.warn(
-      `Skipping coupon permissions update: deployer ${deployerAddress} is not VNF ${vnfAddress}.`,
-    );
-  } else {
-    let shouldUpdatePermissionsAddress = true;
-    if (typeof instance.getPermissionsAddress === 'function') {
-      const currentPermissionsAddress = await instance.getPermissionsAddress();
-      shouldUpdatePermissionsAddress =
-        !currentPermissionsAddress ||
-        currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase();
+  let shouldUpdatePermissionsAddress = true;
+  let currentPermissionsAddress = null;
+  if (typeof instance.getPermissionsAddress === 'function') {
+    currentPermissionsAddress = await instance.getPermissionsAddress();
+    shouldUpdatePermissionsAddress =
+      !currentPermissionsAddress ||
+      currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase();
+  }
+
+  if (shouldUpdatePermissionsAddress) {
+    try {
+      await instance.setPermissionsAddress.staticCall(permissionsAddress);
+    } catch (error) {
+      const originalMessage =
+        error && typeof error.message === 'string'
+          ? error.message
+          : String(error);
+      throw new Error(
+        `Cannot update coupon permissions address from ${currentPermissionsAddress || 'unavailable'} to ${permissionsAddress}. ` +
+          `Signer ${deployerAddress} is not authorized to call setPermissionsAddress. ` +
+          `Run with an authorized signer. Original error: ${originalMessage}`,
+      );
     }
 
-    if (shouldUpdatePermissionsAddress) {
-      const tx = await instance.setPermissionsAddress(permissionsAddress);
-      await tx.wait();
-    }
+    const tx = await instance.setPermissionsAddress(permissionsAddress);
+    await tx.wait();
   }
 
   console.log(`COUPON_PROXY_ADDRESS=${await instance.getAddress()}`);
