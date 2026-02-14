@@ -282,6 +282,7 @@ eslint.json
 
 # Contracts
 .openzeppelin
+**/cache/hardhat
 test-logs.txt
 _*-permissions-proxy-contract-address.json
 _*-events-mint.json
