@@ -41,7 +41,7 @@
     "eslint-plugin-autofix": "2.2.0",
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-jsdoc": "62.5.2",
+    "eslint-plugin-jsdoc": "62.5.4",
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
     "eslint-plugin-prettier": "5.5.5",
     "eslint-watch": "8.0.0",
@@ -51,7 +51,7 @@
     "nanoid": "5.1.6",
     "prettier": "3.8.1",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.54.0"
+    "typescript-eslint": "8.55.0"
   },
   "nx": {
     "tags": [
