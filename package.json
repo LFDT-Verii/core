@@ -38,7 +38,6 @@
     "stop": "docker-compose down -v"
   },
   "//": "resolutions notes",
-  "//": "'tar', 'ansi-regex', 'elliptic', 'node-fetch' can be removed with truffle",
   "//": "'json5 after eslint-plugin-import upgrade from 2.31.0",
   "resolutions": {
     "tar": "^7.0.0",

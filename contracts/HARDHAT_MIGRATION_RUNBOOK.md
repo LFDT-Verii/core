@@ -64,6 +64,30 @@ Use the engineering wrapper (from engineering repo root):
 6. Promote same commit to mainnet.
 - Run upgrade (no dry-run), then repeat validation checks.
 
+## New-Chain Bootstrap (Hardhat-Only, From Scratch)
+Use this when deploying to a brand-new chain with no existing proxy manifests.
+
+1. Configure the new network in `contracts/hardhat.shared.js` (or reuse an existing env alias) with:
+- RPC URL
+- chain ID
+- funded deployer private key
+
+2. Execute Hardhat deploy chain in order:
+- permissions deploy
+- verification-coupon deploy
+- metadata-registry deploy
+- revocation-list deploy
+
+From repository root this is typically:
+- `yarn contracts:deploy:hardhat:<network>`
+
+3. Capture emitted proxy addresses and persist deployment state into the engineering deployment context (`unknown-<chainId>.json` and env vars as required).
+
+4. Run post-deploy validation:
+- each proxy responds on-chain
+- permissions wiring is correct on coupon/metadata/revocation
+- metadata has `coupon:burn` scope configured
+
 ## Failure Handling
 - Scripts are fail-fast by design.
 - If a step fails mid-sequence:

@@ -8,6 +8,8 @@ Use an **archive strategy** for legacy Truffle `migrations/`.
 - New deployment and upgrade operations must use Hardhat scripts (`contracts/*/hardhat/*.js`).
 - No new Truffle migration scripts should be added.
 - CI/operator procedures should not invoke `truffle migrate` for managed network changes.
+- Truffle toolchain dependencies are removed from contract workspace packages.
+- Contract package scripts no longer expose Truffle build/test/migrate commands.
 
 ## Why Archive (Not a Compatibility Wrapper)
 - Reduces operational ambiguity: one write path (Hardhat) instead of two.

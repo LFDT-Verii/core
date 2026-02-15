@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "hardhat test",
-    "test:truffle": "truffle test --migrate-none",
-    "build": "truffle compile --all",
+    "build": "hardhat compile",
     "build:hardhat": "hardhat compile",
     "clean:hardhat": "hardhat clean",
     "hardhat:deploy": "hardhat run hardhat/deploy.js",
@@ -20,11 +19,7 @@
     "hardhat:upgrade:dev": "hardhat run hardhat/upgrade.js --network dev",
     "hardhat:upgrade:qa": "hardhat run hardhat/upgrade.js --network qa",
     "hardhat:upgrade:staging": "hardhat run hardhat/upgrade.js --network staging",
-    "hardhat:upgrade:prod": "hardhat run hardhat/upgrade.js --network prod",
-    "migrate:dev": "truffle migrate --network dev",
-    "migrate:qa": "truffle migrate --network qa",
-    "migrate:staging": "truffle migrate --network staging",
-    "migrate:prod": "truffle migrate --network prod"
+    "hardhat:upgrade:prod": "hardhat run hardhat/upgrade.js --network prod"
   },
   "author": "Nassan Paul",
   "publishConfig": {
@@ -35,10 +30,6 @@
   "devDependencies": {
     "@openzeppelin/contracts": "4.9.6",
     "@openzeppelin/contracts-upgradeable": "4.9.6",
-    "@openzeppelin/truffle-upgrades": "1.21.0",
-    "@truffle/hdwallet-provider": "1.7.0",
-    "ethers": "6.16.0",
-    "truffle": "5.11.5",
-    "truffle-assertions": "0.9.2"
+    "ethers": "6.16.0"
   }
 }
