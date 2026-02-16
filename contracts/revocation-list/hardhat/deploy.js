@@ -22,8 +22,19 @@ async function main() {
   });
   await instance.waitForDeployment();
 
-  const tx = await instance.setPermissionsAddress(permissionsAddress);
-  await tx.wait();
+  try {
+    const tx = await instance.setPermissionsAddress(permissionsAddress);
+    await tx.wait();
+  } catch (error) {
+    const originalMessage =
+      error && typeof error.message === 'string'
+        ? error.message
+        : String(error);
+    throw new Error(
+      `Failed to set permissions address on revocation proxy ${await instance.getAddress()} to ${permissionsAddress}. ` +
+        `Ensure the deployer is authorized to call setPermissionsAddress. Original error: ${originalMessage}`,
+    );
+  }
 
   console.log(`REVOCATION_PROXY_ADDRESS=${await instance.getAddress()}`);
 }

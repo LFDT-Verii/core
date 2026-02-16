@@ -66,13 +66,24 @@ async function main() {
   );
   await instance.waitForDeployment();
 
-  const setPermissionsTx = await instance.setPermissionsAddress(
-    permissionsAddress,
-  );
-  await setPermissionsTx.wait();
+  const metadataAddress = await instance.getAddress();
+  try {
+    const setPermissionsTx = await instance.setPermissionsAddress(
+      permissionsAddress,
+    );
+    await setPermissionsTx.wait();
+  } catch (error) {
+    const originalMessage =
+      error && typeof error.message === 'string'
+        ? error.message
+        : String(error);
+    throw new Error(
+      `Failed to set permissions address for metadata registry ${metadataAddress} to ${permissionsAddress}. ` +
+        `Ensure the deployer is authorized to call setPermissionsAddress. Original error: ${originalMessage}`,
+    );
+  }
 
   const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
-  const metadataAddress = await instance.getAddress();
   const hasBurnScope = await permissions.checkAddressScope(
     metadataAddress,
     'coupon:burn',
