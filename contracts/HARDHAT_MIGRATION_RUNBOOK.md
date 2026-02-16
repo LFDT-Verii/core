@@ -26,7 +26,7 @@ Operator flow maps managed environments as follows:
 - `testnet` -> hardhat `staging` -> chainId `1481`
 - `mainnet` -> hardhat `prod` -> chainId `1482`
 
-Post-upgrade smoke test scripts use the same environment names as Hardhat networks: `dev`, `staging`, `prod`.
+Post-upgrade smoke test scripts use the same environment names as Hardhat networks: `localdocker`, `dev`, `staging`, `prod`.
 Smoke tests use the same Hardhat RPC/auth runtime as deploy/upgrade scripts for each environment.
 
 ## Address Resolution Order

@@ -19,7 +19,7 @@
     "test:affected": "cross-env NODE_ENV=test nx affected --target=test",
     "depcheck": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --oneline",
     "depcheck-ci": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --json",
-    "contracts:assert-target-env": "node -e \"const env=process.env.TARGET_ENV; const allowed=new Set(['localdocker','dev','staging','prod']); if(!allowed.has(env)){console.error('TARGET_ENV must be one of localdocker, dev, staging, prod'); process.exit(1)}\"",
+    "contracts:assert-target-env": "node contracts/test-utils/assert-target-env.js",
     "contracts:build:hardhat": "yarn workspace @verii/permissions-contract run build:hardhat && yarn workspace @verii/verification-coupon-contract run build:hardhat && yarn workspace @verii/metadata-registry-contract run build:hardhat && yarn workspace @verii/revocation-list-contract run build:hardhat",
     "contracts:clean:hardhat": "yarn workspace @verii/permissions-contract run clean:hardhat && yarn workspace @verii/verification-coupon-contract run clean:hardhat && yarn workspace @verii/metadata-registry-contract run clean:hardhat && yarn workspace @verii/revocation-list-contract run clean:hardhat",
     "contracts:deploy:hardhat": "yarn contracts:assert-target-env && yarn workspace @verii/permissions-contract run hardhat:deploy && yarn workspace @verii/verification-coupon-contract run hardhat:deploy && yarn workspace @verii/metadata-registry-contract run hardhat:deploy && yarn workspace @verii/revocation-list-contract run hardhat:deploy",
