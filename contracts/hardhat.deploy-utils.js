@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createHash } = require('crypto');
+const permissionsPackageDir = path.resolve(__dirname, 'permissions');
 
 const normalizeAddress = (address) => {
   if (typeof address !== 'string') {
@@ -40,7 +41,14 @@ const readManifest = (packageDir, chainId) => {
     return null;
   }
 
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  let manifest;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  } catch (error) {
+    throw new Error(
+      `Failed to parse OpenZeppelin manifest at "${manifestPath}": ${error && error.message ? error.message : String(error)}`,
+    );
+  }
   return {
     manifestPath,
     manifest,
@@ -80,13 +88,27 @@ const resolveProxyAddress = ({
   return ensureAddress(selectedProxy.address, `${label} manifest proxy`);
 };
 
+// Metadata registry stores credential types as bytes2 values, so we
+// intentionally keep only the first 2 bytes (4 hex chars) of the digest.
 const get2BytesHash = (value) =>
   `0x${createHash('sha256').update(value).digest('hex').slice(0, 4)}`;
+
+const resolvePermissionsAddress = (chainId) => {
+  const manifestData = readManifest(permissionsPackageDir, chainId);
+  return resolveProxyAddress({
+    envVar: 'PERMISSIONS_PROXY_ADDRESS',
+    manifest: manifestData?.manifest,
+    preferredIndex: 0,
+    fallback: 'first',
+    label: 'permissions proxy',
+  });
+};
 
 module.exports = {
   ensureAddress,
   get2BytesHash,
   getChainId,
   readManifest,
+  resolvePermissionsAddress,
   resolveProxyAddress,
 };

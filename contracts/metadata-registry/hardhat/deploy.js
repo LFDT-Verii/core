@@ -4,10 +4,10 @@ const {
   get2BytesHash,
   getChainId,
   readManifest,
+  resolvePermissionsAddress,
   resolveProxyAddress,
 } = require('../../hardhat.deploy-utils');
 
-const permissionsPackageDir = path.resolve(__dirname, '../../permissions');
 const couponPackageDir = path.resolve(__dirname, '../../verification-coupon');
 
 const freeCredentialTypes = [
@@ -18,27 +18,17 @@ const freeCredentialTypes = [
   'IdDocument',
   'IdDocumentV1.0',
   'PassportV1.0',
-  'DrivingLicenseV1.0',
+  'DriversLicenseV1.0',
   'NationalIdCardV1.0',
   'ProofOfAgeV1.0',
   'ResidentPermitV1.0',
+  'VerificationIdentifier',
 ];
-
-const resolvePermissionsAddress = (chainId) => {
-  const manifestData = readManifest(permissionsPackageDir, chainId);
-  return resolveProxyAddress({
-    envVar: 'PERMISSIONS_PROXY_ADDRESS',
-    manifest: manifestData?.manifest,
-    preferredIndex: 0,
-    fallback: 'first',
-    label: 'permissions proxy',
-  });
-};
 
 const resolveCouponAddress = (chainId) => {
   const manifestData = readManifest(couponPackageDir, chainId);
   const explicitIndex = Number(process.env.COUPON_PROXY_INDEX);
-  const preferredIndex = Number.isInteger(explicitIndex) ? explicitIndex : 1;
+  const preferredIndex = Number.isInteger(explicitIndex) ? explicitIndex : 0;
   return resolveProxyAddress({
     envVar: 'COUPON_PROXY_ADDRESS',
     manifest: manifestData?.manifest,
@@ -76,23 +66,41 @@ async function main() {
   );
   await instance.waitForDeployment();
 
-  const setPermissionsTx = await instance.setPermissionsAddress(
-    permissionsAddress,
-  );
-  await setPermissionsTx.wait();
+  const metadataAddress = await instance.getAddress();
+  try {
+    const setPermissionsTx = await instance.setPermissionsAddress(
+      permissionsAddress,
+    );
+    await setPermissionsTx.wait();
+  } catch (error) {
+    const originalMessage =
+      error && typeof error.message === 'string'
+        ? error.message
+        : String(error);
+    throw new Error(
+      `Failed to set permissions address for metadata registry ${metadataAddress} to ${permissionsAddress}. ` +
+        `Ensure the deployer is authorized to call setPermissionsAddress. Original error: ${originalMessage}`,
+    );
+  }
 
   const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
-  const metadataAddress = await instance.getAddress();
   const hasBurnScope = await permissions.checkAddressScope(
     metadataAddress,
     'coupon:burn',
   );
   if (!hasBurnScope) {
-    const addScopeTx = await permissions.addAddressScope(
-      metadataAddress,
-      'coupon:burn',
-    );
-    await addScopeTx.wait();
+    try {
+      const addScopeTx = await permissions.addAddressScope(
+        metadataAddress,
+        'coupon:burn',
+      );
+      await addScopeTx.wait();
+    } catch (error) {
+      throw new Error(
+        `Failed to grant 'coupon:burn' scope to metadata registry at ${metadataAddress} via permissions proxy ${permissionsAddress}. ` +
+          `Ensure the deployer is authorized to modify scopes. Original error: ${error && error.message ? error.message : String(error)}`,
+      );
+    }
   }
 
   console.log(`METADATA_PROXY_ADDRESS=${metadataAddress}`);

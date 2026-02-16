@@ -12,22 +12,18 @@ async function main() {
   const chainId = await getChainId(ethers);
   const manifestData = readManifest(packageDir, chainId);
 
-  if (!manifestData) {
-    throw new Error(
-      `Missing manifest file for chain ${chainId} at ${packageDir}/.openzeppelin`,
-    );
-  }
-
   const proxyAddress = resolveProxyAddress({
     envVar: 'PERMISSIONS_PROXY_ADDRESS',
-    manifest: manifestData.manifest,
+    manifest: manifestData?.manifest,
     preferredIndex: 0,
     fallback: 'first',
     label: 'permissions proxy',
   });
 
   if (!proxyAddress) {
-    throw new Error(`Unable to resolve permissions proxy address`);
+    throw new Error(
+      'Failed to resolve permissions proxy address; set PERMISSIONS_PROXY_ADDRESS or ensure it is present in .openzeppelin/unknown-<chainId>.json (script: contracts/permissions/hardhat/upgrade.js).',
+    );
   }
 
   const Permissions = await ethers.getContractFactory('Permissions');

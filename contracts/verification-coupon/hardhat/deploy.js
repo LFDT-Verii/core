@@ -1,25 +1,11 @@
-const path = require('path');
 const { ethers, upgrades } = require('hardhat');
 const {
   getChainId,
-  readManifest,
-  resolveProxyAddress,
+  resolvePermissionsAddress,
 } = require('../../hardhat.deploy-utils');
 
-const permissionsPackageDir = path.resolve(__dirname, '../../permissions');
 const tokenName = 'Velocity Verification Coupon';
 const baseTokenURI = 'https://www.velocitynetwork.foundation/';
-
-const resolvePermissionsAddress = (chainId) => {
-  const manifestData = readManifest(permissionsPackageDir, chainId);
-  return resolveProxyAddress({
-    envVar: 'PERMISSIONS_PROXY_ADDRESS',
-    manifest: manifestData?.manifest,
-    preferredIndex: 0,
-    fallback: 'first',
-    label: 'permissions proxy',
-  });
-};
 
 async function main() {
   const chainId = await getChainId(ethers);
@@ -44,8 +30,19 @@ async function main() {
   );
   await instance.waitForDeployment();
 
-  const tx = await instance.setPermissionsAddress(permissionsAddress);
-  await tx.wait();
+  try {
+    const tx = await instance.setPermissionsAddress(permissionsAddress);
+    await tx.wait();
+  } catch (error) {
+    const originalMessage =
+      error && typeof error.message === 'string'
+        ? error.message
+        : String(error);
+    throw new Error(
+      `Failed to set permissions address on verification-coupon proxy ${await instance.getAddress()} to ${permissionsAddress}. ` +
+        `Ensure the deployer is authorized to call setPermissionsAddress. Original error: ${originalMessage}`,
+    );
+  }
 
   console.log(`COUPON_PROXY_ADDRESS=${await instance.getAddress()}`);
 }

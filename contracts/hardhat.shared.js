@@ -4,6 +4,7 @@ require('@openzeppelin/hardhat-upgrades');
 
 const DEFAULT_LOCALDOCKER_PRIVATE_KEY =
   '0x071d76d6395c725960f2f6343bd26cc56173679b3ae33292d99d7abc289832bf';
+// This is a deterministic localdocker test key only, used for local chains.
 
 const normalizePrivateKey = (privateKey) => {
   if (!privateKey) {
@@ -23,13 +24,18 @@ const toNumber = (value) => {
   return Number.isFinite(parsedValue) ? parsedValue : undefined;
 };
 
-const buildHttpNetwork = ({ rpcUrl, privateKey, chainId }) => {
+const buildHttpNetwork = ({ rpcUrl, privateKey, privateKeyEnvName, chainId }) => {
   if (!rpcUrl) {
     return null;
   }
 
   const networkConfig = { url: rpcUrl };
   const normalizedPrivateKey = normalizePrivateKey(privateKey);
+  if (privateKey && !normalizedPrivateKey) {
+    throw new Error(
+      `Invalid private key value for ${privateKeyEnvName || 'network config'}`,
+    );
+  }
   if (normalizedPrivateKey) {
     networkConfig.accounts = [normalizedPrivateKey];
   }
@@ -55,6 +61,7 @@ const buildNetworks = () => {
     privateKey:
       process.env.HARDHAT_LOCALDOCKER_PRIVATE_KEY ||
       DEFAULT_LOCALDOCKER_PRIVATE_KEY,
+    privateKeyEnvName: 'HARDHAT_LOCALDOCKER_PRIVATE_KEY',
     chainId: process.env.HARDHAT_LOCALDOCKER_CHAIN_ID || '2020',
   });
 
@@ -66,6 +73,7 @@ const buildNetworks = () => {
     const network = buildHttpNetwork({
       rpcUrl: process.env[`HARDHAT_${name}_RPC_URL`],
       privateKey: process.env[`HARDHAT_${name}_PRIVATE_KEY`],
+      privateKeyEnvName: `HARDHAT_${name}_PRIVATE_KEY`,
       chainId: process.env[`HARDHAT_${name}_CHAIN_ID`],
     });
 
