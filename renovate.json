@@ -99,6 +99,16 @@
         "@nx/{/,}**"
       ],
       "enabled": false
+    },
+    {
+      "groupName": "group: hardhat compatibility set",
+      "matchPackageNames": [
+        "hardhat",
+        "@openzeppelin/hardhat-upgrades"
+      ],
+      "minimumGroupSize": 2,
+      "automerge": false,
+      "description": "Temporary coupling: keep hardhat updates grouped with @openzeppelin/hardhat-upgrades until hardhat-upgrades adds Hardhat v3 compatibility."
     }
   ]
 }

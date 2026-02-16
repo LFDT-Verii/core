@@ -1,62 +1,100 @@
-# Hardhat Migration Runbook (Phase 1)
+# Hardhat Migration Runbook
 
-This runbook covers the Hardhat deploy/upgrade commands added as a replacement path for Truffle-based migrations.
+This runbook defines the operator path for migrating from the current on-chain proxy state on devnet/testnet/mainnet.
 
-## Contract Workspaces
+See also: `contracts/LEGACY_MIGRATIONS_POLICY.md`.
+
+## Scope
 - `@verii/permissions-contract`
 - `@verii/verification-coupon-contract`
 - `@verii/metadata-registry-contract`
 - `@verii/revocation-list-contract`
 
-## Build and Clean
-- Build all Hardhat artifacts:
-  - `yarn contracts:build:hardhat`
-- Clean all Hardhat artifacts:
-  - `yarn contracts:clean:hardhat`
+## Legacy Migration Handling
+Decision: archive legacy Truffle files under `contracts/legacy-truffle/*` and use Hardhat only for active deployments/upgrades.
 
-## Environment Mapping
-Networks are configured from environment variables in `contracts/hardhat.shared.js`.
+## Build Commands
+From repository root:
+- Build hardhat artifacts: `yarn contracts:build:hardhat`
+- Clean hardhat artifacts: `yarn contracts:clean:hardhat`
 
-- `localdocker`
-  - `HARDHAT_LOCALDOCKER_RPC_URL` (default `http://localhost:8545`)
-  - `HARDHAT_LOCALDOCKER_PRIVATE_KEY` (defaults to a local test key in `contracts/hardhat.shared.js`; set explicitly outside local test contexts)
-  - `HARDHAT_LOCALDOCKER_CHAIN_ID` (default `2020`)
-- `dev|qa|staging|prod`
-  - `HARDHAT_<ENV>_RPC_URL`
-  - `HARDHAT_<ENV>_PRIVATE_KEY`
-  - `HARDHAT_<ENV>_CHAIN_ID`
+## Network Mapping
+Hardhat scripts in this repo expose `dev`, `staging`, `prod` networks.
+Operator flow maps managed environments as follows:
 
-## Deploy Flows
-Root orchestration:
-- `yarn contracts:deploy:hardhat:localdocker`
-- `yarn contracts:deploy:hardhat:dev`
-- `yarn contracts:deploy:hardhat:qa`
-- `yarn contracts:deploy:hardhat:staging`
-- `yarn contracts:deploy:hardhat:prod`
+- `devnet` -> hardhat `dev` -> chainId `1480`
+- `testnet` -> hardhat `staging` -> chainId `1481`
+- `mainnet` -> hardhat `prod` -> chainId `1482`
 
-Upgrade flows:
-- `yarn contracts:upgrade:hardhat:localdocker`
-- `yarn contracts:upgrade:hardhat:dev`
-- `yarn contracts:upgrade:hardhat:qa`
-- `yarn contracts:upgrade:hardhat:staging`
-- `yarn contracts:upgrade:hardhat:prod`
+## Address Resolution Order
+Deploy/upgrade scripts resolve contract proxies from:
+1. Explicit env vars (`PERMISSIONS_PROXY_ADDRESS`, `COUPON_PROXY_ADDRESS`, `METADATA_PROXY_ADDRESS`, `REVOCATION_PROXY_ADDRESS`)
+2. OpenZeppelin manifests (`.openzeppelin/unknown-<chainId>.json`)
 
-All root deploy/upgrade commands are chained with `&&` (fail-fast). If a step fails,
-earlier steps may already be on-chain. Recovery flow:
-1. Fix the failing step (env var, permissions, manifest, or script issue).
-2. Re-run the same root deploy/upgrade command.
-3. Verify all expected proxy addresses and required scope bindings after rerun.
+Managed-network manifest/state files are maintained in the engineering deployment repo.
 
-## Address Resolution
-Deploy/upgrade scripts resolve proxy addresses from:
-1. Explicit env vars (e.g. `PERMISSIONS_PROXY_ADDRESS`, `COUPON_PROXY_ADDRESS`, `METADATA_PROXY_ADDRESS`, `REVOCATION_PROXY_ADDRESS`)
-2. `.openzeppelin/unknown-<chainId>.json` manifests
+## Operator Entry Point
+Use the engineering wrapper (from engineering repo root):
+- `./deploy/scripts/release.sh`
 
-For verification-coupon, proxy selection defaults to index `1` for upgrades (legacy V2 behavior). Override with `COUPON_PROXY_INDEX` when needed.
+## Managed-Network Flow (From Current On-Chain State)
+1. Prepare deployment context in engineering repo.
+- Ensure public vars exist for target env (`devnet-vars.json`, `testnet-vars.json`, `mainnet-vars.json`).
+- Ensure secret vars exist where required (for example `devnet-secret-vars.json`) and are not committed.
+- Ensure correct `unknown-<chainId>.json` files are present in engineering deployment context.
 
-## Engineering Wrapper
-Primary operator entrypoint is in `engineering`:
-- `../engineering/deploy/scripts/release.sh`
+2. Run dry-run first.
+- Devnet: `./deploy/scripts/release.sh --env devnet --chain-id 1480 --verii-ref <sha> --mode upgrade --dry-run`
+- Testnet: `./deploy/scripts/release.sh --env testnet --chain-id 1481 --verii-ref <sha> --mode upgrade --dry-run`
+- Mainnet: `./deploy/scripts/release.sh --env mainnet --chain-id 1482 --verii-ref <sha> --mode upgrade --dry-run`
 
-Recommended pre-deploy command:
-- `../engineering/deploy/scripts/release.sh --chain-id 1480 --verii-ref <sha> --env dev --mode upgrade --dry-run`
+3. Execute devnet upgrade.
+- `./deploy/scripts/release.sh --env devnet --chain-id 1480 --verii-ref <sha> --mode upgrade`
+
+4. Validate devnet post-upgrade.
+- Confirm emitted proxy addresses match expected manifests.
+- Confirm critical wiring:
+  - coupon/revocation/metadata `getPermissionsAddress()`
+  - metadata `checkAddressScope(metadata, 'coupon:burn')`
+- Run integration tests from engineering/verii flow that deploy and interact with contracts.
+
+5. Promote same commit to testnet.
+- Run upgrade (no dry-run), then repeat validation checks.
+
+6. Promote same commit to mainnet.
+- Run upgrade (no dry-run), then repeat validation checks.
+
+## New-Chain Bootstrap (Hardhat-Only, From Scratch)
+Use this when deploying to a brand-new chain with no existing proxy manifests.
+
+1. Configure the new network in `contracts/hardhat.shared.js` (or reuse an existing env alias) with:
+- RPC URL
+- chain ID
+- funded deployer private key
+
+2. Execute Hardhat deploy chain in order:
+- permissions deploy
+- verification-coupon deploy
+- metadata-registry deploy
+- revocation-list deploy
+
+From repository root this is typically:
+- `yarn contracts:deploy:hardhat:<network>`
+
+3. Capture emitted proxy addresses and persist deployment state into the engineering deployment context (`unknown-<chainId>.json` and env vars as required).
+
+4. Run post-deploy validation:
+- each proxy responds on-chain
+- permissions wiring is correct on coupon/metadata/revocation
+- metadata has `coupon:burn` scope configured
+
+## Failure Handling
+- Scripts are fail-fast by design.
+- If a step fails mid-sequence:
+1. fix root cause (auth/rpc/manifest/address mismatch)
+2. rerun the same `release.sh` command for that environment
+3. re-validate addresses and wiring
+
+## Notes
+- Verification-coupon proxy resolution defaults to legacy index behavior for upgrades; override with `COUPON_PROXY_INDEX` when needed.
+- For production changes, always use explicit commit SHA (`--verii-ref <sha>`).

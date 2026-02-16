@@ -2,28 +2,20 @@
   "name": "@verii/metadata-registry-contract",
   "version": "0.5.0-build",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "hardhat test",
-    "build": "truffle compile --all",
     "build:hardhat": "hardhat compile",
     "clean:hardhat": "hardhat clean",
     "hardhat:deploy": "hardhat run hardhat/deploy.js",
     "hardhat:upgrade": "hardhat run hardhat/upgrade.js",
     "hardhat:deploy:localdocker": "hardhat run hardhat/deploy.js --network localdocker",
     "hardhat:deploy:dev": "hardhat run hardhat/deploy.js --network dev",
-    "hardhat:deploy:qa": "hardhat run hardhat/deploy.js --network qa",
     "hardhat:deploy:staging": "hardhat run hardhat/deploy.js --network staging",
     "hardhat:deploy:prod": "hardhat run hardhat/deploy.js --network prod",
     "hardhat:upgrade:localdocker": "hardhat run hardhat/upgrade.js --network localdocker",
     "hardhat:upgrade:dev": "hardhat run hardhat/upgrade.js --network dev",
-    "hardhat:upgrade:qa": "hardhat run hardhat/upgrade.js --network qa",
     "hardhat:upgrade:staging": "hardhat run hardhat/upgrade.js --network staging",
-    "hardhat:upgrade:prod": "hardhat run hardhat/upgrade.js --network prod",
-    "migrate:dev": "truffle migrate --network dev",
-    "migrate:qa": "truffle migrate --network qa",
-    "migrate:staging": "truffle migrate --network staging",
-    "migrate:prod": "truffle migrate --network prod"
+    "hardhat:upgrade:prod": "hardhat run hardhat/upgrade.js --network prod"
   },
   "author": "",
   "publishConfig": {
@@ -34,14 +26,11 @@
   "devDependencies": {
     "@openzeppelin/contracts": "4.9.6",
     "@openzeppelin/contracts-upgradeable": "4.9.6",
-    "@openzeppelin/truffle-upgrades": "1.21.0",
-    "@truffle/hdwallet-provider": "1.7.0",
     "@verii/blockchain-functions": "^0.5.0-build",
     "@verii/verification-coupon-contract": "^0.5.0-build",
     "@verii/permissions-contract": "^0.5.0-build",
     "@verii/signature-verification-library": "^0.5.0-build",
     "ethers": "6.16.0",
-    "lodash": "4.17.23",
-    "truffle": "5.11.5"
+    "lodash": "4.17.23"
   }
 }
