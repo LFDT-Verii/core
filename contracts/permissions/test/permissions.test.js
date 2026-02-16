@@ -1,25 +1,8 @@
 const assert = require('node:assert/strict');
 const { ethers } = require('hardhat');
+const { execute, expectRevert } = require('../../test-utils');
 
 const zeroAddress = ethers.ZeroAddress;
-
-const execute = async (txPromise) => {
-  const tx = await txPromise;
-  return tx.wait();
-};
-
-const expectRevert = async (action, expectedMessage) => {
-  try {
-    await action();
-    assert.fail(`Expected revert with: ${expectedMessage}`);
-  } catch (error) {
-    const message = String(error?.message || error);
-    assert.ok(
-      message.includes(expectedMessage),
-      `Expected message "${expectedMessage}", got "${message}"`,
-    );
-  }
-};
 
 describe('VNF functions', () => {
   describe('Permissions', () => {
