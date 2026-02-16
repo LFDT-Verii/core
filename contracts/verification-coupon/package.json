@@ -4,6 +4,10 @@
   "description": "",
   "scripts": {
     "test": "hardhat test",
+    "test:post-upgrade:localdocker": "POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network localdocker",
+    "test:post-upgrade:dev": "POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network dev",
+    "test:post-upgrade:staging": "POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network staging",
+    "test:post-upgrade:prod": "POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network prod",
     "build:hardhat": "hardhat compile",
     "clean:hardhat": "hardhat clean",
     "hardhat:deploy": "hardhat run hardhat/deploy.js",
