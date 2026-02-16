@@ -11,7 +11,7 @@ See also: `contracts/LEGACY_MIGRATIONS_POLICY.md`.
 - `@verii/revocation-list-contract`
 
 ## Legacy Migration Handling
-Decision: archive legacy Truffle `migrations/` and use Hardhat only for active deployments/upgrades.
+Decision: archive legacy Truffle files under `contracts/legacy-truffle/*` and use Hardhat only for active deployments/upgrades.
 
 ## Build Commands
 From repository root:
