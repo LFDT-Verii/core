@@ -4,22 +4,11 @@
   "description": "",
   "scripts": {
     "test": "hardhat test",
-    "test:post-upgrade:localdocker": "POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network localdocker",
-    "test:post-upgrade:dev": "POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network dev",
-    "test:post-upgrade:staging": "POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network staging",
-    "test:post-upgrade:prod": "POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network prod",
+    "test:post-upgrade": "node -e \"const env=process.env.TARGET_ENV; const allowed=new Set(['localdocker','dev','staging','prod']); if(!allowed.has(env)){console.error('TARGET_ENV must be one of localdocker, dev, staging, prod'); process.exit(1)}\" && POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network $TARGET_ENV",
     "build:hardhat": "hardhat compile",
     "clean:hardhat": "hardhat clean",
-    "hardhat:deploy": "hardhat run hardhat/deploy.js",
-    "hardhat:upgrade": "hardhat run hardhat/upgrade.js",
-    "hardhat:deploy:localdocker": "hardhat run hardhat/deploy.js --network localdocker",
-    "hardhat:deploy:dev": "hardhat run hardhat/deploy.js --network dev",
-    "hardhat:deploy:staging": "hardhat run hardhat/deploy.js --network staging",
-    "hardhat:deploy:prod": "hardhat run hardhat/deploy.js --network prod",
-    "hardhat:upgrade:localdocker": "hardhat run hardhat/upgrade.js --network localdocker",
-    "hardhat:upgrade:dev": "hardhat run hardhat/upgrade.js --network dev",
-    "hardhat:upgrade:staging": "hardhat run hardhat/upgrade.js --network staging",
-    "hardhat:upgrade:prod": "hardhat run hardhat/upgrade.js --network prod"
+    "hardhat:deploy": "node -e \"const env=process.env.TARGET_ENV; const allowed=new Set(['localdocker','dev','staging','prod']); if(!allowed.has(env)){console.error('TARGET_ENV must be one of localdocker, dev, staging, prod'); process.exit(1)}\" && hardhat run hardhat/deploy.js --network $TARGET_ENV",
+    "hardhat:upgrade": "node -e \"const env=process.env.TARGET_ENV; const allowed=new Set(['localdocker','dev','staging','prod']); if(!allowed.has(env)){console.error('TARGET_ENV must be one of localdocker, dev, staging, prod'); process.exit(1)}\" && hardhat run hardhat/upgrade.js --network $TARGET_ENV"
   },
   "author": "Nassan Paul",
   "publishConfig": {
