@@ -2,7 +2,6 @@
   "name": "@verii/permissions-contract",
   "version": "0.5.0-build",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "hardhat test",
     "build:hardhat": "hardhat compile",
