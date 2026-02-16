@@ -2844,7 +2844,7 @@
   dependencies:
     sparse-bitfield "^3.0.3"
 
-"@mswjs/interceptors@^0.39.3":
+"@mswjs/interceptors@^0.39.5":
   version "0.39.8"
   resolved "https://registry.npmjs.org/@mswjs/interceptors/-/interceptors-0.39.8.tgz#0a2cf4cf26a731214ca4156273121f67dff7ebf8"
   integrity sha512-2+BzZbjRO7Ct61k8fMNHEtoKjeWI9pIlHFTqBwZ5icHpqszIgEZbjb1MW5Z0+bITTCTl3gk4PDBxs9tA/csXvA==
@@ -4819,10 +4819,10 @@
     picocolors "1.1.1"
     pretty-format "^27.0.2"
 
-"@testing-library/jest-dom@6.8.0":
-  version "6.8.0"
-  resolved "https://registry.npmjs.org/@testing-library/jest-dom/-/jest-dom-6.8.0.tgz#697db9424f0d21d8216f1958fa0b1b69b5f43923"
-  integrity sha512-WgXcWzVM6idy5JaftTVC8Vs83NKRmGJz4Hqs4oyOuO2J4r/y79vvKZsb+CaGyCSEbUPI6OsewfPd0G1A0/TUZQ==
+"@testing-library/jest-dom@6.9.1":
+  version "6.9.1"
+  resolved "https://registry.npmjs.org/@testing-library/jest-dom/-/jest-dom-6.9.1.tgz#7613a04e146dd2976d24ddf019730d57a89d56c2"
+  integrity sha512-zIcONa+hVtVSSep9UT3jZ5rizo2BsxgyDYU7WFD5eICBE7no3881HGeb/QkGfsJs6JTkY1aQhT7rIPC7e+0nnA==
   dependencies:
     "@adobe/css-tools" "^4.4.0"
     aria-query "^5.0.0"
@@ -4831,10 +4831,10 @@
     picocolors "^1.1.1"
     redent "^3.0.0"
 
-"@testing-library/react@16.3.0":
-  version "16.3.0"
-  resolved "https://registry.npmjs.org/@testing-library/react/-/react-16.3.0.tgz#3a85bb9bdebf180cd76dba16454e242564d598a6"
-  integrity sha512-kFSyxiEDwv1WLl2fgsq6pPBbw5aWKrsY2/noi1Id0TK0UParSF62oFQFGHXIyaG4pp2tEub/Zlel+fjjZILDsw==
+"@testing-library/react@16.3.2":
+  version "16.3.2"
+  resolved "https://registry.npmjs.org/@testing-library/react/-/react-16.3.2.tgz#672883b7acb8e775fc0492d9e9d25e06e89786d0"
+  integrity sha512-XU5/SytQM+ykqMnAnvB2umaJNIOsLF3PVv//1Ew4CTcpz0/BRyy/af40qqrt7SjKpDdT1saBMc42CUok5gaw+g==
   dependencies:
     "@babel/runtime" "^7.12.5"
 
@@ -12736,12 +12736,12 @@ no-case@^3.0.4:
     lower-case "^2.0.2"
     tslib "^2.0.3"
 
-nock@15.0.0-beta.6:
-  version "15.0.0-beta.6"
-  resolved "https://registry.npmjs.org/nock/-/nock-15.0.0-beta.6.tgz#44d2699c9e19bb3d15639c5e6cc55165fd38042e"
-  integrity sha512-DEOrKwXXWKCocuA3AX2DWHGNQXZK7x72yahk3aBsUuSwEIlATKHZT7IMgrQJSobIGcG1yavBBvBf6XLUwfo4Kg==
+nock@15.0.0:
+  version "15.0.0"
+  resolved "https://registry.npmjs.org/nock/-/nock-15.0.0.tgz#99c95472e767da991698f6a7cee59893f5453c83"
+  integrity sha512-EoAVk4Y8Yv4JUQz62sv8zmv+DoBblD/pht/q7aW/td1WietaFWrivzhMGGCLmx2qjpLcOrbyammedW8IRUU5TA==
   dependencies:
-    "@mswjs/interceptors" "^0.39.3"
+    "@mswjs/interceptors" "^0.39.5"
     json-stringify-safe "^5.0.1"
 
 node-abi@^3.61.0:
