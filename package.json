@@ -37,6 +37,10 @@
     "start:rebuild": "docker-compose up --build",
     "stop": "docker-compose down -v"
   },
+  "// undici-resolution-note": "Temporary: remove this **/undici resolution after upgrading hardhat to a version that no longer requires it for security patching.",
+  "resolutions": {
+    "**/undici": "^6.23.0"
+  },
   "devDependencies": {
     "@commitlint/cli": "20.4.1",
     "@commitlint/config-conventional": "20.4.1",
@@ -44,7 +48,7 @@
     "@openzeppelin/hardhat-upgrades": "3.5.0",
     "cross-env": "10.1.0",
     "depcheck": "1.4.7",
-    "hardhat": "2.22.19",
+    "hardhat": "2.28.6",
     "husky": "4.3.8",
     "lodash-es": "4.17.23",
     "nx": "21.6.10",
