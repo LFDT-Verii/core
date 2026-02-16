@@ -4,18 +4,12 @@
   "description": "",
   "scripts": {
     "test": "hardhat test",
+    "assert:target-env": "node ../test-utils/assert-target-env.js",
+    "test:post-upgrade": "yarn run -s assert:target-env && POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network $TARGET_ENV",
     "build:hardhat": "hardhat compile",
     "clean:hardhat": "hardhat clean",
-    "hardhat:deploy": "hardhat run hardhat/deploy.js",
-    "hardhat:upgrade": "hardhat run hardhat/upgrade.js",
-    "hardhat:deploy:localdocker": "hardhat run hardhat/deploy.js --network localdocker",
-    "hardhat:deploy:dev": "hardhat run hardhat/deploy.js --network dev",
-    "hardhat:deploy:staging": "hardhat run hardhat/deploy.js --network staging",
-    "hardhat:deploy:prod": "hardhat run hardhat/deploy.js --network prod",
-    "hardhat:upgrade:localdocker": "hardhat run hardhat/upgrade.js --network localdocker",
-    "hardhat:upgrade:dev": "hardhat run hardhat/upgrade.js --network dev",
-    "hardhat:upgrade:staging": "hardhat run hardhat/upgrade.js --network staging",
-    "hardhat:upgrade:prod": "hardhat run hardhat/upgrade.js --network prod"
+    "hardhat:deploy": "yarn run -s assert:target-env && hardhat run hardhat/deploy.js --network $TARGET_ENV",
+    "hardhat:upgrade": "yarn run -s assert:target-env && hardhat run hardhat/upgrade.js --network $TARGET_ENV"
   },
   "author": "Nassan Paul",
   "publishConfig": {

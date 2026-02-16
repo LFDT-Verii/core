@@ -26,6 +26,9 @@ Operator flow maps managed environments as follows:
 - `testnet` -> hardhat `staging` -> chainId `1481`
 - `mainnet` -> hardhat `prod` -> chainId `1482`
 
+Post-upgrade smoke test scripts use the same environment names as Hardhat networks: `localdocker`, `dev`, `staging`, `prod`.
+Smoke tests use the same Hardhat RPC/auth runtime as deploy/upgrade scripts for each environment.
+
 ## Address Resolution Order
 Deploy/upgrade scripts resolve contract proxies from:
 1. Explicit env vars (`PERMISSIONS_PROXY_ADDRESS`, `COUPON_PROXY_ADDRESS`, `METADATA_PROXY_ADDRESS`, `REVOCATION_PROXY_ADDRESS`)
@@ -56,13 +59,19 @@ Use the engineering wrapper (from engineering repo root):
 - Confirm critical wiring:
   - coupon/revocation/metadata `getPermissionsAddress()`
   - metadata `checkAddressScope(metadata, 'coupon:burn')`
+- Run post-upgrade smoke tests (read-only checks; no deploy/upgrade transactions):
+  - `TARGET_ENV=dev yarn contracts:test:post-upgrade`
 - Run integration tests from engineering/verii flow that deploy and interact with contracts.
 
 5. Promote same commit to testnet.
 - Run upgrade (no dry-run), then repeat validation checks.
+- Run smoke checks:
+  - `TARGET_ENV=staging yarn contracts:test:post-upgrade`
 
 6. Promote same commit to mainnet.
 - Run upgrade (no dry-run), then repeat validation checks.
+- Run smoke checks:
+  - `TARGET_ENV=prod yarn contracts:test:post-upgrade`
 
 ## New-Chain Bootstrap (Hardhat-Only, From Scratch)
 Use this when deploying to a brand-new chain with no existing proxy manifests.
@@ -79,7 +88,7 @@ Use this when deploying to a brand-new chain with no existing proxy manifests.
 - revocation-list deploy
 
 From repository root this is typically:
-- `yarn contracts:deploy:hardhat:<network>`
+- `TARGET_ENV=<network> yarn contracts:deploy:hardhat`
 
 3. Capture emitted proxy addresses and persist deployment state into the engineering deployment context (`unknown-<chainId>.json` and env vars as required).
 
