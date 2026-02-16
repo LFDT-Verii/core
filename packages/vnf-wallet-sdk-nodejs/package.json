@@ -32,8 +32,8 @@
     "pino-pretty": "^13.0.0"
   },
   "devDependencies": {
-    "@testing-library/react": "16.3.0",
-    "@types/node": "22.19.9",
+    "@testing-library/react": "16.3.2",
+    "@types/node": "22.19.11",
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",
@@ -42,7 +42,7 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
     "eslint-plugin-prettier": "5.5.5",
-    "eslint-plugin-unused-imports": "4.3.0",
+    "eslint-plugin-unused-imports": "4.4.1",
     "expect": "30.2.0",
     "typescript": "5.9.3"
   },
