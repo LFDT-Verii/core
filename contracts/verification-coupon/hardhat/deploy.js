@@ -2,12 +2,22 @@ const { ethers, upgrades } = require('hardhat');
 const {
   getChainId,
   resolvePermissionsAddress,
+  resolveTxOverrides,
 } = require('../../hardhat.deploy-utils');
 
 const tokenName = 'Velocity Verification Coupon';
 const baseTokenURI = 'https://www.velocitynetwork.foundation/';
 
 async function main() {
+  const txOverrides = await resolveTxOverrides(ethers);
+  const deployOptions = {
+    kind: 'transparent',
+    initializer: 'initialize',
+  };
+  if (Object.keys(txOverrides).length > 0) {
+    deployOptions.txOverrides = txOverrides;
+  }
+
   const chainId = await getChainId(ethers);
   const permissionsAddress = resolvePermissionsAddress(chainId);
 
@@ -23,15 +33,15 @@ async function main() {
   const instance = await upgrades.deployProxy(
     VerificationCoupon,
     [tokenName, baseTokenURI],
-    {
-      kind: 'transparent',
-      initializer: 'initialize',
-    },
+    deployOptions,
   );
   await instance.waitForDeployment();
 
   try {
-    const tx = await instance.setPermissionsAddress(permissionsAddress);
+    const tx = await instance.setPermissionsAddress(
+      permissionsAddress,
+      txOverrides,
+    );
     await tx.wait();
   } catch (error) {
     const originalMessage =

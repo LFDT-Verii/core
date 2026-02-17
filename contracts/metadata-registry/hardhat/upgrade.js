@@ -5,6 +5,7 @@ const {
   readManifest,
   resolvePermissionsAddress,
   resolveProxyAddress,
+  resolveTxOverrides,
 } = require('../../hardhat.deploy-utils');
 
 const packageDir = path.resolve(__dirname, '..');
@@ -23,6 +24,12 @@ const resolveMetadataAddress = (chainId) => {
 async function main() {
   const [deployer] = await ethers.getSigners();
   const deployerAddress = await deployer.getAddress();
+  const txOverrides = await resolveTxOverrides(ethers);
+  const upgradeOptions = { kind: 'transparent' };
+  if (Object.keys(txOverrides).length > 0) {
+    upgradeOptions.txOverrides = txOverrides;
+  }
+
   const chainId = await getChainId(ethers);
   const proxyAddress = resolveMetadataAddress(chainId);
   if (!proxyAddress) {
@@ -32,9 +39,11 @@ async function main() {
   }
 
   const MetadataRegistry = await ethers.getContractFactory('MetadataRegistry');
-  const instance = await upgrades.upgradeProxy(proxyAddress, MetadataRegistry, {
-    kind: 'transparent',
-  });
+  const instance = await upgrades.upgradeProxy(
+    proxyAddress,
+    MetadataRegistry,
+    upgradeOptions,
+  );
   await instance.waitForDeployment();
 
   const permissionsAddress = resolvePermissionsAddress(chainId);
@@ -64,6 +73,7 @@ async function main() {
 
     const setPermissionsTx = await instance.setPermissionsAddress(
       permissionsAddress,
+      txOverrides,
     );
     await setPermissionsTx.wait();
   }
@@ -79,6 +89,7 @@ async function main() {
       const addScopeTx = await permissions.addAddressScope(
         metadataAddress,
         'coupon:burn',
+        txOverrides,
       );
       await addScopeTx.wait();
     } catch (error) {

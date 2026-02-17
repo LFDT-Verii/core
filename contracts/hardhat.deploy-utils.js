@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { createHash } = require('crypto');
 const permissionsPackageDir = path.resolve(__dirname, 'permissions');
+const DECIMAL_INTEGER_PATTERN = /^[0-9]+$/;
+const HEX_INTEGER_PATTERN = /^0x[0-9a-fA-F]+$/;
 
 const normalizeAddress = (address) => {
   if (typeof address !== 'string') {
@@ -104,11 +106,86 @@ const resolvePermissionsAddress = (chainId) => {
   });
 };
 
+const parsePositiveBigInt = (value, label) => {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const normalized = String(value).trim();
+  if (
+    !DECIMAL_INTEGER_PATTERN.test(normalized) &&
+    !HEX_INTEGER_PATTERN.test(normalized)
+  ) {
+    throw new Error(`Invalid ${label}: ${String(value)}`);
+  }
+
+  const parsed = BigInt(normalized);
+  if (parsed <= 0n) {
+    throw new Error(`Invalid ${label}: ${String(value)}`);
+  }
+
+  return parsed;
+};
+
+const resolveAutoGasPercent = () => {
+  const rawPercent = process.env.HARDHAT_AUTO_GAS_LIMIT_PERCENT;
+  if (!rawPercent) {
+    return 90n;
+  }
+
+  const parsedPercent = Number(rawPercent);
+  if (!Number.isInteger(parsedPercent) || parsedPercent < 1 || parsedPercent > 100) {
+    throw new Error(
+      `Invalid HARDHAT_AUTO_GAS_LIMIT_PERCENT: ${String(rawPercent)} (expected integer 1-100)`,
+    );
+  }
+
+  return BigInt(parsedPercent);
+};
+
+const isAutoGasDisabled = () => {
+  const rawValue = process.env.HARDHAT_AUTO_GAS_LIMIT;
+  if (!rawValue) {
+    return false;
+  }
+
+  return ['0', 'false', 'no', 'off'].includes(String(rawValue).toLowerCase());
+};
+
+const resolveTxOverrides = async (ethers) => {
+  const explicitGasLimit = parsePositiveBigInt(
+    process.env.HARDHAT_TX_GAS_LIMIT,
+    'HARDHAT_TX_GAS_LIMIT',
+  );
+  if (explicitGasLimit) {
+    return { gasLimit: explicitGasLimit };
+  }
+
+  if (isAutoGasDisabled()) {
+    return {};
+  }
+
+  const latestBlock = await ethers.provider.getBlock('latest');
+  const blockGasLimit = latestBlock?.gasLimit;
+  if (!blockGasLimit || blockGasLimit <= 0n) {
+    return {};
+  }
+
+  const autoGasPercent = resolveAutoGasPercent();
+  const autoGasLimit = (blockGasLimit * autoGasPercent) / 100n;
+  if (autoGasLimit <= 0n) {
+    return {};
+  }
+
+  return { gasLimit: autoGasLimit };
+};
+
 module.exports = {
   ensureAddress,
   get2BytesHash,
   getChainId,
   readManifest,
+  resolveTxOverrides,
   resolvePermissionsAddress,
   resolveProxyAddress,
 };

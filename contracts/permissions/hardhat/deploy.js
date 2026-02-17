@@ -1,11 +1,18 @@
 const { ethers, upgrades } = require('hardhat');
+const { resolveTxOverrides } = require('../../hardhat.deploy-utils');
 
 async function main() {
-  const Permissions = await ethers.getContractFactory('Permissions');
-  const instance = await upgrades.deployProxy(Permissions, [], {
+  const txOverrides = await resolveTxOverrides(ethers);
+  const deployOptions = {
     kind: 'transparent',
     initializer: 'initialize',
-  });
+  };
+  if (Object.keys(txOverrides).length > 0) {
+    deployOptions.txOverrides = txOverrides;
+  }
+
+  const Permissions = await ethers.getContractFactory('Permissions');
+  const instance = await upgrades.deployProxy(Permissions, [], deployOptions);
   await instance.waitForDeployment();
 
   const proxyAddress = await instance.getAddress();

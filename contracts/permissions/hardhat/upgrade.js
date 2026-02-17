@@ -3,12 +3,19 @@ const { ethers, upgrades } = require('hardhat');
 const {
   getChainId,
   readManifest,
+  resolveTxOverrides,
   resolveProxyAddress,
 } = require('../../hardhat.deploy-utils');
 
 const packageDir = path.resolve(__dirname, '..');
 
 async function main() {
+  const txOverrides = await resolveTxOverrides(ethers);
+  const upgradeOptions = { kind: 'transparent' };
+  if (Object.keys(txOverrides).length > 0) {
+    upgradeOptions.txOverrides = txOverrides;
+  }
+
   const chainId = await getChainId(ethers);
   const manifestData = readManifest(packageDir, chainId);
 
@@ -27,9 +34,11 @@ async function main() {
   }
 
   const Permissions = await ethers.getContractFactory('Permissions');
-  const instance = await upgrades.upgradeProxy(proxyAddress, Permissions, {
-    kind: 'transparent',
-  });
+  const instance = await upgrades.upgradeProxy(
+    proxyAddress,
+    Permissions,
+    upgradeOptions,
+  );
   await instance.waitForDeployment();
 
   console.log(`PERMISSIONS_PROXY_ADDRESS=${await instance.getAddress()}`);

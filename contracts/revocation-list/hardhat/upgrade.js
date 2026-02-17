@@ -5,6 +5,7 @@ const {
   readManifest,
   resolvePermissionsAddress,
   resolveProxyAddress,
+  resolveTxOverrides,
 } = require('../../hardhat.deploy-utils');
 
 const packageDir = path.resolve(__dirname, '..');
@@ -23,6 +24,12 @@ const resolveRevocationAddress = (chainId) => {
 async function main() {
   const [deployer] = await ethers.getSigners();
   const deployerAddress = await deployer.getAddress();
+  const txOverrides = await resolveTxOverrides(ethers);
+  const upgradeOptions = { kind: 'transparent' };
+  if (Object.keys(txOverrides).length > 0) {
+    upgradeOptions.txOverrides = txOverrides;
+  }
+
   const chainId = await getChainId(ethers);
   const proxyAddress = resolveRevocationAddress(chainId);
   if (!proxyAddress) {
@@ -34,9 +41,11 @@ async function main() {
   const RevocationRegistry = await ethers.getContractFactory(
     'RevocationRegistry',
   );
-  const instance = await upgrades.upgradeProxy(proxyAddress, RevocationRegistry, {
-    kind: 'transparent',
-  });
+  const instance = await upgrades.upgradeProxy(
+    proxyAddress,
+    RevocationRegistry,
+    upgradeOptions,
+  );
   await instance.waitForDeployment();
 
   const permissionsAddress = resolvePermissionsAddress(chainId);
@@ -66,6 +75,7 @@ async function main() {
 
     const setPermissionsTx = await instance.setPermissionsAddress(
       permissionsAddress,
+      txOverrides,
     );
     await setPermissionsTx.wait();
   }

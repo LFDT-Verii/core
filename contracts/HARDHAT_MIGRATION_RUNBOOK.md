@@ -107,3 +107,4 @@ From repository root this is typically:
 ## Notes
 - Verification-coupon proxy resolution defaults to legacy index behavior for upgrades; override with `COUPON_PROXY_INDEX` when needed.
 - For production changes, always use explicit commit SHA (`--verii-ref <sha>`).
+- Deploy/upgrade scripts support explicit tx gas limits via `HARDHAT_TX_GAS_LIMIT`; when unset they auto-derive `gasLimit` from latest block gas limit (`HARDHAT_AUTO_GAS_LIMIT=0` disables auto mode, `HARDHAT_AUTO_GAS_LIMIT_PERCENT` defaults to `90`).

@@ -6,6 +6,7 @@ const {
   readManifest,
   resolvePermissionsAddress,
   resolveProxyAddress,
+  resolveTxOverrides,
 } = require('../../hardhat.deploy-utils');
 
 const couponPackageDir = path.resolve(__dirname, '../../verification-coupon');
@@ -39,6 +40,15 @@ const resolveCouponAddress = (chainId) => {
 };
 
 async function main() {
+  const txOverrides = await resolveTxOverrides(ethers);
+  const deployOptions = {
+    kind: 'transparent',
+    initializer: 'initialize',
+  };
+  if (Object.keys(txOverrides).length > 0) {
+    deployOptions.txOverrides = txOverrides;
+  }
+
   const chainId = await getChainId(ethers);
   const couponAddress = resolveCouponAddress(chainId);
   const permissionsAddress = resolvePermissionsAddress(chainId);
@@ -59,10 +69,7 @@ async function main() {
   const instance = await upgrades.deployProxy(
     MetadataRegistry,
     [couponAddress, freeCredentialTypes.map(get2BytesHash)],
-    {
-      kind: 'transparent',
-      initializer: 'initialize',
-    },
+    deployOptions,
   );
   await instance.waitForDeployment();
 
@@ -70,6 +77,7 @@ async function main() {
   try {
     const setPermissionsTx = await instance.setPermissionsAddress(
       permissionsAddress,
+      txOverrides,
     );
     await setPermissionsTx.wait();
   } catch (error) {
@@ -93,6 +101,7 @@ async function main() {
       const addScopeTx = await permissions.addAddressScope(
         metadataAddress,
         'coupon:burn',
+        txOverrides,
       );
       await addScopeTx.wait();
     } catch (error) {
