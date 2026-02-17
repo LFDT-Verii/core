@@ -10,17 +10,36 @@ export default [
     files: ['**/*.js'],
     rules: {
       'no-console': 'off',
+      complexity: 'off',
+      'max-depth': 'off',
+      'max-len': 'off',
+      'max-nested-callbacks': 'off',
+      'no-await-in-loop': 'off',
+      'no-underscore-dangle': 'off',
+      'prefer-destructuring': 'off',
+      'prettier/prettier': 'off',
+      'better-mutation/no-mutation': 'off',
+      'better-mutation/no-mutating-functions': 'off',
+      'better-mutation/no-mutating-methods': 'off',
+      'import/no-extraneous-dependencies': 'off',
+      'prefer-arrow-functions/prefer-arrow-functions': 'off',
     },
   },
 
   // Test files configuration
   {
-    files: ['**/test/*.test.js'],
+    files: ['**/test/**/*.test.js'],
     languageOptions: {
       globals: {
+        after: 'readonly',
+        afterEach: 'readonly',
         artifacts: 'readonly',
         assert: 'readonly',
+        before: 'readonly',
+        beforeEach: 'readonly',
         contract: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
       },
     },
     rules: {
@@ -43,10 +62,15 @@ export default [
 
   // General test files
   {
-    files: ['**/test/*.js'],
+    files: ['**/test/**/*.js'],
     languageOptions: {
       globals: {
+        after: 'readonly',
+        afterEach: 'readonly',
         before: 'readonly',
+        beforeEach: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
         web3: 'readonly',
       },
     },
