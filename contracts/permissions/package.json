@@ -2,14 +2,14 @@
   "name": "@verii/permissions-contract",
   "version": "0.5.0-build",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "truffle test --migrate-none",
-    "build": "truffle compile --all",
-    "migrate:dev": "truffle migrate --network dev",
-    "migrate:qa": "truffle migrate --network qa",
-    "migrate:staging": "truffle migrate --network staging",
-    "migrate:prod": "truffle migrate --network prod"
+    "test": "hardhat test",
+    "assert:target-env": "node ../test-utils/assert-target-env.js",
+    "test:post-upgrade": "yarn run -s assert:target-env && POST_UPGRADE_SMOKE=1 hardhat test test/smoke/post-upgrade.smoke.test.js --network $TARGET_ENV",
+    "build:hardhat": "hardhat compile",
+    "clean:hardhat": "hardhat clean",
+    "hardhat:deploy": "yarn run -s assert:target-env && hardhat run hardhat/deploy.js --network $TARGET_ENV",
+    "hardhat:upgrade": "yarn run -s assert:target-env && hardhat run hardhat/upgrade.js --network $TARGET_ENV"
   },
   "author": "Nassan Paul",
   "publishConfig": {
@@ -20,10 +20,6 @@
   "devDependencies": {
     "@openzeppelin/contracts": "4.9.6",
     "@openzeppelin/contracts-upgradeable": "4.9.6",
-    "@openzeppelin/truffle-upgrades": "1.21.0",
-    "@truffle/hdwallet-provider": "1.7.0",
-    "ethers": "6.16.0",
-    "truffle": "5.11.5",
-    "truffle-assertions": "0.9.2"
+    "ethers": "6.16.0"
   }
 }

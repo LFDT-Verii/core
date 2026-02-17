@@ -1,0 +1,121 @@
+const path = require('path');
+const { ethers, upgrades } = require('hardhat');
+const {
+  get2BytesHash,
+  getChainId,
+  readManifest,
+  resolvePermissionsAddress,
+  resolveProxyAddress,
+  resolveTxOverrides,
+} = require('../../hardhat.deploy-utils');
+
+const couponPackageDir = path.resolve(__dirname, '../../verification-coupon');
+
+const freeCredentialTypes = [
+  'Email',
+  'EmailV1.0',
+  'Phone',
+  'PhoneV1.0',
+  'IdDocument',
+  'IdDocumentV1.0',
+  'PassportV1.0',
+  'DriversLicenseV1.0',
+  'NationalIdCardV1.0',
+  'ProofOfAgeV1.0',
+  'ResidentPermitV1.0',
+  'VerificationIdentifier',
+];
+
+const resolveCouponAddress = (chainId) => {
+  const manifestData = readManifest(couponPackageDir, chainId);
+  const explicitIndex = Number(process.env.COUPON_PROXY_INDEX);
+  const preferredIndex = Number.isInteger(explicitIndex) ? explicitIndex : 0;
+  return resolveProxyAddress({
+    envVar: 'COUPON_PROXY_ADDRESS',
+    manifest: manifestData?.manifest,
+    preferredIndex,
+    fallback: 'last',
+    label: 'verification-coupon proxy',
+  });
+};
+
+async function main() {
+  const txOverrides = await resolveTxOverrides(ethers);
+  const deployOptions = {
+    kind: 'transparent',
+    initializer: 'initialize',
+  };
+  if (Object.keys(txOverrides).length > 0) {
+    deployOptions.txOverrides = txOverrides;
+  }
+
+  const chainId = await getChainId(ethers);
+  const couponAddress = resolveCouponAddress(chainId);
+  const permissionsAddress = resolvePermissionsAddress(chainId);
+
+  if (!couponAddress) {
+    throw new Error(
+      'Coupon proxy address is required (set COUPON_PROXY_ADDRESS or provide coupon manifest)',
+    );
+  }
+
+  if (!permissionsAddress) {
+    throw new Error(
+      'Permissions proxy address is required (set PERMISSIONS_PROXY_ADDRESS or provide permissions manifest)',
+    );
+  }
+
+  const MetadataRegistry = await ethers.getContractFactory('MetadataRegistry');
+  const instance = await upgrades.deployProxy(
+    MetadataRegistry,
+    [couponAddress, freeCredentialTypes.map(get2BytesHash)],
+    deployOptions,
+  );
+  await instance.waitForDeployment();
+
+  const metadataAddress = await instance.getAddress();
+  try {
+    const setPermissionsTx = await instance.setPermissionsAddress(
+      permissionsAddress,
+      txOverrides,
+    );
+    await setPermissionsTx.wait();
+  } catch (error) {
+    const originalMessage =
+      error && typeof error.message === 'string'
+        ? error.message
+        : String(error);
+    throw new Error(
+      `Failed to set permissions address for metadata registry ${metadataAddress} to ${permissionsAddress}. ` +
+        `Ensure the deployer is authorized to call setPermissionsAddress. Original error: ${originalMessage}`,
+    );
+  }
+
+  const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
+  const hasBurnScope = await permissions.checkAddressScope(
+    metadataAddress,
+    'coupon:burn',
+  );
+  if (!hasBurnScope) {
+    try {
+      const addScopeTx = await permissions.addAddressScope(
+        metadataAddress,
+        'coupon:burn',
+        txOverrides,
+      );
+      await addScopeTx.wait();
+    } catch (error) {
+      throw new Error(
+        `Failed to grant 'coupon:burn' scope to metadata registry at ${metadataAddress} via permissions proxy ${permissionsAddress}. ` +
+          `Ensure the deployer is authorized to modify scopes. Original error: ${error && error.message ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  console.log(`METADATA_PROXY_ADDRESS=${metadataAddress}`);
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

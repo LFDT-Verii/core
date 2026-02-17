@@ -56,6 +56,10 @@ contract VerificationCoupon is Initializable, AccessControlEnumerableUpgradeable
         permissions = Permissions(_permissions);
     }
 
+    function getPermissionsAddress() public view returns (address) {
+        return address(permissions);
+    }
+
     function getVNF() public view returns (address) {
         return VNF;
     }
