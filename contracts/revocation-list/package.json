@@ -22,7 +22,7 @@
   "dependencies": {},
   "devDependencies": {
     "@openzeppelin/contracts": "4.9.6",
-    "@openzeppelin/contracts-upgradeable": "4.9.6",
+    "@openzeppelin/contracts-upgradeable": "5.4.0",
     "@verii/blockchain-functions": "^0.5.0-build",
     "@verii/permissions-contract": "^0.5.0-build",
     "@verii/signature-verification-library": "^0.5.0-build",
