@@ -11,7 +11,7 @@ yarn add @verii/common-functions
 ## Usage
 
 ```js
-const pkg = require('@verii/common-functions');
+const { appendSearchParam, appendSearchParamArray, applyOverrides } = require('@verii/common-functions');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,29 @@ const pkg = require('@verii/common-functions');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'lodash/fp'`
-- Refer to `index.js` for the package API.
+- `appendSearchParam`
+- `appendSearchParamArray`
+- `applyOverrides`
+- `bytes32toString`
+- `coerceArray`
+- `dateify`
+- `filterValidEntities`
+- `findIndexWithIndex`
+- `formatAsDate`
+- `idKeyMapper`
+- `leafMap`
+- `mapValuesByKey`
+- `mapWithIndex`
+- `normalizeDisplayDescriptorName`
+- `normalizeFormSchemaName`
+- `normalizeJsonSchemaName`
+- `optional`
+- `prepCamelCase`
+- `promisify`
+- `reduceWithIndex`
+- ... and 4 more (see `index.js`)
 
 ## Development
 

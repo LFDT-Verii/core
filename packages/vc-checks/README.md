@@ -11,7 +11,7 @@ yarn add @verii/vc-checks
 ## Usage
 
 ```js
-const pkg = require('@verii/vc-checks');
+const { CheckResults, CredentialStatus, VelocityRevocationListType } = require('@verii/vc-checks');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,21 @@ const pkg = require('@verii/vc-checks');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'date-fns/fp'`
-- Refer to `index.js` for the package API.
+- `CheckResults`
+- `CredentialStatus`
+- `VelocityRevocationListType`
+- `VeriiProtocolVersions`
+- `checkCredentialStatus`
+- `checkExpiration`
+- `checkHolder`
+- `checkIdentityIssuer`
+- `checkIssuerTrust`
+- `checkJwsVcTampering`
+- `extractCredentialType`
+- `verifyIssuerForCredentialType`
+- `verifyPrimarySourceIssuer`
 
 ## Development
 

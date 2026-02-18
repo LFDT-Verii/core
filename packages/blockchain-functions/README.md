@@ -11,7 +11,7 @@ yarn add @verii/blockchain-functions
 ## Usage
 
 ```js
-const pkg = require('@verii/blockchain-functions');
+const { initGetBlock, initGetBlockNumber, initGetSignerMetrics } = require('@verii/blockchain-functions');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,17 @@ const pkg = require('@verii/blockchain-functions');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'lodash/fp'`
-- Refer to `index.js` for the package API.
+- `initGetBlock`
+- `initGetBlockNumber`
+- `initGetSignerMetrics`
+- `sendNoOpTx`
+- `signAddress`
+- `signArguments`
+- `toEthereumAddress`
+- `toHexString`
+- `toNumber`
 
 ## Development
 

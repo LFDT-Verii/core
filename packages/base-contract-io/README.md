@@ -11,7 +11,7 @@ yarn add @verii/base-contract-io
 ## Usage
 
 ```js
-const pkg = require('@verii/base-contract-io');
+const { authenticateVnfClientPlugin, initAuthenticateVnfBlockchainClient, initAuthenticateVnfClient } = require('@verii/base-contract-io');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,17 @@ const pkg = require('@verii/base-contract-io');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'fastify-plugin'`
-- Refer to `index.js` for the package API.
+- `authenticateVnfClientPlugin`
+- `initAuthenticateVnfBlockchainClient`
+- `initAuthenticateVnfClient`
+- `initAuthenticateVnfClientPlugin`
+- `initContractClient`
+- `initContractWithTransactingClient`
+- `initProvider`
+- `rpcProviderPlugin`
+- `setProvider`
 
 ## Development
 

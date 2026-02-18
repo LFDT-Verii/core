@@ -11,7 +11,7 @@ yarn add @verii/fineract-client
 ## Usage
 
 ```js
-const pkg = require('@verii/fineract-client');
+const { ProductIds, batchOperations, batchTransferCredits } = require('@verii/fineract-client');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,29 @@ const pkg = require('@verii/fineract-client');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module '@verii/common-functions'`
-- Refer to `index.js` for the package API.
+- `ProductIds`
+- `batchOperations`
+- `batchTransferCredits`
+- `buildBurnVouchersPayload`
+- `buildCreateClientPayload`
+- `buildCreateCreditsAccountPayload`
+- `buildTransferCreditsPayload`
+- `createClient`
+- `createCreditsAccount`
+- `createEscrowAccount`
+- `createFineractClient`
+- `createStakesAccount`
+- `createVouchers`
+- `getClientVoucherBalance`
+- `getCreditsAccount`
+- `getCreditsAccountTransactions`
+- `getExpiringVouchers`
+- `getVouchers`
+- `initBuildBatchBurnVouchersPayload`
+- `initBuildBatchCreateClientPayload`
+- ... and 4 more (see `index.js`)
 
 ## Development
 

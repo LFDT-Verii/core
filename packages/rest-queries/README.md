@@ -11,7 +11,7 @@ yarn add @verii/rest-queries
 ## Usage
 
 ```js
-const pkg = require('@verii/rest-queries');
+const { DEFAULT_SIZE, DEFAULT_SKIP, SORT_ASC } = require('@verii/rest-queries');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,23 @@ const pkg = require('@verii/rest-queries');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'lodash/fp'`
-- Refer to `index.js` for the package API.
+- `DEFAULT_SIZE`
+- `DEFAULT_SKIP`
+- `SORT_ASC`
+- `SORT_DESC`
+- `buildPaginatedResponse`
+- `customFastifyQueryStringParser`
+- `initTransformToFilterDocument`
+- `initTransformToFinder`
+- `toEndOfDay`
+- `toStartOfDay`
+- `transformSortTupleArrayToMongoSortObject`
+- `transformToDocumentSkip`
+- `transformToPageSize`
+- `transformToSortDocument`
+- `validateSortDirection`
 
 ## Development
 

@@ -11,7 +11,7 @@ yarn add @verii/did-doc
 ## Usage
 
 ```js
-const pkg = require('@verii/did-doc');
+const { addKeysToDidDoc, addServiceToDidDoc, buildDidDocWithAlternativeId } = require('@verii/did-doc');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,29 @@ const pkg = require('@verii/did-doc');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'http-errors'`
-- Refer to `index.js` for the package API.
+- `addKeysToDidDoc`
+- `addServiceToDidDoc`
+- `buildDidDocWithAlternativeId`
+- `createDidDoc`
+- `extractService`
+- `extractVerificationKey`
+- `extractVerificationMethod`
+- `generateDidInfo`
+- `generateProof`
+- `generatePublicKeySection`
+- `getDidAndAliases`
+- `getDidJwkDocument`
+- `getDidUriFromJwk`
+- `getJwkFromDidUri`
+- `isDidMatching`
+- `isDidUrlWithFragment`
+- `normalizeDidDoc`
+- `normalizeOrganizationDidDocService`
+- `normalizeOrganizationKey`
+- `publicKeyToJwk`
+- ... and 12 more (see `index.js`)
 
 ## Development
 

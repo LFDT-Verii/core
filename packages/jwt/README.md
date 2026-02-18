@@ -11,7 +11,7 @@ yarn add @verii/jwt
 ## Usage
 
 ```js
-const pkg = require('@verii/jwt');
+const { base64UrlToJwk, buildDecodedCredential, buildDecodedPresentation } = require('@verii/jwt');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,29 @@ const pkg = require('@verii/jwt');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'lodash/fp'`
-- Refer to `index.js` for the package API.
+- `base64UrlToJwk`
+- `buildDecodedCredential`
+- `buildDecodedPresentation`
+- `decodeCredentialJwt`
+- `decodePresentationJwt`
+- `deriveJwk`
+- `generateCredentialJwt`
+- `generateDocJwt`
+- `generatePresentationJwt`
+- `getExpirationISODate`
+- `getIssuerId`
+- `hexFromJwk`
+- `hexToJwkKeyTransformer`
+- `jsonLdToUnsignedVcJwtContent`
+- `jwkFromSecp256k1Key`
+- `jwkFromStringified`
+- `jwkThumbprint`
+- `jwkToPublicBase64Url`
+- `jwsVerify`
+- `jwtDecode`
+- ... and 13 more (see `index.js`)
 
 ## Development
 

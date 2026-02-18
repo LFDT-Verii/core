@@ -11,7 +11,7 @@ yarn add @verii/organizations-registry
 ## Usage
 
 ```js
-const pkg = require('@verii/organizations-registry');
+const { IonPublicKeyPurpose, IssuingAndInspectionCategories, OrganizationRegistryErrorMessages } = require('@verii/organizations-registry');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,16 @@ const pkg = require('@verii/organizations-registry');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'lodash/fp'`
-- Refer to `index.js` for the package API.
+- `IonPublicKeyPurpose`
+- `IssuingAndInspectionCategories`
+- `OrganizationRegistryErrorMessages`
+- `ServiceCategories`
+- `ServiceTypeToCategoryMap`
+- `ServiceTypes`
+- `ServiceTypesOfServiceCategory`
+- `categorizeServices`
 
 ## Development
 

@@ -11,7 +11,7 @@ yarn add @verii/fastify-plugins
 ## Usage
 
 ```js
-const pkg = require('@verii/fastify-plugins');
+const { ERROR_CODES, addRequestId, addValidationErrorCode } = require('@verii/fastify-plugins');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,24 @@ const pkg = require('@verii/fastify-plugins');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'fastify-plugin'`
-- Refer to `index.js` for the package API.
+- `ERROR_CODES`
+- `addRequestId`
+- `addValidationErrorCode`
+- `autoSchemaPlugin`
+- `cachePlugin`
+- `corsPlugin`
+- `csvResponseHook`
+- `ensureErrorCode`
+- `errorsPlugin`
+- `extractRequestPath`
+- `fastifyVersionPluginFactory`
+- `getDocsUrl`
+- `httpClientPlugin`
+- `responseRequestIdPlugin`
+- `sendErrorPlugin`
+- `vnfProtocolVersionPlugin`
 
 ## Development
 

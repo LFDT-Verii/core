@@ -11,7 +11,7 @@ yarn add @verii/endpoints-credential-types-registrar
 ## Usage
 
 ```js
-const pkg = require('@verii/endpoints-credential-types-registrar');
+const { CachingConstants, createConfig, credentialTypesRegistrarEndpoints } = require('@verii/endpoints-credential-types-registrar');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,11 @@ const pkg = require('@verii/endpoints-credential-types-registrar');
 
 - `src/index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module '@fastify/autoload'`
-- Refer to `src/index.js` for the package API.
+- `CachingConstants`
+- `createConfig`
+- `credentialTypesRegistrarEndpoints`
 
 ## Development
 

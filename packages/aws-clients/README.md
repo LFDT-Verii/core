@@ -11,7 +11,7 @@ yarn add @verii/aws-clients
 ## Usage
 
 ```js
-const pkg = require('@verii/aws-clients');
+const { buildRawMessage, createSesClient, createSesV2Client } = require('@verii/aws-clients');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,19 @@ const pkg = require('@verii/aws-clients');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module '@aws-sdk/client-dynamodb'`
-- Refer to `index.js` for the package API.
+- `buildRawMessage`
+- `createSesClient`
+- `createSesV2Client`
+- `initKmsClient`
+- `initReadDocument`
+- `initS3Client`
+- `initSendEmailNotification`
+- `initSendSmsNotification`
+- `initWriteDocument`
+- `sendEmailPlugin`
+- `sendSmsPlugin`
 
 ## Development
 
