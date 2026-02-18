@@ -22,11 +22,11 @@ const { adminJwtAuthPlugin, createOauthConfig, initBasicAuthValidate } = require
 
 ## Top-level Exports
 
-- `adminJwtAuthPlugin`
-- `createOauthConfig`
-- `initBasicAuthValidate`
-- `initHasMatchingScope`
-- `oauthPlugin`
+- `adminJwtAuthPlugin` - auth for administrator endpoints
+- `createOauthConfig` - for creating authentication swagger configuration
+- `initBasicAuthValidate` - for basic auth protected endpoints
+- `initHasMatchingScope` - for permissioning
+- `oauthPlugin` - auth for regular endpoints
 
 ## Development
 
