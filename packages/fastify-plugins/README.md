@@ -1,17 +1,17 @@
-# @verii/base-contract-io
+# @verii/fastify-plugins
 
-Package contains functions needed across all contract io packages
+Plugin for handling errors
 
 ## Installation
 
 ```bash
-yarn add @verii/base-contract-io
+yarn add @verii/fastify-plugins
 ```
 
 ## Usage
 
 ```js
-const pkg = require('@verii/base-contract-io');
+const pkg = require('@verii/fastify-plugins');
 
 // Use the exported members for your workflow.
 ```
@@ -30,7 +30,7 @@ const pkg = require('@verii/base-contract-io');
 Run from the repository root:
 
 ```bash
-yarn workspace @verii/base-contract-io test
-yarn workspace @verii/base-contract-io lint
+yarn workspace @verii/fastify-plugins test
+yarn workspace @verii/fastify-plugins lint
 ```
 
