@@ -32,8 +32,10 @@
     "stop": "docker-compose down -v"
   },
   "// undici-resolution-note": "Temporary: remove this **/undici resolution after upgrading hardhat to a version that no longer requires it for security patching.",
+  "// fast-xml-parser-resolution-note": "Temporary: remove this **/fast-xml-parser resolution once @aws-sdk/xml-builder no longer pulls fast-xml-parser 5.3.4 (i.e., upstream resolves to >=5.3.6).",
   "resolutions": {
-    "**/undici": "^6.23.0"
+    "**/undici": "^6.23.0",
+    "**/fast-xml-parser": "^5.3.6"
   },
   "devDependencies": {
     "@commitlint/cli": "20.4.1",
