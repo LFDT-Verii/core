@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
   merge_group:
   pull_request:
-    paths:
-      - contracts/**
     branches:
       - main
       - release/**
@@ -97,6 +95,15 @@ jobs:
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Save yarn cache
+        if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: |
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            node_modules
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: Lint Contracts
         run: yarn contracts:lint
