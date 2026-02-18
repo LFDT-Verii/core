@@ -11,7 +11,7 @@ yarn add @verii/db-kms
 ## Usage
 
 ```js
-const pkg = require('@verii/db-kms');
+const { dbKmsPlugin, defaultRepoOptions, initDbKms } = require('@verii/db-kms');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,12 @@ const pkg = require('@verii/db-kms');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module '@verii/crypto'`
-- Refer to `index.js` for the package API.
+- `dbKmsPlugin`
+- `defaultRepoOptions`
+- `initDbKms`
+- `kmsRepo`
 
 ## Development
 

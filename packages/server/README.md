@@ -11,7 +11,7 @@ yarn add @verii/server-provider
 ## Usage
 
 ```js
-const pkg = require('@verii/server-provider');
+const { createServer, createTestServer, listenServer } = require('@verii/server-provider');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,11 @@ const pkg = require('@verii/server-provider');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module '@fastify/helmet'`
-- Refer to `index.js` for the package API.
+- `createServer`
+- `createTestServer`
+- `listenServer`
 
 ## Development
 

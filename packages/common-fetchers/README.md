@@ -11,7 +11,7 @@ yarn add @verii/common-fetchers
 ## Usage
 
 ```js
-const pkg = require('@verii/common-fetchers');
+const { fetchJson, getCredentialDisplayDescriptor, getCredentialSchemaUris } = require('@verii/common-fetchers');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,17 @@ const pkg = require('@verii/common-fetchers');
 
 - `src/index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'lodash/fp'`
-- Refer to `src/index.js` for the package API.
+- `fetchJson`
+- `getCredentialDisplayDescriptor`
+- `getCredentialSchemaUris`
+- `getCredentialTypeDescriptor`
+- `getCredentialTypeMetadata`
+- `getOrganizationVerifiedProfile`
+- `resolveDid`
+- `resolveKid`
+- `resolveOrgVc`
 
 ## Development
 

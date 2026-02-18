@@ -11,7 +11,7 @@ yarn add @verii/auth
 ## Usage
 
 ```js
-const pkg = require('@verii/auth');
+const { adminJwtAuthPlugin, createOauthConfig, initBasicAuthValidate } = require('@verii/auth');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,13 @@ const pkg = require('@verii/auth');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'lodash/fp'`
-- Refer to `index.js` for the package API.
+- `adminJwtAuthPlugin`
+- `createOauthConfig`
+- `initBasicAuthValidate`
+- `initHasMatchingScope`
+- `oauthPlugin`
 
 ## Development
 

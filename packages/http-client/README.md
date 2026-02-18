@@ -11,7 +11,7 @@ yarn add @verii/http-client
 ## Usage
 
 ```js
-const pkg = require('@verii/http-client');
+const { initCache, initHttpClient } = require('@verii/http-client');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,10 @@ const pkg = require('@verii/http-client');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'nanoid/non-secure'`
-- Refer to `index.js` for the package API.
+- `initCache`
+- `initHttpClient`
 
 ## Development
 

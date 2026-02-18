@@ -11,7 +11,7 @@ yarn add @verii/endpoints-organizations-registrar
 ## Usage
 
 ```js
-const pkg = require('@verii/endpoints-organizations-registrar');
+const { AuthClientTypes, Authorities, ConsentTypes } = require('@verii/endpoints-organizations-registrar');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,29 @@ const pkg = require('@verii/endpoints-organizations-registrar');
 
 - `src/index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module '@spencejs/spence-mongo-repos'`
-- Refer to `src/index.js` for the package API.
+- `AuthClientTypes`
+- `Authorities`
+- `ConsentTypes`
+- `GroupErrorMessages`
+- `ImageState`
+- `KeyErrorMessages`
+- `NodeServiceCategories`
+- `OrganizationErrorMessages`
+- `OrganizationServiceErrorMessages`
+- `OrganizationTypes`
+- `PublicProfileFieldsForHide`
+- `RegistrarScopes`
+- `RoleNames`
+- `ServiceTypeLabels`
+- `SignatoryEventStatus`
+- `UserErrorMessages`
+- `VNF_GROUP_ID_CLAIM`
+- `acceptInvitation`
+- `activateServices`
+- `addInvitationBodySchema`
+- ... and 123 more (see `src/index.js`)
 
 ## Development
 

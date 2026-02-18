@@ -11,7 +11,7 @@ yarn add @verii/validation
 ## Usage
 
 ```js
-const pkg = require('@verii/validation');
+const { initValidation, validationPlugin, wrapValidationError } = require('@verii/validation');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,11 @@ const pkg = require('@verii/validation');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'ajv/dist/2019'`
-- Refer to `index.js` for the package API.
+- `initValidation`
+- `validationPlugin`
+- `wrapValidationError`
 
 ## Development
 

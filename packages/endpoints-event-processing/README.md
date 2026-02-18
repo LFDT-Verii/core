@@ -11,7 +11,7 @@ yarn add @verii/endpoints-event-processing
 ## Usage
 
 ```js
-const pkg = require('@verii/endpoints-event-processing');
+const { createConfig, eventProcessingEndpoints } = require('@verii/endpoints-event-processing');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,10 @@ const pkg = require('@verii/endpoints-event-processing');
 
 - `src/index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module '@fastify/autoload'`
-- Refer to `src/index.js` for the package API.
+- `createConfig`
+- `eventProcessingEndpoints`
 
 ## Development
 

@@ -11,7 +11,7 @@ yarn add @verii/cose-key
 ## Usage
 
 ```js
-const pkg = require('@verii/cose-key');
+const { Algorithms, CBORTags, CWTClaims } = require('@verii/cose-key');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,28 @@ const pkg = require('@verii/cose-key');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'bigint-crypto-utils'`
-- Refer to `index.js` for the package API.
+- `Algorithms`
+- `CBORTags`
+- `CWTClaims`
+- `CoseKey`
+- `EC2KeyParameters`
+- `EllipticCurves`
+- `HSSLMSKeyParameters`
+- `HeaderAlgorithmParameters`
+- `HeaderParameters`
+- `KeyOperations`
+- `KeyParameters`
+- `KeyTypes`
+- `OKPKeyParameters`
+- `RSAKeyParameters`
+- `SymmetricKeyParameters`
+- `WalnutDSAKeyParameters`
+- `deriveEcYValue`
+- `fromJwk`
+- `isEcYValueEven`
+- `toJwk`
 
 ## Development
 

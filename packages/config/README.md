@@ -11,7 +11,7 @@ yarn add @verii/config
 ## Usage
 
 ```js
-const pkg = require('@verii/config');
+const { abi, genericConfig } = require('@verii/config');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,10 @@ const pkg = require('@verii/config');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'env-var'`
-- Refer to `index.js` for the package API.
+- `abi`
+- `genericConfig`
 
 ## Development
 

@@ -11,7 +11,7 @@ yarn add @verii/tests-helpers
 ## Usage
 
 ```js
-const pkg = require('@verii/tests-helpers');
+const { DEFAULT_GROUP_ID, abi, buildMongoConnection } = require('@verii/tests-helpers');
 
 // Use the exported members for your workflow.
 ```
@@ -20,10 +20,29 @@ const pkg = require('@verii/tests-helpers');
 
 - `index.js`
 
-## Notes
+## Top-level Exports
 
-- Unable to enumerate exports automatically in a standalone runtime: `Cannot find module 'expect'`
-- Refer to `index.js` for the package API.
+- `DEFAULT_GROUP_ID`
+- `abi`
+- `buildMongoConnection`
+- `deleteS3Object`
+- `errorResponseMatcher`
+- `generateKeyPairInHexAndJwk`
+- `generateOrganizationKeyMatcher`
+- `getObject`
+- `jsonify`
+- `loadTestEnv`
+- `mongoCloseWrapper`
+- `mongoFactoryWrapper`
+- `mongoify`
+- `privateJwkMatcher`
+- `publicJwkMatcher`
+- `testAdminPayMethodsUser`
+- `testAuthToken`
+- `testIAMSuperUser`
+- `testNoGroupRegistrarUser`
+- `testPurchaseCouponsUser`
+- ... and 6 more (see `index.js`)
 
 ## Development
 
