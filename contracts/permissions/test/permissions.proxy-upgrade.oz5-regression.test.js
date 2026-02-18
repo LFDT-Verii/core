@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { ethers, upgrades } = require('hardhat');
-const { execute } = require('../../test-utils');
+const { execute, expectRevert } = require('../../test-utils');
 
 describe('Permissions Proxy Upgrade OZ5 Regression', () => {
   it('preserves VNF, scopes and operator mapping across proxy upgrade', async () => {
@@ -30,9 +30,13 @@ describe('Permissions Proxy Upgrade OZ5 Regression', () => {
     );
     await execute(permissions.rotateVNF(newVnf));
 
+    const PermissionsV2 = await ethers.getContractFactory(
+      'PermissionsV2',
+      deployerSigner,
+    );
     const upgradedPermissions = await upgrades.upgradeProxy(
       await permissions.getAddress(),
-      Permissions,
+      PermissionsV2,
       { kind: 'transparent' },
     );
 
@@ -44,9 +48,9 @@ describe('Permissions Proxy Upgrade OZ5 Regression', () => {
     );
 
     // Ensure previous VNF no longer has admin rights.
-    await assert.rejects(
-      upgradedPermissions.connect(deployerSigner).rotateVNF(deployer),
-      /Permissions: caller is not VNF/,
+    await expectRevert(
+      () => execute(upgradedPermissions.connect(deployerSigner).rotateVNF(deployer)),
+      'Permissions: caller is not VNF',
     );
   });
 });

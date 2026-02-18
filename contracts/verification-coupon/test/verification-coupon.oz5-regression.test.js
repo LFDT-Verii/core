@@ -71,7 +71,6 @@ const setupCoupon = async ({ useProxy }) => {
     deployer,
     primary,
     operator,
-    VerificationCoupon,
     coupon,
   };
 };
@@ -105,11 +104,11 @@ describe('VerificationCoupon OZ5 Regression', () => {
 
   it('preserves token state across proxy upgrade', async () => {
     const {
+      deployerSigner,
       deployer,
       primary,
       operator,
       metadataSigner,
-      VerificationCoupon,
       coupon,
     } = await setupCoupon({ useProxy: true });
 
@@ -122,9 +121,13 @@ describe('VerificationCoupon OZ5 Regression', () => {
         .burn(0, traceId, caoDid, burnerDid, operator),
     );
 
+    const VerificationCouponV2 = await ethers.getContractFactory(
+      'VerificationCouponV2',
+      deployerSigner,
+    );
     const upgradedCoupon = await upgrades.upgradeProxy(
       await coupon.getAddress(),
-      VerificationCoupon,
+      VerificationCouponV2,
       { kind: 'transparent' },
     );
 
