@@ -20,8 +20,10 @@
     "depcheck": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --oneline",
     "depcheck-ci": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --json",
     "contracts:assert-target-env": "node contracts/test-utils/assert-target-env.js",
+    "contracts:lint": "yarn eslint --config contracts/eslint.config.mjs \"contracts/**/*.js\" --ignore-pattern \"contracts/legacy-truffle/**\"",
     "contracts:build:hardhat": "yarn workspace @verii/permissions-contract run build:hardhat && yarn workspace @verii/verification-coupon-contract run build:hardhat && yarn workspace @verii/metadata-registry-contract run build:hardhat && yarn workspace @verii/revocation-list-contract run build:hardhat",
     "contracts:clean:hardhat": "yarn workspace @verii/permissions-contract run clean:hardhat && yarn workspace @verii/verification-coupon-contract run clean:hardhat && yarn workspace @verii/metadata-registry-contract run clean:hardhat && yarn workspace @verii/revocation-list-contract run clean:hardhat",
+    "contracts:test": "yarn workspace @verii/permissions-contract run test && yarn workspace @verii/verification-coupon-contract run test && yarn workspace @verii/metadata-registry-contract run test && yarn workspace @verii/revocation-list-contract run test",
     "contracts:deploy:hardhat": "yarn contracts:assert-target-env && yarn workspace @verii/permissions-contract run hardhat:deploy && yarn workspace @verii/verification-coupon-contract run hardhat:deploy && yarn workspace @verii/metadata-registry-contract run hardhat:deploy && yarn workspace @verii/revocation-list-contract run hardhat:deploy",
     "contracts:upgrade:hardhat": "yarn contracts:assert-target-env && yarn workspace @verii/permissions-contract run hardhat:upgrade && yarn workspace @verii/verification-coupon-contract run hardhat:upgrade && yarn workspace @verii/metadata-registry-contract run hardhat:upgrade && yarn workspace @verii/revocation-list-contract run hardhat:upgrade",
     "contracts:test:post-upgrade": "yarn contracts:assert-target-env && yarn workspace @verii/permissions-contract run test:post-upgrade && yarn workspace @verii/verification-coupon-contract run test:post-upgrade && yarn workspace @verii/metadata-registry-contract run test:post-upgrade && yarn workspace @verii/revocation-list-contract run test:post-upgrade",
@@ -31,10 +33,8 @@
     "start:rebuild": "docker-compose up --build",
     "stop": "docker-compose down -v"
   },
-  "// undici-resolution-note": "Temporary: remove this **/undici resolution after upgrading hardhat to a version that no longer requires it for security patching.",
   "// fast-xml-parser-resolution-note": "Temporary: remove this **/fast-xml-parser resolution once @aws-sdk/xml-builder no longer pulls fast-xml-parser 5.3.4 (i.e., upstream resolves to >=5.3.6).",
   "resolutions": {
-    "**/undici": "^6.23.0",
     "**/fast-xml-parser": "^5.3.6"
   },
   "devDependencies": {
