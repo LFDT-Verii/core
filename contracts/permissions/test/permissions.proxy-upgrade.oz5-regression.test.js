@@ -30,13 +30,9 @@ describe('Permissions Proxy Upgrade OZ5 Regression', () => {
     );
     await execute(permissions.rotateVNF(newVnf));
 
-    const PermissionsV2 = await ethers.getContractFactory(
-      'PermissionsV2',
-      deployerSigner,
-    );
     const upgradedPermissions = await upgrades.upgradeProxy(
       await permissions.getAddress(),
-      PermissionsV2,
+      Permissions,
       { kind: 'transparent' },
     );
 

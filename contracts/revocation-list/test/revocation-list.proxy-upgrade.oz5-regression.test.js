@@ -41,13 +41,9 @@ describe('RevocationRegistry Proxy Upgrade OZ5 Regression', () => {
         .setRevokedStatus(1, 10, 'traceId', 'caoDid'),
     );
 
-    const RevocationRegistryV2 = await ethers.getContractFactory(
-      'RevocationRegistryV2',
-      deployerSigner,
-    );
     const upgradedRegistry = await upgrades.upgradeProxy(
       await registry.getAddress(),
-      RevocationRegistryV2,
+      RevocationRegistry,
       { kind: 'transparent' },
     );
 

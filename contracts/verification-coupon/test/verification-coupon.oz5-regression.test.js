@@ -121,13 +121,13 @@ describe('VerificationCoupon OZ5 Regression', () => {
         .burn(0, traceId, caoDid, burnerDid, operator),
     );
 
-    const VerificationCouponV2 = await ethers.getContractFactory(
-      'VerificationCouponV2',
+    const VerificationCoupon = await ethers.getContractFactory(
+      'VerificationCoupon',
       deployerSigner,
     );
     const upgradedCoupon = await upgrades.upgradeProxy(
       await coupon.getAddress(),
-      VerificationCouponV2,
+      VerificationCoupon,
       { kind: 'transparent' },
     );
 

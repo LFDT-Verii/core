@@ -58,13 +58,9 @@ describe('MetadataRegistry Proxy Upgrade OZ5 Regression', () => {
         .setEntry('0x4ffb', '0x1234', 1, 0, 'traceId', 'caoDid'),
     );
 
-    const MetadataRegistryV2 = await ethers.getContractFactory(
-      'MetadataRegistryV2',
-      deployerSigner,
-    );
     const upgradedMetadata = await upgrades.upgradeProxy(
       metadataAddress,
-      MetadataRegistryV2,
+      MetadataRegistry,
       { kind: 'transparent' },
     );
 
