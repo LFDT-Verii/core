@@ -134,7 +134,8 @@ jobs:
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
         key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
-    - name: Install Dependencies
+    - name: Install Dependencies (fallback)
+      if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
       run: yarn install --frozen-lockfile --prefer-offline
     - name: Build Libs
       run: yarn build:lib
@@ -228,7 +229,8 @@ jobs:
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
         key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
-    - name: Install Dependencies
+    - name: Install Dependencies (fallback)
+      if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
       run: yarn install --frozen-lockfile --prefer-offline
     - name: Build Libs
       run: yarn build:lib
@@ -321,4 +323,3 @@ jobs:
     - name: Fail on Failure or Draft PR
       run: exit 1
       if: ${{ contains(needs.*.result, 'failure') }}
-
