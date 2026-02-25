@@ -3,28 +3,28 @@
 ## Run Server
 ### Running without building
 
-- `yarn start:dev` Runs the server using ts-node
+- `pnpm run start:dev` Runs the server using ts-node
 
 ### Running after build
 
-- `yarn start`
+- `pnpm run start`
 Runs the built server from the dist folder
 
 ## Building
 
-- `yarn build`
+- `pnpm build`
 
 Builds the app for production to the `dist` folder using `tsc`.
 
 ## Linting
 
-- `yarn lint:fix`
+- `pnpm run lint:fix`
 
 Lint and autofix
 
 
 ## Testing
 
-- `yarn test`
+- `pnpm test`
 
 Launches the test runner

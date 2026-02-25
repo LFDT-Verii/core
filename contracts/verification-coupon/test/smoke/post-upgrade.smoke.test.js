@@ -15,10 +15,15 @@ describeSmoke('VerificationCoupon post-upgrade smoke', function () {
 
   it('resolves deployed proxies and validates permissions wiring', async () => {
     const couponPackageDir = path.resolve(__dirname, '../..');
-    const permissionsPackageDir = path.resolve(__dirname, '../../../permissions');
+    const permissionsPackageDir = path.resolve(
+      __dirname,
+      '../../../permissions',
+    );
 
     const explicitIndex = Number(process.env.COUPON_PROXY_INDEX);
-    const preferredCouponIndex = Number.isInteger(explicitIndex) ? explicitIndex : 1;
+    const preferredCouponIndex = Number.isInteger(explicitIndex)
+      ? explicitIndex
+      : 1;
 
     const { address: permissionsAddress, chainId } = await resolveManagedProxy({
       ethers,
@@ -40,7 +45,10 @@ describeSmoke('VerificationCoupon post-upgrade smoke', function () {
     await assertHasCode(ethers, permissionsAddress, 'permissions proxy');
     await assertHasCode(ethers, couponAddress, 'verification-coupon proxy');
 
-    const coupon = await ethers.getContractAt('VerificationCoupon', couponAddress);
+    const coupon = await ethers.getContractAt(
+      'VerificationCoupon',
+      couponAddress,
+    );
     const currentPermissionsAddress = await coupon.getPermissionsAddress();
     assertAddressEqual(
       currentPermissionsAddress,
@@ -49,6 +57,10 @@ describeSmoke('VerificationCoupon post-upgrade smoke', function () {
     );
 
     const tokenName = await coupon._getTokenName();
-    assert.notEqual(tokenName, '', 'VerificationCoupon token name should not be empty');
+    assert.notEqual(
+      tokenName,
+      '',
+      'VerificationCoupon token name should not be empty',
+    );
   });
 });

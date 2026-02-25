@@ -9,7 +9,7 @@ const {
 
 const packageDir = path.resolve(__dirname, '..');
 
-async function main() {
+const main = async () => {
   const txOverrides = await resolveTxOverrides(ethers);
   const upgradeOptions = { kind: 'transparent' };
   if (Object.keys(txOverrides).length > 0) {
@@ -42,7 +42,7 @@ async function main() {
   await instance.waitForDeployment();
 
   console.log(`PERMISSIONS_PROXY_ADDRESS=${await instance.getAddress()}`);
-}
+};
 
 main().catch((error) => {
   console.error(error);

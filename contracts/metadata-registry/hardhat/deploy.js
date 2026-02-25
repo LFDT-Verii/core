@@ -39,7 +39,7 @@ const resolveCouponAddress = (chainId) => {
   });
 };
 
-async function main() {
+const main = async () => {
   const txOverrides = await resolveTxOverrides(ethers);
   const deployOptions = {
     kind: 'transparent',
@@ -91,7 +91,10 @@ async function main() {
     );
   }
 
-  const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
+  const permissions = await ethers.getContractAt(
+    'Permissions',
+    permissionsAddress,
+  );
   const hasBurnScope = await permissions.checkAddressScope(
     metadataAddress,
     'coupon:burn',
@@ -113,7 +116,7 @@ async function main() {
   }
 
   console.log(`METADATA_PROXY_ADDRESS=${metadataAddress}`);
-}
+};
 
 main().catch((error) => {
   console.error(error);

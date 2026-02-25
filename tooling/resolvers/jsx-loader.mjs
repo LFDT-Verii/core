@@ -16,7 +16,7 @@
  */
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import swc from '@swc/core';
 import { extname } from 'node:path';
 

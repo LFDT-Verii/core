@@ -50,9 +50,9 @@
     "start:remoteauth": "vite dev --mode dev.remoteauth",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "lint:ci": "eslint src --format json >> eslint-results.json"
+    "lint": "pnpm exec eslint src",
+    "lint:fix": "pnpm exec eslint src --fix",
+    "lint:ci": "pnpm exec eslint src --format json >> eslint-results.json"
   },
   "browserslist": [
     ">0.2%",

@@ -1,0 +1,6 @@
+packages:
+  - contracts/*
+  - packages/*
+  - servers/*
+  - tools/*
+  - samples/*
