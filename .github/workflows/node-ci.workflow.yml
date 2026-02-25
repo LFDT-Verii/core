@@ -34,6 +34,7 @@ jobs:
       lint-packages: ${{ steps.packages-list.outputs.lint-packages }}
       test-packages: ${{ steps.packages-list.outputs.test-packages }}
       node-versions: '[ "22.x" ]'
+      deps-cache-key: ${{ steps.cache-keys.outputs.run-key }}
     strategy:
       matrix:
         node-version: ['22.x']
@@ -49,6 +50,11 @@ jobs:
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+    - name: Build Cache Keys
+      id: cache-keys
+      run: |
+        echo "shared-key=${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}" >> $GITHUB_OUTPUT
+        echo "run-key=${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
       uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
@@ -56,7 +62,7 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: ${{ steps.cache-keys.outputs.shared-key }}
     - name: Setup Token
       run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
     - name: Install Dependencies
@@ -68,8 +74,16 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: ${{ steps.cache-keys.outputs.shared-key }}
       if: ${{ steps.cache-yarn-restore.outputs.cache-hit != 'true' }}
+    - name: Save run-scoped Cache
+      id: cache-yarn-save-run
+      uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      with:
+        path: |
+          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          node_modules
+        key: ${{ steps.cache-keys.outputs.run-key }}
     - name: Split Branch Name
       env:
         BRANCH: ${{ github.event.merge_group.base_ref }}
@@ -133,7 +147,7 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: ${{ needs.prepare.outputs.deps-cache-key }}
     - name: Install Dependencies (fallback)
       if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
       run: yarn install --frozen-lockfile --prefer-offline
@@ -228,7 +242,7 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: ${{ needs.prepare.outputs.deps-cache-key }}
     - name: Install Dependencies (fallback)
       if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
       run: yarn install --frozen-lockfile --prefer-offline
