@@ -92,16 +92,16 @@
     openid-client "^6.8.0"
 
 "@auth0/auth0-react@^2.2.1":
-  version "2.14.0"
-  resolved "https://registry.npmjs.org/@auth0/auth0-react/-/auth0-react-2.14.0.tgz#980376900307984251703be5c0aa0268467c2607"
-  integrity sha512-Uyn9mB+pOJ0ko81aJoTbOJok11E4rFeNXhzNFLsvWaUD7dp0Qe3B9zwsbQhaCxrsJOX1UXg0y4ck/RjwNnsPoA==
-  dependencies:
-    "@auth0/auth0-spa-js" "^2.15.0"
-
-"@auth0/auth0-spa-js@^2.15.0":
   version "2.15.0"
-  resolved "https://registry.npmjs.org/@auth0/auth0-spa-js/-/auth0-spa-js-2.15.0.tgz#cc6243aaa51b206166972a2de5d861941b6fe0b9"
-  integrity sha512-cXv1Isyy4JEc+GxesQPFj3SEbDSnCVQTGiardY9WLSoYTsMMU585Kgm9TJFPJO4dDq3wi+DSJoy3IUcB3rr9nA==
+  resolved "https://registry.npmjs.org/@auth0/auth0-react/-/auth0-react-2.15.0.tgz#f1ef0feaaac65bc51a481dfc7a64e62495d839df"
+  integrity sha512-LbRU87U54/YW/N3UHtNVoj3mCBBz+iYAdAByQjbXOkpI6IYnjMBwIwDusW3N23XNXq9WnihD57Dyi2R3/Q9btw==
+  dependencies:
+    "@auth0/auth0-spa-js" "^2.16.0"
+
+"@auth0/auth0-spa-js@^2.16.0":
+  version "2.17.0"
+  resolved "https://registry.npmjs.org/@auth0/auth0-spa-js/-/auth0-spa-js-2.17.0.tgz#a414c8b4ffb13924cb8d7d76b91e5b0477ee0914"
+  integrity sha512-Zdpu4qdOlBXBUDIxSOFAAK6bhs3WlJl1LzkL6kDvamJYDgImi4pMFSzGjS0lobFdotDX1KBnxuyiDSEV0nEBMA==
   dependencies:
     "@auth0/auth0-auth-js" "^1.4.0"
     browser-tabs-lock "^1.2.15"
