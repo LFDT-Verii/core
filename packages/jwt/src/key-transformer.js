@@ -109,7 +109,7 @@ const jwkFromStringified = (key, priv = true) => {
     }
     return v;
   });
-  const jwk = Object.assign(Object.create(null), parsed);
+  const jwk = { ...parsed };
   return priv ? jwk : omit(['d'], jwk);
 };
 
