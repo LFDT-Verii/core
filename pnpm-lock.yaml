@@ -493,9 +493,15 @@ importers:
       '@react-pdf/renderer':
         specifier: ^4.0.0
         version: 4.3.2(react@18.3.1)
+      '@tanstack/react-query':
+        specifier: ^5.83.0
+        version: 5.90.21(react@18.3.1)
       autosuggest-highlight:
         specifier: ^3.3.4
         version: 3.3.4
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.23
