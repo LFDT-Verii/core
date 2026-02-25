@@ -67,15 +67,15 @@ const signerByAddress = async (signers) =>
 const isOverridesObject = (value) =>
   Boolean(
     value &&
-      typeof value === 'object' &&
-      !Array.isArray(value) &&
-      (Object.prototype.hasOwnProperty.call(value, 'from') ||
-        Object.prototype.hasOwnProperty.call(value, 'value') ||
-        Object.prototype.hasOwnProperty.call(value, 'gasLimit') ||
-        Object.prototype.hasOwnProperty.call(value, 'gasPrice') ||
-        Object.prototype.hasOwnProperty.call(value, 'nonce') ||
-        Object.prototype.hasOwnProperty.call(value, 'maxFeePerGas') ||
-        Object.prototype.hasOwnProperty.call(value, 'maxPriorityFeePerGas')),
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    (Object.prototype.hasOwnProperty.call(value, 'from') ||
+      Object.prototype.hasOwnProperty.call(value, 'value') ||
+      Object.prototype.hasOwnProperty.call(value, 'gasLimit') ||
+      Object.prototype.hasOwnProperty.call(value, 'gasPrice') ||
+      Object.prototype.hasOwnProperty.call(value, 'nonce') ||
+      Object.prototype.hasOwnProperty.call(value, 'maxFeePerGas') ||
+      Object.prototype.hasOwnProperty.call(value, 'maxPriorityFeePerGas')),
   );
 
 const parseContractLogs = (receipt, contract) =>
@@ -96,7 +96,7 @@ const parseContractLogs = (receipt, contract) =>
 const wrapContract = async (contract, signersByAddress) => {
   const address = await contract.getAddress();
   return new Proxy(contract, {
-    get(target, prop, receiver) {
+    get: (target, prop, receiver) => {
       if (prop === 'address') {
         return address;
       }

@@ -12,6 +12,6 @@ module.exports = async (deployer) => {
   console.log(`Deployed Permissions Proxy to: ${address}`);
   fs.writeFileSync(
     `_${env}-permissions-proxy-contract-address.json`,
-    JSON.stringify({ address })
+    JSON.stringify({ address }),
   );
 };

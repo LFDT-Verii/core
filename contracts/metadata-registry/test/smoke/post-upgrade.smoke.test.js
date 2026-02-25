@@ -15,7 +15,10 @@ describeSmoke('MetadataRegistry post-upgrade smoke', function () {
 
   it('resolves deployed proxies and validates metadata wiring invariants', async () => {
     const metadataPackageDir = path.resolve(__dirname, '../..');
-    const permissionsPackageDir = path.resolve(__dirname, '../../../permissions');
+    const permissionsPackageDir = path.resolve(
+      __dirname,
+      '../../../permissions',
+    );
 
     const { address: permissionsAddress, chainId } = await resolveManagedProxy({
       ethers,
@@ -37,8 +40,14 @@ describeSmoke('MetadataRegistry post-upgrade smoke', function () {
     await assertHasCode(ethers, permissionsAddress, 'permissions proxy');
     await assertHasCode(ethers, metadataAddress, 'metadata proxy');
 
-    const metadata = await ethers.getContractAt('MetadataRegistry', metadataAddress);
-    const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
+    const metadata = await ethers.getContractAt(
+      'MetadataRegistry',
+      metadataAddress,
+    );
+    const permissions = await ethers.getContractAt(
+      'Permissions',
+      permissionsAddress,
+    );
 
     const currentPermissionsAddress = await metadata.getPermissionsAddress();
     assertAddressEqual(

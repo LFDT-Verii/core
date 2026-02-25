@@ -4,7 +4,7 @@
 
 1. Run docker compose `docker compose -f ../docker/compose.yml up`
 1. Set the `NODE_TLS_REJECT_UNAUTHORIZED` environment variable to `0`
-1. Run tests using `yarn nx run @verii/server-credentialagent:test:e2e`
+1. Run tests using `pnpm exec nx run @verii/server-credentialagent:test:e2e`
 
 ## Docker Compose
 

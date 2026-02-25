@@ -8,7 +8,7 @@ const {
 const tokenName = 'Velocity Verification Coupon';
 const baseTokenURI = 'https://www.velocitynetwork.foundation/';
 
-async function main() {
+const main = async () => {
   const txOverrides = await resolveTxOverrides(ethers);
   const deployOptions = {
     kind: 'transparent',
@@ -27,9 +27,8 @@ async function main() {
     );
   }
 
-  const VerificationCoupon = await ethers.getContractFactory(
-    'VerificationCoupon',
-  );
+  const VerificationCoupon =
+    await ethers.getContractFactory('VerificationCoupon');
   const instance = await upgrades.deployProxy(
     VerificationCoupon,
     [tokenName, baseTokenURI],
@@ -55,7 +54,7 @@ async function main() {
   }
 
   console.log(`COUPON_PROXY_ADDRESS=${await instance.getAddress()}`);
-}
+};
 
 main().catch((error) => {
   console.error(error);

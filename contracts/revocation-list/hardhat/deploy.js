@@ -5,7 +5,7 @@ const {
   resolveTxOverrides,
 } = require('../../hardhat.deploy-utils');
 
-async function main() {
+const main = async () => {
   const txOverrides = await resolveTxOverrides(ethers);
   const deployOptions = {
     kind: 'transparent',
@@ -23,9 +23,8 @@ async function main() {
     );
   }
 
-  const RevocationRegistry = await ethers.getContractFactory(
-    'RevocationRegistry',
-  );
+  const RevocationRegistry =
+    await ethers.getContractFactory('RevocationRegistry');
   const instance = await upgrades.deployProxy(
     RevocationRegistry,
     [],
@@ -51,7 +50,7 @@ async function main() {
   }
 
   console.log(`REVOCATION_PROXY_ADDRESS=${await instance.getAddress()}`);
-}
+};
 
 main().catch((error) => {
   console.error(error);

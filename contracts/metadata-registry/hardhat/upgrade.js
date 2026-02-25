@@ -21,7 +21,7 @@ const resolveMetadataAddress = (chainId) => {
   });
 };
 
-async function main() {
+const main = async () => {
   const [deployer] = await ethers.getSigners();
   const deployerAddress = await deployer.getAddress();
   const txOverrides = await resolveTxOverrides(ethers);
@@ -78,7 +78,10 @@ async function main() {
     await setPermissionsTx.wait();
   }
 
-  const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
+  const permissions = await ethers.getContractAt(
+    'Permissions',
+    permissionsAddress,
+  );
   const metadataAddress = await instance.getAddress();
   const hasBurnScope = await permissions.checkAddressScope(
     metadataAddress,
@@ -101,7 +104,7 @@ async function main() {
   }
 
   console.log(`METADATA_PROXY_ADDRESS=${metadataAddress}`);
-}
+};
 
 main().catch((error) => {
   console.error(error);

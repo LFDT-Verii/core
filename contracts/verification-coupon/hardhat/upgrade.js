@@ -25,7 +25,7 @@ const resolveCouponProxyAddress = (chainId) => {
   });
 };
 
-async function main() {
+const main = async () => {
   const [deployer] = await ethers.getSigners();
   const deployerAddress = await deployer.getAddress();
   const txOverrides = await resolveTxOverrides(ethers);
@@ -42,9 +42,8 @@ async function main() {
     );
   }
 
-  const VerificationCoupon = await ethers.getContractFactory(
-    'VerificationCoupon',
-  );
+  const VerificationCoupon =
+    await ethers.getContractFactory('VerificationCoupon');
   const instance = await upgrades.upgradeProxy(
     proxyAddress,
     VerificationCoupon,
@@ -65,7 +64,8 @@ async function main() {
     currentPermissionsAddress = await instance.getPermissionsAddress();
     shouldUpdatePermissionsAddress =
       !currentPermissionsAddress ||
-      currentPermissionsAddress.toLowerCase() !== permissionsAddress.toLowerCase();
+      currentPermissionsAddress.toLowerCase() !==
+        permissionsAddress.toLowerCase();
   }
 
   if (shouldUpdatePermissionsAddress) {
@@ -91,7 +91,7 @@ async function main() {
   }
 
   console.log(`COUPON_PROXY_ADDRESS=${await instance.getAddress()}`);
-}
+};
 
 main().catch((error) => {
   console.error(error);

@@ -18,22 +18,24 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - name: Use Node.js 20
+      - name: Use Node.js
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Restore yarn cached
-        id: cache-yarn-restore
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Get pnpm store path
+        id: pnpm-store-path
+        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - name: Restore pnpm cache
+        id: cache-pnpm-restore
         uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: |
-            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            ${{ steps.pnpm-store-path.outputs.dir }}
             node_modules
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install dependencies
-        run: yarn install --production --frozen-lockfile
+        run: pnpm install --prod --frozen-lockfile
       - name: Licenses
-        run: yarn check-licenses
+        run: pnpm run check-licenses

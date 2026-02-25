@@ -7,7 +7,10 @@ const setupContracts = async ({
   primary,
   deployerSigner,
 }) => {
-  const Permissions = await ethers.getContractFactory('Permissions', deployerSigner);
+  const Permissions = await ethers.getContractFactory(
+    'Permissions',
+    deployerSigner,
+  );
   const permissionsContractInstance = await Permissions.deploy();
   await permissionsContractInstance.waitForDeployment();
   await execute(permissionsContractInstance.initialize());
@@ -36,7 +39,9 @@ const setupContracts = async ({
       'coupon:burn',
     ),
   );
-  await execute(permissionsContractInstance.addPrimary(primary, primary, primary));
+  await execute(
+    permissionsContractInstance.addPrimary(primary, primary, primary),
+  );
   await execute(
     permissionsContractInstance.addAddressScope(primary, 'transactions:write'),
   );
@@ -176,13 +181,7 @@ describe('VerificationCoupon Contract Test Suite', () => {
             execute(
               verificationCouponInstance
                 .connect(signers[4])
-                .burn(
-                  0,
-                  traceId,
-                  caoDid,
-                  burnerDid,
-                  accountWithoutTokens,
-                ),
+                .burn(0, traceId, caoDid, burnerDid, accountWithoutTokens),
             ),
           'Burn: caller does not have coupon:burn permission',
         );
@@ -208,7 +207,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
 
     before(async () => {
       signers = await ethers.getSigners();
-      [deployerSigner, , issuerSigner, operatorSigner, metadataSigner] = signers;
+      [deployerSigner, , issuerSigner, operatorSigner, metadataSigner] =
+        signers;
 
       issuer = await issuerSigner.getAddress();
       primaryAccount = issuer;
@@ -279,7 +279,11 @@ describe('VerificationCoupon Contract Test Suite', () => {
             .connect(issuerSigner)
             .mint(issuer, expiredTime, quantity, traceId, ownerDid),
         );
-        assert.equal(await verificationCouponInstance.isExpired(1), true, 'Token expired');
+        assert.equal(
+          await verificationCouponInstance.isExpired(1),
+          true,
+          'Token expired',
+        );
       });
 
       it('Token not expired', async () => {
@@ -288,7 +292,11 @@ describe('VerificationCoupon Contract Test Suite', () => {
             .connect(issuerSigner)
             .mint(issuer, expirationTime, quantity, traceId, ownerDid),
         );
-        assert.equal(await verificationCouponInstance.isExpired(2), false, 'Token actual');
+        assert.equal(
+          await verificationCouponInstance.isExpired(2),
+          false,
+          'Token actual',
+        );
       });
     });
   });
@@ -367,7 +375,11 @@ describe('VerificationCoupon Contract Test Suite', () => {
             .burn(0, traceId, caoDid, burnerDid, operatorAccount),
         );
 
-        const burnEvent = findEvent(receipt, verificationCouponInstance, 'BurnCoupon');
+        const burnEvent = findEvent(
+          receipt,
+          verificationCouponInstance,
+          'BurnCoupon',
+        );
         assert.ok(burnEvent, 'BurnCoupon event was not emitted');
 
         const block = await ethers.provider.getBlock(receipt.blockNumber);
@@ -419,7 +431,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
             ownerDid,
           ),
         );
-        const couponId = await verificationCouponInstance.getTokenId(operatorAccount);
+        const couponId =
+          await verificationCouponInstance.getTokenId(operatorAccount);
         assert.equal(
           Number(couponId),
           secondCouponId,
@@ -440,7 +453,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
 
         const tokenIds = [1, 1, 1, 2, 2, 2, 3, 3, 3];
         for (let i = 0; i < tokenIds.length; i += 1) {
-          const couponId = await verificationCouponInstance.getTokenId(operatorAccount);
+          const couponId =
+            await verificationCouponInstance.getTokenId(operatorAccount);
           await execute(
             verificationCouponInstance
               .connect(metadataSigner)
@@ -465,7 +479,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
               ownerDid,
             ),
           );
-          const couponId = await verificationCouponInstance.getTokenId(operatorAccount);
+          const couponId =
+            await verificationCouponInstance.getTokenId(operatorAccount);
           await execute(
             verificationCouponInstance
               .connect(metadataSigner)
@@ -502,7 +517,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
             ),
           );
 
-          const couponId = await verificationCouponInstance.getTokenId(operatorAccount);
+          const couponId =
+            await verificationCouponInstance.getTokenId(operatorAccount);
           await execute(
             verificationCouponInstance
               .connect(metadataSigner)
@@ -600,7 +616,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
           ),
         );
 
-        const couponId = await verificationCouponInstance.getTokenId(operatorAccount);
+        const couponId =
+          await verificationCouponInstance.getTokenId(operatorAccount);
         assert.equal(
           Number(couponId),
           firstCouponId,
@@ -622,8 +639,14 @@ describe('VerificationCoupon Contract Test Suite', () => {
             .burn(firstCouponId, traceId, caoDid, burnerDid, operatorAccount),
         );
 
-        assert.equal(await verificationCouponInstance.balanceOf(primaryAccount, 0), 0n);
-        assert.equal(await verificationCouponInstance.balanceOf(primaryAccount, 1), 0n);
+        assert.equal(
+          await verificationCouponInstance.balanceOf(primaryAccount, 0),
+          0n,
+        );
+        assert.equal(
+          await verificationCouponInstance.balanceOf(primaryAccount, 1),
+          0n,
+        );
       });
     });
   });
@@ -645,7 +668,8 @@ describe('VerificationCoupon Contract Test Suite', () => {
 
       before(async () => {
         signers = await ethers.getSigners();
-        [deployerSigner, primarySigner, operatorSigner, metadataSigner] = signers;
+        [deployerSigner, primarySigner, operatorSigner, metadataSigner] =
+          signers;
 
         primaryAccount = await primarySigner.getAddress();
         operatorAccount = await operatorSigner.getAddress();

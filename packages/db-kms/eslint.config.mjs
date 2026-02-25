@@ -1,5 +1,5 @@
 import baseConfig from '../../eslint.config.mjs';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import jsdoc from 'eslint-plugin-jsdoc';
 import typescriptEslint from 'typescript-eslint';
 

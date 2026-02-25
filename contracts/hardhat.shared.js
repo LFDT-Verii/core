@@ -24,7 +24,12 @@ const toNumber = (value) => {
   return Number.isFinite(parsedValue) ? parsedValue : undefined;
 };
 
-const buildHttpNetwork = ({ rpcUrl, privateKey, privateKeyEnvName, chainId }) => {
+const buildHttpNetwork = ({
+  rpcUrl,
+  privateKey,
+  privateKeyEnvName,
+  chainId,
+}) => {
   if (!rpcUrl) {
     return null;
   }

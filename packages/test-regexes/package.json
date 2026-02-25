@@ -12,9 +12,9 @@
   "dependencies": {},
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage **/*.test.js --passWithNoTests",
-    "lint": "eslint .",
-    "lint:ci": "eslint . --format json >> eslint-results.json",
-    "lint:fix": "eslint --fix ."
+    "lint": "pnpm exec eslint .",
+    "lint:ci": "pnpm exec eslint . --format json >> eslint-results.json",
+    "lint:fix": "pnpm exec eslint --fix ."
   },
   "devDependencies": {
     "eslint": "9.39.3",

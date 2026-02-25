@@ -21,7 +21,7 @@ const main = async () => {
   const instance = new ethers.Contract(
     config.contractAddress,
     Migrations.abi,
-    provider
+    provider,
   );
 
   if (cmd === 'set') {
