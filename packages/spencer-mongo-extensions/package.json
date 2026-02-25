@@ -25,7 +25,7 @@
   "devDependencies": {
     "@spencejs/spence-config": "0.10.2",
     "@verii/tests-helpers": "0.5.0-build",
-    "eslint": "9.39.2",
+    "eslint": "9.39.3",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",

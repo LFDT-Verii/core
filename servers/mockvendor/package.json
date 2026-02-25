@@ -54,7 +54,7 @@
     "@verii/test-regexes": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
     "canonicalize": "2.1.0",
-    "eslint": "9.39.2",
+    "eslint": "9.39.3",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",
