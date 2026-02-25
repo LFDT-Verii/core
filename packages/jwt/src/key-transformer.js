@@ -6,10 +6,29 @@ const isPem = startsWith('-----BEGIN');
 
 const normalizeHex = (hex) => hex.replace(/^0x/i, '');
 
+const HEX_FORMAT = /^[0-9a-fA-F]+$/;
+
 const normalizeCoordinateHex = (hex, byteLength = 32) => {
   const normalizedHex = normalizeHex(hex);
   const paddedHex = normalizedHex.padStart(byteLength * 2, '0');
   return paddedHex.slice(-byteLength * 2);
+};
+
+const detectHexKeyType = (key) => {
+  const normalizedKey = normalizeHex(key);
+  if (!HEX_FORMAT.test(normalizedKey)) {
+    return 'unknown';
+  }
+  if (normalizedKey.length === 64) {
+    return 'private';
+  }
+  if (
+    (normalizedKey.length === 130 && normalizedKey.startsWith('04')) ||
+    normalizedKey.length === 128
+  ) {
+    return 'public';
+  }
+  return 'unknown';
 };
 
 const base64UrlToHex = (value) => {
@@ -25,9 +44,6 @@ const uncompressedPublicKeyToCoordinates = (publicKey) => {
   const coordinates = normalizedKey.startsWith('04')
     ? normalizedKey.slice(2)
     : normalizedKey;
-  if (coordinates.length < 128 || coordinates.length % 2 !== 0) {
-    throw new Error('Invalid secp256k1 public key');
-  }
   const canonicalCoordinates = coordinates.slice(-128);
   return {
     x: canonicalCoordinates.slice(0, 64),
@@ -58,7 +74,7 @@ const jwkFromPem = (pem, priv) => {
   return priv ? exportedJwk : omit(['d'], exportedJwk);
 };
 
-  const jwkFromSecp256k1Key = (key, priv = true) => {
+const jwkFromSecp256k1Key = (key, priv = true) => {
   if (isPem(key)) {
     const rawJwk = jwkFromPem(key, priv);
     return {
@@ -68,11 +84,16 @@ const jwkFromPem = (pem, priv) => {
     };
   }
   if (!priv) {
-    try {
+    const keyType = detectHexKeyType(key);
+    if (keyType === 'public') {
       return publicJwkFromPublicHex(key);
-    } catch {
+    }
+    if (keyType === 'private') {
       return publicJwkFromPublicHex(publicHexFromPrivateHex(key));
     }
+    throw new Error(
+      'Expected secp256k1 private key (64 hex chars) or uncompressed public key (128/130 hex chars)',
+    );
   }
   const privateKeyHex = normalizeCoordinateHex(key);
   return {

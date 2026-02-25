@@ -120,10 +120,28 @@ describe('Key Transformer Tests', () => {
       expect(publicJwk).toEqual(PUBLIC_JWK);
     });
 
+    it('should generate jwk for hex public keys without prefix', () => {
+      const publicJwk = jwkFromSecp256k1Key(PUBLIC_KEY.slice(2), false);
+
+      expect(publicJwk).toEqual(PUBLIC_JWK);
+    });
+
     it('should generate public jwk from private hex when requested', () => {
       const publicJwk = jwkFromSecp256k1Key(PRIVATE_KEY, false);
 
       expect(publicJwk).toEqual(PUBLIC_JWK);
+    });
+
+    it('should throw for invalid keys when public jwk is requested', () => {
+      expect(() => jwkFromSecp256k1Key('not-a-key', false)).toThrow(
+        'Expected secp256k1 private key (64 hex chars) or uncompressed public key (128/130 hex chars)',
+      );
+    });
+
+    it('should throw for wrong-sized hex keys when public jwk is requested', () => {
+      expect(() => jwkFromSecp256k1Key('abcd', false)).toThrow(
+        'Expected secp256k1 private key (64 hex chars) or uncompressed public key (128/130 hex chars)',
+      );
     });
 
     it('should generate hex for jwk public keys', () => {
