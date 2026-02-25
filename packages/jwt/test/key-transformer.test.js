@@ -157,6 +157,18 @@ describe('Key Transformer Tests', () => {
     it('should generate hex for jwk private keys', () => {
       expect(hexFromJwk(PRIVATE_JWK, true)).toEqual(PRIVATE_KEY);
     });
+
+    it('should preserve padding when generating hex for padded jwk private keys', () => {
+      expect(hexFromJwk(PRIVATE_JWK_WITH_PADDING, true)).toEqual(
+        PRIVATE_KEY_WITH_PADDING,
+      );
+    });
+
+    it('should preserve padding when generating hex for padded jwk public keys', () => {
+      expect(hexFromJwk(PUBLIC_JWK_WITH_PADDING, false)).toEqual(
+        PUBLIC_KEY_WITH_PADDING,
+      );
+    });
   });
 
   describe('public key from private key', () => {
