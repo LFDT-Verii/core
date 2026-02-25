@@ -19,7 +19,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">= 20.0.0"
+    "node": ">= 24.0.0"
   },
   "dependencies": {
     "@fastify/autoload": "^6.0.0",
@@ -33,7 +33,7 @@
     "fastify-plugin": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "22.19.11",
+    "@types/node": "24.9.2",
     "eslint": "9.39.3",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",

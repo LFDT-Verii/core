@@ -107,5 +107,5 @@ Solidity contracts under `contracts/` use Truffle. Key contracts:
 
 ## Requirements
 
-- Node.js 22.x (see `.nvmrc` for exact version)
+- Node.js 24.x (see `.nvmrc` for exact version)
 - Yarn 1.x (classic)
