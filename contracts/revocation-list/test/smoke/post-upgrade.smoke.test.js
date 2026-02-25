@@ -14,7 +14,10 @@ describeSmoke('RevocationRegistry post-upgrade smoke', function () {
 
   it('resolves deployed proxies and validates permissions wiring', async () => {
     const revocationPackageDir = path.resolve(__dirname, '../..');
-    const permissionsPackageDir = path.resolve(__dirname, '../../../permissions');
+    const permissionsPackageDir = path.resolve(
+      __dirname,
+      '../../../permissions',
+    );
 
     const { address: permissionsAddress, chainId } = await resolveManagedProxy({
       ethers,

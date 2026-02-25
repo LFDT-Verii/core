@@ -76,40 +76,42 @@ jobs:
         uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Enable Corepack
+        run: corepack enable
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      - name: Get pnpm store path
+        id: pnpm-store-path
+        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
 
-      - name: Restore yarn cached
-        id: cache-yarn-restore
+      - name: Restore pnpm cache
+        id: cache-pnpm-restore
         uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: |
-            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            ${{ steps.pnpm-store-path.outputs.dir }}
             node_modules
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Setup Token
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile --prefer-offline
+        run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Save yarn cache
-        if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
+      - name: Save pnpm cache
+        if: steps.cache-pnpm-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: |
-            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            ${{ steps.pnpm-store-path.outputs.dir }}
             node_modules
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Lint Contracts
-        run: yarn contracts:lint
+        run: pnpm run contracts:lint
 
       - name: Compile Contracts (Hardhat)
-        run: yarn contracts:build:hardhat
+        run: pnpm run contracts:build:hardhat
 
       - name: Start Besu Blockchain Node
         run: >
@@ -132,4 +134,4 @@ jobs:
         run: while ! nc -z localhost 8545; do echo "Waiting for Besu on 8545..."; sleep 2; done;
 
       - name: Run Contracts Tests
-        run: yarn contracts:test
+        run: pnpm run contracts:test

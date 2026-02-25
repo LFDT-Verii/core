@@ -73,15 +73,17 @@
     "prepublish": "vite build",
     "test": "node --enable-source-maps --import=global-jsdom/register --import=./setup-tests.js --test --test-concurrency=1 --experimental-test-module-mocks --test-reporter=spec --test-reporter-destination=stdout '**/*.test.js' '**/*.test.jsx'",
     "test:ci": "node --enable-source-maps --import=global-jsdom/register --import=./setup-tests.js  --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info '**/*.test.js' '**/*.test.jsx'",
-    "lint": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node eslint src",
-    "lint:fix": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node eslint src --fix"
+    "lint": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node pnpm exec eslint src",
+    "lint:fix": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node pnpm exec eslint src --fix"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.1",
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
     "@react-pdf/renderer": "^4.0.0",
+    "@tanstack/react-query": "^5.83.0",
     "autosuggest-highlight": "^3.3.4",
+    "clsx": "^2.1.1",
     "lodash-es": "^4.17.21",
     "prop-types": "^15.8.1",
     "ra-core": "^5.5.2",

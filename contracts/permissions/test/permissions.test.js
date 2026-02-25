@@ -25,7 +25,10 @@ describe('VNF functions', () => {
     });
 
     it('Should deploy the permissions contract', async () => {
-      assert.notEqual(await permissionsContractInstance.getAddress(), zeroAddress);
+      assert.notEqual(
+        await permissionsContractInstance.getAddress(),
+        zeroAddress,
+      );
     });
 
     it('Should have initialized the contract with the VNF address', async () => {
@@ -87,7 +90,10 @@ describe('Address -> Scopes mappings test suite', () => {
     });
 
     it('Should deploy the permissions contract', async () => {
-      assert.notEqual(await permissionsContractInstance.getAddress(), zeroAddress);
+      assert.notEqual(
+        await permissionsContractInstance.getAddress(),
+        zeroAddress,
+      );
     });
 
     it('Should return an empty addressToPermissions map', async () => {
@@ -112,13 +118,18 @@ describe('Address -> Scopes mappings test suite', () => {
 
     it('Should fail when VNF address tries to add a scope for the 0 address', async () => {
       await expectRevert(
-        () => execute(permissionsContractInstance.addAddressScope(zeroAddress, 'foo')),
+        () =>
+          execute(
+            permissionsContractInstance.addAddressScope(zeroAddress, 'foo'),
+          ),
         'Permissions: address is 0 address',
       );
     });
 
     it('Should allow VNF to add scope to an address', async () => {
-      await execute(permissionsContractInstance.addAddressScope(mockAddress1, 'foo'));
+      await execute(
+        permissionsContractInstance.addAddressScope(mockAddress1, 'foo'),
+      );
       const hasFooScope = await permissionsContractInstance.checkAddressScope(
         mockAddress1,
         'foo',
@@ -139,7 +150,9 @@ describe('Address -> Scopes mappings test suite', () => {
     });
 
     it('Should allow VNF to remove scope from an address', async () => {
-      await execute(permissionsContractInstance.removeAddressScope(mockAddress1, 'foo'));
+      await execute(
+        permissionsContractInstance.removeAddressScope(mockAddress1, 'foo'),
+      );
       const hasFooScope = await permissionsContractInstance.checkAddressScope(
         mockAddress1,
         'foo',
@@ -148,7 +161,9 @@ describe('Address -> Scopes mappings test suite', () => {
     });
 
     it('Should allow VNF to remove a scope from the 0 address', async () => {
-      await execute(permissionsContractInstance.removeAddressScope(zeroAddress, 'foo'));
+      await execute(
+        permissionsContractInstance.removeAddressScope(zeroAddress, 'foo'),
+      );
       const hasFooScope = await permissionsContractInstance.checkAddressScope(
         zeroAddress,
         'foo',
@@ -169,14 +184,22 @@ describe('Address -> Scopes mappings test suite', () => {
     });
 
     it('updateAddressScopes should update scopes for an address', async () => {
-      await execute(permissionsContractInstance.addAddressScope(mockAddress1, 'fooremove'));
+      await execute(
+        permissionsContractInstance.addAddressScope(mockAddress1, 'fooremove'),
+      );
       assert.equal(
-        await permissionsContractInstance.checkAddressScope(mockAddress1, 'fooremove'),
+        await permissionsContractInstance.checkAddressScope(
+          mockAddress1,
+          'fooremove',
+        ),
         true,
         'should have fooremove scope before removal',
       );
       assert.equal(
-        await permissionsContractInstance.checkAddressScope(mockAddress1, 'fooadd'),
+        await permissionsContractInstance.checkAddressScope(
+          mockAddress1,
+          'fooadd',
+        ),
         false,
         'should not have fooadd scope initially',
       );
@@ -189,14 +212,16 @@ describe('Address -> Scopes mappings test suite', () => {
         ),
       );
 
-      const hasFooAddScope = await permissionsContractInstance.checkAddressScope(
-        mockAddress1,
-        'fooadd',
-      );
-      const hasFooRemoveScope = await permissionsContractInstance.checkAddressScope(
-        mockAddress1,
-        'fooremove',
-      );
+      const hasFooAddScope =
+        await permissionsContractInstance.checkAddressScope(
+          mockAddress1,
+          'fooadd',
+        );
+      const hasFooRemoveScope =
+        await permissionsContractInstance.checkAddressScope(
+          mockAddress1,
+          'fooremove',
+        );
       assert.equal(hasFooAddScope, true, 'should have fooadd scope');
       assert.equal(hasFooRemoveScope, false, 'should not have fooremove scope');
     });
@@ -209,14 +234,16 @@ describe('Address -> Scopes mappings test suite', () => {
           ['fooremove'],
         ),
       );
-      const hasFooAddScope = await permissionsContractInstance.checkAddressScope(
-        zeroAddress,
-        'fooadd',
-      );
-      const hasFooRemoveScope = await permissionsContractInstance.checkAddressScope(
-        zeroAddress,
-        'fooremove',
-      );
+      const hasFooAddScope =
+        await permissionsContractInstance.checkAddressScope(
+          zeroAddress,
+          'fooadd',
+        );
+      const hasFooRemoveScope =
+        await permissionsContractInstance.checkAddressScope(
+          zeroAddress,
+          'fooremove',
+        );
       assert.equal(hasFooAddScope, true, 'should have fooadd scope');
       assert.equal(hasFooRemoveScope, false, 'should not have fooremove scope');
     });
@@ -267,7 +294,10 @@ describe('Permissions test suite', () => {
     });
 
     it('Should deploy the permissions contract', async () => {
-      assert.notEqual(await permissionsContractInstance.getAddress(), zeroAddress);
+      assert.notEqual(
+        await permissionsContractInstance.getAddress(),
+        zeroAddress,
+      );
     });
 
     it('Adding a primary account should fail when called by non VNF address', async () => {
@@ -298,7 +328,11 @@ describe('Permissions test suite', () => {
 
     it('Adding a primary account should succeed when called by VNF address', async () => {
       const result = await execute(
-        permissionsContractInstance.addPrimary(primary1, permissioning1, rotation1),
+        permissionsContractInstance.addPrimary(
+          primary1,
+          permissioning1,
+          rotation1,
+        ),
       );
       assert.ok(result, 'addPrimary should resolve');
 
@@ -308,7 +342,11 @@ describe('Permissions test suite', () => {
         primary1,
         'primaries array does not contain the correct primary address',
       );
-      assert.equal(primaries.length, 1, 'primaries array should have 1 element');
+      assert.equal(
+        primaries.length,
+        1,
+        'primaries array should have 1 element',
+      );
     });
 
     it('Rotating a permissioning address should fail when a non rotation address of the primary address is used', async () => {
@@ -347,7 +385,8 @@ describe('Permissions test suite', () => {
     });
 
     it('Lookup Primary should return 0 address when operator is the 0 address', async () => {
-      const primary = await permissionsContractInstance.lookupPrimary(zeroAddress);
+      const primary =
+        await permissionsContractInstance.lookupPrimary(zeroAddress);
       assert.equal(primary, zeroAddress, primary);
     });
 
@@ -383,9 +422,8 @@ describe('Permissions test suite', () => {
       );
       assert.ok(result, 'addOperatorKey should resolve');
 
-      const primaryOfOperator = await permissionsContractInstance.lookupPrimary(
-        operator1,
-      );
+      const primaryOfOperator =
+        await permissionsContractInstance.lookupPrimary(operator1);
       assert.equal(
         primaryOfOperator,
         primary1,
@@ -434,7 +472,8 @@ describe('Permissions test suite', () => {
       );
       assert.ok(result, 'removeOperatorKey should resolve');
 
-      const primary = await permissionsContractInstance.lookupPrimary(operator1);
+      const primary =
+        await permissionsContractInstance.lookupPrimary(operator1);
       assert.equal(primary, zeroAddress, primary);
     });
 
@@ -488,14 +527,12 @@ describe('Permissions test suite', () => {
       );
       assert.ok(result, 'rotateOperatorKey should resolve');
 
-      const oldOperatorPrimary = await permissionsContractInstance.lookupPrimary(
-        operator1,
-      );
+      const oldOperatorPrimary =
+        await permissionsContractInstance.lookupPrimary(operator1);
       assert.equal(oldOperatorPrimary, zeroAddress, oldOperatorPrimary);
 
-      const newOperatorPrimary = await permissionsContractInstance.lookupPrimary(
-        operator2,
-      );
+      const newOperatorPrimary =
+        await permissionsContractInstance.lookupPrimary(operator2);
       assert.equal(newOperatorPrimary, primary1, newOperatorPrimary);
     });
 
@@ -507,14 +544,12 @@ describe('Permissions test suite', () => {
       );
       assert.ok(result, 'rotateOperatorKey should resolve');
 
-      const oldOperatorPrimary = await permissionsContractInstance.lookupPrimary(
-        unknown1,
-      );
+      const oldOperatorPrimary =
+        await permissionsContractInstance.lookupPrimary(unknown1);
       assert.equal(oldOperatorPrimary, zeroAddress, oldOperatorPrimary);
 
-      const newOperatorPrimary = await permissionsContractInstance.lookupPrimary(
-        operator1,
-      );
+      const newOperatorPrimary =
+        await permissionsContractInstance.lookupPrimary(operator1);
       assert.equal(newOperatorPrimary, primary1, newOperatorPrimary);
     });
 
@@ -532,14 +567,12 @@ describe('Permissions test suite', () => {
       );
       assert.ok(result, 'rotateOperatorKey should resolve');
 
-      const oldOperatorPrimary = await permissionsContractInstance.lookupPrimary(
-        zeroAddress,
-      );
+      const oldOperatorPrimary =
+        await permissionsContractInstance.lookupPrimary(zeroAddress);
       assert.equal(oldOperatorPrimary, zeroAddress, oldOperatorPrimary);
 
-      const newOperatorPrimary = await permissionsContractInstance.lookupPrimary(
-        operator1,
-      );
+      const newOperatorPrimary =
+        await permissionsContractInstance.lookupPrimary(operator1);
       assert.equal(newOperatorPrimary, primary1, newOperatorPrimary);
     });
 
@@ -566,18 +599,21 @@ describe('Permissions test suite', () => {
 
     it('checkOperatorWithScope should fail if primary of operator lacks specified scope', async () => {
       await expectRevert(
-        () => permissionsContractInstance.checkOperatorWithScope(operator1, 'foo'),
+        () =>
+          permissionsContractInstance.checkOperatorWithScope(operator1, 'foo'),
         'Permissions: primary of operator lacks transactions:write scope',
       );
     });
 
     it('Check Operator should succeed when operator is pointing to a primary', async () => {
       await execute(
-        permissionsContractInstance.addAddressScope(primary1, 'transactions:write'),
+        permissionsContractInstance.addAddressScope(
+          primary1,
+          'transactions:write',
+        ),
       );
-      const primaryOfOperator = await permissionsContractInstance.checkOperator(
-        operator1,
-      );
+      const primaryOfOperator =
+        await permissionsContractInstance.checkOperator(operator1);
       assert.equal(
         primaryOfOperator,
         primary1,
@@ -586,9 +622,14 @@ describe('Permissions test suite', () => {
     });
 
     it('checkOperatorWithScope should succeed when operator is pointing to a primary', async () => {
-      await execute(permissionsContractInstance.addAddressScope(primary1, 'foo'));
+      await execute(
+        permissionsContractInstance.addAddressScope(primary1, 'foo'),
+      );
       const primaryOfOperator =
-        await permissionsContractInstance.checkOperatorWithScope(operator1, 'foo');
+        await permissionsContractInstance.checkOperatorWithScope(
+          operator1,
+          'foo',
+        );
       assert.equal(
         primaryOfOperator,
         primary1,
@@ -599,33 +640,49 @@ describe('Permissions test suite', () => {
     describe('"checkOperatorPermission" Test Suite', () => {
       it('checkOperatorPermission should fail if operator is not pointing to a primary', async () => {
         await expectRevert(
-          () => permissionsContractInstance.checkOperatorPermission(unknown1, 'foo'),
+          () =>
+            permissionsContractInstance.checkOperatorPermission(
+              unknown1,
+              'foo',
+            ),
           'Permissions: operator not pointing to a primary',
         );
       });
 
       it('checkOperatorPermission should fail if primary of operator lacks requested permission', async () => {
-        await execute(permissionsContractInstance.removeAddressScope(primary1, 'foo'));
+        await execute(
+          permissionsContractInstance.removeAddressScope(primary1, 'foo'),
+        );
         await expectRevert(
-          () => permissionsContractInstance.checkOperatorPermission(operator1, 'foo'),
+          () =>
+            permissionsContractInstance.checkOperatorPermission(
+              operator1,
+              'foo',
+            ),
           'Permissions: primary of operator lacks requested permission',
         );
       });
 
       it('checkOperatorPermission should fail if requested permission is empty string', async () => {
         await expectRevert(
-          () => permissionsContractInstance.checkOperatorPermission(operator1, ''),
+          () =>
+            permissionsContractInstance.checkOperatorPermission(operator1, ''),
           'Permissions: permission may not be empty',
         );
       });
 
       it('checkOperatorPermission should succeed if primary of operator has requested permission', async () => {
-        await execute(permissionsContractInstance.removeAddressScope(primary1, 'foo'));
-        await execute(permissionsContractInstance.addAddressScope(primary1, 'foo'));
-        const primary = await permissionsContractInstance.checkOperatorPermission(
-          operator1,
-          'foo',
+        await execute(
+          permissionsContractInstance.removeAddressScope(primary1, 'foo'),
         );
+        await execute(
+          permissionsContractInstance.addAddressScope(primary1, 'foo'),
+        );
+        const primary =
+          await permissionsContractInstance.checkOperatorPermission(
+            operator1,
+            'foo',
+          );
         assert.equal(
           primary,
           primary1,

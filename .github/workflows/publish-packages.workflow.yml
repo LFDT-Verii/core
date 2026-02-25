@@ -49,31 +49,27 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
-      # Get yarn cache directory path
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      # Restore yarn cached
-      - name: Restore yarn cached
-        id: cache-yarn-restore
+      - name: Enable Corepack
+        run: corepack enable
+      # Get pnpm store path
+      - name: Get pnpm store path
+        id: pnpm-store-path
+        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+      # Restore pnpm cache
+      - name: Restore pnpm cache
+        id: cache-pnpm-restore
         uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: |
-            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+            ${{ steps.pnpm-store-path.outputs.dir }}
             node_modules
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-yarn-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
       # Install Dependencies
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile
-      # Install Lerna
-      - name: Install Lerna
-        run: yarn global add lerna@${{ env.LERNA_VERSION }}
-      # Resolve Lerna binary once and reuse it across steps
-      - name: Resolve Lerna Binary
-        run: echo "LERNA_BIN=$(yarn global bin)/lerna" >> $GITHUB_ENV
+        run: pnpm install --frozen-lockfile
       # Set Version
       - name: Set Version
-        run: '"$LERNA_BIN" version --no-git-tag-version --no-push --exact --yes ${{ env.NPM_VER_NUM }}'
+        run: pnpm dlx lerna@${{ env.LERNA_VERSION }} version --no-git-tag-version --no-push --exact --yes ${{ env.NPM_VER_NUM }}
       # Git Set Identity
       - name: Git Identity
         run: |
@@ -90,6 +86,6 @@ jobs:
       # Lerna v9+ has native support for npm trusted publishing
       # See: https://lerna.js.org/docs/features/version-and-publish
       - name: Publish NpmJS
-        run: '"$LERNA_BIN" publish --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"'
+        run: pnpm dlx lerna@${{ env.LERNA_VERSION }} publish --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"
         env:
           NPM_CONFIG_PROVENANCE: true

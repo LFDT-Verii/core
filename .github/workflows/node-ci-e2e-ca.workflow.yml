@@ -29,19 +29,21 @@ jobs:
       uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Get yarn cache directory path
-      id: yarn-cache-dir-path
-      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-    - name: Restore yarn cached
-      id: cache-yarn-restore
+    - name: Enable Corepack
+      run: corepack enable
+    - name: Get pnpm store path
+      id: pnpm-store-path
+      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+    - name: Restore pnpm cache
+      id: cache-pnpm-restore
       uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
-          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+        key: ${{ runner.os }}-${{ matrix.node-version }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
     - name: Install Dependencies
-      run: yarn install --frozen-lockfile --prefer-offline
+      run: pnpm install --frozen-lockfile --prefer-offline
     - name: Start Containers
       run: docker compose -f ./servers/credentialagent/e2e/docker-compose.yml up -d
     - name: Wait for Fineract to launch
@@ -50,14 +52,14 @@ jobs:
       run: RPC_NODE_URL=http://localhost:18545 node ./tools/contracts-deployment/index
     - name: Run Oracle Migrations
       working-directory: ./servers/oracle
-      run: MIGRATION_ENV=localdev yarn migrate:up
+      run: MIGRATION_ENV=localdev pnpm run migrate:up
     - name: Test
       uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
       with:
         timeout_minutes: 10
         max_attempts: 2
         retry_on: timeout
-        command: yarn nx run @verii/server-credentialagent:test:e2e
+        command: pnpm exec nx run @verii/server-credentialagent:test:e2e
       env:
         IS_CI: true
         NODE_OPTIONS: "--max_old_space_size=4096"

@@ -1,7 +1,7 @@
 const { ethers, upgrades } = require('hardhat');
 const { resolveTxOverrides } = require('../../hardhat.deploy-utils');
 
-async function main() {
+const main = async () => {
   const txOverrides = await resolveTxOverrides(ethers);
   const deployOptions = {
     kind: 'transparent',
@@ -17,7 +17,7 @@ async function main() {
 
   const proxyAddress = await instance.getAddress();
   console.log(`PERMISSIONS_PROXY_ADDRESS=${proxyAddress}`);
-}
+};
 
 main().catch((error) => {
   console.error(error);

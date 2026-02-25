@@ -11,9 +11,9 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
     "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
-    "lint": "eslint .",
-    "lint:ci": "eslint . --format json >> eslint-results.json",
-    "lint:fix": "eslint --fix ."
+    "lint": "pnpm exec eslint .",
+    "lint:ci": "pnpm exec eslint . --format json >> eslint-results.json",
+    "lint:fix": "pnpm exec eslint --fix ."
   },
   "dependencies": {
     "@spencejs/spence-mongo-repos": "~0.10.2",
@@ -36,6 +36,7 @@
     "eslint-plugin-autofix": "2.2.0",
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-jsdoc": "62.5.4",
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
     "eslint-plugin-prettier": "5.5.5",
     "eslint-watch": "8.0.0",

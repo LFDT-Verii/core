@@ -15,8 +15,8 @@ Decision: archive legacy Truffle files under `contracts/legacy-truffle/*` and us
 
 ## Build Commands
 From repository root:
-- Build hardhat artifacts: `yarn contracts:build:hardhat`
-- Clean hardhat artifacts: `yarn contracts:clean:hardhat`
+- Build hardhat artifacts: `pnpm run contracts:build:hardhat`
+- Clean hardhat artifacts: `pnpm run contracts:clean:hardhat`
 
 ## Network Mapping
 Hardhat scripts in this repo expose `dev`, `staging`, `prod` networks.
@@ -60,18 +60,18 @@ Use the engineering wrapper (from engineering repo root):
   - coupon/revocation/metadata `getPermissionsAddress()`
   - metadata `checkAddressScope(metadata, 'coupon:burn')`
 - Run post-upgrade smoke tests (read-only checks; no deploy/upgrade transactions):
-  - `TARGET_ENV=dev yarn contracts:test:post-upgrade`
+  - `TARGET_ENV=dev pnpm run contracts:test:post-upgrade`
 - Run integration tests from engineering/verii flow that deploy and interact with contracts.
 
 5. Promote same commit to testnet.
 - Run upgrade (no dry-run), then repeat validation checks.
 - Run smoke checks:
-  - `TARGET_ENV=staging yarn contracts:test:post-upgrade`
+  - `TARGET_ENV=staging pnpm run contracts:test:post-upgrade`
 
 6. Promote same commit to mainnet.
 - Run upgrade (no dry-run), then repeat validation checks.
 - Run smoke checks:
-  - `TARGET_ENV=prod yarn contracts:test:post-upgrade`
+  - `TARGET_ENV=prod pnpm run contracts:test:post-upgrade`
 
 ## New-Chain Bootstrap (Hardhat-Only, From Scratch)
 Use this when deploying to a brand-new chain with no existing proxy manifests.
@@ -88,7 +88,7 @@ Use this when deploying to a brand-new chain with no existing proxy manifests.
 - revocation-list deploy
 
 From repository root this is typically:
-- `TARGET_ENV=<network> yarn contracts:deploy:hardhat`
+- `TARGET_ENV=<network> pnpm run contracts:deploy:hardhat`
 
 3. Capture emitted proxy addresses and persist deployment state into the engineering deployment context (`unknown-<chainId>.json` and env vars as required).
 

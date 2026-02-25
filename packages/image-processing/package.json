@@ -10,9 +10,9 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
     "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
-    "lint": "eslint .",
-    "lint:ci": "eslint . --format json >> eslint-results.json",
-    "lint:fix": "eslint --fix ."
+    "lint": "pnpm exec eslint .",
+    "lint:ci": "pnpm exec eslint . --format json >> eslint-results.json",
+    "lint:fix": "pnpm exec eslint --fix ."
   },
   "author": "Denis Smolonski",
   "license": "Apache-2.0",
@@ -29,6 +29,7 @@
     "eslint-watch": "8.0.0",
     "expect": "30.2.0",
     "globals": "17.3.0",
+    "nanoid": "5.1.0",
     "prettier": "3.8.1"
   },
   "nx": {

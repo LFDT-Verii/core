@@ -45,9 +45,9 @@
     "vite-tsconfig-paths": "6.1.1"
   },
   "scripts": {
-    "lint": "eslint src",
-    "lint:fix": "eslint --fix src",
-    "lint:ci": "eslint --format json >> eslint-results.json src",
+    "lint": "pnpm exec eslint src",
+    "lint:fix": "pnpm exec eslint --fix src",
+    "lint:ci": "pnpm exec eslint --format json >> eslint-results.json src",
     "start": "vite",
     "build": "tsc & vite build",
     "serve": "vite preview",

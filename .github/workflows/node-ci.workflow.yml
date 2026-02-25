@@ -47,20 +47,22 @@ jobs:
       uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Get yarn cache directory path
-      id: yarn-cache-dir-path
-      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
     - name: Build Cache Keys
       id: cache-keys
       run: |
-        echo "shared-key=${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}" >> $GITHUB_OUTPUT
-        echo "run-key=${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
-    - name: Restore yarn cached
-      id: cache-yarn-restore
+        echo "shared-key=${{ runner.os }}-${{ matrix.node-version }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
+        echo "run-key=${{ runner.os }}-${{ matrix.node-version }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
+    - name: Enable Corepack
+      run: corepack enable
+    - name: Get pnpm store path
+      id: pnpm-store-path
+      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+    - name: Restore pnpm cache
+      id: cache-pnpm-restore
       uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
-          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
           servers/*/node_modules
@@ -69,25 +71,25 @@ jobs:
     - name: Setup Token
       run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
     - name: Install Dependencies
-      run: yarn install --frozen-lockfile --prefer-offline
-    - name: Save yarn Cache
-      id: cache-yarn-save
+      run: pnpm install --frozen-lockfile --prefer-offline
+    - name: Save pnpm cache
+      id: cache-pnpm-save
       uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
-          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
           servers/*/node_modules
           tools/*/node_modules
         key: ${{ steps.cache-keys.outputs.shared-key }}
-      if: ${{ steps.cache-yarn-restore.outputs.cache-hit != 'true' }}
+      if: ${{ steps.cache-pnpm-restore.outputs.cache-hit != 'true' }}
     - name: Save run-scoped Cache
-      id: cache-yarn-save-run
+      id: cache-pnpm-save-run
       uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
-          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
           servers/*/node_modules
@@ -106,19 +108,19 @@ jobs:
       if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     - name: Get Lint Affected Packages
       run: |
-        echo LINT_PACKAGES_LIST=$(yarn --silent nx show projects --affected --with-target lint --json) >> $GITHUB_ENV
+        echo LINT_PACKAGES_LIST=$(pnpm --silent exec nx show projects --affected --with-target lint --json) >> $GITHUB_ENV
       if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     - name: Get Lint All Packages
       run: |
-        echo LINT_PACKAGES_LIST=$(yarn --silent nx show projects --with-target lint --json) >> $GITHUB_ENV
+        echo LINT_PACKAGES_LIST=$(pnpm --silent exec nx show projects --with-target lint --json) >> $GITHUB_ENV
       if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
     - name: Get Test Affected Packages
       run: |
-        echo TEST_PACKAGES_LIST=$(yarn --silent nx show projects --affected --with-target test --json) >> $GITHUB_ENV
+        echo TEST_PACKAGES_LIST=$(pnpm --silent exec nx show projects --affected --with-target test --json) >> $GITHUB_ENV
       if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
     - name: Get Test All Packages
       run: |
-        echo TEST_PACKAGES_LIST=$(yarn --silent nx show projects --with-target test --json) >> $GITHUB_ENV
+        echo TEST_PACKAGES_LIST=$(pnpm --silent exec nx show projects --with-target test --json) >> $GITHUB_ENV
       if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
     - name: Set Output
       id: packages-list
@@ -146,27 +148,29 @@ jobs:
       uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Get yarn cache directory path
-      id: yarn-cache-dir-path
-      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-    - name: Restore yarn cached
-      id: cache-yarn-restore
+    - name: Enable Corepack
+      run: corepack enable
+    - name: Get pnpm store path
+      id: pnpm-store-path
+      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+    - name: Restore pnpm cache
+      id: cache-pnpm-restore
       uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
-          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
           servers/*/node_modules
           tools/*/node_modules
         key: ${{ needs.prepare.outputs.deps-cache-key }}
     - name: Install Dependencies (fallback)
-      if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
-      run: yarn install --frozen-lockfile --prefer-offline
+      if: steps.cache-pnpm-restore.outputs.cache-hit != 'true'
+      run: pnpm install --frozen-lockfile --prefer-offline
     - name: Build Libs
-      run: yarn build:lib
+      run: pnpm run build:lib
     - name: Lint
-      run: yarn nx run ${{ matrix.package }}:"lint:ci"
+      run: pnpm exec nx run ${{ matrix.package }}:"lint:ci"
     - name: Create Artifact Name
       run: |
         echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
@@ -244,35 +248,37 @@ jobs:
       uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Get yarn cache directory path
-      id: yarn-cache-dir-path
-      run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-    - name: Restore yarn cached
-      id: cache-yarn-restore
+    - name: Enable Corepack
+      run: corepack enable
+    - name: Get pnpm store path
+      id: pnpm-store-path
+      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+    - name: Restore pnpm cache
+      id: cache-pnpm-restore
       uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
       with:
         path: |
-          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
           servers/*/node_modules
           tools/*/node_modules
         key: ${{ needs.prepare.outputs.deps-cache-key }}
     - name: Install Dependencies (fallback)
-      if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
-      run: yarn install --frozen-lockfile --prefer-offline
+      if: steps.cache-pnpm-restore.outputs.cache-hit != 'true'
+      run: pnpm install --frozen-lockfile --prefer-offline
     - name: Build Libs
-      run: yarn build:lib
+      run: pnpm run build:lib
     - name: Run Credential Agent Migrations
       working-directory: ./servers/credentialagent
-      run: MONGO_URI=mongodb://localhost:27017/test-credential-agent yarn migrate:up
+      run: MONGO_URI=mongodb://localhost:27017/test-credential-agent pnpm run migrate:up
     - name: Test
       uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
       with: 
         timeout_minutes: 10
         max_attempts: 2
         retry_on: timeout
-        command: yarn nx run ${{ matrix.package }}:"test:ci"
+        command: pnpm exec nx run ${{ matrix.package }}:"test:ci"
       env:
         IS_CI: true
         NODE_OPTIONS: "--max_old_space_size=4096"

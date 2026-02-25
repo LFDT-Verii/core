@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Verii is a Verifiable Credentials (VC) platform monorepo containing libraries, servers, smart contracts, and tools for credential issuance and verification. Uses Yarn workspaces, Lerna for versioning, and Nx for build orchestration.
+Verii is a Verifiable Credentials (VC) platform monorepo containing libraries, servers, smart contracts, and tools for credential issuance and verification. Uses pnpm workspaces, Lerna for versioning, and Nx for build orchestration.
 
 ## Commands
 
 ### Building
 ```bash
-yarn build              # Build all packages
-yarn build:affected     # Build only packages affected by changes
+pnpm build              # Build all packages
+pnpm build:affected     # Build only packages affected by changes
 ```
 
 ### Setup test environment
@@ -23,17 +23,17 @@ docker run --name localstack -p 4566:4566 -p 4571:4571 -d localstack/localstack:
 
 ### Run all tests
 ```bash
-yarn test
+pnpm test
 ```
 
 ### Run tests for affected packages only
 ```bash
-yarn test:affected
+pnpm test:affected
 ```
 
 ### Run tests for a specific package
 ```bash
-yarn nx run <package>:test
+pnpm exec nx run <package>:test
 ```
 
 ### Run a single test file (Node.js test runner)
@@ -49,15 +49,15 @@ All migrations are run in a particular environment. Default is localdev
 
 #### Check migration status
 ```bash
-MIGRATION_ENV=<env> yarn migrate:status
+MIGRATION_ENV=<env> pnpm run migrate:status
 ```
 #### Run migration
 ```bash
-MIGRATION_ENV=<env> yarn migrate:up        # Run migrations
+MIGRATION_ENV=<env> pnpm run migrate:up        # Run migrations
 ```
 #### Create a new migration
 ```bash
-MIGRATION_ENV=<env> yarn migrate:create     # Create new migration
+MIGRATION_ENV=<env> pnpm run migrate:create     # Create new migration
 ```
 
 ## Architecture
@@ -108,4 +108,4 @@ Solidity contracts under `contracts/` use Truffle. Key contracts:
 ## Requirements
 
 - Node.js 22.x (see `.nvmrc` for exact version)
-- Yarn 1.x (classic)
+- pnpm 10.x

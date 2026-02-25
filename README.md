@@ -12,10 +12,10 @@ Contains Verii's Core Components
 ## Development
 
 ```bash
-yarn install
-yarn build
-yarn test
-yarn lint
+pnpm install
+pnpm build
+pnpm test
+pnpm lint
 ```
 
 ## Package Publishing
