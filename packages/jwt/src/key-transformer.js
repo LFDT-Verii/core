@@ -103,7 +103,13 @@ const jwkFromSecp256k1Key = (key, priv = true) => {
 };
 
 const jwkFromStringified = (key, priv = true) => {
-  const jwk = JSON.parse(key);
+  const parsed = JSON.parse(key, (k, v) => {
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') {
+      return undefined;
+    }
+    return v;
+  });
+  const jwk = Object.assign(Object.create(null), parsed);
   return priv ? jwk : omit(['d'], jwk);
 };
 
