@@ -1786,9 +1786,6 @@ importers:
 
   packages/jwt:
     dependencies:
-      '@trust/keyto':
-        specifier: ~2.0.0-alpha1
-        version: 2.0.0-alpha1
       '@verii/crypto':
         specifier: ^0.5.0-build
         version: link:../crypto
