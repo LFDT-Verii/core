@@ -63,9 +63,7 @@ jobs:
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
           packages/*/node_modules
-          contracts/*/node_modules
           servers/*/node_modules
-          samples/*/node_modules
           tools/*/node_modules
         key: ${{ steps.cache-keys.outputs.shared-key }}
     - name: Setup Token
@@ -80,9 +78,7 @@ jobs:
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
           packages/*/node_modules
-          contracts/*/node_modules
           servers/*/node_modules
-          samples/*/node_modules
           tools/*/node_modules
         key: ${{ steps.cache-keys.outputs.shared-key }}
       if: ${{ steps.cache-yarn-restore.outputs.cache-hit != 'true' }}
@@ -94,9 +90,7 @@ jobs:
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
           packages/*/node_modules
-          contracts/*/node_modules
           servers/*/node_modules
-          samples/*/node_modules
           tools/*/node_modules
         key: ${{ steps.cache-keys.outputs.run-key }}
     - name: Split Branch Name
@@ -163,9 +157,7 @@ jobs:
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
           packages/*/node_modules
-          contracts/*/node_modules
           servers/*/node_modules
-          samples/*/node_modules
           tools/*/node_modules
         key: ${{ needs.prepare.outputs.deps-cache-key }}
     - name: Install Dependencies (fallback)
@@ -263,9 +255,7 @@ jobs:
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
           packages/*/node_modules
-          contracts/*/node_modules
           servers/*/node_modules
-          samples/*/node_modules
           tools/*/node_modules
         key: ${{ needs.prepare.outputs.deps-cache-key }}
     - name: Install Dependencies (fallback)
