@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.21",
-    "qs": "6.14.2"
+    "qs": "6.15.0"
   },
   "devDependencies": {
     "eslint": "9.39.3",

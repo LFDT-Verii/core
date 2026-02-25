@@ -106,6 +106,6 @@
     "nanoid-dictionary": "5.0.0",
     "nodemon": "3.1.14",
     "prettier": "3.8.1",
-    "qs": "6.14.2"
+    "qs": "6.15.0"
   }
 }
