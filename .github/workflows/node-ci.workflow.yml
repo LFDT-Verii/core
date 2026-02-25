@@ -33,11 +33,11 @@ jobs:
     outputs:
       lint-packages: ${{ steps.packages-list.outputs.lint-packages }}
       test-packages: ${{ steps.packages-list.outputs.test-packages }}
-      node-versions: '[ "22.x" ]'
+      node-versions: '[ "24.x" ]'
       deps-cache-key: ${{ steps.cache-keys.outputs.run-key }}
     strategy:
       matrix:
-        node-version: ['22.x']
+        node-version: ['24.x']
     steps:
     - name: Checkout Repo
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
