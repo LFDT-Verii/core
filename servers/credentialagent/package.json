@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "repository": "https://github.com/LFDT-Verii/core",
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=22.22.0"
   },
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --test-timeout=1200000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",

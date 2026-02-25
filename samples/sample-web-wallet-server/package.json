@@ -19,7 +19,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">= 24.0.0"
+    "node": ">= 22.22.0"
   },
   "dependencies": {
     "@fastify/autoload": "^6.0.0",
