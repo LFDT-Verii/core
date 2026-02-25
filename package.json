@@ -35,8 +35,7 @@
   },
   "// fast-xml-parser-resolution-note": "Temporary: remove this **/fast-xml-parser resolution once @aws-sdk/xml-builder no longer pulls fast-xml-parser 5.3.4 (i.e., upstream resolves to >=5.3.6).",
   "resolutions": {
-    "**/fast-xml-parser": "^5.3.6",
-    "**/elliptic": "^6.6.1"
+    "**/fast-xml-parser": "^5.3.6"
   },
   "devDependencies": {
     "@commitlint/cli": "20.4.2",
