@@ -52,15 +52,15 @@ const publicHexFromPrivateHex = (privateKeyHex) => {
   return ecdh.getPublicKey('hex', 'uncompressed');
 };
 
-const publicJwkFromPem = (pem, priv) => {
+const jwkFromPem = (pem, priv) => {
   const keyObject = priv ? createPrivateKey(pem) : createPublicKey(pem);
   const exportedJwk = keyObject.export({ format: 'jwk' });
   return priv ? exportedJwk : omit(['d'], exportedJwk);
 };
 
-const jwkFromSecp256k1Key = (key, priv = true) => {
+  const jwkFromSecp256k1Key = (key, priv = true) => {
   if (isPem(key)) {
-    const rawJwk = publicJwkFromPem(key, priv);
+    const rawJwk = jwkFromPem(key, priv);
     return {
       ...rawJwk,
       kty: 'EC',
