@@ -315,7 +315,7 @@ jobs:
         pattern: test-*
         merge-multiple: true
     - name: Publish Test Results
-      uses: mikepenz/action-junit-report@v5
+      uses: mikepenz/action-junit-report@b05b53431409fb91ca23e9e6b2da4fede2f944e8 # v5
       with:
         report_paths: "**/test-results.junit.xml"
         check_name: Test Results
