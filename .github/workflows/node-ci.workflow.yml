@@ -33,11 +33,11 @@ jobs:
     outputs:
       lint-packages: ${{ steps.packages-list.outputs.lint-packages }}
       test-packages: ${{ steps.packages-list.outputs.test-packages }}
-      node-versions: '[ "22.x" ]'
+      node-versions: '[ "24.x" ]'
       deps-cache-key: ${{ steps.cache-keys.outputs.run-key }}
     strategy:
       matrix:
-        node-version: ['22.x']
+        node-version: ['24.x']
     steps:
     - name: Checkout Repo
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -315,13 +315,17 @@ jobs:
         pattern: test-*
         merge-multiple: true
     - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2
+      uses: mikepenz/action-junit-report@b05b53431409fb91ca23e9e6b2da4fede2f944e8 # v5
       with:
-        test_changes_limit: 0
-        json_thousands_separator: ","
-        action_fail: true
-        files: |
-          **/test-results.junit.xml
+        report_paths: "**/test-results.junit.xml"
+        check_name: Test Results
+        detailed_summary: true
+        include_passed: false
+        fail_on_failure: true
+        fail_on_parse_error: true
+        require_tests: false
+        comment: true
+        updateComment: true
     - name: Download All Codecov Reports
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
       with:

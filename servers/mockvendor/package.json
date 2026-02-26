@@ -4,7 +4,7 @@
   "description": "Mock Vendor backend",
   "repository": "https://github.com/LFDT-Verii/core",
   "engines": {
-    "node": ">=20.5.1"
+    "node": ">=22.22.0"
   },
   "main": "src/index.js",
   "scripts": {
