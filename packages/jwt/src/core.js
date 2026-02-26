@@ -27,8 +27,7 @@ const {
 const canonicalize = require('canonicalize');
 
 const utf8Decoder = new TextDecoder('utf-8');
-const keyto = require('@trust/keyto');
-const { flow, isString, startsWith, split, omit } = require('lodash/fp');
+const { flow, isString, split } = require('lodash/fp');
 const { KeyAlgorithms } = require('@verii/crypto');
 const {
   setIssuedAt,
@@ -40,6 +39,13 @@ const {
   setOptionalExpirationTime,
   setOptionalSubject,
 } = require('./jwt-fp');
+const {
+  hexFromJwk,
+  jwkFromSecp256k1Key,
+  jwkFromStringified,
+  publicKeyFromPrivateKey,
+  stringifyJwk,
+} = require('./key-transformer');
 
 const keyAlgorithmToJoseAlg = (keyAlgorithm = KeyAlgorithms.SECP256K1) =>
   keyAlgorithm === KeyAlgorithms.SECP256K1 ? 'ES256K' : keyAlgorithm;
@@ -136,23 +142,6 @@ const jwsVerify = async (jws, keyOrSecret, options = {}) => {
   return { header, payload: JSON.parse(new TextDecoder().decode(payload)) };
 };
 
-const isPem = startsWith('-----BEGIN');
-
-const jwkFromSecp256k1Key = (key, priv = true) => {
-  const k = isPem(key) ? keyto.from(key, 'pem') : keyto.from(key, 'blk');
-  const rawJwk = k.toJwk(priv ? 'private' : 'public');
-  return {
-    ...rawJwk,
-    kty: 'EC',
-    use: 'sig',
-  };
-};
-
-const jwkFromStringified = (key, priv = true) => {
-  const k = keyto.from(key, 'jwk');
-  return k.toJwk(priv ? 'private' : 'public');
-};
-
 const base64UrlToJwk = (base64String) => {
   const buffer = base64url.decode(base64String);
   return JSON.parse(utf8Decoder.decode(buffer));
@@ -163,21 +152,6 @@ const jwkToPublicBase64Url = (json) => base64url.encode(canonicalize(json));
 const jwkThumbprint = calculateJwkThumbprint;
 
 const jwtHeaderDecode = decodeProtectedHeader;
-
-const stringifyJwk = (jwk, priv = true) => {
-  return keyto.from(jwk, 'jwk').toString('jwk', priv ? 'private' : 'public');
-};
-
-const hexFromJwk = (jwk, priv = true) => {
-  return keyto.from(jwk, 'jwk').toString('blk', priv ? 'private' : 'public');
-};
-
-// TO DO: Try to implement this on crypto package without jose dependency
-const publicKeyFromPrivateKey = (key) => {
-  return key.x == null
-    ? keyto.from(key, 'blk').toString('blk', 'public')
-    : omit(['d'], key);
-};
 
 const tamperJwt = (jwt, mergeObj) => {
   const [headerBase64, payloadBase64, signatureBase64] = split('.', jwt);

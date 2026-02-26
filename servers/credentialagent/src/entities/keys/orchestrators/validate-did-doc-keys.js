@@ -52,9 +52,15 @@ const transformKeyToJwk = (privateKey) => {
     });
   }
 
-  return isString(privateKey)
-    ? jwkFromSecp256k1Key(privateKey, true)
-    : privateKey;
+  if (!isString(privateKey)) {
+    return privateKey;
+  }
+
+  try {
+    return jwkFromSecp256k1Key(privateKey, true);
+  } catch {
+    return throwErrorPrivateKeyNotMatched();
+  }
 };
 
 const throwErrorKidFragment = (kidFragment) => {

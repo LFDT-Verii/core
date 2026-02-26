@@ -4,7 +4,7 @@
   "description": "Mock Vendor backend",
   "repository": "https://github.com/LFDT-Verii/core",
   "engines": {
-    "node": ">=20.5.1"
+    "node": ">=22.22.0"
   },
   "main": "src/index.js",
   "scripts": {
@@ -54,7 +54,7 @@
     "@verii/test-regexes": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
     "canonicalize": "2.1.0",
-    "eslint": "9.39.2",
+    "eslint": "9.39.3",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",
@@ -66,7 +66,7 @@
     "expect": "30.2.0",
     "globals": "17.3.0",
     "nock": "15.0.0",
-    "nodemon": "3.1.11",
+    "nodemon": "3.1.14",
     "prettier": "3.8.1"
   }
 }
