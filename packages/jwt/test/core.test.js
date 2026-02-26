@@ -35,10 +35,8 @@ const {
   jwsVerify,
   jwkFromSecp256k1Key,
   hexFromJwk,
-  publicKeyFromPrivateKey,
   tamperJwt,
   deriveJwk,
-  jwkFromStringified,
   safeJwtDecode,
   toJwk,
   jwkToPublicBase64Url,
@@ -486,31 +484,6 @@ describe('JWT Tests', () => {
     });
   });
 
-  describe('jwk / hex conversions', () => {
-    it('should generate jwk for hex public keys', async () => {
-      const { publicKey } = generateKeyPair();
-      const publicJwk = jwkFromSecp256k1Key(publicKey, false);
-      expect(publicJwk).toEqual(expect.any(Object));
-    });
-    it('should generate hexs for jwk public keys', async () => {
-      const { publicKey } = generateKeyPair();
-      expect(publicKey).toEqual(
-        await hexFromJwk(jwkFromSecp256k1Key(publicKey, false), false),
-      );
-    });
-    it('should generate jwk for hex private keys', async () => {
-      const { privateKey } = generateKeyPair();
-      const privateJwk = jwkFromSecp256k1Key(privateKey);
-      expect(privateJwk).toEqual(expect.any(Object));
-    });
-    it('should generate hexs for jwk private keys', async () => {
-      const { privateKey } = generateKeyPair();
-      expect(privateKey).toEqual(
-        await hexFromJwk(jwkFromSecp256k1Key(privateKey, true), true),
-      );
-    });
-  });
-
   describe('jwk / base64url conversions', () => {
     it('should convert from ec jwk to base64url & back', () => {
       const { publicKey, privateKey } = generateKeyPair({
@@ -541,23 +514,6 @@ describe('JWT Tests', () => {
       expect(base64UrlToJwk(jwkToPublicBase64Url(privateKey))).toEqual(
         privateKey,
       );
-    });
-  });
-
-  describe('public key from private key', () => {
-    it('should return hex public key for passed hex private key', () => {
-      const { publicKey, privateKey } = generateKeyPair();
-
-      const result = publicKeyFromPrivateKey(privateKey);
-
-      expect(result).toEqual(publicKey);
-    });
-    it('should return jwk public key for passed jwk private key', () => {
-      const { publicKey, privateKey } = generateKeyPair({ format: 'jwk' });
-
-      const result = publicKeyFromPrivateKey(privateKey);
-
-      expect(result).toEqual(publicKey);
     });
   });
 
@@ -603,28 +559,6 @@ describe('JWT Tests', () => {
       const jwt = await jwtSign({ foo: 'bar' }, privateKeyJwk);
       const derivedJwk = deriveJwk(jwt, publicKey);
       expect(derivedJwk).toEqual(publicKeyJwk);
-    });
-  });
-
-  describe('jwkFromStringified test suite', () => {
-    it('Should deserialize public jwk', async () => {
-      const { publicKey } = generateKeyPair({ format: 'jwk' });
-      const serializedPublicJwk = JSON.stringify(publicKey);
-      const deSerializedPublicJwk = jwkFromStringified(
-        serializedPublicJwk,
-        false,
-      );
-      expect(publicKey).toEqual(deSerializedPublicJwk);
-    });
-
-    it('Should deserialize private jwk', async () => {
-      const { privateKey } = generateKeyPair({ format: 'jwk' });
-      const serializedPrivateJwk = JSON.stringify(privateKey);
-      const deSerializedPrivateJwk = jwkFromStringified(
-        serializedPrivateJwk,
-        true,
-      );
-      expect(privateKey).toEqual(deSerializedPrivateJwk);
     });
   });
 

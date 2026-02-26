@@ -24,7 +24,7 @@ services:
       start_period: 20s
 
   contracts-deployment:
-    image: node:22.14.0-slim@sha256:1c18d9ab3af4585870b92e4dbc5cac5a0dc77dd13df1a5905cea89fc720eb05b
+    image: node:24.14.0-slim@sha256:e8e2e91b1378f83c5b2dd15f0247f34110e2fe895f6ca7719dbb780f929368eb
     environment:
       - RPC_NODE_URL=http://blockchain:8545
     command: npx @verii/contracts-deployment@1.25.0-dev-build.1caf36412

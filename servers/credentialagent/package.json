@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "repository": "https://github.com/LFDT-Verii/core",
   "engines": {
-    "node": ">=22.11.0"
+    "node": ">=22.22.0"
   },
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --test-timeout=1200000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
@@ -89,7 +89,7 @@
     "@verii/tests-helpers": "0.5.0-build",
     "cheerio": "1.2.0",
     "dotenv": "16.6.1",
-    "eslint": "9.39.2",
+    "eslint": "9.39.3",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",
@@ -104,8 +104,8 @@
     "jose": "5.10.0",
     "migrate-mongo": "14.0.7",
     "nanoid-dictionary": "5.0.0",
-    "nodemon": "3.1.11",
+    "nodemon": "3.1.14",
     "prettier": "3.8.1",
-    "qs": "6.14.2"
+    "qs": "6.15.0"
   }
 }
