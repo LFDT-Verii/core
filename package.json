@@ -60,7 +60,7 @@
     "lodash-es": "4.17.23",
     "nx": "21.6.10",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.55.0"
+    "typescript-eslint": "8.56.0"
   },
   "workspaces": [
     "contracts/*",

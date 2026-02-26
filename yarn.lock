@@ -12182,16 +12182,6 @@ typed-array-length@^1.0.7:
     possible-typed-array-names "^1.0.0"
     reflect.getprototypeof "^1.0.6"
 
-typescript-eslint@8.55.0, typescript-eslint@^8.53.1:
-  version "8.55.0"
-  resolved "https://registry.npmjs.org/typescript-eslint/-/typescript-eslint-8.55.0.tgz#abae8295c5f0f82f816218113a46e89bc30c3de2"
-  integrity sha512-HE4wj+r5lmDVS9gdaN0/+iqNvPZwGfnJ5lZuz7s5vLlg9ODw0bIiiETaios9LvFI1U94/VBXGm3CB2Y5cNFMpw==
-  dependencies:
-    "@typescript-eslint/eslint-plugin" "8.55.0"
-    "@typescript-eslint/parser" "8.55.0"
-    "@typescript-eslint/typescript-estree" "8.55.0"
-    "@typescript-eslint/utils" "8.55.0"
-
 typescript-eslint@8.56.0:
   version "8.56.0"
   resolved "https://registry.npmjs.org/typescript-eslint/-/typescript-eslint-8.56.0.tgz#f4686ccaaf2fb86daf0133820da40ca5961a2236"
@@ -12201,6 +12191,16 @@ typescript-eslint@8.56.0:
     "@typescript-eslint/parser" "8.56.0"
     "@typescript-eslint/typescript-estree" "8.56.0"
     "@typescript-eslint/utils" "8.56.0"
+
+typescript-eslint@^8.53.1:
+  version "8.55.0"
+  resolved "https://registry.npmjs.org/typescript-eslint/-/typescript-eslint-8.55.0.tgz#abae8295c5f0f82f816218113a46e89bc30c3de2"
+  integrity sha512-HE4wj+r5lmDVS9gdaN0/+iqNvPZwGfnJ5lZuz7s5vLlg9ODw0bIiiETaios9LvFI1U94/VBXGm3CB2Y5cNFMpw==
+  dependencies:
+    "@typescript-eslint/eslint-plugin" "8.55.0"
+    "@typescript-eslint/parser" "8.55.0"
+    "@typescript-eslint/typescript-estree" "8.55.0"
+    "@typescript-eslint/utils" "8.55.0"
 
 typescript@5.9.3:
   version "5.9.3"
