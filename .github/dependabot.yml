@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+    versioning-strategy: lockfile-only
+    allow:
+      - dependency-type: all
+    groups:
+      npm_and_yarn:
+        applies-to: security-updates
+        patterns:
+          - "*"

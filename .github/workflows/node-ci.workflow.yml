@@ -33,10 +33,11 @@ jobs:
     outputs:
       lint-packages: ${{ steps.packages-list.outputs.lint-packages }}
       test-packages: ${{ steps.packages-list.outputs.test-packages }}
-      node-versions: '[ "22.x" ]'
+      node-versions: '[ "24.x" ]'
+      deps-cache-key: ${{ steps.cache-keys.outputs.run-key }}
     strategy:
       matrix:
-        node-version: ['22.x']
+        node-version: ['24.x']
     steps:
     - name: Checkout Repo
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -49,6 +50,11 @@ jobs:
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+    - name: Build Cache Keys
+      id: cache-keys
+      run: |
+        echo "shared-key=${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}" >> $GITHUB_OUTPUT
+        echo "run-key=${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
       uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
@@ -56,7 +62,10 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+          packages/*/node_modules
+          servers/*/node_modules
+          tools/*/node_modules
+        key: ${{ steps.cache-keys.outputs.shared-key }}
     - name: Setup Token
       run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
     - name: Install Dependencies
@@ -68,8 +77,22 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
+          packages/*/node_modules
+          servers/*/node_modules
+          tools/*/node_modules
+        key: ${{ steps.cache-keys.outputs.shared-key }}
       if: ${{ steps.cache-yarn-restore.outputs.cache-hit != 'true' }}
+    - name: Save run-scoped Cache
+      id: cache-yarn-save-run
+      uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      with:
+        path: |
+          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          node_modules
+          packages/*/node_modules
+          servers/*/node_modules
+          tools/*/node_modules
+        key: ${{ steps.cache-keys.outputs.run-key }}
     - name: Split Branch Name
       env:
         BRANCH: ${{ github.event.merge_group.base_ref }}
@@ -133,8 +156,12 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
-    - name: Install Dependencies
+          packages/*/node_modules
+          servers/*/node_modules
+          tools/*/node_modules
+        key: ${{ needs.prepare.outputs.deps-cache-key }}
+    - name: Install Dependencies (fallback)
+      if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
       run: yarn install --frozen-lockfile --prefer-offline
     - name: Build Libs
       run: yarn build:lib
@@ -227,8 +254,12 @@ jobs:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           node_modules
-        key: ${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}
-    - name: Install Dependencies
+          packages/*/node_modules
+          servers/*/node_modules
+          tools/*/node_modules
+        key: ${{ needs.prepare.outputs.deps-cache-key }}
+    - name: Install Dependencies (fallback)
+      if: steps.cache-yarn-restore.outputs.cache-hit != 'true'
       run: yarn install --frozen-lockfile --prefer-offline
     - name: Build Libs
       run: yarn build:lib
@@ -284,7 +315,7 @@ jobs:
         pattern: test-*
         merge-multiple: true
     - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@27d65e188ec43221b20d26de30f4892fad91df2f # v2
+      uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2
       with:
         test_changes_limit: 0
         json_thousands_separator: ","
@@ -321,4 +352,3 @@ jobs:
     - name: Fail on Failure or Draft PR
       run: exit 1
       if: ${{ contains(needs.*.result, 'failure') }}
-

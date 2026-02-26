@@ -18,7 +18,7 @@ on:
 env:
   LERNA_VERSION: '9.0.3'
   DIST_TAG: 'prerelease'
-  NODE_VERSION: '22.x'
+  NODE_VERSION: '24.x'
   VERSION_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.version-type || format('{0}', 'prerelease') }}
   TARGET_ORG: 'verii'
   CURR_REPO_VERSION: '1.1.0'
