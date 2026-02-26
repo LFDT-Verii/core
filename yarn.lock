@@ -12094,9 +12094,9 @@ tsx@4.21.0:
     fsevents "~2.3.3"
 
 twilio@^5.10.1:
-  version "5.12.1"
-  resolved "https://registry.npmjs.org/twilio/-/twilio-5.12.1.tgz#0328008a8d3229f78b9a8b8ec36d8c6408672e9e"
-  integrity sha512-EhgWS5o+JWqMEl0KgUaN1oAym2Pr7LYYiIlwQdx+u+vACBdwHRzhHAQD6TRKFMciNUTzgBi266ZNpYbFhnEykQ==
+  version "5.12.2"
+  resolved "https://registry.npmjs.org/twilio/-/twilio-5.12.2.tgz#f4a5dd6362c27d8d0a0a3698870594143579e73f"
+  integrity sha512-yjTH04Ig0Z3PAxIXhwrto0IJC4Gv7lBDQQ9f4/P9zJhnxVdd+3tENqBMJOtdmmRags3X0jl2IGKEQefCEpJE9g==
   dependencies:
     axios "^1.12.0"
     dayjs "^1.11.9"
