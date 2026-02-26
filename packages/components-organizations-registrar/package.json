@@ -72,8 +72,8 @@
     "build:watch": "vite build --watch",
     "prepublish": "vite build",
     "test": "node --enable-source-maps --import=global-jsdom/register --import=./setup-tests.js --test --test-concurrency=1 --experimental-test-module-mocks --test-reporter=spec --test-reporter-destination=stdout '**/*.test.js' '**/*.test.jsx'",
-    "test:ci": "node --enable-source-maps --import=global-jsdom/register --import=./setup-tests.js  --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info '**/*.test.js' '**/*.test.jsx'",
-    "lint": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node eslint src",
+    "test:ci": "node --enable-source-maps --import=global-jsdom/register --import=./setup-tests.js --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info '**/*.test.js' '**/*.test.jsx'",
+    "lint": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node eslint src --format json >> eslint-results.json",
     "lint:fix": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node eslint src --fix"
   },
   "dependencies": {
