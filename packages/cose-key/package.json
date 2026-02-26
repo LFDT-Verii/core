@@ -10,7 +10,7 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
     "test:ci": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml  'test/**/*.test.js'",
-    "lint": "eslint . --format json >> eslint.json",
+    "lint": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix ."
   },
   "author": "Velocity Team",
