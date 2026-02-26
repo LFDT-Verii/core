@@ -288,10 +288,10 @@ jobs:
           **/test-results.junit.xml
           !node_modules/**/test-results.junit.xml
       if: '!cancelled()'
-    - name: Upload Codecov Report
+    - name: Upload Coverage Report
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
-        name: codecov${{ env.ARTIFACT_NAME }}
+        name: coverage${{ env.ARTIFACT_NAME }}
         path: |
           **/lcov.info
           !tools/**/lcov.info          
@@ -326,26 +326,6 @@ jobs:
         require_tests: false
         comment: true
         updateComment: true
-    - name: Download All Codecov Reports
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
-      with:
-        path: codecov-reports
-        pattern: codecov-*
-        merge-multiple: true
-    - name: Upload coverage for PR
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: lcov.info,!tools
-        flags: pull_request
-      if: github.event_name == 'pull_request'
-    - name: Upload coverage for All
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: lcov.info,!tools
-      if: github.event_name != 'pull_request'
-
   # Diff Coverage
   diff-coverage:
     name: Diff Coverage (98%)
@@ -360,11 +340,11 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         fetch-depth: 0
-    - name: Download All Codecov Reports
+    - name: Download All Coverage Reports
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
       with:
-        path: codecov-reports
-        pattern: codecov-*
+        path: coverage-reports
+        pattern: coverage-*
         merge-multiple: true
     - name: Install diff-cover
       run: python3 -m pip install --user diff-cover==9.7.1
@@ -372,7 +352,7 @@ jobs:
       uses: aki77/reviewdog-action-code-coverage@v2
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        lcov_path: "codecov-reports/**/lcov.info"
+        lcov_path: "coverage-reports/**/lcov.info"
         reporter: github-pr-review
         filter_mode: added
         fail_level: none
@@ -385,12 +365,12 @@ jobs:
         git fetch --no-tags origin "${BASE_BRANCH}"
         COMPARE_BRANCH="origin/${BASE_BRANCH}"
 
-        mapfile -t LCOV_FILES < <(find codecov-reports -type f -name "lcov.info" | sort)
+        mapfile -t LCOV_FILES < <(find coverage-reports -type f -name "lcov.info" | sort)
         if [ "${#LCOV_FILES[@]}" -eq 0 ]; then
           {
             echo "### Diff Coverage (Target: 98%)"
             echo ""
-            echo "- No coverage reports found under \`codecov-reports/**/lcov.info\`."
+            echo "- No coverage reports found under \`coverage-reports/**/lcov.info\`."
             echo "- Check passed because there is no coverage input to evaluate."
           } >> "$GITHUB_STEP_SUMMARY"
           exit 0
