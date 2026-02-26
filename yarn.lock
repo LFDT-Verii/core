@@ -5345,6 +5345,14 @@ ast-types-flow@^0.0.8:
   resolved "https://registry.npmjs.org/ast-types-flow/-/ast-types-flow-0.0.8.tgz#0a85e1c92695769ac13a428bb653e7538bea27d6"
   integrity sha512-OH/2E5Fg20h2aPrbe+QL8JZQFko0YZaF+j4mnQ7BGhfavO7OpSLa8a0y9sBwomHdSbkhTS8TQNayBfnW5DwbvQ==
 
+async-cache-dedupe@^3.1.0:
+  version "3.4.0"
+  resolved "https://registry.npmjs.org/async-cache-dedupe/-/async-cache-dedupe-3.4.0.tgz#f65e3836cd0aed142c4e3ff9e8b613041a5490e0"
+  integrity sha512-RkQr21CpltqMpbYpRaEAmF1BdUO5jnnS/scZkectmLiuWQ81w8u4lYraipbQf8zQ0yYvb3U0N1ozNAYmI4jQ3g==
+  dependencies:
+    mnemonist "^0.40.3"
+    safe-stable-stringify "^2.5.0"
+
 async-function@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/async-function/-/async-function-1.0.0.tgz#509c9fca60eaf85034c6829838188e4e4c8ffb2b"
@@ -7549,6 +7557,16 @@ fast-jwt@^5.0.0:
     ecdsa-sig-formatter "^1.0.11"
     mnemonist "^0.40.0"
 
+fast-jwt@^6.0.0:
+  version "6.1.0"
+  resolved "https://registry.npmjs.org/fast-jwt/-/fast-jwt-6.1.0.tgz#371ff349ad6beac94d0a50efcb7107aad625236c"
+  integrity sha512-cGK/TXlud8INL49Iv7yRtZy0PHzNJId1shfqNCqdF0gOlWiy+1FPgjxX+ZHp/CYxFYDaoNnxeYEGzcXSkahUEQ==
+  dependencies:
+    "@lukeed/ms" "^2.0.2"
+    asn1.js "^5.4.1"
+    ecdsa-sig-formatter "^1.0.11"
+    mnemonist "^0.40.0"
+
 fast-levenshtein@^2.0.6:
   version "2.0.6"
   resolved "https://registry.npmjs.org/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
@@ -9740,7 +9758,7 @@ mnemonist@^0.38.0:
   dependencies:
     obliterator "^2.0.0"
 
-mnemonist@^0.40.0:
+mnemonist@^0.40.0, mnemonist@^0.40.3:
   version "0.40.3"
   resolved "https://registry.npmjs.org/mnemonist/-/mnemonist-0.40.3.tgz#1cd4835c110ac28ec41504834a7184e0325f75cb"
   integrity sha512-Vjyr90sJ23CKKH/qPAgUKicw/v6pRoamxIEDFOF8uSgFME7DqPRpHgRTejWVjkdGg5dXj0/NyxZHZ9bcjH+2uQ==
@@ -11275,7 +11293,7 @@ safe-regex2@^5.0.0:
   dependencies:
     ret "~0.5.0"
 
-safe-stable-stringify@^2.3.1:
+safe-stable-stringify@^2.3.1, safe-stable-stringify@^2.5.0:
   version "2.5.0"
   resolved "https://registry.npmjs.org/safe-stable-stringify/-/safe-stable-stringify-2.5.0.tgz#4ca2f8e385f2831c432a719b108a3bf7af42a1dd"
   integrity sha512-b3rppTKm9T+PsVCBEOUR46GWI7fdOs00VKZ1+9c1EWDaDMvjQc6tUwuFyIprgGgTcWoVHSKrU8H31ZHA2e0RHA==
@@ -12227,12 +12245,13 @@ undefsafe@^2.0.5:
   resolved "https://registry.npmjs.org/undefsafe/-/undefsafe-2.0.5.tgz#38733b9327bdcd226db889fb723a6efd162e6e2c"
   integrity sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==
 
-undici-oidc-interceptor@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.npmjs.org/undici-oidc-interceptor/-/undici-oidc-interceptor-0.6.0.tgz#3275138fb25d926bd11f1d8863784a0d11546187"
-  integrity sha512-9Cddcqv9kLsvsYlGd5wuC9CywgontjyKmhvOC0JUj0HOUzr6nr3zfJZG4NfAEtutLzlyMAiGRq5gNhMqbmxqIw==
+undici-oidc-interceptor@^0.9.0:
+  version "0.9.0"
+  resolved "https://registry.npmjs.org/undici-oidc-interceptor/-/undici-oidc-interceptor-0.9.0.tgz#16560205b05e3fd737ab11bd95e48915bbe6dde6"
+  integrity sha512-CK+OIoqoVXkDBTn53Az/qIDRkWuppI7wh7nsNFkPOS8gGMbyqvW0TK/MEbaywzygkMqEQ/UnW7OP4tdW03sg6g==
   dependencies:
-    fast-jwt "^5.0.0"
+    async-cache-dedupe "^3.1.0"
+    fast-jwt "^6.0.0"
     undici "^7.0.0"
 
 undici-types@^6.15.0:
