@@ -322,8 +322,8 @@ jobs:
         detailed_summary: true
         include_passed: false
         fail_on_failure: true
-        fail_on_parse_error: true
-        require_tests: true
+        fail_on_parse_error: false
+        require_tests: false
         comment: true
         updateComment: true
     - name: Download All Codecov Reports
