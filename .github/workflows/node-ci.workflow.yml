@@ -326,15 +326,15 @@ jobs:
         require_tests: false
         comment: true
         updateComment: true
-  # Diff Coverage
-  diff-coverage:
-    name: Diff Coverage (98%)
+  # Coverage Report
+  coverage-report:
+    name: Coverage Report
     needs: [prepare, test]
     permissions:
       contents: read
       pull-requests: write
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && needs.prepare.outputs.test-packages != '[]' && !cancelled()
+    if: needs.prepare.outputs.test-packages != '[]' && !cancelled()
     steps:
     - name: Checkout repo
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -346,9 +346,22 @@ jobs:
         path: coverage-reports
         pattern: coverage-*
         merge-multiple: true
-    - name: Install diff-cover
-      run: python3 -m pip install --user diff-cover==9.7.1
+    - name: Detect Coverage Reports
+      id: coverage-files
+      run: |
+        REPORT_COUNT=$(find coverage-reports -type f -name "lcov.info" | wc -l | tr -d ' ')
+        echo "count=${REPORT_COUNT}" >> "$GITHUB_OUTPUT"
+        if [ "${REPORT_COUNT}" -gt 0 ]; then
+          echo "has_reports=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_reports=false" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Fetch PR Base Branch
+      if: github.event_name == 'pull_request'
+      run: git fetch --no-tags origin "${{ github.base_ref }}"
     - name: Annotate Uncovered Diff Lines
+      if: github.event_name == 'pull_request' && steps.coverage-files.outputs.has_reports == 'true'
+      continue-on-error: true
       uses: aki77/reviewdog-action-code-coverage@v2
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -356,90 +369,25 @@ jobs:
         reporter: github-pr-review
         filter_mode: added
         fail_level: none
-    - name: Check Diff Coverage (>= 98%)
-      env:
-        BASE_REF: ${{ github.base_ref }}
+    - name: PR Coverage Summary (Diff target 98%)
+      if: github.event_name == 'pull_request'
       run: |
-        export PATH="$HOME/.local/bin:$PATH"
-        BASE_BRANCH="${BASE_REF:-main}"
-        git fetch --no-tags origin "${BASE_BRANCH}"
-        COMPARE_BRANCH="origin/${BASE_BRANCH}"
-
-        mapfile -t LCOV_FILES < <(find coverage-reports -type f -name "lcov.info" | sort)
-        if [ "${#LCOV_FILES[@]}" -eq 0 ]; then
-          {
-            echo "### Diff Coverage (Target: 98%)"
-            echo ""
-            echo "- No coverage reports found under \`coverage-reports/**/lcov.info\`."
-            echo "- Check passed because there is no coverage input to evaluate."
-          } >> "$GITHUB_STEP_SUMMARY"
-          exit 0
-        fi
-
-        set +e
-        diff-cover "${LCOV_FILES[@]}" \
-          --compare-branch="${COMPARE_BRANCH}" \
-          --fail-under=98 \
-          --format markdown:diff-coverage.md | tee diff-coverage.txt
-        DIFF_COVER_EXIT=${PIPESTATUS[0]}
-        set -e
-
-        python3 <<'PY'
-        import os
-        import pathlib
-        import re
-
-        txt = pathlib.Path("diff-coverage.txt").read_text(encoding="utf-8", errors="replace")
-        md_path = pathlib.Path("diff-coverage.md")
-
-        total_match = re.search(r"Total:\s*([0-9]+)\s+lines?", txt)
-        coverage_match = re.search(r"Coverage:\s*([0-9]+(?:\.[0-9]+)?)%", txt)
-        total = total_match.group(1) if total_match else "N/A"
-        coverage = coverage_match.group(1) if coverage_match else "N/A"
-
-        low_coverage_files = []
-        if md_path.exists():
-            for raw_line in md_path.read_text(encoding="utf-8", errors="replace").splitlines():
-                line = raw_line.strip()
-                if not line.startswith("|"):
-                    continue
-                cols = [c.strip() for c in line.strip("|").split("|")]
-                if len(cols) < 2:
-                    continue
-                first_col = cols[0].lower()
-                if first_col == "file" or set(first_col) <= {"-", ":"}:
-                    continue
-                percent_match = re.search(r"([0-9]+(?:\.[0-9]+)?)%", cols[1])
-                if not percent_match:
-                    continue
-                percent = float(percent_match.group(1))
-                if percent < 100:
-                    low_coverage_files.append((cols[0], percent_match.group(1)))
-
-        summary = pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"])
-        with summary.open("a", encoding="utf-8") as out:
-            out.write("### Diff Coverage (Target: 98%)\n\n")
-            out.write(f"- New lines in PR diff: **{total}**\n")
-            out.write(f"- New-code coverage: **{coverage}%**\n\n")
-            out.write("### Files Below 100% New-Line Coverage\n\n")
-            if low_coverage_files:
-                for file_path, percent in low_coverage_files:
-                    out.write(f"- `{file_path}`: **{percent}%**\n")
-            else:
-                out.write("- None\n")
-
-            if md_path.exists():
-                out.write("\n### Detailed Diff-Coverage Report\n\n")
-                out.write(md_path.read_text(encoding="utf-8", errors="replace"))
-                out.write("\n")
-        PY
-
-        exit "${DIFF_COVER_EXIT}"
+        python3 .github/scripts/coverage_summary.py \
+          --mode pr \
+          --coverage-dir coverage-reports \
+          --compare-branch "origin/${{ github.base_ref }}" \
+          --target 98
+    - name: Run Coverage Summary
+      if: github.event_name != 'pull_request'
+      run: |
+        python3 .github/scripts/coverage_summary.py \
+          --mode general \
+          --coverage-dir coverage-reports
 
   # CI Result
   ci-result:
     name: CI Result
-    needs: [prepare, lint, post-lint, test, post-test, diff-coverage]
+    needs: [prepare, lint, post-lint, test, post-test, coverage-report]
     runs-on: ubuntu-latest
     if: always() && !cancelled() && github.event.pull_request.draft == false
     steps:
