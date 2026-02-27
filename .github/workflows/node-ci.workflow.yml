@@ -345,7 +345,6 @@ jobs:
       with:
         path: coverage-reports
         pattern: coverage-*
-        merge-multiple: true
     - name: Detect Coverage Reports
       id: coverage-files
       run: |

@@ -89,15 +89,51 @@ def find_lcov_files(coverage_dir: str) -> list[pathlib.Path]:
     return sorted(base.rglob("lcov.info"))
 
 
-def parse_lcov(files: list[pathlib.Path], workspace: str) -> dict[str, dict[int, int]]:
+def infer_package_root_from_report_path(
+    report_path: pathlib.Path, package_roots: dict[str, str]
+) -> str | None:
+    parts = report_path.as_posix().split("/")
+    if len(parts) < 2:
+        return None
+
+    for idx in range(len(parts) - 1):
+        root = f"{parts[idx]}/{parts[idx + 1]}"
+        if root in package_roots:
+            return root
+    return None
+
+
+def resolve_source_path(
+    raw_path: str, workspace: str, inferred_root: str | None, package_roots: dict[str, str]
+) -> str:
+    normalized = normalize_path(raw_path, workspace)
+    if not normalized:
+        return ""
+
+    if package_root_for_file(normalized, package_roots):
+        return normalized
+
+    if normalized.startswith("../"):
+        return normalized
+
+    if inferred_root and not normalized.startswith("packages/") and not normalized.startswith("servers/"):
+        return f"{inferred_root}/{normalized}"
+
+    return normalized
+
+
+def parse_lcov(
+    files: list[pathlib.Path], workspace: str, package_roots: dict[str, str]
+) -> dict[str, dict[int, int]]:
     coverage: dict[str, dict[int, int]] = defaultdict(dict)
 
     for file_path in files:
+        inferred_root = infer_package_root_from_report_path(file_path, package_roots)
         current_file = ""
         for raw_line in file_path.read_text(encoding="utf-8", errors="replace").splitlines():
             line = raw_line.strip()
             if line.startswith("SF:"):
-                current_file = normalize_path(line[3:], workspace)
+                current_file = resolve_source_path(line[3:], workspace, inferred_root, package_roots)
                 continue
 
             if line == "end_of_record":
@@ -404,6 +440,7 @@ def main() -> int:
     args = parse_args()
     workspace = os.environ.get("GITHUB_WORKSPACE", os.getcwd())
     lcov_files = find_lcov_files(args.coverage_dir)
+    package_roots = load_package_roots(workspace)
 
     if not lcov_files:
         write_summary(
@@ -416,7 +453,7 @@ def main() -> int:
         )
         return 0
 
-    coverage = parse_lcov(lcov_files, workspace)
+    coverage = parse_lcov(lcov_files, workspace, package_roots)
     stats = file_stats(coverage)
     if not stats:
         write_summary(
@@ -428,8 +465,6 @@ def main() -> int:
             ]
         )
         return 0
-
-    package_roots = load_package_roots(workspace)
 
     if args.mode == "pr":
         return run_pr_mode(coverage, stats, package_roots, args.compare_branch, args.target)
