@@ -1,6 +1,5 @@
 import baseConfig from '../../eslint.config.mjs';
 import jsdoc from 'eslint-plugin-jsdoc';
-import typescriptEslint from 'typescript-eslint';
 
 export default [
   // JSDoc recommended config
@@ -13,10 +12,6 @@ export default [
     files: ['**/*.{js,ts}'],
     plugins: {
       jsdoc,
-      '@typescript-eslint': typescriptEslint.plugin,
-    },
-    languageOptions: {
-      parser: typescriptEslint.parser,
     },
     rules: {
       'jsdoc/require-jsdoc': [
