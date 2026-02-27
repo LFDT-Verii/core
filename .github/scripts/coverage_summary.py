@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import pathlib
 import re
@@ -60,18 +59,11 @@ def load_package_roots(workspace: str) -> dict[str, str]:
         if not base.exists():
             continue
 
-        for package_json in sorted(base.glob("*/package.json")):
-            root = f"{parent}/{package_json.parent.name}"
-            default_name = f"@verii/{package_json.parent.name}"
-            package_name = default_name
-            try:
-                payload = json.loads(package_json.read_text(encoding="utf-8"))
-                if isinstance(payload, dict) and isinstance(payload.get("name"), str) and payload["name"].strip():
-                    package_name = payload["name"].strip()
-            except Exception:
-                package_name = default_name
-
-            roots[root] = package_name
+        for package_dir in sorted(base.iterdir()):
+            if not package_dir.is_dir():
+                continue
+            root = f"{parent}/{package_dir.name}"
+            roots[root] = f"@verii/{package_dir.name}"
 
     return roots
 
