@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import pathlib
 import re
@@ -50,13 +51,43 @@ def normalize_path(path: str, workspace: str) -> str:
     return value.lstrip("/")
 
 
-def package_name(file_path: str) -> str:
+def load_package_roots(workspace: str) -> dict[str, str]:
+    roots: dict[str, str] = {}
+    workspace_path = pathlib.Path(workspace)
+
+    for parent in ("packages", "servers"):
+        base = workspace_path / parent
+        if not base.exists():
+            continue
+
+        for package_json in sorted(base.glob("*/package.json")):
+            root = f"{parent}/{package_json.parent.name}"
+            default_name = f"@verii/{package_json.parent.name}"
+            package_name = default_name
+            try:
+                payload = json.loads(package_json.read_text(encoding="utf-8"))
+                if isinstance(payload, dict) and isinstance(payload.get("name"), str) and payload["name"].strip():
+                    package_name = payload["name"].strip()
+            except Exception:
+                package_name = default_name
+
+            roots[root] = package_name
+
+    return roots
+
+
+def package_root_for_file(file_path: str, package_roots: dict[str, str]) -> str | None:
     parts = file_path.split("/")
-    if len(parts) >= 2 and parts[0] in {"packages", "servers", "tools"}:
-        return f"{parts[0]}/{parts[1]}"
-    if parts and parts[0]:
-        return parts[0]
-    return "(root)"
+    if len(parts) < 2:
+        return None
+    root = f"{parts[0]}/{parts[1]}"
+    if root in package_roots:
+        return root
+    return None
+
+
+def is_package_src_file(file_path: str, root: str) -> bool:
+    return file_path.startswith(f"{root}/src/")
 
 
 def find_lcov_files(coverage_dir: str) -> list[pathlib.Path]:
@@ -114,34 +145,40 @@ def file_stats(coverage: dict[str, dict[int, int]]) -> dict[str, dict[str, float
     return stats
 
 
-def aggregate_packages(stats: dict[str, dict[str, float]], package_filter: set[str] | None = None) -> list[dict[str, float | str]]:
+def aggregate_packages(
+    stats: dict[str, dict[str, float]],
+    package_roots: dict[str, str],
+    package_filter: set[str] | None = None,
+) -> list[dict[str, float | str]]:
     aggregates: dict[str, list[float]] = defaultdict(lambda: [0.0, 0.0])
     for file_path, data in stats.items():
-        pkg = package_name(file_path)
-        if package_filter is not None and pkg not in package_filter:
+        root = package_root_for_file(file_path, package_roots)
+        if root is None or not is_package_src_file(file_path, root):
             continue
-        aggregates[pkg][0] += data["covered"]
-        aggregates[pkg][1] += data["total"]
+        if package_filter is not None and root not in package_filter:
+            continue
+        aggregates[root][0] += data["covered"]
+        aggregates[root][1] += data["total"]
 
     rows: list[dict[str, float | str]] = []
     if package_filter is not None:
-        for pkg in package_filter:
-            covered, total = aggregates.get(pkg, [0.0, 0.0])
+        for root in sorted(package_filter):
+            covered, total = aggregates.get(root, [0.0, 0.0])
             coverage_pct = (covered / total * 100) if total > 0 else float("nan")
             rows.append(
                 {
-                    "package": pkg,
+                    "package": package_roots.get(root, root),
                     "covered": covered,
                     "total": total,
                     "coverage": coverage_pct,
                 }
             )
     else:
-        for pkg, (covered, total) in aggregates.items():
+        for root, (covered, total) in aggregates.items():
             coverage_pct = (covered / total * 100) if total > 0 else float("nan")
             rows.append(
                 {
-                    "package": pkg,
+                    "package": package_roots.get(root, root),
                     "covered": covered,
                     "total": total,
                     "coverage": coverage_pct,
@@ -198,6 +235,19 @@ def parse_added_lines(compare_branch: str) -> dict[str, set[int]]:
                 added_lines[current_file].add(line_no)
 
     return added_lines
+
+
+def parse_changed_files(compare_branch: str) -> set[str]:
+    if not compare_branch:
+        return set()
+
+    result = subprocess.run(
+        ["git", "diff", "--name-only", f"{compare_branch}...HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return {line.strip() for line in result.stdout.splitlines() if line.strip()}
 
 
 def total_coverage(stats: dict[str, dict[str, float]]) -> tuple[float, float, float]:
@@ -271,11 +321,12 @@ def render_worst_files_section(rows: list[tuple[str, dict[str, float]]], title: 
 def run_pr_mode(
     coverage: dict[str, dict[int, int]],
     stats: dict[str, dict[str, float]],
+    package_roots: dict[str, str],
     compare_branch: str,
     target: float,
 ) -> int:
     added_lines = parse_added_lines(compare_branch)
-    changed_files = set(added_lines.keys())
+    changed_files = parse_changed_files(compare_branch)
 
     total_new_lines = sum(len(lines) for lines in added_lines.values())
     executable_new_lines = 0
@@ -296,8 +347,13 @@ def run_pr_mode(
     if executable_new_lines > 0:
         diff_coverage = ((executable_new_lines - uncovered_new_lines) / executable_new_lines) * 100
 
-    affected_packages = {package_name(path) for path in changed_files}
-    package_rows = aggregate_packages(stats, affected_packages)
+    affected_package_roots: set[str] = set()
+    for path in changed_files:
+        root = package_root_for_file(path, package_roots)
+        if root:
+            affected_package_roots.add(root)
+
+    package_rows = aggregate_packages(stats, package_roots, affected_package_roots)
     worst_changed_files = worst_files(stats, limit=5, file_filter=changed_files)
 
     summary = [
@@ -328,9 +384,9 @@ def run_pr_mode(
     return 0
 
 
-def run_general_mode(stats: dict[str, dict[str, float]]) -> int:
+def run_general_mode(stats: dict[str, dict[str, float]], package_roots: dict[str, str]) -> int:
     covered, total, percentage = total_coverage(stats)
-    package_rows = aggregate_packages(stats, None)
+    package_rows = aggregate_packages(stats, package_roots, None)
     worst_overall_files = worst_files(stats, limit=5, file_filter=None)
 
     summary = [
@@ -381,10 +437,12 @@ def main() -> int:
         )
         return 0
 
-    if args.mode == "pr":
-        return run_pr_mode(coverage, stats, args.compare_branch, args.target)
+    package_roots = load_package_roots(workspace)
 
-    return run_general_mode(stats)
+    if args.mode == "pr":
+        return run_pr_mode(coverage, stats, package_roots, args.compare_branch, args.target)
+
+    return run_general_mode(stats, package_roots)
 
 
 if __name__ == "__main__":
