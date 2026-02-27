@@ -1,42 +1,35 @@
-# Introduction
-The package contains the minimum starting point, 
-of what defines a package for us.
+# @verii/error-aggregation
 
-# New Package Creation Instructions
+Aggregation of errors
 
-## Steps
+## Installation
 
-1. This directory should be copied and renamed to the package name. 
-   The `"name"` field in the `package.json` should be updated to match 
-   the directory name, prefixed by `@verii` as 
-   seen by the `template-package` name:
-   `"@verii/template-package"`
+```bash
+yarn add @verii/error-aggregation
+```
 
-1. A description should be added in the `"description"` field 
-   in the `package.json`
+## Usage
 
-1. This `README.md` should be cleared and used for relevant 
-   information in the new package.
+```js
+const { initSendError } = require('@verii/error-aggregation');
 
-## Some points to take note of:
+// Use the exported members for your workflow.
+```
 
-* `"repository"` field in `package.json` is important and is used 
-  later when we setup scopes with [`lerna`](https://lerna.js.org/)
+## Entry Point
 
-* They packages actually get published, but we don't consume the 
-  packages directly from their publish location, instead we rely 
-  on `lerna` cli within the repository like so:
-  
-  `lerna add [CONSUMED-PACKAGE-NAME] --scope [CONSUMING-PACKAGE-NAME]`
+- `index.js`
 
-  So if you want `did-docs` package to use the `crypto` package, 
-  you would do:
-  
-  `lerna add @verii/crypto --scope @verii/did-docs`
+## Top-level Exports
 
-* Packages uses standard structure, of `src` directory, 
-  and then `test` directory for corresponding tests
+- `initSendError`
 
-* Tests can be run from `package.json` script
+## Development
 
-* Tests will be automatically included in global test suite and run in CI
+Run from the repository root:
+
+```bash
+yarn workspace @verii/error-aggregation test
+yarn workspace @verii/error-aggregation lint
+```
+
