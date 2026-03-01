@@ -8025,10 +8025,10 @@ global-directory@^4.0.1:
   dependencies:
     ini "4.1.1"
 
-global-jsdom@26.0.0:
-  version "26.0.0"
-  resolved "https://registry.npmjs.org/global-jsdom/-/global-jsdom-26.0.0.tgz#fcddd40f81ff11531e5ce87e1a377af016018e98"
-  integrity sha512-BqXpTNZFjP40N+s4k8Bk9HS8GFVPJB/+TKtwcShM84wLv6C5dH9o1dydI3pL6potanhfDiIAVDbaaGj/uSdRSA==
+global-jsdom@28.0.0:
+  version "28.0.0"
+  resolved "https://registry.npmjs.org/global-jsdom/-/global-jsdom-28.0.0.tgz#1fbb2abf4abe493a189fc77ce949c71afab93a57"
+  integrity sha512-G0uJuTt17fnWWoIOxgXTANKwMzlrQehWH5qyD+mJ+C4vT1PaAhtU2UBwDD+mRZaHoMObhwXdt3kbXLgZaPHLpQ==
 
 global-modules@^1.0.0:
   version "1.0.0"
