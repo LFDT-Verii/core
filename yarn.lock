@@ -2583,13 +2583,37 @@
     "@nomicfoundation/edr-linux-x64-musl" "0.12.0-next.23"
     "@nomicfoundation/edr-win32-x64-msvc" "0.12.0-next.23"
 
-"@nomicfoundation/hardhat-ethers@3.1.3":
-  version "3.1.3"
-  resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-ethers/-/hardhat-ethers-3.1.3.tgz#fc0d96083f8f28d82c7c45231f40257da7e67bf9"
-  integrity sha512-208JcDeVIl+7Wu3MhFUUtiA8TJ7r2Rn3Wr+lSx9PfsDTKkbsAsWPY6N6wQ4mtzDv0/pB9nIbJhkjoHe1EsgNsA==
+"@nomicfoundation/hardhat-errors@^3.0.7":
+  version "3.0.7"
+  resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-errors/-/hardhat-errors-3.0.7.tgz#9c5d45c38adf09f3db481dbc1b8138dbdc67eb04"
+  integrity sha512-l4RrzTfJ/WO0B9Te6i9161+pRbCSFXILanmHmgRfS4Bb4pDOjs+0eQf2I2cQrnqcJ6O/bxLvChPTQuad97dmQw==
   dependencies:
-    debug "^4.1.1"
-    lodash.isequal "^4.5.0"
+    "@nomicfoundation/hardhat-utils" "^4.0.0"
+
+"@nomicfoundation/hardhat-ethers@4.0.5":
+  version "4.0.5"
+  resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-ethers/-/hardhat-ethers-4.0.5.tgz#b5a75e70477da8a19a36a281abaf3e0d8c5d62ce"
+  integrity sha512-DFTpsg6MBV/JNv8Rd0M/C70Wqk3giYSAYCrBu3PeerX1eNd4wuz5kUlsX4yVoNOPpM6Lva9z+30JRDEuFEt0bQ==
+  dependencies:
+    "@nomicfoundation/hardhat-errors" "^3.0.7"
+    "@nomicfoundation/hardhat-utils" "^4.0.0"
+    debug "^4.3.2"
+    ethereum-cryptography "^2.2.1"
+    ethers "^6.14.0"
+
+"@nomicfoundation/hardhat-utils@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.npmjs.org/@nomicfoundation/hardhat-utils/-/hardhat-utils-4.0.0.tgz#3e2fc740f6a38160ee2330c8780f748695b6f92c"
+  integrity sha512-Deu4od7flcM89K+SEAxmOyn7FFWGiEILrGjoxYl/Gus0tctgpLNaK3M4LIjrJ25ci8LBjGVe3i28XZA4+QGQHQ==
+  dependencies:
+    "@streamparser/json-node" "^0.0.22"
+    debug "^4.3.2"
+    env-paths "^2.2.0"
+    ethereum-cryptography "^2.2.1"
+    fast-equals "^5.4.0"
+    json-stream-stringify "^3.1.6"
+    rfdc "^1.3.1"
+    undici "^6.16.1"
 
 "@nomicfoundation/slang@^0.18.3":
   version "0.18.3"
@@ -4144,6 +4168,18 @@
     fastify-plugin "4.5.1"
     http-errors "^2.0.0"
     lodash "~4.17.15"
+
+"@streamparser/json-node@^0.0.22":
+  version "0.0.22"
+  resolved "https://registry.npmjs.org/@streamparser/json-node/-/json-node-0.0.22.tgz#cee66bb2f175e41abf83574dc7d6fe9c997d94d5"
+  integrity sha512-sJT2ptNRwqB1lIsQrQlCoWk5rF4tif9wDh+7yluAGijJamAhrHGYpFB/Zg3hJeceoZypi74ftXk8DHzwYpbZSg==
+  dependencies:
+    "@streamparser/json" "^0.0.22"
+
+"@streamparser/json@^0.0.22":
+  version "0.0.22"
+  resolved "https://registry.npmjs.org/@streamparser/json/-/json-0.0.22.tgz#8ddcbcc8c3ca77aeadf80af47f54a64c8739a037"
+  integrity sha512-b6gTSBjJ8G8SuO3Gbbj+zXbVx8NSs1EbpbMKpzGLWMdkR+98McH9bEjSz3+0mPJf68c5nxa3CrJHp5EQNXM6zQ==
 
 "@stylistic/eslint-plugin@^5.7.0":
   version "5.8.0"
@@ -7409,7 +7445,7 @@ ethereumjs-util@^7.0.3, ethereumjs-util@^7.1.5:
     ethereum-cryptography "^0.1.3"
     rlp "^2.2.4"
 
-ethers@6.16.0, ethers@~6.16.0:
+ethers@6.16.0, ethers@^6.14.0, ethers@~6.16.0:
   version "6.16.0"
   resolved "https://registry.npmjs.org/ethers/-/ethers-6.16.0.tgz#fff9b4f05d7a359c774ad6e91085a800f7fccf65"
   integrity sha512-U1wulmetNymijEhpSEQ7Ct/P/Jw9/e7R1j5XIbPRydgV2DjLVMsULDlNksq3RQnFgKoLlZf88ijYtWEXcPa07A==
@@ -7510,6 +7546,11 @@ fast-diff@^1.1.2:
   version "1.3.0"
   resolved "https://registry.npmjs.org/fast-diff/-/fast-diff-1.3.0.tgz#ece407fa550a64d638536cd727e129c61616e0f0"
   integrity sha512-VxPP4NqbUjj6MaAOafWeUn2cXWLcCtljklUtZf0Ind4XQ+QPtmA0b18zZy0jIQx+ExRVCR/ZQpBmik5lXshNsw==
+
+fast-equals@^5.4.0:
+  version "5.4.0"
+  resolved "https://registry.npmjs.org/fast-equals/-/fast-equals-5.4.0.tgz#b60073b8764f27029598447f05773c7534ba7f1e"
+  integrity sha512-jt2DW/aNFNwke7AUd+Z+e6pz39KO5rzdbbFCg2sGafS4mk13MI7Z8O5z9cADNn5lhGODIgLwug6TZO2ctf7kcw==
 
 fast-glob@3.3.1:
   version "3.3.1"
@@ -9161,7 +9202,7 @@ json-stable-stringify-without-jsonify@^1.0.1:
   resolved "https://registry.npmjs.org/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz#9db7b59496ad3f3cfef30a75142d2d930ad72651"
   integrity sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==
 
-json-stream-stringify@^3.1.4:
+json-stream-stringify@^3.1.4, json-stream-stringify@^3.1.6:
   version "3.1.6"
   resolved "https://registry.npmjs.org/json-stream-stringify/-/json-stream-stringify-3.1.6.tgz#ebe32193876fb99d4ec9f612389a8d8e2b5d54d4"
   integrity sha512-x7fpwxOkbhFCaJDJ8vb1fBY3DdSa4AlITaz+HHILQJzdPMnHEFjxPwVUi1ALIbcIxDE0PNe/0i7frnY8QnBQog==
@@ -12262,7 +12303,7 @@ undici@^5.14.0:
   dependencies:
     "@fastify/busboy" "^2.0.0"
 
-undici@^6.11.1:
+undici@^6.11.1, undici@^6.16.1:
   version "6.23.0"
   resolved "https://registry.npmjs.org/undici/-/undici-6.23.0.tgz#7953087744d9095a96f115de3140ca3828aff3a4"
   integrity sha512-VfQPToRA5FZs/qJxLIinmU59u0r7LXqoJkCzinq3ckNJp3vKEh7jTWN589YQ5+aoAC/TGRLyJLCPKcLQbM8r9g==
