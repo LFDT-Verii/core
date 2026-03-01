@@ -172,7 +172,7 @@ jobs:
         echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Lint Report
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       with:
         name: lint${{ env.ARTIFACT_NAME }}
         path: |
@@ -188,7 +188,7 @@ jobs:
     if: needs.prepare.outputs.lint-packages != '[]' && !cancelled()
     steps:
     - name: Download All Reports
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
       with:
         path: reports
         pattern: lint-*
@@ -281,7 +281,7 @@ jobs:
         echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Test Report
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       with:
         name: test${{ env.ARTIFACT_NAME }}
         path: |
@@ -289,7 +289,7 @@ jobs:
           !node_modules/**/test-results.junit.xml
       if: '!cancelled()'
     - name: Upload Codecov Report
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
       with:
         name: codecov${{ env.ARTIFACT_NAME }}
         path: |
@@ -309,7 +309,7 @@ jobs:
     if: needs.prepare.outputs.test-packages != '[]' && !cancelled()
     steps:
     - name: Download All Test Reports
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
       with:
         path: test-results
         pattern: test-*
@@ -327,7 +327,7 @@ jobs:
         comment: true
         updateComment: true
     - name: Download All Codecov Reports
-      uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+      uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8
       with:
         path: codecov-reports
         pattern: codecov-*
