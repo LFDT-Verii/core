@@ -288,10 +288,10 @@ jobs:
           **/test-results.junit.xml
           !node_modules/**/test-results.junit.xml
       if: '!cancelled()'
-    - name: Upload Codecov Report
+    - name: Upload Coverage Report
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
       with:
-        name: codecov${{ env.ARTIFACT_NAME }}
+        name: coverage${{ env.ARTIFACT_NAME }}
         path: |
           **/lcov.info
           !tools/**/lcov.info          
@@ -326,30 +326,67 @@ jobs:
         require_tests: false
         comment: true
         updateComment: true
-    - name: Download All Codecov Reports
+  # Coverage Report
+  coverage-report:
+    name: Coverage Report
+    needs: [prepare, test]
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    if: needs.prepare.outputs.test-packages != '[]' && !cancelled()
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        fetch-depth: 0
+    - name: Download All Coverage Reports
       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
       with:
-        path: codecov-reports
-        pattern: codecov-*
-        merge-multiple: true
-    - name: Upload coverage for PR
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: lcov.info,!tools
-        flags: pull_request
+        path: coverage-reports
+        pattern: coverage-*
+    - name: Detect Coverage Reports
+      id: coverage-files
+      run: |
+        REPORT_COUNT=$(find coverage-reports -type f -name "lcov.info" | wc -l | tr -d ' ')
+        echo "count=${REPORT_COUNT}" >> "$GITHUB_OUTPUT"
+        if [ "${REPORT_COUNT}" -gt 0 ]; then
+          echo "has_reports=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "has_reports=false" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Fetch PR Base Branch
       if: github.event_name == 'pull_request'
-    - name: Upload coverage for All
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
+      run: git fetch --no-tags origin "${{ github.base_ref }}"
+    - name: Annotate Uncovered Diff Lines
+      if: github.event_name == 'pull_request' && steps.coverage-files.outputs.has_reports == 'true'
+      continue-on-error: true
+      uses: aki77/reviewdog-action-code-coverage@v2
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: lcov.info,!tools
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        lcov_path: "coverage-reports/**/lcov.info"
+        reporter: github-pr-review
+        filter_mode: added
+        fail_level: none
+    - name: PR Coverage Summary (Diff target 98%)
+      if: github.event_name == 'pull_request'
+      run: |
+        python3 .github/scripts/coverage_summary.py \
+          --mode pr \
+          --coverage-dir coverage-reports \
+          --compare-branch "origin/${{ github.base_ref }}" \
+          --target 98
+    - name: Run Coverage Summary
       if: github.event_name != 'pull_request'
+      run: |
+        python3 .github/scripts/coverage_summary.py \
+          --mode general \
+          --coverage-dir coverage-reports
 
   # CI Result
   ci-result:
     name: CI Result
-    needs: [prepare, lint, post-lint, test, post-test]
+    needs: [prepare, lint, post-lint, test, post-test, coverage-report]
     runs-on: ubuntu-latest
     if: always() && !cancelled() && github.event.pull_request.draft == false
     steps:
