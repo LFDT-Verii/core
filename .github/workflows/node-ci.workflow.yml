@@ -372,20 +372,35 @@ jobs:
     - name: PR Coverage Summary (Diff target 98%)
       if: github.event_name == 'pull_request'
       run: |
-        python3 .github/scripts/coverage_summary.py \
+        SUMMARY_FILE=coverage-summary.md
+        JOB_SUMMARY="$GITHUB_STEP_SUMMARY"
+        set +e
+        GITHUB_STEP_SUMMARY="$SUMMARY_FILE" python3 .github/scripts/coverage_summary.py \
           --mode pr \
           --coverage-dir coverage-reports \
           --compare-branch "origin/${{ github.base_ref }}" \
           --target 98
+        STATUS=$?
+        set -e
+        if [ -f "$SUMMARY_FILE" ]; then
+          cat "$SUMMARY_FILE" >> "$JOB_SUMMARY"
+        fi
+        exit $STATUS
     - name: Run Coverage Summary
       if: github.event_name != 'pull_request'
       run: |
-        python3 .github/scripts/coverage_summary.py \
+        SUMMARY_FILE=coverage-summary.md
+        JOB_SUMMARY="$GITHUB_STEP_SUMMARY"
+        set +e
+        GITHUB_STEP_SUMMARY="$SUMMARY_FILE" python3 .github/scripts/coverage_summary.py \
           --mode general \
           --coverage-dir coverage-reports
-    - name: Capture Coverage Summary
-      if: always() && steps.coverage-files.outputs.has_reports == 'true'
-      run: cp "$GITHUB_STEP_SUMMARY" coverage-summary.md
+        STATUS=$?
+        set -e
+        if [ -f "$SUMMARY_FILE" ]; then
+          cat "$SUMMARY_FILE" >> "$JOB_SUMMARY"
+        fi
+        exit $STATUS
     - name: Post Coverage Summary Comment
       if: always() && steps.coverage-files.outputs.has_reports == 'true'
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
