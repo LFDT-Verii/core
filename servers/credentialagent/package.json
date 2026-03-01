@@ -89,7 +89,7 @@
     "@verii/tests-helpers": "0.5.0-build",
     "cheerio": "1.2.0",
     "dotenv": "16.6.1",
-    "eslint": "9.39.3",
+    "eslint": "10.0.2",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",
