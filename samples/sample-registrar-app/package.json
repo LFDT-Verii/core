@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react-swc": "4.2.3",
-    "eslint": "9.39.3",
+    "eslint": "10.0.2",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",
