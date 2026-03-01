@@ -39,7 +39,7 @@
     "nanoid": "~5.1.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "3.981.0",
+    "@aws-sdk/client-s3": "3.998.0",
     "@spencejs/spence-factories": "0.10.2",
     "@verii/crypto": "0.5.0-build",
     "@verii/sample-data": "0.5.0-build",
