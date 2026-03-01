@@ -1,25 +1,12 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.20;
+pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/extensions/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@verii/permissions-contract/contracts/Permissions.sol";
-
-library CounterStorageCompat {
-    struct Counter {
-        uint256 _value;
-    }
-
-    function current(Counter storage counter) internal view returns (uint256) {
-        return counter._value;
-    }
-
-    function increment(Counter storage counter) internal {
-        counter._value += 1;
-    }
-}
 
 /**
  * @dev {ERC721} token, including:
@@ -38,14 +25,14 @@ library CounterStorageCompat {
  */
 contract VerificationCoupon is Initializable, AccessControlEnumerableUpgradeable, ERC1155Upgradeable {
     address VNF;
-    using CounterStorageCompat for CounterStorageCompat.Counter;
+    using CountersUpgradeable for CountersUpgradeable.Counter;
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     mapping(uint256 => uint256) private expirationTime;
 
     mapping(address => uint256[]) private ownerTokens;
 
-    CounterStorageCompat.Counter private _tokenIdTracker;
+    CountersUpgradeable.Counter private _tokenIdTracker;
 
     string private _tokenName;
 
@@ -57,12 +44,11 @@ contract VerificationCoupon is Initializable, AccessControlEnumerableUpgradeable
 
     function initialize(string memory tokenName, string memory baseTokenURI) public initializer {
         ERC1155Upgradeable.__ERC1155_init(baseTokenURI);
-        AccessControlEnumerableUpgradeable.__AccessControlEnumerable_init();
         VNF = msg.sender;
         _tokenName = tokenName;
 
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(MINTER_ROLE, msg.sender);
     }
 
     function setPermissionsAddress(address _permissions) public {
