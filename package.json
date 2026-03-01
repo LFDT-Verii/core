@@ -17,6 +17,7 @@
     "lint:fix:affected": "nx affected --target=lint:fix",
     "test": "cross-env NODE_ENV=test nx run-many --target=test --all",
     "test:affected": "cross-env NODE_ENV=test nx affected --target=test",
+    "test:coverage-summary-local": "python3 -m unittest discover -s .github/scripts/tests -p 'test_coverage_summary.py' -v",
     "depcheck": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --oneline",
     "depcheck-ci": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --json",
     "contracts:assert-target-env": "node contracts/test-utils/assert-target-env.js",
