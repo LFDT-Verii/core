@@ -11,13 +11,13 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix .",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "prepublishOnly": "tsc --declaration",
     "test": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=./setup-tests.js --test --test-reporter=spec --test-reporter-destination=stdout '**/*.test.ts' '**/*.test.tsx'",
-    "test:ci": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=./setup-tests.js --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info  '**/*.test.ts' '**/*.test.tsx'"
+    "test:ci": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=./setup-tests.js --test --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info '**/*.test.ts' '**/*.test.tsx'"
   },
   "engines": {
     "node": ">= 22.22.0"
@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "16.3.2",
-    "@types/node": "24.9.2",
+    "@types/node": "24.10.15",
     "eslint": "9.39.3",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.4",

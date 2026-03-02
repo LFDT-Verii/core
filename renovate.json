@@ -104,11 +104,12 @@
       "groupName": "group: hardhat compatibility set",
       "matchPackageNames": [
         "hardhat",
-        "@openzeppelin/hardhat-upgrades"
+        "@openzeppelin/hardhat-upgrades",
+        "@nomicfoundation/hardhat-ethers"
       ],
-      "minimumGroupSize": 2,
+      "minimumGroupSize": 3,
       "automerge": false,
-      "description": "Temporary coupling: keep hardhat updates grouped with @openzeppelin/hardhat-upgrades until hardhat-upgrades adds Hardhat v3 compatibility."
+      "description": "Temporary coupling: keep hardhat updates grouped with @openzeppelin/hardhat-upgrades & @nomicfoundation/hardhat-ethers until Hardhat v3 compatibility."
     }
   ]
 }
