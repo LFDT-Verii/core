@@ -24,6 +24,11 @@ const nonceConflictErrorCodes = new Set([
 ]);
 const nonceConflictErrorRegex =
   /nonce|already been used|replacement fee too low|transaction underpriced/i;
+const nonceConflictRetries = 3;
+const accountNonceRegexes = [
+  /sender account nonce\s+(\d+)/i,
+  /account nonce(?: is)?\s+(\d+)/i,
+];
 
 const isObjectLike = (value) =>
   value != null && (typeof value === 'object' || typeof value === 'function');
@@ -31,11 +36,42 @@ const isObjectLike = (value) =>
 const getNestedErrorCandidates = (value) =>
   [value.error, value.info, value.cause].filter(isObjectLike);
 
-const hasNonceConflictMessage = (value) => {
+const getErrorText = (value) => {
   const shortMessage =
     typeof value.shortMessage === 'string' ? value.shortMessage : '';
   const message = typeof value.message === 'string' ? value.message : '';
-  return nonceConflictErrorRegex.test(`${shortMessage} ${message}`);
+  return `${shortMessage}\n${message}`;
+};
+
+const parseNonNegativeInteger = (value) => {
+  const parsed = Number.parseInt(value || '', 10);
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
+};
+
+const getMaxNumber = (values) =>
+  values.reduce((maxValue, value) => {
+    if (value == null) {
+      return maxValue;
+    }
+
+    if (maxValue == null || value > maxValue) {
+      return value;
+    }
+
+    return maxValue;
+  }, null);
+
+const hasNonceConflictMessage = (value) => {
+  return nonceConflictErrorRegex.test(getErrorText(value));
+};
+
+const getAccountNonceFromMessage = (value) => {
+  const text = getErrorText(value);
+  return getMaxNumber(
+    accountNonceRegexes.map((regex) =>
+      parseNonNegativeInteger(regex.exec(text)?.[1]),
+    ),
+  );
 };
 
 const isNonceConflictError = (error, visited = new Set()) => {
@@ -57,6 +93,20 @@ const isNonceConflictError = (error, visited = new Set()) => {
   );
 };
 
+const getMinimumNonceFromError = (error, visited = new Set()) => {
+  if (!isObjectLike(error) || visited.has(error)) {
+    return null;
+  }
+
+  visited.add(error);
+  return getMaxNumber([
+    getAccountNonceFromMessage(error),
+    ...getNestedErrorCandidates(error).map((candidate) =>
+      getMinimumNonceFromError(candidate, visited),
+    ),
+  ]);
+};
+
 class ResyncingNonceManager extends ethers.NonceManager {
   constructor(signer) {
     super(signer);
@@ -64,33 +114,50 @@ class ResyncingNonceManager extends ethers.NonceManager {
   }
 
   sendTransaction(tx) {
-    const sendWithExplicitNonce = async () => {
-      const nonce = await this.getNonce('pending');
-      this.increment();
-      try {
-        const populatedTransaction = await this.signer.populateTransaction({
-          ...(tx || {}),
-          nonce,
-        });
-        return this.signer.sendTransaction({
-          ...populatedTransaction,
-          nonce,
-        });
-      } catch (error) {
-        this.reset();
-        throw error;
-      }
+    const getNonceFloor = async (minimumNonceFromError) => {
+      const [pendingNonce, latestNonce] = await Promise.all([
+        this.signer.getNonce('pending'),
+        this.signer.getNonce('latest'),
+      ]);
+
+      return Math.max(
+        pendingNonce,
+        latestNonce,
+        minimumNonceFromError == null ? 0 : minimumNonceFromError,
+      );
     };
 
-    const sendWithRetry = async () => {
+    const sendWithNonce = async (nonce) => {
+      const populatedTransaction = await this.signer.populateTransaction({
+        ...(tx || {}),
+        nonce,
+      });
+
+      return this.signer.sendTransaction({
+        ...populatedTransaction,
+        nonce,
+      });
+    };
+
+    const nextMinimumNonceFromError = (minimumNonceFromError, error) => {
+      const extractedMinimumNonce = getMinimumNonceFromError(error);
+      return getMaxNumber([minimumNonceFromError, extractedMinimumNonce]);
+    };
+
+    const sendWithRetry = async (attempt = 1, minimumNonceFromError = null) => {
       try {
-        return await super.sendTransaction({ ...(tx || {}) });
+        const nonce = await getNonceFloor(minimumNonceFromError);
+        return await sendWithNonce(nonce);
       } catch (error) {
         this.reset();
-        if (!isNonceConflictError(error)) {
+        if (!isNonceConflictError(error) || attempt >= nonceConflictRetries) {
           throw error;
         }
-        return sendWithExplicitNonce();
+
+        return sendWithRetry(
+          attempt + 1,
+          nextMinimumNonceFromError(minimumNonceFromError, error),
+        );
       }
     };
 
