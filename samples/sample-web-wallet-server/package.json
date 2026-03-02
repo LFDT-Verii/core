@@ -61,6 +61,11 @@
         "outputs": [
           "{projectRoot}/dist"
         ]
+      },
+      "test": {
+        "dependsOn": [
+          "^build"
+        ]
       }
     }
   }

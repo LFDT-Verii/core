@@ -1,7 +1,6 @@
 import baseConfig from '../../eslint.config.mjs';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import jsdoc from 'eslint-plugin-jsdoc';
-import typescriptEslint from 'typescript-eslint';
 
 export default [
   // JSDoc recommended config
@@ -14,10 +13,6 @@ export default [
     files: ['**/*.{js,ts}'],
     plugins: {
       jsdoc,
-      '@typescript-eslint': typescriptEslint.plugin,
-    },
-    languageOptions: {
-      parser: typescriptEslint.parser,
     },
     rules: {
       'jsdoc/require-jsdoc': [

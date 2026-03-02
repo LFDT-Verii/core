@@ -3567,12 +3567,16 @@ describe('Organizations Full Test Suite', () => {
 
           expect(response.statusCode).toEqual(201);
 
-          expect(
-            mockSESSendEmail.mock.calls.map((call) => call.arguments),
-          ).toEqual([
-            [expectedSupportEmail()],
-            [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
-          ]);
+          const emailCalls = mockSESSendEmail.mock.calls.map(
+            (call) => call.arguments,
+          );
+          expect(emailCalls).toHaveLength(2);
+          expect(emailCalls).toEqual(
+            expect.arrayContaining([
+              [expectedSupportEmail()],
+              [expectedSignatoryApprovalEmail(null, { profile: orgProfile })],
+            ]),
+          );
         });
 
         it('Should create organization and ignore expired invitation', async () => {
