@@ -14,37 +14,19 @@
  * limitations under the License.
  */
 
-const { after, beforeEach, describe, it, mock } = require('node:test');
+const { describe, it, mock } = require('node:test');
 const { expect } = require('expect');
-const ethers = require('ethers');
-
-const superSendTransactionMock = mock.fn();
-const getNonceMock = mock.fn();
-const incrementMock = mock.fn();
-const resetMock = mock.fn();
-
-const nonceManagerPrototype = ethers.NonceManager.prototype;
-const originalSendTransaction = nonceManagerPrototype.sendTransaction;
-const originalGetNonce = nonceManagerPrototype.getNonce;
-const originalIncrement = nonceManagerPrototype.increment;
-const originalReset = nonceManagerPrototype.reset;
-
-nonceManagerPrototype.sendTransaction = (tx) => superSendTransactionMock(tx);
-
-nonceManagerPrototype.getNonce = (blockTag) => getNonceMock(blockTag);
-
-nonceManagerPrototype.increment = () => {
-  incrementMock();
-};
-
-nonceManagerPrototype.reset = () => {
-  resetMock();
-};
 
 const { ResyncingNonceManager } = require('../src/resyncing-nonce-manager');
 
 const createSigner = () => ({
   provider: {},
+  getNonce: mock.fn((blockTag) => {
+    if (blockTag === 'pending') {
+      return Promise.resolve(10);
+    }
+    return Promise.resolve(10);
+  }),
   populateTransaction: mock.fn((tx) =>
     Promise.resolve({ ...tx, gasLimit: 1n }),
   ),
@@ -61,87 +43,95 @@ const createDeferred = () => {
   return { promise, resolve, reject };
 };
 
+const waitForQueueTick = () =>
+  new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+
 describe('ResyncingNonceManager', () => {
-  beforeEach(() => {
-    superSendTransactionMock.mock.resetCalls();
-    getNonceMock.mock.resetCalls();
-    incrementMock.mock.resetCalls();
-    resetMock.mock.resetCalls();
-
-    superSendTransactionMock.mock.mockImplementation((tx) =>
-      Promise.resolve({ hash: '0xsuper', tx }),
-    );
-    getNonceMock.mock.mockImplementation(() => Promise.resolve(10));
-  });
-
-  after(() => {
-    nonceManagerPrototype.sendTransaction = originalSendTransaction;
-    nonceManagerPrototype.getNonce = originalGetNonce;
-    nonceManagerPrototype.increment = originalIncrement;
-    nonceManagerPrototype.reset = originalReset;
-    mock.reset();
-  });
-
-  it('uses regular NonceManager flow on the first attempt', async () => {
+  it('uses explicit nonce on the first attempt', async () => {
     const signer = createSigner();
     const manager = new ResyncingNonceManager(signer);
 
     const result = await manager.sendTransaction({ to: '0xaaa' });
 
-    expect(result).toEqual({ hash: '0xsuper', tx: { to: '0xaaa' } });
-    expect(superSendTransactionMock.mock.callCount()).toEqual(1);
-    expect(superSendTransactionMock.mock.calls[0].arguments[0]).toEqual({
-      to: '0xaaa',
+    expect(result).toEqual({
+      hash: '0x1',
+      tx: { to: '0xaaa', nonce: 10, gasLimit: 1n },
     });
-    expect(getNonceMock.mock.callCount()).toEqual(0);
-    expect(incrementMock.mock.callCount()).toEqual(0);
-    expect(resetMock.mock.callCount()).toEqual(0);
-    expect(signer.populateTransaction.mock.callCount()).toEqual(0);
-    expect(signer.sendTransaction.mock.callCount()).toEqual(0);
+    expect(signer.getNonce.mock.callCount()).toEqual(2);
+    expect(signer.getNonce.mock.calls[0].arguments).toEqual(['pending']);
+    expect(signer.getNonce.mock.calls[1].arguments).toEqual(['latest']);
+    expect(signer.populateTransaction.mock.callCount()).toEqual(1);
+    expect(signer.populateTransaction.mock.calls[0].arguments[0]).toEqual({
+      to: '0xaaa',
+      nonce: 10,
+    });
+    expect(signer.sendTransaction.mock.callCount()).toEqual(1);
+    expect(signer.sendTransaction.mock.calls[0].arguments[0]).toEqual({
+      to: '0xaaa',
+      nonce: 10,
+      gasLimit: 1n,
+    });
   });
 
-  it('retries with explicit nonce on nonce-conflict errors', async () => {
+  it('retries nonce-conflict estimate failures and uses nonce from error', async () => {
     const signer = createSigner();
     const manager = new ResyncingNonceManager(signer);
-    const nonceConflictError = Object.assign(new Error('nonce conflict'), {
-      info: { error: { code: 'NONCE_EXPIRED' } },
+    const originalReset = manager.reset.bind(manager);
+    const resetMock = mock.fn(() => originalReset());
+    manager.reset = resetMock;
+
+    signer.getNonce.mock.mockImplementation((blockTag) => {
+      if (blockTag === 'pending') {
+        return Promise.resolve(0);
+      }
+      return Promise.resolve(0);
     });
 
-    superSendTransactionMock.mock.mockImplementationOnce(() =>
-      Promise.reject(nonceConflictError),
+    const nonceConflictError = Object.assign(
+      new Error(
+        'Nonce too low (transaction nonce 0 below sender account nonce 3)',
+      ),
+      { code: 'NONCE_EXPIRED' },
     );
-    getNonceMock.mock.mockImplementationOnce(() => Promise.resolve(42));
+
+    let populateCallCount = 0;
+    signer.populateTransaction.mock.mockImplementation((tx) => {
+      populateCallCount += 1;
+      if (populateCallCount === 1) {
+        return Promise.reject(nonceConflictError);
+      }
+      return Promise.resolve({ ...tx, gasLimit: 1n });
+    });
 
     const result = await manager.sendTransaction({ to: '0xbbb' });
 
     expect(result).toEqual({
       hash: '0x1',
-      tx: { to: '0xbbb', nonce: 42, gasLimit: 1n },
+      tx: { to: '0xbbb', nonce: 3, gasLimit: 1n },
     });
-    expect(superSendTransactionMock.mock.callCount()).toEqual(1);
     expect(resetMock.mock.callCount()).toEqual(1);
-    expect(getNonceMock.mock.callCount()).toEqual(1);
-    expect(getNonceMock.mock.calls[0].arguments).toEqual(['pending']);
-    expect(incrementMock.mock.callCount()).toEqual(1);
-    expect(signer.populateTransaction.mock.callCount()).toEqual(1);
+    expect(signer.populateTransaction.mock.callCount()).toEqual(2);
     expect(signer.populateTransaction.mock.calls[0].arguments[0]).toEqual({
       to: '0xbbb',
-      nonce: 42,
+      nonce: 0,
     });
-    expect(signer.sendTransaction.mock.callCount()).toEqual(1);
-    expect(signer.sendTransaction.mock.calls[0].arguments[0]).toEqual({
+    expect(signer.populateTransaction.mock.calls[1].arguments[0]).toEqual({
       to: '0xbbb',
-      nonce: 42,
-      gasLimit: 1n,
+      nonce: 3,
     });
   });
 
   it('does not retry on non-nonce errors and resets once', async () => {
     const signer = createSigner();
     const manager = new ResyncingNonceManager(signer);
+    const originalReset = manager.reset.bind(manager);
+    const resetMock = mock.fn(() => originalReset());
+    manager.reset = resetMock;
     const boom = new Error('boom');
 
-    superSendTransactionMock.mock.mockImplementationOnce(() =>
+    signer.populateTransaction.mock.mockImplementationOnce(() =>
       Promise.reject(boom),
     );
 
@@ -149,72 +139,45 @@ describe('ResyncingNonceManager', () => {
       'boom',
     );
 
-    expect(superSendTransactionMock.mock.callCount()).toEqual(1);
     expect(resetMock.mock.callCount()).toEqual(1);
-    expect(getNonceMock.mock.callCount()).toEqual(0);
-    expect(incrementMock.mock.callCount()).toEqual(0);
-    expect(signer.populateTransaction.mock.callCount()).toEqual(0);
-    expect(signer.sendTransaction.mock.callCount()).toEqual(0);
-  });
-
-  it('resets twice when retry explicit send setup fails', async () => {
-    const signer = createSigner();
-    const manager = new ResyncingNonceManager(signer);
-    const nonceConflictError = Object.assign(new Error('nonce conflict'), {
-      code: 'NONCE_EXPIRED',
-    });
-
-    superSendTransactionMock.mock.mockImplementationOnce(() =>
-      Promise.reject(nonceConflictError),
-    );
-    getNonceMock.mock.mockImplementationOnce(() => Promise.resolve(7));
-    signer.populateTransaction.mock.mockImplementationOnce(() =>
-      Promise.reject(new Error('retry populate failed')),
-    );
-
-    await expect(manager.sendTransaction({ to: '0xddd' })).rejects.toThrow(
-      'retry populate failed',
-    );
-
-    expect(resetMock.mock.callCount()).toEqual(2);
-    expect(incrementMock.mock.callCount()).toEqual(1);
+    expect(signer.populateTransaction.mock.callCount()).toEqual(1);
     expect(signer.sendTransaction.mock.callCount()).toEqual(0);
   });
 
   it('serializes concurrent sends through the internal queue', async () => {
     const signer = createSigner();
     const manager = new ResyncingNonceManager(signer);
-    const firstSend = createDeferred();
-    let sendCallNumber = 0;
+    const firstPopulate = createDeferred();
 
-    superSendTransactionMock.mock.mockImplementation((tx) => {
-      sendCallNumber += 1;
-      if (sendCallNumber === 1) {
-        return firstSend.promise;
+    let populateCallCount = 0;
+    signer.populateTransaction.mock.mockImplementation((tx) => {
+      populateCallCount += 1;
+      if (populateCallCount === 1) {
+        return firstPopulate.promise;
       }
-      return Promise.resolve({ hash: '0xsecond', tx });
+      return Promise.resolve({ ...tx, gasLimit: 2n });
     });
 
     const firstPromise = manager.sendTransaction({ nonce: 1 });
     const secondPromise = manager.sendTransaction({ nonce: 2 });
 
-    await Promise.resolve();
-    expect(superSendTransactionMock.mock.callCount()).toEqual(1);
+    await waitForQueueTick();
+    expect(signer.populateTransaction.mock.callCount()).toEqual(1);
 
-    firstSend.resolve({ hash: '0xfirst', tx: { nonce: 1 } });
+    firstPopulate.resolve({ nonce: 1, gasLimit: 1n });
     const [firstResult, secondResult] = await Promise.all([
       firstPromise,
       secondPromise,
     ]);
 
-    expect(firstResult).toEqual({ hash: '0xfirst', tx: { nonce: 1 } });
-    expect(secondResult).toEqual({ hash: '0xsecond', tx: { nonce: 2 } });
-    expect(superSendTransactionMock.mock.callCount()).toEqual(2);
-    expect(superSendTransactionMock.mock.calls[0].arguments[0]).toEqual({
-      nonce: 1,
+    expect(firstResult).toEqual({
+      hash: '0x1',
+      tx: { nonce: 10, gasLimit: 1n },
     });
-    expect(superSendTransactionMock.mock.calls[1].arguments[0]).toEqual({
-      nonce: 2,
+    expect(secondResult).toEqual({
+      hash: '0x1',
+      tx: { nonce: 10, gasLimit: 2n },
     });
+    expect(signer.populateTransaction.mock.callCount()).toEqual(2);
   });
 });
