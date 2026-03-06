@@ -23,10 +23,11 @@ export default class PresentationRequestByDeepLinkVerifierImpl implements Presen
             return false;
         }
         if (
-            (didDocument.id === presentationRequest.iss &&
-                didDocument.id === deepLink.did) ||
-            (didDocument.alsoKnownAs.includes(presentationRequest.iss) &&
-                didDocument.alsoKnownAs.includes(deepLink.did!))
+            this.isDidBoundToDidDocument(
+                presentationRequest.iss,
+                didDocument,
+            ) &&
+            this.isDidBoundToDidDocument(deepLink.did, didDocument)
         ) {
             return true;
         }
@@ -35,6 +36,10 @@ export default class PresentationRequestByDeepLinkVerifierImpl implements Presen
             VCLErrorCode.MismatchedPresentationRequestInspectorDid,
         );
         return false;
+    }
+
+    private isDidBoundToDidDocument(did: string, didDocument: VCLDidDocument) {
+        return didDocument.id === did || didDocument.alsoKnownAs.includes(did);
     }
 
     private async onError(
