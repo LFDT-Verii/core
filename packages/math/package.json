@@ -16,7 +16,7 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "bignumber.js": "9.3.1",
+    "bignumber.js": "10.0.2",
     "lodash": "4.17.23"
   },
   "devDependencies": {
