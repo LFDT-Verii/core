@@ -38,25 +38,25 @@ mock.module('@verii/error-aggregation', {
   },
 });
 
-const mockAuth0ClientDelete = mock.fn(async ({ id }) => {
+const mockAuth0ClientDelete = mock.fn(async (id) => {
   console.log(`deleting auth0 client ${id}`);
 });
-const mockAuth0ClientGrantDelete = mock.fn(async ({ id }) => {
+const mockAuth0ClientGrantDelete = mock.fn(async (id) => {
   console.log(`deleting auth0 client grant ${id}`);
 });
 const mockAuth0ClientCreate = mock.fn(async (obj) => {
   const id = nanoid();
   console.log(`create auth0 client ${id}`);
-  return { data: { client_id: id, client_secret: nanoid(), ...obj } };
+  return { client_id: id, client_secret: nanoid(), ...obj };
 });
 const mockAuth0ClientGrantCreate = mock.fn(async (obj) => {
   const id = nanoid();
   console.log(`create auth0 clientGrant ${id}`);
-  return { data: { id: nanoid(), ...obj } };
+  return { id: nanoid(), ...obj };
 });
-const mockAuth0UserUpdate = mock.fn(async ({ id }, obj) => {
+const mockAuth0UserUpdate = mock.fn(async (id, obj) => {
   console.log(`update auth0 user ${id}`);
-  return { data: { id, ...obj } };
+  return { id, ...obj };
 });
 const mockAuth0GetUsers = mock.fn(() =>
   Promise.resolve({
@@ -64,7 +64,7 @@ const mockAuth0GetUsers = mock.fn(() =>
   }),
 );
 const mockAuth0GetUser = mock.fn(() =>
-  Promise.resolve({ data: { email: 'admin@localhost.test' } }),
+  Promise.resolve({ email: 'admin@localhost.test' }),
 );
 
 class ManagementClient {
@@ -78,10 +78,10 @@ class ManagementClient {
       delete: mockAuth0ClientGrantDelete,
     };
     this.users = {
+      list: mockAuth0GetUsers,
       get: mockAuth0GetUser,
       update: mockAuth0UserUpdate,
     };
-    this.getUsers = mockAuth0GetUsers;
   }
 }
 mock.module('auth0', {
@@ -4766,7 +4766,7 @@ describe('Organization Services Test Suite', () => {
         });
         expect(
           mockAuth0ClientDelete.mock.calls.map((call) => call.arguments),
-        ).toEqual([[{ client_id: authClients[1].clientId }]]);
+        ).toEqual([[authClients[1].clientId]]);
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
       });
 
@@ -4836,13 +4836,13 @@ describe('Organization Services Test Suite', () => {
           mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
-            (clientGrantId) => [{ id: clientGrantId }],
+            (clientGrantId) => [clientGrantId],
             authClients[1].clientGrantIds,
           ),
         );
         expect(
           mockAuth0ClientDelete.mock.calls.map((call) => call.arguments),
-        ).toEqual([[{ client_id: authClients[1].clientId }]]);
+        ).toEqual([[authClients[1].clientId]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
@@ -5090,7 +5090,7 @@ describe('Organization Services Test Suite', () => {
           mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
-            (clientGrantId) => [{ id: clientGrantId }],
+            (clientGrantId) => [clientGrantId],
             authClients[0].clientGrantIds,
           ),
         );
@@ -5222,7 +5222,7 @@ describe('Organization Services Test Suite', () => {
           mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
-            (clientGrantId) => [{ id: clientGrantId }],
+            (clientGrantId) => [clientGrantId],
             authClients[0].clientGrantIds,
           ),
         );
@@ -5353,24 +5353,16 @@ describe('Organization Services Test Suite', () => {
         });
 
         expect(mockAuth0ClientGrantDelete.mock.calls[0].arguments).toEqual([
-          {
-            id: authClients[0].clientGrantIds[0],
-          },
+          authClients[0].clientGrantIds[0],
         ]);
         expect(mockAuth0ClientGrantDelete.mock.calls[1].arguments).toEqual([
-          {
-            id: authClients[0].clientGrantIds[1],
-          },
+          authClients[0].clientGrantIds[1],
         ]);
         expect(mockAuth0ClientGrantDelete.mock.calls[2].arguments).toEqual([
-          {
-            id: authClients[1].clientGrantIds[0],
-          },
+          authClients[1].clientGrantIds[0],
         ]);
         expect(mockAuth0ClientGrantDelete.mock.calls[3].arguments).toEqual([
-          {
-            id: authClients[1].clientGrantIds[1],
-          },
+          authClients[1].clientGrantIds[1],
         ]);
 
         expect(mockAuth0ClientDelete.mock.callCount()).toEqual(0);
@@ -6477,14 +6469,14 @@ describe('Organization Services Test Suite', () => {
           mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
-            (clientGrantId) => [{ id: clientGrantId }],
+            (clientGrantId) => [clientGrantId],
             authClients[1].clientGrantIds,
           ),
         );
 
         expect(
           mockAuth0ClientDelete.mock.calls.map((call) => call.arguments),
-        ).toEqual([[{ client_id: authClients[1].clientId }]]);
+        ).toEqual([[authClients[1].clientId]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
@@ -6582,14 +6574,14 @@ describe('Organization Services Test Suite', () => {
           mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
-            (clientGrantId) => [{ id: clientGrantId }],
+            (clientGrantId) => [clientGrantId],
             authClients[1].clientGrantIds,
           ),
         );
 
         expect(
           mockAuth0ClientDelete.mock.calls.map((call) => call.arguments),
-        ).toEqual([[{ client_id: authClients[1].clientId }]]);
+        ).toEqual([[authClients[1].clientId]]);
 
         expect(monitorDeletionNockExecuted(monitorNockScope)).toEqual(true);
 
@@ -7064,7 +7056,7 @@ describe('Organization Services Test Suite', () => {
           mockAuth0ClientGrantDelete.mock.calls.map((call) => call.arguments),
         ).toEqual(
           map(
-            (clientGrantId) => [{ id: clientGrantId }],
+            (clientGrantId) => [clientGrantId],
             authClients[0].clientGrantIds,
           ),
         );
