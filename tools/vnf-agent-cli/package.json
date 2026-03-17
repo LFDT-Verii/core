@@ -32,7 +32,7 @@
     "prettier": "3.8.1"
   },
   "dependencies": {
-    "commander": "~13.1.0",
+    "commander": "~14.0.0",
     "lodash": "^4.17.21"
   }
 }

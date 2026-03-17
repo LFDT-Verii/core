@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "chalk": "~4.1.2",
-    "commander": "~13.1.0",
+    "commander": "~14.0.0",
     "csv-parser": "~3.2.0",
     "got": "11.8.6",
     "date-fns": "4.1.0",
