@@ -58,12 +58,9 @@ const initAuth0Provisioner = async ({
   });
 
   const setAuth0UserGroupId = async (did, { user }) => {
-    await auth0ManagementClient.users.update(
-      { id: user.sub },
-      {
-        app_metadata: { groupId: did },
-      },
-    );
+    await auth0ManagementClient.users.update(user.sub, {
+      app_metadata: { groupId: did },
+    });
   };
 
   const provisionAuth0SystemClient = async (
@@ -79,7 +76,7 @@ const initAuth0Provisioner = async ({
 
     const { name, description, clientType } = clientDetails;
 
-    const { data: auth0Client } = await auth0ManagementClient.clients.create({
+    const auth0Client = await auth0ManagementClient.clients.create({
       name,
       description,
       logo_uri: trim(profile.logo),
@@ -126,48 +123,43 @@ const initAuth0Provisioner = async ({
     }
 
     const { audience, scope } = clientGrantDetails;
-    const { data: clientGrant } =
-      await auth0ManagementClient.clientGrants.create({
-        client_id: clientId,
-        audience,
-        scope,
-      });
+    const clientGrant = await auth0ManagementClient.clientGrants.create({
+      client_id: clientId,
+      audience,
+      scope,
+    });
     return clientGrant;
   };
 
   const removeAuth0Client = async (authClient) => {
     for (const clientGrantId of authClient.clientGrantIds ?? []) {
       // eslint-disable-next-line no-await-in-loop
-      await auth0ManagementClient.clientGrants.delete({ id: clientGrantId });
+      await auth0ManagementClient.clientGrants.delete(clientGrantId);
     }
 
-    await auth0ManagementClient.clients.delete({
-      client_id: authClient.clientId,
-    });
+    await auth0ManagementClient.clients.delete(authClient.clientId);
   };
 
   const removeAuth0Grants = async (authClient) => {
     for (const clientGrantId of authClient.clientGrantIds ?? []) {
       // eslint-disable-next-line no-await-in-loop
-      await auth0ManagementClient.clientGrants.delete({ id: clientGrantId });
+      await auth0ManagementClient.clientGrants.delete(clientGrantId);
     }
   };
 
   const createAuth0User = async ({ user }) => {
-    const { data: createUserResult } = await auth0ManagementClient.users.create(
-      {
-        email: user.email,
-        given_name: user.givenName,
-        family_name: user.familyName,
-        password: nanoid(28),
-        verify_email: false,
-        email_verified: false,
-        connection: auth0Connection,
-        app_metadata: {
-          groupId: user.groupId,
-        },
+    const createUserResult = await auth0ManagementClient.users.create({
+      email: user.email,
+      given_name: user.givenName,
+      family_name: user.familyName,
+      password: nanoid(28),
+      verify_email: false,
+      email_verified: false,
+      connection: auth0Connection,
+      app_metadata: {
+        groupId: user.groupId,
       },
-    );
+    });
     return {
       ...user,
       id: createUserResult.user_id,
@@ -179,25 +171,20 @@ const initAuth0Provisioner = async ({
       ' OR ',
       map((userId) => `user_id:${userId}`, userIds),
     );
-    const { data: users } = await auth0ManagementClient.getUsers({
+    const usersPage = await auth0ManagementClient.users.list({
       search_engine: 'v3',
       q: query,
       fields: fields.join(','),
       per_page: 25,
       page: 0,
     });
-    return users;
+    return usersPage.data;
   };
 
   const addRoleToAuth0User = async ({ user, roleName }) => {
-    const { data: roles } = await auth0ManagementClient.users.assignRoles(
-      {
-        id: user.id,
-      },
-      {
-        roles: [roleNameToRoleId(roleName)],
-      },
-    );
+    const roles = await auth0ManagementClient.users.roles.assign(user.id, {
+      roles: [roleNameToRoleId(roleName)],
+    });
     return roles;
   };
 
@@ -205,14 +192,12 @@ const initAuth0Provisioner = async ({
     user,
     resultUrl = registrarAppUiUrl,
   }) => {
-    const { data: ticket } = await auth0ManagementClient.tickets.changePassword(
-      {
-        user_id: user.id,
-        result_url: resultUrl,
-        mark_email_as_verified: true,
-        ttl_sec: 604800,
-      },
-    );
+    const ticket = await auth0ManagementClient.tickets.changePassword({
+      user_id: user.id,
+      result_url: resultUrl,
+      mark_email_as_verified: true,
+      ttl_sec: 604800,
+    });
     return ticket;
   };
 

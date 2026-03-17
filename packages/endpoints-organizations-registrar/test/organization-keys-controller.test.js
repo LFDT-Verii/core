@@ -38,31 +38,29 @@ mock.module('@verii/error-aggregation', {
   },
 });
 
-const mockAuth0ClientDelete = mock.fn(async ({ id }) => {
+const mockAuth0ClientDelete = mock.fn(async (id) => {
   console.log(`deleting auth0 client ${id}`);
 });
-const mockAuth0ClientGrantDelete = mock.fn(async ({ id }) => {
+const mockAuth0ClientGrantDelete = mock.fn(async (id) => {
   console.log(`deleting auth0 client grant ${id}`);
 });
 const mockAuth0ClientCreate = mock.fn(async (obj) => {
   const id = nanoid();
   console.log(`create auth0 client ${id}`);
-  return { data: { client_id: id, client_secret: nanoid(), ...obj } };
+  return { client_id: id, client_secret: nanoid(), ...obj };
 });
 const mockAuth0ClientGrantCreate = mock.fn(async (obj) => {
   const id = nanoid();
   console.log(`create auth0 clientGrant ${id}`);
-  return { data: { id: nanoid(), ...obj } };
+  return { id: nanoid(), ...obj };
 });
-const mockAuth0UserUpdate = mock.fn(async ({ id }, obj) => {
+const mockAuth0UserUpdate = mock.fn(async (id, obj) => {
   console.log(`update auth0 user ${id}`);
-  return { data: { id, ...obj } };
+  return { id, ...obj };
 });
 const mockAuth0GetUsers = mock.fn(() =>
   Promise.resolve({
-    data: {
-      email: `${mockAuth0GetUsers.mock.callCount()}@localhost.test`,
-    },
+    data: [{ email: `${mockAuth0GetUsers.mock.callCount()}@localhost.test` }],
   }),
 );
 
@@ -77,9 +75,9 @@ class ManagementClient {
       delete: mockAuth0ClientGrantDelete,
     };
     this.users = {
+      list: mockAuth0GetUsers,
       update: mockAuth0UserUpdate,
     };
-    this.getUsers = mockAuth0GetUsers;
   }
 }
 mock.module('auth0', {

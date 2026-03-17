@@ -5255,7 +5255,7 @@ attr-accept@^2.2.4:
   resolved "https://registry.npmjs.org/attr-accept/-/attr-accept-2.2.5.tgz#d7061d958e6d4f97bf8665c68b75851a0713ab5e"
   integrity sha512-0bDNnY/u6pPwHDMoF0FieU354oBi0a8rD9FcsLwzcGWbc8KS8KPIi7y+s13OlVY+gMWc/9xEMUgNE6Qm8ZllYQ==
 
-auth0@4.37.0:
+"auth0-legacy@npm:auth0@^4.27.0":
   version "4.37.0"
   resolved "https://registry.npmjs.org/auth0/-/auth0-4.37.0.tgz#828d91d254926579e0fff5b6c060988c5631436f"
   integrity sha512-+TqJRxh4QvbD4TQIYx1ak2vanykQkG/nIZLuR6o8LoQj425gjVG3tFuUbbOeh/nCpP1rnvU0CCV1ChZHYXLU/A==
@@ -5263,6 +5263,15 @@ auth0@4.37.0:
     jose "^4.13.2"
     undici-types "^6.15.0"
     uuid "^9.0.0"
+
+auth0@5.5.0:
+  version "5.5.0"
+  resolved "https://registry.npmjs.org/auth0/-/auth0-5.5.0.tgz#ff7894f561346fa86debe1bc34ecd69bcfc017d0"
+  integrity sha512-adHl/7SZ3MDlSulSFxbkFbDe+pJldm3ovrQ67IGt/DOobkDIfVaQThGbsZL+4YHF7BJv0TzmHdUl0lcTmHKcng==
+  dependencies:
+    auth0-legacy "npm:auth0@^4.27.0"
+    jose "^4.13.2"
+    uuid "^11.1.0"
 
 autosuggest-highlight@^3.1.1, autosuggest-highlight@^3.3.4:
   version "3.3.4"
@@ -12284,6 +12293,11 @@ util-deprecate@^1.0.1, util-deprecate@~1.0.1:
   version "1.0.2"
   resolved "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==
+
+uuid@^11.1.0:
+  version "11.1.0"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-11.1.0.tgz#9549028be1753bb934fc96e2bca09bb4105ae912"
+  integrity sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==
 
 uuid@^8.3.2:
   version "8.3.2"

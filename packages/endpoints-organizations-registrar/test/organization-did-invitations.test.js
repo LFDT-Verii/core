@@ -38,29 +38,29 @@ mock.module('@verii/error-aggregation', {
 });
 
 const mockAuth0UserCreate = mock.fn(async (obj) => {
-  return { data: { user_id: 'user_id_123', ...obj } };
+  return { user_id: 'user_id_123', ...obj };
 });
 const mockAuth0UserGetByEmail = mock.fn(async () => {
-  return { data: [] };
+  return [];
 });
 const mockAuth0TicketChange = mock.fn(async () => {
   return {
-    data: { ticket: undefined },
+    ticket: undefined,
   };
 });
 const mockAuth0ClientAssignRole = mock.fn(async (obj) => {
-  return { data: { id: nanoid(), ...obj } };
+  return { id: nanoid(), ...obj };
 });
 class ManagementClient {
   constructor() {
     this.users = {
       create: mockAuth0UserCreate,
-      assignRoles: mockAuth0ClientAssignRole,
+      roles: {
+        assign: mockAuth0ClientAssignRole,
+      },
+      listUsersByEmail: mockAuth0UserGetByEmail,
     };
     this.tickets = { changePassword: mockAuth0TicketChange };
-    this.usersByEmail = {
-      getByEmail: mockAuth0UserGetByEmail,
-    };
   }
 }
 mock.module('auth0', {
@@ -757,8 +757,8 @@ describe('Organization invitations test suites', () => {
       expect(
         mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
-        [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
-        [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
+        ['user_id_123', { roles: ['rol_sQZLrbwBEblVBNDj'] }],
+        ['user_id_123', { roles: ['rol_xxx'] }],
       ]);
       expect(
         mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
@@ -850,8 +850,8 @@ describe('Organization invitations test suites', () => {
       expect(
         mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
-        [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
-        [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
+        ['user_id_123', { roles: ['rol_sQZLrbwBEblVBNDj'] }],
+        ['user_id_123', { roles: ['rol_xxx'] }],
       ]);
       expect(
         mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
@@ -935,8 +935,8 @@ describe('Organization invitations test suites', () => {
       expect(
         mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
-        [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
-        [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
+        ['user_id_123', { roles: ['rol_sQZLrbwBEblVBNDj'] }],
+        ['user_id_123', { roles: ['rol_xxx'] }],
       ]);
       expect(
         mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
@@ -1033,7 +1033,7 @@ describe('Organization invitations test suites', () => {
     });
     it('should reuse a an existing user if they have already signed up', async () => {
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async (email) => {
-        return { data: [{ user_id: 'user_id_123', logins_count: 1, email }] };
+        return [{ user_id: 'user_id_123', logins_count: 1, email }];
       });
       const payload = {
         inviteeEmail: 'test@email.com',
@@ -1093,16 +1093,14 @@ describe('Organization invitations test suites', () => {
       const ticket = 'https://ticket.com?pass=123';
       mockAuth0TicketChange.mock.mockImplementationOnce(async () => {
         return {
-          data: {
-            ticket,
-          },
+          ticket,
         };
       });
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
-        return { data: [] };
+        return [];
       });
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
-        return { data: [{ user_id: 'user_id_123' }] };
+        return [{ user_id: 'user_id_123' }];
       });
 
       const payload1 = {
@@ -1213,8 +1211,8 @@ describe('Organization invitations test suites', () => {
       expect(
         mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
-        [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
-        [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
+        ['user_id_123', { roles: ['rol_sQZLrbwBEblVBNDj'] }],
+        ['user_id_123', { roles: ['rol_xxx'] }],
       ]);
       expect(mockAuth0TicketChange.mock.callCount()).toEqual(2);
       expect(
@@ -1835,13 +1833,11 @@ describe('Organization invitations test suites', () => {
     it('Should resend invitation', async () => {
       const ticket = 'https://ticket.com?pass=123';
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
-        return { data: [] };
+        return [];
       });
       mockAuth0TicketChange.mock.mockImplementationOnce(async () => {
         return {
-          data: {
-            ticket,
-          },
+          ticket,
         };
       });
       const invitation = await persistInvitation({
@@ -1949,8 +1945,8 @@ describe('Organization invitations test suites', () => {
       expect(
         mockAuth0ClientAssignRole.mock.calls.map((call) => call.arguments),
       ).toEqual([
-        [{ id: 'user_id_123' }, { roles: ['rol_sQZLrbwBEblVBNDj'] }],
-        [{ id: 'user_id_123' }, { roles: ['rol_xxx'] }],
+        ['user_id_123', { roles: ['rol_sQZLrbwBEblVBNDj'] }],
+        ['user_id_123', { roles: ['rol_xxx'] }],
       ]);
       expect(
         mockAuth0TicketChange.mock.calls.map((call) => call.arguments),
@@ -1974,14 +1970,12 @@ describe('Organization invitations test suites', () => {
 
     it('Should resend invitation without creating a user', async () => {
       mockAuth0UserGetByEmail.mock.mockImplementationOnce(async () => {
-        return { data: [{ user_id: 'user_id_123' }] };
+        return [{ user_id: 'user_id_123' }];
       });
       const ticket = 'https://ticket.com?pass=123';
       mockAuth0TicketChange.mock.mockImplementationOnce(async () => {
         return {
-          data: {
-            ticket,
-          },
+          ticket,
         };
       });
       const invitation = await persistInvitation({

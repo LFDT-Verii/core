@@ -70,14 +70,11 @@ const initUserManagement = async ({
   });
 
   const softDeleteUser = async ({ id }, context) => {
-    const { data: user } = await managementClient.users.get({ id });
+    const user = await managementClient.users.get(id);
     if (isUserAccessPermitted(mapUser(user), context)) {
-      await managementClient.users.update(
-        { id },
-        {
-          blocked: true,
-        },
-      );
+      await managementClient.users.update(id, {
+        blocked: true,
+      });
     }
   };
 
@@ -88,13 +85,13 @@ const initUserManagement = async ({
   };
 
   const getUser = async ({ id }, context) => {
-    const { data: user } = await managementClient.users.get({ id });
+    const user = await managementClient.users.get(id);
     return scopeUser(mapUser(user), context);
   };
 
   const getUserWithRoles = async ({ id }, context) => {
-    const [{ data: user }, roles] = await Promise.all([
-      managementClient.users.get({ id }),
+    const [user, roles] = await Promise.all([
+      managementClient.users.get(id),
       getRolesOfUser({ id, page: 0, perPage: 10 }),
     ]);
     const currentRolesObj = auth0RolesArrToRolesObj(roles);
@@ -102,7 +99,7 @@ const initUserManagement = async ({
   };
 
   const getUserByEmail = async (email, context) => {
-    const { data: users } = await managementClient.usersByEmail.getByEmail({
+    const users = await managementClient.users.listUsersByEmail({
       email,
     });
     return map((user) => scopeUser(mapUser(user), context), users);
@@ -132,18 +129,13 @@ const initUserManagement = async ({
   };
 
   const getRolesOfUser = async ({ id, page, perPage }) => {
-    const { data: roles } = await managementClient.users.getRoles(
-      {
-        id,
-      },
-      {
-        page,
-        per_page: perPage,
-        // sort: 'date:-1',
-        // include_totals: true,
-      },
-    );
-    return roles;
+    const roles = await managementClient.users.roles.list(id, {
+      page,
+      per_page: perPage,
+      // sort: 'date:-1',
+      // include_totals: true,
+    });
+    return roles.data;
   };
 
   return {
