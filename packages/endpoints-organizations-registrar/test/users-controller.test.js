@@ -24,7 +24,7 @@ const {
 
 const mockAuth0CreateUser = mock.fn(async () => {
   const id = nanoid();
-  return { data: { user_id: id } };
+  return { user_id: id };
 });
 const mockUser = {
   id: 'auth0|1',
@@ -34,15 +34,11 @@ const mockUser = {
   app_metadata: { groupId: testRegistrarUser[VNF_GROUP_ID_CLAIM] },
 };
 
-const mockAuth0AddRoleToUser = mock.fn(() =>
-  Promise.resolve({ data: { undefined } }),
-);
-const mockAuth0GetUser = mock.fn(() => Promise.resolve({ data: mockUser }));
-const mockAuth0UpdateUser = mock.fn(async ({ id }, obj) => ({
-  data: {
-    user_id: id,
-    ...obj,
-  },
+const mockAuth0AddRoleToUser = mock.fn(() => Promise.resolve(undefined));
+const mockAuth0GetUser = mock.fn(() => Promise.resolve(mockUser));
+const mockAuth0UpdateUser = mock.fn(async (id, obj) => ({
+  user_id: id,
+  ...obj,
 }));
 
 const mockAuth0GetUserRoles = mock.fn(() =>
@@ -51,9 +47,7 @@ const mockAuth0GetUserRoles = mock.fn(() =>
 
 const mockAuth0CreatePasswordChangeTicket = mock.fn(() =>
   Promise.resolve({
-    data: {
-      ticket: 'http://localhost/ticket',
-    },
+    ticket: 'http://localhost/ticket',
   }),
 );
 
@@ -61,10 +55,12 @@ class ManagementClient {
   constructor() {
     this.users = {
       create: mockAuth0CreateUser,
-      assignRoles: mockAuth0AddRoleToUser,
-      update: mockAuth0UpdateUser,
       get: mockAuth0GetUser,
-      getRoles: mockAuth0GetUserRoles,
+      roles: {
+        assign: mockAuth0AddRoleToUser,
+        list: mockAuth0GetUserRoles,
+      },
+      update: mockAuth0UpdateUser,
     };
     this.tickets = {
       changePassword: mockAuth0CreatePasswordChangeTicket,
@@ -745,11 +741,7 @@ describe('Users Registrar Test Suite', () => {
           }),
         );
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
-        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
-          {
-            id: userId,
-          },
-        ]);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([userId]);
       });
       it('Should 204 upon successful soft deletion', async () => {
         const response = await fastify.injectJson({
@@ -761,11 +753,7 @@ describe('Users Registrar Test Suite', () => {
         });
         expect(response.statusCode).toEqual(204);
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
-        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
-          {
-            id: userId,
-          },
-        ]);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([userId]);
       });
     });
 
@@ -792,19 +780,13 @@ describe('Users Registrar Test Suite', () => {
           }),
         );
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
-        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
-          {
-            id: userId,
-          },
-        ]);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([userId]);
       });
 
       it("Should 404 if user does not exist in user's group", async () => {
         mockAuth0GetUser.mock.mockImplementationOnce(async () => ({
-          data: {
-            ...mockUser,
-            groupId: 'otherGroup',
-          },
+          ...mockUser,
+          groupId: 'otherGroup',
         }));
         const response = await fastify.injectJson({
           method: 'GET',
@@ -823,11 +805,7 @@ describe('Users Registrar Test Suite', () => {
           }),
         );
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
-        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
-          {
-            id: userId,
-          },
-        ]);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([userId]);
       });
       it("Should 200 and return user that isn't associated with a group", async () => {
         const response = await fastify.injectJson({
@@ -840,11 +818,7 @@ describe('Users Registrar Test Suite', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.json).toEqual(userJsonResponse(mockUser));
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
-        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
-          {
-            id: userId,
-          },
-        ]);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([userId]);
       });
       it('Should 200 and return user that is associated with a group', async () => {
         await persistGroup({
@@ -861,11 +835,7 @@ describe('Users Registrar Test Suite', () => {
         expect(response.statusCode).toEqual(200);
         expect(response.json).toEqual(userJsonResponse(mockUser));
         expect(mockAuth0GetUser.mock.callCount()).toEqual(1);
-        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([
-          {
-            id: userId,
-          },
-        ]);
+        expect(last(mockAuth0GetUser.mock.calls).arguments).toEqual([userId]);
       });
     });
 
