@@ -40,7 +40,7 @@
     "@verii/server-credentialagent": "0.5.0-build",
     "@verii/server-provider": "0.5.0-build",
     "date-fns": "~4.1.0",
-    "dotenv": "16.6.1",
+    "dotenv": "17.3.1",
     "env-var": "~7.5.0",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",
