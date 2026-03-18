@@ -12317,9 +12317,9 @@ undici@^6.11.1:
   integrity sha512-VfQPToRA5FZs/qJxLIinmU59u0r7LXqoJkCzinq3ckNJp3vKEh7jTWN589YQ5+aoAC/TGRLyJLCPKcLQbM8r9g==
 
 undici@^7.0.0, undici@^7.19.0, undici@^7.21.0:
-  version "7.24.0"
-  resolved "https://registry.npmjs.org/undici/-/undici-7.24.0.tgz#c7349cdede0db44226b5930783b11207831a5eaf"
-  integrity sha512-jxytwMHhsbdpBXxLAcuu0fzlQeXCNnWdDyRHpvWsUl8vd98UwYdl9YTyn8/HcpcJPC3pwUveefsa3zTxyD/ERg==
+  version "7.24.4"
+  resolved "https://registry.npmjs.org/undici/-/undici-7.24.4.tgz#873bce680d7c6354c941399fd4e8ea4563de4ea7"
+  integrity sha512-BM/JzwwaRXxrLdElV2Uo6cTLEjhSb3WXboncJamZ15NgUURmvlXvxa6xkwIOILIjPNo9i8ku136ZvWV0Uly8+w==
 
 unfetch@^4.2.0:
   version "4.2.0"
