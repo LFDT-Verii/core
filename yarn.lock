@@ -12323,10 +12323,10 @@ undici-types@~7.18.0:
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-7.18.2.tgz#29357a89e7b7ca4aef3bf0fd3fd0cd73884229e9"
   integrity sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==
 
-undici@7.24.3:
-  version "7.24.3"
-  resolved "https://registry.npmjs.org/undici/-/undici-7.24.3.tgz#9c26a00b5e6cfbf10c1238471eb4ec0166b0374b"
-  integrity sha512-eJdUmK/Wrx2d+mnWWmwwLRyA7OQCkLap60sk3dOK4ViZR7DKwwptwuIvFBg2HaiP9ESaEdhtpSymQPvytpmkCA==
+undici@7.24.4:
+  version "7.24.4"
+  resolved "https://registry.npmjs.org/undici/-/undici-7.24.4.tgz#873bce680d7c6354c941399fd4e8ea4563de4ea7"
+  integrity sha512-BM/JzwwaRXxrLdElV2Uo6cTLEjhSb3WXboncJamZ15NgUURmvlXvxa6xkwIOILIjPNo9i8ku136ZvWV0Uly8+w==
 
 undici@^5.14.0:
   version "5.29.0"
