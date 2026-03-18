@@ -17,8 +17,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@fastify/jwt": "^9.1.0",
-    "fastify-auth0-verify": "^3.0.0",
+    "@fastify/jwt": "^10.0.0",
+    "fastify-auth0-verify": "^4.0.0",
     "fastify-plugin": "^5.0.0",
     "http-errors": "~2.0.0",
     "lodash": "^4.17.21"
@@ -33,7 +33,7 @@
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
     "eslint-plugin-prettier": "5.5.5",
     "eslint-watch": "8.0.0",
-    "expect": "30.2.0",
+    "expect": "30.3.0",
     "fastify": "5.8.2",
     "globals": "17.4.0",
     "nock": "15.0.0",

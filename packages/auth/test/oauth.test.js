@@ -1,6 +1,8 @@
+const { generateKeyPairSync } = require('node:crypto');
 const { after, afterEach, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
+const fastifyJWT = require('@fastify/jwt');
 const fastify = require('fastify');
 const nock = require('nock');
 const { oauthPlugin } = require('../src/oauth');
@@ -58,6 +60,58 @@ rJKE/ZCb2+W8g29N5cv2P6nhahT3mYatMiQ0U/gfaIrA0A==
       ],
     },
   ],
+};
+
+const createScopedTokenWithPermissionsArray = async () => {
+  const signingServer = fastify({});
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+  });
+  const privateKeyPem = privateKey.export({ type: 'pkcs1', format: 'pem' });
+  const publicJwk = publicKey.export({ format: 'jwk' });
+
+  signingServer.register(fastifyJWT, {
+    secret: {
+      private: privateKeyPem,
+      public: publicKey.export({ type: 'pkcs1', format: 'pem' }),
+    },
+    sign: {
+      algorithm: 'RS256',
+    },
+  });
+
+  try {
+    await signingServer.ready();
+
+    const token = await signingServer.jwt.sign(
+      {
+        permissions: ['eth:*'],
+        scope: 'read:users',
+      },
+      {
+        aud: 'foo',
+        header: { kid: 'ARRAY_KEY' },
+        iss: 'https://permissions.local/',
+      },
+    );
+
+    return {
+      token,
+      jwksResponse: {
+        keys: [
+          {
+            ...publicJwk,
+            alg: 'RS256',
+            kid: 'ARRAY_KEY',
+            kty: 'RSA',
+            use: 'sig',
+          },
+        ],
+      },
+    };
+  } finally {
+    await signingServer.close();
+  }
 };
 
 describe('oauth module', () => {
@@ -255,5 +309,40 @@ describe('oauth module', () => {
     });
 
     expect(response.statusCode).toEqual(403);
+  });
+
+  it('the verifyAccessToken should ignore custom permissions arrays', async () => {
+    const { token, jwksResponse } =
+      await createScopedTokenWithPermissionsArray();
+    nock('https://permissions.local')
+      .get('/.well-known/jwks.json')
+      .reply(200, jwksResponse);
+
+    server
+      .register(oauthPlugin, {
+        audience: 'foo',
+        domain: 'https://permissions.local/',
+      })
+      .register(async (instance) => {
+        instance.get(
+          '/',
+          {
+            onRequest: instance.verifyAccessToken(['read:users']),
+          },
+          async () => 'OK',
+        );
+      });
+
+    await server.ready();
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/',
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
   });
 });
