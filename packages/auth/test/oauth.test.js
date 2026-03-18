@@ -70,7 +70,7 @@ const createScopedTokenWithPermissionsArray = async () => {
   const privateKeyPem = privateKey.export({ type: 'pkcs1', format: 'pem' });
   const publicJwk = publicKey.export({ format: 'jwk' });
 
-  await signingServer.register(fastifyJWT, {
+  signingServer.register(fastifyJWT, {
     secret: {
       private: privateKeyPem,
       public: publicKey.export({ type: 'pkcs1', format: 'pem' }),
@@ -80,36 +80,38 @@ const createScopedTokenWithPermissionsArray = async () => {
     },
   });
 
-  await signingServer.ready();
+  try {
+    await signingServer.ready();
 
-  const token = await signingServer.jwt.sign(
-    {
-      permissions: ['eth:*'],
-      scope: 'read:users',
-    },
-    {
-      aud: 'foo',
-      header: { kid: 'ARRAY_KEY' },
-      iss: 'https://permissions.local/',
-    },
-  );
+    const token = await signingServer.jwt.sign(
+      {
+        permissions: ['eth:*'],
+        scope: 'read:users',
+      },
+      {
+        aud: 'foo',
+        header: { kid: 'ARRAY_KEY' },
+        iss: 'https://permissions.local/',
+      },
+    );
 
-  await signingServer.close();
-
-  return {
-    token,
-    jwksResponse: {
-      keys: [
-        {
-          ...publicJwk,
-          alg: 'RS256',
-          kid: 'ARRAY_KEY',
-          kty: 'RSA',
-          use: 'sig',
-        },
-      ],
-    },
-  };
+    return {
+      token,
+      jwksResponse: {
+        keys: [
+          {
+            ...publicJwk,
+            alg: 'RS256',
+            kid: 'ARRAY_KEY',
+            kty: 'RSA',
+            use: 'sig',
+          },
+        ],
+      },
+    };
+  } finally {
+    await signingServer.close();
+  }
 };
 
 describe('oauth module', () => {
