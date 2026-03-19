@@ -19,23 +19,49 @@ const { VeriiProtocolVersions } = require('@verii/vc-checks');
 const { getJwkFromDidUri } = require('@verii/did-doc');
 const newError = require('http-errors');
 
+const KID_AND_JWK_DEPRECATION_WARNING = [
+  'jwt_vp contains both kid and jwk headers;',
+  'using kid and ignoring jwk for backward compatibility.',
+  'This will not be accepted after 2026-12-31T23:59:59Z,',
+  'and this compatibility path will be removed.',
+].join(' ');
+const MISSING_KID_AND_JWK_ERROR =
+  'jwt_vp must include kid or jwk in the header';
+
 const verifyVerifiablePresentationJwt = async (
   presentationJwt,
-  { vnfProtocolVersion },
+  { vnfProtocolVersion, log } = {},
 ) => {
   if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
     return wrapVerifyPresentationJwt(presentationJwt);
   }
 
   const { header } = jwtDecode(presentationJwt);
-  if (header.jwk != null) {
+  ensurePresentationHeaderIsSupported(header, log);
+
+  const jwk = await wrapGetJwkFromDidUri(header.kid);
+  return wrapVerifyPresentationJwt(presentationJwt, jwk);
+};
+
+const ensurePresentationHeaderIsSupported = ({ jwk, kid }, log) => {
+  if (kid == null && jwk == null) {
+    throw newError(400, MISSING_KID_AND_JWK_ERROR, {
+      errorCode: 'presentation_malformed',
+    });
+  }
+  if (kid == null) {
     throw newError(400, 'jwt_vp must not be self signed', {
       errorCode: 'presentation_malformed',
     });
   }
-
-  const jwk = await wrapGetJwkFromDidUri(header.kid);
-  return wrapVerifyPresentationJwt(presentationJwt, jwk);
+  if (jwk != null) {
+    // After 2026-12-31, remove this warning-only compatibility path and
+    // restore strict rejection for mixed kid+jwk headers as malformed input.
+    // throw newError(400, 'jwt_vp must not include both kid and jwk', {
+    //   errorCode: 'presentation_malformed',
+    // });
+    log?.warn(KID_AND_JWK_DEPRECATION_WARNING);
+  }
 };
 
 const wrapGetJwkFromDidUri = async (kid) => {
@@ -59,4 +85,8 @@ const wrapVerifyPresentationJwt = async (presentationJwt, jwk) => {
   }
 };
 
-module.exports = { verifyVerifiablePresentationJwt };
+module.exports = {
+  KID_AND_JWK_DEPRECATION_WARNING,
+  MISSING_KID_AND_JWK_ERROR,
+  verifyVerifiablePresentationJwt,
+};

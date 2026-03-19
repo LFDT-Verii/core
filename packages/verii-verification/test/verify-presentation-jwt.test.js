@@ -17,11 +17,13 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const { generateKeyPair } = require('@verii/crypto');
-const { generateDocJwt, jwtDecode } = require('@verii/jwt');
+const { generateDocJwt, jwtDecode, jwtSign } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { omit } = require('lodash/fp');
 const {
+  KID_AND_JWK_DEPRECATION_WARNING,
+  MISSING_KID_AND_JWK_ERROR,
   verifyVerifiablePresentationJwt,
 } = require('../src/verify-presentation-jwt');
 
@@ -111,6 +113,43 @@ describe('verify presentation jwt', () => {
           vnfProtocolVersion: 2,
         }),
       ).rejects.toEqual(new Error('jwt_vp must not be self signed'));
+    });
+
+    it('should fail clearly when kid and jwk are both missing', async () => {
+      const presentation = await jwtSign(payload, keyPair.privateKey, {
+        issuer: didJwk,
+        jti: options.jti,
+      });
+
+      await expect(() =>
+        verifyVerifiablePresentationJwt(presentation, {
+          vnfProtocolVersion: 2,
+        }),
+      ).rejects.toEqual(new Error(MISSING_KID_AND_JWK_ERROR));
+    });
+
+    it('should verify presentation with kid and ignore jwk', async () => {
+      const wrongKeyPair = generateKeyPair({ format: 'jwk' });
+      const warnings = [];
+      const presentation = await generateDocJwt(payload, keyPair.privateKey, {
+        ...options,
+        jwk: wrongKeyPair.publicKey,
+      });
+
+      expect(
+        await verifyVerifiablePresentationJwt(presentation, {
+          log: { warn: (message) => warnings.push(message) },
+          vnfProtocolVersion: 2,
+        }),
+      ).toEqual({
+        ...payload.vp,
+        id: options.jti,
+        issuanceDate: expectedIssuanceDate(presentation),
+        issuer: {
+          id: didJwk,
+        },
+      });
+      expect(warnings).toEqual([KID_AND_JWK_DEPRECATION_WARNING]);
     });
   });
 });
