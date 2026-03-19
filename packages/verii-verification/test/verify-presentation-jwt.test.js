@@ -128,6 +128,19 @@ describe('verify presentation jwt', () => {
       ).rejects.toEqual(new Error(MISSING_KID_AND_JWK_ERROR));
     });
 
+    it('should fail clearly when kid is malformed', async () => {
+      const presentation = await generateDocJwt(payload, keyPair.privateKey, {
+        ...options,
+        kid: 'WRONG',
+      });
+
+      await expect(() =>
+        verifyVerifiablePresentationJwt(presentation, {
+          vnfProtocolVersion: 2,
+        }),
+      ).rejects.toEqual(new Error('kid_must_be_did'));
+    });
+
     it('should verify presentation with kid and ignore jwk', async () => {
       const wrongKeyPair = generateKeyPair({ format: 'jwk' });
       const warnings = [];
