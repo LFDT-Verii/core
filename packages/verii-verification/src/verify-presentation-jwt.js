@@ -86,7 +86,5 @@ const wrapVerifyPresentationJwt = async (presentationJwt, jwk) => {
 };
 
 module.exports = {
-  KID_AND_JWK_DEPRECATION_WARNING,
-  MISSING_KID_AND_JWK_ERROR,
   verifyVerifiablePresentationJwt,
 };

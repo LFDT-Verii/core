@@ -22,10 +22,18 @@ const { nanoid } = require('nanoid');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { omit } = require('lodash/fp');
 const {
-  KID_AND_JWK_DEPRECATION_WARNING,
-  MISSING_KID_AND_JWK_ERROR,
   verifyVerifiablePresentationJwt,
 } = require('../src/verify-presentation-jwt');
+
+const KID_AND_JWK_DEPRECATION_WARNING = [
+  'jwt_vp contains both kid and jwk headers;',
+  'using kid and ignoring jwk for backward compatibility.',
+  'This will not be accepted after 2026-12-31T23:59:59Z,',
+  'and this compatibility path will be removed.',
+].join(' ');
+const MISSING_KID_AND_JWK_ERROR =
+  'jwt_vp must include kid or jwk in the header';
+const PRESENTATION_MALFORMED_ERROR = 'presentation_malformed';
 
 describe('verify presentation jwt', () => {
   describe('verify vnfProtocol v1 presentation', () => {
@@ -93,12 +101,14 @@ describe('verify presentation jwt', () => {
         wrongKeyPair.privateKey,
         options,
       );
-      await expect(() =>
+      await expect(
         verifyVerifiablePresentationJwt(presentation, {
           vnfProtocolVersion: 2,
         }),
-      ).rejects.toEqual(
-        new Error('Malformed jwt_vp property: signature verification failed'),
+      ).rejects.toMatchObject(
+        presentationMalformedError(
+          'Malformed jwt_vp property: signature verification failed',
+        ),
       );
     });
 
@@ -108,11 +118,13 @@ describe('verify presentation jwt', () => {
         keyPair.privateKey,
         omit(['kid'], options),
       );
-      await expect(() =>
+      await expect(
         verifyVerifiablePresentationJwt(presentation, {
           vnfProtocolVersion: 2,
         }),
-      ).rejects.toEqual(new Error('jwt_vp must not be self signed'));
+      ).rejects.toMatchObject(
+        presentationMalformedError('jwt_vp must not be self signed'),
+      );
     });
 
     it('should fail clearly when kid and jwk are both missing', async () => {
@@ -121,11 +133,13 @@ describe('verify presentation jwt', () => {
         jti: options.jti,
       });
 
-      await expect(() =>
+      await expect(
         verifyVerifiablePresentationJwt(presentation, {
           vnfProtocolVersion: 2,
         }),
-      ).rejects.toEqual(new Error(MISSING_KID_AND_JWK_ERROR));
+      ).rejects.toMatchObject(
+        presentationMalformedError(MISSING_KID_AND_JWK_ERROR),
+      );
     });
 
     it('should fail clearly when kid is malformed', async () => {
@@ -134,11 +148,11 @@ describe('verify presentation jwt', () => {
         kid: 'WRONG',
       });
 
-      await expect(() =>
+      await expect(
         verifyVerifiablePresentationJwt(presentation, {
           vnfProtocolVersion: 2,
         }),
-      ).rejects.toEqual(new Error('kid_must_be_did'));
+      ).rejects.toMatchObject(presentationMalformedError('kid_must_be_did'));
     });
 
     it('should verify presentation with kid and ignore jwk', async () => {
@@ -169,3 +183,9 @@ describe('verify presentation jwt', () => {
 
 const expectedIssuanceDate = (jwt) =>
   new Date(jwtDecode(jwt).payload.iat * 1000).toISOString();
+
+const presentationMalformedError = (message) => ({
+  errorCode: PRESENTATION_MALFORMED_ERROR,
+  message,
+  statusCode: 400,
+});
