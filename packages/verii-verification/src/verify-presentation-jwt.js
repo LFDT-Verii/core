@@ -25,14 +25,25 @@ const KID_AND_JWK_DEPRECATION_WARNING = [
   'This will not be accepted after 2026-12-31T23:59:59Z,',
   'and this compatibility path will be removed.',
 ].join(' ');
+const MISSING_CONTEXT_ERROR =
+  'verifyVerifiablePresentationJwt requires a context object';
+const MISSING_PROTOCOL_VERSION_ERROR =
+  'verifyVerifiablePresentationJwt requires context.vnfProtocolVersion';
 const MISSING_KID_AND_JWK_ERROR =
   'jwt_vp must include kid or jwk in the header';
 
-const verifyVerifiablePresentationJwt = async (
-  presentationJwt,
-  { vnfProtocolVersion, log } = {},
-) => {
-  if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
+const verifyVerifiablePresentationJwt = async (presentationJwt, context) => {
+  if (context == null) {
+    throw new TypeError(MISSING_CONTEXT_ERROR);
+  }
+
+  const protocolVersion = context.vnfProtocolVersion;
+  const log = context.log ?? null;
+
+  if (protocolVersion == null) {
+    throw new TypeError(MISSING_PROTOCOL_VERSION_ERROR);
+  }
+  if (protocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
     return wrapVerifyPresentationJwt(presentationJwt);
   }
 

@@ -31,6 +31,10 @@ const KID_AND_JWK_DEPRECATION_WARNING = [
   'This will not be accepted after 2026-12-31T23:59:59Z,',
   'and this compatibility path will be removed.',
 ].join(' ');
+const MISSING_CONTEXT_ERROR =
+  'verifyVerifiablePresentationJwt requires a context object';
+const MISSING_PROTOCOL_VERSION_ERROR =
+  'verifyVerifiablePresentationJwt requires context.vnfProtocolVersion';
 const MISSING_KID_AND_JWK_ERROR =
   'jwt_vp must include kid or jwk in the header';
 const PRESENTATION_MALFORMED_ERROR = 'presentation_malformed';
@@ -92,6 +96,30 @@ describe('verify presentation jwt', () => {
           id: didJwk,
         },
       });
+    });
+
+    it('should fail clearly when context is missing', async () => {
+      const presentation = await generateDocJwt(
+        payload,
+        keyPair.privateKey,
+        options,
+      );
+
+      await expect(
+        verifyVerifiablePresentationJwt(presentation),
+      ).rejects.toEqual(new TypeError(MISSING_CONTEXT_ERROR));
+    });
+
+    it('should fail clearly when context.vnfProtocolVersion is missing', async () => {
+      const presentation = await generateDocJwt(
+        payload,
+        keyPair.privateKey,
+        options,
+      );
+
+      await expect(
+        verifyVerifiablePresentationJwt(presentation, {}),
+      ).rejects.toEqual(new TypeError(MISSING_PROTOCOL_VERSION_ERROR));
     });
 
     it('should fail to verify presentation with wrongkid', async () => {
@@ -177,6 +205,28 @@ describe('verify presentation jwt', () => {
         },
       });
       expect(warnings).toEqual([KID_AND_JWK_DEPRECATION_WARNING]);
+    });
+
+    it('should ignore jwk when kid is present and log is null', async () => {
+      const wrongKeyPair = generateKeyPair({ format: 'jwk' });
+      const presentation = await generateDocJwt(payload, keyPair.privateKey, {
+        ...options,
+        jwk: wrongKeyPair.publicKey,
+      });
+
+      expect(
+        await verifyVerifiablePresentationJwt(presentation, {
+          log: null,
+          vnfProtocolVersion: 2,
+        }),
+      ).toEqual({
+        ...payload.vp,
+        id: options.jti,
+        issuanceDate: expectedIssuanceDate(presentation),
+        issuer: {
+          id: didJwk,
+        },
+      });
     });
   });
 });
