@@ -80,6 +80,10 @@ console.log(verified);
 Verifies a Verifiable Presentation (VP) in JWT format, optionally using protocol-aware key resolution. Returns the
 unsigned VP.
 
+Detailed protocol-v1/protocol-v2 rules, header requirements, and the mixed
+`kid` + `jwk` deprecation are documented in
+[`verify-presentation-jwt.README.md`](./verify-presentation-jwt.README.md).
+
 ```ts
 import { verifyVerifiablePresentationJwt } from '@velocitycareerlabs/verii-verification';
 
