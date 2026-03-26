@@ -29,6 +29,7 @@ export default class VCLSubmission {
             [VCLSubmission.KeyJti]: this.jti,
             [VCLSubmission.KeyIss]: iss,
             [VCLSubmission.KeyVp]: {
+                [VCLSubmission.KeyContext]: VCLSubmission.ValueContextList,
                 [VCLSubmission.KeyType]:
                     VCLSubmission.ValueVerifiablePresentation,
                 [VCLSubmission.KeyPresentationSubmission]: {
@@ -57,7 +58,6 @@ export default class VCLSubmission {
         const result: Dictionary<any> = {
             [VCLSubmission.KeyExchangeId]: this.exchangeId,
             [VCLSubmission.KeyJwtVp]: jwt.signedJwt.serialize(),
-            [VCLSubmission.KeyContext]: VCLSubmission.ValueContextList,
         };
 
         if (this.pushDelegate) {
