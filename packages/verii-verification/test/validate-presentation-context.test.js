@@ -22,7 +22,10 @@ const {
 
 const config = {
   enablePresentationContextValidation: true,
-  presentationContextValue: 'http://example.com/presentation.jsonld',
+  presentationContextValue: [
+    'http://example.com/presentation.jsonld',
+    'http://example.com/presentation-v2.jsonld',
+  ],
 };
 
 describe('validate presentation context', () => {
@@ -35,7 +38,10 @@ describe('validate presentation context', () => {
         {
           config: {
             enablePresentationContextValidation: false,
-            presentationContextValue: 'http://example.com/presentation.jsonld',
+            presentationContextValue: [
+              'http://example.com/presentation.jsonld',
+              'http://example.com/presentation-v2.jsonld',
+            ],
           },
         },
       ),
@@ -62,6 +68,16 @@ describe('validate presentation context', () => {
         validatePresentationContext(
           {
             '@context': 'http://example.com/presentation.jsonld',
+          },
+          { config },
+        ),
+      ).toBeUndefined();
+    });
+    it('should pass string presentation context for another allowed value', () => {
+      expect(
+        validatePresentationContext(
+          {
+            '@context': 'http://example.com/presentation-v2.jsonld',
           },
           { config },
         ),

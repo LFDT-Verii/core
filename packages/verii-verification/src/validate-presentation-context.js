@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { castArray, includes } = require('lodash/fp');
+const { castArray } = require('lodash/fp');
 const newError = require('http-errors');
 
 const validatePresentationContext = (
@@ -22,7 +22,7 @@ const validatePresentationContext = (
   {
     config: {
       enablePresentationContextValidation,
-      presentationContextValue: expectedValue,
+      presentationContextValue: expectedValues,
     },
   },
 ) => {
@@ -30,7 +30,12 @@ const validatePresentationContext = (
     return;
   }
 
-  if (!includes(expectedValue, castArray(presentation?.['@context']))) {
+  const presentationContexts =
+    presentation?.['@context'] == null
+      ? []
+      : castArray(presentation['@context']);
+
+  if (!expectedValues.some((value) => presentationContexts.includes(value))) {
     throw newError(400, 'presentation @context is not set correctly', {
       errorCode: 'presentation_invalid',
     });
