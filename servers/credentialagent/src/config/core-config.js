@@ -106,8 +106,13 @@ const coreConfig = {
     .asString(),
   presentationContextValue: env
     .get('PRESENTATION_CONTEXT_VALUE')
-    .default('https://www.w3.org/2018/credentials/v1')
-    .asString(),
+    .default(
+      [
+        'https://www.w3.org/2018/credentials/v1',
+        'https://www.w3.org/ns/credentials/v2',
+      ].join(','),
+    )
+    .asArray(),
   enablePresentationContextValidation: env
     .get('ENABLE_PRESENTATION_CONTEXT_VALIDATION')
     .default('false')
