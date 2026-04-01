@@ -6158,10 +6158,10 @@ cosmiconfig@^9.0.1:
     js-yaml "^4.1.0"
     parse-json "^5.2.0"
 
-country-codes-list@1.6.12:
-  version "1.6.12"
-  resolved "https://registry.npmjs.org/country-codes-list/-/country-codes-list-1.6.12.tgz#1a0f29b00031eb2e5a409927fe92a68ba8902f21"
-  integrity sha512-YWrbBkUvWXRV9K7/0HQ8himHeXemjv3Bo/3y/0uoZdmoXJCstqXuMjRLRYZZqwG9tOVdIHoZa0qUzm0eZu1ApA==
+country-codes-list@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/country-codes-list/-/country-codes-list-2.0.0.tgz#162c49028a0a9fe64503ed146980e0bb8529c170"
+  integrity sha512-KZqq/LBdCD76hQCa6nOx0bA/nIjYly1OtV8+Bbt/4SW+mJEqGk7oZHjUj7PRrV0gXJJKs6Tv2cIntFdofBByvA==
 
 create-error@^0.3.1:
   version "0.3.1"
@@ -12297,7 +12297,7 @@ undici-types@~7.18.0:
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-7.18.2.tgz#29357a89e7b7ca4aef3bf0fd3fd0cd73884229e9"
   integrity sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==
 
-undici@7.24.6:
+undici@7.24.6, undici@^7.0.0, undici@^7.19.0, undici@^7.21.0:
   version "7.24.6"
   resolved "https://registry.npmjs.org/undici/-/undici-7.24.6.tgz#b7e977e1bab53d0aab3fa5722fc1efff093aa5e9"
   integrity sha512-Xi4agocCbRzt0yYMZGMA6ApD7gvtUFaxm4ZmeacWI4cZxaF6C+8I8QfofC20NAePiB/IcvZmzkJ7XPa471AEtA==
@@ -12313,11 +12313,6 @@ undici@^6.11.1:
   version "6.24.1"
   resolved "https://registry.npmjs.org/undici/-/undici-6.24.1.tgz#9df1425cede20b836d95634347946f79578b7e71"
   integrity sha512-sC+b0tB1whOCzbtlx20fx3WgCXwkW627p4EA9uM+/tNNPkSS+eSEld6pAs9nDv7WbY1UUljBMYPtu9BCOrCWKA==
-
-undici@^7.0.0, undici@^7.19.0, undici@^7.21.0:
-  version "7.24.6"
-  resolved "https://registry.npmjs.org/undici/-/undici-7.24.6.tgz#b7e977e1bab53d0aab3fa5722fc1efff093aa5e9"
-  integrity sha512-Xi4agocCbRzt0yYMZGMA6ApD7gvtUFaxm4ZmeacWI4cZxaF6C+8I8QfofC20NAePiB/IcvZmzkJ7XPa471AEtA==
 
 unfetch@^4.2.0:
   version "4.2.0"
