@@ -58,7 +58,7 @@
     "fastify-plugin": "^5.0.0",
     "http-errors": "~2.0.0",
     "handlebars": "^4.7.7",
-    "lodash": "~4.17.21",
+    "lodash": "~4.18.0",
     "mongodb": "~7.1.0",
     "nanoid": "~5.1.0",
     "sprintf-js": "1.1.3",
