@@ -103,17 +103,14 @@ const controller = async (fastify) => {
         },
       }),
     },
-    // eslint-disable-next-line complexity
+
     async (req, reply) => {
       const {
         user: { vendorUserId },
         body: { types = [], offerHashes = [] },
         exchange,
         repos,
-        log,
       } = req;
-      const { challenge, challengeIssuedAt } = generateIssuingChallenge();
-
       await repos.exchanges.addState(
         exchange._id,
         ExchangeStates.OFFERS_REQUESTED,
@@ -133,32 +130,24 @@ const controller = async (fastify) => {
         req,
       );
 
-      if (status === 202) {
-        await repos.exchanges.addState(
-          exchange._id,
-          ExchangeStates.OFFERS_WAITING_ON_VENDOR,
-          { offerHashes, vendorUserId },
-        );
-      } else {
-        const $set = {
-          vendorUserId,
-          offerIds: map('_id', offers),
-          challenge,
-          challengeIssuedAt,
-        };
-        if (!isEmpty(vendorOfferStatuses)) {
-          $set.vendorOfferStatuses = vendorOfferStatuses;
-          log.info({
+      const { challenge, exchangeState, exchangeStateData } =
+        await loadExchangeStateResult(
+          {
             exchangeId: exchange._id,
+            offers,
+            offerHashes,
+            status,
             vendorOfferStatuses,
-          });
-        }
-        await repos.exchanges.addState(
-          exchange._id,
-          ExchangeStates.OFFERS_SENT,
-          $set,
+            vendorUserId,
+          },
+          req,
         );
-      }
+
+      await repos.exchanges.addState(
+        exchange._id,
+        exchangeState,
+        exchangeStateData,
+      );
 
       validateInvalidWebhookOffers(vendorOfferStatuses, req);
 
@@ -182,6 +171,46 @@ const controller = async (fastify) => {
     }
 
     return offerMode;
+  };
+
+  const loadExchangeStateResult = async (
+    {
+      exchangeId,
+      offers,
+      offerHashes,
+      status,
+      vendorOfferStatuses,
+      vendorUserId,
+    },
+    context,
+  ) => {
+    if (status === 202) {
+      return {
+        challenge: undefined,
+        exchangeState: ExchangeStates.OFFERS_WAITING_ON_VENDOR,
+        exchangeStateData: { offerHashes, vendorUserId },
+      };
+    }
+
+    const { challenge } = await generateIssuingChallenge(exchangeId, context);
+    const exchangeStateData = {
+      vendorUserId,
+      offerIds: map('_id', offers),
+    };
+
+    if (!isEmpty(vendorOfferStatuses)) {
+      exchangeStateData.vendorOfferStatuses = vendorOfferStatuses;
+      context.log.info({
+        exchangeId,
+        vendorOfferStatuses,
+      });
+    }
+
+    return {
+      challenge,
+      exchangeState: ExchangeStates.OFFERS_SENT,
+      exchangeStateData,
+    };
   };
 
   const loadAllOffers = async (

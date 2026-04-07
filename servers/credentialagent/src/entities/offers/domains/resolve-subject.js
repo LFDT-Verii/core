@@ -17,8 +17,8 @@
 const { first, startsWith, isEmpty, lastIndexOf } = require('lodash/fp');
 const { jwtVerify, jwtHeaderDecode, jwkThumbprint } = require('@verii/jwt');
 const newError = require('http-errors');
-const { getUnixTime } = require('date-fns/fp');
 const { resolveDidJwkDocument } = require('@verii/did-doc');
+const { verifyIssuingChallenge } = require('./verify-issuing-challenge');
 
 const resolveSubject = async (proof, context) => {
   verifyProofStructure(proof);
@@ -101,10 +101,10 @@ const extractDidJwkWithoutSuffix = (jwkIdentifier) => {
 };
 
 const verifyProofJwt = async (
-  { challenge, challengeIssuedAt },
+  exchange,
   { jwt },
   jwk,
-  { config: { hostUrl, oidcTokensExpireIn } },
+  { config: { hostUrl, issuingChallengeSecret } },
 ) => {
   let payload;
   try {
@@ -122,21 +122,55 @@ const verifyProofJwt = async (
     });
   }
 
-  if (payload.nonce !== challenge) {
-    throw newError(
-      400,
-      'The nonce in the jwt does not match the supplied c_nonce',
-      {
-        errorCode: 'proof_challenge_mismatch',
-      },
-    );
-  }
+  await verifyChallenge(payload.nonce, exchange, {
+    hostUrl,
+    issuingChallengeSecret,
+  });
+};
 
-  if (challengeIssuedAt + oidcTokensExpireIn < getUnixTime(new Date())) {
-    throw newError(400, 'The c_nonce in the jwt has expired', {
-      errorCode: 'proof_challenge_expired',
+const throwExpiredChallengeError = () => {
+  throw newError(400, 'The c_nonce in the jwt has expired', {
+    errorCode: 'proof_challenge_expired',
+  });
+};
+
+const throwChallengeMismatchError = () => {
+  throw newError(
+    400,
+    'The nonce in the jwt does not match the supplied c_nonce',
+    {
+      errorCode: 'proof_challenge_mismatch',
+    },
+  );
+};
+
+const verifySignedChallenge = async (
+  nonce,
+  exchangeId,
+  { hostUrl, issuingChallengeSecret },
+) => {
+  try {
+    await verifyIssuingChallenge(nonce, exchangeId, {
+      hostUrl,
+      issuingChallengeSecret,
     });
+  } catch (error) {
+    if (error?.code === 'ERR_JWT_EXPIRED' || error?.name === 'JWTExpired') {
+      throwExpiredChallengeError();
+    }
+
+    throwChallengeMismatchError();
   }
 };
+
+const verifyChallenge = async (
+  nonce,
+  { _id },
+  { hostUrl, issuingChallengeSecret },
+) =>
+  verifySignedChallenge(nonce, _id, {
+    hostUrl,
+    issuingChallengeSecret,
+  });
 
 module.exports = { resolveSubject };

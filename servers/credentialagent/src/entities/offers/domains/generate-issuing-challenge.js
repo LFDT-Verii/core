@@ -16,11 +16,29 @@
 
 const { getUnixTime } = require('date-fns/fp');
 const { nanoid } = require('nanoid');
-const { ISSUING_CHALLENGE_SIZE } = require('./constants');
+const { jwtSign } = require('@verii/jwt');
 
-const generateIssuingChallenge = () => ({
-  challenge: nanoid(ISSUING_CHALLENGE_SIZE),
-  challengeIssuedAt: getUnixTime(new Date()),
-});
+const generateIssuingChallenge = async (
+  exchangeId,
+  { config: { hostUrl, oidcTokensExpireIn, issuingChallengeSecret } },
+) => {
+  const challengeIssuedAt = getUnixTime(new Date());
+
+  return {
+    challenge: await jwtSign(
+      { exchangeId: exchangeId.toString() },
+      issuingChallengeSecret,
+      {
+        alg: 'HS256',
+        audience: hostUrl,
+        exp: challengeIssuedAt + oidcTokensExpireIn,
+        iat: challengeIssuedAt,
+        issuer: hostUrl,
+        jti: nanoid(),
+      },
+    ),
+    challengeIssuedAt,
+  };
+};
 
 module.exports = { generateIssuingChallenge };
