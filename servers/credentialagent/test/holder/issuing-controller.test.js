@@ -3112,7 +3112,23 @@ describe('Holder Issuing Test Suite', () => {
           },
         }),
       );
-      expect(response.json.challenge.length).toBeGreaterThan(16);
+      const { header: challengeHeader, payload: challengePayload } = jwtDecode(
+        response.json.challenge,
+      );
+      expect(response.json.challenge.split('.')).toHaveLength(3);
+      expect(challengeHeader).toEqual(
+        expect.objectContaining({
+          alg: 'HS256',
+          typ: 'JWT',
+        }),
+      );
+      expect(challengePayload).toEqual(
+        expect.objectContaining({
+          exchangeId: exchangeId.toString(),
+          iss: fastify.config.hostUrl,
+          aud: fastify.config.hostUrl,
+        }),
+      );
       expect(getSchemaNock.isDone()).toEqual(true);
     });
 
