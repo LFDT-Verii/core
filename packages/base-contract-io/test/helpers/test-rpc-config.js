@@ -1,6 +1,7 @@
 const defaultRpcUrl = 'http://localhost:8545';
 
-const rpcUrl = process.env.TEST_RPC_URL || process.env.BESU_RPC_URL || defaultRpcUrl;
+const rpcUrl =
+  process.env.TEST_RPC_URL || process.env.BESU_RPC_URL || defaultRpcUrl;
 const chainIdValue =
   process.env.TEST_CHAIN_ID || process.env.BESU_CHAIN_ID || '';
 const chainId = chainIdValue ? Number(chainIdValue) : undefined;
@@ -11,12 +12,16 @@ const authClientId =
   process.env.TEST_AUTH_CLIENT_ID || process.env.BESU_CLIENT_ID || '';
 const authClientSecret =
   process.env.TEST_AUTH_CLIENT_SECRET || process.env.BESU_CLIENT_SECRET || '';
-const authScope = process.env.TEST_AUTH_SCOPE || process.env.BESU_AUTH_SCOPE || '';
+const authScope =
+  process.env.TEST_AUTH_SCOPE || process.env.BESU_AUTH_SCOPE || '';
 const authAudience =
   process.env.TEST_AUTH_AUDIENCE || process.env.BESU_AUTH_AUDIENCE || '';
 const authUseBasic =
-  (process.env.TEST_AUTH_USE_BASIC || process.env.BESU_AUTH_USE_BASIC || '')
-    .toLowerCase() === 'true';
+  (
+    process.env.TEST_AUTH_USE_BASIC ||
+    process.env.BESU_AUTH_USE_BASIC ||
+    ''
+  ).toLowerCase() === 'true';
 
 const parseExpiresInSeconds = (expiresIn) => {
   const parsed = Number(expiresIn);
@@ -62,16 +67,29 @@ const buildTokenRequestHeaders = () => {
 let cachedToken = explicitBearerToken;
 let tokenExpiresAt = explicitBearerToken ? Number.MAX_SAFE_INTEGER : 0;
 
-const fetchAccessToken = async () => {
-  if (!authUrl) {
-    return '';
-  }
-
+const assertAuthCredentials = () => {
   if (!authClientId || !authClientSecret) {
     throw new Error(
       'Missing auth credentials: set TEST_AUTH_CLIENT_ID and TEST_AUTH_CLIENT_SECRET',
     );
   }
+};
+
+const extractAccessToken = (payload) => {
+  const token = payload.access_token || payload.token || '';
+  if (!token) {
+    throw new Error('Token response did not include access_token');
+  }
+
+  return token;
+};
+
+const fetchAccessToken = async () => {
+  if (!authUrl) {
+    return '';
+  }
+
+  assertAuthCredentials();
 
   const response = await fetch(authUrl, {
     method: 'POST',
@@ -86,11 +104,7 @@ const fetchAccessToken = async () => {
   }
 
   const payload = await response.json();
-  const token = payload.access_token || payload.token || '';
-  if (!token) {
-    throw new Error('Token response did not include access_token');
-  }
-
+  const token = extractAccessToken(payload);
   const expiresInSeconds = parseExpiresInSeconds(payload.expires_in);
   const refreshWindowSeconds = 30;
   const ttl = Math.max(expiresInSeconds - refreshWindowSeconds, 1);
