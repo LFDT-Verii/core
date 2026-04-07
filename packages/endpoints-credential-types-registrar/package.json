@@ -58,7 +58,7 @@
     "expect": "30.3.0",
     "form-data": "4.0.5",
     "globals": "17.4.0",
-    "mongodb": "7.1.0",
+    "mongodb": "7.1.1",
     "nock": "15.0.0",
     "prettier": "3.8.1"
   }

@@ -60,7 +60,7 @@
     "ethers": "6.16.0",
     "expect": "30.3.0",
     "globals": "17.4.0",
-    "mongodb": "7.1.0",
+    "mongodb": "7.1.1",
     "prettier": "3.8.1"
   }
 }
