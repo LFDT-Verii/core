@@ -57,7 +57,7 @@ jobs:
         echo "run-key=${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -72,7 +72,7 @@ jobs:
       run: yarn install --frozen-lockfile --prefer-offline
     - name: Save yarn Cache
       id: cache-yarn-save
-      uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -84,7 +84,7 @@ jobs:
       if: ${{ steps.cache-yarn-restore.outputs.cache-hit != 'true' }}
     - name: Save run-scoped Cache
       id: cache-yarn-save-run
-      uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -151,7 +151,7 @@ jobs:
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -249,7 +249,7 @@ jobs:
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -315,7 +315,7 @@ jobs:
         pattern: test-*
         merge-multiple: true
     - name: Publish Test Results
-      uses: mikepenz/action-junit-report@49b2ca06f62aa7ef83ae6769a2179271e160d8e4 # v6
+      uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6
       with:
         report_paths: "**/test-results.junit.xml"
         check_name: Test Results

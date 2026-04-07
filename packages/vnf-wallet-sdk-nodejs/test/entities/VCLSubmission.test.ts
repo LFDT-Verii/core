@@ -1,59 +1,107 @@
 import { beforeEach, describe, test } from 'node:test';
 import { expect } from 'expect';
+import { UUID_FORMAT } from '@verii/test-regexes';
 import VCLSubmission from '../../src/api/entities/VCLSubmission';
 import VCLPresentationSubmission from '../../src/api/entities/VCLPresentationSubmission';
 import { PresentationSubmissionMocks } from '../infrastructure/resources/valid/PresentationSubmissionMocks';
 import { JwtMocks } from '../infrastructure/resources/valid/JwtMocks';
-import VCLPushDelegate from '../../src/api/entities/VCLPushDelegate';
+import VCLIdentificationSubmission from '../../src/api/entities/VCLIdentificationSubmission';
+import { IdentificationSubmissionMocks } from '../infrastructure/resources/valid/IdentificationSubmissionMocks';
+
+const createExpectedPayload = ({
+    iss,
+    presentationDefinitionId,
+    vendorOriginContext,
+}: {
+    iss: string;
+    presentationDefinitionId: string;
+    vendorOriginContext?: string | null;
+}) => ({
+    [VCLSubmission.KeyJti]: expect.stringMatching(UUID_FORMAT),
+    [VCLSubmission.KeyIss]: iss,
+    [VCLSubmission.KeyVp]: {
+        [VCLSubmission.KeyContext]: VCLSubmission.ValueContextList,
+        [VCLSubmission.KeyType]: VCLSubmission.ValueVerifiablePresentation,
+        [VCLSubmission.KeyPresentationSubmission]: {
+            [VCLSubmission.KeyId]: expect.stringMatching(UUID_FORMAT),
+            [VCLSubmission.KeyDefinitionId]: presentationDefinitionId,
+            [VCLSubmission.KeyDescriptorMap]:
+                PresentationSubmissionMocks.SelectionsList.map(
+                    (credential, index) => ({
+                        [VCLSubmission.KeyId]: credential.inputDescriptor,
+                        [VCLSubmission.KeyPath]: `$.verifiableCredential[${index}]`,
+                        [VCLSubmission.KeyFormat]: VCLSubmission.ValueJwtVc,
+                    }),
+                ),
+        },
+        [VCLSubmission.KeyVerifiableCredential]:
+            PresentationSubmissionMocks.SelectionsList.map(
+                (credential) => credential.jwtVc,
+            ),
+        ...(vendorOriginContext
+            ? {
+                  [VCLSubmission.KeyVendorOriginContext]: vendorOriginContext,
+              }
+            : {}),
+    },
+});
 
 describe('VCLSubmission Tests', () => {
-    let subject: VCLSubmission;
+    let subjectPresentationSubmission: VCLSubmission;
+
+    let subjectIdentificationSubmission: VCLSubmission;
 
     beforeEach(() => {
-        subject = new VCLPresentationSubmission(
+        subjectPresentationSubmission = new VCLPresentationSubmission(
             PresentationSubmissionMocks.PresentationRequest,
+            PresentationSubmissionMocks.SelectionsList,
+        );
+        subjectIdentificationSubmission = new VCLIdentificationSubmission(
+            IdentificationSubmissionMocks.CredentialManifest,
             PresentationSubmissionMocks.SelectionsList,
         );
     });
 
     test('testPayload', () => {
-        const payload = subject.generatePayload();
-        expect(payload[VCLSubmission.KeyJti]).toEqual(subject.jti);
-    });
-
-    test('testPushDelegate', () => {
-        expect(subject.pushDelegate?.pushUrl).toEqual(
-            PresentationSubmissionMocks.PushDelegate.pushUrl,
+        expect(
+            subjectPresentationSubmission.generatePayload('inspection iss'),
+        ).toEqual(
+            createExpectedPayload({
+                iss: 'inspection iss',
+                presentationDefinitionId:
+                    PresentationSubmissionMocks.PresentationRequest
+                        .presentationDefinitionId,
+                vendorOriginContext:
+                    PresentationSubmissionMocks.PresentationRequest
+                        .vendorOriginContext,
+            }),
         );
-        expect(subject.pushDelegate?.pushToken).toEqual(
-            PresentationSubmissionMocks.PushDelegate.pushToken,
+        expect(
+            subjectIdentificationSubmission.generatePayload('issuing iss'),
+        ).toEqual(
+            createExpectedPayload({
+                iss: 'issuing iss',
+                presentationDefinitionId:
+                    IdentificationSubmissionMocks.CredentialManifest
+                        .presentationDefinitionId,
+                vendorOriginContext:
+                    IdentificationSubmissionMocks.CredentialManifest
+                        .vendorOriginContext,
+            }),
         );
     });
 
     test('testRequestBody', () => {
-        const requestBodyJsonObj = subject.generateRequestBody(JwtMocks.JWT);
-        expect(requestBodyJsonObj[VCLSubmission.KeyExchangeId]).toEqual(
-            subject.exchangeId,
-        );
-        expect(requestBodyJsonObj[VCLSubmission.KeyContext]).toEqual(
-            VCLSubmission.ValueContextList,
-        );
-
-        const pushDelegateBodyJsonObj =
-            requestBodyJsonObj[VCLSubmission.KeyPushDelegate];
-
-        expect(pushDelegateBodyJsonObj[VCLPushDelegate.KeyPushUrl]).toEqual(
-            PresentationSubmissionMocks.PushDelegate.pushUrl,
-        );
-        expect(pushDelegateBodyJsonObj[VCLPushDelegate.KeyPushToken]).toEqual(
-            PresentationSubmissionMocks.PushDelegate.pushToken,
-        );
-
-        expect(pushDelegateBodyJsonObj[VCLPushDelegate.KeyPushUrl]).toEqual(
-            subject.pushDelegate?.pushUrl,
-        );
-        expect(pushDelegateBodyJsonObj[VCLPushDelegate.KeyPushToken]).toEqual(
-            subject.pushDelegate?.pushToken,
-        );
+        expect(
+            subjectPresentationSubmission.generateRequestBody(JwtMocks.JWT),
+        ).toEqual({
+            [VCLSubmission.KeyExchangeId]:
+                PresentationSubmissionMocks.PresentationRequest.exchangeId,
+            [VCLSubmission.KeyJwtVp]: JwtMocks.JWT.signedJwt.serialize(),
+            [VCLSubmission.KeyPushDelegate]: {
+                pushUrl: PresentationSubmissionMocks.PushDelegate.pushUrl,
+                pushToken: PresentationSubmissionMocks.PushDelegate.pushToken,
+            },
+        });
     });
 });
