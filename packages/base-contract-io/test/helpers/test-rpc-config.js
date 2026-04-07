@@ -1,10 +1,41 @@
+/**
+ * Copyright 2023 Velocity Team
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 const defaultRpcUrl = 'http://localhost:8545';
 
 const rpcUrl =
   process.env.TEST_RPC_URL || process.env.BESU_RPC_URL || defaultRpcUrl;
 const chainIdValue =
   process.env.TEST_CHAIN_ID || process.env.BESU_CHAIN_ID || '';
-const chainId = chainIdValue ? Number(chainIdValue) : undefined;
+
+const parseChainId = (value) => {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(
+      `Invalid chain ID "${value}": set TEST_CHAIN_ID or BESU_CHAIN_ID to a positive integer`,
+    );
+  }
+
+  return parsed;
+};
+const chainId = parseChainId(chainIdValue);
 
 const explicitBearerToken = process.env.TEST_RPC_BEARER_TOKEN || '';
 const authUrl = process.env.TEST_AUTH_URL || process.env.BESU_AUTH_URL || '';
