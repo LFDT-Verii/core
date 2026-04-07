@@ -19,6 +19,7 @@ const { genericConfig, abi } = require('@verii/config');
 const packageJson = require('../../package.json');
 
 const { isTest } = genericConfig;
+const secret = env.get('SECRET').required(!isTest).asString();
 
 const swaggerConfig = {
   swaggerInfo: {
@@ -70,7 +71,11 @@ const coreConfig = {
     .default('http://34.244.131.79:8547')
     .asString(),
   chainId: env.get('CHAIN_ID').default(2020).asInt(),
-  secret: env.get('SECRET').required(!isTest).asString(),
+  secret,
+  issuingChallengeSecret: env
+    .get('ISSUING_CHALLENGE_SECRET')
+    .default(secret)
+    .asString(),
   vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').required(!isTest).asString(),
   vnfClientSecret: env
     .get('VNF_OAUTH_CLIENT_SECRET')
@@ -91,7 +96,7 @@ const coreConfig = {
   enableProfiling: env.get('ENABLE_PROFILING').default('false').asBool(),
   enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
-  oidcTokensExpireIn: env.get('OIDC_TOKENS_EXPIRE_IN').asInt(),
+  oidcTokensExpireIn: env.get('OIDC_TOKENS_EXPIRE_IN').default(600).asInt(),
   enableOfferValidation: env
     .get('ENABLE_OFFER_VALIDATION')
     .default('true')

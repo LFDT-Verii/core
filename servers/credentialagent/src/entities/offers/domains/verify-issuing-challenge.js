@@ -14,30 +14,24 @@
  * limitations under the License.
  */
 
-const exchangeRepoDefaultProjection = {
-  _id: 1,
-  type: 1,
-  disclosureId: 1,
-  protocolMetadata: 1,
-  pushDelegate: 1,
-  pushSentAt: 1,
-  disclosureConsentedAt: 1,
-  disclosureRejectedAt: 1,
-  requestedTypesFeedback: 1,
-  identityMatcherValues: 1,
-  vendorUserId: 1,
-  events: 1,
-  createdAt: 1,
-  updatedAt: 1,
-  presentationId: 1,
-  offerHashes: 1,
-  offerIds: 1,
-  vendorOfferStatuses: 1,
-  finalizedOfferIds: 1,
-  credentialTypes: 1,
-  err: 1,
+const { jwtVerify } = require('@verii/jwt');
+
+const verifyIssuingChallenge = async (
+  challenge,
+  exchangeId,
+  { hostUrl, issuingChallengeSecret },
+) => {
+  const { payload } = await jwtVerify(challenge, issuingChallengeSecret, {
+    algorithms: ['HS256'],
+    audience: hostUrl,
+    issuer: hostUrl,
+  });
+
+  if (payload.exchangeId !== exchangeId.toString()) {
+    throw new Error('challenge_exchange_mismatch');
+  }
+
+  return payload;
 };
 
-module.exports = {
-  exchangeRepoDefaultProjection,
-};
+module.exports = { verifyIssuingChallenge };

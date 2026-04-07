@@ -217,8 +217,6 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
         },
       ],
       vendorUserId: user.vendorUserId,
-      challenge: 'challenge',
-      challengeIssuedAt: 12341,
     });
 
     authToken = await genAuthToken(tenant, tenantKeys, exchange, user, keyPair);

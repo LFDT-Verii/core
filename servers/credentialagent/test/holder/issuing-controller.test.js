@@ -522,8 +522,6 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             err: `Exchange ${emptyExchange._id} is in an invalid state`,
             offerIds: undefined,
-            challenge: undefined,
-            challengeIssuedAt: undefined,
           },
           states: [
             ExchangeStates.NEW,
@@ -713,10 +711,6 @@ describe('Holder Issuing Test Suite', () => {
           exchangeId,
           disclosure,
           user,
-          overrides: {
-            challenge: undefined,
-            challengeIssuedAt: undefined,
-          },
           states: [
             ExchangeStates.NEW,
             ExchangeStates.IDENTIFIED,
@@ -1026,8 +1020,6 @@ describe('Holder Issuing Test Suite', () => {
           overrides: {
             err: '2 offer(s) without offerId received from vendor',
             offerIds: undefined,
-            challenge: undefined,
-            challengeIssuedAt: undefined,
           },
         }),
       );
@@ -2132,8 +2124,6 @@ describe('Holder Issuing Test Suite', () => {
           ],
           overrides: {
             offerHashes: [],
-            challenge: undefined,
-            challengeIssuedAt: undefined,
           },
           omitList: ['offerIds'],
         }),
@@ -3119,17 +3109,25 @@ describe('Holder Issuing Test Suite', () => {
             vendorOfferStatuses: {
               [vendorOffer.offerId]: 'OK',
             },
-            challenge: expect.any(String),
-            challengeIssuedAt: expect.any(Number),
           },
         }),
       );
-      expect(exchangeFromDb.challenge).toHaveLength(16);
-      expect(exchangeFromDb.challengeIssuedAt).toBeLessThanOrEqual(
-        getUnixTime(new Date()),
+      const { header: challengeHeader, payload: challengePayload } = jwtDecode(
+        response.json.challenge,
       );
-      expect(exchangeFromDb.challengeIssuedAt).toBeGreaterThan(
-        getUnixTime(new Date()) - 5,
+      expect(response.json.challenge.split('.')).toHaveLength(3);
+      expect(challengeHeader).toEqual(
+        expect.objectContaining({
+          alg: 'HS256',
+          typ: 'JWT',
+        }),
+      );
+      expect(challengePayload).toEqual(
+        expect.objectContaining({
+          exchangeId: exchangeId.toString(),
+          iss: fastify.config.hostUrl,
+          aud: fastify.config.hostUrl,
+        }),
       );
       expect(getSchemaNock.isDone()).toEqual(true);
     });
@@ -4425,8 +4423,6 @@ describe('Holder Issuing Test Suite', () => {
     beforeEach(async () => {
       await exchangeRepo.update(exchangeId, {
         vendorUserId: user.vendorUserId,
-        challenge: 'challenge',
-        challengeIssuedAt: 12341,
       });
       nockCredentialTypes();
       offer0 = await persistFinalizableOffer({
@@ -6407,8 +6403,13 @@ describe('Holder Issuing Test Suite', () => {
       let joseKeyPair;
       let proofKeyPair;
       let didJwk;
+      const loadChallengeConfig = () => ({
+        challengeIssuer: fastify.config.hostUrl,
+        challengeSecret: fastify.config.issuingChallengeSecret,
+        challengeTtl: fastify.config.oidcTokensExpireIn,
+      });
 
-      const prepareData = async (challengeIssuedAt) => {
+      const prepareData = async () => {
         exchange = await persistOfferExchange({
           tenant,
           disclosure,
@@ -6420,14 +6421,49 @@ describe('Holder Issuing Test Suite', () => {
             },
           ],
           vendorUserId: 'abcdefg123454',
-          challenge: 'mockchallenge',
-          challengeIssuedAt: challengeIssuedAt ?? new Date().valueOf() / 1000,
         });
         offer = offer0;
         exchangeId = exchange._id;
         await updateExchangeOffersIds(exchangeId, [offer._id]);
         authToken = await genAuthToken(tenant, exchange);
       };
+
+      const buildSignedChallenge = async (
+        challengePayload = {},
+        challengeOptions = {},
+      ) => {
+        const { challengeIssuer, challengeSecret, challengeTtl } =
+          loadChallengeConfig();
+        const issuedAt = challengeOptions.iat ?? getUnixTime(new Date());
+        return jwtSign(
+          { exchangeId: exchangeId.toString(), ...challengePayload },
+          challengeSecret,
+          {
+            alg: 'HS256',
+            audience: challengeIssuer,
+            exp: challengeOptions.exp ?? issuedAt + challengeTtl,
+            iat: issuedAt,
+            issuer: challengeIssuer,
+            jti: challengeOptions.jti ?? nanoid(),
+          },
+        );
+      };
+
+      const postCredentialOffers = async (
+        payload = {
+          exchangeId,
+          types: castArray(offer.type),
+        },
+      ) =>
+        fastify.injectJson({
+          method: 'POST',
+          url: issuingUrl(tenant, 'credential-offers'),
+          payload,
+          headers: {
+            authorization: `Bearer ${authToken}`,
+            'x-vnf-protocol-version': '2',
+          },
+        });
 
       beforeEach(async () => {
         await prepareData();
@@ -6653,13 +6689,36 @@ describe('Holder Issuing Test Suite', () => {
           }),
         );
       });
-      it('should return error if challenge is expired', async () => {
-        await prepareData(getUnixTime(subYears(25, new Date())));
+      it('should return 200 if signed challenge remains valid after duplicate credential-offers calls', async () => {
+        const firstOffersResponse = await postCredentialOffers();
+        const secondOffersResponse = await postCredentialOffers();
+
+        expect(firstOffersResponse.statusCode).toEqual(200);
+        expect(secondOffersResponse.statusCode).toEqual(200);
         const response = await postFinalizeOffers({
           exchangeId,
           approvedOfferIds: [offer._id],
-          proof: await buildProof(didJwk, proofKeyPair, exchange.challenge),
+          proof: await buildProof(
+            didJwk,
+            proofKeyPair,
+            firstOffersResponse.json.challenge,
+          ),
         });
+
+        expect(response.statusCode).toEqual(200);
+      });
+      it('should return error if signed challenge token is expired', async () => {
+        const issuedAt = getUnixTime(subYears(25, new Date()));
+        const response = await postFinalizeOffers({
+          exchangeId,
+          approvedOfferIds: [offer._id],
+          proof: await buildProof(
+            didJwk,
+            proofKeyPair,
+            await buildSignedChallenge({}, { exp: issuedAt, iat: issuedAt }),
+          ),
+        });
+
         expect(response.statusCode).toEqual(400);
         expect(response.json).toEqual(
           errorResponseMatcher({
@@ -6670,11 +6729,54 @@ describe('Holder Issuing Test Suite', () => {
           }),
         );
       });
-      it('should return 200 and approve offer ES256K alg', async () => {
+      it('should return error if signed challenge token exchange is invalid', async () => {
         const response = await postFinalizeOffers({
           exchangeId,
           approvedOfferIds: [offer._id],
-          proof: await buildProof(didJwk, proofKeyPair, exchange.challenge),
+          proof: await buildProof(
+            didJwk,
+            proofKeyPair,
+            await buildSignedChallenge({
+              exchangeId: new ObjectId().toString(),
+            }),
+          ),
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'proof_challenge_mismatch',
+            message: 'The nonce in the jwt does not match the supplied c_nonce',
+            statusCode: 400,
+          }),
+        );
+      });
+      it('should return error if signed challenge token is tampered', async () => {
+        const signedChallenge = await buildSignedChallenge();
+        const tamperedChallenge = `${signedChallenge}a`;
+        const response = await postFinalizeOffers({
+          exchangeId,
+          approvedOfferIds: [offer._id],
+          proof: await buildProof(didJwk, proofKeyPair, tamperedChallenge),
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'proof_challenge_mismatch',
+            message: 'The nonce in the jwt does not match the supplied c_nonce',
+            statusCode: 400,
+          }),
+        );
+      });
+      it('should return 200 and approve offer ES256K alg', async () => {
+        const challenge = await buildSignedChallenge();
+        const response = await postFinalizeOffers({
+          exchangeId,
+          approvedOfferIds: [offer._id],
+          proof: await buildProof(didJwk, proofKeyPair, challenge),
         });
         expect(response.statusCode).toEqual(200);
         expect(response.json).toHaveLength(1);
@@ -6726,8 +6828,6 @@ describe('Holder Issuing Test Suite', () => {
             offerIds: [offer._id],
             overrides: {
               finalizedOfferIds: mapToObjectId([offer._id]),
-              challenge: exchange.challenge,
-              challengeIssuedAt: exchange.challengeIssuedAt,
               vendorUserId: exchange.vendorUserId,
             },
           }),
@@ -6740,10 +6840,11 @@ describe('Holder Issuing Test Suite', () => {
           publicKey: await exportJWK(joseKeyPair.publicKey),
         };
         didJwk = getDidUriFromJwk(proofKeyPair.publicKey);
+        const challenge = await buildSignedChallenge();
         const response = await postFinalizeOffers({
           exchangeId,
           approvedOfferIds: [offer._id],
-          proof: await buildProof(didJwk, proofKeyPair, exchange.challenge),
+          proof: await buildProof(didJwk, proofKeyPair, challenge),
         });
         expect(response.statusCode).toEqual(200);
         expect(response.json).toHaveLength(1);
@@ -6795,23 +6896,17 @@ describe('Holder Issuing Test Suite', () => {
             offerIds: [offer._id],
             overrides: {
               finalizedOfferIds: mapToObjectId([offer._id]),
-              challenge: exchange.challenge,
-              challengeIssuedAt: exchange.challengeIssuedAt,
               vendorUserId: exchange.vendorUserId,
             },
           }),
         );
       });
       it('should return 200 and approve offer with credential subject id jwkThumbprint format', async () => {
+        const challenge = await buildSignedChallenge();
         const response = await postFinalizeOffers({
           exchangeId,
           approvedOfferIds: [offer._id],
-          proof: await buildProof(
-            didJwk,
-            proofKeyPair,
-            exchange.challenge,
-            false,
-          ),
+          proof: await buildProof(didJwk, proofKeyPair, challenge, false),
         });
         const didJwkThumbprint = await jwkThumbprint(proofKeyPair.publicKey);
         expect(response.statusCode).toEqual(200);
@@ -6864,8 +6959,6 @@ describe('Holder Issuing Test Suite', () => {
             offerIds: [offer._id],
             overrides: {
               finalizedOfferIds: mapToObjectId([offer._id]),
-              challenge: exchange.challenge,
-              challengeIssuedAt: exchange.challengeIssuedAt,
               vendorUserId: exchange.vendorUserId,
             },
           }),
@@ -7048,8 +7141,6 @@ const exchangeExpectation = ({
     offerHashes: [],
     offerIds: expect.arrayContaining(mapToObjectId(offerIds)),
     vendorUserId: user?.vendorUserId,
-    challenge: expect.any(String),
-    challengeIssuedAt: expect.any(Number),
     ...credentialTypesObject,
     createdAt: expect.any(Date),
     updatedAt: expect.any(Date),
