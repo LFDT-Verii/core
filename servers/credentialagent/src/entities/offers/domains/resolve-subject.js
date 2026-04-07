@@ -122,10 +122,14 @@ const verifyProofJwt = async (
     });
   }
 
-  await verifyChallenge(payload.nonce, exchange, {
-    hostUrl,
-    issuingChallengeSecret,
-  });
+  try {
+    await verifyIssuingChallenge(payload.nonce, exchange._id, {
+      hostUrl,
+      issuingChallengeSecret,
+    });
+  } catch (error) {
+    throwChallengeVerificationError(error);
+  }
 };
 
 const throwExpiredChallengeError = () => {
@@ -144,33 +148,12 @@ const throwChallengeMismatchError = () => {
   );
 };
 
-const verifySignedChallenge = async (
-  nonce,
-  exchangeId,
-  { hostUrl, issuingChallengeSecret },
-) => {
-  try {
-    await verifyIssuingChallenge(nonce, exchangeId, {
-      hostUrl,
-      issuingChallengeSecret,
-    });
-  } catch (error) {
-    if (error?.code === 'ERR_JWT_EXPIRED' || error?.name === 'JWTExpired') {
-      throwExpiredChallengeError();
-    }
-
-    throwChallengeMismatchError();
+const throwChallengeVerificationError = (error) => {
+  if (error?.code === 'ERR_JWT_EXPIRED' || error?.name === 'JWTExpired') {
+    throwExpiredChallengeError();
   }
-};
 
-const verifyChallenge = async (
-  nonce,
-  { _id },
-  { hostUrl, issuingChallengeSecret },
-) =>
-  verifySignedChallenge(nonce, _id, {
-    hostUrl,
-    issuingChallengeSecret,
-  });
+  throwChallengeMismatchError();
+};
 
 module.exports = { resolveSubject };
