@@ -92,7 +92,6 @@ docker-compose.override.yml
 *.address
 *.did
 tools/**/*.jwt
-packages/base-contract-io/test/helpers/test-rpc-config.js
 #Terraform files
 
 .terraform
