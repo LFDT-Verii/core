@@ -41,6 +41,7 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 *.lcov
+lcov.info
 # nyc test coverage
 .nyc_output
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
@@ -71,6 +72,7 @@ web_modules/
 .node_repl_history
 # Output of 'npm pack'
 *.tgz
+*.patch
 # Yarn Integrity file
 .yarn-integrity
 # Dotenv environment variables file
@@ -90,6 +92,7 @@ docker-compose.override.yml
 *.address
 *.did
 tools/**/*.jwt
+packages/base-contract-io/test/helpers/test-rpc-config.js
 #Terraform files
 
 .terraform
@@ -153,6 +156,7 @@ htmlcov/
 .coverage.*
 .cache
 nosetests.xml
+test-results*.xml
 coverage.xml
 *.cover
 *.py,cover
@@ -216,6 +220,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.claude/
 .env
 .env.local
 .env.test.local
