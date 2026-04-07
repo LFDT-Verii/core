@@ -37,7 +37,6 @@ const generateIssuingChallenge = async (
         jti: nanoid(),
       },
     ),
-    challengeIssuedAt,
   };
 };
 

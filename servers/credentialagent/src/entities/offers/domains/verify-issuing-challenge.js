@@ -22,6 +22,7 @@ const verifyIssuingChallenge = async (
   { hostUrl, issuingChallengeSecret },
 ) => {
   const { payload } = await jwtVerify(challenge, issuingChallengeSecret, {
+    algorithms: ['HS256'],
     audience: hostUrl,
     issuer: hostUrl,
   });

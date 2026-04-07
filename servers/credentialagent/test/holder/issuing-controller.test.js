@@ -6387,10 +6387,11 @@ describe('Holder Issuing Test Suite', () => {
       let joseKeyPair;
       let proofKeyPair;
       let didJwk;
-      const challengeIssuer = process.env.HOST_URL ?? 'http://localhost.test';
-      const challengeSecret =
-        process.env.ISSUING_CHALLENGE_SECRET ?? process.env.SECRET;
-      const challengeTtl = Number(process.env.OIDC_TOKENS_EXPIRE_IN ?? 600);
+      const loadChallengeConfig = () => ({
+        challengeIssuer: fastify.config.hostUrl,
+        challengeSecret: fastify.config.issuingChallengeSecret,
+        challengeTtl: fastify.config.oidcTokensExpireIn,
+      });
 
       const prepareData = async () => {
         exchange = await persistOfferExchange({
@@ -6415,6 +6416,8 @@ describe('Holder Issuing Test Suite', () => {
         challengePayload = {},
         challengeOptions = {},
       ) => {
+        const { challengeIssuer, challengeSecret, challengeTtl } =
+          loadChallengeConfig();
         const issuedAt = challengeOptions.iat ?? getUnixTime(new Date());
         return jwtSign(
           { exchangeId: exchangeId.toString(), ...challengePayload },
