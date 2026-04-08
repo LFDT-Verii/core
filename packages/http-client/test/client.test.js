@@ -32,6 +32,9 @@ const {
   buildUrl,
 } = require('../src/client');
 
+const TEST_ACCESS_TOKEN =
+  'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjQxMDAwMDAwMDAsInN1YiI6InRlc3QifQ.signature';
+
 describe('Http Client Package', () => {
   describe('Build URL', () => {
     const origin = 'https://www.example.com';
@@ -726,13 +729,13 @@ describe('Http Client Package', () => {
             path: '/tokens',
             method: 'POST',
           })
-          .reply(200, { access_token: 'TOKEN' });
+          .reply(200, { access_token: TEST_ACCESS_TOKEN });
         mockAgent
           .get(origin)
           .intercept({
             path: '/data',
             method: 'GET',
-            headers: { Authorization: 'Bearer TOKEN' },
+            headers: { Authorization: `Bearer ${TEST_ACCESS_TOKEN}` },
           })
           .reply(200);
 
