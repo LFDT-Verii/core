@@ -37,9 +37,7 @@ const initFetchers = (options) => {
     createDisclosure: async (disclosureRequest) => {
       printInfo('Creating disclosure');
       return credentialAgentTenantClient
-        .post(`tenants/${param}/disclosures`, {
-          json: disclosureRequest,
-        })
+        .post(`tenants/${param}/disclosures`, disclosureRequest)
         .then((res) => res.json());
     },
     getDisclosureList: async (vendorEndpoints) => {
@@ -64,9 +62,7 @@ const initFetchers = (options) => {
     createOfferExchange: async (newExchange) => {
       printInfo('Creating exchange');
       return credentialAgentTenantClient
-        .post(`tenants/${param}/exchanges`, {
-          json: newExchange,
-        })
+        .post(`tenants/${param}/exchanges`, newExchange)
         .then((res) => res.json());
     },
     createOffer: async (exchange, newOffer) => {
@@ -74,9 +70,7 @@ const initFetchers = (options) => {
         `Adding offer ${newOffer.offerId} to exchange id: ${exchange.id}`,
       );
       return credentialAgentTenantClient
-        .post(`tenants/${param}/exchanges/${exchange.id}/offers`, {
-          json: newOffer,
-        })
+        .post(`tenants/${param}/exchanges/${exchange.id}/offers`, newOffer)
         .then((res) => res.json());
     },
     submitCompleteOffer: async (exchange, offers) => {

@@ -22,13 +22,13 @@ const initExecuteUpdate = (options) => {
     if (person) {
       printInfo({
         createdPerson: await vendorHttpClient
-          .post('api/users', { json: person })
+          .post('api/users', person)
           .then((res) => res.json()),
       });
     }
     printInfo({
       createdOffer: await vendorHttpClient
-        .post('api/offers', { json: offer })
+        .post('api/offers', offer)
         .then((res) => res.json()),
     });
   };
