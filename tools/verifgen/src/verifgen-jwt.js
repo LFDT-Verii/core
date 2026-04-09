@@ -1,5 +1,5 @@
 const { program } = require('commander');
-const got = require('got');
+const { initHttpClient } = require('@verii/http-client');
 const { printInfo, printError, writeFile } = require('./common');
 
 const environments = {
@@ -10,17 +10,19 @@ const environments = {
 
 const generateJwt = async ({ clientId, clientSecret, environment }) => {
   const url = environments[environment];
-  return got
+  const httpClient = initHttpClient({})({
+    log: console,
+    traceId: 'TRACE-ID',
+  });
+
+  return httpClient
     .post(url, {
-      headers: { 'content-type': 'application/json' },
-      json: {
-        grant_type: 'client_credentials',
-        audience: 'https://velocitynetwork.node',
-        client_id: clientId,
-        client_secret: clientSecret,
-      },
+      grant_type: 'client_credentials',
+      audience: 'https://velocitynetwork.node',
+      client_id: clientId,
+      client_secret: clientSecret,
     })
-    .json();
+    .then((response) => response.json());
 };
 
 program

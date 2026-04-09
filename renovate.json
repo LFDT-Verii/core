@@ -23,6 +23,13 @@
   ],
   "packageRules": [
     {
+      "matchPackageNames": [
+        "nock"
+      ],
+      "allowedVersions": "!/^15\\.0\\.0$/",
+      "description": "Block the accidentally published nock 15.0.0 release while still allowing other nock updates."
+    },
+    {
       "matchUpdateTypes": [
         "major"
       ],

@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "expect": "30.3.0",
-    "nock": "15.0.0"
+    "nock": "15.0.0-beta.10"
   },
   "nx": {
     "tags": [

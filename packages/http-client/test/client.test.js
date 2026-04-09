@@ -192,6 +192,23 @@ describe('Http Client Package', () => {
         }),
       );
     });
+    it('should create a client with custom TLS certificates', () => {
+      expect(
+        parseOptions({
+          caCertificate: 'ca-cert',
+          clientCertificate: 'client-cert',
+          clientKey: 'client-key',
+          clientCertificatePassword: 'secret',
+        }),
+      ).toEqual(
+        expectedHttpOptions({
+          'clientOptions.connect.ca': 'ca-cert',
+          'clientOptions.connect.cert': 'client-cert',
+          'clientOptions.connect.key': 'client-key',
+          'clientOptions.connect.passphrase': 'secret',
+        }),
+      );
+    });
   });
 
   describe('Http client requests', () => {
@@ -782,7 +799,13 @@ describe('Http Client Package', () => {
 const expectedHttpOptions = (overrides) => {
   let expectation = {
     clientOptions: {
-      connect: { rejectUnauthorized: undefined },
+      connect: {
+        rejectUnauthorized: undefined,
+        ca: undefined,
+        cert: undefined,
+        key: undefined,
+        passphrase: undefined,
+      },
     },
     customHeaders: {},
     traceIdHeader: 'TRACE_ID',
