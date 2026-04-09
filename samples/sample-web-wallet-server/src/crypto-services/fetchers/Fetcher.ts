@@ -5,29 +5,53 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { initHttpClient } from '@verii/http-client';
 
-interface FetcherConfig<T> extends AxiosRequestConfig {
+interface FetcherConfig<T> {
+  headers?: Record<string, string>;
+  method: string;
+  url: string;
   data?: T;
 }
 
-const fetcher = async <T, R>(config: FetcherConfig<T>): Promise<R> => {
-  const axiosConfig: AxiosRequestConfig = {
-    ...config,
-    url: `${config.url}`,
-  };
+const httpClient = initHttpClient({})({
+  log: console,
+  traceId: 'sample-web-wallet-server',
+});
 
+const fetcher = async <T, R>(config: FetcherConfig<T>): Promise<R> => {
   try {
-    const response: AxiosResponse<R> = await axios(axiosConfig);
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('Axios error:', error.message);
-      throw error;
-    } else {
-      console.error('Unexpected error:', error);
-      throw new Error('An unexpected error occurred');
+    const method = config.method.toUpperCase();
+
+    switch (method) {
+      case 'GET': {
+        const response = await httpClient.get<R>(`${config.url}`, {
+          headers: config.headers,
+        });
+        return response.json();
+      }
+      case 'POST': {
+        const response = await httpClient.post<T, R>(
+          `${config.url}`,
+          config.data,
+          {
+            headers: config.headers,
+          },
+        );
+        return response.json();
+      }
+      case 'DELETE': {
+        const response = await httpClient.delete<R>(`${config.url}`, {
+          headers: config.headers,
+        });
+        return response.json();
+      }
+      default:
+        throw new Error(`Unsupported HTTP method: ${config.method}`);
     }
+  } catch (error) {
+    console.error('Http client error:', error);
+    throw error;
   }
 };
 
