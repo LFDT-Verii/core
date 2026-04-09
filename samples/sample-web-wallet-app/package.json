@@ -9,7 +9,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@verii/http-client": "0.5.0-build",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
