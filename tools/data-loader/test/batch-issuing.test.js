@@ -1,6 +1,8 @@
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 
+const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const nock = require('nock');
 
@@ -1464,5 +1466,152 @@ describe('batch issuing test', () => {
         ],
       });
     });
+  });
+
+  it('should create disclosure and exchange payloads through the full issuing flow', async () => {
+    const agentUrl = 'https://exampleUrl';
+    const tempDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'data-loader-batch-issuing-'),
+    );
+    const expectedDisclosure = {
+      configurationType: 'issuing',
+      vendorEndpoint: 'integrated-issuing-identification',
+      types: [{ type: 'EmailV1.0' }],
+      identityMatchers: {
+        rules: [
+          {
+            valueIndex: 0,
+            path: ['$.emails'],
+            rule: 'pick',
+          },
+        ],
+        vendorUserIdIndex: 2,
+      },
+      setIssuingDefault: true,
+      duration: '1h',
+      purpose: 'Issuing Career Credential',
+      authTokenExpiresIn: 525600,
+      termsUrl: 'http://example.com/terms.html',
+    };
+    const expectedFirstExchange = {
+      type: 'ISSUING',
+      identityMatcherValues: ['joan.lee@sap.com'],
+      disclosureId: 'disclosure-id',
+    };
+    const expectedSecondExchange = {
+      type: 'ISSUING',
+      identityMatcherValues: ['john.smith@sap.com'],
+      disclosureId: 'disclosure-id',
+    };
+    const expectedFirstOffer = {
+      type: ['EmailV1.0'],
+      issuer: { id: 'did:sap:123' },
+      credentialSubject: {
+        vendorUserId: 'joan.lee@sap.com',
+        email: 'joan.lee@sap.com',
+      },
+    };
+    const expectedSecondOffer = {
+      type: ['EmailV1.0'],
+      issuer: { id: 'did:sap:123' },
+      credentialSubject: {
+        vendorUserId: 'john.smith@sap.com',
+        email: 'john.smith@sap.com',
+      },
+    };
+
+    const disclosureScope = nock(agentUrl, {
+      reqheaders: { Authorization: 'Bearer fakeToken' },
+    })
+      .post('/operator-api/v0.8/tenants/tenant-id/disclosures', (body) => {
+        expect(body).toMatchObject(expectedDisclosure);
+        expect(body.vendorDisclosureId).toEqual(expect.any(Number));
+        expect(body.activationDate).toEqual(
+          expect.stringMatching(ISO_DATETIME_TZ_FORMAT),
+        );
+        return true;
+      })
+      .reply(200, { id: 'disclosure-id' });
+
+    const exchangeOfferScope = nock(agentUrl, {
+      reqheaders: { Authorization: 'Bearer fakeToken' },
+    })
+      .post(
+        '/operator-api/v0.8/tenants/tenant-id/exchanges',
+        expectedFirstExchange,
+      )
+      .reply(200, { id: 'exchange-1' })
+      .post(
+        '/operator-api/v0.8/tenants/tenant-id/exchanges/exchange-1/offers',
+        (body) => {
+          expect(body).toMatchObject(expectedFirstOffer);
+          expect(body.offerId).toEqual(expect.any(String));
+          return true;
+        },
+      )
+      .reply(200, { id: 'offer-1' })
+      .post(
+        '/operator-api/v0.8/tenants/tenant-id/exchanges/exchange-1/offers/complete',
+      )
+      .reply(200, {})
+      .post(
+        '/operator-api/v0.8/tenants/tenant-id/exchanges',
+        expectedSecondExchange,
+      )
+      .reply(200, { id: 'exchange-2' })
+      .post(
+        '/operator-api/v0.8/tenants/tenant-id/exchanges/exchange-2/offers',
+        (body) => {
+          expect(body).toMatchObject(expectedSecondOffer);
+          expect(body.offerId).toEqual(expect.any(String));
+          return true;
+        },
+      )
+      .reply(200, { id: 'offer-2' })
+      .post(
+        '/operator-api/v0.8/tenants/tenant-id/exchanges/exchange-2/offers/complete',
+      )
+      .reply(200, {})
+      .get(
+        '/operator-api/v0.8/tenants/tenant-id/disclosures/disclosure-id/qrcode.uri',
+      )
+      .reply(200, 'https://example.com/disclosure')
+      .get(
+        '/operator-api/v0.8/tenants/tenant-id/disclosures/disclosure-id/qrcode.png',
+      )
+      .reply(200, Buffer.from('fake-png'));
+
+    const options = {
+      csvFilename: path.join(__dirname, 'data/variables.csv'),
+      offerTemplateFilename: path.join(
+        __dirname,
+        'data/email-offer.template.json',
+      ),
+      tenant: 'tenant-id',
+      did: 'did:sap:123',
+      termsUrl: 'http://example.com/terms.html',
+      idCredentialType: 'EmailV1.0',
+      vendorUseridColumn: 'email',
+      new: true,
+      endpoint: agentUrl,
+      authToken: 'fakeToken',
+      path: tempDir,
+    };
+
+    try {
+      await expect(runBatchIssuing(options)).resolves.toBeUndefined();
+
+      disclosureScope.done();
+      exchangeOfferScope.done();
+      expect(
+        fs.existsSync(path.join(tempDir, 'disclosure-disclosure-id.json')),
+      ).toBe(true);
+      expect(fs.existsSync(path.join(tempDir, 'lastrun.json'))).toBe(true);
+      expect(fs.existsSync(path.join(tempDir, 'qrcode-generic.png'))).toBe(
+        true,
+      );
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });
