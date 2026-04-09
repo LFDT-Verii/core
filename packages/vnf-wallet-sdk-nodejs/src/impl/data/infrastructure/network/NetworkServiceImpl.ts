@@ -30,7 +30,10 @@ export default class NetworkServiceImpl implements NetworkService {
                 const response = await httpClient.get(request.endpoint, {
                     headers: commonHeaders,
                 });
-                return new Response(await response.json(), response.statusCode);
+                return new Response(
+                    await parsePayload(response),
+                    response.statusCode,
+                );
             }
 
             case HttpMethod.POST: {
@@ -46,7 +49,10 @@ export default class NetworkServiceImpl implements NetworkService {
                         },
                     },
                 );
-                return new Response(await response.json(), response.statusCode);
+                return new Response(
+                    await parsePayload(response),
+                    response.statusCode,
+                );
             }
 
             default:
@@ -57,7 +63,7 @@ export default class NetworkServiceImpl implements NetworkService {
     async sendRequest(request: Request): Promise<Response> {
         this.logRequest(request);
         try {
-            return this.sendRequestRaw(request);
+            return await this.sendRequestRaw(request);
         } catch (error: any) {
             throw error.body ?? error.response?.data ?? error;
         }
@@ -67,3 +73,20 @@ export default class NetworkServiceImpl implements NetworkService {
         VCLLog.info(request, 'Network request');
     }
 }
+
+const parsePayload = async (response: {
+    json: () => Promise<any>;
+    resHeaders: Record<string, string | string[] | undefined>;
+    text: () => Promise<string>;
+}) => {
+    const contentType = response.resHeaders['content-type'];
+
+    if (
+        typeof contentType === 'string' &&
+        contentType.startsWith('text/plain')
+    ) {
+        return response.text();
+    }
+
+    return response.json();
+};
