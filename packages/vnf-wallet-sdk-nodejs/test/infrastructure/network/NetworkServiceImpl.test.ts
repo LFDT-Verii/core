@@ -27,11 +27,25 @@ const protocolHeaders = {
     [HeaderKeys.XVnfProtocolVersion]: HeaderValues.XVnfProtocolVersion,
 };
 
+type CapturedRequest = {
+    body: unknown;
+    headers: Record<string, string | string[] | undefined>;
+    method?: string;
+    url: string;
+};
+
 describe('NetworkServiceImpl integration', () => {
     const subject = new NetworkServiceImpl();
+    let capturedRequest: CapturedRequest;
 
     useNockLifecycle();
-    beforeEach(() => undefined);
+    beforeEach(() => {
+        capturedRequest = {
+            body: undefined,
+            headers: {},
+            url: '',
+        };
+    });
 
     test('sends GET requests with cache-control and parses json responses', async () => {
         const scope = mockAbsoluteGet(
@@ -40,22 +54,35 @@ describe('NetworkServiceImpl integration', () => {
             200,
             {
                 ...protocolHeaders,
+                accept: Request.ContentTypeApplicationJson,
                 'cache-control': 'public, max-age=86400',
+                'x-trace-id': 'GET-TRACE',
             },
             { 'content-type': jsonContentType },
+            (request) => {
+                capturedRequest = request;
+            },
         );
 
         const response = await subject.sendRequest(
-            new Request(
-                `${origin}/json?mode=get`,
-                HttpMethod.GET,
-                undefined,
-                protocolHeaders,
-            ),
+            new Request(`${origin}/json?mode=get`, HttpMethod.GET, undefined, {
+                ...protocolHeaders,
+                accept: Request.ContentTypeApplicationJson,
+                'x-trace-id': 'GET-TRACE',
+            }),
         );
 
         expect(response.code).toEqual(200);
         expect(response.payload).toEqual({ hello: 'world' });
+        expect(capturedRequest.method).toEqual(HttpMethod.GET);
+        expect(capturedRequest.url).toEqual('/json?mode=get');
+        expect(capturedRequest.headers.accept).toEqual(
+            Request.ContentTypeApplicationJson,
+        );
+        expect(capturedRequest.headers['cache-control']).toEqual(
+            'public, max-age=86400',
+        );
+        expect(capturedRequest.headers['x-trace-id']).toEqual('GET-TRACE');
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -66,6 +93,9 @@ describe('NetworkServiceImpl integration', () => {
             200,
             protocolHeaders,
             { 'content-type': textPlain },
+            (request) => {
+                capturedRequest = request;
+            },
         );
 
         const response = await subject.sendRequest(
@@ -80,6 +110,8 @@ describe('NetworkServiceImpl integration', () => {
 
         expect(response.code).toEqual(200);
         expect(response.payload).toEqual('plain response body');
+        expect(capturedRequest.method).toEqual(HttpMethod.GET);
+        expect(capturedRequest.headers['cache-control']).toBeUndefined();
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -93,8 +125,12 @@ describe('NetworkServiceImpl integration', () => {
                 ...protocolHeaders,
                 'cache-control': 'public, max-age=86400',
                 'content-type': new RegExp(`^${jsonContentType}`),
+                'x-request-id': 'POST-JSON',
             },
             { 'content-type': jsonContentType },
+            (request) => {
+                capturedRequest = request;
+            },
         );
 
         const response = await subject.sendRequest(
@@ -105,12 +141,27 @@ describe('NetworkServiceImpl integration', () => {
                     foo: 'bar',
                     count: 2,
                 },
-                protocolHeaders,
+                {
+                    ...protocolHeaders,
+                    'x-request-id': 'POST-JSON',
+                },
             ),
         );
 
         expect(response.code).toEqual(200);
         expect(response.payload).toEqual({ accepted: true });
+        expect(capturedRequest.method).toEqual(HttpMethod.POST);
+        expect(capturedRequest.body).toEqual({
+            foo: 'bar',
+            count: 2,
+        });
+        expect(headerValue(capturedRequest.headers['content-type'])).toContain(
+            jsonContentType,
+        );
+        expect(capturedRequest.headers['cache-control']).toEqual(
+            'public, max-age=86400',
+        );
+        expect(capturedRequest.headers['x-request-id']).toEqual('POST-JSON');
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -121,10 +172,14 @@ describe('NetworkServiceImpl integration', () => {
             'PONG',
             200,
             {
-                ...protocolHeaders,
                 'content-type': textPlain,
+                ...protocolHeaders,
+                'x-format': 'plain-text',
             },
             { 'content-type': textPlain },
+            (request) => {
+                capturedRequest = request;
+            },
         );
 
         const response = await subject.sendRequest(
@@ -132,7 +187,10 @@ describe('NetworkServiceImpl integration', () => {
                 `${origin}/plain-text`,
                 HttpMethod.POST,
                 'PING',
-                protocolHeaders,
+                {
+                    ...protocolHeaders,
+                    'x-format': 'plain-text',
+                },
                 false,
                 textPlain,
             ),
@@ -140,6 +198,11 @@ describe('NetworkServiceImpl integration', () => {
 
         expect(response.code).toEqual(200);
         expect(response.payload).toEqual('PONG');
+        expect(capturedRequest.method).toEqual(HttpMethod.POST);
+        expect(capturedRequest.body).toEqual('PING');
+        expect(capturedRequest.headers['content-type']).toEqual(textPlain);
+        expect(capturedRequest.headers['cache-control']).toBeUndefined();
+        expect(capturedRequest.headers['x-format']).toEqual('plain-text');
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -243,3 +306,6 @@ describe('NetworkServiceImpl integration', () => {
         ).rejects.toBeInstanceOf(VCLError);
     });
 });
+
+const headerValue = (value?: string | string[]): string | undefined =>
+    Array.isArray(value) ? value.join(',') : value;

@@ -7,6 +7,13 @@ const PROTOCOL_VERSION_VALUE = '1.0';
 
 type HeaderValue = string | RegExp;
 type ReplyHeaders = Record<string, string | string[] | number>;
+type CapturedRequest = {
+    body: unknown;
+    headers: Record<string, string | string[] | undefined>;
+    method?: string;
+    url: string;
+};
+type CaptureRequest = (request: CapturedRequest) => void;
 
 const withProtocolHeaders = (
     origin: string,
@@ -69,12 +76,17 @@ export const mockAbsoluteGet = (
     statusCode = 200,
     headers: Record<string, HeaderValue> = {},
     replyHeaders: ReplyHeaders = {},
+    captureRequest?: CaptureRequest,
 ) => {
     const { origin, pathname, search } = new URL(requestUrl);
 
-    return withProtocolHeaders(origin, headers)
-        .get(`${pathname}${search}`)
-        .reply(statusCode, replyBody, replyHeaders);
+    return reply(
+        withProtocolHeaders(origin, headers).get(`${pathname}${search}`),
+        statusCode,
+        replyBody,
+        replyHeaders,
+        captureRequest,
+    );
 };
 
 export const mockAbsolutePost = (
@@ -84,12 +96,43 @@ export const mockAbsolutePost = (
     statusCode = 200,
     headers: Record<string, HeaderValue> = {},
     replyHeaders: ReplyHeaders = {},
+    captureRequest?: CaptureRequest,
 ) => {
     const { origin, pathname, search } = new URL(requestUrl);
 
-    return withProtocolHeaders(origin, headers)
-        .post(`${pathname}${search}`, requestBody)
-        .reply(statusCode, replyBody, replyHeaders);
+    return reply(
+        withProtocolHeaders(origin, headers).post(
+            `${pathname}${search}`,
+            requestBody,
+        ),
+        statusCode,
+        replyBody,
+        replyHeaders,
+        captureRequest,
+    );
+};
+
+const reply = (
+    scope: any,
+    statusCode: number,
+    replyBody: unknown,
+    replyHeaders: ReplyHeaders,
+    captureRequest?: CaptureRequest,
+) => {
+    if (captureRequest == null) {
+        return scope.reply(statusCode, replyBody, replyHeaders);
+    }
+
+    return scope.reply(function capture(uri: string, body: unknown) {
+        captureRequest({
+            body,
+            headers: this.req.headers,
+            method: this.req.method,
+            url: uri,
+        });
+
+        return [statusCode, replyBody, replyHeaders];
+    });
 };
 
 export const mockResolveDid = (
