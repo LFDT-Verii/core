@@ -62,17 +62,16 @@ const createServer = (config) => {
   );
 };
 
-const listenServer = (server) => {
+const listenServer = async (server) => {
   const { appPort, appHost } = server.config;
-  server.listen({ port: appPort, host: appHost }, (err) => {
-    if (err) {
-      /* istanbul ignore next */
-      server.log.error(err);
-      setTimeout(() => process.exit(1), 5000); // let errors printout
-      return;
-    }
+  try {
+    await server.listen({ port: appPort, host: appHost });
     server.log.info('Server Started');
-  });
+  } catch (err) {
+    /* istanbul ignore next */
+    server.log.error(err);
+    setTimeout(() => process.exit(1), 5000); // let errors printout
+  }
 };
 
 module.exports = {

@@ -77,8 +77,7 @@ describe(
     it('server should respond to HTTP/1.1 insecure by default', async () => {
       const config = buildConfig();
       server = initServer(createServer(config));
-      listenServer(server);
-      await server.ready();
+      await listenServer(server);
 
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       const response = await requestHttp11(urlObj);
@@ -100,8 +99,7 @@ describe(
       config.serverCertificate = serverCertificate;
       server = initServer(createServer(config));
 
-      listenServer(server);
-      await server.ready();
+      await listenServer(server);
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       urlObj.protocol = 'https';
       const response = await requestHttp11(urlObj, {
@@ -115,8 +113,7 @@ describe(
       config.enableHttp2 = true;
 
       server = initServer(createServer(config));
-      listenServer(server);
-      await server.ready();
+      await listenServer(server);
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       await wait(3000);
       const response = await h2url.concat({ url: urlObj.href });
@@ -140,8 +137,7 @@ describe(
       config.enableHttp2 = true;
 
       server = initServer(createServer(config));
-      listenServer(server);
-      await server.ready();
+      await listenServer(server);
       await wait(3000);
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       urlObj.protocol = 'https';
@@ -166,8 +162,7 @@ describe(
       config.enableHttp2 = true;
 
       server = initServer(createServer(config));
-      listenServer(server);
-      await server.ready();
+      await listenServer(server);
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       urlObj.protocol = 'https';
       await wait(3000);

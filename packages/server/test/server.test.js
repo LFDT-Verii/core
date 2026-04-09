@@ -44,8 +44,7 @@ describe('Server package variant tests ', () => {
     server.get('/', async (req, reply) => {
       return reply.status(200).send(null);
     });
-    listenServer(server);
-    await server.ready();
+    await listenServer(server);
     const response = await server.inject({ method: 'get', url: '/' });
     expect(response.body).toEqual('null');
   });
@@ -54,8 +53,7 @@ describe('Server package variant tests ', () => {
     server.get('/', async (req, reply) => {
       return reply.status(200).send([]);
     });
-    listenServer(server);
-    await server.ready();
+    await listenServer(server);
     const response = await server.inject({
       method: 'get',
       url: '/',
@@ -76,8 +74,7 @@ describe('Server package variant tests ', () => {
   });
 
   it('server should 404 when route does not exist', async () => {
-    listenServer(server);
-    await server.ready();
+    await listenServer(server);
     try {
       await server.inject({
         method: 'get',
@@ -93,8 +90,7 @@ describe('Server package variant tests ', () => {
       throw new Error('fake error');
     });
 
-    listenServer(server);
-    await server.ready();
+    await listenServer(server);
     try {
       await server.inject({
         method: 'get',
