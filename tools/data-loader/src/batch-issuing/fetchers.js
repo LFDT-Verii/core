@@ -1,78 +1,83 @@
 const { env } = require('node:process');
-const got = require('got');
+const { initHttpClient } = require('@verii/http-client');
 const { map, isEmpty } = require('lodash/fp');
 const { printInfo } = require('../helpers/common');
 
-const setupGot = ({ endpoint, authToken }) => {
+const setupHttpClient = ({ endpoint, authToken }) => {
   const options = {};
   if (endpoint != null) {
     options.prefixUrl = `${endpoint}/operator-api/v0.8`;
   }
   if (authToken != null) {
-    options.headers = { Authorization: `Bearer ${authToken}` };
+    options.bearerToken = authToken;
   }
   if (env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
-    options.https = {
-      rejectUnauthorized: false,
-    };
+    options.tlsRejectUnauthorized = false;
   }
-  return got.extend(options);
+  if (env.NODE_ENV === 'test') {
+    options.isTest = true;
+  }
+
+  return initHttpClient(options)({
+    log: console,
+    traceId: 'TRACE-ID',
+  });
 };
 
 const initFetchers = (options) => {
-  const credentialAgentTenantGot = setupGot(options);
+  const credentialAgentTenantClient = setupHttpClient(options);
   const param = getTenantsRouteParam(options);
   return {
     getTenant: async () => {
       printInfo('Retrieving tenant');
-      return credentialAgentTenantGot.get(`tenants/${param}`).json();
+      return credentialAgentTenantClient
+        .get(`tenants/${param}`)
+        .then((res) => res.json());
     },
     createDisclosure: async (disclosureRequest) => {
       printInfo('Creating disclosure');
-      return credentialAgentTenantGot
+      return credentialAgentTenantClient
         .post(`tenants/${param}/disclosures`, {
           json: disclosureRequest,
         })
-        .json();
+        .then((res) => res.json());
     },
     getDisclosureList: async (vendorEndpoints) => {
       printInfo('Retrieving disclosure list');
-      const url = new URL(
-        `tenants/${param}/disclosures`,
-        credentialAgentTenantGot.defaults.options.prefixUrl,
-      );
-
+      const searchParams = new URLSearchParams();
       if (!isEmpty(vendorEndpoints)) {
         vendorEndpoints.forEach((vendorEndpoint) => {
-          url.searchParams.append('vendorEndpoint', vendorEndpoint);
+          searchParams.append('vendorEndpoint', vendorEndpoint);
         });
       }
 
-      return credentialAgentTenantGot.get(url).json();
+      return credentialAgentTenantClient
+        .get(`tenants/${param}/disclosures`, { searchParams })
+        .then((res) => res.json());
     },
     getDisclosure: async (disclosureId) => {
       printInfo('Retrieving disclosure');
-      return credentialAgentTenantGot
+      return credentialAgentTenantClient
         .get(`tenants/${param}/disclosures/${disclosureId}`)
-        .json();
+        .then((res) => res.json());
     },
     createOfferExchange: async (newExchange) => {
       printInfo('Creating exchange');
-      return credentialAgentTenantGot
+      return credentialAgentTenantClient
         .post(`tenants/${param}/exchanges`, {
           json: newExchange,
         })
-        .json();
+        .then((res) => res.json());
     },
     createOffer: async (exchange, newOffer) => {
       printInfo(
         `Adding offer ${newOffer.offerId} to exchange id: ${exchange.id}`,
       );
-      return credentialAgentTenantGot
+      return credentialAgentTenantClient
         .post(`tenants/${param}/exchanges/${exchange.id}/offers`, {
           json: newOffer,
         })
-        .json();
+        .then((res) => res.json());
     },
     submitCompleteOffer: async (exchange, offers) => {
       printInfo(
@@ -81,30 +86,34 @@ const initFetchers = (options) => {
           offers,
         )}`,
       );
-      return credentialAgentTenantGot
+      return credentialAgentTenantClient
         .post(`tenants/${param}/exchanges/${exchange.id}/offers/complete`)
-        .json();
+        .then((res) => res.json());
     },
     loadExchangeQrcode: async (exchange) =>
-      (
-        await credentialAgentTenantGot.get(
-          `tenants/${param}/exchanges/${exchange.id}/qrcode.png`,
-        )
-      ).rawBody,
+      Buffer.from(
+        await (
+          await credentialAgentTenantClient.get(
+            `tenants/${param}/exchanges/${exchange.id}/qrcode.png`,
+          )
+        ).rawBody.arrayBuffer(),
+      ),
     loadExchangeDeeplink: async (exchange) =>
-      credentialAgentTenantGot
+      credentialAgentTenantClient
         .get(`tenants/${param}/exchanges/${exchange.id}/qrcode.uri`)
-        .text(),
+        .then((res) => res.text()),
     loadDisclosureQrcode: async (disclosure) =>
-      (
-        await credentialAgentTenantGot.get(
-          `tenants/${param}/disclosures/${disclosure.id}/qrcode.png`,
-        )
-      ).rawBody,
+      Buffer.from(
+        await (
+          await credentialAgentTenantClient.get(
+            `tenants/${param}/disclosures/${disclosure.id}/qrcode.png`,
+          )
+        ).rawBody.arrayBuffer(),
+      ),
     loadDisclosureDeeplink: async (disclosure) =>
-      credentialAgentTenantGot
+      credentialAgentTenantClient
         .get(`tenants/${param}/disclosures/${disclosure.id}/qrcode.uri`)
-        .text(),
+        .then((res) => res.text()),
   };
 };
 

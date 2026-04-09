@@ -18,7 +18,7 @@ const { expect } = require('expect');
 
 const path = require('path');
 const fs = require('fs');
-const got = require('got');
+const { initHttpClient } = require('@verii/http-client');
 const h2url = require('h2url');
 const { wait } = require('@verii/common-functions');
 const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
@@ -49,6 +49,18 @@ const initServer = (server) => {
   });
   return server;
 };
+
+const requestHttp11 = async (urlObj, options = {}) => {
+  const client = initHttpClient({
+    prefixUrl: urlObj.origin,
+    ...options,
+  })({
+    log: console,
+    traceId: 'TRACE-ID',
+  });
+  return client.get(`${urlObj.pathname}${urlObj.search}`);
+};
+
 describe(
   'HTTP/2 or 1.1 and HTTP or HTTPS configuration',
   { timeout: 15000 },
@@ -69,7 +81,7 @@ describe(
       await server.ready();
 
       const urlObj = new URL(`http://${appHost}:${appPort}`);
-      const response = await got(urlObj.href);
+      const response = await requestHttp11(urlObj);
       expect(response.statusCode).toEqual(200);
     });
 
@@ -92,10 +104,8 @@ describe(
       await server.ready();
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       urlObj.protocol = 'https';
-      const response = await got(urlObj.href, {
-        https: {
-          certificateAuthority: serverCertificate,
-        },
+      const response = await requestHttp11(urlObj, {
+        caCertificate: serverCertificate,
       });
       expect(response.statusCode).toEqual(200);
     });
@@ -161,10 +171,8 @@ describe(
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       urlObj.protocol = 'https';
       await wait(3000);
-      const response = await got(urlObj.href, {
-        https: {
-          certificateAuthority: serverCertificate,
-        },
+      const response = await requestHttp11(urlObj, {
+        caCertificate: serverCertificate,
       });
       expect(response.statusCode).toEqual(200);
     });

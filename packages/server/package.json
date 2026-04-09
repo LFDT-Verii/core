@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@verii/config": "0.5.0-build",
+    "@verii/http-client": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.0.1",
@@ -50,7 +51,6 @@
     "eslint-watch": "8.0.0",
     "expect": "30.3.0",
     "globals": "17.4.0",
-    "got": "11.8.6",
     "h2url": "0.2.0",
     "prettier": "3.8.1"
   },

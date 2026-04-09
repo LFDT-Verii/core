@@ -165,6 +165,10 @@ const parseOptions = (options) => {
   const clientOptions = {
     connect: {
       rejectUnauthorized: options.tlsRejectUnauthorized,
+      ca: options.caCertificate,
+      cert: options.clientCertificate,
+      key: options.clientKey,
+      passphrase: options.clientCertificatePassword,
     },
   };
   if (options.requestTimeout != null) {
