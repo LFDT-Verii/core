@@ -25,7 +25,7 @@ const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
 
 loadTestEnv();
 const { genericConfig } = require('@verii/config');
-const { createServer, listenServer } = require('../src/create-server');
+const { createServer } = require('../src/create-server');
 
 const mongoConnection = buildMongoConnection('credentialagent');
 const appHost = 'localhost';
@@ -37,6 +37,11 @@ const buildConfig = () => {
     appHost,
     mongoConnection,
   };
+};
+
+const listenTestServer = async (server) => {
+  const { appPort: port, appHost: host } = server.config;
+  await server.listen({ port, host });
 };
 
 const initServer = (server) => {
@@ -77,7 +82,7 @@ describe(
     it('server should respond to HTTP/1.1 insecure by default', async () => {
       const config = buildConfig();
       server = initServer(createServer(config));
-      await listenServer(server);
+      await listenTestServer(server);
 
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       const response = await requestHttp11(urlObj);
@@ -99,7 +104,7 @@ describe(
       config.serverCertificate = serverCertificate;
       server = initServer(createServer(config));
 
-      await listenServer(server);
+      await listenTestServer(server);
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       urlObj.protocol = 'https';
       const response = await requestHttp11(urlObj, {
@@ -113,7 +118,7 @@ describe(
       config.enableHttp2 = true;
 
       server = initServer(createServer(config));
-      await listenServer(server);
+      await listenTestServer(server);
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       await wait(3000);
       const response = await h2url.concat({ url: urlObj.href });
@@ -137,7 +142,7 @@ describe(
       config.enableHttp2 = true;
 
       server = initServer(createServer(config));
-      await listenServer(server);
+      await listenTestServer(server);
       await wait(3000);
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       urlObj.protocol = 'https';
@@ -162,7 +167,7 @@ describe(
       config.enableHttp2 = true;
 
       server = initServer(createServer(config));
-      await listenServer(server);
+      await listenTestServer(server);
       const urlObj = new URL(`http://${appHost}:${appPort}`);
       urlObj.protocol = 'https';
       await wait(3000);

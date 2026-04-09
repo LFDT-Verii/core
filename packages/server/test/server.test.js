@@ -20,9 +20,14 @@ const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
 
 loadTestEnv();
 const { genericConfig } = require('@verii/config');
-const { createServer, listenServer } = require('../src/create-server');
+const { createServer } = require('../src/create-server');
 
 const mongoConnection = buildMongoConnection('credentialagent');
+
+const listenTestServer = async (server) => {
+  const { appPort, appHost } = server.config;
+  await server.listen({ port: appPort, host: appHost });
+};
 
 describe('Server package variant tests ', () => {
   let server;
@@ -44,7 +49,7 @@ describe('Server package variant tests ', () => {
     server.get('/', async (req, reply) => {
       return reply.status(200).send(null);
     });
-    await listenServer(server);
+    await listenTestServer(server);
     const response = await server.inject({ method: 'get', url: '/' });
     expect(response.body).toEqual('null');
   });
@@ -53,7 +58,7 @@ describe('Server package variant tests ', () => {
     server.get('/', async (req, reply) => {
       return reply.status(200).send([]);
     });
-    await listenServer(server);
+    await listenTestServer(server);
     const response = await server.inject({
       method: 'get',
       url: '/',
@@ -74,7 +79,7 @@ describe('Server package variant tests ', () => {
   });
 
   it('server should 404 when route does not exist', async () => {
-    await listenServer(server);
+    await listenTestServer(server);
     try {
       await server.inject({
         method: 'get',
@@ -90,7 +95,7 @@ describe('Server package variant tests ', () => {
       throw new Error('fake error');
     });
 
-    await listenServer(server);
+    await listenTestServer(server);
     try {
       await server.inject({
         method: 'get',
