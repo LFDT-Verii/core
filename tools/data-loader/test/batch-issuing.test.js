@@ -1,10 +1,19 @@
-const { after, before, describe, it } = require('node:test');
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const nock = require('nock');
+
+const mockPrompt = mock.fn();
+mock.module('inquirer', {
+  namedExports: {
+    default: {
+      prompt: mockPrompt,
+    },
+  },
+});
 
 const { nanoid } = require('nanoid');
 const { runBatchIssuing } = require('../src/batch-issuing/orchestrators');
@@ -17,9 +26,14 @@ describe('batch issuing test', () => {
     nock.cleanAll();
   });
 
+  beforeEach(() => {
+    mockPrompt.mock.resetCalls();
+  });
+
   after(() => {
     nock.cleanAll();
     nock.restore();
+    mock.reset();
   });
 
   it("should fail if options don't have credential type or type doesn't exist", async () => {
@@ -1465,6 +1479,63 @@ describe('batch issuing test', () => {
           },
         ],
       });
+    });
+
+    it('should use interactive prompts to select an existing disclosure', async () => {
+      const interactiveDisclosures = [
+        {
+          id: nanoid(),
+          purpose: 'Employment',
+          createdAt: '2026-03-18T01:02:03.000Z',
+        },
+        {
+          id: nanoid(),
+          purpose: 'Education',
+          createdAt: '2026-03-18T02:03:04.000Z',
+        },
+      ];
+      const agentUrl = 'https://exampleUrl';
+      const tenant = '123';
+
+      mockPrompt.mock.mockImplementation(async ([question]) => {
+        if (question.name === 'disclosureType') {
+          return { disclosureType: 'existing' };
+        }
+
+        if (question.name === 'disclosure') {
+          return { disclosure: interactiveDisclosures[0].id };
+        }
+
+        throw new Error(`Unexpected question: ${question.name}`);
+      });
+
+      nock(agentUrl)
+        .get(
+          `/operator-api/v0.8/tenants/${tenant}/disclosures?vendorEndpoint=integrated-issuing-identification`,
+        )
+        .reply(200, interactiveDisclosures);
+
+      const options = {
+        csvFilename: path.join(__dirname, 'data/variables.csv'),
+        offerTemplateFilename: path.join(
+          __dirname,
+          'data/email-offer.template.json',
+        ),
+        tenant,
+        termsUrl: 'http://example.com/terms.html',
+        idCredentialType: 'EmailV1.0',
+        vendorUseridColumn: 'email',
+        dryrun: true,
+        endpoint: agentUrl,
+        authToken: 'fakeToken',
+      };
+
+      const updates = await runBatchIssuing(options);
+
+      expect(updates.disclosureRequest).toEqual(interactiveDisclosures[0]);
+      expect(
+        mockPrompt.mock.calls.map((call) => call.arguments[0][0].name),
+      ).toEqual(['disclosureType', 'disclosure']);
     });
   });
 
