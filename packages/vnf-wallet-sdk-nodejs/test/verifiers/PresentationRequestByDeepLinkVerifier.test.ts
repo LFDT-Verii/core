@@ -7,21 +7,40 @@
 
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
-import { VCLErrorCode } from '../../src';
+import {
+    VCLDeepLink,
+    VCLErrorCode,
+    VCLJwt,
+    VCLPresentationRequest,
+    VCLVerifiedProfile,
+} from '../../src';
 import { PresentationRequestByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
-import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
 import PresentationRequestByDeepLinkVerifier from '../../src/impl/domain/verifiers/PresentationRequestByDeepLinkVerifier';
 import { PresentationRequestMocks } from '../infrastructure/resources/valid/PresentationRequestMocks';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
+import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 
-describe('CredentialManifestByDeepLinkVerifier', () => {
+describe('PresentationRequestByDeepLinkVerifier', () => {
     let subject: PresentationRequestByDeepLinkVerifier;
 
     const presentationRequest = PresentationRequestMocks.PresentationRequest;
 
     const deepLink = DeepLinkMocks.PresentationRequestDeepLinkDevNet;
+
+    const createPresentationRequest = (iss: string): VCLPresentationRequest => {
+        const jwt = VCLJwt.fromEncodedJwt(
+            PresentationRequestMocks.EncodedPresentationRequest,
+        );
+        jwt.payload.iss = iss;
+        return new VCLPresentationRequest(
+            jwt,
+            new VCLVerifiedProfile({}),
+            new VCLDeepLink('velocity-network://inspect'),
+            null,
+            DidJwkMocks.DidJwk,
+        );
+    };
 
     test('testVerifyPresentationRequestSuccess', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
@@ -29,6 +48,36 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
         const isVerified = await subject.verifyPresentationRequest(
             presentationRequest,
             deepLink,
+            DidDocumentMocks.DidDocumentMock,
+        );
+        expect(isVerified).toBeTruthy();
+    });
+
+    test('testVerifyPresentationRequestSuccessWithDidDocumentIdInPresentationRequest', async () => {
+        subject = new PresentationRequestByDeepLinkVerifierImpl();
+        const presentationRequestWithDidDocumentId = createPresentationRequest(
+            DidDocumentMocks.DidDocumentMock.id,
+        );
+
+        const isVerified = await subject.verifyPresentationRequest(
+            presentationRequestWithDidDocumentId,
+            deepLink,
+            DidDocumentMocks.DidDocumentMock,
+        );
+        expect(isVerified).toBeTruthy();
+    });
+
+    test('testVerifyPresentationRequestSuccessWithDidDocumentIdInDeepLink', async () => {
+        subject = new PresentationRequestByDeepLinkVerifierImpl();
+        const deepLinkWithDidDocumentId = new VCLDeepLink(
+            `velocity-network://inspect?inspectorDid=${encodeURIComponent(
+                DidDocumentMocks.DidDocumentMock.id,
+            )}`,
+        );
+
+        const isVerified = await subject.verifyPresentationRequest(
+            presentationRequest,
+            deepLinkWithDidDocumentId,
             DidDocumentMocks.DidDocumentMock,
         );
         expect(isVerified).toBeTruthy();
