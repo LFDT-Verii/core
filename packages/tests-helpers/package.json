@@ -16,7 +16,7 @@
   "author": "Itay Podhajcer",
   "license": "Apache-2.0",
   "dependencies": {
-    "@spencejs/spence-mongo-repos": "^0.10.2",
+    "@spencejs/spence-mongo-repos": "^1.0.0",
     "@verii/common-functions": "0.5.0-build",
     "@verii/crypto": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",

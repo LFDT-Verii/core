@@ -4088,6 +4088,14 @@
     lodash "~4.17.15"
     uuid "~9.0.0"
 
+"@spencejs/spence-events@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/@spencejs/spence-events/-/spence-events-1.0.0.tgz#12024b7b623f373d4706b55dfcc781b4cc2882b7"
+  integrity sha512-gULt5GOhYvJCpcoqzck8EBtsBe/vnhkeKc96vIbOE3yb4i7V2bNP6N39CnYpPWuiwqnEaZwdfIIEkpZRK0iRMA==
+  dependencies:
+    lodash "^4.18.1"
+    uuid "^11.1.0"
+
 "@spencejs/spence-factories@0.10.2", "@spencejs/spence-factories@^0.10.2":
   version "0.10.2"
   resolved "https://registry.npmjs.org/@spencejs/spence-factories/-/spence-factories-0.10.2.tgz#09c3dd730eb3266f3077e2188b96deb6eb7d0cc0"
@@ -4096,15 +4104,15 @@
     lodash "~4.17.15"
     uuid "~9.0.0"
 
-"@spencejs/spence-mongo-repos@0.10.2", "@spencejs/spence-mongo-repos@^0.10.2", "@spencejs/spence-mongo-repos@~0.10.2":
-  version "0.10.2"
-  resolved "https://registry.npmjs.org/@spencejs/spence-mongo-repos/-/spence-mongo-repos-0.10.2.tgz#f3266664f9669d99ec3562fd349722d90035254a"
-  integrity sha512-LDKTuoqPP75FzMnVjYKqdew7+OYNX8Przk9QSWHjiLflv/GdaWcfJ527aX6h+IINNCGFyHpz4aQNS1IeLQlFEA==
+"@spencejs/spence-mongo-repos@1.0.0", "@spencejs/spence-mongo-repos@^1.0.0", "@spencejs/spence-mongo-repos@~1.0.0":
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/@spencejs/spence-mongo-repos/-/spence-mongo-repos-1.0.0.tgz#6ae62b9b0147c844075e1b763735a7c633184ecd"
+  integrity sha512-qn0QT4QdRaSRqo00MW6vqHVl7ctXDM+mAsOy0kZYVq8+Wp3BNBFq+3Q+O+PvyiWUiI8P/mgEuDSyU+aVQZqFqA==
   dependencies:
-    "@spencejs/spence-events" "^0.10.2"
-    fastify-plugin "4.5.1"
+    "@spencejs/spence-events" "^1.0.0"
+    fastify-plugin "^5.1.0"
     http-errors "^2.0.0"
-    lodash "~4.17.15"
+    lodash "^4.18.1"
 
 "@stylistic/eslint-plugin@^5.7.0":
   version "5.10.0"
@@ -7539,11 +7547,6 @@ fastify-jwt-jwks@^3.0.0:
     http-errors "^2.0.1"
     node-cache "^5.1.2"
 
-fastify-plugin@4.5.1:
-  version "4.5.1"
-  resolved "https://registry.npmjs.org/fastify-plugin/-/fastify-plugin-4.5.1.tgz#44dc6a3cc2cce0988bc09e13f160120bbd91dbee"
-  integrity sha512-stRHYGeuqpEZTL1Ef0Ovr2ltazUT9g844X5z/zEBFLG8RYlpDiOCIG+ATvYEp+/zmc7sN29mcIMp8gvYplYPIQ==
-
 fastify-plugin@^5.0.0, fastify-plugin@^5.0.1, fastify-plugin@^5.1.0, fastify-plugin@~5.1.0:
   version "5.1.0"
   resolved "https://registry.npmjs.org/fastify-plugin/-/fastify-plugin-5.1.0.tgz#7083e039d6418415f9a669f8c25e72fc5bf2d3e7"
@@ -9379,7 +9382,7 @@ lodash.zip@^4.2.0:
   resolved "https://registry.npmjs.org/lodash.zip/-/lodash.zip-4.2.0.tgz#ec6662e4896408ed4ab6c542a3990b72cc080020"
   integrity sha512-C7IOaBBK/0gMORRBd8OETNx3kmOkgIWIPvyDpZSCTwUrpYmgZwJkjZeOD8ww4xbOUOs4/attY+pciKvadNfFbg==
 
-lodash@4.18.1, lodash@>=4.17.21, lodash@^4.17.11, lodash@^4.17.21, lodash@~4.18.0:
+lodash@4.18.1, lodash@>=4.17.21, lodash@^4.17.11, lodash@^4.17.21, lodash@^4.18.1, lodash@~4.18.0:
   version "4.18.1"
   resolved "https://registry.npmjs.org/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
   integrity sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==
