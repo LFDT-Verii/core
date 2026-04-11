@@ -1,5 +1,6 @@
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
+import VCLError from '../../src/api/entities/error/VCLError';
 import PresentationRequestUseCaseImpl from '../../src/impl/data/usecases/PresentationRequestUseCaseImpl';
 import PresentationRequestRepositoryImpl from '../../src/impl/data/repositories/PresentationRequestRepositoryImpl';
 import { PresentationRequestMocks } from '../infrastructure/resources/valid/PresentationRequestMocks';
@@ -23,6 +24,7 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 import {
     mockAbsoluteGet,
+    mockRegistrarGet,
     mockResolveDid,
     useNockLifecycle,
 } from '../utils/nock';
@@ -85,6 +87,10 @@ describe('PresentationRequestUseCase Tests', () => {
             presentationRequestDescriptor.endpoint!,
             { wrong: 'payload' },
         );
+        const didScope = mockRegistrarGet(
+            '/api/v0.6/resolve-did/',
+            DidDocumentMocks.DidDocumentMock.payload,
+        );
 
         try {
             await subject.getPresentationRequest(
@@ -93,9 +99,11 @@ describe('PresentationRequestUseCase Tests', () => {
             );
             expect(true).toEqual(false);
         } catch (error: any) {
-            expect(error).toBeInstanceOf(Error);
+            expect(error).toBeInstanceOf(VCLError);
+            expect(error.errorCode).toEqual(VCLErrorCode.SdkError.toString());
         }
 
         expect(requestScope.isDone()).toBeTruthy();
+        expect(didScope.isDone()).toBeTruthy();
     });
 });
