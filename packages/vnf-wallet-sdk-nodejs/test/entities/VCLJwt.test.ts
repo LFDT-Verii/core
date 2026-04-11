@@ -2,10 +2,19 @@ import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import VCLJwt from '../../src/api/entities/VCLJwt';
 
-const jwtWtithKidStr =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNvbWVfa2lkIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.lGqyFj2RpmostxLvCcMFym9kWM0bzQcty9a81EdzrhM';
-const jwtWtihJwkStr =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImp3ayI6eyJrdHkiOiJSU0EiLCJ1c2UiOiJzaWciLCJraWQiOiJzb21lX2tpZCIsIm4iOiJ6ZzctOGFZcnh1VjdINHQuLi4iLCJlIjoiQVFBQiJ9fQ.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.ijeuQTlhK7jpYkRmD_yWFKtluFWLEhjdieZJxkTc9fY';
+const jwtWtithKidStr = [
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InNvbWVfa2lkIn0',
+    'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ',
+    'lGqyFj2RpmostxLvCcMFym9kWM0bzQcty9a81EdzrhM',
+].join('.');
+const jwtWtihJwkStr = [
+    [
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImp3ayI6eyJrdHkiOiJSU0EiLCJ1c2UiOiJzaWciLCJraWQiOiJzb21lX2tpZCIs',
+        'Im4iOiJ6ZzctOGFZcnh1VjdINHQuLi4iLCJlIjoiQVFBQiJ9fQ',
+    ].join(''),
+    'eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ',
+    'ijeuQTlhK7jpYkRmD_yWFKtluFWLEhjdieZJxkTc9fY',
+].join('.');
 
 describe('test jwt', () => {
     test('empty jwt', async () => {

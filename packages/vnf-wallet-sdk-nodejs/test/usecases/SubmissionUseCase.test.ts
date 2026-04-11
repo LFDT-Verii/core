@@ -1,41 +1,24 @@
 import { describe, beforeEach, test } from 'node:test';
 import { expect } from 'expect';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import JwtServiceRepositoryImpl from '../../src/impl/data/repositories/JwtServiceRepositoryImpl';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';
 import { JwtVerifyServiceMock } from '../infrastructure/resources/jwt/JwtVerifyServiceMock';
-import {
-    VCLDeepLink,
-    VCLPresentationRequest,
-    VCLPresentationSubmission,
-    VCLVerifiedProfile,
-} from '../../src';
-import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
+import { VCLPresentationSubmission, VCLJwt } from '../../src';
 import PresentationSubmissionUseCaseImpl from '../../src/impl/data/usecases/PresentationSubmissionUseCaseImpl';
 import { PresentationSubmissionMocks } from '../infrastructure/resources/valid/PresentationSubmissionMocks';
+import { PresentationRequestMocks } from '../infrastructure/resources/valid/PresentationRequestMocks';
 import SubmissionRepositoryImpl from '../../src/impl/data/repositories/SubmissionRepositoryImpl';
-import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 import { generatePresentationSubmissionResult } from '../infrastructure/resources/utils/Utils';
 import TokenMocks from '../infrastructure/resources/valid/TokenMocks';
 import PresentationSubmissionUseCase from '../../src/impl/domain/usecases/PresentationSubmissionUseCase';
-import {
-    HeaderKeys,
-    HeaderValues,
-} from '../../src/impl/data/repositories/Urls';
+import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import { mockAbsolutePost, useNockLifecycle } from '../utils/nock';
 
 describe('PresentationSubmission Tests', () => {
     let subject: PresentationSubmissionUseCase;
-    let networkServiceSuccess: NetworkServiceSuccess;
-    const didJwk = DidJwkMocks.DidJwk;
     const authToken = TokenMocks.AuthToken;
     const presentationSubmission = new VCLPresentationSubmission(
-        new VCLPresentationRequest(
-            CommonMocks.JWT,
-            new VCLVerifiedProfile({}),
-            new VCLDeepLink(''),
-            null,
-            didJwk,
-        ),
+        PresentationRequestMocks.PresentationRequestFeed,
         [],
     );
     const expectedSubmissionResult = generatePresentationSubmissionResult(
@@ -44,20 +27,9 @@ describe('PresentationSubmission Tests', () => {
         presentationSubmission.submissionId,
     );
 
-    const expectedHeadersWithoutAccessToken = {
-        [HeaderKeys.XVnfProtocolVersion]: HeaderValues.XVnfProtocolVersion,
-    };
-    const expectedHeadersWithAccessToken = {
-        [HeaderKeys.XVnfProtocolVersion]: HeaderValues.XVnfProtocolVersion,
-        [HeaderKeys.Authorization]: `Bearer ${authToken.accessToken?.value}`,
-    };
-
     beforeEach(() => {
-        networkServiceSuccess = new NetworkServiceSuccess(
-            PresentationSubmissionMocks.PresentationSubmissionResultJson,
-        );
         subject = new PresentationSubmissionUseCaseImpl(
-            new SubmissionRepositoryImpl(networkServiceSuccess),
+            new SubmissionRepositoryImpl(new NetworkServiceImpl()),
             new JwtServiceRepositoryImpl(
                 new JwtSignServiceMock(
                     PresentationSubmissionMocks.JwtEncodedSubmission,
@@ -67,32 +39,48 @@ describe('PresentationSubmission Tests', () => {
         );
     });
 
+    useNockLifecycle();
+
     test('testSubmitPresentationSuccess', async () => {
+        const scope = mockAbsolutePost(
+            presentationSubmission.submitUri,
+            presentationSubmission.generateRequestBody(
+                VCLJwt.fromEncodedJwt(
+                    PresentationSubmissionMocks.JwtEncodedSubmission,
+                ),
+            ),
+            PresentationSubmissionMocks.PresentationSubmissionResultJson,
+        );
+
         const presentationSubmissionResult = await subject.submit(
             presentationSubmission,
         );
 
         expect(presentationSubmissionResult).toEqual(expectedSubmissionResult);
-
-        expect(networkServiceSuccess.sendRequestCalled).toEqual(true);
-        expect(networkServiceSuccess.request).toBeDefined();
-        expect(networkServiceSuccess.request!.headers).toEqual(
-            expectedHeadersWithoutAccessToken,
-        );
+        expect(scope.isDone()).toBeTruthy();
     });
 
     test('testSubmitPresentationTypeFeedSuccess', async () => {
+        const scope = mockAbsolutePost(
+            presentationSubmission.submitUri,
+            presentationSubmission.generateRequestBody(
+                VCLJwt.fromEncodedJwt(
+                    PresentationSubmissionMocks.JwtEncodedSubmission,
+                ),
+            ),
+            PresentationSubmissionMocks.PresentationSubmissionResultJson,
+            200,
+            {
+                authorization: `Bearer ${authToken.accessToken?.value}`,
+            },
+        );
+
         const presentationSubmissionResult = await subject.submit(
             presentationSubmission,
             authToken,
         );
 
         expect(presentationSubmissionResult).toEqual(expectedSubmissionResult);
-
-        expect(networkServiceSuccess.sendRequestCalled).toEqual(true);
-        expect(networkServiceSuccess.request).toBeDefined();
-        expect(networkServiceSuccess.request!.headers!).toEqual(
-            expectedHeadersWithAccessToken,
-        );
+        expect(scope.isDone()).toBeTruthy();
     });
 });

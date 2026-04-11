@@ -11,10 +11,11 @@ import { CredentialManifestDescriptorMocks } from '../infrastructure/resources/v
 import { VCLErrorCode, VCLJwt } from '../../src';
 import { CredentialsByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
 import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
 import CredentialsByDeepLinkVerifier from '../../src/impl/domain/verifiers/CredentialsByDeepLinkVerifier';
 import { CredentialMocks } from '../infrastructure/resources/valid/CredentialMocks';
+import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import { mockResolveDid, useNockLifecycle } from '../utils/nock';
 
 describe('CredentialsByDeepLinkVerifier', () => {
     let subject: CredentialsByDeepLinkVerifier;
@@ -29,11 +30,15 @@ describe('CredentialsByDeepLinkVerifier', () => {
         ),
     ];
 
+    useNockLifecycle();
+
     test('testVerifyCredentialsSuccess', async () => {
         subject = new CredentialsByDeepLinkVerifierImpl(
-            new ResolveDidDocumentRepositoryImpl(
-                new NetworkServiceSuccess(DidDocumentMocks.DidDocumentMock),
-            ),
+            new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
+        );
+        const scope = mockResolveDid(
+            deepLink.did!,
+            DidDocumentMocks.DidDocumentMock.payload,
         );
 
         const isVerified = await subject.verifyCredentials(
@@ -41,15 +46,16 @@ describe('CredentialsByDeepLinkVerifier', () => {
             deepLink,
         );
         expect(isVerified).toBeTruthy();
+        expect(scope.isDone()).toBeTruthy();
     });
 
     test('testVerifyCredentialsError', async () => {
         subject = new CredentialsByDeepLinkVerifierImpl(
-            new ResolveDidDocumentRepositoryImpl(
-                new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentWithWrongDidMock,
-                ),
-            ),
+            new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
+        );
+        const scope = mockResolveDid(
+            deepLink.did!,
+            DidDocumentMocks.DidDocumentWithWrongDidMock.payload,
         );
         try {
             const isVerified = await subject.verifyCredentials(
@@ -62,5 +68,6 @@ describe('CredentialsByDeepLinkVerifier', () => {
                 VCLErrorCode.MismatchedCredentialIssuerDid,
             );
         }
+        expect(scope.isDone()).toBeTruthy();
     });
 });

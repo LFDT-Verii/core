@@ -16,8 +16,6 @@ import {
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 import { CredentialManifestDescriptorMocks } from '../infrastructure/resources/valid/CredentialManifestDescriptorMocks';
 import { CredentialManifestByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
-import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
 import { CredentialManifestMocks } from '../infrastructure/resources/valid/CredentialManifestMocks';
 import { VerifiedProfileMocks } from '../infrastructure/resources/valid/VerifiedProfileMocks';

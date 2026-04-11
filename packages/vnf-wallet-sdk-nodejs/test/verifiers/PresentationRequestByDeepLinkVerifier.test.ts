@@ -9,8 +9,6 @@ import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import { VCLErrorCode } from '../../src';
 import { PresentationRequestByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
-import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
 import PresentationRequestByDeepLinkVerifier from '../../src/impl/domain/verifiers/PresentationRequestByDeepLinkVerifier';
 import { PresentationRequestMocks } from '../infrastructure/resources/valid/PresentationRequestMocks';

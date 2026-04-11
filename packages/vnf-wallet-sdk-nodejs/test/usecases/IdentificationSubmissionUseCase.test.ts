@@ -1,6 +1,5 @@
 import { describe, test, mock } from 'node:test';
 import { expect } from 'expect';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import JwtServiceRepositoryImpl from '../../src/impl/data/repositories/JwtServiceRepositoryImpl';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';
 import { JwtVerifyServiceMock } from '../infrastructure/resources/jwt/JwtVerifyServiceMock';
@@ -17,6 +16,8 @@ import IdentificationSubmissionUseCaseImpl from '../../src/impl/data/usecases/Id
 import VCLIdentificationSubmission from '../../src/api/entities/VCLIdentificationSubmission';
 import { IdentificationSubmissionMocks } from '../infrastructure/resources/valid/IdentificationSubmissionMocks';
 import VCLJwtDescriptor from '../../src/api/entities/VCLJwtDescriptor';
+import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import { mockAbsolutePost, useNockLifecycle } from '../utils/nock';
 
 describe('PresentationSubmission Tests', () => {
     const jwtSignServiceMock = new JwtSignServiceMock();
@@ -33,9 +34,7 @@ describe('PresentationSubmission Tests', () => {
         jwtVerifyServiceMock,
     );
     const submissionRepository = new SubmissionRepositoryImpl(
-        new NetworkServiceSuccess(
-            PresentationSubmissionMocks.PresentationSubmissionResultJson,
-        ),
+        new NetworkServiceImpl(),
     );
     const subject = new IdentificationSubmissionUseCaseImpl(
         submissionRepository,
@@ -76,6 +75,8 @@ describe('PresentationSubmission Tests', () => {
             identificationSubmission.submissionId,
         );
 
+    useNockLifecycle();
+
     test('testIdentificationSubmissionDidJwk', async () => {
         expect(
             IdentificationSubmissionMocks.CredentialManifest.didJwk,
@@ -86,6 +87,16 @@ describe('PresentationSubmission Tests', () => {
     });
 
     test('testIdentificationSubmissionSuccess', async () => {
+        const scope = mockAbsolutePost(
+            identificationSubmission.submitUri,
+            identificationSubmission.generateRequestBody(
+                VCLJwt.fromEncodedJwt(
+                    PresentationSubmissionMocks.JwtEncodedSubmission,
+                ),
+            ),
+            PresentationSubmissionMocks.PresentationSubmissionResultJson,
+        );
+
         const identificationSubmissionResult = await subject.submit(
             identificationSubmission,
         );
@@ -107,5 +118,6 @@ describe('PresentationSubmission Tests', () => {
         expect(identificationSubmissionResult).toEqual(
             expectedPresentationSubmissionResult,
         );
+        expect(scope.isDone()).toBeTruthy();
     });
 });
