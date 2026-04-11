@@ -4080,13 +4080,21 @@
     lodash "~4.17.15"
     pino "~8.17.1"
 
-"@spencejs/spence-events@^0.10.2", "@spencejs/spence-events@~0.10.2":
+"@spencejs/spence-events@^0.10.2":
   version "0.10.2"
   resolved "https://registry.npmjs.org/@spencejs/spence-events/-/spence-events-0.10.2.tgz#6006f258d800a1b794246ad831e1a5978b1fc972"
   integrity sha512-4frk0vfI+JHI9GAW3QmKIFko4hNpT9wCZY0oCX9PbUkJ69dbHdAOhwSgbBcUcpqlbXwOz9N9kjMwgc6Uw/5uaw==
   dependencies:
     lodash "~4.17.15"
     uuid "~9.0.0"
+
+"@spencejs/spence-events@^1.0.0", "@spencejs/spence-events@~1.0.0":
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/@spencejs/spence-events/-/spence-events-1.0.0.tgz#12024b7b623f373d4706b55dfcc781b4cc2882b7"
+  integrity sha512-gULt5GOhYvJCpcoqzck8EBtsBe/vnhkeKc96vIbOE3yb4i7V2bNP6N39CnYpPWuiwqnEaZwdfIIEkpZRK0iRMA==
+  dependencies:
+    lodash "^4.18.1"
+    uuid "^11.1.0"
 
 "@spencejs/spence-factories@0.10.2", "@spencejs/spence-factories@^0.10.2":
   version "0.10.2"
@@ -9379,7 +9387,7 @@ lodash.zip@^4.2.0:
   resolved "https://registry.npmjs.org/lodash.zip/-/lodash.zip-4.2.0.tgz#ec6662e4896408ed4ab6c542a3990b72cc080020"
   integrity sha512-C7IOaBBK/0gMORRBd8OETNx3kmOkgIWIPvyDpZSCTwUrpYmgZwJkjZeOD8ww4xbOUOs4/attY+pciKvadNfFbg==
 
-lodash@4.18.1, lodash@>=4.17.21, lodash@^4.17.11, lodash@^4.17.21, lodash@~4.18.0:
+lodash@4.18.1, lodash@>=4.17.21, lodash@^4.17.11, lodash@^4.17.21, lodash@^4.18.1, lodash@~4.18.0:
   version "4.18.1"
   resolved "https://registry.npmjs.org/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
   integrity sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==
