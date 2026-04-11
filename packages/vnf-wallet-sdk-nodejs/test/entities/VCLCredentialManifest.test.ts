@@ -1,12 +1,8 @@
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
-import {
-    VCLCredentialManifest,
-    VCLDeepLink,
-    VCLJwt,
-    VCLVerifiedProfile,
-} from '../../src';
+import { VCLCredentialManifest, VCLJwt, VCLVerifiedProfile } from '../../src';
 import { CredentialManifestMocks } from '../infrastructure/resources/valid/CredentialManifestMocks';
+import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 
 describe('VCLCredentialManifest Tests', () => {
@@ -14,7 +10,7 @@ describe('VCLCredentialManifest Tests', () => {
         VCLJwt.fromEncodedJwt(CredentialManifestMocks.JwtCredentialManifest1),
         null,
         new VCLVerifiedProfile({}),
-        new VCLDeepLink(''),
+        DeepLinkMocks.CredentialManifestDeepLinkMainNet,
         DidJwkMocks.DidJwk,
     );
     test('VCLCredentialManifest props', () => {

@@ -15,6 +15,7 @@ import { VCLErrorCode, VCLJwt, VCLOffers, VCLToken } from '../../src';
 import { GenerateOffersMocks } from '../infrastructure/resources/valid/GenerateOffersMocks';
 import OffersByDeepLinkVerifier from '../../src/impl/domain/verifiers/OffersByDeepLinkVerifier';
 import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 import { mockResolveDid, useNockLifecycle } from '../utils/nock';
 
 describe('OffersByDeepLinkVerifierTest', () => {
@@ -28,7 +29,7 @@ describe('OffersByDeepLinkVerifierTest', () => {
             GenerateOffersMocks.RealOffersJson[VCLOffers.CodingKeys.KeyOffers],
         ),
         0,
-        new VCLToken(''),
+        CommonMocks.Token,
         '',
     );
 

@@ -2,12 +2,12 @@ import { before, describe, test } from 'node:test';
 import { expect } from 'expect';
 import {
     VCLCredentialManifest,
-    VCLDeepLink,
     VCLFinalizeOffersDescriptor,
     VCLJwt,
     VCLVerifiedProfile,
 } from '../../src';
 import { CredentialManifestMocks } from '../infrastructure/resources/valid/CredentialManifestMocks';
+import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 import { VerifiedProfileMocks } from '../infrastructure/resources/valid/VerifiedProfileMocks';
 
@@ -37,7 +37,7 @@ describe('VCLCredentialManifest Tests', () => {
             new VCLVerifiedProfile(
                 JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1),
             ),
-            new VCLDeepLink(''),
+            DeepLinkMocks.CredentialManifestDeepLinkMainNet,
             DidJwkMocks.DidJwk,
         );
         subject = new VCLFinalizeOffersDescriptor(

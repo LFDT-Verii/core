@@ -1,28 +1,29 @@
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import { VCLOffers, VCLToken } from '../../src';
+import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 import { OffersMocks } from '../infrastructure/resources/valid/OffersMocks';
 
 describe('VCLOffers tests', () => {
     const subject1 = VCLOffers.fromPayload(
         JSON.parse(OffersMocks.offersJsonArrayStr),
         123,
-        new VCLToken('some token'),
+        CommonMocks.Token,
     );
     const subject2 = VCLOffers.fromPayload(
         JSON.parse(OffersMocks.offersJsonObjectStr),
         123,
-        new VCLToken('some token'),
+        CommonMocks.Token,
     );
     const subject3 = VCLOffers.fromPayload(
         JSON.parse(OffersMocks.offersJsonEmptyArrayStr),
         123,
-        new VCLToken('some token'),
+        CommonMocks.Token,
     );
     const subject4 = VCLOffers.fromPayload(
         JSON.parse(OffersMocks.offersJsonEmptyObjectStr),
         123,
-        new VCLToken('some token'),
+        CommonMocks.Token,
     );
 
     test('VCLOffers from array test', async () => {
@@ -75,7 +76,7 @@ describe('VCLOffers tests', () => {
 
     const testExpectations = (subject: VCLOffers) => {
         expect(subject.responseCode).toEqual(123);
-        expect(subject.sessionToken).toStrictEqual(new VCLToken('some token'));
+        expect(subject.sessionToken).toStrictEqual(CommonMocks.Token);
         expect(subject.all.length).toEqual(11);
     };
 });
