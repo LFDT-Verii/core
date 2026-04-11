@@ -6105,10 +6105,10 @@ cosmiconfig@^9.0.1:
     js-yaml "^4.1.0"
     parse-json "^5.2.0"
 
-country-codes-list@1.6.12:
-  version "1.6.12"
-  resolved "https://registry.npmjs.org/country-codes-list/-/country-codes-list-1.6.12.tgz#1a0f29b00031eb2e5a409927fe92a68ba8902f21"
-  integrity sha512-YWrbBkUvWXRV9K7/0HQ8himHeXemjv3Bo/3y/0uoZdmoXJCstqXuMjRLRYZZqwG9tOVdIHoZa0qUzm0eZu1ApA==
+country-codes-list@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/country-codes-list/-/country-codes-list-2.0.0.tgz#162c49028a0a9fe64503ed146980e0bb8529c170"
+  integrity sha512-KZqq/LBdCD76hQCa6nOx0bA/nIjYly1OtV8+Bbt/4SW+mJEqGk7oZHjUj7PRrV0gXJJKs6Tv2cIntFdofBByvA==
 
 create-error@^0.3.1:
   version "0.3.1"
