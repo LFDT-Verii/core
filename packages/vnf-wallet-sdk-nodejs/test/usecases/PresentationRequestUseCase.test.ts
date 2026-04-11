@@ -100,7 +100,14 @@ describe('PresentationRequestUseCase Tests', () => {
             expect(true).toEqual(false);
         } catch (error: any) {
             expect(error).toBeInstanceOf(VCLError);
-            expect(error.errorCode).toEqual(VCLErrorCode.SdkError.toString());
+            expect(error).toEqual(
+                expect.objectContaining({
+                    name: 'VCLError',
+                    errorCode: VCLErrorCode.SdkError.toString(),
+                    requestId: null,
+                    statusCode: null,
+                }),
+            );
         }
 
         expect(requestScope.isDone()).toBeTruthy();
