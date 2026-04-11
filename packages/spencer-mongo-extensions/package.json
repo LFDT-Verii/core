@@ -23,7 +23,7 @@
     "mongodb": "7.1.1"
   },
   "devDependencies": {
-    "@spencejs/spence-config": "0.10.2",
+    "@spencejs/spence-config": "1.0.0",
     "@verii/tests-helpers": "0.5.0-build",
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.0.1",

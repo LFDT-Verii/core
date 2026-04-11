@@ -25,7 +25,7 @@
     "mongodb": "7.1.1"
   },
   "devDependencies": {
-    "@spencejs/spence-config": "0.10.2",
+    "@spencejs/spence-config": "1.0.0",
     "@typescript-eslint/eslint-plugin": "8.57.0",
     "@typescript-eslint/parser": "8.57.0",
     "@verii/test-regexes": "0.5.0-build",
