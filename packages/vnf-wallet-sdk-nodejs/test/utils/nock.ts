@@ -31,6 +31,19 @@ const withProtocolHeaders = (
     return scope;
 };
 
+const withHeaders = (
+    origin: string,
+    headers: Record<string, HeaderValue> = {},
+) => {
+    let scope = nock(origin);
+
+    for (const [key, value] of Object.entries(headers)) {
+        scope = scope.matchHeader(key, value);
+    }
+
+    return scope;
+};
+
 export const useNockLifecycle = () => {
     before(() => {
         nock.disableNetConnect();
@@ -81,7 +94,7 @@ export const mockAbsoluteGet = (
     const { origin, pathname, search } = new URL(requestUrl);
 
     return reply(
-        withProtocolHeaders(origin, headers).get(`${pathname}${search}`),
+        withHeaders(origin, headers).get(`${pathname}${search}`),
         statusCode,
         replyBody,
         replyHeaders,
@@ -101,10 +114,7 @@ export const mockAbsolutePost = (
     const { origin, pathname, search } = new URL(requestUrl);
 
     return reply(
-        withProtocolHeaders(origin, headers).post(
-            `${pathname}${search}`,
-            requestBody,
-        ),
+        withHeaders(origin, headers).post(`${pathname}${search}`, requestBody),
         statusCode,
         replyBody,
         replyHeaders,
@@ -123,16 +133,36 @@ const reply = (
         return scope.reply(statusCode, replyBody, replyHeaders);
     }
 
-    return scope.reply(function capture(uri: string, body: unknown) {
-        captureRequest({
-            body,
-            headers: this.req.headers,
-            method: this.req.method,
-            url: uri,
-        });
+    return scope.reply(
+        statusCode,
+        async (request: Request) => {
+            const requestUrl = new URL(request.url);
 
-        return [statusCode, replyBody, replyHeaders];
-    });
+            captureRequest({
+                body: await parseBody(request),
+                headers: Object.fromEntries(request.headers.entries()),
+                method: request.method,
+                url: `${requestUrl.pathname}${requestUrl.search}`,
+            });
+
+            return replyBody;
+        },
+        replyHeaders,
+    );
+};
+
+const parseBody = async (request: Request): Promise<unknown> => {
+    const body = await request.clone().text();
+
+    if (!body) {
+        return undefined;
+    }
+
+    try {
+        return JSON.parse(body);
+    } catch {
+        return body;
+    }
 };
 
 export const mockResolveDid = (
