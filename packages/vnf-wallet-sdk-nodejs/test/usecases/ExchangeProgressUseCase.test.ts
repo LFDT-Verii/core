@@ -38,7 +38,7 @@ describe('ExchangeProgressUseCase', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('throws an sdk error for an invalid exchange progress response', async () => {
+    test('returns an empty exchange for an invalid exchange progress response', async () => {
         const scope = mockAbsoluteGet(
             `${exchangeDescriptor.processUri}?exchange_id=${exchangeDescriptor.exchangeId}`,
             '',
