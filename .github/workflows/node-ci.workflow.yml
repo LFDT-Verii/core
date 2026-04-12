@@ -172,7 +172,7 @@ jobs:
         echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Lint Report
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: lint${{ env.ARTIFACT_NAME }}
         path: |
@@ -281,7 +281,7 @@ jobs:
         echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Test Report
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: test${{ env.ARTIFACT_NAME }}
         path: |
@@ -289,7 +289,7 @@ jobs:
           !node_modules/**/test-results.junit.xml
       if: '!cancelled()'
     - name: Upload Codecov Report
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: coverage${{ env.ARTIFACT_NAME }}
         path: |
