@@ -444,8 +444,6 @@ describe('FinalizeOffersUseCase Tests', () => {
             get data() {
                 return data as any;
             },
-            initialize: (): Promise<VCLError> => {
-                throw new Error('Method not implemented.');
-            },
+            initialize: (): Promise<VCLError | null> => Promise.resolve(null),
         }) as CredentialTypesModel;
 });
