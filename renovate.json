@@ -84,6 +84,12 @@
       "automerge": false
     },
     {
+      "groupName": "group: spence packages",
+      "matchPackageNames": [
+        "@spencejs/{/,}**"
+      ]
+    },
+    {
       "matchPackageNames": [
         "twilio{/,}**",
         "ethers{/,}**",
