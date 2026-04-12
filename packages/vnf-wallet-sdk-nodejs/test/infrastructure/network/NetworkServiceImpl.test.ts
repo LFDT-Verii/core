@@ -1,0 +1,219 @@
+/**
+ * Copyright 2022 Velocity Career Labs inc.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { beforeEach, describe, test } from 'node:test';
+import { expect } from 'expect';
+import NetworkServiceImpl from '../../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import Request from '../../../src/impl/data/infrastructure/network/Request';
+import { HttpMethod } from '../../../src/impl/data/infrastructure/network/HttpMethod';
+import {
+    mockAbsoluteGet,
+    mockAbsolutePost,
+    useNockLifecycle,
+} from '../../utils/nock';
+
+const origin = 'https://network-service.test';
+const textPlain = 'text/plain';
+const jsonContentType = Request.ContentTypeApplicationJson;
+
+describe('NetworkServiceImpl integration', () => {
+    const subject = new NetworkServiceImpl();
+
+    useNockLifecycle();
+    beforeEach(() => undefined);
+
+    test('sends GET requests with cache-control and parses json responses', async () => {
+        const scope = mockAbsoluteGet(
+            `${origin}/json?mode=get`,
+            { hello: 'world' },
+            200,
+            {
+                accept: jsonContentType,
+                'cache-control': 'public, max-age=86400',
+                'x-trace-id': 'GET-TRACE',
+            },
+            { 'content-type': jsonContentType },
+        );
+
+        const response = await subject.sendRequest(
+            new Request(`${origin}/json?mode=get`, HttpMethod.GET, undefined, {
+                accept: jsonContentType,
+                'x-trace-id': 'GET-TRACE',
+            }),
+        );
+
+        expect(response.code).toEqual(200);
+        expect(response.payload).toEqual({ hello: 'world' });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('parses text responses for GET requests', async () => {
+        const scope = mockAbsoluteGet(
+            `${origin}/text`,
+            'plain response body',
+            200,
+            {},
+            { 'content-type': textPlain },
+        );
+
+        const response = await subject.sendRequest(
+            new Request(`${origin}/text`, HttpMethod.GET, undefined, {}, false),
+        );
+
+        expect(response.code).toEqual(200);
+        expect(response.payload).toEqual('plain response body');
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('generates a short x-trace-id when one is not provided', async () => {
+        const scope = mockAbsoluteGet(
+            `${origin}/generated-trace-id`,
+            { ok: true },
+            200,
+            {
+                'x-trace-id': /^vnf-sdk_[A-Za-z0-9_-]{8}$/,
+            },
+            { 'content-type': jsonContentType },
+        );
+
+        const response = await subject.sendRequest(
+            new Request(`${origin}/generated-trace-id`, HttpMethod.GET),
+        );
+
+        expect(response.code).toEqual(200);
+        expect(response.payload).toEqual({ ok: true });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('sends JSON POST bodies with application/json content type', async () => {
+        const scope = mockAbsolutePost(
+            `${origin}/submit`,
+            { foo: 'bar', count: 2 },
+            { accepted: true },
+            200,
+            {
+                'cache-control': 'public, max-age=86400',
+                'content-type': new RegExp(`^${jsonContentType}`),
+                'x-request-id': 'POST-JSON',
+            },
+            { 'content-type': jsonContentType },
+        );
+
+        const response = await subject.sendRequest(
+            new Request(
+                `${origin}/submit`,
+                HttpMethod.POST,
+                { foo: 'bar', count: 2 },
+                { 'x-request-id': 'POST-JSON' },
+                true,
+                jsonContentType,
+            ),
+        );
+
+        expect(response.code).toEqual(200);
+        expect(response.payload).toEqual({ accepted: true });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('sends text POST bodies with text/plain content type and parses text responses', async () => {
+        const scope = mockAbsolutePost(
+            `${origin}/plain-text`,
+            'PING',
+            'PONG',
+            200,
+            {
+                'content-type': textPlain,
+                'x-format': 'plain-text',
+            },
+            { 'content-type': textPlain },
+        );
+
+        const response = await subject.sendRequest(
+            new Request(
+                `${origin}/plain-text`,
+                HttpMethod.POST,
+                'PING',
+                { 'x-format': 'plain-text' },
+                false,
+                textPlain,
+            ),
+        );
+
+        expect(response.code).toEqual(200);
+        expect(response.payload).toEqual('PONG');
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('propagates non-2xx response bodies', async () => {
+        const scope = mockAbsolutePost(
+            `${origin}/errors`,
+            { invalid: true },
+            { error: 'bad request' },
+            400,
+            {
+                'cache-control': 'public, max-age=86400',
+                'content-type': new RegExp(`^${jsonContentType}`),
+            },
+            { 'content-type': jsonContentType },
+        );
+
+        await expect(
+            subject.sendRequest(
+                new Request(`${origin}/errors`, HttpMethod.POST, {
+                    invalid: true,
+                }),
+            ),
+        ).rejects.toEqual({ error: 'bad request' });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('propagates 404 response bodies for GET requests', async () => {
+        const scope = mockAbsoluteGet(
+            `${origin}/missing`,
+            { error: 'not found' },
+            404,
+            {},
+            { 'content-type': jsonContentType },
+        );
+
+        await expect(
+            subject.sendRequest(
+                new Request(`${origin}/missing`, HttpMethod.GET, undefined),
+            ),
+        ).rejects.toEqual({ error: 'not found' });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('propagates 500 response bodies for GET requests', async () => {
+        const scope = mockAbsoluteGet(
+            `${origin}/internal-error`,
+            { error: 'server error' },
+            500,
+            {},
+            { 'content-type': jsonContentType },
+        );
+
+        await expect(
+            subject.sendRequest(
+                new Request(
+                    `${origin}/internal-error`,
+                    HttpMethod.GET,
+                    undefined,
+                ),
+            ),
+        ).rejects.toEqual({ error: 'server error' });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('propagates errors when no HTTP response is available', async () => {
+        await expect(
+            subject.sendRequest(
+                new Request(`${origin}/unmatched`, HttpMethod.GET, undefined),
+            ),
+        ).rejects.toMatchObject({
+            code: expect.any(String),
+        });
+    });
+});

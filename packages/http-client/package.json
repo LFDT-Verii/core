@@ -4,6 +4,7 @@
   "description": "HTTP client for Verii network",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
+  "types": "index.d.ts",
   "publishConfig": {
     "access": "public"
   },
