@@ -1,5 +1,6 @@
 import { initHttpClient } from '@verii/http-client';
-import type { HttpResponse } from '@verii/http-client';
+import type { HttpClientInitOptions, HttpResponse } from '@verii/http-client';
+import { nanoid } from 'nanoid';
 import { Nullish } from '../../../../api/VCLTypes';
 import VCLError from '../../../../api/entities/error/VCLError';
 import NetworkService from '../../../domain/infrastructure/network/NetworkService';
@@ -9,49 +10,33 @@ import Response from './Response';
 import Request from './Request';
 import { HttpMethod } from './HttpMethod';
 
-const createHttpClient = initHttpClient({});
+type NetworkServiceImplOptions = Pick<HttpClientInitOptions, 'isTest'>;
+const TRACE_ID_HEADER = 'x-trace-id';
+const TRACE_ID_PREFIX = 'vnf-sdk_';
 
 export default class NetworkServiceImpl implements NetworkService {
+    private readonly createHttpClient;
+
+    constructor(options: NetworkServiceImplOptions = {}) {
+        this.createHttpClient = initHttpClient({
+            isTest: process.env.NODE_ENV === 'test',
+            traceIdHeader: TRACE_ID_HEADER,
+            ...options,
+        });
+    }
+
     async sendRequestRaw(request: Request): Promise<Response> {
         const MAX_AGE = 60 * 60 * 24; // 24 hours
 
-        const httpClient = createHttpClient({
-            log: VCLLog,
-            traceId: request.endpoint,
-        });
-
-        let commonHeaders = request.headers;
-        if (request.useCaches) {
-            commonHeaders = {
-                ...request.headers,
-                'Cache-Control': `public, max-age=${MAX_AGE}`,
-            };
-        }
+        const commonHeaders = buildRequestHeaders(request, MAX_AGE);
 
         try {
             switch (request.method) {
-                case HttpMethod.GET: {
-                    const response = await httpClient.get(request.endpoint, {
-                        headers: commonHeaders,
-                    });
-                    return this.parseResponse(response);
-                }
+                case HttpMethod.GET:
+                    return await this.sendGetRequest(request, commonHeaders);
 
-                case HttpMethod.POST: {
-                    const response = await httpClient.post(
-                        request.endpoint,
-                        request.body,
-                        {
-                            headers: {
-                                ...commonHeaders,
-                                ...(request.contentType == null
-                                    ? {}
-                                    : { 'content-type': request.contentType }),
-                            },
-                        },
-                    );
-                    return this.parseResponse(response);
-                }
+                case HttpMethod.POST:
+                    return await this.sendPostRequest(request, commonHeaders);
 
                 default:
                     throw new Error(
@@ -74,6 +59,41 @@ export default class NetworkServiceImpl implements NetworkService {
 
     logRequest(request: Request) {
         VCLLog.info(request, 'Network request');
+    }
+
+    private async sendGetRequest(
+        request: Request,
+        headers: { [key: string]: string },
+    ): Promise<Response> {
+        const httpClient = this.createHttpClient({
+            log: VCLLog,
+            traceId: request.headers?.[TRACE_ID_HEADER] ?? generateTraceId(),
+        });
+
+        const response = await httpClient.get(request.endpoint, {
+            headers,
+        });
+        return this.parseResponse(response);
+    }
+
+    private async sendPostRequest(
+        request: Request,
+        headers: { [key: string]: string },
+    ): Promise<Response> {
+        const httpClient = this.createHttpClient({
+            log: VCLLog,
+            traceId: request.headers?.[TRACE_ID_HEADER] ?? generateTraceId(),
+        });
+
+        const response = await httpClient.post(request.endpoint, request.body, {
+            headers: {
+                ...headers,
+                ...(request.contentType == null
+                    ? {}
+                    : { 'content-type': request.contentType }),
+            },
+        });
+        return this.parseResponse(response);
     }
 
     private async parseResponse(response: HttpResponse): Promise<Response> {
@@ -179,3 +199,13 @@ export default class NetworkServiceImpl implements NetworkService {
         return Array.isArray(value) ? value.join(',') : (value ?? undefined);
     }
 }
+
+const buildRequestHeaders = (request: Request, maxAge: number) =>
+    request.useCaches
+        ? {
+              ...request.headers,
+              'Cache-Control': `public, max-age=${maxAge}`,
+          }
+        : request.headers;
+
+const generateTraceId = () => `${TRACE_ID_PREFIX}${nanoid(8)}`;
