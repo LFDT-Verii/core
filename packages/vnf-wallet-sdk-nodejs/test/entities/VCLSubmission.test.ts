@@ -46,7 +46,7 @@ const createExpectedPayload = ({
     },
 });
 
-describe('VCLSubmission Tests', () => {
+describe('VCLSubmission', () => {
     let subjectPresentationSubmission: VCLSubmission;
 
     let subjectIdentificationSubmission: VCLSubmission;
@@ -62,7 +62,7 @@ describe('VCLSubmission Tests', () => {
         );
     });
 
-    test('testPayload', () => {
+    test('exposes the submission payload', () => {
         expect(
             subjectPresentationSubmission.generatePayload('inspection iss'),
         ).toEqual(
@@ -91,7 +91,7 @@ describe('VCLSubmission Tests', () => {
         );
     });
 
-    test('testRequestBody', () => {
+    test('generates the submission request body', () => {
         expect(
             subjectPresentationSubmission.generateRequestBody(JwtMocks.JWT),
         ).toEqual({

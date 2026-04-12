@@ -1,17 +1,17 @@
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
+import VCLError from '../../src/api/entities/error/VCLError';
 import PresentationRequestUseCaseImpl from '../../src/impl/data/usecases/PresentationRequestUseCaseImpl';
 import PresentationRequestRepositoryImpl from '../../src/impl/data/repositories/PresentationRequestRepositoryImpl';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { PresentationRequestMocks } from '../infrastructure/resources/valid/PresentationRequestMocks';
 import JwtServiceRepositoryImpl from '../../src/impl/data/repositories/JwtServiceRepositoryImpl';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';
 import { JwtVerifyServiceMock } from '../infrastructure/resources/jwt/JwtVerifyServiceMock';
 import {
     VCLErrorCode,
+    VCLPresentationRequest,
     VCLPresentationRequestDescriptor,
     VCLPushDelegate,
-    VCLToken,
     VCLVerifiedProfile,
 } from '../../src';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
@@ -20,27 +20,28 @@ import PresentationRequestUseCase from '../../src/impl/domain/usecases/Presentat
 import { PresentationRequestByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
 import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
+import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import { CommonMocks } from '../infrastructure/resources/CommonMocks';
+import {
+    mockAbsoluteGet,
+    mockRegistrarGet,
+    mockResolveDid,
+    useNockLifecycle,
+} from '../utils/nock';
 
-describe('PresentationRequestUseCase Tests', () => {
-    let subject1: PresentationRequestUseCase;
-    let subject2: PresentationRequestUseCase;
-
-    test('testGetPresentationRequestSuccess', async () => {
-        const pushUrl = 'push_url';
-        const pushToken = 'push_token';
-        subject1 = new PresentationRequestUseCaseImpl(
-            new PresentationRequestRepositoryImpl(
-                new NetworkServiceSuccess(
-                    JSON.parse(
-                        PresentationRequestMocks.EncodedPresentationRequestResponse,
-                    ),
-                ),
-            ),
-            new ResolveDidDocumentRepositoryImpl(
-                new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentMock.payload,
-                ),
-            ),
+describe('PresentationRequestUseCase', () => {
+    const pushUrl = 'push_url';
+    const pushToken = 'push_token';
+    const presentationRequestDescriptor = new VCLPresentationRequestDescriptor(
+        DeepLinkMocks.PresentationRequestDeepLinkDevNet,
+        new VCLPushDelegate(pushUrl, pushToken),
+        DidJwkMocks.DidJwk,
+        CommonMocks.Token,
+    );
+    const subject: PresentationRequestUseCase =
+        new PresentationRequestUseCaseImpl(
+            new PresentationRequestRepositoryImpl(new NetworkServiceImpl()),
+            new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
             new JwtServiceRepositoryImpl(
                 new JwtSignServiceMock(''),
                 new JwtVerifyServiceMock(),
@@ -48,57 +49,68 @@ describe('PresentationRequestUseCase Tests', () => {
             new PresentationRequestByDeepLinkVerifierImpl(),
         );
 
-        const presentationRequest = await subject1.getPresentationRequest(
-            new VCLPresentationRequestDescriptor(
-                DeepLinkMocks.PresentationRequestDeepLinkDevNet,
-                new VCLPushDelegate(pushUrl, pushToken),
-                DidJwkMocks.DidJwk,
-                new VCLToken('some token'),
+    useNockLifecycle();
+
+    test('returns a presentation request', async () => {
+        const verifiedProfile = new VCLVerifiedProfile({});
+        const requestScope = mockAbsoluteGet(
+            presentationRequestDescriptor.endpoint!,
+            JSON.parse(
+                PresentationRequestMocks.EncodedPresentationRequestResponse,
             ),
-            new VCLVerifiedProfile({}),
         );
-        expect(presentationRequest.jwt).toStrictEqual(
+        const didScope = mockResolveDid(
+            PresentationRequestMocks.PresentationRequest.iss,
+            DidDocumentMocks.DidDocumentMock.payload,
+        );
+
+        const presentationRequest = await subject.getPresentationRequest(
+            presentationRequestDescriptor,
+            verifiedProfile,
+        );
+        const expectedPresentationRequest = new VCLPresentationRequest(
             PresentationRequestMocks.PresentationRequestJwt,
+            verifiedProfile,
+            DeepLinkMocks.PresentationRequestDeepLinkDevNet,
+            new VCLPushDelegate(pushUrl, pushToken),
+            DidJwkMocks.DidJwk,
+            CommonMocks.Token,
         );
-        expect(presentationRequest.pushDelegate?.pushUrl).toEqual(pushUrl);
-        expect(presentationRequest.pushDelegate?.pushToken).toEqual(pushToken);
-        expect(presentationRequest.didJwk).toStrictEqual(DidJwkMocks.DidJwk);
-        expect(presentationRequest.remoteCryptoServicesToken?.value).toEqual(
-            'some token',
-        );
+
+        expect(presentationRequest).toEqual(expectedPresentationRequest);
+        expect(requestScope.isDone()).toBeTruthy();
+        expect(didScope.isDone()).toBeTruthy();
     });
 
-    test('testGetPresentationRequestError', async () => {
-        const pushUrl = 'push_url';
-        const pushToken = 'push_token';
-        subject2 = new PresentationRequestUseCaseImpl(
-            new PresentationRequestRepositoryImpl(
-                new NetworkServiceSuccess(JSON.parse('{"wrong": "payload"}')),
-            ),
-            new ResolveDidDocumentRepositoryImpl(
-                new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentMock.payload,
-                ),
-            ),
-            new JwtServiceRepositoryImpl(
-                new JwtSignServiceMock(''),
-                new JwtVerifyServiceMock(),
-            ),
-            new PresentationRequestByDeepLinkVerifierImpl(),
+    test('throws an sdk error for an invalid presentation request response', async () => {
+        const requestScope = mockAbsoluteGet(
+            presentationRequestDescriptor.endpoint!,
+            { wrong: 'payload' },
         );
+        const didScope = mockRegistrarGet(
+            '/api/v0.6/resolve-did/',
+            DidDocumentMocks.DidDocumentMock.payload,
+        );
+
         try {
-            await subject2.getPresentationRequest(
-                new VCLPresentationRequestDescriptor(
-                    DeepLinkMocks.PresentationRequestDeepLinkDevNet,
-                    new VCLPushDelegate(pushUrl, pushToken),
-                    DidJwkMocks.DidJwk,
-                    new VCLToken('some token'),
-                ),
+            await subject.getPresentationRequest(
+                presentationRequestDescriptor,
                 new VCLVerifiedProfile({}),
             );
             expect(true).toEqual(false);
         } catch (error: any) {
-            expect(error.errorCode).toEqual(VCLErrorCode.SdkError.toString());
+            expect(error).toBeInstanceOf(VCLError);
+            expect(error).toEqual(
+                expect.objectContaining({
+                    name: 'VCLError',
+                    errorCode: VCLErrorCode.SdkError.toString(),
+                    requestId: null,
+                    statusCode: null,
+                }),
+            );
         }
+
+        expect(requestScope.isDone()).toBeTruthy();
+        expect(didScope.isDone()).toBeTruthy();
     });
 });

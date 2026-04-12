@@ -4,13 +4,15 @@ import { expect } from 'expect';
 import VCLDidJwk from '../../src/api/entities/VCLDidJwk';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 
-describe('VCLDidJwk Tests', () => {
+describe('VCLDidJwk', () => {
     let subject: VCLDidJwk;
     const expectedPayload = DidJwkMocks.DidJwkJson;
-    const expectedDid =
-        'did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6InI5ZnlhNTJJbG1UbzN5YlMwd19HZWZlUV9SWDJFSF9ISm1TV3FZWU8ySlkiLCJ5IjoicFFUUmE3R2txYzVrajZvZGVNcXBnVjVUNExqYlphNEY1S1R1MkpEclduYyJ9';
-    const expectedKid =
-        'did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6InI5ZnlhNTJJbG1UbzN5YlMwd19HZWZlUV9SWDJFSF9ISm1TV3FZWU8ySlkiLCJ5IjoicFFUUmE3R2txYzVrajZvZGVNcXBnVjVUNExqYlphNEY1S1R1MkpEclduYyJ9#0';
+    const expectedDid = [
+        'did:jwk:eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6InI5ZnlhNTJJbG1U',
+        'bzN5YlMwd19HZWZlUV9SWDJFSF9ISm1TV3FZWU8ySlkiLCJ5IjoicFFUUmE3',
+        'R2txYzVrajZvZGVNcXBnVjVUNExqYlphNEY1S1R1MkpEclduYyJ9',
+    ].join('');
+    const expectedKid = `${expectedDid}#0`;
     const expectedKeyId = '6630f0a67b097c289711f583';
     const expectedPublicJwk = {
         kty: 'EC',
@@ -19,7 +21,7 @@ describe('VCLDidJwk Tests', () => {
         x: 'r9fya52IlmTo3ybS0w_GefeQ_RX2EH_HJmSWqYYO2JY',
     };
 
-    test('testPublicJwkFromStr', () => {
+    test('creates a public JWK from a string', () => {
         subject = VCLDidJwk.fromString(DidJwkMocks.DidJwkStr);
 
         expect(subject.payload).toStrictEqual(expectedPayload);
@@ -29,7 +31,7 @@ describe('VCLDidJwk Tests', () => {
         expect(subject.publicJwk.valueJson).toStrictEqual(expectedPublicJwk);
     });
 
-    test('testPublicJwkFromJson', () => {
+    test('creates a public JWK from json', () => {
         subject = VCLDidJwk.fromJSON(DidJwkMocks.DidJwkJson);
 
         expect(subject.payload).toStrictEqual(expectedPayload);

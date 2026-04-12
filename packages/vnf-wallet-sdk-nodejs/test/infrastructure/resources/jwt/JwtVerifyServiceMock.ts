@@ -7,8 +7,8 @@ import {
 
 export class JwtVerifyServiceMock implements VCLJwtVerifyService {
     async verify(
-        jwt: VCLJwt,
-        publicJwk: Nullish<VCLPublicJwk>,
+        _jwt: VCLJwt,
+        _publicJwk: Nullish<VCLPublicJwk>,
     ): Promise<boolean> {
         return true;
     }

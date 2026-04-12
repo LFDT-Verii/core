@@ -1,10 +1,10 @@
 import {
-    VCLDeepLink,
     VCLJwt,
     VCLPresentationRequest,
     VCLVerifiedProfile,
 } from '../../../../src';
 import { DidJwkMocks } from './DidJwkMocks';
+import { DeepLinkMocks } from './DeepLinkMocks';
 
 export class PresentationRequestMocks {
     static readonly EncodedPresentationRequest =
@@ -29,7 +29,7 @@ export class PresentationRequestMocks {
     static readonly PresentationRequest = new VCLPresentationRequest(
         PresentationRequestMocks.PresentationRequestJwt,
         new VCLVerifiedProfile({}),
-        new VCLDeepLink(''),
+        DeepLinkMocks.PresentationRequestDeepLinkDevNet,
         null,
         DidJwkMocks.DidJwk,
     );
@@ -37,7 +37,7 @@ export class PresentationRequestMocks {
     static readonly PresentationRequestFeed = new VCLPresentationRequest(
         PresentationRequestMocks.PresentationRequestFeedJwt,
         new VCLVerifiedProfile({}),
-        new VCLDeepLink(''),
+        DeepLinkMocks.PresentationRequestDeepLinkDevNet,
         null,
         DidJwkMocks.DidJwk,
     );

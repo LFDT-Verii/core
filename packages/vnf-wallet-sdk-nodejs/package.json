@@ -16,8 +16,8 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "prepublishOnly": "tsc --declaration",
-    "test": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=./setup-tests.js --test --test-reporter=spec --test-reporter-destination=stdout '**/*.test.ts' '**/*.test.tsx'",
-    "test:ci": "node --enable-source-maps --import=global-jsdom/register --import=tsx --import=./setup-tests.js --test --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info '**/*.test.ts' '**/*.test.tsx'"
+    "test": "node --enable-source-maps --import=tsx --test --test-reporter=spec --test-reporter-destination=stdout '**/*.test.ts' '**/*.test.tsx'",
+    "test:ci": "node --enable-source-maps --import=tsx --test --experimental-test-coverage --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info '**/*.test.ts' '**/*.test.tsx'"
   },
   "engines": {
     "node": ">= 22.22.0"
@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@verii/test-regexes": "^0.5.0-build",
-    "@testing-library/react": "16.3.2",
     "@types/node": "24.12.2",
     "eslint": "9.39.4",
     "eslint-config-prettier": "10.1.8",
@@ -45,7 +44,7 @@
     "eslint-plugin-prettier": "5.5.5",
     "eslint-plugin-unused-imports": "4.4.1",
     "expect": "30.3.0",
-    "global-jsdom": "28.0.0",
+    "nock": "15.0.0-beta.10",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
   },

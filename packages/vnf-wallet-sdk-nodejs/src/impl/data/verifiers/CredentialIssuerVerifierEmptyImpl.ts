@@ -10,8 +10,8 @@ import VCLFinalizeOffersDescriptor from '../../../api/entities/VCLFinalizeOffers
 
 export default class CredentialIssuerVerifierEmptyImpl implements CredentialIssuerVerifier {
     async verifyCredentials(
-        jwtCredentials: VCLJwt[],
-        finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
+        _jwtCredentials: VCLJwt[],
+        _finalizeOffersDescriptor: VCLFinalizeOffersDescriptor,
     ): Promise<boolean> {
         return true;
     }

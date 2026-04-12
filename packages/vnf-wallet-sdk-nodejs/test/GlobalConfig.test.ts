@@ -73,7 +73,7 @@ describe('GlobalConfig', () => {
         expect(GlobalConfig.IsLoggerOn).toEqual(true);
     });
 
-    test('test debug & logger for Prod', () => {
+    test('disables logger output for prod when debug is off', () => {
         GlobalConfig.init(
             false,
             VCLEnvironment.Prod,
@@ -85,7 +85,7 @@ describe('GlobalConfig', () => {
         expect(GlobalConfig.IsLoggerOn).toEqual(false);
     });
 
-    test('test debug & logger for Staging', () => {
+    test('disables logger output for staging when debug is off', () => {
         GlobalConfig.init(
             false,
             VCLEnvironment.Staging,
@@ -97,7 +97,7 @@ describe('GlobalConfig', () => {
         expect(GlobalConfig.IsLoggerOn).toEqual(false);
     });
 
-    test('test debug & logger for Qa', () => {
+    test('enables logger output for qa when debug is off', () => {
         GlobalConfig.init(
             false,
             VCLEnvironment.Qa,
@@ -109,7 +109,7 @@ describe('GlobalConfig', () => {
         expect(GlobalConfig.IsLoggerOn).toEqual(true);
     });
 
-    test('test debug & logger for Dev', () => {
+    test('enables logger output for dev when debug is off', () => {
         GlobalConfig.init(
             false,
             VCLEnvironment.Dev,

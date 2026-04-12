@@ -3,17 +3,16 @@ import { expect } from 'expect';
 import CredentialManifestUseCase from '../../src/impl/domain/usecases/CredentialManifestUseCase';
 import CredentialManifestUseCaseImpl from '../../src/impl/data/usecases/CredentialManifestUseCaseImpl';
 import CredentialManifestRepositoryImpl from '../../src/impl/data/repositories/CredentialManifestRepositoryImpl';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { CredentialManifestMocks } from '../infrastructure/resources/valid/CredentialManifestMocks';
-import ResolveKidRepositoryImpl from '../../src/impl/data/repositories/ResolveKidRepositoryImpl';
 import JwtServiceRepositoryImpl from '../../src/impl/data/repositories/JwtServiceRepositoryImpl';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';
 import { JwtVerifyServiceMock } from '../infrastructure/resources/jwt/JwtVerifyServiceMock';
 import {
+    VCLCredentialManifest,
     VCLCredentialManifestDescriptorByDeepLink,
     VCLErrorCode,
     VCLIssuingType,
-    VCLToken,
+    VCLJwt,
     VCLVerifiedProfile,
 } from '../../src';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
@@ -22,24 +21,27 @@ import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 import { CredentialManifestByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
 import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
+import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import { CommonMocks } from '../infrastructure/resources/CommonMocks';
+import {
+    mockAbsoluteGet,
+    mockResolveDid,
+    useNockLifecycle,
+} from '../utils/nock';
 
-describe('CredentialManifestUseCase Tests', () => {
-    let subject1: CredentialManifestUseCase;
-    let subject2: CredentialManifestUseCase;
-
-    // eslint-disable-next-line complexity
-    test('testGetCredentialManifestSuccess', async () => {
-        subject1 = new CredentialManifestUseCaseImpl(
-            new CredentialManifestRepositoryImpl(
-                new NetworkServiceSuccess(
-                    JSON.parse(CredentialManifestMocks.CredentialManifest1),
-                ),
-            ),
-            new ResolveDidDocumentRepositoryImpl(
-                new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentMock.payload,
-                ),
-            ),
+describe('CredentialManifestUseCase', () => {
+    const credentialManifestDescriptor =
+        new VCLCredentialManifestDescriptorByDeepLink(
+            DeepLinkMocks.CredentialManifestDeepLinkDevNet,
+            VCLIssuingType.Career,
+            null,
+            DidJwkMocks.DidJwk,
+            CommonMocks.Token,
+        );
+    const subject: CredentialManifestUseCase =
+        new CredentialManifestUseCaseImpl(
+            new CredentialManifestRepositoryImpl(new NetworkServiceImpl()),
+            new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
             new JwtServiceRepositoryImpl(
                 new JwtSignServiceMock(''),
                 new JwtVerifyServiceMock(),
@@ -47,63 +49,54 @@ describe('CredentialManifestUseCase Tests', () => {
             new CredentialManifestByDeepLinkVerifierImpl(),
         );
 
+    useNockLifecycle();
+
+    test('returns a credential manifest', async () => {
+        const verifiedProfile = new VCLVerifiedProfile(
+            JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1),
+        );
+        const requestScope = mockAbsoluteGet(
+            credentialManifestDescriptor.endpoint!,
+            JSON.parse(CredentialManifestMocks.CredentialManifest1),
+        );
+        const didScope = mockResolveDid(
+            DeepLinkMocks.IssuerDid,
+            DidDocumentMocks.DidDocumentMock.payload,
+        );
+
         try {
-            const credentialManifest = await subject1.getCredentialManifest(
-                new VCLCredentialManifestDescriptorByDeepLink(
-                    DeepLinkMocks.CredentialManifestDeepLinkDevNet,
-                    VCLIssuingType.Career,
-                    null,
-                    DidJwkMocks.DidJwk,
-                    new VCLToken('some token'),
+            const credentialManifest = await subject.getCredentialManifest(
+                credentialManifestDescriptor,
+                verifiedProfile,
+            );
+            const expectedCredentialManifest = new VCLCredentialManifest(
+                VCLJwt.fromEncodedJwt(
+                    CredentialManifestMocks.JwtCredentialManifest1,
                 ),
-                new VCLVerifiedProfile(
-                    JSON.parse(
-                        VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1,
-                    ),
-                ),
-            );
-            expect(credentialManifest?.jwt.encodedJwt).toEqual(
-                CredentialManifestMocks.JwtCredentialManifest1,
-            );
-            expect(credentialManifest?.jwt.header).toStrictEqual(
-                JSON.parse(CredentialManifestMocks.Header),
-            );
-            expect(credentialManifest?.jwt.payload).toStrictEqual(
-                JSON.parse(CredentialManifestMocks.Payload),
-            );
-            expect(credentialManifest?.jwt.signature).toEqual(
-                CredentialManifestMocks.Signature,
-            );
-            expect(credentialManifest?.didJwk).toStrictEqual(
+                credentialManifestDescriptor.vendorOriginContext,
+                verifiedProfile,
+                credentialManifestDescriptor.deepLink,
                 DidJwkMocks.DidJwk,
+                CommonMocks.Token,
             );
-            expect(
-                credentialManifest?.remoteCryptoServicesToken?.value,
-            ).toEqual('some token');
+
+            expect(credentialManifest).toEqual(expectedCredentialManifest);
         } catch (error) {
             expect(error).toBeNull();
         }
+
+        expect(requestScope.isDone()).toBeTruthy();
+        expect(didScope.isDone()).toBeTruthy();
     });
 
-    test('testGetCredentialManifestFailure', async () => {
-        subject2 = new CredentialManifestUseCaseImpl(
-            new CredentialManifestRepositoryImpl(
-                new NetworkServiceSuccess(JSON.parse('{"wrong": "payload"}')),
-            ),
-            new ResolveDidDocumentRepositoryImpl(
-                new NetworkServiceSuccess(
-                    DidDocumentMocks.DidDocumentMock.payload,
-                ),
-            ),
-            new JwtServiceRepositoryImpl(
-                new JwtSignServiceMock(''),
-                new JwtVerifyServiceMock(),
-            ),
-            new CredentialManifestByDeepLinkVerifierImpl(),
+    test('throws an sdk error for an invalid credential manifest response', async () => {
+        const requestScope = mockAbsoluteGet(
+            credentialManifestDescriptor.endpoint!,
+            { wrong: 'payload' },
         );
 
         try {
-            await subject2.getCredentialManifest(
+            await subject.getCredentialManifest(
                 new VCLCredentialManifestDescriptorByDeepLink(
                     DeepLinkMocks.CredentialManifestDeepLinkDevNet,
                     VCLIssuingType.Career,
@@ -120,5 +113,7 @@ describe('CredentialManifestUseCase Tests', () => {
         } catch (error: any) {
             expect(error?.errorCode).toEqual(VCLErrorCode.SdkError.toString());
         }
+
+        expect(requestScope.isDone()).toBeTruthy();
     });
 });

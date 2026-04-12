@@ -9,21 +9,19 @@ import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import { VCLErrorCode } from '../../src';
 import { PresentationRequestByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
-import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
 import PresentationRequestByDeepLinkVerifier from '../../src/impl/domain/verifiers/PresentationRequestByDeepLinkVerifier';
 import { PresentationRequestMocks } from '../infrastructure/resources/valid/PresentationRequestMocks';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 
-describe('CredentialManifestByDeepLinkVerifier', () => {
+describe('PresentationRequestByDeepLinkVerifier', () => {
     let subject: PresentationRequestByDeepLinkVerifier;
 
     const presentationRequest = PresentationRequestMocks.PresentationRequest;
 
     const deepLink = DeepLinkMocks.PresentationRequestDeepLinkDevNet;
 
-    test('testVerifyPresentationRequestSuccess', async () => {
+    test('verifies a matching presentation request deep link', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
 
         const isVerified = await subject.verifyPresentationRequest(
@@ -34,7 +32,7 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
         expect(isVerified).toBeTruthy();
     });
 
-    test('testVerifyPresentationRequestError', async () => {
+    test('throws for a mismatched presentation request deep link', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
         try {
             const isVerified = await subject.verifyPresentationRequest(

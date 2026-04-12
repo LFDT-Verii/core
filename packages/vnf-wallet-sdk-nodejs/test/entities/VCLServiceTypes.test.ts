@@ -4,8 +4,8 @@ import VCLServiceTypes from '../../src/api/entities/VCLServiceTypes';
 import VCLServiceType from '../../src/api/entities/VCLServiceType';
 import { VCLIssuingType } from '../../src';
 
-describe('VCLServiceTypes Tests', () => {
-    test('testContainsFull', () => {
+describe('VCLServiceTypes', () => {
+    test('matches service types from a full set', () => {
         const serviceTypes = new VCLServiceTypes([
             VCLServiceType.Issuer,
             VCLServiceType.Inspector,
@@ -48,7 +48,7 @@ describe('VCLServiceTypes Tests', () => {
         ).toBeFalsy();
     });
 
-    test('testContainsPartial', () => {
+    test('matches service types from a partial set', () => {
         const serviceTypes = new VCLServiceTypes([
             VCLServiceType.Issuer,
             VCLServiceType.Inspector,
@@ -78,7 +78,7 @@ describe('VCLServiceTypes Tests', () => {
         ).toBeFalsy();
     });
 
-    test('testContainsEmpty', () => {
+    test('handles an empty set of service types', () => {
         const serviceTypes = new VCLServiceTypes([]);
 
         expect(serviceTypes.contains(VCLServiceType.Issuer)).toBeFalsy();
@@ -110,7 +110,7 @@ describe('VCLServiceTypes Tests', () => {
         ).toBeFalsy();
     });
 
-    test('testFromCareer', () => {
+    test('parses career service types', () => {
         const serviceTypes = VCLServiceTypes.fromIssuingType(
             VCLIssuingType.Career,
         );
@@ -146,7 +146,7 @@ describe('VCLServiceTypes Tests', () => {
         ).toBeFalsy();
     });
 
-    test('testFromIdentity', () => {
+    test('parses identity service types', () => {
         const serviceTypes = VCLServiceTypes.fromIssuingType(
             VCLIssuingType.Identity,
         );
@@ -185,7 +185,7 @@ describe('VCLServiceTypes Tests', () => {
         ).toBeFalsy();
     });
 
-    test('testFromRefresh', () => {
+    test('parses refresh service types', () => {
         const serviceTypes = VCLServiceTypes.fromIssuingType(
             VCLIssuingType.Refresh,
         );
@@ -220,7 +220,7 @@ describe('VCLServiceTypes Tests', () => {
         ).toBeFalsy();
     });
 
-    test('testFromUndefined', () => {
+    test('handles undefined service types', () => {
         const serviceTypes = VCLServiceTypes.fromIssuingType(
             VCLIssuingType.Undefined,
         );

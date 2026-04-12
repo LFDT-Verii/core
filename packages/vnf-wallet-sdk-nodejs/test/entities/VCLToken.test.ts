@@ -3,10 +3,10 @@ import { expect } from 'expect';
 import VCLToken from '../../src/api/entities/VCLToken';
 import TokenMocks from '../infrastructure/resources/valid/TokenMocks';
 
-describe('VCLToken Tests', () => {
+describe('VCLToken', () => {
     let subject: VCLToken;
 
-    test('testToken1', () => {
+    test('creates a token from an encoded JWT string', () => {
         subject = new VCLToken(TokenMocks.TokenStr1);
 
         expect(subject.value).toEqual(TokenMocks.TokenStr1);
@@ -14,7 +14,7 @@ describe('VCLToken Tests', () => {
         expect(subject.expiresIn).toEqual(BigInt(1704020514));
     });
 
-    test('testToken2', () => {
+    test('creates a token from a VCLJwt instance', () => {
         subject = new VCLToken(TokenMocks.TokenJwt1);
 
         expect(subject.value).toEqual(TokenMocks.TokenJwt1.encodedJwt);

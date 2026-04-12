@@ -6,10 +6,10 @@ import VCLService from '../../src/api/entities/VCLService';
 import { CredentialManifestDescriptorMocks } from '../infrastructure/resources/valid/CredentialManifestDescriptorMocks';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 
-describe('VCLCredentialManifestDescriptorByService Tests', () => {
+describe('VCLCredentialManifestDescriptorByService', () => {
     let subject: VCLCredentialManifestDescriptorByService;
 
-    test('testCredentialManifestDescriptorByServiceWithFullInput1Success', () => {
+    test('builds an endpoint with credential types and a push delegate for career issuance', () => {
         const service = new VCLService(
             JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
@@ -41,7 +41,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
         expect(subject.did).toEqual('123');
     });
 
-    test('testCredentialManifestDescriptorByServiceWithFullInput2Success', () => {
+    test('builds an endpoint with credential types and a push delegate for identity issuance', () => {
         const service = new VCLService(
             JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
@@ -73,7 +73,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
         expect(subject.did).toEqual('123');
     });
 
-    test('testCredentialManifestDescriptorByServiceWithPartialInput3Success', () => {
+    test('builds an endpoint with only a push delegate', () => {
         const service = new VCLService(
             JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
@@ -101,7 +101,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
         expect(subject.did).toEqual('123');
     });
 
-    test('testCredentialManifestDescriptorByServiceWithPartialInput4Success', () => {
+    test('appends credential types to an endpoint with existing query params', () => {
         const service = new VCLService(
             JSON.parse(
                 CredentialManifestDescriptorMocks.IssuingServiceWithParamJsonStr,
@@ -116,14 +116,17 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
             '123',
         );
 
-        const credentialTypesQuery = `${VCLCredentialManifestDescriptorByService.KeyCredentialTypes}=${CredentialManifestDescriptorMocks.CredentialTypesList[0]}&${VCLCredentialManifestDescriptorByService.KeyCredentialTypes}=${CredentialManifestDescriptorMocks.CredentialTypesList[1]}`;
+        const credentialTypesQuery = [
+            `${VCLCredentialManifestDescriptorByService.KeyCredentialTypes}=${CredentialManifestDescriptorMocks.CredentialTypesList[0]}`,
+            `${VCLCredentialManifestDescriptorByService.KeyCredentialTypes}=${CredentialManifestDescriptorMocks.CredentialTypesList[1]}`,
+        ].join('&');
         const mockEndpoint = `${CredentialManifestDescriptorMocks.IssuingServiceWithParamEndPoint}&${credentialTypesQuery}`;
 
         expect(subject.endpoint).toEqual(mockEndpoint);
         expect(subject.did).toEqual('123');
     });
 
-    test('testCredentialManifestDescriptorByServiceWithPartialInput5Success', () => {
+    test('preserves an endpoint with existing query params when optional params are absent', () => {
         const service = new VCLService(
             JSON.parse(
                 CredentialManifestDescriptorMocks.IssuingServiceWithParamJsonStr,
@@ -145,7 +148,7 @@ describe('VCLCredentialManifestDescriptorByService Tests', () => {
         expect(subject.did).toEqual('123');
     });
 
-    test('testCredentialManifestDescriptorByServiceWithPartialInput6Success', () => {
+    test('preserves an endpoint when optional params are absent', () => {
         const service = new VCLService(
             JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );

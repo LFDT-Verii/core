@@ -1,56 +1,56 @@
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import ExchangeProgressRepositoryImpl from '../../src/impl/data/repositories/ExchangeProgressRepositoryImpl';
 import ExchangeProgressUseCaseImpl from '../../src/impl/data/usecases/ExchangeProgressUseCaseImpl';
 import { ExchangeProgressMocks } from '../infrastructure/resources/valid/ExchangeProgressMocks';
-import {
-    Dictionary,
-    VCLExchange,
-    VCLExchangeDescriptor,
-    VCLToken,
-} from '../../src';
+import { VCLExchange, VCLExchangeDescriptor } from '../../src';
+import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import { CommonMocks } from '../infrastructure/resources/CommonMocks';
+import { mockAbsoluteGet, useNockLifecycle } from '../utils/nock';
 
-describe('ExchangeProgressUseCase Tests', () => {
-    const subject1 = new ExchangeProgressUseCaseImpl(
-        new ExchangeProgressRepositoryImpl(
-            new NetworkServiceSuccess(
-                ExchangeProgressMocks.ExchangeProgressJson,
-            ),
-        ),
-    );
-    const subject2 = new ExchangeProgressUseCaseImpl(
-        new ExchangeProgressRepositoryImpl(new NetworkServiceSuccess('')),
+describe('ExchangeProgressUseCase', () => {
+    const subject = new ExchangeProgressUseCaseImpl(
+        new ExchangeProgressRepositoryImpl(new NetworkServiceImpl()),
     );
     const exchangeDescriptor = {
-        exchangeId: '',
-        processUri: '',
-        sessionToken: new VCLToken(''),
+        exchangeId: 'exchange-id',
+        processUri: 'https://agent.velocitycareerlabs.io/get-exchange-progress',
+        sessionToken: CommonMocks.Token,
     } as VCLExchangeDescriptor;
 
-    test('testGetExchangeProgressSuccess', async () => {
-        const exchange = await subject1.getExchangeProgress(exchangeDescriptor);
+    useNockLifecycle();
 
-        expect(exchange.id).toEqual(
-            ExchangeProgressMocks.ExchangeProgressJson.id,
+    test('returns exchange progress', async () => {
+        const scope = mockAbsoluteGet(
+            `${exchangeDescriptor.processUri}?exchange_id=${exchangeDescriptor.exchangeId}`,
+            ExchangeProgressMocks.ExchangeProgressJson,
+            200,
+            {
+                authorization: `Bearer ${exchangeDescriptor.sessionToken.value}`,
+            },
         );
-        expect(exchange.type).toEqual(
-            ExchangeProgressMocks.ExchangeProgressJson.type,
+
+        const exchange = await subject.getExchangeProgress(exchangeDescriptor);
+
+        expect(exchange).toEqual(
+            new VCLExchange(ExchangeProgressMocks.ExchangeProgressJson),
         );
-        expect(exchange.exchangeComplete).toEqual(
-            ExchangeProgressMocks.ExchangeProgressJson.exchangeComplete,
-        );
-        expect(exchange.disclosureComplete).toEqual(
-            ExchangeProgressMocks.ExchangeProgressJson.disclosureComplete,
-        );
+        expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testGetExchangeProgressFailure', async () => {
-        const exchange = await subject2.getExchangeProgress(exchangeDescriptor);
+    test('returns an empty exchange for an invalid exchange progress response', async () => {
+        const scope = mockAbsoluteGet(
+            `${exchangeDescriptor.processUri}?exchange_id=${exchangeDescriptor.exchangeId}`,
+            '',
+            200,
+            {
+                authorization: `Bearer ${exchangeDescriptor.sessionToken.value}`,
+            },
+        );
 
-        expect(exchange.id).toEqual(undefined);
-        expect(exchange.type).toEqual(undefined);
-        expect(exchange.disclosureComplete).toEqual(undefined);
-        expect(exchange.exchangeComplete).toEqual(undefined);
+        const exchange = await subject.getExchangeProgress(exchangeDescriptor);
+
+        expect(exchange).toEqual(new VCLExchange({}));
+        expect(scope.isDone()).toBeTruthy();
     });
 });

@@ -5,17 +5,19 @@ import CredentialTypesUIFormSchemaUseCase from '../../src/impl/domain/usecases/C
 import CredentialTypesUIFormSchemaUseCaseImpl from '../../src/impl/data/usecases/CredentialTypesUIFormSchemaUseCaseImpl';
 import CredentialTypesUIFormSchemaRepositoryImpl from '../../src/impl/data/repositories/CredentialTypesUIFormSchemaRepositoryImpl';
 import { CredentialTypesUIFormSchemaMocks } from '../infrastructure/resources/valid/CredentialTypesUIFormSchemaMocks';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import VCLCredentialTypesUIFormSchema from '../../src/api/entities/VCLCredentialTypesUIFormSchema';
 import VCLCredentialTypesUIFormSchemaDescriptor from '../../src/api/entities/VCLCredentialTypesUIFormSchemaDescriptor';
 import VCLCountry from '../../src/api/entities/VCLCountry';
 import VCLRegions from '../../src/api/entities/VCLRegions';
 import VCLRegion from '../../src/api/entities/VCLRegion';
 import { VCLCountryCodes } from '../../src';
+import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
+import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
+describe('CredentialTypesUIFormSchemaUseCase', () => {
     let subject: CredentialTypesUIFormSchemaUseCase;
     let mockedCountries: VCLCountries;
+    const credentialType = 'EmploymentPastV1.1';
 
     beforeEach(() => {
         mockedCountries = jsonArrToCountries(
@@ -23,20 +25,22 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
         );
     });
 
-    test('testCredentialTypesFormSchemaFull', async () => {
+    useNockLifecycle();
+
+    test('returns the full form schema', async () => {
         subject = new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(
-                new NetworkServiceSuccess(
-                    JSON.parse(
-                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonFull,
-                    ),
-                ),
+                new NetworkServiceImpl(),
             ),
+        );
+        const scope = mockRegistrarGet(
+            `/api/v0.6/form-schemas?credentialType=${credentialType}`,
+            JSON.parse(CredentialTypesUIFormSchemaMocks.UISchemaFormJsonFull),
         );
 
         const response = await subject.getCredentialTypesUIFormSchema(
             new VCLCredentialTypesUIFormSchemaDescriptor(
-                'some type',
+                credentialType,
                 VCLCountryCodes.CA,
             ),
             mockedCountries,
@@ -75,24 +79,27 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
         expect(expectedAddressRegionNames).toEqual(
             CredentialTypesUIFormSchemaMocks.CanadaRegionNames,
         );
+        expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testCredentialTypesFormSchemaOnlyCountries', async () => {
+    test('returns form schema with only countries', async () => {
         // Arrange
         subject = new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(
-                new NetworkServiceSuccess(
-                    JSON.parse(
-                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyCountries,
-                    ),
-                ),
+                new NetworkServiceImpl(),
+            ),
+        );
+        const scope = mockRegistrarGet(
+            `/api/v0.6/form-schemas?credentialType=${credentialType}`,
+            JSON.parse(
+                CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyCountries,
             ),
         );
 
         // Action
         const response = await subject.getCredentialTypesUIFormSchema(
             new VCLCredentialTypesUIFormSchemaDescriptor(
-                'some type',
+                credentialType,
                 VCLCountryCodes.CA,
             ),
             mockedCountries,
@@ -125,24 +132,27 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
         );
         expect(expectedAddressRegionCodes).toBeFalsy();
         expect(expectedAddressRegionNames).toBeFalsy();
+        expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testCredentialTypesFormSchemaOnlyRegions', async () => {
+    test('returns form schema with only regions', async () => {
         // Arrange
         subject = new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(
-                new NetworkServiceSuccess(
-                    JSON.parse(
-                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyRegions,
-                    ),
-                ),
+                new NetworkServiceImpl(),
+            ),
+        );
+        const scope = mockRegistrarGet(
+            `/api/v0.6/form-schemas?credentialType=${credentialType}`,
+            JSON.parse(
+                CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyRegions,
             ),
         );
 
         // Action
         const response = await subject.getCredentialTypesUIFormSchema(
             new VCLCredentialTypesUIFormSchemaDescriptor(
-                'some type',
+                credentialType,
                 VCLCountryCodes.CA,
             ),
             mockedCountries,
@@ -175,24 +185,27 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
         expect(expectedAddressRegionNames).toEqual(
             CredentialTypesUIFormSchemaMocks.CanadaRegionNames,
         );
+        expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testCredentialTypesFormSchemaOnlyEnums', async () => {
+    test('returns form schema with only enums', async () => {
         // Arrange
         subject = new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(
-                new NetworkServiceSuccess(
-                    JSON.parse(
-                        CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyEnums,
-                    ),
-                ),
+                new NetworkServiceImpl(),
+            ),
+        );
+        const scope = mockRegistrarGet(
+            `/api/v0.6/form-schemas?credentialType=${credentialType}`,
+            JSON.parse(
+                CredentialTypesUIFormSchemaMocks.UISchemaFormJsonOnlyEnums,
             ),
         );
 
         // Action
         const response = await subject.getCredentialTypesUIFormSchema(
             new VCLCredentialTypesUIFormSchemaDescriptor(
-                'some type',
+                credentialType,
                 VCLCountryCodes.CA,
             ),
             mockedCountries,
@@ -225,6 +238,7 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
             CredentialTypesUIFormSchemaMocks.CanadaRegionCodes,
         );
         expect(expectedAddressRegionNames).toBeFalsy();
+        expect(scope.isDone()).toBeTruthy();
     });
 
     const jsonArrToCountries = (countriesJsonArr: any[]): VCLCountries => {

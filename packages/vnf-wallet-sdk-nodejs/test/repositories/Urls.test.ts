@@ -11,8 +11,8 @@ import GlobalConfig from '../../src/impl/GlobalConfig';
 import VCLXVnfProtocolVersion from '../../src/api/VCLXVnfProtocolVersion';
 import VCLEnvironment from '../../src/api/VCLEnvironment';
 
-describe('UrlsTest', () => {
-    test('testProdEnvironment', () => {
+describe('Urls', () => {
+    test('builds urls for the prod environment', () => {
         const registrarPrefix = 'https://registrar.velocitynetwork.foundation';
 
         GlobalConfig.setCurrentEnvironment(VCLEnvironment.Prod);
@@ -20,7 +20,7 @@ describe('UrlsTest', () => {
         verifyUrlsPrefix(registrarPrefix);
     });
 
-    test('testStagingEnvironment', () => {
+    test('builds urls for the staging environment', () => {
         const registrarPrefix =
             'https://stagingregistrar.velocitynetwork.foundation';
 
@@ -29,7 +29,7 @@ describe('UrlsTest', () => {
         verifyUrlsPrefix(registrarPrefix);
     });
 
-    test('testQaEnvironment', () => {
+    test('builds urls for the qa environment', () => {
         const registrarPrefix =
             'https://qaregistrar.velocitynetwork.foundation';
 
@@ -38,7 +38,7 @@ describe('UrlsTest', () => {
         verifyUrlsPrefix(registrarPrefix);
     });
 
-    test('testDevEnvironment', () => {
+    test('builds urls for the dev environment', () => {
         const registrarPrefix =
             'https://devregistrar.velocitynetwork.foundation';
 
@@ -60,7 +60,7 @@ describe('UrlsTest', () => {
         ).toEqual(true);
     };
 
-    test('testXVnfProtocolVersion', () => {
+    test('uses the configured x-vnf protocol version', () => {
         GlobalConfig.setXVnfProtocolVersion(
             VCLXVnfProtocolVersion.XVnfProtocolVersion1,
         );

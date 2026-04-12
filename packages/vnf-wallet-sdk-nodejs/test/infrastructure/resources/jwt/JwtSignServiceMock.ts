@@ -8,10 +8,10 @@ export class JwtSignServiceMock implements VCLJwtSignService {
     constructor(readonly successValue: Nullish<string> = null) {}
 
     async sign(
-        jwtDescriptor: VCLJwtDescriptor,
-        didJwk: VCLDidJwk,
-        nonce: Nullish<string>,
-        remoteCryptoServicesToken: Nullish<VCLToken>,
+        _jwtDescriptor: VCLJwtDescriptor,
+        _didJwk: VCLDidJwk,
+        _nonce: Nullish<string>,
+        _remoteCryptoServicesToken: Nullish<VCLToken>,
     ): Promise<VCLJwt> {
         return VCLJwt.fromEncodedJwt(this.successValue ?? '');
     }

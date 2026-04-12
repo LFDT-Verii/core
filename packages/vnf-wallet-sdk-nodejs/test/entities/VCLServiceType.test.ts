@@ -4,8 +4,8 @@ import VCLServiceType, {
     serviceTypeFromString,
 } from '../../src/api/entities/VCLServiceType';
 
-describe('VCLServiceType Tests', () => {
-    test('testFromExactString', () => {
+describe('VCLServiceType', () => {
+    test('parses an exact service type string', () => {
         expect(serviceTypeFromString('Inspector')).toEqual(
             VCLServiceType.Inspector,
         );
@@ -48,7 +48,7 @@ describe('VCLServiceType Tests', () => {
         );
     });
 
-    test('testFromNonExactString', () => {
+    test('parses a non-exact service type string', () => {
         expect(serviceTypeFromString(',dfm%InspectorGH*(T')).toEqual(
             VCLServiceType.Inspector,
         );

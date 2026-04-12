@@ -2,22 +2,22 @@ import { beforeEach, describe, test } from 'node:test';
 import { expect } from 'expect';
 import VCLExchange from '../../src/api/entities/VCLExchange';
 import VCLSubmissionResult from '../../src/api/entities/VCLSubmissionResult';
-import VCLToken from '../../src/api/entities/VCLToken';
+import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 
-describe('VCLSubmissionResult Tests', () => {
+describe('VCLSubmissionResult', () => {
     let subject: VCLSubmissionResult;
 
     beforeEach(() => {
         subject = new VCLSubmissionResult(
-            new VCLToken('token123'),
+            CommonMocks.Token,
             new VCLExchange('id123', 'type123', true, true),
             'jti123',
             'submissionId123',
         );
     });
 
-    test('testProps', () => {
-        expect(subject.sessionToken.value).toEqual('token123');
+    test('exposes submission result properties', () => {
+        expect(subject.sessionToken).toEqual(CommonMocks.Token);
         expect(subject.exchange.id).toEqual('id123');
         expect(subject.exchange.type).toEqual('type123');
         expect(subject.exchange.exchangeComplete).toBeTruthy();

@@ -3,10 +3,10 @@ import { expect } from 'expect';
 import { VCLFilter, VCLOrganizationsSearchDescriptor } from '../../src';
 import { OrganizationsDescriptorMocks } from '../infrastructure/resources/valid/OrganizationsDescriptorMocks';
 
-describe('VCLOrganizationsSearchDescriptor Tests', () => {
+describe('VCLOrganizationsSearchDescriptor', () => {
     let subject: VCLOrganizationsSearchDescriptor;
 
-    test('testOrganizationsDescriptorAllParamsAggregationSuccess', () => {
+    test('aggregates all search params', () => {
         const organizationDescriptorQueryParamsMock =
             'filter.did=did:velocity:0x2bef092530ccc122f5fe439b78eddf6010685e88&' +
             'filter.serviceTypes=Inspector&' +
@@ -26,7 +26,7 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         );
     });
 
-    test('testOrganizationsDescriptorFilterPageSortParamsAggregationSuccess', () => {
+    test('aggregates filter, page, and sort params', () => {
         const organizationDescriptorQueryParamsMock =
             'filter.did=did:velocity:0x2bef092530ccc122f5fe439b78eddf6010685e88&' +
             'filter.serviceTypes=Inspector&' +
@@ -44,7 +44,7 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         );
     });
 
-    test('testOrganizationsDescriptorFilterPageQueryParamsAggregationSuccess', () => {
+    test('aggregates filter, page, and query params', () => {
         const organizationDescriptorQueryParamsMock =
             'filter.did=did:velocity:0x2bef092530ccc122f5fe439b78eddf6010685e88&' +
             'filter.serviceTypes=Inspector&' +
@@ -63,7 +63,7 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         );
     });
 
-    test('testOrganizationsDescriptorFilterSortQueryParamsAggregationSuccess', () => {
+    test('aggregates filter, sort, and query params', () => {
         const organizationDescriptorQueryParamsMock =
             'filter.did=did:velocity:0x2bef092530ccc122f5fe439b78eddf6010685e88&' +
             'filter.serviceTypes=Inspector&' +
@@ -82,7 +82,7 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         );
     });
 
-    test('testOrganizationsDescriptorPageSortQueryParamsAggregationSuccess', () => {
+    test('aggregates page, sort, and query params', () => {
         const organizationDescriptorQueryParamsMock =
             'sort[0]=createdAt,DESC&' +
             'sort[1]=pdatedAt,ASC&' +
@@ -100,7 +100,7 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         );
     });
 
-    test('testOrganizationsDescriptorDidFilterAggregationSuccess', () => {
+    test('aggregates a did filter', () => {
         const organizationDescriptorQueryParamsMock =
             'filter.did=did:velocity:0x2bef092530ccc122f5fe439b78eddf6010685e88';
         subject = new VCLOrganizationsSearchDescriptor(
@@ -112,7 +112,7 @@ describe('VCLOrganizationsSearchDescriptor Tests', () => {
         );
     });
 
-    test('testOrganizationsDescriptorNoParamsAggregationSuccess', () => {
+    test('handles missing search params', () => {
         const organizationDescriptorQueryParamsMock = null;
         subject = new VCLOrganizationsSearchDescriptor();
 

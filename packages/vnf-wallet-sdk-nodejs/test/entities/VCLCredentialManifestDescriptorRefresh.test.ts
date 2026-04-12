@@ -5,10 +5,10 @@ import VCLService from '../../src/api/entities/VCLService';
 import { CredentialManifestDescriptorMocks } from '../infrastructure/resources/valid/CredentialManifestDescriptorMocks';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 
-describe('VCLCredentialManifestDescriptorRefresh Tests', () => {
+describe('VCLCredentialManifestDescriptorRefresh', () => {
     let subject: VCLCredentialManifestDescriptorRefresh;
 
-    test('testCredentialManifestDescriptorWith2CredentialIdsSuccess', () => {
+    test('builds a refresh endpoint with two credential ids', () => {
         const service = new VCLService(
             JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
@@ -39,7 +39,7 @@ describe('VCLCredentialManifestDescriptorRefresh Tests', () => {
         expect(subject.did).toEqual('123');
     });
 
-    test('testCredentialManifestDescriptorWith1CredentialIdsSuccess', () => {
+    test('builds a refresh endpoint with one credential id', () => {
         const service = new VCLService(
             JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );
@@ -63,7 +63,7 @@ describe('VCLCredentialManifestDescriptorRefresh Tests', () => {
         expect(subject.did).toEqual('123');
     });
 
-    test('testCredentialManifestDescriptorWith0CredentialIdsSuccess', () => {
+    test('builds a refresh endpoint without credential ids', () => {
         const service = new VCLService(
             JSON.parse(CredentialManifestDescriptorMocks.IssuingServiceJsonStr),
         );

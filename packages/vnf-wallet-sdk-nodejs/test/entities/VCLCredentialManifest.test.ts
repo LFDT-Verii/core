@@ -1,47 +1,39 @@
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
-import {
-    VCLCredentialManifest,
-    VCLDeepLink,
-    VCLJwt,
-    VCLVerifiedProfile,
-} from '../../src';
+import { VCLCredentialManifest, VCLJwt, VCLVerifiedProfile } from '../../src';
 import { CredentialManifestMocks } from '../infrastructure/resources/valid/CredentialManifestMocks';
+import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 
-describe('VCLCredentialManifest Tests', () => {
+describe('VCLCredentialManifest', () => {
+    const issuerId = 'did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA';
+    const holderBaseUrl =
+        'https://devagent.velocitycareerlabs.io/api/holder/v0.6/org';
+    const issuerBaseUrl = `${holderBaseUrl}/${issuerId}`;
     const subject: VCLCredentialManifest = new VCLCredentialManifest(
         VCLJwt.fromEncodedJwt(CredentialManifestMocks.JwtCredentialManifest1),
         null,
         new VCLVerifiedProfile({}),
-        new VCLDeepLink(''),
+        DeepLinkMocks.CredentialManifestDeepLinkMainNet,
         DidJwkMocks.DidJwk,
     );
-    test('VCLCredentialManifest props', () => {
-        expect(subject.iss).toEqual(
-            'did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA',
-        );
-        expect(subject.did).toEqual(
-            'did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA',
-        );
-        expect(subject.issuerId).toEqual(
-            'did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA',
-        );
-        expect(subject.aud).toEqual(
-            'https://devagent.velocitycareerlabs.io/api/holder/v0.6/org/did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA',
-        );
+    test('exposes credential manifest properties', () => {
+        expect(subject.iss).toEqual(issuerId);
+        expect(subject.did).toEqual(issuerId);
+        expect(subject.issuerId).toEqual(issuerId);
+        expect(subject.aud).toEqual(issuerBaseUrl);
         expect(subject.exchangeId).toEqual('645e315309237c760ac022b1');
         expect(subject.presentationDefinitionId).toEqual(
             '645e315309237c760ac022b1.6384a3ad148b1991687f67c9',
         );
         expect(subject.finalizeOffersUri).toEqual(
-            'https://devagent.velocitycareerlabs.io/api/holder/v0.6/org/did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA/issue/finalize-offers',
+            `${issuerBaseUrl}/issue/finalize-offers`,
         );
         expect(subject.checkOffersUri).toEqual(
-            'https://devagent.velocitycareerlabs.io/api/holder/v0.6/org/did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA/issue/credential-offers',
+            `${issuerBaseUrl}/issue/credential-offers`,
         );
         expect(subject.submitPresentationUri).toEqual(
-            'https://devagent.velocitycareerlabs.io/api/holder/v0.6/org/did:ion:EiApMLdMb4NPb8sae9-hXGHP79W1gisApVSE80USPEbtJA/issue/submit-identification',
+            `${issuerBaseUrl}/issue/submit-identification`,
         );
     });
 });

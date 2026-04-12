@@ -1,27 +1,26 @@
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import { CredentialTypesMocks } from '../infrastructure/resources/valid/CredentialTypesMocks';
-import NetworkServiceSuccess from '../infrastructure/resources/network/NetworkServiceSuccess';
 import CredentialTypesRepositoryImpl from '../../src/impl/data/repositories/CredentialTypesRepositoryImpl';
 import CredentialTypesUseCaseImpl from '../../src/impl/data/usecases/CredentialTypesUseCaseImpl';
+import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
 import { VCLCredentialType, VCLErrorCode } from '../../src';
+import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('CredentialTypesUseCaseImpl Tests', () => {
-    const subject1 = new CredentialTypesUseCaseImpl(
-        new CredentialTypesRepositoryImpl(
-            new NetworkServiceSuccess(
-                JSON.parse(CredentialTypesMocks.CredentialTypesJsonStr),
-            ),
-        ),
-    );
-    const subject2 = new CredentialTypesUseCaseImpl(
-        new CredentialTypesRepositoryImpl(
-            new NetworkServiceSuccess({ wrong: 'payload' }),
-        ),
+describe('CredentialTypesUseCase', () => {
+    const subject = new CredentialTypesUseCaseImpl(
+        new CredentialTypesRepositoryImpl(new NetworkServiceImpl()),
     );
 
-    test('testGetCountriesSuccess', async () => {
-        const credentialTypes = await subject1.getCredentialTypes();
+    useNockLifecycle();
+
+    test('returns credential types', async () => {
+        const scope = mockRegistrarGet(
+            '/api/v0.6/credential-types',
+            JSON.parse(CredentialTypesMocks.CredentialTypesJsonStr),
+        );
+
+        const credentialTypes = await subject.getCredentialTypes();
 
         compareCredentialTypes(
             credentialTypes.all!,
@@ -34,44 +33,29 @@ describe('CredentialTypesUseCaseImpl Tests', () => {
 
             getExpectedRecommendedCredentialTypesArr(),
         );
+        expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testGetCountriesFailure', async () => {
+    test('throws an sdk error for an invalid credential types response', async () => {
+        const scope = mockRegistrarGet('/api/v0.6/credential-types', {
+            wrong: 'payload',
+        });
+
         try {
-            await subject2.getCredentialTypes();
+            await subject.getCredentialTypes();
             expect(false).toEqual(true);
         } catch (error: any) {
             expect(error.errorCode).toEqual(VCLErrorCode.SdkError.toString());
         }
+
+        expect(scope.isDone()).toBeTruthy();
     });
 
     const compareCredentialTypes = (
         credentialTypesArr1: VCLCredentialType[],
         credentialTypesArr2: VCLCredentialType[],
     ) => {
-        for (let i = 0; i < credentialTypesArr1.length; i++) {
-            expect(credentialTypesArr1[i].payload).toStrictEqual(
-                credentialTypesArr2[i].payload,
-            );
-            expect(credentialTypesArr1[i].id).toEqual(
-                credentialTypesArr2[i].id,
-            );
-            expect(credentialTypesArr1[i].schema).toEqual(
-                credentialTypesArr2[i].schema,
-            );
-            expect(credentialTypesArr1[i].createdAt).toEqual(
-                credentialTypesArr2[i].createdAt,
-            );
-            expect(credentialTypesArr1[i].schemaName).toEqual(
-                credentialTypesArr2[i].schemaName,
-            );
-            expect(credentialTypesArr1[i].credentialType).toEqual(
-                credentialTypesArr2[i].credentialType,
-            );
-            expect(credentialTypesArr1[i].recommended).toEqual(
-                credentialTypesArr2[i].recommended,
-            );
-        }
+        expect(credentialTypesArr1).toEqual(credentialTypesArr2);
     };
 
     const getExpectedCredentialTypesArr = (): VCLCredentialType[] => {
