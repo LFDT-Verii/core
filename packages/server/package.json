@@ -16,7 +16,7 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "@spencejs/spence-events": "^0.10.2",
+    "@spencejs/spence-events": "^1.0.0",
     "@spencejs/spence-mongo-repos": "^1.0.0",
     "@verii/common-functions": "0.5.0-build",
     "@verii/common-schemas": "0.5.0-build",
