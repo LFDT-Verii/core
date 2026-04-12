@@ -82,7 +82,7 @@
     "qr-image": "~3.2.0"
   },
   "devDependencies": {
-    "@spencejs/spence-config": "0.10.2",
+    "@spencejs/spence-config": "1.0.0",
     "@verii/endpoints-organizations-registrar": "0.5.0-build",
     "@verii/sample-data": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
