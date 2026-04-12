@@ -21,7 +21,7 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { CredentialManifestMocks } from '../infrastructure/resources/valid/CredentialManifestMocks';
 import { mockAbsolutePost, useNockLifecycle } from '../utils/nock';
 
-describe('GenerateOffersUseCaseTest', () => {
+describe('GenerateOffersUseCase', () => {
     const verifiedProfile = new VCLVerifiedProfile(
         JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1),
     );
@@ -42,7 +42,7 @@ describe('GenerateOffersUseCaseTest', () => {
 
     useNockLifecycle();
 
-    it('testGenerateOffers', async () => {
+    it('returns generated offers', async () => {
         const generateOffersDescriptor = new VCLGenerateOffersDescriptor(
             credentialManifest,
             null,
@@ -77,7 +77,7 @@ describe('GenerateOffersUseCaseTest', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    it('testGenerateOffersEmptyJsonObj', async () => {
+    it('returns empty offers from an empty object response', async () => {
         const generateOffersDescriptor = new VCLGenerateOffersDescriptor(
             credentialManifest,
             null,
@@ -102,7 +102,7 @@ describe('GenerateOffersUseCaseTest', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    it('testGenerateOffersEmptyJsonArr', async () => {
+    it('returns empty offers from an empty array response', async () => {
         const generateOffersDescriptor = new VCLGenerateOffersDescriptor(
             credentialManifest,
             null,

@@ -6,7 +6,7 @@ import CountriesRepositoryImpl from '../../src/impl/data/repositories/CountriesR
 import { CountriesMocks } from '../infrastructure/resources/valid/CountriesMocks';
 import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('CountriesUseCaseImpl Tests', () => {
+describe('CountriesUseCase', () => {
     const expectedCountriesPayload = JSON.parse(CountriesMocks.CountriesJson);
 
     const subject = new CountriesUseCaseImpl(
@@ -15,7 +15,7 @@ describe('CountriesUseCaseImpl Tests', () => {
 
     useNockLifecycle();
 
-    test('testGetCountriesSuccess', async () => {
+    test('returns countries', async () => {
         const scope = mockRegistrarGet(
             '/reference/countries',
             expectedCountriesPayload,

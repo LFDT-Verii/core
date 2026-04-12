@@ -18,7 +18,7 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 import { mockResolveDid, useNockLifecycle } from '../utils/nock';
 
-describe('OffersByDeepLinkVerifierTest', () => {
+describe('OffersByDeepLinkVerifier', () => {
     let subject: OffersByDeepLinkVerifier;
 
     const deepLink = CredentialManifestDescriptorMocks.DeepLink;
@@ -35,7 +35,7 @@ describe('OffersByDeepLinkVerifierTest', () => {
 
     useNockLifecycle();
 
-    test('testVerifyOffersSuccess', async () => {
+    test('verifies matching offer deep links', async () => {
         subject = new OffersByDeepLinkVerifierImpl(
             new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
         );
@@ -49,7 +49,7 @@ describe('OffersByDeepLinkVerifierTest', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testVerifyOffersError', async () => {
+    test('throws for mismatched offer deep links', async () => {
         subject = new OffersByDeepLinkVerifierImpl(
             new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
         );

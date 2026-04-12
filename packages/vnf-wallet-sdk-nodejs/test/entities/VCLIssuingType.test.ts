@@ -2,8 +2,8 @@ import { describe, test } from 'node:test';
 import { expect } from 'expect';
 import { issuingTypeFromString, VCLIssuingType } from '../../src';
 
-describe('VCLIssuingType Tests', () => {
-    test('testFromExactString', () => {
+describe('VCLIssuingType', () => {
+    test('parses an exact issuing type string', () => {
         expect(issuingTypeFromString('Career')).toEqual(VCLIssuingType.Career);
         expect(issuingTypeFromString('Identity')).toEqual(
             VCLIssuingType.Identity,
@@ -16,7 +16,7 @@ describe('VCLIssuingType Tests', () => {
         );
     });
 
-    test('testFromNonExactString', () => {
+    test('parses a non-exact issuing type string', () => {
         expect(issuingTypeFromString('11_Career6_2')).toEqual(
             VCLIssuingType.Career,
         );

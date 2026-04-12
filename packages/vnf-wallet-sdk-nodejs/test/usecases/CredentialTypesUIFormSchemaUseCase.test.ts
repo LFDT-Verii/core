@@ -14,7 +14,7 @@ import { VCLCountryCodes } from '../../src';
 import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
 import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
+describe('CredentialTypesUIFormSchemaUseCase', () => {
     let subject: CredentialTypesUIFormSchemaUseCase;
     let mockedCountries: VCLCountries;
     const credentialType = 'EmploymentPastV1.1';
@@ -27,7 +27,7 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
 
     useNockLifecycle();
 
-    test('testCredentialTypesFormSchemaFull', async () => {
+    test('returns the full form schema', async () => {
         subject = new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(
                 new NetworkServiceImpl(),
@@ -82,7 +82,7 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testCredentialTypesFormSchemaOnlyCountries', async () => {
+    test('returns form schema with only countries', async () => {
         // Arrange
         subject = new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(
@@ -135,7 +135,7 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testCredentialTypesFormSchemaOnlyRegions', async () => {
+    test('returns form schema with only regions', async () => {
         // Arrange
         subject = new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(
@@ -188,7 +188,7 @@ describe('CredentialTypesUIFormSchemaUseCase Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testCredentialTypesFormSchemaOnlyEnums', async () => {
+    test('returns form schema with only enums', async () => {
         // Arrange
         subject = new CredentialTypesUIFormSchemaUseCaseImpl(
             new CredentialTypesUIFormSchemaRepositoryImpl(

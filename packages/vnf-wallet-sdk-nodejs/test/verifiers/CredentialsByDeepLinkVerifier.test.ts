@@ -32,7 +32,7 @@ describe('CredentialsByDeepLinkVerifier', () => {
 
     useNockLifecycle();
 
-    test('testVerifyCredentialsSuccess', async () => {
+    test('verifies matching credential deep links', async () => {
         subject = new CredentialsByDeepLinkVerifierImpl(
             new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
         );
@@ -49,7 +49,7 @@ describe('CredentialsByDeepLinkVerifier', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testVerifyCredentialsError', async () => {
+    test('throws for mismatched credential deep links', async () => {
         subject = new CredentialsByDeepLinkVerifierImpl(
             new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
         );

@@ -19,7 +19,7 @@ import VCLJwtDescriptor from '../../src/api/entities/VCLJwtDescriptor';
 import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
 import { mockAbsolutePost, useNockLifecycle } from '../utils/nock';
 
-describe('IdentificationSubmissionUseCase Tests', () => {
+describe('IdentificationSubmissionUseCase', () => {
     const jwtSignServiceMock = new JwtSignServiceMock();
     jwtSignServiceMock.sign = mock.fn(() =>
         Promise.resolve(
@@ -77,7 +77,7 @@ describe('IdentificationSubmissionUseCase Tests', () => {
 
     useNockLifecycle();
 
-    test('testIdentificationSubmissionDidJwk', async () => {
+    test('submits an identification request with a did:jwk', async () => {
         expect(
             IdentificationSubmissionMocks.CredentialManifest.didJwk,
         ).toStrictEqual(IdentificationSubmissionMocks.DidJwk);
@@ -86,7 +86,7 @@ describe('IdentificationSubmissionUseCase Tests', () => {
         );
     });
 
-    test('testIdentificationSubmissionSuccess', async () => {
+    test('submits an identification request', async () => {
         const scope = mockAbsolutePost(
             identificationSubmission.submitUri,
             identificationSubmission.generateRequestBody(

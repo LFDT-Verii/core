@@ -5,10 +5,10 @@ import { PresentationRequestDescriptorMocks } from '../infrastructure/resources/
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 
-describe('VCLPresentationRequestDescriptor Tests', () => {
+describe('VCLPresentationRequestDescriptor', () => {
     let subject: VCLPresentationRequestDescriptor;
 
-    test('testPresentationRequestDescriptorWithPushDelegateSuccess', () => {
+    test('creates a descriptor with a push delegate', () => {
         subject = new VCLPresentationRequestDescriptor(
             PresentationRequestDescriptorMocks.DeepLink,
             PresentationRequestDescriptorMocks.PushDelegate,
@@ -42,7 +42,7 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         );
     });
 
-    test('testPresentationRequestDescriptorWithoutPushDelegateOnlySuccess', () => {
+    test('creates a descriptor without a push delegate', () => {
         subject = new VCLPresentationRequestDescriptor(
             PresentationRequestDescriptorMocks.DeepLink,
             null,
@@ -58,7 +58,7 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         );
     });
 
-    test('testPresentationRequestDescriptorWithQParamsWithPushDelegateSuccess', () => {
+    test('creates a descriptor from query params with a push delegate', () => {
         subject = new VCLPresentationRequestDescriptor(
             PresentationRequestDescriptorMocks.DeepLinkWithQParams,
             PresentationRequestDescriptorMocks.PushDelegate,
@@ -92,7 +92,7 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         );
     });
 
-    test('testPresentationRequestDescriptorWithQParamsWithoutPushDelegateOnlySuccess', () => {
+    test('creates a descriptor from query params without a push delegate', () => {
         subject = new VCLPresentationRequestDescriptor(
             PresentationRequestDescriptorMocks.DeepLinkWithQParams,
             null,
@@ -110,7 +110,7 @@ describe('VCLPresentationRequestDescriptor Tests', () => {
         );
     });
 
-    test('testPresentationRequestDescriptorWithInspectorIdSuccess', () => {
+    test('creates a descriptor with an inspector id', () => {
         subject = new VCLPresentationRequestDescriptor(
             DeepLinkMocks.PresentationRequestDeepLinkMainNetWithId,
             null,

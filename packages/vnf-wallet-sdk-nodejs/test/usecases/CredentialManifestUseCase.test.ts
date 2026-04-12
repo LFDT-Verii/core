@@ -29,7 +29,7 @@ import {
     useNockLifecycle,
 } from '../utils/nock';
 
-describe('CredentialManifestUseCase Tests', () => {
+describe('CredentialManifestUseCase', () => {
     const credentialManifestDescriptor =
         new VCLCredentialManifestDescriptorByDeepLink(
             DeepLinkMocks.CredentialManifestDeepLinkDevNet,
@@ -51,7 +51,7 @@ describe('CredentialManifestUseCase Tests', () => {
 
     useNockLifecycle();
 
-    test('testGetCredentialManifestSuccess', async () => {
+    test('returns a credential manifest', async () => {
         const verifiedProfile = new VCLVerifiedProfile(
             JSON.parse(VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1),
         );
@@ -89,7 +89,7 @@ describe('CredentialManifestUseCase Tests', () => {
         expect(didScope.isDone()).toBeTruthy();
     });
 
-    test('testGetCredentialManifestFailure', async () => {
+    test('throws an sdk error for an invalid credential manifest response', async () => {
         const requestScope = mockAbsoluteGet(
             credentialManifestDescriptor.endpoint!,
             { wrong: 'payload' },

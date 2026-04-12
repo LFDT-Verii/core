@@ -3,8 +3,8 @@ import { expect } from 'expect';
 import VCLError from '../../src/api/entities/error/VCLError';
 import { ErrorMocks } from '../infrastructure/resources/valid/ErrorMocks';
 
-describe('VCLError Tests', () => {
-    test('testErrorFromPayload', () => {
+describe('VCLError', () => {
+    test('creates an error from a payload', () => {
         const error = VCLError.fromPayload(ErrorMocks.Payload);
 
         expect(error.payload).toEqual(ErrorMocks.Payload);
@@ -14,7 +14,7 @@ describe('VCLError Tests', () => {
         expect(error.statusCode).toEqual(ErrorMocks.StatusCode);
     });
 
-    test('testErrorFromProperties', () => {
+    test('creates an error from explicit properties', () => {
         const error = new VCLError(
             ErrorMocks.Error,
             ErrorMocks.ErrorCode,
@@ -30,7 +30,7 @@ describe('VCLError Tests', () => {
         expect(error.statusCode).toEqual(ErrorMocks.StatusCode);
     });
 
-    test('testErrorToJsonFromPayload', () => {
+    test('serializes an error created from a payload', () => {
         const error = VCLError.fromPayload(ErrorMocks.Payload);
         const errorJsonObject = error.jsonObject;
 
@@ -52,7 +52,7 @@ describe('VCLError Tests', () => {
         );
     });
 
-    test('testErrorToJsonFromProperties', () => {
+    test('serializes an error created from explicit properties', () => {
         const error = new VCLError(
             ErrorMocks.Error,
             ErrorMocks.ErrorCode,
@@ -77,7 +77,7 @@ describe('VCLError Tests', () => {
         );
     });
 
-    test('testErrorFromSomeError', () => {
+    test('creates an error from another error', () => {
         const error = VCLError.fromJson(ErrorMocks.SomeErrorJson);
 
         expect(JSON.parse(error.payload ?? '{}')).toStrictEqual(

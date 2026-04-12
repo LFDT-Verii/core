@@ -6,7 +6,7 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { CredentialTypeSchemaMocks } from '../infrastructure/resources/valid/CredentialTypeSchemaMocks';
 import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('CredentialTypeSchemaUseCase Tests', () => {
+describe('CredentialTypeSchemaUseCase', () => {
     const expectedCredentialTypeSchemasPayload = JSON.parse(
         CredentialTypeSchemaMocks.CredentialTypeSchemaJson,
     );
@@ -17,7 +17,7 @@ describe('CredentialTypeSchemaUseCase Tests', () => {
 
     useNockLifecycle();
 
-    test('testGetCredentialTypeSchemas', async () => {
+    test('returns credential type schemas', async () => {
         const scope = mockRegistrarGet(
             `/schemas/${CredentialTypeSchemaMocks.CredentialType.schemaName}`,
             expectedCredentialTypeSchemasPayload,

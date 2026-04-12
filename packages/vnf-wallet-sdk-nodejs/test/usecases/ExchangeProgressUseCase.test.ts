@@ -8,7 +8,7 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 import { mockAbsoluteGet, useNockLifecycle } from '../utils/nock';
 
-describe('ExchangeProgressUseCase Tests', () => {
+describe('ExchangeProgressUseCase', () => {
     const subject = new ExchangeProgressUseCaseImpl(
         new ExchangeProgressRepositoryImpl(new NetworkServiceImpl()),
     );
@@ -20,7 +20,7 @@ describe('ExchangeProgressUseCase Tests', () => {
 
     useNockLifecycle();
 
-    test('testGetExchangeProgressSuccess', async () => {
+    test('returns exchange progress', async () => {
         const scope = mockAbsoluteGet(
             `${exchangeDescriptor.processUri}?exchange_id=${exchangeDescriptor.exchangeId}`,
             ExchangeProgressMocks.ExchangeProgressJson,
@@ -38,7 +38,7 @@ describe('ExchangeProgressUseCase Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testGetExchangeProgressFailure', async () => {
+    test('throws an sdk error for an invalid exchange progress response', async () => {
         const scope = mockAbsoluteGet(
             `${exchangeDescriptor.processUri}?exchange_id=${exchangeDescriptor.exchangeId}`,
             '',

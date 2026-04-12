@@ -29,7 +29,7 @@ import {
     useNockLifecycle,
 } from '../utils/nock';
 
-describe('PresentationRequestUseCase Tests', () => {
+describe('PresentationRequestUseCase', () => {
     const pushUrl = 'push_url';
     const pushToken = 'push_token';
     const presentationRequestDescriptor = new VCLPresentationRequestDescriptor(
@@ -51,7 +51,7 @@ describe('PresentationRequestUseCase Tests', () => {
 
     useNockLifecycle();
 
-    test('testGetPresentationRequestSuccess', async () => {
+    test('returns a presentation request', async () => {
         const verifiedProfile = new VCLVerifiedProfile({});
         const requestScope = mockAbsoluteGet(
             presentationRequestDescriptor.endpoint!,
@@ -82,7 +82,7 @@ describe('PresentationRequestUseCase Tests', () => {
         expect(didScope.isDone()).toBeTruthy();
     });
 
-    test('testGetPresentationRequestError', async () => {
+    test('throws an sdk error for an invalid presentation request response', async () => {
         const requestScope = mockAbsoluteGet(
             presentationRequestDescriptor.endpoint!,
             { wrong: 'payload' },

@@ -34,7 +34,7 @@ import VclBlocksProvider from '../../src/impl/VclBlocksProvider';
 import CredentialTypesModel from '../../src/impl/domain/models/CredentialTypesModel';
 import VCLError from '../../src/api/entities/error/VCLError';
 
-describe('FinalizeOffersUseCase Tests', () => {
+describe('FinalizeOffersUseCase', () => {
     let subject1: FinalizeOffersUseCase;
     let subject2: FinalizeOffersUseCase;
     let subject3: FinalizeOffersUseCase;
@@ -106,7 +106,7 @@ describe('FinalizeOffersUseCase Tests', () => {
 
     useNockLifecycle();
 
-    test('testFailedCredentials', async () => {
+    test('marks invalid credentials as failed', async () => {
         subject1 = new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(new NetworkServiceImpl()),
             jwtServiceRepository,
@@ -146,7 +146,7 @@ describe('FinalizeOffersUseCase Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testPassedCredentials', async () => {
+    test('returns verified credentials', async () => {
         subject2 = new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(new NetworkServiceImpl()),
             jwtServiceRepository,
@@ -182,7 +182,7 @@ describe('FinalizeOffersUseCase Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testEmptyCredentials', async () => {
+    test('returns an empty credential list', async () => {
         subject3 = new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(new NetworkServiceImpl()),
             jwtServiceRepository,
@@ -216,7 +216,7 @@ describe('FinalizeOffersUseCase Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testFailure', async () => {
+    test('propagates finalize offers failures', async () => {
         subject4 = new FinalizeOffersUseCaseImpl(
             new FinalizeOffersRepositoryImpl(new NetworkServiceImpl()),
             jwtServiceRepository,

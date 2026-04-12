@@ -16,8 +16,8 @@ const jwtWtihJwkStr = [
     'ijeuQTlhK7jpYkRmD_yWFKtluFWLEhjdieZJxkTc9fY',
 ].join('.');
 
-describe('test jwt', () => {
-    test('empty jwt', async () => {
+describe('VCLJwt', () => {
+    test('creates an empty jwt', async () => {
         const subject = VCLJwt.fromEncodedJwt('');
 
         expect(subject.header).toStrictEqual({});
@@ -28,7 +28,7 @@ describe('test jwt', () => {
         expect(subject.kid).toStrictEqual('');
     });
 
-    test('valid jwt with kid', async () => {
+    test('parses a valid jwt with a kid header', async () => {
         const subject = VCLJwt.fromEncodedJwt(jwtWtithKidStr);
 
         expect(subject.header).toStrictEqual(
@@ -47,7 +47,7 @@ describe('test jwt', () => {
         expect(subject.kid).toStrictEqual('some_kid');
     });
 
-    test('valid jwt with jwk', async () => {
+    test('parses a valid jwt with an embedded jwk header', async () => {
         const subject = VCLJwt.fromEncodedJwt(jwtWtihJwkStr);
 
         expect(subject.header).toStrictEqual(

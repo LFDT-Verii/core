@@ -7,10 +7,10 @@ import VCLPushDelegate from '../../src/api/entities/VCLPushDelegate';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 
-describe('VCLCredentialManifestDescriptorByDeepLink Tests', () => {
+describe('VCLCredentialManifestDescriptorByDeepLink', () => {
     let subject: VCLCredentialManifestDescriptorByDeepLink;
 
-    test('testCredentialManifestDescriptorFullValidByDeepLinkSuccess', () => {
+    test('builds a descriptor from a credential manifest deep link', () => {
         subject = new VCLCredentialManifestDescriptorByDeepLink(
             CredentialManifestDescriptorMocks.DeepLink,
             VCLIssuingType.Career,
@@ -34,7 +34,7 @@ describe('VCLCredentialManifestDescriptorByDeepLink Tests', () => {
         expect(subject.pushDelegate?.pushToken).toEqual('some_token');
     });
 
-    test('testCredentialManifestDescriptorFullValidByDeepLinkWithIdSuccess', () => {
+    test('builds a descriptor from a credential manifest deep link with an id', () => {
         subject = new VCLCredentialManifestDescriptorByDeepLink(
             DeepLinkMocks.CredentialManifestDeepLinkMainNetWithId,
             VCLIssuingType.Career,

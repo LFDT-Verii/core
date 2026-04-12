@@ -35,7 +35,7 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
         DidJwkMocks.DidJwk,
     );
 
-    test('testVerifyCredentialManifestSuccess', async () => {
+    test('verifies a matching credential manifest deep link', async () => {
         subject = new CredentialManifestByDeepLinkVerifierImpl();
 
         const isVerified = await subject.verifyCredentialManifest(
@@ -46,7 +46,7 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
         expect(isVerified).toBeTruthy();
     });
 
-    test('testVerifyCredentialManifestError', async () => {
+    test('throws for a mismatched credential manifest deep link', async () => {
         subject = new CredentialManifestByDeepLinkVerifierImpl();
         try {
             const isVerified = await subject.verifyCredentialManifest(

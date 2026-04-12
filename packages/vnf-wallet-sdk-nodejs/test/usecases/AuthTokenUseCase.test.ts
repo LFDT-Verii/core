@@ -15,7 +15,7 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { VCLAuthToken, VCLAuthTokenDescriptor, VCLErrorCode } from '../../src';
 import { mockAbsolutePost, useNockLifecycle } from '../utils/nock';
 
-describe('AuthTokenUseCaseTest', () => {
+describe('AuthTokenUseCase', () => {
     const authTokenUri = 'https://wallet.example.test/oauth/token';
     const expectedAuthToken = TokenMocks.AuthToken;
     const authTokenDescriptor = new VCLAuthTokenDescriptor(
@@ -30,7 +30,7 @@ describe('AuthTokenUseCaseTest', () => {
 
     useNockLifecycle();
 
-    test('testGetAuthTokenSuccess', async () => {
+    test('returns an auth token', async () => {
         const scope = mockAbsolutePost(
             authTokenUri,
             authTokenDescriptor.generateRequestBody(),
@@ -53,7 +53,7 @@ describe('AuthTokenUseCaseTest', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testGetAuthTokenFailure', async () => {
+    test('throws an sdk error for an invalid auth token response', async () => {
         const scope = mockAbsolutePost(
             authTokenUri,
             authTokenDescriptor.generateRequestBody(),

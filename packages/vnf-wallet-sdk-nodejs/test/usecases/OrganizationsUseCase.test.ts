@@ -7,7 +7,7 @@ import { OrganizationsMocks } from '../infrastructure/resources/valid/Organizati
 import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
 import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('OrganizationsUseCase Tests', () => {
+describe('OrganizationsUseCase', () => {
     const subject = new OrganizationsUseCaseImpl(
         new OrganizationsRepositoryImpl(new NetworkServiceImpl()),
     );
@@ -20,7 +20,7 @@ describe('OrganizationsUseCase Tests', () => {
 
     useNockLifecycle();
 
-    test('testSearchForOrganizationsSuccess', async () => {
+    test('returns organizations for a search descriptor', async () => {
         const scope = mockRegistrarGet(
             '/api/v0.6/organizations/search-profiles',
             OrganizationsMocks.OrganizationJsonResultStr,

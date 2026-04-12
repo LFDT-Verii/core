@@ -7,7 +7,7 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { VCLVerifiedProfile, VCLVerifiedProfileDescriptor } from '../../src';
 import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('VerifiedProfileUseCaseImpl Tests', () => {
+describe('VerifiedProfileUseCase', () => {
     const subject = new VerifiedProfileUseCaseImpl(
         new VerifiedProfileRepositoryImpl(new NetworkServiceImpl()),
     );
@@ -15,7 +15,7 @@ describe('VerifiedProfileUseCaseImpl Tests', () => {
 
     useNockLifecycle();
 
-    test('testGetVerifiedProfileIssuerSuccess', async () => {
+    test('returns an issuer verified profile', async () => {
         const expectedPayload = JSON.parse(
             VerifiedProfileMocks.VerifiedProfileIssuerJsonStr1,
         );
@@ -29,7 +29,7 @@ describe('VerifiedProfileUseCaseImpl Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testGetVerifiedProfileIssuerInspector1Success', async () => {
+    test('returns the first inspector verified profile', async () => {
         const expectedPayload = JSON.parse(
             VerifiedProfileMocks.VerifiedProfileIssuerInspectorJsonStr,
         );
@@ -43,7 +43,7 @@ describe('VerifiedProfileUseCaseImpl Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testGetVerifiedProfileIssuerInspector2Success', async () => {
+    test('returns the second inspector verified profile', async () => {
         const expectedPayload = JSON.parse(
             VerifiedProfileMocks.VerifiedProfileNotaryIssuerJsonStr,
         );
@@ -57,7 +57,7 @@ describe('VerifiedProfileUseCaseImpl Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testGetVerifiedProfileIssuerNotaryIssuer2Success', async () => {
+    test('returns a notary issuer verified profile', async () => {
         const expectedPayload = JSON.parse(
             VerifiedProfileMocks.VerifiedProfileNotaryIssuerJsonStr,
         );

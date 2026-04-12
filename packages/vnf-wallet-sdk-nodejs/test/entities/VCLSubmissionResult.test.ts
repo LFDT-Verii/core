@@ -4,7 +4,7 @@ import VCLExchange from '../../src/api/entities/VCLExchange';
 import VCLSubmissionResult from '../../src/api/entities/VCLSubmissionResult';
 import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 
-describe('VCLSubmissionResult Tests', () => {
+describe('VCLSubmissionResult', () => {
     let subject: VCLSubmissionResult;
 
     beforeEach(() => {
@@ -16,7 +16,7 @@ describe('VCLSubmissionResult Tests', () => {
         );
     });
 
-    test('testProps', () => {
+    test('exposes submission result properties', () => {
         expect(subject.sessionToken).toEqual(CommonMocks.Token);
         expect(subject.exchange.id).toEqual('id123');
         expect(subject.exchange.type).toEqual('type123');

@@ -14,7 +14,7 @@ import PresentationSubmissionUseCase from '../../src/impl/domain/usecases/Presen
 import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
 import { mockAbsolutePost, useNockLifecycle } from '../utils/nock';
 
-describe('PresentationSubmission Tests', () => {
+describe('PresentationSubmissionUseCase', () => {
     let subject: PresentationSubmissionUseCase;
     const authToken = TokenMocks.AuthToken;
     const presentationSubmission = new VCLPresentationSubmission(
@@ -41,7 +41,7 @@ describe('PresentationSubmission Tests', () => {
 
     useNockLifecycle();
 
-    test('testSubmitPresentationSuccess', async () => {
+    test('submits a presentation', async () => {
         const scope = mockAbsolutePost(
             presentationSubmission.submitUri,
             presentationSubmission.generateRequestBody(
@@ -60,7 +60,7 @@ describe('PresentationSubmission Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testSubmitPresentationTypeFeedSuccess', async () => {
+    test('submits a presentation with an auth token', async () => {
         const scope = mockAbsolutePost(
             presentationSubmission.submitUri,
             presentationSubmission.generateRequestBody(

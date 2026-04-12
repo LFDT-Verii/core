@@ -17,7 +17,7 @@ import { KeyServiceMock } from '../../infrastructure/resources/key/KeyServiceMoc
 import { JwtVerifyServiceMock } from '../../infrastructure/resources/jwt/JwtVerifyServiceMock';
 import { JwtSignServiceMock } from '../../infrastructure/resources/jwt/JwtSignServiceMock';
 
-describe('VCLInitializationDescriptor tests', () => {
+describe('VCLInitializationDescriptor', () => {
     const cryptoServicesDescriptor = new VCLCryptoServicesDescriptor(
         new KeyServiceMock(),
         new JwtSignServiceMock(),

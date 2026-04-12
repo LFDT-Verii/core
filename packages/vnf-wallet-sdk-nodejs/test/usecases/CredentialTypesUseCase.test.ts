@@ -7,14 +7,14 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { VCLCredentialType, VCLErrorCode } from '../../src';
 import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('CredentialTypesUseCaseImpl Tests', () => {
+describe('CredentialTypesUseCase', () => {
     const subject = new CredentialTypesUseCaseImpl(
         new CredentialTypesRepositoryImpl(new NetworkServiceImpl()),
     );
 
     useNockLifecycle();
 
-    test('testGetCountriesSuccess', async () => {
+    test('returns credential types', async () => {
         const scope = mockRegistrarGet(
             '/api/v0.6/credential-types',
             JSON.parse(CredentialTypesMocks.CredentialTypesJsonStr),
@@ -36,7 +36,7 @@ describe('CredentialTypesUseCaseImpl Tests', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('testGetCountriesFailure', async () => {
+    test('throws an sdk error for an invalid credential types response', async () => {
         const scope = mockRegistrarGet('/api/v0.6/credential-types', {
             wrong: 'payload',
         });

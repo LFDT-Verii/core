@@ -10,8 +10,8 @@ import { expect } from 'expect';
 import { VCLImpl } from '../src/impl/VCLImpl';
 import { VCLProvider } from '../src';
 
-describe('GlobalConfigTest', () => {
-    it('sdk should be initialized successfully', async () => {
+describe('VCLProvider', () => {
+    it('returns the VCL implementation instance', async () => {
         const vclSdk = VCLProvider.getInstance();
 
         // const initializationDescriptor = new VCLInitializationDescriptor(

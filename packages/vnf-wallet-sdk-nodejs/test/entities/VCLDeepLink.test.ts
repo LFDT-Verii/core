@@ -3,8 +3,8 @@ import { expect } from 'expect';
 import VCLDeepLink from '../../src/api/entities/VCLDeepLink';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 
-describe('VCLDeepLink Tests', () => {
-    test('testOpenidInitiateIssuance', () => {
+describe('VCLDeepLink', () => {
+    test('parses an OpenID initiate issuance deep link', () => {
         const subject = new VCLDeepLink(
             DeepLinkMocks.OpenidInitiateIssuanceStrDev,
         );
@@ -19,7 +19,7 @@ describe('VCLDeepLink Tests', () => {
         expect(subject.did).toEqual(DeepLinkMocks.OIDIssuerDid);
     });
 
-    test('testPresentationRequestDeepLinkDevNetValidAggregation', () => {
+    test('parses a devnet presentation request deep link', () => {
         const subject = new VCLDeepLink(
             DeepLinkMocks.PresentationRequestDeepLinkDevNetStr,
         );
@@ -41,7 +41,7 @@ describe('VCLDeepLink Tests', () => {
         expect(subject.did).toEqual(DeepLinkMocks.InspectorDid);
     });
 
-    test('testPresentationRequestDeepLinkTestNetValidAggregation', () => {
+    test('parses a testnet presentation request deep link', () => {
         const subject = new VCLDeepLink(
             DeepLinkMocks.PresentationRequestDeepLinkTestNetStr,
         );
@@ -64,7 +64,7 @@ describe('VCLDeepLink Tests', () => {
         expect(subject.did).toEqual(DeepLinkMocks.InspectorDid);
     });
 
-    test('testPresentationRequestDeepLinkMainNetValidAggregation', () => {
+    test('parses a mainnet presentation request deep link', () => {
         const subject = new VCLDeepLink(
             DeepLinkMocks.PresentationRequestDeepLinkMainNetStr,
         );
@@ -86,7 +86,7 @@ describe('VCLDeepLink Tests', () => {
         expect(subject.did).toEqual(DeepLinkMocks.InspectorDid);
     });
 
-    test('testCredentialManifestDeepLinkDevNetValidAggregation', () => {
+    test('parses a devnet credential manifest deep link', () => {
         const subject = new VCLDeepLink(
             DeepLinkMocks.CredentialManifestDeepLinkDevNetStr,
         );
@@ -106,7 +106,7 @@ describe('VCLDeepLink Tests', () => {
         expect(subject.did).toEqual(DeepLinkMocks.IssuerDid);
     });
 
-    test('testCredentialManifestDeepLinkTestNetValidAggregation', () => {
+    test('parses a testnet credential manifest deep link', () => {
         const subject = new VCLDeepLink(
             DeepLinkMocks.CredentialManifestDeepLinkTestNetStr,
         );
@@ -126,7 +126,7 @@ describe('VCLDeepLink Tests', () => {
         expect(subject.did).toEqual(DeepLinkMocks.IssuerDid);
     });
 
-    test('testCredentialManifestDeepLinkMainNetValidAggregation', () => {
+    test('parses a mainnet credential manifest deep link', () => {
         const subject = new VCLDeepLink(
             DeepLinkMocks.CredentialManifestDeepLinkMainNetStr,
         );
