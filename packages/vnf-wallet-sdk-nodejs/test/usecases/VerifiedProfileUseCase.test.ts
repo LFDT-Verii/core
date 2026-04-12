@@ -7,7 +7,7 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { VCLVerifiedProfile, VCLVerifiedProfileDescriptor } from '../../src';
 import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('CredentialTypesUseCaseImpl Tests', () => {
+describe('VerifiedProfileUseCaseImpl Tests', () => {
     const subject = new VerifiedProfileUseCaseImpl(
         new VerifiedProfileRepositoryImpl(new NetworkServiceImpl()),
     );

@@ -6,7 +6,7 @@ import CountriesRepositoryImpl from '../../src/impl/data/repositories/CountriesR
 import { CountriesMocks } from '../infrastructure/resources/valid/CountriesMocks';
 import { mockRegistrarGet, useNockLifecycle } from '../utils/nock';
 
-describe('CredentialManifestUseCase Tests', () => {
+describe('CountriesUseCaseImpl Tests', () => {
     const expectedCountriesPayload = JSON.parse(CountriesMocks.CountriesJson);
 
     const subject = new CountriesUseCaseImpl(

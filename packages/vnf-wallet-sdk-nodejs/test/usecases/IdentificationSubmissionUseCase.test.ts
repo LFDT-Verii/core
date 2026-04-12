@@ -19,7 +19,7 @@ import VCLJwtDescriptor from '../../src/api/entities/VCLJwtDescriptor';
 import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';
 import { mockAbsolutePost, useNockLifecycle } from '../utils/nock';
 
-describe('PresentationSubmission Tests', () => {
+describe('IdentificationSubmissionUseCase Tests', () => {
     const jwtSignServiceMock = new JwtSignServiceMock();
     jwtSignServiceMock.sign = mock.fn(() =>
         Promise.resolve(
