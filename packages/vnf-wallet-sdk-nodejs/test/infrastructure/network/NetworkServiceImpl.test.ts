@@ -1,6 +1,4 @@
 /**
- * Created by OpenAI Codex on 09/04/2026.
- *
  * Copyright 2022 Velocity Career Labs inc.
  * SPDX-License-Identifier: Apache-2.0
  */
