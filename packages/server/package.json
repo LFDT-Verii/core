@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@spencejs/spence-events": "^0.10.2",
-    "@spencejs/spence-mongo-repos": "^0.10.2",
+    "@spencejs/spence-mongo-repos": "^1.0.0",
     "@verii/common-functions": "0.5.0-build",
     "@verii/common-schemas": "0.5.0-build",
     "@verii/fastify-plugins": "0.5.0-build",

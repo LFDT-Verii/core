@@ -39,7 +39,7 @@
     "@fastify/swagger-ui": "^5.0.0",
     "@fastify/view": "^11.0.0",
     "@spencejs/spence-factories": "^0.10.2",
-    "@spencejs/spence-mongo-repos": "^0.10.2",
+    "@spencejs/spence-mongo-repos": "^1.0.0",
     "@verii/auth": "0.5.0-build",
     "@verii/base-contract-io": "0.5.0-build",
     "@verii/blockchain-functions": "0.5.0-build",
