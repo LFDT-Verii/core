@@ -20,7 +20,7 @@ export class CredentialTypesModelMock implements CredentialTypesModel {
         throw new Error('Method not implemented.');
     }
 
-    credentialTypeByTypeName = (type: string): VCLCredentialType => {
+    credentialTypeByTypeName = (_type: string): VCLCredentialType => {
         return new VCLCredentialType({}, this.issuerCategory);
     };
 

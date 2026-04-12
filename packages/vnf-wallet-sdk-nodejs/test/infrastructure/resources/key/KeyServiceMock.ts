@@ -5,7 +5,7 @@ import { DidJwkMocks } from '../valid/DidJwkMocks';
 
 export class KeyServiceMock implements VCLKeyService {
     async generateDidJwk(
-        didJwkDescriptor: VCLDidJwkDescriptor,
+        _didJwkDescriptor: VCLDidJwkDescriptor,
     ): Promise<VCLDidJwk> {
         return DidJwkMocks.DidJwk;
     }

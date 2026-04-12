@@ -66,9 +66,6 @@ describe('FinalizeOffersUseCase Tests', () => {
         CredentialManifestMocks.JwtCredentialManifestFromRegularIssuer,
     );
 
-    const credentialsAmount = JSON.parse(
-        CredentialMocks.JwtCredentialsFromRegularIssuer,
-    ).length;
     const expectedJwtCredentials = JSON.parse(
         CredentialMocks.JwtCredentialsFromRegularIssuer,
     ).map((jwt: string) => VCLJwt.fromEncodedJwt(jwt));

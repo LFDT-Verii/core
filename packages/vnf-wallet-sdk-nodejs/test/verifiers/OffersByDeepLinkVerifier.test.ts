@@ -11,7 +11,7 @@ import { CredentialManifestDescriptorMocks } from '../infrastructure/resources/v
 import { OffersByDeepLinkVerifierImpl } from '../../src/impl/data/verifiers';
 import ResolveDidDocumentRepositoryImpl from '../../src/impl/data/repositories/ResolveDidDocumentRepositoryImpl';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
-import { VCLErrorCode, VCLJwt, VCLOffers, VCLToken } from '../../src';
+import { VCLErrorCode, VCLOffers } from '../../src';
 import { GenerateOffersMocks } from '../infrastructure/resources/valid/GenerateOffersMocks';
 import OffersByDeepLinkVerifier from '../../src/impl/domain/verifiers/OffersByDeepLinkVerifier';
 import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/NetworkServiceImpl';

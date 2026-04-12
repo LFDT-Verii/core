@@ -4,10 +4,7 @@ import VCLPushDelegate from './VCLPushDelegate';
 import VCLToken from './VCLToken';
 import VCLDidJwk from './VCLDidJwk';
 import VCLDeepLink from './VCLDeepLink';
-import {
-    appendQueryParamsToString,
-    getUrlSubPathFromString,
-} from '../../impl/utils/HelperFunctions';
+import { appendQueryParamsToString } from '../../impl/utils/HelperFunctions';
 
 export default class VCLCredentialManifestDescriptor {
     // eslint-disable-next-line complexity

@@ -10,7 +10,6 @@ import CredentialManifestByDeepLinkVerifier from '../../domain/verifiers/Credent
 import VCLLog from '../../utils/VCLLog';
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLErrorCode from '../../../api/entities/error/VCLErrorCode';
-import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDocumentRepository';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 
 export default class CredentialManifestByDeepLinkVerifierImpl implements CredentialManifestByDeepLinkVerifier {

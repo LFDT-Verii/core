@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { configs } from 'eslint-config-airbnb-extended/legacy';
 import globals from 'globals';
 import prettierPlugin from 'eslint-plugin-prettier';
@@ -204,7 +203,14 @@ const baseConfig = [
       },
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': 'off',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^(React|_)',
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'off',
       'class-methods-use-this': 'off',
     },

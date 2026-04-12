@@ -1,5 +1,4 @@
 import {
-    VCLDeepLink,
     VCLJwt,
     VCLPresentationRequest,
     VCLVerifiedProfile,

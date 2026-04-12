@@ -23,7 +23,6 @@ import IdentificationSubmissionRepositoryImpl from './data/repositories/Identifi
 import JwtServiceRepositoryImpl from './data/repositories/JwtServiceRepositoryImpl';
 import OrganizationsRepositoryImpl from './data/repositories/OrganizationsRepositoryImpl';
 import PresentationRequestRepositoryImpl from './data/repositories/PresentationRequestRepositoryImpl';
-import ResolveKidRepositoryImpl from './data/repositories/ResolveKidRepositoryImpl';
 import VerifiedProfileRepositoryImpl from './data/repositories/VerifiedProfileRepositoryImpl';
 import CountriesUseCaseImpl from './data/usecases/CountriesModelUseCaseImpl';
 import CredentialManifestUseCaseImpl from './data/usecases/CredentialManifestUseCaseImpl';
