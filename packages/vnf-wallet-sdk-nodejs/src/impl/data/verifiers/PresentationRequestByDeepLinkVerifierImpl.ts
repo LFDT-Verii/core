@@ -18,7 +18,9 @@ export default class PresentationRequestByDeepLinkVerifierImpl implements Presen
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
     ): Promise<boolean> {
-        if (deepLink.did == null) {
+        const deepLinkDid = deepLink.did;
+
+        if (deepLinkDid == null) {
             await this.onError(`DID not found in deep link: ${deepLink.value}`);
             return false;
         }
@@ -27,7 +29,7 @@ export default class PresentationRequestByDeepLinkVerifierImpl implements Presen
                 presentationRequest.iss,
                 didDocument,
             ) &&
-            this.isDidBoundToDidDocument(deepLink.did, didDocument)
+            this.isDidBoundToDidDocument(deepLinkDid, didDocument)
         ) {
             return true;
         }
