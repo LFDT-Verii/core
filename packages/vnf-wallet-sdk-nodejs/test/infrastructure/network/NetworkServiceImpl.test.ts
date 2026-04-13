@@ -147,7 +147,31 @@ describe('NetworkServiceImpl integration', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
-    test('treats plain-text error bodies as human-readable VCLError messages', async () => {
+    test('parses JSON 404 error bodies as VCLError payloads', async () => {
+        const scope = mockAbsoluteGet(
+            `${origin}/missing`,
+            ErrorMocks.SomeErrorJson,
+            404,
+            {},
+            { 'content-type': jsonContentType },
+        );
+
+        await expect(
+            subject.sendRequest(
+                new Request(`${origin}/missing`, HttpMethod.GET, undefined),
+            ),
+        ).rejects.toMatchObject({
+            payload: JSON.stringify(ErrorMocks.SomeErrorJson),
+            error: ErrorMocks.SomeErrorJson.error,
+            errorCode: ErrorMocks.SomeErrorJson.errorCode,
+            requestId: ErrorMocks.SomeErrorJson.requestId,
+            message: ErrorMocks.SomeErrorJson.message,
+            statusCode: ErrorMocks.SomeErrorJson.statusCode,
+        });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('treats plain-text 500 error bodies as human-readable VCLError messages', async () => {
         const scope = mockAbsoluteGet(
             `${origin}/internal-error`,
             'server error',

@@ -43,10 +43,9 @@ export default class VCLError extends Error {
     }
 
     // eslint-disable-next-line complexity
-    static fromPayload(payload: string): VCLError {
-        const payloadJson = JSON.parse(payload);
+    static fromPayloadJson(payloadJson: Dictionary<any>): VCLError {
         return new VCLError({
-            payload,
+            payload: JSON.stringify(payloadJson),
             error: payloadJson?.[VCLError.KeyError],
             errorCode:
                 payloadJson?.[VCLError.KeyErrorCode] ??

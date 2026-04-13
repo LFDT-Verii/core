@@ -66,11 +66,11 @@ export default class NetworkServiceImpl implements NetworkService {
     private normalizeError(error: any): VCLError {
         const response = error?.response;
         const payload = response?.data;
+        const contentType = response?.headers?.['content-type'];
 
         if (response) {
-            const jsonPayload = this.toJsonPayload(payload);
-            if (jsonPayload != null) {
-                return VCLError.fromPayload(jsonPayload);
+            if (this.isJsonContentType(contentType) && payload != null) {
+                return VCLError.fromPayloadJson(payload);
             }
 
             if (payload != null) {
@@ -88,20 +88,11 @@ export default class NetworkServiceImpl implements NetworkService {
         return VCLError.fromError(error, response?.status);
     }
 
-    private toJsonPayload(payload: unknown): Nullish<string> {
-        if (typeof payload === 'string') {
-            try {
-                JSON.parse(payload);
-                return payload;
-            } catch {
-                return null;
-            }
-        }
-
-        if (payload && typeof payload === 'object') {
-            return JSON.stringify(payload);
-        }
-
-        return null;
+    private isJsonContentType(contentType?: string): boolean {
+        return (
+            typeof contentType === 'string' &&
+            (contentType.includes('application/json') ||
+                contentType.includes('+json'))
+        );
     }
 }

@@ -4,8 +4,8 @@ import VCLError from '../../src/api/entities/error/VCLError';
 import { ErrorMocks } from '../infrastructure/resources/valid/ErrorMocks';
 
 describe('VCLError', () => {
-    test('creates an error from a payload', () => {
-        const error = VCLError.fromPayload(ErrorMocks.Payload);
+    test('creates an error from a JSON payload', () => {
+        const error = VCLError.fromPayloadJson(JSON.parse(ErrorMocks.Payload));
 
         expect(error.payload).toEqual(ErrorMocks.Payload);
         expect(error.error).toEqual(ErrorMocks.Error);
@@ -40,8 +40,8 @@ describe('VCLError', () => {
         expect(error.statusCode).toBeNull();
     });
 
-    test('serializes an error created from a payload', () => {
-        const error = VCLError.fromPayload(ErrorMocks.Payload);
+    test('serializes an error created from a JSON payload', () => {
+        const error = VCLError.fromPayloadJson(JSON.parse(ErrorMocks.Payload));
         const errorJsonObject = error.jsonObject;
 
         expect(errorJsonObject[VCLError.KeyPayload]).toEqual(
