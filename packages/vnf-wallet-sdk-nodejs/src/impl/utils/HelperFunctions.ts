@@ -85,7 +85,7 @@ export const ensureDefined = <T>(
     name: string,
 ): T => {
     if (value == null) {
-        throw new VCLError(`${name} is required`);
+        throw new VCLError({ message: `${name} is required` });
     }
     return value;
 };

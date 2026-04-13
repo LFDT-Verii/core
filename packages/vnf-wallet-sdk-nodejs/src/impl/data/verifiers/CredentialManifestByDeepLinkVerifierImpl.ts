@@ -42,6 +42,9 @@ export default class CredentialManifestByDeepLinkVerifierImpl implements Credent
         errorCode: VCLErrorCode = VCLErrorCode.SdkError,
     ) {
         VCLLog.error(errorMessage);
-        throw new VCLError(null, errorCode, null, errorMessage);
+        throw new VCLError({
+            errorCode: errorCode.toString(),
+            message: errorMessage,
+        });
     }
 }

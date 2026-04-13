@@ -43,9 +43,9 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
         const { kid } = presentationRequest.jwt;
         const publicJwk = didDocument.getPublicJwk(kid);
         if (publicJwk == null) {
-            throw new VCLError(
-                `Public JWK not found for kid: ${kid} in DID Document: ${didDocument}`,
-            );
+            throw new VCLError({
+                message: `Public JWK not found for kid: ${kid} in DID Document: ${didDocument}`,
+            });
         }
         return this.verifyPresentationRequest(
             publicJwk,
@@ -83,8 +83,8 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
         if (isVerified) {
             return presentationRequest;
         }
-        throw new VCLError(
-            `Failed  to verify: ${presentationRequest.jwt.payload}`,
-        );
+        throw new VCLError({
+            message: `Failed  to verify: ${presentationRequest.jwt.payload}`,
+        });
     }
 }

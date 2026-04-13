@@ -45,13 +45,15 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
                 );
             const { kid } = credentialManifest.jwt;
             if (kid === null) {
-                throw new VCLError(
-                    `Empty credentialManifest.jwt.kid in jwt: ${credentialManifest.jwt}`,
-                );
+                throw new VCLError({
+                    message: `Empty credentialManifest.jwt.kid in jwt: ${credentialManifest.jwt}`,
+                });
             }
             const publicJwk = didDocument.getPublicJwk(kid);
             if (publicJwk === null) {
-                throw new VCLError(`public jwk not found for kid: ${kid}`);
+                throw new VCLError({
+                    message: `public jwk not found for kid: ${kid}`,
+                });
             }
             return this.verifyCredentialManifestJwt(
                 publicJwk,
@@ -59,7 +61,7 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
                 didDocument,
             );
         }
-        throw new VCLError('Empty jwtStr');
+        throw new VCLError({ message: 'Empty jwtStr' });
     }
 
     async verifyCredentialManifestJwt(
@@ -104,8 +106,8 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
         if (isVerified) {
             return credentialManifest;
         }
-        throw new VCLError(
-            `Failed to verify credentialManifest jwt:\n${credentialManifest.jwt}`,
-        );
+        throw new VCLError({
+            message: `Failed to verify credentialManifest jwt:\n${credentialManifest.jwt}`,
+        });
     }
 }

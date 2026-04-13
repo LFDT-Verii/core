@@ -14,7 +14,9 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
     ): Promise<string> {
         const { endpoint } = presentationRequestDescriptor;
         if (!endpoint) {
-            throw new VCLError('presentationRequestDescriptor.endpoint = null');
+            throw new VCLError({
+                message: 'presentationRequestDescriptor.endpoint = null',
+            });
         }
 
         const presentationRequestResponse =

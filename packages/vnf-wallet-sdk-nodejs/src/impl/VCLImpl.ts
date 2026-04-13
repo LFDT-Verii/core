@@ -42,7 +42,6 @@ import CredentialTypesModel from './domain/models/CredentialTypesModel';
 import InitializationWatcher from './utils/InitializationWatcher';
 import { ProfileServiceTypeVerifier } from './utils/ProfileServiceTypeVerifier';
 import VCLLog from './utils/VCLLog';
-import VCLErrorCode from '../api/entities/error/VCLErrorCode';
 import VerifiedProfileUseCase from './domain/usecases/VerifiedProfileUseCase';
 import JwtServiceUseCase from './domain/usecases/JwtServiceUseCase';
 import IdentificationSubmissionUseCase from './domain/usecases/IdentificationSubmissionUseCase';
@@ -167,7 +166,9 @@ export class VCLImpl implements VCL {
             }
         } else {
             return completionHandler(
-                new VCLError('Failed to get credential type schemas'),
+                new VCLError({
+                    message: 'Failed to get credential type schemas',
+                }),
             );
         }
     }
@@ -255,11 +256,11 @@ export class VCLImpl implements VCL {
     ) => {
         const { did } = presentationRequestDescriptor;
         if (!did) {
-            const err = new VCLError(
-                `did was not found in ${JSON.stringify(
+            const err = new VCLError({
+                message: `did was not found in ${JSON.stringify(
                     presentationRequestDescriptor,
                 )}`,
-            );
+            });
 
             logError('getPresentationRequest::verifiedProfile', err);
             throw err;
@@ -324,13 +325,11 @@ export class VCLImpl implements VCL {
     ) => {
         const { did } = credentialManifestDescriptor;
         if (!did) {
-            const error = new VCLError(
-                `did was not found in ${JSON.stringify(
+            const error = new VCLError({
+                message: `did was not found in ${JSON.stringify(
                     credentialManifestDescriptor,
                 )}`,
-                VCLErrorCode.SdkError.toString(),
-                null,
-            );
+            });
 
             logError("credentialManifestDescriptor.did doesn't exist", error);
             throw error;
@@ -428,9 +427,9 @@ export class VCLImpl implements VCL {
                 throw error;
             }
         } else {
-            const error = new VCLError(
-                'No countries for getCredentialTypesUIFormSchema',
-            );
+            const error = new VCLError({
+                message: 'No countries for getCredentialTypesUIFormSchema',
+            });
 
             logError('getCredentialTypesUIFormSchema', error);
             throw error;
