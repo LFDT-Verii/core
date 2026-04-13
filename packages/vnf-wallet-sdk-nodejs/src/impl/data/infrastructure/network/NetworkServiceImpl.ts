@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import { Nullish } from '../../../../api/VCLTypes';
+import VCLError from '../../../../api/entities/error/VCLError';
 import NetworkService from '../../../domain/infrastructure/network/NetworkService';
 import VCLLog from '../../../utils/VCLLog';
 import Response from './Response';
@@ -7,7 +8,6 @@ import Request from './Request';
 import { HttpMethod } from './HttpMethod';
 
 export default class NetworkServiceImpl implements NetworkService {
-    // eslint-disable-next-line complexity
     async sendRequestRaw(request: Request): Promise<Response> {
         const MAX_AGE = 60 * 60 * 24; // 24 hours
 
@@ -49,7 +49,7 @@ export default class NetworkServiceImpl implements NetworkService {
             const r = await handler();
             return new Response(r!.data, r!.status);
         } catch (error: any) {
-            throw error.response?.data ?? error;
+            throw this.normalizeError(error);
         }
     }
 
@@ -60,5 +60,48 @@ export default class NetworkServiceImpl implements NetworkService {
 
     logRequest(request: Request) {
         VCLLog.info(request, 'Network request');
+    }
+
+    // eslint-disable-next-line complexity
+    private normalizeError(error: any): VCLError {
+        const response = error?.response;
+        const payload = response?.data;
+
+        if (response) {
+            const jsonPayload = this.toJsonPayload(payload);
+            if (jsonPayload != null) {
+                return VCLError.fromPayload(jsonPayload);
+            }
+
+            if (payload != null) {
+                const textPayload =
+                    typeof payload === 'string' ? payload : String(payload);
+
+                return new VCLError({
+                    payload: textPayload,
+                    message: textPayload,
+                    statusCode: response.status,
+                });
+            }
+        }
+
+        return VCLError.fromError(error, response?.status);
+    }
+
+    private toJsonPayload(payload: unknown): Nullish<string> {
+        if (typeof payload === 'string') {
+            try {
+                JSON.parse(payload);
+                return payload;
+            } catch {
+                return null;
+            }
+        }
+
+        if (payload && typeof payload === 'object') {
+            return JSON.stringify(payload);
+        }
+
+        return null;
     }
 }
