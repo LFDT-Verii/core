@@ -89,3 +89,7 @@ export const ensureDefined = <T>(
     }
     return value;
 };
+
+export const toNullableString = (value: unknown): Nullish<string> => {
+    return value == null ? null : String(value);
+};

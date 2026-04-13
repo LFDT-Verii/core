@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { Nullish } from '../../../../api/VCLTypes';
 import VCLError from '../../../../api/entities/error/VCLError';
 import NetworkService from '../../../domain/infrastructure/network/NetworkService';
+import { toNullableString } from '../../../utils/HelperFunctions';
 import VCLLog from '../../../utils/VCLLog';
 import Response from './Response';
 import Request from './Request';
@@ -68,16 +69,11 @@ export default class NetworkServiceImpl implements NetworkService {
             return VCLError.fromError(error);
         }
 
-        return this.normalizeResponseError(response, error);
-    }
-
-    private normalizeResponseError(response: any, error: any): VCLError {
         if (this.isJsonContentType(response.headers?.['content-type'])) {
             return VCLError.fromPayloadJson(response.data);
         }
 
-        const textPayload =
-            response.data == null ? null : String(response.data);
+        const textPayload = toNullableString(response.data);
 
         return new VCLError({
             payload: textPayload,
