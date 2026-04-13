@@ -61,7 +61,7 @@ services:
       - 13999:3000
 
   registrar-proxy:
-    image: nginx:alpine@sha256:9c5e088b4dababb9fb4a2523bdddf74fd32c0ed748226ac71094ba599681a33d
+    image: nginx:alpine@sha256:582c496ccf79d8aa6f8203a79d32aaf7ffd8b13362c60a701a2f9ac64886c93d
     restart: on-failure
     depends_on:
       - registrar
