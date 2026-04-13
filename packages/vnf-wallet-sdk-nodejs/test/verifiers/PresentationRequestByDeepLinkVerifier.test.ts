@@ -98,4 +98,19 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
             );
         }
     });
+
+    test('testVerifyPresentationRequestErrorWhenDeepLinkDidMissing', async () => {
+        subject = new PresentationRequestByDeepLinkVerifierImpl();
+
+        await expect(
+            subject.verifyPresentationRequest(
+                presentationRequest,
+                new VCLDeepLink('velocity-network://inspect'),
+                DidDocumentMocks.DidDocumentMock,
+            ),
+        ).rejects.toMatchObject({
+            errorCode: VCLErrorCode.SdkError,
+            message: expect.stringContaining('DID not found in deep link'),
+        });
+    });
 });
