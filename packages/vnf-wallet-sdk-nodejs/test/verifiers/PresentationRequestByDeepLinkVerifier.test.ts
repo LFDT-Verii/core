@@ -42,7 +42,7 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
         );
     };
 
-    test('testVerifyPresentationRequestSuccess', async () => {
+    test('verifies a matching presentation request deep link', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
 
         const isVerified = await subject.verifyPresentationRequest(
@@ -53,7 +53,7 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
         expect(isVerified).toBeTruthy();
     });
 
-    test('testVerifyPresentationRequestSuccessWithDidDocumentIdInPresentationRequest', async () => {
+    test('verifies a presentation request when iss matches didDocument.id', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
         const presentationRequestWithDidDocumentId = createPresentationRequest(
             DidDocumentMocks.DidDocumentMock.id,
@@ -67,7 +67,7 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
         expect(isVerified).toBeTruthy();
     });
 
-    test('testVerifyPresentationRequestSuccessWithDidDocumentIdInDeepLink', async () => {
+    test('verifies a presentation request when inspectorDid matches didDocument.id', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
         const deepLinkWithDidDocumentId = new VCLDeepLink(
             `velocity-network://inspect?inspectorDid=${encodeURIComponent(
@@ -83,7 +83,7 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
         expect(isVerified).toBeTruthy();
     });
 
-    test('testVerifyPresentationRequestError', async () => {
+    test('throws for a mismatched presentation request deep link', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
         try {
             const isVerified = await subject.verifyPresentationRequest(
@@ -99,7 +99,7 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
         }
     });
 
-    test('testVerifyPresentationRequestErrorWhenDeepLinkDidMissing', async () => {
+    test('throws when the deep link does not include a DID', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
 
         await expect(
