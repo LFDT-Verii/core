@@ -83,10 +83,15 @@ export default class NetworkServiceImpl implements NetworkService {
     }
 
     private isJsonContentType(contentType?: string): boolean {
+        if (typeof contentType !== 'string') {
+            return false;
+        }
+
+        const normalizedContentType = contentType.toLowerCase();
+
         return (
-            typeof contentType === 'string' &&
-            (contentType.includes('application/json') ||
-                contentType.includes('+json'))
+            normalizedContentType.includes('application/json') ||
+            normalizedContentType.includes('+json')
         );
     }
 }

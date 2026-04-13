@@ -6,7 +6,7 @@ const PROTOCOL_VERSION_HEADER = 'x-vnf-protocol-version';
 const PROTOCOL_VERSION_VALUE = '1.0';
 
 type HeaderValue = string | RegExp;
-type ReplyHeaders = Record<string, string>;
+type ReplyHeaders = Record<string, string | string[] | number>;
 
 const withProtocolHeaders = (
     origin: string,
