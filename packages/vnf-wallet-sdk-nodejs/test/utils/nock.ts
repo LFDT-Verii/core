@@ -24,19 +24,6 @@ const withProtocolHeaders = (
     return scope;
 };
 
-const withHeaders = (
-    origin: string,
-    headers: Record<string, HeaderValue> = {},
-) => {
-    let scope = nock(origin);
-
-    for (const [key, value] of Object.entries(headers)) {
-        scope = scope.matchHeader(key, value);
-    }
-
-    return scope;
-};
-
 export const useNockLifecycle = () => {
     before(() => {
         nock.disableNetConnect();
@@ -85,7 +72,7 @@ export const mockAbsoluteGet = (
 ) => {
     const { origin, pathname, search } = new URL(requestUrl);
 
-    return withHeaders(origin, headers)
+    return withProtocolHeaders(origin, headers)
         .get(`${pathname}${search}`)
         .reply(statusCode, replyBody, replyHeaders);
 };
@@ -100,7 +87,7 @@ export const mockAbsolutePost = (
 ) => {
     const { origin, pathname, search } = new URL(requestUrl);
 
-    return withHeaders(origin, headers)
+    return withProtocolHeaders(origin, headers)
         .post(`${pathname}${search}`, requestBody)
         .reply(statusCode, replyBody, replyHeaders);
 };

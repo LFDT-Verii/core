@@ -8,6 +8,10 @@ import { expect } from 'expect';
 import NetworkServiceImpl from '../../../src/impl/data/infrastructure/network/NetworkServiceImpl';
 import Request from '../../../src/impl/data/infrastructure/network/Request';
 import { HttpMethod } from '../../../src/impl/data/infrastructure/network/HttpMethod';
+import {
+    HeaderKeys,
+    HeaderValues,
+} from '../../../src/impl/data/repositories/Urls';
 import VCLError from '../../../src/api/entities/error/VCLError';
 import { ErrorMocks } from '../../infrastructure/resources/valid/ErrorMocks';
 import {
@@ -19,6 +23,9 @@ import {
 const origin = 'https://network-service.test';
 const textPlain = 'text/plain';
 const jsonContentType = Request.ContentTypeApplicationJson;
+const protocolHeaders = {
+    [HeaderKeys.XVnfProtocolVersion]: HeaderValues.XVnfProtocolVersion,
+};
 
 describe('NetworkServiceImpl integration', () => {
     const subject = new NetworkServiceImpl();
@@ -32,13 +39,19 @@ describe('NetworkServiceImpl integration', () => {
             { hello: 'world' },
             200,
             {
+                ...protocolHeaders,
                 'cache-control': 'public, max-age=86400',
             },
             { 'content-type': jsonContentType },
         );
 
         const response = await subject.sendRequest(
-            new Request(`${origin}/json?mode=get`, HttpMethod.GET),
+            new Request(
+                `${origin}/json?mode=get`,
+                HttpMethod.GET,
+                undefined,
+                protocolHeaders,
+            ),
         );
 
         expect(response.code).toEqual(200);
@@ -51,12 +64,18 @@ describe('NetworkServiceImpl integration', () => {
             `${origin}/text`,
             'plain response body',
             200,
-            {},
+            protocolHeaders,
             { 'content-type': textPlain },
         );
 
         const response = await subject.sendRequest(
-            new Request(`${origin}/text`, HttpMethod.GET, undefined, {}, false),
+            new Request(
+                `${origin}/text`,
+                HttpMethod.GET,
+                undefined,
+                protocolHeaders,
+                false,
+            ),
         );
 
         expect(response.code).toEqual(200);
@@ -71,6 +90,7 @@ describe('NetworkServiceImpl integration', () => {
             { accepted: true },
             200,
             {
+                ...protocolHeaders,
                 'cache-control': 'public, max-age=86400',
                 'content-type': new RegExp(`^${jsonContentType}`),
             },
@@ -78,10 +98,15 @@ describe('NetworkServiceImpl integration', () => {
         );
 
         const response = await subject.sendRequest(
-            new Request(`${origin}/submit`, HttpMethod.POST, {
-                foo: 'bar',
-                count: 2,
-            }),
+            new Request(
+                `${origin}/submit`,
+                HttpMethod.POST,
+                {
+                    foo: 'bar',
+                    count: 2,
+                },
+                protocolHeaders,
+            ),
         );
 
         expect(response.code).toEqual(200);
@@ -96,6 +121,7 @@ describe('NetworkServiceImpl integration', () => {
             'PONG',
             200,
             {
+                ...protocolHeaders,
                 'content-type': textPlain,
             },
             { 'content-type': textPlain },
@@ -106,7 +132,7 @@ describe('NetworkServiceImpl integration', () => {
                 `${origin}/plain-text`,
                 HttpMethod.POST,
                 'PING',
-                {},
+                protocolHeaders,
                 false,
                 textPlain,
             ),
@@ -124,6 +150,7 @@ describe('NetworkServiceImpl integration', () => {
             ErrorMocks.SomeErrorJson,
             400,
             {
+                ...protocolHeaders,
                 'cache-control': 'public, max-age=86400',
                 'content-type': new RegExp(`^${jsonContentType}`),
             },
@@ -132,9 +159,14 @@ describe('NetworkServiceImpl integration', () => {
 
         await expect(
             subject.sendRequest(
-                new Request(`${origin}/errors`, HttpMethod.POST, {
-                    invalid: true,
-                }),
+                new Request(
+                    `${origin}/errors`,
+                    HttpMethod.POST,
+                    {
+                        invalid: true,
+                    },
+                    protocolHeaders,
+                ),
             ),
         ).rejects.toMatchObject({
             payload: JSON.stringify(ErrorMocks.SomeErrorJson),
@@ -152,13 +184,18 @@ describe('NetworkServiceImpl integration', () => {
             `${origin}/missing`,
             ErrorMocks.SomeErrorJson,
             404,
-            {},
+            protocolHeaders,
             { 'content-type': jsonContentType },
         );
 
         await expect(
             subject.sendRequest(
-                new Request(`${origin}/missing`, HttpMethod.GET, undefined),
+                new Request(
+                    `${origin}/missing`,
+                    HttpMethod.GET,
+                    undefined,
+                    protocolHeaders,
+                ),
             ),
         ).rejects.toMatchObject({
             payload: JSON.stringify(ErrorMocks.SomeErrorJson),
@@ -176,7 +213,7 @@ describe('NetworkServiceImpl integration', () => {
             `${origin}/internal-error`,
             'server error',
             500,
-            {},
+            protocolHeaders,
             { 'content-type': textPlain },
         );
 
@@ -186,6 +223,7 @@ describe('NetworkServiceImpl integration', () => {
                     `${origin}/internal-error`,
                     HttpMethod.GET,
                     undefined,
+                    protocolHeaders,
                 ),
             ),
         ).rejects.toMatchObject({

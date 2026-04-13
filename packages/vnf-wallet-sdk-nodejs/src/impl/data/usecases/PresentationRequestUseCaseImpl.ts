@@ -84,7 +84,7 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
             return presentationRequest;
         }
         throw new VCLError({
-            message: `Failed  to verify: ${presentationRequest.jwt.payload}`,
+            message: `Failed to verify: ${presentationRequest.jwt.payload}`,
         });
     }
 }
