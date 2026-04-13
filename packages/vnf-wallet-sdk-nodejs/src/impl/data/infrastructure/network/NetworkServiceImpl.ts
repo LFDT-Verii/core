@@ -63,6 +63,7 @@ export default class NetworkServiceImpl implements NetworkService {
         VCLLog.info(request, 'Network request');
     }
 
+    // eslint-disable-next-line complexity
     private normalizeError(error: any): VCLError {
         const response = error?.response;
         if (!response) {
@@ -70,7 +71,17 @@ export default class NetworkServiceImpl implements NetworkService {
         }
 
         if (this.isJsonContentType(response.headers?.['content-type'])) {
-            return VCLError.fromPayloadJson(response.data);
+            const normalizedError = VCLError.fromPayloadJson(response.data);
+            return normalizedError.statusCode == null
+                ? new VCLError({
+                      payload: normalizedError.payload,
+                      error: normalizedError.error,
+                      errorCode: normalizedError.errorCode,
+                      requestId: normalizedError.requestId,
+                      message: normalizedError.message,
+                      statusCode: response.status,
+                  })
+                : normalizedError;
         }
 
         const textPayload = toNullableString(response.data);
