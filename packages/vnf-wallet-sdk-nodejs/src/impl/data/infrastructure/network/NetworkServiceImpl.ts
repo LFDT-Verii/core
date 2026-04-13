@@ -72,16 +72,12 @@ export default class NetworkServiceImpl implements NetworkService {
 
         if (this.isJsonContentType(response.headers?.['content-type'])) {
             const normalizedError = VCLError.fromPayloadJson(response.data);
-            return normalizedError.statusCode == null
-                ? new VCLError({
-                      payload: normalizedError.payload,
-                      error: normalizedError.error,
-                      errorCode: normalizedError.errorCode,
-                      requestId: normalizedError.requestId,
-                      message: normalizedError.message,
-                      statusCode: response.status,
-                  })
-                : normalizedError;
+
+            if (normalizedError.statusCode == null) {
+                // eslint-disable-next-line better-mutation/no-mutation
+                normalizedError.statusCode = response.status;
+            }
+            return normalizedError;
         }
 
         const textPayload = toNullableString(response.data);
