@@ -23,7 +23,9 @@ export default class AuthTokenRepositoryImpl implements AuthTokenRepository {
     ): Promise<VCLAuthToken> {
         const { authTokenUri } = authTokenDescriptor;
         if (authTokenUri == null) {
-            throw new VCLError('authTokenDescriptor.authTokenUri = null');
+            throw new VCLError({
+                message: 'authTokenDescriptor.authTokenUri = null',
+            });
         }
         try {
             const authTokenResponse = await this.networkService.sendRequest({
@@ -52,10 +54,10 @@ export default class AuthTokenRepositoryImpl implements AuthTokenRepository {
 
     async verifyAuthTokenPayload(payload: Dictionary<any>): Promise<void> {
         if (payload.access_token == null) {
-            throw new VCLError('payload.access_token = null');
+            throw new VCLError({ message: 'payload.access_token = null' });
         }
         if (payload.refresh_token == null) {
-            throw new VCLError('payload.refresh_token = null');
+            throw new VCLError({ message: 'payload.refresh_token = null' });
         }
     }
 }

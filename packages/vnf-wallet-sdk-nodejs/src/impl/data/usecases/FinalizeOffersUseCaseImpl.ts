@@ -83,7 +83,7 @@ export default class FinalizeOffersUseCaseImpl implements FinalizeOffersUseCase 
                 );
             }
         }
-        throw new VCLError('Credentials verification failed');
+        throw new VCLError({ message: 'Credentials verification failed' });
     }
 
     async verifyCredentialsByDeepLink(

@@ -4,8 +4,8 @@ import VCLError from '../../src/api/entities/error/VCLError';
 import { ErrorMocks } from '../infrastructure/resources/valid/ErrorMocks';
 
 describe('VCLError', () => {
-    test('creates an error from a payload', () => {
-        const error = VCLError.fromPayload(ErrorMocks.Payload);
+    test('creates an error from a JSON payload', () => {
+        const error = VCLError.fromPayloadJson(JSON.parse(ErrorMocks.Payload));
 
         expect(error.payload).toEqual(ErrorMocks.Payload);
         expect(error.error).toEqual(ErrorMocks.Error);
@@ -15,13 +15,13 @@ describe('VCLError', () => {
     });
 
     test('creates an error from explicit properties', () => {
-        const error = new VCLError(
-            ErrorMocks.Error,
-            ErrorMocks.ErrorCode,
-            ErrorMocks.RequestId,
-            ErrorMocks.Message,
-            ErrorMocks.StatusCode,
-        );
+        const error = new VCLError({
+            error: ErrorMocks.Error,
+            errorCode: ErrorMocks.ErrorCode,
+            requestId: ErrorMocks.RequestId,
+            message: ErrorMocks.Message,
+            statusCode: ErrorMocks.StatusCode,
+        });
 
         expect(error.error).toEqual(ErrorMocks.Error);
         expect(error.errorCode).toEqual(ErrorMocks.ErrorCode);
@@ -30,8 +30,18 @@ describe('VCLError', () => {
         expect(error.statusCode).toEqual(ErrorMocks.StatusCode);
     });
 
-    test('serializes an error created from a payload', () => {
-        const error = VCLError.fromPayload(ErrorMocks.Payload);
+    test('creates an error from a human-readable message', () => {
+        const error = new VCLError({ message: 'Readable error' });
+
+        expect(error.payload).toBeNull();
+        expect(error.error).toBeNull();
+        expect(error.message).toEqual('Readable error');
+        expect(error.requestId).toBeNull();
+        expect(error.statusCode).toBeNull();
+    });
+
+    test('serializes an error created from a JSON payload', () => {
+        const error = VCLError.fromPayloadJson(JSON.parse(ErrorMocks.Payload));
         const errorJsonObject = error.jsonObject;
 
         expect(errorJsonObject[VCLError.KeyPayload]).toEqual(
@@ -53,15 +63,16 @@ describe('VCLError', () => {
     });
 
     test('serializes an error created from explicit properties', () => {
-        const error = new VCLError(
-            ErrorMocks.Error,
-            ErrorMocks.ErrorCode,
-            ErrorMocks.RequestId,
-            ErrorMocks.Message,
-            ErrorMocks.StatusCode,
-        );
+        const error = new VCLError({
+            error: ErrorMocks.Error,
+            errorCode: ErrorMocks.ErrorCode,
+            requestId: ErrorMocks.RequestId,
+            message: ErrorMocks.Message,
+            statusCode: ErrorMocks.StatusCode,
+        });
         const errorJsonObject = error.jsonObject;
 
+        expect(errorJsonObject[VCLError.KeyPayload]).toBeNull();
         expect(errorJsonObject[VCLError.KeyError]).toEqual(ErrorMocks.Error);
         expect(errorJsonObject[VCLError.KeyErrorCode]).toEqual(
             ErrorMocks.ErrorCode,
@@ -78,15 +89,30 @@ describe('VCLError', () => {
     });
 
     test('creates an error from another error', () => {
-        const error = VCLError.fromJson(ErrorMocks.SomeErrorJson);
+        const sourceError = new Error(
+            ErrorMocks.SomeErrorJson.message,
+        ) as Error & Record<string, any>;
+        sourceError.errorCode = ErrorMocks.SomeErrorJson.errorCode;
+        sourceError.requestId = ErrorMocks.SomeErrorJson.requestId;
+        sourceError.statusCode = ErrorMocks.SomeErrorJson.statusCode;
+        const error = VCLError.fromError(sourceError);
 
-        expect(JSON.parse(error.payload ?? '{}')).toStrictEqual(
-            ErrorMocks.SomeErrorJson,
-        );
-        expect(error.error).toEqual(ErrorMocks.SomeErrorJson.error);
+        expect(error.payload).toBeNull();
+        expect(error.error).toEqual(JSON.stringify(sourceError));
         expect(error.errorCode).toEqual(ErrorMocks.SomeErrorJson.errorCode);
         expect(error.requestId).toEqual(ErrorMocks.SomeErrorJson.requestId);
         expect(error.message).toEqual(ErrorMocks.SomeErrorJson.message);
         expect(error.statusCode).toEqual(ErrorMocks.SomeErrorJson.statusCode);
+    });
+
+    test('creates an error from a non-error value', () => {
+        const error = VCLError.fromError('Readable error');
+
+        expect(error.payload).toBeNull();
+        expect(error.error).toEqual('"Readable error"');
+        expect(error.errorCode).toEqual('sdk_error');
+        expect(error.requestId).toBeNull();
+        expect(error.message).toEqual('');
+        expect(error.statusCode).toBeNull();
     });
 });

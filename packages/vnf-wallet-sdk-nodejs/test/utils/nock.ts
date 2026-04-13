@@ -6,6 +6,7 @@ const PROTOCOL_VERSION_HEADER = 'x-vnf-protocol-version';
 const PROTOCOL_VERSION_VALUE = '1.0';
 
 type HeaderValue = string | RegExp;
+type ReplyHeaders = Record<string, string | string[] | number>;
 
 const withProtocolHeaders = (
     origin: string,
@@ -42,10 +43,11 @@ export const mockRegistrarGet = (
     replyBody: unknown,
     statusCode = 200,
     headers: Record<string, HeaderValue> = {},
+    replyHeaders: ReplyHeaders = {},
 ) => {
     return withProtocolHeaders(REGISTRAR_ORIGIN, headers)
         .get(path)
-        .reply(statusCode, replyBody);
+        .reply(statusCode, replyBody, replyHeaders);
 };
 
 export const mockRegistrarPost = (
@@ -54,10 +56,11 @@ export const mockRegistrarPost = (
     replyBody: unknown,
     statusCode = 200,
     headers: Record<string, HeaderValue> = {},
+    replyHeaders: ReplyHeaders = {},
 ) => {
     return withProtocolHeaders(REGISTRAR_ORIGIN, headers)
         .post(path, requestBody)
-        .reply(statusCode, replyBody);
+        .reply(statusCode, replyBody, replyHeaders);
 };
 
 export const mockAbsoluteGet = (
@@ -65,12 +68,13 @@ export const mockAbsoluteGet = (
     replyBody: unknown,
     statusCode = 200,
     headers: Record<string, HeaderValue> = {},
+    replyHeaders: ReplyHeaders = {},
 ) => {
     const { origin, pathname, search } = new URL(requestUrl);
 
     return withProtocolHeaders(origin, headers)
         .get(`${pathname}${search}`)
-        .reply(statusCode, replyBody);
+        .reply(statusCode, replyBody, replyHeaders);
 };
 
 export const mockAbsolutePost = (
@@ -79,12 +83,13 @@ export const mockAbsolutePost = (
     replyBody: unknown,
     statusCode = 200,
     headers: Record<string, HeaderValue> = {},
+    replyHeaders: ReplyHeaders = {},
 ) => {
     const { origin, pathname, search } = new URL(requestUrl);
 
     return withProtocolHeaders(origin, headers)
         .post(`${pathname}${search}`, requestBody)
-        .reply(statusCode, replyBody);
+        .reply(statusCode, replyBody, replyHeaders);
 };
 
 export const mockResolveDid = (

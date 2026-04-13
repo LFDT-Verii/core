@@ -1,13 +1,14 @@
 import axios, { AxiosResponse } from 'axios';
 import { Nullish } from '../../../../api/VCLTypes';
+import VCLError from '../../../../api/entities/error/VCLError';
 import NetworkService from '../../../domain/infrastructure/network/NetworkService';
+import { toNullableString } from '../../../utils/HelperFunctions';
 import VCLLog from '../../../utils/VCLLog';
 import Response from './Response';
 import Request from './Request';
 import { HttpMethod } from './HttpMethod';
 
 export default class NetworkServiceImpl implements NetworkService {
-    // eslint-disable-next-line complexity
     async sendRequestRaw(request: Request): Promise<Response> {
         const MAX_AGE = 60 * 60 * 24; // 24 hours
 
@@ -49,7 +50,7 @@ export default class NetworkServiceImpl implements NetworkService {
             const r = await handler();
             return new Response(r!.data, r!.status);
         } catch (error: any) {
-            throw error.response?.data ?? error;
+            throw this.normalizeError(error);
         }
     }
 
@@ -60,5 +61,44 @@ export default class NetworkServiceImpl implements NetworkService {
 
     logRequest(request: Request) {
         VCLLog.info(request, 'Network request');
+    }
+
+    // eslint-disable-next-line complexity
+    private normalizeError(error: any): VCLError {
+        const response = error?.response;
+        if (!response) {
+            return VCLError.fromError(error);
+        }
+
+        if (this.isJsonContentType(response.headers?.['content-type'])) {
+            const normalizedError = VCLError.fromPayloadJson(response.data);
+
+            if (normalizedError.statusCode == null) {
+                // eslint-disable-next-line better-mutation/no-mutation
+                normalizedError.statusCode = response.status;
+            }
+            return normalizedError;
+        }
+
+        const textPayload = toNullableString(response.data);
+
+        return new VCLError({
+            payload: textPayload,
+            message: error.message ?? textPayload,
+            statusCode: response.status,
+        });
+    }
+
+    private isJsonContentType(contentType?: string): boolean {
+        if (typeof contentType !== 'string') {
+            return false;
+        }
+
+        const normalizedContentType = contentType.toLowerCase();
+
+        return (
+            normalizedContentType.includes('application/json') ||
+            normalizedContentType.includes('+json')
+        );
     }
 }

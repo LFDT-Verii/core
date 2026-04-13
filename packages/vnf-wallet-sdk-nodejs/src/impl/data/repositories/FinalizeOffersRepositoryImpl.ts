@@ -37,8 +37,8 @@ export class FinalizeOffersRepositoryImpl implements FinalizeOffersRepository {
         if (finalizedOffersResponse.payload instanceof Error) {
             throw VCLError.fromError(finalizedOffersResponse.payload);
         }
-        throw new VCLError(
-            `Failed to parse: ${finalizedOffersResponse.payload}`,
-        );
+        throw new VCLError({
+            message: `Failed to parse: ${finalizedOffersResponse.payload}`,
+        });
     }
 }

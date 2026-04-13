@@ -31,6 +31,6 @@ export default class GenerateOffersRepositoryImpl implements GenerateOffersRepos
                 sessionToken,
             );
         }
-        throw new VCLError('Offers did not returned.');
+        throw new VCLError({ message: 'Offers were not returned.' });
     }
 }

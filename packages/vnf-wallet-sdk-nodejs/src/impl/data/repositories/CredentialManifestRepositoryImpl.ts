@@ -14,7 +14,9 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
     ): Promise<string> {
         const { endpoint } = credentialManifestDescriptor;
         if (!endpoint) {
-            throw new VCLError('credentialManifestDescriptor.endpoint = null');
+            throw new VCLError({
+                message: 'credentialManifestDescriptor.endpoint = null',
+            });
         }
 
         const credentialManifestResponse =
