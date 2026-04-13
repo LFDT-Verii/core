@@ -61,12 +61,24 @@ export default class VCLError extends Error {
             return error;
         }
         return new VCLError({
-            error: JSON.stringify(error),
+            error: VCLError.stringifyErrorSafely(error),
             errorCode: VCLError.findErrorCode(error),
             requestId: error.requestId,
             message: error.message,
             statusCode: statusCode ?? error.statusCode,
         });
+    }
+
+    private static stringifyErrorSafely(error: any): Nullish<string> {
+        if (error == null) {
+            return null;
+        }
+
+        try {
+            return JSON.stringify(error);
+        } catch {
+            return String(error);
+        }
     }
 
     private static findErrorCode(error: any): string {
