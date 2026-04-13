@@ -10,6 +10,12 @@ export type VCLErrorArgs = {
     statusCode?: Nullish<number>;
 };
 
+type VCLKnownErrorFields = Error & {
+    errorCode?: string;
+    requestId?: Nullish<string>;
+    statusCode?: Nullish<number>;
+};
+
 export default class VCLError extends Error {
     payload: Nullish<string> = null;
 
@@ -56,12 +62,15 @@ export default class VCLError extends Error {
         });
     }
 
+    // eslint-disable-next-line complexity
     static fromError(error: any, statusCode: Nullish<number> = null): VCLError {
         if (error instanceof VCLError) {
             return error;
         }
 
-        if (!(error instanceof Error)) {
+        const knownError = VCLError.asKnownError(error);
+
+        if (knownError == null) {
             return new VCLError({
                 error: VCLError.stringifyErrorSafely(error),
                 statusCode,
@@ -69,11 +78,11 @@ export default class VCLError extends Error {
         }
 
         return new VCLError({
-            error: VCLError.stringifyErrorSafely(error),
-            errorCode: VCLError.findErrorCode(error),
-            requestId: error.requestId,
-            message: error.message,
-            statusCode: statusCode ?? error.statusCode,
+            error: VCLError.stringifyErrorSafely(knownError),
+            errorCode: VCLError.findErrorCode(knownError),
+            requestId: knownError.requestId ?? null,
+            message: knownError.message,
+            statusCode: statusCode ?? knownError.statusCode ?? null,
         });
     }
 
@@ -87,6 +96,10 @@ export default class VCLError extends Error {
         } catch {
             return String(error);
         }
+    }
+
+    private static asKnownError(error: any): VCLKnownErrorFields | null {
+        return error instanceof Error ? (error as VCLKnownErrorFields) : null;
     }
 
     private static findErrorCode(error: any): string {
