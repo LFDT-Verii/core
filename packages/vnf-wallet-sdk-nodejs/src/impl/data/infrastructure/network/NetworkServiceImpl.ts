@@ -62,30 +62,28 @@ export default class NetworkServiceImpl implements NetworkService {
         VCLLog.info(request, 'Network request');
     }
 
-    // eslint-disable-next-line complexity
     private normalizeError(error: any): VCLError {
         const response = error?.response;
-        const payload = response?.data;
-        const contentType = response?.headers?.['content-type'];
-
-        if (response) {
-            if (this.isJsonContentType(contentType) && payload != null) {
-                return VCLError.fromPayloadJson(payload);
-            }
-
-            if (payload != null) {
-                const textPayload =
-                    typeof payload === 'string' ? payload : String(payload);
-
-                return new VCLError({
-                    payload: textPayload,
-                    message: textPayload,
-                    statusCode: response.status,
-                });
-            }
+        if (!response) {
+            return VCLError.fromError(error);
         }
 
-        return VCLError.fromError(error, response?.status);
+        return this.normalizeResponseError(response, error);
+    }
+
+    private normalizeResponseError(response: any, error: any): VCLError {
+        if (this.isJsonContentType(response.headers?.['content-type'])) {
+            return VCLError.fromPayloadJson(response.data);
+        }
+
+        const textPayload =
+            response.data == null ? null : String(response.data);
+
+        return new VCLError({
+            payload: textPayload,
+            message: error.message ?? textPayload,
+            statusCode: response.status,
+        });
     }
 
     private isJsonContentType(contentType?: string): boolean {

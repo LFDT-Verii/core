@@ -191,7 +191,7 @@ describe('NetworkServiceImpl integration', () => {
         ).rejects.toMatchObject({
             payload: 'server error',
             error: null,
-            message: 'server error',
+            message: 'Request failed with status code 500',
             statusCode: 500,
         });
         expect(scope.isDone()).toBeTruthy();
