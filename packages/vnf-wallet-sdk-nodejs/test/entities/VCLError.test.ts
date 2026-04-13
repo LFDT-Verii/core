@@ -89,13 +89,12 @@ describe('VCLError', () => {
     });
 
     test('creates an error from another error', () => {
-        const sourceError = {
-            error: ErrorMocks.SomeErrorJson.error,
-            errorCode: ErrorMocks.SomeErrorJson.errorCode,
-            requestId: ErrorMocks.SomeErrorJson.requestId,
-            message: ErrorMocks.SomeErrorJson.message,
-            statusCode: ErrorMocks.SomeErrorJson.statusCode,
-        };
+        const sourceError = new Error(
+            ErrorMocks.SomeErrorJson.message,
+        ) as Error & Record<string, any>;
+        sourceError.errorCode = ErrorMocks.SomeErrorJson.errorCode;
+        sourceError.requestId = ErrorMocks.SomeErrorJson.requestId;
+        sourceError.statusCode = ErrorMocks.SomeErrorJson.statusCode;
         const error = VCLError.fromError(sourceError);
 
         expect(error.payload).toBeNull();
@@ -104,5 +103,16 @@ describe('VCLError', () => {
         expect(error.requestId).toEqual(ErrorMocks.SomeErrorJson.requestId);
         expect(error.message).toEqual(ErrorMocks.SomeErrorJson.message);
         expect(error.statusCode).toEqual(ErrorMocks.SomeErrorJson.statusCode);
+    });
+
+    test('creates an error from a non-error value', () => {
+        const error = VCLError.fromError('Readable error');
+
+        expect(error.payload).toBeNull();
+        expect(error.error).toEqual('"Readable error"');
+        expect(error.errorCode).toEqual('sdk_error');
+        expect(error.requestId).toBeNull();
+        expect(error.message).toEqual('');
+        expect(error.statusCode).toBeNull();
     });
 });

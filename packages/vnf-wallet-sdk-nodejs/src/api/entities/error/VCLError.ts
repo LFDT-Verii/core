@@ -60,6 +60,14 @@ export default class VCLError extends Error {
         if (error instanceof VCLError) {
             return error;
         }
+
+        if (!(error instanceof Error)) {
+            return new VCLError({
+                error: VCLError.stringifyErrorSafely(error),
+                statusCode,
+            });
+        }
+
         return new VCLError({
             error: VCLError.stringifyErrorSafely(error),
             errorCode: VCLError.findErrorCode(error),
