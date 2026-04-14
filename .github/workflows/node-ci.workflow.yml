@@ -57,7 +57,7 @@ jobs:
         echo "run-key=${{ runner.os }}-${{ matrix.node-version }}-yarn-${{ hashFiles('yarn.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -72,7 +72,7 @@ jobs:
       run: yarn install --frozen-lockfile --prefer-offline
     - name: Save yarn Cache
       id: cache-yarn-save
-      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -84,7 +84,7 @@ jobs:
       if: ${{ steps.cache-yarn-restore.outputs.cache-hit != 'true' }}
     - name: Save run-scoped Cache
       id: cache-yarn-save-run
-      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -151,7 +151,7 @@ jobs:
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -249,7 +249,7 @@ jobs:
       run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
     - name: Restore yarn cached
       id: cache-yarn-restore
-      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
