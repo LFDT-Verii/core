@@ -2063,9 +2063,9 @@
     vary "^1.1.2"
 
 "@fastify/static@^9.0.0":
-  version "9.0.0"
-  resolved "https://registry.npmjs.org/@fastify/static/-/static-9.0.0.tgz#d111b905ed54d647e2693cf317a61d60d143b843"
-  integrity sha512-r64H8Woe/vfilg5RTy7lwWlE8ZZcTrc3kebYFMEUBrMqlydhQyoiExQXdYAy2REVpST/G35+stAM8WYp1WGmMA==
+  version "9.1.0"
+  resolved "https://registry.npmjs.org/@fastify/static/-/static-9.1.0.tgz#209445724896a0e9c44916e2faf532d1ec61cff1"
+  integrity sha512-EPRNQYqEYEYTK8yyGbcM0iHpyJaupb94bey5O6iCQfLTADr02kaZU+qeHSdd9H9TiMwTBVkrMa59V8CMbn3avQ==
   dependencies:
     "@fastify/accept-negotiator" "^2.0.0"
     "@fastify/send" "^4.0.0"
