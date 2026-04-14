@@ -3163,16 +3163,16 @@
     "@react-pdf/png-js" "^3.0.0"
     jay-peg "^1.1.1"
 
-"@react-pdf/layout@^4.5.0":
-  version "4.5.0"
-  resolved "https://registry.npmjs.org/@react-pdf/layout/-/layout-4.5.0.tgz#1b45b82a51df0827d9bf467a86ecc4769375ed6f"
-  integrity sha512-XlGLzcZFdEYQHK6b9z9uPOVywbjv6pQ92D4RvqRmYNjpf7lQLnhdHr63tbiF7fB5k8Lg9/lGBXkHbzkeQW5geQ==
+"@react-pdf/layout@^4.5.1":
+  version "4.5.1"
+  resolved "https://registry.npmjs.org/@react-pdf/layout/-/layout-4.5.1.tgz#5fcdeca0ccb0f8c4d3d78c567b7e61034709d2ac"
+  integrity sha512-1V8ssgg9FHVsmvuCKmp7TWoUiPGgxAR2cgyvdcao8UQm7emWB7rP1o4CieHH56kgZyXXbwWqQAmmtgvcju+xfA==
   dependencies:
     "@react-pdf/fns" "3.1.3"
     "@react-pdf/image" "^3.0.4"
     "@react-pdf/primitives" "^4.2.0"
     "@react-pdf/stylesheet" "^6.1.4"
-    "@react-pdf/textkit" "^6.1.1"
+    "@react-pdf/textkit" "^6.2.0"
     "@react-pdf/types" "^2.10.0"
     emoji-regex-xs "^1.0.0"
     queue "^6.0.1"
@@ -3214,15 +3214,15 @@
     object-assign "^4.1.1"
     scheduler "0.25.0-rc-603e6108-20241029"
 
-"@react-pdf/render@^4.4.0":
-  version "4.4.0"
-  resolved "https://registry.npmjs.org/@react-pdf/render/-/render-4.4.0.tgz#394b502ae1a0371c63ac1772451a29633a367b2a"
-  integrity sha512-+gGa9ymGosN6Ld3hFFSIVCV03Vva5S+asW7vmKetZY4LnhX5ea2gYNy6wL3e9VsLHqFDAefIXGtGDLH6XxQHag==
+"@react-pdf/render@^4.4.1":
+  version "4.4.1"
+  resolved "https://registry.npmjs.org/@react-pdf/render/-/render-4.4.1.tgz#c4cd138fe0120ab9cbfa5c0ae5fc6d90a86b15ce"
+  integrity sha512-TBaEw6F+IBI4oVHUF7LL2OJX87unRrk6r7mkEmgjehN9BV5LF53I8CzVtdAchuO1+YhvE4MoMzkNelA+X2luRA==
   dependencies:
     "@babel/runtime" "^7.20.13"
     "@react-pdf/fns" "3.1.3"
     "@react-pdf/primitives" "^4.2.0"
-    "@react-pdf/textkit" "^6.1.1"
+    "@react-pdf/textkit" "^6.2.0"
     "@react-pdf/types" "^2.10.0"
     abs-svg-path "^0.1.1"
     color-string "^1.9.1"
@@ -3231,18 +3231,18 @@
     svg-arc-to-cubic-bezier "^3.2.0"
 
 "@react-pdf/renderer@^4.0.0":
-  version "4.4.0"
-  resolved "https://registry.npmjs.org/@react-pdf/renderer/-/renderer-4.4.0.tgz#ae8b5603053d7d426716cf49c3af6d75c9537ad9"
-  integrity sha512-TtCcz1vyYD6fddhvBagwr9Aj3gRFLCqvduERQyNhTzHJi3zAKayHvJFr2PxcP4sRyIDRhibDW6ApqNhTqIVPoQ==
+  version "4.4.1"
+  resolved "https://registry.npmjs.org/@react-pdf/renderer/-/renderer-4.4.1.tgz#38470190822a4cb04d676498ba4fe10598be751a"
+  integrity sha512-mK7xyCdDUagO1kg8jraad3aUzdVAGBru08qyjjp8FMhGsh4BcuPGa0SycQ8Pv8EDEdyEOfmiE+XI1sBybSLwaQ==
   dependencies:
     "@babel/runtime" "^7.20.13"
     "@react-pdf/fns" "3.1.3"
     "@react-pdf/font" "^4.0.6"
-    "@react-pdf/layout" "^4.5.0"
+    "@react-pdf/layout" "^4.5.1"
     "@react-pdf/pdfkit" "^5.0.0"
     "@react-pdf/primitives" "^4.2.0"
     "@react-pdf/reconciler" "^2.0.0"
-    "@react-pdf/render" "^4.4.0"
+    "@react-pdf/render" "^4.4.1"
     "@react-pdf/types" "^2.10.0"
     events "^3.3.0"
     object-assign "^4.1.1"
@@ -3261,10 +3261,10 @@
     media-engine "^1.0.3"
     postcss-value-parser "^4.1.0"
 
-"@react-pdf/textkit@^6.1.1":
-  version "6.1.1"
-  resolved "https://registry.npmjs.org/@react-pdf/textkit/-/textkit-6.1.1.tgz#7fbe936d7b75fcc4eb23f954486287efc3886cb4"
-  integrity sha512-HAHoa407q0UHLzwe/oL6VwgJj2cGKs5vORSVY+cRG/GC0kt7nxUV9N+2hA6VcqJA37gSRg7BTLsVr8Tt+4l5ow==
+"@react-pdf/textkit@^6.2.0":
+  version "6.2.0"
+  resolved "https://registry.npmjs.org/@react-pdf/textkit/-/textkit-6.2.0.tgz#50abfdb04fceec3d8b851912268f4eed9b734979"
+  integrity sha512-0B22Kue/ALHiEcYNbrx2BdkpHPTq2j3u2xmAyCnf3XJbTyANjljJjtWRohkVLQKqOlieD88BvmQt7OeWLj+ZYg==
   dependencies:
     "@react-pdf/fns" "3.1.3"
     bidi-js "^1.0.2"
