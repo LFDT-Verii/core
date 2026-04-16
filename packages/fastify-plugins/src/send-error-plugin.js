@@ -19,11 +19,10 @@ const fp = require('fastify-plugin');
 
 const sendErrorPlugin = async (fastify) => {
   const {
-    config: { sentryDsn, enableProfiling, enableSentryDebug, nodeEnv, version },
+    config: { sentryDsn, enableSentryDebug, nodeEnv, version },
   } = fastify;
-  const { sendError, startProfiling, finishProfiling } = await initSendError({
+  const { sendError } = await initSendError({
     dsn: sentryDsn,
-    enableProfiling,
     release: version,
     environment: nodeEnv,
     debug: enableSentryDebug,
@@ -32,19 +31,6 @@ const sendErrorPlugin = async (fastify) => {
   fastify.decorateRequest('sendError', null);
   fastify.addHook('preHandler', async (req) => {
     req.sendError = sendError;
-  });
-  fastify.decorate('startProfiling', startProfiling);
-  fastify.decorate('finishProfiling', finishProfiling);
-  fastify.decorateRequest('profilingContext', null);
-  fastify.addHook('onRequest', async (req) => {
-    req.profilingContext = req.server.startProfiling({
-      name: req.routeOptions.url,
-      op: req.routeOptions.method,
-      url: req.url,
-    });
-  });
-  fastify.addHook('onResponse', async (req) => {
-    req.server.finishProfiling(req.profilingContext);
   });
 };
 

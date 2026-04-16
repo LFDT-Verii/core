@@ -19,9 +19,6 @@
   "dependencies": {
     "@sentry/node": "^8.0.0"
   },
-  "optionalDependencies": {
-    "@sentry/profiling-node": "^8.0.0"
-  },
   "devDependencies": {
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.0.1",
