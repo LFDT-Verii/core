@@ -83,7 +83,7 @@
     "eslint-watch": "8.0.0",
     "ethers": "6.16.0",
     "expect": "30.3.0",
-    "globals": "17.4.0",
+    "globals": "17.5.0",
     "nock": "15.0.0-beta.10",
     "prettier": "3.8.1"
   }

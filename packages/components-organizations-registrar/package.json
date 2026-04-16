@@ -121,7 +121,7 @@
     "eslint-plugin-react-hooks": "7.0.1",
     "expect": "30.3.0",
     "global-jsdom": "29.0.0",
-    "globals": "17.4.0",
+    "globals": "17.5.0",
     "identity-obj-proxy": "3.0.0",
     "jsdom": "28.1.0",
     "vite": "8.0.8",
