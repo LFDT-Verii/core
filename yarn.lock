@@ -2012,10 +2012,10 @@
   dependencies:
     dequal "^2.0.3"
 
-"@fastify/multipart@^9.0.0":
-  version "9.4.0"
-  resolved "https://registry.npmjs.org/@fastify/multipart/-/multipart-9.4.0.tgz#be50e7d12d989cb42b835a5e46e08b40ab5b0728"
-  integrity sha512-Z404bzZeLSXTBmp/trCBuoVFX28pM7rhv849Q5TsbTFZHuk1lc4QjQITTPK92DKVpXmNtJXeHSSc7GYvqFpxAQ==
+"@fastify/multipart@^10.0.0":
+  version "10.0.0"
+  resolved "https://registry.npmjs.org/@fastify/multipart/-/multipart-10.0.0.tgz#216011a1f1404aae75abd151e829d27aa8ae2c66"
+  integrity sha512-pUx3Z1QStY7E7kwvDTIvB6P+rF5lzP+iqPgZyJyG3yBJVPvQaZxzDHYbQD89rbY0ciXrMOyGi8ezHDVexLvJDA==
   dependencies:
     "@fastify/busboy" "^3.0.0"
     "@fastify/deepmerge" "^3.0.0"
