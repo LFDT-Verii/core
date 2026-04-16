@@ -93,7 +93,6 @@ const coreConfig = {
   caoDid: env.get('CAO_DID').required(!isTest).asString(),
   validateCaoDid: env.get('VALIDATE_CAO_DID').default('true').asBool(),
   sentryDsn: env.get('SENTRY_DSN').default('').asString(),
-  enableProfiling: env.get('ENABLE_PROFILING').default('false').asBool(),
   enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
   oidcTokensExpireIn: env.get('OIDC_TOKENS_EXPIRE_IN').default(600).asInt(),

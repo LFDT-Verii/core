@@ -40,7 +40,6 @@ module.exports = {
     http2: false,
   },
   sentryDsn: env.get('SENTRY_DSN').required(!isTest).asString(),
-  enableProfiling: env.get('ENABLE_PROFILING').default('false').asBool(),
   enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   omitOfferId: env.get('OMIT_OFFER_ID').default('false').asBool(),
   noOffers200: env.get('NO_OFFERS_200').default('true').asBool(),

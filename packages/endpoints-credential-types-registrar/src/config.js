@@ -64,7 +64,6 @@ const createConfig = (packageJson) => {
     version: packageJson.version,
     allowedCorsOrigins: env.get('ALLOWED_CORS_ORIGINS').default('').asArray(),
     sentryDsn: env.get('SENTRY_DSN').required(!isTest).asString(),
-    enableProfiling: env.get('ENABLE_PROFILING').default('false').asBool(),
     enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   };
 
