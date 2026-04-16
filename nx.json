@@ -1,10 +1,17 @@
 {
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  },
   "extends": "nx/presets/npm.json",
   "parallel": 2,
   "targetDefaults": {
     "build": {
       "cache": true,
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "test": {
       "cache": true,
@@ -18,14 +25,11 @@
     },
     "prepare": {
       "cache": true,
-      "dependsOn": ["^prepare"]
+      "dependsOn": [
+        "^prepare"
+      ]
     }
   },
   "useInferencePlugins": false,
-  "defaultBase": "main",
-  "pluginsConfig": {
-    "@nx/js": {
-      "projectsAffectedByDependencyUpdates": "auto"
-    }
-  }
+  "defaultBase": "main"
 }
