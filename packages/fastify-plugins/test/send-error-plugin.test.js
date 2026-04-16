@@ -19,8 +19,6 @@ const { expect } = require('expect');
 const initSendError = mock.fn(() =>
   Promise.resolve({
     sendError: 'sendErrorFn',
-    startProfiling: 'startProfilingFn',
-    finishProfiling: 'finishProfilingFn',
   }),
 );
 mock.module('@verii/error-aggregation', {
@@ -55,7 +53,6 @@ describe('Capture Exception to Sentry plugin tests', () => {
       [
         {
           dsn: 'testDsn',
-          enableProfiling: undefined,
           environment: 'testEnv',
           release: 'testVersion',
         },
@@ -63,23 +60,12 @@ describe('Capture Exception to Sentry plugin tests', () => {
     ]);
     expect(
       fakeServer.decorate.mock.calls.map((call) => call.arguments),
-    ).toEqual([
-      ['sendError', 'sendErrorFn'],
-      ['startProfiling', 'startProfilingFn'],
-      ['finishProfiling', 'finishProfilingFn'],
-    ]);
+    ).toEqual([['sendError', 'sendErrorFn']]);
     expect(
       fakeServer.decorateRequest.mock.calls.map((call) => call.arguments),
-    ).toEqual([
-      ['sendError', null],
-      ['profilingContext', null],
-    ]);
+    ).toEqual([['sendError', null]]);
     expect(fakeServer.addHook.mock.calls.map((call) => call.arguments)).toEqual(
-      [
-        ['preHandler', expect.any(Function)],
-        ['onRequest', expect.any(Function)],
-        ['onResponse', expect.any(Function)],
-      ],
+      [['preHandler', expect.any(Function)]],
     );
   });
 });

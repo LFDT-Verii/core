@@ -22,12 +22,6 @@ const mockSendError = mock.fn(() => undefined);
 const mockInitSendError = mock.fn(() =>
   Promise.resolve({
     sendError: mockSendError,
-    startProfiling: () => {
-      console.log('fake start sentry profiling');
-    },
-    finishProfiling: () => {
-      console.log('fake finish sentry profiling');
-    },
   }),
 );
 
@@ -95,7 +89,6 @@ const {
   testRegistrarSuperUser,
   errorResponseMatcher,
 } = require('@verii/tests-helpers');
-const console = require('console');
 const { NANO_ID_FORMAT } = require('@verii/test-regexes/src/regexes');
 const buildFastify = require('./helpers/build-fastify');
 const { expectedInvitationSentEmail } = require('./helpers/email-matchers');

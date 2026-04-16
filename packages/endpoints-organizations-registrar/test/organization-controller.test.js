@@ -30,12 +30,6 @@ const mockInitSendError = mock.fn(() =>
     sendError: (err) => {
       console.log(`fake capturing exception: ${err.message}`);
     },
-    startProfiling: () => {
-      console.log('fake start sentry profiling');
-    },
-    finishProfiling: () => {
-      console.log('fake finish sentry profiling');
-    },
   }),
 );
 

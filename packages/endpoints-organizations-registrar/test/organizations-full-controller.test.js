@@ -23,12 +23,6 @@ const mockSendError = mock.fn(() => {
 const mockInitSendError = mock.fn(() =>
   Promise.resolve({
     sendError: mockSendError,
-    startProfiling: () => {
-      console.log('fake start sentry profiling');
-    },
-    finishProfiling: () => {
-      console.log('fake finish sentry profiling');
-    },
   }),
 );
 
