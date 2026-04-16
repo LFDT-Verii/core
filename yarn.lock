@@ -5311,10 +5311,10 @@ attr-accept@^2.2.4:
     undici-types "^6.15.0"
     uuid "^9.0.0"
 
-auth0@5.5.0:
-  version "5.5.0"
-  resolved "https://registry.npmjs.org/auth0/-/auth0-5.5.0.tgz#ff7894f561346fa86debe1bc34ecd69bcfc017d0"
-  integrity sha512-adHl/7SZ3MDlSulSFxbkFbDe+pJldm3ovrQ67IGt/DOobkDIfVaQThGbsZL+4YHF7BJv0TzmHdUl0lcTmHKcng==
+auth0@5.6.0:
+  version "5.6.0"
+  resolved "https://registry.npmjs.org/auth0/-/auth0-5.6.0.tgz#4e94a3c44e3faab0c9414f0164b6d62c383ceb2b"
+  integrity sha512-+1pEJlf9Q2j2eU1mMQ8wRIGJ15U9iDXrQTUWqeyY6BOpUtYCPOs9I9yuYcQHL7NyByTWPrLNoNEXbtMHi36LAw==
   dependencies:
     auth0-legacy "npm:auth0@^4.27.0"
     jose "^4.13.2"
