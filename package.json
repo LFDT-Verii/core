@@ -35,7 +35,9 @@
     "stop": "docker-compose down -v"
   },
   "// lodash-resolution-note": "Temporary: remove these package-specific lodash resolutions once eslint-plugin-better-mutation, ra-data-local-storage, and ra-ui-materialui stop pinning lodash 4.17.x.",
+  "// hardhat-serialize-javascript-resolution-note": "Temporary: remove this hardhat/mocha/serialize-javascript resolution once the Hardhat dependency path no longer resolves serialize-javascript 6.x (Dependabot alert #148 / GHSA-5c6j-r48x-rmvq).",
   "resolutions": {
+    "hardhat/mocha/serialize-javascript": "7.0.3",
     "eslint-plugin-better-mutation/lodash": "^4.18.0",
     "**/ra-data-local-storage/lodash": "^4.18.0",
     "**/ra-ui-materialui/lodash": "^4.18.0"
