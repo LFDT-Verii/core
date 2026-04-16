@@ -11,8 +11,8 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "pnpm exec eslint . --format json >> eslint-results.json",
-    "lint:fix": "pnpm exec eslint --fix .",
+    "lint": "eslint . --format json >> eslint-results.json",
+    "lint:fix": "eslint --fix .",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "prepublishOnly": "tsc --declaration",
