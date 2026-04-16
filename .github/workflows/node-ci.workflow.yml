@@ -101,9 +101,7 @@ jobs:
           exit 1
         fi
 
-        grep -q '^## Changes$' "${release_notes_file}" || { echo "${release_notes_file} is missing a '## Changes' section."; exit 1; }
-        grep -q '^## Backward incompatibilities$' "${release_notes_file}" || { echo "${release_notes_file} is missing a '## Backward incompatibilities' section."; exit 1; }
-        grep -Eq '^### \[#[^]]+\]\([^)]+\)( .*)?$' "${release_notes_file}" || { echo "${release_notes_file} must include at least one release entry heading in the form '### [#PR](...) ...'."; exit 1; }
+        ./.github/scripts/validate-release-notes.sh "${release_notes_file}"
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
       with:

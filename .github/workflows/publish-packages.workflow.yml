@@ -46,14 +46,11 @@ jobs:
           fi
 
           major_minor="$(printf '%s' "${repo_version}" | cut -d. -f1,2)"
-          patch_version="$(printf '%s' "${repo_version}" | cut -d. -f3)"
           release_branch="release/${major_minor}.x"
           release_version="v${repo_version}"
           release_notes_file="${GITHUB_WORKSPACE}/.github/releases/${release_version}.md"
 
           echo "REPO_VERSION=${repo_version}" >> "$GITHUB_ENV"
-          echo "MAJOR_MINOR=${major_minor}" >> "$GITHUB_ENV"
-          echo "PATCH_VERSION=${patch_version}" >> "$GITHUB_ENV"
           echo "RELEASE_BRANCH=${release_branch}" >> "$GITHUB_ENV"
           echo "RELEASE_VERSION=${release_version}" >> "$GITHUB_ENV"
           echo "RELEASE_NOTES_FILE=${release_notes_file}" >> "$GITHUB_ENV"
@@ -71,14 +68,7 @@ jobs:
           fi
 
           if [ "${VERSION_TYPE}" = "release" ]; then
-            if [ ! -f "${RELEASE_NOTES_FILE}" ]; then
-              echo "Missing release notes file: ${RELEASE_NOTES_FILE}"
-              exit 1
-            fi
-
-            grep -q '^## Changes$' "${RELEASE_NOTES_FILE}" || { echo "Release notes must include a '## Changes' section."; exit 1; }
-            grep -q '^## Backward incompatibilities$' "${RELEASE_NOTES_FILE}" || { echo "Release notes must include a '## Backward incompatibilities' section."; exit 1; }
-            grep -Eq '^### \[#[^]]+\]\([^)]+\)( .*)?$' "${RELEASE_NOTES_FILE}" || { echo "Release notes must include at least one release entry heading in the form '### [#PR](...) ...'."; exit 1; }
+            ./.github/scripts/validate-release-notes.sh "${RELEASE_NOTES_FILE}"
 
             if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
               echo "Tag ${RELEASE_VERSION} already exists."
