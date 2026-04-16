@@ -92,6 +92,8 @@ docker-compose.override.yml
 *.address
 *.did
 tools/**/*.jwt
+tools/verifgen/data/*
+!tools/verifgen/data/.gitkeep
 #Terraform files
 
 .terraform

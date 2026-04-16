@@ -9,6 +9,7 @@ const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { generateProof } = require('@verii/did-doc');
 
 const templatesPath = path.resolve(__dirname, '../templates');
+const dataPath = path.resolve(__dirname, '../data');
 
 const writeFile = (filePath, fileContent) => {
   const fileBasename = path.basename(filePath, '.*');
@@ -28,6 +29,16 @@ const readFile = (filePath, missingError) => {
 
 const resolveTemplate = (template) =>
   path.resolve(templatesPath, `${template}.json`);
+
+const resolveDataPath = (filePath) => path.resolve(dataPath, filePath);
+
+const resolveInputPath = (filePath) => {
+  if (fs.existsSync(filePath) || path.isAbsolute(filePath)) {
+    return filePath;
+  }
+
+  return resolveDataPath(filePath);
+};
 
 const printError = (ex) => console.error(ex);
 const printInfo = (data) => console.info(data);
@@ -69,7 +80,10 @@ const generateDid = (controller = {}) => {
 const loadPersonaFiles = (persona) => {
   return {
     did: JSON.parse(
-      readFile(`${persona}.did`, `Persona ${persona} DID File not found`),
+      readFile(
+        resolveInputPath(`${persona}.did`),
+        `Persona ${persona} DID File not found`,
+      ),
     ),
     privateKey: loadPersonaPrivateKey(persona),
   };
@@ -77,8 +91,8 @@ const loadPersonaFiles = (persona) => {
 
 const loadPersonaPrivateKey = (persona) => {
   const missingErrorMessage = `Persona ${persona}  private key file not found`;
-  const jwkFilePath = `${persona}.prv.key.json`;
-  const filePath = `${persona}.prv.key`;
+  const jwkFilePath = resolveInputPath(`${persona}.prv.key.json`);
+  const filePath = resolveInputPath(`${persona}.prv.key`);
   if (fs.existsSync(jwkFilePath)) {
     const jsonStr = readFile(jwkFilePath, missingErrorMessage);
     return JSON.parse(jsonStr);
@@ -95,4 +109,7 @@ module.exports = {
   printError,
   generateDid,
   loadPersonaFiles,
+  dataPath,
+  resolveDataPath,
+  resolveInputPath,
 };

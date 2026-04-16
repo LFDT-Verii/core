@@ -36,7 +36,7 @@ Now that you have a set of credentials then you can create presentations for sen
 `$ node ./src/verifgen.js presentation -c adamsmith-id -r credential-manifest.json -o adam-id-presentation`
 
 ### Creating a credentials presentation with a vendor origin context(for a disclosure)
-`$ node ./src/verifgen.js presentation -r presentation-request.json -v eyj!143PRrs -c adamsmith-id adam-currentemployment adam-educationdegree -o adam-creds-presentation.v1`
+`$ node ./src/verifgen.js presentation -r data/presentation-request.json -v eyj!143PRrs -c adamsmith-id adam-currentemployment adam-educationdegree -o adam-creds-presentation.v1`
 
 ## Future Dev
 - Support organization signed credentials
@@ -68,7 +68,7 @@ Options
 
 Whatever is passed in as the `-p` value, is what the documentation calls "a persona".
 In practice, what this means, is that it will look for certain files that are expected to be present
-for the persona to be used properly. 
+for the persona to be used properly. The CLI first checks the current working directory, then falls back to `tools/verifgen/data/`.
 With a persona of johndoe, the following files would be expected.
 1. A did document named `johndoe.did`, with JSON contents like:
    ```

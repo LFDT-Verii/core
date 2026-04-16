@@ -30,7 +30,7 @@ const generatePresentation = async ({
 
     const presentationRequest = JSON.parse(
       common.readFile(
-        `${presentationRequestFilename}`,
+        common.resolveInputPath(`${presentationRequestFilename}`),
         'Presentation Request not found',
       ),
     );
