@@ -65,6 +65,7 @@ jobs:
           ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
+          samples/*/node_modules
           servers/*/node_modules
           tools/*/node_modules
         key: ${{ steps.cache-keys.outputs.shared-key }}
@@ -80,6 +81,7 @@ jobs:
           ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
+          samples/*/node_modules
           servers/*/node_modules
           tools/*/node_modules
         key: ${{ steps.cache-keys.outputs.shared-key }}
@@ -92,6 +94,7 @@ jobs:
           ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
+          samples/*/node_modules
           servers/*/node_modules
           tools/*/node_modules
         key: ${{ steps.cache-keys.outputs.run-key }}
@@ -161,6 +164,7 @@ jobs:
           ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
+          samples/*/node_modules
           servers/*/node_modules
           tools/*/node_modules
         key: ${{ needs.prepare.outputs.deps-cache-key }}
@@ -261,6 +265,7 @@ jobs:
           ${{ steps.pnpm-store-path.outputs.dir }}
           node_modules
           packages/*/node_modules
+          samples/*/node_modules
           servers/*/node_modules
           tools/*/node_modules
         key: ${{ needs.prepare.outputs.deps-cache-key }}
