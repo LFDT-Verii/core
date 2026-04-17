@@ -3,6 +3,7 @@ on:
   push:
     branches: [ main ]
     paths:
+      - 'VERSION'
       - 'packages/**'
       - 'servers/**'
       - 'tools/**'
@@ -20,15 +21,13 @@ env:
   DIST_TAG: 'prerelease'
   NODE_VERSION: '24.x'
   VERSION_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.version-type || format('{0}', 'prerelease') }}
-  TARGET_ORG: 'verii'
-  CURR_REPO_VERSION: '1.1.0'
 jobs:
   # Publish Packages
   publish-packages:
     name: Publish Packages
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
       id-token: write
     steps:
@@ -37,12 +36,57 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0 # Recommended for Lerna to track history
+      - name: Load Release Metadata
+        shell: bash
+        run: |
+          repo_version="$(tr -d '[:space:]' < VERSION)"
+          if ! printf '%s\n' "${repo_version}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "VERSION must contain a semantic version like X.Y.Z."
+            exit 1
+          fi
+
+          major_minor="$(printf '%s' "${repo_version}" | cut -d. -f1,2)"
+          release_branch="release/${major_minor}.x"
+          release_version="v${repo_version}"
+          release_notes_file="${GITHUB_WORKSPACE}/.github/releases/${release_version}.md"
+
+          echo "REPO_VERSION=${repo_version}" >> "$GITHUB_ENV"
+          echo "RELEASE_BRANCH=${release_branch}" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=${release_version}" >> "$GITHUB_ENV"
+          echo "RELEASE_NOTES_FILE=${release_notes_file}" >> "$GITHUB_ENV"
+      - name: Validate Release Context
+        shell: bash
+        run: |
+          if [ "${VERSION_TYPE}" = "release" ] && [ "${GITHUB_REF_NAME}" != "${RELEASE_BRANCH}" ]; then
+            echo "Prod releases for ${REPO_VERSION} must run from ${RELEASE_BRANCH}, not ${GITHUB_REF_NAME}."
+            exit 1
+          fi
+
+          if [ "${VERSION_TYPE}" = "prerelease" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
+            echo "Prerelease publishes must run from main."
+            exit 1
+          fi
+
+          if [ "${VERSION_TYPE}" = "release" ]; then
+            ./.github/scripts/validate-release-notes.sh "${RELEASE_NOTES_FILE}"
+
+            if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
+              echo "Tag ${RELEASE_VERSION} already exists."
+              exit 1
+            fi
+          fi
       # Generate PreRelease Version Number
       - name: Generate PreRelease Version Number
-        run: echo "PRERELEASE_VER_NUM=${{format('{0}-pre.$(date +%s)', env.CURR_REPO_VERSION)}}" >> $GITHUB_ENV
+        run: echo "PRERELEASE_VER_NUM=${REPO_VERSION}-pre.$(date +%s)" >> $GITHUB_ENV
       # Set Npm Version Number
       - name: Set Npm Version Number
-        run: echo "NPM_VER_NUM=${{ env.VERSION_TYPE == 'release' && env.CURR_REPO_VERSION || env.PRERELEASE_VER_NUM }}" >> $GITHUB_ENV
+        shell: bash
+        run: |
+          if [ "${VERSION_TYPE}" = "release" ]; then
+            echo "NPM_VER_NUM=${REPO_VERSION}" >> "$GITHUB_ENV"
+          else
+            echo "NPM_VER_NUM=${PRERELEASE_VER_NUM}" >> "$GITHUB_ENV"
+          fi
       # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
@@ -93,3 +137,14 @@ jobs:
         run: '"$LERNA_BIN" publish --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"'
         env:
           NPM_CONFIG_PROVENANCE: true
+      - name: Create GitHub Release
+        if: env.VERSION_TYPE == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${RELEASE_VERSION}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --target "${GITHUB_SHA}" \
+            --title "${RELEASE_VERSION}" \
+            --notes-file "${RELEASE_NOTES_FILE}"

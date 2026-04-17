@@ -9,7 +9,7 @@ on:
   pull_request:
     branches: 
       - main
-      - release/**
+      - release/*.x
     types:
       - opened
       - synchronize
@@ -43,6 +43,74 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         fetch-depth: 0
+    - name: Validate release metadata for version bump PRs
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: |
+        base_sha="${{ github.event.pull_request.base.sha }}"
+        base_ref="${{ github.base_ref }}"
+        if ! git rev-parse --verify "${base_sha}^{commit}" >/dev/null 2>&1; then
+          if ! git fetch --depth=1 origin "${base_ref}"; then
+            echo "Failed to fetch base ref ${base_ref} for base commit ${base_sha}."
+            exit 1
+          fi
+        fi
+
+        if ! git rev-parse --verify "${base_sha}^{commit}" >/dev/null 2>&1; then
+          echo "Base commit ${base_sha} is not available after fetching ${base_ref}."
+          exit 1
+        fi
+
+        version="$(tr -d '[:space:]' < VERSION)"
+        if ! printf '%s\n' "${version}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "VERSION must contain a semantic version like X.Y.Z."
+          exit 1
+        fi
+
+        release_notes_file=".github/releases/v${version}.md"
+        major_minor="$(printf '%s' "${version}" | cut -d. -f1,2)"
+        expected_release_branch="release/${major_minor}.x"
+        version_changed=false
+        release_notes_changed=false
+
+        if ! git diff --quiet "${base_sha}...HEAD" -- VERSION; then
+          version_changed=true
+        fi
+
+        if ! git diff --quiet "${base_sha}...HEAD" -- "${release_notes_file}"; then
+          release_notes_changed=true
+        fi
+
+        if [ "${version_changed}" = "false" ] && [ "${release_notes_changed}" = "false" ]; then
+          echo "No release metadata change detected; skipping release metadata validation."
+          exit 0
+        fi
+
+        if [ "${{ github.base_ref }}" = "main" ]; then
+          if [ "${release_notes_changed}" = "true" ]; then
+            echo "Release notes for v${version} should be prepared in a PR targeting ${expected_release_branch}, not main."
+            exit 1
+          fi
+          echo "VERSION changes on main are allowed while preparing the next release line."
+          exit 0
+        fi
+
+        if [ "${{ github.base_ref }}" != "${expected_release_branch}" ]; then
+          echo "Version ${version} must target branch ${expected_release_branch}, not ${{ github.base_ref }}."
+          exit 1
+        fi
+
+        if [ ! -f "${release_notes_file}" ]; then
+          echo "${release_notes_file} must exist for version v${version}."
+          exit 1
+        fi
+
+        if [ "${release_notes_changed}" != "true" ]; then
+          echo "${release_notes_file} must be added or updated in the release PR targeting ${expected_release_branch}."
+          exit 1
+        fi
+
+        ./.github/scripts/validate-release-notes.sh "${release_notes_file}"
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
       with:
