@@ -243,18 +243,20 @@ jobs:
       run: pnpm run build:lib
     - name: Lint
       run: pnpm exec nx run ${{ matrix.package }}:"lint:ci"
-    - name: Resolve Lint Artifact Paths
+    - name: Create Artifact Name
       run: |
-        PROJECT_ROOT=$(pnpm --silent exec nx show project "${{ matrix.package }}" --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).root")
-        ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g')
-        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
-        echo "PROJECT_ROOT=$PROJECT_ROOT" >> $GITHUB_ENV
+        echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Lint Report
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: lint${{ env.ARTIFACT_NAME }}
-        path: ${{ env.PROJECT_ROOT }}/eslint-results.json
+        path: |
+          packages/*/eslint-results.json
+          samples/*/eslint-results.json
+          servers/*/eslint-results.json
+          tools/*/eslint-results.json
+          !**/node_modules/**/eslint-results.json
         if-no-files-found: warn
       if: '!cancelled()'
 
@@ -270,6 +272,7 @@ jobs:
       with:
         path: reports
         pattern: lint-*
+        merge-multiple: true
     - name: Publish Lint Report
       uses: ataylorme/eslint-annotate-action@v3
       with:
@@ -356,25 +359,32 @@ jobs:
       env:
         IS_CI: true
         NODE_OPTIONS: "--max_old_space_size=4096"
-    - name: Resolve Test Artifact Paths
+    - name: Create Artifact Name
       run: |
-        PROJECT_ROOT=$(pnpm --silent exec nx show project "${{ matrix.package }}" --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).root")
-        ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g')
-        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
-        echo "PROJECT_ROOT=$PROJECT_ROOT" >> $GITHUB_ENV
+        echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Test Report
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: test${{ env.ARTIFACT_NAME }}
-        path: ${{ env.PROJECT_ROOT }}/test-results.junit.xml
+        path: |
+          packages/*/test-results.junit.xml
+          samples/*/test-results.junit.xml
+          servers/*/test-results.junit.xml
+          tools/*/test-results.junit.xml
+          !**/node_modules/**/test-results.junit.xml
         if-no-files-found: warn
       if: '!cancelled()'
     - name: Upload Codecov Report
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: coverage${{ env.ARTIFACT_NAME }}
-        path: ${{ env.PROJECT_ROOT }}/lcov.info
+        path: |
+          packages/*/lcov.info
+          samples/*/lcov.info
+          servers/*/lcov.info
+          tools/*/lcov.info
+          !**/node_modules/**/lcov.info
         if-no-files-found: warn
       if: '!cancelled()'
 
@@ -393,6 +403,7 @@ jobs:
       with:
         path: test-results
         pattern: test-*
+        merge-multiple: true
     - name: Publish Test Results
       uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6
       with:
