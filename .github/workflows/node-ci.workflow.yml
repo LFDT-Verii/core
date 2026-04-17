@@ -48,8 +48,17 @@ jobs:
       shell: bash
       run: |
         base_sha="${{ github.event.pull_request.base.sha }}"
+        base_ref="${{ github.base_ref }}"
         if ! git rev-parse --verify "${base_sha}^{commit}" >/dev/null 2>&1; then
-          git fetch origin "${base_sha}" --depth=1
+          if ! git fetch --depth=1 origin "${base_ref}"; then
+            echo "Failed to fetch base ref ${base_ref} for base commit ${base_sha}."
+            exit 1
+          fi
+        fi
+
+        if ! git rev-parse --verify "${base_sha}^{commit}" >/dev/null 2>&1; then
+          echo "Base commit ${base_sha} is not available after fetching ${base_ref}."
+          exit 1
         fi
 
         version="$(tr -d '[:space:]' < VERSION)"
