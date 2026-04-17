@@ -16,7 +16,7 @@
  */
 import { register } from 'node:module';
 import { afterEach } from 'node:test';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { cleanup } from '@testing-library/react';
 
 register('../../tooling/resolvers/alias-resolver.mjs', import.meta.url);
@@ -25,7 +25,7 @@ register('../../tooling/resolvers/jsx-loader.mjs', import.meta.url);
 
 afterEach(cleanup);
 
-// eslint-disable-next-line better-mutation/no-mutation,no-undef
+// eslint-disable-next-line better-mutation/no-mutation
 global.Event = window.Event;
-// eslint-disable-next-line better-mutation/no-mutation,no-undef
+// eslint-disable-next-line better-mutation/no-mutation
 global.CustomEvent = window.CustomEvent;

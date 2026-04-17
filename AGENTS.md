@@ -9,8 +9,7 @@
 ## JS/TS edits
 - After modifying `.js` or `.ts` files, run `eslint --fix` on the affected files.
 
-## New JS/TS Dependencies
-- Run `yarn install`
-
-## JS/TS Dependency upgrades
-- Run `yarn install --ignore-scripts`
+## pnpm workspace rules
+- Use `corepack pnpm@10.30.2` for all dependency commands.
+- After rebasing onto `origin/main` and no conflicts you can run:
+  - `corepack pnpm@10.30.2 install --lockfile-only --no-frozen-lockfile`

@@ -21,26 +21,38 @@
     "depcheck": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --oneline",
     "depcheck-ci": "nx exec -- depcheck --ignores='eslint*,prettier,nodemon,@storybook/*,ts-node,typescript' --json",
     "contracts:assert-target-env": "node contracts/test-utils/assert-target-env.js",
-    "contracts:lint": "yarn eslint --config contracts/eslint.config.mjs \"contracts/**/*.js\" --ignore-pattern \"contracts/legacy-truffle/**\"",
-    "contracts:build:hardhat": "yarn workspace @verii/permissions-contract run build:hardhat && yarn workspace @verii/verification-coupon-contract run build:hardhat && yarn workspace @verii/metadata-registry-contract run build:hardhat && yarn workspace @verii/revocation-list-contract run build:hardhat",
-    "contracts:clean:hardhat": "yarn workspace @verii/permissions-contract run clean:hardhat && yarn workspace @verii/verification-coupon-contract run clean:hardhat && yarn workspace @verii/metadata-registry-contract run clean:hardhat && yarn workspace @verii/revocation-list-contract run clean:hardhat",
-    "contracts:test": "yarn workspace @verii/permissions-contract run test && yarn workspace @verii/verification-coupon-contract run test && yarn workspace @verii/metadata-registry-contract run test && yarn workspace @verii/revocation-list-contract run test",
-    "contracts:deploy:hardhat": "yarn contracts:assert-target-env && yarn workspace @verii/permissions-contract run hardhat:deploy && yarn workspace @verii/verification-coupon-contract run hardhat:deploy && yarn workspace @verii/metadata-registry-contract run hardhat:deploy && yarn workspace @verii/revocation-list-contract run hardhat:deploy",
-    "contracts:upgrade:hardhat": "yarn contracts:assert-target-env && yarn workspace @verii/permissions-contract run hardhat:upgrade && yarn workspace @verii/verification-coupon-contract run hardhat:upgrade && yarn workspace @verii/metadata-registry-contract run hardhat:upgrade && yarn workspace @verii/revocation-list-contract run hardhat:upgrade",
-    "contracts:test:post-upgrade": "yarn contracts:assert-target-env && yarn workspace @verii/permissions-contract run test:post-upgrade && yarn workspace @verii/verification-coupon-contract run test:post-upgrade && yarn workspace @verii/metadata-registry-contract run test:post-upgrade && yarn workspace @verii/revocation-list-contract run test:post-upgrade",
-    "check-packages": "yarn clean && yarn compile && yarn test && yarn lint",
-    "check-licenses": "yarn licenses list --production --json | grep table | node ./check-license.js",
+    "contracts:lint": "pnpm exec eslint --config contracts/eslint.config.mjs \"contracts/**/*.js\" --ignore-pattern \"contracts/legacy-truffle/**\"",
+    "contracts:build:hardhat": "pnpm --filter @verii/permissions-contract run build:hardhat && pnpm --filter @verii/verification-coupon-contract run build:hardhat && pnpm --filter @verii/metadata-registry-contract run build:hardhat && pnpm --filter @verii/revocation-list-contract run build:hardhat",
+    "contracts:clean:hardhat": "pnpm --filter @verii/permissions-contract run clean:hardhat && pnpm --filter @verii/verification-coupon-contract run clean:hardhat && pnpm --filter @verii/metadata-registry-contract run clean:hardhat && pnpm --filter @verii/revocation-list-contract run clean:hardhat",
+    "contracts:test": "pnpm --filter @verii/permissions-contract run test && pnpm --filter @verii/verification-coupon-contract run test && pnpm --filter @verii/metadata-registry-contract run test && pnpm --filter @verii/revocation-list-contract run test",
+    "contracts:deploy:hardhat": "pnpm run contracts:assert-target-env && pnpm --filter @verii/permissions-contract run hardhat:deploy && pnpm --filter @verii/verification-coupon-contract run hardhat:deploy && pnpm --filter @verii/metadata-registry-contract run hardhat:deploy && pnpm --filter @verii/revocation-list-contract run hardhat:deploy",
+    "contracts:upgrade:hardhat": "pnpm run contracts:assert-target-env && pnpm --filter @verii/permissions-contract run hardhat:upgrade && pnpm --filter @verii/verification-coupon-contract run hardhat:upgrade && pnpm --filter @verii/metadata-registry-contract run hardhat:upgrade && pnpm --filter @verii/revocation-list-contract run hardhat:upgrade",
+    "contracts:test:post-upgrade": "pnpm run contracts:assert-target-env && pnpm --filter @verii/permissions-contract run test:post-upgrade && pnpm --filter @verii/verification-coupon-contract run test:post-upgrade && pnpm --filter @verii/metadata-registry-contract run test:post-upgrade && pnpm --filter @verii/revocation-list-contract run test:post-upgrade",
+    "check-packages": "pnpm run clean && pnpm run compile && pnpm run test && pnpm run lint",
+    "check-licenses": "pnpm licenses list --prod --json | node ./check-license.js",
     "start": "docker-compose up",
     "start:rebuild": "docker-compose up --build",
     "stop": "docker-compose down -v"
   },
-  "// lodash-resolution-note": "Temporary: remove these package-specific lodash resolutions once eslint-plugin-better-mutation, ra-data-local-storage, and ra-ui-materialui stop pinning lodash 4.17.x.",
-  "// hardhat-serialize-javascript-resolution-note": "Temporary: remove this hardhat/mocha/serialize-javascript resolution once the Hardhat dependency path no longer resolves serialize-javascript 6.x (Dependabot alert #148 / GHSA-5c6j-r48x-rmvq).",
-  "resolutions": {
-    "hardhat/mocha/serialize-javascript": "7.0.5",
-    "eslint-plugin-better-mutation/lodash": "^4.18.0",
-    "**/ra-data-local-storage/lodash": "^4.18.0",
-    "**/ra-ui-materialui/lodash": "^4.18.0"
+  "// fast-xml-parser-override-note": "Temporary: remove this fast-xml-parser override once @aws-sdk/xml-builder no longer pulls fast-xml-parser 5.3.4 (i.e., upstream resolves to >=5.3.6).",
+  "pnpm": {
+    "overrides": {
+      "fast-xml-parser": "^5.3.6",
+      "serialize-javascript": "7.0.5",
+      "lodash": "^4.18.0"
+    },
+    "onlyBuiltDependencies": [
+      "@sentry/profiling-node",
+      "@swc/core",
+      "argon2",
+      "browser-tabs-lock",
+      "esbuild",
+      "husky",
+      "keccak",
+      "nx",
+      "secp256k1",
+      "unrs-resolver"
+    ]
   },
   "devDependencies": {
     "@commitlint/cli": "20.5.0",
@@ -94,5 +106,5 @@
       ]
     }
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "pnpm@10.30.2"
 }

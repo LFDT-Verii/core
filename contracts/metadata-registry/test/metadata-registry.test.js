@@ -29,7 +29,13 @@ const contactIssuingCredentialTypeHash = '0x4ffb';
 
 const bytes =
   '0xa6626964787d657468657265756d3a2f2f30783931333231303338323138333134303931322f6765745f63726564656e7469616c5f6d657461646174615f6c6973745f6973737565725f76633f6c69737449643d3930323133393132333231303339323130333231266163636f756e7449643d307831383339313233383231333231336474797065827456657269666961626c6543726564656e7469616c781c43726564656e7469616c4d657461646174614c6973744865616465726669737375657278186469643a76656c6f636974793a30783932313331323331326669737375656474323031392d30382d33325430393a34343a30305a7163726564656e7469616c5375626a656374a262696478186469643a76656c6f636974793a3078393231333132333132666c6973744964fb44138fe0cd20f71c6570726f6f66a5656e6f6e6365fb4429e9f10d9813d9676372656174656474323031392d30382d33325430393a34343a30305a6c70726f6f66507572706f73656f617373657274696f6e4d6574686f6472766572696669636174696f6e4d6574686f64781e6469643a76656c6f636974793a3078393231333132333132236b65792d31636a7773652e2e2e2e2e';
-const sampleEntry = [testListVersion, regularIssuingCredentialTypeHash, testListAlgType, bytes, bytes];
+const sampleEntry = [
+  testListVersion,
+  regularIssuingCredentialTypeHash,
+  testListAlgType,
+  bytes,
+  bytes,
+];
 const traceId = 'trackingId';
 const caoDid = 'did:velocity:42';
 const burnerDid = 'did:velocity:321';
@@ -62,7 +68,10 @@ const setupContracts = async ({
   operatorAccount,
   signersByAddress,
 }) => {
-  const Permissions = await ethers.getContractFactory('Permissions', deployerSigner);
+  const Permissions = await ethers.getContractFactory(
+    'Permissions',
+    deployerSigner,
+  );
   const permissionsInstance = await Permissions.deploy();
   await permissionsInstance.waitForDeployment();
   await execute(permissionsInstance.initialize());
@@ -109,7 +118,11 @@ const setupContracts = async ({
     ),
   );
   await execute(
-    permissionsInstance.addPrimary(primaryAccount, primaryAccount, primaryAccount),
+    permissionsInstance.addPrimary(
+      primaryAccount,
+      primaryAccount,
+      primaryAccount,
+    ),
   );
   await execute(
     permissionsInstance.addAddressScope(primaryAccount, 'transactions:write'),
@@ -159,14 +172,16 @@ describe('MetadataRegistry', () => {
 
   before(async () => {
     signers = await ethers.getSigners();
-    [
-      deployerSigner,
-      primarySigner,
-    ] = signers;
+    [deployerSigner, primarySigner] = signers;
     signersByAddress = await signerByAddress(signers);
     accounts = await Promise.all(signers.map((signer) => signer.getAddress()));
-    [deployerAccount, primaryAccount, operatorAccount, randomTxAccount, randomNonTxAccount] =
-      accounts;
+    [
+      deployerAccount,
+      primaryAccount,
+      operatorAccount,
+      randomTxAccount,
+      randomNonTxAccount,
+    ] = accounts;
   });
 
   describe('Validate the create list and set entry functions', () => {
@@ -175,18 +190,28 @@ describe('MetadataRegistry', () => {
     let permissionsInstance;
 
     beforeEach(async () => {
-      ({verificationCouponInstance, metadataRegistryInstance, permissionsInstance} = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress }));
+      ({
+        verificationCouponInstance,
+        metadataRegistryInstance,
+        permissionsInstance,
+      } = await setupContracts({
+        deployerSigner,
+        primarySigner,
+        primaryAccount,
+        operatorAccount,
+        signersByAddress,
+      }));
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:issue'
+        primaryAccount,
+        'credential:issue',
       );
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:identityissue'
+        primaryAccount,
+        'credential:identityissue',
       );
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:contactissue'
+        primaryAccount,
+        'credential:contactissue',
       );
     });
 
@@ -251,7 +276,7 @@ describe('MetadataRegistry', () => {
     it('Method isExistMetadataList returns false when the account and list were not created', async () => {
       const result = await metadataRegistryInstance.isExistMetadataList(
         '0x0000000000000000000000000000000000000000',
-        42
+        42,
       );
       assert.equal(result, false);
     });
@@ -263,9 +288,9 @@ describe('MetadataRegistry', () => {
           testListVersion,
           bytes,
           traceId,
-          caoDid
+          caoDid,
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('Create new metadata list', async () => {
@@ -276,7 +301,7 @@ describe('MetadataRegistry', () => {
         bytes,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       const event = findEvent(
         result,
@@ -295,9 +320,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           '',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        ['invalid arrayify value', 'invalid BytesLike value']
+        ['invalid arrayify value', 'invalid BytesLike value'],
       );
     });
     it('newMetadataListSigned should fail with bad signature length', async () => {
@@ -310,9 +335,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6c',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        ['invalid signature length', 'invalid BytesLike value']
+        ['invalid signature length', 'invalid BytesLike value'],
       );
     });
     it('newMetadataListSigned should fail with arbitrary signature', async () => {
@@ -325,9 +350,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6cda19da761c0f6845aea70eb9946fe47a4549b1ff205e098994a5bd2db772d9bfc407142e97081e11c',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('newMetadataListSigned should fail when wrong address payload is signed', async () => {
@@ -344,9 +369,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('newMetadataListSigned should fail when wrong payload type is signed', async () => {
@@ -362,9 +387,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('newMetadataListSigned should fail when not signed by the operator', async () => {
@@ -381,9 +406,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('Create new metadata list with newMetadataListSigned', async () => {
@@ -399,7 +424,7 @@ describe('MetadataRegistry', () => {
         traceId,
         caoDid,
         signature,
-        { from: randomTxAccount }
+        { from: randomTxAccount },
       );
       const event = findEvent(
         result,
@@ -412,23 +437,20 @@ describe('MetadataRegistry', () => {
       await createMetadataList(1);
       const result = await metadataRegistryInstance.isExistMetadataList(
         primaryAccount,
-        1
+        1,
       );
       assert.equal(result, true);
     });
     it('Method isExistMetadataList returns false when only the list were not created', async () => {
       const result = await metadataRegistryInstance.isExistMetadataList(
         accounts[0],
-        42
+        42,
       );
       assert.equal(result, false);
     });
     it('Create list with the created already listId throws an error', async () => {
       await createMetadataList(1);
-      await expectRevert(
-        createMetadataList(1),
-        'List id already used'
-      );
+      await expectRevert(createMetadataList(1), 'List id already used');
     });
     it('setEntry should set entries on the existing list using operator as transactor', async () => {
       await createMetadataList(1);
@@ -442,8 +464,8 @@ describe('MetadataRegistry', () => {
             i,
             traceId,
             caoDid,
-            { from: operatorAccount }
-          )
+            { from: operatorAccount },
+          ),
         );
       }
 
@@ -455,18 +477,15 @@ describe('MetadataRegistry', () => {
           'AddedCredentialMetadata',
         );
         assert.ok(event, 'AddedCredentialMetadata event was not emitted');
-        assert.deepStrictEqual(
-          event.args.toObject(),
-          {
-            sender: primaryAccount,
-            listId: 1n,
-            index: BigInt(i),
-            credentialType: regularIssuingCredentialTypeHash,
-            issuerVc: bytes,
-            traceId,
-            caoDid,
-          },
-        );
+        assert.deepStrictEqual(event.args.toObject(), {
+          sender: primaryAccount,
+          listId: 1n,
+          index: BigInt(i),
+          credentialType: regularIssuingCredentialTypeHash,
+          issuerVc: bytes,
+          traceId,
+          caoDid,
+        });
       });
     });
     it('setEntrySigned should set 3 entries on the existing list using operator as signer', async () => {
@@ -487,8 +506,8 @@ describe('MetadataRegistry', () => {
             traceId,
             caoDid,
             signature,
-            { from: randomTxAccount }
-          )
+            { from: randomTxAccount },
+          ),
         );
       }
 
@@ -500,18 +519,15 @@ describe('MetadataRegistry', () => {
           'AddedCredentialMetadata',
         );
         assert.ok(event, 'AddedCredentialMetadata event was not emitted');
-        assert.deepStrictEqual(
-          event.args.toObject(),
-          {
-            sender: primaryAccount,
-            listId: 1n,
-            index: BigInt(i + 3),
-            credentialType: regularIssuingCredentialTypeHash,
-            issuerVc: bytes,
-            traceId,
-            caoDid,
-          },
-        );
+        assert.deepStrictEqual(event.args.toObject(), {
+          sender: primaryAccount,
+          listId: 1n,
+          index: BigInt(i + 3),
+          credentialType: regularIssuingCredentialTypeHash,
+          issuerVc: bytes,
+          traceId,
+          caoDid,
+        });
       });
     });
     it('setEntrySigned should fallback to regular issuing permission if credentialType is not known', async () => {
@@ -521,46 +537,44 @@ describe('MetadataRegistry', () => {
         signerWallet: operatorWallet,
       });
       const tx = await metadataRegistryInstance.setEntrySigned(
-          nonExistentCredentialTypeHash,
-          bytes,
-          1,
-          6,
-          traceId,
-          caoDid,
-          signature,
-          { from: randomTxAccount }
-      )
+        nonExistentCredentialTypeHash,
+        bytes,
+        1,
+        6,
+        traceId,
+        caoDid,
+        signature,
+        { from: randomTxAccount },
+      );
       const event = findEvent(
         tx,
         metadataRegistryInstance,
         'AddedCredentialMetadata',
       );
       assert.ok(event, 'AddedCredentialMetadata event was not emitted');
-      assert.deepStrictEqual(
-        event.args.toObject(),
-        {
-          sender: primaryAccount,
-          listId: 1n,
-          index: 6n,
-          credentialType: nonExistentCredentialTypeHash,
-          issuerVc: bytes,
-          traceId,
-          caoDid,
-        },
-      );
+      assert.deepStrictEqual(event.args.toObject(), {
+        sender: primaryAccount,
+        listId: 1n,
+        index: 6n,
+        credentialType: nonExistentCredentialTypeHash,
+        issuerVc: bytes,
+        traceId,
+        caoDid,
+      });
     });
     it('setEntrySigned should fail if primary lacks regular issuing permissions', async () => {
       await createMetadataList(1);
       await permissionsInstance.removeAddressScope(
-          primaryAccount,
-          'credential:issue'
+        primaryAccount,
+        'credential:issue',
       );
 
       const signature = signAddress({
         address: randomTxAccount,
         signerWallet: operatorWallet,
       });
-      await expectRevert(metadataRegistryInstance.setEntrySigned(
+      await expectRevert(
+        metadataRegistryInstance.setEntrySigned(
           regularIssuingCredentialTypeHash,
           bytes,
           1,
@@ -568,21 +582,24 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
-      ), 'Permissions: primary of operator lacks credential:issue permission')
+          { from: randomTxAccount },
+        ),
+        'Permissions: primary of operator lacks credential:issue permission',
+      );
     });
     it('setEntrySigned should fail if primary lacks contact issuing permissions', async () => {
       await createMetadataList(1);
       await permissionsInstance.removeAddressScope(
-          primaryAccount,
-          'credential:contactissue'
+        primaryAccount,
+        'credential:contactissue',
       );
 
       const signature = signAddress({
         address: randomTxAccount,
         signerWallet: operatorWallet,
       });
-      await expectRevert(metadataRegistryInstance.setEntrySigned(
+      await expectRevert(
+        metadataRegistryInstance.setEntrySigned(
           contactIssuingCredentialTypeHash,
           bytes,
           1,
@@ -590,21 +607,24 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
-      ), 'Permissions: primary of operator lacks credential:contactissue permission')
+          { from: randomTxAccount },
+        ),
+        'Permissions: primary of operator lacks credential:contactissue permission',
+      );
     });
     it('setEntrySigned should fail if primary lacks identity issuing permissions', async () => {
       await createMetadataList(1);
       await permissionsInstance.removeAddressScope(
-          primaryAccount,
-          'credential:identityissue'
+        primaryAccount,
+        'credential:identityissue',
       );
 
       const signature = signAddress({
         address: randomTxAccount,
         signerWallet: operatorWallet,
       });
-      await expectRevert(metadataRegistryInstance.setEntrySigned(
+      await expectRevert(
+        metadataRegistryInstance.setEntrySigned(
           identityIssuingCredentialTypeHash,
           bytes,
           1,
@@ -612,8 +632,10 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
-      ), 'Permissions: primary of operator lacks credential:identityissue permission')
+          { from: randomTxAccount },
+        ),
+        'Permissions: primary of operator lacks credential:identityissue permission',
+      );
     });
     it('setEntrySigned should fail with empty signature', async () => {
       await expectRevert(
@@ -625,9 +647,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           '',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        ['invalid arrayify value', 'invalid BytesLike value']
+        ['invalid arrayify value', 'invalid BytesLike value'],
       );
     });
     it('setEntrySigned should fail with bad signature length', async () => {
@@ -640,9 +662,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6c',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        ['invalid signature length', 'invalid BytesLike value']
+        ['invalid signature length', 'invalid BytesLike value'],
       );
     });
     it('setEntrySigned should fail with arbitrary signature', async () => {
@@ -655,9 +677,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6cda19da761c0f6845aea70eb9946fe47a4549b1ff205e098994a5bd2db772d9bfc407142e97081e11c',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('setEntrySigned should fail when wrong address payload is signed', async () => {
@@ -674,9 +696,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('setEntrySigned should fail when wrong payload type is signed', async () => {
@@ -692,9 +714,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('setEntrySigned should fail when not signed by the operator', async () => {
@@ -711,9 +733,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('setEntry should fail to a non-existent list', async () => {
@@ -725,15 +747,22 @@ describe('MetadataRegistry', () => {
           1,
           traceId,
           caoDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'List Id not aveliable'
+        'List Id not aveliable',
       );
     });
     it('setEntry should fail if not operator', async () => {
       await expectRevert(
-        metadataRegistryInstance.setEntry(nonExistentCredentialTypeHash, bytes, 2, 1, traceId, caoDid),
-        'Permissions: operator not pointing to a primary'
+        metadataRegistryInstance.setEntry(
+          nonExistentCredentialTypeHash,
+          bytes,
+          2,
+          1,
+          traceId,
+          caoDid,
+        ),
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('setEntry should fail with an invalid index of an existing list', async () => {
@@ -746,9 +775,9 @@ describe('MetadataRegistry', () => {
           10001,
           traceId,
           caoDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'Invalid index'
+        'Invalid index',
       );
     });
     it('setEntry should fail with a previously used index of an existing list', async () => {
@@ -762,9 +791,9 @@ describe('MetadataRegistry', () => {
           1,
           traceId,
           caoDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'Index already used'
+        'Index already used',
       );
     });
   });
@@ -774,7 +803,14 @@ describe('MetadataRegistry', () => {
     let permissionsInstance;
 
     beforeEach(async () => {
-      ({verificationCouponInstance, permissionsInstance} = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress }));
+      ({ verificationCouponInstance, permissionsInstance } =
+        await setupContracts({
+          deployerSigner,
+          primarySigner,
+          primaryAccount,
+          operatorAccount,
+          signersByAddress,
+        }));
     });
 
     it('Should allow setup permission if there is no address', async () => {
@@ -795,13 +831,16 @@ describe('MetadataRegistry', () => {
 
       await metadataRegistryInstance.setPermissionsAddress(
         permissionsInstance.address,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
 
       await expectRevert(
-        metadataRegistryInstance.setPermissionsAddress(permissionsInstance.address, {
-          from: operatorAccount,
-        }),
+        metadataRegistryInstance.setPermissionsAddress(
+          permissionsInstance.address,
+          {
+            from: operatorAccount,
+          },
+        ),
         'Permissions: caller is not VNF',
       );
     });
@@ -824,7 +863,7 @@ describe('MetadataRegistry', () => {
 
       await metadataRegistryInstance.setPermissionsAddress(
         permissionsInstance.address,
-        { from: primaryAccount }
+        { from: primaryAccount },
       );
 
       await expectRevert(
@@ -877,14 +916,24 @@ describe('MetadataRegistry', () => {
     let permissionsInstance;
     let couponId;
     beforeEach(async () => {
-      ({verificationCouponInstance, metadataRegistryInstance, permissionsInstance} = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress }))
+      ({
+        verificationCouponInstance,
+        metadataRegistryInstance,
+        permissionsInstance,
+      } = await setupContracts({
+        deployerSigner,
+        primarySigner,
+        primaryAccount,
+        operatorAccount,
+        signersByAddress,
+      }));
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:issue'
+        primaryAccount,
+        'credential:issue',
       );
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:contactissue'
+        primaryAccount,
+        'credential:contactissue',
       );
       await verificationCouponInstance.mint(
         primaryAccount,
@@ -894,11 +943,9 @@ describe('MetadataRegistry', () => {
         ownerDid,
         {
           from: deployerAccount,
-        }
+        },
       );
-      couponId = (
-        await verificationCouponInstance.getTokenId(operatorAccount)
-      );
+      couponId = await verificationCouponInstance.getTokenId(operatorAccount);
       await metadataRegistryInstance.newMetadataList(
         1,
         testListAlgType,
@@ -906,7 +953,7 @@ describe('MetadataRegistry', () => {
         bytes,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         regularIssuingCredentialTypeHash,
@@ -915,7 +962,7 @@ describe('MetadataRegistry', () => {
         1,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         regularIssuingCredentialTypeHash,
@@ -924,7 +971,7 @@ describe('MetadataRegistry', () => {
         2,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         freeCredentialTypesBytes2[0],
@@ -933,7 +980,7 @@ describe('MetadataRegistry', () => {
         3,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
     });
     it('getPaidEntriesSigned should fail with empty signature', async () => {
@@ -944,9 +991,9 @@ describe('MetadataRegistry', () => {
           caoDid,
           burnerDid,
           '',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        ['invalid arrayify value', 'invalid BytesLike value']
+        ['invalid arrayify value', 'invalid BytesLike value'],
       );
     });
     it('getPaidEntriesSigned should fail with bad signature length', async () => {
@@ -957,9 +1004,9 @@ describe('MetadataRegistry', () => {
           caoDid,
           burnerDid,
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6c',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        ['invalid signature length', 'invalid BytesLike value']
+        ['invalid signature length', 'invalid BytesLike value'],
       );
     });
     it('getPaidEntriesSigned should fail with arbitrary signature', async () => {
@@ -970,9 +1017,9 @@ describe('MetadataRegistry', () => {
           caoDid,
           burnerDid,
           '0x90c082e8de5b2f45aab09bcf5d00e27a19d87a2de31536e6cda19da761c0f6845aea70eb9946fe47a4549b1ff205e098994a5bd2db772d9bfc407142e97081e11c',
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('getPaidEntriesSigned should fail when wrong address payload is signed', async () => {
@@ -987,9 +1034,9 @@ describe('MetadataRegistry', () => {
           caoDid,
           burnerDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('getPaidEntriesSigned should fail when wrong payload type is signed', async () => {
@@ -1003,9 +1050,9 @@ describe('MetadataRegistry', () => {
           caoDid,
           burnerDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('getPaidEntriesSigned should fail when not signed by the operator', async () => {
@@ -1020,16 +1067,16 @@ describe('MetadataRegistry', () => {
           caoDid,
           burnerDid,
           signature,
-          { from: randomTxAccount }
+          { from: randomTxAccount },
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
     it('getPaidEntriesSigned should get one entry', async () => {
       assert.equal(
         await verificationCouponInstance.isExpired(couponId),
         false,
-        'Coupon should not be expired'
+        'Coupon should not be expired',
       );
       const signature = signAddress({
         address: randomTxAccount,
@@ -1041,15 +1088,15 @@ describe('MetadataRegistry', () => {
         caoDid,
         burnerDid,
         signature,
-        { from: randomTxAccount }
+        { from: randomTxAccount },
       );
-      
+
       assert.deepEqual(JSON.parse(JSON.stringify(result.logs[0].args[0])), [
         sampleEntry,
       ]);
       const balance = await verificationCouponInstance.balanceOf(
         primaryAccount,
-        couponId
+        couponId,
       );
       assert.equal(Number(balance), 99);
     });
@@ -1058,21 +1105,21 @@ describe('MetadataRegistry', () => {
       assert.equal(
         await verificationCouponInstance.isExpired(couponId),
         false,
-        'Coupon should not be expired'
+        'Coupon should not be expired',
       );
       const result = await metadataRegistryInstance.getPaidEntries(
         [[primaryAccount, 1, 1]],
         traceId,
         caoDid,
         burnerDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       assert.deepEqual(JSON.parse(JSON.stringify(result.logs[0].args[0])), [
         sampleEntry,
       ]);
       const balance = await verificationCouponInstance.balanceOf(
         primaryAccount,
-        couponId
+        couponId,
       );
       assert.equal(Number(balance), 99);
     });
@@ -1080,7 +1127,7 @@ describe('MetadataRegistry', () => {
       assert.equal(
         await verificationCouponInstance.isExpired(couponId),
         false,
-        'Coupon should not be expired'
+        'Coupon should not be expired',
       );
 
       const result = await metadataRegistryInstance.getPaidEntries(
@@ -1092,15 +1139,21 @@ describe('MetadataRegistry', () => {
         traceId,
         caoDid,
         burnerDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       assert.deepEqual(JSON.parse(JSON.stringify(result.logs[0].args[0])), [
         ...[0, 1].map(() => sampleEntry),
-        [testListVersion, freeCredentialTypesBytes2[0], testListAlgType, bytes, bytes],
+        [
+          testListVersion,
+          freeCredentialTypesBytes2[0],
+          testListAlgType,
+          bytes,
+          bytes,
+        ],
       ]);
       const balance = await verificationCouponInstance.balanceOf(
         primaryAccount,
-        couponId
+        couponId,
       );
       assert.equal(Number(balance), 99);
     });
@@ -1108,7 +1161,7 @@ describe('MetadataRegistry', () => {
       assert.equal(
         await verificationCouponInstance.isExpired(couponId),
         false,
-        'Coupon should not be expired'
+        'Coupon should not be expired',
       );
 
       const result = await metadataRegistryInstance.getPaidEntries(
@@ -1119,15 +1172,15 @@ describe('MetadataRegistry', () => {
         traceId,
         caoDid,
         burnerDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       assert.deepEqual(
         JSON.parse(JSON.stringify(result.logs[0].args[0])),
-        [1, 2].map(() => sampleEntry)
+        [1, 2].map(() => sampleEntry),
       );
       const balance = await verificationCouponInstance.balanceOf(
         primaryAccount,
-        couponId
+        couponId,
       );
       assert.equal(Number(balance), 99);
     });
@@ -1135,7 +1188,7 @@ describe('MetadataRegistry', () => {
       assert.equal(
         await verificationCouponInstance.isExpired(couponId),
         false,
-        'Coupon should not be expired'
+        'Coupon should not be expired',
       );
       await expectRevert(
         metadataRegistryInstance.getPaidEntries(
@@ -1147,13 +1200,13 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           burnerDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'Index not used'
+        'Index not used',
       );
       const balance = await verificationCouponInstance.balanceOf(
         primaryAccount,
-        couponId
+        couponId,
       );
       assert.equal(Number(balance), 100);
     });
@@ -1161,7 +1214,7 @@ describe('MetadataRegistry', () => {
       assert.equal(
         await verificationCouponInstance.isExpired(couponId),
         false,
-        'Coupon should not be expired'
+        'Coupon should not be expired',
       );
       await expectRevert(
         metadataRegistryInstance.getPaidEntries(
@@ -1173,13 +1226,13 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           burnerDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'List id not used'
+        'List id not used',
       );
       const balance = await verificationCouponInstance.balanceOf(
         primaryAccount,
-        couponId
+        couponId,
       );
       assert.equal(Number(balance), 100);
     });
@@ -1187,7 +1240,7 @@ describe('MetadataRegistry', () => {
       assert.equal(
         await verificationCouponInstance.isExpired(couponId),
         false,
-        'Coupon should not be expired'
+        'Coupon should not be expired',
       );
 
       await expectRevert(
@@ -1200,13 +1253,13 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           burnerDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'List id not used'
+        'List id not used',
       );
       const balance = await verificationCouponInstance.balanceOf(
         primaryAccount,
-        couponId
+        couponId,
       );
       assert.equal(Number(balance), 100);
     });
@@ -1217,17 +1270,23 @@ describe('MetadataRegistry', () => {
     let metadataRegistryInstance;
 
     beforeEach(async () => {
-      const contracts = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress });
-      ({verificationCouponInstance, metadataRegistryInstance} = contracts);
+      const contracts = await setupContracts({
+        deployerSigner,
+        primarySigner,
+        primaryAccount,
+        operatorAccount,
+        signersByAddress,
+      });
+      ({ verificationCouponInstance, metadataRegistryInstance } = contracts);
 
-      const {permissionsInstance} = contracts;
+      const { permissionsInstance } = contracts;
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:issue'
+        primaryAccount,
+        'credential:issue',
       );
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:contactissue'
+        primaryAccount,
+        'credential:contactissue',
       );
 
       await metadataRegistryInstance.newMetadataList(
@@ -1237,7 +1296,7 @@ describe('MetadataRegistry', () => {
         bytes,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         regularIssuingCredentialTypeHash,
@@ -1246,7 +1305,7 @@ describe('MetadataRegistry', () => {
         1,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         regularIssuingCredentialTypeHash,
@@ -1255,7 +1314,7 @@ describe('MetadataRegistry', () => {
         2,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         freeCredentialTypesBytes2[0],
@@ -1264,14 +1323,14 @@ describe('MetadataRegistry', () => {
         3,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
     });
 
     it('Throws an error when the coupon was not exist', async () => {
       await expectRevert(
         verificationCouponInstance.getTokenId(operatorAccount),
-        'No available tokens'
+        'No available tokens',
       );
       await expectRevert(
         metadataRegistryInstance.getPaidEntries(
@@ -1279,9 +1338,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           burnerDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'No available tokens'
+        'No available tokens',
       );
     });
     it('Throws an error when the coupon was burned', async () => {
@@ -1293,26 +1352,26 @@ describe('MetadataRegistry', () => {
         ownerDid,
         {
           from: accounts[0],
-        }
+        },
       );
       await metadataRegistryInstance.getPaidEntries(
         [[primaryAccount, 1, 1]],
         traceId,
         caoDid,
         burnerDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.getPaidEntries(
         [[primaryAccount, 1, 1]],
         traceId,
         caoDid,
         burnerDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
 
       await expectRevert(
         verificationCouponInstance.getTokenId(operatorAccount),
-        'No available tokens'
+        'No available tokens',
       );
       await expectRevert(
         metadataRegistryInstance.getPaidEntries(
@@ -1320,9 +1379,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           burnerDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'No available tokens'
+        'No available tokens',
       );
     });
 
@@ -1335,7 +1394,7 @@ describe('MetadataRegistry', () => {
         ownerDid,
         {
           from: accounts[0],
-        }
+        },
       );
       await verificationCouponInstance.mint(
         accounts[1],
@@ -1345,7 +1404,7 @@ describe('MetadataRegistry', () => {
         ownerDid,
         {
           from: accounts[0],
-        }
+        },
       );
       await verificationCouponInstance.mint(
         accounts[1],
@@ -1355,14 +1414,13 @@ describe('MetadataRegistry', () => {
         ownerDid,
         {
           from: accounts[0],
-        }
+        },
       );
-      const couponId = (
-        await verificationCouponInstance.getTokenId(operatorAccount)
-      );
+      const couponId =
+        await verificationCouponInstance.getTokenId(operatorAccount);
       await assert.equal(
         await verificationCouponInstance.isExpired(couponId),
-        false
+        false,
       );
       await metadataRegistryInstance.getPaidEntries(
         [
@@ -1374,7 +1432,7 @@ describe('MetadataRegistry', () => {
         burnerDid,
         {
           from: operatorAccount,
-        }
+        },
       );
     });
   });
@@ -1384,17 +1442,23 @@ describe('MetadataRegistry', () => {
     let metadataRegistryInstance;
 
     beforeEach(async () => {
-      const contracts = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress });
-      ({verificationCouponInstance, metadataRegistryInstance} = contracts);
+      const contracts = await setupContracts({
+        deployerSigner,
+        primarySigner,
+        primaryAccount,
+        operatorAccount,
+        signersByAddress,
+      });
+      ({ verificationCouponInstance, metadataRegistryInstance } = contracts);
 
-      const {permissionsInstance} = contracts;
+      const { permissionsInstance } = contracts;
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:issue'
+        primaryAccount,
+        'credential:issue',
       );
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:contactissue'
+        primaryAccount,
+        'credential:contactissue',
       );
 
       await verificationCouponInstance.mint(
@@ -1405,7 +1469,7 @@ describe('MetadataRegistry', () => {
         ownerDid,
         {
           from: accounts[0],
-        }
+        },
       );
       await metadataRegistryInstance.newMetadataList(
         1,
@@ -1414,7 +1478,7 @@ describe('MetadataRegistry', () => {
         bytes,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         freeCredentialTypesBytes2[0],
@@ -1423,7 +1487,7 @@ describe('MetadataRegistry', () => {
         1,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         freeCredentialTypesBytes2[1],
@@ -1432,7 +1496,7 @@ describe('MetadataRegistry', () => {
         2,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         freeCredentialTypesBytes2[2],
@@ -1441,7 +1505,7 @@ describe('MetadataRegistry', () => {
         3,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         regularIssuingCredentialTypeHash,
@@ -1450,17 +1514,23 @@ describe('MetadataRegistry', () => {
         4,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
     });
     it('Get one entry from the existing list ', async () => {
       const entries = await metadataRegistryInstance.getFreeEntries(
         [[primaryAccount, 1, 1]],
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
 
       assert.deepEqual(normalizeEntries(entries), [
-        [testListVersion, freeCredentialTypesBytes2[0], testListAlgType, bytes, bytes],
+        [
+          testListVersion,
+          freeCredentialTypesBytes2[0],
+          testListAlgType,
+          bytes,
+          bytes,
+        ],
       ]);
     });
     it('Get multiple entries from to the existing list', async () => {
@@ -1470,7 +1540,7 @@ describe('MetadataRegistry', () => {
           [primaryAccount, 1, 2],
           [primaryAccount, 1, 3],
         ],
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       assert.deepEqual(
         normalizeEntries(entries),
@@ -1480,7 +1550,7 @@ describe('MetadataRegistry', () => {
           testListAlgType,
           bytes,
           bytes,
-        ])
+        ]),
       );
     });
 
@@ -1489,7 +1559,7 @@ describe('MetadataRegistry', () => {
         metadataRegistryInstance.getFreeEntries([[primaryAccount, 1, 4]], {
           from: operatorAccount,
         }),
-        'Only free creadential types is allowed without coupon'
+        'Only free creadential types is allowed without coupon',
       );
     });
 
@@ -1499,9 +1569,9 @@ describe('MetadataRegistry', () => {
           [[primaryAccount, 1, 1]],
           traceId,
           caoDid,
-          burnerDid
+          burnerDid,
         ),
-        'No paid creadential types'
+        'No paid creadential types',
       );
     });
 
@@ -1511,9 +1581,9 @@ describe('MetadataRegistry', () => {
           [[primaryAccount, 1, 4]],
           traceId,
           caoDid,
-          burnerDid
+          burnerDid,
         ),
-        'Permissions: operator not pointing to a primary'
+        'Permissions: operator not pointing to a primary',
       );
     });
 
@@ -1524,9 +1594,9 @@ describe('MetadataRegistry', () => {
           traceId,
           caoDid,
           burnerDid,
-          { from: operatorAccount }
+          { from: operatorAccount },
         ),
-        'No paid creadential types'
+        'No paid creadential types',
       );
     });
   });
@@ -1536,18 +1606,24 @@ describe('MetadataRegistry', () => {
     const newFreeCredentialTypesList = ['NewType1', 'NewType2', 'NewType3'];
     const newFreeCredentialTypesBytes2 = map(
       get2BytesHash,
-      newFreeCredentialTypesList
+      newFreeCredentialTypesList,
     );
     beforeEach(async () => {
-      ({metadataRegistryInstance} = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress }));
+      ({ metadataRegistryInstance } = await setupContracts({
+        deployerSigner,
+        primarySigner,
+        primaryAccount,
+        operatorAccount,
+        signersByAddress,
+      }));
     });
     it('Add new free types', async () => {
       const isFreeBefore = await metadataRegistryInstance.isFreeCredentialType(
-        newFreeCredentialTypesBytes2[0]
+        newFreeCredentialTypesBytes2[0],
       );
       await metadataRegistryInstance.addFreeTypes(newFreeCredentialTypesBytes2);
       const isFreeAfter = await metadataRegistryInstance.isFreeCredentialType(
-        newFreeCredentialTypesBytes2[0]
+        newFreeCredentialTypesBytes2[0],
       );
 
       assert.equal(isFreeBefore, false);
@@ -1556,13 +1632,13 @@ describe('MetadataRegistry', () => {
     it('Remove new free types', async () => {
       await metadataRegistryInstance.addFreeTypes(newFreeCredentialTypesBytes2);
       const isFreeBefore = await metadataRegistryInstance.isFreeCredentialType(
-        newFreeCredentialTypesBytes2[0]
+        newFreeCredentialTypesBytes2[0],
       );
       await metadataRegistryInstance.removeFreeTypes(
-        newFreeCredentialTypesBytes2
+        newFreeCredentialTypesBytes2,
       );
       const isFreeAfter = await metadataRegistryInstance.isFreeCredentialType(
-        newFreeCredentialTypesBytes2[0]
+        newFreeCredentialTypesBytes2[0],
       );
 
       assert.equal(isFreeBefore, true);
@@ -1573,22 +1649,22 @@ describe('MetadataRegistry', () => {
         metadataRegistryInstance.addFreeTypes(newFreeCredentialTypesBytes2, {
           from: accounts[3],
         }),
-        'The caller is not VNF'
+        'The caller is not VNF',
       );
       await expectRevert(
         metadataRegistryInstance.removeFreeTypes(newFreeCredentialTypesBytes2, {
           from: accounts[3],
         }),
-        'The caller is not VNF'
+        'The caller is not VNF',
       );
     });
 
     it('Can remove unexisting free types', async () => {
       await metadataRegistryInstance.removeFreeTypes(
-        newFreeCredentialTypesBytes2
+        newFreeCredentialTypesBytes2,
       );
       await metadataRegistryInstance.removeFreeTypes(
-        newFreeCredentialTypesBytes2
+        newFreeCredentialTypesBytes2,
       );
     });
   });
@@ -1597,17 +1673,23 @@ describe('MetadataRegistry', () => {
     let verificationCouponInstance;
     let metadataRegistryInstance;
     beforeEach(async () => {
-      const contracts = await setupContracts({ deployerSigner, primarySigner, primaryAccount, operatorAccount, signersByAddress });
-      ({verificationCouponInstance, metadataRegistryInstance} = contracts);
+      const contracts = await setupContracts({
+        deployerSigner,
+        primarySigner,
+        primaryAccount,
+        operatorAccount,
+        signersByAddress,
+      });
+      ({ verificationCouponInstance, metadataRegistryInstance } = contracts);
 
-      const {permissionsInstance} = contracts;
+      const { permissionsInstance } = contracts;
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:issue'
+        primaryAccount,
+        'credential:issue',
       );
       await permissionsInstance.addAddressScope(
-          primaryAccount,
-          'credential:contactissue'
+        primaryAccount,
+        'credential:contactissue',
       );
 
       await verificationCouponInstance.mint(
@@ -1618,7 +1700,7 @@ describe('MetadataRegistry', () => {
         ownerDid,
         {
           from: accounts[0],
-        }
+        },
       );
       await metadataRegistryInstance.newMetadataList(
         1,
@@ -1627,7 +1709,7 @@ describe('MetadataRegistry', () => {
         bytes,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         freeCredentialTypesBytes2[0],
@@ -1636,7 +1718,7 @@ describe('MetadataRegistry', () => {
         1,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         freeCredentialTypesBytes2[1],
@@ -1645,7 +1727,7 @@ describe('MetadataRegistry', () => {
         2,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         freeCredentialTypesBytes2[2],
@@ -1654,7 +1736,7 @@ describe('MetadataRegistry', () => {
         3,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
       await metadataRegistryInstance.setEntry(
         regularIssuingCredentialTypeHash,
@@ -1663,7 +1745,7 @@ describe('MetadataRegistry', () => {
         4,
         traceId,
         caoDid,
-        { from: operatorAccount }
+        { from: operatorAccount },
       );
     });
     it('Set new verification coupon address', async () => {
@@ -1691,9 +1773,9 @@ describe('MetadataRegistry', () => {
           verificationCouponInstance.address,
           {
             from: accounts[3],
-          }
+          },
         ),
-        'The caller is not VNF'
+        'The caller is not VNF',
       );
     });
   });

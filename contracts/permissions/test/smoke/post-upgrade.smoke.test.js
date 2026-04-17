@@ -26,7 +26,10 @@ describeSmoke('Permissions post-upgrade smoke', function () {
 
     await assertHasCode(ethers, permissionsAddress, 'permissions proxy');
 
-    const permissions = await ethers.getContractAt('Permissions', permissionsAddress);
+    const permissions = await ethers.getContractAt(
+      'Permissions',
+      permissionsAddress,
+    );
     const vnf = await permissions.getVNF();
     assert.notEqual(
       vnf,

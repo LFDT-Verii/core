@@ -21,7 +21,7 @@ const resolveRevocationAddress = (chainId) => {
   });
 };
 
-async function main() {
+const main = async () => {
   const [deployer] = await ethers.getSigners();
   const deployerAddress = await deployer.getAddress();
   const txOverrides = await resolveTxOverrides(ethers);
@@ -38,9 +38,8 @@ async function main() {
     );
   }
 
-  const RevocationRegistry = await ethers.getContractFactory(
-    'RevocationRegistry',
-  );
+  const RevocationRegistry =
+    await ethers.getContractFactory('RevocationRegistry');
   const instance = await upgrades.upgradeProxy(
     proxyAddress,
     RevocationRegistry,
@@ -81,7 +80,7 @@ async function main() {
   }
 
   console.log(`REVOCATION_PROXY_ADDRESS=${await instance.getAddress()}`);
-}
+};
 
 main().catch((error) => {
   console.error(error);

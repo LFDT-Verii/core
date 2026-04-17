@@ -5,7 +5,10 @@ const { signAddress } = require('@verii/blockchain-functions');
 const { execute, expectRevert, findEvent } = require('../../test-utils');
 
 const setupContracts = async ({ primary, deployerSigner }) => {
-  const Permissions = await ethers.getContractFactory('Permissions', deployerSigner);
+  const Permissions = await ethers.getContractFactory(
+    'Permissions',
+    deployerSigner,
+  );
   const permissionsContractInstance = await Permissions.deploy();
   await permissionsContractInstance.waitForDeployment();
   await execute(permissionsContractInstance.initialize());
@@ -23,7 +26,9 @@ const setupContracts = async ({ primary, deployerSigner }) => {
     ),
   );
 
-  await execute(permissionsContractInstance.addPrimary(primary, primary, primary));
+  await execute(
+    permissionsContractInstance.addPrimary(primary, primary, primary),
+  );
   await execute(
     permissionsContractInstance.addAddressScope(primary, 'transactions:write'),
   );
@@ -52,18 +57,12 @@ describe('Revocation Registry', () => {
 
   before(async () => {
     signers = await ethers.getSigners();
-    [
-      deployerSigner,
-      primarySigner,
-      operatorSigner,
-      randomTxSigner,
-    ] = signers;
+    [deployerSigner, primarySigner, operatorSigner, randomTxSigner] = signers;
 
     primaryAccount = await primarySigner.getAddress();
     operatorAccount = await operatorSigner.getAddress();
     randomTxAccount = await randomTxSigner.getAddress();
     randomNonTxAccount = await signers[4].getAddress();
-
   });
 
   describe('Set permission address', () => {
@@ -78,7 +77,8 @@ describe('Revocation Registry', () => {
     });
 
     it('Should allow setup permission if there is no address', async () => {
-      const RevocationRegistry = await ethers.getContractFactory('RevocationRegistry');
+      const RevocationRegistry =
+        await ethers.getContractFactory('RevocationRegistry');
       const revocationRegistryInstance = await RevocationRegistry.deploy();
       await revocationRegistryInstance.waitForDeployment();
       await execute(revocationRegistryInstance.initialize());
@@ -102,7 +102,8 @@ describe('Revocation Registry', () => {
     });
 
     it('Should not allow setup permission if caller is not VNF', async () => {
-      const RevocationRegistry = await ethers.getContractFactory('RevocationRegistry');
+      const RevocationRegistry =
+        await ethers.getContractFactory('RevocationRegistry');
       const revocationRegistryInstance = await RevocationRegistry.deploy();
       await revocationRegistryInstance.waitForDeployment();
       await execute(revocationRegistryInstance.initialize());
@@ -126,7 +127,8 @@ describe('Revocation Registry', () => {
     });
 
     it('Should allow setup permission if caller is VNF', async () => {
-      const RevocationRegistry = await ethers.getContractFactory('RevocationRegistry');
+      const RevocationRegistry =
+        await ethers.getContractFactory('RevocationRegistry');
       const revocationRegistryInstance = await RevocationRegistry.deploy();
       await revocationRegistryInstance.waitForDeployment();
       await execute(revocationRegistryInstance.initialize());
@@ -144,7 +146,9 @@ describe('Revocation Registry', () => {
 
       const secondPermissionAccount = ethers.Wallet.createRandom();
       await execute(
-        revocationRegistryInstance.setPermissionsAddress(secondPermissionAccount.address),
+        revocationRegistryInstance.setPermissionsAddress(
+          secondPermissionAccount.address,
+        ),
       );
       assert.equal(
         await revocationRegistryInstance.getPermissionsAddress(),
@@ -202,7 +206,11 @@ describe('Revocation Registry', () => {
           .addWallet('traceId', 'caoDid'),
       );
 
-      const event = findEvent(receipt, revocationRegistryInstance, 'WalletAdded');
+      const event = findEvent(
+        receipt,
+        revocationRegistryInstance,
+        'WalletAdded',
+      );
       assert.ok(event, 'WalletAdded event was not emitted');
       assert.equal(event.args.traceId, 'traceId');
       assert.equal(event.args.caoDid, 'caoDid');
@@ -216,7 +224,11 @@ describe('Revocation Registry', () => {
           .addRevocationList(1, 'traceId', 'caoDid'),
       );
 
-      const event = findEvent(receipt, revocationRegistryInstance, 'RevocationListCreate');
+      const event = findEvent(
+        receipt,
+        revocationRegistryInstance,
+        'RevocationListCreate',
+      );
       assert.ok(event, 'RevocationListCreate event was not emitted');
       assert.equal(event.args.wallet, primaryAccount);
       assert.equal(event.args.listId, 1n);
@@ -278,7 +290,12 @@ describe('Revocation Registry', () => {
         await expectRevert(
           () =>
             execute(
-              revocationRegistryInstance.setRevokedStatus(1, 2, 'traceId', 'caoDid'),
+              revocationRegistryInstance.setRevokedStatus(
+                1,
+                2,
+                'traceId',
+                'caoDid',
+              ),
             ),
           'Permissions: operator not pointing to a primary',
         );
@@ -315,7 +332,11 @@ describe('Revocation Registry', () => {
             .setRevokedStatus(1, 2, 'traceId', 'caoDid'),
         );
 
-        const event = findEvent(receipt, revocationRegistryInstance, 'RevokedStatusUpdate');
+        const event = findEvent(
+          receipt,
+          revocationRegistryInstance,
+          'RevokedStatusUpdate',
+        );
         assert.ok(event, 'RevokedStatusUpdate event was not emitted');
         assert.equal(event.args.owner, primaryAccount);
         assert.equal(event.args.listId, 1n);
@@ -365,14 +386,19 @@ describe('Revocation Registry', () => {
       it('Should fail if list index is out of bounds', async () => {
         await expectRevert(
           () =>
-            revocationRegistryInstance.getRevokedStatus(primaryAccount, 1, 10242),
+            revocationRegistryInstance.getRevokedStatus(
+              primaryAccount,
+              1,
+              10242,
+            ),
           'list index out of bound',
         );
       });
 
       it('Should fail if list with list id does not exist', async () => {
         await expectRevert(
-          () => revocationRegistryInstance.getRevokedStatus(primaryAccount, 11, 2),
+          () =>
+            revocationRegistryInstance.getRevokedStatus(primaryAccount, 11, 2),
           'revocation list with given id does not exist',
         );
       });
@@ -380,11 +406,7 @@ describe('Revocation Registry', () => {
       it('Should fail if wallet does not exist', async () => {
         await expectRevert(
           () =>
-            revocationRegistryInstance.getRevokedStatus(
-              randomTxAccount,
-              11,
-              2,
-            ),
+            revocationRegistryInstance.getRevokedStatus(randomTxAccount, 11, 2),
           'wallet not in registry',
         );
       });
@@ -600,7 +622,11 @@ describe('Revocation Registry', () => {
           .addWalletSigned('traceId', 'caoDid', signature),
       );
 
-      const event = findEvent(receipt, revocationRegistryInstance, 'WalletAdded');
+      const event = findEvent(
+        receipt,
+        revocationRegistryInstance,
+        'WalletAdded',
+      );
       assert.ok(event, 'WalletAdded event was not emitted');
       assert.equal(event.args.traceId, 'traceId');
       assert.equal(event.args.caoDid, 'caoDid');
@@ -618,7 +644,11 @@ describe('Revocation Registry', () => {
           .addRevocationListSigned(1, 'traceId', 'caoDid', signature),
       );
 
-      const event = findEvent(receipt, revocationRegistryInstance, 'RevocationListCreate');
+      const event = findEvent(
+        receipt,
+        revocationRegistryInstance,
+        'RevocationListCreate',
+      );
       assert.ok(event, 'RevocationListCreate event was not emitted');
       assert.equal(event.args.wallet, primaryAccount);
       assert.equal(event.args.listId, 1n);
@@ -765,7 +795,11 @@ describe('Revocation Registry', () => {
           .setRevokedStatusSigned(1, 2, 'traceId', 'caoDid', signature),
       );
 
-      const event = findEvent(receipt, revocationRegistryInstance, 'RevokedStatusUpdate');
+      const event = findEvent(
+        receipt,
+        revocationRegistryInstance,
+        'RevokedStatusUpdate',
+      );
       assert.ok(event, 'RevokedStatusUpdate event was not emitted');
       assert.equal(event.args.owner, primaryAccount);
       assert.equal(event.args.listId, 1n);

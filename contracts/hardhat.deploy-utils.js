@@ -134,7 +134,11 @@ const resolveAutoGasPercent = () => {
   }
 
   const parsedPercent = Number(rawPercent);
-  if (!Number.isInteger(parsedPercent) || parsedPercent < 1 || parsedPercent > 100) {
+  if (
+    !Number.isInteger(parsedPercent) ||
+    parsedPercent < 1 ||
+    parsedPercent > 100
+  ) {
     throw new Error(
       `Invalid HARDHAT_AUTO_GAS_LIMIT_PERCENT: ${String(rawPercent)} (expected integer 1-100)`,
     );

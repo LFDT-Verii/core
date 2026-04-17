@@ -1,0 +1,7 @@
+linkWorkspacePackages: true
+packages:
+  - contracts/*
+  - packages/*
+  - servers/*
+  - tools/*
+  - samples/*
