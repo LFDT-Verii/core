@@ -15,9 +15,10 @@ RUN apt-get update \
 USER node
 
 COPY --chown=node:node package*.json pnpm-lock.yaml pnpm-workspace.yaml lerna.json ./
+COPY --chown=node:node .husky ./.husky
 COPY --chown=node:node packages ./packages
 COPY --chown=node:node servers ./servers
-RUN pnpm install --prod --frozen-lockfile
+RUN HUSKY=0 pnpm install --frozen-lockfile
 
 FROM node:24.14.1-slim@sha256:b506e7321f176aae77317f99d67a24b272c1f09f1d10f1761f2773447d8da26c
 ARG SERVICE
