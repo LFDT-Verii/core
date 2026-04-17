@@ -30,7 +30,7 @@
     "contracts:test:post-upgrade": "pnpm run contracts:assert-target-env && pnpm --filter @verii/permissions-contract run test:post-upgrade && pnpm --filter @verii/verification-coupon-contract run test:post-upgrade && pnpm --filter @verii/metadata-registry-contract run test:post-upgrade && pnpm --filter @verii/revocation-list-contract run test:post-upgrade",
     "check-packages": "pnpm run clean && pnpm run compile && pnpm run test && pnpm run lint",
     "check-licenses": "pnpm licenses list --prod --json | node ./check-license.js",
-    "prepare": "husky",
+    "prepare": "node .husky/install.mjs",
     "start": "docker-compose up",
     "start:rebuild": "docker-compose up --build",
     "stop": "docker-compose down -v"
