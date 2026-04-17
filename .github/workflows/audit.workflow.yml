@@ -25,7 +25,6 @@ jobs:
       - name: Cache node modules
         id: pnpm-cache # use this to check for `cache-hit` (`steps.pnpm-cache.outputs.cache-hit != 'true'`)
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
-        id: pnpm-cache # use this to check for `cache-hit` (`steps.pnpm-cache.outputs.cache-hit != 'true'`)
         with:
           path: ${{ steps.pnpm-store-path.outputs.dir }}
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
