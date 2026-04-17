@@ -24,7 +24,7 @@ services:
       - ../../../packages:/app/packages
       - /app/servers/credentialagent/node_modules
       - ..:/app/servers/credentialagent
-    command: npx nodemon --exec "cd servers/credentialagent && yarn start"
+    command: npx nodemon --exec "cd servers/credentialagent && pnpm start"
     env_file:
       - ../.localdev.e2e.env
     environment:

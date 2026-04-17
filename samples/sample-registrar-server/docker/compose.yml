@@ -24,7 +24,7 @@ services:
       - /app/servers/registrar-migrations/node_modules
       - ..:/app/servers/registrar-migrations
       - ../../sample-lib-app:/app/samples/sample-lib-app
-    command: "yarn --cwd servers/registrar-migrations migrate:up"
+    command: "pnpm --dir servers/registrar-migrations run migrate:up"
     env_file:
       - ../.localdev.env
 
@@ -52,7 +52,7 @@ services:
       - /app/servers/registrar/node_modules
       - ..:/app/servers/registrar
       - httpscert:/certs
-    command: npx nodemon --exec "cd servers/registrar && yarn start"
+    command: npx nodemon --exec "cd servers/registrar && pnpm start"
     env_file:
       - ../.localdev.env
     environment:
