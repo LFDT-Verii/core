@@ -1,6 +1,4 @@
 import baseConfig from '../eslint.config.mjs';
-// eslint-disable-next-line no-unused-vars
-import globals from 'globals';
 
 export default [
   ...baseConfig,
