@@ -18,7 +18,7 @@ services:
       - ../../../packages:/app/packages
       - /app/servers/mockvendor/node_modules
       - ..:/app/servers/mockvendor
-    command: npx nodemon --exec "cd servers/mockvendor && pnpm start"
+    command: pnpm --dir servers/mockvendor exec nodemon --exec "pnpm start"
     env_file:
       - ../.localdev.env
     ports:

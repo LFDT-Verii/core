@@ -26,6 +26,7 @@ WORKDIR /app
 RUN corepack enable \
   && corepack prepare pnpm@10.30.2 --activate
 COPY --chown=node:node --from=builder /app .
+USER node
 WORKDIR "/app/servers/$SERVICE"
 
 EXPOSE 3000

@@ -52,7 +52,7 @@ services:
       - /app/servers/registrar/node_modules
       - ..:/app/servers/registrar
       - httpscert:/certs
-    command: npx nodemon --exec "cd servers/registrar && pnpm start"
+    command: pnpm --dir servers/registrar exec nodemon --exec "pnpm start"
     env_file:
       - ../.localdev.env
     environment:
