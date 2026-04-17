@@ -31,9 +31,9 @@
     "check-packages": "pnpm run clean && pnpm run compile && pnpm run test && pnpm run lint",
     "check-licenses": "pnpm licenses list --prod --json | node ./check-license.js",
     "prepare": "node .husky/install.mjs",
-    "start": "docker-compose up",
-    "start:rebuild": "docker-compose up --build",
-    "stop": "docker-compose down -v"
+    "start": "docker compose up",
+    "start:rebuild": "docker compose up --build",
+    "stop": "docker compose down -v"
   },
   "// fast-xml-parser-override-note": "Temporary: remove this fast-xml-parser override once @aws-sdk/xml-builder no longer pulls fast-xml-parser 5.3.4 (i.e., upstream resolves to >=5.3.6).",
   "pnpm": {
