@@ -2648,8 +2648,8 @@ importers:
         specifier: 3.8.1
         version: 3.8.1
       undici:
-        specifier: 7.24.8
-        version: 7.24.8
+        specifier: 7.25.0
+        version: 7.25.0
 
   packages/vnf-wallet-sdk-nodejs:
     dependencies:
@@ -10697,6 +10697,10 @@ packages:
     resolution: {integrity: sha512-6KQ/+QxK49Z/p3HO6E5ZCZWNnCasyZLa5ExaVYyvPxUwKtbCPMKELJOqh7EqOle0t9cH/7d2TaaTRRa6Nhs4YQ==}
     engines: {node: '>=20.18.1'}
 
+  undici@7.25.0:
+    resolution: {integrity: sha512-xXnp4kTyor2Zq+J1FfPI6Eq3ew5h6Vl0F/8d9XU5zZQf1tX9s2Su1/3PiMmUANFULpmksxkClamIZcaUqryHsQ==}
+    engines: {node: '>=20.18.1'}
+
   unfetch@4.2.0:
     resolution: {integrity: sha512-F9p7yYCn6cIW9El1zi0HI6vqpeIvBsr3dSuRO6Xuppb1u5rXpCPmMvLSyECLhybr9isec8Ohl0hPekMVrEinDA==}
 
@@ -15542,7 +15546,7 @@ snapshots:
       parse5: 7.3.0
       parse5-htmlparser2-tree-adapter: 7.1.0
       parse5-parser-stream: 7.1.2
-      undici: 7.24.8
+      undici: 7.25.0
       whatwg-mimetype: 4.0.0
 
   chokidar@3.6.0:
@@ -19527,6 +19531,8 @@ snapshots:
   undici@7.22.0: {}
 
   undici@7.24.8: {}
+
+  undici@7.25.0: {}
 
   unfetch@4.2.0: {}
 
