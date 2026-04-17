@@ -2658,7 +2658,7 @@ importers:
         version: link:../vc-checks
       axios:
         specifier: ^1.13.5
-        version: 1.13.5(debug@4.4.3)
+        version: 1.15.0(debug@4.4.3)
       canonicalize:
         specifier: ^2.1.0
         version: 2.1.0
@@ -2960,7 +2960,7 @@ importers:
     dependencies:
       axios:
         specifier: ^1.13.5
-        version: 1.13.5(debug@4.4.3)
+        version: 1.15.0(debug@4.4.3)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -3072,7 +3072,7 @@ importers:
         version: link:../../packages/vnf-wallet-sdk-nodejs
       axios:
         specifier: ^1.13.5
-        version: 1.13.5(debug@4.4.3)
+        version: 1.15.0(debug@4.4.3)
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
@@ -8243,8 +8243,8 @@ packages:
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
 
-  follow-redirects@1.15.11:
-    resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
+  follow-redirects@1.16.0:
+    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -10674,8 +10674,8 @@ packages:
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
 
-  undici-types@6.23.0:
-    resolution: {integrity: sha512-HN7GeXgBUs1StmY/vf9hIH11LrNI5SfqmFVtxKyp9Dhuf1P1cDSRlS+H1NJDaGOWzlI08q+NmiHgu11Vx6QnhA==}
+  undici-types@6.25.0:
+    resolution: {integrity: sha512-vOw74RVVYFtnooUkZPxsY1GuuNNupSrCcANIAaDekpZ/Dp1sBuLLl5n2UCKpzxgmOwD66S4Jj24MrhmcDG+0vw==}
 
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
@@ -13336,7 +13336,7 @@ snapshots:
   '@openzeppelin/defender-sdk-deploy-client@1.15.2(debug@4.4.3)':
     dependencies:
       '@openzeppelin/defender-sdk-base-client': 1.15.2
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.15.0(debug@4.4.3)
       lodash: 4.18.1
     transitivePeerDependencies:
       - debug
@@ -13345,7 +13345,7 @@ snapshots:
   '@openzeppelin/defender-sdk-network-client@1.15.2(debug@4.4.3)':
     dependencies:
       '@openzeppelin/defender-sdk-base-client': 1.15.2
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.15.0(debug@4.4.3)
       lodash: 4.18.1
     transitivePeerDependencies:
       - debug
@@ -15262,7 +15262,7 @@ snapshots:
   auth0@4.37.0:
     dependencies:
       jose: 4.15.9
-      undici-types: 6.23.0
+      undici-types: 6.25.0
       uuid: 9.0.1
 
   auth0@5.6.0:
@@ -15286,17 +15286,17 @@ snapshots:
 
   axe-core@4.11.1: {}
 
-  axios@1.13.5(debug@4.4.3):
+  axios@1.13.5:
     dependencies:
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.16.0(debug@4.4.3)
       form-data: 4.0.5
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
 
-  axios@1.15.0:
+  axios@1.15.0(debug@4.4.3):
     dependencies:
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.16.0(debug@4.4.3)
       form-data: 4.0.5
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -16845,7 +16845,7 @@ snapshots:
 
   flatted@3.3.3: {}
 
-  follow-redirects@1.15.11(debug@4.4.3):
+  follow-redirects@1.16.0(debug@4.4.3):
     optionalDependencies:
       debug: 4.4.3(supports-color@5.5.0)
 
@@ -18130,7 +18130,7 @@ snapshots:
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.2
       '@zkochan/js-yaml': 0.0.7
-      axios: 1.15.0
+      axios: 1.15.0(debug@4.4.3)
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
       cliui: 8.0.1
@@ -19104,7 +19104,7 @@ snapshots:
     dependencies:
       command-exists: 1.2.9
       commander: 8.3.0
-      follow-redirects: 1.15.11(debug@4.4.3)
+      follow-redirects: 1.16.0(debug@4.4.3)
       js-sha3: 0.8.0
       memorystream: 0.3.1
       semver: 5.7.2
@@ -19419,7 +19419,7 @@ snapshots:
 
   twilio@5.12.2:
     dependencies:
-      axios: 1.13.5(debug@4.4.3)
+      axios: 1.13.5
       dayjs: 1.11.19
       https-proxy-agent: 5.0.1
       jsonwebtoken: 9.0.3
@@ -19523,7 +19523,7 @@ snapshots:
 
   undici-types@6.19.8: {}
 
-  undici-types@6.23.0: {}
+  undici-types@6.25.0: {}
 
   undici-types@7.16.0: {}
 
