@@ -1,26 +1,6 @@
-const isEnabledEnvFlag = (value) =>
-  value === '1' || value?.toLowerCase() === 'true';
-
-const omitIncludesDevDependency = (value) =>
-  value
-    ?.split(',')
-    .map((entry) => entry.trim())
-    .includes('dev') ?? false;
-
-const shouldSkipInstall = () =>
-  process.env.NODE_ENV === 'production' ||
-  isEnabledEnvFlag(process.env.CI) ||
-  isEnabledEnvFlag(process.env.IS_CI) ||
-  isEnabledEnvFlag(process.env.npm_config_production) ||
-  omitIncludesDevDependency(process.env.npm_config_omit);
-
 const main = async () => {
-  if (shouldSkipInstall()) {
-    process.exit(0);
-  }
-
   try {
-    // Husky is intentionally a devDependency; this wrapper skips importing it in CI/production.
+    // Husky is intentionally a devDependency; skip install when it is absent.
     // eslint-disable-next-line import/no-extraneous-dependencies
     const husky = (await import('husky')).default;
 
