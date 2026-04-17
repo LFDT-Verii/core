@@ -256,7 +256,6 @@ jobs:
           samples/*/eslint-results.json
           servers/*/eslint-results.json
           tools/*/eslint-results.json
-          !**/node_modules/**/eslint-results.json
         if-no-files-found: warn
       if: '!cancelled()'
 
@@ -372,7 +371,6 @@ jobs:
           samples/*/test-results.junit.xml
           servers/*/test-results.junit.xml
           tools/*/test-results.junit.xml
-          !**/node_modules/**/test-results.junit.xml
         if-no-files-found: warn
       if: '!cancelled()'
     - name: Upload Codecov Report
@@ -384,7 +382,6 @@ jobs:
           samples/*/lcov.info
           servers/*/lcov.info
           tools/*/lcov.info
-          !**/node_modules/**/lcov.info
         if-no-files-found: warn
       if: '!cancelled()'
 
