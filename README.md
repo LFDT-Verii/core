@@ -28,5 +28,8 @@ pnpm lint
 ## Package Publishing
 
 - Package publishing is handled by GitHub Actions via `.github/workflows/publish-packages.workflow.yml`.
+- `VERSION` is the committed source of truth for the next Verii release version.
+- Release notes live in `.github/releases/vX.Y.Z.md`.
+- See [RELEASING.md](RELEASING.md) for the release-branch and prod-release workflow.
 - The workflow installs `lerna` globally in CI and runs publish from there.
 - The root repo does not rely on a local `lerna` dependency for publishing.
