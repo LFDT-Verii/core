@@ -243,16 +243,21 @@ jobs:
       run: pnpm run build:lib
     - name: Lint
       run: pnpm exec nx run ${{ matrix.package }}:"lint:ci"
-    - name: Resolve Project Artifact Paths
+    - name: Stage Lint Artifact
       run: |
-        echo PROJECT_ROOT=$(pnpm --silent exec nx show project "${{ matrix.package }}" --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).root") >> $GITHUB_ENV
-        echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
+        PROJECT_ROOT=$(pnpm --silent exec nx show project "${{ matrix.package }}" --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).root")
+        ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g')
+        ARTIFACT_DIR="$RUNNER_TEMP/$ARTIFACT_NAME"
+        mkdir -p "$ARTIFACT_DIR"
+        cp "$PROJECT_ROOT/eslint-results.json" "$ARTIFACT_DIR/eslint-results.json"
+        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+        echo "ARTIFACT_DIR=$ARTIFACT_DIR" >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Lint Report
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: lint${{ env.ARTIFACT_NAME }}
-        path: ${{ env.PROJECT_ROOT }}/eslint-results.json
+        path: ${{ env.ARTIFACT_DIR }}/eslint-results.json
       if: '!cancelled()'
 
   # Post Lint
@@ -354,22 +359,28 @@ jobs:
       env:
         IS_CI: true
         NODE_OPTIONS: "--max_old_space_size=4096"
-    - name: Resolve Project Artifact Paths
+    - name: Stage Test Artifacts
       run: |
-        echo PROJECT_ROOT=$(pnpm --silent exec nx show project "${{ matrix.package }}" --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).root") >> $GITHUB_ENV
-        echo ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g') >> $GITHUB_ENV
+        PROJECT_ROOT=$(pnpm --silent exec nx show project "${{ matrix.package }}" --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).root")
+        ARTIFACT_NAME=$(echo ${{ matrix.package }} | sed -e 's+@+-+g; s+/+-+g')
+        ARTIFACT_DIR="$RUNNER_TEMP/$ARTIFACT_NAME"
+        mkdir -p "$ARTIFACT_DIR"
+        cp "$PROJECT_ROOT/test-results.junit.xml" "$ARTIFACT_DIR/test-results.junit.xml"
+        cp "$PROJECT_ROOT/lcov.info" "$ARTIFACT_DIR/lcov.info"
+        echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+        echo "ARTIFACT_DIR=$ARTIFACT_DIR" >> $GITHUB_ENV
       if: '!cancelled()'
     - name: Upload Test Report
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: test${{ env.ARTIFACT_NAME }}
-        path: ${{ env.PROJECT_ROOT }}/test-results.junit.xml
+        path: ${{ env.ARTIFACT_DIR }}/test-results.junit.xml
       if: '!cancelled()'
     - name: Upload Codecov Report
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
       with:
         name: coverage${{ env.ARTIFACT_NAME }}
-        path: ${{ env.PROJECT_ROOT }}/lcov.info
+        path: ${{ env.ARTIFACT_DIR }}/lcov.info
 
   # Post Test
   post-test:
