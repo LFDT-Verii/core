@@ -12,10 +12,10 @@ RUN apt-get update \
 
 USER node
 
-COPY --chown=node:node package*.json pnpm-lock.yaml pnpm-workspace.yaml lerna.json ./
+COPY --chown=node:node package*.json yarn.lock lerna.json ./
 COPY --chown=node:node packages ./packages
 COPY --chown=node:node servers ./servers
-RUN corepack enable && pnpm install --prod --frozen-lockfile
+RUN yarn --production --pure-lockfile
 
 FROM node:24.14.1-slim@sha256:b506e7321f176aae77317f99d67a24b272c1f09f1d10f1761f2773447d8da26c
 WORKDIR /app
@@ -23,4 +23,4 @@ COPY --chown=node:node --from=builder /app .
 WORKDIR "/app/servers/$SERVICE"
 
 EXPOSE 3000
-ENTRYPOINT ["pnpm", "start"]
+ENTRYPOINT ["yarn", "start"]
