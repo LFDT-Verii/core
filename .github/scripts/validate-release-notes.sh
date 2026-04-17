@@ -16,4 +16,4 @@ fi
 
 grep -q '^## Changes$' "${release_notes_file}" || { echo "${release_notes_file} is missing a '## Changes' section."; exit 1; }
 grep -q '^## Backward incompatibilities$' "${release_notes_file}" || { echo "${release_notes_file} is missing a '## Backward incompatibilities' section."; exit 1; }
-grep -Eq '^### \[#[^]]+\]\([^)]+\)( .*)?$' "${release_notes_file}" || { echo "${release_notes_file} must include at least one release entry heading in the form '### [#PR](...) ...'."; exit 1; }
+grep -qE '^### \[#[^]]+\]\([^)]+\)( .*)?$' "${release_notes_file}" || { echo "${release_notes_file} must include at least one release entry heading in the form '### [#PR](...) ...'."; exit 1; }
