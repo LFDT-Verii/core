@@ -3609,8 +3609,8 @@ importers:
         specifier: 5.1.7
         version: 5.1.7
       strip-bom-stream:
-        specifier: ^4.0.0
-        version: 4.0.0
+        specifier: ^5.0.0
+        version: 5.0.0
     devDependencies:
       eslint:
         specifier: 9.39.4
@@ -8231,9 +8231,9 @@ packages:
     resolution: {integrity: sha512-MzwXju70AuyflbgeOhzvQWAvvQdo1XL0A9bVvlXsYcFEBM87WR4OakL4OfZq+QRmr+duJubio+UtNQCPsVESzQ==}
     engines: {node: '>= 10.13.0'}
 
-  first-chunk-stream@3.0.0:
-    resolution: {integrity: sha512-LNRvR4hr/S8cXXkIY5pTgVP7L3tq6LlYWcg9nWBuW7o1NMxKZo6oOVa/6GIekMGI0Iw7uC+HWimMe9u/VAeKqw==}
-    engines: {node: '>=8'}
+  first-chunk-stream@5.0.0:
+    resolution: {integrity: sha512-WdHo4ejd2cG2Dl+sLkW79SctU7mUQDfr4s1i26ffOZRs5mgv+BRttIM9gwcq0rDbemo0KlpVPaa3LBVLqPXzcQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
@@ -10396,13 +10396,13 @@ packages:
     resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
     engines: {node: '>=8'}
 
-  strip-bom-buf@2.0.0:
-    resolution: {integrity: sha512-gLFNHucd6gzb8jMsl5QmZ3QgnUJmp7qn4uUSHNwEXumAp7YizoGYw19ZUVfuq4aBOQUtyn2k8X/CwzWB73W2lQ==}
-    engines: {node: '>=8'}
+  strip-bom-buf@3.0.1:
+    resolution: {integrity: sha512-iJaWw2WroigLHzQysdc5WWeUc99p7ea7AEgB6JkY8CMyiO1yTVAA1gIlJJgORElUIR+lcZJkNl1OGChMhvc2Cw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  strip-bom-stream@4.0.0:
-    resolution: {integrity: sha512-0ApK3iAkHv6WbgLICw/J4nhwHeDZsBxIIsOD+gHgZICL6SeJ0S9f/WZqemka9cjkTyMN5geId6e8U5WGFAn3cQ==}
-    engines: {node: '>=8'}
+  strip-bom-stream@5.0.0:
+    resolution: {integrity: sha512-Yo472mU+3smhzqeKlIxClre4s4pwtYZEvDNQvY/sJpnChdaxmKuwU28UVx/v1ORKNMxkmj1GBuvxJQyBk6wYMQ==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   strip-bom@3.0.0:
     resolution: {integrity: sha512-vavAMRXOgBVNF6nyEEmL3DBK19iRpDcoIwW+swQ+CbGiu7lju6t+JklA1MHweoWtadgt4ISVUsXLyDq34ddcwA==}
@@ -16842,7 +16842,7 @@ snapshots:
       micromatch: 4.0.8
       resolve-dir: 1.0.1
 
-  first-chunk-stream@3.0.0: {}
+  first-chunk-stream@5.0.0: {}
 
   flat-cache@4.0.1:
     dependencies:
@@ -19242,14 +19242,14 @@ snapshots:
     dependencies:
       ansi-regex: 5.0.1
 
-  strip-bom-buf@2.0.0:
+  strip-bom-buf@3.0.1:
     dependencies:
       is-utf8: 0.2.1
 
-  strip-bom-stream@4.0.0:
+  strip-bom-stream@5.0.0:
     dependencies:
-      first-chunk-stream: 3.0.0
-      strip-bom-buf: 2.0.0
+      first-chunk-stream: 5.0.0
+      strip-bom-buf: 3.0.1
 
   strip-bom@3.0.0: {}
 
