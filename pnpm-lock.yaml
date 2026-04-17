@@ -1777,6 +1777,9 @@ importers:
       globals:
         specifier: 17.5.0
         version: 17.5.0
+      nanoid:
+        specifier: 5.1.7
+        version: 5.1.7
       prettier:
         specifier: 3.8.1
         version: 3.8.1
