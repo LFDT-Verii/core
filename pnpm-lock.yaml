@@ -1420,7 +1420,7 @@ importers:
         version: 5.1.0
       handlebars:
         specifier: ^4.7.7
-        version: 4.7.8
+        version: 4.7.9
       http-errors:
         specifier: ~2.0.0
         version: 2.0.1
@@ -3283,7 +3283,7 @@ importers:
         version: 5.1.0
       handlebars:
         specifier: ^4.7.7
-        version: 4.7.8
+        version: 4.7.9
       http-errors:
         specifier: ~2.0.0
         version: 2.0.1
@@ -3598,7 +3598,7 @@ importers:
         version: 4.1.0
       handlebars:
         specifier: ^4.7.7
-        version: 4.7.8
+        version: 4.7.9
       inquirer:
         specifier: ^8.0.0
         version: 8.2.7(@types/node@24.12.2)
@@ -8406,8 +8406,8 @@ packages:
     resolution: {integrity: sha512-UlE6lCE4uiamypT3qXyR8ak9EWIBsuYsCaR23NNjd+wPaDDVgek78Nh8rgC2A/auN+0sZPCs/VsLlhQ+EyPgIg==}
     hasBin: true
 
-  handlebars@4.7.8:
-    resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
+  handlebars@4.7.9:
+    resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
     engines: {node: '>=0.4.7'}
     hasBin: true
 
@@ -10674,8 +10674,8 @@ packages:
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
 
-  undici-types@6.23.0:
-    resolution: {integrity: sha512-HN7GeXgBUs1StmY/vf9hIH11LrNI5SfqmFVtxKyp9Dhuf1P1cDSRlS+H1NJDaGOWzlI08q+NmiHgu11Vx6QnhA==}
+  undici-types@6.25.0:
+    resolution: {integrity: sha512-vOw74RVVYFtnooUkZPxsY1GuuNNupSrCcANIAaDekpZ/Dp1sBuLLl5n2UCKpzxgmOwD66S4Jj24MrhmcDG+0vw==}
 
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
@@ -15262,7 +15262,7 @@ snapshots:
   auth0@4.37.0:
     dependencies:
       jose: 4.15.9
-      undici-types: 6.23.0
+      undici-types: 6.25.0
       uuid: 9.0.1
 
   auth0@5.6.0:
@@ -17029,7 +17029,7 @@ snapshots:
       pump: 3.0.3
       tinysonic: 1.3.0
 
-  handlebars@4.7.8:
+  handlebars@4.7.9:
     dependencies:
       minimist: 1.2.8
       neo-async: 2.6.2
@@ -19523,7 +19523,7 @@ snapshots:
 
   undici-types@6.19.8: {}
 
-  undici-types@6.23.0: {}
+  undici-types@6.25.0: {}
 
   undici-types@7.16.0: {}
 
