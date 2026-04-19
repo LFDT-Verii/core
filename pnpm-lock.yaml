@@ -476,8 +476,8 @@ importers:
         specifier: 17.5.0
         version: 17.5.0
       nanoid:
-        specifier: 5.1.7
-        version: 5.1.7
+        specifier: 5.1.9
+        version: 5.1.9
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1779,8 +1779,8 @@ importers:
         specifier: 17.5.0
         version: 17.5.0
       nanoid:
-        specifier: 5.1.7
-        version: 5.1.7
+        specifier: 5.1.9
+        version: 5.1.9
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1843,8 +1843,8 @@ importers:
         specifier: 17.5.0
         version: 17.5.0
       nanoid:
-        specifier: 5.1.7
-        version: 5.1.7
+        specifier: 5.1.9
+        version: 5.1.9
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1990,8 +1990,8 @@ importers:
         specifier: 30.3.0
         version: 30.3.0
       nanoid:
-        specifier: 5.1.7
-        version: 5.1.7
+        specifier: 5.1.9
+        version: 5.1.9
 
   packages/organizations-registry:
     dependencies:
@@ -2224,8 +2224,8 @@ importers:
         specifier: 17.5.0
         version: 17.5.0
       nanoid:
-        specifier: 5.1.7
-        version: 5.1.7
+        specifier: 5.1.9
+        version: 5.1.9
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -2549,8 +2549,8 @@ importers:
         specifier: 7.1.1
         version: 7.1.1
       nanoid:
-        specifier: 5.1.7
-        version: 5.1.7
+        specifier: 5.1.9
+        version: 5.1.9
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -2640,8 +2640,8 @@ importers:
         specifier: 17.5.0
         version: 17.5.0
       nanoid:
-        specifier: 5.1.7
-        version: 5.1.7
+        specifier: 5.1.9
+        version: 5.1.9
       nock:
         specifier: 15.0.0-beta.10
         version: 15.0.0-beta.10
@@ -3607,8 +3607,8 @@ importers:
         specifier: ^4.17.21
         version: 4.18.1
       nanoid:
-        specifier: 5.1.7
-        version: 5.1.7
+        specifier: 5.1.9
+        version: 5.1.9
       strip-bom-stream:
         specifier: ^4.0.0
         version: 4.0.0
@@ -9433,8 +9433,8 @@ packages:
     engines: {node: ^18 || >=20}
     hasBin: true
 
-  nanoid@5.1.7:
-    resolution: {integrity: sha512-ua3NDgISf6jdwezAheMOk4mbE1LXjm1DfMUDMuJf4AqxLFK3ccGpgWizwa5YV7Yz9EpXwEaWoRXSb/BnV0t5dQ==}
+  nanoid@5.1.9:
+    resolution: {integrity: sha512-ZUvP7KeBLe3OZ1ypw6dI/TzYJuvHP77IM4Ry73waSQTLn8/g8rpdjfyVAh7t1/+FjBtG4lCP42MEbDxOsRpBMw==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -15048,7 +15048,7 @@ snapshots:
   '@vitejs/plugin-react-swc@4.3.0(@swc/helpers@0.5.19)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-rc.7
-      '@swc/core': 1.15.24(@swc/helpers@0.5.19)
+      '@swc/core': 1.15.26(@swc/helpers@0.5.19)
       vite: 8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - '@swc/helpers'
@@ -18087,7 +18087,7 @@ snapshots:
 
   nanoid@5.1.6: {}
 
-  nanoid@5.1.7: {}
+  nanoid@5.1.9: {}
 
   napi-postinstall@0.3.4: {}
 

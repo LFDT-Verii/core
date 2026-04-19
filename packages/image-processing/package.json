@@ -29,7 +29,7 @@
     "eslint-watch": "8.0.0",
     "expect": "30.3.0",
     "globals": "17.5.0",
-    "nanoid": "5.1.7",
+    "nanoid": "5.1.9",
     "prettier": "3.8.1"
   },
   "nx": {
