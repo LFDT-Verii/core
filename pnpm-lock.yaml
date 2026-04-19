@@ -2649,7 +2649,7 @@ importers:
         version: 3.8.1
       undici:
         specifier: 7.25.0
-        version: 7.24.0
+        version: 7.25.0
 
   packages/vnf-wallet-sdk-nodejs:
     dependencies:
