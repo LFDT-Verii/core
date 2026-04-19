@@ -35,12 +35,14 @@
     "start:rebuild": "docker compose up --build",
     "stop": "docker compose down -v"
   },
-  "// fast-xml-parser-override-note": "Temporary: remove this fast-xml-parser override once @aws-sdk/xml-builder no longer pulls fast-xml-parser 5.3.4 (i.e., upstream resolves to >=5.3.6).",
+  "// mocha-serialize-javascript-override-note": "Temporary: remove this mocha>serialize-javascript override once the Hardhat dependency path no longer resolves serialize-javascript 6.x (Dependabot alert #148 / GHSA-5c6j-r48x-rmvq).",
+  "// lodash-override-note": "Temporary: remove these package-specific lodash overrides once eslint-plugin-better-mutation, ra-data-local-storage, and ra-ui-materialui stop pinning lodash 4.17.x.",
   "pnpm": {
     "overrides": {
-      "fast-xml-parser": "^5.3.6",
-      "serialize-javascript": "7.0.5",
-      "lodash": "^4.18.0"
+      "mocha>serialize-javascript": "7.0.5",
+      "eslint-plugin-better-mutation>lodash": "^4.18.0",
+      "ra-data-local-storage>lodash": "^4.18.0",
+      "ra-ui-materialui>lodash": "^4.18.0"
     },
     "onlyBuiltDependencies": [
       "@sentry/profiling-node",
