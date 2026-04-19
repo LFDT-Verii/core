@@ -40,7 +40,7 @@
     "date-fns": "4.1.0",
     "handlebars": "^4.7.7",
     "lodash": "^4.17.21",
-    "nanoid": "5.1.7",
+    "nanoid": "5.1.9",
     "inquirer": "^8.0.0",
     "strip-bom-stream": "^4.0.0"
   }
