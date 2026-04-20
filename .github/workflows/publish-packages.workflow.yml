@@ -125,7 +125,7 @@ jobs:
         if: env.VERSION_TYPE == 'release'
       # Commit Version Locally for Npmjs
       - name: Commit Version Locally for Npmjs
-        run: git commit -am "chore(release): create version ${{ env.NPM_VER_NUM }}"
+        run: 'git commit -am "chore(release): create version ${{ env.NPM_VER_NUM }}"'
       # Publish to NpmJS with trusted publishing (OIDC + provenance)
       # Lerna v9+ has native support for npm trusted publishing
       # See: https://lerna.js.org/docs/features/version-and-publish
