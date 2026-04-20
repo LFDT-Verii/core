@@ -125,6 +125,13 @@
     },
     {
       "matchPackageNames": [
+        "@verii/{/,}**"
+      ],
+      "enabled": false,
+      "description": "Internal monorepo package references are versioned and rewritten by the repo publish flow, so Renovate should leave them alone."
+    },
+    {
+      "matchPackageNames": [
         "nx",
         "@nx/{/,}**"
       ],
