@@ -487,8 +487,8 @@ importers:
   packages/components-organizations-registrar:
     dependencies:
       '@auth0/auth0-react':
-        specifier: ^2.2.1
-        version: 2.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^2.16.1
+        version: 2.16.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mui/icons-material':
         specifier: ^7.3.10
         version: 7.3.10(@mui/material@7.3.10(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@19.2.14)(react@18.3.1)
@@ -1402,8 +1402,8 @@ importers:
         specifier: 0.5.0-build
         version: link:../verii-verification
       auth0:
-        specifier: 5.6.0
-        version: 5.6.0
+        specifier: 5.7.0
+        version: 5.7.0
       bs58:
         specifier: ^6.0.0
         version: 6.0.0
@@ -2724,8 +2724,8 @@ importers:
   samples/sample-registrar-app:
     dependencies:
       '@auth0/auth0-react':
-        specifier: ^2.2.1
-        version: 2.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^2.16.1
+        version: 2.16.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@csstools/normalize.css':
         specifier: ^12.0.0
         version: 12.1.1
@@ -3847,17 +3847,17 @@ packages:
     resolution: {integrity: sha512-ExypohE8L7FvKBHxu7UpwcV9XVfyS+AqNZKyKIfxYwJyD9l7Gw6pmMYd7J2uopJsPEIUf44/emEFds6nFUx/dw==}
     engines: {node: '>= 10'}
 
-  '@auth0/auth0-auth-js@1.4.0':
-    resolution: {integrity: sha512-ShA7KT4KvcBEtxsXZTcrmoNxai5q1JXhB2aEBFnZD1L6LNLzzmiUWiFTtGMsaaITCylr8TJ/onEQk6XZmUHXbg==}
+  '@auth0/auth0-auth-js@1.6.0':
+    resolution: {integrity: sha512-/WYYNlsqhWA6I60pMVLFVeOgjOUCLdJThEAsjN8pAgYY09BTxbPaRIEVDgGu6ckoJpkmKvEYlHPO/vwRNrvX6w==}
 
-  '@auth0/auth0-react@2.15.0':
-    resolution: {integrity: sha512-LbRU87U54/YW/N3UHtNVoj3mCBBz+iYAdAByQjbXOkpI6IYnjMBwIwDusW3N23XNXq9WnihD57Dyi2R3/Q9btw==}
+  '@auth0/auth0-react@2.16.2':
+    resolution: {integrity: sha512-Sp7aXuvSMXh0qO74wv25ZsNjCAX1HItU2LhHCvPAJKQYRr/Rc9b1OtdyhkkIXAlAYgQZ2qbC2P8hiDpRh54aAw==}
     peerDependencies:
       react: ^16.11.0 || ^17 || ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
       react-dom: ^16.11.0 || ^17 || ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
-  '@auth0/auth0-spa-js@2.17.0':
-    resolution: {integrity: sha512-Zdpu4qdOlBXBUDIxSOFAAK6bhs3WlJl1LzkL6kDvamJYDgImi4pMFSzGjS0lobFdotDX1KBnxuyiDSEV0nEBMA==}
+  '@auth0/auth0-spa-js@2.19.2':
+    resolution: {integrity: sha512-NJOjPQZjZ8g2LXkBjNiYtf614WGVhwCg+q9L2MXcEQqey+ign9CG/wnl9OxYDz7XuItWecfYQLbiVTjIGNZ/Dw==}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -7024,8 +7024,8 @@ packages:
     resolution: {integrity: sha512-+TqJRxh4QvbD4TQIYx1ak2vanykQkG/nIZLuR6o8LoQj425gjVG3tFuUbbOeh/nCpP1rnvU0CCV1ChZHYXLU/A==}
     engines: {node: '>=18'}
 
-  auth0@5.6.0:
-    resolution: {integrity: sha512-+1pEJlf9Q2j2eU1mMQ8wRIGJ15U9iDXrQTUWqeyY6BOpUtYCPOs9I9yuYcQHL7NyByTWPrLNoNEXbtMHi36LAw==}
+  auth0@5.7.0:
+    resolution: {integrity: sha512-1JpxxSHQ5No1/2dGWzPO3592uOlblflEkVI+IXC9TX6Iqe7qgtxOdpf5Er9v42pg0vE0WfLH26iC1Q48+uyXsg==}
     engines: {node: ^20.19.0 || ^22.12.0 || ^24.0.0}
 
   autosuggest-highlight@3.3.4:
@@ -11110,20 +11110,20 @@ snapshots:
       '@ast-grep/napi-win32-ia32-msvc': 0.36.3
       '@ast-grep/napi-win32-x64-msvc': 0.36.3
 
-  '@auth0/auth0-auth-js@1.4.0':
+  '@auth0/auth0-auth-js@1.6.0':
     dependencies:
       jose: 6.1.3
       openid-client: 6.8.2
 
-  '@auth0/auth0-react@2.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@auth0/auth0-react@2.16.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@auth0/auth0-spa-js': 2.17.0
+      '@auth0/auth0-spa-js': 2.19.2
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@auth0/auth0-spa-js@2.17.0':
+  '@auth0/auth0-spa-js@2.19.2':
     dependencies:
-      '@auth0/auth0-auth-js': 1.4.0
+      '@auth0/auth0-auth-js': 1.6.0
       browser-tabs-lock: 1.3.0
       dpop: 2.1.1
       es-cookie: 1.3.2
@@ -15328,7 +15328,7 @@ snapshots:
       undici-types: 6.25.0
       uuid: 9.0.1
 
-  auth0@5.6.0:
+  auth0@5.7.0:
     dependencies:
       auth0-legacy: auth0@4.37.0
       jose: 4.15.9
