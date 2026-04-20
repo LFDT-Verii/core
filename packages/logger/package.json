@@ -17,8 +17,8 @@
   "author": "Yauheni Pozdnyakov",
   "license": "Apache-2.0",
   "dependencies": {
-    "pino": "~10.3.0",
-    "pino-pretty": "~13.1.0",
+    "pino": "^10.3.0",
+    "pino-pretty": "^13.1.0",
     "lodash": "^4.17.21",
     "@verii/jwt": "0.5.0-build"
   },

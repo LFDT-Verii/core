@@ -47,7 +47,7 @@
     "http-errors": "^2.0.0",
     "lodash": "^4.17.21",
     "mongodb": "^7.1.0",
-    "nanoid": "~5.1.0"
+    "nanoid": "^5.1.0"
   },
   "devDependencies": {
     "@spencejs/spence-factories": "^1.0.0",
