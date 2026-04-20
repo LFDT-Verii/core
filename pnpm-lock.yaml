@@ -1700,7 +1700,7 @@ importers:
         specifier: ^7.0.0
         version: 7.24.0
       undici-oidc-interceptor:
-        specifier: ^0.9.0
+        specifier: 0.9.0
         version: 0.9.0
     devDependencies:
       eslint:
@@ -19606,7 +19606,7 @@ snapshots:
     dependencies:
       async-cache-dedupe: 3.4.0
       fast-jwt: 6.2.2
-      undici: 7.24.0
+      undici: 7.25.0
 
   undici-types@6.19.8: {}
 
