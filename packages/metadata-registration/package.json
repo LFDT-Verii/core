@@ -25,12 +25,12 @@
     "@verii/jwt": "0.5.0-build",
     "@verii/contract-permissions": "^0.5.0-build",
     "eth-url-parser": "1.0.4",
-    "lodash": "4.18.1"
+    "lodash": "^4.18.1"
   },
   "devDependencies": {
     "@spencejs/spence-config": "1.0.0",
     "@verii/tests-helpers": "0.5.0-build",
-    "date-fns": "4.1.0",
+    "date-fns": "~4.1.0",
     "expect": "30.3.0",
     "nanoid": "5.1.9"
   },

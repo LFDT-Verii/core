@@ -17,13 +17,13 @@
   },
   "dependencies": {
     "@verii/common-functions": "0.5.0-build",
-    "http-errors": "2.0.1",
+    "http-errors": "^2.0.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@verii/http-client": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
-    "date-fns": "4.1.0",
+    "date-fns": "~4.1.0",
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",

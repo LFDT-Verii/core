@@ -20,7 +20,7 @@
     "@verii/blockchain-functions": "0.5.0-build",
     "@verii/crypto": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",
-    "bs58": "^6.0.0",
+    "bs58": "~6.0.0",
     "http-errors": "^2.0.0",
     "lodash": "^4.17.21",
     "jose": "~5.10.0"
