@@ -26,9 +26,9 @@
       "matchDatasources": [
         "npm"
       ],
-      "matchCurrentValue": "/^[~^][1-9]\\d*\\.\\d+\\.\\d+$/",
+      "matchCurrentValue": "/^\\^[1-9]\\d*\\.\\d+\\.\\d+$/",
       "rangeStrategy": "bump",
-      "description": "Keep stable npm semver ranges current in package manifests so shared pnpm lockfile refreshes don't split into lockfile-only PRs."
+      "description": "Keep stable npm caret ranges current in package manifests so shared pnpm lockfile refreshes don't split into lockfile-only PRs."
     },
     {
       "matchDatasources": [

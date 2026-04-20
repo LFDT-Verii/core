@@ -25,7 +25,7 @@
     "@verii/jwt": "0.5.0-build",
     "@verii/metadata-registration": "0.5.0-build",
     "@verii/vc-checks": "0.5.0-build",
-    "eth-url-parser": "1.0.4",
+    "eth-url-parser": "^1.0.4",
     "canonicalize": "^2.1.0",
     "fast-shuffle": "6.1.1",
     "lodash": "^4.17.21"
@@ -47,7 +47,7 @@
     "eslint-watch": "8.0.0",
     "expect": "30.3.0",
     "globals": "17.5.0",
-    "mongodb": "7.1.1",
+    "mongodb": "^7.1.1",
     "nanoid": "5.1.9",
     "prettier": "3.8.1",
     "typescript": "5.9.3",

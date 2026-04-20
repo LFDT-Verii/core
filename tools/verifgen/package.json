@@ -40,7 +40,7 @@
     "@verii/jwt": "0.5.0-build",
     "@verii/verii-verification": "0.5.0-build",
     "@verii/vc-checks": "0.5.0-build",
-    "bs58": "~6.0.0",
+    "bs58": "^6.0.0",
     "chalk": "~4.1.2",
     "commander": "~14.0.0",
     "lodash": "^4.17.21",
