@@ -35,8 +35,9 @@
         "npm"
       ],
       "matchCurrentValue": "/^[~^]?0\\./",
+      "rangeStrategy": "pin",
       "automerge": false,
-      "description": "Pre-1.0 npm packages may break in minor or patch releases, so require review."
+      "description": "Pre-1.0 npm packages may break in minor or patch releases, so pin them exactly and require review."
     },
     {
       "matchPackageNames": [
