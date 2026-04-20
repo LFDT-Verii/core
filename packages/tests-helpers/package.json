@@ -26,8 +26,8 @@
     "env-var": "^7.0.0",
     "expect": "30.3.0",
     "lodash": "^4.17.21",
-    "mongodb": "~7.1.0",
-    "nanoid": "~5.1.0"
+    "mongodb": "^7.1.0",
+    "nanoid": "^5.1.0"
   },
   "devDependencies": {
     "eslint": "9.39.4",

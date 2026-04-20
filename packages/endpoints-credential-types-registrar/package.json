@@ -22,7 +22,7 @@
     "@fastify/sensible": "^6.0.0",
     "@fastify/swagger": "^9.0.0",
     "@fastify/swagger-ui": "^5.0.0",
-    "@spencejs/spence-mongo-repos": "~1.0.0",
+    "@spencejs/spence-mongo-repos": "^1.0.0",
     "@verii/auth": "0.5.0-build",
     "@verii/aws-clients": "0.5.0-build",
     "@verii/common-fetchers": "0.5.0-build",
@@ -34,13 +34,13 @@
     "fastest-levenshtein": "~1.0.16",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",
-    "http-errors": "~2.0.0",
-    "lodash": "~4.18.0",
-    "nanoid": "~5.1.0"
+    "http-errors": "^2.0.0",
+    "lodash": "^4.18.0",
+    "nanoid": "^5.1.0"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "3.999.0",
-    "@spencejs/spence-factories": "1.0.0",
+    "@spencejs/spence-factories": "^1.0.0",
     "@verii/crypto": "0.5.0-build",
     "@verii/sample-data": "0.5.0-build",
     "@verii/server-provider": "0.5.0-build",
@@ -58,7 +58,7 @@
     "expect": "30.3.0",
     "form-data": "4.0.5",
     "globals": "17.5.0",
-    "mongodb": "7.1.1",
+    "mongodb": "^7.1.1",
     "nock": "15.0.0-beta.10",
     "prettier": "3.8.1"
   }

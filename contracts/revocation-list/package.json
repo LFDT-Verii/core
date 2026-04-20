@@ -26,6 +26,6 @@
     "@verii/blockchain-functions": "^0.5.0-build",
     "@verii/permissions-contract": "^0.5.0-build",
     "@verii/signature-verification-library": "^0.5.0-build",
-    "ethers": "6.16.0"
+    "ethers": "^6.16.0"
   }
 }

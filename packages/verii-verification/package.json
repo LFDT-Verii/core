@@ -32,7 +32,7 @@
     "@verii/sample-data": "0.5.0-build",
     "@verii/test-regexes": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
-    "date-fns": "4.1.0",
+    "date-fns": "^4.1.0",
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.0.1",
     "eslint-config-prettier": "10.1.8",
@@ -44,10 +44,10 @@
     "eslint-watch": "8.0.0",
     "expect": "30.3.0",
     "globals": "17.5.0",
-    "nanoid": "5.1.9",
+    "nanoid": "^5.1.9",
     "nock": "15.0.0-beta.10",
     "prettier": "3.8.1",
-    "undici": "7.25.0"
+    "undici": "^7.25.0"
   },
   "nx": {
     "tags": [

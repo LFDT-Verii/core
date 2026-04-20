@@ -23,6 +23,23 @@
   ],
   "packageRules": [
     {
+      "matchDatasources": [
+        "npm"
+      ],
+      "matchCurrentValue": "/^\\^[1-9]\\d*\\.\\d+\\.\\d+$/",
+      "rangeStrategy": "bump",
+      "description": "Keep stable npm caret ranges current in package manifests so shared pnpm lockfile refreshes don't split into lockfile-only PRs."
+    },
+    {
+      "matchDatasources": [
+        "npm"
+      ],
+      "matchCurrentValue": "/^[~^]?0\\./",
+      "rangeStrategy": "pin",
+      "automerge": false,
+      "description": "Pre-1.0 npm packages may break in minor or patch releases, so pin them exactly and require review."
+    },
+    {
       "matchPackageNames": [
         "nock"
       ],
@@ -105,6 +122,13 @@
         "schedule:monthly"
       ],
       "automerge": false
+    },
+    {
+      "matchPackageNames": [
+        "@verii/{/,}**"
+      ],
+      "enabled": false,
+      "description": "Internal monorepo package references are versioned and rewritten by the repo publish flow, so Renovate should leave them alone."
     },
     {
       "matchPackageNames": [
