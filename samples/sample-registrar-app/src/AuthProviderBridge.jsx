@@ -49,22 +49,10 @@ export const AuthProviderBridge = ({ config: { authConfig }, children }) => {
             returnTo: window.location.origin,
           },
         }),
-      getAccessToken: (options = defaultAccessTokenOptions) => {
-        try {
-          return getAccessTokenSilently(options);
-        } catch (e) {
-          console.error(e);
-          return null;
-        }
-      },
-      getAccessTokenWithPopup: (options = defaultAccessTokenOptions) => {
-        try {
-          return getAccessTokenWithPopup(options);
-        } catch (e) {
-          console.error(e);
-          return null;
-        }
-      },
+      getAccessToken: (options) =>
+        getAccessTokenSilently({ ...defaultAccessTokenOptions, ...options }),
+      getAccessTokenWithPopup: (options) =>
+        getAccessTokenWithPopup({ ...defaultAccessTokenOptions, ...options }),
     };
   }, [
     user,
