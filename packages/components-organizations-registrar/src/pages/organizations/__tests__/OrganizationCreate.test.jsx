@@ -218,4 +218,45 @@ describe('OrganizationCreate', () => {
     expect(navigateMock.mock.calls.length).toEqual(1);
     expect(navigateMock.mock.calls[0].arguments).toEqual([-1]);
   });
+
+  it('continues navigation when refresh fails with a non-interaction error', async () => {
+    createControllerOptions = undefined;
+    navigateMock.mock.resetCalls();
+    refetchMock.mock.resetCalls();
+    getAccessTokenMock.mock.resetCalls();
+    getAccessTokenWithPopupMock.mock.resetCalls();
+
+    let tokenCallCount = 0;
+    const refreshError = new Error('network timeout');
+    getAccessTokenMock.mock.mockImplementation(() => {
+      tokenCallCount += 1;
+      if (tokenCallCount === 1) {
+        return Promise.resolve(
+          buildToken({
+            scope: 'write:organizations',
+          }),
+        );
+      }
+
+      return Promise.reject(refreshError);
+    });
+
+    renderOrganizationCreate(OrganizationCreate);
+
+    await waitFor(() => expect(createControllerOptions).toBeDefined());
+    await waitFor(() => expect(getAccessTokenMock.mock.calls.length).toEqual(1));
+
+    await expect(
+      createControllerOptions.mutationOptions.onSuccess({
+        id: 'did:test:new-org',
+        keys: [],
+        authClients: [],
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(getAccessTokenWithPopupMock.mock.calls.length).toEqual(0);
+    expect(refetchMock.mock.calls.length).toEqual(1);
+    expect(navigateMock.mock.calls.length).toEqual(1);
+    expect(navigateMock.mock.calls[0].arguments).toEqual([-1]);
+  });
 });

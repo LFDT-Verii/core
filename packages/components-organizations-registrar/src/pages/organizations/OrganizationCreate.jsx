@@ -149,7 +149,11 @@ const OrganizationCreate = ({
         setSecretKeys({ keys: resp.keys, authClients: resp.authClients });
         setServiceCreated(true);
         setCreateRequestLoading(false);
-        await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
+        try {
+          await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
+        } catch {
+          // refreshAccessToken logs non-interaction failures internally; do not block success flow.
+        }
         refetch();
         navigate(-1);
       },

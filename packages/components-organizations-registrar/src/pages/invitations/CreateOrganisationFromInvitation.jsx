@@ -211,10 +211,14 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
         <SecretKeysPopup
           isOpen={isOpenSecretPopup}
           secretKeys={secretKeys}
-          onClose={async () => {
+          onClose={() => {
             setIsOpenSecretPopup(false);
-            await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
-            redirect('/');
+            // SecretKeysPopup does not await onClose, so absorb refresh failures here and always redirect.
+            refreshAccessToken({ getAccessToken, getAccessTokenWithPopup })
+              .catch(() => undefined)
+              .finally(() => {
+                redirect('/');
+              });
           }}
           wording={{
             title: 'Your organization is now registered on Velocity Network™.',
