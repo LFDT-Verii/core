@@ -130,7 +130,8 @@ jobs:
       # Lerna v9+ has native support for npm trusted publishing
       # See: https://lerna.js.org/docs/features/version-and-publish
       - name: Publish NpmJS
-        run: pnpm dlx lerna@${{ env.LERNA_VERSION }} publish --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"
+        # Serialize publishes to avoid intermittent npm provenance/tlog 409s.
+        run: pnpm dlx lerna@${{ env.LERNA_VERSION }} publish --concurrency 1 --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"
         env:
           NPM_CONFIG_PROVENANCE: true
       - name: Create GitHub Release
