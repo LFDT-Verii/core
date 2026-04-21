@@ -112,7 +112,7 @@ jobs:
 
         ./.github/scripts/validate-release-notes.sh "${release_notes_file}"
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
       with:
         node-version: ${{ matrix.node-version }}
     - name: Build Cache Keys
@@ -216,7 +216,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
       with:
         node-version: ${{ matrix.node-version }}
     - name: Enable Corepack
@@ -320,7 +320,7 @@ jobs:
     - name: Wait for SES to launch
       run: while ! nc -z localhost 4566; do echo "Waiting for SES to launch on port 4566..."; sleep 2; done;
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
       with:
         node-version: ${{ matrix.node-version }}
     - name: Enable Corepack
