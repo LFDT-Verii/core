@@ -60,6 +60,7 @@ import {
 } from '@/utils/index.jsx';
 import useCountryCodes from '@/utils/countryCodes.js';
 import { useAuth } from '@/utils/auth/AuthContext.js';
+import { refreshAccessToken } from '@/utils/auth/refreshAccessTokens.js';
 import { dataResources } from '@/utils/remoteDataProvider.js';
 
 import AuthorityRegistrationNumbersInput from './components/AuthorityRegistrationInput.jsx';
@@ -95,7 +96,7 @@ const OrganizationCreate = ({
   const notify = useNotify();
   const redirect = useRedirect();
 
-  const { logout, user, getAccessToken } = useAuth();
+  const { logout, user, getAccessToken, getAccessTokenWithPopup } = useAuth();
 
   const { data: countryCodes, isLoading } = useCountryCodes();
   const [did, setDid] = useSelectedOrganization();
@@ -144,13 +145,17 @@ const OrganizationCreate = ({
     resource: 'organizations',
     mutationOptions: {
       onSuccess: async (resp) => {
-        refetch();
         setDid(resp.id);
         setSecretKeys({ keys: resp.keys, authClients: resp.authClients });
         setServiceCreated(true);
         setCreateRequestLoading(false);
+        try {
+          await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
+        } catch {
+          // refreshAccessToken logs non-interaction failures internally; do not block success flow.
+        }
+        refetch();
         navigate(-1);
-        getAccessToken({ cacheMode: 'off' });
       },
       onError: ({ body }) => {
         setCreateRequestLoading(false);
