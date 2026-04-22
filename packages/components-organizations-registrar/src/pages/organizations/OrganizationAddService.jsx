@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import { useGetList } from 'react-admin';
 import PropTypes from 'prop-types';
-import { kebabCase } from 'lodash-es';
 
 import Loading from '../../components/Loading.jsx';
 import Popup from '../../components/common/Popup.jsx';
@@ -25,78 +24,40 @@ import { dataResources } from '../../utils/remoteDataProvider.js';
 
 import { ServiceEndpointSelection } from '../services/components/ServiceEndpointSelection/index.jsx';
 import { ServiceTypeSelection } from '../services/components/ServiceTypeSelection/index.jsx';
-import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
-import { useIsIssuingInspection } from '../services/hooks/useIsIssuingInspection.js';
 import { buildPayload } from '../services/utils/buildPayload.js';
+
+export const ORGANIZATION_ADD_SERVICE_STEPS = {
+  SELECT_TYPE: 'selectType',
+  CONFIGURE_SERVICE: 'configureService',
+};
 
 const OrganizationAddService = ({
   isModalOpened,
   isSending,
   onCreate,
-  isCreated,
-  secretKeys,
+  onDoLater,
   onClose,
-  // did,
+  selectedStep,
+  setSelectedStep,
   selectedServiceType,
   setSelectedServiceType,
-  selectedCAO,
-  setSelectedCAO,
-  InterceptOnCreate,
 }) => {
-  const [selectedStep, setSelectedStep] = useState(1);
-  const [isKeysPopupOpened, setIsKeysPopupOpened] = useState(false);
-  const [isInterceptOnCreateOpen, setIsInterceptOnCreateOpen] = useState(false);
-
-  const serviceId = useMemo(() => {
-    if (selectedServiceType) {
-      const type = selectedServiceType.id.match(/.+v1/);
-      return `${kebabCase(type[0])}-1`;
-    }
-    return '';
-  }, [selectedServiceType]);
-
-  const openedStateRef = useRef(isModalOpened);
-
-  const { isIssuingOrInspection, isCAO } = useIsIssuingInspection(selectedServiceType);
-
-  const { data: credentialAgentOperators, isLoading: isLoadingCAO } = useGetList(
+  const { data: credentialAgentOperators = [], isLoading: isLoadingCAO } = useGetList(
     dataResources.SEARCH_PROFILES,
     {
       filter: { serviceTypes: 'CredentialAgentOperator' },
     },
   );
 
-  // clear previous state after close
-  useEffect(() => {
-    const reset = () => {
-      setSelectedStep(1);
-    };
-    if (openedStateRef.current === false && isModalOpened && !isCreated) {
-      reset();
-    }
-
-    // eslint-disable-next-line better-mutation/no-mutation
-    openedStateRef.current = isModalOpened;
-    return reset;
-  }, [isModalOpened, isCreated]);
-
-  useEffect(() => {
-    if (InterceptOnCreate && isCreated) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsInterceptOnCreateOpen(true);
-    }
-  }, [InterceptOnCreate, isCreated]);
-
   const onCreateCallback = useCallback(
     (service) => {
       const type = selectedServiceType.id.match(/.+v1/);
-      setSelectedCAO(service.serviceEndpoint.split('#')[0]);
-      const payload = buildPayload(service, type[0]);
       onCreate({
-        ...payload,
+        selectedCAO: service.serviceEndpoint.split('#')[0],
+        serviceData: buildPayload(service, type[0]),
       });
     },
-    [onCreate, selectedServiceType.id, setSelectedCAO],
+    [onCreate, selectedServiceType],
   );
 
   return (
@@ -110,57 +71,26 @@ const OrganizationAddService = ({
       >
         {isSending && <Loading color="error" sx={{ pl: '10px' }} size={26} />}
 
-        {selectedStep === 1 && (
+        {selectedStep === ORGANIZATION_ADD_SERVICE_STEPS.SELECT_TYPE && (
           <ServiceTypeSelection
-            handleNext={() => setSelectedStep(2)}
+            handleNext={() => setSelectedStep(ORGANIZATION_ADD_SERVICE_STEPS.CONFIGURE_SERVICE)}
             isLoading={isLoadingCAO}
             selectedServiceType={selectedServiceType}
             setSelectedServiceType={setSelectedServiceType}
-            onDoLater={() => {
-              onCreate(null);
-            }}
+            onDoLater={onDoLater}
           />
         )}
-        {selectedStep === 2 && (
-          <ServiceEndpointSelection
-            credentialAgentOperators={credentialAgentOperators}
-            isIssueOrInspection={isIssuingOrInspection}
-            selectedServiceType={selectedServiceType}
-            inProgress={isSending}
-            onCreate={onCreateCallback}
-            handleBack={() => setSelectedStep(1)}
-          />
-        )}
+        {selectedStep === ORGANIZATION_ADD_SERVICE_STEPS.CONFIGURE_SERVICE &&
+          selectedServiceType && (
+            <ServiceEndpointSelection
+              credentialAgentOperators={credentialAgentOperators}
+              selectedServiceType={selectedServiceType}
+              inProgress={isSending}
+              onCreate={onCreateCallback}
+              showBackButton={false}
+            />
+          )}
       </Popup>
-
-      <InterceptOnCreate
-        isInterceptOnCreateOpen={isInterceptOnCreateOpen}
-        serviceId={serviceId}
-        onNext={() => setIsKeysPopupOpened(true)}
-        onClose={() => setIsKeysPopupOpened(true)}
-        isIssueOrInspection={isIssuingOrInspection}
-        selectedCAO={selectedCAO}
-        isCAO={isCAO}
-      />
-
-      <SecretKeysPopup
-        isOpen={isKeysPopupOpened}
-        secretKeys={secretKeys}
-        onClose={() => {
-          setIsKeysPopupOpened(false);
-          onClose();
-        }}
-        wording={{
-          title: 'Your organization is now registered on Velocity Network™.',
-          subtitle:
-            'Please save your organization’s unique keys in a secure location, as they will not be available once you close this window.',
-        }}
-        warningWording={{
-          title: 'You must download a copy of your keys before exiting',
-          subtitle:
-            'They will not be available again and are critical for managing your organization data.',
-        }}
-      />
     </>
   );
 };
@@ -174,19 +104,18 @@ OrganizationAddService.propTypes = {
   isModalOpened: PropTypes.bool,
   isSending: PropTypes.bool,
   onCreate: PropTypes.func,
-  isCreated: PropTypes.bool,
-  // eslint-disable-next-line react/forbid-prop-types
-  secretKeys: PropTypes.object,
+  onDoLater: PropTypes.func,
   onClose: PropTypes.func,
-  did: PropTypes.string,
-  selectedServiceType: PropTypes.shape({
-    id: PropTypes.string,
-    title: PropTypes.string,
-  }),
+  selectedStep: PropTypes.string,
+  setSelectedStep: PropTypes.func,
+  selectedServiceType: PropTypes.oneOfType([
+    PropTypes.shape({
+      id: PropTypes.string,
+      title: PropTypes.string,
+    }),
+    PropTypes.string,
+  ]),
   setSelectedServiceType: PropTypes.func,
-  selectedCAO: PropTypes.string,
-  setSelectedCAO: PropTypes.func,
-  InterceptOnCreate: PropTypes.func,
 };
 
 export default OrganizationAddService;

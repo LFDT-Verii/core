@@ -2,7 +2,7 @@ import { before, describe, it, mock } from 'node:test';
 import { expect } from 'expect';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import * as reactAdminActual from 'react-admin';
 import * as reactRouterActual from 'react-router';
@@ -30,6 +30,8 @@ const buildToken = (payload) => {
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
   return `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode(payload)}.signature`;
 };
+
+const EXPECTED_KEYS_DIALOG_TITLE = 'Your organization is now registered on Velocity Network™.';
 
 const navigateMock = mock.fn();
 const redirectMock = mock.fn();
@@ -108,7 +110,7 @@ describe('OrganizationCreate', () => {
     OrganizationCreate = (await import('../OrganizationCreate.jsx')).default;
   });
 
-  it('waits for access token refresh before navigating after organization creation', async () => {
+  it('waits for access token refresh before opening the keys flow after organization creation', async () => {
     createControllerOptions = undefined;
     navigateMock.mock.resetCalls();
     refetchMock.mock.resetCalls();
@@ -150,6 +152,7 @@ describe('OrganizationCreate', () => {
     expect(refetchMock.mock.calls).toEqual([]);
     expect(navigateMock.mock.calls).toEqual([]);
     expect(onSuccessSettled).toEqual(false);
+    expect(screen.queryByText(EXPECTED_KEYS_DIALOG_TITLE)).toBeNull();
 
     refreshDeferred.resolve(
       buildToken({
@@ -160,11 +163,11 @@ describe('OrganizationCreate', () => {
     await onSuccessPromise;
 
     expect(refetchMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls[0].arguments).toEqual([-1]);
+    expect(navigateMock.mock.calls).toEqual([]);
+    await waitFor(() => expect(screen.getByText(EXPECTED_KEYS_DIALOG_TITLE)).toBeInTheDocument());
   });
 
-  it('falls back to popup refresh and still waits before navigating when silent refresh errors', async () => {
+  it('falls back to popup refresh and still waits before opening the keys flow when silent refresh errors', async () => {
     createControllerOptions = undefined;
     navigateMock.mock.resetCalls();
     refetchMock.mock.resetCalls();
@@ -205,6 +208,7 @@ describe('OrganizationCreate', () => {
     expect(getAccessTokenMock.mock.calls.length).toEqual(2);
     expect(getAccessTokenWithPopupMock.mock.calls.length).toEqual(1);
     expect(navigateMock.mock.calls).toEqual([]);
+    expect(screen.queryByText(EXPECTED_KEYS_DIALOG_TITLE)).toBeNull();
 
     popupDeferred.resolve(
       buildToken({
@@ -215,11 +219,11 @@ describe('OrganizationCreate', () => {
     await onSuccessPromise;
 
     expect(refetchMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls[0].arguments).toEqual([-1]);
+    expect(navigateMock.mock.calls).toEqual([]);
+    await waitFor(() => expect(screen.getByText(EXPECTED_KEYS_DIALOG_TITLE)).toBeInTheDocument());
   });
 
-  it('continues navigation when refresh fails with a non-interaction error', async () => {
+  it('opens the keys flow when refresh fails with a non-interaction error', async () => {
     createControllerOptions = undefined;
     navigateMock.mock.resetCalls();
     refetchMock.mock.resetCalls();
@@ -256,7 +260,7 @@ describe('OrganizationCreate', () => {
 
     expect(getAccessTokenWithPopupMock.mock.calls.length).toEqual(0);
     expect(refetchMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls[0].arguments).toEqual([-1]);
+    expect(navigateMock.mock.calls).toEqual([]);
+    await waitFor(() => expect(screen.getByText(EXPECTED_KEYS_DIALOG_TITLE)).toBeInTheDocument());
   });
 });

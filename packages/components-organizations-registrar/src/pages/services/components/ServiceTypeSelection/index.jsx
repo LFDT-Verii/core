@@ -33,8 +33,8 @@ export const ServiceTypeSelection = ({
           value={selectedServiceType}
           onChange={setSelectedServiceType}
           items={serviceTypes}
-          stringValue={(item) => item.title}
-          parse={(value) => value.id}
+          stringValue={(item) => item?.title || ''}
+          parse={(value) => value?.id || ''}
           disabled={false}
         />
         <Box sx={[styles.buttonBlock, !onDoLater && styles.rightButton]}>

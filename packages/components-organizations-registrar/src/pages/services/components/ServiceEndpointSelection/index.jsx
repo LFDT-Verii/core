@@ -20,6 +20,7 @@ export const ServiceEndpointSelection = ({
   inProgress,
   onCreate,
   handleBack,
+  showBackButton,
 }) => {
   const { isIssuingOrInspection, isCAO, isWallet, isWebWallet, isHolderWallet } =
     useIsIssuingInspection(selectedServiceType);
@@ -49,15 +50,17 @@ export const ServiceEndpointSelection = ({
           {isCAO && <CAOSelection inProgress={inProgress} />}
           <UserAgreement isWallet={isWallet} />
           <Box sx={styles.buttonBlock}>
-            <Button
-              variant="outlined"
-              sx={[styles.button, styles.backButton]}
-              onClick={handleBack}
-              startIcon={<KeyboardArrowLeftIcon />}
-              disabled={inProgress}
-            >
-              Back
-            </Button>
+            {showBackButton && (
+              <Button
+                variant="outlined"
+                sx={[styles.button, styles.backButton]}
+                onClick={handleBack}
+                startIcon={<KeyboardArrowLeftIcon />}
+                disabled={inProgress}
+              >
+                Back
+              </Button>
+            )}
             <FormDataConsumer>
               {({ formData }) => {
                 const isDisabled = isAddButtonDisabled(
@@ -140,10 +143,20 @@ ServiceEndpointSelection.propTypes = {
       ),
     }),
   ).isRequired,
-  selectedServiceType: PropTypes.string.isRequired,
+  selectedServiceType: PropTypes.shape({
+    id: PropTypes.string,
+    title: PropTypes.string,
+  }).isRequired,
   inProgress: PropTypes.bool.isRequired,
   onCreate: PropTypes.func.isRequired,
-  handleBack: PropTypes.func.isRequired,
+  handleBack: PropTypes.func,
+  showBackButton: PropTypes.bool,
+};
+
+// eslint-disable-next-line better-mutation/no-mutation
+ServiceEndpointSelection.defaultProps = {
+  handleBack: null,
+  showBackButton: true,
 };
 
 export default ServiceEndpointSelection;
