@@ -130,7 +130,7 @@ const MockOrganizationButton = ({ setInitialRecord }) => (
   </button>
 );
 
-const InterceptOnCreateMock = ({ isInterceptOnCreateOpen = false, onNext }) => {
+const InterceptOnOrganizationCreationMock = ({ isInterceptOnCreateOpen = false, onNext }) => {
   useEffect(() => {
     if (isInterceptOnCreateOpen) {
       onNext();
@@ -144,7 +144,7 @@ MockOrganizationButton.propTypes = {
   setInitialRecord: PropTypes.func.isRequired,
 };
 
-InterceptOnCreateMock.propTypes = {
+InterceptOnOrganizationCreationMock.propTypes = {
   isInterceptOnCreateOpen: PropTypes.bool,
   onNext: PropTypes.func.isRequired,
 };
@@ -234,7 +234,7 @@ const OrganizationCreateRoute = ({ OrganizationCreateComponent }) => {
     <ResourceContextProvider value="organizations">
       <OrganizationCreateComponent
         MockOrganization={MockOrganizationButton}
-        InterceptOnCreate={InterceptOnCreateMock}
+        InterceptOnOrganizationCreation={InterceptOnOrganizationCreationMock}
       />
     </ResourceContextProvider>
   );

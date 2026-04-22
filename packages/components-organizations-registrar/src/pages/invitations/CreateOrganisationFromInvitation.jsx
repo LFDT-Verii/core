@@ -36,7 +36,7 @@ import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
 
 // eslint-disable-next-line complexity
-const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
+const CreateOrganizationFromInvitation = ({ InterceptOnOrganizationCreation }) => {
   const { code } = useParams();
   const refresh = useRefresh();
   const redirect = useRedirect();
@@ -130,14 +130,14 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
 
   useEffect(() => {
     if (secretKeys) {
-      if (InterceptOnCreate) {
+      if (InterceptOnOrganizationCreation) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsInterceptOnCreateOpen(true);
       } else {
         setIsOpenSecretPopup(true);
       }
     }
-  }, [InterceptOnCreate, secretKeys]);
+  }, [InterceptOnOrganizationCreation, secretKeys]);
 
   const handleSubmit = useCallback(
     async (formData) => {
@@ -192,8 +192,8 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
           </CreateOrganisation>
         )}
 
-        {InterceptOnCreate && (
-          <InterceptOnCreate
+        {InterceptOnOrganizationCreation && (
+          <InterceptOnOrganizationCreation
             isInterceptOnCreateOpen={isInterceptOnCreateOpen}
             serviceId={invitationData?.inviteeService?.[0]?.id}
             // did={did}
@@ -261,7 +261,7 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
 
 // eslint-disable-next-line better-mutation/no-mutation
 CreateOrganizationFromInvitation.propTypes = {
-  InterceptOnCreate: PropTypes.elementType,
+  InterceptOnOrganizationCreation: PropTypes.elementType,
 };
 
 export default CreateOrganizationFromInvitation;

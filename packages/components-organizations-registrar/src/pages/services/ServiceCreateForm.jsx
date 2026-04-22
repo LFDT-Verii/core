@@ -51,7 +51,7 @@ const ServiceCreateForm = ({ onServiceCreated, services, InterceptOnCreate }) =>
   );
 
   const [selectedStep, setSelectedStep] = useState(1);
-  const [selectedServiceType, setSelectedServiceType] = useState('');
+  const [selectedServiceType, setSelectedServiceType] = useState(null);
   const [authClient, setAuthClient] = useState(defaultAuthClient);
   const [createServiceInProgress, setCreateServiceInProgress] = useState(false);
 
@@ -68,7 +68,7 @@ const ServiceCreateForm = ({ onServiceCreated, services, InterceptOnCreate }) =>
   useEffect(() => {
     const reset = () => {
       setSelectedStep(1);
-      setSelectedServiceType('');
+      setSelectedServiceType(null);
       setAuthClient(defaultAuthClient);
     };
     if (openedStateRef.current === false && isModalOpened) {

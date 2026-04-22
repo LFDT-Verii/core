@@ -18,6 +18,10 @@ export const ServiceTypeSelection = ({
   setSelectedServiceType,
   onDoLater,
 }) => {
+  const handleSelectedServiceTypeChange = (value) => {
+    setSelectedServiceType(value || null);
+  };
+
   return (
     <>
       <Typography variant="pm" sx={styles.step}>
@@ -32,7 +36,7 @@ export const ServiceTypeSelection = ({
           source="selectedServiceType"
           label="Select type of service"
           value={selectedServiceType || ''}
-          onChange={setSelectedServiceType}
+          onChange={handleSelectedServiceTypeChange}
           items={serviceTypes}
           stringValue={(item) => item?.title || ''}
           parse={(value) => value?.id || ''}

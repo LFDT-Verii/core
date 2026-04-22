@@ -24,7 +24,7 @@ import Loading from '@/components/Loading.jsx';
 
 const titleDefault =
   'Wait! Before you close this window, please make sure you have saved a copy of your keys';
-const subTitleDefault =
+const subtitleDefault =
   // eslint-disable-next-line max-len
   'Your organization’s unique keys are critical for managing your organization’s data on Velocity Network™. They will not be available once you close this window.';
 const buttonLabelDefault = 'Download keys';
@@ -33,7 +33,7 @@ const WarningSecretKeysPopup = ({
   isModalOpened,
   onClose,
   title = titleDefault,
-  subTitle = subTitleDefault,
+  subtitle = subtitleDefault,
   buttonLabel = buttonLabelDefault,
   isLoading = false,
   onClick,
@@ -52,7 +52,7 @@ const WarningSecretKeysPopup = ({
     >
       <InfoIcon color="warning" sx={styles.icon} />
       <Typography sx={styles.title}>{title}</Typography>
-      <Typography textAlign="center">{subTitle}</Typography>
+      <Typography textAlign="center">{subtitle}</Typography>
 
       <Box sx={styles.buttonBlock}>
         <Button
@@ -99,7 +99,7 @@ WarningSecretKeysPopup.propTypes = {
   isModalOpened: PropTypes.bool,
   onClose: PropTypes.func,
   title: PropTypes.string,
-  subTitle: PropTypes.string,
+  subtitle: PropTypes.string,
   buttonLabel: PropTypes.string,
   isLoading: PropTypes.bool,
   onClick: PropTypes.func,

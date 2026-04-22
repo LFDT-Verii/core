@@ -102,7 +102,7 @@ const ORGANIZATION_CREATE_FLOW_STEPS = {
 const OrganizationCreate = ({
   CreateServiceComponent = ServiceCreateFormContainer,
   MockOrganization,
-  InterceptOnCreate,
+  InterceptOnOrganizationCreation,
 }) => {
   const navigate = useNavigate();
   const notify = useNotify();
@@ -180,7 +180,7 @@ const OrganizationCreate = ({
         }
         refetch();
         setFlowStep(
-          InterceptOnCreate
+          InterceptOnOrganizationCreation
             ? ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT
             : ORGANIZATION_CREATE_FLOW_STEPS.KEYS,
         );
@@ -549,8 +549,8 @@ const OrganizationCreate = ({
           selectedServiceType={serviceType}
           setSelectedServiceType={setServiceType}
         />
-        {InterceptOnCreate && (
-          <InterceptOnCreate
+        {InterceptOnOrganizationCreation && (
+          <InterceptOnOrganizationCreation
             isInterceptOnCreateOpen={flowStep === ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT}
             serviceId={serviceId}
             onNext={() => setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.KEYS)}
@@ -585,7 +585,7 @@ const OrganizationCreate = ({
 // eslint-disable-next-line better-mutation/no-mutation
 OrganizationCreate.propTypes = {
   CreateServiceComponent: PropTypes.elementType,
-  InterceptOnCreate: PropTypes.elementType,
+  InterceptOnOrganizationCreation: PropTypes.elementType,
   MockOrganization: PropTypes.elementType,
 };
 
