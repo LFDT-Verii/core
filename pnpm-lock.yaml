@@ -1697,8 +1697,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.9
       undici:
-        specifier: ^7.0.0
-        version: 7.24.0
+        specifier: ^7.25.0
+        version: 7.25.0
       undici-oidc-interceptor:
         specifier: 0.9.0
         version: 0.9.0
@@ -10727,10 +10727,6 @@ packages:
     resolution: {integrity: sha512-RqslV2Us5BrllB+JeiZnK4peryVTndy9Dnqq62S3yYRRTj0tFQCwEniUy2167skdGOy3vqRzEvl1Dm4sV2ReDg==}
     engines: {node: '>=20.18.1'}
 
-  undici@7.24.0:
-    resolution: {integrity: sha512-jxytwMHhsbdpBXxLAcuu0fzlQeXCNnWdDyRHpvWsUl8vd98UwYdl9YTyn8/HcpcJPC3pwUveefsa3zTxyD/ERg==}
-    engines: {node: '>=20.18.1'}
-
   undici@7.25.0:
     resolution: {integrity: sha512-xXnp4kTyor2Zq+J1FfPI6Eq3ew5h6Vl0F/8d9XU5zZQf1tX9s2Su1/3PiMmUANFULpmksxkClamIZcaUqryHsQ==}
     engines: {node: '>=20.18.1'}
@@ -19618,8 +19614,6 @@ snapshots:
   undici@6.23.0: {}
 
   undici@7.22.0: {}
-
-  undici@7.24.0: {}
 
   undici@7.25.0: {}
 
