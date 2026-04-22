@@ -573,8 +573,6 @@ const OrganizationCreate = ({
             }}
             warningWording={{
               title: 'You must download a copy of your keys before exiting',
-              subtitle:
-                'They will not be available again and are critical for managing your organization data.',
             }}
           />
         )}

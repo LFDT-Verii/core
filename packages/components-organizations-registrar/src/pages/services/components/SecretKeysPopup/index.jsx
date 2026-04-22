@@ -70,7 +70,7 @@ SecretKeysPopup.propTypes = {
   }).isRequired,
   warningWording: PropTypes.shape({
     title: PropTypes.string.isRequired,
-    subtitle: PropTypes.string.isRequired,
+    subtitle: PropTypes.string,
   }).isRequired,
 };
 
