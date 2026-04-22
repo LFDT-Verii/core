@@ -60,7 +60,7 @@ import {
 } from '@/utils/index.jsx';
 import useCountryCodes from '@/utils/countryCodes.js';
 import { useAuth } from '@/utils/auth/AuthContext.js';
-import { refreshAccessToken } from '@/utils/auth/refreshAccessTokens.js';
+import { finalizePostOrganizationCreate } from '@/utils/auth/finalizePostOrganizationCreate.js';
 import { dataResources } from '@/utils/remoteDataProvider.js';
 
 import AuthorityRegistrationNumbersInput from './components/AuthorityRegistrationInput.jsx';
@@ -135,10 +135,14 @@ const OrganizationCreate = ({
     return type ? `${kebabCase(type[0])}-1` : '';
   }, [serviceType]);
 
-  const { refetch } = useGetList('organizations', undefined, {
+  const { refetch: refetchOrganizations } = useGetList('organizations', undefined, {
     enabled: false,
   });
-  const { data: userData, isLoading: isUserDataLoading } = useGetOne(
+  const {
+    data: userData,
+    isLoading: isUserDataLoading,
+    refetch: refetchUserData,
+  } = useGetOne(
     dataResources.USERS,
     {
       id: user.sub,
@@ -169,16 +173,10 @@ const OrganizationCreate = ({
   const { save } = useCreateController({
     resource: 'organizations',
     mutationOptions: {
-      onSuccess: async (resp) => {
+      onSuccess: (resp) => {
         setDid(resp.id);
         setSecretKeys({ keys: resp.keys, authClients: resp.authClients });
         setCreateRequestLoading(false);
-        try {
-          await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
-        } catch {
-          // refreshAccessToken logs non-interaction failures internally; do not block success flow.
-        }
-        refetch();
         setFlowStep(
           InterceptOnOrganizationCreation
             ? ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT
@@ -217,7 +215,16 @@ const OrganizationCreate = ({
 
   const onKeysClose = () => {
     resetCreateFlow();
-    redirect('list', 'services');
+    finalizePostOrganizationCreate({
+      getAccessToken,
+      getAccessTokenWithPopup,
+      refetchUserData,
+      refreshPostCreateData: refetchOrganizations,
+    })
+      .catch(() => undefined)
+      .finally(() => {
+        redirect('list', 'services');
+      });
   };
 
   const onCreate = async ({ serviceData = null, selectedCAO: nextSelectedCAO = '' } = {}) => {

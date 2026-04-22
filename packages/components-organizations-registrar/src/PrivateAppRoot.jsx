@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react';
+import React, { useState } from 'react';
 // react admin
 import { Admin } from 'react-admin';
 
 import PropTypes from 'prop-types';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { QueryClient } from '@tanstack/react-query';
 
 // components
@@ -37,13 +37,16 @@ import theme from './theme/theme.js';
 export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
   const auth = useAuth();
   const config = useConfig();
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
   const { isSignupProcess } = useSignupRedirect({ auth });
 
   if (!auth.isAuthenticated || auth.isLoading || isSignupProcess) {

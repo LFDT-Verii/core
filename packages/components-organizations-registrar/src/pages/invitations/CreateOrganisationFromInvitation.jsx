@@ -31,7 +31,7 @@ import { formatWebSiteUrl, formatRegistrationNumbers, parseJwt } from '@/utils/i
 import useCountryCodes from '@/utils/countryCodes.js';
 import { dataResources } from '@/utils/remoteDataProvider.js';
 import { useAuth } from '@/utils/auth/AuthContext.js';
-import { refreshAccessToken } from '@/utils/auth/refreshAccessTokens.js';
+import { finalizePostOrganizationCreate } from '@/utils/auth/finalizePostOrganizationCreate.js';
 import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
 
@@ -68,7 +68,11 @@ const CreateOrganizationFromInvitation = ({ InterceptOnOrganizationCreation }) =
     },
   });
 
-  const { data: userData, isLoading: isUserDataLoading } = useGetOne(dataResources.USERS, {
+  const {
+    data: userData,
+    isLoading: isUserDataLoading,
+    refetch: refetchUserData,
+  } = useGetOne(dataResources.USERS, {
     id: user.sub,
   });
 
@@ -213,8 +217,12 @@ const CreateOrganizationFromInvitation = ({ InterceptOnOrganizationCreation }) =
           secretKeys={secretKeys}
           onClose={() => {
             setIsOpenSecretPopup(false);
-            // SecretKeysPopup does not await onClose, so absorb refresh failures here and always redirect.
-            refreshAccessToken({ getAccessToken, getAccessTokenWithPopup })
+            finalizePostOrganizationCreate({
+              getAccessToken,
+              getAccessTokenWithPopup,
+              refetchUserData,
+              refreshPostCreateData: refresh,
+            })
               .catch(() => undefined)
               .finally(() => {
                 redirect('/');
