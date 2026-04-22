@@ -14,6 +14,7 @@ import { getTitle, isAddButtonDisabled } from '../../utils/index.js';
 
 const selectedStep = 2;
 
+/* eslint-disable complexity */
 export const ServiceEndpointSelection = ({
   credentialAgentOperators,
   selectedServiceType,
@@ -22,6 +23,7 @@ export const ServiceEndpointSelection = ({
   handleBack,
   showBackButton,
 }) => {
+  const shouldShowBackButton = showBackButton ?? !!handleBack;
   const { isIssuingOrInspection, isCAO, isWallet, isWebWallet, isHolderWallet } =
     useIsIssuingInspection(selectedServiceType);
 
@@ -50,7 +52,7 @@ export const ServiceEndpointSelection = ({
           {isCAO && <CAOSelection inProgress={inProgress} />}
           <UserAgreement isWallet={isWallet} />
           <Box sx={styles.buttonBlock}>
-            {showBackButton && (
+            {shouldShowBackButton && (
               <Button
                 variant="outlined"
                 sx={[styles.button, styles.backButton]}
@@ -90,6 +92,7 @@ export const ServiceEndpointSelection = ({
     </>
   );
 };
+/* eslint-enable complexity */
 
 const styles = {
   step: { color: (theme) => theme.palette.primary.main, pb: '20px', display: 'block' },
@@ -156,7 +159,7 @@ ServiceEndpointSelection.propTypes = {
 // eslint-disable-next-line better-mutation/no-mutation
 ServiceEndpointSelection.defaultProps = {
   handleBack: null,
-  showBackButton: true,
+  showBackButton: undefined,
 };
 
 export default ServiceEndpointSelection;

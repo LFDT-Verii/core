@@ -117,7 +117,7 @@ const OrganizationCreate = ({
   const [secretKeys, setSecretKeys] = useState(null);
   const [isCreateRequestLoading, setCreateRequestLoading] = useState(false);
   const [hasOrganisations, setHasOrganisations] = useState(false);
-  const [serviceType, setServiceType] = useState('');
+  const [serviceType, setServiceType] = useState(null);
   const [selectedCAO, setSelectedCAO] = useState('');
   const [initialRecord, setInitialRecord] = useState({ profile: { name: '' } });
   const [flowStep, setFlowStep] = useState(ORGANIZATION_CREATE_FLOW_STEPS.DETAILS);
@@ -201,13 +201,13 @@ const OrganizationCreate = ({
     setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.DETAILS);
     setOrganizationData(null);
     setSecretKeys(null);
-    setServiceType('');
+    setServiceType(null);
     setSelectedCAO('');
   };
 
   const goToCreateServiceStep = (data) => {
     setOrganizationData(data);
-    setServiceType('');
+    setServiceType(null);
     setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.SELECT_TYPE);
   };
 

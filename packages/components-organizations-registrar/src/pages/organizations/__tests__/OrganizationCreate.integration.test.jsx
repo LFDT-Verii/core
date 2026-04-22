@@ -29,7 +29,7 @@ const EXPECTED_KEYS_DIALOG_TEXT =
 const EXPECTED_WARNING_TITLE = 'You must download a copy of your keys before exiting';
 const EXPECTED_WARNING_TEXT =
   'Your organization’s unique keys are critical for managing your organization’s data ' +
-  'on Velocity Network™. This information will not be available once you close this window.';
+  'on Velocity Network™. They will not be available once you close this window.';
 const ORGANIZATION_CREATE_RESPONSE = {
   data: {
     id: TEST_ORGANIZATION_ID,
@@ -332,6 +332,9 @@ const closeKeysFlowAndAssertRedirect = async ({ user, getPathname }) => {
   const keysDialog = await findDialogByText(EXPECTED_KEYS_DIALOG_TITLE);
   expect(within(keysDialog).getByText(EXPECTED_KEYS_DIALOG_TEXT)).toBeInTheDocument();
 
+  // This delay is intentional regression coverage: the old flow could tear down
+  // the success modal after navigation/history changes even though the user had
+  // not dismissed it yet.
   await wait(2000);
   const persistedKeysDialog = await findDialogByText(EXPECTED_KEYS_DIALOG_TITLE);
   expect(within(persistedKeysDialog).getByText(EXPECTED_KEYS_DIALOG_TEXT)).toBeInTheDocument();

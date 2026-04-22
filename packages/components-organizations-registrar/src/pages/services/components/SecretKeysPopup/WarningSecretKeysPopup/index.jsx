@@ -26,7 +26,7 @@ const titleDefault =
   'Wait! Before you close this window, please make sure you have saved a copy of your keys';
 const subTitleDefault =
   // eslint-disable-next-line max-len
-  'Your organization’s unique keys are critical for managing your organization’s data on Velocity Network™. This information will not be available once you close this window.';
+  'Your organization’s unique keys are critical for managing your organization’s data on Velocity Network™. They will not be available once you close this window.';
 const buttonLabelDefault = 'Download keys';
 
 const WarningSecretKeysPopup = ({

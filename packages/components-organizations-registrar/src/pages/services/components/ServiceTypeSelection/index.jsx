@@ -10,6 +10,7 @@ import { getTitle } from '../../utils/index.js';
 
 const selectedStep = 1;
 
+/* eslint-disable complexity */
 export const ServiceTypeSelection = ({
   handleNext,
   isLoading,
@@ -30,7 +31,7 @@ export const ServiceTypeSelection = ({
         <CustomDropDown
           source="selectedServiceType"
           label="Select type of service"
-          value={selectedServiceType}
+          value={selectedServiceType || ''}
           onChange={setSelectedServiceType}
           items={serviceTypes}
           stringValue={(item) => item?.title || ''}
@@ -63,6 +64,7 @@ export const ServiceTypeSelection = ({
     </>
   );
 };
+/* eslint-enable complexity */
 
 const styles = {
   buttonBlock: {
@@ -82,7 +84,10 @@ const styles = {
 ServiceTypeSelection.propTypes = {
   handleNext: PropTypes.func.isRequired,
   isLoading: PropTypes.bool,
-  selectedServiceType: PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.number]),
+  selectedServiceType: PropTypes.shape({
+    id: PropTypes.string,
+    title: PropTypes.string,
+  }),
   setSelectedServiceType: PropTypes.func.isRequired,
   onDoLater: PropTypes.func,
 };

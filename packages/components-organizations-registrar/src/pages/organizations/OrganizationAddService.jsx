@@ -106,15 +106,12 @@ OrganizationAddService.propTypes = {
   onCreate: PropTypes.func,
   onDoLater: PropTypes.func,
   onClose: PropTypes.func,
-  selectedStep: PropTypes.string,
-  setSelectedStep: PropTypes.func,
-  selectedServiceType: PropTypes.oneOfType([
-    PropTypes.shape({
-      id: PropTypes.string,
-      title: PropTypes.string,
-    }),
-    PropTypes.string,
-  ]),
+  selectedStep: PropTypes.string.isRequired,
+  setSelectedStep: PropTypes.func.isRequired,
+  selectedServiceType: PropTypes.shape({
+    id: PropTypes.string,
+    title: PropTypes.string,
+  }),
   setSelectedServiceType: PropTypes.func,
 };
 
