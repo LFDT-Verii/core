@@ -487,7 +487,7 @@ importers:
   packages/components-organizations-registrar:
     dependencies:
       '@auth0/auth0-react':
-        specifier: ^2.16.1
+        specifier: ^2.16.2
         version: 2.16.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mui/icons-material':
         specifier: ^7.3.10
@@ -2724,7 +2724,7 @@ importers:
   samples/sample-registrar-app:
     dependencies:
       '@auth0/auth0-react':
-        specifier: ^2.16.1
+        specifier: ^2.16.2
         version: 2.16.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@csstools/normalize.css':
         specifier: ^12.1.1
