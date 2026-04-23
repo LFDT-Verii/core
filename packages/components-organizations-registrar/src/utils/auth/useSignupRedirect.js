@@ -56,7 +56,7 @@ const useSignupRedirect = ({ auth }) => {
     trace({ event: 'signup-url-redirect-requested', pathname: location.pathname });
     localStorage.setItem(REDIRECT_KEY, location.pathname);
 
-    auth.logout().then(() => {
+    auth.logout({ source: 'signup-redirect' }).then(() => {
       window.location.replace(decodeURIComponent(signupUrl));
     });
   }, [signupUrl, signupUrlParam, location.pathname, auth]);
