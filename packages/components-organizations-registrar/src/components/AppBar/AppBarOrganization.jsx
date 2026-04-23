@@ -33,7 +33,6 @@ import useSelectedOrganization from '../../state/selectedOrganizationState.js';
 import { useIsHideSidebar } from '../../utils/index.jsx';
 import useCountryCodes from '../../utils/countryCodes.js';
 import Loading from '../Loading.jsx';
-import { useAuth } from '../../utils/auth/AuthContext.js';
 
 // eslint-disable-next-line complexity
 const AppBarOrganization = () => {
@@ -41,7 +40,6 @@ const AppBarOrganization = () => {
   const isHidden = useIsHideSidebar();
   const redirect = useRedirect();
   const [did, setDid] = useSelectedOrganization();
-  const auth = useAuth();
   const logout = useLogout();
 
   const { data: allOrganizations, isLoading } = useGetList('organizations', undefined, {
@@ -94,7 +92,7 @@ const AppBarOrganization = () => {
 
   const handleLogoutClick = () => {
     setAnchorEl(null);
-    logout(auth, '/', false);
+    logout({ source: 'app-bar-organization' }, '/', false);
   };
 
   return (
