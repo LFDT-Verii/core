@@ -75,7 +75,7 @@ const getAuthState = ({
 
 export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
   const auth = useAuth();
-  const { isAuthenticated, isLoading, isLogoutInProgress, login } = auth;
+  const { isAuthenticated, isLoading, isLogoutInProgress = false, login } = auth;
   const config = useConfig();
   const location = useLocation();
   const [hasAuthenticatedOnce, setHasAuthenticatedOnce] = useState(isAuthenticated);
