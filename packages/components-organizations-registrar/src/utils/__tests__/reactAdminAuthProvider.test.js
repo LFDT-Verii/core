@@ -1,5 +1,6 @@
 import { describe, it, mock } from 'node:test';
 import { expect } from 'expect';
+// eslint-disable-next-line import/extensions
 import initReactAdminAuthProvider from '../reactAdminAuthProvider.js';
 
 describe('initReactAdminAuthProvider', () => {
