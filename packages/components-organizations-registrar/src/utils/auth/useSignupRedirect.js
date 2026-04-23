@@ -20,15 +20,15 @@ import { useEffect } from 'react';
 import { initTrace } from '../tracing.js';
 
 const trace = initTrace('useSignupRedirect');
+const REDIRECT_KEY = 'afterSignupRedirectUrl';
 
-const useSignupRedirect = ({ auth, options = {} }) => {
+const useSignupRedirect = ({ auth }) => {
   const [searchParams] = useSearchParams();
   const signupUrlParam = searchParams.get('signup_url');
 
   const [signupUrl, setSignupUrl] = useStore('signupUrl', null);
   const isSignupProcess = signupUrlParam != null || signupUrl != null;
 
-  const redirectKey = options.redirectKey ?? 'afterSignupRedirectUrl';
   const location = useLocation();
 
   useEffect(() => {
@@ -54,25 +54,12 @@ const useSignupRedirect = ({ auth, options = {} }) => {
     }
 
     trace({ event: 'signup-url-redirect-requested', pathname: location.pathname });
-    localStorage.setItem(redirectKey, location.pathname);
+    localStorage.setItem(REDIRECT_KEY, location.pathname);
 
     auth.logout().then(() => {
       window.location.replace(decodeURIComponent(signupUrl));
     });
-  }, [signupUrl, signupUrlParam, redirectKey, location.pathname, auth]);
-
-  useEffect(() => {
-    if (isSignupProcess || auth.isLoading || auth.isAuthenticated) {
-      return;
-    }
-
-    const returnTo = localStorage.getItem(redirectKey) || location.pathname;
-
-    trace({ event: 'login-redirect-requested', returnTo });
-    auth.login({ appState: { returnTo } }).then(() => {
-      localStorage.removeItem(redirectKey);
-    });
-  }, [isSignupProcess, auth.isLoading, auth.isAuthenticated, auth, location.pathname, redirectKey]);
+  }, [signupUrl, signupUrlParam, location.pathname, auth]);
 
   return { isSignupProcess };
 };
