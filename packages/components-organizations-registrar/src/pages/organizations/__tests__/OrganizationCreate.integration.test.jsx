@@ -1,4 +1,4 @@
-import { before, describe, it, mock } from 'node:test';
+import { before, beforeEach, describe, it, mock } from 'node:test';
 import { expect } from 'expect';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import React, { useEffect } from 'react';
@@ -44,6 +44,7 @@ const ORGANIZATION_CREATE_RESPONSE = {
     authClients: [],
   },
 };
+const interceptOpenMock = mock.fn();
 
 mock.module('@/utils/countryCodes.js', {
   defaultExport: () => ({
@@ -133,6 +134,7 @@ const MockOrganizationButton = ({ setInitialRecord }) => (
 const InterceptOnOrganizationCreationMock = ({ isInterceptOnCreateOpen = false, onNext }) => {
   useEffect(() => {
     if (isInterceptOnCreateOpen) {
+      interceptOpenMock();
       onNext();
     }
   }, [isInterceptOnCreateOpen, onNext]);
@@ -207,7 +209,12 @@ const createDataProvider = ({ assertCreate }) =>
     create: (resource, params) => {
       if (resource === 'organizations') {
         assertCreate(params);
-        return Promise.resolve(ORGANIZATION_CREATE_RESPONSE);
+        return Promise.resolve({
+          data: {
+            ...ORGANIZATION_CREATE_RESPONSE.data,
+            serviceEndpoints: params.data.serviceEndpoints,
+          },
+        });
       }
 
       throw new Error(`Unexpected create resource: ${resource}`);
@@ -359,6 +366,10 @@ describe('OrganizationCreate integration', () => {
     OrganizationCreate = (await import('../OrganizationCreate.jsx')).default;
   });
 
+  beforeEach(() => {
+    interceptOpenMock.mock.resetCalls();
+  });
+
   it('redirects to the services list after creating an organization with an initial service and completing the keys flow', async () => {
     const app = renderOrganizationCreateApp({
       OrganizationCreateComponent: OrganizationCreate,
@@ -389,6 +400,7 @@ describe('OrganizationCreate integration', () => {
       );
       await app.user.click(screen.getByRole('button', { name: 'Add', hidden: true }));
 
+      await waitFor(() => expect(interceptOpenMock.mock.calls.length).toBe(1));
       await closeKeysFlowAndAssertRedirect(app);
     } finally {
       await app.cleanup();
@@ -408,6 +420,7 @@ describe('OrganizationCreate integration', () => {
       await openAddServiceFlow(app.user);
       await app.user.click(screen.getByRole('button', { name: 'Do Later', hidden: true }));
 
+      expect(interceptOpenMock.mock.calls.length).toBe(0);
       await closeKeysFlowAndAssertRedirect(app);
     } finally {
       await app.cleanup();

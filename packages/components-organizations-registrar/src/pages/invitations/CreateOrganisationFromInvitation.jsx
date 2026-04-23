@@ -238,7 +238,6 @@ const CreateOrganizationFromInvitation = ({ InterceptOnOrganizationCreation }) =
           <InterceptOnOrganizationCreation
             isInterceptOnCreateOpen={isInterceptOnCreateOpen}
             serviceId={invitationData?.inviteeService?.[0]?.id}
-            // did={did}
             onNext={() => {
               trace({ event: 'intercept-step-completed' });
               setIsOpenSecretPopup(true);

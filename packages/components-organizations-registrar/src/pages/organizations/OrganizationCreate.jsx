@@ -191,14 +191,16 @@ const OrganizationCreate = ({
     resource: 'organizations',
     mutationOptions: {
       onSuccess: (resp) => {
-        const toFlowStep = InterceptOnOrganizationCreation
-          ? ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT
-          : ORGANIZATION_CREATE_FLOW_STEPS.KEYS;
+        const hasInitialService = Boolean(resp.serviceEndpoints?.length);
+        const toFlowStep =
+          InterceptOnOrganizationCreation && hasInitialService
+            ? ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT
+            : ORGANIZATION_CREATE_FLOW_STEPS.KEYS;
         trace({
           event: 'organization-create-succeeded',
           organizationId: resp.id,
           toFlowStep,
-          hasInitialService: Boolean(resp.serviceEndpoints?.length),
+          hasInitialService,
         });
         setDid(resp.id);
         setSecretKeys({ keys: resp.keys, authClients: resp.authClients });
