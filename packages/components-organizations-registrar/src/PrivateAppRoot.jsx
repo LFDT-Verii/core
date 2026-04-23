@@ -38,12 +38,40 @@ import theme from './theme/theme.js';
 
 const trace = initTrace('PrivateAppRoot');
 
+const AUTH_STATES = Object.freeze({
+  SIGNUP_REDIRECT: 'signupRedirect',
+  RESOLVING: 'resolving',
+  AUTHENTICATED: 'authenticated',
+  REFRESHING_AUTHENTICATED: 'refreshingAuthenticated',
+  LOGGED_OUT: 'loggedOut',
+});
+
+const getAuthState = ({ isSignupProcess, isAuthenticated, isLoading, hasAuthenticatedOnce }) => {
+  if (isSignupProcess) {
+    return AUTH_STATES.SIGNUP_REDIRECT;
+  }
+
+  if (isAuthenticated) {
+    return AUTH_STATES.AUTHENTICATED;
+  }
+
+  if (isLoading && hasAuthenticatedOnce) {
+    return AUTH_STATES.REFRESHING_AUTHENTICATED;
+  }
+
+  if (isLoading) {
+    return AUTH_STATES.RESOLVING;
+  }
+
+  return AUTH_STATES.LOGGED_OUT;
+};
+
 export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
   const auth = useAuth();
+  const { isAuthenticated, isLoading, login } = auth;
   const config = useConfig();
   const location = useLocation();
-  const hasResolvedAuth = auth.isAuthenticated || !auth.isLoading;
-  const [isAuthBootstrapped, setIsAuthBootstrapped] = useState(auth.isAuthenticated);
+  const [hasAuthenticatedOnce, setHasAuthenticatedOnce] = useState(isAuthenticated);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -55,6 +83,12 @@ export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
       }),
   );
   const { isSignupProcess } = useSignupRedirect({ auth });
+  const authState = getAuthState({
+    isSignupProcess,
+    isAuthenticated,
+    isLoading,
+    hasAuthenticatedOnce,
+  });
 
   useEffect(() => {
     trace({ event: 'mounted' });
@@ -64,50 +98,40 @@ export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
   useEffect(() => {
     trace({
       event: 'auth-gate-state-changed',
-      isAuthenticated: auth.isAuthenticated,
-      isLoading: auth.isLoading,
-      hasResolvedAuth,
-      isAuthBootstrapped,
+      isAuthenticated,
+      isLoading,
       isSignupProcess,
+      hasAuthenticatedOnce,
+      authState,
     });
-  }, [auth.isAuthenticated, auth.isLoading, hasResolvedAuth, isAuthBootstrapped, isSignupProcess]);
+  }, [authState, hasAuthenticatedOnce, isAuthenticated, isLoading, isSignupProcess]);
 
   useEffect(() => {
-    if (!isAuthBootstrapped && auth.isAuthenticated) {
+    if (!hasAuthenticatedOnce && isAuthenticated) {
       trace({
-        event: 'auth-bootstrapped',
-        isAuthenticated: auth.isAuthenticated,
-        isLoading: auth.isLoading,
+        event: 'auth-authenticated-once',
+        isAuthenticated,
+        isLoading,
       });
-      // This is a one-way latch: once authenticated auth has resolved for this mount,
-      // keep the app bootstrapped so later token refreshes cannot remount the root by
-      // flipping auth.isLoading back on.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsAuthBootstrapped(true);
+      setHasAuthenticatedOnce(true);
     }
-  }, [auth.isAuthenticated, auth.isLoading, isAuthBootstrapped]);
+  }, [hasAuthenticatedOnce, isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (isSignupProcess || auth.isLoading || auth.isAuthenticated || isAuthBootstrapped) {
+    if (authState !== AUTH_STATES.LOGGED_OUT) {
       return;
     }
 
     const returnTo = localStorage.getItem('afterSignupRedirectUrl') || location.pathname;
 
     trace({ event: 'login-redirect-requested', returnTo });
-    auth.login({ appState: { returnTo } }).then(() => {
+    login({ appState: { returnTo } }).then(() => {
       localStorage.removeItem('afterSignupRedirectUrl');
     });
-  }, [
-    auth,
-    auth.isAuthenticated,
-    auth.isLoading,
-    isAuthBootstrapped,
-    isSignupProcess,
-    location.pathname,
-  ]);
+  }, [authState, location.pathname, login]);
 
-  if (isSignupProcess || !isAuthBootstrapped || !auth.isAuthenticated) {
+  if (![AUTH_STATES.AUTHENTICATED, AUTH_STATES.REFRESHING_AUTHENTICATED].includes(authState)) {
     return <Loading sx={{ pt: '60px' }} />;
   }
 
