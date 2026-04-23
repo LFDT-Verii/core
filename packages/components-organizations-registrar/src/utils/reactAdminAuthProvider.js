@@ -35,7 +35,11 @@ const initReactAdminAuthProvider = (auth) => ({
   getPermissions: async () => {},
   // called when getting the user details. Ignore calls
   getIdentity: () => {
-    return { id: auth.user.sub, fullName: auth.user.name, avatar: auth.user.picture };
+    return {
+      id: auth.user?.sub ?? '',
+      fullName: auth.user?.name,
+      avatar: auth.user?.picture,
+    };
   },
 });
 
