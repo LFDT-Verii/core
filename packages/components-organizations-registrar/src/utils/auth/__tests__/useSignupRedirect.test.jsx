@@ -36,23 +36,6 @@ describe('useSignupRedirect', () => {
     }).isRequired,
   };
 
-  it('does not own the normal logged-out login redirect', async () => {
-    const login = mock.fn(() => Promise.resolve());
-    const auth = {
-      isLoading: false,
-      isAuthenticated: false,
-      logout: mock.fn(() => Promise.resolve()),
-    };
-
-    render(
-      <MemoryRouter initialEntries={['/organizations']}>
-        <TestComponent auth={auth} />
-      </MemoryRouter>,
-    );
-
-    expect(login.mock.calls.length).toEqual(0);
-  });
-
   it('does not start normal login while an invitation signup URL is pending', async () => {
     const login = mock.fn(() => Promise.resolve());
     const logout = mock.fn(() => new Promise(() => {}));
