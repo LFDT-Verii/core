@@ -15,27 +15,38 @@
  *
  */
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { QueryClient } from '@tanstack/react-query';
 import { Admin, CustomRoutes } from 'react-admin';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Dashboard from './components/Dashboard.jsx';
 import MainLayout from './layouts/MainLayout.jsx';
 import Footer from './components/Footer.jsx';
 import theme from './theme/theme.js';
 import remoteDataProvider from './utils/remoteDataProvider.js';
 import { useConfig } from './utils/ConfigContext.js';
+import { initTrace } from './utils/tracing.js';
+
+const trace = initTrace('PublicAppRoot');
 
 export const PublicAppRoot = ({ children }) => {
   const config = useConfig();
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
+
+  useEffect(() => {
+    trace({ event: 'mounted' });
+    return () => trace({ event: 'unmounted' });
+  }, []);
+
   return (
     <>
       <Admin

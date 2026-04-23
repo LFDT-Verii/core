@@ -14,13 +14,16 @@ import { getTitle, isAddButtonDisabled } from '../../utils/index.js';
 
 const selectedStep = 2;
 
+/* eslint-disable complexity */
 export const ServiceEndpointSelection = ({
   credentialAgentOperators,
   selectedServiceType,
   inProgress,
   onCreate,
   handleBack,
+  showBackButton,
 }) => {
+  const shouldShowBackButton = showBackButton ?? !!handleBack;
   const { isIssuingOrInspection, isCAO, isWallet, isWebWallet, isHolderWallet } =
     useIsIssuingInspection(selectedServiceType);
 
@@ -49,15 +52,17 @@ export const ServiceEndpointSelection = ({
           {isCAO && <CAOSelection inProgress={inProgress} />}
           <UserAgreement isWallet={isWallet} />
           <Box sx={styles.buttonBlock}>
-            <Button
-              variant="outlined"
-              sx={[styles.button, styles.backButton]}
-              onClick={handleBack}
-              startIcon={<KeyboardArrowLeftIcon />}
-              disabled={inProgress}
-            >
-              Back
-            </Button>
+            {shouldShowBackButton && (
+              <Button
+                variant="outlined"
+                sx={[styles.button, styles.backButton]}
+                onClick={handleBack}
+                startIcon={<KeyboardArrowLeftIcon />}
+                disabled={inProgress}
+              >
+                Back
+              </Button>
+            )}
             <FormDataConsumer>
               {({ formData }) => {
                 const isDisabled = isAddButtonDisabled(
@@ -87,6 +92,7 @@ export const ServiceEndpointSelection = ({
     </>
   );
 };
+/* eslint-enable complexity */
 
 const styles = {
   step: { color: (theme) => theme.palette.primary.main, pb: '20px', display: 'block' },
@@ -140,10 +146,20 @@ ServiceEndpointSelection.propTypes = {
       ),
     }),
   ).isRequired,
-  selectedServiceType: PropTypes.string.isRequired,
+  selectedServiceType: PropTypes.shape({
+    id: PropTypes.string,
+    title: PropTypes.string,
+  }).isRequired,
   inProgress: PropTypes.bool.isRequired,
   onCreate: PropTypes.func.isRequired,
-  handleBack: PropTypes.func.isRequired,
+  handleBack: PropTypes.func,
+  showBackButton: PropTypes.bool,
+};
+
+// eslint-disable-next-line better-mutation/no-mutation
+ServiceEndpointSelection.defaultProps = {
+  handleBack: null,
+  showBackButton: undefined,
 };
 
 export default ServiceEndpointSelection;

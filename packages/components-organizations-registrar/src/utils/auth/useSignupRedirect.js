@@ -17,15 +17,30 @@
 import { useLocation, useSearchParams } from 'react-router';
 import { useStore } from 'react-admin';
 import { useEffect } from 'react';
+import { initTrace } from '../tracing.js';
+
+const trace = initTrace('useSignupRedirect');
 
 const useSignupRedirect = ({ auth, options = {} }) => {
   const [searchParams] = useSearchParams();
   const signupUrlParam = searchParams.get('signup_url');
 
   const [signupUrl, setSignupUrl] = useStore('signupUrl', null);
+  const isSignupProcess = signupUrlParam != null || signupUrl != null;
 
   const redirectKey = options.redirectKey ?? 'afterSignupRedirectUrl';
   const location = useLocation();
+
+  useEffect(() => {
+    trace({
+      event: 'signup-redirect-state-changed',
+      hasSignupUrlParam: signupUrlParam != null,
+      hasStoredSignupUrl: signupUrl != null,
+      isLoading: auth.isLoading,
+      isAuthenticated: auth.isAuthenticated,
+      isSignupProcess,
+    });
+  }, [auth.isAuthenticated, auth.isLoading, isSignupProcess, signupUrl, signupUrlParam]);
 
   useEffect(() => {
     if (signupUrlParam !== signupUrl) {
@@ -38,26 +53,28 @@ const useSignupRedirect = ({ auth, options = {} }) => {
       return;
     }
 
+    trace({ event: 'signup-url-redirect-requested', pathname: location.pathname });
     localStorage.setItem(redirectKey, location.pathname);
 
     auth.logout().then(() => {
       window.location.replace(decodeURIComponent(signupUrl));
     });
-  }, [signupUrl, signupUrlParam, redirectKey, location, auth]);
+  }, [signupUrl, signupUrlParam, redirectKey, location.pathname, auth]);
 
   useEffect(() => {
-    if (signupUrl || auth.isLoading || auth.isAuthenticated) {
+    if (isSignupProcess || auth.isLoading || auth.isAuthenticated) {
       return;
     }
 
     const returnTo = localStorage.getItem(redirectKey) || location.pathname;
 
+    trace({ event: 'login-redirect-requested', returnTo });
     auth.login({ appState: { returnTo } }).then(() => {
       localStorage.removeItem(redirectKey);
     });
-  }, [signupUrl, auth.isLoading, auth.isAuthenticated, auth, location, redirectKey]);
+  }, [isSignupProcess, auth.isLoading, auth.isAuthenticated, auth, location.pathname, redirectKey]);
 
-  return { isSignupProcess: signupUrl != null };
+  return { isSignupProcess };
 };
 
 export default useSignupRedirect;

@@ -32,11 +32,14 @@ import useCountryCodes from '@/utils/countryCodes.js';
 import { dataResources } from '@/utils/remoteDataProvider.js';
 import { useAuth } from '@/utils/auth/AuthContext.js';
 import { refreshAccessToken } from '@/utils/auth/refreshAccessTokens.js';
+import { initTrace } from '@/utils/tracing.js';
 import useSelectedOrganization from '@/state/selectedOrganizationState.js';
 import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
 
+const trace = initTrace('CreateOrganizationFromInvitation');
+
 // eslint-disable-next-line complexity
-const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
+const CreateOrganizationFromInvitation = ({ InterceptOnOrganizationCreation }) => {
   const { code } = useParams();
   const refresh = useRefresh();
   const redirect = useRedirect();
@@ -51,6 +54,7 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
 
   const [isLoader, setIsLoader] = useState(false);
   const [secretKeys, setSecretKeys] = useState(null);
+  const [isFinalizingPostCreate, setIsFinalizingPostCreate] = useState(false);
   // popups
   const [isOpenSecretPopup, setIsOpenSecretPopup] = useState(false);
   const [isOpenNotExistingPopup, setIsOpenNotExistingPopup] = useState(false);
@@ -61,14 +65,22 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
     resource: 'organizations',
     mutationOptions: {
       onSuccess: async (resp) => {
-        refresh();
+        trace({
+          event: 'organization-create-succeeded',
+          organizationId: resp.id,
+          hasInvitationService: Boolean(resp.serviceEndpoints?.length),
+        });
         setDid(resp.id);
         setSecretKeys({ keys: resp.keys, authClients: resp.authClients });
       },
     },
   });
 
-  const { data: userData, isLoading: isUserDataLoading } = useGetOne(dataResources.USERS, {
+  const {
+    data: userData,
+    isLoading: isUserDataLoading,
+    refetch: refetchUserData,
+  } = useGetOne(dataResources.USERS, {
     id: user.sub,
   });
 
@@ -81,12 +93,14 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
       // eslint-disable-next-line complexity
       onError: (error) => {
         if (error?.body?.statusCode === 404) {
+          trace({ event: 'invitation-not-found', code });
           setIsOpenNotExistingPopup(true);
         }
         if (
           error?.body?.statusCode === 400 &&
           error?.body?.errorCode === MESSAGE_CODES.INVITATION_EXPIRED
         ) {
+          trace({ event: 'invitation-expired', code });
           setIsOpenExpiredPopup(true);
         }
       },
@@ -99,6 +113,22 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
       { id: invitationData?.inviterDid },
       { enabled: !!invitationData?.inviterDid },
     );
+
+  useEffect(() => {
+    trace({ event: 'mounted', code });
+    return () => trace({ event: 'unmounted', code });
+  }, [code]);
+
+  useEffect(() => {
+    trace({
+      event: 'load-state-changed',
+      isLoading,
+      invitationIsLoading,
+      isLoadingOrgData,
+      isUserDataLoading,
+      isFinalizingPostCreate,
+    });
+  }, [invitationIsLoading, isFinalizingPostCreate, isLoading, isLoadingOrgData, isUserDataLoading]);
 
   // Check if the user has an organization
   useEffect(() => {
@@ -123,6 +153,11 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
     const userEmail = userData?.email;
 
     if (inviteeEmail && userEmail && userEmail !== inviteeEmail) {
+      trace({
+        event: 'invitee-email-mismatch',
+        inviteeEmail,
+        userEmail,
+      });
       localStorage.setItem('createInvitationURL', window.location.pathname);
       logout(auth, window.location.href, true);
     }
@@ -130,17 +165,24 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
 
   useEffect(() => {
     if (secretKeys) {
-      if (InterceptOnCreate) {
+      if (InterceptOnOrganizationCreation) {
+        trace({ event: 'intercept-popup-opened' });
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsInterceptOnCreateOpen(true);
       } else {
+        trace({ event: 'keys-popup-opened' });
         setIsOpenSecretPopup(true);
       }
     }
-  }, [InterceptOnCreate, secretKeys]);
+  }, [InterceptOnOrganizationCreation, secretKeys]);
 
   const handleSubmit = useCallback(
     async (formData) => {
+      trace({
+        event: 'organization-create-requested',
+        code,
+        hasInvitationService: Boolean(invitationData?.inviteeService?.length),
+      });
       await save({
         profile: {
           ...formData,
@@ -170,7 +212,7 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
         </Toolbar>
       </AppBar>
       <Stack sx={{ flexGrow: 1 }}>
-        {isLoader ? (
+        {isLoader || isFinalizingPostCreate ? (
           <Loading sx={sxStyles.loader} />
         ) : (
           <CreateOrganisation
@@ -192,15 +234,16 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
           </CreateOrganisation>
         )}
 
-        {InterceptOnCreate && (
-          <InterceptOnCreate
+        {InterceptOnOrganizationCreation && (
+          <InterceptOnOrganizationCreation
             isInterceptOnCreateOpen={isInterceptOnCreateOpen}
             serviceId={invitationData?.inviteeService?.[0]?.id}
-            // did={did}
             onNext={() => {
+              trace({ event: 'intercept-step-completed' });
               setIsOpenSecretPopup(true);
             }}
             onClose={() => {
+              trace({ event: 'intercept-step-closed' });
               setIsOpenSecretPopup(true);
             }}
             isIssueOrInspection={true}
@@ -211,14 +254,22 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
         <SecretKeysPopup
           isOpen={isOpenSecretPopup}
           secretKeys={secretKeys}
-          onClose={() => {
+          onClose={async () => {
+            trace({ event: 'keys-close-requested' });
+            setIsFinalizingPostCreate(true);
             setIsOpenSecretPopup(false);
-            // SecretKeysPopup does not await onClose, so absorb refresh failures here and always redirect.
-            refreshAccessToken({ getAccessToken, getAccessTokenWithPopup })
-              .catch(() => undefined)
-              .finally(() => {
-                redirect('/');
-              });
+            try {
+              await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
+              trace({ event: 'access-token-refreshed' });
+            } catch {
+              trace({ event: 'access-token-refresh-failed' });
+              // refreshAccessToken logs non-interaction failures internally; do not block exit.
+            }
+            await refetchUserData().catch(() => undefined);
+            trace({ event: 'react-admin-refresh-requested' });
+            refresh();
+            trace({ event: 'redirect-requested', to: '/' });
+            redirect('/');
           }}
           wording={{
             title: 'Your organization is now registered on Velocity Network™.',
@@ -227,8 +278,6 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
           }}
           warningWording={{
             title: 'You must download a copy of your keys before exiting',
-            subtitle:
-              'They will not be available again and are critical for managing your organization data.',
           }}
         />
 
@@ -263,7 +312,7 @@ const CreateOrganizationFromInvitation = ({ InterceptOnCreate }) => {
 
 // eslint-disable-next-line better-mutation/no-mutation
 CreateOrganizationFromInvitation.propTypes = {
-  InterceptOnCreate: PropTypes.elementType,
+  InterceptOnOrganizationCreation: PropTypes.elementType,
 };
 
 export default CreateOrganizationFromInvitation;
