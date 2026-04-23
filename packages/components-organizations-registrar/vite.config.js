@@ -21,8 +21,13 @@ import path from 'path';
 import react from '@vitejs/plugin-react-swc';
 import { libInjectCss } from 'vite-plugin-lib-inject-css';
 
+const isTracingEnabled = (mode) => mode === 'development' || process.env.TRACING_ENABLED === '1';
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  define: {
+    __TRACING_ENABLED__: JSON.stringify(isTracingEnabled(mode)),
+  },
   // Automatically externalizes deps based on package.json
   plugins: [libInjectCss(), externalizeDeps({}), react()],
   resolve: {
@@ -64,4 +69,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

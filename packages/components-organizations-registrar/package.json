@@ -69,6 +69,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:tracing": "cross-env TRACING_ENABLED=1 vite build",
     "build:watch": "vite build --watch",
     "prepublish": "vite build",
     "test": "node --enable-source-maps --import=global-jsdom/register --import=./setup-tests.js --test --test-concurrency=1 --experimental-test-module-mocks --test-reporter=spec --test-reporter-destination=stdout '**/*.test.js' '**/*.test.jsx'",

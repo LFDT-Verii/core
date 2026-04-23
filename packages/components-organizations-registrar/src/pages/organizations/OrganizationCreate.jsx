@@ -30,7 +30,7 @@ import {
   FormDataConsumer,
   useGetOne,
   useNotify,
-  useGetList,
+  useRefresh,
 } from 'react-admin';
 
 import { Box, Stack, Tooltip, Typography, Grid } from '@mui/material';
@@ -60,8 +60,9 @@ import {
 } from '@/utils/index.jsx';
 import useCountryCodes from '@/utils/countryCodes.js';
 import { useAuth } from '@/utils/auth/AuthContext.js';
-import { finalizePostOrganizationCreate } from '@/utils/auth/finalizePostOrganizationCreate.js';
+import { refreshAccessToken } from '@/utils/auth/refreshAccessTokens.js';
 import { dataResources } from '@/utils/remoteDataProvider.js';
+import { initTrace } from '@/utils/tracing.js';
 
 import AuthorityRegistrationNumbersInput from './components/AuthorityRegistrationInput.jsx';
 import { LinkedInRegistrationInput } from './components/LinkedInRegistrationInput.jsx';
@@ -98,6 +99,8 @@ const ORGANIZATION_CREATE_FLOW_STEPS = {
   ...ORGANIZATION_ADD_SERVICE_STEPS,
 };
 
+const trace = initTrace('OrganizationCreate');
+
 /* eslint-disable complexity */
 const OrganizationCreate = ({
   CreateServiceComponent = ServiceCreateFormContainer,
@@ -107,6 +110,7 @@ const OrganizationCreate = ({
   const navigate = useNavigate();
   const notify = useNotify();
   const redirect = useRedirect();
+  const refresh = useRefresh();
 
   const { logout, user, getAccessToken, getAccessTokenWithPopup } = useAuth();
 
@@ -116,6 +120,7 @@ const OrganizationCreate = ({
   const [organizationData, setOrganizationData] = useState(null);
   const [secretKeys, setSecretKeys] = useState(null);
   const [isCreateRequestLoading, setCreateRequestLoading] = useState(false);
+  const [isFinalizingPostCreate, setIsFinalizingPostCreate] = useState(false);
   const [hasOrganisations, setHasOrganisations] = useState(false);
   const [serviceType, setServiceType] = useState(null);
   const [selectedCAO, setSelectedCAO] = useState('');
@@ -135,9 +140,6 @@ const OrganizationCreate = ({
     return type ? `${kebabCase(type[0])}-1` : '';
   }, [serviceType]);
 
-  const { refetch: refetchOrganizations } = useGetList('organizations', undefined, {
-    enabled: false,
-  });
   const {
     data: userData,
     isLoading: isUserDataLoading,
@@ -152,6 +154,21 @@ const OrganizationCreate = ({
       ...requestOptions,
     },
   );
+
+  useEffect(() => {
+    trace({ event: 'mounted' });
+    return () => trace({ event: 'unmounted' });
+  }, []);
+
+  useEffect(() => {
+    trace({
+      event: 'load-state-changed',
+      isLoading,
+      isUserDataLoading,
+      isFinalizingPostCreate,
+      flowStep,
+    });
+  }, [flowStep, isFinalizingPostCreate, isLoading, isUserDataLoading]);
 
   useEffect(() => {
     (async () => {
@@ -174,16 +191,22 @@ const OrganizationCreate = ({
     resource: 'organizations',
     mutationOptions: {
       onSuccess: (resp) => {
+        const toFlowStep = InterceptOnOrganizationCreation
+          ? ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT
+          : ORGANIZATION_CREATE_FLOW_STEPS.KEYS;
+        trace({
+          event: 'organization-create-succeeded',
+          organizationId: resp.id,
+          toFlowStep,
+          hasInitialService: Boolean(resp.serviceEndpoints?.length),
+        });
         setDid(resp.id);
         setSecretKeys({ keys: resp.keys, authClients: resp.authClients });
         setCreateRequestLoading(false);
-        setFlowStep(
-          InterceptOnOrganizationCreation
-            ? ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT
-            : ORGANIZATION_CREATE_FLOW_STEPS.KEYS,
-        );
+        setFlowStep(toFlowStep);
       },
       onError: ({ body }) => {
+        trace({ event: 'organization-create-failed', errorCode: body.errorCode });
         setCreateRequestLoading(false);
         if (body.errorCode === 'website_already_exists') {
           notify(ERRORS.websiteExists, { type: 'error' }, { autoHideDuration: 5000 });
@@ -195,6 +218,7 @@ const OrganizationCreate = ({
   });
 
   const resetCreateFlow = () => {
+    trace({ event: 'create-flow-reset', fromFlowStep: flowStep, serviceTypeId: serviceType?.id });
     setCreateRequestLoading(false);
     setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.DETAILS);
     setOrganizationData(null);
@@ -204,30 +228,60 @@ const OrganizationCreate = ({
   };
 
   const goToCreateServiceStep = (data) => {
+    trace({
+      event: 'service-popup-step-requested',
+      fromFlowStep: flowStep,
+      toFlowStep: ORGANIZATION_CREATE_FLOW_STEPS.SELECT_TYPE,
+      serviceTypeId: serviceType?.id,
+    });
     setOrganizationData(data);
     setServiceType(null);
     setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.SELECT_TYPE);
+  };
+
+  const onServicePopupStepRequested = (toFlowStepOrUpdater) => {
+    const toFlowStep =
+      typeof toFlowStepOrUpdater === 'function'
+        ? toFlowStepOrUpdater(flowStep)
+        : toFlowStepOrUpdater;
+    trace({
+      event: 'service-popup-step-requested',
+      fromFlowStep: flowStep,
+      toFlowStep,
+      serviceTypeId: serviceType?.id,
+    });
+    setFlowStep(toFlowStep);
   };
 
   const onClose = () => {
     resetCreateFlow();
   };
 
-  const onKeysClose = () => {
-    resetCreateFlow();
-    finalizePostOrganizationCreate({
-      getAccessToken,
-      getAccessTokenWithPopup,
-      refetchUserData,
-      refreshPostCreateData: refetchOrganizations,
-    })
-      .catch(() => undefined)
-      .finally(() => {
-        redirect('list', 'services');
-      });
+  const onKeysClose = async () => {
+    trace({ event: 'keys-close-requested', flowStep, serviceTypeId: serviceType?.id });
+    setIsFinalizingPostCreate(true);
+    try {
+      await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
+      trace({ event: 'access-token-refreshed' });
+    } catch {
+      trace({ event: 'access-token-refresh-failed' });
+      // refreshAccessToken logs non-interaction failures internally; do not block exit.
+    }
+    await refetchUserData().catch(() => undefined);
+    trace({ event: 'react-admin-refresh-requested' });
+    refresh();
+    trace({ event: 'redirect-requested', resource: 'services', type: 'list' });
+    redirect('list', 'services');
   };
 
   const onCreate = async ({ serviceData = null, selectedCAO: nextSelectedCAO = '' } = {}) => {
+    trace({
+      event: 'organization-create-requested',
+      flowStep,
+      serviceTypeId: serviceType?.id,
+      selectedCAO: nextSelectedCAO,
+      hasInitialService: Boolean(serviceData),
+    });
     setCreateRequestLoading(true);
     setSelectedCAO(nextSelectedCAO);
     const organization = {
@@ -260,7 +314,7 @@ const OrganizationCreate = ({
     });
   };
 
-  if (isLoading || isUserDataLoading) {
+  if (isLoading || isUserDataLoading || isFinalizingPostCreate) {
     return <Loading sx={{ pt: '60px' }} />;
   }
   return (
@@ -552,7 +606,7 @@ const OrganizationCreate = ({
           onCreate={onCreate}
           onDoLater={() => onCreate()}
           selectedStep={flowStep}
-          setSelectedStep={setFlowStep}
+          setSelectedStep={onServicePopupStepRequested}
           selectedServiceType={serviceType}
           setSelectedServiceType={setServiceType}
         />
@@ -560,8 +614,24 @@ const OrganizationCreate = ({
           <InterceptOnOrganizationCreation
             isInterceptOnCreateOpen={flowStep === ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT}
             serviceId={serviceId}
-            onNext={() => setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.KEYS)}
-            onClose={() => setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.KEYS)}
+            onNext={() => {
+              trace({
+                event: 'intercept-step-completed',
+                fromFlowStep: flowStep,
+                toFlowStep: ORGANIZATION_CREATE_FLOW_STEPS.KEYS,
+                serviceTypeId: serviceType?.id,
+              });
+              setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.KEYS);
+            }}
+            onClose={() => {
+              trace({
+                event: 'intercept-step-closed',
+                fromFlowStep: flowStep,
+                toFlowStep: ORGANIZATION_CREATE_FLOW_STEPS.KEYS,
+                serviceTypeId: serviceType?.id,
+              });
+              setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.KEYS);
+            }}
             isIssueOrInspection={isIssuingOrInspection}
             selectedCAO={selectedCAO}
             isCAO={isCAO}
