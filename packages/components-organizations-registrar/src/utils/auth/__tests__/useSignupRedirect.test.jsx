@@ -53,6 +53,7 @@ describe('useSignupRedirect', () => {
     );
 
     await waitFor(() => expect(logout.mock.calls.length).toEqual(1));
+    expect(logout.mock.calls[0].arguments).toEqual([{ source: 'signup-redirect' }]);
     expect(login.mock.calls.length).toEqual(0);
   });
 });

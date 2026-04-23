@@ -19,6 +19,7 @@ export * from './PublicAppRoot.jsx';
 export * from './utils/auth/AuthContext.js';
 export * from './utils/auth/authScopes.js';
 export * from './utils/ConfigContext.js';
+export * from './utils/tracing.js';
 export * from './utils/chainNames.js';
 export * from './utils/serviceTypes.js';
 export * from './state/index.js';

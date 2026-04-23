@@ -159,9 +159,9 @@ const CreateOrganizationFromInvitation = ({ InterceptOnOrganizationCreation }) =
         userEmail,
       });
       localStorage.setItem('createInvitationURL', window.location.pathname);
-      logout(auth, window.location.href, true);
+      logout({ source: 'invitation-email-mismatch' }, window.location.href, true);
     }
-  }, [userData, invitationData, logout, auth]);
+  }, [userData, invitationData, logout]);
 
   useEffect(() => {
     if (secretKeys) {

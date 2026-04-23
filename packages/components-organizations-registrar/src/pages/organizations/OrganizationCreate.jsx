@@ -591,7 +591,11 @@ const OrganizationCreate = ({
                     color="secondary"
                     size="large"
                     sx={sx.cancelButton}
-                    onClick={() => (hasOrganisations ? navigate('/') : logout())}
+                    onClick={() =>
+                      hasOrganisations
+                        ? navigate('/')
+                        : logout({ source: 'organization-create-discard' })
+                    }
                   >
                     {hasOrganisations ? 'Cancel' : 'Log out & discard'}
                   </Button>
