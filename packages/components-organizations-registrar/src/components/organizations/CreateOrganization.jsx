@@ -312,7 +312,7 @@ const CreateOrganization = ({
                     sx={sxStyles.cancelButton}
                     onClick={() => (hasOrganisations ? navigate('/') : logout())}
                   >
-                    Cancel
+                    {hasOrganisations ? 'Cancel' : 'Log out & discard'}
                   </Button>
                   <OrganizationSubmitButton
                     title={buttonTitle}
