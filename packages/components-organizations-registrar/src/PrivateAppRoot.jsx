@@ -97,14 +97,10 @@ export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
 
   useEffect(() => {
     trace({
-      event: 'auth-gate-state-changed',
-      isAuthenticated,
-      isLoading,
-      isSignupProcess,
-      hasAuthenticatedOnce,
+      event: 'auth-state-changed',
       authState,
     });
-  }, [authState, hasAuthenticatedOnce, isAuthenticated, isLoading, isSignupProcess]);
+  }, [authState]);
 
   useEffect(() => {
     if (!hasAuthenticatedOnce && isAuthenticated) {
