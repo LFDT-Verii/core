@@ -65,7 +65,11 @@ const ConsentProvider = ({ children }) => {
 
     const handleConsentError = (e) => {
       if (e.error && logoutErrors.includes(e.error)) {
-        logout({ logoutParams: { returnTo: window.location.origin } });
+        logout({
+          source: 'consent-error',
+          details: { error: e.error },
+          logoutParams: { returnTo: window.location.origin },
+        });
       }
     };
 
@@ -144,7 +148,7 @@ const ConsentProvider = ({ children }) => {
       <TermsOfUsePopup
         isOpen={isShouldAgreeWithNewVersion}
         onClose={() => {
-          logout();
+          logout({ source: 'terms-popup-close' });
         }}
         onProceed={onAgreeWithNewVersion}
         title={isNewUser ? 'Terms of use' : 'The terms of use were updated'}

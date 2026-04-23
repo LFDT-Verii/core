@@ -43,24 +43,31 @@ const AUTH_STATES = Object.freeze({
   RESOLVING: 'resolving',
   AUTHENTICATED: 'authenticated',
   REFRESHING_AUTHENTICATED: 'refreshingAuthenticated',
+  RESOLVING_LOGOUT: 'resolvingLogout',
   LOGGED_OUT: 'loggedOut',
 });
 
-const getAuthState = ({ isSignupProcess, isAuthenticated, isLoading, hasAuthenticatedOnce }) => {
+const getAuthState = ({
+  isSignupProcess,
+  isAuthenticated,
+  isLoading,
+  hasAuthenticatedOnce,
+  isLogoutInProgress,
+}) => {
   if (isSignupProcess) {
     return AUTH_STATES.SIGNUP_REDIRECT;
+  }
+
+  if (isLogoutInProgress) {
+    return AUTH_STATES.RESOLVING_LOGOUT;
   }
 
   if (isAuthenticated) {
     return AUTH_STATES.AUTHENTICATED;
   }
 
-  if (isLoading && hasAuthenticatedOnce) {
-    return AUTH_STATES.REFRESHING_AUTHENTICATED;
-  }
-
   if (isLoading) {
-    return AUTH_STATES.RESOLVING;
+    return hasAuthenticatedOnce ? AUTH_STATES.REFRESHING_AUTHENTICATED : AUTH_STATES.RESOLVING;
   }
 
   return AUTH_STATES.LOGGED_OUT;
@@ -68,7 +75,7 @@ const getAuthState = ({ isSignupProcess, isAuthenticated, isLoading, hasAuthenti
 
 export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
   const auth = useAuth();
-  const { isAuthenticated, isLoading, login } = auth;
+  const { isAuthenticated, isLoading, isLogoutInProgress = false, login } = auth;
   const config = useConfig();
   const location = useLocation();
   const [hasAuthenticatedOnce, setHasAuthenticatedOnce] = useState(isAuthenticated);
@@ -88,6 +95,7 @@ export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
     isAuthenticated,
     isLoading,
     hasAuthenticatedOnce,
+    isLogoutInProgress,
   });
 
   useEffect(() => {
