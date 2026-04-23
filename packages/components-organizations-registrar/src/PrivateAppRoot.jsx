@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // react admin
 import { Admin } from 'react-admin';
 
 import PropTypes from 'prop-types';
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { QueryClient } from '@tanstack/react-query';
 
 // components
@@ -32,21 +32,60 @@ import { useAuth } from './utils/auth/AuthContext.js';
 import useSignupRedirect from './utils/auth/useSignupRedirect.js';
 import remoteDataProvider from './utils/remoteDataProvider.js';
 import { useConfig } from './utils/ConfigContext.js';
+import { initTrace } from './utils/tracing.js';
 import theme from './theme/theme.js';
+
+const trace = initTrace('PrivateAppRoot');
 
 export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
   const auth = useAuth();
   const config = useConfig();
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: false,
-      },
-    },
-  });
+  const hasResolvedAuth = auth.isAuthenticated || !auth.isLoading;
+  const [isAuthBootstrapped, setIsAuthBootstrapped] = useState(auth.isAuthenticated);
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
   const { isSignupProcess } = useSignupRedirect({ auth });
 
-  if (!auth.isAuthenticated || auth.isLoading || isSignupProcess) {
+  useEffect(() => {
+    trace({ event: 'mounted' });
+    return () => trace({ event: 'unmounted' });
+  }, []);
+
+  useEffect(() => {
+    trace({
+      event: 'auth-gate-state-changed',
+      isAuthenticated: auth.isAuthenticated,
+      isLoading: auth.isLoading,
+      hasResolvedAuth,
+      isAuthBootstrapped,
+      isSignupProcess,
+    });
+  }, [auth.isAuthenticated, auth.isLoading, hasResolvedAuth, isAuthBootstrapped, isSignupProcess]);
+
+  useEffect(() => {
+    if (!isAuthBootstrapped && auth.isAuthenticated) {
+      trace({
+        event: 'auth-bootstrapped',
+        isAuthenticated: auth.isAuthenticated,
+        isLoading: auth.isLoading,
+      });
+      // This is a one-way latch: once authenticated auth has resolved for this mount,
+      // keep the app bootstrapped so later token refreshes cannot remount the root by
+      // flipping auth.isLoading back on.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsAuthBootstrapped(true);
+    }
+  }, [auth.isAuthenticated, auth.isLoading, isAuthBootstrapped]);
+
+  if (!isAuthBootstrapped || isSignupProcess) {
     return <Loading sx={{ pt: '60px' }} />;
   }
 

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import {
   AutocompleteInput,
   Button,
@@ -30,7 +30,7 @@ import {
   FormDataConsumer,
   useGetOne,
   useNotify,
-  useGetList,
+  useRefresh,
 } from 'react-admin';
 
 import { Box, Stack, Tooltip, Typography, Grid } from '@mui/material';
@@ -62,19 +62,24 @@ import useCountryCodes from '@/utils/countryCodes.js';
 import { useAuth } from '@/utils/auth/AuthContext.js';
 import { refreshAccessToken } from '@/utils/auth/refreshAccessTokens.js';
 import { dataResources } from '@/utils/remoteDataProvider.js';
+import { initTrace } from '@/utils/tracing.js';
 
 import AuthorityRegistrationNumbersInput from './components/AuthorityRegistrationInput.jsx';
 import { LinkedInRegistrationInput } from './components/LinkedInRegistrationInput.jsx';
 import { OrganizationBrand } from './components/OrganizationBrand.jsx';
 import { OrganizationSubmitButton } from './components/OrganizationSubmitButton.jsx';
 import { OrganizationCreateTitle } from './components/OrganizationCreateTitle.jsx';
-import ServiceCreateFormContainer from './OrganizationAddService.jsx';
+import ServiceCreateFormContainer, {
+  ORGANIZATION_ADD_SERVICE_STEPS,
+} from './OrganizationAddService.jsx';
 import {
   requestOptions,
   organizationPlaceholder,
   validateName,
   validateEmail,
 } from './utils/index.js';
+import { SecretKeysPopup } from '../services/components/SecretKeysPopup/index.jsx';
+import { useIsIssuingInspection } from '../services/hooks/useIsIssuingInspection.js';
 
 export const defaultBrandValue = [
   {
@@ -87,14 +92,25 @@ export const isAddBrandDisabled = (values) => {
   return values && !allBrandsFilled(values) && (values.length % 2 === 0 || values.length !== 1);
 };
 
+const ORGANIZATION_CREATE_FLOW_STEPS = {
+  DETAILS: 'details',
+  INTERCEPT: 'intercept',
+  KEYS: 'keys',
+  ...ORGANIZATION_ADD_SERVICE_STEPS,
+};
+
+const trace = initTrace('OrganizationCreate');
+
+/* eslint-disable complexity */
 const OrganizationCreate = ({
   CreateServiceComponent = ServiceCreateFormContainer,
   MockOrganization,
+  InterceptOnOrganizationCreation,
 }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const notify = useNotify();
   const redirect = useRedirect();
+  const refresh = useRefresh();
 
   const { logout, user, getAccessToken, getAccessTokenWithPopup } = useAuth();
 
@@ -102,18 +118,33 @@ const OrganizationCreate = ({
   const [did, setDid] = useSelectedOrganization();
 
   const [organizationData, setOrganizationData] = useState(null);
-  const [isServiceCreated, setServiceCreated] = useState(false);
   const [secretKeys, setSecretKeys] = useState(null);
   const [isCreateRequestLoading, setCreateRequestLoading] = useState(false);
+  const [isFinalizingPostCreate, setIsFinalizingPostCreate] = useState(false);
   const [hasOrganisations, setHasOrganisations] = useState(false);
-  const [serviceType, setServiceType] = useState('');
+  const [serviceType, setServiceType] = useState(null);
   const [selectedCAO, setSelectedCAO] = useState('');
   const [initialRecord, setInitialRecord] = useState({ profile: { name: '' } });
+  const [flowStep, setFlowStep] = useState(ORGANIZATION_CREATE_FLOW_STEPS.DETAILS);
 
-  const { refetch } = useGetList('organizations', undefined, {
-    enabled: false,
-  });
-  const { data: userData, isLoading: isUserDataLoading } = useGetOne(
+  const isServiceFlowOpened =
+    flowStep === ORGANIZATION_CREATE_FLOW_STEPS.SELECT_TYPE ||
+    flowStep === ORGANIZATION_CREATE_FLOW_STEPS.CONFIGURE_SERVICE;
+  const { isIssuingOrInspection, isCAO } = useIsIssuingInspection(serviceType);
+  const serviceId = useMemo(() => {
+    if (!serviceType?.id) {
+      return '';
+    }
+
+    const type = serviceType.id.match(/.+v1/);
+    return type ? `${kebabCase(type[0])}-1` : '';
+  }, [serviceType]);
+
+  const {
+    data: userData,
+    isLoading: isUserDataLoading,
+    refetch: refetchUserData,
+  } = useGetOne(
     dataResources.USERS,
     {
       id: user.sub,
@@ -123,6 +154,21 @@ const OrganizationCreate = ({
       ...requestOptions,
     },
   );
+
+  useEffect(() => {
+    trace({ event: 'mounted' });
+    return () => trace({ event: 'unmounted' });
+  }, []);
+
+  useEffect(() => {
+    trace({
+      event: 'load-state-changed',
+      isLoading,
+      isUserDataLoading,
+      isFinalizingPostCreate,
+      flowStep,
+    });
+  }, [flowStep, isFinalizingPostCreate, isLoading, isUserDataLoading]);
 
   useEffect(() => {
     (async () => {
@@ -144,50 +190,102 @@ const OrganizationCreate = ({
   const { save } = useCreateController({
     resource: 'organizations',
     mutationOptions: {
-      onSuccess: async (resp) => {
+      onSuccess: (resp) => {
+        const hasInitialService = Boolean(resp.serviceEndpoints?.length);
+        const toFlowStep =
+          InterceptOnOrganizationCreation && hasInitialService
+            ? ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT
+            : ORGANIZATION_CREATE_FLOW_STEPS.KEYS;
+        trace({
+          event: 'organization-create-succeeded',
+          organizationId: resp.id,
+          toFlowStep,
+          hasInitialService,
+        });
         setDid(resp.id);
         setSecretKeys({ keys: resp.keys, authClients: resp.authClients });
-        setServiceCreated(true);
         setCreateRequestLoading(false);
-        try {
-          await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
-        } catch {
-          // refreshAccessToken logs non-interaction failures internally; do not block success flow.
-        }
-        refetch();
-        navigate(-1);
+        setFlowStep(toFlowStep);
       },
       onError: ({ body }) => {
+        trace({ event: 'organization-create-failed', errorCode: body.errorCode });
         setCreateRequestLoading(false);
         if (body.errorCode === 'website_already_exists') {
           notify(ERRORS.websiteExists, { type: 'error' }, { autoHideDuration: 5000 });
         } else {
           notify(body.message || ERRORS.default, { type: 'error' }, { autoHideDuration: 5000 });
         }
-        navigate(-1);
-        setServiceCreated(false);
       },
     },
   });
 
+  const resetCreateFlow = () => {
+    trace({ event: 'create-flow-reset', fromFlowStep: flowStep, serviceTypeId: serviceType?.id });
+    setCreateRequestLoading(false);
+    setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.DETAILS);
+    setOrganizationData(null);
+    setSecretKeys(null);
+    setServiceType(null);
+    setSelectedCAO('');
+  };
+
   const goToCreateServiceStep = (data) => {
+    trace({
+      event: 'service-popup-step-requested',
+      fromFlowStep: flowStep,
+      toFlowStep: ORGANIZATION_CREATE_FLOW_STEPS.SELECT_TYPE,
+      serviceTypeId: serviceType?.id,
+    });
     setOrganizationData(data);
-    navigate('service');
+    setServiceType(null);
+    setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.SELECT_TYPE);
+  };
+
+  const onServicePopupStepRequested = (toFlowStepOrUpdater) => {
+    const toFlowStep =
+      typeof toFlowStepOrUpdater === 'function'
+        ? toFlowStepOrUpdater(flowStep)
+        : toFlowStepOrUpdater;
+    trace({
+      event: 'service-popup-step-requested',
+      fromFlowStep: flowStep,
+      toFlowStep,
+      serviceTypeId: serviceType?.id,
+    });
+    setFlowStep(toFlowStep);
   };
 
   const onClose = () => {
-    if (isServiceCreated === true) {
-      redirect('list', 'services');
-    } else {
-      navigate(-1);
-      setOrganizationData(null);
-      setServiceCreated(false);
-    }
+    resetCreateFlow();
   };
 
-  // eslint-disable-next-line complexity
-  const onCreate = async (serviceData) => {
+  const onKeysClose = async () => {
+    trace({ event: 'keys-close-requested', flowStep, serviceTypeId: serviceType?.id });
+    setIsFinalizingPostCreate(true);
+    try {
+      await refreshAccessToken({ getAccessToken, getAccessTokenWithPopup });
+      trace({ event: 'access-token-refreshed' });
+    } catch {
+      trace({ event: 'access-token-refresh-failed' });
+      // refreshAccessToken logs non-interaction failures internally; do not block exit.
+    }
+    await refetchUserData().catch(() => undefined);
+    trace({ event: 'react-admin-refresh-requested' });
+    refresh();
+    trace({ event: 'redirect-requested', resource: 'services', type: 'list' });
+    redirect('list', 'services');
+  };
+
+  const onCreate = async ({ serviceData = null, selectedCAO: nextSelectedCAO = '' } = {}) => {
+    trace({
+      event: 'organization-create-requested',
+      flowStep,
+      serviceTypeId: serviceType?.id,
+      selectedCAO: nextSelectedCAO,
+      hasInitialService: Boolean(serviceData),
+    });
     setCreateRequestLoading(true);
+    setSelectedCAO(nextSelectedCAO);
     const organization = {
       ...organizationData,
       profile: {
@@ -210,7 +308,7 @@ const OrganizationCreate = ({
       serviceEndpoints: serviceData
         ? [
             {
-              id: `${did}#${kebabCase(serviceData.type)}-1`,
+              id: `${did ? `${did}` : ''}#${kebabCase(serviceData.type)}-1`,
               ...serviceData,
             },
           ]
@@ -218,7 +316,7 @@ const OrganizationCreate = ({
     });
   };
 
-  if (isLoading || isUserDataLoading) {
+  if (isLoading || isUserDataLoading || isFinalizingPostCreate) {
     return <Loading sx={{ pt: '60px' }} />;
   }
   return (
@@ -230,303 +328,343 @@ const OrganizationCreate = ({
 
         <Form record={initialRecord} onSubmit={goToCreateServiceStep} noValidate mode="onTouched">
           <FormDataConsumer>
-            {
-              // eslint-disable-next-line complexity
-              ({ formData }) => (
-                <>
-                  <Grid container spacing={4} rowSpacing={1}>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack container flex={1} flexDirection="column">
-                        <Grid size={{ xs: 12 }}>
-                          <Stack flexDirection="row" gap={1.75}>
-                            <TextInput
-                              fullWidth
-                              label="Legal Name"
-                              source="profile.name"
-                              validate={validateName}
-                            />
-                          </Stack>
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                          <Stack flexDirection="row" gap={1.75}>
-                            <TextInput
-                              fullWidth
-                              label="Website"
-                              source="profile.website"
-                              validate={[...validateWebsiteStrict, required()]}
-                            />
-                            <Box mt={2}>
-                              <Tooltip title={WEBSITE_HINT}>
-                                <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                              </Tooltip>
-                            </Box>
-                          </Stack>
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
+            {({ formData }) => (
+              <>
+                <Grid container spacing={4} rowSpacing={1}>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack container flex={1} flexDirection="column">
+                      <Grid size={{ xs: 12 }}>
+                        <Stack flexDirection="row" gap={1.75}>
                           <TextInput
                             fullWidth
-                            label="Address"
-                            source="profile.physicalAddress.line1"
-                            validate={[required(), maxLength(1024)]}
+                            label="Legal Name"
+                            source="profile.name"
+                            validate={validateName}
                           />
-                        </Grid>
-                        <Grid size={{ xs: 12 }}>
-                          <AutocompleteInput
-                            label="Country"
-                            source="profile.location.countryCode"
-                            choices={countryCodes}
-                            validate={required()}
+                        </Stack>
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
+                        <Stack flexDirection="row" gap={1.75}>
+                          <TextInput
+                            fullWidth
+                            label="Website"
+                            source="profile.website"
+                            validate={[...validateWebsiteStrict, required()]}
                           />
-                        </Grid>
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }} pb={1}>
-                      <CustomImageInput label={false} editMode addTo="profile" />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <TextInput
-                        fullWidth
-                        label="LinkedIn Page"
-                        source="profile.linkedInProfile"
-                        validate={[...validateWebsite, required()]}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <LinkedInRegistrationInput
-                        formData={formData.profile}
-                        source="profile.registrationNumbers"
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
+                          <Box mt={2}>
+                            <Tooltip title={WEBSITE_HINT}>
+                              <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                            </Tooltip>
+                          </Box>
+                        </Stack>
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
                         <TextInput
                           fullWidth
-                          label="Support Email"
-                          source="profile.contactEmail"
-                          validate={validateEmail}
+                          label="Address"
+                          source="profile.physicalAddress.line1"
+                          validate={[required(), maxLength(1024)]}
                         />
-                        <Box mt={2}>
-                          <Tooltip title={SUPPORT_EMAIL_HINT}>
-                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                          </Tooltip>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="Technical Contact Email"
-                          source="profile.technicalEmail"
-                          validate={validateEmail}
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
+                        <AutocompleteInput
+                          label="Country"
+                          source="profile.location.countryCode"
+                          choices={countryCodes}
+                          validate={required()}
                         />
-                        <Box mt={2}>
-                          <Tooltip title={TECHNICAL_EMAIL_HINT}>
-                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                          </Tooltip>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                    <AuthorityRegistrationNumbersInput
-                      source="profile.registrationNumbers"
-                      orientation="horizontal"
-                    />
-                    <Grid size={{ xs: 12 }}>
-                      <TextInput
-                        fullWidth
-                        multiline
-                        label="Short Description"
-                        placeholder={organizationPlaceholder}
-                        source="profile.description"
-                        validate={required()}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      <Typography variant="h5">Key individuals</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <Typography variant="body1" my={2} sx={sx.sectionTitle}>
-                          Administrator’s Details
-                        </Typography>
-                        <Box mt={2}>
-                          <Tooltip title={ADMINISTRATOR_DETAILS_HINT}>
-                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                          </Tooltip>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <Typography variant="body1" my={2} sx={sx.sectionTitle}>
-                          Signatory Authority’s Details
-                        </Typography>
-                        <Box mt={2}>
-                          <Tooltip title={SIGNATORY_DETAILS_HINT}>
-                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                          </Tooltip>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="First name"
-                          source="profile.adminGivenName"
-                          validate={[maxLength(1024), required()]}
-                          defaultValue={userData ? userData.givenName : ''}
-                        />
-                      </Stack>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="Last name"
-                          source="profile.adminFamilyName"
-                          validate={[maxLength(1024), required()]}
-                          defaultValue={userData ? userData.familyName : ''}
-                        />
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="First name"
-                          source="profile.signatoryGivenName"
-                          validate={[maxLength(1024), required()]}
-                        />
-                      </Stack>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="Last name"
-                          source="profile.signatoryFamilyName"
-                          validate={[maxLength(1024), required()]}
-                        />
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="Job Title"
-                          source="profile.adminTitle"
-                          validate={[maxLength(1024), required()]}
-                        />
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="Job Title"
-                          source="profile.signatoryTitle"
-                          validate={[maxLength(1024), required()]}
-                        />
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="Email"
-                          source="profile.adminEmail"
-                          validate={validateEmail}
-                          defaultValue={userData ? userData.email : ''}
-                        />
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 6 }}>
-                      <Stack flexDirection="row" gap={1.75}>
-                        <TextInput
-                          fullWidth
-                          label="Email"
-                          source="profile.signatoryEmail"
-                          validate={validateEmail}
-                        />
-                        <Box mt={2}>
-                          <Tooltip title={SIGNATORY_EMAIL_HINT}>
-                            <InfoIcon color="info" fontSize="small" cursor="pointer" />
-                          </Tooltip>
-                        </Box>
-                      </Stack>
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      <Typography variant="h4" mb={2} mt={4}>
-                        Commercial Names
-                      </Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      <ArrayInput
-                        source="profile.commercialEntities"
-                        defaultValue={defaultBrandValue}
-                        sx={{ '& .RaArrayInput-label': { display: 'none' } }}
-                      >
-                        <SimpleFormIterator
-                          addButton={
-                            <PlusButtonBlock
-                              style={sx.plusButtonBlock}
-                              disabled={!allBrandsFilled(formData.profile.commercialEntities)}
-                              position={formData.profile?.commercialEntities?.length}
-                            />
-                          }
-                          disableAdd={isAddBrandDisabled(formData.profile.commercialEntities)}
-                          fullWidth
-                          sx={sx.brandList}
-                        >
-                          <FormDataConsumer>
-                            {({ scopedFormData }) => {
-                              return (
-                                <OrganizationBrand
-                                  formData={formData}
-                                  scopedFormData={scopedFormData}
-                                />
-                              );
-                            }}
-                          </FormDataConsumer>
-                        </SimpleFormIterator>
-                      </ArrayInput>
-                    </Grid>
+                      </Grid>
+                    </Stack>
                   </Grid>
-                  <Box display="flex" justifyContent="center" pt={4}>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      size="large"
-                      sx={sx.cancelButton}
-                      onClick={() => (hasOrganisations ? navigate('/') : logout())}
-                    >
-                      Cancel
-                    </Button>
-                    <OrganizationSubmitButton />
-                  </Box>
-                  <CreateServiceComponent
-                    isModalOpened={/create\/service/.test(location.pathname) || isServiceCreated}
-                    isSending={isCreateRequestLoading}
-                    onClose={onClose}
-                    onCreate={onCreate}
-                    isCreated={isServiceCreated}
-                    secretKeys={secretKeys}
-                    did={did}
-                    selectedServiceType={serviceType}
-                    setSelectedServiceType={setServiceType}
-                    selectedCAO={selectedCAO}
-                    setSelectedCAO={setSelectedCAO}
+                  <Grid size={{ xs: 6 }} pb={1}>
+                    <CustomImageInput label={false} editMode addTo="profile" />
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <TextInput
+                      fullWidth
+                      label="LinkedIn Page"
+                      source="profile.linkedInProfile"
+                      validate={[...validateWebsite, required()]}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <LinkedInRegistrationInput
+                      formData={formData.profile}
+                      source="profile.registrationNumbers"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="Support Email"
+                        source="profile.contactEmail"
+                        validate={validateEmail}
+                      />
+                      <Box mt={2}>
+                        <Tooltip title={SUPPORT_EMAIL_HINT}>
+                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                        </Tooltip>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="Technical Contact Email"
+                        source="profile.technicalEmail"
+                        validate={validateEmail}
+                      />
+                      <Box mt={2}>
+                        <Tooltip title={TECHNICAL_EMAIL_HINT}>
+                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                        </Tooltip>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                  <AuthorityRegistrationNumbersInput
+                    source="profile.registrationNumbers"
+                    orientation="horizontal"
                   />
-                </>
-              )
-            }
+                  <Grid size={{ xs: 12 }}>
+                    <TextInput
+                      fullWidth
+                      multiline
+                      label="Short Description"
+                      placeholder={organizationPlaceholder}
+                      source="profile.description"
+                      validate={required()}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="h5">Key individuals</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <Typography variant="body1" my={2} sx={sx.sectionTitle}>
+                        Administrator’s Details
+                      </Typography>
+                      <Box mt={2}>
+                        <Tooltip title={ADMINISTRATOR_DETAILS_HINT}>
+                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                        </Tooltip>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <Typography variant="body1" my={2} sx={sx.sectionTitle}>
+                        Signatory Authority’s Details
+                      </Typography>
+                      <Box mt={2}>
+                        <Tooltip title={SIGNATORY_DETAILS_HINT}>
+                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                        </Tooltip>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="First name"
+                        source="profile.adminGivenName"
+                        validate={[maxLength(1024), required()]}
+                        defaultValue={userData ? userData.givenName : ''}
+                      />
+                    </Stack>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="Last name"
+                        source="profile.adminFamilyName"
+                        validate={[maxLength(1024), required()]}
+                        defaultValue={userData ? userData.familyName : ''}
+                      />
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="First name"
+                        source="profile.signatoryGivenName"
+                        validate={[maxLength(1024), required()]}
+                      />
+                    </Stack>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="Last name"
+                        source="profile.signatoryFamilyName"
+                        validate={[maxLength(1024), required()]}
+                      />
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="Job Title"
+                        source="profile.adminTitle"
+                        validate={[maxLength(1024), required()]}
+                      />
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="Job Title"
+                        source="profile.signatoryTitle"
+                        validate={[maxLength(1024), required()]}
+                      />
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="Email"
+                        source="profile.adminEmail"
+                        validate={validateEmail}
+                        defaultValue={userData ? userData.email : ''}
+                      />
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <Stack flexDirection="row" gap={1.75}>
+                      <TextInput
+                        fullWidth
+                        label="Email"
+                        source="profile.signatoryEmail"
+                        validate={validateEmail}
+                      />
+                      <Box mt={2}>
+                        <Tooltip title={SIGNATORY_EMAIL_HINT}>
+                          <InfoIcon color="info" fontSize="small" cursor="pointer" />
+                        </Tooltip>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="h4" mb={2} mt={4}>
+                      Commercial Names
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <ArrayInput
+                      source="profile.commercialEntities"
+                      defaultValue={defaultBrandValue}
+                      sx={{ '& .RaArrayInput-label': { display: 'none' } }}
+                    >
+                      <SimpleFormIterator
+                        addButton={
+                          <PlusButtonBlock
+                            style={sx.plusButtonBlock}
+                            disabled={!allBrandsFilled(formData.profile.commercialEntities)}
+                            position={formData.profile?.commercialEntities?.length}
+                          />
+                        }
+                        disableAdd={isAddBrandDisabled(formData.profile.commercialEntities)}
+                        fullWidth
+                        sx={sx.brandList}
+                      >
+                        <FormDataConsumer>
+                          {({ scopedFormData }) => {
+                            return (
+                              <OrganizationBrand
+                                formData={formData}
+                                scopedFormData={scopedFormData}
+                              />
+                            );
+                          }}
+                        </FormDataConsumer>
+                      </SimpleFormIterator>
+                    </ArrayInput>
+                  </Grid>
+                </Grid>
+                <Box display="flex" justifyContent="center" pt={4}>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="large"
+                    sx={sx.cancelButton}
+                    onClick={() => (hasOrganisations ? navigate('/') : logout())}
+                  >
+                    Cancel
+                  </Button>
+                  <OrganizationSubmitButton />
+                </Box>
+              </>
+            )}
           </FormDataConsumer>
         </Form>
+        <CreateServiceComponent
+          isModalOpened={isServiceFlowOpened}
+          isSending={isCreateRequestLoading}
+          onClose={onClose}
+          onCreate={onCreate}
+          onDoLater={() => onCreate()}
+          selectedStep={flowStep}
+          setSelectedStep={onServicePopupStepRequested}
+          selectedServiceType={serviceType}
+          setSelectedServiceType={setServiceType}
+        />
+        {InterceptOnOrganizationCreation && (
+          <InterceptOnOrganizationCreation
+            isInterceptOnCreateOpen={flowStep === ORGANIZATION_CREATE_FLOW_STEPS.INTERCEPT}
+            serviceId={serviceId}
+            onNext={() => {
+              trace({
+                event: 'intercept-step-completed',
+                fromFlowStep: flowStep,
+                toFlowStep: ORGANIZATION_CREATE_FLOW_STEPS.KEYS,
+                serviceTypeId: serviceType?.id,
+              });
+              setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.KEYS);
+            }}
+            onClose={() => {
+              trace({
+                event: 'intercept-step-closed',
+                fromFlowStep: flowStep,
+                toFlowStep: ORGANIZATION_CREATE_FLOW_STEPS.KEYS,
+                serviceTypeId: serviceType?.id,
+              });
+              setFlowStep(ORGANIZATION_CREATE_FLOW_STEPS.KEYS);
+            }}
+            isIssueOrInspection={isIssuingOrInspection}
+            selectedCAO={selectedCAO}
+            isCAO={isCAO}
+          />
+        )}
+        {flowStep === ORGANIZATION_CREATE_FLOW_STEPS.KEYS && secretKeys && (
+          <SecretKeysPopup
+            isOpen
+            secretKeys={secretKeys}
+            onClose={onKeysClose}
+            wording={{
+              title: 'Your organization is now registered on Velocity Network™.',
+              subtitle:
+                'Please save your organization’s unique keys in a secure location, ' +
+                'as they will not be available once you close this window.',
+            }}
+            warningWording={{
+              title: 'You must download a copy of your keys before exiting',
+            }}
+          />
+        )}
       </Stack>
     </Box>
   );
 };
+/* eslint-enable complexity */
 
 // eslint-disable-next-line better-mutation/no-mutation
 OrganizationCreate.propTypes = {
   CreateServiceComponent: PropTypes.elementType,
+  InterceptOnOrganizationCreation: PropTypes.elementType,
   MockOrganization: PropTypes.elementType,
 };
 

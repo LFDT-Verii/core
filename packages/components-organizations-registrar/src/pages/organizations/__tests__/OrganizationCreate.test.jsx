@@ -2,7 +2,7 @@ import { before, describe, it, mock } from 'node:test';
 import { expect } from 'expect';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import * as reactAdminActual from 'react-admin';
 import * as reactRouterActual from 'react-router';
@@ -18,18 +18,12 @@ const theme = createTheme({
   },
 });
 
-const createDeferred = () => {
-  let resolve;
-  const promise = new Promise((res) => {
-    resolve = res;
-  });
-  return { promise, resolve };
-};
-
 const buildToken = (payload) => {
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
   return `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode(payload)}.signature`;
 };
+
+const EXPECTED_KEYS_DIALOG_TITLE = 'Your organization is now registered on Velocity Network™.';
 
 const navigateMock = mock.fn();
 const redirectMock = mock.fn();
@@ -60,6 +54,7 @@ mock.module('react-admin', {
     useGetOne: () => ({
       data: { givenName: 'New', familyName: 'User' },
       isLoading: false,
+      refetch: mock.fn(),
     }),
     useNotify: () => notifyMock,
     useGetList: () => ({
@@ -108,155 +103,36 @@ describe('OrganizationCreate', () => {
     OrganizationCreate = (await import('../OrganizationCreate.jsx')).default;
   });
 
-  it('waits for access token refresh before navigating after organization creation', async () => {
+  it('opens the keys flow immediately after organization creation without refreshing auth or organizations', async () => {
     createControllerOptions = undefined;
     navigateMock.mock.resetCalls();
     refetchMock.mock.resetCalls();
     getAccessTokenMock.mock.resetCalls();
     getAccessTokenWithPopupMock.mock.resetCalls();
 
-    const refreshDeferred = createDeferred();
-    let tokenCallCount = 0;
-    getAccessTokenMock.mock.mockImplementation(() => {
-      tokenCallCount += 1;
-      if (tokenCallCount === 1) {
-        return Promise.resolve(
-          buildToken({
-            scope: 'write:organizations',
-          }),
-        );
-      }
-      return refreshDeferred.promise;
-    });
+    getAccessTokenMock.mock.mockImplementation(() =>
+      Promise.resolve(
+        buildToken({
+          scope: 'write:organizations',
+        }),
+      ),
+    );
 
     renderOrganizationCreate(OrganizationCreate);
 
     await waitFor(() => expect(createControllerOptions).toBeDefined());
     await waitFor(() => expect(getAccessTokenMock.mock.calls.length).toEqual(1));
 
-    let onSuccessSettled = false;
-    const onSuccessPromise = createControllerOptions.mutationOptions.onSuccess({
+    createControllerOptions.mutationOptions.onSuccess({
       id: 'did:test:new-org',
       keys: [],
       authClients: [],
     });
-    onSuccessPromise.then(() => {
-      onSuccessSettled = true;
-    });
 
-    await Promise.resolve();
-
-    expect(getAccessTokenMock.mock.calls.length).toEqual(2);
-    expect(refetchMock.mock.calls).toEqual([]);
-    expect(navigateMock.mock.calls).toEqual([]);
-    expect(onSuccessSettled).toEqual(false);
-
-    refreshDeferred.resolve(
-      buildToken({
-        scope: 'write:organizations',
-        'http://velocitynetwork.foundation/groupId': 'did:test:new-org',
-      }),
-    );
-    await onSuccessPromise;
-
-    expect(refetchMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls[0].arguments).toEqual([-1]);
-  });
-
-  it('falls back to popup refresh and still waits before navigating when silent refresh errors', async () => {
-    createControllerOptions = undefined;
-    navigateMock.mock.resetCalls();
-    refetchMock.mock.resetCalls();
-    getAccessTokenMock.mock.resetCalls();
-    getAccessTokenWithPopupMock.mock.resetCalls();
-
-    const popupDeferred = createDeferred();
-    let tokenCallCount = 0;
-    getAccessTokenMock.mock.mockImplementation(() => {
-      tokenCallCount += 1;
-      if (tokenCallCount === 1) {
-        return Promise.resolve(
-          buildToken({
-            scope: 'write:organizations',
-          }),
-        );
-      }
-      throw Object.assign(new Error('Consent required'), {
-        error: 'consent_required',
-      });
-    });
-    getAccessTokenWithPopupMock.mock.mockImplementation(() => popupDeferred.promise);
-
-    renderOrganizationCreate(OrganizationCreate);
-
-    await waitFor(() => expect(createControllerOptions).toBeDefined());
-    await waitFor(() => expect(getAccessTokenMock.mock.calls.length).toEqual(1));
-
-    const onSuccessPromise = createControllerOptions.mutationOptions.onSuccess({
-      id: 'did:test:new-org',
-      keys: [],
-      authClients: [],
-    });
-    onSuccessPromise.catch(() => {});
-
-    await Promise.resolve();
-
-    expect(getAccessTokenMock.mock.calls.length).toEqual(2);
-    expect(getAccessTokenWithPopupMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls).toEqual([]);
-
-    popupDeferred.resolve(
-      buildToken({
-        scope: 'write:organizations',
-        'http://velocitynetwork.foundation/groupId': 'did:test:new-org',
-      }),
-    );
-    await onSuccessPromise;
-
-    expect(refetchMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls[0].arguments).toEqual([-1]);
-  });
-
-  it('continues navigation when refresh fails with a non-interaction error', async () => {
-    createControllerOptions = undefined;
-    navigateMock.mock.resetCalls();
-    refetchMock.mock.resetCalls();
-    getAccessTokenMock.mock.resetCalls();
-    getAccessTokenWithPopupMock.mock.resetCalls();
-
-    let tokenCallCount = 0;
-    const refreshError = new Error('network timeout');
-    getAccessTokenMock.mock.mockImplementation(() => {
-      tokenCallCount += 1;
-      if (tokenCallCount === 1) {
-        return Promise.resolve(
-          buildToken({
-            scope: 'write:organizations',
-          }),
-        );
-      }
-
-      return Promise.reject(refreshError);
-    });
-
-    renderOrganizationCreate(OrganizationCreate);
-
-    await waitFor(() => expect(createControllerOptions).toBeDefined());
-    await waitFor(() => expect(getAccessTokenMock.mock.calls.length).toEqual(1));
-
-    await expect(
-      createControllerOptions.mutationOptions.onSuccess({
-        id: 'did:test:new-org',
-        keys: [],
-        authClients: [],
-      }),
-    ).resolves.toBeUndefined();
-
+    expect(getAccessTokenMock.mock.calls.length).toEqual(1);
     expect(getAccessTokenWithPopupMock.mock.calls.length).toEqual(0);
-    expect(refetchMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls.length).toEqual(1);
-    expect(navigateMock.mock.calls[0].arguments).toEqual([-1]);
+    expect(refetchMock.mock.calls.length).toEqual(0);
+    expect(navigateMock.mock.calls).toEqual([]);
+    await waitFor(() => expect(screen.getByText(EXPECTED_KEYS_DIALOG_TITLE)).toBeInTheDocument());
   });
 });

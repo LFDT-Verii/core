@@ -10,6 +10,7 @@ import { getTitle } from '../../utils/index.js';
 
 const selectedStep = 1;
 
+/* eslint-disable complexity */
 export const ServiceTypeSelection = ({
   handleNext,
   isLoading,
@@ -17,6 +18,10 @@ export const ServiceTypeSelection = ({
   setSelectedServiceType,
   onDoLater,
 }) => {
+  const handleSelectedServiceTypeChange = (value) => {
+    setSelectedServiceType(value || null);
+  };
+
   return (
     <>
       <Typography variant="pm" sx={styles.step}>
@@ -30,11 +35,11 @@ export const ServiceTypeSelection = ({
         <CustomDropDown
           source="selectedServiceType"
           label="Select type of service"
-          value={selectedServiceType}
-          onChange={setSelectedServiceType}
+          value={selectedServiceType || ''}
+          onChange={handleSelectedServiceTypeChange}
           items={serviceTypes}
-          stringValue={(item) => item.title}
-          parse={(value) => value.id}
+          stringValue={(item) => item?.title || ''}
+          parse={(value) => value?.id || ''}
           disabled={false}
         />
         <Box sx={[styles.buttonBlock, !onDoLater && styles.rightButton]}>
@@ -63,6 +68,7 @@ export const ServiceTypeSelection = ({
     </>
   );
 };
+/* eslint-enable complexity */
 
 const styles = {
   buttonBlock: {
@@ -82,7 +88,10 @@ const styles = {
 ServiceTypeSelection.propTypes = {
   handleNext: PropTypes.func.isRequired,
   isLoading: PropTypes.bool,
-  selectedServiceType: PropTypes.oneOfType([PropTypes.object, PropTypes.string, PropTypes.number]),
+  selectedServiceType: PropTypes.shape({
+    id: PropTypes.string,
+    title: PropTypes.string,
+  }),
   setSelectedServiceType: PropTypes.func.isRequired,
   onDoLater: PropTypes.func,
 };
