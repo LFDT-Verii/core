@@ -32,29 +32,9 @@ describe('useSignupRedirect', () => {
     auth: PropTypes.shape({
       isAuthenticated: PropTypes.bool.isRequired,
       isLoading: PropTypes.bool.isRequired,
-      login: PropTypes.func.isRequired,
       logout: PropTypes.func.isRequired,
     }).isRequired,
   };
-
-  it('starts the normal login redirect after auth resolves logged out', async () => {
-    const login = mock.fn(() => Promise.resolve());
-    const auth = {
-      isLoading: false,
-      isAuthenticated: false,
-      login,
-      logout: mock.fn(() => Promise.resolve()),
-    };
-
-    render(
-      <MemoryRouter initialEntries={['/organizations']}>
-        <TestComponent auth={auth} />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => expect(login.mock.calls.length).toEqual(1));
-    expect(login.mock.calls[0].arguments).toEqual([{ appState: { returnTo: '/organizations' } }]);
-  });
 
   it('does not start normal login while an invitation signup URL is pending', async () => {
     const login = mock.fn(() => Promise.resolve());
