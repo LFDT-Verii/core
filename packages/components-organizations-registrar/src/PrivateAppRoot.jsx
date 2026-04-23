@@ -16,6 +16,7 @@
 import React, { useEffect, useState } from 'react';
 // react admin
 import { Admin } from 'react-admin';
+import { useLocation } from 'react-router';
 
 import PropTypes from 'prop-types';
 
@@ -40,6 +41,7 @@ const trace = initTrace('PrivateAppRoot');
 export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
   const auth = useAuth();
   const config = useConfig();
+  const location = useLocation();
   const hasResolvedAuth = auth.isAuthenticated || !auth.isLoading;
   const [isAuthBootstrapped, setIsAuthBootstrapped] = useState(auth.isAuthenticated);
   const [queryClient] = useState(
@@ -85,7 +87,27 @@ export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
     }
   }, [auth.isAuthenticated, auth.isLoading, isAuthBootstrapped]);
 
-  if (!isAuthBootstrapped || isSignupProcess) {
+  useEffect(() => {
+    if (isSignupProcess || auth.isLoading || auth.isAuthenticated || isAuthBootstrapped) {
+      return;
+    }
+
+    const returnTo = localStorage.getItem('afterSignupRedirectUrl') || location.pathname;
+
+    trace({ event: 'login-redirect-requested', returnTo });
+    auth.login({ appState: { returnTo } }).then(() => {
+      localStorage.removeItem('afterSignupRedirectUrl');
+    });
+  }, [
+    auth,
+    auth.isAuthenticated,
+    auth.isLoading,
+    isAuthBootstrapped,
+    isSignupProcess,
+    location.pathname,
+  ]);
+
+  if (isSignupProcess || !isAuthBootstrapped || !auth.isAuthenticated) {
     return <Loading sx={{ pt: '60px' }} />;
   }
 
