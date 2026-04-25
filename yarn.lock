@@ -4072,28 +4072,26 @@
     lodash "^4.18.1"
     pino "^10.3.0"
 
-"@spencejs/spence-events@^1.0.0", "@spencejs/spence-events@~1.0.0":
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/@spencejs/spence-events/-/spence-events-1.0.0.tgz#12024b7b623f373d4706b55dfcc781b4cc2882b7"
-  integrity sha512-gULt5GOhYvJCpcoqzck8EBtsBe/vnhkeKc96vIbOE3yb4i7V2bNP6N39CnYpPWuiwqnEaZwdfIIEkpZRK0iRMA==
+"@spencejs/spence-events@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/@spencejs/spence-events/-/spence-events-1.1.0.tgz#86c4568f37be54417c1a9e211aa6b3f95e5d220d"
+  integrity sha512-7WsBVNG/A5HI5gqDZWhaWzE2ABpejHtZAYKB2A9nVThBh8EcOSmxMemvZTBo0q76o76O34QGOOeTPlvGGN7Rxg==
   dependencies:
     lodash "^4.18.1"
-    uuid "^11.1.0"
 
-"@spencejs/spence-factories@1.0.0", "@spencejs/spence-factories@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/@spencejs/spence-factories/-/spence-factories-1.0.0.tgz#efb2e2e512a9be14d916077d529046525db6df09"
-  integrity sha512-r+LNI90QiRXNgT48LbTqwY7yTbSM3E3GFVa6elX6uXj0/qjuSF04zjUG5MuuthifCsSqgTXp3gKor0WUXk9PEQ==
+"@spencejs/spence-factories@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/@spencejs/spence-factories/-/spence-factories-1.1.0.tgz#ce19b565a920cd3574ac686448bbd50877419917"
+  integrity sha512-4JJ0rXpwnqCrbVGDdET78p7jxdSz4HqNmw404NJiZYr9hVvYQ7nYLHKvWPHMwneIc4QS5vQCW5/55L7SGWgCfg==
   dependencies:
     lodash "^4.18.1"
-    uuid "^11.1.0"
 
-"@spencejs/spence-mongo-repos@1.0.0", "@spencejs/spence-mongo-repos@^1.0.0", "@spencejs/spence-mongo-repos@~1.0.0":
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/@spencejs/spence-mongo-repos/-/spence-mongo-repos-1.0.0.tgz#6ae62b9b0147c844075e1b763735a7c633184ecd"
-  integrity sha512-qn0QT4QdRaSRqo00MW6vqHVl7ctXDM+mAsOy0kZYVq8+Wp3BNBFq+3Q+O+PvyiWUiI8P/mgEuDSyU+aVQZqFqA==
+"@spencejs/spence-mongo-repos@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/@spencejs/spence-mongo-repos/-/spence-mongo-repos-1.1.0.tgz#bd96b50d7c0c5e2b47e6bdb823185dda04cf0283"
+  integrity sha512-ILcd70urFL2rYybekdQslNP+EW0h/+07AIAozZAY9E7kceoROQ2o00DqOifYUr11h5Lbg0lyKuQaafnCBKIpyw==
   dependencies:
-    "@spencejs/spence-events" "^1.0.0"
+    "@spencejs/spence-events" "^1.1.0"
     fastify-plugin "^5.1.0"
     http-errors "^2.0.0"
     lodash "^4.18.1"
@@ -6459,10 +6457,10 @@ domhandler@^5.0.2, domhandler@^5.0.3:
   dependencies:
     domelementtype "^2.3.0"
 
-dompurify@^3.2.4:
-  version "3.3.3"
-  resolved "https://registry.npmjs.org/dompurify/-/dompurify-3.3.3.tgz#680cae8af3e61320ddf3666a3bc843f7b291b2b6"
-  integrity sha512-Oj6pzI2+RqBfFG+qOaOLbFXLQ90ARpcGG6UePL82bJLtdsa6CYJD7nmiU8MW9nQNOtCHV3lZ/Bzq1X0QYbBZCA==
+dompurify@^3.2.4, dompurify@^3.4.0:
+  version "3.4.1"
+  resolved "https://registry.npmjs.org/dompurify/-/dompurify-3.4.1.tgz#521d04483ac12631b2aedf434a5f5390933b8789"
+  integrity sha512-JahakDAIg1gyOm7dlgWSDjV4n7Ip2PKR55NIT6jrMfIgLFgWo81vdr1/QGqWtFNRqXP9UV71oVePtjqS2ebnPw==
   optionalDependencies:
     "@types/trusted-types" "^2.0.7"
 
@@ -7654,10 +7652,10 @@ flatted@^3.2.9:
   resolved "https://registry.npmjs.org/flatted/-/flatted-3.4.2.tgz#f5c23c107f0f37de8dbdf24f13722b3b98d52726"
   integrity sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==
 
-follow-redirects@^1.12.1, follow-redirects@^1.15.11:
-  version "1.15.11"
-  resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.11.tgz#777d73d72a92f8ec4d2e410eb47352a56b8e8340"
-  integrity sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==
+follow-redirects@1.16.0, follow-redirects@^1.12.1, follow-redirects@^1.15.11:
+  version "1.16.0"
+  resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.0.tgz#28474a159d3b9d11ef62050a14ed60e4df6d61bc"
+  integrity sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==
 
 fontkit@^2.0.2:
   version "2.0.4"
@@ -12116,25 +12114,15 @@ util-deprecate@^1.0.1, util-deprecate@~1.0.1:
   resolved "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==
 
-uuid@^11.1.0:
-  version "11.1.0"
-  resolved "https://registry.npmjs.org/uuid/-/uuid-11.1.0.tgz#9549028be1753bb934fc96e2bca09bb4105ae912"
-  integrity sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==
+uuid@^11.1.0, uuid@^14.0.0, uuid@^9.0.0, uuid@~14.0.0:
+  version "14.0.0"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-14.0.0.tgz#0af883220163d264ffe0c084f6b8a89b9666966d"
+  integrity sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==
 
 uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
-
-uuid@^9.0.0:
-  version "9.0.1"
-  resolved "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
-  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
-
-uuid@~13.0.0:
-  version "13.0.0"
-  resolved "https://registry.npmjs.org/uuid/-/uuid-13.0.0.tgz#263dc341b19b4d755eb8fe36b78d95a6b65707e8"
-  integrity sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==
 
 vary@^1.1.2:
   version "1.1.2"
