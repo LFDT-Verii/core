@@ -68,7 +68,7 @@ Options
 
 Whatever is passed in as the `-p` value, is what the documentation calls "a persona".
 In practice, what this means, is that it will look for certain files that are expected to be present
-for the persona to be used properly. 
+for the persona to be used properly. The CLI first checks the current working directory, then falls back to the package `data/` directory (in this repository, that directory lives at `tools/verifgen/data/`).
 With a persona of johndoe, the following files would be expected.
 1. A did document named `johndoe.did`, with JSON contents like:
    ```

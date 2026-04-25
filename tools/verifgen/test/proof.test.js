@@ -1,43 +1,44 @@
-const { beforeEach, describe, it } = require('node:test');
+const { afterEach, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const fs = require('fs').promises;
-
-const currentDir = process.cwd();
-
-const createPersona = async (name, body) => {
-  await fs.writeFile(`${currentDir}/${name}.prv.key`, body);
-  await fs.writeFile(`${currentDir}/${name}.did`, JSON.stringify({}));
-};
-
-const deletePersona = async (name) => {
-  const path = `${currentDir}/${name}`;
-  const existsPrv = await fs
-    .access(`${path}.prv.key`)
-    .then(() => true)
-    .catch(() => false);
-  const existsDid = await fs
-    .access(`${path}.did`)
-    .then(() => true)
-    .catch(() => false);
-  // eslint-disable-next-line no-unused-expressions
-  existsPrv && (await fs.rm(`${path}.prv.key`));
-  // eslint-disable-next-line no-unused-expressions
-  existsDid && (await fs.rm(`${path}.did`));
-};
+const os = require('os');
+const path = require('path');
 
 const { generateKeyPair } = require('@verii/crypto');
 const { jwtVerify, jwkFromSecp256k1Key } = require('@verii/jwt');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { generateProof } = require('../src/verifgen-proof/generate-proof');
 
+const createPersona = async (testDir, name, body) => {
+  await fs.writeFile(path.join(testDir, `${name}.prv.key`), body);
+  await fs.writeFile(path.join(testDir, `${name}.did`), JSON.stringify({}));
+};
+
+const createJwkPersona = async (testDir, name, privateKey) => {
+  await fs.writeFile(
+    path.join(testDir, `${name}.prv.key.json`),
+    JSON.stringify(privateKey),
+  );
+  await fs.writeFile(path.join(testDir, `${name}.did`), JSON.stringify({}));
+};
+
 describe('Test proof cli tool', () => {
   let keyPair;
+  let originalCwd;
+  let testDir;
 
   beforeEach(async () => {
-    await deletePersona('persona1');
+    originalCwd = process.cwd();
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'verifgen-proof-test-'));
+    process.chdir(testDir);
     keyPair = await generateKeyPair();
-    await createPersona('persona1', keyPair.privateKey);
+    await createPersona(testDir, 'persona1', keyPair.privateKey);
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fs.rm(testDir, { recursive: true, force: true });
   });
 
   it('should not generate a proof if persona is missing', async () => {
@@ -58,6 +59,9 @@ describe('Test proof cli tool', () => {
       audience: 'http://test.com',
     });
     expect(proof).toBeDefined();
+    await expect(
+      fs.access(path.join(testDir, 'proof.jwt')),
+    ).resolves.toBeUndefined();
     const parsedJwt = await jwtVerify(
       proof,
       jwkFromSecp256k1Key(keyPair.publicKey, false),
@@ -82,12 +86,7 @@ describe('Test proof cli tool', () => {
 
   it('should generate a proof by a prv.key.json', async () => {
     const persona2Keypair = await generateKeyPair({ format: 'jwk' });
-    const name = 'persona2';
-    await fs.writeFile(
-      `${currentDir}/${name}.prv.key.json`,
-      JSON.stringify(persona2Keypair.privateKey),
-    );
-    await fs.writeFile(`${currentDir}/${name}.did`, JSON.stringify({}));
+    await createJwkPersona(testDir, 'persona2', persona2Keypair.privateKey);
     const proof = await generateProof({
       challenge: 'abc',
       persona: 'persona2',
@@ -113,12 +112,7 @@ describe('Test proof cli tool', () => {
 
   it('should generate an openid4vci proof by a prv.key.json', async () => {
     const persona2Keypair = await generateKeyPair({ format: 'jwk' });
-    const name = 'persona2';
-    await fs.writeFile(
-      `${currentDir}/${name}.prv.key.json`,
-      JSON.stringify(persona2Keypair.privateKey),
-    );
-    await fs.writeFile(`${currentDir}/${name}.did`, JSON.stringify({}));
+    await createJwkPersona(testDir, 'persona2', persona2Keypair.privateKey);
     const proof = await generateProof({
       challenge: 'abc',
       persona: 'persona2',
