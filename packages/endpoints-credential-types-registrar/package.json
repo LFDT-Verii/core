@@ -22,7 +22,7 @@
     "@fastify/sensible": "^6.0.0",
     "@fastify/swagger": "^9.0.0",
     "@fastify/swagger-ui": "^5.0.0",
-    "@spencejs/spence-mongo-repos": "^1.0.0",
+    "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/auth": "0.5.0-build",
     "@verii/aws-clients": "0.5.0-build",
     "@verii/common-fetchers": "0.5.0-build",
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "3.999.0",
-    "@spencejs/spence-factories": "^1.0.0",
+    "@spencejs/spence-factories": "^1.1.0",
     "@verii/crypto": "0.5.0-build",
     "@verii/sample-data": "0.5.0-build",
     "@verii/server-provider": "0.5.0-build",

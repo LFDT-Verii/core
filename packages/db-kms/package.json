@@ -16,7 +16,7 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "@spencejs/spence-mongo-repos": "^1.0.0",
+    "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/crypto": "0.5.0-build",
     "@verii/jwt": "0.5.0-build",
     "@verii/spencer-mongo-extensions": "0.5.0-build",
