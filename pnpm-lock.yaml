@@ -2288,8 +2288,8 @@ importers:
         specifier: 0.5.0-build
         version: link:../test-regexes
       dotenv:
-        specifier: ^16.0.0
-        version: 16.6.1
+        specifier: ^17.4.2
+        version: 17.4.2
       env-var:
         specifier: ^7.0.0
         version: 7.5.0
@@ -2913,8 +2913,8 @@ importers:
         specifier: 0.5.0-build
         version: link:../../packages/tests-helpers
       dotenv:
-        specifier: ^16.6.1
-        version: 16.6.1
+        specifier: ^17.4.2
+        version: 17.4.2
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.6.1)
@@ -3076,8 +3076,8 @@ importers:
         specifier: ^1.13.5
         version: 1.15.0(debug@4.4.3)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.6.1
+        specifier: ^17.4.2
+        version: 17.4.2
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -3324,8 +3324,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0
       dotenv:
-        specifier: ^16.6.1
-        version: 16.6.1
+        specifier: ^17.4.2
+        version: 17.4.2
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.6.1)
@@ -3438,8 +3438,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       dotenv:
-        specifier: ^16.6.1
-        version: 16.6.1
+        specifier: ^17.4.2
+        version: 17.4.2
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -7692,6 +7692,10 @@ packages:
 
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
   dpop@2.1.1:
@@ -16003,6 +16007,8 @@ snapshots:
   dotenv@16.4.7: {}
 
   dotenv@16.6.1: {}
+
+  dotenv@17.4.2: {}
 
   dpop@2.1.1: {}
 
