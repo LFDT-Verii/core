@@ -36,8 +36,15 @@
   },
   "// lodash-resolution-note": "Temporary: remove these package-specific lodash resolutions once eslint-plugin-better-mutation, ra-data-local-storage, and ra-ui-materialui stop pinning lodash 4.17.x.",
   "// hardhat-serialize-javascript-resolution-note": "Temporary: remove this hardhat/mocha/serialize-javascript resolution once the Hardhat dependency path no longer resolves serialize-javascript 6.x (Dependabot alert #148 / GHSA-5c6j-r48x-rmvq).",
+  "// auth0-uuid-resolution-note": "Temporary: remove these auth0 uuid resolutions once auth0 and auth0-legacy resolve uuid >=14 without a resolution (GHSA-w5hq-g745-h8pq).",
+  "// dompurify-resolution-note": "Temporary: remove this dompurify resolution once ra-ui-materialui resolves dompurify >=3.4.0 without a resolution (CVE-2026-41238, CVE-2026-41239, CVE-2026-41240).",
+  "// follow-redirects-resolution-note": "Temporary: remove this follow-redirects resolution once axios consumers resolve follow-redirects >=1.16.0 without a resolution (GHSA-r4q5-vmmm-2653).",
   "resolutions": {
     "hardhat/mocha/serialize-javascript": "7.0.5",
+    "**/auth0/uuid": "^14.0.0",
+    "**/auth0-legacy/uuid": "^14.0.0",
+    "**/dompurify": "^3.4.0",
+    "**/follow-redirects": "1.16.0",
     "eslint-plugin-better-mutation/lodash": "^4.18.0",
     "**/ra-data-local-storage/lodash": "^4.18.0",
     "**/ra-ui-materialui/lodash": "^4.18.0"
