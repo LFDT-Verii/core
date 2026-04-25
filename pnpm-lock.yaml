@@ -6,6 +6,7 @@ settings:
 
 overrides:
   mocha>serialize-javascript: 7.0.5
+  auth0>uuid: ^14.0.0
   eslint-plugin-better-mutation>lodash: ^4.18.0
   ra-data-local-storage>lodash: ^4.18.0
   ra-ui-materialui>lodash: ^4.18.0
@@ -887,8 +888,8 @@ importers:
   packages/db-kms:
     dependencies:
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/crypto':
         specifier: 0.5.0-build
         version: link:../crypto
@@ -1049,8 +1050,8 @@ importers:
         specifier: ^5.0.0
         version: 5.2.5
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/auth':
         specifier: 0.5.0-build
         version: link:../auth
@@ -1098,8 +1099,8 @@ importers:
         specifier: 3.999.0
         version: 3.999.0
       '@spencejs/spence-factories':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@verii/crypto':
         specifier: 0.5.0-build
         version: link:../crypto
@@ -1182,8 +1183,8 @@ importers:
         specifier: ^5.0.0
         version: 5.2.5
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/auth':
         specifier: 0.5.0-build
         version: link:../auth
@@ -1243,8 +1244,8 @@ importers:
         version: 4.18.1
     devDependencies:
       '@spencejs/spence-factories':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@verii/common-functions':
         specifier: 0.5.0-build
         version: link:../common-functions
@@ -1318,14 +1319,14 @@ importers:
         specifier: ^11.0.0
         version: 11.1.1
       '@spencejs/spence-events':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@spencejs/spence-factories':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/auth':
         specifier: 0.5.0-build
         version: link:../auth
@@ -2081,11 +2082,11 @@ importers:
         specifier: '>=4.2.0'
         version: 5.2.5
       '@spencejs/spence-events':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/common-functions':
         specifier: 0.5.0-build
         version: link:../common-functions
@@ -2272,8 +2273,8 @@ importers:
         specifier: 3.999.0
         version: 3.999.0
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/common-functions':
         specifier: 0.5.0-build
         version: link:../common-functions
@@ -2845,8 +2846,8 @@ importers:
         specifier: ^5.0.0
         version: 5.2.5
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/auth':
         specifier: 0.5.0-build
         version: link:../../packages/auth
@@ -2900,8 +2901,8 @@ importers:
         version: 4.18.1
     devDependencies:
       '@spencejs/spence-factories':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@verii/db-kms':
         specifier: 0.5.0-build
         version: link:../../packages/db-kms
@@ -3181,11 +3182,11 @@ importers:
         specifier: ^11.0.0
         version: 11.1.1
       '@spencejs/spence-factories':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/auth':
         specifier: 0.5.0-build
         version: link:../../packages/auth
@@ -3401,8 +3402,8 @@ importers:
         specifier: ^5.0.0
         version: 5.2.5
       '@spencejs/spence-mongo-repos':
-        specifier: ^1.0.0
-        version: 1.0.0(mongodb@7.1.1)
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
       '@verii/common-functions':
         specifier: 0.5.0-build
         version: link:../../packages/common-functions
@@ -3462,8 +3463,8 @@ importers:
         version: 5.1.9
     devDependencies:
       '@spencejs/spence-factories':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.1.0
+        version: 1.1.0
       '@verii/test-regexes':
         specifier: 0.5.0-build
         version: link:../../packages/test-regexes
@@ -6204,16 +6205,16 @@ packages:
     resolution: {integrity: sha512-nzu5ESZfrseSSm2Js0RECaPN6sD/Vokmm6Y9//6QEd6MoT2irckdRxP/eu2PiC7vt7gT4Bg29EEMyEhBLMCukQ==}
     engines: {node: '>=22.0.0'}
 
-  '@spencejs/spence-events@1.0.0':
-    resolution: {integrity: sha512-gULt5GOhYvJCpcoqzck8EBtsBe/vnhkeKc96vIbOE3yb4i7V2bNP6N39CnYpPWuiwqnEaZwdfIIEkpZRK0iRMA==}
+  '@spencejs/spence-events@1.1.0':
+    resolution: {integrity: sha512-7WsBVNG/A5HI5gqDZWhaWzE2ABpejHtZAYKB2A9nVThBh8EcOSmxMemvZTBo0q76o76O34QGOOeTPlvGGN7Rxg==}
     engines: {node: '>=22.0.0'}
 
-  '@spencejs/spence-factories@1.0.0':
-    resolution: {integrity: sha512-r+LNI90QiRXNgT48LbTqwY7yTbSM3E3GFVa6elX6uXj0/qjuSF04zjUG5MuuthifCsSqgTXp3gKor0WUXk9PEQ==}
+  '@spencejs/spence-factories@1.1.0':
+    resolution: {integrity: sha512-4JJ0rXpwnqCrbVGDdET78p7jxdSz4HqNmw404NJiZYr9hVvYQ7nYLHKvWPHMwneIc4QS5vQCW5/55L7SGWgCfg==}
     engines: {node: '>=22.0.0'}
 
-  '@spencejs/spence-mongo-repos@1.0.0':
-    resolution: {integrity: sha512-qn0QT4QdRaSRqo00MW6vqHVl7ctXDM+mAsOy0kZYVq8+Wp3BNBFq+3Q+O+PvyiWUiI8P/mgEuDSyU+aVQZqFqA==}
+  '@spencejs/spence-mongo-repos@1.1.0':
+    resolution: {integrity: sha512-ILcd70urFL2rYybekdQslNP+EW0h/+07AIAozZAY9E7kceoROQ2o00DqOifYUr11h5Lbg0lyKuQaafnCBKIpyw==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       mongodb: ^6.0.0 || ^7.0.0
@@ -10764,20 +10765,12 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
-  uuid@11.1.0:
-    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
-    hasBin: true
-
   uuid@14.0.0:
     resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
-    hasBin: true
-
-  uuid@9.0.1:
-    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
 
   vary@1.1.2:
@@ -14417,19 +14410,17 @@ snapshots:
       lodash: 4.18.1
       pino: 10.3.1
 
-  '@spencejs/spence-events@1.0.0':
+  '@spencejs/spence-events@1.1.0':
     dependencies:
       lodash: 4.18.1
-      uuid: 11.1.0
 
-  '@spencejs/spence-factories@1.0.0':
+  '@spencejs/spence-factories@1.1.0':
     dependencies:
       lodash: 4.18.1
-      uuid: 11.1.0
 
-  '@spencejs/spence-mongo-repos@1.0.0(mongodb@7.1.1)':
+  '@spencejs/spence-mongo-repos@1.1.0(mongodb@7.1.1)':
     dependencies:
-      '@spencejs/spence-events': 1.0.0
+      '@spencejs/spence-events': 1.1.0
       fastify-plugin: 5.1.0
       http-errors: 2.0.1
       lodash: 4.18.1
@@ -15323,13 +15314,13 @@ snapshots:
     dependencies:
       jose: 4.15.9
       undici-types: 6.25.0
-      uuid: 9.0.1
+      uuid: 14.0.0
 
   auth0@5.7.0:
     dependencies:
       auth0-legacy: auth0@4.37.0
       jose: 4.15.9
-      uuid: 11.1.0
+      uuid: 14.0.0
 
   autosuggest-highlight@3.3.4:
     dependencies:
@@ -19670,13 +19661,9 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  uuid@11.1.0: {}
-
   uuid@14.0.0: {}
 
   uuid@8.3.2: {}
-
-  uuid@9.0.1: {}
 
   vary@1.1.2: {}
 

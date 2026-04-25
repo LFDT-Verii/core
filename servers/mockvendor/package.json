@@ -28,7 +28,7 @@
     "@fastify/sensible": "^6.0.0",
     "@fastify/swagger": "^9.0.0",
     "@fastify/swagger-ui": "^5.0.0",
-    "@spencejs/spence-mongo-repos": "^1.0.0",
+    "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/common-functions": "0.5.0-build",
     "@verii/common-schemas": "0.5.0-build",
     "@verii/config": "0.5.0-build",
@@ -50,7 +50,7 @@
     "nanoid": "^5.1.0"
   },
   "devDependencies": {
-    "@spencejs/spence-factories": "^1.0.0",
+    "@spencejs/spence-factories": "^1.1.0",
     "@verii/test-regexes": "0.5.0-build",
     "@verii/tests-helpers": "0.5.0-build",
     "canonicalize": "^2.1.0",
