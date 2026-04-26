@@ -3596,7 +3596,7 @@ importers:
         specifier: ^4.7.9
         version: 4.7.9
       inquirer:
-        specifier: ^8.0.0
+        specifier: ^8.2.7
         version: 8.2.7(@types/node@25.6.0)
       lodash:
         specifier: ^4.17.21
