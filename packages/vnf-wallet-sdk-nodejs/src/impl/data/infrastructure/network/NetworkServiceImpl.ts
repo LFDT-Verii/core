@@ -1,6 +1,6 @@
 import { initHttpClient } from '@verii/http-client';
 import type { HttpClientInitOptions, HttpResponse } from '@verii/http-client';
-import { nanoid } from 'nanoid';
+import { randomBytes } from 'node:crypto';
 import { Nullish } from '../../../../api/VCLTypes';
 import VCLError from '../../../../api/entities/error/VCLError';
 import NetworkService from '../../../domain/infrastructure/network/NetworkService';
@@ -207,4 +207,5 @@ const buildRequestHeaders = (request: Request, maxAge: number) => ({
         : {}),
 });
 
-const generateTraceId = () => `${TRACE_ID_PREFIX}${nanoid(8)}`;
+const generateTraceId = () =>
+    `${TRACE_ID_PREFIX}${randomBytes(6).toString('base64url')}`;
