@@ -5,30 +5,81 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-
-interface FetcherConfig<T> extends AxiosRequestConfig {
+interface FetcherConfig<T> {
+  headers?: Record<string, string>;
+  method: string;
+  url: string;
   data?: T;
 }
 
 const fetcher = async <T, R>(config: FetcherConfig<T>): Promise<R> => {
-  const axiosConfig: AxiosRequestConfig = {
-    ...config,
-    url: `${config.url}`,
-  };
-
   try {
-    const response: AxiosResponse<R> = await axios(axiosConfig);
-    return response.data;
+    const response = await fetch(config.url, buildRequestInit(config));
+    return parseResponse<R>(response);
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('Axios error:', error.message);
-      throw error;
-    } else {
-      console.error('Unexpected error:', error);
-      throw new Error('An unexpected error occurred');
-    }
+    console.error('Fetch error:', error);
+    throw error;
   }
+};
+
+const buildRequestInit = <T>(config: FetcherConfig<T>): RequestInit => {
+  const method = config.method.toUpperCase();
+
+  if (!['DELETE', 'GET', 'POST'].includes(method)) {
+    throw new Error(`Unsupported HTTP method: ${config.method}`);
+  }
+
+  if (method === 'POST') {
+    return {
+      method,
+      headers: {
+        'content-type': 'application/json',
+        ...config.headers,
+      },
+      body: config.data == null ? undefined : JSON.stringify(config.data),
+    };
+  }
+
+  return {
+    method,
+    headers: config.headers,
+  };
+};
+
+const parseResponse = async <R>(response: globalThis.Response): Promise<R> => {
+  const contentType = response.headers.get('content-type') ?? '';
+
+  if (!response.ok) {
+    throw await parseErrorResponse(response, contentType);
+  }
+
+  return parseResponseBody(response, contentType) as Promise<R>;
+};
+
+const parseErrorResponse = async (
+  response: globalThis.Response,
+  contentType: string,
+) => {
+  const error = new Error(`Request failed with status ${response.status}`);
+
+  error.name = 'FetchError';
+  Object.assign(error, {
+    statusCode: response.status,
+    body: await parseResponseBody(response, contentType),
+  });
+
+  return error;
+};
+
+const parseResponseBody = async (
+  response: globalThis.Response,
+  contentType: string,
+) => {
+  if (contentType.startsWith('application/json')) {
+    return response.json();
+  }
+
+  return response.text();
 };
 
 export default fetcher;
