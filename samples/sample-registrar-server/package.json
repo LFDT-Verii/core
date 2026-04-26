@@ -41,7 +41,7 @@
     "@verii/fastify-plugins": "0.5.0-build",
     "@verii/server-provider": "0.5.0-build",
     "@verii/validation": "0.5.0-build",
-    "env-var": "^7.0.0",
+    "env-var": "^7.5.0",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",
     "http-errors": "^2.0.1",
