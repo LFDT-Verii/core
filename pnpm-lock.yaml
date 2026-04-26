@@ -3275,7 +3275,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       eth-url-parser:
-        specifier: ^1.0.3
+        specifier: ^1.0.4
         version: 1.0.4
       fastify:
         specifier: ^5.0.0

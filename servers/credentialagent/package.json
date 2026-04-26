@@ -69,7 +69,7 @@
     "canonicalize": "^2.1.0",
     "date-fns": "^4.1.0",
     "env-var": "^7.5.0",
-    "eth-url-parser": "^1.0.3",
+    "eth-url-parser": "^1.0.4",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.0.0",
     "handlebars": "^4.7.7",
