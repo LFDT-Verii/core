@@ -388,6 +388,72 @@ describe('Http Client Package', () => {
         });
       });
 
+      it('should use cached GET responses', async () => {
+        const cache = initCache();
+        const httpClient2 = initHttpClient({
+          cache,
+          rejectUnauthorized: false,
+          isTest: true,
+          prefixUrl: origin,
+        })(origin, {
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/cached', method: 'GET' })
+          .reply(
+            200,
+            { message: 'cached' },
+            { headers: { 'cache-control': 'max-age=604800' } },
+          );
+
+        const response1 = await httpClient2.get('cached');
+
+        await expect(response1.json()).resolves.toEqual({
+          message: 'cached',
+        });
+
+        // Only one mock response is registered, so this request must be
+        // fulfilled by the cache.
+        const response2 = await httpClient2.get('cached');
+        const cachedResponse = await cache.get({
+          origin,
+          method: 'GET',
+          path: '/cached',
+        });
+        const cachedResponseBody = JSON.parse(
+          Buffer.from(cachedResponse.body[0]).toString(),
+        );
+
+        await expect(response2.json()).resolves.toEqual({
+          message: 'cached',
+        });
+        expect(cachedResponseBody).toEqual({
+          message: 'cached',
+        });
+      });
+
+      it('should return an empty object when JSON parsing fails', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/invalid-json', method: 'GET' })
+          .reply(200, 'not-json', { 'content-type': 'application/json' });
+
+        const response = await httpClient.get('invalid-json');
+
+        expect(response).toEqual({
+          statusCode: 200,
+          resHeaders: {},
+          json: expect.any(Function),
+          text: expect.any(Function),
+          rawBody: expect.any(Object),
+        });
+
+        await expect(response.json()).resolves.toEqual({});
+      });
+
       it('should parse json for post()', async () => {
         mockAgent
           .get(origin)
@@ -436,6 +502,20 @@ describe('Http Client Package', () => {
         await expect(response.json()).resolves.toEqual({
           message: 'matched',
         });
+      });
+
+      it('should throw when a relative url is used without a host', async () => {
+        const httpClient2 = initHttpClient({
+          rejectUnauthorized: false,
+          isTest: true,
+        })({
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+
+        await expect(httpClient2.get('json')).rejects.toThrow(
+          'HttpClient: Cannot build URL without prefixUrl or full url',
+        );
       });
 
       it('should handle post() with no prefixUrl params', async () => {
@@ -791,6 +871,17 @@ describe('Http Client Package', () => {
         });
 
         expect(client.responseType).toEqual('promise');
+      });
+
+      it('should throw for invalid client factory arguments', () => {
+        const createClient = initHttpClient({
+          prefixUrl: `${origin}/json`,
+          rejectUnauthorized: false,
+        });
+
+        expect(() => createClient()).toThrow(
+          'HttpClient: Expected 1 or 2 arguments, received 0',
+        );
       });
     });
   });
