@@ -1,5 +1,5 @@
 const console = require('console');
-const chalk = require('chalk');
+const chalkModule = require('chalk');
 const fs = require('fs');
 const { default: bs58 } = require('bs58');
 const path = require('path');
@@ -10,6 +10,7 @@ const { generateProof } = require('@verii/did-doc');
 
 const templatesPath = path.resolve(__dirname, '../templates');
 const dataPath = path.resolve(__dirname, '../data');
+const chalk = chalkModule.default ?? chalkModule;
 
 const writeFile = (filePath, fileContent) => {
   const fileBasename = path.basename(filePath, '.*');
