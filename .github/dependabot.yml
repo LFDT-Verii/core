@@ -9,7 +9,7 @@ updates:
     allow:
       - dependency-type: all
     groups:
-      npm_and_yarn:
+      pnpm:
         applies-to: security-updates
         patterns:
           - "*"
