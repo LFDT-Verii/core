@@ -2655,18 +2655,21 @@ importers:
 
   packages/vnf-wallet-sdk-nodejs:
     dependencies:
+      '@verii/http-client':
+        specifier: 0.5.0-build
+        version: link:../http-client
       '@verii/vc-checks':
         specifier: ^0.5.0-build
         version: link:../vc-checks
-      axios:
-        specifier: ^1.13.5
-        version: 1.15.0(debug@4.4.3)
       canonicalize:
         specifier: ^2.1.0
         version: 2.1.0
       jose:
         specifier: ^5.9.6
         version: 5.10.0
+      nanoid:
+        specifier: ^5.1.7
+        version: 5.1.9
       pino:
         specifier: ^10.0.0
         version: 10.3.1
@@ -2960,9 +2963,6 @@ importers:
 
   samples/sample-web-wallet-app:
     dependencies:
-      axios:
-        specifier: ^1.13.5
-        version: 1.15.0(debug@4.4.3)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -3072,9 +3072,6 @@ importers:
       '@verii/vnf-nodejs-wallet-sdk':
         specifier: 0.5.0-build
         version: link:../../packages/vnf-wallet-sdk-nodejs
-      axios:
-        specifier: ^1.13.5
-        version: 1.15.0(debug@4.4.3)
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1

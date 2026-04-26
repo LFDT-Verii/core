@@ -63,15 +63,19 @@ describe('NetworkServiceImpl integration', () => {
             }),
         );
 
-        expect(response.code).toEqual(200);
-        expect(response.payload).toEqual({ hello: 'world' });
-        expect(capturedRequest.method).toEqual(HttpMethod.GET);
-        expect(capturedRequest.url).toEqual('/json?mode=get');
-        expect(capturedRequest.headers.accept).toEqual(jsonContentType);
-        expect(capturedRequest.headers['cache-control']).toEqual(
-            'public, max-age=86400',
-        );
-        expect(capturedRequest.headers['x-trace-id']).toEqual('GET-TRACE');
+        expect(responseDetails(response)).toEqual({
+            code: 200,
+            payload: { hello: 'world' },
+        });
+        expect(requestDetails(capturedRequest)).toEqual({
+            headers: {
+                accept: jsonContentType,
+                'cache-control': 'public, max-age=86400',
+                'x-trace-id': 'GET-TRACE',
+            },
+            method: HttpMethod.GET,
+            url: '/json?mode=get',
+        });
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -91,10 +95,19 @@ describe('NetworkServiceImpl integration', () => {
             new Request(`${origin}/text`, HttpMethod.GET, undefined, {}, false),
         );
 
-        expect(response.code).toEqual(200);
-        expect(response.payload).toEqual('plain response body');
-        expect(capturedRequest.method).toEqual(HttpMethod.GET);
-        expect(capturedRequest.headers['cache-control']).toBeUndefined();
+        expect(responseDetails(response)).toEqual({
+            code: 200,
+            payload: 'plain response body',
+        });
+        expect(requestDetails(capturedRequest)).toEqual({
+            headers: {
+                'x-trace-id': expect.stringMatching(
+                    /^vnf-sdk_[A-Za-z0-9_-]{8}$/,
+                ),
+            },
+            method: HttpMethod.GET,
+            url: '/text',
+        });
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -113,8 +126,10 @@ describe('NetworkServiceImpl integration', () => {
             new Request(`${origin}/generated-trace-id`, HttpMethod.GET),
         );
 
-        expect(response.code).toEqual(200);
-        expect(response.payload).toEqual({ ok: true });
+        expect(responseDetails(response)).toEqual({
+            code: 200,
+            payload: { ok: true },
+        });
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -146,20 +161,28 @@ describe('NetworkServiceImpl integration', () => {
             ),
         );
 
-        expect(response.code).toEqual(200);
-        expect(response.payload).toEqual({ accepted: true });
-        expect(capturedRequest.method).toEqual(HttpMethod.POST);
-        expect(parsedBody(capturedRequest.body)).toEqual({
-            foo: 'bar',
-            count: 2,
+        expect(responseDetails(response)).toEqual({
+            code: 200,
+            payload: { accepted: true },
         });
-        expect(headerValue(capturedRequest.headers['content-type'])).toContain(
-            jsonContentType,
-        );
-        expect(capturedRequest.headers['cache-control']).toEqual(
-            'public, max-age=86400',
-        );
-        expect(capturedRequest.headers['x-request-id']).toEqual('POST-JSON');
+        expect(requestDetails(capturedRequest)).toEqual({
+            body: {
+                foo: 'bar',
+                count: 2,
+            },
+            headers: {
+                'cache-control': 'public, max-age=86400',
+                'content-type': expect.stringMatching(
+                    new RegExp(`^${jsonContentType}`),
+                ),
+                'x-request-id': 'POST-JSON',
+                'x-trace-id': expect.stringMatching(
+                    /^vnf-sdk_[A-Za-z0-9_-]{8}$/,
+                ),
+            },
+            method: HttpMethod.POST,
+            url: '/submit',
+        });
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -171,7 +194,6 @@ describe('NetworkServiceImpl integration', () => {
             200,
             {
                 'content-type': textPlain,
-                'x-format': 'plain-text',
             },
             { 'content-type': textPlain },
             (request) => {
@@ -184,19 +206,27 @@ describe('NetworkServiceImpl integration', () => {
                 `${origin}/plain-text`,
                 HttpMethod.POST,
                 'PING',
-                { 'x-format': 'plain-text' },
+                {},
                 false,
                 textPlain,
             ),
         );
 
-        expect(response.code).toEqual(200);
-        expect(response.payload).toEqual('PONG');
-        expect(capturedRequest.method).toEqual(HttpMethod.POST);
-        expect(capturedRequest.body).toEqual('PING');
-        expect(capturedRequest.headers['content-type']).toEqual(textPlain);
-        expect(capturedRequest.headers['cache-control']).toBeUndefined();
-        expect(capturedRequest.headers['x-format']).toEqual('plain-text');
+        expect(responseDetails(response)).toEqual({
+            code: 200,
+            payload: 'PONG',
+        });
+        expect(requestDetails(capturedRequest)).toEqual({
+            body: 'PING',
+            headers: {
+                'content-type': textPlain,
+                'x-trace-id': expect.stringMatching(
+                    /^vnf-sdk_[A-Za-z0-9_-]{8}$/,
+                ),
+            },
+            method: HttpMethod.POST,
+            url: '/plain-text',
+        });
         expect(scope.isDone()).toBeTruthy();
     });
 
@@ -214,17 +244,19 @@ describe('NetworkServiceImpl integration', () => {
         );
 
         await expect(
-            subject.sendRequest(
-                new Request(`${origin}/errors`, HttpMethod.POST, {
-                    invalid: true,
-                }),
+            rejectedVCLErrorJson(
+                subject.sendRequest(
+                    new Request(`${origin}/errors`, HttpMethod.POST, {
+                        invalid: true,
+                    }),
+                ),
             ),
-        ).rejects.toMatchObject({
-            payload: JSON.stringify(ErrorMocks.SomeErrorJson),
+        ).resolves.toEqual({
             error: ErrorMocks.SomeErrorJson.error,
             errorCode: ErrorMocks.SomeErrorJson.errorCode,
-            requestId: ErrorMocks.SomeErrorJson.requestId,
             message: ErrorMocks.SomeErrorJson.message,
+            payload: JSON.stringify(ErrorMocks.SomeErrorJson),
+            requestId: ErrorMocks.SomeErrorJson.requestId,
             statusCode: ErrorMocks.SomeErrorJson.statusCode,
         });
         expect(scope.isDone()).toBeTruthy();
@@ -240,15 +272,17 @@ describe('NetworkServiceImpl integration', () => {
         );
 
         await expect(
-            subject.sendRequest(
-                new Request(`${origin}/missing`, HttpMethod.GET, undefined),
+            rejectedVCLErrorJson(
+                subject.sendRequest(
+                    new Request(`${origin}/missing`, HttpMethod.GET, undefined),
+                ),
             ),
-        ).rejects.toMatchObject({
-            payload: JSON.stringify(ErrorMocks.SomeErrorJson),
+        ).resolves.toEqual({
             error: ErrorMocks.SomeErrorJson.error,
             errorCode: ErrorMocks.SomeErrorJson.errorCode,
-            requestId: ErrorMocks.SomeErrorJson.requestId,
             message: ErrorMocks.SomeErrorJson.message,
+            payload: JSON.stringify(ErrorMocks.SomeErrorJson),
+            requestId: ErrorMocks.SomeErrorJson.requestId,
             statusCode: ErrorMocks.SomeErrorJson.statusCode,
         });
         expect(scope.isDone()).toBeTruthy();
@@ -264,13 +298,17 @@ describe('NetworkServiceImpl integration', () => {
         );
 
         await expect(
-            subject.sendRequest(
-                new Request(`${origin}/internal-error`, HttpMethod.GET),
+            rejectedVCLErrorJson(
+                subject.sendRequest(
+                    new Request(`${origin}/internal-error`, HttpMethod.GET),
+                ),
             ),
-        ).rejects.toMatchObject({
-            payload: 'server error',
+        ).resolves.toEqual({
             error: null,
+            errorCode: 'sdk_error',
             message: 'Request failed with status code 500',
+            payload: 'server error',
+            requestId: null,
             statusCode: 500,
         });
         expect(scope.isDone()).toBeTruthy();
@@ -285,8 +323,41 @@ describe('NetworkServiceImpl integration', () => {
     });
 });
 
+const responseDetails = (response: { code: number; payload: unknown }) => ({
+    code: response.code,
+    payload: response.payload,
+});
+
+const requestDetails = (request: CapturedRequest) => ({
+    ...(request.body === undefined ? {} : { body: request.body }),
+    headers: compact({
+        accept: headerValue(request.headers.accept),
+        'cache-control': headerValue(request.headers['cache-control']),
+        'content-type': headerValue(request.headers['content-type']),
+        'x-request-id': headerValue(request.headers['x-request-id']),
+        'x-trace-id': headerValue(request.headers['x-trace-id']),
+    }),
+    method: request.method,
+    url: request.url,
+});
+
 const headerValue = (value?: string | string[]): string | undefined =>
     Array.isArray(value) ? value.join(',') : value;
 
-const parsedBody = (body: unknown) =>
-    typeof body === 'string' ? JSON.parse(body) : body;
+const compact = <T extends Record<string, unknown>>(object: T) =>
+    Object.fromEntries(
+        Object.entries(object).filter(([, value]) => value !== undefined),
+    );
+
+const rejectedVCLErrorJson = async (
+    promise: Promise<unknown>,
+): Promise<VCLError['jsonObject']> => {
+    try {
+        await promise;
+    } catch (error) {
+        expect(error).toBeInstanceOf(VCLError);
+        return (error as VCLError).jsonObject;
+    }
+
+    throw new Error('Expected promise to reject with VCLError');
+};
