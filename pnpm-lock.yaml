@@ -1421,7 +1421,7 @@ importers:
         specifier: ^5.0.0
         version: 5.1.0
       handlebars:
-        specifier: ^4.7.7
+        specifier: ^4.7.9
         version: 4.7.9
       http-errors:
         specifier: ^2.0.0
@@ -3278,7 +3278,7 @@ importers:
         specifier: ^5.0.0
         version: 5.1.0
       handlebars:
-        specifier: ^4.7.7
+        specifier: ^4.7.9
         version: 4.7.9
       http-errors:
         specifier: ^2.0.0
@@ -3593,7 +3593,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       handlebars:
-        specifier: ^4.7.7
+        specifier: ^4.7.9
         version: 4.7.9
       inquirer:
         specifier: ^8.0.0
