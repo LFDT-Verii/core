@@ -2667,9 +2667,6 @@ importers:
       jose:
         specifier: ^5.9.6
         version: 5.10.0
-      nanoid:
-        specifier: ^5.1.7
-        version: 5.1.9
       pino:
         specifier: ^10.0.0
         version: 10.3.1
