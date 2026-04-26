@@ -50,11 +50,7 @@ export default class NetworkServiceImpl implements NetworkService {
 
     async sendRequest(request: Request): Promise<Response> {
         this.logRequest(request);
-        try {
-            return await this.sendRequestRaw(request);
-        } catch (error: any) {
-            throw error.body ?? error.response?.data ?? error;
-        }
+        return this.sendRequestRaw(request);
     }
 
     logRequest(request: Request) {
@@ -88,9 +84,7 @@ export default class NetworkServiceImpl implements NetworkService {
         const response = await httpClient.post(request.endpoint, request.body, {
             headers: {
                 ...headers,
-                ...(request.contentType == null
-                    ? {}
-                    : { 'content-type': request.contentType }),
+                'content-type': request.contentType,
             },
         });
         return this.parseResponse(response);
@@ -98,15 +92,6 @@ export default class NetworkServiceImpl implements NetworkService {
 
     private async parseResponse(response: HttpResponse): Promise<Response> {
         const payload = await this.parsePayload(response);
-
-        if (response.statusCode >= 400) {
-            throw this.normalizeResponseError(
-                payload,
-                response.statusCode,
-                response.resHeaders,
-            );
-        }
-
         return new Response(payload, response.statusCode);
     }
 
@@ -120,7 +105,6 @@ export default class NetworkServiceImpl implements NetworkService {
             : response.text();
     }
 
-    // eslint-disable-next-line complexity
     private normalizeError(error: any): VCLError {
         if (error?.body !== undefined && error?.statusCode != null) {
             return this.normalizeResponseError(
@@ -130,28 +114,7 @@ export default class NetworkServiceImpl implements NetworkService {
             );
         }
 
-        const response = error?.response;
-        if (!response) {
-            return VCLError.fromError(error);
-        }
-
-        if (this.isJsonContentType(response.headers?.['content-type'])) {
-            const normalizedError = VCLError.fromPayloadJson(response.data);
-
-            if (normalizedError.statusCode == null) {
-                // eslint-disable-next-line better-mutation/no-mutation
-                normalizedError.statusCode = response.status;
-            }
-            return normalizedError;
-        }
-
-        const textPayload = toNullableString(response.data);
-
-        return new VCLError({
-            payload: textPayload,
-            message: error.message ?? textPayload,
-            statusCode: response.status,
-        });
+        return VCLError.fromError(error);
     }
 
     private normalizeResponseError(

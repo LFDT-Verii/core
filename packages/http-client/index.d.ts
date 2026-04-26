@@ -1,3 +1,9 @@
+import type { Dispatcher, cacheStores } from 'undici';
+
+export type HttpRawBody = Dispatcher.ResponseData['body'];
+
+export type HttpCacheStore = InstanceType<typeof cacheStores.MemoryCacheStore>;
+
 export interface HttpClientContext {
   traceId?: string;
   log?: {
@@ -12,7 +18,7 @@ export interface HttpRequestOptions {
 }
 
 export interface HttpResponse<T = unknown> {
-  rawBody: unknown;
+  rawBody: HttpRawBody;
   statusCode: number;
   resHeaders: Record<string, string | string[] | undefined>;
   json(): Promise<T>;
@@ -43,7 +49,7 @@ export interface HttpClientInitOptions {
   requestTimeout?: number;
   traceIdHeader?: string;
   customHeaders?: Record<string, string>;
-  cache?: unknown;
+  cache?: HttpCacheStore;
   tokensEndpoint?: string;
   clientId?: string;
   clientSecret?: string;
@@ -61,4 +67,4 @@ export function initHttpClient(options: HttpClientInitOptions): {
   (host: string, context: HttpClientContext): HttpClient;
 };
 
-export function initCache(): unknown;
+export function initCache(): HttpCacheStore;

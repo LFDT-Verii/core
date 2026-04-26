@@ -288,6 +288,42 @@ describe('NetworkServiceImpl integration', () => {
         expect(scope.isDone()).toBeTruthy();
     });
 
+    test('uses HTTP status when JSON error body has no statusCode', async () => {
+        const errorBody = {
+            error: 'missing_status',
+            errorCode: 'missing_status_code',
+            message: 'Missing status code',
+            requestId: 'request-123',
+        };
+        const scope = mockAbsoluteGet(
+            `${origin}/missing-status`,
+            errorBody,
+            422,
+            {},
+            { 'content-type': jsonContentType },
+        );
+
+        await expect(
+            rejectedVCLErrorJson(
+                subject.sendRequest(
+                    new Request(
+                        `${origin}/missing-status`,
+                        HttpMethod.GET,
+                        undefined,
+                    ),
+                ),
+            ),
+        ).resolves.toEqual({
+            error: errorBody.error,
+            errorCode: errorBody.errorCode,
+            message: errorBody.message,
+            payload: JSON.stringify(errorBody),
+            requestId: errorBody.requestId,
+            statusCode: 422,
+        });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
     test('treats plain-text 500 error bodies as human-readable VCLError messages', async () => {
         const scope = mockAbsoluteGet(
             `${origin}/internal-error`,
@@ -312,6 +348,54 @@ describe('NetworkServiceImpl integration', () => {
             statusCode: 500,
         });
         expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('treats error bodies with missing content type as text', async () => {
+        const scope = mockAbsoluteGet(
+            `${origin}/missing-content-type`,
+            'missing content type',
+            500,
+        );
+
+        await expect(
+            rejectedVCLErrorJson(
+                subject.sendRequest(
+                    new Request(
+                        `${origin}/missing-content-type`,
+                        HttpMethod.GET,
+                    ),
+                ),
+            ),
+        ).resolves.toEqual({
+            error: null,
+            errorCode: 'sdk_error',
+            message: 'Request failed with status code 500',
+            payload: '',
+            requestId: null,
+            statusCode: 500,
+        });
+        expect(scope.isDone()).toBeTruthy();
+    });
+
+    test('normalizes unsupported HTTP methods', async () => {
+        await expect(
+            rejectedVCLErrorJson(
+                subject.sendRequest(
+                    new Request(
+                        `${origin}/unsupported`,
+                        'PUT' as HttpMethod,
+                        undefined,
+                    ),
+                ),
+            ),
+        ).resolves.toEqual({
+            error: '{}',
+            errorCode: 'sdk_error',
+            message: 'Unsupported HTTP method: PUT',
+            payload: null,
+            requestId: null,
+            statusCode: null,
+        });
     });
 
     test('propagates errors when no HTTP response is available', async () => {
