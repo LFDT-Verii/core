@@ -1506,7 +1506,7 @@ importers:
   packages/error-aggregation:
     dependencies:
       '@sentry/node':
-        specifier: ^8.0.0
+        specifier: ^8.55.1
         version: 8.55.1
     devDependencies:
       eslint:
