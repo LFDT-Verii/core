@@ -23,7 +23,7 @@
     "@verii/test-regexes": "0.5.0-build",
     "@aws-sdk/client-s3": "3.999.0",
     "dotenv": "^16.6.1",
-    "env-var": "^7.0.0",
+    "env-var": "^7.5.0",
     "expect": "30.3.0",
     "lodash": "^4.17.21",
     "mongodb": "^7.1.0",

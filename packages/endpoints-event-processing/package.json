@@ -38,7 +38,7 @@
     "@verii/metadata-registration": "0.5.0-build",
     "@verii/spencer-mongo-extensions": "0.5.0-build",
     "date-fns": "^4.1.0",
-    "env-var": "^7.0.0",
+    "env-var": "^7.5.0",
     "fastify": "^5.0.0",
     "fastify-plugin": "^5.1.0",
     "lodash": "^4.18.0"
