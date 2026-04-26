@@ -200,12 +200,11 @@ export default class NetworkServiceImpl implements NetworkService {
     }
 }
 
-const buildRequestHeaders = (request: Request, maxAge: number) =>
-    request.useCaches
-        ? {
-              ...request.headers,
-              'Cache-Control': `public, max-age=${maxAge}`,
-          }
-        : request.headers;
+const buildRequestHeaders = (request: Request, maxAge: number) => ({
+    ...(request.headers ?? {}),
+    ...(request.useCaches
+        ? { 'Cache-Control': `public, max-age=${maxAge}` }
+        : {}),
+});
 
 const generateTraceId = () => `${TRACE_ID_PREFIX}${nanoid(8)}`;
