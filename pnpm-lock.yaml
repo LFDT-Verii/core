@@ -314,7 +314,7 @@ importers:
         specifier: ^0.5.0-build
         version: link:../http-client
       date-fns:
-        specifier: ^4.0.0
+        specifier: ^4.1.0
         version: 4.1.0
       ethers:
         specifier: ^6.16.0
@@ -437,7 +437,7 @@ importers:
   packages/common-functions:
     dependencies:
       date-fns:
-        specifier: ^4.0.0
+        specifier: ^4.1.0
         version: 4.1.0
       lodash:
         specifier: ^4.17.21
@@ -1686,7 +1686,7 @@ importers:
   packages/http-client:
     dependencies:
       date-fns:
-        specifier: ^4.0.0
+        specifier: ^4.1.0
         version: 4.1.0
       http-errors:
         specifier: ^2.0.0
@@ -2413,7 +2413,7 @@ importers:
         specifier: ~0.5.0-build
         version: link:../organizations-registry
       date-fns:
-        specifier: ^4.0.0
+        specifier: ^4.1.0
         version: 4.1.0
       lodash:
         specifier: ^4.17.21
