@@ -19,7 +19,7 @@
     "lodash": "^4.17.21",
     "did-resolver": "^4.1.0",
     "web-did-resolver": "^2.0.27",
-    "http-errors": "^2.0.0"
+    "http-errors": "^2.0.1"
   },
   "devDependencies": {
     "expect": "30.3.0",

@@ -20,7 +20,7 @@
     "@fastify/jwt": "^10.0.0",
     "fastify-auth0-verify": "^4.0.0",
     "fastify-plugin": "^5.0.0",
-    "http-errors": "^2.0.0",
+    "http-errors": "^2.0.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
