@@ -2665,7 +2665,7 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       jose:
-        specifier: ^5.9.6
+        specifier: ^5.10.0
         version: 5.10.0
       pino:
         specifier: ^10.0.0
