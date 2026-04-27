@@ -74,7 +74,7 @@
     "fastify-plugin": "^5.0.0",
     "handlebars": "^4.7.9",
     "http-errors": "^2.0.1",
-    "jsonpath-plus": "^10.3.0",
+    "jsonpath-plus": "^10.4.0",
     "lodash": "^4.17.21",
     "mongodb": "^7.1.0",
     "nanoid": "^5.1.0",
