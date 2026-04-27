@@ -25,7 +25,7 @@
     "@verii/rest-queries": "0.5.0-build",
     "ajv-formats": "3.0.1",
     "http-errors": "^2.0.1",
-    "lodash": "^4.17.21",
+    "lodash": "^4.18.1",
     "nanoid": "^5.1.0"
   },
   "peerDependencies": {

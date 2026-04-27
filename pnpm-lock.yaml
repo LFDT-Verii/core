@@ -177,7 +177,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       eslint:
@@ -253,7 +253,7 @@ importers:
         specifier: ^5.0.0
         version: 5.1.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       twilio:
         specifier: ^5.10.1
@@ -323,7 +323,7 @@ importers:
         specifier: ^5.0.0
         version: 5.1.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@spencejs/spence-config':
@@ -348,7 +348,7 @@ importers:
         specifier: ^6.16.0
         version: 6.16.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/crypto':
@@ -394,7 +394,7 @@ importers:
   packages/common-fetchers:
     dependencies:
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       eslint:
@@ -440,7 +440,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       eslint:
@@ -630,7 +630,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       eslint-plugin-autofix:
@@ -677,7 +677,7 @@ importers:
         specifier: 4.5.8
         version: 4.5.8
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/crypto':
@@ -732,7 +732,7 @@ importers:
         specifier: 2.3.11
         version: 2.3.11
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       eslint:
@@ -796,7 +796,7 @@ importers:
         specifier: ^6.6.1
         version: 6.6.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       random-number-csprng:
         specifier: ^1.0.2
@@ -845,7 +845,7 @@ importers:
         specifier: ^5.0.7
         version: 5.0.7
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       eslint:
@@ -994,7 +994,7 @@ importers:
         specifier: ^5.10.0
         version: 5.10.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/sample-data':
@@ -1016,7 +1016,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       web-did-resolver:
         specifier: ^2.0.27
@@ -1567,7 +1567,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       quick-lru:
         specifier: ~7.3.0
@@ -1631,7 +1631,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/http-client':
@@ -1692,7 +1692,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       nanoid:
         specifier: ^5.1.0
@@ -1801,7 +1801,7 @@ importers:
         specifier: ^5.10.0
         version: 5.10.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/sample-data':
@@ -1856,7 +1856,7 @@ importers:
         specifier: 0.5.0-build
         version: link:../jwt
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       pino:
         specifier: ^10.3.0
@@ -2006,7 +2006,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/test-regexes':
@@ -2022,7 +2022,7 @@ importers:
   packages/rest-queries:
     dependencies:
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       qs:
         specifier: 6.15.1
@@ -2112,7 +2112,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       nanoid:
         specifier: ^5.1.0
@@ -2179,7 +2179,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       mongodb:
         specifier: ^7.1.1
@@ -2297,7 +2297,7 @@ importers:
         specifier: 30.3.0
         version: 30.3.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       mongodb:
         specifier: ^7.1.0
@@ -2352,7 +2352,7 @@ importers:
         specifier: ^5.0.0
         version: 5.1.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/config':
@@ -2416,7 +2416,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/sample-data':
@@ -2495,7 +2495,7 @@ importers:
         specifier: 6.1.1
         version: 6.1.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/contract-permissions':
@@ -2589,7 +2589,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       '@verii/crypto':
@@ -2752,7 +2752,7 @@ importers:
         specifier: ^3.3.4
         version: 3.3.4
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       prop-types:
         specifier: ^15.8.1
@@ -3287,7 +3287,7 @@ importers:
         specifier: ^10.4.0
         version: 10.4.0
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       mongodb:
         specifier: ^7.1.0
@@ -3447,7 +3447,7 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       mongodb:
         specifier: ^7.1.0
@@ -3520,7 +3520,7 @@ importers:
         specifier: ~14.0.0
         version: 14.0.3
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       mongodb:
         specifier: ^7.1.0
@@ -3599,7 +3599,7 @@ importers:
         specifier: ^8.2.7
         version: 8.2.7(@types/node@25.6.0)
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       nanoid:
         specifier: ^5.1.9
@@ -3678,7 +3678,7 @@ importers:
         specifier: ~14.0.0
         version: 14.0.3
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
       nanoid:
         specifier: ^5.1.0
@@ -3721,7 +3721,7 @@ importers:
         specifier: ~14.0.0
         version: 14.0.3
       lodash:
-        specifier: ^4.17.21
+        specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
       eslint:

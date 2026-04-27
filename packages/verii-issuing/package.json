@@ -28,7 +28,7 @@
     "eth-url-parser": "^1.0.4",
     "canonicalize": "^2.1.0",
     "fast-shuffle": "6.1.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.18.1"
   },
   "devDependencies": {
     "@verii/contract-permissions": "0.5.0-build",
