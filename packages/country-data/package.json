@@ -19,7 +19,7 @@
     "country-codes-list": "1.6.12",
     "i18n-iso-countries": "7.14.0",
     "iso3166-2-db": "2.3.11",
-    "lodash": "^4.17.21"
+    "lodash": "^4.18.1"
   },
   "devDependencies": {
     "eslint": "9.39.4",

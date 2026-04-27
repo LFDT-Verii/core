@@ -25,7 +25,7 @@
     "@verii/metadata-registration": "^0.5.0-build",
     "@verii/vc-checks": "0.5.0-build",
     "http-errors": "^2.0.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.18.1"
   },
   "devDependencies": {
     "@verii/crypto": "0.5.0-build",
