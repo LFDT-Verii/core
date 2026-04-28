@@ -1092,7 +1092,7 @@ importers:
         specifier: ^4.18.0
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.0
+        specifier: ^5.1.9
         version: 5.1.9
     devDependencies:
       '@aws-sdk/client-s3':
@@ -1433,7 +1433,7 @@ importers:
         specifier: ^7.1.0
         version: 7.1.1
       nanoid:
-        specifier: ^5.1.0
+        specifier: ^5.1.9
         version: 5.1.9
       sprintf-js:
         specifier: 1.1.3
@@ -1695,7 +1695,7 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.0
+        specifier: ^5.1.9
         version: 5.1.9
       undici:
         specifier: ^7.25.0
@@ -2115,7 +2115,7 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.0
+        specifier: ^5.1.9
         version: 5.1.9
     devDependencies:
       '@verii/config':
@@ -2303,7 +2303,7 @@ importers:
         specifier: ^7.1.0
         version: 7.1.1
       nanoid:
-        specifier: ^5.1.0
+        specifier: ^5.1.9
         version: 5.1.9
     devDependencies:
       eslint:
@@ -3293,7 +3293,7 @@ importers:
         specifier: ^7.1.0
         version: 7.1.1
       nanoid:
-        specifier: ^5.1.0
+        specifier: ^5.1.9
         version: 5.1.9
       nock:
         specifier: 15.0.0-beta.10
@@ -3453,7 +3453,7 @@ importers:
         specifier: ^7.1.0
         version: 7.1.1
       nanoid:
-        specifier: ^5.1.0
+        specifier: ^5.1.9
         version: 5.1.9
     devDependencies:
       '@spencejs/spence-factories':
@@ -3681,7 +3681,7 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.0
+        specifier: ^5.1.9
         version: 5.1.9
     devDependencies:
       eslint:
