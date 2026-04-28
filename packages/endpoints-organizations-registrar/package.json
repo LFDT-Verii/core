@@ -60,7 +60,7 @@
     "http-errors": "^2.0.1",
     "lodash": "^4.18.0",
     "mongodb": "^7.1.0",
-    "nanoid": "^5.1.0",
+    "nanoid": "^5.1.9",
     "sprintf-js": "1.1.3",
     "uuid": "~14.0.0"
   },
