@@ -1019,7 +1019,7 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       web-did-resolver:
-        specifier: ^2.0.27
+        specifier: ^2.0.32
         version: 2.0.32
     devDependencies:
       expect:
