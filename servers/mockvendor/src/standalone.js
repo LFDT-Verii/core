@@ -2,7 +2,7 @@
 
 const dotenv = require('dotenv');
 
-dotenv.config({ path: '.standalone.env' });
-dotenv.config({ path: '.localdev.env' });
+dotenv.config({ path: '.standalone.env', quiet: true });
+dotenv.config({ path: '.localdev.env', quiet: true });
 
 require('./main');
