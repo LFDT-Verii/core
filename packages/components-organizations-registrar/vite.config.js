@@ -18,10 +18,12 @@
 import { defineConfig } from 'vite';
 import { externalizeDeps } from 'vite-plugin-externalize-deps';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import react from '@vitejs/plugin-react-swc';
 import { libInjectCss } from 'vite-plugin-lib-inject-css';
 
 const isTracingEnabled = (mode) => mode === 'development' || process.env.TRACING_ENABLED === '1';
+const packageDir = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -32,7 +34,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [libInjectCss(), externalizeDeps({}), react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(packageDir, 'src'),
     },
   },
   build: {
@@ -49,23 +51,23 @@ export default defineConfig(({ mode }) => ({
     lib: {
       format: ['es'],
       entry: {
-        index: path.resolve(__dirname, 'src/index.jsx'), // Don't forget the main entry!
-        components: path.resolve(__dirname, 'src/components/index.jsx'),
-        'components/AppBar': path.resolve(__dirname, 'src/components/AppBar/index.jsx'),
-        'components/common': path.resolve(__dirname, 'src/components/common/index.jsx'),
-        'components/invitations': path.resolve(__dirname, 'src/components/invitations/index.jsx'),
+        index: path.resolve(packageDir, 'src/index.jsx'), // Don't forget the main entry!
+        components: path.resolve(packageDir, 'src/components/index.jsx'),
+        'components/AppBar': path.resolve(packageDir, 'src/components/AppBar/index.jsx'),
+        'components/common': path.resolve(packageDir, 'src/components/common/index.jsx'),
+        'components/invitations': path.resolve(packageDir, 'src/components/invitations/index.jsx'),
         'components/organizations': path.resolve(
-          __dirname,
+          packageDir,
           'src/components/organizations/index.jsx',
         ),
-        'components/services': path.resolve(__dirname, 'src/components/services/index.jsx'),
-        constants: path.resolve(__dirname, 'src/constants/index.js'),
-        layouts: path.resolve(__dirname, 'src/layouts/index.jsx'),
-        pages: path.resolve(__dirname, 'src/pages/index.jsx'),
-        'pages/individuals': path.resolve(__dirname, 'src/pages/individuals/index.jsx'),
-        'pages/invitations': path.resolve(__dirname, 'src/pages/invitations/index.jsx'),
-        'pages/organizations': path.resolve(__dirname, 'src/pages/organizations/index.jsx'),
-        'pages/services': path.resolve(__dirname, 'src/pages/services/index.jsx'),
+        'components/services': path.resolve(packageDir, 'src/components/services/index.jsx'),
+        constants: path.resolve(packageDir, 'src/constants/index.js'),
+        layouts: path.resolve(packageDir, 'src/layouts/index.jsx'),
+        pages: path.resolve(packageDir, 'src/pages/index.jsx'),
+        'pages/individuals': path.resolve(packageDir, 'src/pages/individuals/index.jsx'),
+        'pages/invitations': path.resolve(packageDir, 'src/pages/invitations/index.jsx'),
+        'pages/organizations': path.resolve(packageDir, 'src/pages/organizations/index.jsx'),
+        'pages/services': path.resolve(packageDir, 'src/pages/services/index.jsx'),
       },
     },
   },
