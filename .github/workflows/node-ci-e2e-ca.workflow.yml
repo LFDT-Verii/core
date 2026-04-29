@@ -33,7 +33,7 @@ jobs:
       run: corepack enable
     - name: Get pnpm store path
       id: pnpm-store-path
-      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+      run: echo "dir=$(pnpm store path)" >> "$GITHUB_OUTPUT"
     - name: Restore pnpm cache
       id: cache-pnpm-restore
       uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
