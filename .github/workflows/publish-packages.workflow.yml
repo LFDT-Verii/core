@@ -50,10 +50,12 @@ jobs:
           release_version="v${repo_version}"
           release_notes_file="${GITHUB_WORKSPACE}/.github/releases/${release_version}.md"
 
-          echo "REPO_VERSION=${repo_version}" >> "$GITHUB_ENV"
-          echo "RELEASE_BRANCH=${release_branch}" >> "$GITHUB_ENV"
-          echo "RELEASE_VERSION=${release_version}" >> "$GITHUB_ENV"
-          echo "RELEASE_NOTES_FILE=${release_notes_file}" >> "$GITHUB_ENV"
+          {
+            echo "REPO_VERSION=${repo_version}"
+            echo "RELEASE_BRANCH=${release_branch}"
+            echo "RELEASE_VERSION=${release_version}"
+            echo "RELEASE_NOTES_FILE=${release_notes_file}"
+          } >> "$GITHUB_ENV"
       - name: Validate Release Context
         shell: bash
         run: |
@@ -77,7 +79,7 @@ jobs:
           fi
       # Generate PreRelease Version Number
       - name: Generate PreRelease Version Number
-        run: echo "PRERELEASE_VER_NUM=${REPO_VERSION}-pre.$(date +%s)" >> $GITHUB_ENV
+        run: echo "PRERELEASE_VER_NUM=${REPO_VERSION}-pre.$(date +%s)" >> "$GITHUB_ENV"
       # Set Npm Version Number
       - name: Set Npm Version Number
         shell: bash
@@ -98,7 +100,7 @@ jobs:
       # Get pnpm store path
       - name: Get pnpm store path
         id: pnpm-store-path
-        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(pnpm store path)" >> "$GITHUB_OUTPUT"
       # Restore pnpm cache
       - name: Restore pnpm cache
         id: cache-pnpm-restore
@@ -121,7 +123,7 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
       # Set Dist Tag For Release
       - name: Set Dist Tag For Release
-        run: echo 'DIST_TAG=latest' >> $GITHUB_ENV
+        run: echo 'DIST_TAG=latest' >> "$GITHUB_ENV"
         if: env.VERSION_TYPE == 'release'
       # Commit Version Locally for Npmjs
       - name: Commit Version Locally for Npmjs

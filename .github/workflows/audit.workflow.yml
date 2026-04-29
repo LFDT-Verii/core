@@ -21,7 +21,7 @@ jobs:
         run: corepack enable
       - name: Get pnpm store path
         id: pnpm-store-path
-        run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+        run: echo "dir=$(pnpm store path)" >> "$GITHUB_OUTPUT"
       - name: Cache node modules
         id: pnpm-cache # use this to check for `cache-hit` (`steps.pnpm-cache.outputs.cache-hit != 'true'`)
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
