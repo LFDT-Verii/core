@@ -79,6 +79,7 @@ dotenv.config({
     '.localdev.env',
   ),
   processEnv: e2eEnv,
+  quiet: true,
 });
 console.dir(e2eEnv);
 

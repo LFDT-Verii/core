@@ -21,7 +21,7 @@ const loadTestEnv = (
   envFile = path.resolve(__dirname, '..', '.env.test'),
   override = true,
 ) => {
-  dotenv.config({ path: envFile, override });
+  dotenv.config({ path: envFile, override, quiet: true });
 };
 
 module.exports = { loadTestEnv };
