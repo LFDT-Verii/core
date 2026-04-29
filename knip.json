@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/coverage/**"
+  ],
+  "ignoreDependencies": [
+    "@storybook/*",
+    "eslint",
+    "eslint-*",
+    "nodemon",
+    "prettier",
+    "ts-node",
+    "typescript",
+    "typescript-eslint"
+  ]
+}
