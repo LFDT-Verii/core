@@ -17,14 +17,14 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "3.999.0",
-    "@aws-sdk/client-kms": "3.999.0",
-    "@aws-sdk/client-s3": "3.999.0",
-    "@aws-sdk/client-ses": "3.999.0",
-    "@aws-sdk/client-sesv2": "3.999.0",
-    "@aws-sdk/client-sns": "3.999.0",
-    "@aws-sdk/lib-dynamodb": "3.999.0",
-    "@aws-sdk/s3-request-presigner": "3.999.0",
+    "@aws-sdk/client-dynamodb": "3.1038.0",
+    "@aws-sdk/client-kms": "3.1038.0",
+    "@aws-sdk/client-s3": "3.1038.0",
+    "@aws-sdk/client-ses": "3.1038.0",
+    "@aws-sdk/client-sesv2": "3.1038.0",
+    "@aws-sdk/client-sns": "3.1038.0",
+    "@aws-sdk/lib-dynamodb": "3.1038.0",
+    "@aws-sdk/s3-request-presigner": "3.1038.0",
     "fastify-plugin": "^5.0.0",
     "lodash": "^4.18.1",
     "twilio": "^5.10.1"
