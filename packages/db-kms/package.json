@@ -45,7 +45,7 @@
     "globals": "17.5.0",
     "mongodb": "^7.1.1",
     "prettier": "3.8.1",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "typescript-eslint": "8.57.0"
   },
   "nx": {
