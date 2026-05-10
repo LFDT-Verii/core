@@ -16,12 +16,12 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "@fastify/autoload": "^6.0.0",
-    "@fastify/basic-auth": "^6.0.0",
-    "@fastify/helmet": "^13.0.0",
-    "@fastify/sensible": "^6.0.0",
-    "@fastify/swagger": "^9.0.0",
-    "@fastify/swagger-ui": "^5.0.0",
+    "@fastify/autoload": "^6.3.1",
+    "@fastify/basic-auth": "^6.2.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/sensible": "^6.0.4",
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^5.2.6",
     "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/aws-clients": "0.5.0-build",
     "@verii/auth": "0.5.0-build",
@@ -39,7 +39,7 @@
     "@verii/spencer-mongo-extensions": "0.5.0-build",
     "date-fns": "^4.1.0",
     "env-var": "^7.5.0",
-    "fastify": "^5.0.0",
+    "fastify": "^5.8.5",
     "fastify-plugin": "^5.1.0",
     "lodash": "^4.18.0"
   },
