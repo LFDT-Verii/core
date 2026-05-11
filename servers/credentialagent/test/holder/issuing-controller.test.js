@@ -70,7 +70,7 @@ const {
   entries,
   uniq,
 } = require('lodash/fp');
-const nock = require('nock');
+const nock = require('../helpers/nock');
 const { openBadgeCredentialExample } = require('@verii/sample-data');
 
 const {

@@ -17,7 +17,7 @@
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
-const nock = require('nock');
+const nock = require('../helpers/nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { first, flow, map, omit, sortBy } = require('lodash/fp');
 const { idKeyMapper } = require('@verii/common-functions');

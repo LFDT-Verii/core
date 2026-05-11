@@ -19,7 +19,7 @@ const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const buildFastify = require('./helpers/build-fastify');
 const initCredentialSchemaFactory = require('./factories/credential-schema-factory');
 

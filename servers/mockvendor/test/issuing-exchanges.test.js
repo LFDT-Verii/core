@@ -9,7 +9,7 @@ const {
 } = require('@verii/test-regexes');
 const { testAuthToken } = require('@verii/tests-helpers');
 const { first } = require('lodash/fp');
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { nanoid } = require('nanoid/non-secure');
 const buildFastify = require('./helpers/mockvendor-build-fastify');
 const initOfferFactory = require('./factories/offers.factory');

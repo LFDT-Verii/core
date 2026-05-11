@@ -153,7 +153,7 @@ const { ObjectId } = require('mongodb');
 
 const console = require('console');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { CheckResults } = require('@verii/vc-checks');
 const buildFastify = require('./helpers/build-fastify');
 const initOrganizationFactory = require('../src/entities/organizations/factories/organizations-factory');

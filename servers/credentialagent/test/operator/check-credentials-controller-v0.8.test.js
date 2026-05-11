@@ -40,7 +40,7 @@ mock.module('../../src/fetchers/push-gateway/push-fetcher.js', {
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const { ObjectId } = require('mongodb');
 const { map } = require('lodash/fp');
-const nock = require('nock');
+const nock = require('../helpers/nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
 const { errorResponseMatcher } = require('@verii/tests-helpers');

@@ -32,7 +32,7 @@ mock.module('@verii/metadata-registration', {
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 
-const nock = require('nock');
+const nock = require('../helpers/nock');
 const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
 const { generateKeyPair, KeyPurposes } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const nock = require('nock');
+const nock = require('../../helpers/nock');
 
 const nockRegistrarAppSchemaName = ({
   nockInstance,

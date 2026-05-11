@@ -17,7 +17,7 @@
 const { afterEach, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
-const nock = require('nock');
+const nock = require('../helpers/nock');
 const { ServiceCategories } = require('@verii/organizations-registry');
 const {
   validateCao,

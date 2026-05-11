@@ -162,7 +162,7 @@ const { ObjectId } = require('mongodb');
 
 const console = require('console');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { subDays } = require('date-fns/fp');
 
 const initOrganizationFactory = require('../src/entities/organizations/factories/organizations-factory');

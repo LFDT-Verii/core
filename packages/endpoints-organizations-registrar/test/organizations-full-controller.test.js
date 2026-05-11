@@ -187,7 +187,7 @@ const {
 
 const console = require('console');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { subDays } = require('date-fns/fp');
 const { ObjectId } = require('mongodb');
 const { NANO_ID_FORMAT } = require('@verii/test-regexes/src/regexes');

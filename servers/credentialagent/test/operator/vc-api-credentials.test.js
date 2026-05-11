@@ -37,7 +37,7 @@ mock.module('@verii/metadata-registration', {
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
-const nock = require('nock');
+const nock = require('../helpers/nock');
 const { generateKeyPair } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { jwtDecode } = require('@verii/jwt');

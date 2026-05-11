@@ -15,7 +15,7 @@
  *
  */
 
-const nock = require('nock');
+const nock = require('../../helpers/nock');
 const { castArray, every, includes, pick, keyBy } = require('lodash/fp');
 
 const credentialTypeMetadata = keyBy('credentialType', [

@@ -18,7 +18,7 @@
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ServiceTypes } = require('@verii/organizations-registry');
 const { errorResponseMatcher } = require('@verii/tests-helpers');

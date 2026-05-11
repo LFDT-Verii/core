@@ -18,7 +18,7 @@ const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { ObjectId } = require('mongodb');
 const { KeyAlgorithms } = require('@verii/crypto');
 const {
