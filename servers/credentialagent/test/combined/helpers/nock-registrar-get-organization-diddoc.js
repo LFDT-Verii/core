@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const nock = require('nock');
+const nock = require('../../helpers/nock');
 
 const nockRegistrarGetOrganizationDidDoc = (tenantDid, orgDoc) =>
   nock('http://oracle.localhost.test')

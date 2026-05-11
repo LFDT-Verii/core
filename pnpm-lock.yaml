@@ -1003,9 +1003,6 @@ importers:
       expect:
         specifier: 30.3.0
         version: 30.3.0
-      nock:
-        specifier: 15.0.0-beta.11
-        version: 15.0.0-beta.11
 
   packages/did-web:
     dependencies:
@@ -2951,9 +2948,6 @@ importers:
       migrate-mongo:
         specifier: 14.0.7
         version: 14.0.7(mongodb@7.1.1)
-      nock:
-        specifier: 15.0.0-beta.11
-        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1

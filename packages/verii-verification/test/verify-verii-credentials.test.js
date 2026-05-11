@@ -49,7 +49,7 @@ const {
 } = require('@verii/vc-checks');
 const { generateKeyPair } = require('@verii/crypto');
 const { applyOverrides } = require('@verii/common-functions');
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { verifyVeriiCredentials } = require('../src/verify-verii-credentials');
 
 const registrarHost = 'registrar.test';

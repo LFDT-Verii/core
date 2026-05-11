@@ -23,7 +23,7 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { mapWithIndex, runSequentially } = require('@verii/common-functions');
 const { ServiceTypes } = require('@verii/organizations-registry');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const initOrganizationFactory = require('../src/entities/organizations/factories/organizations-factory');
 const buildFastify = require('./helpers/build-fastify');
 

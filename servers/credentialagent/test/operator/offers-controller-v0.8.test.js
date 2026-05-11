@@ -34,7 +34,7 @@ const { ObjectId } = require('mongodb');
 const { nanoid } = require('nanoid');
 const { flow, map, omit, set } = require('lodash/fp');
 const { intermediateIssuer } = require('@verii/sample-data');
-const nock = require('nock');
+const nock = require('../helpers/nock');
 const {
   ISO_DATETIME_FORMAT,
   OBJECT_ID_FORMAT,

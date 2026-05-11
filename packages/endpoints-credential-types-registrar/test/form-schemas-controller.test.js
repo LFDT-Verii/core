@@ -18,7 +18,7 @@
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const buildFastify = require('./helpers/build-fastify');
 const initCredentialSchemaFactory = require('./factories/credential-schema-factory');

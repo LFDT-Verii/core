@@ -4,7 +4,7 @@ const { expect } = require('expect');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const nock = require('nock');
+const nock = require('./helpers/nock');
 
 const { nanoid } = require('nanoid');
 const { runBatchIssuing } = require('../src/batch-issuing/orchestrators');

@@ -129,7 +129,7 @@ const { ObjectId } = require('mongodb');
 
 const console = require('console');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const buildFastify = require('./helpers/build-fastify');
 const { mapResponseKeyToDbKey } = require('./helpers/map-response-key-to-db');
 const initOrganizationFactory = require('../src/entities/organizations/factories/organizations-factory');

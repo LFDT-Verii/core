@@ -18,7 +18,7 @@ const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const { applyOverrides } = require('@verii/common-functions');
 const { sampleEducationDegreeGraduation } = require('@verii/sample-data');

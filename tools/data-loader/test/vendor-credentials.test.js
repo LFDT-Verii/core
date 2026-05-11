@@ -1,6 +1,6 @@
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
-const nock = require('nock');
+const nock = require('./helpers/nock');
 
 const path = require('path');
 const {

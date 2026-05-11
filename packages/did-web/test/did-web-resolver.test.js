@@ -17,7 +17,7 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const newError = require('http-errors');
 const { resolveDidWeb, isWebDid } = require('../src/did-web-resolver');
 

@@ -4,7 +4,7 @@ const { expect } = require('expect');
 
 const fastifyJWT = require('@fastify/jwt');
 const fastify = require('fastify');
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { oauthPlugin } = require('../src/oauth');
 
 const noScopesToken =

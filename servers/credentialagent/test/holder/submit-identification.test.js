@@ -43,7 +43,7 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { decodeJwt } = require('jose');
 const { map, omitBy } = require('lodash/fp');
-const nock = require('nock');
+const nock = require('../helpers/nock');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
 

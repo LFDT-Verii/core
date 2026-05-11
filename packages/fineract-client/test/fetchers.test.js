@@ -17,7 +17,7 @@
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
-const nock = require('nock');
+const nock = require('./helpers/nock');
 const { startOfDay, subDays } = require('date-fns/fp');
 const { formatAsDate } = require('@verii/common-functions');
 const { initHttpClient } = require('@verii/http-client');
