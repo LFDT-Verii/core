@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "eslint": "9.39.4",
-    "eslint-config-airbnb-extended": "3.0.1",
+    "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",
     "eslint-plugin-better-mutation": "2.1.0",
@@ -37,7 +37,7 @@
     "expect": "30.3.0",
     "globals": "17.6.0",
     "nodemon": "3.1.14",
-    "prettier": "3.8.1"
+    "prettier": "3.8.3"
   },
   "nx": {
     "tags": [
