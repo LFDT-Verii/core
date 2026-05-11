@@ -219,8 +219,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1006,8 +1006,8 @@ importers:
         specifier: 30.3.0
         version: 30.3.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
 
   packages/did-web:
     dependencies:
@@ -1028,8 +1028,8 @@ importers:
         specifier: 30.3.0
         version: 30.3.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
 
   packages/endpoints-credential-types-registrar:
     dependencies:
@@ -1158,8 +1158,8 @@ importers:
         specifier: ^7.1.1
         version: 7.1.1
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1499,8 +1499,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1618,8 +1618,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1679,8 +1679,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -2646,8 +2646,8 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -2713,8 +2713,8 @@ importers:
         specifier: 30.3.0
         version: 30.3.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       tsx:
         specifier: 4.21.0
         version: 4.21.0
@@ -2954,8 +2954,8 @@ importers:
         specifier: 14.0.7
         version: 14.0.7(mongodb@7.1.1)
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -3298,8 +3298,8 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       qr-image:
         specifier: ~3.2.0
         version: 3.2.0
@@ -3504,8 +3504,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       nodemon:
         specifier: 3.1.14
         version: 3.1.14
@@ -3638,8 +3638,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nock:
-        specifier: 15.0.0-beta.10
-        version: 15.0.0-beta.10
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -9454,9 +9454,9 @@ packages:
   no-case@3.0.4:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
 
-  nock@15.0.0-beta.10:
-    resolution: {integrity: sha512-ncC2d6wjovdDZOwsaXJ5VAA0kUpWtQILhOapmVN9X9p3XDpyS9heEPw4p2sHOglsAY7sttwKyInhGJop6JnHBQ==}
-    engines: {node: '>=18.20.0 <20 || >=20.12.1'}
+  nock@15.0.0-beta.11:
+    resolution: {integrity: sha512-XsxHMY4OMGXAvnxDgzSHwtPNVIsbVDJRZ78Rd2gkYNwqPLPM7eVtZqQFn5m2KTzWwjC2RZG8OBB9/XFqkDFcjQ==}
+    engines: {node: '>=20.12.1'}
 
   node-addon-api@2.0.2:
     resolution: {integrity: sha512-Ntyt4AIXyaLIuMHF6IOoTakB3K+RWxwtsHNRxllEoA6vPwP9o4866g6YWDLUdnucilZhmkxiHwHr11gAENw+QA==}
@@ -17842,7 +17842,7 @@ snapshots:
       lower-case: 2.0.2
       tslib: 2.8.1
 
-  nock@15.0.0-beta.10:
+  nock@15.0.0-beta.11:
     dependencies:
       '@mswjs/interceptors': 0.41.3
 
