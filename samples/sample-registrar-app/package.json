@@ -31,7 +31,7 @@
   "devDependencies": {
     "@vitejs/plugin-react-swc": "4.3.0",
     "eslint": "9.39.4",
-    "eslint-config-airbnb-extended": "3.0.1",
+    "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-autofix": "2.2.0",
     "eslint-plugin-better-mutation": "2.1.0",
@@ -39,7 +39,7 @@
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
     "eslint-plugin-prettier": "5.5.5",
     "eslint-plugin-react": "7.37.5",
-    "eslint-plugin-react-hooks": "7.0.1",
+    "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.6.0",
     "postcss-normalize": "13.0.1",
     "vite": "8.0.11"

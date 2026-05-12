@@ -89,7 +89,6 @@ const InvitationCreateForm = () => {
   useEffect(() => {
     if (openedStateRef.current === false && isModalOpened) {
       redirect('/invitations/create/step-1');
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setServiceData(null);
       setKeyIndividualsData(null);
       setOrganizationProfileData(null);
