@@ -1402,8 +1402,8 @@ importers:
         specifier: 0.5.0-build
         version: link:../verii-verification
       auth0:
-        specifier: 5.7.0
-        version: 5.7.0
+        specifier: 5.9.1
+        version: 5.9.1
       bs58:
         specifier: ^6.0.0
         version: 6.0.0
@@ -7012,10 +7012,9 @@ packages:
     resolution: {integrity: sha512-+TqJRxh4QvbD4TQIYx1ak2vanykQkG/nIZLuR6o8LoQj425gjVG3tFuUbbOeh/nCpP1rnvU0CCV1ChZHYXLU/A==}
     engines: {node: '>=18'}
 
-  auth0@5.7.0:
-    resolution: {integrity: sha512-1JpxxSHQ5No1/2dGWzPO3592uOlblflEkVI+IXC9TX6Iqe7qgtxOdpf5Er9v42pg0vE0WfLH26iC1Q48+uyXsg==}
+  auth0@5.9.1:
+    resolution: {integrity: sha512-2Uq6DuHM7Krk5Di8rxlzHVE3PoehQnEJohqfMW9iPg1PcH2X8akHKe1igPKe5TZneabKIFizFmKPqq7/pkF2xw==}
     engines: {node: ^20.19.0 || ^22.12.0 || ^24.0.0}
-    deprecated: invitation_landing_client_id and allowed_roles fields have been removed in v5.8.0. Upgrade to v5.8.0 and remove usage of these fields.
 
   autosuggest-highlight@3.3.4:
     resolution: {integrity: sha512-j6RETBD2xYnrVcoV1S5R4t3WxOlWZKyDQjkwnggDPSjF5L4jV98ZltBpvPvbkM1HtoSe5o+bNrTHyjPbieGeYA==}
@@ -14980,7 +14979,7 @@ snapshots:
       undici-types: 6.25.0
       uuid: 14.0.0
 
-  auth0@5.7.0:
+  auth0@5.9.1:
     dependencies:
       auth0-legacy: auth0@4.37.0
       jose: 4.15.9
