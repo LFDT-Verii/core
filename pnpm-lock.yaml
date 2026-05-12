@@ -210,8 +210,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       fastify:
         specifier: ^5.8.5
         version: 5.8.5
@@ -295,8 +295,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -338,8 +338,8 @@ importers:
         specifier: 0.5.0-build
         version: link:../tests-helpers
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
 
   packages/blockchain-functions:
     dependencies:
@@ -384,8 +384,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -427,8 +427,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -473,8 +473,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -602,8 +602,8 @@ importers:
         specifier: 7.1.1
         version: 7.1.1(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       global-jsdom:
         specifier: 29.0.0
         version: 29.0.0(jsdom@29.1.1(@noble/hashes@1.8.0))
@@ -642,8 +642,8 @@ importers:
         specifier: 3.9.1
         version: 3.9.1(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
 
   packages/contract-permissions:
     dependencies:
@@ -667,8 +667,8 @@ importers:
         specifier: 0.5.0-build
         version: link:../tests-helpers
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
 
   packages/cose-key:
     dependencies:
@@ -713,8 +713,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -765,8 +765,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -832,8 +832,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -878,8 +878,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -957,8 +957,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       fastify:
         specifier: ^5.8.5
         version: 5.8.5
@@ -1003,8 +1003,8 @@ importers:
         specifier: 0.5.0-build
         version: link:../sample-data
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
 
   packages/did-web:
     dependencies:
@@ -1022,8 +1022,8 @@ importers:
         version: 2.0.32
     devDependencies:
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       nock:
         specifier: 15.0.0-beta.11
         version: 15.0.0-beta.11
@@ -1143,8 +1143,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       form-data:
         specifier: 4.0.5
         version: 4.0.5
@@ -1285,8 +1285,8 @@ importers:
         specifier: ^6.16.0
         version: 6.16.0
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1490,8 +1490,8 @@ importers:
         specifier: ^6.16.0
         version: 6.16.0
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1536,8 +1536,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1606,8 +1606,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       fastify:
         specifier: ^5.8.5
         version: 5.8.5
@@ -1670,8 +1670,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1731,8 +1731,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1773,8 +1773,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1837,8 +1837,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1892,8 +1892,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1938,8 +1938,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -1987,8 +1987,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
@@ -2015,8 +2015,8 @@ importers:
         specifier: 0.5.0-build
         version: link:../tests-helpers
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
 
   packages/rest-queries:
     dependencies:
@@ -2055,8 +2055,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -2154,8 +2154,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       fastify:
         specifier: ^5.8.5
         version: 5.8.5
@@ -2218,8 +2218,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -2257,8 +2257,8 @@ importers:
         specifier: 5.5.5
         version: 5.5.5(eslint-config-prettier@10.1.8(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))(prettier@3.8.3)
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -2293,8 +2293,8 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -2388,8 +2388,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       fastify:
         specifier: ^5.8.5
         version: 5.8.5
@@ -2452,8 +2452,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -2540,8 +2540,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -2634,8 +2634,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -2707,8 +2707,8 @@ importers:
         specifier: 4.4.1
         version: 4.4.1(@typescript-eslint/eslint-plugin@8.59.2(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       nock:
         specifier: 15.0.0-beta.11
         version: 15.0.0-beta.11
@@ -2942,8 +2942,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -3024,8 +3024,8 @@ importers:
         specifier: 7.1.1
         version: 7.1.1(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       global-jsdom:
         specifier: 29.0.0
         version: 29.0.0(jsdom@29.1.1(@noble/hashes@1.8.0))
@@ -3115,8 +3115,8 @@ importers:
         specifier: 4.4.1
         version: 4.4.1(@typescript-eslint/eslint-plugin@8.59.2(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       global-jsdom:
         specifier: 29.0.0
         version: 29.0.0(jsdom@29.1.1(@noble/hashes@1.8.0))
@@ -3344,8 +3344,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -3492,8 +3492,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -3547,8 +3547,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -3626,8 +3626,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -3702,8 +3702,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -3742,8 +3742,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.4(jiti@2.7.0))
       expect:
-        specifier: 30.3.0
-        version: 30.3.0
+        specifier: 30.4.1
+        version: 30.4.1
       globals:
         specifier: 17.6.0
         version: 17.6.0
@@ -4728,24 +4728,32 @@ packages:
     resolution: {integrity: sha512-cG51MVnLq1ecVUaQ3fr6YuuAOitHK1S4WUJHnsPFE/quQr33ADUx1FfrTCpMCRxvy0Yr9BThKpDjSlcTi91tMA==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  '@jest/expect-utils@30.3.0':
-    resolution: {integrity: sha512-j0+W5iQQ8hBh7tHZkTQv3q2Fh/M7Je72cIsYqC4OaktgtO7v1So9UTjp6uPBHIaB6beoF/RRsCgMJKvti0wADA==}
+  '@jest/diff-sequences@30.4.0':
+    resolution: {integrity: sha512-zOpzlfUs45l6u7jm39qr87JCHUDsaeCtvL+kQe/Vn9jSnRB4/5IPXISm0h9I1vZW/o00Kn4UTJ2MOlhnUGwv3g==}
+    engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
+
+  '@jest/expect-utils@30.4.1':
+    resolution: {integrity: sha512-ZBn5CglH8fBsQsvs4VWNzD4aWfUYks+IdOOQU3MEK71ol/BcVm+P+rtb1KpiFBpSWSCE27uOahyyf1vfqOVbcQ==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   '@jest/get-type@30.1.0':
     resolution: {integrity: sha512-eMbZE2hUnx1WV0pmURZY9XoXPkUYjpc55mb0CrhtdWLtzMQPFvu/rZkTLZFTsdaVQa+Tr4eWAteqcUzoawq/uA==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  '@jest/pattern@30.0.1':
-    resolution: {integrity: sha512-gWp7NfQW27LaBQz3TITS8L7ZCQ0TLvtmI//4OwlQRx4rnWxcPNIYjxZpDcN4+UlGxgm3jS5QPz8IPTCkb59wZA==}
+  '@jest/pattern@30.4.0':
+    resolution: {integrity: sha512-RAWn3+f9u8BsHijKJ71uHcFp6vmyEt6VvoWXkl6hKF3qVIuWNmudVjg12DlBPGup/frIl5UcUlH5HfEuvHpEXg==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   '@jest/schemas@30.0.5':
     resolution: {integrity: sha512-DmdYgtezMkh3cpU8/1uyXakv3tJRcmcXxBOcO0tbaozPwpmh4YMsnWrQm9ZmZMfa5ocbxzbFk6O4bDPEc/iAnA==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  '@jest/types@30.3.0':
-    resolution: {integrity: sha512-JHm87k7bA33hpBngtU8h6UBub/fqqA9uXfw+21j5Hmk7ooPHlboRNxHq0JcMtC+n8VJGP1mcfnD3Mk+XKe1oSw==}
+  '@jest/schemas@30.4.1':
+    resolution: {integrity: sha512-i6b4qw5qnP8c5FEeBJg/uZQ4ddrkN6Ca8qISJh0pr7a5hfn3h3v5x60BEbOC7OYAGZNMs1LfFLwnW2CuK8F57Q==}
+    engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
+
+  '@jest/types@30.4.1':
+    resolution: {integrity: sha512-f1x/vJXIfjOlEmejYpbkbgw1gOqpPECwMvMEtBqe47j7H2Hg8h8w3o3ikhSXq3MI15kg+oQ0exWO0uCtTNJLoQ==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -8088,8 +8096,8 @@ packages:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
 
-  expect@30.3.0:
-    resolution: {integrity: sha512-1zQrciTiQfRdo7qJM1uG4navm8DayFa2TgCSRlzUyNkhcJ6XUZF3hjnpkyr3VhAqPH7i/9GkG7Tv5abz6fqz0Q==}
+  expect@30.4.1:
+    resolution: {integrity: sha512-PMARsyh/JtqC20HoGqlFcIlQAyqUtW4PlI1rup1uhYJtKuwAjbvWi3GQMAn+STdHum/dk8xrKfUM1+5SAwpolA==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   fakerest@4.2.0:
@@ -8811,6 +8819,10 @@ packages:
     resolution: {integrity: sha512-n3q4PDQjS4LrKxfWB3Z5KNk1XjXtZTBwQp71OP0Jo03Z6V60x++K5L8k6ZrW8MY8pOFylZvHM0zsjS1RqlHJZQ==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
+  jest-diff@30.4.1:
+    resolution: {integrity: sha512-CRpFK0RtLriVDGcPPAnR6HMVI8bSR2jnUIgralhauzYQZIb4RH9AtEInTuQr65LmmGggGcRT6HIASxwqsVsmlA==}
+    engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
+
   jest-get-type@27.5.1:
     resolution: {integrity: sha512-2KY95ksYSaK7DMBWQn6dQz3kqAf3BB64y2udeG+hv4KfSOb9qwcYQstTJc1KCbsix+wLZWZYN8t7nwX3GOBLRw==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
@@ -8823,24 +8835,24 @@ packages:
     resolution: {integrity: sha512-z2uTx/T6LBaCoNWNFWwChLBKYxTMcGBRjAt+2SbP929/Fflb9aa5LGma654Rz8z9HLxsrUaYzxE9T/EFIL/PAw==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
 
-  jest-matcher-utils@30.3.0:
-    resolution: {integrity: sha512-HEtc9uFQgaUHkC7nLSlQL3Tph4Pjxt/yiPvkIrrDCt9jhoLIgxaubo1G+CFOnmHYMxHwwdaSN7mkIFs6ZK8OhA==}
+  jest-matcher-utils@30.4.1:
+    resolution: {integrity: sha512-zvYfX5CaeEkFrrLS9suWe9rvJrm9J1Iv3ua8kIBv9GEPzcnsfBf0bob37la7s67fs0nlBC3EuvkOLnXQKxtx4A==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  jest-message-util@30.3.0:
-    resolution: {integrity: sha512-Z/j4Bo+4ySJ+JPJN3b2Qbl9hDq3VrXmnjjGEWD/x0BCXeOXPTV1iZYYzl2X8c1MaCOL+ewMyNBcm88sboE6YWw==}
+  jest-message-util@30.4.1:
+    resolution: {integrity: sha512-kwCKIvq0MCW1HzLoGola9Te6JUdzgV0loyKJ3Qghrkz9i5/RRIHsL95BMQc2HBBhlBKC4j22K9p11TGHH8RBpQ==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  jest-mock@30.3.0:
-    resolution: {integrity: sha512-OTzICK8CpE+t4ndhKrwlIdbM6Pn8j00lvmSmq5ejiO+KxukbLjgOflKWMn3KE34EZdQm5RqTuKj+5RIEniYhog==}
+  jest-mock@30.4.1:
+    resolution: {integrity: sha512-/i8SVb8/NSB7RfNi8gfqu8gxLV23KaL5EpAttyb9iz8qWRIqXRLflycz/32wXsYkOnaUlx8NAKnJYtpsmXUmfw==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  jest-regex-util@30.0.1:
-    resolution: {integrity: sha512-jHEQgBXAgc+Gh4g0p3bCevgRCVRkB4VB70zhoAE48gxeSr1hfUOsM/C2WoJgVL7Eyg//hudYENbm3Ne+/dRVVA==}
+  jest-regex-util@30.4.0:
+    resolution: {integrity: sha512-mWlvLviKIgIQ8VCuM1xRdD0TWp3zlzionlmDBjuXVBs+VkmXq6FgW9T4Emr7oGz/Rk6feDCGyiugolcQEyp3mg==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  jest-util@30.3.0:
-    resolution: {integrity: sha512-/jZDa00a3Sz7rdyu55NLrQCIrbyIkbBxareejQI315f/i8HjYN+ZWsDLLpoQSiUIEIyZF/R8fDg3BmB8AtHttg==}
+  jest-util@30.4.1:
+    resolution: {integrity: sha512-vjQb1sACEiv13DKJMDToJpzVW0joCsIQrmbg0fi7CyOOt+g9jTuQl2A216pWRBYhOVt53XbL/2LbMKg1BECWOw==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   jiti@2.6.1:
@@ -9745,6 +9757,10 @@ packages:
 
   pretty-format@30.3.0:
     resolution: {integrity: sha512-oG4T3wCbfeuvljnyAzhBvpN45E8iOTXCU/TD3zXW80HA3dQ4ahdqMkWGiPWZvjpQwlbyHrPTWUAqUzGzv4l1JQ==}
+    engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
+
+  pretty-format@30.4.1:
+    resolution: {integrity: sha512-K6KiKMHTL4jjX4u3Kir2EW07nRfcqVTXIImx50wbjHQTcZPgg+gjVeNTIT3l3L1Rd4UefxfogquC9J37SoFyyw==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
   process-nextick-args@2.0.1:
@@ -12567,25 +12583,31 @@ snapshots:
 
   '@jest/diff-sequences@30.3.0': {}
 
-  '@jest/expect-utils@30.3.0':
+  '@jest/diff-sequences@30.4.0': {}
+
+  '@jest/expect-utils@30.4.1':
     dependencies:
       '@jest/get-type': 30.1.0
 
   '@jest/get-type@30.1.0': {}
 
-  '@jest/pattern@30.0.1':
+  '@jest/pattern@30.4.0':
     dependencies:
       '@types/node': 24.12.3
-      jest-regex-util: 30.0.1
+      jest-regex-util: 30.4.0
 
   '@jest/schemas@30.0.5':
     dependencies:
       '@sinclair/typebox': 0.34.48
 
-  '@jest/types@30.3.0':
+  '@jest/schemas@30.4.1':
     dependencies:
-      '@jest/pattern': 30.0.1
-      '@jest/schemas': 30.0.5
+      '@sinclair/typebox': 0.34.48
+
+  '@jest/types@30.4.1':
+    dependencies:
+      '@jest/pattern': 30.4.0
+      '@jest/schemas': 30.4.1
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
       '@types/node': 24.12.3
@@ -16307,14 +16329,14 @@ snapshots:
       signal-exit: 3.0.7
       strip-final-newline: 2.0.0
 
-  expect@30.3.0:
+  expect@30.4.1:
     dependencies:
-      '@jest/expect-utils': 30.3.0
+      '@jest/expect-utils': 30.4.1
       '@jest/get-type': 30.1.0
-      jest-matcher-utils: 30.3.0
-      jest-message-util: 30.3.0
-      jest-mock: 30.3.0
-      jest-util: 30.3.0
+      jest-matcher-utils: 30.4.1
+      jest-message-util: 30.4.1
+      jest-mock: 30.4.1
+      jest-util: 30.4.1
 
   fakerest@4.2.0:
     dependencies:
@@ -17123,6 +17145,13 @@ snapshots:
       chalk: 4.1.2
       pretty-format: 30.3.0
 
+  jest-diff@30.4.1:
+    dependencies:
+      '@jest/diff-sequences': 30.4.0
+      '@jest/get-type': 30.1.0
+      chalk: 4.1.2
+      pretty-format: 30.4.1
+
   jest-get-type@27.5.1: {}
 
   jest-json-schema@6.1.0:
@@ -17139,36 +17168,37 @@ snapshots:
       jest-get-type: 27.5.1
       pretty-format: 27.5.1
 
-  jest-matcher-utils@30.3.0:
+  jest-matcher-utils@30.4.1:
     dependencies:
       '@jest/get-type': 30.1.0
       chalk: 4.1.2
-      jest-diff: 30.3.0
-      pretty-format: 30.3.0
+      jest-diff: 30.4.1
+      pretty-format: 30.4.1
 
-  jest-message-util@30.3.0:
+  jest-message-util@30.4.1:
     dependencies:
       '@babel/code-frame': 7.29.0
-      '@jest/types': 30.3.0
+      '@jest/types': 30.4.1
       '@types/stack-utils': 2.0.3
       chalk: 4.1.2
       graceful-fs: 4.2.11
+      jest-util: 30.4.1
       picomatch: 4.0.4
-      pretty-format: 30.3.0
+      pretty-format: 30.4.1
       slash: 3.0.0
       stack-utils: 2.0.6
 
-  jest-mock@30.3.0:
+  jest-mock@30.4.1:
     dependencies:
-      '@jest/types': 30.3.0
+      '@jest/types': 30.4.1
       '@types/node': 24.12.3
-      jest-util: 30.3.0
+      jest-util: 30.4.1
 
-  jest-regex-util@30.0.1: {}
+  jest-regex-util@30.4.0: {}
 
-  jest-util@30.3.0:
+  jest-util@30.4.1:
     dependencies:
-      '@jest/types': 30.3.0
+      '@jest/types': 30.4.1
       '@types/node': 24.12.3
       chalk: 4.1.2
       ci-info: 4.4.0
@@ -18157,6 +18187,13 @@ snapshots:
       '@jest/schemas': 30.0.5
       ansi-styles: 5.2.0
       react-is: 18.3.1
+
+  pretty-format@30.4.1:
+    dependencies:
+      '@jest/schemas': 30.4.1
+      ansi-styles: 5.2.0
+      react-is-18: react-is@18.3.1
+      react-is-19: react-is@19.2.5
 
   process-nextick-args@2.0.1: {}
 

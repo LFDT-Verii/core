@@ -44,7 +44,7 @@
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
     "eslint-plugin-prettier": "5.5.5",
     "eslint-plugin-unused-imports": "4.4.1",
-    "expect": "30.3.0",
+    "expect": "30.4.1",
     "global-jsdom": "29.0.0",
     "globals": "17.6.0",
     "json-schema-to-ts": "3.1.1",
