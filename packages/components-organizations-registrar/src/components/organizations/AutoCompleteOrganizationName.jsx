@@ -81,15 +81,14 @@ const AutoCompleteOrganizationName = ({ defaultValue }) => {
     }
   }, [dataProvider, debouncedText, stopSearch]);
 
-  useEffect(() => {
-    if (!isOpen) {
-      setOptions([]);
-    }
-  }, [isOpen]);
-
   const handleChangeText = useCallback((event) => {
     setText(event?.target?.value);
     setValue({ name: event?.target?.value });
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setOptions([]);
   }, []);
 
   const handleBlur = useCallback(() => {
@@ -124,7 +123,7 @@ const AutoCompleteOrganizationName = ({ defaultValue }) => {
         inputValue={text || ''}
         open={isOpen}
         onOpen={() => setIsOpen(true)}
-        onClose={() => setIsOpen(false)}
+        onClose={handleClose}
         onInputChange={handleChangeText}
         getOptionLabel={(params) => params?.name?.toString()}
         getOptionKey={(params) => params.id}
