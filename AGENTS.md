@@ -10,6 +10,6 @@
 - After modifying `.js` or `.ts` files, run `eslint --fix` on the affected files.
 
 ## pnpm workspace rules
-- Use the pnpm for all dependency commands, e.g. `corepack $(node -p "require('./package.json').packageManager")`.
+- Use `corepack $(node -p "require('./package.json').packageManager")` for all dependency commands
 - After rebasing onto `origin/main` and no conflicts you can run:
   - `corepack $(node -p "require('./package.json').packageManager") install --lockfile-only --no-frozen-lockfile`
