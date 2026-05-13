@@ -26,18 +26,29 @@
       "matchDatasources": [
         "npm"
       ],
-      "matchCurrentValue": "/^\\^[1-9]\\d*\\.\\d+\\.\\d+$/",
+      "matchCurrentValue": "/^[~^]?[1-9]\\d*\\.\\d+\\.\\d+$/",
       "rangeStrategy": "bump",
-      "description": "Keep stable npm caret ranges current in package manifests so shared pnpm lockfile refreshes don't split into lockfile-only PRs."
+      "description": "Keep stable npm v1+ semver dependencies current in package manifests so shared pnpm lockfile refreshes don't split into lockfile-only PRs."
     },
     {
       "matchDatasources": [
         "npm"
       ],
-      "matchCurrentValue": "/^[~^]?0\\./",
+      "matchUpdateTypes": [
+        "pin"
+      ],
+      "matchCurrentValue": "/^[~^]?[1-9]\\d*\\.\\d+\\.\\d+$/",
+      "enabled": false,
+      "description": "Stable npm v1+ packages should remain range-based instead of being pinned by config:best-practices."
+    },
+    {
+      "matchDatasources": [
+        "npm"
+      ],
+      "matchCurrentValue": "/^(?![~^]?[1-9]\\d*\\.\\d+\\.\\d+$).+/",
       "rangeStrategy": "pin",
       "automerge": false,
-      "description": "Pre-1.0 npm packages may break in minor or patch releases, so pin them exactly and require review."
+      "description": "Pre-1.0, prerelease, and other non-plain-stable npm values may break outside major-version semver guarantees, so pin them exactly and require review."
     },
     {
       "matchPackageNames": [
