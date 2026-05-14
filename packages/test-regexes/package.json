@@ -9,7 +9,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {},
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage **/*.test.js --passWithNoTests",
     "lint": "eslint .",
@@ -20,7 +19,6 @@
     "eslint": "10.3.0",
     "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-autofix": "2.2.0",
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-prefer-arrow-functions": "3.9.1",

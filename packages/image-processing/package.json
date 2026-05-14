@@ -16,12 +16,10 @@
   },
   "author": "Denis Smolonski",
   "license": "Apache-2.0",
-  "dependencies": {},
   "devDependencies": {
     "eslint": "10.3.0",
     "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-autofix": "2.2.0",
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
