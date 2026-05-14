@@ -47,9 +47,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -191,9 +188,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -276,9 +270,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -365,9 +356,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -408,9 +396,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -454,9 +439,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -580,9 +562,6 @@ importers:
       eslint-import-resolver-alias:
         specifier: 1.1.2
         version: 1.1.2(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0)))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -635,9 +614,6 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-prefer-arrow-functions:
         specifier: 3.9.1
         version: 3.9.1(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
@@ -694,9 +670,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -746,9 +719,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -813,9 +783,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -859,9 +826,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -935,9 +899,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1124,9 +1085,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1263,9 +1221,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1468,9 +1423,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1517,9 +1469,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1587,9 +1536,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1651,9 +1597,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1712,9 +1655,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1754,9 +1694,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1818,9 +1755,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1873,9 +1807,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -1919,9 +1850,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2036,9 +1964,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2135,9 +2060,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2199,9 +2121,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2241,9 +2160,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2314,9 +2230,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2369,9 +2282,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2433,9 +2343,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2518,9 +2425,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2615,9 +2519,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2688,9 +2589,6 @@ importers:
       eslint-import-resolver-typescript:
         specifier: 4.4.4
         version: 4.4.4(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-import:
         specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.4)(eslint@9.39.4(jiti@2.7.0))
@@ -2793,9 +2691,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2923,9 +2818,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -2999,9 +2891,6 @@ importers:
       eslint-import-resolver-typescript:
         specifier: 4.4.4
         version: 4.4.4(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -3093,9 +2982,6 @@ importers:
       eslint-import-resolver-typescript:
         specifier: 4.4.4
         version: 4.4.4(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.9)(eslint@9.39.4(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -3325,9 +3211,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -3473,9 +3356,6 @@ importers:
       eslint-config-prettier:
         specifier: 10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
-      eslint-plugin-autofix:
-        specifier: 2.2.0
-        version: 2.2.0(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-better-mutation:
         specifier: 2.1.0
         version: 2.1.0(eslint@9.39.4(jiti@2.7.0))
@@ -7838,12 +7718,6 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
 
-  eslint-plugin-autofix@2.2.0:
-    resolution: {integrity: sha512-lu8+0r+utyTroROqXIL+a8sUpICi6za22hIzlpb0+x0tQGRnOjhOKU7v8mC/NS/faDoVsw6xW3vUpc+Mcz5NWA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      eslint: '>=8'
-
   eslint-plugin-better-mutation@2.1.0:
     resolution: {integrity: sha512-21fYoFV+zTmGdIjGWIlP0iaCffiOULsGwpbdVTsc+Z77ITY15se7VgZIa/ztp9xTE4YTr1McA2Ro1Ga5RD2y5A==}
     engines: {node: '>=18.0.0'}
@@ -7938,10 +7812,6 @@ packages:
       '@typescript-eslint/eslint-plugin':
         optional: true
 
-  eslint-rule-composer@0.3.0:
-    resolution: {integrity: sha512-bt+Sh8CtDmn2OajxvNO+BX7Wn4CIWMpTRm3MaiKPCQcnnlm0CS2mhui6QaoeQugs+3Kj2ESKEEGJUdVafwhiCg==}
-    engines: {node: '>=4.0.0'}
-
   eslint-scope@8.4.0:
     resolution: {integrity: sha512-sNXOfKCn74rt8RICKMvJS7XKV/Xk9kA7DyJr8mJik3S7Cwgy3qlkkmyS2uQB3jiJg6VNdZd/pDBJu0nvG2NlTg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -7982,10 +7852,6 @@ packages:
   espree@11.2.0:
     resolution: {integrity: sha512-7p3DrVEIopW1B1avAGLuCSh1jubc01H2JHc8B4qqGblmg5gI9yumBgACjWo4JlIc04ufug4xJ3SQI8HkS/Rgzw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
-
-  espree@9.6.1:
-    resolution: {integrity: sha512-oruZaFkjorTpF32kDSI5/75ViwGeZginGGy2NoOSg3Q9bnwlnmDm4HLnkl0RE3n+njDXR037aY1+x58Z/zFdwQ==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   esquery@1.7.0:
     resolution: {integrity: sha512-Ap6G0WQwcU/LHsvLwON1fAQX9Zp0A2Y6Y/cJBl9r/JbW90Zyg4/zbG6zzKa2OTALELarYHmKu0GhpM5EO+7T0g==}
@@ -10221,10 +10087,6 @@ packages:
   strict-uri-encode@2.0.0:
     resolution: {integrity: sha512-QwiXZgpRcKkhTj2Scnn++4PKtWsH0kpzZ62L2R6c/LUVYv7hVnZqcg2+sMuT6R7Jusu1vviK/MFsu6kNJfWlEQ==}
     engines: {node: '>=4'}
-
-  string-similarity@4.0.4:
-    resolution: {integrity: sha512-/q/8Q4Bl4ZKAPjj8WerIBJWALKkaPRfrvhfF8k/B23i4nzrlRj2/go1m90In7nG/3XDSbOo0+pu6RvCTM9RGMQ==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
@@ -15803,14 +15665,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-autofix@2.2.0(eslint@9.39.4(jiti@2.7.0)):
-    dependencies:
-      eslint: 9.39.4(jiti@2.7.0)
-      eslint-rule-composer: 0.3.0
-      espree: 9.6.1
-      esutils: 2.0.3
-      string-similarity: 4.0.4
-
   eslint-plugin-better-mutation@2.1.0(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       create-eslint-index: 1.0.0
@@ -15988,8 +15842,6 @@ snapshots:
     optionalDependencies:
       '@typescript-eslint/eslint-plugin': 8.59.2(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
 
-  eslint-rule-composer@0.3.0: {}
-
   eslint-scope@8.4.0:
     dependencies:
       esrecurse: 4.3.0
@@ -16069,12 +15921,6 @@ snapshots:
       acorn: 8.16.0
       acorn-jsx: 5.3.2(acorn@8.16.0)
       eslint-visitor-keys: 5.0.1
-
-  espree@9.6.1:
-    dependencies:
-      acorn: 8.16.0
-      acorn-jsx: 5.3.2(acorn@8.16.0)
-      eslint-visitor-keys: 3.4.3
 
   esquery@1.7.0:
     dependencies:
@@ -18714,8 +18560,6 @@ snapshots:
   strict-event-emitter@0.5.1: {}
 
   strict-uri-encode@2.0.0: {}
-
-  string-similarity@4.0.4: {}
 
   string-width@4.2.3:
     dependencies:
