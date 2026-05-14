@@ -4,7 +4,6 @@ import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 import betterMutation from 'eslint-plugin-better-mutation';
 import preferArrowFunctions from 'eslint-plugin-prefer-arrow-functions';
-import autofixPlugin from 'eslint-plugin-autofix';
 import typescriptEslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 
@@ -39,14 +38,13 @@ const baseConfig = [
       prettier: prettierPlugin,
       'better-mutation': betterMutation,
       'prefer-arrow-functions': preferArrowFunctions,
-      autofix: autofixPlugin,
       import: importPlugin,
     },
     rules: {
       'no-useless-constructor': 'off',
       'no-empty-function': 'off',
       'no-plusplus': 'off',
-      'autofix/no-debugger': 'error',
+      'no-debugger': 'error',
       'better-mutation/no-mutation': [
         'error',
         {
