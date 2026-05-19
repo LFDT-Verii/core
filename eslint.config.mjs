@@ -141,6 +141,7 @@ const baseConfig = [
             '**/setupTests.js',
             '**/setup-tests.ts',
             '**/setup-tests.js',
+            '**/src/standalone.js',
             'tooling/resolvers/**/*.mjs',
             '**/vite.config.js',
             '**/eslint.config.mjs',
