@@ -5,6 +5,10 @@ import NetworkService from '../../domain/infrastructure/network/NetworkService';
 import PresentationRequestRepository from '../../domain/repositories/PresentationRequestRepository';
 import { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
+import {
+    classifyClientRequestFetch,
+    ErrorTaxonomy,
+} from '../../utils/ErrorTaxonomy';
 
 export default class PresentationRequestRepositoryImpl implements PresentationRequestRepository {
     constructor(private readonly networkService: NetworkService) {}
@@ -19,17 +23,36 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
             });
         }
 
-        const presentationRequestResponse =
-            await this.networkService.sendRequest({
-                endpoint,
-                method: HttpMethod.GET,
-                headers: {
-                    [HeaderKeys.XVnfProtocolVersion]:
-                        HeaderValues.XVnfProtocolVersion,
+        let presentationRequestResponse;
+        try {
+            presentationRequestResponse = await this.networkService.sendRequest(
+                {
+                    endpoint,
+                    method: HttpMethod.GET,
+                    headers: {
+                        [HeaderKeys.XVnfProtocolVersion]:
+                            HeaderValues.XVnfProtocolVersion,
+                    },
                 },
-            });
-        return presentationRequestResponse.payload[
-            VCLPresentationRequest.KeyPresentationRequest
-        ];
+            );
+        } catch (error) {
+            throw classifyClientRequestFetch(
+                VCLError.fromError(error),
+                endpoint,
+                ErrorTaxonomy.RequestKindPresentation,
+            );
+        }
+        const presentationRequest =
+            presentationRequestResponse.payload[
+                VCLPresentationRequest.KeyPresentationRequest
+            ];
+        if (!presentationRequest) {
+            throw classifyClientRequestFetch(
+                new VCLError({ message: 'Missing presentation_request' }),
+                endpoint,
+                ErrorTaxonomy.RequestKindPresentation,
+            );
+        }
+        return presentationRequest;
     }
 }

@@ -5,6 +5,10 @@ import NetworkService from '../../domain/infrastructure/network/NetworkService';
 import CredentialManifestRepository from '../../domain/repositories/CredentialManifestRepository';
 import { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
+import {
+    classifyClientRequestFetch,
+    ErrorTaxonomy,
+} from '../../utils/ErrorTaxonomy';
 
 export default class CredentialManifestRepositoryImpl implements CredentialManifestRepository {
     constructor(private readonly networkService: NetworkService) {}
@@ -19,8 +23,9 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
             });
         }
 
-        const credentialManifestResponse =
-            await this.networkService.sendRequest({
+        let credentialManifestResponse;
+        try {
+            credentialManifestResponse = await this.networkService.sendRequest({
                 endpoint,
                 method: HttpMethod.GET,
                 body: null,
@@ -29,8 +34,24 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
                         HeaderValues.XVnfProtocolVersion,
                 },
             });
-        return credentialManifestResponse.payload[
-            VCLCredentialManifest.KeyIssuingRequest
-        ];
+        } catch (error) {
+            throw classifyClientRequestFetch(
+                VCLError.fromError(error),
+                endpoint,
+                ErrorTaxonomy.RequestKindIssuing,
+            );
+        }
+        const issuingRequest =
+            credentialManifestResponse.payload[
+                VCLCredentialManifest.KeyIssuingRequest
+            ];
+        if (!issuingRequest) {
+            throw classifyClientRequestFetch(
+                new VCLError({ message: 'Missing issuing_request' }),
+                endpoint,
+                ErrorTaxonomy.RequestKindIssuing,
+            );
+        }
+        return issuingRequest;
     }
 }

@@ -59,6 +59,14 @@ import { Nullish } from '../api/VCLTypes';
 import VCLAuthTokenDescriptor from '../api/entities/VCLAuthTokenDescriptor';
 import VCLAuthToken from '../api/entities/VCLAuthToken';
 import AuthTokenUseCase from './domain/usecases/AuthTokenUseCase';
+import {
+    classifyRegistration,
+    classifyServiceAuthorization,
+    ErrorTaxonomy,
+    RequestKind,
+} from './utils/ErrorTaxonomy';
+import ErrorTaxonomyCompatibilityMapper from './utils/ErrorTaxonomyCompatibilityMapper';
+import VelocityDeepLinkValidator from './utils/VelocityDeepLinkValidator';
 
 export class VCLImpl implements VCL {
     static readonly ModelsToInitializeAmount = 3;
@@ -102,6 +110,12 @@ export class VCLImpl implements VCL {
     private initializationWatcher = new InitializationWatcher(
         VCLImpl.ModelsToInitializeAmount,
     );
+
+    private readonly velocityDeepLinkValidator =
+        new VelocityDeepLinkValidator();
+
+    private readonly errorTaxonomyCompatibilityMapper =
+        new ErrorTaxonomyCompatibilityMapper();
 
     // eslint-disable-next-line consistent-return,complexity
     async initialize(
@@ -254,32 +268,55 @@ export class VCLImpl implements VCL {
     getPresentationRequest = async (
         presentationRequestDescriptor: VCLPresentationRequestDescriptor,
     ) => {
-        const { did } = presentationRequestDescriptor;
-        if (!did) {
-            const err = new VCLError({
+        return this.withPublicRequestError(
+            ErrorTaxonomy.RequestKindPresentation,
+            'getPresentationRequest',
+            async () => {
+                this.validatePresentationRequestDescriptor(
+                    presentationRequestDescriptor,
+                );
+                const verifiedProfile =
+                    await this.verifyServiceTypeOfVerifiedProfile(
+                        presentationRequestDescriptor.did!,
+                        new VCLServiceTypes([VCLServiceType.Inspector]),
+                        ErrorTaxonomy.RequestKindPresentation,
+                    );
+                return this.presentationRequestUseCase.getPresentationRequest(
+                    presentationRequestDescriptor,
+                    verifiedProfile,
+                );
+            },
+        );
+    };
+
+    private validatePresentationRequestDescriptor(
+        presentationRequestDescriptor: VCLPresentationRequestDescriptor,
+    ) {
+        this.throwIfValidationError(
+            this.velocityDeepLinkValidator.validateDeepLink({
+                deepLink: presentationRequestDescriptor.deepLink,
+                expectedPath: 'inspect',
+                expectedDidParam: 'inspectorDid',
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+            }),
+        );
+        this.throwIfValidationError(
+            this.velocityDeepLinkValidator.validateRequestEndpoint(
+                presentationRequestDescriptor.endpoint,
+                ErrorTaxonomy.RequestKindPresentation,
+            ),
+        );
+        if (!presentationRequestDescriptor.did) {
+            throw new VCLError({
+                errorCode: 'invalid_link',
                 message: `did was not found in ${JSON.stringify(
                     presentationRequestDescriptor,
                 )}`,
+                validationPhase: ErrorTaxonomy.PhaseLinkValidation,
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
             });
-
-            logError('getPresentationRequest::verifiedProfile', err);
-            throw err;
         }
-        try {
-            const verifiedProfile =
-                await this.profileServiceTypeVerifier.verifyServiceTypeOfVerifiedProfile(
-                    new VCLVerifiedProfileDescriptor(did),
-                    new VCLServiceTypes([VCLServiceType.Inspector]),
-                );
-            return await this.presentationRequestUseCase.getPresentationRequest(
-                presentationRequestDescriptor,
-                verifiedProfile,
-            );
-        } catch (error: any) {
-            logError('getPresentationRequest', error);
-            throw error;
-        }
-    };
+    }
 
     submitPresentation = async (
         presentationSubmission: VCLPresentationSubmission,
@@ -323,40 +360,59 @@ export class VCLImpl implements VCL {
     getCredentialManifest = async (
         credentialManifestDescriptor: VCLCredentialManifestDescriptor,
     ) => {
-        const { did } = credentialManifestDescriptor;
-        if (!did) {
-            const error = new VCLError({
+        return this.withPublicRequestError(
+            ErrorTaxonomy.RequestKindIssuing,
+            'getCredentialManifest',
+            async () => {
+                this.validateCredentialManifestDescriptor(
+                    credentialManifestDescriptor,
+                );
+                const verifiedProfile =
+                    await this.verifyServiceTypeOfVerifiedProfile(
+                        credentialManifestDescriptor.did!,
+                        VCLServiceTypes.fromIssuingType(
+                            credentialManifestDescriptor.issuingType,
+                        ),
+                        ErrorTaxonomy.RequestKindIssuing,
+                    );
+                return this.credentialManifestUseCase.getCredentialManifest(
+                    credentialManifestDescriptor,
+                    verifiedProfile,
+                );
+            },
+        );
+    };
+
+    private validateCredentialManifestDescriptor(
+        credentialManifestDescriptor: VCLCredentialManifestDescriptor,
+    ) {
+        if (credentialManifestDescriptor.deepLink) {
+            this.throwIfValidationError(
+                this.velocityDeepLinkValidator.validateDeepLink({
+                    deepLink: credentialManifestDescriptor.deepLink,
+                    expectedPath: 'issue',
+                    expectedDidParam: 'issuerDid',
+                    requestKind: ErrorTaxonomy.RequestKindIssuing,
+                }),
+            );
+        }
+        this.throwIfValidationError(
+            this.velocityDeepLinkValidator.validateRequestEndpoint(
+                credentialManifestDescriptor.endpoint,
+                ErrorTaxonomy.RequestKindIssuing,
+            ),
+        );
+        if (!credentialManifestDescriptor.did) {
+            throw new VCLError({
+                errorCode: 'invalid_link',
                 message: `did was not found in ${JSON.stringify(
                     credentialManifestDescriptor,
                 )}`,
+                validationPhase: ErrorTaxonomy.PhaseLinkValidation,
+                requestKind: ErrorTaxonomy.RequestKindIssuing,
             });
-
-            logError("credentialManifestDescriptor.did doesn't exist", error);
-            throw error;
         }
-        let verifiedProfile: VCLVerifiedProfile;
-        try {
-            verifiedProfile =
-                await this.profileServiceTypeVerifier.verifyServiceTypeOfVerifiedProfile(
-                    new VCLVerifiedProfileDescriptor(did),
-                    VCLServiceTypes.fromIssuingType(
-                        credentialManifestDescriptor.issuingType,
-                    ),
-                );
-        } catch (error: any) {
-            logError(`failed to find verified profile by did ${did}`, error);
-            throw error;
-        }
-        try {
-            return await this.credentialManifestUseCase.getCredentialManifest(
-                credentialManifestDescriptor,
-                verifiedProfile,
-            );
-        } catch (error: any) {
-            logError('getCredentialManifest', error);
-            throw error;
-        }
-    };
+    }
 
     generateOffers = async (
         generateOffersDescriptor: VCLGenerateOffersDescriptor,
@@ -518,9 +574,81 @@ export class VCLImpl implements VCL {
             throw error;
         }
     }
+
+    private throwIfValidationError(error: VCLError | null) {
+        if (error) {
+            throw error;
+        }
+    }
+
+    private async verifyServiceTypeOfVerifiedProfile(
+        did: string,
+        expectedServiceTypes: VCLServiceTypes,
+        requestKind: RequestKind,
+    ): Promise<VCLVerifiedProfile> {
+        try {
+            return await this.profileServiceTypeVerifier.verifyServiceTypeOfVerifiedProfile(
+                new VCLVerifiedProfileDescriptor(did),
+                expectedServiceTypes,
+            );
+        } catch (error: any) {
+            throw this.classifyProfileVerificationError(
+                VCLError.fromError(error),
+                requestKind,
+                null,
+            );
+        }
+    }
+
+    private async withPublicRequestError<T>(
+        requestKind: RequestKind,
+        logMessage: string,
+        action: () => Promise<T>,
+    ): Promise<T> {
+        try {
+            return await action();
+        } catch (error: any) {
+            const sdkError = VCLError.fromError(error);
+            logError(logMessage, sdkError);
+            throw this.toPublicError(sdkError, requestKind);
+        }
+    }
+
+    private classifyProfileVerificationError(
+        error: VCLError,
+        requestKind: RequestKind,
+        requestDid: string | null,
+    ): VCLError {
+        if (
+            error.sourceErrorCode ===
+            ProfileServiceTypeVerifier.SourceWrongServiceType
+        ) {
+            return classifyServiceAuthorization(error, requestKind, requestDid);
+        }
+        return classifyRegistration(error, requestKind, requestDid);
+    }
+
+    private toPublicError(error: VCLError, requestKind: RequestKind): VCLError {
+        if (
+            this.initializationDescriptor?.errorCodeCompatibilityMode ===
+            'legacy'
+        ) {
+            return this.errorTaxonomyCompatibilityMapper.map({
+                error,
+                requestKind,
+                endpointNullMessage: endpointNullMessage(requestKind),
+            });
+        }
+        return error;
+    }
 }
 
 // eslint-disable-next-line default-param-last
 const logError = (message = '', error: VCLError) => {
     VCLLog.error(error, message);
 };
+
+const endpointNullMessage = (requestKind: RequestKind) =>
+    requestKind === ErrorTaxonomy.RequestKindPresentation
+        ? 'presentationRequestDescriptor.endpoint = null'
+        : 'credentialManifestDescriptor.endpoint = null';

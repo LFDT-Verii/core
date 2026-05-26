@@ -9,6 +9,7 @@ import VCLProvider from './api/VCLProvider';
 import VCLSignatureAlgorithm from './api/VCLSignatureAlgorithm';
 import type VCL from './api/VCL';
 import VCLInitializationDescriptor from './api/entities/initialization/VCLInitializationDescriptor';
+import type { VCLErrorCodeCompatibilityMode } from './api/entities/initialization/VCLInitializationDescriptor';
 import VCLCryptoServicesDescriptor from './api/entities/initialization/VCLCryptoServicesDescriptor';
 import type VCLKeyService from './api/keys/VCLKeyService';
 import type VCLJwtSignService from './api/jwt/VCLJwtSignService';
@@ -89,6 +90,7 @@ export type {
     Dictionary,
     VCLLogService,
     LogFn,
+    VCLErrorCodeCompatibilityMode,
 };
 
 export {

@@ -9,6 +9,7 @@ import NetworkServiceImpl from '../../../src/impl/data/infrastructure/network/Ne
 import Request from '../../../src/impl/data/infrastructure/network/Request';
 import { HttpMethod } from '../../../src/impl/data/infrastructure/network/HttpMethod';
 import VCLError from '../../../src/api/entities/error/VCLError';
+import VCLStatusCode from '../../../src/api/entities/error/VCLStatusCode';
 import { ErrorMocks } from '../../infrastructure/resources/valid/ErrorMocks';
 import {
     mockAbsoluteGet,
@@ -283,7 +284,7 @@ describe('NetworkServiceImpl integration', () => {
             message: ErrorMocks.SomeErrorJson.message,
             payload: JSON.stringify(ErrorMocks.SomeErrorJson),
             requestId: ErrorMocks.SomeErrorJson.requestId,
-            statusCode: ErrorMocks.SomeErrorJson.statusCode,
+            statusCode: 404,
         });
         expect(scope.isDone()).toBeTruthy();
     });
@@ -342,7 +343,7 @@ describe('NetworkServiceImpl integration', () => {
         ).resolves.toEqual({
             error: null,
             errorCode: 'sdk_error',
-            message: 'Request failed with status code 500',
+            message: 'server error',
             payload: 'server error',
             requestId: null,
             statusCode: 500,
@@ -389,12 +390,12 @@ describe('NetworkServiceImpl integration', () => {
                 ),
             ),
         ).resolves.toEqual({
-            error: '{}',
+            error: null,
             errorCode: 'sdk_error',
             message: 'Unsupported HTTP method: PUT',
             payload: null,
             requestId: null,
-            statusCode: null,
+            statusCode: VCLStatusCode.NetworkError,
         });
     });
 

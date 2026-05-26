@@ -8,7 +8,9 @@ import {
     VCLErrorCode,
     VCLCredentialManifestDescriptorByDeepLink,
     VCLDeepLink,
+    VCLCryptoServicesDescriptor,
     VCLIssuingType,
+    VCLInitializationDescriptor,
     VCLJwt,
     VCLJwtVerifyService,
     VCLPresentationRequestDescriptor,
@@ -35,6 +37,7 @@ import {
 import Request from '../../src/impl/data/infrastructure/network/Request';
 import { ProfileServiceTypeVerifier } from '../../src/impl/utils/ProfileServiceTypeVerifier';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';
+import { KeyServiceMock } from '../infrastructure/resources/key/KeyServiceMock';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
@@ -495,6 +498,18 @@ const initializedVcl = (jwtVerificationError?: VCLError): VCLImpl => {
     const jwtServiceRepository = new JwtServiceRepositoryImpl(
         new JwtSignServiceMock(''),
         new FixedJwtVerifyService(jwtVerificationError),
+    );
+    vcl.initializationDescriptor = new VCLInitializationDescriptor(
+        VCLEnvironment.Prod,
+        VCLXVnfProtocolVersion.XVnfProtocolVersion1,
+        new VCLCryptoServicesDescriptor(
+            new KeyServiceMock(),
+            new JwtSignServiceMock(''),
+            new FixedJwtVerifyService(jwtVerificationError),
+        ),
+        false,
+        undefined,
+        'legacy',
     );
 
     vcl.profileServiceTypeVerifier = new ProfileServiceTypeVerifier(
