@@ -25,6 +25,14 @@ export default class PublicRequestDescriptorValidator {
 
     validate(descriptor: PublicRequestDescriptor) {
         const { requestKind, expectedPath, requireDeepLink } = this.config;
+        if (requireDeepLink && !descriptor.deepLink) {
+            throw new VCLError({
+                errorCode: VCLErrorCode.InvalidLink,
+                message: `deepLink was not found in ${JSON.stringify(descriptor)}`,
+                validationPhase: ErrorTaxonomy.PhaseLinkValidation,
+                requestKind,
+            });
+        }
         if (requireDeepLink || descriptor.deepLink) {
             this.throwIfValidationError(
                 this.deepLinkValidator.validateDeepLink({

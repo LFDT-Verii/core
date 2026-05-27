@@ -33,9 +33,10 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
                 presentationRequestDescriptor,
             );
         let requestDid = presentationRequestDescriptor.did ?? null;
+        let presentationRequest: VCLPresentationRequest;
         try {
             const jwt = await this.jwtServiceRepository.decode(encodedJwtStr);
-            const presentationRequest = new VCLPresentationRequest(
+            presentationRequest = new VCLPresentationRequest(
                 jwt,
                 verifiedProfile,
                 presentationRequestDescriptor.deepLink,
@@ -44,23 +45,15 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
                 presentationRequestDescriptor.remoteCryptoServicesToken,
             );
             requestDid = presentationRequest.iss;
-            let didDocument: VCLDidDocument;
-            try {
-                didDocument =
-                    await this.resolveDidDocumentRepository.resolveDidDocument(
-                        presentationRequest.iss,
-                    );
-            } catch (error) {
-                throw toDidResolutionError(VCLError.fromError(error), {
-                    requestKind: ErrorTaxonomy.RequestKindPresentation,
-                    requestDid,
-                });
-            }
-            this.validateDidDocumentVerificationMaterial(
-                presentationRequest,
-                didDocument,
-                `public jwk not found for kid: ${presentationRequest.jwt.kid}`,
-            );
+        } catch (error) {
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+                requestDid,
+            });
+        }
+
+        const didDocument = await this.resolveDidDocument(presentationRequest);
+        try {
             return await this.verifyPresentationRequest(
                 presentationRequest,
                 didDocument,
@@ -69,6 +62,28 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
             throw toRequestValidationError(VCLError.fromError(error), {
                 requestKind: ErrorTaxonomy.RequestKindPresentation,
                 requestDid,
+            });
+        }
+    }
+
+    private async resolveDidDocument(
+        presentationRequest: VCLPresentationRequest,
+    ): Promise<VCLDidDocument> {
+        try {
+            const didDocument =
+                await this.resolveDidDocumentRepository.resolveDidDocument(
+                    presentationRequest.iss,
+                );
+            this.validateDidDocumentVerificationMaterial(
+                presentationRequest,
+                didDocument,
+                `public jwk not found for kid: ${presentationRequest.jwt.kid}`,
+            );
+            return didDocument;
+        } catch (error) {
+            throw toDidResolutionError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+                requestDid: presentationRequest.iss,
             });
         }
     }

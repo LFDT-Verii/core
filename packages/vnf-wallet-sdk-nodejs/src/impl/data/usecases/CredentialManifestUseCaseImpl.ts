@@ -44,15 +44,7 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
             verifiedProfile,
         );
         const requestDid = credentialManifest.iss;
-        const didDocument = await this.resolveDidDocument(
-            credentialManifest,
-            requestDid,
-        );
-        this.validateDidDocumentVerificationMaterial(
-            credentialManifest,
-            didDocument,
-            `public jwk not found for kid: ${credentialManifest.jwt.kid}`,
-        );
+        const didDocument = await this.resolveDidDocument(credentialManifest);
         try {
             return await this.verifyCredentialManifestJwt(
                 credentialManifest,
@@ -83,16 +75,22 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
 
     private async resolveDidDocument(
         credentialManifest: VCLCredentialManifest,
-        requestDid: string | null,
     ): Promise<VCLDidDocument> {
         try {
-            return await this.resolveDidDocumentRepository.resolveDidDocument(
-                credentialManifest.iss,
+            const didDocument =
+                await this.resolveDidDocumentRepository.resolveDidDocument(
+                    credentialManifest.iss,
+                );
+            this.validateDidDocumentVerificationMaterial(
+                credentialManifest,
+                didDocument,
+                `public jwk not found for kid: ${credentialManifest.jwt.kid}`,
             );
+            return didDocument;
         } catch (error) {
             throw toDidResolutionError(VCLError.fromError(error), {
                 requestKind: ErrorTaxonomy.RequestKindIssuing,
-                requestDid,
+                requestDid: credentialManifest.iss,
             });
         }
     }
