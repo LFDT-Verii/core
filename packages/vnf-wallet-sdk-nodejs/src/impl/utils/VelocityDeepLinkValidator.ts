@@ -9,9 +9,6 @@ export default class VelocityDeepLinkValidator {
         'velocity-network-testnet:',
     ]);
 
-    static readonly DidPattern =
-        /^did:[a-z0-9]+:[A-Za-z0-9._:%-]+(?:[:/][A-Za-z0-9._:%-]+)*$/;
-
     static readonly SourceUnparseablePayload =
         'invalid_link_unparseable_payload';
 
@@ -110,7 +107,17 @@ export default class VelocityDeepLinkValidator {
 }
 
 const isSyntacticallyValidDid = (did: string | null | undefined) =>
-    did ? VelocityDeepLinkValidator.DidPattern.test(did) : false;
+    did != null && did.startsWith('did:') && hasValidDidParts(did);
+
+const hasValidDidParts = (did: string) => {
+    const didParts = did.slice('did:'.length);
+    const methodEndIndex = didParts.indexOf(':');
+    if (methodEndIndex <= 0 || methodEndIndex === didParts.length - 1) {
+        return false;
+    }
+    const method = didParts.slice(0, methodEndIndex);
+    return /^[a-z0-9]+$/.test(method);
+};
 
 const parseUrl = (value: string) => {
     try {
