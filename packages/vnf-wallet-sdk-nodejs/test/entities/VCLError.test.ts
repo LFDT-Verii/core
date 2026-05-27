@@ -88,6 +88,33 @@ describe('VCLError', () => {
         );
     });
 
+    test('serializes taxonomy diagnostic fields', () => {
+        const error = new VCLError({
+            errorCode: 'issuer_request_invalid',
+            message: 'Invalid request',
+            sourceErrorCode: 'mismatched_request_issuer_did',
+            validationPhase: 'request_validation',
+            requestDid: 'did:example:issuer',
+            requestUri: 'https://example.com/request',
+            requestKind: 'issuing_request',
+        });
+        const errorJsonObject = error.jsonObject;
+
+        expect(errorJsonObject).toEqual({
+            [VCLError.KeyPayload]: null,
+            [VCLError.KeyError]: null,
+            [VCLError.KeyErrorCode]: 'issuer_request_invalid',
+            [VCLError.KeyRequestId]: null,
+            [VCLError.KeyMessage]: 'Invalid request',
+            [VCLError.KeyStatusCode]: null,
+            [VCLError.KeySourceErrorCode]: 'mismatched_request_issuer_did',
+            [VCLError.KeyValidationPhase]: 'request_validation',
+            [VCLError.KeyRequestDid]: 'did:example:issuer',
+            [VCLError.KeyRequestUri]: 'https://example.com/request',
+            [VCLError.KeyRequestKind]: 'issuing_request',
+        });
+    });
+
     test('creates an error from another error', () => {
         const sourceError = new Error(
             ErrorMocks.SomeErrorJson.message,

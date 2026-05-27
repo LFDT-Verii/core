@@ -303,6 +303,45 @@ describe('Error taxonomy contract', () => {
         expect(error.message).toContain('did was not found');
     });
 
+    test('missing direct credential manifest endpoint returns invalid link', async () => {
+        const entryPoint = issuingEntryPoint();
+        const error = await getCredentialManifestDescriptorError(
+            credentialManifestDescriptorByService({ endpoint: null }),
+            {},
+            undefined,
+            false,
+        );
+
+        assertDiagnostics(
+            expectedDiagnostics(entryPoint, {
+                errorCode: VCLErrorCode.InvalidLink,
+                sourceErrorCode:
+                    VelocityDeepLinkValidator.SourceInvalidOrMissingRequestEndpoint,
+                validationPhase: 'link_validation',
+                requestUri: null,
+            }),
+            error,
+        );
+    });
+
+    test('missing presentation request deep link returns invalid link', async () => {
+        const entryPoint = presentationEntryPoint();
+        const error = await getPresentationRequestDescriptorError({
+            deepLink: null,
+            endpoint: null,
+            did: null,
+        } as unknown as VCLPresentationRequestDescriptor);
+
+        assertDiagnostics(
+            expectedDiagnostics(entryPoint, {
+                errorCode: VCLErrorCode.InvalidLink,
+                validationPhase: 'link_validation',
+            }),
+            error,
+        );
+        expect(error.message).toContain('deepLink was not found');
+    });
+
     test('malformed did syntax returns invalid link', async () => {
         for (const entryPoint of entryPoints) {
             for (const did of [
@@ -667,37 +706,62 @@ describe('Error taxonomy contract', () => {
         });
     });
 
-    test('credential manifest use case classifies verifier false as request invalid', async () => {
-        const entryPoint = issuingEntryPoint();
+    test('request use cases classify response validation failures as request invalid', async () => {
+        const cases = [
+            {
+                entryPoint: issuingEntryPoint(),
+                getError: () =>
+                    credentialManifestUseCase({
+                        verifierResult: false,
+                    }).getCredentialManifest(
+                        credentialManifestDescriptor(
+                            DeepLinkMocks.CredentialManifestDeepLinkDevNet,
+                        ),
+                        {},
+                    ),
+                message: 'Failed to verify credentialManifest jwt',
+            },
+            {
+                entryPoint: presentationEntryPoint(),
+                getError: () =>
+                    presentationRequestUseCase({
+                        decodeError: new VCLError({
+                            errorCode: VCLErrorCode.SdkError,
+                            message: 'invalid presentation request jwt',
+                        }),
+                    }).getPresentationRequest(
+                        presentationDescriptor(
+                            DeepLinkMocks.PresentationRequestDeepLinkDevNet,
+                        ),
+                        {},
+                    ),
+                message: 'invalid presentation request jwt',
+            },
+        ];
 
-        try {
-            await credentialManifestUseCase({
-                verifierResult: false,
-            }).getCredentialManifest(
-                credentialManifestDescriptor(
-                    DeepLinkMocks.CredentialManifestDeepLinkDevNet,
-                ),
-                {},
-            );
-        } catch (error) {
-            expect(error).toBeInstanceOf(VCLError);
-            const sdkError = error as VCLError;
+        for (const testCase of cases) {
+            let sdkError: VCLError | null = null;
+            try {
+                await testCase.getError();
+            } catch (error) {
+                expect(error).toBeInstanceOf(VCLError);
+                sdkError = error as VCLError;
+            }
+
+            if (sdkError == null) {
+                throw new Error('Expected request use case to reject');
+            }
             assertDiagnostics(
-                expectedDiagnostics(entryPoint, {
-                    errorCode: VCLErrorCode.IssuerRequestInvalid,
+                expectedDiagnostics(testCase.entryPoint, {
+                    errorCode: testCase.entryPoint.requestInvalidCode,
                     sourceErrorCode: VCLErrorCode.SdkError,
                     validationPhase: 'request_validation',
-                    requestDid: entryPoint.did,
+                    requestDid: testCase.entryPoint.did,
                 }),
                 sdkError,
             );
-            expect(sdkError.message).toContain(
-                'Failed to verify credentialManifest jwt',
-            );
-            return;
+            expect(sdkError.message).toContain(testCase.message);
         }
-
-        throw new Error('Expected credential manifest use case to reject');
     });
 
     test('credential manifest by service succeeds without deep link verification', async () => {
@@ -974,7 +1038,7 @@ const credentialManifestDescriptorByService = ({
     endpoint = DeepLinkMocks.CredentialManifestRequestDecodedUriStr,
     did = DeepLinkMocks.IssuerDid,
 }: {
-    endpoint?: string;
+    endpoint?: string | null;
     did?: string;
 } = {}) =>
     new VCLCredentialManifestDescriptorByService(
@@ -1012,6 +1076,19 @@ const getCredentialManifestDescriptorError = async (
     throw new Error('Expected getCredentialManifest to reject with VCLError');
 };
 
+const getPresentationRequestDescriptorError = async (
+    descriptor: VCLPresentationRequestDescriptor,
+): Promise<VCLError> => {
+    try {
+        await initializedVcl().getPresentationRequest(descriptor);
+    } catch (error) {
+        expect(error).toBeInstanceOf(VCLError);
+        return error as VCLError;
+    }
+
+    throw new Error('Expected getPresentationRequest to reject with VCLError');
+};
+
 const getCredentialManifestByService = async (
     descriptor: VCLCredentialManifestDescriptor,
     router: BaselineRouter = {},
@@ -1044,6 +1121,34 @@ const credentialManifestUseCase = ({
         },
         {
             verifyCredentialManifest: async () => verifierResult,
+        },
+    );
+
+const presentationRequestUseCase = ({
+    decodeError = new VCLError({
+        errorCode: VCLErrorCode.SdkError,
+        message: 'invalid presentation request jwt',
+    }),
+}: {
+    decodeError?: VCLError;
+} = {}) =>
+    new PresentationRequestUseCaseImpl(
+        {
+            getPresentationRequest: async () => 'invalid.jwt',
+        },
+        {
+            resolveDidDocument: async () => DidDocumentMocks.DidDocumentMock,
+        },
+        {
+            decode: async () => {
+                throw decodeError;
+            },
+            verifyJwt: async () => true,
+            generateSignedJwt: async () =>
+                PresentationRequestMocks.PresentationRequestJwt,
+        },
+        {
+            verifyPresentationRequest: async () => true,
         },
     );
 
@@ -1260,6 +1365,9 @@ const simpleRequestUri = () =>
 
 const issuingEntryPoint = () =>
     entryPoints.find((entryPoint) => entryPoint.type === 'issuing')!;
+
+const presentationEntryPoint = () =>
+    entryPoints.find((entryPoint) => entryPoint.type === 'presentation')!;
 
 const jwtWithoutKid = (jwt: string) => {
     const [, payload, signature] = jwt.split('.');

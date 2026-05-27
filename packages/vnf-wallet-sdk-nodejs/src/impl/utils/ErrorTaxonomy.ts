@@ -137,16 +137,6 @@ export const toRequestValidationError = (
         },
     );
 
-export const toIssuingRequestAuthorizationError = (
-    error: VCLError,
-    context: Omit<TaxonomyContext, 'requestKind' | 'validationPhase'> = {},
-) =>
-    toTaxonomyError(error, VCLErrorCode.IssuerRequestUnauthorized, {
-        validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
-        requestKind: ErrorTaxonomy.RequestKindIssuing,
-        ...context,
-    });
-
 export const isConnectivityFailure = (error: VCLError) =>
     error.errorCode === VCLErrorCode.ConnectivityFailure ||
     error.statusCode === VCLStatusCode.NetworkError;
