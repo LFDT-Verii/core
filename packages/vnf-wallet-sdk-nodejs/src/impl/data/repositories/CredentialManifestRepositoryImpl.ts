@@ -6,7 +6,7 @@ import CredentialManifestRepository from '../../domain/repositories/CredentialMa
 import { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 import {
-    classifyClientRequestFetch,
+    toClientRequestFetchError,
     ErrorTaxonomy,
 } from '../../utils/ErrorTaxonomy';
 
@@ -35,21 +35,22 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
                 },
             });
         } catch (error) {
-            throw classifyClientRequestFetch(
-                VCLError.fromError(error),
-                endpoint,
-                ErrorTaxonomy.RequestKindIssuing,
-            );
+            throw toClientRequestFetchError(VCLError.fromError(error), {
+                requestUri: endpoint,
+                requestKind: ErrorTaxonomy.RequestKindIssuing,
+            });
         }
         const issuingRequest =
             credentialManifestResponse.payload[
                 VCLCredentialManifest.KeyIssuingRequest
             ];
         if (!issuingRequest) {
-            throw classifyClientRequestFetch(
+            throw toClientRequestFetchError(
                 new VCLError({ message: 'Missing issuing_request' }),
-                endpoint,
-                ErrorTaxonomy.RequestKindIssuing,
+                {
+                    requestUri: endpoint,
+                    requestKind: ErrorTaxonomy.RequestKindIssuing,
+                },
             );
         }
         return issuingRequest;

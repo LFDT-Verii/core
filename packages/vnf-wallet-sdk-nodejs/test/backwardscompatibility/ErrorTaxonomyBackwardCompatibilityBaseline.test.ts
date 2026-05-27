@@ -270,13 +270,20 @@ describe('Error taxonomy backward compatibility baseline', () => {
         }
     });
 
-    test('malformed request endpoint response returns sdk_error', async () => {
+    test('malformed request endpoint response returns sdk_error with http status', async () => {
         for (const entryPoint of entryPoints) {
             const error = await getEntryPointError(entryPoint, undefined, {
-                requestPayload: 'not json',
+                requestStatusCode: 502,
+                requestPayload: '{not json',
+                requestContentType: 'text/plain',
             });
 
             expect(error.errorCode).toEqual(VCLErrorCode.SdkError);
+            expect(error.statusCode).toEqual(502);
+            expect(error.message).toEqual(
+                'Request failed with status code 502',
+            );
+            expect(error.payload).toEqual('{not json');
         }
     });
 

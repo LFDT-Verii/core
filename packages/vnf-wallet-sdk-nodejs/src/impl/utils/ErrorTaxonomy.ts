@@ -25,6 +25,17 @@ type TaxonomyContext = {
     validationPhase?: string | null;
 };
 
+type RequiredTaxonomyContext = Omit<TaxonomyContext, 'validationPhase'> & {
+    validationPhase: string;
+};
+
+type RequestTaxonomyContext = Omit<
+    TaxonomyContext,
+    'requestKind' | 'validationPhase'
+> & {
+    requestKind: RequestKind;
+};
+
 const taxonomyCodes = new Set<string>([
     VCLErrorCode.InvalidLink,
     VCLErrorCode.ConnectivityFailure,
@@ -63,146 +74,78 @@ export const invalidLink = ({
         requestKind,
     });
 
-export const classifyClientRequestFetch = (
+export const toClientRequestFetchError = (
     error: VCLError,
-    requestUri: string | null,
-    requestKind: RequestKind,
-) => {
-    if (isTaxonomyError(error)) {
-        return withMissingTaxonomyContext(error, {
-            requestUri,
-            requestKind,
-            validationPhase: ErrorTaxonomy.PhaseClientRequestFetch,
-        });
-    }
-    if (isConnectivityFailure(error)) {
-        return withTaxonomy(error, VCLErrorCode.ConnectivityFailure, {
-            validationPhase: ErrorTaxonomy.PhaseClientRequestFetch,
-            requestUri,
-            requestKind,
-        });
-    }
-    if (error.statusCode === 401 || error.statusCode === 403) {
-        return withTaxonomy(error, VCLErrorCode.ClientRequestUnauthorized, {
-            validationPhase: ErrorTaxonomy.PhaseClientRequestFetch,
-            requestUri,
-            requestKind,
-        });
-    }
-    return withTaxonomy(error, VCLErrorCode.ClientRequestRejected, {
+    context: RequestTaxonomyContext,
+) =>
+    toTaxonomyError(error, clientRequestFetchCode(error), {
         validationPhase: ErrorTaxonomy.PhaseClientRequestFetch,
-        requestUri,
-        requestKind,
+        ...context,
     });
-};
 
-export const classifyDidResolution = (
+export const toDidResolutionError = (
     error: VCLError,
-    requestKind: RequestKind,
-    requestDid: string | null,
-) => {
-    if (isTaxonomyError(error)) {
-        return withMissingTaxonomyContext(error, {
-            requestDid,
-            requestKind,
-            validationPhase: ErrorTaxonomy.PhaseDidResolution,
-        });
-    }
-    return withTaxonomy(
+    context: RequestTaxonomyContext,
+) =>
+    toTaxonomyError(
         error,
         isConnectivityFailure(error)
             ? VCLErrorCode.ConnectivityFailure
-            : didUnresolvableCode(requestKind),
+            : didUnresolvableCode(context.requestKind),
         {
             validationPhase: ErrorTaxonomy.PhaseDidResolution,
-            requestDid,
-            requestKind,
+            ...context,
         },
     );
-};
 
-export const classifyRegistration = (
+export const toRegistrationCheckError = (
     error: VCLError,
-    requestKind: RequestKind,
-    requestDid: string | null,
-) => {
-    if (isTaxonomyError(error)) {
-        return withMissingTaxonomyContext(error, {
-            requestDid,
-            requestKind,
-            validationPhase: ErrorTaxonomy.PhaseRegistrationCheck,
-        });
-    }
-    return withTaxonomy(
+    context: RequestTaxonomyContext,
+) =>
+    toTaxonomyError(
         error,
         isConnectivityFailure(error)
             ? VCLErrorCode.ConnectivityFailure
-            : notRegisteredCode(requestKind),
+            : notRegisteredCode(context.requestKind),
         {
             validationPhase: ErrorTaxonomy.PhaseRegistrationCheck,
-            requestDid,
-            requestKind,
+            ...context,
         },
     );
-};
 
-export const classifyServiceAuthorization = (
+export const toRequestAuthorizationError = (
     error: VCLError,
-    requestKind: RequestKind,
-    requestDid: string | null,
+    context: RequestTaxonomyContext,
 ) =>
-    isTaxonomyError(error)
-        ? withMissingTaxonomyContext(error, {
-              requestDid,
-              requestKind,
-              validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
-          })
-        : withTaxonomy(error, requestUnauthorizedCode(requestKind), {
-              validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
-              requestDid,
-              requestKind,
-          });
+    toTaxonomyError(error, requestUnauthorizedCode(context.requestKind), {
+        validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
+        ...context,
+    });
 
-export const classifyRequestValidation = (
+export const toRequestValidationError = (
     error: VCLError,
-    requestKind: RequestKind,
-    requestDid: string | null,
-) => {
-    if (isTaxonomyError(error)) {
-        return withMissingTaxonomyContext(error, {
-            requestDid,
-            requestKind,
-            validationPhase: ErrorTaxonomy.PhaseRequestValidation,
-        });
-    }
-    return withTaxonomy(
+    context: RequestTaxonomyContext,
+) =>
+    toTaxonomyError(
         error,
         isConnectivityFailure(error)
             ? VCLErrorCode.ConnectivityFailure
-            : requestInvalidCode(requestKind),
+            : requestInvalidCode(context.requestKind),
         {
             validationPhase: ErrorTaxonomy.PhaseRequestValidation,
-            requestDid,
-            requestKind,
+            ...context,
         },
     );
-};
 
-export const classifyRequestAuthorization = (
+export const toIssuingRequestAuthorizationError = (
     error: VCLError,
-    requestDid: string | null = null,
+    context: Omit<TaxonomyContext, 'requestKind' | 'validationPhase'> = {},
 ) =>
-    isTaxonomyError(error)
-        ? withMissingTaxonomyContext(error, {
-              requestDid,
-              requestKind: ErrorTaxonomy.RequestKindIssuing,
-              validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
-          })
-        : withTaxonomy(error, VCLErrorCode.IssuerRequestUnauthorized, {
-              validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
-              requestDid,
-              requestKind: ErrorTaxonomy.RequestKindIssuing,
-          });
+    toTaxonomyError(error, VCLErrorCode.IssuerRequestUnauthorized, {
+        validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
+        requestKind: ErrorTaxonomy.RequestKindIssuing,
+        ...context,
+    });
 
 export const isConnectivityFailure = (error: VCLError) =>
     error.errorCode === VCLErrorCode.ConnectivityFailure ||
@@ -211,34 +154,15 @@ export const isConnectivityFailure = (error: VCLError) =>
 export const isTaxonomyError = (error: VCLError) =>
     taxonomyCodes.has(error.errorCode);
 
-export const withMissingTaxonomyContext = (
-    error: VCLError,
-    context: TaxonomyContext,
-) =>
-    copyError(error, {
-        validationPhase: error.validationPhase ?? context.validationPhase,
-        requestDid: error.requestDid ?? context.requestDid,
-        requestUri: error.requestUri ?? context.requestUri,
-        requestKind: error.requestKind ?? context.requestKind,
-    });
-
-export const withTaxonomy = (
+export const toTaxonomyError = (
     error: VCLError,
     taxonomyCode: VCLErrorCode,
-    context: Required<Pick<TaxonomyContext, 'validationPhase'>> &
-        TaxonomyContext,
+    context: RequiredTaxonomyContext,
 ) => {
     if (isTaxonomyError(error)) {
-        return withMissingTaxonomyContext(error, context);
+        return copyError(error, missingTaxonomyContext(error, context));
     }
-    return copyError(error, {
-        errorCode: taxonomyCode,
-        sourceErrorCode: sourceErrorCodeFor(error, taxonomyCode),
-        validationPhase: context.validationPhase,
-        requestDid: context.requestDid ?? error.requestDid,
-        requestUri: context.requestUri ?? error.requestUri,
-        requestKind: context.requestKind ?? error.requestKind,
-    });
+    return copyError(error, taxonomyOverrides(error, taxonomyCode, context));
 };
 
 export const copyError = (
@@ -290,6 +214,39 @@ const sourceErrorCodeFor = (error: VCLError, taxonomyCode: VCLErrorCode) => {
         return null;
     }
     return error.errorCode === taxonomyCode ? null : error.errorCode;
+};
+
+const missingTaxonomyContext = (
+    error: VCLError,
+    context: RequiredTaxonomyContext,
+) => ({
+    validationPhase: error.validationPhase ?? context.validationPhase,
+    requestDid: error.requestDid ?? context.requestDid,
+    requestUri: error.requestUri ?? context.requestUri,
+    requestKind: error.requestKind ?? context.requestKind,
+});
+
+const taxonomyOverrides = (
+    error: VCLError,
+    taxonomyCode: VCLErrorCode,
+    context: RequiredTaxonomyContext,
+) => ({
+    errorCode: taxonomyCode,
+    sourceErrorCode: sourceErrorCodeFor(error, taxonomyCode),
+    validationPhase: context.validationPhase,
+    requestDid: context.requestDid ?? error.requestDid,
+    requestUri: context.requestUri ?? error.requestUri,
+    requestKind: context.requestKind ?? error.requestKind,
+});
+
+const clientRequestFetchCode = (error: VCLError) => {
+    if (isConnectivityFailure(error)) {
+        return VCLErrorCode.ConnectivityFailure;
+    }
+    if (error.statusCode === 401 || error.statusCode === 403) {
+        return VCLErrorCode.ClientRequestUnauthorized;
+    }
+    return VCLErrorCode.ClientRequestRejected;
 };
 
 const valueOr = <T, K extends keyof T>(

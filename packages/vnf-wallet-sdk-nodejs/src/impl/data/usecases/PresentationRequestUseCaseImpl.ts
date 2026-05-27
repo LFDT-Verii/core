@@ -11,8 +11,8 @@ import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDo
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 import VCLLog from '../../utils/VCLLog';
 import {
-    classifyDidResolution,
-    classifyRequestValidation,
+    toDidResolutionError,
+    toRequestValidationError,
     ErrorTaxonomy,
 } from '../../utils/ErrorTaxonomy';
 
@@ -51,11 +51,10 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
                         presentationRequest.iss,
                     );
             } catch (error) {
-                throw classifyDidResolution(
-                    VCLError.fromError(error),
-                    ErrorTaxonomy.RequestKindPresentation,
+                throw toDidResolutionError(VCLError.fromError(error), {
+                    requestKind: ErrorTaxonomy.RequestKindPresentation,
                     requestDid,
-                );
+                });
             }
             this.validateDidDocumentVerificationMaterial(
                 presentationRequest,
@@ -67,11 +66,10 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
                 didDocument,
             );
         } catch (error) {
-            throw classifyRequestValidation(
-                VCLError.fromError(error),
-                ErrorTaxonomy.RequestKindPresentation,
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
                 requestDid,
-            );
+            });
         }
     }
 
@@ -86,12 +84,14 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
             !Array.isArray(verificationMethod) ||
             verificationMethod.length === 0
         ) {
-            throw classifyDidResolution(
+            throw toDidResolutionError(
                 new VCLError({
                     message: missingMaterialMessage,
                 }),
-                ErrorTaxonomy.RequestKindPresentation,
-                presentationRequest.iss,
+                {
+                    requestKind: ErrorTaxonomy.RequestKindPresentation,
+                    requestDid: presentationRequest.iss,
+                },
             );
         }
     }
@@ -110,11 +110,10 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
             }
             return publicJwk;
         } catch (error) {
-            throw classifyRequestValidation(
-                VCLError.fromError(error),
-                ErrorTaxonomy.RequestKindPresentation,
-                presentationRequest.iss,
-            );
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+                requestDid: presentationRequest.iss,
+            });
         }
     }
 

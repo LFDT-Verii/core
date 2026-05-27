@@ -60,13 +60,13 @@ import VCLAuthTokenDescriptor from '../api/entities/VCLAuthTokenDescriptor';
 import VCLAuthToken from '../api/entities/VCLAuthToken';
 import AuthTokenUseCase from './domain/usecases/AuthTokenUseCase';
 import {
-    classifyRegistration,
-    classifyServiceAuthorization,
+    toRegistrationCheckError,
+    toRequestAuthorizationError,
     ErrorTaxonomy,
     RequestKind,
 } from './utils/ErrorTaxonomy';
 import ErrorTaxonomyCompatibilityMapper from './utils/ErrorTaxonomyCompatibilityMapper';
-import VelocityDeepLinkValidator from './utils/VelocityDeepLinkValidator';
+import PublicRequestDescriptorValidator from './utils/PublicRequestDescriptorValidator';
 
 export class VCLImpl implements VCL {
     static readonly ModelsToInitializeAmount = 3;
@@ -111,8 +111,19 @@ export class VCLImpl implements VCL {
         VCLImpl.ModelsToInitializeAmount,
     );
 
-    private readonly velocityDeepLinkValidator =
-        new VelocityDeepLinkValidator();
+    private readonly presentationRequestDescriptorValidator =
+        new PublicRequestDescriptorValidator({
+            requestKind: ErrorTaxonomy.RequestKindPresentation,
+            expectedPath: 'inspect',
+            requireDeepLink: true,
+        });
+
+    private readonly credentialManifestDescriptorValidator =
+        new PublicRequestDescriptorValidator({
+            requestKind: ErrorTaxonomy.RequestKindIssuing,
+            expectedPath: 'issue',
+            requireDeepLink: false,
+        });
 
     private readonly errorTaxonomyCompatibilityMapper =
         new ErrorTaxonomyCompatibilityMapper();
@@ -272,7 +283,7 @@ export class VCLImpl implements VCL {
             ErrorTaxonomy.RequestKindPresentation,
             'getPresentationRequest',
             async () => {
-                this.validatePresentationRequestDescriptor(
+                this.presentationRequestDescriptorValidator.validate(
                     presentationRequestDescriptor,
                 );
                 const verifiedProfile =
@@ -288,35 +299,6 @@ export class VCLImpl implements VCL {
             },
         );
     };
-
-    private validatePresentationRequestDescriptor(
-        presentationRequestDescriptor: VCLPresentationRequestDescriptor,
-    ) {
-        this.throwIfValidationError(
-            this.velocityDeepLinkValidator.validateDeepLink({
-                deepLink: presentationRequestDescriptor.deepLink,
-                expectedPath: 'inspect',
-                expectedDidParam: 'inspectorDid',
-                requestKind: ErrorTaxonomy.RequestKindPresentation,
-            }),
-        );
-        this.throwIfValidationError(
-            this.velocityDeepLinkValidator.validateRequestEndpoint(
-                presentationRequestDescriptor.endpoint,
-                ErrorTaxonomy.RequestKindPresentation,
-            ),
-        );
-        if (!presentationRequestDescriptor.did) {
-            throw new VCLError({
-                errorCode: 'invalid_link',
-                message: `did was not found in ${JSON.stringify(
-                    presentationRequestDescriptor,
-                )}`,
-                validationPhase: ErrorTaxonomy.PhaseLinkValidation,
-                requestKind: ErrorTaxonomy.RequestKindPresentation,
-            });
-        }
-    }
 
     submitPresentation = async (
         presentationSubmission: VCLPresentationSubmission,
@@ -364,7 +346,7 @@ export class VCLImpl implements VCL {
             ErrorTaxonomy.RequestKindIssuing,
             'getCredentialManifest',
             async () => {
-                this.validateCredentialManifestDescriptor(
+                this.credentialManifestDescriptorValidator.validate(
                     credentialManifestDescriptor,
                 );
                 const verifiedProfile =
@@ -382,37 +364,6 @@ export class VCLImpl implements VCL {
             },
         );
     };
-
-    private validateCredentialManifestDescriptor(
-        credentialManifestDescriptor: VCLCredentialManifestDescriptor,
-    ) {
-        if (credentialManifestDescriptor.deepLink) {
-            this.throwIfValidationError(
-                this.velocityDeepLinkValidator.validateDeepLink({
-                    deepLink: credentialManifestDescriptor.deepLink,
-                    expectedPath: 'issue',
-                    expectedDidParam: 'issuerDid',
-                    requestKind: ErrorTaxonomy.RequestKindIssuing,
-                }),
-            );
-        }
-        this.throwIfValidationError(
-            this.velocityDeepLinkValidator.validateRequestEndpoint(
-                credentialManifestDescriptor.endpoint,
-                ErrorTaxonomy.RequestKindIssuing,
-            ),
-        );
-        if (!credentialManifestDescriptor.did) {
-            throw new VCLError({
-                errorCode: 'invalid_link',
-                message: `did was not found in ${JSON.stringify(
-                    credentialManifestDescriptor,
-                )}`,
-                validationPhase: ErrorTaxonomy.PhaseLinkValidation,
-                requestKind: ErrorTaxonomy.RequestKindIssuing,
-            });
-        }
-    }
 
     generateOffers = async (
         generateOffersDescriptor: VCLGenerateOffersDescriptor,
@@ -575,12 +526,6 @@ export class VCLImpl implements VCL {
         }
     }
 
-    private throwIfValidationError(error: VCLError | null) {
-        if (error) {
-            throw error;
-        }
-    }
-
     private async verifyServiceTypeOfVerifiedProfile(
         did: string,
         expectedServiceTypes: VCLServiceTypes,
@@ -623,9 +568,12 @@ export class VCLImpl implements VCL {
             error.sourceErrorCode ===
             ProfileServiceTypeVerifier.SourceWrongServiceType
         ) {
-            return classifyServiceAuthorization(error, requestKind, requestDid);
+            return toRequestAuthorizationError(error, {
+                requestKind,
+                requestDid,
+            });
         }
-        return classifyRegistration(error, requestKind, requestDid);
+        return toRegistrationCheckError(error, { requestKind, requestDid });
     }
 
     private toPublicError(error: VCLError, requestKind: RequestKind): VCLError {

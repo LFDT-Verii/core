@@ -6,7 +6,10 @@ import {
     VCLEnvironment,
     VCLError,
     VCLErrorCode,
+    VCLCredentialManifest,
+    VCLCredentialManifestDescriptor,
     VCLCredentialManifestDescriptorByDeepLink,
+    VCLCredentialManifestDescriptorByService,
     VCLCryptoServicesDescriptor,
     VCLDeepLink,
     VCLInitializationDescriptor,
@@ -15,6 +18,7 @@ import {
     VCLJwtVerifyService,
     VCLPresentationRequestDescriptor,
     VCLPublicJwk,
+    VCLService,
     VCLStatusCode,
     VCLToken,
     VCLXVnfProtocolVersion,
@@ -181,7 +185,7 @@ describe('Error taxonomy contract', () => {
         }
     });
 
-    test('wrong flow did param returns invalid link', async () => {
+    test('wrong flow did param is accepted by lax did parsing and fails request verification', async () => {
         for (const entryPoint of entryPoints) {
             const deepLink = new VCLDeepLink(
                 `velocity-network://${entryPoint.schemePath}?request_uri=${simpleRequestUri()}&${entryPoint.otherDidParam}=did:example:entity`,
@@ -190,11 +194,10 @@ describe('Error taxonomy contract', () => {
 
             assertDiagnostics(
                 expectedDiagnostics(entryPoint, {
-                    errorCode: VCLErrorCode.InvalidLink,
-                    sourceErrorCode:
-                        VelocityDeepLinkValidator.SourceInvalidOrMissingDid,
-                    validationPhase: 'link_validation',
-                    requestUri: deepLink.requestUri,
+                    errorCode: entryPoint.requestInvalidCode,
+                    sourceErrorCode: entryPoint.legacyMismatchErrorCode,
+                    validationPhase: 'request_validation',
+                    requestDid: entryPoint.did,
                 }),
                 error,
             );
@@ -257,6 +260,47 @@ describe('Error taxonomy contract', () => {
                 );
             }
         }
+    });
+
+    test('invalid direct request endpoint returns invalid link', async () => {
+        const entryPoint = issuingEntryPoint();
+        const endpoint = 'ftp://example.com/request';
+        const error = await getCredentialManifestDescriptorError(
+            credentialManifestDescriptorByService({ endpoint }),
+            {},
+            undefined,
+            false,
+        );
+
+        assertDiagnostics(
+            expectedDiagnostics(entryPoint, {
+                errorCode: VCLErrorCode.InvalidLink,
+                sourceErrorCode:
+                    VelocityDeepLinkValidator.SourceInvalidOrMissingRequestEndpoint,
+                validationPhase: 'link_validation',
+                requestUri: endpoint,
+            }),
+            error,
+        );
+    });
+
+    test('missing direct request did returns invalid link', async () => {
+        const entryPoint = issuingEntryPoint();
+        const error = await getCredentialManifestDescriptorError(
+            credentialManifestDescriptorByService({ did: '' }),
+            {},
+            undefined,
+            false,
+        );
+
+        assertDiagnostics(
+            expectedDiagnostics(entryPoint, {
+                errorCode: VCLErrorCode.InvalidLink,
+                validationPhase: 'link_validation',
+            }),
+            error,
+        );
+        expect(error.message).toContain('did was not found');
     });
 
     test('malformed did syntax returns invalid link', async () => {
@@ -469,6 +513,29 @@ describe('Error taxonomy contract', () => {
         }
     });
 
+    test('empty issuing_request returns sdk_error after request fetch', async () => {
+        const error = await getCredentialManifestDescriptorError(
+            credentialManifestDescriptorByService(),
+            {
+                requestPayload: {
+                    issuing_request: '',
+                },
+            },
+        );
+
+        assertDiagnostics(
+            expectedDiagnostics(issuingEntryPoint(), {
+                errorCode: VCLErrorCode.ClientRequestRejected,
+                sourceErrorCode: VCLErrorCode.SdkError,
+                validationPhase: 'client_request_fetch',
+                requestUri:
+                    credentialManifestDescriptorByService().endpoint ?? null,
+            }),
+            error,
+        );
+        expect(error.message).toEqual('Missing issuing_request');
+    });
+
     test('did resolution network failure propagates sdk_error and status from network', async () => {
         for (const entryPoint of entryPoints) {
             const payload =
@@ -558,6 +625,88 @@ describe('Error taxonomy contract', () => {
             );
             expect(error.message).toContain('public jwk not found for kid');
         }
+    });
+
+    test('credential manifest jwt without kid returns request invalid', async () => {
+        const entryPoint = issuingEntryPoint();
+        const error = await getCredentialManifestDescriptorError(
+            credentialManifestDescriptorByService(),
+            {
+                requestPayload: {
+                    issuing_request: jwtWithoutKid(
+                        CredentialManifestMocks.JwtCredentialManifest1,
+                    ),
+                },
+            },
+        );
+
+        assertDiagnostics(
+            expectedDiagnostics(entryPoint, {
+                errorCode: VCLErrorCode.IssuerRequestInvalid,
+                sourceErrorCode: VCLErrorCode.SdkError,
+                validationPhase: 'request_validation',
+                requestDid: entryPoint.did,
+            }),
+            error,
+        );
+        expect(error.message).toContain('Empty credentialManifest.jwt.kid');
+    });
+
+    test('credential manifest use case rejects an empty repository jwt', async () => {
+        await expect(
+            credentialManifestUseCase({
+                repositoryJwt: '',
+            }).getCredentialManifest(
+                credentialManifestDescriptor(
+                    DeepLinkMocks.CredentialManifestDeepLinkDevNet,
+                ),
+                {},
+            ),
+        ).rejects.toMatchObject({
+            message: 'Empty jwtStr',
+        });
+    });
+
+    test('credential manifest use case classifies verifier false as request invalid', async () => {
+        const entryPoint = issuingEntryPoint();
+
+        try {
+            await credentialManifestUseCase({
+                verifierResult: false,
+            }).getCredentialManifest(
+                credentialManifestDescriptor(
+                    DeepLinkMocks.CredentialManifestDeepLinkDevNet,
+                ),
+                {},
+            );
+        } catch (error) {
+            expect(error).toBeInstanceOf(VCLError);
+            const sdkError = error as VCLError;
+            assertDiagnostics(
+                expectedDiagnostics(entryPoint, {
+                    errorCode: VCLErrorCode.IssuerRequestInvalid,
+                    sourceErrorCode: VCLErrorCode.SdkError,
+                    validationPhase: 'request_validation',
+                    requestDid: entryPoint.did,
+                }),
+                sdkError,
+            );
+            expect(sdkError.message).toContain(
+                'Failed to verify credentialManifest jwt',
+            );
+            return;
+        }
+
+        throw new Error('Expected credential manifest use case to reject');
+    });
+
+    test('credential manifest by service succeeds without deep link verification', async () => {
+        const credentialManifest = await getCredentialManifestByService(
+            credentialManifestDescriptorByService(),
+        );
+
+        expect(credentialManifest.deepLink).toBeNull();
+        expect(credentialManifest.did).toEqual(DeepLinkMocks.IssuerDid);
     });
 
     test('verified profile lookup failure propagates network error details', async () => {
@@ -821,6 +970,83 @@ const credentialManifestDescriptor = (deepLink: VCLDeepLink) =>
 const presentationDescriptor = (deepLink: VCLDeepLink) =>
     new VCLPresentationRequestDescriptor(deepLink, null, DidJwkMocks.DidJwk);
 
+const credentialManifestDescriptorByService = ({
+    endpoint = DeepLinkMocks.CredentialManifestRequestDecodedUriStr,
+    did = DeepLinkMocks.IssuerDid,
+}: {
+    endpoint?: string;
+    did?: string;
+} = {}) =>
+    new VCLCredentialManifestDescriptorByService(
+        new VCLService({
+            id: `${DeepLinkMocks.IssuerDid}#credential-agent-issuer-1`,
+            type: 'VelocityCredentialAgentIssuer_v1.0',
+            serviceEndpoint: endpoint,
+            credentialTypes: ['PastEmploymentPosition'],
+        }),
+        VCLIssuingType.Career,
+        null,
+        null,
+        DidJwkMocks.DidJwk,
+        did,
+    );
+
+const getCredentialManifestDescriptorError = async (
+    descriptor: VCLCredentialManifestDescriptor,
+    router: BaselineRouter = {},
+    jwtVerificationError?: VCLError,
+    setupNetwork = true,
+): Promise<VCLError> => {
+    try {
+        await getCredentialManifestByService(
+            descriptor,
+            router,
+            jwtVerificationError,
+            setupNetwork,
+        );
+    } catch (error) {
+        expect(error).toBeInstanceOf(VCLError);
+        return error as VCLError;
+    }
+
+    throw new Error('Expected getCredentialManifest to reject with VCLError');
+};
+
+const getCredentialManifestByService = async (
+    descriptor: VCLCredentialManifestDescriptor,
+    router: BaselineRouter = {},
+    jwtVerificationError?: VCLError,
+    setupNetwork = true,
+): Promise<VCLCredentialManifest> => {
+    const vcl = initializedVcl(jwtVerificationError);
+    if (setupNetwork) {
+        setupCredentialManifestDescriptorRouter(descriptor, router);
+    }
+    return vcl.getCredentialManifest(descriptor);
+};
+
+const credentialManifestUseCase = ({
+    repositoryJwt = CredentialManifestMocks.JwtCredentialManifest1,
+    verifierResult = true,
+}: {
+    repositoryJwt?: string;
+    verifierResult?: boolean;
+} = {}) =>
+    new CredentialManifestUseCaseImpl(
+        {
+            getCredentialManifest: async () => repositoryJwt,
+        },
+        {
+            resolveDidDocument: async () => DidDocumentMocks.DidDocumentMock,
+        },
+        {
+            verifyJwt: async () => true,
+        },
+        {
+            verifyCredentialManifest: async () => verifierResult,
+        },
+    );
+
 const setupRouter = (
     entryPoint: EntryPoint,
     deepLink: VCLDeepLink,
@@ -841,16 +1067,46 @@ const setupRouter = (
     mockDidDocument(entryPoint, router);
 };
 
+const setupCredentialManifestDescriptorRouter = (
+    descriptor: VCLCredentialManifestDescriptor,
+    router: BaselineRouter,
+) => {
+    const entryPoint = issuingEntryPoint();
+    mockVerifiedProfileForDid(
+        entryPoint,
+        descriptor.did ?? entryPoint.did,
+        router,
+    );
+
+    const { endpoint } = descriptor;
+    if (endpoint && isHttpUrl(endpoint)) {
+        mockSdkRequestEndpoint(entryPoint, endpoint, router);
+    }
+
+    mockDidDocument(entryPoint, router);
+};
+
 const mockVerifiedProfile = (
     entryPoint: EntryPoint,
     deepLink: VCLDeepLink,
+    router: BaselineRouter,
+) => {
+    mockVerifiedProfileForDid(
+        entryPoint,
+        safeDid(deepLink) ?? entryPoint.did,
+        router,
+    );
+};
+
+const mockVerifiedProfileForDid = (
+    entryPoint: EntryPoint,
+    did: string,
     {
         verifiedProfileContentType = jsonContentType,
         verifiedProfilePayload = defaultVerifiedProfilePayload(entryPoint),
         verifiedProfileStatusCode = 200,
     }: BaselineRouter,
 ) => {
-    const did = safeDid(deepLink) ?? entryPoint.did;
     const path = `/api/v0.6/organizations/${did}/verified-profile`;
 
     nock(registrarOrigin)
@@ -1001,6 +1257,20 @@ const canonicalJsonOrSelf = (value: string | null | undefined) => {
 
 const simpleRequestUri = () =>
     encodeURIComponent('https://example.com/request');
+
+const issuingEntryPoint = () =>
+    entryPoints.find((entryPoint) => entryPoint.type === 'issuing')!;
+
+const jwtWithoutKid = (jwt: string) => {
+    const [, payload, signature] = jwt.split('.');
+    return `${base64UrlJson({
+        typ: 'JWT',
+        alg: 'ES256K',
+    })}.${payload}.${signature}`;
+};
+
+const base64UrlJson = (value: unknown) =>
+    Buffer.from(JSON.stringify(value)).toString('base64url');
 
 const normalizePayload = (payload: unknown) => {
     if (typeof payload === 'string' && isJsonString(payload)) {

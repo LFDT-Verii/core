@@ -14,8 +14,8 @@ import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDo
 import VCLDeepLink from '../../../api/entities/VCLDeepLink';
 import { Nullish } from '../../../api/VCLTypes';
 import {
-    classifyDidResolution,
-    classifyRequestValidation,
+    toDidResolutionError,
+    toRequestValidationError,
     ErrorTaxonomy,
 } from '../../utils/ErrorTaxonomy';
 
@@ -59,11 +59,10 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
                 didDocument,
             );
         } catch (error) {
-            throw classifyRequestValidation(
-                VCLError.fromError(error),
-                ErrorTaxonomy.RequestKindIssuing,
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindIssuing,
                 requestDid,
-            );
+            });
         }
     }
 
@@ -91,11 +90,10 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
                 credentialManifest.iss,
             );
         } catch (error) {
-            throw classifyDidResolution(
-                VCLError.fromError(error),
-                ErrorTaxonomy.RequestKindIssuing,
+            throw toDidResolutionError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindIssuing,
                 requestDid,
-            );
+            });
         }
     }
 
@@ -104,7 +102,7 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
         didDocument: VCLDidDocument,
     ): VCLPublicJwk {
         const { kid } = credentialManifest.jwt;
-        if (kid === null) {
+        if (!kid) {
             throw new VCLError({
                 message: `Empty credentialManifest.jwt.kid in jwt: ${credentialManifest.jwt}`,
             });
@@ -125,11 +123,10 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
         try {
             return this.publicJwkFor(credentialManifest, didDocument);
         } catch (error) {
-            throw classifyRequestValidation(
-                VCLError.fromError(error),
-                ErrorTaxonomy.RequestKindIssuing,
-                credentialManifest.iss,
-            );
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindIssuing,
+                requestDid: credentialManifest.iss,
+            });
         }
     }
 
@@ -144,12 +141,14 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
             !Array.isArray(verificationMethod) ||
             verificationMethod.length === 0
         ) {
-            throw classifyDidResolution(
+            throw toDidResolutionError(
                 new VCLError({
                     message: missingMaterialMessage,
                 }),
-                ErrorTaxonomy.RequestKindIssuing,
-                credentialManifest.iss,
+                {
+                    requestKind: ErrorTaxonomy.RequestKindIssuing,
+                    requestDid: credentialManifest.iss,
+                },
             );
         }
     }

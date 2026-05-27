@@ -6,7 +6,7 @@ import PresentationRequestRepository from '../../domain/repositories/Presentatio
 import { HeaderKeys, HeaderValues } from './Urls';
 import { HttpMethod } from '../infrastructure/network/HttpMethod';
 import {
-    classifyClientRequestFetch,
+    toClientRequestFetchError,
     ErrorTaxonomy,
 } from '../../utils/ErrorTaxonomy';
 
@@ -36,21 +36,22 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
                 },
             );
         } catch (error) {
-            throw classifyClientRequestFetch(
-                VCLError.fromError(error),
-                endpoint,
-                ErrorTaxonomy.RequestKindPresentation,
-            );
+            throw toClientRequestFetchError(VCLError.fromError(error), {
+                requestUri: endpoint,
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+            });
         }
         const presentationRequest =
             presentationRequestResponse.payload[
                 VCLPresentationRequest.KeyPresentationRequest
             ];
         if (!presentationRequest) {
-            throw classifyClientRequestFetch(
+            throw toClientRequestFetchError(
                 new VCLError({ message: 'Missing presentation_request' }),
-                endpoint,
-                ErrorTaxonomy.RequestKindPresentation,
+                {
+                    requestUri: endpoint,
+                    requestKind: ErrorTaxonomy.RequestKindPresentation,
+                },
             );
         }
         return presentationRequest;

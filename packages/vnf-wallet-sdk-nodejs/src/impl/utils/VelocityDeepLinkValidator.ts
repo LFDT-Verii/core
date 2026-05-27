@@ -30,12 +30,10 @@ export default class VelocityDeepLinkValidator {
     validateDeepLink({
         deepLink,
         expectedPath,
-        expectedDidParam,
         requestKind,
     }: {
         deepLink: VCLDeepLink;
         expectedPath: string;
-        expectedDidParam: string;
         requestKind: RequestKind;
     }): VCLError | null {
         const parsedUrl = parseUrl(deepLink.value);
@@ -63,7 +61,7 @@ export default class VelocityDeepLinkValidator {
             });
         }
 
-        const requestDid = expectedDid(deepLink, expectedDidParam);
+        const requestDid = deepLink.did;
         if (!isSyntacticallyValidDid(requestDid)) {
             return invalidLink({
                 message: 'Invalid or missing DID in Velocity link',
@@ -110,32 +108,6 @@ export default class VelocityDeepLinkValidator {
         );
     }
 }
-
-const expectedDid = (deepLink: VCLDeepLink, expectedDidParam: string) =>
-    queryParam(deepLink.value, expectedDidParam) ??
-    queryParam(deepLink.requestUri, expectedDidParam) ??
-    didInPath(deepLink.requestUri);
-
-const queryParam = (value: string | null | undefined, key: string) => {
-    try {
-        return value ? new URL(value).searchParams.get(key) : null;
-    } catch {
-        return null;
-    }
-};
-
-const didInPath = (value: string | null | undefined) => {
-    try {
-        return (
-            value
-                ?.split('?')[0]
-                .split('/')
-                .find((it) => it.startsWith(VCLDeepLink.KeyDidPrefix)) ?? null
-        );
-    } catch {
-        return null;
-    }
-};
 
 const isSyntacticallyValidDid = (did: string | null | undefined) =>
     did ? VelocityDeepLinkValidator.DidPattern.test(did) : false;
