@@ -370,7 +370,7 @@ describe('NetworkServiceImpl integration', () => {
         ).resolves.toEqual({
             error: null,
             errorCode: 'sdk_error',
-            message: 'Request failed with status code 500',
+            message: '',
             payload: '',
             requestId: null,
             statusCode: 500,

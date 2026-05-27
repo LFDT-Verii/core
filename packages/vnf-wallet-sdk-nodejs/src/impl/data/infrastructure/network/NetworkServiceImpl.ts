@@ -140,8 +140,7 @@ export default class NetworkServiceImpl implements NetworkService {
 
         return new VCLError({
             payload: textPayload,
-            message:
-                textPayload || `Request failed with status code ${statusCode}`,
+            message: textPayload,
             statusCode,
         });
     }

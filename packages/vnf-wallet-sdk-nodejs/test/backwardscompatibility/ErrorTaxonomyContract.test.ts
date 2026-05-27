@@ -577,6 +577,7 @@ describe('Error taxonomy contract', () => {
                     sourceErrorCode: VCLErrorCode.SdkError,
                     statusCode: 404,
                     validationPhase: 'registration_check',
+                    requestDid: entryPoint.did,
                 }),
                 error,
             );
@@ -597,6 +598,7 @@ describe('Error taxonomy contract', () => {
                         ProfileServiceTypeVerifier.SourceWrongServiceType,
                     statusCode: VCLStatusCode.VerificationError,
                     validationPhase: 'request_authorization',
+                    requestDid: entryPoint.did,
                 }),
                 error,
             );
@@ -621,6 +623,7 @@ describe('Error taxonomy contract', () => {
                         ProfileServiceTypeVerifier.SourceWrongServiceType,
                     statusCode: VCLStatusCode.VerificationError,
                     validationPhase: 'request_authorization',
+                    requestDid: entryPoint.did,
                 }),
                 error,
             );

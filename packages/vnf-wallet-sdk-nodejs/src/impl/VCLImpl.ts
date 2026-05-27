@@ -595,7 +595,7 @@ export class VCLImpl implements VCL {
             throw this.classifyProfileVerificationError(
                 VCLError.fromError(error),
                 requestKind,
-                null,
+                did,
             );
         }
     }
