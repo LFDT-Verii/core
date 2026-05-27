@@ -10,6 +10,11 @@ import PresentationRequestByDeepLinkVerifier from '../../domain/verifiers/Presen
 import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDocumentRepository';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 import VCLLog from '../../utils/VCLLog';
+import {
+    toDidResolutionError,
+    toRequestValidationError,
+    ErrorTaxonomy,
+} from '../../utils/ErrorTaxonomy';
 
 export default class PresentationRequestUseCaseImpl implements PresentationRequestUseCase {
     constructor(
@@ -27,38 +32,114 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
             await this.presentationRequestRepository.getPresentationRequest(
                 presentationRequestDescriptor,
             );
-        const jwt = await this.jwtServiceRepository.decode(encodedJwtStr);
-        const presentationRequest = new VCLPresentationRequest(
-            jwt,
-            verifiedProfile,
-            presentationRequestDescriptor.deepLink,
-            presentationRequestDescriptor.pushDelegate,
-            presentationRequestDescriptor.didJwk,
-            presentationRequestDescriptor.remoteCryptoServicesToken,
-        );
-        const didDocument =
-            await this.resolveDidDocumentRepository.resolveDidDocument(
-                presentationRequest.iss,
+        let requestDid = presentationRequestDescriptor.did ?? null;
+        let presentationRequest: VCLPresentationRequest;
+        try {
+            const jwt = await this.jwtServiceRepository.decode(encodedJwtStr);
+            presentationRequest = new VCLPresentationRequest(
+                jwt,
+                verifiedProfile,
+                presentationRequestDescriptor.deepLink,
+                presentationRequestDescriptor.pushDelegate,
+                presentationRequestDescriptor.didJwk,
+                presentationRequestDescriptor.remoteCryptoServicesToken,
             );
-        const { kid } = presentationRequest.jwt;
-        const publicJwk = didDocument.getPublicJwk(kid);
-        if (publicJwk == null) {
-            throw new VCLError({
-                message: `Public JWK not found for kid: ${kid} in DID Document: ${didDocument}`,
+            requestDid = presentationRequest.iss;
+        } catch (error) {
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+                requestDid,
             });
         }
-        return this.verifyPresentationRequest(
-            publicJwk,
-            presentationRequest,
-            didDocument,
-        );
+
+        const didDocument = await this.resolveDidDocument(presentationRequest);
+        try {
+            return await this.verifyPresentationRequest(
+                presentationRequest,
+                didDocument,
+            );
+        } catch (error) {
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+                requestDid,
+            });
+        }
+    }
+
+    private async resolveDidDocument(
+        presentationRequest: VCLPresentationRequest,
+    ): Promise<VCLDidDocument> {
+        try {
+            const didDocument =
+                await this.resolveDidDocumentRepository.resolveDidDocument(
+                    presentationRequest.iss,
+                );
+            this.validateDidDocumentVerificationMaterial(
+                presentationRequest,
+                didDocument,
+                `public jwk not found for kid: ${presentationRequest.jwt.kid}`,
+            );
+            return didDocument;
+        } catch (error) {
+            throw toDidResolutionError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+                requestDid: presentationRequest.iss,
+            });
+        }
+    }
+
+    private validateDidDocumentVerificationMaterial(
+        presentationRequest: VCLPresentationRequest,
+        didDocument: VCLDidDocument,
+        missingMaterialMessage: string,
+    ) {
+        const verificationMethod =
+            didDocument.payload?.[VCLDidDocument.KeyVerificationMethod];
+        if (
+            !Array.isArray(verificationMethod) ||
+            verificationMethod.length === 0
+        ) {
+            throw toDidResolutionError(
+                new VCLError({
+                    message: missingMaterialMessage,
+                }),
+                {
+                    requestKind: ErrorTaxonomy.RequestKindPresentation,
+                    requestDid: presentationRequest.iss,
+                },
+            );
+        }
+    }
+
+    private resolvePublicJwk(
+        presentationRequest: VCLPresentationRequest,
+        didDocument: VCLDidDocument,
+    ): VCLPublicJwk {
+        try {
+            const { kid } = presentationRequest.jwt;
+            const publicJwk = didDocument.getPublicJwk(kid);
+            if (publicJwk == null) {
+                throw new VCLError({
+                    message: `public jwk not found for kid: ${kid}`,
+                });
+            }
+            return publicJwk;
+        } catch (error) {
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
+                requestDid: presentationRequest.iss,
+            });
+        }
     }
 
     async verifyPresentationRequest(
-        publicJwk: VCLPublicJwk,
         presentationRequest: VCLPresentationRequest,
         didDocument: VCLDidDocument,
     ): Promise<VCLPresentationRequest> {
+        const publicJwk = this.resolvePublicJwk(
+            presentationRequest,
+            didDocument,
+        );
         await this.jwtServiceRepository.verifyJwt(
             presentationRequest.jwt,
             publicJwk,

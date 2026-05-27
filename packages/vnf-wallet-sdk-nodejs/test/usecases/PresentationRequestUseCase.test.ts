@@ -24,7 +24,6 @@ import NetworkServiceImpl from '../../src/impl/data/infrastructure/network/Netwo
 import { CommonMocks } from '../infrastructure/resources/CommonMocks';
 import {
     mockAbsoluteGet,
-    mockRegistrarGet,
     mockResolveDid,
     useNockLifecycle,
 } from '../utils/nock';
@@ -82,16 +81,11 @@ describe('PresentationRequestUseCase', () => {
         expect(didScope.isDone()).toBeTruthy();
     });
 
-    test('throws an sdk error for an invalid presentation request response', async () => {
+    test('throws client_request_rejected for an invalid presentation request response', async () => {
         const requestScope = mockAbsoluteGet(
             presentationRequestDescriptor.endpoint!,
             { wrong: 'payload' },
         );
-        const didScope = mockRegistrarGet(
-            '/api/v0.6/resolve-did/',
-            DidDocumentMocks.DidDocumentMock.payload,
-        );
-
         try {
             await subject.getPresentationRequest(
                 presentationRequestDescriptor,
@@ -103,7 +97,9 @@ describe('PresentationRequestUseCase', () => {
             expect(error).toEqual(
                 expect.objectContaining({
                     name: 'VCLError',
-                    errorCode: VCLErrorCode.SdkError.toString(),
+                    errorCode: VCLErrorCode.ClientRequestRejected,
+                    sourceErrorCode: VCLErrorCode.SdkError,
+                    validationPhase: 'client_request_fetch',
                     requestId: null,
                     statusCode: null,
                 }),
@@ -111,6 +107,5 @@ describe('PresentationRequestUseCase', () => {
         }
 
         expect(requestScope.isDone()).toBeTruthy();
-        expect(didScope.isDone()).toBeTruthy();
     });
 });

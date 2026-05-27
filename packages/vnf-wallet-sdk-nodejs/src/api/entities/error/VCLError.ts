@@ -8,6 +8,11 @@ export type VCLErrorArgs = {
     requestId?: Nullish<string>;
     message?: Nullish<string>;
     statusCode?: Nullish<number>;
+    sourceErrorCode?: Nullish<string>;
+    validationPhase?: Nullish<string>;
+    requestDid?: Nullish<string>;
+    requestUri?: Nullish<string>;
+    requestKind?: Nullish<string>;
 };
 
 type VCLKnownErrorFields = Error & {
@@ -27,6 +32,16 @@ export default class VCLError extends Error {
 
     statusCode: Nullish<number> = null;
 
+    sourceErrorCode: Nullish<string> = null;
+
+    validationPhase: Nullish<string> = null;
+
+    requestDid: Nullish<string> = null;
+
+    requestUri: Nullish<string> = null;
+
+    requestKind: Nullish<string> = null;
+
     // eslint-disable-next-line complexity
     constructor({
         payload = null,
@@ -35,6 +50,11 @@ export default class VCLError extends Error {
         requestId = null,
         message = null,
         statusCode = null,
+        sourceErrorCode = null,
+        validationPhase = null,
+        requestDid = null,
+        requestUri = null,
+        requestKind = null,
     }: VCLErrorArgs = {}) {
         super(message ?? '');
         this.payload = payload;
@@ -42,6 +62,11 @@ export default class VCLError extends Error {
         this.errorCode = errorCode;
         this.requestId = requestId;
         this.statusCode = statusCode;
+        this.sourceErrorCode = sourceErrorCode;
+        this.validationPhase = validationPhase;
+        this.requestDid = requestDid;
+        this.requestUri = requestUri;
+        this.requestKind = requestKind;
 
         this.name = 'VCLError';
         // eslint-disable-next-line better-mutation/no-mutating-functions
@@ -59,6 +84,11 @@ export default class VCLError extends Error {
             requestId: payloadJson?.[VCLError.KeyRequestId],
             message: payloadJson?.[VCLError.KeyMessage],
             statusCode: payloadJson?.[VCLError.KeyStatusCode],
+            sourceErrorCode: payloadJson?.[VCLError.KeySourceErrorCode],
+            validationPhase: payloadJson?.[VCLError.KeyValidationPhase],
+            requestDid: payloadJson?.[VCLError.KeyRequestDid],
+            requestUri: payloadJson?.[VCLError.KeyRequestUri],
+            requestKind: payloadJson?.[VCLError.KeyRequestKind],
         });
     }
 
@@ -115,7 +145,7 @@ export default class VCLError extends Error {
     }
 
     get jsonObject(): Dictionary<any> {
-        return {
+        const result: Dictionary<any> = {
             [VCLError.KeyPayload]: this.payload,
             [VCLError.KeyError]: this.error,
             [VCLError.KeyRequestId]: this.requestId,
@@ -124,6 +154,12 @@ export default class VCLError extends Error {
             [VCLError.KeyMessage]: this.message,
             [VCLError.KeyStatusCode]: this.statusCode,
         };
+        addOptional(result, VCLError.KeySourceErrorCode, this.sourceErrorCode);
+        addOptional(result, VCLError.KeyValidationPhase, this.validationPhase);
+        addOptional(result, VCLError.KeyRequestDid, this.requestDid);
+        addOptional(result, VCLError.KeyRequestUri, this.requestUri);
+        addOptional(result, VCLError.KeyRequestKind, this.requestKind);
+        return result;
     }
 
     static readonly KeyPayload: string = 'payload';
@@ -137,4 +173,25 @@ export default class VCLError extends Error {
     static readonly KeyMessage: string = 'message';
 
     static readonly KeyStatusCode: string = 'statusCode';
+
+    static readonly KeySourceErrorCode: string = 'sourceErrorCode';
+
+    static readonly KeyValidationPhase: string = 'validationPhase';
+
+    static readonly KeyRequestDid: string = 'requestDid';
+
+    static readonly KeyRequestUri: string = 'requestUri';
+
+    static readonly KeyRequestKind: string = 'requestKind';
 }
+
+const addOptional = (
+    target: Dictionary<any>,
+    key: string,
+    value: Nullish<string>,
+) => {
+    if (value != null) {
+        // eslint-disable-next-line better-mutation/no-mutation
+        target[key] = value;
+    }
+};

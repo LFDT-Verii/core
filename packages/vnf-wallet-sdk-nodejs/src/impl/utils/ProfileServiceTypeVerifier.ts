@@ -4,11 +4,12 @@ import VCLStatusCode from '../../api/entities/error/VCLStatusCode';
 import VCLVerifiedProfile from '../../api/entities/VCLVerifiedProfile';
 import VCLVerifiedProfileDescriptor from '../../api/entities/VCLVerifiedProfileDescriptor';
 import VerifiedProfileUseCase from '../domain/usecases/VerifiedProfileUseCase';
-import VCLErrorCode from '../../api/entities/error/VCLErrorCode';
 import { Dictionary, Nullish } from '../../api/VCLTypes';
 import VCLLog from './VCLLog';
 
 export class ProfileServiceTypeVerifier {
+    static readonly SourceWrongServiceType = 'wrong_service_type';
+
     constructor(
         private readonly verifiedProfileUseCase: VerifiedProfileUseCase,
     ) {}
@@ -58,11 +59,11 @@ export class ProfileServiceTypeVerifier {
             return true;
         }
         throw new VCLError({
-            errorCode: VCLErrorCode.SdkError.toString(),
             message: this.toJsonString(
                 verifiedProfile.name,
                 `Wrong service type - expected: ${expectedServiceTypes.all}, found: ${verifiedProfile.serviceTypes.all}`,
             ),
+            sourceErrorCode: ProfileServiceTypeVerifier.SourceWrongServiceType,
             statusCode: VCLStatusCode.VerificationError,
         });
     }

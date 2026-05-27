@@ -3,6 +3,7 @@ import type { HttpClientInitOptions, HttpResponse } from '@verii/http-client';
 import { randomBytes } from 'node:crypto';
 import { Nullish } from '../../../../api/VCLTypes';
 import VCLError from '../../../../api/entities/error/VCLError';
+import VCLStatusCode from '../../../../api/entities/error/VCLStatusCode';
 import NetworkService from '../../../domain/infrastructure/network/NetworkService';
 import { toNullableString } from '../../../utils/HelperFunctions';
 import VCLLog from '../../../utils/VCLLog';
@@ -114,7 +115,10 @@ export default class NetworkServiceImpl implements NetworkService {
             );
         }
 
-        return VCLError.fromError(error);
+        return new VCLError({
+            message: error?.message,
+            statusCode: VCLStatusCode.NetworkError,
+        });
     }
 
     private normalizeResponseError(
@@ -127,10 +131,8 @@ export default class NetworkServiceImpl implements NetworkService {
         ) {
             const normalizedError = VCLError.fromPayloadJson(payload);
 
-            if (normalizedError.statusCode == null) {
-                // eslint-disable-next-line better-mutation/no-mutation
-                normalizedError.statusCode = statusCode;
-            }
+            // eslint-disable-next-line better-mutation/no-mutation
+            normalizedError.statusCode = statusCode;
             return normalizedError;
         }
 
@@ -138,7 +140,7 @@ export default class NetworkServiceImpl implements NetworkService {
 
         return new VCLError({
             payload: textPayload,
-            message: `Request failed with status code ${statusCode}`,
+            message: textPayload,
             statusCode,
         });
     }

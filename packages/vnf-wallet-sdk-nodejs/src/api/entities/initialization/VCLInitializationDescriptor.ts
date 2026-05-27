@@ -4,6 +4,8 @@ import VCLCryptoServicesDescriptor from './VCLCryptoServicesDescriptor';
 import VCLXVnfProtocolVersion from '../../VCLXVnfProtocolVersion';
 import { VCLLogService } from './VCLLogService';
 
+export type VCLErrorCodeCompatibilityMode = 'taxonomy' | 'legacy';
+
 export default class VCLInitializationDescriptor {
     constructor(
         // eslint-disable-next-line default-param-last
@@ -13,5 +15,6 @@ export default class VCLInitializationDescriptor {
         public readonly cryptoServicesDescriptor: VCLCryptoServicesDescriptor,
         public readonly isDebugOn: boolean = false,
         public readonly logService: VCLLogService = pino(),
+        public readonly errorCodeCompatibilityMode: VCLErrorCodeCompatibilityMode = 'taxonomy',
     ) {}
 }
