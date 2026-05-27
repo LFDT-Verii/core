@@ -145,6 +145,26 @@ describe('Error taxonomy contract', () => {
         }
     });
 
+    test('opaque velocity uris return unparseable invalid link', async () => {
+        for (const entryPoint of entryPoints) {
+            const deepLink = new VCLDeepLink(
+                `velocity-network:${entryPoint.schemePath}?request_uri=${entryPoint.encodedRequestUri}&${entryPoint.didParam}=did:example:entity`,
+            );
+            const error = await getEntryPointError(entryPoint, deepLink);
+
+            assertDiagnostics(
+                expectedDiagnostics(entryPoint, {
+                    errorCode: VCLErrorCode.InvalidLink,
+                    sourceErrorCode:
+                        VelocityDeepLinkValidator.SourceUnparseablePayload,
+                    validationPhase: 'link_validation',
+                    requestUri: deepLink.requestUri,
+                }),
+                error,
+            );
+        }
+    });
+
     test('unsupported scheme with known query params returns null endpoint sdk_error', async () => {
         for (const entryPoint of entryPoints) {
             const deepLink = new VCLDeepLink(
@@ -322,6 +342,32 @@ describe('Error taxonomy contract', () => {
             }),
             error,
         );
+    });
+
+    test('repository null endpoint fallbacks return invalid link diagnostics', async () => {
+        for (const { entryPoint, getError } of [
+            {
+                entryPoint: issuingEntryPoint(),
+                getError: getCredentialManifestRepositoryNullEndpointError,
+            },
+            {
+                entryPoint: presentationEntryPoint(),
+                getError: getPresentationRequestRepositoryNullEndpointError,
+            },
+        ]) {
+            const error = await getError();
+
+            assertDiagnostics(
+                expectedDiagnostics(entryPoint, {
+                    errorCode: VCLErrorCode.InvalidLink,
+                    sourceErrorCode:
+                        VelocityDeepLinkValidator.SourceInvalidOrMissingRequestEndpoint,
+                    validationPhase: 'link_validation',
+                }),
+                error,
+            );
+            expect(error.message).toContain('endpoint = null');
+        }
     });
 
     test('missing presentation request deep link returns invalid link', async () => {
@@ -1088,6 +1134,59 @@ const getPresentationRequestDescriptorError = async (
 
     throw new Error('Expected getPresentationRequest to reject with VCLError');
 };
+
+const getCredentialManifestRepositoryNullEndpointError =
+    async (): Promise<VCLError> => {
+        try {
+            await new CredentialManifestRepositoryImpl(
+                unusedNetworkService(),
+            ).getCredentialManifest(
+                credentialManifestDescriptor(
+                    new VCLDeepLink(
+                        `velocity-network://issue?issuerDid=${issuingEntryPoint().did}`,
+                    ),
+                ),
+            );
+        } catch (error) {
+            expect(error).toBeInstanceOf(VCLError);
+            return error as VCLError;
+        }
+
+        throw new Error(
+            'Expected getCredentialManifest repository to reject with VCLError',
+        );
+    };
+
+const getPresentationRequestRepositoryNullEndpointError =
+    async (): Promise<VCLError> => {
+        try {
+            await new PresentationRequestRepositoryImpl(
+                unusedNetworkService(),
+            ).getPresentationRequest(
+                presentationDescriptor(
+                    new VCLDeepLink(
+                        `velocity-network://inspect?inspectorDid=${presentationEntryPoint().did}`,
+                    ),
+                ),
+            );
+        } catch (error) {
+            expect(error).toBeInstanceOf(VCLError);
+            return error as VCLError;
+        }
+
+        throw new Error(
+            'Expected getPresentationRequest repository to reject with VCLError',
+        );
+    };
+
+const unusedNetworkService = () => ({
+    sendRequest: async () => {
+        throw new Error('Network should not be called for null endpoint');
+    },
+    sendRequestRaw: async () => {
+        throw new Error('Network should not be called for null endpoint');
+    },
+});
 
 const getCredentialManifestByService = async (
     descriptor: VCLCredentialManifestDescriptor,

@@ -36,6 +36,11 @@ import {
 } from '../../src/impl/data/verifiers';
 import Request from '../../src/impl/data/infrastructure/network/Request';
 import { ProfileServiceTypeVerifier } from '../../src/impl/utils/ProfileServiceTypeVerifier';
+import ErrorTaxonomyCompatibilityMapper from '../../src/impl/utils/ErrorTaxonomyCompatibilityMapper';
+import {
+    ErrorTaxonomy,
+    invalidLink,
+} from '../../src/impl/utils/ErrorTaxonomy';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';
 import { KeyServiceMock } from '../infrastructure/resources/key/KeyServiceMock';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
@@ -144,6 +149,19 @@ describe('Error taxonomy backward compatibility baseline', () => {
         }
     });
 
+    test('missing direct request did preserves legacy did message', () => {
+        const error = new ErrorTaxonomyCompatibilityMapper().map({
+            error: invalidLink({
+                message: 'did was not found in credentialManifestDescriptor',
+                requestKind: ErrorTaxonomy.RequestKindIssuing,
+            }),
+            requestKind: ErrorTaxonomy.RequestKindIssuing,
+        });
+
+        expect(error.errorCode).toEqual(VCLErrorCode.SdkError);
+        expect(error.message).toContain('did was not found');
+    });
+
     test('malformed and disallowed request_uri values reach transport as raw endpoint text', async () => {
         for (const entryPoint of entryPoints) {
             const malformedRequestUriDeepLink = new VCLDeepLink(
@@ -202,7 +220,7 @@ describe('Error taxonomy backward compatibility baseline', () => {
                 expect(error.errorCode).toEqual(ErrorMocks.ErrorCode);
                 expect(error.requestId).toEqual(ErrorMocks.RequestId);
                 expect(error.message).toEqual(ErrorMocks.Message);
-                expect(error.statusCode).toEqual(ErrorMocks.StatusCode);
+                expect(error.statusCode).toEqual(statusCode);
             }
         }
     });
@@ -256,7 +274,7 @@ describe('Error taxonomy backward compatibility baseline', () => {
             expect(error.errorCode).toEqual(VCLErrorCode.SdkError);
             expect(error.requestId).toEqual(ErrorMocks.RequestId);
             expect(error.message).toEqual(ErrorMocks.Message);
-            expect(error.statusCode).toEqual(ErrorMocks.StatusCode);
+            expect(error.statusCode).toEqual(422);
         }
     });
 

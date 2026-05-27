@@ -8,7 +8,9 @@ import { HttpMethod } from '../infrastructure/network/HttpMethod';
 import {
     toClientRequestFetchError,
     ErrorTaxonomy,
+    invalidLink,
 } from '../../utils/ErrorTaxonomy';
+import VelocityDeepLinkValidator from '../../utils/VelocityDeepLinkValidator';
 
 export default class PresentationRequestRepositoryImpl implements PresentationRequestRepository {
     constructor(private readonly networkService: NetworkService) {}
@@ -18,8 +20,11 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
     ): Promise<string> {
         const { endpoint } = presentationRequestDescriptor;
         if (!endpoint) {
-            throw new VCLError({
+            throw invalidLink({
                 message: 'presentationRequestDescriptor.endpoint = null',
+                sourceErrorCode:
+                    VelocityDeepLinkValidator.SourceInvalidOrMissingRequestEndpoint,
+                requestKind: ErrorTaxonomy.RequestKindPresentation,
             });
         }
 

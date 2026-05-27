@@ -43,6 +43,15 @@ export default class VelocityDeepLinkValidator {
                 requestKind,
             });
         }
+        if (!parsedUrl.hostname) {
+            return invalidLink({
+                message: 'Payload is not a parseable URL',
+                sourceErrorCode:
+                    VelocityDeepLinkValidator.SourceUnparseablePayload,
+                requestUri: deepLink.requestUri,
+                requestKind,
+            });
+        }
         if (
             !VelocityDeepLinkValidator.AllowedVelocitySchemes.has(
                 parsedUrl.protocol,

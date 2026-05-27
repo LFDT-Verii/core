@@ -59,12 +59,14 @@ export default class ErrorTaxonomyCompatibilityMapper {
                     VCLErrorCode.SdkError,
                     legacyMissingDidMessage,
                 );
-            default:
+            case VelocityDeepLinkValidator.SourceUnsupportedVelocityLink:
                 return this.legacyCopy(
                     error,
                     VCLErrorCode.SdkError,
                     endpointNullMessage,
                 );
+            default:
+                return this.legacyCopy(error, VCLErrorCode.SdkError);
         }
     }
 
@@ -115,10 +117,7 @@ export default class ErrorTaxonomyCompatibilityMapper {
     }
 
     private mapNetworkStatus(error: VCLError): VCLError {
-        const payloadStatusCode = payloadStatus(error.payload);
-        return payloadStatusCode == null
-            ? error
-            : copyError(error, { statusCode: payloadStatusCode });
+        return error;
     }
 
     private legacyCopy(
@@ -144,16 +143,6 @@ const mismatchErrorCode = (requestKind: RequestKind) =>
     requestKind === ErrorTaxonomy.RequestKindPresentation
         ? VCLErrorCode.MismatchedPresentationRequestInspectorDid
         : VCLErrorCode.MismatchedRequestIssuerDid;
-
-const payloadStatus = (payload: string | null | undefined) => {
-    try {
-        const parsed = payload ? JSON.parse(payload) : null;
-        const value = parsed?.[VCLError.KeyStatusCode];
-        return typeof value === 'number' ? value : null;
-    } catch {
-        return null;
-    }
-};
 
 const optionalStatusCode = (overrides: { statusCode?: number | null }) =>
     Object.prototype.hasOwnProperty.call(overrides, 'statusCode')
