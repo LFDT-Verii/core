@@ -537,11 +537,15 @@ export class VCLImpl implements VCL {
                 expectedServiceTypes,
             );
         } catch (error: any) {
-            throw this.classifyProfileVerificationError(
-                VCLError.fromError(error),
-                requestKind,
-                did,
-            );
+            const profileError = VCLError.fromError(error);
+            const context = { requestKind, requestDid: did };
+            if (
+                profileError.sourceErrorCode ===
+                ProfileServiceTypeVerifier.SourceWrongServiceType
+            ) {
+                throw toRequestAuthorizationError(profileError, context);
+            }
+            throw toRegistrationCheckError(profileError, context);
         }
     }
 
@@ -559,23 +563,6 @@ export class VCLImpl implements VCL {
         }
     }
 
-    private classifyProfileVerificationError(
-        error: VCLError,
-        requestKind: RequestKind,
-        requestDid: string | null,
-    ): VCLError {
-        if (
-            error.sourceErrorCode ===
-            ProfileServiceTypeVerifier.SourceWrongServiceType
-        ) {
-            return toRequestAuthorizationError(error, {
-                requestKind,
-                requestDid,
-            });
-        }
-        return toRegistrationCheckError(error, { requestKind, requestDid });
-    }
-
     private toPublicError(error: VCLError, requestKind: RequestKind): VCLError {
         if (
             this.initializationDescriptor?.errorCodeCompatibilityMode ===
@@ -584,7 +571,6 @@ export class VCLImpl implements VCL {
             return this.errorTaxonomyCompatibilityMapper.map({
                 error,
                 requestKind,
-                endpointNullMessage: endpointNullMessage(requestKind),
             });
         }
         return error;
@@ -595,8 +581,3 @@ export class VCLImpl implements VCL {
 const logError = (message = '', error: VCLError) => {
     VCLLog.error(error, message);
 };
-
-const endpointNullMessage = (requestKind: RequestKind) =>
-    requestKind === ErrorTaxonomy.RequestKindPresentation
-        ? 'presentationRequestDescriptor.endpoint = null'
-        : 'credentialManifestDescriptor.endpoint = null';

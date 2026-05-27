@@ -13,19 +13,13 @@ export default class ErrorTaxonomyCompatibilityMapper {
     map({
         error,
         requestKind,
-        endpointNullMessage,
     }: {
         error: VCLError;
         requestKind: RequestKind;
-        endpointNullMessage: string;
     }): VCLError {
         switch (error.errorCode) {
             case VCLErrorCode.InvalidLink:
-                return this.mapInvalidLink(
-                    error,
-                    requestKind,
-                    endpointNullMessage,
-                );
+                return this.mapInvalidLink(error, requestKind);
             case VCLErrorCode.ConnectivityFailure:
                 return this.legacyCopy(
                     error,
@@ -45,8 +39,8 @@ export default class ErrorTaxonomyCompatibilityMapper {
     private mapInvalidLink(
         error: VCLError,
         requestKind: RequestKind,
-        endpointNullMessage: string,
     ): VCLError {
+        const endpointNullMessage = legacyEndpointNullMessage(requestKind);
         switch (error.sourceErrorCode) {
             case VelocityDeepLinkValidator.SourceInvalidOrMissingDid:
                 return error.requestUri
@@ -167,6 +161,11 @@ const optionalStatusCode = (overrides: { statusCode?: number | null }) =>
         : {};
 
 const legacyMissingDidMessage = 'did was not found in Velocity link';
+
+const legacyEndpointNullMessage = (requestKind: RequestKind) =>
+    requestKind === ErrorTaxonomy.RequestKindPresentation
+        ? 'presentationRequestDescriptor.endpoint = null'
+        : 'credentialManifestDescriptor.endpoint = null';
 
 const isLegacyPlainTextRequestRejection = (error: VCLError) =>
     error.errorCode === VCLErrorCode.ClientRequestRejected &&
