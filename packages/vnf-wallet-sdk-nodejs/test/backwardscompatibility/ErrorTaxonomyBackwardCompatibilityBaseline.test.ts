@@ -6,7 +6,9 @@ import {
     VCLEnvironment,
     VCLError,
     VCLErrorCode,
+    VCLCredentialManifestDescriptor,
     VCLCredentialManifestDescriptorByDeepLink,
+    VCLCredentialManifestDescriptorByService,
     VCLDeepLink,
     VCLCryptoServicesDescriptor,
     VCLIssuingType,
@@ -15,6 +17,7 @@ import {
     VCLJwtVerifyService,
     VCLPresentationRequestDescriptor,
     VCLPublicJwk,
+    VCLService,
     VCLStatusCode,
     VCLToken,
     VCLXVnfProtocolVersion,
@@ -36,11 +39,6 @@ import {
 } from '../../src/impl/data/verifiers';
 import Request from '../../src/impl/data/infrastructure/network/Request';
 import { ProfileServiceTypeVerifier } from '../../src/impl/utils/ProfileServiceTypeVerifier';
-import ErrorTaxonomyCompatibilityMapper from '../../src/impl/utils/ErrorTaxonomyCompatibilityMapper';
-import {
-    ErrorTaxonomy,
-    invalidLink,
-} from '../../src/impl/utils/ErrorTaxonomy';
 import { JwtSignServiceMock } from '../infrastructure/resources/jwt/JwtSignServiceMock';
 import { KeyServiceMock } from '../infrastructure/resources/key/KeyServiceMock';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
@@ -149,14 +147,10 @@ describe('Error taxonomy backward compatibility baseline', () => {
         }
     });
 
-    test('missing direct request did preserves legacy did message', () => {
-        const error = new ErrorTaxonomyCompatibilityMapper().map({
-            error: invalidLink({
-                message: 'did was not found in credentialManifestDescriptor',
-                requestKind: ErrorTaxonomy.RequestKindIssuing,
-            }),
-            requestKind: ErrorTaxonomy.RequestKindIssuing,
-        });
+    test('missing direct request did preserves legacy did message', async () => {
+        const error = await getCredentialManifestDescriptorError(
+            credentialManifestDescriptorByService({ did: '' }),
+        );
 
         expect(error.errorCode).toEqual(VCLErrorCode.SdkError);
         expect(error.message).toContain('did was not found');
@@ -565,6 +559,43 @@ const credentialManifestDescriptor = (deepLink: VCLDeepLink) =>
         null,
         DidJwkMocks.DidJwk,
     );
+
+const credentialManifestDescriptorByService = ({
+    endpoint = DeepLinkMocks.CredentialManifestRequestDecodedUriStr,
+    did = DeepLinkMocks.IssuerDid,
+}: {
+    endpoint?: string | null;
+    did?: string;
+} = {}) =>
+    new VCLCredentialManifestDescriptorByService(
+        new VCLService({
+            id: `${DeepLinkMocks.IssuerDid}#credential-agent-issuer-1`,
+            type: 'VelocityCredentialAgentIssuer_v1.0',
+            serviceEndpoint: endpoint,
+            credentialTypes: ['PastEmploymentPosition'],
+        }),
+        VCLIssuingType.Career,
+        null,
+        null,
+        DidJwkMocks.DidJwk,
+        did,
+    );
+
+const getCredentialManifestDescriptorError = async (
+    descriptor: VCLCredentialManifestDescriptor,
+    jwtVerificationError?: VCLError,
+): Promise<VCLError> => {
+    const vcl = initializedVcl(jwtVerificationError);
+
+    try {
+        await vcl.getCredentialManifest(descriptor);
+    } catch (error) {
+        expect(error).toBeInstanceOf(VCLError);
+        return error as VCLError;
+    }
+
+    throw new Error('Expected getCredentialManifest to reject with VCLError');
+};
 
 const presentationDescriptor = (deepLink: VCLDeepLink) =>
     new VCLPresentationRequestDescriptor(deepLink, null, DidJwkMocks.DidJwk);

@@ -32,7 +32,7 @@ export default class ErrorTaxonomyCompatibilityMapper {
             default:
                 return isTaxonomyError(error)
                     ? this.mapTaxonomyError(error)
-                    : this.mapNetworkStatus(error);
+                    : error;
         }
     }
 
@@ -96,28 +96,23 @@ export default class ErrorTaxonomyCompatibilityMapper {
     }
 
     private mapTaxonomyError(error: VCLError): VCLError {
-        const networkStatusError = this.mapNetworkStatus(error);
-        const { sourceErrorCode } = networkStatusError;
-        if (isLegacyPlainTextRequestRejection(networkStatusError)) {
+        const { sourceErrorCode } = error;
+        if (isLegacyPlainTextRequestRejection(error)) {
             return this.legacyCopy(
-                networkStatusError,
+                error,
                 VCLErrorCode.SdkError,
-                `Request failed with status code ${networkStatusError.statusCode}`,
+                `Request failed with status code ${error.statusCode}`,
             );
         }
         if (
             !sourceErrorCode ||
-            sourceErrorCode === networkStatusError.errorCode ||
+            sourceErrorCode === error.errorCode ||
             sourceErrorCode ===
                 ProfileServiceTypeVerifier.SourceWrongServiceType
         ) {
-            return this.legacyCopy(networkStatusError, VCLErrorCode.SdkError);
+            return this.legacyCopy(error, VCLErrorCode.SdkError);
         }
-        return this.legacyCopy(networkStatusError, sourceErrorCode);
-    }
-
-    private mapNetworkStatus(error: VCLError): VCLError {
-        return error;
+        return this.legacyCopy(error, sourceErrorCode);
     }
 
     private legacyCopy(
