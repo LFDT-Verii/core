@@ -20,7 +20,7 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
         let credentialManifestResponse;
         try {
             credentialManifestResponse = await this.networkService.sendRequest({
-                endpoint,
+                endpoint: endpoint!,
                 method: HttpMethod.GET,
                 body: null,
                 headers: {

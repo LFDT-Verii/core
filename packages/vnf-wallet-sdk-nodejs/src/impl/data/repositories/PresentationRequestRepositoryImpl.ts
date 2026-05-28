@@ -21,7 +21,7 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
         try {
             presentationRequestResponse = await this.networkService.sendRequest(
                 {
-                    endpoint,
+                    endpoint: endpoint!,
                     method: HttpMethod.GET,
                     headers: {
                         [HeaderKeys.XVnfProtocolVersion]:
