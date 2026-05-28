@@ -71,7 +71,7 @@ export type EntryPoint = {
     type: 'issuing' | 'presentation';
 };
 
-export type BaselineRouter = {
+type BaselineRouter = {
     didDocumentContentType?: string;
     didDocumentPayload?: unknown;
     didDocumentStatusCode?: number;
@@ -84,11 +84,11 @@ export type BaselineRouter = {
     verifiedProfileStatusCode?: number;
 };
 
-export type CapturedRequest = {
+type CapturedRequest = {
     urls: string[];
 };
 
-export type EntryPointCallOptions = {
+type EntryPointCallOptions = {
     compatibilityMode?: VCLErrorCodeCompatibilityMode;
     deepLink?: VCLDeepLink;
     did?: string;
@@ -97,7 +97,7 @@ export type EntryPointCallOptions = {
     router?: BaselineRouter;
 };
 
-export type EntryPointCallResult = {
+type EntryPointCallResult = {
     capturedRequest: CapturedRequest;
     error: VCLError | null;
     result: unknown | null;
@@ -267,7 +267,7 @@ const initializedVcl = (
     return vcl;
 };
 
-export const credentialManifestDescriptor = (deepLink: VCLDeepLink) =>
+const credentialManifestDescriptor = (deepLink: VCLDeepLink) =>
     new VCLCredentialManifestDescriptorByDeepLink(
         deepLink,
         VCLIssuingType.Career,
@@ -275,7 +275,7 @@ export const credentialManifestDescriptor = (deepLink: VCLDeepLink) =>
         DidJwkMocks.DidJwk,
     );
 
-export const presentationDescriptor = (deepLink: VCLDeepLink) =>
+const presentationDescriptor = (deepLink: VCLDeepLink) =>
     new VCLPresentationRequestDescriptor(deepLink, null, DidJwkMocks.DidJwk);
 
 const credentialManifestDescriptorByService = ({
@@ -318,9 +318,6 @@ export const didDocumentWithRequestVerificationKeyRemoved = (
 
 export const issuingEntryPoint = () =>
     entryPoints.find((entryPoint) => entryPoint.type === 'issuing')!;
-
-export const presentationEntryPoint = () =>
-    entryPoints.find((entryPoint) => entryPoint.type === 'presentation')!;
 
 const setupRouter = (
     entryPoint: EntryPoint,
