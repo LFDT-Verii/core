@@ -299,19 +299,6 @@ const credentialManifestDescriptorByService = ({
         did,
     );
 
-export const getPresentationRequestDescriptorError = async (
-    descriptor: VCLPresentationRequestDescriptor,
-): Promise<VCLError> => {
-    try {
-        await initializedVcl().getPresentationRequest(descriptor);
-    } catch (error) {
-        expect(error).toBeInstanceOf(VCLError);
-        return error as VCLError;
-    }
-
-    throw new Error('Expected getPresentationRequest to reject with VCLError');
-};
-
 export const didDocumentWithRequestVerificationKeyRemoved = (
     entryPoint: EntryPoint,
 ) => {

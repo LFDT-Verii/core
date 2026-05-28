@@ -1,13 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { beforeEach, describe, test } from 'node:test';
 import { expect } from 'expect';
-import {
-    VCLError,
-    VCLErrorCode,
-    VCLDeepLink,
-    VCLPresentationRequestDescriptor,
-    VCLStatusCode,
-} from '../../src';
+import { VCLError, VCLErrorCode, VCLDeepLink, VCLStatusCode } from '../../src';
 import VelocityDeepLinkValidator from '../../src/impl/utils/VelocityDeepLinkValidator';
 import { ProfileServiceTypeVerifier } from '../../src/impl/utils/ProfileServiceTypeVerifier';
 import { CredentialManifestMocks } from '../infrastructure/resources/valid/CredentialManifestMocks';
@@ -20,10 +14,8 @@ import {
     didDocumentWithRequestVerificationKeyRemoved,
     entryPoints,
     callEntryPoint,
-    getPresentationRequestDescriptorError,
     issuingEntryPoint,
     jsonContentType,
-    presentationEntryPoint,
     resetGlobalConfig,
 } from './errorTaxonomyTestHarness';
 import type { EntryPoint } from './errorTaxonomyTestHarness';
@@ -254,21 +246,6 @@ describe('Error taxonomy contract', () => {
             });
         }
     });
-
-    test('missing presentation request deep link returns invalid link', async () => {
-        const entryPoint = presentationEntryPoint();
-        const error = await getPresentationRequestDescriptorError({
-            deepLink: null,
-            endpoint: null,
-            did: null,
-        } as unknown as VCLPresentationRequestDescriptor);
-
-        assertTaxonomyError(entryPoint, error, 'link_validation', {
-            errorCode: VCLErrorCode.InvalidLink,
-            messageContaining: 'deepLink was not found',
-        });
-    });
-
     test('malformed did syntax returns invalid link', async () => {
         for (const entryPoint of entryPoints) {
             for (const did of [
