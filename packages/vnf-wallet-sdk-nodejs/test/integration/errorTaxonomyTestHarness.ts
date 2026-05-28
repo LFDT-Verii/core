@@ -1,4 +1,3 @@
-import { expect } from 'expect';
 import nock from 'nock';
 import {
     VCLEnvironment,
@@ -201,10 +200,12 @@ const entryPointResult = async (
             result,
         };
     } catch (error) {
-        expect(error).toBeInstanceOf(VCLError);
+        if (!(error instanceof VCLError)) {
+            throw error;
+        }
         return {
             capturedRequest,
-            error: error as VCLError,
+            error,
             result: null,
         };
     }
