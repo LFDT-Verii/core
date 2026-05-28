@@ -34,7 +34,7 @@ export default class VelocityDeepLinkValidator {
         requestKind: RequestKind;
     }): VCLError | null {
         const parsedUrl = parseUrl(deepLink.value);
-        if (!parsedUrl) {
+        if (!hasParseableVelocityPayload(parsedUrl)) {
             return invalidLink({
                 message: 'Payload is not a parseable URL',
                 sourceErrorCode:
@@ -43,12 +43,7 @@ export default class VelocityDeepLinkValidator {
                 requestKind,
             });
         }
-        if (
-            !VelocityDeepLinkValidator.AllowedVelocitySchemes.has(
-                parsedUrl.protocol,
-            ) ||
-            parsedUrl.hostname !== expectedPath
-        ) {
+        if (isUnsupportedVelocityLink(parsedUrl, expectedPath)) {
             return invalidLink({
                 message: `Unsupported Velocity link: ${deepLink.value}`,
                 sourceErrorCode:
@@ -118,6 +113,16 @@ const hasValidDidParts = (did: string) => {
     const method = didParts.slice(0, methodEndIndex);
     return /^[a-z0-9]+$/.test(method);
 };
+
+const hasParseableVelocityPayload = (parsedUrl: URL | null): parsedUrl is URL =>
+    parsedUrl != null && Boolean(parsedUrl.hostname);
+
+const isUnsupportedVelocityLink = (
+    parsedUrl: URL,
+    expectedPath: string,
+): boolean =>
+    !VelocityDeepLinkValidator.AllowedVelocitySchemes.has(parsedUrl.protocol) ||
+    parsedUrl.hostname !== expectedPath;
 
 const parseUrl = (value: string) => {
     try {

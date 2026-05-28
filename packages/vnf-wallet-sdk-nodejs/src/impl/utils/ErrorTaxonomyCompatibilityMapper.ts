@@ -32,7 +32,7 @@ export default class ErrorTaxonomyCompatibilityMapper {
             default:
                 return isTaxonomyError(error)
                     ? this.mapTaxonomyError(error)
-                    : this.mapNetworkStatus(error);
+                    : error;
         }
     }
 
@@ -43,13 +43,7 @@ export default class ErrorTaxonomyCompatibilityMapper {
         const endpointNullMessage = legacyEndpointNullMessage(requestKind);
         switch (error.sourceErrorCode) {
             case VelocityDeepLinkValidator.SourceInvalidOrMissingDid:
-                return error.requestUri
-                    ? this.legacyCopy(error, mismatchErrorCode(requestKind))
-                    : this.legacyCopy(
-                          error,
-                          VCLErrorCode.SdkError,
-                          legacyMissingDidMessage,
-                      );
+                return this.mapInvalidOrMissingDid(error, requestKind);
             case VelocityDeepLinkValidator.SourceInvalidOrMissingRequestUri:
             case VelocityDeepLinkValidator.SourceInvalidOrMissingRequestEndpoint:
                 return this.mapInvalidRequestUri(error, endpointNullMessage);
@@ -59,13 +53,28 @@ export default class ErrorTaxonomyCompatibilityMapper {
                     VCLErrorCode.SdkError,
                     legacyMissingDidMessage,
                 );
-            default:
+            case VelocityDeepLinkValidator.SourceUnsupportedVelocityLink:
                 return this.legacyCopy(
                     error,
                     VCLErrorCode.SdkError,
                     endpointNullMessage,
                 );
+            default:
+                return this.legacyCopy(error, VCLErrorCode.SdkError);
         }
+    }
+
+    private mapInvalidOrMissingDid(
+        error: VCLError,
+        requestKind: RequestKind,
+    ): VCLError {
+        return error.requestUri
+            ? this.legacyCopy(error, mismatchErrorCode(requestKind))
+            : this.legacyCopy(
+                  error,
+                  VCLErrorCode.SdkError,
+                  legacyMissingDidMessage,
+              );
     }
 
     private mapInvalidRequestUri(
@@ -94,31 +103,23 @@ export default class ErrorTaxonomyCompatibilityMapper {
     }
 
     private mapTaxonomyError(error: VCLError): VCLError {
-        const networkStatusError = this.mapNetworkStatus(error);
-        const { sourceErrorCode } = networkStatusError;
-        if (isLegacyPlainTextRequestRejection(networkStatusError)) {
+        const { sourceErrorCode } = error;
+        if (isLegacyPlainTextRequestRejection(error)) {
             return this.legacyCopy(
-                networkStatusError,
+                error,
                 VCLErrorCode.SdkError,
-                `Request failed with status code ${networkStatusError.statusCode}`,
+                `Request failed with status code ${error.statusCode}`,
             );
         }
         if (
             !sourceErrorCode ||
-            sourceErrorCode === networkStatusError.errorCode ||
+            sourceErrorCode === error.errorCode ||
             sourceErrorCode ===
                 ProfileServiceTypeVerifier.SourceWrongServiceType
         ) {
-            return this.legacyCopy(networkStatusError, VCLErrorCode.SdkError);
+            return this.legacyCopy(error, VCLErrorCode.SdkError);
         }
-        return this.legacyCopy(networkStatusError, sourceErrorCode);
-    }
-
-    private mapNetworkStatus(error: VCLError): VCLError {
-        const payloadStatusCode = payloadStatus(error.payload);
-        return payloadStatusCode == null
-            ? error
-            : copyError(error, { statusCode: payloadStatusCode });
+        return this.legacyCopy(error, sourceErrorCode);
     }
 
     private legacyCopy(
@@ -144,16 +145,6 @@ const mismatchErrorCode = (requestKind: RequestKind) =>
     requestKind === ErrorTaxonomy.RequestKindPresentation
         ? VCLErrorCode.MismatchedPresentationRequestInspectorDid
         : VCLErrorCode.MismatchedRequestIssuerDid;
-
-const payloadStatus = (payload: string | null | undefined) => {
-    try {
-        const parsed = payload ? JSON.parse(payload) : null;
-        const value = parsed?.[VCLError.KeyStatusCode];
-        return typeof value === 'number' ? value : null;
-    } catch {
-        return null;
-    }
-};
 
 const optionalStatusCode = (overrides: { statusCode?: number | null }) =>
     Object.prototype.hasOwnProperty.call(overrides, 'statusCode')

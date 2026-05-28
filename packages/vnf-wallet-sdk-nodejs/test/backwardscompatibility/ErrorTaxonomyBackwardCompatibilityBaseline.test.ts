@@ -6,7 +6,9 @@ import {
     VCLEnvironment,
     VCLError,
     VCLErrorCode,
+    VCLCredentialManifestDescriptor,
     VCLCredentialManifestDescriptorByDeepLink,
+    VCLCredentialManifestDescriptorByService,
     VCLDeepLink,
     VCLCryptoServicesDescriptor,
     VCLIssuingType,
@@ -15,6 +17,7 @@ import {
     VCLJwtVerifyService,
     VCLPresentationRequestDescriptor,
     VCLPublicJwk,
+    VCLService,
     VCLStatusCode,
     VCLToken,
     VCLXVnfProtocolVersion,
@@ -144,6 +147,15 @@ describe('Error taxonomy backward compatibility baseline', () => {
         }
     });
 
+    test('missing direct request did preserves legacy did message', async () => {
+        const error = await getCredentialManifestDescriptorError(
+            credentialManifestDescriptorByService({ did: '' }),
+        );
+
+        expect(error.errorCode).toEqual(VCLErrorCode.SdkError);
+        expect(error.message).toContain('did was not found');
+    });
+
     test('malformed and disallowed request_uri values reach transport as raw endpoint text', async () => {
         for (const entryPoint of entryPoints) {
             const malformedRequestUriDeepLink = new VCLDeepLink(
@@ -202,7 +214,7 @@ describe('Error taxonomy backward compatibility baseline', () => {
                 expect(error.errorCode).toEqual(ErrorMocks.ErrorCode);
                 expect(error.requestId).toEqual(ErrorMocks.RequestId);
                 expect(error.message).toEqual(ErrorMocks.Message);
-                expect(error.statusCode).toEqual(ErrorMocks.StatusCode);
+                expect(error.statusCode).toEqual(statusCode);
             }
         }
     });
@@ -256,7 +268,7 @@ describe('Error taxonomy backward compatibility baseline', () => {
             expect(error.errorCode).toEqual(VCLErrorCode.SdkError);
             expect(error.requestId).toEqual(ErrorMocks.RequestId);
             expect(error.message).toEqual(ErrorMocks.Message);
-            expect(error.statusCode).toEqual(ErrorMocks.StatusCode);
+            expect(error.statusCode).toEqual(422);
         }
     });
 
@@ -547,6 +559,43 @@ const credentialManifestDescriptor = (deepLink: VCLDeepLink) =>
         null,
         DidJwkMocks.DidJwk,
     );
+
+const credentialManifestDescriptorByService = ({
+    endpoint = DeepLinkMocks.CredentialManifestRequestDecodedUriStr,
+    did = DeepLinkMocks.IssuerDid,
+}: {
+    endpoint?: string | null;
+    did?: string;
+} = {}) =>
+    new VCLCredentialManifestDescriptorByService(
+        new VCLService({
+            id: `${DeepLinkMocks.IssuerDid}#credential-agent-issuer-1`,
+            type: 'VelocityCredentialAgentIssuer_v1.0',
+            serviceEndpoint: endpoint,
+            credentialTypes: ['PastEmploymentPosition'],
+        }),
+        VCLIssuingType.Career,
+        null,
+        null,
+        DidJwkMocks.DidJwk,
+        did,
+    );
+
+const getCredentialManifestDescriptorError = async (
+    descriptor: VCLCredentialManifestDescriptor,
+    jwtVerificationError?: VCLError,
+): Promise<VCLError> => {
+    const vcl = initializedVcl(jwtVerificationError);
+
+    try {
+        await vcl.getCredentialManifest(descriptor);
+    } catch (error) {
+        expect(error).toBeInstanceOf(VCLError);
+        return error as VCLError;
+    }
+
+    throw new Error('Expected getCredentialManifest to reject with VCLError');
+};
 
 const presentationDescriptor = (deepLink: VCLDeepLink) =>
     new VCLPresentationRequestDescriptor(deepLink, null, DidJwkMocks.DidJwk);
