@@ -1,6 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
 import { Dictionary, Nullish } from '../VCLTypes';
-import VCLLog from '../../impl/utils/VCLLog';
 
 export default class VCLJwt {
     public encodedJwt: string;
@@ -21,20 +20,14 @@ export default class VCLJwt {
     }
 
     static fromEncodedJwt(encodedJwt: string): VCLJwt {
-        let item = new VCLJwt(new SignedJWT('', '', ''));
-        try {
-            const encodedJwtArr = encodedJwt.split('.');
-            item = new VCLJwt(
-                new SignedJWT(
-                    encodedJwtArr[0] ?? '',
-                    encodedJwtArr[1] ?? '',
-                    encodedJwtArr[2] ?? '',
-                ),
-            );
-        } catch (e) {
-            VCLLog.error(e);
-        }
-        return item;
+        const encodedJwtArr = encodedJwt.split('.');
+        return new VCLJwt(
+            new SignedJWT(
+                encodedJwtArr[0] ?? '',
+                encodedJwtArr[1] ?? '',
+                encodedJwtArr[2] ?? '',
+            ),
+        );
     }
 
     get kid(): string {

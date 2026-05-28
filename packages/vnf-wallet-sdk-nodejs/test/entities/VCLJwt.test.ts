@@ -28,6 +28,10 @@ describe('VCLJwt', () => {
         expect(subject.kid).toStrictEqual('');
     });
 
+    test('throws for a malformed jwt', async () => {
+        expect(() => VCLJwt.fromEncodedJwt('not-a-jwt')).toThrow(SyntaxError);
+    });
+
     test('parses a valid jwt with a kid header', async () => {
         const subject = VCLJwt.fromEncodedJwt(jwtWtithKidStr);
 

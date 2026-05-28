@@ -8,9 +8,7 @@ import { HttpMethod } from '../infrastructure/network/HttpMethod';
 import {
     toClientRequestFetchError,
     ErrorTaxonomy,
-    invalidLink,
 } from '../../utils/ErrorTaxonomy';
-import VelocityDeepLinkValidator from '../../utils/VelocityDeepLinkValidator';
 
 export default class CredentialManifestRepositoryImpl implements CredentialManifestRepository {
     constructor(private readonly networkService: NetworkService) {}
@@ -19,15 +17,6 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
         credentialManifestDescriptor: VCLCredentialManifestDescriptor,
     ): Promise<string> {
         const { endpoint } = credentialManifestDescriptor;
-        if (!endpoint) {
-            throw invalidLink({
-                message: 'credentialManifestDescriptor.endpoint = null',
-                sourceErrorCode:
-                    VelocityDeepLinkValidator.SourceInvalidOrMissingRequestEndpoint,
-                requestKind: ErrorTaxonomy.RequestKindIssuing,
-            });
-        }
-
         let credentialManifestResponse;
         try {
             credentialManifestResponse = await this.networkService.sendRequest({

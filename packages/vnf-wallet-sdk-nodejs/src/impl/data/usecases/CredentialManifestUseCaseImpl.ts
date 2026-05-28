@@ -2,7 +2,6 @@ import VCLCredentialManifest from '../../../api/entities/VCLCredentialManifest';
 import VCLCredentialManifestDescriptor from '../../../api/entities/VCLCredentialManifestDescriptor';
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLPublicJwk from '../../../api/entities/VCLPublicJwk';
-import VCLJwt from '../../../api/entities/VCLJwt';
 import CredentialManifestRepository from '../../domain/repositories/CredentialManifestRepository';
 import JwtServiceRepository from '../../domain/repositories/JwtServiceRepository';
 import CredentialManifestUseCase from '../../domain/usecases/CredentialManifestUseCase';
@@ -35,14 +34,19 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
             await this.credentialManifestRepository.getCredentialManifest(
                 credentialManifestDescriptor,
             );
-        if (!jwtStr) {
-            throw new VCLError({ message: 'Empty jwtStr' });
+        let credentialManifest: VCLCredentialManifest;
+        try {
+            credentialManifest = await this.parseCredentialManifest(
+                jwtStr,
+                credentialManifestDescriptor,
+                verifiedProfile,
+            );
+        } catch (error) {
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindIssuing,
+                requestDid: credentialManifestDescriptor?.did ?? null,
+            });
         }
-        const credentialManifest = this.parseCredentialManifest(
-            jwtStr,
-            credentialManifestDescriptor,
-            verifiedProfile,
-        );
         const requestDid = credentialManifest.iss;
         const didDocument = await this.resolveDidDocument(credentialManifest);
         try {
@@ -58,13 +62,13 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
         }
     }
 
-    private parseCredentialManifest(
+    private async parseCredentialManifest(
         jwtStr: string,
         credentialManifestDescriptor: VCLCredentialManifestDescriptor,
         verifiedProfile: VCLVerifiedProfile,
-    ): VCLCredentialManifest {
+    ): Promise<VCLCredentialManifest> {
         return new VCLCredentialManifest(
-            VCLJwt.fromEncodedJwt(jwtStr),
+            await this.jwtServiceRepository.decode(jwtStr),
             credentialManifestDescriptor.vendorOriginContext,
             verifiedProfile,
             credentialManifestDescriptor.deepLink,
