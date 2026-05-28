@@ -43,13 +43,7 @@ export default class ErrorTaxonomyCompatibilityMapper {
         const endpointNullMessage = legacyEndpointNullMessage(requestKind);
         switch (error.sourceErrorCode) {
             case VelocityDeepLinkValidator.SourceInvalidOrMissingDid:
-                return error.requestUri
-                    ? this.legacyCopy(error, mismatchErrorCode(requestKind))
-                    : this.legacyCopy(
-                          error,
-                          VCLErrorCode.SdkError,
-                          legacyMissingDidMessage,
-                      );
+                return this.mapInvalidOrMissingDid(error, requestKind);
             case VelocityDeepLinkValidator.SourceInvalidOrMissingRequestUri:
             case VelocityDeepLinkValidator.SourceInvalidOrMissingRequestEndpoint:
                 return this.mapInvalidRequestUri(error, endpointNullMessage);
@@ -68,6 +62,19 @@ export default class ErrorTaxonomyCompatibilityMapper {
             default:
                 return this.legacyCopy(error, VCLErrorCode.SdkError);
         }
+    }
+
+    private mapInvalidOrMissingDid(
+        error: VCLError,
+        requestKind: RequestKind,
+    ): VCLError {
+        return error.requestUri
+            ? this.legacyCopy(error, mismatchErrorCode(requestKind))
+            : this.legacyCopy(
+                  error,
+                  VCLErrorCode.SdkError,
+                  legacyMissingDidMessage,
+              );
     }
 
     private mapInvalidRequestUri(
