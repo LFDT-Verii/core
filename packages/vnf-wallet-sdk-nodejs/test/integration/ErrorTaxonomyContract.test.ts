@@ -701,14 +701,14 @@ describe('Error taxonomy contract', () => {
             for (const { router, messageContaining } of [
                 {
                     router: { verifiedProfilePayload: {} },
-                    messageContaining: 'Empty verified profile',
+                    messageContaining: 'Malformed verified profile',
                 },
                 {
                     router: {
                         verifiedProfilePayload: '{not json',
                         verifiedProfileContentType: jsonContentType,
                     },
-                    messageContaining: 'Empty verified profile',
+                    messageContaining: 'Malformed verified profile',
                 },
             ]) {
                 const { error } = await callEntryPoint(entryPoint, {
