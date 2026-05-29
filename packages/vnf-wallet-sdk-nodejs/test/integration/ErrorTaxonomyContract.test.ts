@@ -8,6 +8,7 @@ import { CredentialManifestMocks } from '../infrastructure/resources/valid/Crede
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
 import { DidDocumentMocks } from '../infrastructure/resources/valid/DidDocumentMocks';
 import { ErrorMocks } from '../infrastructure/resources/valid/ErrorMocks';
+import { PresentationRequestMocks } from '../infrastructure/resources/valid/PresentationRequestMocks';
 import { VerifiedProfileMocks } from '../infrastructure/resources/valid/VerifiedProfileMocks';
 import { useNockLifecycle } from '../utils/nock';
 import {
@@ -485,6 +486,33 @@ describe('Error taxonomy contract', () => {
         }
     });
 
+    test('request jwt without iss returns request invalid from sdk entry point', async () => {
+        for (const entryPoint of entryPoints) {
+            const requestKey =
+                entryPoint.type === 'issuing'
+                    ? 'issuing_request'
+                    : 'presentation_request';
+            const requestJwt =
+                entryPoint.type === 'issuing'
+                    ? CredentialManifestMocks.JwtCredentialManifest1
+                    : PresentationRequestMocks.EncodedPresentationRequest;
+            const { error } = await callEntryPoint(entryPoint, {
+                router: {
+                    requestPayload: {
+                        [requestKey]: jwtWithoutPayloadClaim(requestJwt, 'iss'),
+                    },
+                },
+            });
+
+            assertTaxonomyError(entryPoint, error, 'request_validation', {
+                errorCode: entryPoint.requestInvalidCode,
+                sourceErrorCode: VCLErrorCode.SdkError,
+                requestDid: entryPoint.did,
+                message: `Missing ${requestKey}`,
+            });
+        }
+    });
+
     test('did resolution network failure propagates sdk_error and status from network', async () => {
         for (const entryPoint of entryPoints) {
             const payload =
@@ -729,6 +757,24 @@ describe('Error taxonomy contract', () => {
             });
         }
     });
+
+    test('deep link verification false result returns request invalid', async () => {
+        for (const entryPoint of entryPoints) {
+            const { error } = await callEntryPoint(entryPoint, {
+                deepLinkVerificationResult: false,
+            });
+
+            assertTaxonomyError(entryPoint, error, 'request_validation', {
+                errorCode: entryPoint.requestInvalidCode,
+                sourceErrorCode: VCLErrorCode.SdkError,
+                requestDid: entryPoint.did,
+                messageContaining:
+                    entryPoint.type === 'issuing'
+                        ? 'Failed to verify credentialManifest jwt'
+                        : 'Failed to verify',
+            });
+        }
+    });
 });
 
 const assertTaxonomyError = (
@@ -806,4 +852,16 @@ const jwtWithoutKid = (jwt: string) => {
     ).toString('base64url');
 
     return `${header}.${payload}.${signature}`;
+};
+
+const jwtWithoutPayloadClaim = (jwt: string, claim: string) => {
+    const [header, payload, signature] = jwt.split('.');
+    const decodedPayload = JSON.parse(
+        Buffer.from(payload, 'base64url').toString('utf8'),
+    );
+    delete decodedPayload[claim];
+
+    return `${header}.${Buffer.from(JSON.stringify(decodedPayload)).toString(
+        'base64url',
+    )}.${signature}`;
 };

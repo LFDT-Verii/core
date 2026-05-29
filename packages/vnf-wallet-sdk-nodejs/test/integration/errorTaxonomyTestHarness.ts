@@ -3,6 +3,7 @@ import {
     VCLEnvironment,
     VCLError,
     VCLErrorCode,
+    VCLCredentialManifest,
     VCLCredentialManifestDescriptor,
     VCLCredentialManifestDescriptorByDeepLink,
     VCLCredentialManifestDescriptorByService,
@@ -12,6 +13,7 @@ import {
     VCLIssuingType,
     VCLJwt,
     VCLJwtVerifyService,
+    VCLPresentationRequest,
     VCLPresentationRequestDescriptor,
     VCLPublicJwk,
     VCLService,
@@ -31,6 +33,8 @@ import VerifiedProfileRepositoryImpl from '../../src/impl/data/repositories/Veri
 import CredentialManifestUseCaseImpl from '../../src/impl/data/usecases/CredentialManifestUseCaseImpl';
 import PresentationRequestUseCaseImpl from '../../src/impl/data/usecases/PresentationRequestUseCaseImpl';
 import VerifiedProfileUseCaseImpl from '../../src/impl/data/usecases/VerifiedProfileUseCaseImpl';
+import CredentialManifestByDeepLinkVerifier from '../../src/impl/domain/verifiers/CredentialManifestByDeepLinkVerifier';
+import PresentationRequestByDeepLinkVerifier from '../../src/impl/domain/verifiers/PresentationRequestByDeepLinkVerifier';
 import {
     CredentialManifestByDeepLinkVerifierImpl,
     PresentationRequestByDeepLinkVerifierImpl,
@@ -90,6 +94,7 @@ type CapturedRequest = {
 type EntryPointCallOptions = {
     compatibilityMode?: VCLErrorCodeCompatibilityMode;
     deepLink?: VCLDeepLink;
+    deepLinkVerificationResult?: boolean;
     did?: string;
     endpoint?: string | null;
     jwtVerificationError?: VCLError;
@@ -159,6 +164,7 @@ export const callEntryPoint = async (
     {
         compatibilityMode = 'taxonomy',
         deepLink = entryPoint.defaultDeepLink,
+        deepLinkVerificationResult,
         did,
         endpoint,
         jwtVerificationError,
@@ -166,7 +172,11 @@ export const callEntryPoint = async (
     }: EntryPointCallOptions = {},
 ): Promise<EntryPointCallResult> => {
     const capturedRequest = { urls: [] };
-    const vcl = initializedVcl(jwtVerificationError, compatibilityMode);
+    const vcl = initializedVcl(
+        jwtVerificationError,
+        compatibilityMode,
+        deepLinkVerificationResult,
+    );
     let request;
 
     if (entryPoint.type === 'issuing') {
@@ -228,6 +238,7 @@ export const callLegacyEntryPoint = (
 const initializedVcl = (
     jwtVerificationError?: VCLError,
     compatibilityMode: VCLErrorCodeCompatibilityMode = 'taxonomy',
+    deepLinkVerificationResult?: boolean,
 ): VCLImpl => {
     const vcl = new VCLImpl();
     const jwtServiceRepository = new JwtServiceRepositoryImpl(
@@ -256,13 +267,13 @@ const initializedVcl = (
         new CredentialManifestRepositoryImpl(new NetworkServiceImpl()),
         new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
         jwtServiceRepository,
-        new CredentialManifestByDeepLinkVerifierImpl(),
+        credentialManifestByDeepLinkVerifier(deepLinkVerificationResult),
     );
     vcl.presentationRequestUseCase = new PresentationRequestUseCaseImpl(
         new PresentationRequestRepositoryImpl(new NetworkServiceImpl()),
         new ResolveDidDocumentRepositoryImpl(new NetworkServiceImpl()),
         jwtServiceRepository,
-        new PresentationRequestByDeepLinkVerifierImpl(),
+        presentationRequestByDeepLinkVerifier(deepLinkVerificationResult),
     );
 
     return vcl;
@@ -482,3 +493,29 @@ class FixedJwtVerifyService implements VCLJwtVerifyService {
         return true;
     }
 }
+
+const credentialManifestByDeepLinkVerifier = (
+    result?: boolean,
+): CredentialManifestByDeepLinkVerifier =>
+    result === undefined
+        ? new CredentialManifestByDeepLinkVerifierImpl()
+        : {
+              verifyCredentialManifest: async (
+                  _credentialManifest: VCLCredentialManifest,
+                  _deepLink: VCLDeepLink,
+                  _didDocument: VCLDidDocument,
+              ) => result,
+          };
+
+const presentationRequestByDeepLinkVerifier = (
+    result?: boolean,
+): PresentationRequestByDeepLinkVerifier =>
+    result === undefined
+        ? new PresentationRequestByDeepLinkVerifierImpl()
+        : {
+              verifyPresentationRequest: async (
+                  _presentationRequest: VCLPresentationRequest,
+                  _deepLink: VCLDeepLink,
+                  _didDocument: VCLDidDocument,
+              ) => result,
+          };
