@@ -79,6 +79,7 @@ type BaselineRouter = {
     requestPayload?: unknown;
     requestStatusCode?: number;
     verifiedProfileContentType?: string;
+    verifiedProfileFailure?: Error;
     verifiedProfilePayload?: unknown;
     verifiedProfileStatusCode?: number;
 };
@@ -347,21 +348,29 @@ const mockVerifiedProfileForDid = (
     did: string,
     {
         verifiedProfileContentType = jsonContentType,
+        verifiedProfileFailure,
         verifiedProfilePayload = defaultVerifiedProfilePayload(entryPoint),
         verifiedProfileStatusCode = 200,
     }: BaselineRouter,
 ) => {
     const path = `/api/v0.6/organizations/${did}/verified-profile`;
 
-    nock(registrarOrigin)
-        .get((uri) => uri === path || decodeURIComponent(uri) === path)
-        .reply(
-            verifiedProfileStatusCode,
-            normalizePayload(verifiedProfilePayload),
-            {
-                'content-type': verifiedProfileContentType,
-            },
-        );
+    const interceptor = nock(registrarOrigin).get(
+        (uri) => uri === path || decodeURIComponent(uri) === path,
+    );
+
+    if (verifiedProfileFailure) {
+        interceptor.replyWithError(verifiedProfileFailure.message);
+        return;
+    }
+
+    interceptor.reply(
+        verifiedProfileStatusCode,
+        normalizePayload(verifiedProfilePayload),
+        {
+            'content-type': verifiedProfileContentType,
+        },
+    );
 };
 
 const mockSdkRequestEndpoint = (

@@ -26,6 +26,7 @@ enum VCLErrorCode {
     VerifierDidUnresolvable = 'verifier_did_unresolvable',
     IssuerNotRegistered = 'issuer_not_registered',
     VerifierNotRegistered = 'verifier_not_registered',
+    RegistrationCheckInconclusive = 'registration_check_inconclusive',
     IssuerRequestInvalid = 'issuer_request_invalid',
     VerifierRequestInvalid = 'verifier_request_invalid',
     IssuerRequestUnauthorized = 'issuer_request_unauthorized',

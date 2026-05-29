@@ -3,6 +3,7 @@ import { beforeEach, describe, test } from 'node:test';
 import { expect } from 'expect';
 import { VCLError, VCLErrorCode, VCLDeepLink, VCLStatusCode } from '../../src';
 import VelocityDeepLinkValidator from '../../src/impl/utils/VelocityDeepLinkValidator';
+import { SourceMalformedVerifiedProfile } from '../../src/impl/utils/ErrorTaxonomy';
 import { ProfileServiceTypeVerifier } from '../../src/impl/utils/ProfileServiceTypeVerifier';
 import { CredentialManifestMocks } from '../infrastructure/resources/valid/CredentialManifestMocks';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
@@ -631,7 +632,7 @@ describe('Error taxonomy contract', () => {
         expect(credentialManifest.did).toEqual(DeepLinkMocks.IssuerDid);
     });
 
-    test('verified profile lookup failure propagates network error details', async () => {
+    test('verified profile 404 returns not registered', async () => {
         for (const entryPoint of entryPoints) {
             const payload =
                 '{"message":"profile missing","errorCode":"sdk_error"}';
@@ -654,11 +655,85 @@ describe('Error taxonomy contract', () => {
         }
     });
 
-    test('empty verified profile fails service type verification', async () => {
+    test('verified profile transport failure returns connectivity failure', async () => {
         for (const entryPoint of entryPoints) {
             const { error } = await callEntryPoint(entryPoint, {
                 router: {
-                    verifiedProfilePayload: {},
+                    verifiedProfileFailure: new Error('profile offline'),
+                },
+            });
+
+            assertTaxonomyError(entryPoint, error, 'registration_check', {
+                errorCode: VCLErrorCode.ConnectivityFailure,
+                statusCode: VCLStatusCode.NetworkError,
+                requestDid: entryPoint.did,
+                messageContaining: 'profile offline',
+            });
+        }
+    });
+
+    test('verified profile unexpected 4xx and 5xx are registration check inconclusive', async () => {
+        for (const entryPoint of entryPoints) {
+            for (const statusCode of [400, 500]) {
+                const payload = `{"message":"profile lookup failed","errorCode":"${VCLErrorCode.SdkError}"}`;
+                const { error } = await callEntryPoint(entryPoint, {
+                    router: {
+                        verifiedProfileStatusCode: statusCode,
+                        verifiedProfilePayload: payload,
+                        verifiedProfileContentType: jsonContentType,
+                    },
+                });
+
+                assertTaxonomyError(entryPoint, error, 'registration_check', {
+                    payload,
+                    errorCode: VCLErrorCode.RegistrationCheckInconclusive,
+                    sourceErrorCode: VCLErrorCode.SdkError,
+                    statusCode,
+                    requestDid: entryPoint.did,
+                    message: 'profile lookup failed',
+                });
+            }
+        }
+    });
+
+    test('empty and malformed json verified profile 200 responses are registration check inconclusive', async () => {
+        for (const entryPoint of entryPoints) {
+            for (const { router, messageContaining } of [
+                {
+                    router: { verifiedProfilePayload: {} },
+                    messageContaining: 'Empty verified profile',
+                },
+                {
+                    router: {
+                        verifiedProfilePayload: '{not json',
+                        verifiedProfileContentType: jsonContentType,
+                    },
+                    messageContaining: 'Empty verified profile',
+                },
+            ]) {
+                const { error } = await callEntryPoint(entryPoint, {
+                    router,
+                });
+
+                assertTaxonomyError(entryPoint, error, 'registration_check', {
+                    errorCode: VCLErrorCode.RegistrationCheckInconclusive,
+                    sourceErrorCode: SourceMalformedVerifiedProfile,
+                    requestDid: entryPoint.did,
+                    messageContaining,
+                });
+            }
+        }
+    });
+
+    test('verified profile with missing service types reaches service type authorization', async () => {
+        for (const entryPoint of entryPoints) {
+            const { error } = await callEntryPoint(entryPoint, {
+                router: {
+                    verifiedProfilePayload: {
+                        credentialSubject: {
+                            name: 'No Service Types, Inc.',
+                        },
+                    },
                 },
             });
 

@@ -5,6 +5,7 @@ import {
     ErrorTaxonomy,
     isTaxonomyError,
     RequestKind,
+    SourceMalformedVerifiedProfile,
 } from './ErrorTaxonomy';
 import { ProfileServiceTypeVerifier } from './ProfileServiceTypeVerifier';
 import VelocityDeepLinkValidator from './VelocityDeepLinkValidator';
@@ -115,7 +116,8 @@ export default class ErrorTaxonomyCompatibilityMapper {
             !sourceErrorCode ||
             sourceErrorCode === error.errorCode ||
             sourceErrorCode ===
-                ProfileServiceTypeVerifier.SourceWrongServiceType
+                ProfileServiceTypeVerifier.SourceWrongServiceType ||
+            sourceErrorCode === SourceMalformedVerifiedProfile
         ) {
             return this.legacyCopy(error, VCLErrorCode.SdkError);
         }

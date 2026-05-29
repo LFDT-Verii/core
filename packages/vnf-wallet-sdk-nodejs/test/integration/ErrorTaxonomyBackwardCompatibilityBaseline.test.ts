@@ -333,20 +333,6 @@ describe('Error taxonomy backward compatibility baseline', () => {
 
     // Request authorization -> issuer_request_unauthorized / verifier_request_unauthorized
 
-    test('empty verified profile fails service type verification', async () => {
-        for (const entryPoint of entryPoints) {
-            const { error } = await callEntryPoint(entryPoint, {
-                router: {
-                    verifiedProfilePayload: {},
-                },
-            });
-
-            expect(error.errorCode).toEqual(VCLErrorCode.SdkError);
-            expect(error.statusCode).toEqual(VCLStatusCode.VerificationError);
-            expect(error.message).toContain('Wrong service type');
-        }
-    });
-
     test('wrong issuer or verifier service type returns sdk_error with verification status', async () => {
         for (const entryPoint of entryPoints) {
             const wrongServiceProfile =
