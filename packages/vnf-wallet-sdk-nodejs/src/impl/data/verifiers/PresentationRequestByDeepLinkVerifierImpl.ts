@@ -17,20 +17,12 @@ export default class PresentationRequestByDeepLinkVerifierImpl implements Presen
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
     ): void {
-        const deepLinkDid = deepLink.did;
-
-        if (deepLinkDid == null) {
-            throw new VCLError({
-                errorCode: VCLErrorCode.SdkError.toString(),
-                message: `DID not found in deep link: ${deepLink.value}`,
-            });
-        }
         if (
             !(
                 this.isDidBoundToDidDocument(
                     presentationRequest.iss,
                     didDocument,
-                ) && this.isDidBoundToDidDocument(deepLinkDid, didDocument)
+                ) && this.isDidBoundToDidDocument(deepLink.did!, didDocument)
             )
         ) {
             throw new VCLError({

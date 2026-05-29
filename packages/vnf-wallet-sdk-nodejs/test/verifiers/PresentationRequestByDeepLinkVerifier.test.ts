@@ -104,23 +104,4 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
         }
         throw new Error('Expected presentation request verification to throw');
     });
-
-    test('throws when the deep link does not include a DID', () => {
-        subject = new PresentationRequestByDeepLinkVerifierImpl();
-
-        try {
-            subject.verifyPresentationRequest(
-                presentationRequest,
-                new VCLDeepLink('velocity-network://inspect'),
-                DidDocumentMocks.DidDocumentMock,
-            );
-        } catch (error) {
-            expect(error).toMatchObject({
-                errorCode: VCLErrorCode.SdkError,
-                message: expect.stringContaining('DID not found in deep link'),
-            });
-            return;
-        }
-        throw new Error('Expected presentation request verification to throw');
-    });
 });

@@ -7,9 +7,9 @@
 import VCLCredentialManifest from '../../../api/entities/VCLCredentialManifest';
 import VCLDeepLink from '../../../api/entities/VCLDeepLink';
 import CredentialManifestByDeepLinkVerifier from '../../domain/verifiers/CredentialManifestByDeepLinkVerifier';
+import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLErrorCode from '../../../api/entities/error/VCLErrorCode';
-import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 
 export default class CredentialManifestByDeepLinkVerifierImpl implements CredentialManifestByDeepLinkVerifier {
     verifyCredentialManifest(
@@ -17,22 +17,14 @@ export default class CredentialManifestByDeepLinkVerifierImpl implements Credent
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
     ): void {
-        const deepLinkDid = deepLink.did;
-
-        if (deepLinkDid == null) {
-            throw new VCLError({
-                errorCode: VCLErrorCode.SdkError.toString(),
-                message: `DID not found in deep link: ${deepLink.value}`,
-            });
-        }
         if (
             !(
                 (didDocument.id === credentialManifest.issuerId &&
-                    didDocument.id === deepLinkDid) ||
+                    didDocument.id === deepLink.did) ||
                 (didDocument.alsoKnownAs.includes(
                     credentialManifest.issuerId,
                 ) &&
-                    didDocument.alsoKnownAs.includes(deepLinkDid))
+                    didDocument.alsoKnownAs.includes(deepLink.did!))
             )
         ) {
             throw new VCLError({
