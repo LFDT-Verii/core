@@ -42,34 +42,34 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
         );
     };
 
-    test('verifies a matching presentation request deep link', async () => {
+    test('verifies a matching presentation request deep link', () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
 
-        await expect(
+        expect(() =>
             subject.verifyPresentationRequest(
                 presentationRequest,
                 deepLink,
                 DidDocumentMocks.DidDocumentMock,
             ),
-        ).resolves.toBeUndefined();
+        ).not.toThrow();
     });
 
-    test('verifies a presentation request when iss matches didDocument.id', async () => {
+    test('verifies a presentation request when iss matches didDocument.id', () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
         const presentationRequestWithDidDocumentId = createPresentationRequest(
             DidDocumentMocks.DidDocumentMock.id,
         );
 
-        await expect(
+        expect(() =>
             subject.verifyPresentationRequest(
                 presentationRequestWithDidDocumentId,
                 deepLink,
                 DidDocumentMocks.DidDocumentMock,
             ),
-        ).resolves.toBeUndefined();
+        ).not.toThrow();
     });
 
-    test('verifies a presentation request when inspectorDid matches didDocument.id', async () => {
+    test('verifies a presentation request when inspectorDid matches didDocument.id', () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
         const deepLinkWithDidDocumentId = new VCLDeepLink(
             `velocity-network://inspect?inspectorDid=${encodeURIComponent(
@@ -77,41 +77,50 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
             )}`,
         );
 
-        await expect(
+        expect(() =>
             subject.verifyPresentationRequest(
                 presentationRequest,
                 deepLinkWithDidDocumentId,
                 DidDocumentMocks.DidDocumentMock,
             ),
-        ).resolves.toBeUndefined();
+        ).not.toThrow();
     });
 
-    test('throws for a mismatched presentation request deep link', async () => {
+    test('throws for a mismatched presentation request deep link', () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
 
-        await expect(
+        try {
             subject.verifyPresentationRequest(
                 presentationRequest,
                 deepLink,
                 DidDocumentMocks.DidDocumentWithWrongDidMock,
-            ),
-        ).rejects.toMatchObject({
-            errorCode: VCLErrorCode.MismatchedPresentationRequestInspectorDid,
-        });
+            );
+        } catch (error) {
+            expect(error).toMatchObject({
+                errorCode:
+                    VCLErrorCode.MismatchedPresentationRequestInspectorDid,
+            });
+            return;
+        }
+        throw new Error('Expected presentation request verification to throw');
     });
 
-    test('throws when the deep link does not include a DID', async () => {
+    test('throws when the deep link does not include a DID', () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
 
-        await expect(
+        try {
             subject.verifyPresentationRequest(
                 presentationRequest,
                 new VCLDeepLink('velocity-network://inspect'),
                 DidDocumentMocks.DidDocumentMock,
-            ),
-        ).rejects.toMatchObject({
-            errorCode: VCLErrorCode.SdkError,
-            message: expect.stringContaining('DID not found in deep link'),
-        });
+            );
+        } catch (error) {
+            expect(error).toMatchObject({
+                errorCode: VCLErrorCode.SdkError,
+                message: expect.stringContaining('DID not found in deep link'),
+            });
+            return;
+        }
+        throw new Error('Expected presentation request verification to throw');
     });
 });

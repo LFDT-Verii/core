@@ -187,7 +187,7 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
             VCLLog.info('Deep link was not provided => nothing to verify');
             return credentialManifest;
         }
-        await this.credentialManifestByDeepLinkVerifier.verifyCredentialManifest(
+        this.credentialManifestByDeepLinkVerifier.verifyCredentialManifest(
             credentialManifest,
             credentialManifest.deepLink,
             didDocument,

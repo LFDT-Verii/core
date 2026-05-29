@@ -154,7 +154,7 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
             publicJwk,
             presentationRequest.remoteCryptoServicesToken,
         );
-        await this.presentationRequestByDeepLinkVerifier.verifyPresentationRequest(
+        this.presentationRequestByDeepLinkVerifier.verifyPresentationRequest(
             presentationRequest,
             presentationRequest.deepLink,
             didDocument,

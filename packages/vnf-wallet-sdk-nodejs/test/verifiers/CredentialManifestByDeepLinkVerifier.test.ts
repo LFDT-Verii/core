@@ -35,29 +35,33 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
         DidJwkMocks.DidJwk,
     );
 
-    test('verifies a matching credential manifest deep link', async () => {
+    test('verifies a matching credential manifest deep link', () => {
         subject = new CredentialManifestByDeepLinkVerifierImpl();
 
-        await expect(
+        expect(() =>
             subject.verifyCredentialManifest(
                 credentialManifest,
                 deepLink,
                 DidDocumentMocks.DidDocumentMock,
             ),
-        ).resolves.toBeUndefined();
+        ).not.toThrow();
     });
 
-    test('throws for a mismatched credential manifest deep link', async () => {
+    test('throws for a mismatched credential manifest deep link', () => {
         subject = new CredentialManifestByDeepLinkVerifierImpl();
 
-        await expect(
+        try {
             subject.verifyCredentialManifest(
                 credentialManifest,
                 deepLink,
                 DidDocumentMocks.DidDocumentWithWrongDidMock,
-            ),
-        ).rejects.toMatchObject({
-            errorCode: VCLErrorCode.MismatchedRequestIssuerDid,
-        });
+            );
+        } catch (error) {
+            expect(error).toMatchObject({
+                errorCode: VCLErrorCode.MismatchedRequestIssuerDid,
+            });
+            return;
+        }
+        throw new Error('Expected credential manifest verification to throw');
     });
 });

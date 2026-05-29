@@ -7,43 +7,38 @@
 import VCLCredentialManifest from '../../../api/entities/VCLCredentialManifest';
 import VCLDeepLink from '../../../api/entities/VCLDeepLink';
 import CredentialManifestByDeepLinkVerifier from '../../domain/verifiers/CredentialManifestByDeepLinkVerifier';
-import VCLLog from '../../utils/VCLLog';
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLErrorCode from '../../../api/entities/error/VCLErrorCode';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 
 export default class CredentialManifestByDeepLinkVerifierImpl implements CredentialManifestByDeepLinkVerifier {
-    async verifyCredentialManifest(
+    verifyCredentialManifest(
         credentialManifest: VCLCredentialManifest,
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
-    ): Promise<void> {
-        if (deepLink.did === null) {
-            await this.onError(`DID not found in deep link: ${deepLink.value}`);
-            return;
+    ): void {
+        const deepLinkDid = deepLink.did;
+
+        if (deepLinkDid == null) {
+            throw new VCLError({
+                errorCode: VCLErrorCode.SdkError.toString(),
+                message: `DID not found in deep link: ${deepLink.value}`,
+            });
         }
         if (
-            (didDocument.id === credentialManifest.issuerId &&
-                didDocument.id === deepLink.did) ||
-            (didDocument.alsoKnownAs.includes(credentialManifest.issuerId) &&
-                didDocument.alsoKnownAs.includes(deepLink.did!))
+            !(
+                (didDocument.id === credentialManifest.issuerId &&
+                    didDocument.id === deepLinkDid) ||
+                (didDocument.alsoKnownAs.includes(
+                    credentialManifest.issuerId,
+                ) &&
+                    didDocument.alsoKnownAs.includes(deepLinkDid))
+            )
         ) {
-            return;
+            throw new VCLError({
+                errorCode: VCLErrorCode.MismatchedRequestIssuerDid.toString(),
+                message: `credential manifest: ${credentialManifest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
+            });
         }
-        await this.onError(
-            `credential manifest: ${credentialManifest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
-            VCLErrorCode.MismatchedRequestIssuerDid,
-        );
-    }
-
-    private async onError(
-        errorMessage: string,
-        errorCode: VCLErrorCode = VCLErrorCode.SdkError,
-    ) {
-        VCLLog.error(errorMessage);
-        throw new VCLError({
-            errorCode: errorCode.toString(),
-            message: errorMessage,
-        });
     }
 }

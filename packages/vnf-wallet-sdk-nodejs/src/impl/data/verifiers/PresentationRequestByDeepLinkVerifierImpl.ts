@@ -7,50 +7,41 @@
 import VCLPresentationRequest from '../../../api/entities/VCLPresentationRequest';
 import VCLDeepLink from '../../../api/entities/VCLDeepLink';
 import PresentationRequestByDeepLinkVerifier from '../../domain/verifiers/PresentationRequestByDeepLinkVerifier';
-import VCLLog from '../../utils/VCLLog';
 import VCLErrorCode from '../../../api/entities/error/VCLErrorCode';
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 
 export default class PresentationRequestByDeepLinkVerifierImpl implements PresentationRequestByDeepLinkVerifier {
-    async verifyPresentationRequest(
+    verifyPresentationRequest(
         presentationRequest: VCLPresentationRequest,
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
-    ): Promise<void> {
+    ): void {
         const deepLinkDid = deepLink.did;
 
         if (deepLinkDid == null) {
-            await this.onError(`DID not found in deep link: ${deepLink.value}`);
-            return;
+            throw new VCLError({
+                errorCode: VCLErrorCode.SdkError.toString(),
+                message: `DID not found in deep link: ${deepLink.value}`,
+            });
         }
         if (
-            this.isDidBoundToDidDocument(
-                presentationRequest.iss,
-                didDocument,
-            ) &&
-            this.isDidBoundToDidDocument(deepLinkDid, didDocument)
+            !(
+                this.isDidBoundToDidDocument(
+                    presentationRequest.iss,
+                    didDocument,
+                ) && this.isDidBoundToDidDocument(deepLinkDid, didDocument)
+            )
         ) {
-            return;
+            throw new VCLError({
+                errorCode:
+                    VCLErrorCode.MismatchedPresentationRequestInspectorDid.toString(),
+                message: `mismatched presentation request: ${presentationRequest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
+            });
         }
-        await this.onError(
-            `mismatched presentation request: ${presentationRequest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
-            VCLErrorCode.MismatchedPresentationRequestInspectorDid,
-        );
     }
 
     private isDidBoundToDidDocument(did: string, didDocument: VCLDidDocument) {
         return didDocument.id === did || didDocument.alsoKnownAs.includes(did);
-    }
-
-    private async onError(
-        errorMessage: string,
-        errorCode: VCLErrorCode = VCLErrorCode.SdkError,
-    ) {
-        VCLLog.error(errorMessage);
-        throw new VCLError({
-            errorCode: errorCode.toString(),
-            message: errorMessage,
-        });
     }
 }
