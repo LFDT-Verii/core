@@ -44,6 +44,11 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
                 presentationRequestDescriptor.didJwk,
                 presentationRequestDescriptor.remoteCryptoServicesToken,
             );
+            if (!presentationRequest.iss) {
+                throw new VCLError({
+                    message: 'Missing presentation_request',
+                });
+            }
             requestDid = presentationRequest.iss;
         } catch (error) {
             throw toRequestValidationError(VCLError.fromError(error), {

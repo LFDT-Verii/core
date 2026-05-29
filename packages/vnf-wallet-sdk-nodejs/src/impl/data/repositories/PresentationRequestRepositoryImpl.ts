@@ -35,11 +35,8 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
                 requestKind: ErrorTaxonomy.RequestKindPresentation,
             });
         }
-        const presentationRequest =
-            presentationRequestResponse.payload[
-                VCLPresentationRequest.KeyPresentationRequest
-            ];
-        if (!presentationRequest) {
+        const { payload } = presentationRequestResponse;
+        if (payload == null || typeof payload !== 'object') {
             throw toClientRequestFetchError(
                 new VCLError({ message: 'Missing presentation_request' }),
                 {
@@ -48,6 +45,6 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
                 },
             );
         }
-        return presentationRequest;
+        return payload[VCLPresentationRequest.KeyPresentationRequest] ?? '';
     }
 }

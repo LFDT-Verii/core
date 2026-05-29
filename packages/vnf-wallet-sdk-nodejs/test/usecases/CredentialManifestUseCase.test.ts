@@ -89,7 +89,7 @@ describe('CredentialManifestUseCase', () => {
         expect(didScope.isDone()).toBeTruthy();
     });
 
-    test('throws client_request_rejected for an invalid credential manifest response', async () => {
+    test('throws issuer_request_invalid for an invalid credential manifest response', async () => {
         const requestScope = mockAbsoluteGet(
             credentialManifestDescriptor.endpoint!,
             { wrong: 'payload' },
@@ -111,11 +111,9 @@ describe('CredentialManifestUseCase', () => {
             );
             expect(true).toEqual(false);
         } catch (error: any) {
-            expect(error?.errorCode).toEqual(
-                VCLErrorCode.ClientRequestRejected,
-            );
+            expect(error?.errorCode).toEqual(VCLErrorCode.IssuerRequestInvalid);
             expect(error?.sourceErrorCode).toEqual(VCLErrorCode.SdkError);
-            expect(error?.validationPhase).toEqual('client_request_fetch');
+            expect(error?.validationPhase).toEqual('request_validation');
         }
 
         expect(requestScope.isDone()).toBeTruthy();

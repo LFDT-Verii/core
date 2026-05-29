@@ -41,6 +41,9 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
                 credentialManifestDescriptor,
                 verifiedProfile,
             );
+            if (!credentialManifest.iss) {
+                throw new VCLError({ message: 'Missing issuing_request' });
+            }
         } catch (error) {
             throw toRequestValidationError(VCLError.fromError(error), {
                 requestKind: ErrorTaxonomy.RequestKindIssuing,

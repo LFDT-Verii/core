@@ -390,7 +390,7 @@ describe('Error taxonomy contract', () => {
         }
     });
 
-    test('empty request endpoint response returns sdk_error', async () => {
+    test('empty request endpoint response returns request invalid', async () => {
         for (const entryPoint of entryPoints) {
             const { error } = await callEntryPoint(entryPoint, {
                 router: {
@@ -398,15 +398,15 @@ describe('Error taxonomy contract', () => {
                 },
             });
 
-            assertTaxonomyError(entryPoint, error, 'client_request_fetch', {
-                errorCode: VCLErrorCode.ClientRequestRejected,
+            assertTaxonomyError(entryPoint, error, 'request_validation', {
+                errorCode: entryPoint.requestInvalidCode,
                 sourceErrorCode: VCLErrorCode.SdkError,
-                requestUri: entryPoint.defaultDeepLink.requestUri,
+                requestDid: entryPoint.did,
             });
         }
     });
 
-    test('malformed request endpoint response returns sdk_error', async () => {
+    test('malformed request endpoint response returns request invalid', async () => {
         for (const entryPoint of entryPoints) {
             const { error } = await callEntryPoint(entryPoint, {
                 router: {
@@ -414,15 +414,15 @@ describe('Error taxonomy contract', () => {
                 },
             });
 
-            assertTaxonomyError(entryPoint, error, 'client_request_fetch', {
-                errorCode: VCLErrorCode.ClientRequestRejected,
+            assertTaxonomyError(entryPoint, error, 'request_validation', {
+                errorCode: entryPoint.requestInvalidCode,
                 sourceErrorCode: VCLErrorCode.SdkError,
-                requestUri: entryPoint.defaultDeepLink.requestUri,
+                requestDid: entryPoint.did,
             });
         }
     });
 
-    test('missing expected request fields return sdk_error after empty jwt is decoded', async () => {
+    test('missing expected request fields return request invalid', async () => {
         for (const entryPoint of entryPoints) {
             const { error } = await callEntryPoint(entryPoint, {
                 router: {
@@ -430,30 +430,35 @@ describe('Error taxonomy contract', () => {
                 },
             });
 
-            assertTaxonomyError(entryPoint, error, 'client_request_fetch', {
-                errorCode: VCLErrorCode.ClientRequestRejected,
+            assertTaxonomyError(entryPoint, error, 'request_validation', {
+                errorCode: entryPoint.requestInvalidCode,
                 sourceErrorCode: VCLErrorCode.SdkError,
-                requestUri: entryPoint.defaultDeepLink.requestUri,
+                requestDid: entryPoint.did,
             });
         }
     });
 
-    test('empty issuing_request returns sdk_error after request fetch', async () => {
-        const entryPoint = issuingEntryPoint();
-        const { error } = await callEntryPoint(entryPoint, {
-            router: {
-                requestPayload: {
-                    issuing_request: '',
+    test('empty request jwt field returns request invalid', async () => {
+        for (const entryPoint of entryPoints) {
+            const requestKey =
+                entryPoint.type === 'issuing'
+                    ? 'issuing_request'
+                    : 'presentation_request';
+            const { error } = await callEntryPoint(entryPoint, {
+                router: {
+                    requestPayload: {
+                        [requestKey]: '',
+                    },
                 },
-            },
-        });
+            });
 
-        assertTaxonomyError(entryPoint, error, 'client_request_fetch', {
-            errorCode: VCLErrorCode.ClientRequestRejected,
-            sourceErrorCode: VCLErrorCode.SdkError,
-            requestUri: entryPoint.defaultDeepLink.requestUri,
-            message: 'Missing issuing_request',
-        });
+            assertTaxonomyError(entryPoint, error, 'request_validation', {
+                errorCode: entryPoint.requestInvalidCode,
+                sourceErrorCode: VCLErrorCode.SdkError,
+                requestDid: entryPoint.did,
+                message: `Missing ${requestKey}`,
+            });
+        }
     });
 
     test('malformed request jwt returns request invalid from sdk entry point', async () => {

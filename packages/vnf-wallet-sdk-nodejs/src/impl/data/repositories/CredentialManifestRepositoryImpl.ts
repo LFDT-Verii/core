@@ -34,11 +34,8 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
                 requestKind: ErrorTaxonomy.RequestKindIssuing,
             });
         }
-        const issuingRequest =
-            credentialManifestResponse.payload[
-                VCLCredentialManifest.KeyIssuingRequest
-            ];
-        if (!issuingRequest) {
+        const { payload } = credentialManifestResponse;
+        if (payload == null || typeof payload !== 'object') {
             throw toClientRequestFetchError(
                 new VCLError({ message: 'Missing issuing_request' }),
                 {
@@ -47,6 +44,6 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
                 },
             );
         }
-        return issuingRequest;
+        return payload[VCLCredentialManifest.KeyIssuingRequest] ?? '';
     }
 }
