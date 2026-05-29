@@ -757,24 +757,6 @@ describe('Error taxonomy contract', () => {
             });
         }
     });
-
-    test('deep link verification false result returns request invalid', async () => {
-        for (const entryPoint of entryPoints) {
-            const { error } = await callEntryPoint(entryPoint, {
-                deepLinkVerificationResult: false,
-            });
-
-            assertTaxonomyError(entryPoint, error, 'request_validation', {
-                errorCode: entryPoint.requestInvalidCode,
-                sourceErrorCode: VCLErrorCode.SdkError,
-                requestDid: entryPoint.did,
-                messageContaining:
-                    entryPoint.type === 'issuing'
-                        ? 'Failed to verify credentialManifest jwt'
-                        : 'Failed to verify',
-            });
-        }
-    });
 });
 
 const assertTaxonomyError = (

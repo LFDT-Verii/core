@@ -45,12 +45,13 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
     test('verifies a matching presentation request deep link', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
 
-        const isVerified = await subject.verifyPresentationRequest(
-            presentationRequest,
-            deepLink,
-            DidDocumentMocks.DidDocumentMock,
-        );
-        expect(isVerified).toBeTruthy();
+        await expect(
+            subject.verifyPresentationRequest(
+                presentationRequest,
+                deepLink,
+                DidDocumentMocks.DidDocumentMock,
+            ),
+        ).resolves.toBeUndefined();
     });
 
     test('verifies a presentation request when iss matches didDocument.id', async () => {
@@ -59,12 +60,13 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
             DidDocumentMocks.DidDocumentMock.id,
         );
 
-        const isVerified = await subject.verifyPresentationRequest(
-            presentationRequestWithDidDocumentId,
-            deepLink,
-            DidDocumentMocks.DidDocumentMock,
-        );
-        expect(isVerified).toBeTruthy();
+        await expect(
+            subject.verifyPresentationRequest(
+                presentationRequestWithDidDocumentId,
+                deepLink,
+                DidDocumentMocks.DidDocumentMock,
+            ),
+        ).resolves.toBeUndefined();
     });
 
     test('verifies a presentation request when inspectorDid matches didDocument.id', async () => {
@@ -75,28 +77,27 @@ describe('PresentationRequestByDeepLinkVerifier', () => {
             )}`,
         );
 
-        const isVerified = await subject.verifyPresentationRequest(
-            presentationRequest,
-            deepLinkWithDidDocumentId,
-            DidDocumentMocks.DidDocumentMock,
-        );
-        expect(isVerified).toBeTruthy();
+        await expect(
+            subject.verifyPresentationRequest(
+                presentationRequest,
+                deepLinkWithDidDocumentId,
+                DidDocumentMocks.DidDocumentMock,
+            ),
+        ).resolves.toBeUndefined();
     });
 
     test('throws for a mismatched presentation request deep link', async () => {
         subject = new PresentationRequestByDeepLinkVerifierImpl();
-        try {
-            const isVerified = await subject.verifyPresentationRequest(
+
+        await expect(
+            subject.verifyPresentationRequest(
                 presentationRequest,
                 deepLink,
                 DidDocumentMocks.DidDocumentWithWrongDidMock,
-            );
-            expect(isVerified).toBeFalsy();
-        } catch (error: any) {
-            expect(error.errorCode).toEqual(
-                VCLErrorCode.MismatchedPresentationRequestInspectorDid,
-            );
-        }
+            ),
+        ).rejects.toMatchObject({
+            errorCode: VCLErrorCode.MismatchedPresentationRequestInspectorDid,
+        });
     });
 
     test('throws when the deep link does not include a DID', async () => {

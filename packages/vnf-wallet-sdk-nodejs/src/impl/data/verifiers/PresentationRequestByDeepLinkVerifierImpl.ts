@@ -17,12 +17,12 @@ export default class PresentationRequestByDeepLinkVerifierImpl implements Presen
         presentationRequest: VCLPresentationRequest,
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
-    ): Promise<boolean> {
+    ): Promise<void> {
         const deepLinkDid = deepLink.did;
 
         if (deepLinkDid == null) {
             await this.onError(`DID not found in deep link: ${deepLink.value}`);
-            return false;
+            return;
         }
         if (
             this.isDidBoundToDidDocument(
@@ -31,13 +31,12 @@ export default class PresentationRequestByDeepLinkVerifierImpl implements Presen
             ) &&
             this.isDidBoundToDidDocument(deepLinkDid, didDocument)
         ) {
-            return true;
+            return;
         }
         await this.onError(
             `mismatched presentation request: ${presentationRequest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
             VCLErrorCode.MismatchedPresentationRequestInspectorDid,
         );
-        return false;
     }
 
     private isDidBoundToDidDocument(did: string, didDocument: VCLDidDocument) {

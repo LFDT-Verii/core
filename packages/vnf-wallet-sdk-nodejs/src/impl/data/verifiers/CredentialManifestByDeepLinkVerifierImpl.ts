@@ -17,10 +17,10 @@ export default class CredentialManifestByDeepLinkVerifierImpl implements Credent
         credentialManifest: VCLCredentialManifest,
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
-    ): Promise<boolean> {
+    ): Promise<void> {
         if (deepLink.did === null) {
             await this.onError(`DID not found in deep link: ${deepLink.value}`);
-            return false;
+            return;
         }
         if (
             (didDocument.id === credentialManifest.issuerId &&
@@ -28,13 +28,12 @@ export default class CredentialManifestByDeepLinkVerifierImpl implements Credent
             (didDocument.alsoKnownAs.includes(credentialManifest.issuerId) &&
                 didDocument.alsoKnownAs.includes(deepLink.did!))
         ) {
-            return true;
+            return;
         }
         await this.onError(
             `credential manifest: ${credentialManifest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
             VCLErrorCode.MismatchedRequestIssuerDid,
         );
-        return false;
     }
 
     private async onError(

@@ -9,7 +9,6 @@ import VCLVerifiedProfile from '../../../api/entities/VCLVerifiedProfile';
 import PresentationRequestByDeepLinkVerifier from '../../domain/verifiers/PresentationRequestByDeepLinkVerifier';
 import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDocumentRepository';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
-import VCLLog from '../../utils/VCLLog';
 import {
     toDidResolutionError,
     toRequestValidationError,
@@ -155,27 +154,11 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
             publicJwk,
             presentationRequest.remoteCryptoServicesToken,
         );
-        const isVerified =
-            await this.presentationRequestByDeepLinkVerifier.verifyPresentationRequest(
-                presentationRequest,
-                presentationRequest.deepLink,
-                didDocument,
-            );
-        VCLLog.info(
-            `Presentation request by deep link verification result: ${isVerified}`,
+        await this.presentationRequestByDeepLinkVerifier.verifyPresentationRequest(
+            presentationRequest,
+            presentationRequest.deepLink,
+            didDocument,
         );
-        return this.onVerificationSuccess(isVerified, presentationRequest);
-    }
-
-    async onVerificationSuccess(
-        isVerified: boolean,
-        presentationRequest: VCLPresentationRequest,
-    ): Promise<VCLPresentationRequest> {
-        if (isVerified) {
-            return presentationRequest;
-        }
-        throw new VCLError({
-            message: `Failed to verify: ${presentationRequest.jwt.payload}`,
-        });
+        return presentationRequest;
     }
 }

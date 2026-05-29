@@ -10,7 +10,6 @@ import CredentialManifestByDeepLinkVerifier from '../../domain/verifiers/Credent
 import VCLLog from '../../utils/VCLLog';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDocumentRepository';
-import VCLDeepLink from '../../../api/entities/VCLDeepLink';
 import { Nullish } from '../../../api/VCLTypes';
 import {
     toDidResolutionError,
@@ -177,37 +176,22 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
         return this.verifyCredentialManifestByDeepLink(
             credentialManifest,
             didDocument,
-            credentialManifest.deepLink,
         );
     }
 
     async verifyCredentialManifestByDeepLink(
         credentialManifest: VCLCredentialManifest,
         didDocument: VCLDidDocument,
-        deepLink?: Nullish<VCLDeepLink>,
     ): Promise<VCLCredentialManifest> {
-        if (credentialManifest.deepLink === null) {
+        if (credentialManifest.deepLink == null) {
             VCLLog.info('Deep link was not provided => nothing to verify');
             return credentialManifest;
         }
-        const isVerified =
-            await this.credentialManifestByDeepLinkVerifier.verifyCredentialManifest(
-                credentialManifest,
-                deepLink!,
-                didDocument,
-            );
-        return this.onVerificationSuccess(isVerified, credentialManifest);
-    }
-
-    async onVerificationSuccess(
-        isVerified: boolean,
-        credentialManifest: VCLCredentialManifest,
-    ): Promise<VCLCredentialManifest> {
-        if (isVerified) {
-            return credentialManifest;
-        }
-        throw new VCLError({
-            message: `Failed to verify credentialManifest jwt:\n${credentialManifest.jwt}`,
-        });
+        await this.credentialManifestByDeepLinkVerifier.verifyCredentialManifest(
+            credentialManifest,
+            credentialManifest.deepLink,
+            didDocument,
+        );
+        return credentialManifest;
     }
 }

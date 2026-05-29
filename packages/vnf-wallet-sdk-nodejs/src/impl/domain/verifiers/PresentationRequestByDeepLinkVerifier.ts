@@ -13,5 +13,5 @@ export default interface PresentationRequestByDeepLinkVerifier {
         presentationRequest: VCLPresentationRequest,
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
-    ): Promise<boolean>;
+    ): Promise<void>;
 }

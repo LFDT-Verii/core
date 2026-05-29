@@ -38,27 +38,26 @@ describe('CredentialManifestByDeepLinkVerifier', () => {
     test('verifies a matching credential manifest deep link', async () => {
         subject = new CredentialManifestByDeepLinkVerifierImpl();
 
-        const isVerified = await subject.verifyCredentialManifest(
-            credentialManifest,
-            deepLink,
-            DidDocumentMocks.DidDocumentMock,
-        );
-        expect(isVerified).toBeTruthy();
+        await expect(
+            subject.verifyCredentialManifest(
+                credentialManifest,
+                deepLink,
+                DidDocumentMocks.DidDocumentMock,
+            ),
+        ).resolves.toBeUndefined();
     });
 
     test('throws for a mismatched credential manifest deep link', async () => {
         subject = new CredentialManifestByDeepLinkVerifierImpl();
-        try {
-            const isVerified = await subject.verifyCredentialManifest(
+
+        await expect(
+            subject.verifyCredentialManifest(
                 credentialManifest,
                 deepLink,
                 DidDocumentMocks.DidDocumentWithWrongDidMock,
-            );
-            expect(isVerified).toBeFalsy();
-        } catch (error: any) {
-            expect(error.errorCode).toEqual(
-                VCLErrorCode.MismatchedRequestIssuerDid,
-            );
-        }
+            ),
+        ).rejects.toMatchObject({
+            errorCode: VCLErrorCode.MismatchedRequestIssuerDid,
+        });
     });
 });
