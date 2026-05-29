@@ -35,6 +35,11 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
         let requestDid = presentationRequestDescriptor.did ?? null;
         let presentationRequest: VCLPresentationRequest;
         try {
+            if (!encodedJwtStr) {
+                throw new VCLError({
+                    message: 'Missing presentation_request',
+                });
+            }
             const jwt = await this.jwtServiceRepository.decode(encodedJwtStr);
             presentationRequest = new VCLPresentationRequest(
                 jwt,

@@ -66,10 +66,13 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
     }
 
     private async parseCredentialManifest(
-        jwtStr: string,
+        jwtStr: Nullish<string>,
         credentialManifestDescriptor: VCLCredentialManifestDescriptor,
         verifiedProfile: VCLVerifiedProfile,
     ): Promise<VCLCredentialManifest> {
+        if (!jwtStr) {
+            throw new VCLError({ message: 'Missing issuing_request' });
+        }
         return new VCLCredentialManifest(
             await this.jwtServiceRepository.decode(jwtStr),
             credentialManifestDescriptor.vendorOriginContext,

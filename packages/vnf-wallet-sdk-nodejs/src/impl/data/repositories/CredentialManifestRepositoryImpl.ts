@@ -1,6 +1,7 @@
 import VCLCredentialManifest from '../../../api/entities/VCLCredentialManifest';
 import VCLCredentialManifestDescriptor from '../../../api/entities/VCLCredentialManifestDescriptor';
 import VCLError from '../../../api/entities/error/VCLError';
+import { Nullish } from '../../../api/VCLTypes';
 import NetworkService from '../../domain/infrastructure/network/NetworkService';
 import CredentialManifestRepository from '../../domain/repositories/CredentialManifestRepository';
 import { HeaderKeys, HeaderValues } from './Urls';
@@ -15,7 +16,7 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
 
     async getCredentialManifest(
         credentialManifestDescriptor: VCLCredentialManifestDescriptor,
-    ): Promise<string> {
+    ): Promise<Nullish<string>> {
         const { endpoint } = credentialManifestDescriptor;
         let credentialManifestResponse;
         try {
@@ -34,16 +35,8 @@ export default class CredentialManifestRepositoryImpl implements CredentialManif
                 requestKind: ErrorTaxonomy.RequestKindIssuing,
             });
         }
-        const { payload } = credentialManifestResponse;
-        if (payload == null || typeof payload !== 'object') {
-            throw toClientRequestFetchError(
-                new VCLError({ message: 'Missing issuing_request' }),
-                {
-                    requestUri: endpoint,
-                    requestKind: ErrorTaxonomy.RequestKindIssuing,
-                },
-            );
-        }
-        return payload[VCLCredentialManifest.KeyIssuingRequest] ?? '';
+        return credentialManifestResponse.payload?.[
+            VCLCredentialManifest.KeyIssuingRequest
+        ];
     }
 }

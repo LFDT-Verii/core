@@ -1,6 +1,7 @@
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLPresentationRequest from '../../../api/entities/VCLPresentationRequest';
 import VCLPresentationRequestDescriptor from '../../../api/entities/VCLPresentationRequestDescriptor';
+import { Nullish } from '../../../api/VCLTypes';
 import NetworkService from '../../domain/infrastructure/network/NetworkService';
 import PresentationRequestRepository from '../../domain/repositories/PresentationRequestRepository';
 import { HeaderKeys, HeaderValues } from './Urls';
@@ -15,7 +16,7 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
 
     async getPresentationRequest(
         presentationRequestDescriptor: VCLPresentationRequestDescriptor,
-    ): Promise<string> {
+    ): Promise<Nullish<string>> {
         const { endpoint } = presentationRequestDescriptor;
         let presentationRequestResponse;
         try {
@@ -35,16 +36,8 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
                 requestKind: ErrorTaxonomy.RequestKindPresentation,
             });
         }
-        const { payload } = presentationRequestResponse;
-        if (payload == null || typeof payload !== 'object') {
-            throw toClientRequestFetchError(
-                new VCLError({ message: 'Missing presentation_request' }),
-                {
-                    requestUri: endpoint,
-                    requestKind: ErrorTaxonomy.RequestKindPresentation,
-                },
-            );
-        }
-        return payload[VCLPresentationRequest.KeyPresentationRequest] ?? '';
+        return presentationRequestResponse.payload?.[
+            VCLPresentationRequest.KeyPresentationRequest
+        ];
     }
 }
