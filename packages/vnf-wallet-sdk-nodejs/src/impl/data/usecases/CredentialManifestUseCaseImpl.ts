@@ -2,7 +2,6 @@ import VCLCredentialManifest from '../../../api/entities/VCLCredentialManifest';
 import VCLCredentialManifestDescriptor from '../../../api/entities/VCLCredentialManifestDescriptor';
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLPublicJwk from '../../../api/entities/VCLPublicJwk';
-import VCLJwt from '../../../api/entities/VCLJwt';
 import CredentialManifestRepository from '../../domain/repositories/CredentialManifestRepository';
 import JwtServiceRepository from '../../domain/repositories/JwtServiceRepository';
 import CredentialManifestUseCase from '../../domain/usecases/CredentialManifestUseCase';
@@ -11,7 +10,6 @@ import CredentialManifestByDeepLinkVerifier from '../../domain/verifiers/Credent
 import VCLLog from '../../utils/VCLLog';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
 import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDocumentRepository';
-import VCLDeepLink from '../../../api/entities/VCLDeepLink';
 import { Nullish } from '../../../api/VCLTypes';
 import {
     toDidResolutionError,
@@ -35,14 +33,22 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
             await this.credentialManifestRepository.getCredentialManifest(
                 credentialManifestDescriptor,
             );
-        if (!jwtStr) {
-            throw new VCLError({ message: 'Empty jwtStr' });
+        let credentialManifest: VCLCredentialManifest;
+        try {
+            credentialManifest = await this.parseCredentialManifest(
+                jwtStr,
+                credentialManifestDescriptor,
+                verifiedProfile,
+            );
+            if (!credentialManifest.iss) {
+                throw new VCLError({ message: 'Missing issuing_request' });
+            }
+        } catch (error) {
+            throw toRequestValidationError(VCLError.fromError(error), {
+                requestKind: ErrorTaxonomy.RequestKindIssuing,
+                requestDid: credentialManifestDescriptor?.did ?? null,
+            });
         }
-        const credentialManifest = this.parseCredentialManifest(
-            jwtStr,
-            credentialManifestDescriptor,
-            verifiedProfile,
-        );
         const requestDid = credentialManifest.iss;
         const didDocument = await this.resolveDidDocument(credentialManifest);
         try {
@@ -58,13 +64,16 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
         }
     }
 
-    private parseCredentialManifest(
-        jwtStr: string,
+    private async parseCredentialManifest(
+        jwtStr: Nullish<string>,
         credentialManifestDescriptor: VCLCredentialManifestDescriptor,
         verifiedProfile: VCLVerifiedProfile,
-    ): VCLCredentialManifest {
+    ): Promise<VCLCredentialManifest> {
+        if (!jwtStr) {
+            throw new VCLError({ message: 'Missing issuing_request' });
+        }
         return new VCLCredentialManifest(
-            VCLJwt.fromEncodedJwt(jwtStr),
+            await this.jwtServiceRepository.decode(jwtStr),
             credentialManifestDescriptor.vendorOriginContext,
             verifiedProfile,
             credentialManifestDescriptor.deepLink,
@@ -167,37 +176,22 @@ export default class CredentialManifestUseCaseImpl implements CredentialManifest
         return this.verifyCredentialManifestByDeepLink(
             credentialManifest,
             didDocument,
-            credentialManifest.deepLink,
         );
     }
 
     async verifyCredentialManifestByDeepLink(
         credentialManifest: VCLCredentialManifest,
         didDocument: VCLDidDocument,
-        deepLink?: Nullish<VCLDeepLink>,
     ): Promise<VCLCredentialManifest> {
-        if (credentialManifest.deepLink === null) {
+        if (credentialManifest.deepLink == null) {
             VCLLog.info('Deep link was not provided => nothing to verify');
             return credentialManifest;
         }
-        const isVerified =
-            await this.credentialManifestByDeepLinkVerifier.verifyCredentialManifest(
-                credentialManifest,
-                deepLink!,
-                didDocument,
-            );
-        return this.onVerificationSuccess(isVerified, credentialManifest);
-    }
-
-    async onVerificationSuccess(
-        isVerified: boolean,
-        credentialManifest: VCLCredentialManifest,
-    ): Promise<VCLCredentialManifest> {
-        if (isVerified) {
-            return credentialManifest;
-        }
-        throw new VCLError({
-            message: `Failed to verify credentialManifest jwt:\n${credentialManifest.jwt}`,
-        });
+        this.credentialManifestByDeepLinkVerifier.verifyCredentialManifest(
+            credentialManifest,
+            credentialManifest.deepLink,
+            didDocument,
+        );
+        return credentialManifest;
     }
 }

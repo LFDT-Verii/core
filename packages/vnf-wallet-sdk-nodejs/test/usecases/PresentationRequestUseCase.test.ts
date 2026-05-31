@@ -81,7 +81,7 @@ describe('PresentationRequestUseCase', () => {
         expect(didScope.isDone()).toBeTruthy();
     });
 
-    test('throws client_request_rejected for an invalid presentation request response', async () => {
+    test('throws verifier_request_invalid for an invalid presentation request response', async () => {
         const requestScope = mockAbsoluteGet(
             presentationRequestDescriptor.endpoint!,
             { wrong: 'payload' },
@@ -97,9 +97,9 @@ describe('PresentationRequestUseCase', () => {
             expect(error).toEqual(
                 expect.objectContaining({
                     name: 'VCLError',
-                    errorCode: VCLErrorCode.ClientRequestRejected,
+                    errorCode: VCLErrorCode.VerifierRequestInvalid,
                     sourceErrorCode: VCLErrorCode.SdkError,
-                    validationPhase: 'client_request_fetch',
+                    validationPhase: 'request_validation',
                     requestId: null,
                     statusCode: null,
                 }),

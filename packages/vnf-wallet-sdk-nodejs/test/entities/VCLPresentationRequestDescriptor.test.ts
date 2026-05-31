@@ -1,6 +1,9 @@
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
+import { VCLErrorCode } from '../../src';
 import VCLPresentationRequestDescriptor from '../../src/api/entities/VCLPresentationRequestDescriptor';
+import PublicRequestDescriptorValidator from '../../src/impl/utils/PublicRequestDescriptorValidator';
+import { ErrorTaxonomy } from '../../src/impl/utils/ErrorTaxonomy';
 import { PresentationRequestDescriptorMocks } from '../infrastructure/resources/valid/PresentationRequestDescriptorMocks';
 import { DidJwkMocks } from '../infrastructure/resources/valid/DidJwkMocks';
 import { DeepLinkMocks } from '../infrastructure/resources/valid/DeepLinkMocks';
@@ -126,5 +129,31 @@ describe('VCLPresentationRequestDescriptor', () => {
         expect(subject.did).toEqual(
             PresentationRequestDescriptorMocks.InspectorDid,
         );
+    });
+
+    test('validator rejects a descriptor missing a deep link', () => {
+        const validator = new PublicRequestDescriptorValidator({
+            requestKind: ErrorTaxonomy.RequestKindPresentation,
+            expectedPath: 'inspect',
+            requireDeepLink: true,
+        });
+
+        let caughtError: unknown;
+        try {
+            validator.validate({
+                deepLink: null,
+                endpoint: null,
+                did: null,
+            });
+        } catch (error) {
+            caughtError = error;
+        }
+
+        expect(caughtError).toMatchObject({
+            errorCode: VCLErrorCode.InvalidLink,
+            message: expect.stringContaining('deepLink was not found'),
+            requestKind: ErrorTaxonomy.RequestKindPresentation,
+            validationPhase: ErrorTaxonomy.PhaseLinkValidation,
+        });
     });
 });

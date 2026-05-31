@@ -452,7 +452,7 @@ jobs:
       uses: aki77/reviewdog-action-code-coverage@afe9f2d9588ce5ade4fa73dff380d90c3a7dd31e # v2
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        lcov_path: "coverage-reports/**/lcov.info"
+        lcov_path: "coverage-reports/*/packages/*/lcov.info coverage-reports/*/servers/*/lcov.info coverage-reports/*/tools/*/lcov.info"
         reporter: github-pr-review
         filter_mode: added
         fail_level: none

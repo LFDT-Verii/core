@@ -1,6 +1,7 @@
 import VCLError from '../../../api/entities/error/VCLError';
 import VCLPresentationRequest from '../../../api/entities/VCLPresentationRequest';
 import VCLPresentationRequestDescriptor from '../../../api/entities/VCLPresentationRequestDescriptor';
+import { Nullish } from '../../../api/VCLTypes';
 import NetworkService from '../../domain/infrastructure/network/NetworkService';
 import PresentationRequestRepository from '../../domain/repositories/PresentationRequestRepository';
 import { HeaderKeys, HeaderValues } from './Urls';
@@ -8,31 +9,20 @@ import { HttpMethod } from '../infrastructure/network/HttpMethod';
 import {
     toClientRequestFetchError,
     ErrorTaxonomy,
-    invalidLink,
 } from '../../utils/ErrorTaxonomy';
-import VelocityDeepLinkValidator from '../../utils/VelocityDeepLinkValidator';
 
 export default class PresentationRequestRepositoryImpl implements PresentationRequestRepository {
     constructor(private readonly networkService: NetworkService) {}
 
     async getPresentationRequest(
         presentationRequestDescriptor: VCLPresentationRequestDescriptor,
-    ): Promise<string> {
+    ): Promise<Nullish<string>> {
         const { endpoint } = presentationRequestDescriptor;
-        if (!endpoint) {
-            throw invalidLink({
-                message: 'presentationRequestDescriptor.endpoint = null',
-                sourceErrorCode:
-                    VelocityDeepLinkValidator.SourceInvalidOrMissingRequestEndpoint,
-                requestKind: ErrorTaxonomy.RequestKindPresentation,
-            });
-        }
-
         let presentationRequestResponse;
         try {
             presentationRequestResponse = await this.networkService.sendRequest(
                 {
-                    endpoint,
+                    endpoint: endpoint!,
                     method: HttpMethod.GET,
                     headers: {
                         [HeaderKeys.XVnfProtocolVersion]:
@@ -46,19 +36,8 @@ export default class PresentationRequestRepositoryImpl implements PresentationRe
                 requestKind: ErrorTaxonomy.RequestKindPresentation,
             });
         }
-        const presentationRequest =
-            presentationRequestResponse.payload[
-                VCLPresentationRequest.KeyPresentationRequest
-            ];
-        if (!presentationRequest) {
-            throw toClientRequestFetchError(
-                new VCLError({ message: 'Missing presentation_request' }),
-                {
-                    requestUri: endpoint,
-                    requestKind: ErrorTaxonomy.RequestKindPresentation,
-                },
-            );
-        }
-        return presentationRequest;
+        return presentationRequestResponse.payload?.[
+            VCLPresentationRequest.KeyPresentationRequest
+        ];
     }
 }

@@ -14,6 +14,8 @@ export const ErrorTaxonomy = {
     RequestKindPresentation: 'presentation_request',
 } as const;
 
+export const SourceMalformedVerifiedProfile = 'malformed_verified_profile';
+
 export type RequestKind =
     | typeof ErrorTaxonomy.RequestKindIssuing
     | typeof ErrorTaxonomy.RequestKindPresentation;
@@ -45,6 +47,7 @@ const taxonomyCodes = new Set<string>([
     VCLErrorCode.VerifierDidUnresolvable,
     VCLErrorCode.IssuerNotRegistered,
     VCLErrorCode.VerifierNotRegistered,
+    VCLErrorCode.RegistrationCheckInconclusive,
     VCLErrorCode.IssuerRequestInvalid,
     VCLErrorCode.VerifierRequestInvalid,
     VCLErrorCode.IssuerRequestUnauthorized,
@@ -102,40 +105,41 @@ export const toRegistrationCheckError = (
     error: VCLError,
     context: RequestTaxonomyContext,
 ) =>
-    toTaxonomyError(
-        error,
-        isConnectivityFailure(error)
-            ? VCLErrorCode.ConnectivityFailure
-            : notRegisteredCode(context.requestKind),
-        {
-            validationPhase: ErrorTaxonomy.PhaseRegistrationCheck,
-            ...context,
-        },
-    );
+    toTaxonomyError(error, registrationCheckCode(error, context.requestKind), {
+        validationPhase: ErrorTaxonomy.PhaseRegistrationCheck,
+        ...context,
+    });
 
 export const toRequestAuthorizationError = (
     error: VCLError,
     context: RequestTaxonomyContext,
 ) =>
-    toTaxonomyError(error, requestUnauthorizedCode(context.requestKind), {
-        validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
-        ...context,
-    });
+    toTaxonomyError(
+        error,
+        context.requestKind === ErrorTaxonomy.RequestKindPresentation
+            ? VCLErrorCode.VerifierRequestUnauthorized
+            : VCLErrorCode.IssuerRequestUnauthorized,
+        {
+            validationPhase: ErrorTaxonomy.PhaseRequestAuthorization,
+            ...context,
+        },
+    );
 
 export const toRequestValidationError = (
     error: VCLError,
     context: RequestTaxonomyContext,
-) =>
-    toTaxonomyError(
-        error,
-        isConnectivityFailure(error)
-            ? VCLErrorCode.ConnectivityFailure
-            : requestInvalidCode(context.requestKind),
-        {
-            validationPhase: ErrorTaxonomy.PhaseRequestValidation,
-            ...context,
-        },
-    );
+) => {
+    let errorCode = VCLErrorCode.IssuerRequestInvalid;
+    if (isConnectivityFailure(error)) {
+        errorCode = VCLErrorCode.ConnectivityFailure;
+    } else if (context.requestKind === ErrorTaxonomy.RequestKindPresentation) {
+        errorCode = VCLErrorCode.VerifierRequestInvalid;
+    }
+    return toTaxonomyError(error, errorCode, {
+        validationPhase: ErrorTaxonomy.PhaseRequestValidation,
+        ...context,
+    });
+};
 
 export const isConnectivityFailure = (error: VCLError) =>
     error.errorCode === VCLErrorCode.ConnectivityFailure ||
@@ -247,24 +251,27 @@ const valueOr = <T, K extends keyof T>(
     Object.prototype.hasOwnProperty.call(source, key) ? source[key] : fallback;
 
 const didUnresolvableCode = (requestKind: RequestKind) =>
-    isPresentationRequest(requestKind)
+    requestKind === ErrorTaxonomy.RequestKindPresentation
         ? VCLErrorCode.VerifierDidUnresolvable
         : VCLErrorCode.IssuerDidUnresolvable;
 
 const notRegisteredCode = (requestKind: RequestKind) =>
-    isPresentationRequest(requestKind)
+    requestKind === ErrorTaxonomy.RequestKindPresentation
         ? VCLErrorCode.VerifierNotRegistered
         : VCLErrorCode.IssuerNotRegistered;
 
-const requestInvalidCode = (requestKind: RequestKind) =>
-    isPresentationRequest(requestKind)
-        ? VCLErrorCode.VerifierRequestInvalid
-        : VCLErrorCode.IssuerRequestInvalid;
-
-const requestUnauthorizedCode = (requestKind: RequestKind) =>
-    isPresentationRequest(requestKind)
-        ? VCLErrorCode.VerifierRequestUnauthorized
-        : VCLErrorCode.IssuerRequestUnauthorized;
-
-const isPresentationRequest = (requestKind: RequestKind) =>
-    requestKind === ErrorTaxonomy.RequestKindPresentation;
+const registrationCheckCode = (error: VCLError, requestKind: RequestKind) => {
+    if (error.sourceErrorCode === SourceMalformedVerifiedProfile) {
+        return VCLErrorCode.RegistrationCheckInconclusive;
+    }
+    if (isConnectivityFailure(error)) {
+        return VCLErrorCode.ConnectivityFailure;
+    }
+    if (error.statusCode === 404) {
+        return notRegisteredCode(requestKind);
+    }
+    if (error.statusCode != null && error.statusCode >= 400) {
+        return VCLErrorCode.RegistrationCheckInconclusive;
+    }
+    return notRegisteredCode(requestKind);
+};

@@ -9,7 +9,6 @@ import VCLVerifiedProfile from '../../../api/entities/VCLVerifiedProfile';
 import PresentationRequestByDeepLinkVerifier from '../../domain/verifiers/PresentationRequestByDeepLinkVerifier';
 import ResolveDidDocumentRepository from '../../domain/repositories/ResolveDidDocumentRepository';
 import VCLDidDocument from '../../../api/entities/VCLDidDocument';
-import VCLLog from '../../utils/VCLLog';
 import {
     toDidResolutionError,
     toRequestValidationError,
@@ -35,6 +34,11 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
         let requestDid = presentationRequestDescriptor.did ?? null;
         let presentationRequest: VCLPresentationRequest;
         try {
+            if (!encodedJwtStr) {
+                throw new VCLError({
+                    message: 'Missing presentation_request',
+                });
+            }
             const jwt = await this.jwtServiceRepository.decode(encodedJwtStr);
             presentationRequest = new VCLPresentationRequest(
                 jwt,
@@ -44,6 +48,11 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
                 presentationRequestDescriptor.didJwk,
                 presentationRequestDescriptor.remoteCryptoServicesToken,
             );
+            if (!presentationRequest.iss) {
+                throw new VCLError({
+                    message: 'Missing presentation_request',
+                });
+            }
             requestDid = presentationRequest.iss;
         } catch (error) {
             throw toRequestValidationError(VCLError.fromError(error), {
@@ -145,27 +154,11 @@ export default class PresentationRequestUseCaseImpl implements PresentationReque
             publicJwk,
             presentationRequest.remoteCryptoServicesToken,
         );
-        const isVerified =
-            await this.presentationRequestByDeepLinkVerifier.verifyPresentationRequest(
-                presentationRequest,
-                presentationRequest.deepLink,
-                didDocument,
-            );
-        VCLLog.info(
-            `Presentation request by deep link verification result: ${isVerified}`,
+        this.presentationRequestByDeepLinkVerifier.verifyPresentationRequest(
+            presentationRequest,
+            presentationRequest.deepLink,
+            didDocument,
         );
-        return this.onVerificationSuccess(isVerified, presentationRequest);
-    }
-
-    async onVerificationSuccess(
-        isVerified: boolean,
-        presentationRequest: VCLPresentationRequest,
-    ): Promise<VCLPresentationRequest> {
-        if (isVerified) {
-            return presentationRequest;
-        }
-        throw new VCLError({
-            message: `Failed to verify: ${presentationRequest.jwt.payload}`,
-        });
+        return presentationRequest;
     }
 }
