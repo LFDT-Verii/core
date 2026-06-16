@@ -1,0 +1,33 @@
+{
+  "title": "Tenant creation",
+  "$id": "new-tenant",
+  "type": "object",
+  "properties": {
+    "did": {
+      "type": "string",
+      "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$"
+    },
+    "hostUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "primaryAccount": {
+      "type": "string"
+    },
+    "caoDid": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "logo": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": [
+    "did",
+    "name",
+    "logo"
+  ]
+}

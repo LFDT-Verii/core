@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Velocity Presentation Submission Response",
+  "$id": "https://velocitycareerlabs.io/velocity-presentation-submission-response.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "token": {
+      "type": "string"
+    },
+    "exchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "ISSUING",
+            "DISCLOSURE"
+          ]
+        },
+        "disclosureComplete": {
+          "type": "boolean"
+        },
+        "exchangeComplete": {
+          "type": "boolean"
+        }
+      },
+      "required": ["id","type", "disclosureComplete", "exchangeComplete"]
+    }
+  },
+  "required": ["exchange"]
+}

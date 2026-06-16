@@ -1,0 +1,35 @@
+name: credentialinghub
+include:
+  - ../../../eng/docker/services/shared-compose.yml
+  - ../../../eng/docker/services/fineract-compose.yml
+  - ../../../samples/sample-registrar-server/docker/compose.yml
+  - ../../../samples/sample-lib-app/docker/compose.yml
+
+services:
+  credentialinghub:
+    depends_on:
+      - certgen
+      - velocity-mongo
+      - registrar
+    image: velocitycore/credentialinghub:local
+    build:
+      context: ../../..
+      dockerfile: eng/docker/Dockerfile-NodeE2E
+      target: builder
+      args:
+        SERVICE: credentialinghub
+    restart: on-failure
+    volumes:
+      - ../../../packages:/app/packages
+      - /app/servers/credentialinghub/node_modules
+      - ..:/app/servers/credentialinghub
+      - httpscert:/certs
+    command: pnpm --dir servers/credentialinghub exec nodemon --exec "pnpm start"
+    env_file:
+      - ../.localdev.env
+    environment:
+      - SERVER_CERTIFICATE_FILE=/certs/cert.crt
+      - SERVER_CERTIFICATE_KEY_FILE=/certs/key.pem
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    ports:
+      - 13002:3000

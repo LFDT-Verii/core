@@ -1,0 +1,49 @@
+{
+    "name": "fooName",
+    "purpose": "fooPurpose",
+    "input_descriptors": [
+        {
+            "id": "CurrentEmployment",
+            "name": "Current Employment",
+            "schema": [
+                {
+                    "uri": "https://example.com/employment-current-v1.1.schema.json"
+                }
+            ],
+            "group": [
+                "A"
+            ]
+        },
+        {
+            "id": "PastEmployment",
+            "name": "Past Employment",
+            "schema": [
+                {
+                    "uri": "https://example.com/employment-past-v1.1.schema.json"
+                }
+            ],
+            "group": [
+                "A"
+            ]
+        },
+        {
+            "id": "OpenBadge",
+            "name": "Badges",
+            "schema": [
+                {
+                    "uri": "https://example.com/open-badge-credential.schema.json"
+                }
+            ],
+            "group": [
+                "B"
+            ]
+        }
+    ],
+    "submission_requirements": [
+        {
+            "rule": "all",
+            "from": "A",
+            "min": 1
+        }
+    ]
+}

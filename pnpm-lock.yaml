@@ -3253,6 +3253,178 @@ importers:
         specifier: 6.15.2
         version: 6.15.2
 
+  servers/credentialinghub:
+    dependencies:
+      '@fastify/autoload':
+        specifier: ^6.3.1
+        version: 6.3.1
+      '@fastify/bearer-auth':
+        specifier: ^10.0.0
+        version: 10.1.2
+      '@fastify/cors':
+        specifier: ^11.2.0
+        version: 11.2.0
+      '@fastify/formbody':
+        specifier: ^8.0.2
+        version: 8.0.2
+      '@fastify/helmet':
+        specifier: ^13.0.2
+        version: 13.0.2
+      '@fastify/sensible':
+        specifier: ^6.0.4
+        version: 6.0.4
+      '@fastify/swagger':
+        specifier: ^9.7.0
+        version: 9.7.0
+      '@fastify/swagger-ui':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fastify/view':
+        specifier: ^11.1.1
+        version: 11.1.1
+      '@lukeed/ms':
+        specifier: ~2.0.2
+        version: 2.0.2
+      '@openid4vc/oauth2':
+        specifier: 0.4.6
+        version: 0.4.6
+      '@openid4vc/openid4vci':
+        specifier: 0.4.6
+        version: 0.4.6
+      '@openid4vc/openid4vp':
+        specifier: 0.4.6
+        version: 0.4.6
+      '@spencejs/spence-factories':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@spencejs/spence-mongo-repos':
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
+      '@verii/base-contract-io':
+        specifier: 0.5.0-build
+        version: link:../../packages/base-contract-io
+      '@verii/blockchain-functions':
+        specifier: 0.5.0-build
+        version: link:../../packages/blockchain-functions
+      '@verii/common-fetchers':
+        specifier: 0.5.0-build
+        version: link:../../packages/common-fetchers
+      '@verii/common-functions':
+        specifier: 0.5.0-build
+        version: link:../../packages/common-functions
+      '@verii/common-schemas':
+        specifier: 0.5.0-build
+        version: link:../../packages/common-schemas
+      '@verii/config':
+        specifier: 0.5.0-build
+        version: link:../../packages/config
+      '@verii/contract-permissions':
+        specifier: 0.5.0-build
+        version: link:../../packages/contract-permissions
+      '@verii/crypto':
+        specifier: 0.5.0-build
+        version: link:../../packages/crypto
+      '@verii/db-kms':
+        specifier: 0.5.0-build
+        version: link:../../packages/db-kms
+      '@verii/did-doc':
+        specifier: 0.5.0-build
+        version: link:../../packages/did-doc
+      '@verii/fastify-plugins':
+        specifier: 0.5.0-build
+        version: link:../../packages/fastify-plugins
+      '@verii/http-client':
+        specifier: 0.5.0-build
+        version: link:../../packages/http-client
+      '@verii/jwt':
+        specifier: 0.5.0-build
+        version: link:../../packages/jwt
+      '@verii/organizations-registry':
+        specifier: 0.5.0-build
+        version: link:../../packages/organizations-registry
+      '@verii/server-provider':
+        specifier: 0.5.0-build
+        version: link:../../packages/server
+      '@verii/spencer-mongo-extensions':
+        specifier: 0.5.0-build
+        version: link:../../packages/spencer-mongo-extensions
+      '@verii/validation':
+        specifier: 0.5.0-build
+        version: link:../../packages/validation
+      '@verii/vc-checks':
+        specifier: 0.5.0-build
+        version: link:../../packages/vc-checks
+      '@verii/verii-issuing':
+        specifier: 0.5.0-build
+        version: link:../../packages/verii-issuing
+      '@verii/verii-verification':
+        specifier: 0.5.0-build
+        version: link:../../packages/verii-verification
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      env-var:
+        specifier: ^7.5.0
+        version: 7.5.0
+      fastify:
+        specifier: ^5.8.5
+        version: 5.8.5
+      fastify-plugin:
+        specifier: ^5.1.0
+        version: 5.1.0
+      handlebars:
+        specifier: ^4.7.9
+        version: 4.7.9
+      http-errors:
+        specifier: ^2.0.1
+        version: 2.0.1
+      jsonpath-plus:
+        specifier: ^10.4.0
+        version: 10.4.0
+      lodash:
+        specifier: ^4.18.1
+        version: 4.18.1
+      mongodb:
+        specifier: 7.1.1
+        version: 7.1.1
+      nanoid:
+        specifier: ^5.1.11
+        version: 5.1.11
+    devDependencies:
+      '@verii/metadata-registration':
+        specifier: 0.5.0-build
+        version: link:../../packages/metadata-registration
+      '@verii/test-regexes':
+        specifier: 0.5.0-build
+        version: link:../../packages/test-regexes
+      '@verii/tests-helpers':
+        specifier: 0.5.0-build
+        version: link:../../packages/tests-helpers
+      cheerio:
+        specifier: 1.2.0
+        version: 1.2.0
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
+      expect:
+        specifier: 30.4.1
+        version: 30.4.1
+      nanoid-dictionary:
+        specifier: 5.0.0
+        version: 5.0.0
+      nock:
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
+      nodemon:
+        specifier: 3.1.14
+        version: 3.1.14
+      prettier:
+        specifier: 3.8.3
+        version: 3.8.3
+      qs:
+        specifier: 6.15.2
+        version: 6.15.2
+
   servers/mockvendor:
     dependencies:
       '@fastify/autoload':
@@ -5041,6 +5213,9 @@ packages:
   '@fastify/basic-auth@6.2.0':
     resolution: {integrity: sha512-Ao9Jf8TyW8v7p3CPy++c+E3qcCDeWfAlSIfFo0CsKrfvm81i0OCpnobIMwaSSkg/At0rzsLzbJPDWrgNru0G1w==}
 
+  '@fastify/bearer-auth@10.1.2':
+    resolution: {integrity: sha512-9WaHql+IdH03doWS1pNDcO/AcAVskoESAC+sI56+euTWMW12ZUz+xTMNPvIwr8jMJlnTnrU9aI+lD7LMWf9POA==}
+
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
@@ -5062,6 +5237,9 @@ packages:
 
   '@fastify/fast-json-stringify-compiler@5.0.3':
     resolution: {integrity: sha512-uik7yYHkLr6fxd8hJSZ8c+xF4WafPK+XzneQDPU+D10r5X19GW8lJcom2YijX2+qtFF1ENJlHXKFM9ouXNJYgQ==}
+
+  '@fastify/formbody@8.0.2':
+    resolution: {integrity: sha512-84v5J2KrkXzjgBpYnaNRPqwgMsmY7ZDjuj0YVuMR3NXCJRCgKEZy/taSP1wUYGn0onfxJpLyRGDLa+NMaDJtnA==}
 
   '@fastify/forwarded@3.0.1':
     resolution: {integrity: sha512-JqDochHFqXs3C3Ml3gOY58zM7OqO9ENqPo0UqAjAjH8L01fRZqwX9iLeX34//kiJubF7r2ZQHtBRU36vONbLlw==}
@@ -5593,6 +5771,18 @@ packages:
 
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
+
+  '@openid4vc/oauth2@0.4.6':
+    resolution: {integrity: sha512-PVa+N9UHt4KhHh02KHUHqS64vdnoaktNSVr7VUgeaB1NS0c3+7UIa2A/TnsyZqUAy9TxGltAflxsaWO+HtWPQQ==}
+
+  '@openid4vc/openid4vci@0.4.6':
+    resolution: {integrity: sha512-qjxLeE6K285r+lyy+4jJFS+M70+dyImVGvqo97BO+JxL4059jMb/FwJIXjnp2Ygl8+FuaEgFxhGpFdnaNwj30w==}
+
+  '@openid4vc/openid4vp@0.4.6':
+    resolution: {integrity: sha512-d7H8SuFlHZS30OC1U8vsezGHuXkOTp97rrHbsxrge7AQaHHi8BZXAwUGdujbXdkkU7zulXx9yk2+J+ZTb/GE3A==}
+
+  '@openid4vc/utils@0.4.6':
+    resolution: {integrity: sha512-qpZ40ccnYTMdmW5zzIiN5SvNBzWHu0cUz97Itw+YMC8obosQ62c4Tg9LpwWwVirouN9oOQZ7IuF1EDakiB8w3w==}
 
   '@opentelemetry/api-logs@0.53.0':
     resolution: {integrity: sha512-8HArjKx+RaAI8uEIgcORbZIPklyh1YLjPSBus8hjRmvLi6DeFzgOcdZ7KwPabKj8mXF8dX0hyfAyGfycz0DbFw==}
@@ -7605,6 +7795,9 @@ packages:
 
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
+
+  buffer@6.0.3:
+    resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -11382,6 +11575,12 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
+  zod-validation-error@5.0.0:
+    resolution: {integrity: sha512-hmk+pkyKq7Q71PiWVSDUc3VfpzpvcRHZ3QPw9yEMVvmtCekaMeOHnbr3WbxfrgEnQTv6haGP4cmv0Ojmihzsxw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
@@ -13552,6 +13751,11 @@ snapshots:
       '@fastify/error': 4.2.0
       fastify-plugin: 5.1.0
 
+  '@fastify/bearer-auth@10.1.2':
+    dependencies:
+      '@fastify/error': 4.2.0
+      fastify-plugin: 5.1.0
+
   '@fastify/busboy@2.1.1': {}
 
   '@fastify/busboy@3.2.0': {}
@@ -13573,6 +13777,11 @@ snapshots:
   '@fastify/fast-json-stringify-compiler@5.0.3':
     dependencies:
       fast-json-stringify: 6.3.0
+
+  '@fastify/formbody@8.0.2':
+    dependencies:
+      fast-querystring: 1.1.2
+      fastify-plugin: 5.1.0
 
   '@fastify/forwarded@3.0.1': {}
 
@@ -14154,6 +14363,29 @@ snapshots:
       outvariant: 1.4.3
 
   '@open-draft/until@2.1.0': {}
+
+  '@openid4vc/oauth2@0.4.6':
+    dependencies:
+      '@openid4vc/utils': 0.4.6
+      zod: 4.3.6
+
+  '@openid4vc/openid4vci@0.4.6':
+    dependencies:
+      '@openid4vc/oauth2': 0.4.6
+      '@openid4vc/utils': 0.4.6
+      zod: 4.3.6
+
+  '@openid4vc/openid4vp@0.4.6':
+    dependencies:
+      '@openid4vc/oauth2': 0.4.6
+      '@openid4vc/utils': 0.4.6
+      zod: 4.3.6
+
+  '@openid4vc/utils@0.4.6':
+    dependencies:
+      buffer: 6.0.3
+      zod: 4.3.6
+      zod-validation-error: 5.0.0(zod@4.3.6)
 
   '@opentelemetry/api-logs@0.53.0':
     dependencies:
@@ -16337,6 +16569,11 @@ snapshots:
       isarray: 1.0.0
 
   buffer@5.7.1:
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
+
+  buffer@6.0.3:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
@@ -20748,6 +20985,10 @@ snapshots:
   yoga-layout@3.2.1: {}
 
   zod-validation-error@4.0.2(zod@4.3.6):
+    dependencies:
+      zod: 4.3.6
+
+  zod-validation-error@5.0.0(zod@4.3.6):
     dependencies:
       zod: 4.3.6
 
