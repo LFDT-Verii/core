@@ -70,6 +70,8 @@ jobs:
           branch="codex/prepare-release-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git switch -c "${branch}"
           echo "name=${branch}" >> "$GITHUB_OUTPUT"
+      - name: Clear existing version plans
+        run: rm -f .nx/version-plans/*.md
       - name: Create version plan
         run: >-
           pnpm exec nx release plan "${RELEASE_BUMP}"

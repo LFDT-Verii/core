@@ -73,11 +73,12 @@ Run `.github/workflows/prepare-release.workflow.yml` manually with the release g
 The workflow:
 
 1. Checks out the selected base branch.
-2. Creates an Nx version plan from the selected groups, bump, and message.
-3. Uses Nx Release to consume that generated version plan.
-4. Updates package versions and dependency metadata.
-5. Removes consumed version plans.
-6. Opens a draft release PR.
+2. Clears any existing version-plan files from the checked-out branch.
+3. Creates an Nx version plan from the selected groups, bump, and message.
+4. Uses Nx Release to consume that generated version plan.
+5. Updates package versions and dependency metadata.
+6. Removes consumed version plans.
+7. Opens a draft release PR.
 
 The prepare workflow does not publish packages, create git tags, or create GitHub Releases.
 
