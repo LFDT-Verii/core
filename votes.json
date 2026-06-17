@@ -1,0 +1,14 @@
+{
+  "additional-kms-backends": 1,
+  "authentication-extension": 1,
+  "automatic-presentation-verification": 1,
+  "credential-status-endpoint": 1,
+  "dcql": 1,
+  "event-webhooks": 1,
+  "issuer-authmode": 1,
+  "openid4vci-extensions": 1,
+  "openid4vp-extensions": 1,
+  "standardized-holder-auth-apis": 1,
+  "tenant-key-management": 1,
+  "vp-holder-authentication": 1
+}
