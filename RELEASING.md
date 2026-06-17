@@ -63,12 +63,30 @@ The workflow:
 
 The prepare workflow does not publish packages, create git tags, or create GitHub Releases.
 
+Before a release PR is ready to merge for production, add release notes for each release group that will be promoted. Release notes live under `.github/releases/` and are named after the group tag that production promotion will create:
+
+- `.github/releases/platform-vX.Y.Z.md`
+- `.github/releases/credentialagent-vX.Y.Z.md`
+- `.github/releases/sdk-nodejs-vX.Y.Z.md`
+
+Each release-notes file must include:
+
+```md
+## Changes
+
+### [#123](https://github.com/LFDT-Verii/core/pull/123) Product-friendly change summary
+
+## Backward incompatibilities
+```
+
+Use `## Backward incompatibilities` even when there are none.
+
 ## Promotion
 
 Run `.github/workflows/publish-packages.workflow.yml` manually from the commit to promote. All npm publishing stays in this existing workflow filename so npm Trusted Publisher configuration does not need to change.
 
 - `prerelease` publishes disposable prerelease versions from the selected commit with a `pre.<epoch-seconds>` prerelease id and the npm `prerelease` dist-tag.
-- `production` publishes the exact package versions from the selected commit with the npm `latest` dist-tag, creates group git tags, and creates GitHub Releases.
+- `production` validates the checked-in release notes for each selected group, publishes the exact package versions from the selected commit with the npm `latest` dist-tag, creates group git tags, and creates GitHub Releases from those notes.
 
 Prerelease publishing does not consume version plans and does not create tags or GitHub Releases. Production uses the package versions already committed by the prepare-release PR.
 

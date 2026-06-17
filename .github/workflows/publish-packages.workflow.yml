@@ -100,16 +100,7 @@ jobs:
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Publish production packages
-        run: >-
-          pnpm exec nx release publish
-          --groups "${{ inputs.groups }}"
-          --tag latest
-          --registry https://registry.npmjs.org
-          --parallel=1
-      - name: Create production tags and GitHub releases
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Validate production release notes
         shell: bash
         run: |
           node - "${{ inputs.groups }}" <<'NODE' > /tmp/release-groups.tsv
@@ -130,12 +121,30 @@ jobs:
               throw new Error(`Unknown release group: ${group}`);
             }
             const manifest = JSON.parse(fs.readFileSync(path.join(roots[0], 'package.json'), 'utf8'));
-            process.stdout.write(`${group}\t${manifest.version}\n`);
+            const tag = `${group}-v${manifest.version}`;
+            const releaseNotesFile = path.join(process.env.GITHUB_WORKSPACE, '.github/releases', `${tag}.md`);
+            process.stdout.write(`${group}\t${manifest.version}\t${tag}\t${releaseNotesFile}\n`);
           }
           NODE
 
-          while IFS=$'\t' read -r group version; do
-            tag="${group}-v${version}"
+          while IFS=$'\t' read -r group version tag release_notes_file; do
+            echo "Validating release notes for ${group} ${version} (${tag})."
+            bash ./.github/scripts/validate-release-notes.sh "${release_notes_file}"
+          done < /tmp/release-groups.tsv
+      - name: Publish production packages
+        run: >-
+          pnpm exec nx release publish
+          --groups "${{ inputs.groups }}"
+          --tag latest
+          --registry https://registry.npmjs.org
+          --parallel=1
+      - name: Create production tags and GitHub releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          while IFS=$'\t' read -r group version tag release_notes_file; do
+            echo "Creating release artifacts for ${group} ${version} (${tag})."
             if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
               echo "Tag ${tag} already exists."
             else
@@ -146,6 +155,6 @@ jobs:
             if gh release view "${tag}" >/dev/null 2>&1; then
               echo "GitHub Release ${tag} already exists."
             else
-              gh release create "${tag}" --target "${GITHUB_SHA}" --title "${tag}" --generate-notes
+              gh release create "${tag}" --repo "${GITHUB_REPOSITORY}" --target "${GITHUB_SHA}" --title "${tag}" --notes-file "${release_notes_file}"
             fi
           done < /tmp/release-groups.tsv

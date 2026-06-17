@@ -31,5 +31,6 @@ pnpm lint
 - Release groups are configured in `nx.json`.
 - Prerelease builds publish automatically from `main` with the npm `prerelease` dist-tag.
 - Release PRs are prepared by `.github/workflows/prepare-release.workflow.yml` from `.nx/version-plans/*.md`.
+- Production release notes are checked in under `.github/releases/<group>-vX.Y.Z.md`.
 - Manual prerelease and production exact-version publishes run through `.github/workflows/publish-packages.workflow.yml`.
 - See [RELEASING.md](RELEASING.md) for release groups, version plans, and promotion policy.
