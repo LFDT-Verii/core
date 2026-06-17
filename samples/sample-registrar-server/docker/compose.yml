@@ -61,6 +61,16 @@ services:
       - ../.localdev.env
     environment:
       - NODE_TLS_REJECT_UNAUTHORIZED=0
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3000/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
     ports:
       - 13999:3000
 
@@ -68,8 +78,10 @@ services:
     image: nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
     restart: on-failure
     depends_on:
-      - registrar
-      - certfix
+      registrar:
+        condition: service_healthy
+      certfix:
+        condition: service_started
     ports:
       - "13003:80"
       - "13004:443"

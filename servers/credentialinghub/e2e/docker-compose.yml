@@ -13,7 +13,7 @@ services:
       contracts-deployment:
         condition: service_completed_successfully
       registrar:
-        condition: service_started
+        condition: service_healthy
       velocity-mongo:
         condition: service_started
     image: velocitycore/credentialinghub:local
@@ -36,5 +36,15 @@ services:
       - SERVER_CERTIFICATE_FILE=/certs/cert.crt
       - SERVER_CERTIFICATE_KEY_FILE=/certs/key.pem
       - NODE_TLS_REJECT_UNAUTHORIZED=0
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "NODE_TLS_REJECT_UNAUTHORIZED=0 node -e \"fetch('https://localhost:3000/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
     ports:
       - 13002:3000

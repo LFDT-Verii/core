@@ -105,7 +105,7 @@ describe('org registration and issuing e2e', () => {
   it('register org, create tenant, preauth service, depot & credential and have holder claim it and finally verify a presentation', async () => {
     const profilePayload = {
       name: `ACME Corp: ${nanoid(6)}`,
-      logo: 'http://www.acmecorp.com/corporate-logo.png',
+      logo: 'https://www.acmecorp.com/corporate-logo.png',
       contactEmail: 'contact@acmecorp.com',
       technicalEmail: 'contact@acmecorp.com',
       commercialEntities: [

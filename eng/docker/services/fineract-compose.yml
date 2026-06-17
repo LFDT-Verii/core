@@ -19,8 +19,8 @@ services:
       - 13306:3306
 
   fineract-server:
-    image: ghcr.io/velocitynetworkfoundation/fineract:dev
-    platform: linux/amd64
+    image: ${FINERACT_IMAGE:-ghcr.io/velocitynetworkfoundation/fineract:dev}
+    platform: ${FINERACT_PLATFORM:-linux/amd64}
     restart: on-failure
     depends_on:
       fineractmysql:
