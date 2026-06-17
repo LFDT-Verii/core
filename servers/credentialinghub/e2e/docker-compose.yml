@@ -8,9 +8,14 @@ include:
 services:
   credentialinghub:
     depends_on:
-      - certgen
-      - velocity-mongo
-      - registrar
+      certgen:
+        condition: service_started
+      contracts-deployment:
+        condition: service_completed_successfully
+      registrar:
+        condition: service_started
+      velocity-mongo:
+        condition: service_started
     image: velocitycore/credentialinghub:local
     build:
       context: ../../..

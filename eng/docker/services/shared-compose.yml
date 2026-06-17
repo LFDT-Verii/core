@@ -27,7 +27,7 @@ services:
     image: node:24.14.0-slim@sha256:e8e2e91b1378f83c5b2dd15f0247f34110e2fe895f6ca7719dbb780f929368eb
     environment:
       - RPC_NODE_URL=http://blockchain:8545
-    command: npx @verii/contracts-deployment@1.25.0-dev-build.1caf36412
+    command: npx @verii/contracts-deployment@1.2.0-pre.1780532621
     depends_on:
       blockchain:
         condition: service_healthy

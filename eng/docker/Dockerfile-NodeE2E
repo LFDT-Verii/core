@@ -18,6 +18,7 @@ COPY --chown=node:node package*.json pnpm-lock.yaml pnpm-workspace.yaml lerna.js
 COPY --chown=node:node .husky ./.husky
 COPY --chown=node:node packages ./packages
 COPY --chown=node:node servers ./servers
+COPY --chown=node:node samples ./samples
 RUN HUSKY=0 pnpm install --frozen-lockfile
 
 FROM node:24.15.0-slim@sha256:24dc26ef1e3c3690f27ebc4136c9c186c3133b25563ae4d7f0692e4d1fe5db0e

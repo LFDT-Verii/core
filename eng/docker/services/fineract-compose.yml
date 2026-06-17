@@ -20,10 +20,13 @@ services:
 
   fineract-server:
     image: ghcr.io/velocitynetworkfoundation/fineract:dev
+    platform: linux/amd64
     restart: on-failure
     depends_on:
-      - fineractmysql
-      - auth0
+      fineractmysql:
+        condition: service_healthy
+      auth0:
+        condition: service_healthy
     ports:
       - 13008:8080
     environment:
@@ -49,7 +52,6 @@ services:
       - FINERACT_SENTRY_LOGGING_MIN_BREADCRUMB_LEVEL=debug
     entrypoint:
       - "java"
-      - "-agentlib:jdwp=transport=dt_socket,server=y,address=*:8000,suspend=n"
       - "-Dloader.path=/app/libs/"
       - "-Duser.timezone=UTC"
       - "-jar"
@@ -65,5 +67,5 @@ services:
       test: ["CMD", "nc", "-vz", "fineract-server", "8080"]
       interval: 20s
       timeout: 10s
-      retries: 10
-      start_period: 20s
+      retries: 30
+      start_period: 5m
