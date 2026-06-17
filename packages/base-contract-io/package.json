@@ -1,6 +1,6 @@
 {
   "name": "@verii/base-contract-io",
-  "version": "0.5.0-build",
+  "version": "1.2.0",
   "description": "Package contains functions needed across all contract io packages",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
@@ -17,18 +17,18 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "@verii/blockchain-functions": "0.5.0-build",
-    "@verii/common-functions": "0.5.0-build",
-    "@verii/http-client": "^0.5.0-build",
+    "@verii/blockchain-functions": "workspace:*",
+    "@verii/common-functions": "workspace:*",
+    "@verii/http-client": "workspace:*",
     "date-fns": "^4.1.0",
     "fastify-plugin": "^5.1.0",
     "ethers": "^6.16.0",
     "lodash": "^4.18.1"
   },
   "devDependencies": {
-    "@verii/tests-helpers": "0.5.0-build",
+    "@verii/tests-helpers": "workspace:*",
     "@spencejs/spence-config": "1.1.0",
-    "@verii/crypto": "0.5.0-build",
+    "@verii/crypto": "workspace:*",
     "expect": "30.4.1"
   },
   "nx": {

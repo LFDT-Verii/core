@@ -1,6 +1,6 @@
 {
   "name": "@verii/country-data",
-  "version": "0.5.0-build",
+  "version": "1.2.0",
   "description": "Contains ISO 3166-1 and ISO 3166-2 data",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",

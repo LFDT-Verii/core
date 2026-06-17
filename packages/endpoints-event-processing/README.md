@@ -20,19 +20,15 @@ of what defines a package for us.
 
 ## Some points to take note of:
 
-* `"repository"` field in `package.json` is important and is used 
-  later when we setup scopes with [`lerna`](https://lerna.js.org/)
-
-* They packages actually get published, but we don't consume the 
-  packages directly from their publish location, instead we rely 
-  on `lerna` cli within the repository like so:
+* Packages are published, but local development should consume
+  workspace packages through pnpm workspace dependencies:
   
-  `lerna add [CONSUMED-PACKAGE-NAME] --scope [CONSUMING-PACKAGE-NAME]`
+  `pnpm --filter [CONSUMING-PACKAGE-NAME] add [CONSUMED-PACKAGE-NAME]@workspace:*`
 
   So if you want `did-docs` package to use the `crypto` package, 
   you would do:
   
-  `lerna add @verii/crypto --scope @verii/did-docs`
+  `pnpm --filter @verii/did-docs add @verii/crypto@workspace:*`
 
 * Packages uses standard structure, of `src` directory, 
   and then `test` directory for corresponding tests

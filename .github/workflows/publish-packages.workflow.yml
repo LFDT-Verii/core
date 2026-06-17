@@ -1,149 +1,169 @@
 name: Publish Packages
+
 on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Publish target
+        default: staging
+        options:
+          - dev
+          - staging
+          - production
+      groups:
+        type: string
+        description: Comma-separated release groups to publish
+        default: platform,credentialagent,sdk-nodejs
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'VERSION'
       - 'packages/**'
       - 'servers/**'
       - 'tools/**'
-  workflow_dispatch:
-    inputs:
-      version-type:
-        type: choice
-        description: Choose environment
-        default: 'prerelease'
-        options: 
-        - prerelease
-        - release
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
 env:
-  LERNA_VERSION: '9.0.3'
-  DIST_TAG: 'prerelease'
   NODE_VERSION: '24.x'
-  VERSION_TYPE: ${{ github.event_name == 'workflow_dispatch' && inputs.version-type || format('{0}', 'prerelease') }}
+  NPM_CONFIG_PROVENANCE: 'true'
+
 jobs:
-  # Publish Packages
-  publish-packages:
-    name: Publish Packages
+  dev-publish:
+    name: Publish dev packages
+    if: github.event_name == 'push' || inputs.environment == 'dev'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
       id-token: write
+    env:
+      RELEASE_GROUPS: ${{ github.event_name == 'workflow_dispatch' && inputs.groups || 'platform,credentialagent,sdk-nodejs' }}
     steps:
-      # Checkout Repository
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: 0 # Recommended for Lerna to track history
-      - name: Load Release Metadata
-        shell: bash
-        run: |
-          repo_version="$(tr -d '[:space:]' < VERSION)"
-          if ! printf '%s\n' "${repo_version}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "VERSION must contain a semantic version like X.Y.Z."
-            exit 1
-          fi
-
-          major_minor="$(printf '%s' "${repo_version}" | cut -d. -f1,2)"
-          release_branch="release/${major_minor}.x"
-          release_version="v${repo_version}"
-          release_notes_file="${GITHUB_WORKSPACE}/.github/releases/${release_version}.md"
-
-          {
-            echo "REPO_VERSION=${repo_version}"
-            echo "RELEASE_BRANCH=${release_branch}"
-            echo "RELEASE_VERSION=${release_version}"
-            echo "RELEASE_NOTES_FILE=${release_notes_file}"
-          } >> "$GITHUB_ENV"
-      - name: Validate Release Context
-        shell: bash
-        run: |
-          if [ "${VERSION_TYPE}" = "release" ] && [ "${GITHUB_REF_NAME}" != "${RELEASE_BRANCH}" ]; then
-            echo "Prod releases for ${REPO_VERSION} must run from ${RELEASE_BRANCH}, not ${GITHUB_REF_NAME}."
-            exit 1
-          fi
-
-          if [ "${VERSION_TYPE}" = "prerelease" ] && [ "${GITHUB_REF_NAME}" != "main" ]; then
-            echo "Prerelease publishes must run from main."
-            exit 1
-          fi
-
-          if [ "${VERSION_TYPE}" = "release" ]; then
-            ./.github/scripts/validate-release-notes.sh "${RELEASE_NOTES_FILE}"
-
-            if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
-              echo "Tag ${RELEASE_VERSION} already exists."
-              exit 1
-            fi
-          fi
-      # Generate PreRelease Version Number
-      - name: Generate PreRelease Version Number
-        run: echo "PRERELEASE_VER_NUM=${REPO_VERSION}-pre.$(date +%s)" >> "$GITHUB_ENV"
-      # Set Npm Version Number
-      - name: Set Npm Version Number
-        shell: bash
-        run: |
-          if [ "${VERSION_TYPE}" = "release" ]; then
-            echo "NPM_VER_NUM=${REPO_VERSION}" >> "$GITHUB_ENV"
-          else
-            echo "NPM_VER_NUM=${PRERELEASE_VER_NUM}" >> "$GITHUB_ENV"
-          fi
-      # Setup Node.js
-      - name: Setup Node.js
+          fetch-depth: 0
+      - name: Use Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
       - name: Enable Corepack
         run: corepack enable
-      # Get pnpm store path
-      - name: Get pnpm store path
-        id: pnpm-store-path
-        run: echo "dir=$(pnpm store path)" >> "$GITHUB_OUTPUT"
-      # Restore pnpm cache
-      - name: Restore pnpm cache
-        id: cache-pnpm-restore
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
-        with:
-          path: |
-            ${{ steps.pnpm-store-path.outputs.dir }}
-            node_modules
-          key: ${{ runner.os }}-${{ env.NODE_VERSION }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-      # Install Dependencies
-      - name: Install Dependencies
+      - name: Configure package registry auth
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      # Set Version
-      - name: Set Version
-        run: pnpm dlx lerna@${{ env.LERNA_VERSION }} version --no-git-tag-version --no-push --exact --yes ${{ env.NPM_VER_NUM }}
-      # Git Set Identity
-      - name: Git Identity
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-      # Set Dist Tag For Release
-      - name: Set Dist Tag For Release
-        run: echo 'DIST_TAG=latest' >> "$GITHUB_ENV"
-        if: env.VERSION_TYPE == 'release'
-      # Commit Version Locally for Npmjs
-      - name: Commit Version Locally for Npmjs
-        run: 'git commit -am "chore(release): create version ${{ env.NPM_VER_NUM }}"'
-      # Publish to NpmJS with trusted publishing (OIDC + provenance)
-      # Lerna v9+ has native support for npm trusted publishing
-      # See: https://lerna.js.org/docs/features/version-and-publish
-      - name: Publish NpmJS
-        # Serialize publishes to avoid intermittent npm provenance/tlog 409s.
-        run: pnpm dlx lerna@${{ env.LERNA_VERSION }} publish --concurrency 1 --dist-tag ${{ env.DIST_TAG }} from-package --yes --registry "https://registry.npmjs.org/"
-        env:
-          NPM_CONFIG_PROVENANCE: true
-      - name: Create GitHub Release
-        if: env.VERSION_TYPE == 'release'
+      - name: Derive dev prerelease id
+        id: dev-version
         shell: bash
+        run: echo "preid=dev.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Version dev packages
+        run: >-
+          pnpm exec nx release version prerelease
+          --groups "${RELEASE_GROUPS}"
+          --preid "${{ steps.dev-version.outputs.preid }}"
+          --git-commit=false
+          --git-tag=false
+      - name: Publish dev packages
+        run: >-
+          pnpm exec nx release publish
+          --groups "${RELEASE_GROUPS}"
+          --tag dev
+          --registry https://registry.npmjs.org
+          --parallel=1
+
+  promote-release:
+    name: Publish ${{ inputs.environment }} packages
+    if: github.event_name == 'workflow_dispatch' && inputs.environment != 'dev'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure package registry auth
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Publish staging packages
+        if: inputs.environment == 'staging'
+        shell: bash
+        run: |
+          preid="staging.${GITHUB_SHA::7}"
+          pnpm exec nx release version prerelease \
+            --groups "${{ inputs.groups }}" \
+            --preid "${preid}" \
+            --git-commit=false \
+            --git-tag=false
+          pnpm exec nx release publish \
+            --groups "${{ inputs.groups }}" \
+            --tag staging \
+            --registry https://registry.npmjs.org \
+            --parallel=1
+      - name: Publish production packages
+        if: inputs.environment == 'production'
+        run: >-
+          pnpm exec nx release publish
+          --groups "${{ inputs.groups }}"
+          --tag latest
+          --registry https://registry.npmjs.org
+          --parallel=1
+      - name: Create production tags and GitHub releases
+        if: inputs.environment == 'production'
         env:
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
-          gh release create "${RELEASE_VERSION}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --target "${GITHUB_SHA}" \
-            --title "${RELEASE_VERSION}" \
-            --notes-file "${RELEASE_NOTES_FILE}"
+          node - "${{ inputs.groups }}" <<'NODE' > /tmp/release-groups.tsv
+          const fs = require('node:fs');
+          const path = require('node:path');
+
+          const rootsForGroup = {
+            platform: ['packages/auth'],
+            credentialagent: ['servers/credentialagent'],
+            'sdk-nodejs': ['packages/vnf-wallet-sdk-nodejs'],
+          };
+
+          const selectedGroups = process.argv[2].split(',').map((group) => group.trim()).filter(Boolean);
+
+          for (const group of selectedGroups) {
+            const roots = rootsForGroup[group];
+            if (!roots) {
+              throw new Error(`Unknown release group: ${group}`);
+            }
+            const manifest = JSON.parse(fs.readFileSync(path.join(roots[0], 'package.json'), 'utf8'));
+            process.stdout.write(`${group}\t${manifest.version}\n`);
+          }
+          NODE
+
+          while IFS=$'\t' read -r group version; do
+            tag="${group}-v${version}"
+            if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+              echo "Tag ${tag} already exists."
+            else
+              git tag "${tag}" "${GITHUB_SHA}"
+              git push origin "refs/tags/${tag}"
+            fi
+
+            if gh release view "${tag}" >/dev/null 2>&1; then
+              echo "GitHub Release ${tag} already exists."
+            else
+              gh release create "${tag}" --target "${GITHUB_SHA}" --title "${tag}" --generate-notes
+            fi
+          done < /tmp/release-groups.tsv

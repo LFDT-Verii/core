@@ -1,6 +1,6 @@
 {
   "name": "@verii/math",
-  "version": "0.5.0-build",
+  "version": "1.2.0",
   "description": "Velocity math package",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",

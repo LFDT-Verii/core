@@ -27,9 +27,9 @@ pnpm lint
 
 ## Package Publishing
 
-- Package publishing is handled by GitHub Actions via `.github/workflows/publish-packages.workflow.yml`.
-- `VERSION` is the committed source of truth for the next Verii release version.
-- Release notes live in `.github/releases/vX.Y.Z.md`.
-- See [RELEASING.md](RELEASING.md) for the release-branch and prod-release workflow.
-- The workflow installs `lerna` globally in CI and runs publish from there.
-- The root repo does not rely on a local `lerna` dependency for publishing.
+- Package publishing is handled by Nx Release and GitHub Actions.
+- Release groups are configured in `nx.json`.
+- Dev builds publish automatically from `main` with the npm `dev` dist-tag.
+- Release PRs are prepared by `.github/workflows/prepare-release.workflow.yml` from `.nx/version-plans/*.md`.
+- Staging prerelease publishes and production exact-version publishes are manual through `.github/workflows/publish-packages.workflow.yml`.
+- See [RELEASING.md](RELEASING.md) for release groups, version plans, and promotion policy.

@@ -1,6 +1,6 @@
 {
   "name": "@verii/components-organizations-registrar",
-  "version": "0.5.0-build",
+  "version": "1.2.0",
   "type": "module",
   "license": "Apache-2.0",
   "repository": "https://github.com/LFDT-Verii/core",
@@ -107,7 +107,7 @@
     "@testing-library/user-event": "14.6.1",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "@verii/tests-helpers": "0.5.0-build",
+    "@verii/tests-helpers": "workspace:*",
     "@vitejs/plugin-react-swc": "4.3.0",
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.1.0",

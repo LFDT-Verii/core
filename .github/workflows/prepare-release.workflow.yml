@@ -1,0 +1,92 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      base-branch:
+        type: string
+        description: Branch to open the release PR against
+        default: main
+      groups:
+        type: string
+        description: Comma-separated release groups to prepare
+        default: platform,credentialagent,sdk-nodejs
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.base-branch }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24.x'
+
+jobs:
+  prepare-release:
+    name: Prepare release PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ inputs.base-branch }}
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure package registry auth
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Assert version plans exist
+        shell: bash
+        run: |
+          if ! find .nx/version-plans -maxdepth 1 -type f -name '*.md' | grep -q .; then
+            echo "No version plans found in .nx/version-plans."
+            exit 1
+          fi
+      - name: Configure git author
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Create release branch
+        id: branch
+        shell: bash
+        run: |
+          branch="codex/prepare-release-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch -c "${branch}"
+          echo "name=${branch}" >> "$GITHUB_OUTPUT"
+      - name: Version packages from plans
+        run: >-
+          pnpm exec nx release version
+          --groups "${{ inputs.groups }}"
+          --git-commit=false
+          --git-tag=false
+      - name: Remove consumed version plans
+        run: rm -f .nx/version-plans/*.md
+      - name: Commit release preparation
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No release preparation changes were generated."
+            exit 1
+          fi
+          git add package.json pnpm-lock.yaml nx.json packages servers tools .nx/version-plans
+          git commit -s -m "chore(release): prepare release"
+      - name: Push release branch
+        run: git push origin "${{ steps.branch.outputs.name }}"
+      - name: Open draft release PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh pr create
+          --draft
+          --base "${{ inputs.base-branch }}"
+          --head "${{ steps.branch.outputs.name }}"
+          --title "chore(release): prepare release"
+          --body "Prepared package versions from Nx version plans."
+

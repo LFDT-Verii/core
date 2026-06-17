@@ -1,6 +1,6 @@
 {
   "name": "@verii/config",
-  "version": "0.5.0-build",
+  "version": "1.2.0",
   "description": "Generic configuration file for Velocity Projects",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@verii/server-provider",
-  "version": "0.5.0-build",
+  "version": "1.2.0",
   "description": "Server common package for Velocity Projects ",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
@@ -18,11 +18,11 @@
   "dependencies": {
     "@spencejs/spence-events": "^1.1.0",
     "@spencejs/spence-mongo-repos": "^1.1.0",
-    "@verii/common-functions": "0.5.0-build",
-    "@verii/common-schemas": "0.5.0-build",
-    "@verii/fastify-plugins": "0.5.0-build",
-    "@verii/logger": "0.5.0-build",
-    "@verii/rest-queries": "0.5.0-build",
+    "@verii/common-functions": "workspace:*",
+    "@verii/common-schemas": "workspace:*",
+    "@verii/fastify-plugins": "workspace:*",
+    "@verii/logger": "workspace:*",
+    "@verii/rest-queries": "workspace:*",
     "ajv-formats": "3.0.1",
     "http-errors": "^2.0.1",
     "lodash": "^4.18.1",
@@ -37,9 +37,9 @@
     "fastify-plugin": ">=4.5.1"
   },
   "devDependencies": {
-    "@verii/config": "0.5.0-build",
-    "@verii/http-client": "0.5.0-build",
-    "@verii/tests-helpers": "0.5.0-build",
+    "@verii/config": "workspace:*",
+    "@verii/http-client": "workspace:*",
+    "@verii/tests-helpers": "workspace:*",
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",

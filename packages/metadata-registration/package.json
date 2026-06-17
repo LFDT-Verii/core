@@ -1,6 +1,6 @@
 {
   "name": "@verii/metadata-registration",
-  "version": "0.5.0-build",
+  "version": "1.2.0",
   "description": "Package allows interacting with the smart contracts, based on ethers.js",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "./index.js",
@@ -17,19 +17,19 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "@verii/base-contract-io": "^0.5.0-build",
-    "@verii/blockchain-functions": "0.5.0-build",
-    "@verii/common-functions": "0.5.0-build",
-    "@verii/cose-key": "0.5.0-build",
-    "@verii/crypto": "0.5.0-build",
-    "@verii/jwt": "0.5.0-build",
-    "@verii/contract-permissions": "^0.5.0-build",
+    "@verii/base-contract-io": "workspace:*",
+    "@verii/blockchain-functions": "workspace:*",
+    "@verii/common-functions": "workspace:*",
+    "@verii/cose-key": "workspace:*",
+    "@verii/crypto": "workspace:*",
+    "@verii/jwt": "workspace:*",
+    "@verii/contract-permissions": "workspace:*",
     "eth-url-parser": "^1.0.4",
     "lodash": "^4.18.1"
   },
   "devDependencies": {
     "@spencejs/spence-config": "1.1.0",
-    "@verii/tests-helpers": "0.5.0-build",
+    "@verii/tests-helpers": "workspace:*",
     "date-fns": "^4.1.0",
     "expect": "30.4.1",
     "nanoid": "^5.1.11"
