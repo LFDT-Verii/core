@@ -1,6 +1,6 @@
 {
   "name": "@verii/fastify-plugins",
-  "version": "0.5.0-build",
+  "version": "1.1.3",
   "description": "Plugin for handling errors",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
@@ -18,9 +18,9 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@fastify/cors": "^11.2.0",
-    "@verii/crypto": "0.5.0-build",
-    "@verii/error-aggregation": "0.5.0-build",
-    "@verii/http-client": "0.5.0-build",
+    "@verii/crypto": "workspace:*",
+    "@verii/error-aggregation": "workspace:*",
+    "@verii/http-client": "workspace:*",
     "fastify-plugin": "^5.1.0",
     "http-errors": "^2.0.1",
     "lodash": "^4.18.1",

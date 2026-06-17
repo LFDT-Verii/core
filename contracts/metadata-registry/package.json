@@ -20,10 +20,10 @@
   "devDependencies": {
     "@openzeppelin/contracts": "4.9.6",
     "@openzeppelin/contracts-upgradeable": "4.9.6",
-    "@verii/blockchain-functions": "^0.5.0-build",
-    "@verii/verification-coupon-contract": "^0.5.0-build",
-    "@verii/permissions-contract": "^0.5.0-build",
-    "@verii/signature-verification-library": "^0.5.0-build",
+    "@verii/blockchain-functions": "workspace:*",
+    "@verii/verification-coupon-contract": "workspace:*",
+    "@verii/permissions-contract": "workspace:*",
+    "@verii/signature-verification-library": "workspace:*",
     "ethers": "^6.16.0",
     "lodash": "^4.18.1"
   }

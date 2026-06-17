@@ -1,6 +1,6 @@
 {
   "name": "@verii/validation",
-  "version": "0.5.0-build",
+  "version": "1.1.3",
   "description": "Validation package for Velocity Projects, based on ajv and fastify validation",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
@@ -22,8 +22,8 @@
     "lodash": "^4.18.1"
   },
   "devDependencies": {
-    "@verii/config": "0.5.0-build",
-    "@verii/tests-helpers": "0.5.0-build",
+    "@verii/config": "workspace:*",
+    "@verii/tests-helpers": "workspace:*",
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",

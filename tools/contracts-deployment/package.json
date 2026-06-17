@@ -1,6 +1,6 @@
 {
   "name": "@verii/contracts-deployment",
-  "version": "0.5.0-build",
+  "version": "1.1.3",
   "description": "A tool for deploying our contracts locally.",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "ethers": "^6.16.0",
-    "@verii/crypto": "^0.5.0-build",
-    "@verii/contract-permissions": "^0.5.0-build",
-    "@verii/metadata-registration": "^0.5.0-build"
+    "@verii/crypto": "workspace:*",
+    "@verii/contract-permissions": "workspace:*",
+    "@verii/metadata-registration": "workspace:*"
   }
 }

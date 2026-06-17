@@ -34,5 +34,65 @@
   "defaultBase": "main",
   "cli": {
     "packageManager": "pnpm"
+  },
+  "release": {
+    "version": {
+      "currentVersionResolver": "disk",
+      "preserveLocalDependencyProtocols": true,
+      "preserveMatchingDependencyRanges": false,
+      "updateDependents": "always"
+    },
+    "versionPlans": {
+      "ignorePatternsForPlanCheck": [
+        "**/*.md",
+        "**/*.test.*",
+        "**/__tests__/**",
+        "**/e2e/**",
+        "**/test/**",
+        ".github/**",
+        "docs/**",
+        "nx.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "**/package.json"
+      ]
+    },
+    "changelog": {
+      "workspaceChangelog": false,
+      "projectChangelogs": false
+    },
+    "groups": {
+      "platform": {
+        "projectsRelationship": "fixed",
+        "projects": [
+          "directory:packages/*",
+          "directory:tools/*",
+          "!directory:packages/vnf-wallet-sdk-nodejs"
+        ],
+        "releaseTag": {
+          "pattern": "platform-v{version}"
+        }
+      },
+      "credentialagent": {
+        "projectsRelationship": "fixed",
+        "projects": [
+          "directory:servers/credentialagent",
+          "directory:servers/mockvendor"
+        ],
+        "releaseTag": {
+          "pattern": "credentialagent-v{version}"
+        }
+      },
+      "sdk-nodejs": {
+        "projectsRelationship": "fixed",
+        "projects": [
+          "directory:packages/vnf-wallet-sdk-nodejs"
+        ],
+        "releaseTag": {
+          "pattern": "sdk-nodejs-v{version}"
+        }
+      }
+    }
   }
 }
