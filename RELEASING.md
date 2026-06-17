@@ -78,7 +78,7 @@ The workflow:
 4. Uses Nx Release to consume that generated version plan.
 5. Updates package versions and dependency metadata.
 6. Removes consumed version plans.
-7. Opens a draft release PR.
+7. Opens a release PR.
 
 The prepare workflow does not publish packages, create git tags, or create GitHub Releases.
 

@@ -97,12 +97,11 @@ jobs:
           git commit -s -m "chore(release): prepare release"
       - name: Push release branch
         run: git push origin "${{ steps.branch.outputs.name }}"
-      - name: Open draft release PR
+      - name: Open release PR
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
           gh pr create
-          --draft
           --base "${BASE_BRANCH}"
           --head "${{ steps.branch.outputs.name }}"
           --title "chore(release): prepare ${RELEASE_BUMP} release"
