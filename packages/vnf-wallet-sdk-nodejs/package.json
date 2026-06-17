@@ -1,6 +1,6 @@
 {
   "name": "@verii/vnf-nodejs-wallet-sdk",
-  "version": "2.10.0",
+  "version": "2.9.0",
   "description": "VNF Wallet SDK Nodejs",
   "repository": "https://github.com/LFDT-Verii/core",
   "author": "Andres Olave",

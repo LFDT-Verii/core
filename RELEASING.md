@@ -14,7 +14,8 @@ Branch names are operational only. Production publishing does not require a bran
 
 - `main` is always the next minor release line.
 - Package manifests on `main` should stay at the latest stable release baseline for each group until a release-prep PR commits the next stable version.
-- Automatic prerelease publishing from `main` uses Nx `preminor`, so a baseline like `1.1.3` publishes `1.2.0-pre.<epoch>.0`.
+- Automatic prerelease publishing from `main` uses Nx `preminor`, so each group publishes a prerelease on its next minor line.
+- The initial Nx baselines are `platform` `1.1.3`, `credentialagent` `1.27.0`, and `sdk-nodejs` `2.9.0`, which produce `1.2.0-pre.<epoch>.0`, `1.28.0-pre.<epoch>.0`, and `2.10.0-pre.<epoch>.0` respectively.
 - Patch branches start from released group tags, publish exact patch versions only, and never publish prerelease versions.
 - Next-major work happens on dedicated branches, for example `major/platform-2`, `major/sdk-nodejs-3`, or a repo-wide `major/2`.
 
@@ -132,13 +133,13 @@ Release group tags use these patterns:
 - `credentialagent-v{version}`
 - `sdk-nodejs-v{version}`
 
-For the Nx migration, create baseline tags at the commit pointed to by `v1.1.3`:
+For the Nx migration, create baseline group tags for the stable versions each group is starting from:
 
 ```bash
 git tag platform-v1.1.3 v1.1.3
-git tag credentialagent-v1.1.3 v1.1.3
-git tag sdk-nodejs-v1.1.3 v1.1.3
-git push origin platform-v1.1.3 credentialagent-v1.1.3 sdk-nodejs-v1.1.3
+git tag credentialagent-v1.27.0 <credentialagent-baseline-commit>
+git tag sdk-nodejs-v2.9.0 <sdk-nodejs-baseline-commit>
+git push origin platform-v1.1.3 credentialagent-v1.27.0 sdk-nodejs-v2.9.0
 ```
 
 After the migration baselines ship, production promotion creates the real group tags for the shipped versions.

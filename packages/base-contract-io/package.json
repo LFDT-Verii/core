@@ -1,6 +1,6 @@
 {
   "name": "@verii/base-contract-io",
-  "version": "1.2.0",
+  "version": "1.1.3",
   "description": "Package contains functions needed across all contract io packages",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",

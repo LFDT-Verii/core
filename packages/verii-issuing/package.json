@@ -1,6 +1,6 @@
 {
   "name": "@verii/verii-issuing",
-  "version": "1.2.0",
+  "version": "1.1.3",
   "description": "Verii Issuing Package",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "src/index.js",

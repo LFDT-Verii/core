@@ -183,7 +183,10 @@ instance/
 .scrapy
 
 # nx
-.nx
+.nx/*
+!.nx/version-plans/
+!.nx/version-plans/.gitkeep
+!.nx/version-plans/*.md
 
 # Sphinx documentation
 docs/_build/

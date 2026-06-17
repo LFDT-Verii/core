@@ -110,9 +110,10 @@ jobs:
       - name: Validate production release context
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_GROUPS: ${{ inputs.groups }}
         shell: bash
         run: |
-          node - "${{ inputs.groups }}" <<'NODE' > /tmp/release-groups.tsv
+          node - "${RELEASE_GROUPS}" <<'NODE' > /tmp/release-groups.tsv
           const fs = require('node:fs');
           const path = require('node:path');
 
@@ -154,9 +155,11 @@ jobs:
             fi
           done < /tmp/release-groups.tsv
       - name: Publish production packages
+        env:
+          RELEASE_GROUPS: ${{ inputs.groups }}
         run: >-
           pnpm exec nx release publish
-          --groups "${{ inputs.groups }}"
+          --groups "${RELEASE_GROUPS}"
           --tag latest
           --registry https://registry.npmjs.org
           --parallel=1
