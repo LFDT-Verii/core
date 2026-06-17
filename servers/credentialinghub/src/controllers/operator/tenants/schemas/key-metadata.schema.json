@@ -1,0 +1,12 @@
+{
+  "$id": "key-metadata",
+  "title": "Key Metadata",
+  "allOf": [
+    {
+      "$ref": "new-key-metadata#"
+    },
+    {
+      "$ref": "immutable-entity#"
+    }
+  ]
+}

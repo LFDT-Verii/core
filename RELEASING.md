@@ -6,6 +6,7 @@ Group git tags and GitHub Releases are the durable release anchors:
 
 - `platform-vX.Y.Z`
 - `credentialagent-vX.Y.Z`
+- `credentialinghub-vX.Y.Z`
 - `sdk-nodejs-vX.Y.Z`
 
 Branch names are operational only. Production publishing does not require a branch named after a version. For patch work, create a descriptive branch from the group tag being patched, such as `patch/platform-v1.2.1`.
@@ -15,7 +16,7 @@ Branch names are operational only. Production publishing does not require a bran
 - `main` is always the next minor release line.
 - Package manifests on `main` should stay at the latest stable release baseline for each group until a release-prep PR commits the next stable version.
 - Automatic prerelease publishing from `main` uses Nx `preminor`, so each group publishes a prerelease on its next minor line.
-- The initial Nx baselines are `platform` `1.1.3`, `credentialagent` `1.27.0`, and `sdk-nodejs` `2.9.0`, which produce `1.2.0-pre.<epoch>.0`, `1.28.0-pre.<epoch>.0`, and `2.10.0-pre.<epoch>.0` respectively.
+- The initial Nx baselines are `platform` `1.1.3`, `credentialagent` `1.27.0`, `credentialinghub` `2.0.0`, and `sdk-nodejs` `2.9.0`, which produce `1.2.0-pre.<epoch>.0`, `1.28.0-pre.<epoch>.0`, `2.1.0-pre.<epoch>.0`, and `2.10.0-pre.<epoch>.0` respectively.
 - Patch branches start from released group tags, publish exact patch versions only, and never publish prerelease versions.
 - Next-major work happens on dedicated branches, for example `major/platform-2`, `major/sdk-nodejs-3`, or a repo-wide `major/2`.
 
@@ -25,6 +26,7 @@ Nx Release is configured in `nx.json` with fixed-version release groups:
 
 - `platform`: `packages/*` and `tools/*`, excluding `packages/vnf-wallet-sdk-nodejs`
 - `credentialagent`: `servers/credentialagent` and `servers/mockvendor`
+- `credentialinghub`: `servers/credentialinghub`
 - `sdk-nodejs`: `packages/vnf-wallet-sdk-nodejs`
 
 `samples/*` and `contracts/*` are workspace reference material and are not published by Nx Release.
@@ -35,6 +37,7 @@ Package manifests are the source of truth for released versions.
 
 - `platform` packages publish together from the same version.
 - `credentialagent` packages publish together from the same version.
+- `credentialinghub` publishes independently from the other groups.
 - `sdk-nodejs` publishes independently from the other groups.
 - Internal `@verii/*` dependencies use `workspace:*` in source manifests.
 - pnpm converts `workspace:*` dependencies to package versions while packing and publishing.
@@ -87,6 +90,7 @@ Before a release PR is ready to merge for production, add release notes for each
 
 - `.github/releases/platform-vX.Y.Z.md`
 - `.github/releases/credentialagent-vX.Y.Z.md`
+- `.github/releases/credentialinghub-vX.Y.Z.md`
 - `.github/releases/sdk-nodejs-vX.Y.Z.md`
 
 Each release-notes file must include:
@@ -131,6 +135,7 @@ Release group tags use these patterns:
 
 - `platform-v{version}`
 - `credentialagent-v{version}`
+- `credentialinghub-v{version}`
 - `sdk-nodejs-v{version}`
 
 For the Nx migration, create baseline group tags at the commit pointed to by `v1.1.3`:

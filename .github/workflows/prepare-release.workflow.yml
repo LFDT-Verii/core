@@ -10,7 +10,7 @@ on:
       groups:
         type: string
         description: Comma-separated release groups to prepare
-        default: platform,credentialagent,sdk-nodejs
+        default: platform,credentialagent,credentialinghub,sdk-nodejs
 
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.base-branch }}

@@ -84,6 +84,15 @@
           "pattern": "credentialagent-v{version}"
         }
       },
+      "credentialinghub": {
+        "projectsRelationship": "fixed",
+        "projects": [
+          "directory:servers/credentialinghub"
+        ],
+        "releaseTag": {
+          "pattern": "credentialinghub-v{version}"
+        }
+      },
       "sdk-nodejs": {
         "projectsRelationship": "fixed",
         "projects": [

@@ -1,0 +1,30 @@
+{
+  "$id": "new-depot",
+  "type": "object",
+  "required": [
+    "userReference"
+  ],
+  "properties": {
+    "userReference": {
+      "type": "string",
+      "description": "The internal user reference for this depot. Typically a employee or student id of the system"
+    },
+    "authValues": {
+      "type": "array",
+      "description": "auth values to use for authenticating the user or session",
+      "items": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "string"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      }
+    }
+  }
+}

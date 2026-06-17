@@ -23,6 +23,7 @@ const {
 const {
   createConfig: configureEventProcessingEndpoints,
 } = require('@verii/endpoints-event-processing');
+const env = require('env-var');
 const packageJson = require('../../package.json');
 
 const credentialTypeEndpointsConfig =
@@ -55,4 +56,11 @@ module.exports = {
   ...organizationEndpointsConfig,
   ...eventProcessingEndpointsConfig,
   swaggerInfo,
+  customFastifyOptions: {
+    ...eventProcessingEndpointsConfig.customFastifyOptions,
+    pluginTimeout: env
+      .get('FASTIFY_PLUGIN_TIMEOUT')
+      .default('120000')
+      .asIntPositive(),
+  },
 };
