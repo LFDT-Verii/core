@@ -38,15 +38,15 @@ pnpm exec nx release plan:check --base=<base-sha> --head=HEAD
 
 Docs, tests, workflow files, package manifests, lockfiles, and release config files are ignored by the version-plan check. Manifest and lockfile changes are ignored so generated prepare-release PRs do not require a second version plan after consuming the original plans.
 
-## Dev Builds
+## Prerelease Builds
 
 `.github/workflows/publish-packages.workflow.yml` runs automatically on `main` changes under `packages/`, `servers/`, or `tools/`.
 
 The workflow:
 
 1. Versions all active release groups with Nx prerelease mode.
-2. Uses `dev.<short-sha>` as the prerelease id.
-3. Publishes to npm with the `dev` dist-tag.
+2. Uses `pre.<epoch-seconds>` as the prerelease id so newer builds sort after older builds.
+3. Publishes to npm with the `prerelease` dist-tag.
 4. Does not consume version plans.
 
 ## Preparing A Release
@@ -67,10 +67,10 @@ The prepare workflow does not publish packages, create git tags, or create GitHu
 
 Run `.github/workflows/publish-packages.workflow.yml` manually from the commit to promote. All npm publishing stays in this existing workflow filename so npm Trusted Publisher configuration does not need to change.
 
-- `staging` publishes disposable prerelease versions from the selected commit with a `staging.<short-sha>` prerelease id and the npm `staging` dist-tag.
+- `prerelease` publishes disposable prerelease versions from the selected commit with a `pre.<epoch-seconds>` prerelease id and the npm `prerelease` dist-tag.
 - `production` publishes the exact package versions from the selected commit with the npm `latest` dist-tag, creates group git tags, and creates GitHub Releases.
 
-Staging does not consume version plans and does not create tags or GitHub Releases. Production uses the package versions already committed by the prepare-release PR.
+Prerelease publishing does not consume version plans and does not create tags or GitHub Releases. Production uses the package versions already committed by the prepare-release PR.
 
 ## Tag Policy
 

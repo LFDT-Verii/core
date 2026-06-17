@@ -6,10 +6,9 @@ on:
       environment:
         type: choice
         description: Publish target
-        default: staging
+        default: prerelease
         options:
-          - dev
-          - staging
+          - prerelease
           - production
       groups:
         type: string
@@ -23,7 +22,7 @@ on:
       - 'tools/**'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'dev' }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'prerelease' }}
   cancel-in-progress: false
 
 env:
@@ -31,9 +30,9 @@ env:
   NPM_CONFIG_PROVENANCE: 'true'
 
 jobs:
-  dev-publish:
-    name: Publish dev packages
-    if: github.event_name == 'push' || inputs.environment == 'dev'
+  prerelease-publish:
+    name: Publish prerelease packages
+    if: github.event_name == 'push' || inputs.environment == 'prerelease'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -57,28 +56,28 @@ jobs:
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Derive dev prerelease id
-        id: dev-version
+      - name: Derive prerelease id
+        id: prerelease-version
         shell: bash
-        run: echo "preid=dev.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-      - name: Version dev packages
+        run: echo "preid=pre.$(date +%s)" >> "$GITHUB_OUTPUT"
+      - name: Version prerelease packages
         run: >-
           pnpm exec nx release version prerelease
           --groups "${RELEASE_GROUPS}"
-          --preid "${{ steps.dev-version.outputs.preid }}"
+          --preid "${{ steps.prerelease-version.outputs.preid }}"
           --git-commit=false
           --git-tag=false
-      - name: Publish dev packages
+      - name: Publish prerelease packages
         run: >-
           pnpm exec nx release publish
           --groups "${RELEASE_GROUPS}"
-          --tag dev
+          --tag prerelease
           --registry https://registry.npmjs.org
           --parallel=1
 
   promote-release:
-    name: Publish ${{ inputs.environment }} packages
-    if: github.event_name == 'workflow_dispatch' && inputs.environment != 'dev'
+    name: Publish production packages
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     permissions:
@@ -101,23 +100,7 @@ jobs:
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Publish staging packages
-        if: inputs.environment == 'staging'
-        shell: bash
-        run: |
-          preid="staging.${GITHUB_SHA::7}"
-          pnpm exec nx release version prerelease \
-            --groups "${{ inputs.groups }}" \
-            --preid "${preid}" \
-            --git-commit=false \
-            --git-tag=false
-          pnpm exec nx release publish \
-            --groups "${{ inputs.groups }}" \
-            --tag staging \
-            --registry https://registry.npmjs.org \
-            --parallel=1
       - name: Publish production packages
-        if: inputs.environment == 'production'
         run: >-
           pnpm exec nx release publish
           --groups "${{ inputs.groups }}"
@@ -125,7 +108,6 @@ jobs:
           --registry https://registry.npmjs.org
           --parallel=1
       - name: Create production tags and GitHub releases
-        if: inputs.environment == 'production'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
