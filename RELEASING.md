@@ -42,23 +42,17 @@ Package manifests are the source of truth for released versions.
 - Internal `@verii/*` dependencies use `workspace:*` in source manifests.
 - pnpm converts `workspace:*` dependencies to package versions while packing and publishing.
 
-## Version Plans
+## Release Bumps
 
-Feature PRs that touch releasable projects must include a version plan in `.nx/version-plans/*.md`.
+Feature PRs do not need to include version plans. The release manager chooses the release groups and semver bump when running `.github/workflows/prepare-release.workflow.yml`.
 
-Create a plan with:
-
-```bash
-pnpm exec nx release plan <major|minor|patch>
-```
-
-A single version plan can coordinate multiple groups. CI runs:
+The prepare workflow creates an Nx version plan internally for the selected groups, consumes it immediately, and opens a draft release PR with the resulting package versions. For local preview, run:
 
 ```bash
-pnpm exec nx release plan:check --base=<base-sha> --head=HEAD
+pnpm exec nx release plan <major|minor|patch> --groups <group> --onlyTouched=false --message "Prepare release" --dry-run
 ```
 
-Docs, tests, workflow files, package manifests, lockfiles, and release config files are ignored by the version-plan check. Manifest and lockfile changes are ignored so generated prepare-release PRs do not require a second version plan after consuming the original plans.
+A single prepare-release run can coordinate multiple groups by passing a comma-separated `groups` value.
 
 ## Prerelease Builds
 
@@ -74,15 +68,17 @@ The workflow:
 
 ## Preparing A Release
 
-Run `.github/workflows/prepare-release.workflow.yml` manually. For a normal minor release train, use `main` as `base-branch`; for patch trains, use the patch branch created from the released tag; for next-major release trains, use the dedicated major branch.
+Run `.github/workflows/prepare-release.workflow.yml` manually with the release groups, bump type, and version-plan message. For a normal minor release train, use `main` as `base-branch` and `minor` as `bump`; for patch trains, use the patch branch created from the released tag and `patch` as `bump`; for next-major release trains, use the dedicated major branch and `major` as `bump`.
 
 The workflow:
 
 1. Checks out the selected base branch.
-2. Uses Nx Release to consume `.nx/version-plans/*.md`.
-3. Updates package versions and dependency metadata.
-4. Removes consumed version plans.
-5. Opens a draft release PR.
+2. Clears any existing version-plan files from the checked-out branch.
+3. Creates an Nx version plan from the selected groups, bump, and message.
+4. Uses Nx Release to consume that generated version plan.
+5. Updates package versions and dependency metadata.
+6. Removes consumed version plans.
+7. Opens a draft release PR.
 
 The prepare workflow does not publish packages, create git tags, or create GitHub Releases.
 
@@ -111,12 +107,11 @@ For a train of fixes against already released code:
 
 1. Create a patch branch from the latest group tag you are patching, for example `git switch -c patch/platform-v1.2.1 platform-v1.2.0`.
 2. Cherry-pick or apply the fixes onto that branch.
-3. Add version plans for the affected release groups.
-4. Run `.github/workflows/prepare-release.workflow.yml` with `base-branch` set to the patch branch.
-5. Add release notes for the new group tag, for example `.github/releases/platform-v1.2.1.md`.
-6. Merge the release PR into the patch branch.
-7. Run production publishing for the affected groups.
-8. Forward-port the fix commits back to `main`.
+3. Run `.github/workflows/prepare-release.workflow.yml` with `base-branch` set to the patch branch and `bump` set to `patch`.
+4. Add release notes for the new group tag, for example `.github/releases/platform-v1.2.1.md`.
+5. Merge the release PR into the patch branch.
+6. Run production publishing for the affected groups.
+7. Forward-port the fix commits back to `main`.
 
 Patch branches do not publish prerelease versions. Keep releasing exact patch versions from the patch branch until the issue train is complete.
 
