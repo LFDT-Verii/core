@@ -17,6 +17,7 @@
 
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
+const packageJson = require('../package.json');
 const createTestFastify = require('./helpers/create-test-fastify');
 
 describe('root controller test', () => {
@@ -36,7 +37,7 @@ describe('root controller test', () => {
     expect(response.statusCode).toEqual(200);
     expect(response.body).toEqual(`Welcome to the Credentialing Hub
 Host: https://localhost.test
-Version: 0.5.0-build
+Version: ${packageJson.version}
 `);
   });
 

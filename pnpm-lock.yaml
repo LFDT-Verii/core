@@ -3304,64 +3304,64 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(mongodb@7.1.1)
       '@verii/base-contract-io':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/base-contract-io
       '@verii/blockchain-functions':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/blockchain-functions
       '@verii/common-fetchers':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/common-fetchers
       '@verii/common-functions':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/common-functions
       '@verii/common-schemas':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/common-schemas
       '@verii/config':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/config
       '@verii/contract-permissions':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/contract-permissions
       '@verii/crypto':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/crypto
       '@verii/db-kms':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/db-kms
       '@verii/did-doc':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/did-doc
       '@verii/fastify-plugins':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/fastify-plugins
       '@verii/http-client':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/http-client
       '@verii/jwt':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/jwt
       '@verii/organizations-registry':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/organizations-registry
       '@verii/server-provider':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/server
       '@verii/spencer-mongo-extensions':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/spencer-mongo-extensions
       '@verii/validation':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/validation
       '@verii/vc-checks':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/vc-checks
       '@verii/verii-issuing':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/verii-issuing
       '@verii/verii-verification':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/verii-verification
       date-fns:
         specifier: ^4.1.0
@@ -3395,13 +3395,13 @@ importers:
         version: 5.1.11
     devDependencies:
       '@verii/metadata-registration':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/metadata-registration
       '@verii/test-regexes':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/test-regexes
       '@verii/tests-helpers':
-        specifier: 0.5.0-build
+        specifier: workspace:*
         version: link:../../packages/tests-helpers
       cheerio:
         specifier: 1.2.0
