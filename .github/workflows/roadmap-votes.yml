@@ -1,0 +1,82 @@
+name: Roadmap vote counts
+
+# Refreshes the Credentialing Hub roadmap vote badges from Ideas discussion upvotes.
+# Writes votes.json to the orphan `votes-data` branch, which shields.io reads via
+# a dynamic/json badge on the docs roadmap page.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  discussions: read
+
+concurrency:
+  group: roadmap-votes
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Build and publish votes.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          # slug:discussion-number — add a line when a roadmap item is added
+          items=(
+            automatic-presentation-verification:698
+            event-webhooks:699
+            credential-status-endpoint:700
+            tenant-key-management:701
+            additional-kms-backends:702
+            vp-holder-authentication:703
+            authentication-extension:704
+            openid4vci-extensions:705
+            dcql:706
+            openid4vp-extensions:707
+            issuer-authmode:708
+            standardized-holder-auth-apis:709
+          )
+
+          # one GraphQL round-trip: alias each discussion as d<number>
+          query="query{repository(owner:\"LFDT-Verii\",name:\"core\"){"
+          for pair in "${items[@]}"; do
+            num="${pair##*:}"
+            query="${query}d${num}:discussion(number:${num}){upvoteCount} "
+          done
+          query="${query}}}"
+          resp=$(gh api graphql -f query="${query}")
+
+          : > /tmp/pairs
+          for pair in "${items[@]}"; do
+            slug="${pair%%:*}"; num="${pair##*:}"
+            count=$(printf '%s' "$resp" | jq -r ".data.repository.d${num}.upvoteCount // 0")
+            printf '%s %s\n' "$slug" "$count" >> /tmp/pairs
+          done
+          jq -Rn '[inputs | split(" ") | {(.[0]): (.[1] | tonumber)}] | add' /tmp/pairs | jq -S . > /tmp/votes.json
+          cat /tmp/votes.json
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin votes-data >/dev/null 2>&1; then
+            git fetch origin votes-data --depth=1
+            git checkout -B votes-data origin/votes-data
+          else
+            git checkout --orphan votes-data
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          cp /tmp/votes.json votes.json
+          git add votes.json
+          if git diff --staged --quiet; then
+            echo "No change in vote counts."
+          else
+            git commit -s -m "chore: update roadmap vote counts [skip ci]"
+            git push origin HEAD:votes-data
+          fi
