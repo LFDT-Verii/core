@@ -89,7 +89,7 @@ jobs:
       - name: Commit release preparation
         shell: bash
         run: |
-          if git diff --quiet; then
+          if git diff --quiet && git diff --cached --quiet; then
             echo "No release preparation changes were generated."
             exit 1
           fi
