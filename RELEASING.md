@@ -133,12 +133,12 @@ Release group tags use these patterns:
 - `credentialagent-v{version}`
 - `sdk-nodejs-v{version}`
 
-For the Nx migration, create baseline group tags for the stable versions each group is starting from:
+For the Nx migration, create baseline group tags at the commit pointed to by `v1.1.3`:
 
 ```bash
 git tag platform-v1.1.3 v1.1.3
-git tag credentialagent-v1.27.0 <credentialagent-baseline-commit>
-git tag sdk-nodejs-v2.9.0 <sdk-nodejs-baseline-commit>
+git tag credentialagent-v1.27.0 v1.1.3
+git tag sdk-nodejs-v2.9.0 v1.1.3
 git push origin platform-v1.1.3 credentialagent-v1.27.0 sdk-nodejs-v2.9.0
 ```
 
