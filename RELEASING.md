@@ -1,19 +1,14 @@
 # Releasing Verii
 
-## Branch Policy
+## Release Anchors
 
-- `main` is for the next release line under active development.
-- Each stabilizing release line gets a long-lived branch named `release/X.Y.x`.
-- Production releases for a group are cut from the matching `release/X.Y.x` branch, where `X.Y` comes from that group's package version.
-- Do not create one branch per patch version.
+Group git tags and GitHub Releases are the durable release anchors:
 
-Examples:
+- `platform-vX.Y.Z`
+- `credentialagent-vX.Y.Z`
+- `sdk-nodejs-vX.Y.Z`
 
-- Publish `platform-v1.2.0` from `release/1.2.x`.
-- Publish `credentialagent-v1.28.0` from `release/1.28.x`.
-- Publish `sdk-nodejs-v2.10.0` from `release/2.10.x`.
-
-If selected release groups resolve to different release branches, run production publishing separately for groups that share the same release branch.
+Branch names are operational only. Production publishing does not require a branch named after a version. For patch work, create a descriptive branch from the group tag being patched, such as `patch/platform-v1.2.1`.
 
 ## Release Groups
 
@@ -66,7 +61,7 @@ The workflow:
 
 ## Preparing A Release
 
-Run `.github/workflows/prepare-release.workflow.yml` manually. For a production release, set `base-branch` to the matching `release/X.Y.x` branch for the group version being prepared.
+Run `.github/workflows/prepare-release.workflow.yml` manually. For a normal release train, use `main` or the stabilization branch you are working from as `base-branch`; for patch trains, use the patch branch created from the released tag.
 
 The workflow:
 
@@ -77,8 +72,6 @@ The workflow:
 5. Opens a draft release PR.
 
 The prepare workflow does not publish packages, create git tags, or create GitHub Releases.
-
-Production release PRs must target the matching `release/X.Y.x` branch. Do not prepare production package versions through a PR targeting `main`.
 
 Before a release PR is ready to merge for production, add release notes for each release group that will be promoted. Release notes live under `.github/releases/` and are named after the group tag that production promotion will create:
 
@@ -98,12 +91,25 @@ Each release-notes file must include:
 
 Use `## Backward incompatibilities` even when there are none.
 
+## Patch Trains
+
+For a train of fixes against already released code:
+
+1. Create a patch branch from the latest group tag you are patching, for example `git switch -c patch/platform-v1.2.1 platform-v1.2.0`.
+2. Cherry-pick or apply the fixes onto that branch.
+3. Add version plans for the affected release groups.
+4. Run `.github/workflows/prepare-release.workflow.yml` with `base-branch` set to the patch branch.
+5. Add release notes for the new group tag, for example `.github/releases/platform-v1.2.1.md`.
+6. Merge the release PR into the patch branch.
+7. Run production publishing for the affected groups.
+8. Forward-port the fix commits back to `main`.
+
 ## Promotion
 
 Run `.github/workflows/publish-packages.workflow.yml` manually from the commit to promote. All npm publishing stays in this existing workflow filename so npm Trusted Publisher configuration does not need to change.
 
 - `prerelease` publishes disposable prerelease versions from the selected commit with a `pre.<epoch-seconds>` prerelease id and the npm `prerelease` dist-tag.
-- `production` validates the checked-in release notes for each selected group, publishes the exact package versions from the selected commit with the npm `latest` dist-tag, creates group git tags, and creates GitHub Releases from those notes.
+- `production` validates the checked-in release notes for each selected group, fails if any target group tag or GitHub Release already exists, publishes the exact package versions from the selected commit with the npm `latest` dist-tag, creates group git tags, and creates GitHub Releases from those notes.
 
 Prerelease publishing does not consume version plans and does not create tags or GitHub Releases. Production uses the package versions already committed by the prepare-release PR.
 
