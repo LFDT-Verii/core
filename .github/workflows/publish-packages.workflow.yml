@@ -56,13 +56,20 @@ jobs:
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Validate prerelease branch
+        shell: bash
+        run: |
+          if [ "${GITHUB_REF_NAME}" != "main" ]; then
+            echo "Prerelease publishes are only allowed from main."
+            exit 1
+          fi
       - name: Derive prerelease id
         id: prerelease-version
         shell: bash
         run: echo "preid=pre.$(date +%s)" >> "$GITHUB_OUTPUT"
       - name: Version prerelease packages
         run: >-
-          pnpm exec nx release version prerelease
+          pnpm exec nx release version preminor
           --groups "${RELEASE_GROUPS}"
           --preid "${{ steps.prerelease-version.outputs.preid }}"
           --git-commit=false

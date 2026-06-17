@@ -10,6 +10,14 @@ Group git tags and GitHub Releases are the durable release anchors:
 
 Branch names are operational only. Production publishing does not require a branch named after a version. For patch work, create a descriptive branch from the group tag being patched, such as `patch/platform-v1.2.1`.
 
+## Release Lines
+
+- `main` is always the next minor release line.
+- Package manifests on `main` should stay at the latest stable release baseline for each group until a release-prep PR commits the next stable version.
+- Automatic prerelease publishing from `main` uses Nx `preminor`, so a baseline like `1.1.3` publishes `1.2.0-pre.<epoch>.0`.
+- Patch branches start from released group tags, publish exact patch versions only, and never publish prerelease versions.
+- Next-major work happens on dedicated branches, for example `major/platform-2`, `major/sdk-nodejs-3`, or a repo-wide `major/2`.
+
 ## Release Groups
 
 Nx Release is configured in `nx.json` with fixed-version release groups:
@@ -54,14 +62,15 @@ Docs, tests, workflow files, package manifests, lockfiles, and release config fi
 
 The workflow:
 
-1. Versions all active release groups with Nx prerelease mode.
+1. Versions all active release groups with Nx `preminor` mode.
 2. Uses `pre.<epoch-seconds>` as the prerelease id so newer builds sort after older builds.
 3. Publishes to npm with the `prerelease` dist-tag.
 4. Does not consume version plans.
+5. Fails if run from any branch other than `main`.
 
 ## Preparing A Release
 
-Run `.github/workflows/prepare-release.workflow.yml` manually. For a normal release train, use `main` or the stabilization branch you are working from as `base-branch`; for patch trains, use the patch branch created from the released tag.
+Run `.github/workflows/prepare-release.workflow.yml` manually. For a normal minor release train, use `main` as `base-branch`; for patch trains, use the patch branch created from the released tag; for next-major release trains, use the dedicated major branch.
 
 The workflow:
 
@@ -103,6 +112,8 @@ For a train of fixes against already released code:
 6. Merge the release PR into the patch branch.
 7. Run production publishing for the affected groups.
 8. Forward-port the fix commits back to `main`.
+
+Patch branches do not publish prerelease versions. Keep releasing exact patch versions from the patch branch until the issue train is complete.
 
 ## Promotion
 
