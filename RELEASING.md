@@ -1,5 +1,20 @@
 # Releasing Verii
 
+## Branch Policy
+
+- `main` is for the next release line under active development.
+- Each stabilizing release line gets a long-lived branch named `release/X.Y.x`.
+- Production releases for a group are cut from the matching `release/X.Y.x` branch, where `X.Y` comes from that group's package version.
+- Do not create one branch per patch version.
+
+Examples:
+
+- Publish `platform-v1.2.0` from `release/1.2.x`.
+- Publish `credentialagent-v1.28.0` from `release/1.28.x`.
+- Publish `sdk-nodejs-v2.10.0` from `release/2.10.x`.
+
+If selected release groups resolve to different release branches, run production publishing separately for groups that share the same release branch.
+
 ## Release Groups
 
 Nx Release is configured in `nx.json` with fixed-version release groups:
@@ -51,7 +66,7 @@ The workflow:
 
 ## Preparing A Release
 
-Run `.github/workflows/prepare-release.workflow.yml` manually.
+Run `.github/workflows/prepare-release.workflow.yml` manually. For a production release, set `base-branch` to the matching `release/X.Y.x` branch for the group version being prepared.
 
 The workflow:
 
@@ -62,6 +77,8 @@ The workflow:
 5. Opens a draft release PR.
 
 The prepare workflow does not publish packages, create git tags, or create GitHub Releases.
+
+Production release PRs must target the matching `release/X.Y.x` branch. Do not prepare production package versions through a PR targeting `main`.
 
 Before a release PR is ready to merge for production, add release notes for each release group that will be promoted. Release notes live under `.github/releases/` and are named after the group tag that production promotion will create:
 

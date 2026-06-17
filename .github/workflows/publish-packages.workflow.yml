@@ -100,7 +100,7 @@ jobs:
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Validate production release notes
+      - name: Validate production release context
         shell: bash
         run: |
           node - "${{ inputs.groups }}" <<'NODE' > /tmp/release-groups.tsv
@@ -121,13 +121,32 @@ jobs:
               throw new Error(`Unknown release group: ${group}`);
             }
             const manifest = JSON.parse(fs.readFileSync(path.join(roots[0], 'package.json'), 'utf8'));
+            if (!/^\d+\.\d+\.\d+(?:-.+)?$/.test(manifest.version)) {
+              throw new Error(`Release group ${group} has invalid package version: ${manifest.version}`);
+            }
+            const [major, minor] = manifest.version.split('.');
+            const releaseBranch = `release/${major}.${minor}.x`;
             const tag = `${group}-v${manifest.version}`;
             const releaseNotesFile = path.join(process.env.GITHUB_WORKSPACE, '.github/releases', `${tag}.md`);
-            process.stdout.write(`${group}\t${manifest.version}\t${tag}\t${releaseNotesFile}\n`);
+            process.stdout.write(`${group}\t${manifest.version}\t${releaseBranch}\t${tag}\t${releaseNotesFile}\n`);
           }
           NODE
 
-          while IFS=$'\t' read -r group version tag release_notes_file; do
+          expected_release_branch="$(cut -f3 /tmp/release-groups.tsv | sort -u)"
+          if [ "$(printf '%s\n' "${expected_release_branch}" | sed '/^$/d' | wc -l | tr -d ' ')" -ne 1 ]; then
+            echo "Selected release groups target multiple release branches:"
+            cut -f1,2,3 /tmp/release-groups.tsv
+            echo "Run production publishing separately for groups that share a release branch."
+            exit 1
+          fi
+
+          if [ "${GITHUB_REF_NAME}" != "${expected_release_branch}" ]; then
+            echo "Production publishes for selected groups must run from ${expected_release_branch}, not ${GITHUB_REF_NAME}."
+            exit 1
+          fi
+
+          while IFS=$'\t' read -r group version release_branch tag release_notes_file; do
+            echo "Production branch ${release_branch} matches ${group} ${version}."
             echo "Validating release notes for ${group} ${version} (${tag})."
             bash ./.github/scripts/validate-release-notes.sh "${release_notes_file}"
           done < /tmp/release-groups.tsv
@@ -143,7 +162,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          while IFS=$'\t' read -r group version tag release_notes_file; do
+          while IFS=$'\t' read -r group version release_branch tag release_notes_file; do
+            echo "Production branch ${release_branch} matched for ${group} ${version}."
             echo "Creating release artifacts for ${group} ${version} (${tag})."
             if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
               echo "Tag ${tag} already exists."
