@@ -1,0 +1,105 @@
+name: Node.js CI - CIH E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  COMPOSE_FILE: ./servers/credentialinghub/e2e/docker-compose.yml
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [24.x]
+    steps:
+      - name: Clean up Runner
+        run: |
+          sudo apt-get clean
+          docker system prune -af
+          rm -rf /usr/share/dotnet
+
+      - name: Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Get pnpm store path
+        id: pnpm-store-path
+        run: echo "dir=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore pnpm cache
+        id: cache-pnpm-restore
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: |
+            ${{ steps.pnpm-store-path.outputs.dir }}
+            node_modules
+            packages/*/node_modules
+            samples/*/node_modules
+            servers/*/node_modules
+            tools/*/node_modules
+          key: ${{ runner.os }}-${{ matrix.node-version }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Setup Token
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Start Containers
+        run: docker compose -f "$COMPOSE_FILE" up -d --build
+
+      - name: Wait for Credentialing Hub to launch
+        run: |
+          for attempt in {1..60}; do
+            if curl --silent --show-error --fail --insecure https://localhost:13002/ > /dev/null; then
+              exit 0
+            fi
+
+            echo "Waiting for Credentialing Hub to launch on port 13002... attempt ${attempt}/60"
+            docker compose -f "$COMPOSE_FILE" ps
+            sleep 5
+          done
+
+          docker compose -f "$COMPOSE_FILE" logs --tail=300
+          exit 1
+
+      - name: Test
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
+        with:
+          timeout_minutes: 10
+          max_attempts: 2
+          retry_on: timeout
+          command: pnpm exec nx run @verii/server-credentialing-hub:test:e2e
+        env:
+          IS_CI: true
+          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_TLS_REJECT_UNAUTHORIZED: 0
+
+      - name: Dump container logs
+        if: failure()
+        run: docker compose -f "$COMPOSE_FILE" logs --tail=300
+
+      - name: Stop Containers
+        if: always()
+        run: docker compose -f "$COMPOSE_FILE" down -v --remove-orphans
