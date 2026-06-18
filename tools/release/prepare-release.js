@@ -14,7 +14,6 @@ const usage = `Usage:
   pnpm run release:prepare -- --groups sdk-nodejs --bump minor --message "Prepare sdk release"
   pnpm run release:prepare -- --groups platform,credentialagent --bump patch
   pnpm run release:prepare -- --groups sdk-nodejs --bump minor --dry-run
-  pnpm run release:validate-notes -- --groups sdk-nodejs --output /tmp/release-groups.tsv
 `;
 
 const writeInfo = (message) => process.stderr.write(`${message}\n`);
@@ -33,8 +32,6 @@ const parseArgs = (argv) => {
     dryRun: false,
     groups: defaultGroups,
     message: 'Prepare release',
-    output: null,
-    validateCurrent: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -56,11 +53,6 @@ const parseArgs = (argv) => {
     } else if (arg === '--message') {
       index += 1;
       options.message = argv[index];
-    } else if (arg === '--output') {
-      index += 1;
-      options.output = argv[index];
-    } else if (arg === '--validate-current') {
-      options.validateCurrent = true;
     } else {
       fail(`Unknown argument: ${arg}\n\n${usage}`);
     }
@@ -229,21 +221,6 @@ const validateReleaseNotes = ({ group, releaseNotesFile, tag, version }) => {
   writeInfo(`Validated release notes for ${group} ${version} (${tag}).`);
 };
 
-const writeTargets = (targets, output) => {
-  if (!output) {
-    return;
-  }
-
-  const rows = targets
-    .map(
-      ({ group, releaseNotesFile, tag, version }) =>
-        `${group}\t${version}\t${tag}\t${releaseNotesFile}`,
-    )
-    .join('\n');
-
-  fs.writeFileSync(output, `${rows}\n`, 'utf8');
-};
-
 const removeVersionPlans = () => {
   const versionPlansDir = path.join(repoRoot, '.nx', 'version-plans');
 
@@ -312,20 +289,10 @@ const main = () => {
     releaseGroupInfo(group, releaseGroups[group]),
   );
   const targets = groupInfos.map((groupInfo) =>
-    releaseTarget(
-      groupInfo,
-      options.validateCurrent
-        ? groupInfo.version
-        : bumpVersion(groupInfo.version, options.bump),
-    ),
+    releaseTarget(groupInfo, bumpVersion(groupInfo.version, options.bump)),
   );
 
   targets.forEach(validateReleaseNotes);
-  writeTargets(targets, options.output);
-
-  if (options.validateCurrent) {
-    return;
-  }
 
   if (options.dryRun) {
     writeInfo(
