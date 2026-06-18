@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
-/* eslint-disable better-mutation/no-mutating-methods, complexity */
+/* eslint-disable complexity */
 
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const {
+  readJson,
+  releaseGroupInfo,
+  repoRoot,
+  requireOptionValue,
+} = require('./release-utils');
 
-const repoRoot = process.cwd();
 const defaultGroups = 'platform,credentialagent,credentialinghub,sdk-nodejs';
 const releaseManifestFile = path.join(repoRoot, '.github', 'release.json');
 const validBumps = new Set(['major', 'minor', 'patch']);
@@ -24,9 +29,6 @@ const fail = (message) => {
   process.exit(1);
 };
 
-const readJson = (relativePath) =>
-  JSON.parse(fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'));
-
 const parseArgs = (argv) => {
   const options = {
     bump: 'minor',
@@ -41,19 +43,19 @@ const parseArgs = (argv) => {
       // pnpm passes the argument separator through for scripts that already
       // have arguments in package.json.
     } else if (arg === '--bump') {
+      options.bump = requireOptionValue(argv, index, arg);
       index += 1;
-      options.bump = argv[index];
     } else if (arg === '--dry-run') {
       options.dryRun = true;
     } else if (arg === '--groups') {
+      options.groups = requireOptionValue(argv, index, arg);
       index += 1;
-      options.groups = argv[index];
     } else if (arg === '--help' || arg === '-h') {
       process.stdout.write(usage);
       process.exit(0);
     } else if (arg === '--message') {
+      options.message = requireOptionValue(argv, index, arg);
       index += 1;
-      options.message = argv[index];
     } else {
       fail(`Unknown argument: ${arg}\n\n${usage}`);
     }
@@ -78,47 +80,6 @@ const normalizeGroups = (groupsValue, releaseGroups) => {
   }
 
   return groups;
-};
-
-const expandDirectoryPattern = (pattern) => {
-  if (!pattern.includes('*')) {
-    return [pattern];
-  }
-
-  const starIndex = pattern.indexOf('*');
-  const prefix = pattern.slice(0, starIndex).replace(/\/$/, '');
-  const suffix = pattern.slice(starIndex + 1);
-  const parent = path.join(repoRoot, prefix || '.');
-
-  return fs
-    .readdirSync(parent, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => path.posix.join(prefix, entry.name) + suffix);
-};
-
-const expandProjectSpec = (spec) => {
-  if (!spec.startsWith('directory:')) {
-    fail(`Unsupported release project spec: ${spec}`);
-  }
-
-  return expandDirectoryPattern(spec.slice('directory:'.length));
-};
-
-const projectRootsForGroup = (groupConfig) => {
-  const specs = groupConfig.projects ?? [];
-  const included = specs
-    .filter((spec) => !spec.startsWith('!'))
-    .flatMap(expandProjectSpec);
-  const excluded = new Set(
-    specs
-      .filter((spec) => spec.startsWith('!'))
-      .flatMap((spec) => expandProjectSpec(spec.slice(1))),
-  );
-
-  return included
-    .filter((root) => !excluded.has(root))
-    .filter((root) => fs.existsSync(path.join(repoRoot, root, 'package.json')))
-    .sort();
 };
 
 const parseVersion = (version) => {
@@ -147,35 +108,6 @@ const bumpVersion = (version, bump) => {
   }
 
   return `${parsed.major}.${parsed.minor}.${parsed.patch + 1}`;
-};
-
-const releaseGroupInfo = (group, groupConfig) => {
-  const roots = projectRootsForGroup(groupConfig);
-
-  if (roots.length === 0) {
-    fail(`Release group ${group} does not include any package manifests.`);
-  }
-
-  const manifests = roots.map((root) => ({
-    root,
-    manifest: readJson(path.join(root, 'package.json')),
-  }));
-  const versions = [
-    ...new Set(manifests.map(({ manifest }) => manifest.version)),
-  ];
-
-  if (groupConfig.projectsRelationship === 'fixed' && versions.length !== 1) {
-    fail(
-      `Release group ${group} has multiple current versions: ${versions.join(', ')}`,
-    );
-  }
-
-  return {
-    group,
-    roots,
-    tagPattern: groupConfig.releaseTag?.pattern ?? `${group}-v{version}`,
-    version: versions[0],
-  };
 };
 
 const releaseTarget = (groupInfo, version) => {
@@ -233,11 +165,7 @@ const writeReleaseNotesTemplates = (targets) => {
       return;
     }
 
-    fs.writeFileSync(
-      target.releaseNotesFile,
-      releaseNotesTemplate(target),
-      'utf8',
-    );
+    fs.writeFileSync(target.releaseNotesFile, releaseNotesTemplate(), 'utf8');
     writeInfo(`Created ${path.relative(repoRoot, target.releaseNotesFile)}.`);
   });
 };
@@ -352,4 +280,8 @@ const main = () => {
   );
 };
 
-main();
+try {
+  main();
+} catch (error) {
+  fail(error.message);
+}

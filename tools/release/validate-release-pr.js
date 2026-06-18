@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
-/* eslint-disable better-mutation/no-mutating-methods */
-
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const {
+  assertFixedReleaseGroup,
+  projectRootsForGroup,
+  readJson,
+  releaseTag,
+  repoRoot,
+  requireOptionValue,
+} = require('./release-utils');
 
-const repoRoot = process.cwd();
 const releaseManifestPath = '.github/release.json';
 const releaseManifestFile = path.join(repoRoot, releaseManifestPath);
 const validBumps = new Set(['major', 'minor', 'patch']);
@@ -25,9 +30,6 @@ const fail = (message) => {
   process.exit(1);
 };
 
-const readJson = (relativePath) =>
-  JSON.parse(fs.readFileSync(path.join(repoRoot, relativePath), 'utf8'));
-
 const parseArgs = (argv) => {
   const options = {
     base: null,
@@ -40,8 +42,8 @@ const parseArgs = (argv) => {
       // pnpm passes the argument separator through for scripts that already
       // have arguments in package.json.
     } else if (arg === '--base') {
+      options.base = requireOptionValue(argv, index, arg);
       index += 1;
-      options.base = argv[index];
     } else if (arg === '--help' || arg === '-h') {
       process.stdout.write(usage);
       process.exit(0);
@@ -135,54 +137,7 @@ const normalizeGroups = (groupsValue, releaseGroups) => {
   return groups;
 };
 
-const expandDirectoryPattern = (pattern) => {
-  if (!pattern.includes('*')) {
-    return [pattern];
-  }
-
-  const starIndex = pattern.indexOf('*');
-  const prefix = pattern.slice(0, starIndex).replace(/\/$/, '');
-  const suffix = pattern.slice(starIndex + 1);
-  const parent = path.join(repoRoot, prefix || '.');
-
-  return fs
-    .readdirSync(parent, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => path.posix.join(prefix, entry.name) + suffix);
-};
-
-const expandProjectSpec = (spec) => {
-  if (!spec.startsWith('directory:')) {
-    fail(`Unsupported release project spec: ${spec}`);
-  }
-
-  return expandDirectoryPattern(spec.slice('directory:'.length));
-};
-
-const projectRootsForGroup = (groupConfig) => {
-  const specs = groupConfig.projects ?? [];
-  const included = specs
-    .filter((spec) => !spec.startsWith('!'))
-    .flatMap(expandProjectSpec);
-  const excluded = new Set(
-    specs
-      .filter((spec) => spec.startsWith('!'))
-      .flatMap((spec) => expandProjectSpec(spec.slice(1))),
-  );
-
-  return included
-    .filter((root) => !excluded.has(root))
-    .filter((root) => fs.existsSync(path.join(repoRoot, root, 'package.json')))
-    .sort();
-};
-
 const isStableVersion = (version) => /^\d+\.\d+\.\d+$/.test(version);
-
-const releaseTag = (group, groupConfig, version) =>
-  (groupConfig.releaseTag?.pattern ?? `${group}-v{version}`).replace(
-    '{version}',
-    version,
-  );
 
 const validatePackageVersions = (group, groupConfig, version) => {
   const roots = projectRootsForGroup(groupConfig);
@@ -279,6 +234,7 @@ const validateManifest = (manifest, releaseGroups) => {
       );
     }
 
+    assertFixedReleaseGroup(group, releaseGroups[group]);
     validatePackageVersions(group, releaseGroups[group], version);
     validateReleaseNotes(group, releaseGroups[group], version);
   });
@@ -310,4 +266,8 @@ const main = () => {
   writeInfo('Release PR validation passed.');
 };
 
-main();
+try {
+  main();
+} catch (error) {
+  fail(error.message);
+}

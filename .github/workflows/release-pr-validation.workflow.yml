@@ -7,9 +7,9 @@ on:
       - '.github/releases/*.md'
       - 'package.json'
       - 'pnpm-lock.yaml'
-      - 'packages/**/package.json'
-      - 'servers/**/package.json'
-      - 'tools/**/package.json'
+      - 'packages/*/package.json'
+      - 'servers/*/package.json'
+      - 'tools/*/package.json'
 
 env:
   NODE_VERSION: '24.x'
