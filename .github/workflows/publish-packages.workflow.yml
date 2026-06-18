@@ -113,38 +113,9 @@ jobs:
           RELEASE_GROUPS: ${{ inputs.groups }}
         shell: bash
         run: |
-          node - "${RELEASE_GROUPS}" <<'NODE' > /tmp/release-groups.tsv
-          const fs = require('node:fs');
-          const path = require('node:path');
+          pnpm run release:validate-notes -- --groups "${RELEASE_GROUPS}" --output /tmp/release-groups.tsv
 
-          const rootsForGroup = {
-            platform: ['packages/auth'],
-            credentialagent: ['servers/credentialagent'],
-            credentialinghub: ['servers/credentialinghub'],
-            'sdk-nodejs': ['packages/vnf-wallet-sdk-nodejs'],
-          };
-
-          const selectedGroups = process.argv[2].split(',').map((group) => group.trim()).filter(Boolean);
-
-          for (const group of selectedGroups) {
-            const roots = rootsForGroup[group];
-            if (!roots) {
-              throw new Error(`Unknown release group: ${group}`);
-            }
-            const manifest = JSON.parse(fs.readFileSync(path.join(roots[0], 'package.json'), 'utf8'));
-            if (!/^\d+\.\d+\.\d+(?:-.+)?$/.test(manifest.version)) {
-              throw new Error(`Release group ${group} has invalid package version: ${manifest.version}`);
-            }
-            const tag = `${group}-v${manifest.version}`;
-            const releaseNotesFile = path.join(process.env.GITHUB_WORKSPACE, '.github/releases', `${tag}.md`);
-            process.stdout.write(`${group}\t${manifest.version}\t${tag}\t${releaseNotesFile}\n`);
-          }
-          NODE
-
-          while IFS=$'\t' read -r group version tag release_notes_file; do
-            echo "Validating release notes for ${group} ${version} (${tag})."
-            bash ./.github/scripts/validate-release-notes.sh "${release_notes_file}"
-
+          while IFS=$'\t' read -r _group _version tag _release_notes_file; do
             if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
               echo "Tag ${tag} already exists."
               exit 1
