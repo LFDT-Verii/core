@@ -44,15 +44,17 @@ Package manifests are the source of truth for released versions.
 
 ## Release Bumps
 
-Feature PRs do not need to include version plans. The release manager chooses the release groups and semver bump when running `.github/workflows/prepare-release.workflow.yml`.
+Feature PRs do not need to include version plans. The release manager chooses the release groups and semver bump when preparing a release branch.
 
-The prepare workflow creates an Nx version plan internally for the selected groups, consumes it immediately, and opens a draft release PR with the resulting package versions. For local preview, run:
+Use the root npm script to prepare release package versions and release metadata:
 
 ```bash
-pnpm exec nx release plan <major|minor|patch> --groups <group> --onlyTouched=false --message "Prepare release" --dry-run
+pnpm run release:prepare -- --groups <group> --bump <major|minor|patch> --message "Prepare release"
 ```
 
-A single prepare-release run can coordinate multiple groups by passing a comma-separated `groups` value.
+The script computes the target group versions, creates an Nx version plan internally for the selected groups, consumes it immediately, removes consumed version plans, writes `.github/release.json`, creates any missing release-note templates, and leaves the changes unstaged for review. For a preview, add `--dry-run`.
+
+A single prepare run can coordinate multiple groups by passing a comma-separated `groups` value.
 
 ## Prerelease Builds
 
@@ -68,21 +70,27 @@ The workflow:
 
 ## Preparing A Release
 
-Run `.github/workflows/prepare-release.workflow.yml` manually with the release groups, bump type, and version-plan message. For a normal minor release train, use `main` as `base-branch` and `minor` as `bump`; for patch trains, use the patch branch created from the released tag and `patch` as `bump`; for next-major release trains, use the dedicated major branch and `major` as `bump`.
+Create a release branch from the line being released. For a normal minor release train, branch from `main` and use `minor` as `bump`; for patch trains, branch from the released group tag and use `patch` as `bump`; for next-major release trains, branch from the dedicated major branch and use `major` as `bump`.
 
-The workflow:
+Run the prepare script:
 
-1. Checks out the selected base branch.
-2. Clears any existing version-plan files from the checked-out branch.
-3. Creates an Nx version plan from the selected groups, bump, and message.
-4. Uses Nx Release to consume that generated version plan.
-5. Updates package versions and dependency metadata.
-6. Removes consumed version plans.
-7. Opens a draft release PR.
+```bash
+pnpm run release:prepare -- --groups <group> --bump <major|minor|patch> --message "Prepare release"
+```
 
-The prepare workflow does not publish packages, create git tags, or create GitHub Releases.
+The script creates `.github/release.json`, which identifies the PR as a release PR and records the selected groups and target versions:
 
-Before a release PR is ready to merge for production, add release notes for each release group that will be promoted. Release notes live under `.github/releases/` and are named after the group tag that production promotion will create:
+```json
+{
+  "kind": "verii-release",
+  "bump": "minor",
+  "groups": {
+    "sdk-nodejs": "2.10.0"
+  }
+}
+```
+
+It also creates missing release-note templates for each release group that will be promoted. Release notes live under `.github/releases/` and are named after the group tag that production promotion will create:
 
 - `.github/releases/platform-vX.Y.Z.md`
 - `.github/releases/credentialagent-vX.Y.Z.md`
@@ -101,15 +109,41 @@ Each release-notes file must include:
 
 Use `## Backward incompatibilities` even when there are none.
 
+Productize the generated release-note template before opening the PR. Release PR validation fails while placeholder text remains.
+
+The script:
+
+1. Computes the target version for each selected release group.
+2. Creates `.github/release.json` with the selected groups and target versions.
+3. Creates an Nx version plan from the selected groups, bump, and message.
+4. Uses Nx Release to consume that generated version plan.
+5. Updates package versions and dependency metadata.
+6. Removes consumed version plans.
+7. Creates any missing release-note templates.
+8. Verifies the selected group packages ended at the expected versions.
+
+The prepare script does not publish packages, create git tags, create GitHub Releases, stage changes, commit changes, push a branch, or open a PR. Commit the version and release-note changes and open the release PR normally.
+
+Release PR validation runs when `.github/release.json` changes. It verifies:
+
+- `.github/release.json` has `kind: "verii-release"`.
+- All groups in `.github/release.json` are valid Nx release groups.
+- Versions in `.github/release.json` are stable semver versions.
+- Selected group package manifests match the manifest versions.
+- Matching release notes exist for every selected group and target version.
+- Release notes have the required sections and no template placeholder text.
+- No `.nx/version-plans/*.md` files are committed.
+- The release PR diff only includes release-prep files: package manifests, `pnpm-lock.yaml`, `.github/release.json`, and `.github/releases/*.md`.
+
 ## Patch Trains
 
 For a train of fixes against already released code:
 
 1. Create a patch branch from the latest group tag you are patching, for example `git switch -c patch/platform-v1.2.1 platform-v1.2.0`.
 2. Cherry-pick or apply the fixes onto that branch.
-3. Run `.github/workflows/prepare-release.workflow.yml` with `base-branch` set to the patch branch and `bump` set to `patch`.
-4. Add release notes for the new group tag, for example `.github/releases/platform-v1.2.1.md`.
-5. Merge the release PR into the patch branch.
+3. Run `pnpm run release:prepare -- --groups <group> --bump patch --message "Prepare patch release"`.
+4. Productize the generated release notes for the new group tag, for example `.github/releases/platform-v1.2.1.md`.
+5. Open and merge the validated release PR into the patch branch.
 6. Run production publishing for the affected groups.
 7. Forward-port the fix commits back to `main`.
 

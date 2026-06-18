@@ -1,0 +1,41 @@
+name: Release PR Validation
+
+on:
+  pull_request:
+    paths:
+      - '.github/release.json'
+      - '.github/releases/*.md'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'packages/*/package.json'
+      - 'servers/*/package.json'
+      - 'tools/*/package.json'
+
+env:
+  NODE_VERSION: '24.x'
+
+jobs:
+  validate-release-pr:
+    name: Validate release PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Fetch base branch
+        run: git fetch origin "${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
+      - name: Validate release PR
+        run: >-
+          corepack "$(node -p "require('./package.json').packageManager")"
+          run release:validate-pr
+          --
+          --base "origin/${GITHUB_BASE_REF}"
