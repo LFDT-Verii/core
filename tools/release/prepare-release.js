@@ -8,6 +8,7 @@ const { spawnSync } = require('node:child_process');
 
 const repoRoot = process.cwd();
 const defaultGroups = 'platform,credentialagent,credentialinghub,sdk-nodejs';
+const releaseManifestFile = path.join(repoRoot, '.github', 'release.json');
 const validBumps = new Set(['major', 'minor', 'patch']);
 
 const usage = `Usage:
@@ -188,37 +189,57 @@ const releaseTarget = (groupInfo, version) => {
   };
 };
 
-const validateReleaseNotes = ({ group, releaseNotesFile, tag, version }) => {
-  if (!fs.existsSync(releaseNotesFile)) {
-    fail(
-      `Missing release notes for ${group} ${version}: ${path.relative(repoRoot, releaseNotesFile)}`,
+const releaseManifest = (bump, targets) => {
+  const groups = Object.fromEntries(
+    targets.map(({ group, version }) => [group, version]),
+  );
+
+  return {
+    kind: 'verii-release',
+    bump,
+    groups,
+  };
+};
+
+const releaseNotesTemplate = () => `## Changes
+
+### [#PR](https://github.com/LFDT-Verii/core/pull/PR) Product-friendly change summary
+
+TODO: Describe the product impact of this release for downstream teams.
+
+## Backward incompatibilities
+
+TODO: List any breaking changes, or write "None."
+`;
+
+const writeReleaseManifest = (bump, targets) => {
+  fs.mkdirSync(path.dirname(releaseManifestFile), { recursive: true });
+  fs.writeFileSync(
+    releaseManifestFile,
+    `${JSON.stringify(releaseManifest(bump, targets), null, 2)}\n`,
+    'utf8',
+  );
+  writeInfo(`Wrote ${path.relative(repoRoot, releaseManifestFile)}.`);
+};
+
+const writeReleaseNotesTemplates = (targets) => {
+  targets.forEach((target) => {
+    fs.mkdirSync(path.dirname(target.releaseNotesFile), { recursive: true });
+
+    if (fs.existsSync(target.releaseNotesFile)) {
+      writeInfo(
+        `Keeping existing ${path.relative(repoRoot, target.releaseNotesFile)}.`,
+      );
+      return;
+    }
+
+    fs.writeFileSync(
+      target.releaseNotesFile,
+      releaseNotesTemplate(target),
+      'utf8',
     );
-  }
-
-  const content = fs.readFileSync(releaseNotesFile, 'utf8');
-
-  if (!/^## Changes$/m.test(content)) {
-    fail(
-      `${path.relative(repoRoot, releaseNotesFile)} is missing a '## Changes' section.`,
-    );
-  }
-
-  if (!/^## Backward incompatibilities$/m.test(content)) {
-    fail(
-      `${path.relative(repoRoot, releaseNotesFile)} is missing a '## Backward incompatibilities' section.`,
-    );
-  }
-
-  if (!/^### \[#[^\]]+\]\([^)]+\)( .*)?$/m.test(content)) {
-    fail(
-      `${path.relative(
-        repoRoot,
-        releaseNotesFile,
-      )} must include at least one release entry heading in the form '### [#PR](...) ...'.`,
-    );
-  }
-
-  writeInfo(`Validated release notes for ${group} ${version} (${tag}).`);
+    writeInfo(`Created ${path.relative(repoRoot, target.releaseNotesFile)}.`);
+  });
 };
 
 const removeVersionPlans = () => {
@@ -292,12 +313,13 @@ const main = () => {
     releaseTarget(groupInfo, bumpVersion(groupInfo.version, options.bump)),
   );
 
-  targets.forEach(validateReleaseNotes);
-
   if (options.dryRun) {
-    writeInfo(
-      'Dry run complete. Release notes exist for the versions that would be prepared.',
-    );
+    writeInfo('Release preparation dry run:');
+    targets.forEach(({ group, releaseNotesFile, tag, version }) => {
+      writeInfo(
+        `- ${group} ${version} (${tag}) -> ${path.relative(repoRoot, releaseNotesFile)}`,
+      );
+    });
     return;
   }
 
@@ -323,8 +345,10 @@ const main = () => {
   ]);
   removeVersionPlans();
   verifyPreparedVersions(groupInfos, targets);
+  writeReleaseManifest(options.bump, targets);
+  writeReleaseNotesTemplates(targets);
   writeInfo(
-    'Release preparation complete. Review the package version changes and release notes before committing.',
+    'Release preparation complete. Productize the release notes before opening the PR.',
   );
 };
 
