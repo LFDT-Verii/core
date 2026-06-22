@@ -1,0 +1,50 @@
+name: credentialinghub
+include:
+  - ../../../eng/docker/services/shared-compose.yml
+  - ../../../eng/docker/services/fineract-compose.yml
+  - ../../../samples/sample-registrar-server/docker/compose.yml
+  - ../../../samples/sample-lib-app/docker/compose.yml
+
+services:
+  credentialinghub:
+    depends_on:
+      certgen:
+        condition: service_started
+      contracts-deployment:
+        condition: service_completed_successfully
+      registrar:
+        condition: service_healthy
+      velocity-mongo:
+        condition: service_started
+    image: velocitycore/credentialinghub:local
+    build:
+      context: ../../..
+      dockerfile: eng/docker/Dockerfile-NodeE2E
+      target: builder
+      args:
+        SERVICE: credentialinghub
+    restart: on-failure
+    volumes:
+      - ../../../packages:/app/packages
+      - /app/servers/credentialinghub/node_modules
+      - ..:/app/servers/credentialinghub
+      - httpscert:/certs
+    command: pnpm --dir servers/credentialinghub exec nodemon --exec "pnpm start"
+    env_file:
+      - ../.localdev.env
+    environment:
+      - SERVER_CERTIFICATE_FILE=/certs/cert.crt
+      - SERVER_CERTIFICATE_KEY_FILE=/certs/key.pem
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "NODE_TLS_REJECT_UNAUTHORIZED=0 node -e \"fetch('https://localhost:3000/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    ports:
+      - 13002:3000

@@ -1,0 +1,44 @@
+{
+  "title": "Tenant",
+  "$id": "tenant",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "$ref": "mutable-entity#"
+    },
+    {
+      "$ref": "new-tenant#"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "did": {
+          "type": "string",
+          "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "did for the org"
+        },
+        "logo": {
+          "type": "string",
+          "format": "uri"
+        },
+        "description": {
+          "type": "string",
+          "description": "did for the org"
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "id": "5fsdflkdsfsdfsfwwerr",
+      "did": "did:ion:129031903190239123021312",
+      "name": "ACME Limited",
+      "logo": "http://example.com/logo.com",
+      "createdAt": "2019-08-24T14:15:22Z",
+      "updatedAt": "2019-08-24T14:15:22Z"
+    }
+  ]
+}

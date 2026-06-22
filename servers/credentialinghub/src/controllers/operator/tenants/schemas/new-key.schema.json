@@ -1,0 +1,12 @@
+{
+  "$id": "new-key",
+  "title": "New key",
+  "allOf": [
+    {
+      "$ref": "new-key-metadata#"
+    },
+    {
+      "$ref": "secret-key#"
+    }
+  ]
+}

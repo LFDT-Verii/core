@@ -36,6 +36,7 @@ module.exports = {
       {
         schemaName: 'open-badge-credential', // kebab cased schema
         credentialType: 'OpenBadgeCredential', // camelCased schema
+        defaultSignatureAlgorithm: 'RS256',
         jsonldContext:
           'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
         credentialGroup: CredentialGroup.Career,
@@ -64,7 +65,7 @@ module.exports = {
           recommended: true,
           title:
             schemaJson.title ?? schemaJson.description ?? entry.credentialType,
-          schemaUrl: `${libUrl}/schemas/${entry.schemaName}.json`,
+          schemaUrl: `${libUrl}/schemas/${entry.schemaName}.schema.json`,
           displayDescriptorUrls: {
             en: `${libUrl}/display-descriptors/en/${entry.schemaName}.descriptor.json`,
           },

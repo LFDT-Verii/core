@@ -18,6 +18,8 @@
     "test": "cross-env NODE_ENV=test nx run-many --target=test --all",
     "test:affected": "cross-env NODE_ENV=test nx affected --target=test",
     "test:coverage-summary-local": "python3 -m unittest discover -s .github/scripts/tests -p 'test_coverage_summary.py' -v",
+    "release:prepare": "node tools/release/prepare-release.js",
+    "release:validate-pr": "node tools/release/validate-release-pr.js",
     "depcheck": "knip --dependencies --workspace './contracts/*' --workspace './packages/*' --workspace './servers/*' --workspace './tools/*' --workspace './samples/*'",
     "depcheck-ci": "knip --dependencies --reporter json --workspace './contracts/*' --workspace './packages/*' --workspace './servers/*' --workspace './tools/*' --workspace './samples/*'",
     "contracts:assert-target-env": "node contracts/test-utils/assert-target-env.js",

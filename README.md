@@ -30,7 +30,7 @@ pnpm lint
 - Package publishing is handled by Nx Release and GitHub Actions.
 - Release groups are configured in `nx.json`.
 - Next-minor prerelease builds publish automatically from `main` with the npm `prerelease` dist-tag.
-- Release PRs are prepared by `.github/workflows/prepare-release.workflow.yml` from `.nx/version-plans/*.md`.
+- Release PRs are prepared by `.github/workflows/prepare-release.workflow.yml` from selected groups and a semver bump.
 - Production release notes are checked in under `.github/releases/<group>-vX.Y.Z.md`.
 - Manual prerelease and production exact-version publishes run through `.github/workflows/publish-packages.workflow.yml`.
-- See [RELEASING.md](RELEASING.md) for release groups, version plans, and promotion policy.
+- See [RELEASING.md](RELEASING.md) for release groups, release bumps, and promotion policy.

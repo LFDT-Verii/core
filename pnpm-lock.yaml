@@ -508,7 +508,7 @@ importers:
         version: 18.3.1
       react-admin:
         specifier: ^5.14.6
-        version: 5.14.6(@mui/system@7.3.11(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@mui/utils@7.3.11(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@18.3.1(react@18.3.1))(react-is@19.2.5)(react@18.3.1)
+        version: 5.14.6(@mui/system@7.3.11(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@mui/utils@7.3.11(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@18.3.1(react@18.3.1))(react-is@19.2.7)(react@18.3.1)
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
@@ -1640,7 +1640,7 @@ importers:
         version: 5.1.11
       undici:
         specifier: ^7.25.0
-        version: 7.25.0
+        version: 7.28.0
       undici-oidc-interceptor:
         specifier: 0.9.0
         version: 0.9.0
@@ -2550,7 +2550,7 @@ importers:
         version: 3.8.3
       undici:
         specifier: ^7.25.0
-        version: 7.25.0
+        version: 7.28.0
 
   packages/vnf-wallet-sdk-nodejs:
     dependencies:
@@ -2664,7 +2664,7 @@ importers:
         version: 18.3.1
       react-admin:
         specifier: ^5.14.6
-        version: 5.14.6(@mui/system@7.3.11(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@mui/utils@7.3.11(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@18.3.1(react@18.3.1))(react-is@19.2.5)(react@18.3.1)
+        version: 5.14.6(@mui/system@7.3.11(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@mui/utils@7.3.11(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@18.3.1(react@18.3.1))(react-is@19.2.7)(react@18.3.1)
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
@@ -2841,6 +2841,9 @@ importers:
       migrate-mongo:
         specifier: 14.0.7
         version: 14.0.7(mongodb@7.1.1)
+      nodemon:
+        specifier: 3.1.14
+        version: 3.1.14
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -3243,6 +3246,178 @@ importers:
       nanoid-dictionary:
         specifier: 5.0.0
         version: 5.0.0
+      nodemon:
+        specifier: 3.1.14
+        version: 3.1.14
+      prettier:
+        specifier: 3.8.3
+        version: 3.8.3
+      qs:
+        specifier: 6.15.2
+        version: 6.15.2
+
+  servers/credentialinghub:
+    dependencies:
+      '@fastify/autoload':
+        specifier: ^6.3.1
+        version: 6.3.1
+      '@fastify/bearer-auth':
+        specifier: ^10.0.0
+        version: 10.1.2
+      '@fastify/cors':
+        specifier: ^11.2.0
+        version: 11.2.0
+      '@fastify/formbody':
+        specifier: ^8.0.2
+        version: 8.0.2
+      '@fastify/helmet':
+        specifier: ^13.0.2
+        version: 13.0.2
+      '@fastify/sensible':
+        specifier: ^6.0.4
+        version: 6.0.4
+      '@fastify/swagger':
+        specifier: ^9.7.0
+        version: 9.7.0
+      '@fastify/swagger-ui':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fastify/view':
+        specifier: ^11.1.1
+        version: 11.1.1
+      '@lukeed/ms':
+        specifier: ~2.0.2
+        version: 2.0.2
+      '@openid4vc/oauth2':
+        specifier: 0.4.6
+        version: 0.4.6
+      '@openid4vc/openid4vci':
+        specifier: 0.4.6
+        version: 0.4.6
+      '@openid4vc/openid4vp':
+        specifier: 0.4.6
+        version: 0.4.6
+      '@spencejs/spence-factories':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@spencejs/spence-mongo-repos':
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.1.1)
+      '@verii/base-contract-io':
+        specifier: workspace:*
+        version: link:../../packages/base-contract-io
+      '@verii/blockchain-functions':
+        specifier: workspace:*
+        version: link:../../packages/blockchain-functions
+      '@verii/common-fetchers':
+        specifier: workspace:*
+        version: link:../../packages/common-fetchers
+      '@verii/common-functions':
+        specifier: workspace:*
+        version: link:../../packages/common-functions
+      '@verii/common-schemas':
+        specifier: workspace:*
+        version: link:../../packages/common-schemas
+      '@verii/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@verii/contract-permissions':
+        specifier: workspace:*
+        version: link:../../packages/contract-permissions
+      '@verii/crypto':
+        specifier: workspace:*
+        version: link:../../packages/crypto
+      '@verii/db-kms':
+        specifier: workspace:*
+        version: link:../../packages/db-kms
+      '@verii/did-doc':
+        specifier: workspace:*
+        version: link:../../packages/did-doc
+      '@verii/fastify-plugins':
+        specifier: workspace:*
+        version: link:../../packages/fastify-plugins
+      '@verii/http-client':
+        specifier: workspace:*
+        version: link:../../packages/http-client
+      '@verii/jwt':
+        specifier: workspace:*
+        version: link:../../packages/jwt
+      '@verii/organizations-registry':
+        specifier: workspace:*
+        version: link:../../packages/organizations-registry
+      '@verii/server-provider':
+        specifier: workspace:*
+        version: link:../../packages/server
+      '@verii/spencer-mongo-extensions':
+        specifier: workspace:*
+        version: link:../../packages/spencer-mongo-extensions
+      '@verii/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
+      '@verii/vc-checks':
+        specifier: workspace:*
+        version: link:../../packages/vc-checks
+      '@verii/verii-issuing':
+        specifier: workspace:*
+        version: link:../../packages/verii-issuing
+      '@verii/verii-verification':
+        specifier: workspace:*
+        version: link:../../packages/verii-verification
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      env-var:
+        specifier: ^7.5.0
+        version: 7.5.0
+      fastify:
+        specifier: ^5.8.5
+        version: 5.8.5
+      fastify-plugin:
+        specifier: ^5.1.0
+        version: 5.1.0
+      handlebars:
+        specifier: ^4.7.9
+        version: 4.7.9
+      http-errors:
+        specifier: ^2.0.1
+        version: 2.0.1
+      jsonpath-plus:
+        specifier: ^10.4.0
+        version: 10.4.0
+      lodash:
+        specifier: ^4.18.1
+        version: 4.18.1
+      mongodb:
+        specifier: 7.1.1
+        version: 7.1.1
+      nanoid:
+        specifier: ^5.1.11
+        version: 5.1.11
+    devDependencies:
+      '@verii/metadata-registration':
+        specifier: workspace:*
+        version: link:../../packages/metadata-registration
+      '@verii/test-regexes':
+        specifier: workspace:*
+        version: link:../../packages/test-regexes
+      '@verii/tests-helpers':
+        specifier: workspace:*
+        version: link:../../packages/tests-helpers
+      cheerio:
+        specifier: 1.2.0
+        version: 1.2.0
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
+      expect:
+        specifier: 30.4.1
+        version: 30.4.1
+      nanoid-dictionary:
+        specifier: 5.0.0
+        version: 5.0.0
+      nock:
+        specifier: 15.0.0-beta.11
+        version: 15.0.0-beta.11
       nodemon:
         specifier: 3.1.14
         version: 3.1.14
@@ -5041,6 +5216,9 @@ packages:
   '@fastify/basic-auth@6.2.0':
     resolution: {integrity: sha512-Ao9Jf8TyW8v7p3CPy++c+E3qcCDeWfAlSIfFo0CsKrfvm81i0OCpnobIMwaSSkg/At0rzsLzbJPDWrgNru0G1w==}
 
+  '@fastify/bearer-auth@10.1.2':
+    resolution: {integrity: sha512-9WaHql+IdH03doWS1pNDcO/AcAVskoESAC+sI56+euTWMW12ZUz+xTMNPvIwr8jMJlnTnrU9aI+lD7LMWf9POA==}
+
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
@@ -5062,6 +5240,9 @@ packages:
 
   '@fastify/fast-json-stringify-compiler@5.0.3':
     resolution: {integrity: sha512-uik7yYHkLr6fxd8hJSZ8c+xF4WafPK+XzneQDPU+D10r5X19GW8lJcom2YijX2+qtFF1ENJlHXKFM9ouXNJYgQ==}
+
+  '@fastify/formbody@8.0.2':
+    resolution: {integrity: sha512-84v5J2KrkXzjgBpYnaNRPqwgMsmY7ZDjuj0YVuMR3NXCJRCgKEZy/taSP1wUYGn0onfxJpLyRGDLa+NMaDJtnA==}
 
   '@fastify/forwarded@3.0.1':
     resolution: {integrity: sha512-JqDochHFqXs3C3Ml3gOY58zM7OqO9ENqPo0UqAjAjH8L01fRZqwX9iLeX34//kiJubF7r2ZQHtBRU36vONbLlw==}
@@ -5593,6 +5774,18 @@ packages:
 
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
+
+  '@openid4vc/oauth2@0.4.6':
+    resolution: {integrity: sha512-PVa+N9UHt4KhHh02KHUHqS64vdnoaktNSVr7VUgeaB1NS0c3+7UIa2A/TnsyZqUAy9TxGltAflxsaWO+HtWPQQ==}
+
+  '@openid4vc/openid4vci@0.4.6':
+    resolution: {integrity: sha512-qjxLeE6K285r+lyy+4jJFS+M70+dyImVGvqo97BO+JxL4059jMb/FwJIXjnp2Ygl8+FuaEgFxhGpFdnaNwj30w==}
+
+  '@openid4vc/openid4vp@0.4.6':
+    resolution: {integrity: sha512-d7H8SuFlHZS30OC1U8vsezGHuXkOTp97rrHbsxrge7AQaHHi8BZXAwUGdujbXdkkU7zulXx9yk2+J+ZTb/GE3A==}
+
+  '@openid4vc/utils@0.4.6':
+    resolution: {integrity: sha512-qpZ40ccnYTMdmW5zzIiN5SvNBzWHu0cUz97Itw+YMC8obosQ62c4Tg9LpwWwVirouN9oOQZ7IuF1EDakiB8w3w==}
 
   '@opentelemetry/api-logs@0.53.0':
     resolution: {integrity: sha512-8HArjKx+RaAI8uEIgcORbZIPklyh1YLjPSBus8hjRmvLi6DeFzgOcdZ7KwPabKj8mXF8dX0hyfAyGfycz0DbFw==}
@@ -7392,8 +7585,8 @@ packages:
     resolution: {integrity: sha512-0bDNnY/u6pPwHDMoF0FieU354oBi0a8rD9FcsLwzcGWbc8KS8KPIi7y+s13OlVY+gMWc/9xEMUgNE6Qm8ZllYQ==}
     engines: {node: '>=4'}
 
-  auth0@4.37.0:
-    resolution: {integrity: sha512-+TqJRxh4QvbD4TQIYx1ak2vanykQkG/nIZLuR6o8LoQj425gjVG3tFuUbbOeh/nCpP1rnvU0CCV1ChZHYXLU/A==}
+  auth0@4.37.1:
+    resolution: {integrity: sha512-o9ca0P+hHSUbiwOSFW+DS2GmCA5c6T6E1UJZhWcgKmjAI2Aid16wLzY4/y+XNFb7Im1rM+wQc5YkkNZuTy5FOw==}
     engines: {node: '>=18'}
 
   auth0@5.9.1:
@@ -7608,6 +7801,9 @@ packages:
 
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
+
+  buffer@6.0.3:
+    resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -10321,6 +10517,9 @@ packages:
   react-is@19.2.5:
     resolution: {integrity: sha512-Dn0t8IQhCmeIT3wu+Apm1/YVsJXsGWi6k4sPdnBIdqMVtHtv0IGi6dcpNpNkNac0zB2uUAqNX3MHzN8c+z2rwQ==}
 
+  react-is@19.2.7:
+    resolution: {integrity: sha512-kZFnouyVv7eP/Phmrlo9FK+zcAdriZJvzxXHF1Sl1P377WSGe2G/JxVolhTrB/jeV47lKImhNUsijjHAAbcl/A==}
+
   react-router-dom@7.15.0:
     resolution: {integrity: sha512-VcrVg64Fo8nwBvDscajG8gRTLIuTC6N50nb22l2HOOV4PTOHgoGp8mUjy9wLiHYoYTSYI36tUnXZgasSRFZorQ==}
     engines: {node: '>=20.0.0'}
@@ -10950,6 +11149,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -11055,8 +11255,8 @@ packages:
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
 
-  undici-types@6.25.0:
-    resolution: {integrity: sha512-vOw74RVVYFtnooUkZPxsY1GuuNNupSrCcANIAaDekpZ/Dp1sBuLLl5n2UCKpzxgmOwD66S4Jj24MrhmcDG+0vw==}
+  undici-types@6.27.0:
+    resolution: {integrity: sha512-HDBmCak1Ccswl7xS6/blapTYRVsqva4skTCeeJPLiDn6qCszeqiPGDljQBH2Kf/S0BI6EN14FQsgKVyGid9xnA==}
 
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
@@ -11068,12 +11268,16 @@ packages:
     resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
     engines: {node: '>=14.0'}
 
-  undici@6.23.0:
-    resolution: {integrity: sha512-VfQPToRA5FZs/qJxLIinmU59u0r7LXqoJkCzinq3ckNJp3vKEh7jTWN589YQ5+aoAC/TGRLyJLCPKcLQbM8r9g==}
+  undici@6.27.0:
+    resolution: {integrity: sha512-YmfV3YnEDzXRC5lZ2jWtWWHKGUm1zIt8AhesR1tens+HTNv+YZlN/dp6G727LOvMJ8xjP9Be7Y2Sdr96LDm+pg==}
     engines: {node: '>=18.17'}
 
   undici@7.25.0:
     resolution: {integrity: sha512-xXnp4kTyor2Zq+J1FfPI6Eq3ew5h6Vl0F/8d9XU5zZQf1tX9s2Su1/3PiMmUANFULpmksxkClamIZcaUqryHsQ==}
+    engines: {node: '>=20.18.1'}
+
+  undici@7.28.0:
+    resolution: {integrity: sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==}
     engines: {node: '>=20.18.1'}
 
   unfetch@4.2.0:
@@ -11403,6 +11607,12 @@ packages:
 
   zod-validation-error@4.0.2:
     resolution: {integrity: sha512-Q6/nZLe6jxuU80qb/4uJ4t5v2VEZ44lzQjPDhYJNztRQ4wyWc6VF3D3Kb/fAuPetZQnhS3hnajCf9CsWesghLQ==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+
+  zod-validation-error@5.0.0:
+    resolution: {integrity: sha512-hmk+pkyKq7Q71PiWVSDUc3VfpzpvcRHZ3QPw9yEMVvmtCekaMeOHnbr3WbxfrgEnQTv6haGP4cmv0Ojmihzsxw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
@@ -13577,6 +13787,11 @@ snapshots:
       '@fastify/error': 4.2.0
       fastify-plugin: 5.1.0
 
+  '@fastify/bearer-auth@10.1.2':
+    dependencies:
+      '@fastify/error': 4.2.0
+      fastify-plugin: 5.1.0
+
   '@fastify/busboy@2.1.1': {}
 
   '@fastify/busboy@3.2.0': {}
@@ -13598,6 +13813,11 @@ snapshots:
   '@fastify/fast-json-stringify-compiler@5.0.3':
     dependencies:
       fast-json-stringify: 6.3.0
+
+  '@fastify/formbody@8.0.2':
+    dependencies:
+      fast-querystring: 1.1.2
+      fastify-plugin: 5.1.0
 
   '@fastify/forwarded@3.0.1': {}
 
@@ -14180,6 +14400,29 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
+  '@openid4vc/oauth2@0.4.6':
+    dependencies:
+      '@openid4vc/utils': 0.4.6
+      zod: 4.3.6
+
+  '@openid4vc/openid4vci@0.4.6':
+    dependencies:
+      '@openid4vc/oauth2': 0.4.6
+      '@openid4vc/utils': 0.4.6
+      zod: 4.3.6
+
+  '@openid4vc/openid4vp@0.4.6':
+    dependencies:
+      '@openid4vc/oauth2': 0.4.6
+      '@openid4vc/utils': 0.4.6
+      zod: 4.3.6
+
+  '@openid4vc/utils@0.4.6':
+    dependencies:
+      buffer: 6.0.3
+      zod: 4.3.6
+      zod-validation-error: 5.0.0(zod@4.3.6)
+
   '@opentelemetry/api-logs@0.53.0':
     dependencies:
       '@opentelemetry/api': 1.9.1
@@ -14515,7 +14758,7 @@ snapshots:
       ethers: 6.16.0
       hardhat: 2.28.6(typescript@5.9.3)
       proper-lockfile: 4.1.2
-      undici: 6.23.0
+      undici: 6.27.0
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -16119,15 +16362,15 @@ snapshots:
 
   attr-accept@2.2.5: {}
 
-  auth0@4.37.0:
+  auth0@4.37.1:
     dependencies:
       jose: 4.15.9
-      undici-types: 6.25.0
+      undici-types: 6.27.0
       uuid: 14.0.0
 
   auth0@5.9.1:
     dependencies:
-      auth0-legacy: auth0@4.37.0
+      auth0-legacy: auth0@4.37.1
       jose: 4.15.9
       uuid: 14.0.0
 
@@ -16368,6 +16611,11 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
+  buffer@6.0.3:
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
+
   bytes@3.1.2: {}
 
   call-bind-apply-helpers@1.0.2:
@@ -16446,7 +16694,7 @@ snapshots:
       parse5: 7.3.0
       parse5-htmlparser2-tree-adapter: 7.1.0
       parse5-parser-stream: 7.1.2
-      undici: 7.25.0
+      undici: 7.28.0
       whatwg-mimetype: 4.0.0
 
   chokidar@3.6.0:
@@ -19420,7 +19668,7 @@ snapshots:
       '@jest/schemas': 30.4.1
       ansi-styles: 5.2.0
       react-is-18: react-is@18.3.1
-      react-is-19: react-is@19.2.5
+      react-is-19: react-is@19.2.7
 
   process-nextick-args@2.0.1: {}
 
@@ -19529,7 +19777,7 @@ snapshots:
       - react-router
       - react-router-dom
 
-  ra-ui-materialui@5.14.6(920ed97c50dafef6eb1907902cb58939):
+  ra-ui-materialui@5.14.6(8bf46c1c14db90f58979f681787c169d):
     dependencies:
       '@mui/icons-material': 7.3.11(@mui/material@7.3.11(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@19.2.14)(react@18.3.1)
       '@mui/material': 7.3.11(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -19553,7 +19801,7 @@ snapshots:
       react-error-boundary: 4.1.2(react@18.3.1)
       react-hook-form: 7.72.1(react@18.3.1)
       react-hotkeys-hook: 5.2.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-is: 19.2.5
+      react-is: 19.2.7
       react-router: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom: 7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-transition-group: 4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -19576,7 +19824,7 @@ snapshots:
       iconv-lite: 0.4.24
       unpipe: 1.0.0
 
-  react-admin@5.14.6(@mui/system@7.3.11(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@mui/utils@7.3.11(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@18.3.1(react@18.3.1))(react-is@19.2.5)(react@18.3.1):
+  react-admin@5.14.6(@mui/system@7.3.11(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1))(@mui/utils@7.3.11(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(csstype@3.2.3)(react-dom@18.3.1(react@18.3.1))(react-is@19.2.7)(react@18.3.1):
     dependencies:
       '@emotion/react': 11.14.0(@types/react@19.2.14)(react@18.3.1)
       '@emotion/styled': 11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@18.3.1))(@types/react@19.2.14)(react@18.3.1)
@@ -19586,7 +19834,7 @@ snapshots:
       ra-core: 5.14.6(@tanstack/react-query@5.100.10(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.72.1(react@18.3.1))(react-router-dom@7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       ra-i18n-polyglot: 5.14.6(@tanstack/react-query@5.100.10(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.72.1(react@18.3.1))(react-router-dom@7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       ra-language-english: 5.14.6(@tanstack/react-query@5.100.10(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.72.1(react@18.3.1))(react-router-dom@7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      ra-ui-materialui: 5.14.6(920ed97c50dafef6eb1907902cb58939)
+      ra-ui-materialui: 5.14.6(8bf46c1c14db90f58979f681787c169d)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-hook-form: 7.72.1(react@18.3.1)
@@ -19635,6 +19883,8 @@ snapshots:
   react-is@18.3.1: {}
 
   react-is@19.2.5: {}
+
+  react-is@19.2.7: {}
 
   react-router-dom@7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
@@ -20448,11 +20698,11 @@ snapshots:
     dependencies:
       async-cache-dedupe: 3.4.0
       fast-jwt: 6.2.4
-      undici: 7.25.0
+      undici: 7.28.0
 
   undici-types@6.19.8: {}
 
-  undici-types@6.25.0: {}
+  undici-types@6.27.0: {}
 
   undici-types@7.16.0: {}
 
@@ -20462,9 +20712,11 @@ snapshots:
     dependencies:
       '@fastify/busboy': 2.1.1
 
-  undici@6.23.0: {}
+  undici@6.27.0: {}
 
   undici@7.25.0: {}
+
+  undici@7.28.0: {}
 
   unfetch@4.2.0: {}
 
@@ -20800,6 +21052,10 @@ snapshots:
   yoga-layout@3.2.1: {}
 
   zod-validation-error@4.0.2(zod@4.3.6):
+    dependencies:
+      zod: 4.3.6
+
+  zod-validation-error@5.0.0(zod@4.3.6):
     dependencies:
       zod: 4.3.6
 

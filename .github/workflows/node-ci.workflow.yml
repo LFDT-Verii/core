@@ -73,9 +73,6 @@ jobs:
       run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
     - name: Install Dependencies
       run: pnpm install --frozen-lockfile --prefer-offline
-    - name: Check version plans
-      if: github.event_name == 'pull_request'
-      run: pnpm exec nx release plan:check --base=${{ github.event.pull_request.base.sha }} --head=HEAD
     - name: Save pnpm cache
       id: cache-pnpm-save
       uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
