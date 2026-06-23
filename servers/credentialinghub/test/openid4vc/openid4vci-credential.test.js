@@ -229,7 +229,7 @@ describe('openid4vc credential test suite', () => {
         expect(response.statusCode).toEqual(400);
         expect(response.json).toEqual({
           error: 'invalid_proof',
-          error_description: 'Error verifiying credential request proof jwt.',
+          error_description: 'Error verifying credential request proof jwt.',
         });
 
         await expect(

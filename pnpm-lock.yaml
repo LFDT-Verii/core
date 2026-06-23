@@ -3293,8 +3293,8 @@ importers:
         specifier: 0.4.6
         version: 0.4.6
       '@openid4vc/openid4vci':
-        specifier: 0.4.6
-        version: 0.4.6
+        specifier: 0.5.1
+        version: 0.5.1
       '@openid4vc/openid4vp':
         specifier: 0.4.6
         version: 0.4.6
@@ -5794,14 +5794,20 @@ packages:
   '@openid4vc/oauth2@0.4.6':
     resolution: {integrity: sha512-PVa+N9UHt4KhHh02KHUHqS64vdnoaktNSVr7VUgeaB1NS0c3+7UIa2A/TnsyZqUAy9TxGltAflxsaWO+HtWPQQ==}
 
-  '@openid4vc/openid4vci@0.4.6':
-    resolution: {integrity: sha512-qjxLeE6K285r+lyy+4jJFS+M70+dyImVGvqo97BO+JxL4059jMb/FwJIXjnp2Ygl8+FuaEgFxhGpFdnaNwj30w==}
+  '@openid4vc/oauth2@0.5.1':
+    resolution: {integrity: sha512-hQame/szZgqy4XfoSfylHMxALupyt52q0GcWLDeel6CAu2M+QZt689IwsRm3dLETeU8Y40C8Qal2nfiAEkkRjQ==}
+
+  '@openid4vc/openid4vci@0.5.1':
+    resolution: {integrity: sha512-b81N5adRDI1XxdrkArsTgN6yZpoVRknvDSsBijqZURFnHx/z7YX6Rasv8olHmjw9e026iMXiyhLGmNBfkz66yw==}
 
   '@openid4vc/openid4vp@0.4.6':
     resolution: {integrity: sha512-d7H8SuFlHZS30OC1U8vsezGHuXkOTp97rrHbsxrge7AQaHHi8BZXAwUGdujbXdkkU7zulXx9yk2+J+ZTb/GE3A==}
 
   '@openid4vc/utils@0.4.6':
     resolution: {integrity: sha512-qpZ40ccnYTMdmW5zzIiN5SvNBzWHu0cUz97Itw+YMC8obosQ62c4Tg9LpwWwVirouN9oOQZ7IuF1EDakiB8w3w==}
+
+  '@openid4vc/utils@0.5.1':
+    resolution: {integrity: sha512-jVgyOsw6dfr6BH2dH1F2gMJH/BnV8gTz+7/BXnELFB/I3xua3y2887BMaUMRpdIonB/nob3YbQODkrGcUfaB1A==}
 
   '@opentelemetry/api-logs@0.53.0':
     resolution: {integrity: sha512-8HArjKx+RaAI8uEIgcORbZIPklyh1YLjPSBus8hjRmvLi6DeFzgOcdZ7KwPabKj8mXF8dX0hyfAyGfycz0DbFw==}
@@ -11625,6 +11631,9 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
 snapshots:
 
   '@adobe/css-tools@4.4.4': {}
@@ -14433,11 +14442,16 @@ snapshots:
       '@openid4vc/utils': 0.4.6
       zod: 4.3.6
 
-  '@openid4vc/openid4vci@0.4.6':
+  '@openid4vc/oauth2@0.5.1':
     dependencies:
-      '@openid4vc/oauth2': 0.4.6
-      '@openid4vc/utils': 0.4.6
-      zod: 4.3.6
+      '@openid4vc/utils': 0.5.1
+      zod: 4.4.3
+
+  '@openid4vc/openid4vci@0.5.1':
+    dependencies:
+      '@openid4vc/oauth2': 0.5.1
+      '@openid4vc/utils': 0.5.1
+      zod: 4.4.3
 
   '@openid4vc/openid4vp@0.4.6':
     dependencies:
@@ -14450,6 +14464,12 @@ snapshots:
       buffer: 6.0.3
       zod: 4.3.6
       zod-validation-error: 5.0.0(zod@4.3.6)
+
+  '@openid4vc/utils@0.5.1':
+    dependencies:
+      buffer: 6.0.3
+      zod: 4.4.3
+      zod-validation-error: 5.0.0(zod@4.4.3)
 
   '@opentelemetry/api-logs@0.53.0':
     dependencies:
@@ -21071,4 +21091,10 @@ snapshots:
     dependencies:
       zod: 4.3.6
 
+  zod-validation-error@5.0.0(zod@4.4.3):
+    dependencies:
+      zod: 4.4.3
+
   zod@4.3.6: {}
+
+  zod@4.4.3: {}
