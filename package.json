@@ -43,7 +43,7 @@
   "// jsdom-undici-override-note": "Temporary: remove this jsdom>undici override once jsdom publishes a release that depends on patched undici instead of 7.25.0.",
   "pnpm": {
     "overrides": {
-      "mocha>serialize-javascript": "7.0.5",
+      "mocha>serialize-javascript": "7.0.6",
       "auth0>uuid": "^14.0.1",
       "eslint-plugin-better-mutation>lodash": "^4.18.0",
       "jsdom>undici": "7.28.0"
