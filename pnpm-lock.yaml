@@ -307,8 +307,8 @@ importers:
         specifier: workspace:*
         version: link:../http-client
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       ethers:
         specifier: ^6.17.0
         version: 6.17.0
@@ -424,8 +424,8 @@ importers:
   packages/common-functions:
     dependencies:
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -1185,8 +1185,8 @@ importers:
         specifier: workspace:*
         version: link:../spencer-mongo-extensions
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -1363,8 +1363,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -1586,8 +1586,8 @@ importers:
         specifier: workspace:*
         version: link:../test-regexes
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -1628,8 +1628,8 @@ importers:
   packages/http-client:
     dependencies:
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       http-errors:
         specifier: ^2.0.1
         version: 2.0.1
@@ -1731,8 +1731,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       jose:
         specifier: ^5.10.0
         version: 5.10.0
@@ -1912,8 +1912,8 @@ importers:
         specifier: workspace:*
         version: link:../tests-helpers
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       expect:
         specifier: 30.4.1
         version: 30.4.1
@@ -2322,8 +2322,8 @@ importers:
         specifier: workspace:*
         version: link:../organizations-registry
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -2508,8 +2508,8 @@ importers:
         specifier: workspace:*
         version: link:../tests-helpers
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -3148,8 +3148,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -3365,8 +3365,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/verii-verification
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -3483,8 +3483,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/server
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -3641,8 +3641,8 @@ importers:
         specifier: ~3.2.1
         version: 3.2.1
       date-fns:
-        specifier: ^4.1.0
-        version: 4.1.0
+        specifier: ^4.4.0
+        version: 4.4.0
       handlebars:
         specifier: ^4.7.9
         version: 4.7.9
@@ -8156,8 +8156,8 @@ packages:
   date-fns@3.6.0:
     resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
 
-  date-fns@4.1.0:
-    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
+  date-fns@4.4.0:
+    resolution: {integrity: sha512-+1UMbeh68lH1SegH83CGWwpb6OHHbpSgr3+s5Eww5M4CAgswBpoWS0AjTOfEJ33HiYKz1hdj/KTFprzXHmq/6w==}
 
   dateformat@4.6.3:
     resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
@@ -16964,7 +16964,7 @@ snapshots:
 
   date-fns@3.6.0: {}
 
-  date-fns@4.1.0: {}
+  date-fns@4.4.0: {}
 
   dateformat@4.6.3: {}
 
