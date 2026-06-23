@@ -118,6 +118,14 @@
       ]
     },
     {
+      "groupName": "group: openid4vc packages",
+      "matchPackageNames": [
+        "@openid4vc/{/,}**"
+      ],
+      "automerge": false,
+      "description": "Keep OpenID4VC packages together because their pre-1.0 releases can contain coordinated protocol and API changes."
+    },
+    {
       "matchPackageNames": [
         "twilio{/,}**",
         "ethers{/,}**",
