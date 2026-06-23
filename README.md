@@ -23,6 +23,7 @@ pnpm lint
 - Prefer the narrowest possible `resolutions` entry for transitive security fixes.
 - Scope overrides to the affected parent chain when feasible, such as `hardhat/mocha/serialize-javascript` for Hardhat-only remediation.
 - Document each temporary resolution in `package.json` with the advisory or alert reference and the condition for removal.
+- Keep the current override inventory in [docs/dependency-overrides.md](docs/dependency-overrides.md).
 - Remove the resolution once the upstream dependency path resolves the patched version without the override.
 
 ## Package Publishing
