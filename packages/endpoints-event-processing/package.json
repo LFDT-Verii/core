@@ -37,7 +37,7 @@
     "@verii/math": "workspace:*",
     "@verii/metadata-registration": "workspace:*",
     "@verii/spencer-mongo-extensions": "workspace:*",
-    "date-fns": "^4.1.0",
+    "date-fns": "^4.4.0",
     "env-var": "^7.5.0",
     "fastify": "^5.8.5",
     "fastify-plugin": "^5.1.0",

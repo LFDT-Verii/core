@@ -67,7 +67,7 @@
     "@verii/verii-verification": "workspace:*",
     "ajv": "8.20.0",
     "canonicalize": "^2.1.0",
-    "date-fns": "^4.1.0",
+    "date-fns": "^4.4.0",
     "env-var": "^7.5.0",
     "eth-url-parser": "^1.0.4",
     "fastify": "^5.8.5",
