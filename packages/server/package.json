@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@spencejs/spence-events": "^1.1.0",
-    "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/common-functions": "workspace:*",
     "@verii/common-schemas": "workspace:*",
     "@verii/fastify-plugins": "workspace:*",
@@ -29,14 +28,17 @@
     "nanoid": "^5.1.14"
   },
   "peerDependencies": {
+    "@spencejs/spence-mongo-repos": "^1.1.0",
     "@fastify/helmet": ">=11.1.1",
     "@fastify/sensible": ">=5.6.0",
     "@fastify/swagger": ">=8.15.0",
     "@fastify/swagger-ui": ">=4.2.0",
     "fastify": ">=4.29.0",
-    "fastify-plugin": ">=4.5.1"
+    "fastify-plugin": ">=4.5.1",
+    "mongodb": "^7.0.0"
   },
   "devDependencies": {
+    "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/config": "workspace:*",
     "@verii/http-client": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
@@ -52,6 +54,7 @@
     "fastify": "^5.8.5",
     "globals": "17.6.0",
     "h2url": "0.2.0",
+    "mongodb": "^7.3.0",
     "prettier": "3.8.3"
   },
   "nx": {
