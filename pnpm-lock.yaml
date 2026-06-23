@@ -954,8 +954,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       jose:
-        specifier: ^5.10.0
-        version: 5.10.0
+        specifier: ^6.2.3
+        version: 6.2.3
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -1734,8 +1734,8 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
       jose:
-        specifier: ^5.10.0
-        version: 5.10.0
+        specifier: ^6.2.3
+        version: 6.2.3
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -2568,8 +2568,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       jose:
-        specifier: ^5.10.0
-        version: 5.10.0
+        specifier: ^6.2.3
+        version: 6.2.3
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -3242,8 +3242,8 @@ importers:
         specifier: 6.1.0
         version: 6.1.0
       jose:
-        specifier: ^5.10.0
-        version: 5.10.0
+        specifier: ^6.2.3
+        version: 6.2.3
       migrate-mongo:
         specifier: 14.0.7
         version: 14.0.7(mongodb@7.3.0)
@@ -5794,9 +5794,6 @@ packages:
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
 
-  '@openid4vc/oauth2@0.4.6':
-    resolution: {integrity: sha512-PVa+N9UHt4KhHh02KHUHqS64vdnoaktNSVr7VUgeaB1NS0c3+7UIa2A/TnsyZqUAy9TxGltAflxsaWO+HtWPQQ==}
-
   '@openid4vc/oauth2@0.5.1':
     resolution: {integrity: sha512-hQame/szZgqy4XfoSfylHMxALupyt52q0GcWLDeel6CAu2M+QZt689IwsRm3dLETeU8Y40C8Qal2nfiAEkkRjQ==}
 
@@ -5805,9 +5802,6 @@ packages:
 
   '@openid4vc/openid4vp@0.5.1':
     resolution: {integrity: sha512-YE6DrHIAnH5E25xLuKQ1lcJqx15qWPVOCZiEFjfASNLdkqdEhUymBE+ewq9Evn5xNDkyHUIYt8c4/JElaCOaYg==}
-
-  '@openid4vc/utils@0.4.6':
-    resolution: {integrity: sha512-qpZ40ccnYTMdmW5zzIiN5SvNBzWHu0cUz97Itw+YMC8obosQ62c4Tg9LpwWwVirouN9oOQZ7IuF1EDakiB8w3w==}
 
   '@openid4vc/utils@0.5.1':
     resolution: {integrity: sha512-jVgyOsw6dfr6BH2dH1F2gMJH/BnV8gTz+7/BXnELFB/I3xua3y2887BMaUMRpdIonB/nob3YbQODkrGcUfaB1A==}
@@ -9499,11 +9493,8 @@ packages:
   jose@4.15.9:
     resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
 
-  jose@5.10.0:
-    resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
-
-  jose@6.1.3:
-    resolution: {integrity: sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ==}
+  jose@6.2.3:
+    resolution: {integrity: sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw==}
 
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
@@ -11704,7 +11695,7 @@ snapshots:
 
   '@auth0/auth0-auth-js@1.6.0':
     dependencies:
-      jose: 6.1.3
+      jose: 6.2.3
       openid-client: 6.8.2
 
   '@auth0/auth0-react@2.16.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
@@ -14440,11 +14431,6 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@openid4vc/oauth2@0.4.6':
-    dependencies:
-      '@openid4vc/utils': 0.4.6
-      zod: 4.4.3
-
   '@openid4vc/oauth2@0.5.1':
     dependencies:
       '@openid4vc/utils': 0.5.1
@@ -14461,12 +14447,6 @@ snapshots:
       '@openid4vc/oauth2': 0.5.1
       '@openid4vc/utils': 0.5.1
       zod: 4.4.3
-
-  '@openid4vc/utils@0.4.6':
-    dependencies:
-      buffer: 6.0.3
-      zod: 4.4.3
-      zod-validation-error: 5.0.0(zod@4.4.3)
 
   '@openid4vc/utils@0.5.1':
     dependencies:
@@ -18683,9 +18663,7 @@ snapshots:
 
   jose@4.15.9: {}
 
-  jose@5.10.0: {}
-
-  jose@6.1.3: {}
+  jose@6.2.3: {}
 
   joycon@3.1.1: {}
 
@@ -19418,7 +19396,7 @@ snapshots:
 
   openid-client@6.8.2:
     dependencies:
-      jose: 6.1.3
+      jose: 6.2.3
       oauth4webapi: 3.8.5
 
   optionator@0.9.4:
