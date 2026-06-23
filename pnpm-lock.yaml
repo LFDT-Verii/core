@@ -6,7 +6,7 @@ settings:
 
 overrides:
   mocha>serialize-javascript: 7.0.5
-  auth0>uuid: ^14.0.0
+  auth0>uuid: ^14.0.1
   eslint-plugin-better-mutation>lodash: ^4.18.0
   jsdom>undici: 7.28.0
 
@@ -11339,6 +11339,10 @@ packages:
     resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
+  uuid@14.0.1:
+    resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
+    hasBin: true
+
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
@@ -16410,13 +16414,13 @@ snapshots:
     dependencies:
       jose: 4.15.9
       undici-types: 6.27.0
-      uuid: 14.0.0
+      uuid: 14.0.1
 
   auth0@5.9.1:
     dependencies:
       auth0-legacy: auth0@4.37.1
       jose: 4.15.9
-      uuid: 14.0.0
+      uuid: 14.0.1
 
   autosuggest-highlight@3.3.4:
     dependencies:
@@ -20807,6 +20811,8 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@14.0.0: {}
+
+  uuid@14.0.1: {}
 
   uuid@8.3.2: {}
 
