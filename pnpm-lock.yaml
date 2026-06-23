@@ -6,7 +6,7 @@ settings:
 
 overrides:
   mocha>serialize-javascript: 7.0.5
-  auth0>uuid: ^14.0.0
+  auth0>uuid: ^14.0.1
   eslint-plugin-better-mutation>lodash: ^4.18.0
   jsdom>undici: 7.28.0
 
@@ -5794,9 +5794,6 @@ packages:
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
 
-  '@openid4vc/oauth2@0.4.6':
-    resolution: {integrity: sha512-PVa+N9UHt4KhHh02KHUHqS64vdnoaktNSVr7VUgeaB1NS0c3+7UIa2A/TnsyZqUAy9TxGltAflxsaWO+HtWPQQ==}
-
   '@openid4vc/oauth2@0.5.1':
     resolution: {integrity: sha512-hQame/szZgqy4XfoSfylHMxALupyt52q0GcWLDeel6CAu2M+QZt689IwsRm3dLETeU8Y40C8Qal2nfiAEkkRjQ==}
 
@@ -5805,9 +5802,6 @@ packages:
 
   '@openid4vc/openid4vp@0.5.1':
     resolution: {integrity: sha512-YE6DrHIAnH5E25xLuKQ1lcJqx15qWPVOCZiEFjfASNLdkqdEhUymBE+ewq9Evn5xNDkyHUIYt8c4/JElaCOaYg==}
-
-  '@openid4vc/utils@0.4.6':
-    resolution: {integrity: sha512-qpZ40ccnYTMdmW5zzIiN5SvNBzWHu0cUz97Itw+YMC8obosQ62c4Tg9LpwWwVirouN9oOQZ7IuF1EDakiB8w3w==}
 
   '@openid4vc/utils@0.5.1':
     resolution: {integrity: sha512-jVgyOsw6dfr6BH2dH1F2gMJH/BnV8gTz+7/BXnELFB/I3xua3y2887BMaUMRpdIonB/nob3YbQODkrGcUfaB1A==}
@@ -11341,6 +11335,10 @@ packages:
     resolution: {integrity: sha512-Qo+uWgilfSmAhXCMav1uYFynlQO7fMFiMVZsQqZRMIXp0O7rR7qjkj+cPvBHLgBqi960QCoo/PH2/6ZtVqKvrg==}
     hasBin: true
 
+  uuid@14.0.1:
+    resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
+    hasBin: true
+
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
@@ -14440,11 +14438,6 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@openid4vc/oauth2@0.4.6':
-    dependencies:
-      '@openid4vc/utils': 0.4.6
-      zod: 4.4.3
-
   '@openid4vc/oauth2@0.5.1':
     dependencies:
       '@openid4vc/utils': 0.5.1
@@ -14461,12 +14454,6 @@ snapshots:
       '@openid4vc/oauth2': 0.5.1
       '@openid4vc/utils': 0.5.1
       zod: 4.4.3
-
-  '@openid4vc/utils@0.4.6':
-    dependencies:
-      buffer: 6.0.3
-      zod: 4.4.3
-      zod-validation-error: 5.0.0(zod@4.4.3)
 
   '@openid4vc/utils@0.5.1':
     dependencies:
@@ -16418,13 +16405,13 @@ snapshots:
     dependencies:
       jose: 4.15.9
       undici-types: 6.27.0
-      uuid: 14.0.0
+      uuid: 14.0.1
 
   auth0@5.9.1:
     dependencies:
       auth0-legacy: auth0@4.37.1
       jose: 4.15.9
-      uuid: 14.0.0
+      uuid: 14.0.1
 
   autosuggest-highlight@3.3.4:
     dependencies:
@@ -20815,6 +20802,8 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@14.0.0: {}
+
+  uuid@14.0.1: {}
 
   uuid@8.3.2: {}
 
