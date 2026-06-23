@@ -1,6 +1,6 @@
 services:
   libserver:
-    image: nginx:alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+    image: nginx:alpine@sha256:1a8724a52d432501548a8d8681bb1554c2d09778f8b9ed0882fc3442549980b7
     restart: on-failure
     ports:
       - "18082:80"
