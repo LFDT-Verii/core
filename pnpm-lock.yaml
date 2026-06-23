@@ -855,7 +855,7 @@ importers:
     dependencies:
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/crypto':
         specifier: workspace:*
         version: link:../crypto
@@ -872,8 +872,8 @@ importers:
         specifier: ^4.18.0
         version: 4.18.1
       mongodb:
-        specifier: ^7.1.1
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
     devDependencies:
       '@spencejs/spence-config':
         specifier: 1.1.0
@@ -1011,7 +1011,7 @@ importers:
         version: 5.2.6
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../auth
@@ -1110,8 +1110,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       mongodb:
-        specifier: ^7.1.1
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
       nock:
         specifier: 15.0.0-beta.11
         version: 15.0.0-beta.11
@@ -1141,7 +1141,7 @@ importers:
         version: 5.2.6
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../auth
@@ -1246,8 +1246,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       mongodb:
-        specifier: ^7.1.1
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -1280,7 +1280,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../auth
@@ -1384,8 +1384,8 @@ importers:
         specifier: ^4.18.0
         version: 4.18.1
       mongodb:
-        specifier: ^7.1.0
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
@@ -2010,7 +2010,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
@@ -2103,8 +2103,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: ^7.1.1
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
     devDependencies:
       '@spencejs/spence-config':
         specifier: 1.1.0
@@ -2189,7 +2189,7 @@ importers:
         version: 3.1045.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
@@ -2215,8 +2215,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: ^7.1.0
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
@@ -2450,8 +2450,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       mongodb:
-        specifier: ^7.1.1
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
@@ -2741,7 +2741,7 @@ importers:
         version: 5.2.6
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -2841,7 +2841,7 @@ importers:
         version: 17.6.0
       migrate-mongo:
         specifier: 14.0.7
-        version: 14.0.7(mongodb@7.1.1)
+        version: 14.0.7(mongodb@7.3.0)
       nodemon:
         specifier: 3.1.14
         version: 3.1.14
@@ -3065,7 +3065,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -3175,8 +3175,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: ^7.1.0
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
@@ -3243,7 +3243,7 @@ importers:
         version: 5.10.0
       migrate-mongo:
         specifier: 14.0.7
-        version: 14.0.7(mongodb@7.1.1)
+        version: 14.0.7(mongodb@7.3.0)
       nanoid-dictionary:
         specifier: 5.0.0
         version: 5.0.0
@@ -3303,7 +3303,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/base-contract-io':
         specifier: workspace:*
         version: link:../../packages/base-contract-io
@@ -3389,8 +3389,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: 7.1.1
-        version: 7.1.1
+        specifier: 7.3.0
+        version: 7.3.0
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
@@ -3451,7 +3451,7 @@ importers:
         version: 5.2.6
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.1.1)
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../../packages/common-functions
@@ -3501,8 +3501,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: ^7.1.0
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
@@ -3574,8 +3574,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: ^7.1.0
-        version: 7.1.1
+        specifier: ^7.3.0
+        version: 7.3.0
     devDependencies:
       '@verii/tests-helpers':
         specifier: workspace:*
@@ -9945,8 +9945,8 @@ packages:
     resolution: {integrity: sha512-h0AZ9A7IDVwwHyMxmdMXKy+9oNlF0zFoahHiX3vQ8e3KFcSP3VmsmfvtRSuLPxmyv2vjIDxqty8smTgie/SNRQ==}
     engines: {node: '>=20.19.0'}
 
-  mongodb@7.1.1:
-    resolution: {integrity: sha512-067DXiMjcpYQl6bGjWQoTUEE9UoRViTtKFcoqX7z08I+iDZv/emH1g8XEFiO3qiDfXAheT5ozl1VffDTKhIW/w==}
+  mongodb@7.3.0:
+    resolution: {integrity: sha512-WpCqSx7JAU9vcyjm/SU7ydnHls2YrfU3Y3sx4Ml9D7sPe4mXPlaapndiurDXrQ7/VvJkB4/i7b7WovHb8bd8sg==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.806.0
@@ -15644,13 +15644,13 @@ snapshots:
     dependencies:
       lodash: 4.18.1
 
-  '@spencejs/spence-mongo-repos@1.1.0(mongodb@7.1.1)':
+  '@spencejs/spence-mongo-repos@1.1.0(mongodb@7.3.0)':
     dependencies:
       '@spencejs/spence-events': 1.1.0
       fastify-plugin: 5.1.0
       http-errors: 2.0.1
       lodash: 4.18.1
-      mongodb: 7.1.1
+      mongodb: 7.3.0
 
   '@stylistic/eslint-plugin@5.10.0(eslint@9.39.4(jiti@2.7.0))':
     dependencies:
@@ -18975,11 +18975,11 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.1
 
-  migrate-mongo@14.0.7(mongodb@7.1.1):
+  migrate-mongo@14.0.7(mongodb@7.3.0):
     dependencies:
       cli-table3: 0.6.5
       commander: 14.0.3
-      mongodb: 7.1.1
+      mongodb: 7.3.0
 
   mime-db@1.52.0: {}
 
@@ -19069,7 +19069,7 @@ snapshots:
       '@types/whatwg-url': 13.0.0
       whatwg-url: 14.2.0
 
-  mongodb@7.1.1:
+  mongodb@7.3.0:
     dependencies:
       '@mongodb-js/saslprep': 1.4.6
       bson: 7.2.0
