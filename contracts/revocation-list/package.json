@@ -26,6 +26,6 @@
     "@verii/blockchain-functions": "workspace:*",
     "@verii/permissions-contract": "workspace:*",
     "@verii/signature-verification-library": "workspace:*",
-    "ethers": "^6.16.0"
+    "ethers": "^6.17.0"
   }
 }
