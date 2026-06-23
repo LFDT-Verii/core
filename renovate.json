@@ -45,10 +45,10 @@
       "matchDatasources": [
         "npm"
       ],
-      "matchCurrentValue": "/^(?![~^]?[1-9]\\d*\\.\\d+\\.\\d+$).+/",
+      "matchCurrentValue": "/(^[~^]?0\\.)|(^[~^]?[1-9]\\d*(\\.\\d+)?$)|(^[~^]?[1-9]\\d*\\.\\d+\\.\\d+[-+])|(^[^~^0-9])|([xX*<>=])|( - )|(\\|\\|)/",
       "rangeStrategy": "pin",
       "automerge": false,
-      "description": "Pre-1.0, prerelease, and other non-plain-stable npm values may break outside major-version semver guarantees, so pin them exactly and require review."
+      "description": "Pre-1.0, prerelease, and other non-plain-stable npm values may break outside major-version semver guarantees, so pin them exactly and require review using an RE2-compatible matcher."
     },
     {
       "matchPackageNames": [
