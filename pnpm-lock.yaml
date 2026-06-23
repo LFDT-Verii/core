@@ -1521,7 +1521,7 @@ importers:
         specifier: ~7.3.0
         version: 7.3.0
       statuses:
-        specifier: ~2.0.1
+        specifier: ~2.0.2
         version: 2.0.2
       toidentifier:
         specifier: ~1.0.1
