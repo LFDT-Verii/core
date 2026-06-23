@@ -16,6 +16,7 @@ Branch names are operational only. Production publishing does not require a bran
 - `main` is always the next minor release line.
 - Package manifests on `main` should stay at the latest stable release baseline for each group until a release-prep PR commits the next stable version.
 - Automatic prerelease publishing from `main` uses Nx `preminor`, so each group publishes a prerelease on its next minor line.
+- Manual prerelease publishing from `main` can use `prepatch` when the release manager needs a disposable patch prerelease from the current stable baseline, for example `credentialinghub` `2.0.0` to `2.0.1-pre.<epoch>.0`.
 - The initial Nx baselines are `platform` `1.1.3`, `credentialagent` `1.27.0`, `credentialinghub` `2.0.0`, and `sdk-nodejs` `2.9.0`, which produce `1.2.0-pre.<epoch>.0`, `1.28.0-pre.<epoch>.0`, `2.1.0-pre.<epoch>.0`, and `2.10.0-pre.<epoch>.0` respectively.
 - Patch branches start from released group tags, publish exact patch versions only, and never publish prerelease versions.
 - Next-major work happens on dedicated branches, for example `major/platform-2`, `major/sdk-nodejs-3`, or a repo-wide `major/2`.
@@ -62,11 +63,19 @@ A single prepare run can coordinate multiple groups by passing a comma-separated
 
 The workflow:
 
-1. Versions all active release groups with Nx `preminor` mode.
+1. Versions all active release groups with Nx `preminor` mode by default. Manual workflow runs can select `prepatch` for a patch prerelease.
 2. Uses `pre.<epoch-seconds>` as the prerelease id so newer builds sort after older builds.
 3. Publishes to npm with the `prerelease` dist-tag.
 4. Does not consume version plans.
 5. Fails if run from any branch other than `main`.
+
+To publish a credentialing hub patch prerelease from the current `2.0.0` baseline, run the workflow manually from `main` with:
+
+- `environment`: `prerelease`
+- `groups`: `credentialinghub`
+- `prerelease_bump`: `prepatch`
+
+That produces a package version like `2.0.1-pre.<epoch>.0` and does not create git tags or GitHub Releases.
 
 ## Preparing A Release
 
@@ -153,7 +162,7 @@ Patch branches do not publish prerelease versions. Keep releasing exact patch ve
 
 Run `.github/workflows/publish-packages.workflow.yml` manually from the commit to promote. All npm publishing stays in this existing workflow filename so npm Trusted Publisher configuration does not need to change.
 
-- `prerelease` publishes disposable prerelease versions from the selected commit with a `pre.<epoch-seconds>` prerelease id and the npm `prerelease` dist-tag.
+- `prerelease` publishes disposable prerelease versions from the selected commit with a `pre.<epoch-seconds>` prerelease id and the npm `prerelease` dist-tag. Manual runs default to `preminor` and can select `prepatch`.
 - `production` validates the checked-in release notes for each selected group, fails if any target group tag or GitHub Release already exists, publishes the exact package versions from the selected commit with the npm `latest` dist-tag, creates group git tags, and creates GitHub Releases from those notes.
 
 Prerelease publishing does not consume version plans and does not create tags or GitHub Releases. Production uses the package versions already committed by the prepare-release PR.
