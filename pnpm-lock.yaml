@@ -853,9 +853,6 @@ importers:
 
   packages/db-kms:
     dependencies:
-      '@spencejs/spence-mongo-repos':
-        specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
       '@verii/crypto':
         specifier: workspace:*
         version: link:../crypto
@@ -871,13 +868,13 @@ importers:
       lodash:
         specifier: ^4.18.0
         version: 4.18.1
-      mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
     devDependencies:
       '@spencejs/spence-config':
         specifier: 1.1.0
         version: 1.1.0
+      '@spencejs/spence-mongo-repos':
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.3.0)
       '@typescript-eslint/eslint-plugin':
         specifier: 8.59.2
         version: 8.59.2(@typescript-eslint/parser@8.59.2(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
@@ -926,6 +923,9 @@ importers:
       globals:
         specifier: 17.6.0
         version: 17.6.0
+      mongodb:
+        specifier: ^7.3.0
+        version: 7.3.0
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -1009,9 +1009,6 @@ importers:
       '@fastify/swagger-ui':
         specifier: ^5.2.6
         version: 5.2.6
-      '@spencejs/spence-mongo-repos':
-        specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../auth
@@ -1061,6 +1058,9 @@ importers:
       '@spencejs/spence-factories':
         specifier: ^1.1.0
         version: 1.1.0
+      '@spencejs/spence-mongo-repos':
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/crypto':
         specifier: workspace:*
         version: link:../crypto
@@ -1139,9 +1139,6 @@ importers:
       '@fastify/swagger-ui':
         specifier: ^5.2.6
         version: 5.2.6
-      '@spencejs/spence-mongo-repos':
-        specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../auth
@@ -1203,6 +1200,9 @@ importers:
       '@spencejs/spence-factories':
         specifier: ^1.1.0
         version: 1.1.0
+      '@spencejs/spence-mongo-repos':
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
@@ -1278,9 +1278,6 @@ importers:
       '@spencejs/spence-factories':
         specifier: ^1.1.0
         version: 1.1.0
-      '@spencejs/spence-mongo-repos':
-        specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../auth
@@ -1383,9 +1380,6 @@ importers:
       lodash:
         specifier: ^4.18.0
         version: 4.18.1
-      mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
       nanoid:
         specifier: ^5.1.14
         version: 5.1.15
@@ -1399,6 +1393,9 @@ importers:
       '@aws-sdk/client-ses':
         specifier: 3.1045.0
         version: 3.1045.0
+      '@spencejs/spence-mongo-repos':
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/error-aggregation':
         specifier: workspace:*
         version: link:../error-aggregation
@@ -1447,6 +1444,9 @@ importers:
       globals:
         specifier: 17.6.0
         version: 17.6.0
+      mongodb:
+        specifier: ^7.3.0
+        version: 7.3.0
       nock:
         specifier: 15.0.0-beta.11
         version: 15.0.0-beta.11
@@ -2008,9 +2008,6 @@ importers:
       '@spencejs/spence-events':
         specifier: ^1.1.0
         version: 1.1.0
-      '@spencejs/spence-mongo-repos':
-        specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
@@ -2042,6 +2039,9 @@ importers:
         specifier: ^5.1.14
         version: 5.1.15
     devDependencies:
+      '@spencejs/spence-mongo-repos':
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.3.0)
       '@verii/config':
         specifier: workspace:*
         version: link:../config
@@ -2087,6 +2087,9 @@ importers:
       h2url:
         specifier: 0.2.0
         version: 0.2.0
+      mongodb:
+        specifier: ^7.3.0
+        version: 7.3.0
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -2102,9 +2105,6 @@ importers:
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
-      mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
     devDependencies:
       '@spencejs/spence-config':
         specifier: 1.1.0
@@ -2142,6 +2142,9 @@ importers:
       globals:
         specifier: 17.6.0
         version: 17.6.0
+      mongodb:
+        specifier: ^7.3.0
+        version: 7.3.0
       nanoid:
         specifier: ^5.1.14
         version: 5.1.15
@@ -2187,9 +2190,6 @@ importers:
       '@aws-sdk/client-s3':
         specifier: 3.1045.0
         version: 3.1045.0
-      '@spencejs/spence-mongo-repos':
-        specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
@@ -2214,13 +2214,13 @@ importers:
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
-      mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
       nanoid:
         specifier: ^5.1.14
         version: 5.1.15
     devDependencies:
+      '@spencejs/spence-mongo-repos':
+        specifier: ^1.1.0
+        version: 1.1.0(mongodb@7.3.0)
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -2248,6 +2248,9 @@ importers:
       globals:
         specifier: 17.6.0
         version: 17.6.0
+      mongodb:
+        specifier: ^7.3.0
+        version: 7.3.0
       prettier:
         specifier: 3.8.3
         version: 3.8.3
