@@ -252,8 +252,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       twilio:
-        specifier: ^5.10.1
-        version: 5.12.2
+        specifier: ^5.13.1
+        version: 5.13.1
     devDependencies:
       '@verii/crypto':
         specifier: workspace:*
@@ -11172,8 +11172,8 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  twilio@5.12.2:
-    resolution: {integrity: sha512-yjTH04Ig0Z3PAxIXhwrto0IJC4Gv7lBDQQ9f4/P9zJhnxVdd+3tENqBMJOtdmmRags3X0jl2IGKEQefCEpJE9g==}
+  twilio@5.13.1:
+    resolution: {integrity: sha512-sT+PkhptF4Mf7t8eXFFvPQx4w5VHnBIPXbltGPMFRe+R2GxfRdMuFbuNA/cEm0aQR6LFQOn33+fhClg+TjRVqQ==}
     engines: {node: '>=14.0'}
 
   type-check@0.4.0:
@@ -20584,13 +20584,13 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  twilio@5.12.2:
+  twilio@5.13.1:
     dependencies:
       axios: 1.15.2(debug@4.4.3)
       dayjs: 1.11.19
       https-proxy-agent: 5.0.1
       jsonwebtoken: 9.0.3
-      qs: 6.15.1
+      qs: 6.15.2
       scmp: 2.1.0
       xmlbuilder: 13.0.2
     transitivePeerDependencies:
