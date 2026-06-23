@@ -18,7 +18,7 @@
     "access": "public"
   },
   "dependencies": {
-    "ethers": "^6.16.0",
+    "ethers": "^6.17.0",
     "@verii/crypto": "workspace:*",
     "@verii/contract-permissions": "workspace:*",
     "@verii/metadata-registration": "workspace:*"
