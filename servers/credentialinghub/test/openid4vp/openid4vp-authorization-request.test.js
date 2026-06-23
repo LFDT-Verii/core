@@ -492,7 +492,7 @@ const expectedAuthorizationRequestPayload = (
   requestId,
   walletNonce,
 ) => ({
-  aud: `${tenant.hostUrl}/r/${tenant._id}/openid4vp/authorization-request/${requestId}`,
+  aud: 'https://self-issued.me/v2',
   client_id: `decentralized_identifier:${tenant.did}`,
   client_metadata: {
     client_name: tenant.name,
