@@ -14,13 +14,6 @@ on:
         type: string
         description: Comma-separated release groups to publish
         default: platform,credentialagent,credentialinghub,sdk-nodejs
-      prerelease_bump:
-        type: choice
-        description: Version bump for prerelease publishing
-        default: preminor
-        options:
-          - preminor
-          - prepatch
   push:
     branches: [main]
     paths:
@@ -47,7 +40,6 @@ jobs:
       id-token: write
     env:
       RELEASE_GROUPS: ${{ github.event_name == 'workflow_dispatch' && inputs.groups || 'platform,credentialagent,credentialinghub,sdk-nodejs' }}
-      PRERELEASE_BUMP: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease_bump || 'preminor' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -71,25 +63,15 @@ jobs:
             echo "Prerelease publishes are only allowed from main."
             exit 1
           fi
-
-          case "${PRERELEASE_BUMP}" in
-            preminor|prepatch) ;;
-            *)
-              echo "Unsupported prerelease bump: ${PRERELEASE_BUMP}"
-              exit 1
-              ;;
-          esac
       - name: Derive prerelease id
         id: prerelease-version
         shell: bash
         run: echo "preid=pre.$(date +%s)" >> "$GITHUB_OUTPUT"
       - name: Version prerelease packages
         run: >-
-          pnpm exec nx release version "${PRERELEASE_BUMP}"
+          node tools/release/version-prerelease.js
           --groups "${RELEASE_GROUPS}"
           --preid "${{ steps.prerelease-version.outputs.preid }}"
-          --git-commit=false
-          --git-tag=false
       - name: Publish prerelease packages
         run: >-
           pnpm exec nx release publish

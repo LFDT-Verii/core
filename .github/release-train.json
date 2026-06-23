@@ -1,0 +1,21 @@
+{
+  "kind": "verii-release-train",
+  "groups": {
+    "platform": {
+      "bump": "minor",
+      "targetVersion": "1.2.0"
+    },
+    "credentialagent": {
+      "bump": "minor",
+      "targetVersion": "1.28.0"
+    },
+    "credentialinghub": {
+      "bump": "patch",
+      "targetVersion": "2.0.1"
+    },
+    "sdk-nodejs": {
+      "bump": "minor",
+      "targetVersion": "2.11.0"
+    }
+  }
+}
