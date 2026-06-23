@@ -43,7 +43,7 @@
     "eslint-watch": "8.0.0",
     "expect": "30.4.1",
     "globals": "17.6.0",
-    "nanoid": "^5.1.11",
+    "nanoid": "^5.1.14",
     "nock": "15.0.0-beta.11",
     "prettier": "3.8.3",
     "undici": "^7.25.0"

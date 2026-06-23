@@ -461,8 +461,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -1052,8 +1052,8 @@ importers:
         specifier: ^4.18.0
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
     devDependencies:
       '@aws-sdk/client-s3':
         specifier: 3.1045.0
@@ -1387,8 +1387,8 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       sprintf-js:
         specifier: 1.1.3
         version: 1.1.3
@@ -1637,8 +1637,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       undici:
         specifier: ^7.25.0
         version: 7.28.0
@@ -1716,8 +1716,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -1777,8 +1777,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -1918,8 +1918,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
 
   packages/organizations-registry:
     dependencies:
@@ -2039,8 +2039,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
     devDependencies:
       '@verii/config':
         specifier: workspace:*
@@ -2143,8 +2143,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -2218,8 +2218,8 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
     devDependencies:
       eslint:
         specifier: 9.39.4
@@ -2453,8 +2453,8 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       prettier:
         specifier: 3.8.3
         version: 3.8.3
@@ -2541,8 +2541,8 @@ importers:
         specifier: 17.6.0
         version: 17.6.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       nock:
         specifier: 15.0.0-beta.11
         version: 15.0.0-beta.11
@@ -3178,8 +3178,8 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       nock:
         specifier: 15.0.0-beta.11
         version: 15.0.0-beta.11
@@ -3392,8 +3392,8 @@ importers:
         specifier: 7.3.0
         version: 7.3.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
     devDependencies:
       '@verii/metadata-registration':
         specifier: workspace:*
@@ -3504,8 +3504,8 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
     devDependencies:
       '@spencejs/spence-factories':
         specifier: ^1.1.0
@@ -3653,8 +3653,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
       strip-bom-stream:
         specifier: ^4.0.0
         version: 4.0.0
@@ -3732,8 +3732,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       nanoid:
-        specifier: ^5.1.11
-        version: 5.1.11
+        specifier: ^5.1.14
+        version: 5.1.15
     devDependencies:
       eslint:
         specifier: 9.39.4
@@ -9986,8 +9986,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.1.11:
-    resolution: {integrity: sha512-v+KEsUv2ps74PaSKv0gHTxTCgMXOIfBEbaqa6w6ISIGC7ZsvHN4N9oJ8d4cmf0n5oTzQz2SLmThbQWhjd/8eKg==}
+  nanoid@5.1.15:
+    resolution: {integrity: sha512-kBg3RpGtIe+RpTbyXwoI6pk5yD7KUiI3sygUqgeBMRst42KmhB4RZC7eiO9Wa1HIpaCCtpE2DJ6OI4Wi5ebwFw==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -19083,7 +19083,7 @@ snapshots:
 
   nanoid@3.3.15: {}
 
-  nanoid@5.1.11: {}
+  nanoid@5.1.15: {}
 
   napi-postinstall@0.3.4: {}
 
