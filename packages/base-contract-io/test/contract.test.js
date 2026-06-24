@@ -20,6 +20,7 @@ const {
   beforeEach,
   describe,
   it,
+  mock,
 } = require('node:test');
 const { expect } = require('expect');
 
@@ -95,21 +96,27 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
 
     it('Create a client', async () => {
       const { privateKey } = generateKeyPair({ format: 'jwk' });
+      const contractAddress = await contractInstance.getAddress();
+      const log = { info: mock.fn() };
 
       contractClient = await initContractClient(
         {
           privateKey,
-          contractAddress: await contractInstance.getAddress(),
+          contractAddress,
           contractAbi: testEventsAbi,
           rpcProvider,
         },
-        context,
+        { ...context, log },
       );
 
       expect(contractClient.wallet.provider).toEqual(rpcProvider);
       expect(contractClient.contractClient.runner.provider).toEqual(
         rpcProvider,
       );
+      expect(log.info.mock.calls.map((call) => call.arguments)).toEqual([
+        [{ contractAddress }, 'initContractClient'],
+        ['initContractClient done'],
+      ]);
     });
   });
 

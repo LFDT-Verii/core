@@ -72,7 +72,7 @@ const initContractClient = async (
   { privateKey, contractAddress, rpcProvider, contractAbi, cacheSigner = true },
   context,
 ) => {
-  context.log.info({ privateKey, contractAddress }, 'initContractClient');
+  context.log.info({ contractAddress }, 'initContractClient');
   if (!contractAddress) {
     throw new Error('Check the required parameters: contractAddress');
   }
