@@ -1,4 +1,4 @@
-const { hexFromJwk } = require('@verii/jwt');
+const { hexFromJwk } = require('@verii/crypto');
 const { omit, isEmpty } = require('lodash/fp');
 
 /* eslint-disable better-mutation/no-mutation */

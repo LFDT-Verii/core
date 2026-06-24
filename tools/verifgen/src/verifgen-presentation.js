@@ -1,13 +1,9 @@
 const { program } = require('commander');
 const { map, isEmpty } = require('lodash/fp');
 const { nanoid } = require('nanoid');
-const {
-  generatePresentationJwt,
-  toJwk,
-  publicKeyFromPrivateKey,
-} = require('@verii/jwt');
+const { generatePresentationJwt, toJwk } = require('@verii/jwt');
 const { mapWithIndex } = require('@verii/common-functions');
-const { generateKeyPair } = require('@verii/crypto');
+const { generateKeyPair, publicKeyFromPrivateKey } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { VeriiProtocolVersions } = require('@verii/vc-checks');
 

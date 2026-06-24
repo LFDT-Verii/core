@@ -34,7 +34,7 @@ mock.module('@verii/metadata-registration', {
     }),
   },
 });
-const { generateKeyPair, encrypt } = require('@verii/crypto');
+const { generateKeyPair, encrypt, hexFromJwk } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { ObjectId } = require('mongodb');
 const { applyOverrides } = require('@verii/common-functions');
@@ -45,7 +45,7 @@ const {
 
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
-const { jwtSign, hexFromJwk, tamperJwt, jwtDecode } = require('@verii/jwt');
+const { jwtSign, tamperJwt, jwtDecode } = require('@verii/jwt');
 const { NANO_ID_FORMAT, DID_FORMAT } = require('@verii/test-regexes');
 const { mongoify } = require('@verii/tests-helpers');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');

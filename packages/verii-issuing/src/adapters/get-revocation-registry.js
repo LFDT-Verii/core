@@ -17,9 +17,8 @@
 
 /** @import { Issuer, Context } from "../../types/types" */
 
-const { hexFromJwk } = require('@verii/jwt');
 const { initRevocationRegistry } = require('@verii/metadata-registration');
-const { initCallWithKmsKey } = require('@verii/crypto');
+const { initCallWithKmsKey, hexFromJwk } = require('@verii/crypto');
 
 /**
  * Get revocation registry

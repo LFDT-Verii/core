@@ -16,9 +16,9 @@
  */
 
 const { nanoid } = require('nanoid');
-const { generateKeyPair } = require('@verii/crypto');
+const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
-const { hexFromJwk } = require('@verii/jwt');
+
 const { createExampleDid } = require('./create-example-did');
 
 const entityFactory = ({ service = [], key = [], ...values } = {}) => {

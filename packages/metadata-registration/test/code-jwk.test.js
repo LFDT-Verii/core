@@ -22,8 +22,10 @@ const {
   encrypt,
   encryptBuffer,
   decrypt,
+  hexFromJwk,
+  jwkFromSecp256k1Key,
 } = require('@verii/crypto');
-const { hexFromJwk, jwkFromSecp256k1Key } = require('@verii/jwt');
+
 const { encodeJwk, decodeJwk } = require('../src/code-jwk');
 const { ALG_TYPE } = require('../src/constants');
 

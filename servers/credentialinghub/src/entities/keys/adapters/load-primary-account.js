@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const { hexFromJwk } = require('@verii/jwt');
+const { hexFromJwk } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { initPermissions } = require('@verii/contract-permissions');
 

@@ -49,7 +49,7 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { getUnixTime, subYears, subDays } = require('date-fns/fp');
 const { nanoid } = require('nanoid');
 const { mapWithIndex, wait } = require('@verii/common-functions');
-const { jwtDecode, jwtSign, hexFromJwk, jwkThumbprint } = require('@verii/jwt');
+const { jwtDecode, jwtSign, jwkThumbprint } = require('@verii/jwt');
 const {
   VeriiProtocolVersions,
   VelocityRevocationListType,
@@ -83,7 +83,7 @@ const {
   jsonify,
   errorResponseMatcher,
 } = require('@verii/tests-helpers');
-const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
+const { KeyPurposes, generateKeyPair, hexFromJwk } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { hashOffer } = require('@verii/verii-issuing');
 const buildFastify = require('./helpers/credentialagent-holder-build-fastify');

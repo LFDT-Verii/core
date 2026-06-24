@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-const {
-  generateDocJwt,
-  jwtVerify,
-  jwkFromSecp256k1Key,
-} = require('@verii/jwt');
+const { jwkFromSecp256k1Key } = require('@verii/crypto');
+const { generateDocJwt, jwtVerify } = require('@verii/jwt');
 const { extractVerificationKey } = require('@verii/did-doc');
 
 const isMatchingPrivateKeyKid = async (doc, key, kid) => {

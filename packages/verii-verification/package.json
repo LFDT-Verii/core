@@ -19,6 +19,7 @@
   "dependencies": {
     "@verii/common-fetchers": "workspace:*",
     "@verii/common-functions": "workspace:*",
+    "@verii/crypto": "workspace:*",
     "@verii/did-doc": "workspace:*",
     "@verii/http-client": "workspace:*",
     "@verii/jwt": "workspace:*",
@@ -28,7 +29,6 @@
     "lodash": "^4.18.1"
   },
   "devDependencies": {
-    "@verii/crypto": "workspace:*",
     "@verii/sample-data": "workspace:*",
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",

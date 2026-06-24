@@ -17,8 +17,6 @@
   "author": "Yuaheni Pozdnyakov",
   "license": "Apache-2.0",
   "dependencies": {
-    "@trust/keyto": "~2.0.0-alpha1",
-    "@verii/test-regexes": "workspace:*",
     "argon2": "0.44.0",
     "bigint-crypto-utils": "3.3.0",
     "canonicalize": "^2.1.0",
@@ -28,6 +26,7 @@
     "random-number-csprng": "^1.0.2"
   },
   "devDependencies": {
+    "@verii/test-regexes": "workspace:*",
     "eslint": "9.39.4",
     "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",

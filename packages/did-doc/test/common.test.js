@@ -20,8 +20,12 @@ const { expect } = require('expect');
 const { default: bs58 } = require('bs58');
 const { last } = require('lodash/fp');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
-const { generateKeyPair, signPayload } = require('@verii/crypto');
-const { jwkFromSecp256k1Key } = require('@verii/jwt');
+const {
+  generateKeyPair,
+  signPayload,
+  jwkFromSecp256k1Key,
+} = require('@verii/crypto');
+
 const { rootPrivateKey } = require('@verii/sample-data');
 const {
   verificationKeyType,

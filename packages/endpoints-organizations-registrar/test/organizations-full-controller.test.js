@@ -159,8 +159,9 @@ const {
   KeyPurposes,
   generateKeyPair,
   decryptCollection,
+  hexFromJwk,
 } = require('@verii/crypto');
-const { decodeCredentialJwt, hexFromJwk } = require('@verii/jwt');
+const { decodeCredentialJwt } = require('@verii/jwt');
 const { mapWithIndex, runSequentially } = require('@verii/common-functions');
 const { toRelativeKeyId } = require('@verii/did-doc');
 const {

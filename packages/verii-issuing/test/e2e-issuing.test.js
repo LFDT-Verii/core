@@ -35,7 +35,8 @@ const {
 } = require('@verii/metadata-registration/test/helpers/deploy-contracts');
 
 const { nanoid } = require('nanoid');
-const { hexFromJwk, jwtSign, jwtDecode } = require('@verii/jwt');
+const { hexFromJwk } = require('@verii/crypto');
+const { jwtSign, jwtDecode } = require('@verii/jwt');
 const { MongoClient } = require('mongodb');
 const { map } = require('lodash/fp');
 const { collectionClient } = require('./helpers/collection-client');

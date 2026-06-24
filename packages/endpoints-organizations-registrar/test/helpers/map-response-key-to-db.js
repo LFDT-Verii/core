@@ -1,4 +1,4 @@
-const { jwkFromSecp256k1Key } = require('@verii/jwt');
+const { jwkFromSecp256k1Key } = require('@verii/crypto');
 const { omit } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
 const { expect } = require('expect');

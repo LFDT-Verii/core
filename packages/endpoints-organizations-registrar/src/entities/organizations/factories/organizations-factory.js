@@ -19,11 +19,12 @@ const { compact, filter, flow, map } = require('lodash/fp');
 const { register } = require('@spencejs/spence-factories');
 const { createDidDoc, toRelativeServiceId } = require('@verii/did-doc');
 const { categorizeServices } = require('@verii/organizations-registry');
-const { hexFromJwk } = require('@verii/jwt');
+
 const {
   KeyPurposes,
   generateKeyPair,
   KeyAlgorithms,
+  hexFromJwk,
 } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 

@@ -1,6 +1,6 @@
 const { isString, isEmpty } = require('lodash/fp');
 const ethers = require('ethers');
-const { hexFromJwk } = require('@verii/jwt');
+const { hexFromJwk } = require('@verii/crypto');
 
 const toEthereumAddress = (key) => {
   if (isString(key)) {

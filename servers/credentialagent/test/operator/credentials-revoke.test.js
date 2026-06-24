@@ -34,10 +34,10 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 
 const nock = require('../helpers/nock');
 const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
-const { generateKeyPair, KeyPurposes } = require('@verii/crypto');
+const { generateKeyPair, KeyPurposes, hexFromJwk } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { ObjectId } = require('mongodb');
-const { hexFromJwk } = require('@verii/jwt');
+
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
 const {
   initOfferFactory,

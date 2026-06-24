@@ -19,9 +19,12 @@ const crypto = require('crypto');
 const argon2 = require('argon2');
 const { flow, isString, omit } = require('lodash/fp');
 const randomNumber = require('random-number-csprng');
-const keyto = require('@trust/keyto');
-const { HEX_FORMAT } = require('@verii/test-regexes');
 const { KeyAlgorithms } = require('./constants');
+const {
+  HEX_FORMAT,
+  hexFromJwk,
+  jwkFromSecp256k1Key,
+} = require('./key-transformer');
 
 const secp256k1 = new EC('secp256k1');
 
@@ -83,8 +86,8 @@ const generateKeyPair = (options = {}) => {
 
   if (format === 'hex') {
     return {
-      privateKey: keyto.from(privateKey, 'jwk').toString('blk', 'private'),
-      publicKey: keyto.from(publicKey, 'jwk').toString('blk', 'public'),
+      privateKey: hexFromJwk(privateKey),
+      publicKey: hexFromJwk(publicKey, false),
     };
   }
 
@@ -128,9 +131,6 @@ const prepareSignedValue = (payload, options) => {
   return hashAndEncodeHex(`${hexOptions}${hexPayload}`);
 };
 
-const publicKeyHexToPem = (publicKey) =>
-  keyto.from(publicKey, 'blk').toString('pem', 'public_pkcs8');
-
 const sanitizeOptions = (options) => {
   const objOptions = !isString(options) ? options : JSON.parse(options);
   return omit(['jws'], objOptions);
@@ -154,29 +154,22 @@ const get2BytesHash = (value) => {
 };
 
 const signAndEncodeBase64 = (value, privateKey) => {
-  const privateKeyPem = keyto
-    .from(privateKey, 'blk')
-    .toString('pem', 'private_pkcs8');
-  return crypto
-    .createSign('SHA256')
-    .update(value)
-    .sign({
-      key: privateKeyPem,
-    })
-    .toString('base64');
+  const key = crypto.createPrivateKey({
+    key: omit(['use'], jwkFromSecp256k1Key(privateKey)),
+    format: 'jwk',
+  });
+  return crypto.createSign('SHA256').update(value).sign(key).toString('base64');
 };
 
 const verifyBase64Signature = (value, signature, publicKey) => {
+  const key = crypto.createPublicKey({
+    key: omit(['use'], jwkFromSecp256k1Key(publicKey, false)),
+    format: 'jwk',
+  });
   return crypto
     .createVerify('SHA256')
     .update(value)
-    .verify(
-      {
-        key: publicKeyHexToPem(publicKey),
-      },
-      signature,
-      'base64',
-    );
+    .verify(key, signature, 'base64');
 };
 
 const encryptBuffer = (buffer, secret) =>
@@ -258,7 +251,6 @@ module.exports = {
   generateRandomBytes,
   generateKeyPair,
   generatePositive256BitHexString,
-  publicKeyHexToPem,
   encrypt,
   decrypt,
   encryptBuffer,

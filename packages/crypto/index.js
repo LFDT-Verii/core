@@ -18,6 +18,7 @@ const { encrypt, decrypt } = require('./src/crypto');
 
 module.exports = {
   ...require('./src/crypto'),
+  ...require('./src/key-transformer'),
   ...require('./src/constants'),
   ...require('./src/call-with-kms-key'),
   encryptCollection: encrypt,

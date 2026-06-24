@@ -5,8 +5,8 @@ const fs = require('fs').promises;
 const os = require('os');
 const path = require('path');
 
-const { generateKeyPair } = require('@verii/crypto');
-const { jwtVerify, jwkFromSecp256k1Key } = require('@verii/jwt');
+const { generateKeyPair, jwkFromSecp256k1Key } = require('@verii/crypto');
+const { jwtVerify } = require('@verii/jwt');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { generateProof } = require('../src/verifgen-proof/generate-proof');
 

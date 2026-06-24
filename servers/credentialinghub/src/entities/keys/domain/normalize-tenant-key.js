@@ -16,8 +16,12 @@
  */
 const { omit } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
-const { publicKeyFromPrivateKey, jwkFromSecp256k1Key } = require('@verii/jwt');
-const { KeyEncodings } = require('@verii/crypto');
+
+const {
+  KeyEncodings,
+  publicKeyFromPrivateKey,
+  jwkFromSecp256k1Key,
+} = require('@verii/crypto');
 
 const normalizeTenantKey = (key) => {
   const privateJwk = key.jwk != null ? key.jwk : jwkFromSecp256k1Key(key.key);

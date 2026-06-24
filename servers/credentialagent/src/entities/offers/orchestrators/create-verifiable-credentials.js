@@ -16,9 +16,9 @@
 
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { mapWithIndex } = require('@verii/common-functions');
-const { KeyPurposes, calcSha384 } = require('@verii/crypto');
+const { KeyPurposes, calcSha384, hexFromJwk } = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');
-const { hexFromJwk, jwtDecode } = require('@verii/jwt');
+const { jwtDecode } = require('@verii/jwt');
 const {
   issueVeriiCredentials,
   mongoAllocationListQueries,

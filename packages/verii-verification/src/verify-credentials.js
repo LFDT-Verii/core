@@ -31,7 +31,8 @@ const {
   toLower,
   uniq,
 } = require('lodash/fp');
-const { buildDecodedCredential, jwtDecode, hexFromJwk } = require('@verii/jwt');
+const { hexFromJwk } = require('@verii/crypto');
+const { buildDecodedCredential, jwtDecode } = require('@verii/jwt');
 const {
   initMetadataRegistry,
   initVerificationCoupon,
