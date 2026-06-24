@@ -22,7 +22,6 @@
     "@verii/common-functions": "workspace:*",
     "@verii/cose-key": "workspace:*",
     "@verii/crypto": "workspace:*",
-    "@verii/jwt": "workspace:*",
     "@verii/contract-permissions": "workspace:*",
     "eth-url-parser": "^1.0.4",
     "lodash": "^4.18.1"

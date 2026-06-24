@@ -258,9 +258,6 @@ importers:
       '@verii/crypto':
         specifier: workspace:*
         version: link:../crypto
-      '@verii/jwt':
-        specifier: workspace:*
-        version: link:../jwt
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -743,9 +740,6 @@ importers:
 
   packages/crypto:
     dependencies:
-      '@verii/test-regexes':
-        specifier: workspace:*
-        version: link:../test-regexes
       argon2:
         specifier: 0.44.0
         version: 0.44.0
@@ -768,6 +762,9 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
     devDependencies:
+      '@verii/test-regexes':
+        specifier: workspace:*
+        version: link:../test-regexes
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -1889,9 +1886,6 @@ importers:
       '@verii/crypto':
         specifier: workspace:*
         version: link:../crypto
-      '@verii/jwt':
-        specifier: workspace:*
-        version: link:../jwt
       eth-url-parser:
         specifier: ^1.0.4
         version: 1.0.4

@@ -92,6 +92,12 @@ describe('Key Transformer Tests', () => {
     expect(hexFromJwk(PRIVATE_JWK, true)).toEqual(PRIVATE_KEY);
   });
 
+  it('should throw when private hex is requested for public jwk', () => {
+    expect(() => hexFromJwk(PUBLIC_JWK, true)).toThrow(
+      'Expected private JWK with d property',
+    );
+  });
+
   it('should preserve padding when generating hex for padded jwk private keys', () => {
     expect(hexFromJwk(PRIVATE_JWK_WITH_PADDING, true)).toEqual(
       PRIVATE_KEY_WITH_PADDING,

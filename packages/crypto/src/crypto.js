@@ -19,9 +19,12 @@ const crypto = require('crypto');
 const argon2 = require('argon2');
 const { flow, isString, omit } = require('lodash/fp');
 const randomNumber = require('random-number-csprng');
-const { HEX_FORMAT } = require('@verii/test-regexes');
 const { KeyAlgorithms } = require('./constants');
-const { hexFromJwk, jwkFromSecp256k1Key } = require('./key-transformer');
+const {
+  HEX_FORMAT,
+  hexFromJwk,
+  jwkFromSecp256k1Key,
+} = require('./key-transformer');
 
 const secp256k1 = new EC('secp256k1');
 

@@ -85,6 +85,9 @@ const jwkFromSecp256k1Key = (key, priv = true) => {
 
 const hexFromJwk = (jwk, priv = true) => {
   if (priv) {
+    if (jwk?.d == null) {
+      throw new Error('Expected private JWK with d property');
+    }
     return normalizeCoordinateHex(base64UrlToHex(jwk.d));
   }
   return `04${normalizeCoordinateHex(base64UrlToHex(jwk.x))}${normalizeCoordinateHex(base64UrlToHex(jwk.y))}`;
@@ -98,6 +101,7 @@ const publicKeyFromPrivateKey = (key) => {
 };
 
 module.exports = {
+  HEX_FORMAT,
   hexFromJwk,
   jwkFromSecp256k1Key,
   publicKeyFromPrivateKey,
