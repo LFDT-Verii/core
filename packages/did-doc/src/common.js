@@ -17,12 +17,7 @@
 const newError = require('http-errors');
 const { default: bs58 } = require('bs58');
 const { find, isNil, reduce } = require('lodash/fp');
-const {
-  signPayload,
-  generateKeyPair,
-  hexFromJwk,
-  jwkFromSecp256k1Key,
-} = require('@verii/crypto');
+const { signPayload, generateKeyPair, hexFromJwk } = require('@verii/crypto');
 
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 
@@ -34,7 +29,9 @@ const signatureKeyType = 'EcdsaSecp256k1Signature2019';
 const generateDidInfo = (
   { did: existingDid, keyId } = { did: null, keyId: 'key-1' },
 ) => {
-  const { privateKey, publicKey } = generateKeyPair();
+  const { privateKey, publicKey } = generateKeyPair({
+    format: 'jwk',
+  });
   const did = existingDid || `did:velocity:${toEthereumAddress(publicKey)}`;
   const kid = `${did}#${keyId}`;
 
@@ -119,14 +116,6 @@ const publicKeyToHex = (publicKey) => {
   throw newError(500, 'unsupported public key encoding', { publicKey });
 };
 
-const publicKeyToJwk = (publicKey) => {
-  if (publicKey?.publicKeyHex) {
-    return jwkFromSecp256k1Key(publicKey.publicKeyHex, false);
-  }
-
-  return publicKey?.publicKeyJwk;
-};
-
 const initExtractKeyByMethod = (keyHolderProp) => (didDoc, kid) => {
   const publicKey = extractPublicKeyMethod(didDoc, kid, keyHolderProp);
   if (publicKey == null) {
@@ -167,5 +156,4 @@ module.exports = {
   generateProof,
   extractVerificationKey,
   extractVerificationMethod,
-  publicKeyToJwk,
 };

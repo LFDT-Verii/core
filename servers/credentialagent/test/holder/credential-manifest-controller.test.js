@@ -81,10 +81,10 @@ describe('get credential manifests', () => {
     await mongoDb().collection('exchanges').deleteMany({});
 
     tenant = await persistTenant();
-    const { publicKey } = generateKeyPair();
+    const { publicKey: publicJwk } = generateKeyPair({ format: 'jwk' });
     orgDidDoc = {
       id: tenant.did,
-      publicKey: [{ id: `${tenant.did}#key-1`, publicKeyHex: publicKey }],
+      publicKey: [{ id: `${tenant.did}#key-1`, publicKeyJwk: publicJwk }],
       service: [
         {
           id: `${tenant.did}#service-1`,
@@ -1043,11 +1043,11 @@ describe('get credential manifests', () => {
     it("should 200, when route has a tenant's did alias", async () => {
       const didAlias = 'did:aka:foo';
       const customTenant = await persistTenant({ dids: [didAlias] });
-      const { publicKey } = generateKeyPair();
+      const { publicKey: publicJwk } = generateKeyPair({ format: 'jwk' });
       const customOrgDidDoc = {
         id: customTenant.did,
         publicKey: [
-          { id: `${customTenant.did}#key-1`, publicKeyHex: publicKey },
+          { id: `${customTenant.did}#key-1`, publicKeyJwk: publicJwk },
         ],
         service: [
           {
@@ -1679,11 +1679,11 @@ describe('get credential manifests', () => {
 
     it('should 200, when no disclosureId, no exchangeId nor types are passed', async () => {
       const customTenant = await persistTenant();
-      const { publicKey } = generateKeyPair();
+      const { publicKey: publicJwk } = generateKeyPair({ format: 'jwk' });
       const customOrgDidDoc = {
         id: customTenant.did,
         publicKey: [
-          { id: `${customTenant.did}#key-1`, publicKeyHex: publicKey },
+          { id: `${customTenant.did}#key-1`, publicKeyJwk: publicJwk },
         ],
         service: [
           {

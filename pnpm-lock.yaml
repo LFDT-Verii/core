@@ -300,6 +300,9 @@ importers:
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
+      '@verii/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@verii/http-client':
         specifier: workspace:*
         version: link:../http-client
@@ -319,9 +322,6 @@ importers:
       '@spencejs/spence-config':
         specifier: 1.1.0
         version: 1.1.0
-      '@verii/crypto':
-        specifier: workspace:*
-        version: link:../crypto
       '@verii/tests-helpers':
         specifier: workspace:*
         version: link:../tests-helpers

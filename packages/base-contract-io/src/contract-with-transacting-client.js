@@ -1,13 +1,20 @@
 const { Wallet } = require('ethers');
-const { signArguments } = require('@verii/blockchain-functions');
+const {
+  generateAccount,
+  signArguments,
+} = require('@verii/blockchain-functions');
 const { initContractClient } = require('./contract');
+const { toEthersPrivateKey } = require('./private-key');
 
 const initContractWithTransactingClient = async (
   { privateKey, contractAddress, rpcProvider, contractAbi },
   context,
 ) => {
-  const transactingWallet = Wallet.createRandom();
-  const operatorWallet = new Wallet(privateKey, rpcProvider);
+  const transactingWallet = generateAccount();
+  const operatorWallet = new Wallet(
+    toEthersPrivateKey(privateKey),
+    rpcProvider,
+  );
   return {
     transactingClient: await initContractClient(
       {

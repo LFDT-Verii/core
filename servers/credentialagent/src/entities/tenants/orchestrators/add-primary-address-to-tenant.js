@@ -15,7 +15,7 @@
  */
 
 const { initPermissions } = require('@verii/contract-permissions');
-const { KeyPurposes, decrypt, hexFromJwk } = require('@verii/crypto');
+const { KeyPurposes, decrypt } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 
 const addPrimaryAddressToTenant = async ({ _id }, context) => {
@@ -27,7 +27,7 @@ const addPrimaryAddressToTenant = async ({ _id }, context) => {
   };
   const keyDatum = await repos.keys.collection().findOne(filter);
   const stringifiedKey = decrypt(keyDatum.key, context.config.mongoSecret);
-  const privateKey = hexFromJwk(JSON.parse(stringifiedKey));
+  const privateKey = JSON.parse(stringifiedKey);
   const publicAddress = toEthereumAddress(privateKey);
   const permissionContract = await initPermissions(
     {

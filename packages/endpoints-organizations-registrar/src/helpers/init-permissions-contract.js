@@ -17,7 +17,7 @@
 const { initPermissions } = require('@verii/contract-permissions');
 
 const { ObjectId } = require('mongodb');
-const { KeyPurposes, hexFromJwk } = require('@verii/crypto');
+const { KeyPurposes } = require('@verii/crypto');
 
 const initPermissionsContract = async (organization, context) => {
   const { repos } = context;
@@ -36,7 +36,7 @@ const initPermissionsContractByKeyId = async (keyId, context) => {
   return withKmsKey(keyId, ({ privateJwk }) =>
     initPermissions(
       {
-        privateKey: hexFromJwk(privateJwk, true),
+        privateKey: privateJwk,
         contractAddress: config.permissionsContractAddress,
         rpcProvider,
       },

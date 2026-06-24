@@ -32,10 +32,10 @@ const {
   decodePresentationJwt,
   verifyPresentationJwt,
 } = require('../src/verifiable-decoders');
-const { jwtDecode, jwkFromSecp256k1Key } = require('../src/core');
+const { jwtDecode } = require('../src/core');
 
 describe('Verifiable Decoder Tests', () => {
-  const keyPair = generateKeyPair();
+  const keyPair = generateKeyPair({ format: 'jwk' });
 
   const credential = {
     ...credentialUnexpired,
@@ -129,7 +129,9 @@ describe('Verifiable Decoder Tests', () => {
     });
 
     it('Should fail verification if key is invalid', async () => {
-      const { publicKey: wrongPublicKey } = generateKeyPair();
+      const { publicKey: wrongPublicKey } = generateKeyPair({
+        format: 'jwk',
+      });
       const credentialJwt = await generateCredentialJwt(
         { vc: credential },
         keyPair.privateKey,
@@ -147,13 +149,12 @@ describe('Verifiable Decoder Tests', () => {
         presentation,
         keyPair.privateKey,
       );
-      const jwk = jwkFromSecp256k1Key(keyPair.publicKey, false);
 
       const decodedPresentationAgnosticJwt = jwtDecode(presentationJwt);
       expect(decodedPresentationAgnosticJwt).toEqual({
         header: {
           alg: 'ES256K',
-          jwk,
+          jwk: keyPair.publicKey,
           typ: 'JWT',
         },
         payload: {
@@ -238,7 +239,9 @@ describe('Verifiable Decoder Tests', () => {
     });
 
     it('Presentation should fail verification if key is invalid', async () => {
-      const { publicKey: wrongPublicKey } = generateKeyPair();
+      const { publicKey: wrongPublicKey } = generateKeyPair({
+        format: 'jwk',
+      });
       const presentationJwt = await generatePresentationJwt(
         presentation,
         keyPair.privateKey,

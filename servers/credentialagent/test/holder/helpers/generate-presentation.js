@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { generateKeyPair, jwkFromSecp256k1Key } = require('@verii/crypto');
+const { generateKeyPair } = require('@verii/crypto');
 const { mapWithIndex } = require('@verii/common-functions');
 const {
   castArray,
@@ -301,7 +301,7 @@ const whateverPayload = {
   },
 };
 
-const { privateKey, publicKey } = generateKeyPair();
+const { privateKey, publicKey } = generateKeyPair({ format: 'jwk' });
 
 const generateKYCPresentation = (exchange, idDocTypes, options) => {
   const idCredentials = {
@@ -349,15 +349,13 @@ const doGeneratePresentation = async (
     map((c) => generateCredentialJwt(c, privateKey), credentials),
   );
 
-  const publicJwk = jwkFromSecp256k1Key(publicKey, false);
-
   const presentation =
     get('protocolMetadata.protocol', exchange) === ExchangeProtocols.OIDC_SIOP
       ? {
           id: nanoid(),
           state: exchange._id,
-          sub: await jwkThumbprint(publicJwk),
-          sub_jwk: publicJwk,
+          sub: await jwkThumbprint(publicKey),
+          sub_jwk: publicKey,
           aud: exchange.protocolMetadata.redirect_uri,
           nonce: exchange.protocolMetadata.nonce,
           iss: 'https://self-issuanceDate.me',

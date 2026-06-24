@@ -31,7 +31,10 @@ const {
 const { env: config } = require('@spencejs/spence-config');
 const console = require('console');
 
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  generateAccount,
+  generateDisposablePrivateKey,
+} = require('@verii/blockchain-functions');
 
 const { wait } = require('@verii/common-functions');
 const testEventsAbi = require('./data/test-events-abi.json');
@@ -44,8 +47,8 @@ const context = {
 };
 
 describe('Contract Client Test Suite', { timeout: 15000 }, () => {
-  const { privateKey: deployerPrivateKey } = generateKeyPair();
-  const randomAccount = toEthereumAddress(generateKeyPair().publicKey);
+  const deployerPrivateKey = generateDisposablePrivateKey();
+  const randomAccount = generateAccount().address;
   const rpcUrl = 'http://localhost:8545';
   const authenticate = () => 'TOKEN';
   const rpcProvider = initProvider(rpcUrl, authenticate);
@@ -75,7 +78,7 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
       contractInstance = await deployContractThatHasEvents();
     });
     it('Creating a client with no contractAddress should fail', async () => {
-      const { privateKey: clientPrivateKey } = generateKeyPair();
+      const clientPrivateKey = generateDisposablePrivateKey();
       const func = async () =>
         initContractClient(
           {
@@ -91,11 +94,11 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
     });
 
     it('Create a client', async () => {
-      const { privateKey: clientPrivateKey } = generateKeyPair();
+      const { privateKey } = generateKeyPair({ format: 'jwk' });
 
       contractClient = await initContractClient(
         {
-          privateKey: clientPrivateKey,
+          privateKey,
           contractAddress: await contractInstance.getAddress(),
           contractAbi: testEventsAbi,
           rpcProvider,
@@ -115,7 +118,7 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
 
     beforeEach(async () => {
       const contractInstance = await deployContractThatHasEvents();
-      const { privateKey: clientPrivateKey } = generateKeyPair();
+      const clientPrivateKey = generateDisposablePrivateKey();
 
       contractWithEventsClient = await initContractClient(
         {

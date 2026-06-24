@@ -18,7 +18,7 @@ const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const ethers = require('ethers');
 
-const { generateKeyPair } = require('@verii/crypto');
+const { generateDisposablePrivateKey } = require('@verii/blockchain-functions');
 const { initContractClient, initProvider } = require('../index');
 const { deployContract } = require('./helpers/deployContract');
 const testNoEventsAbi = require('./data/test-no-events-abi.json');
@@ -117,7 +117,7 @@ const detectsNonceCollisionWithRetries = async ({
 
 describe('Contract Client Nonce Management', { timeout: 120000 }, () => {
   it.skip('reproduces nonce collisions when signer caching is disabled', async () => {
-    const { privateKey: deployerPrivateKey } = generateKeyPair();
+    const deployerPrivateKey = generateDisposablePrivateKey();
     const rpcProvider = initProvider(rpcUrl, authenticate);
     const contract = await deployContract(
       testNoEventsAbi,
@@ -136,7 +136,7 @@ describe('Contract Client Nonce Management', { timeout: 120000 }, () => {
   });
 
   it('avoids nonce collisions with the default signer cache', async () => {
-    const { privateKey: deployerPrivateKey } = generateKeyPair();
+    const deployerPrivateKey = generateDisposablePrivateKey();
     const rpcProvider = initProvider(rpcUrl, authenticate);
     const contract = await deployContract(
       testNoEventsAbi,
@@ -156,7 +156,7 @@ describe('Contract Client Nonce Management', { timeout: 120000 }, () => {
   });
 
   it('resyncs cached signer nonce after external wallet transactions', async () => {
-    const { privateKey: deployerPrivateKey } = generateKeyPair();
+    const deployerPrivateKey = generateDisposablePrivateKey();
     const rpcProvider = initProvider(rpcUrl, authenticate);
     const contract = await deployContract(
       testNoEventsAbi,
@@ -188,7 +188,7 @@ describe('Contract Client Nonce Management', { timeout: 120000 }, () => {
     ).wait();
 
     const externalWallet = new ethers.Wallet(
-      `0x${deployerPrivateKey}`,
+      deployerPrivateKey,
       new ethers.JsonRpcProvider(rpcUrl),
     );
     await (

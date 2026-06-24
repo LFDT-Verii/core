@@ -17,15 +17,11 @@
 const { rangeStep } = require('lodash/fp');
 const ethers = require('ethers');
 const { ResyncingNonceManager } = require('./resyncing-nonce-manager');
+const { toEthersPrivateKey } = require('./private-key');
 
 const QueryMaxBlocks = 500;
 const signerByProvider = new WeakMap();
 const signerWithoutProvider = new Map();
-
-const ensureHexPrefix = (privateKey) => {
-  const prefix = privateKey?.startsWith('0x') ? '' : '0x';
-  return `${prefix}${privateKey}`;
-};
 
 const initProvider = (rpcUrl, authenticate, chainId) => {
   const network = chainId ? ethers.Network.from(chainId) : undefined;
@@ -82,7 +78,7 @@ const initContractClient = async (
   }
 
   const wallet = privateKey
-    ? initWalletSigner(ensureHexPrefix(privateKey), rpcProvider, cacheSigner)
+    ? initWalletSigner(toEthersPrivateKey(privateKey), rpcProvider, cacheSigner)
     : null;
 
   const contractClient = new ethers.Contract(

@@ -18,13 +18,15 @@ const { expect } = require('expect');
 
 const { generateCredentialJwt } = require('@verii/jwt');
 const { credentialUnexpired } = require('@verii/sample-data');
-const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
+const { generateKeyPair } = require('@verii/crypto');
 const console = require('console');
 const { checkJwsVcTampering } = require('../src/check-jws-vc-tampering');
 const { CheckResults } = require('../src/check-results');
 
 describe('tampering checks', () => {
-  const keyPair = generateKeyPairInHexAndJwk();
+  const { privateKey: privateJwk, publicKey: publicJwk } = generateKeyPair({
+    format: 'jwk',
+  });
   const context = { log: console };
 
   let signedCredential;
@@ -32,7 +34,7 @@ describe('tampering checks', () => {
   before(async () => {
     signedCredential = await generateCredentialJwt(
       credentialUnexpired,
-      keyPair.privateJwk,
+      privateJwk,
       'KID',
     );
   });
@@ -40,7 +42,7 @@ describe('tampering checks', () => {
   it('Should return FAIL when tampered', async () => {
     const otherCredential = await generateCredentialJwt(
       { ...credentialUnexpired, issuer: 'TAMPERED' },
-      keyPair.privateJwk,
+      privateJwk,
       'KID',
     );
 
@@ -52,7 +54,7 @@ describe('tampering checks', () => {
 
     const result = await checkJwsVcTampering(
       tamperedCredential,
-      keyPair.publicJwk,
+      publicJwk,
       context,
     );
 
@@ -62,7 +64,7 @@ describe('tampering checks', () => {
   it('Should return PASS when untampered', async () => {
     const result = await checkJwsVcTampering(
       signedCredential,
-      keyPair.publicJwk,
+      publicJwk,
       context,
     );
 

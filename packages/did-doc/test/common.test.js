@@ -22,6 +22,7 @@ const { last } = require('lodash/fp');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const {
   generateKeyPair,
+  hexFromJwk,
   signPayload,
   jwkFromSecp256k1Key,
 } = require('@verii/crypto');
@@ -34,7 +35,6 @@ const {
   generatePublicKeySection,
   generateProof,
   extractVerificationKey,
-  publicKeyToJwk,
 } = require('../src/common');
 
 describe('DID Documents Common', () => {
@@ -51,7 +51,8 @@ describe('DID Documents Common', () => {
   });
 
   describe('extract public key', () => {
-    const { publicKey } = generateKeyPair();
+    const { publicKey: publicJwk } = generateKeyPair({ format: 'jwk' });
+    const publicKey = hexFromJwk(publicJwk, false);
     const did = `did:key:${publicKey}`;
     const kidFragment = '#key-1';
     const kid = `${did}${kidFragment}`;
@@ -198,21 +199,6 @@ describe('DID Documents Common', () => {
       };
 
       expect(() => extractVerificationKey(didDoc, kid)).toThrow(Error);
-    });
-  });
-
-  describe('publicKeyToJwk', () => {
-    const { publicKey: publicKeyHex } = generateKeyPair();
-    const publicKeyJwk = jwkFromSecp256k1Key(publicKeyHex, false);
-
-    it('should return publicKeyJwk when publicKeyHex is passed', () => {
-      const publicKey = publicKeyToJwk({ publicKeyHex });
-      expect(publicKey).toEqual(publicKeyJwk);
-    });
-
-    it('should return publicKeyJwk when publicKeyJwk is passed', () => {
-      const publicKey = publicKeyToJwk({ publicKeyJwk });
-      expect(publicKey).toEqual(publicKeyJwk);
     });
   });
 

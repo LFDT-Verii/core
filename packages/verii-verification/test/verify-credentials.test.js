@@ -41,22 +41,23 @@ const { jwtSign, jwtDecode, generateCredentialJwt } = require('@verii/jwt');
 const { addHours, setMilliseconds } = require('date-fns/fp');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { credentialUnexpired } = require('@verii/sample-data');
-const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
 const {
   CheckResults,
   VeriiProtocolVersions,
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
-const { generateKeyPair } = require('@verii/crypto');
+const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 const { nanoid } = require('nanoid');
 const { applyOverrides } = require('@verii/common-functions');
 const { verifyCredentials } = require('../src/verify-credentials');
 
 describe('Verify credentials', () => {
-  const orgKeyPair = generateKeyPairInHexAndJwk();
+  const orgKeyPair = generateKeyPair({ format: 'jwk' });
+  const orgPublicKey = hexFromJwk(orgKeyPair.publicKey, false);
+  const orgPrivateKey = hexFromJwk(orgKeyPair.privateKey);
   const issuerDid = 'did:ion:1234567890';
-  const issuerKeyPair = generateKeyPairInHexAndJwk();
-  const issuerDidJwk = getDidUriFromJwk(issuerKeyPair.publicJwk);
+  const issuerKeyPair = generateKeyPair({ format: 'jwk' });
+  const issuerDidJwk = getDidUriFromJwk(issuerKeyPair.publicKey);
 
   const mockGetOrganizationVerifiedProfile = {
     credentialSubject: {
@@ -66,7 +67,7 @@ describe('Verify credentials', () => {
   };
 
   const config = {
-    rootPublicKey: orgKeyPair.publicKey,
+    rootPublicKey: orgPublicKey,
     revocationContractAddress: 'any',
   };
   let issuerVc;
@@ -78,7 +79,7 @@ describe('Verify credentials', () => {
       resolveDid: mock.fn(() =>
         Promise.resolve({
           id: issuerDid,
-          publicKey: [{ id: '#key-1', publicKeyJwk: orgKeyPair.publicJwk }],
+          publicKey: [{ id: '#key-1', publicKeyJwk: orgKeyPair.publicKey }],
         }),
       ),
       getOrganizationVerifiedProfile: mock.fn(() =>
@@ -135,7 +136,7 @@ describe('Verify credentials', () => {
             publicKey: [
               {
                 id: `${credentialDid.toLowerCase()}#key`,
-                publicKeyJwk: orgKeyPair.publicJwk,
+                publicKeyJwk: orgKeyPair.publicKey,
               },
             ],
             service: ['SERVICE'],
@@ -165,7 +166,7 @@ describe('Verify credentials', () => {
             },
           },
         };
-        issuerVc = await jwtSign(issuerCred, orgKeyPair.privateJwk, {
+        issuerVc = await jwtSign(issuerCred, orgKeyPair.privateKey, {
           kid: `${issuerDid}#key-1`,
         });
 
@@ -196,12 +197,12 @@ describe('Verify credentials', () => {
         });
         openBadgeVc = await generateCredentialJwt(
           openBadgeCredential,
-          orgKeyPair.privateJwk,
+          orgKeyPair.privateKey,
           `${credentialDid}#key`,
         );
         idVc = await generateCredentialJwt(
           idCredential,
-          orgKeyPair.privateJwk,
+          orgKeyPair.privateKey,
           `${credentialDid}#key`,
         );
       });
@@ -229,11 +230,17 @@ describe('Verify credentials', () => {
             },
           },
         ]);
+        expect(
+          initMetadataRegistry.mock.calls.map((call) => call.arguments),
+        ).toContainEqual([
+          expect.objectContaining({ privateKey: orgKeyPair.privateKey }),
+          context,
+        ]);
       });
 
       it('should return successful credential check using kms', async () => {
         const keys = {
-          [orgKeyPair.publicKey]: { privateJwk: orgKeyPair.privateJwk },
+          [orgPublicKey]: { privateJwk: orgKeyPair.privateKey },
         };
         const kmsContext = {
           ...context,
@@ -243,7 +250,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: orgKeyPair.publicKey },
+            relyingParty: { dltOperatorKMSKeyId: orgPublicKey },
           },
           fetchers,
           kmsContext,
@@ -289,7 +296,7 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -320,7 +327,7 @@ describe('Verify credentials', () => {
         };
         const legacyOpenBadgeVc = await generateCredentialJwt(
           legacyOpenBadgeCredential,
-          orgKeyPair.privateJwk,
+          orgKeyPair.privateKey,
           `${credentialDid}#key`,
         );
 
@@ -328,7 +335,7 @@ describe('Verify credentials', () => {
           {
             credentials: [legacyOpenBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -353,7 +360,7 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -375,7 +382,7 @@ describe('Verify credentials', () => {
 
       it('should return successful credential check using kms', async () => {
         const keys = {
-          [orgKeyPair.publicKey]: { privateJwk: orgKeyPair.privateJwk },
+          [orgPublicKey]: { privateJwk: orgKeyPair.privateKey },
         };
         const kmsContext = {
           ...context,
@@ -385,7 +392,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltOperatorKMSKeyId: orgKeyPair.publicKey },
+            relyingParty: { dltOperatorKMSKeyId: orgPublicKey },
           },
           fetchers,
           kmsContext,
@@ -431,7 +438,7 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -462,7 +469,7 @@ describe('Verify credentials', () => {
         };
         const legacyOpenBadgeVc = await generateCredentialJwt(
           legacyOpenBadgeCredential,
-          orgKeyPair.privateJwk,
+          orgKeyPair.privateKey,
           `${credentialDid}#key`,
         );
 
@@ -470,7 +477,7 @@ describe('Verify credentials', () => {
           {
             credentials: [legacyOpenBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -495,7 +502,7 @@ describe('Verify credentials', () => {
           {
             credentials: [openBadgeVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           {
             ...fetchers,
@@ -527,7 +534,7 @@ describe('Verify credentials', () => {
         const result = await verifyCredentials(
           {
             credentials: [openBadgeVc],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
             expectedHolderDid: issuerDidJwk,
           },
           fetchers,
@@ -559,14 +566,14 @@ describe('Verify credentials', () => {
         };
         const legacyOpenBadgeVc = await generateCredentialJwt(
           legacyOpenBadgeCredential,
-          orgKeyPair.privateJwk,
+          orgKeyPair.privateKey,
           `${credentialDid}#key`,
         );
 
         const result = await verifyCredentials(
           {
             credentials: [legacyOpenBadgeVc],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
             expectedHolderDid: issuerDidJwk,
           },
           fetchers,
@@ -597,14 +604,14 @@ describe('Verify credentials', () => {
         };
         const vcWithArrayOfStatus = await generateCredentialJwt(
           credentialWithArrayOfStatus,
-          orgKeyPair.privateKey,
+          orgPrivateKey,
           `${credentialDid}#key`,
         );
         const result = await verifyCredentials(
           {
             credentials: [vcWithArrayOfStatus],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -625,8 +632,8 @@ describe('Verify credentials', () => {
       });
 
       it('should return successful credential check if selfsigned using did:jwk in kid', async () => {
-        const keyPair = generateKeyPairInHexAndJwk();
-        const did = getDidUriFromJwk(keyPair.publicJwk);
+        const keyPair = generateKeyPair({ format: 'jwk' });
+        const did = getDidUriFromJwk(keyPair.publicKey);
         const unsignedCredential = {
           ...omit(
             [
@@ -644,7 +651,7 @@ describe('Verify credentials', () => {
         };
         const signedCredential = await jwtSign(
           { vc: unsignedCredential },
-          keyPair.privateJwk,
+          keyPair.privateKey,
           {
             nbf: new Date(unsignedCredential.issuanceDate),
             iat: new Date(unsignedCredential.issuanceDate),
@@ -680,7 +687,7 @@ describe('Verify credentials', () => {
         await verifyCredentials(
           {
             credentials: [openBadgeVc, openBadgeVc],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -705,7 +712,7 @@ describe('Verify credentials', () => {
       });
 
       it('should return successful credential check if selfsigned using jwk', async () => {
-        const keyPair = generateKeyPairInHexAndJwk();
+        const keyPair = generateKeyPair({ format: 'jwk' });
         const credentialId = nanoid();
         const unsignedCredential = {
           ...omit(
@@ -717,12 +724,12 @@ describe('Verify credentials', () => {
         };
         const signedCredential = await jwtSign(
           { vc: unsignedCredential },
-          keyPair.privateJwk,
+          keyPair.privateKey,
           {
             nbf: new Date(openBadgeCredential.issuanceDate),
             jti: credentialId,
             iat: new Date(openBadgeCredential.issuanceDate),
-            jwk: keyPair.publicJwk,
+            jwk: keyPair.publicKey,
           },
         );
         const result = await verifyCredentials(
@@ -734,7 +741,7 @@ describe('Verify credentials', () => {
         expect(header).toEqual({
           alg: 'ES256K',
           typ: 'JWT',
-          jwk: keyPair.publicJwk,
+          jwk: keyPair.publicKey,
         });
         expect(result).toEqual([
           {
@@ -759,7 +766,7 @@ describe('Verify credentials', () => {
         const result = await verifyCredentials(
           {
             credentials: [idVc],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -779,7 +786,7 @@ describe('Verify credentials', () => {
       });
 
       it('UNTAMPERED should return DEPENDENCY_RESOLUTION_ERROR if credential signed using an unsupported did method in kid', async () => {
-        const keyPair = generateKeyPairInHexAndJwk();
+        const keyPair = generateKeyPair({ format: 'jwk' });
         const didWeb = 'did:web:example.com';
         const unsignedCredential = {
           ...omit(['id'], openBadgeCredential),
@@ -790,7 +797,7 @@ describe('Verify credentials', () => {
         };
         const signedCredential = await jwtSign(
           { vc: unsignedCredential },
-          keyPair.privateJwk,
+          keyPair.privateKey,
           {
             nbf: new Date(unsignedCredential.issuanceDate),
             iat: new Date(unsignedCredential.issuanceDate),
@@ -834,7 +841,7 @@ describe('Verify credentials', () => {
             {
               credentials: [idVc],
               expectedHolderDid: issuerDidJwk,
-              relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+              relyingParty: { dltPrivateKey: orgPrivateKey },
             },
             fetchers,
             context,
@@ -863,7 +870,7 @@ describe('Verify credentials', () => {
           {
             credentials: [signedCredential],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -917,11 +924,11 @@ describe('Verify credentials', () => {
             credentials: [
               await generateCredentialJwt(
                 openBadgeCredential,
-                orgKeyPair.privateJwk,
+                orgKeyPair.privateKey,
                 credentialDid,
               ),
             ],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -946,7 +953,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           { ...fetchers, resolveDid: () => Promise.reject(new Error()) },
           context,
@@ -971,7 +978,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           {
             ...fetchers,
@@ -999,7 +1006,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           {
             ...fetchers,
@@ -1029,7 +1036,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           {
             ...fetchers,
@@ -1057,7 +1064,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           {
             ...fetchers,
@@ -1089,7 +1096,7 @@ describe('Verify credentials', () => {
         const result = await verifyCredentials(
           {
             credentials: [idVc],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -1116,14 +1123,14 @@ describe('Verify credentials', () => {
         };
         const signedCredential = await generateCredentialJwt(
           credentialWithVnfProtocolV1,
-          orgKeyPair.privateJwk,
+          orgKeyPair.privateKey,
           `${credentialDid}#key`,
         );
 
         const result = await verifyCredentials(
           {
             credentials: [signedCredential],
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -1154,14 +1161,14 @@ describe('Verify credentials', () => {
 
         const vcWithoutCorrectStatus = await generateCredentialJwt(
           credentialWithoutCorrectStatus,
-          orgKeyPair.privateKey,
+          orgPrivateKey,
           `${credentialDid}#key`,
         );
         const result = await verifyCredentials(
           {
             credentials: [vcWithoutCorrectStatus],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -1190,7 +1197,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,
@@ -1219,7 +1226,7 @@ describe('Verify credentials', () => {
           {
             credentials: [idVc],
             expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgKeyPair.privateKey },
+            relyingParty: { dltPrivateKey: orgPrivateKey },
           },
           fetchers,
           context,

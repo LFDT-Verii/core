@@ -1,5 +1,5 @@
-/**
- * Copyright 2023 Velocity Team
+/*
+ * Copyright 2026 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-const { generateKeyPair, jwkFromSecp256k1Key } = require('@verii/crypto');
+const { Wallet } = require('ethers');
 
-const generateKeyPairInHexAndJwk = () => {
-  const { publicKey, privateKey } = generateKeyPair();
-  return {
-    publicKey,
-    publicJwk: jwkFromSecp256k1Key(publicKey, false),
-    privateKey,
-    privateJwk: jwkFromSecp256k1Key(privateKey, true),
-  };
-};
+const generateAccount = () => Wallet.createRandom();
+
+const generateDisposablePrivateKey = () => generateAccount().privateKey;
 
 module.exports = {
-  generateKeyPairInHexAndJwk,
+  generateAccount,
+  generateDisposablePrivateKey,
 };

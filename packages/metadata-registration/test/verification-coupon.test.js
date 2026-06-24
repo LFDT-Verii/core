@@ -25,9 +25,8 @@ const {
 const { expect } = require('expect');
 
 const { startOfSecond } = require('date-fns/fp');
-const { generateKeyPair } = require('@verii/crypto');
 const {
-  toEthereumAddress,
+  generateAccount,
   toHexString,
   toNumber,
 } = require('@verii/blockchain-functions');
@@ -297,9 +296,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
         ownerDid,
       });
 
-      const accountWithoutTokens = toEthereumAddress(
-        generateKeyPair().publicKey,
-      );
+      const accountWithoutTokens = generateAccount().address;
       expect(
         verificationCoupon.getCoupon(accountWithoutTokens),
       ).rejects.toThrow('Permissions: operator not pointing to a primary');
@@ -314,8 +311,8 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
   });
 
   const initVerificationCouponClient = async () => {
-    const primaryKeyPair = generateKeyPair();
-    primaryAddress = toEthereumAddress(primaryKeyPair.publicKey);
+    const primaryAccount = generateAccount();
+    primaryAddress = primaryAccount.address;
 
     await deployerPermissionsContractInstance.addPrimary({
       primary: primaryAddress,
@@ -327,15 +324,15 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
       scope: 'transactions:write',
     });
 
-    const operatorKeyPair = generateKeyPair();
-    operatorAddress = toEthereumAddress(operatorKeyPair.publicKey);
+    const operatorAccount = generateAccount();
+    operatorAddress = operatorAccount.address;
     await deployerPermissionsContractInstance.addAddressScope({
       address: operatorAddress,
       scope: 'coupon:burn',
     });
     const operatorPermissionsContractClient = await initPermissions(
       {
-        privateKey: primaryKeyPair.privateKey,
+        privateKey: primaryAccount.privateKey,
         contractAddress: permissionsContractAddress,
         rpcProvider,
       },
@@ -348,7 +345,7 @@ describe('Verification Coupon', { timeout: 240000 }, () => {
 
     return initVerificationCoupon(
       {
-        privateKey: operatorKeyPair.privateKey,
+        privateKey: operatorAccount.privateKey,
         contractAddress: verificationCouponAddress,
         rpcProvider,
       },
