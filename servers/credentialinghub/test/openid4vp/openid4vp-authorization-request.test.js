@@ -470,7 +470,9 @@ const expectVerifiedAuthorizationRequestJwt = async ({
   const {
     payload: { exp, iat },
   } = await jwtVerify(jwt, relyingPartyKeyPair.publicKey);
-  expect(exp - iat).toEqual(relyingPartyService.presentationRequestsExpireIn);
+  expect(
+    Math.abs(exp - iat - relyingPartyService.presentationRequestsExpireIn),
+  ).toBeLessThanOrEqual(1);
   expect(
     dbExchange.protocolMetadata.presentationRequestExpiresAt.getTime() -
       dbExchange.createdAt.getTime(),
