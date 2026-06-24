@@ -17,8 +17,12 @@
 const newError = require('http-errors');
 const { default: bs58 } = require('bs58');
 const { find, isNil, reduce } = require('lodash/fp');
-const { signPayload, generateKeyPair } = require('@verii/crypto');
-const { hexFromJwk, jwkFromSecp256k1Key } = require('@verii/jwt');
+const {
+  signPayload,
+  generateKeyPair,
+  hexFromJwk,
+  jwkFromSecp256k1Key,
+} = require('@verii/crypto');
 
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 

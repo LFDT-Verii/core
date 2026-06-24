@@ -16,8 +16,12 @@
  */
 
 const { initMetadataRegistry } = require('@verii/metadata-registration');
-const { jsonLdToUnsignedVcJwtContent, hexFromJwk } = require('@verii/jwt');
-const { KeyAlgorithms, initCallWithKmsKey } = require('@verii/crypto');
+const { jsonLdToUnsignedVcJwtContent } = require('@verii/jwt');
+const {
+  KeyAlgorithms,
+  initCallWithKmsKey,
+  hexFromJwk,
+} = require('@verii/crypto');
 const { buildIssuerVcUrl } = require('./build-issuer-vc-url');
 
 /** @import { Issuer, CredentialMetadata, Context } from "../../types/types" */

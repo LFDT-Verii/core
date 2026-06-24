@@ -41,9 +41,14 @@ const {
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
 const { errorResponseMatcher, mongoify } = require('@verii/tests-helpers');
-const { generateKeyPair, KeyPurposes, KeyEncodings } = require('@verii/crypto');
+const {
+  generateKeyPair,
+  KeyPurposes,
+  KeyEncodings,
+  publicKeyFromPrivateKey,
+} = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
-const { publicKeyFromPrivateKey } = require('@verii/jwt');
+
 const { applyOverrides } = require('@verii/common-functions');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { buildIssuerDidDoc } = require('../helpers/build-issuer-did-doc');

@@ -1,6 +1,6 @@
 const { each, map, omit, isEmpty, isString, some } = require('lodash/fp');
 const newError = require('http-errors');
-const { jwkFromSecp256k1Key } = require('@verii/jwt');
+const { jwkFromSecp256k1Key } = require('@verii/crypto');
 const { extractVerificationMethod } = require('@verii/did-doc');
 const { validateKey, isMatchingPrivateKeyKid } = require('../domains');
 

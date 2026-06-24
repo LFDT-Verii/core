@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-const { generateKeyPair } = require('@verii/crypto');
-const { jwkFromSecp256k1Key } = require('@verii/jwt');
+const { generateKeyPair, jwkFromSecp256k1Key } = require('@verii/crypto');
+
 const { nanoid } = require('nanoid/non-secure');
 
 const createOrgDoc = async () => {

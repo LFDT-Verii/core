@@ -23,8 +23,8 @@ const { mockHttpClientModule } = require('../helpers/mock-http-client');
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { decrypt } = require('@verii/crypto');
-const { hexFromJwk } = require('@verii/jwt');
+const { decrypt, hexFromJwk } = require('@verii/crypto');
+
 const { initKeyFactory } = require('../../src/entities/keys');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const createTestFastify = require('../helpers/create-test-fastify');

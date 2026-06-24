@@ -112,8 +112,8 @@ const {
   KeyPurposes,
   generateKeyPair,
   KeyAlgorithms,
+  hexFromJwk,
 } = require('@verii/crypto');
-const { hexFromJwk } = require('@verii/jwt');
 
 const {
   generateOrganizationKeyMatcher,

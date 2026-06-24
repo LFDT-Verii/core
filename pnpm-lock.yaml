@@ -334,9 +334,9 @@ importers:
 
   packages/blockchain-functions:
     dependencies:
-      '@verii/jwt':
+      '@verii/crypto':
         specifier: workspace:*
-        version: link:../jwt
+        version: link:../crypto
       ethers:
         specifier: ^6.17.0
         version: 6.17.0
@@ -344,9 +344,6 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
-      '@verii/crypto':
-        specifier: workspace:*
-        version: link:../crypto
       eslint:
         specifier: 9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -2473,6 +2470,9 @@ importers:
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
+      '@verii/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@verii/did-doc':
         specifier: workspace:*
         version: link:../did-doc
@@ -2495,9 +2495,6 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
-      '@verii/crypto':
-        specifier: workspace:*
-        version: link:../crypto
       '@verii/sample-data':
         specifier: workspace:*
         version: link:../sample-data

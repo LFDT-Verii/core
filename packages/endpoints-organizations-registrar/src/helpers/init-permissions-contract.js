@@ -15,9 +15,9 @@
  *
  */
 const { initPermissions } = require('@verii/contract-permissions');
-const { hexFromJwk } = require('@verii/jwt');
+
 const { ObjectId } = require('mongodb');
-const { KeyPurposes } = require('@verii/crypto');
+const { KeyPurposes, hexFromJwk } = require('@verii/crypto');
 
 const initPermissionsContract = async (organization, context) => {
   const { repos } = context;

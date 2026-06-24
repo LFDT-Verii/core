@@ -1,5 +1,5 @@
 const { isEmpty } = require('lodash/fp');
-const { hexFromJwk } = require('@verii/jwt');
+const { hexFromJwk } = require('@verii/crypto');
 
 const jwkToHexKeyTransformer = (key) => ({
   ...key,

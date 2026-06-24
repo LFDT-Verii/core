@@ -20,9 +20,10 @@ const {
   KeyAlgorithms,
   KeyEncodings,
   generateKeyPair,
+  publicKeyFromPrivateKey,
 } = require('@verii/crypto');
 const { ObjectId } = require('mongodb');
-const { publicKeyFromPrivateKey } = require('@verii/jwt');
+
 const { kmsRepo, defaultRepoOptions } = require('@verii/db-kms');
 const { initTenantFactory } = require('../../tenants/factories');
 const { kmsRepoOptions } = require('../plugins');

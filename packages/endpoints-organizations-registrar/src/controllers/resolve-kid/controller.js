@@ -3,7 +3,7 @@ const { default: bs58 } = require('bs58');
 const newError = require('http-errors');
 
 const { extractVerificationKey } = require('@verii/did-doc');
-const { jwkFromSecp256k1Key } = require('@verii/jwt');
+const { jwkFromSecp256k1Key } = require('@verii/crypto');
 const { resolveDid } = require('../resolve-did/resolve-did');
 const publicKeyFormats = require('./public-key-formats');
 

@@ -1,5 +1,6 @@
 const { isEmpty } = require('lodash/fp');
-const { jwtSign, publicKeyFromPrivateKey, toJwk } = require('@verii/jwt');
+const { publicKeyFromPrivateKey } = require('@verii/crypto');
+const { jwtSign, toJwk } = require('@verii/jwt');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const common = require('../common');
 

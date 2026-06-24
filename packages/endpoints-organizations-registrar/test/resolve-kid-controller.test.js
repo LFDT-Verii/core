@@ -21,8 +21,13 @@ const { expect } = require('expect');
 const nock = require('./helpers/nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { extractVerificationKey } = require('@verii/did-doc');
-const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
-const { jwkFromSecp256k1Key, hexFromJwk } = require('@verii/jwt');
+const {
+  KeyPurposes,
+  generateKeyPair,
+  jwkFromSecp256k1Key,
+  hexFromJwk,
+} = require('@verii/crypto');
+
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const { default: bs58 } = require('bs58');
 const initOrganizationFactory = require('../src/entities/organizations/factories/organizations-factory');

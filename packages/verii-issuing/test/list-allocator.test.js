@@ -22,9 +22,9 @@ const { mongoify } = require('@verii/tests-helpers');
 const { first, omit } = require('lodash/fp');
 const { ObjectId, MongoClient } = require('mongodb');
 const { nanoid } = require('nanoid');
-const { generateJWAKeyPair } = require('@verii/crypto');
+const { generateJWAKeyPair, hexFromJwk } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
-const { hexFromJwk } = require('@verii/jwt');
+
 const {
   mongoAllocationListQueries,
 } = require('../src/adapters/mongo-allocation-list-queries');

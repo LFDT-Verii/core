@@ -1,12 +1,9 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const {
-  hexFromJwk,
   transformKey,
   hexToJwkKeyTransformer,
-  jwkFromSecp256k1Key,
   jwkFromStringified,
-  publicKeyFromPrivateKey,
   stringifyJwk,
 } = require('../src/key-transformer');
 
@@ -30,13 +27,6 @@ const PUBLIC_JWK_WITH_PADDING = {
   x: 'AH6kY8xfesnm7vTxqjSEygHTZfj08j_NE1ae0oqcS0o',
   y: '5D87PB1frg8vj8Z7VRMio1w42aEKSzkq3FgP1IPXkYc',
   use: 'sig',
-};
-const PUBLIC_JWK_WITH_SHORT_X = {
-  ...PUBLIC_JWK_WITH_PADDING,
-  x: 'fqRjzF96yebu9PGqNITKAdNl-PTyP80TVp7SipxLSg',
-};
-const PRIVATE_JWK_WITH_SHORT_D = {
-  d: 'AQ',
 };
 
 const PRIVATE_KEY =
@@ -105,90 +95,6 @@ describe('Key Transformer Tests', () => {
       const transformedKey = hexToJwkKeyTransformer(hexKey);
 
       expect(transformedKey).toEqual(jwkKey);
-    });
-  });
-
-  describe('jwk / hex conversions', () => {
-    it('should generate jwk for hex public keys', () => {
-      const publicJwk = jwkFromSecp256k1Key(PUBLIC_KEY, false);
-
-      expect(publicJwk).toEqual(PUBLIC_JWK);
-    });
-
-    it('should generate jwk for hex public keys without prefix', () => {
-      const publicJwk = jwkFromSecp256k1Key(PUBLIC_KEY.slice(2), false);
-
-      expect(publicJwk).toEqual(PUBLIC_JWK);
-    });
-
-    it('should generate public jwk from private hex when requested', () => {
-      const publicJwk = jwkFromSecp256k1Key(PRIVATE_KEY, false);
-
-      expect(publicJwk).toEqual(PUBLIC_JWK);
-    });
-
-    it('should throw for invalid keys when public jwk is requested', () => {
-      expect(() => jwkFromSecp256k1Key('not-a-key', false)).toThrow(
-        'Expected secp256k1 private key (64 hex chars) or uncompressed public key (128/130 hex chars)',
-      );
-    });
-
-    it('should throw for wrong-sized hex keys when public jwk is requested', () => {
-      expect(() => jwkFromSecp256k1Key('abcd', false)).toThrow(
-        'Expected secp256k1 private key (64 hex chars) or uncompressed public key (128/130 hex chars)',
-      );
-    });
-
-    it('should generate hex for jwk public keys', () => {
-      expect(hexFromJwk(PUBLIC_JWK, false)).toEqual(PUBLIC_KEY);
-    });
-
-    it('should generate jwk for hex private keys', () => {
-      const privateJwk = jwkFromSecp256k1Key(PRIVATE_KEY, true);
-
-      expect(privateJwk).toEqual(PRIVATE_JWK);
-    });
-
-    it('should generate hex for jwk private keys', () => {
-      expect(hexFromJwk(PRIVATE_JWK, true)).toEqual(PRIVATE_KEY);
-    });
-
-    it('should preserve padding when generating hex for padded jwk private keys', () => {
-      expect(hexFromJwk(PRIVATE_JWK_WITH_PADDING, true)).toEqual(
-        PRIVATE_KEY_WITH_PADDING,
-      );
-    });
-
-    it('should preserve padding when generating hex for padded jwk public keys', () => {
-      expect(hexFromJwk(PUBLIC_JWK_WITH_PADDING, false)).toEqual(
-        PUBLIC_KEY_WITH_PADDING,
-      );
-    });
-
-    it('should add padding when generating hex for shortened jwk private keys', () => {
-      expect(hexFromJwk(PRIVATE_JWK_WITH_SHORT_D, true)).toEqual(
-        '0000000000000000000000000000000000000000000000000000000000000001',
-      );
-    });
-
-    it('should add coordinate padding when generating hex for shortened jwk public keys', () => {
-      expect(hexFromJwk(PUBLIC_JWK_WITH_SHORT_X, false)).toEqual(
-        PUBLIC_KEY_WITH_PADDING,
-      );
-    });
-  });
-
-  describe('public key from private key', () => {
-    it('should preserve padding for derived hex public keys', () => {
-      expect(publicKeyFromPrivateKey(PRIVATE_KEY_WITH_PADDING)).toEqual(
-        PUBLIC_KEY_WITH_PADDING,
-      );
-    });
-
-    it('should return public jwk for passed private jwk', () => {
-      expect(publicKeyFromPrivateKey(PRIVATE_JWK_WITH_PADDING)).toEqual(
-        PUBLIC_JWK_WITH_PADDING,
-      );
     });
   });
 

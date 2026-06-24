@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { generateKeyPair } = require('@verii/crypto');
+const { generateKeyPair, jwkFromSecp256k1Key } = require('@verii/crypto');
 const { mapWithIndex } = require('@verii/common-functions');
 const {
   castArray,
@@ -31,7 +31,6 @@ const {
 } = require('lodash/fp');
 const { nanoid } = require('nanoid/non-secure');
 const {
-  jwkFromSecp256k1Key,
   generateDocJwt,
   generateCredentialJwt,
   generatePresentationJwt,

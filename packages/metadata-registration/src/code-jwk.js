@@ -15,13 +15,14 @@
  *
  */
 
-const { hexFromJwk, jwkFromSecp256k1Key } = require('@verii/jwt');
 const {
   get2BytesHash,
   encrypt,
   encryptBuffer,
   decrypt,
   decryptBuffer,
+  hexFromJwk,
+  jwkFromSecp256k1Key,
 } = require('@verii/crypto');
 const { CoseKey, fromJwk, toJwk } = require('@verii/cose-key');
 const { ALG_TYPE } = require('./constants');

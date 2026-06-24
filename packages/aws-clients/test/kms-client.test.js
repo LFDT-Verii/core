@@ -23,8 +23,8 @@ const {
   DeleteAliasCommand,
   DecryptCommand,
 } = require('@aws-sdk/client-kms');
-const { generateKeyPair } = require('@verii/crypto');
-const { hexFromJwk } = require('@verii/jwt');
+const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
+
 const { initKmsClient } = require('../src/kms-client');
 
 describe('kms-client test suite', () => {

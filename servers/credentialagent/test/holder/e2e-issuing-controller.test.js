@@ -23,7 +23,7 @@ const {
   mongoFactoryWrapper,
   mongoCloseWrapper,
 } = require('@verii/tests-helpers');
-const { generateKeyPair } = require('@verii/crypto');
+const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 
 const {
   deployPermissionContract,
@@ -36,7 +36,7 @@ const {
 } = require('@verii/metadata-registration/test/helpers/deploy-contracts');
 const { initPermissions } = require('@verii/contract-permissions');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
-const { hexFromJwk, jwtDecode } = require('@verii/jwt');
+const { jwtDecode } = require('@verii/jwt');
 const { ObjectId } = require('mongodb');
 const nock = require('../helpers/nock');
 const { KeyPurposes } = require('@verii/crypto');
