@@ -17,7 +17,7 @@
   "author": "Yuaheni Pozdnyakov",
   "license": "Apache-2.0",
   "dependencies": {
-    "@trust/keyto": "~2.0.0-alpha1",
+    "@trust/keyto": "2.0.0-alpha1",
     "@verii/test-regexes": "workspace:*",
     "argon2": "0.44.0",
     "bigint-crypto-utils": "3.3.0",
