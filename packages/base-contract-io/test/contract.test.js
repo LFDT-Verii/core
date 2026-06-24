@@ -114,7 +114,7 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
         rpcProvider,
       );
       expect(log.info.mock.calls.map((call) => call.arguments)).toEqual([
-        [{ contractAddress }, 'initContractClient'],
+        [{ contractAddress, hasPrivateKey: true }, 'initContractClient'],
         ['initContractClient done'],
       ]);
     });
