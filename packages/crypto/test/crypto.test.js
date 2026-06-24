@@ -16,12 +16,10 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 
-const { padCharsStart } = require('lodash/fp');
 const crypto = require('crypto');
 const { HEX_FORMAT, URLSAFE_BASE64_FORMAT } = require('@verii/test-regexes');
 const {
   generateKeyPair,
-  publicKeyHexToPem,
   generateRandomNumber,
   generatePositive256BitHexString,
   signPayload,
@@ -43,6 +41,20 @@ const {
   calcSha384,
   generateJWAKeyPair,
 } = require('../src/crypto');
+const { jwkFromSecp256k1Key } = require('../src/key-transformer');
+
+const toNodePublicKey = (publicKeyHex) => {
+  const publicJwk = jwkFromSecp256k1Key(publicKeyHex, false);
+  return crypto.createPublicKey({
+    key: {
+      kty: publicJwk.kty,
+      crv: publicJwk.crv,
+      x: publicJwk.x,
+      y: publicJwk.y,
+    },
+    format: 'jwk',
+  });
+};
 
 describe('Crypto tests', () => {
   const { publicKey, privateKey } = {
@@ -102,8 +114,9 @@ describe('Crypto tests', () => {
         publicKey: expect.any(String),
         privateKey: expect.any(String),
       });
-      expect(padCharsStart('0', 64, keyPair.privateKey)).toHaveLength(64);
+      expect(keyPair.privateKey).toHaveLength(64);
       expect(keyPair.publicKey).toHaveLength(130);
+      expect(keyPair.publicKey).toEqual(expect.stringMatching(/^04/));
     });
 
     it('should be generate key pairs', () => {
@@ -216,14 +229,6 @@ describe('Crypto tests', () => {
       });
     });
   });
-  describe('pem / hex conversions', () => {
-    it('should generate pems for hex public keys', () => {
-      expect(publicKeyHexToPem(publicKey)).toEqual(
-        expect.stringContaining('BEGIN PUBLIC KEY'),
-      );
-    });
-  });
-
   it('Should return a random number with with 1 digit', async () => {
     const number = await generateRandomNumber(1);
     expect(number.toString()).toHaveLength(1);
@@ -277,7 +282,7 @@ describe('Crypto tests', () => {
         .createVerify('SHA256')
         .update(payload)
         .verify(
-          publicKeyHexToPem(publicKeyHex),
+          toNodePublicKey(publicKeyHex),
           Buffer.from(signature, 'base64'),
         );
 
@@ -296,7 +301,7 @@ describe('Crypto tests', () => {
         .createVerify('SHA256')
         .update(JSON.stringify({ message: 'TEST MESSAGE 2' }))
         .verify(
-          publicKeyHexToPem(publicKeyHex),
+          toNodePublicKey(publicKeyHex),
           Buffer.from(signature, 'base64'),
         );
       expect(isSignatureValid).toBe(false);

@@ -3,14 +3,12 @@ const { default: bs58 } = require('bs58');
 const newError = require('http-errors');
 
 const { extractVerificationKey } = require('@verii/did-doc');
-const { publicKeyHexToPem } = require('@verii/crypto');
 const { jwkFromSecp256k1Key } = require('@verii/jwt');
 const { resolveDid } = require('../resolve-did/resolve-did');
 const publicKeyFormats = require('./public-key-formats');
 
 const resolversController = async (fastify) => {
   const publicKeyEncoders = {
-    [publicKeyFormats.PEM]: (publicKey) => publicKeyHexToPem(publicKey),
     [publicKeyFormats.BASE58]: (publicKey) =>
       bs58.encode(Buffer.from(publicKey, 'hex')),
     [publicKeyFormats.HEX]: (publicKey) => publicKey,
@@ -37,12 +35,11 @@ const resolversController = async (fastify) => {
             format: {
               type: 'string',
               enum: [
-                publicKeyFormats.PEM,
                 publicKeyFormats.BASE58,
                 publicKeyFormats.HEX,
                 publicKeyFormats.JWK,
               ],
-              default: publicKeyFormats.PEM,
+              default: publicKeyFormats.HEX,
             },
           },
         },

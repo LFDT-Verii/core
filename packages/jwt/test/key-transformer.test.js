@@ -31,6 +31,13 @@ const PUBLIC_JWK_WITH_PADDING = {
   y: '5D87PB1frg8vj8Z7VRMio1w42aEKSzkq3FgP1IPXkYc',
   use: 'sig',
 };
+const PUBLIC_JWK_WITH_SHORT_X = {
+  ...PUBLIC_JWK_WITH_PADDING,
+  x: 'fqRjzF96yebu9PGqNITKAdNl-PTyP80TVp7SipxLSg',
+};
+const PRIVATE_JWK_WITH_SHORT_D = {
+  d: 'AQ',
+};
 
 const PRIVATE_KEY =
   '1111111111111111111111111111111111111111111111111111111111111111';
@@ -51,18 +58,6 @@ const PUBLIC_JWK = {
   y: 'OFtrG46tgJymdFTZaD_PK6A0Vtb-LEq-Kwfw-9uy8cE',
   use: 'sig',
 };
-
-const PRIVATE_PEM = `-----BEGIN PRIVATE KEY-----
-MIGEAgEAMBAGByqGSM49AgEGBSuBBAAKBG0wawIBAQQgUrGgEV7O8YyOCCcRyEua
-Gf2pEowk0ga39xizkDbSbMGhRANCAAQAfqRjzF96yebu9PGqNITKAdNl+PTyP80T
-Vp7SipxLSuQ/OzwdX64PL4/Ge1UTIqNcONmhCks5KtxYD9SD15GH
------END PRIVATE KEY-----
-`;
-const PUBLIC_PEM = `-----BEGIN PUBLIC KEY-----
-MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEAH6kY8xfesnm7vTxqjSEygHTZfj08j/N
-E1ae0oqcS0rkPzs8HV+uDy+PxntVEyKjXDjZoQpLOSrcWA/Ug9eRhw==
------END PUBLIC KEY-----
-`;
 
 describe('Key Transformer Tests', () => {
   describe('Transform key', () => {
@@ -169,6 +164,18 @@ describe('Key Transformer Tests', () => {
         PUBLIC_KEY_WITH_PADDING,
       );
     });
+
+    it('should add padding when generating hex for shortened jwk private keys', () => {
+      expect(hexFromJwk(PRIVATE_JWK_WITH_SHORT_D, true)).toEqual(
+        '0000000000000000000000000000000000000000000000000000000000000001',
+      );
+    });
+
+    it('should add coordinate padding when generating hex for shortened jwk public keys', () => {
+      expect(hexFromJwk(PUBLIC_JWK_WITH_SHORT_X, false)).toEqual(
+        PUBLIC_KEY_WITH_PADDING,
+      );
+    });
   });
 
   describe('public key from private key', () => {
@@ -208,20 +215,6 @@ describe('Key Transformer Tests', () => {
       const stringifiedPrivateJwk = stringifyJwk(PRIVATE_JWK, true);
 
       expect(JSON.parse(stringifiedPrivateJwk)).toEqual(PRIVATE_JWK);
-    });
-  });
-
-  describe('pem conversion', () => {
-    it('should generate a public jwk from a public pem', () => {
-      const publicJwk = jwkFromSecp256k1Key(PUBLIC_PEM, false);
-
-      expect(publicJwk).toEqual(PUBLIC_JWK_WITH_PADDING);
-    });
-
-    it('should generate a private jwk from a private pem', () => {
-      const privateJwk = jwkFromSecp256k1Key(PRIVATE_PEM, true);
-
-      expect(privateJwk).toEqual(PRIVATE_JWK_WITH_PADDING);
     });
   });
 });

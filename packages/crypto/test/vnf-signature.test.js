@@ -23,11 +23,21 @@ const {
   buildVnfSignature,
   verifyVnfSignature,
 } = require('../src/vnf-signature');
-const {
-  publicKeyHexToPem,
-  signAndEncodeBase64,
-  generateKeyPair,
-} = require('../src/crypto');
+const { signAndEncodeBase64, generateKeyPair } = require('../src/crypto');
+const { jwkFromSecp256k1Key } = require('../src/key-transformer');
+
+const toNodePublicKey = (publicKeyHex) => {
+  const publicJwk = jwkFromSecp256k1Key(publicKeyHex, false);
+  return crypto.createPublicKey({
+    key: {
+      kty: publicJwk.kty,
+      crv: publicJwk.crv,
+      x: publicJwk.x,
+      y: publicJwk.y,
+    },
+    format: 'jwk',
+  });
+};
 
 describe('vnf signature library', () => {
   const { privateKey, publicKey } = generateKeyPair();
@@ -56,7 +66,7 @@ describe('vnf signature library', () => {
         .createVerify('SHA256')
         .update(`${timestampValue}.${canonicalize(payload)}`)
         .verify(
-          publicKeyHexToPem(publicKey),
+          toNodePublicKey(publicKey),
           Buffer.from(vnfSignatureValue, 'base64'),
         );
       expect(isSignatureValid).toBe(true);

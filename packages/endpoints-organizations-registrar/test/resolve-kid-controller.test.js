@@ -21,11 +21,7 @@ const { expect } = require('expect');
 const nock = require('./helpers/nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { extractVerificationKey } = require('@verii/did-doc');
-const {
-  publicKeyHexToPem,
-  KeyPurposes,
-  generateKeyPair,
-} = require('@verii/crypto');
+const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
 const { jwkFromSecp256k1Key, hexFromJwk } = require('@verii/jwt');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const { default: bs58 } = require('bs58');
@@ -106,7 +102,7 @@ describe('Public Key Resolution', () => {
       url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}`,
     });
 
-    expect(response.body).toEqual(publicKeyHexToPem(publicKeyHex0));
+    expect(response.body).toEqual(publicKeyHex0);
   });
 
   it('[Deprecated] Should resolve kid public key for "did:velocity" did with base58 publicKey as jwk', async () => {
@@ -140,7 +136,7 @@ describe('Public Key Resolution', () => {
     );
   });
 
-  it('Should return public key in default (PEM) format when query param not passed', async () => {
+  it('Should return public key in default HEX format when query param not passed', async () => {
     const organization = await persistOrganization({
       keys: DEFAULT_KEYS,
     });
@@ -155,25 +151,7 @@ describe('Public Key Resolution', () => {
       url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}`,
     });
 
-    expect(response.body).toEqual(publicKeyHexToPem(publicKeyHex0));
-  });
-
-  it("Should return public key in PEM format when query param set to 'pem'", async () => {
-    const organization = await persistOrganization({
-      keys: DEFAULT_KEYS,
-    });
-    const { didDoc } = organization;
-    const did = didDoc.id;
-    const kidFragment = '#vc-signing-key-1';
-    const kid = `${did}${kidFragment}`;
-    const publicKeyHex0 = extractVerificationKey(didDoc, kid);
-
-    const response = await fastify.inject({
-      method: 'GET',
-      url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=pem`,
-    });
-
-    expect(response.body).toEqual(publicKeyHexToPem(publicKeyHex0));
+    expect(response.body).toEqual(publicKeyHex0);
   });
 
   it("Should return public key in HEX format when query param set to 'hex'", async () => {
@@ -324,32 +302,7 @@ describe('Public Key Resolution', () => {
       expect(response.statusCode).toEqual(200);
       expect(nockData.isDone()).toBeTruthy();
 
-      expect(response.body).toBe(
-        publicKeyHexToPem(hexFromJwk(keyPair.publicKey, false)),
-      );
-    });
-
-    it("Should return public key in PEM format when query param set to 'pem'", async () => {
-      const nockData = nock('https://example.com')
-        .get('/.well-known/did.json')
-        .reply(200, expectedDidWebDoc);
-
-      await persistOrganization({
-        didDocId: expectedDidWebDoc.id,
-      });
-      const kid = expectedDidWebDoc.verificationMethod[0].id;
-
-      const response = await fastify.inject({
-        method: 'GET',
-        url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=pem`,
-      });
-
-      expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
-
-      expect(response.body).toBe(
-        publicKeyHexToPem(hexFromJwk(keyPair.publicKey, false)),
-      );
+      expect(response.body).toBe(hexFromJwk(keyPair.publicKey, false));
     });
 
     it("Should return public key in HEX format when query param set to 'hex'", async () => {
@@ -434,7 +387,7 @@ describe('Public Key Resolution', () => {
         url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}`,
       });
 
-      expect(response.body).toEqual(publicKeyHexToPem(publicKeyHex0));
+      expect(response.body).toEqual(publicKeyHex0);
     });
   });
 });

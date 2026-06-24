@@ -373,22 +373,6 @@ describe('JWT Tests', () => {
       });
     });
 
-    it('should generate jwks from a pem', () => {
-      const key1 =
-        '-----BEGIN PUBLIC KEY-----\n' +
-        'MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEu7yLD8KSz7SvTO0HBDdudY0VL2iEEEx2\n' +
-        'eTEqkg9aRQFbcBzedDgN+MNxGzHHl5PLLP7/zXcNanhJf4jcD9Xguw==\n' +
-        '-----END PUBLIC KEY-----';
-      const jwk = jwkFromSecp256k1Key(key1, false);
-      expect(jwk).toEqual({
-        kty: 'EC',
-        crv: 'secp256k1',
-        use: 'sig',
-        x: expect.any(String),
-        y: expect.any(String),
-      });
-    });
-
     it('should generate jwks for private keys from private key only', () => {
       const secp256kKeyPair1 = generateKeyPair();
       const publicJwk = jwkFromSecp256k1Key(secp256kKeyPair1.publicKey, false);
