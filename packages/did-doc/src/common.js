@@ -24,7 +24,7 @@ const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { toRelativeKeyId } = require('./normalize-id');
 
 const verificationKeyType = 'EcdsaSecp256k1VerificationKey2019';
-const signatureKeyType = 'EcdsaSecp256k1Signature2019';
+const signatureKeyType = 'JsonWebKey2020';
 
 const generateDidInfo = (
   { did: existingDid, keyId } = { did: null, keyId: 'key-1' },
@@ -62,6 +62,9 @@ const generatePublicKeySection = (
   return publicKey;
 };
 
+const toProofSigningKey = (privateKey) =>
+  privateKey?.d == null ? privateKey : hexFromJwk(privateKey);
+
 const generateProof = (payload, privateKey, verificationMethod) => {
   if (isNil(payload)) {
     throw newError('Payload is null or undefined', {
@@ -78,7 +81,7 @@ const generateProof = (payload, privateKey, verificationMethod) => {
     verificationMethod,
   };
 
-  const jws = signPayload(payload, privateKey, options);
+  const jws = signPayload(payload, toProofSigningKey(privateKey), options);
 
   return {
     ...options,

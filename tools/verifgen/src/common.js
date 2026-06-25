@@ -3,7 +3,7 @@ const chalkModule = require('chalk');
 const fs = require('fs');
 const path = require('path');
 const { getOr } = require('lodash/fp');
-const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
+const { generateKeyPair } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { generateProof } = require('@verii/did-doc');
 
@@ -44,16 +44,11 @@ const printError = (ex) => console.error(ex);
 const printInfo = (data) => console.info(data);
 const stringifyJson = (value) => JSON.stringify(value, null, 2);
 
-const toProofSigningKey = (privateKey) =>
-  privateKey?.d == null ? privateKey : hexFromJwk(privateKey);
-
 const generateDid = (controller = {}) => {
   const { privateKey, publicKey } = generateKeyPair({ format: 'jwk' });
   const address = toEthereumAddress(publicKey);
   const did = `did:velocity:${address}`;
-  const proofSigningKey = toProofSigningKey(
-    getOr(privateKey, 'privateKey', controller),
-  );
+  const proofSigningKey = getOr(privateKey, 'privateKey', controller);
   const proofController = getOr(did, 'did.id', controller);
   const didObject = {
     '@context': [
@@ -75,7 +70,6 @@ const generateDid = (controller = {}) => {
 
   didObject.proof = generateProof(
     didObject,
-    proofController,
     proofSigningKey,
     `${proofController}#key-1`,
   );

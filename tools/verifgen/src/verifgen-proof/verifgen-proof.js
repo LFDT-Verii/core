@@ -22,7 +22,7 @@ program
   )
   .requiredOption(
     '-p, --persona <persona>',
-    'The persona that will sign the proof. Must be hex format.',
+    'The persona that will sign the proof. Must be JWK format.',
   )
   .action(() => {
     const options = program.opts();

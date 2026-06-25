@@ -271,7 +271,22 @@ describe('DID Documents Common', () => {
       expect(result).toThrow(Error);
     });
 
-    it('Should generate a proof when passed parameters are valid', () => {
+    it('Should generate a proof with a private jwk', () => {
+      const payload = { field: 'value' };
+      const { privateKey } = generateKeyPair({ format: 'jwk' });
+      const proof = generateProof(payload, privateKey, 'VERIFICATION-METHOD');
+      const testProof = {
+        type: signatureKeyType,
+        proofPurpose: 'assertionMethod',
+        created: proof.created,
+        verificationMethod: 'VERIFICATION-METHOD',
+      };
+      const jws = signPayload(payload, hexFromJwk(privateKey), testProof);
+
+      expect(proof).toEqual({ ...testProof, jws });
+    });
+
+    it('Should generate a proof with a private hex key', () => {
       const payload = { field: 'value' };
       const proof = generateProof(
         payload,
