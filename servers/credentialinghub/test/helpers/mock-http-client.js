@@ -16,19 +16,25 @@
 const { mock } = require('node:test');
 const { NotFoundError } = require('http-errors');
 
-const mockRoutes = { get: {} };
-const mockHttpClient = {
-  get: mock.fn((...args) => {
-    if (!Object.hasOwn(mockRoutes.get, args[0])) {
+const mockRoutes = { get: {}, post: {} };
+const buildDefaultImplementation =
+  (method) =>
+  (...args) => {
+    if (!Object.hasOwn(mockRoutes[method], args[0])) {
       return Promise.resolve({
-        json: () => Promise.reject(new Error(`no get route for ${args[0]}`)),
+        json: () =>
+          Promise.reject(new Error(`no ${method} route for ${args[0]}`)),
       });
     }
 
     return Promise.resolve({
-      json: () => Promise.resolve(mockRoutes.get[args[0]]),
+      json: () => Promise.resolve(mockRoutes[method][args[0]]),
     });
-  }),
+  };
+
+const mockHttpClient = {
+  get: mock.fn(buildDefaultImplementation('get')),
+  post: mock.fn(buildDefaultImplementation('post')),
   responseType: 'promise',
 };
 const mockCache = mock.fn();
@@ -74,11 +80,17 @@ const mockHttpClientError = (method, error) => {
 
 const restMockHttpClient = () => {
   mockRoutes.get = {};
+  mockRoutes.post = {};
 };
 const resetMockHttpClient = () => {
   counter = { get: 0, post: 0 };
   jsonResponses = { get: [], post: [] };
   mockHttpClient.get.mock.resetCalls();
+  mockHttpClient.get.mock.mockImplementation(buildDefaultImplementation('get'));
+  mockHttpClient.post.mock.resetCalls();
+  mockHttpClient.post.mock.mockImplementation(
+    buildDefaultImplementation('post'),
+  );
 };
 resetMockHttpClient();
 

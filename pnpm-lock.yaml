@@ -3355,12 +3355,18 @@ importers:
       '@verii/verii-verification':
         specifier: workspace:*
         version: link:../../packages/verii-verification
+      canonicalize:
+        specifier: ^2.1.0
+        version: 2.1.0
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
+      eth-url-parser:
+        specifier: ^1.0.4
+        version: 1.0.4
       fastify:
         specifier: ^5.8.5
         version: 5.8.5

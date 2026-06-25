@@ -42,7 +42,6 @@ module.exports = (app, options, next = () => {}) => {
         userReference: 1,
         authValues: 1,
         serviceId: 1,
-        messagingSettings: 1,
         preauthCodeHash: 1,
         tenantId: 1,
         createdAt: 1,

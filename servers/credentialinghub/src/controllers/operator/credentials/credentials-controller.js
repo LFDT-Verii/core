@@ -21,8 +21,15 @@ const {
 } = require('@verii/common-schemas');
 const { validationPlugin } = require('@verii/validation');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
-const { createCredentials } = require('../../../entities/credentials');
-const { newCredentialSchema, credentialSchema } = require('./schemas');
+const {
+  createCredentials,
+  revokeCredential,
+} = require('../../../entities/credentials');
+const {
+  newCredentialSchema,
+  credentialSchema,
+  revokeCredentialSchema,
+} = require('./schemas');
 
 const credentialsController = async (fastify) => {
   fastify
@@ -30,6 +37,7 @@ const credentialsController = async (fastify) => {
     .addSchema(w3cVcSchema)
     .addSchema(newCredentialSchema)
     .addSchema(credentialSchema)
+    .addSchema(revokeCredentialSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .register(validationPlugin, {
       ajv: { useDefaults: true, strictTypes: false },
@@ -168,6 +176,55 @@ const credentialsController = async (fastify) => {
         });
 
         return { credentials };
+      },
+    )
+    .post(
+      '/revoke',
+      {
+        schema: fastify.autoSchema({
+          body: {
+            $ref: 'revoke-credential',
+          },
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                credential: {
+                  $ref: 'Credential',
+                },
+                notification: {
+                  type: 'object',
+                  properties: {
+                    status: {
+                      type: 'string',
+                      enum: [
+                        'sent',
+                        'skipped_no_messaging_settings',
+                        'failed',
+                        'already_sent',
+                      ],
+                    },
+                    error: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['status'],
+                },
+                requestId: {
+                  type: 'string',
+                },
+              },
+              required: ['credential', 'notification', 'requestId'],
+            },
+          },
+        }),
+      },
+      async (req) => {
+        const { credential, notification } = await revokeCredential(
+          req.body,
+          req,
+        );
+        return { credential, notification };
       },
     )
     .post(

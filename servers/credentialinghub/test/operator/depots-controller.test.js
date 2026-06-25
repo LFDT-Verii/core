@@ -144,6 +144,30 @@ describe('Depots Test suite', () => {
         }),
       );
     });
+    it('should 400 if depot contains messagingSettings', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: issuerService._id,
+          depot: {
+            userReference: 'ABC123',
+            messagingSettings: {
+              webhookUrl: 'https://wallet.example.com/push',
+              authToken: 'push-token',
+            },
+          },
+        },
+      });
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'request_validation_failed',
+          message: 'body/depot must NOT have additional properties',
+        }),
+      );
+    });
     it('should 200 for a correctly setup depot', async () => {
       const payload = {
         tenantId: tenant._id,

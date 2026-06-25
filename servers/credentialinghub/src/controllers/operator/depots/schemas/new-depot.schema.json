@@ -1,6 +1,7 @@
 {
   "$id": "new-depot",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "userReference"
   ],
