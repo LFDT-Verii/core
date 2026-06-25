@@ -24,6 +24,7 @@
     "lodash": "^4.18.1"
   },
   "devDependencies": {
+    "@verii/crypto": "workspace:*",
     "@verii/sample-data": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
     "eslint": "9.39.4",

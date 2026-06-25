@@ -50,7 +50,7 @@ mock.module('ethers', {
 });
 
 const { range, map } = require('lodash/fp');
-const { generateKeyPair } = require('@verii/crypto');
+const { generateDisposablePrivateKey } = require('@verii/blockchain-functions');
 const { env: config } = require('@spencejs/spence-config');
 const console = require('console');
 
@@ -87,7 +87,7 @@ describe.skip('Mocked Contract Client Test Suite', () => {
     let contractWithEventsClient;
 
     beforeEach(async () => {
-      const { privateKey: clientPrivateKey } = generateKeyPair();
+      const clientPrivateKey = generateDisposablePrivateKey();
 
       contractWithEventsClient = await initContractClient(
         {

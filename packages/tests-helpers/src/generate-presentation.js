@@ -48,7 +48,7 @@ const phonePayload = {
   },
 };
 
-const { privateKey } = generateKeyPair();
+const { privateKey } = generateKeyPair({ format: 'jwk' });
 
 const generateSimpleKYCPresentation = (idDocTypes, options) => {
   const idCredentials = {

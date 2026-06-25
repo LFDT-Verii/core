@@ -15,6 +15,7 @@
  *
  */
 
+const { randomBytes } = require('crypto');
 const { compact, filter, flow, map } = require('lodash/fp');
 const { register } = require('@spencejs/spence-factories');
 const { createDidDoc, toRelativeServiceId } = require('@verii/did-doc');
@@ -50,7 +51,7 @@ module.exports = (app) => {
     'organization',
     organizationsRepoPlugin(app)(app),
     async (overrides, { getOrBuild }) => {
-      const nonce = generateKeyPair().privateKey;
+      const nonce = randomBytes(32).toString('hex');
       const website = await getOrBuild(
         'website',
         () => `https://www.${nonce}.organization.com`,

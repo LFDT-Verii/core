@@ -8,10 +8,10 @@ const generateDidFiles = ({ persona, controllerPersona }) => {
       : null;
 
     const { privateKey, didObject } = common.generateDid(controller);
-    const privateKeyFileName = `${persona}.prv.key`;
+    const privateKeyFileName = `${persona}.prv.key.json`;
     const didFileName = `${persona}.did`;
 
-    common.writeFile(privateKeyFileName, privateKey);
+    common.writeFile(privateKeyFileName, common.stringifyJson(privateKey));
     common.writeFile(didFileName, JSON.stringify(didObject, null, 2));
   } catch (ex) {
     common.printError(ex);

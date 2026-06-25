@@ -4,7 +4,9 @@ const common = require('./common');
 
 const generateAddress = (publicKeyFile, addressFile) => {
   try {
-    const publicKey = common.readFile(publicKeyFile, 'Public key not found');
+    const publicKey = JSON.parse(
+      common.readFile(publicKeyFile, 'Public key not found'),
+    );
     const address = toEthereumAddress(publicKey);
 
     common.writeFile(addressFile, address);
@@ -20,7 +22,7 @@ program
   .option(
     '-b, --public-key-file <filename>',
     'Input public key file name',
-    'pub.key',
+    'pub.key.json',
   )
   .option(
     '-a, --address-file <filename>',

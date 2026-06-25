@@ -25,7 +25,10 @@ const {
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  generateDisposablePrivateKey,
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const { rootPrivateKey } = require('@verii/sample-data');
 const {
   KeyPurposes,
@@ -2073,17 +2076,13 @@ describe.skip('Private key to ethereum account test suite', () => {
     }
   });
   it('brute force eth account conversion with original hex', () => {
-    // This test is different from the previous test in that it uses the
-    // hexes coming directly out of generateKeyPair
-    // results seem the same, possibly slightly more common
+    // This test is different from the previous test in that it uses a
+    // disposable blockchain private key.
 
     for (let i = 0; i < 300; i++) {
-      const keyPairHexInternal = generateKeyPair({ format: 'hex' });
-      const privateJwkInternalToHex = keyPairHexInternal.privateKey;
-      const publicFromPrivateHex = publicKeyFromPrivateKey(
-        privateJwkInternalToHex,
-      );
-      const ethAccountFromPrivate = toEthereumAddress(privateJwkInternalToHex);
+      const privateKeyHex = generateDisposablePrivateKey();
+      const publicFromPrivateHex = publicKeyFromPrivateKey(privateKeyHex);
+      const ethAccountFromPrivate = toEthereumAddress(privateKeyHex.slice(2));
 
       // eslint-disable-next-line no-console
       console.log(`Will we finish iteration ${i}?: --------------`);

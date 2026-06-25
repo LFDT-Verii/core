@@ -31,7 +31,7 @@ const {
 } = require('@verii/crypto');
 const { compact, first, map, omit, reduce } = require('lodash/fp');
 const { nanoid } = require('nanoid');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const { generateAccount } = require('@verii/blockchain-functions');
 const { initPermissions } = require('@verii/contract-permissions');
 const {
   mongoFactoryWrapper,
@@ -150,11 +150,11 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
       context,
     );
 
-    const primaryKeyPair = generateKeyPair();
-    primaryAddress = toEthereumAddress(primaryKeyPair.publicKey);
+    const primaryAccount = generateAccount();
+    primaryAddress = primaryAccount.address;
 
-    const operatorKeyPair = generateKeyPair();
-    operatorAddress = toEthereumAddress(operatorKeyPair.publicKey);
+    const operatorAccount = generateAccount();
+    operatorAddress = operatorAccount.address;
 
     deployerVerificationCouponClient = await initVerificationCoupon(
       {
@@ -181,7 +181,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
 
     const operatorPermissionsClient = await initPermissions(
       {
-        privateKey: primaryKeyPair.privateKey,
+        privateKey: primaryAccount.privateKey,
         contractAddress: permissionsAddress,
         rpcProvider,
       },
@@ -203,7 +203,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
 
     operatorMetadataRegistryClient = await initMetadataRegistry(
       {
-        privateKey: operatorKeyPair.privateKey,
+        privateKey: operatorAccount.privateKey,
         contractAddress: metadataAddress,
         rpcProvider,
       },

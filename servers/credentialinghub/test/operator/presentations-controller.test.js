@@ -47,7 +47,6 @@ const { initMetadataRegistry } = require('@verii/metadata-registration');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { generateKeyPair } = require('@verii/crypto');
 const { applyOverrides, mapWithIndex } = require('@verii/common-functions');
-const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
 const { CheckResults } = require('@verii/vc-checks');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const {
@@ -135,8 +134,8 @@ describe('Presentations Test Suite', () => {
       kid: `${tenant.did}#key-1`,
     });
 
-    holderKeyPair = generateKeyPairInHexAndJwk();
-    holderDid = getDidUriFromJwk(holderKeyPair.publicJwk);
+    holderKeyPair = generateKeyPair({ format: 'jwk' });
+    holderDid = getDidUriFromJwk(holderKeyPair.publicKey);
     resetMockHttpClient();
     mockHttpClientJsonRoute(
       'get',
@@ -359,7 +358,7 @@ describe('Presentations Test Suite', () => {
             verifiableCredential: [vc],
             issuer: holderDid,
           },
-          holderKeyPair.privateJwk,
+          holderKeyPair.privateKey,
           `${holderDid}#key`,
         );
       });
@@ -443,7 +442,7 @@ describe('Presentations Test Suite', () => {
 
         const vp2 = await generatePresentationJwt(
           { verifiableCredential: [vc2], issuer: holderDid },
-          holderKeyPair.privateJwk,
+          holderKeyPair.privateKey,
           `${holderDid}#key`,
         );
 
@@ -510,7 +509,7 @@ describe('Presentations Test Suite', () => {
             verifiableCredential: [vc2],
             issuer: holderDid,
           },
-          holderKeyPair.privateJwk,
+          holderKeyPair.privateKey,
           `${holderDid}#key`,
         );
 

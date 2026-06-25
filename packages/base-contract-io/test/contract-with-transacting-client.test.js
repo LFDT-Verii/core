@@ -16,6 +16,7 @@
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
+const { generateDisposablePrivateKey } = require('@verii/blockchain-functions');
 const { generateKeyPair } = require('@verii/crypto');
 const {
   mongoFactoryWrapper,
@@ -39,7 +40,7 @@ describe(
   'Contract With Transacting Client Test Suite',
   { timeout: 15000 },
   () => {
-    const { privateKey: deployerPrivateKey } = generateKeyPair();
+    const deployerPrivateKey = generateDisposablePrivateKey();
     const rpcUrl = 'http://localhost:8545';
     const authenticate = () => 'TOKEN';
     const rpcProvider = initProvider(rpcUrl, authenticate);
@@ -66,7 +67,7 @@ describe(
         contractInstance = await deployContractWrapper();
       });
       it('Creating a client with no contractAddress should fail', async () => {
-        const { privateKey: clientPrivateKey } = generateKeyPair();
+        const clientPrivateKey = generateDisposablePrivateKey();
         const func = async () =>
           initContractWithTransactingClient(
             {
@@ -82,11 +83,11 @@ describe(
       });
 
       it('Create a client', async () => {
-        const { privateKey: clientPrivateKey } = generateKeyPair();
+        const { privateKey } = generateKeyPair({ format: 'jwk' });
 
         const { transactingClient } = await initContractWithTransactingClient(
           {
-            privateKey: clientPrivateKey,
+            privateKey,
             contractAddress: await contractInstance.getAddress(),
             contractAbi: testEventsAbi,
             rpcProvider,

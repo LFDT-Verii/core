@@ -18,10 +18,10 @@ const { expect } = require('expect');
 
 const { generateKeyPair } = require('@verii/crypto');
 const { generateDocJwt } = require('../src/docs');
-const { jwkFromSecp256k1Key, jwtVerify } = require('../src/core');
+const { jwtVerify } = require('../src/core');
 
 describe('generate doc jwt', () => {
-  const keyPair = generateKeyPair();
+  const keyPair = generateKeyPair({ format: 'jwk' });
 
   describe('Generate simple JWT', () => {
     it('Should generate JWT from generic payload', async () => {
@@ -31,10 +31,7 @@ describe('generate doc jwt', () => {
         issuer,
         audience: 'something',
       });
-      const verified = await jwtVerify(
-        result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false),
-      );
+      const verified = await jwtVerify(result, keyPair.publicKey);
 
       expect(verified).toEqual({
         payload: {
@@ -50,7 +47,6 @@ describe('generate doc jwt', () => {
           jwk: {
             crv: 'secp256k1',
             kty: 'EC',
-            use: 'sig',
             x: expect.any(String),
             y: expect.any(String),
           },
@@ -66,10 +62,7 @@ describe('generate doc jwt', () => {
         issuer,
         kid,
       });
-      const verified = await jwtVerify(
-        result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false),
-      );
+      const verified = await jwtVerify(result, keyPair.publicKey);
 
       expect(verified).toEqual({
         payload: {
@@ -89,10 +82,7 @@ describe('generate doc jwt', () => {
     it('Should generate JWT with no options sent', async () => {
       const doc = { field: 'value' };
       const result = await generateDocJwt(doc, keyPair.privateKey);
-      const verified = await jwtVerify(
-        result,
-        jwkFromSecp256k1Key(keyPair.publicKey, false),
-      );
+      const verified = await jwtVerify(result, keyPair.publicKey);
 
       expect(verified).toEqual({
         payload: {
@@ -106,7 +96,6 @@ describe('generate doc jwt', () => {
           jwk: {
             crv: 'secp256k1',
             kty: 'EC',
-            use: 'sig',
             x: expect.any(String),
             y: expect.any(String),
           },

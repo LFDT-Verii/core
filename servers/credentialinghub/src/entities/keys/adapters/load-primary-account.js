@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-const { hexFromJwk } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { initPermissions } = require('@verii/contract-permissions');
 
@@ -23,11 +22,10 @@ const loadPrimaryAccount = async (dltKey, context) => {
     config: { permissionsContractAddress: contractAddress },
     rpcProvider,
   } = context;
-  const hexKey = hexFromJwk(dltKey.jwk);
-  const publicAddress = toEthereumAddress(hexKey);
+  const publicAddress = toEthereumAddress(dltKey.jwk);
   const permissionContract = await initPermissions(
     {
-      hexKey,
+      privateKey: dltKey.jwk,
       contractAddress,
       rpcProvider,
     },

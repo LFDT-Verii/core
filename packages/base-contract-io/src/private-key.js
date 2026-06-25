@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 Velocity Team
+ * Copyright 2026 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-module.exports = {
-  ...require('./src/ethers-wrappers'),
-  ...require('./src/ibft'),
-  ...require('./src/eth'),
-  ...require('./src/sign-arguments'),
-  ...require('./src/generate-disposable-private-key'),
+const { hexFromJwk } = require('@verii/crypto');
+
+const toEthersPrivateKey = (privateKey) => {
+  const hexKey =
+    typeof privateKey === 'string' ? privateKey : hexFromJwk(privateKey);
+
+  return /^0x/i.test(hexKey) ? `0x${hexKey.slice(2)}` : `0x${hexKey}`;
 };
+
+module.exports = { toEthersPrivateKey };

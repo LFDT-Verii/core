@@ -159,7 +159,6 @@ const {
   KeyPurposes,
   generateKeyPair,
   decryptCollection,
-  hexFromJwk,
 } = require('@verii/crypto');
 const { decodeCredentialJwt } = require('@verii/jwt');
 const { mapWithIndex, runSequentially } = require('@verii/common-functions');
@@ -5829,32 +5828,33 @@ describe('Organizations Full Test Suite', () => {
       },
       expect.any(Object),
     ]);
-    expect(mockInitPermission.mock.calls[1].arguments).toEqual([
-      {
-        contractAddress: fastify.config.permissionsContractAddress,
-        privateKey: expect.any(String),
-        rpcProvider: expect.any(Object),
-      },
-      expect.any(Object),
-    ]);
-    expect(mockAddPrimary.mock.callCount()).toEqual(1);
     const permissioningKey = findKeyByPurpose(
       KeyPurposes.PERMISSIONING,
       dbKeys,
     );
+    const [permissionsOptions, permissionsContext] =
+      mockInitPermission.mock.calls[1].arguments;
+    expect(permissionsOptions.contractAddress).toEqual(
+      fastify.config.permissionsContractAddress,
+    );
+    expect(permissionsOptions.privateKey).toEqual(
+      expect.objectContaining({
+        crv: 'secp256k1',
+        d: expect.any(String),
+        kty: 'EC',
+      }),
+    );
+    expect(permissionsOptions.rpcProvider).toEqual(expect.any(Object));
+    expect(permissionsContext).toEqual(expect.any(Object));
+    expect(mockAddPrimary.mock.callCount()).toEqual(1);
     expect(
       mockAddPrimary.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       {
         primary: organization.ids.ethereumAccount,
-        permissioning: toEthereumAddress(
-          hexFromJwk(permissioningKey.publicKey, false),
-        ),
+        permissioning: toEthereumAddress(permissioningKey.publicKey),
         rotation: toEthereumAddress(
-          hexFromJwk(
-            findKeyByPurpose(KeyPurposes.ROTATION, dbKeys).publicKey,
-            false,
-          ),
+          findKeyByPurpose(KeyPurposes.ROTATION, dbKeys).publicKey,
         ),
       },
     ]);
@@ -5864,10 +5864,7 @@ describe('Organizations Full Test Suite', () => {
     ).toContainEqual([
       {
         operator: toEthereumAddress(
-          hexFromJwk(
-            findKeyByPurpose(KeyPurposes.DLT_TRANSACTIONS, dbKeys).publicKey,
-            false,
-          ),
+          findKeyByPurpose(KeyPurposes.DLT_TRANSACTIONS, dbKeys).publicKey,
         ),
         primary: organization.ids.ethereumAccount,
       },

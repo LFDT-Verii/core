@@ -22,11 +22,11 @@ const { last } = require('lodash/fp');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const {
   generateKeyPair,
+  hexFromJwk,
   signPayload,
   jwkFromSecp256k1Key,
 } = require('@verii/crypto');
 
-const { rootPrivateKey } = require('@verii/sample-data');
 const {
   verificationKeyType,
   signatureKeyType,
@@ -34,7 +34,6 @@ const {
   generatePublicKeySection,
   generateProof,
   extractVerificationKey,
-  publicKeyToJwk,
 } = require('../src/common');
 
 describe('DID Documents Common', () => {
@@ -51,7 +50,8 @@ describe('DID Documents Common', () => {
   });
 
   describe('extract public key', () => {
-    const { publicKey } = generateKeyPair();
+    const { publicKey: publicJwk } = generateKeyPair({ format: 'jwk' });
+    const publicKey = hexFromJwk(publicJwk, false);
     const did = `did:key:${publicKey}`;
     const kidFragment = '#key-1';
     const kid = `${did}${kidFragment}`;
@@ -201,21 +201,6 @@ describe('DID Documents Common', () => {
     });
   });
 
-  describe('publicKeyToJwk', () => {
-    const { publicKey: publicKeyHex } = generateKeyPair();
-    const publicKeyJwk = jwkFromSecp256k1Key(publicKeyHex, false);
-
-    it('should return publicKeyJwk when publicKeyHex is passed', () => {
-      const publicKey = publicKeyToJwk({ publicKeyHex });
-      expect(publicKey).toEqual(publicKeyJwk);
-    });
-
-    it('should return publicKeyJwk when publicKeyJwk is passed', () => {
-      const publicKey = publicKeyToJwk({ publicKeyJwk });
-      expect(publicKey).toEqual(publicKeyJwk);
-    });
-  });
-
   describe('DID Public Key Section Generation', () => {
     it('Should generate a valid public key section item', () => {
       const section = generatePublicKeySection(
@@ -234,36 +219,37 @@ describe('DID Documents Common', () => {
   });
 
   describe('DID Proof Generation', () => {
-    it('Should throw error when payload is undefined', () => {
+    const { privateKey } = generateKeyPair({ format: 'jwk' });
+
+    it('should throw when payload is undefined', () => {
       const result = () =>
-        generateProof(undefined, 'PRIVATE-KEY', 'VERIFICATION-METHOD');
+        generateProof(undefined, privateKey, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when payload is null', () => {
+    it('should throw when payload is null', () => {
       const result = () =>
-        generateProof(null, 'PRIVATE-KEY', 'VERIFICATION-METHOD');
+        generateProof(null, privateKey, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when payload is an empty string', () => {
-      const result = () =>
-        generateProof('', 'PRIVATE-KEY', 'VERIFICATION-METHOD');
+    it('should throw when payload is an empty string', () => {
+      const result = () => generateProof('', privateKey, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when payload is not JSON', () => {
+    it('should throw when payload is not JSON', () => {
       const payload = 'NOT_JSON';
       const result = () =>
-        generateProof(payload, 'PRIVATE-KEY', 'VERIFICATION-METHOD');
+        generateProof(payload, privateKey, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when private key is undefined', () => {
+    it('should throw when private key is undefined', () => {
       const payload = { field: 'value' };
       const result = () =>
         generateProof(payload, undefined, 'VERIFICATION-METHOD');
@@ -271,34 +257,30 @@ describe('DID Documents Common', () => {
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when private key is null', () => {
+    it('should throw when private key is null', () => {
       const payload = { field: 'value' };
       const result = () => generateProof(payload, null, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when private key is an empty string', () => {
+    it('should throw when private key is an empty string', () => {
       const payload = { field: 'value' };
       const result = () => generateProof(payload, '', 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should generate a proof when passed parameters are valid', () => {
+    it('should generate a JsonWebKey2020 proof signed with a private JWK', () => {
       const payload = { field: 'value' };
-      const proof = generateProof(
-        payload,
-        rootPrivateKey,
-        'VERIFICATION-METHOD',
-      );
+      const proof = generateProof(payload, privateKey, 'VERIFICATION-METHOD');
       const testProof = {
         type: signatureKeyType,
         proofPurpose: 'assertionMethod',
         created: proof.created,
         verificationMethod: 'VERIFICATION-METHOD',
       };
-      const jws = signPayload(payload, rootPrivateKey, testProof);
+      const jws = signPayload(payload, hexFromJwk(privateKey), testProof);
 
       expect(proof).toEqual({ ...testProof, jws });
     });

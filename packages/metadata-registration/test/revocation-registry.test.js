@@ -18,15 +18,13 @@ const { after, afterEach, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { last } = require('lodash/fp');
-const { toNumber } = require('@verii/blockchain-functions');
-const { generateKeyPair } = require('@verii/crypto');
+const { generateAccount, toNumber } = require('@verii/blockchain-functions');
 const {
   mongoFactoryWrapper,
   mongoCloseWrapper,
 } = require('@verii/tests-helpers');
 const { env } = require('@spencejs/spence-config');
 const console = require('console');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { initPermissions } = require('@verii/contract-permissions');
 const { wait } = require('@verii/common-functions');
 const initRevocationRegistry = require('../src/revocation-registry');
@@ -58,10 +56,10 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
       permissionsContractAddress,
       context,
     );
-    const { primaryAddress, operatorKeyPair } =
+    const { primaryAddress, operatorAccount } =
       await initializationPermissions();
     defaultPrimaryAddress = primaryAddress;
-    revocationRegistry = await createRevocationRegistryWallet(operatorKeyPair);
+    revocationRegistry = await createRevocationRegistryWallet(operatorAccount);
   });
 
   afterEach(async () => {
@@ -100,11 +98,11 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
     });
 
     it('Throw an error: the wallet not registered', async () => {
-      const operatorKeyPair = generateKeyPair();
+      const operatorAccount = generateAccount();
 
       const revocationRegistryClient = await initRevocationRegistry(
         {
-          privateKey: operatorKeyPair.privateKey,
+          privateKey: operatorAccount.privateKey,
           contractAddress: revocationRegistryContractAddress,
           rpcProvider,
         },
@@ -340,10 +338,10 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
     });
   });
 
-  const createRevocationRegistryWallet = async (operatorKeyPair) => {
+  const createRevocationRegistryWallet = async (operatorAccount) => {
     const revocationRegistryClient = await initRevocationRegistry(
       {
-        privateKey: operatorKeyPair.privateKey,
+        privateKey: operatorAccount.privateKey,
         contractAddress: revocationRegistryContractAddress,
         rpcProvider,
       },
@@ -356,8 +354,8 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
   };
 
   const initializationPermissions = async () => {
-    const primaryKeyPair = generateKeyPair();
-    const primaryAddress = toEthereumAddress(primaryKeyPair.publicKey);
+    const primaryAccount = generateAccount();
+    const primaryAddress = primaryAccount.address;
 
     const permissionsContractRootClient = await initPermissions(
       {
@@ -380,19 +378,19 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
 
     const operatorPermissionsClient = await initPermissions(
       {
-        privateKey: primaryKeyPair.privateKey,
+        privateKey: primaryAccount.privateKey,
         contractAddress: permissionsContractAddress,
         rpcProvider,
       },
       context,
     );
 
-    const operatorKeyPair = generateKeyPair();
-    const operatorAddress = toEthereumAddress(operatorKeyPair.publicKey);
+    const operatorAccount = generateAccount();
+    const operatorAddress = operatorAccount.address;
     await operatorPermissionsClient.addOperatorKey({
       primary: primaryAddress,
       operator: operatorAddress,
     });
-    return { primaryAddress, operatorAddress, operatorKeyPair };
+    return { primaryAddress, operatorAddress, operatorAccount };
   };
 });

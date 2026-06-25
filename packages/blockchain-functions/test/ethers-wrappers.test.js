@@ -22,6 +22,7 @@ const {
   toHexString,
   toNumber,
 } = require('../src/ethers-wrappers');
+const { generateAccount } = require('../src/generate-disposable-private-key');
 
 describe('Ethers Wrappers', () => {
   describe('Ethereum Addresses', () => {
@@ -36,10 +37,12 @@ describe('Ethers Wrappers', () => {
     });
 
     it('Should return Ethereum address from private key key', () => {
-      const { publicKey, privateKey } = generateKeyPair();
+      const wallet = generateAccount();
 
-      const publicKeyAddress = toEthereumAddress(publicKey);
-      const privateKeyAddress = toEthereumAddress(privateKey);
+      const publicKeyAddress = toEthereumAddress(
+        wallet.signingKey.publicKey.slice(2),
+      );
+      const privateKeyAddress = toEthereumAddress(wallet.privateKey.slice(2));
 
       expect(privateKeyAddress).toEqual(publicKeyAddress);
     });

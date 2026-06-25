@@ -300,6 +300,9 @@ importers:
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
+      '@verii/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@verii/http-client':
         specifier: workspace:*
         version: link:../http-client
@@ -319,9 +322,6 @@ importers:
       '@spencejs/spence-config':
         specifier: 1.1.0
         version: 1.1.0
-      '@verii/crypto':
-        specifier: workspace:*
-        version: link:../crypto
       '@verii/tests-helpers':
         specifier: workspace:*
         version: link:../tests-helpers
@@ -2319,6 +2319,9 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
+      '@verii/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@verii/sample-data':
         specifier: workspace:*
         version: link:../sample-data
@@ -3710,9 +3713,6 @@ importers:
       '@verii/verii-verification':
         specifier: workspace:*
         version: link:../../packages/verii-verification
-      bs58:
-        specifier: ^6.0.0
-        version: 6.0.0
       chalk:
         specifier: ~5.6.2
         version: 5.6.2

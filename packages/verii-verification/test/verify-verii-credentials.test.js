@@ -41,13 +41,12 @@ const { jwtSign, jwtDecode, generateCredentialJwt } = require('@verii/jwt');
 const { addHours, setMilliseconds } = require('date-fns/fp');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { credentialUnexpired } = require('@verii/sample-data');
-const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
 const {
   CheckResults,
   VeriiProtocolVersions,
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
-const { generateKeyPair } = require('@verii/crypto');
+const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 const { applyOverrides } = require('@verii/common-functions');
 const nock = require('./helpers/nock');
 const { verifyVeriiCredentials } = require('../src/verify-verii-credentials');
@@ -56,10 +55,12 @@ const registrarHost = 'registrar.test';
 const registrarUrl = `https://${registrarHost}`;
 
 describe('Verify verii credentials', () => {
-  const orgKeyPair = generateKeyPairInHexAndJwk();
+  const orgKeyPair = generateKeyPair({ format: 'jwk' });
+  const orgPublicKey = hexFromJwk(orgKeyPair.publicKey, false);
+  const orgPrivateKey = hexFromJwk(orgKeyPair.privateKey);
   const issuerDid = 'did:ion:1234567890';
-  const issuerKeyPair = generateKeyPairInHexAndJwk();
-  const issuerDidJwk = getDidUriFromJwk(issuerKeyPair.publicJwk);
+  const issuerKeyPair = generateKeyPair({ format: 'jwk' });
+  const issuerDidJwk = getDidUriFromJwk(issuerKeyPair.publicKey);
 
   const mockGetOrganizationVerifiedProfile = {
     credentialSubject: {
@@ -77,7 +78,7 @@ describe('Verify verii credentials', () => {
   const credentialTypePath = '/api/v0.6/credential-types';
 
   const config = {
-    rootPublicKey: orgKeyPair.publicKey,
+    rootPublicKey: orgPublicKey,
     revocationContractAddress: 'any',
     registrarUrl,
     isTest: true,
@@ -87,7 +88,7 @@ describe('Verify verii credentials', () => {
 
   before(async () => {
     const keys = {
-      'keyid-1': { privateJwk: orgKeyPair.privateJwk },
+      'keyid-1': { privateJwk: orgKeyPair.privateKey },
     };
 
     context = {
@@ -114,7 +115,7 @@ describe('Verify verii credentials', () => {
             publicKey: [
               {
                 id: `${credentialDid.toLowerCase()}#key`,
-                publicKeyJwk: orgKeyPair.publicJwk,
+                publicKeyJwk: orgKeyPair.publicKey,
               },
             ],
             service: ['SERVICE'],
@@ -138,7 +139,7 @@ describe('Verify verii credentials', () => {
           .get(resolveDidPath)
           .reply(200, {
             id: issuerDid,
-            publicKey: [{ id: '#key-1', publicKeyJwk: orgKeyPair.publicJwk }],
+            publicKey: [{ id: '#key-1', publicKeyJwk: orgKeyPair.publicKey }],
           });
         nock(registrarUrl)
           .get(verifiedProfilePath)
@@ -166,7 +167,7 @@ describe('Verify verii credentials', () => {
             },
           },
         };
-        issuerVc = await jwtSign(issuerCred, orgKeyPair.privateJwk, {
+        issuerVc = await jwtSign(issuerCred, orgKeyPair.privateKey, {
           kid: `${issuerDid}#key-1`,
         });
 
@@ -189,7 +190,7 @@ describe('Verify verii credentials', () => {
         });
         openBadgeVc = await generateCredentialJwt(
           openBadgeCredential,
-          orgKeyPair.privateJwk,
+          orgKeyPair.privateKey,
           `${credentialDid}#key`,
         );
       });
@@ -333,7 +334,7 @@ describe('Verify verii credentials', () => {
         };
         const vcWithArrayOfStatus = await generateCredentialJwt(
           credentialWithArrayOfStatus,
-          orgKeyPair.privateKey,
+          orgPrivateKey,
           `${credentialDid}#key`,
         );
         const result = await verifyVeriiCredentials(
@@ -420,7 +421,7 @@ describe('Verify verii credentials', () => {
       });
 
       it('UNTAMPERED should return DEPENDENCY_RESOLUTION_ERROR if credential signed using an unsupported did method in kid', async () => {
-        const keyPair = generateKeyPairInHexAndJwk();
+        const keyPair = generateKeyPair({ format: 'jwk' });
         const didWeb = 'did:web:example.com';
         const unsignedCredential = {
           ...omit(['id'], openBadgeCredential),
@@ -431,7 +432,7 @@ describe('Verify verii credentials', () => {
         };
         const signedCredential = await jwtSign(
           { vc: unsignedCredential },
-          keyPair.privateJwk,
+          keyPair.privateKey,
           {
             nbf: new Date(unsignedCredential.issuanceDate),
             iat: new Date(unsignedCredential.issuanceDate),
@@ -565,7 +566,7 @@ describe('Verify verii credentials', () => {
             credentials: [
               await generateCredentialJwt(
                 openBadgeCredential,
-                orgKeyPair.privateJwk,
+                orgKeyPair.privateKey,
                 credentialDid,
               ),
             ],
@@ -850,7 +851,7 @@ describe('Verify verii credentials', () => {
 
         const vcWithoutCorrectStatus = await generateCredentialJwt(
           credentialWithoutCorrectStatus,
-          orgKeyPair.privateKey,
+          orgPrivateKey,
           `${credentialDid}#key`,
         );
         const result = await verifyVeriiCredentials(

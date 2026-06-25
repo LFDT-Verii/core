@@ -2058,7 +2058,7 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
       });
 
       it('should return credential check failures if root jwk is incorrect', async () => {
-        const rootPrivateKey = generateKeyPair().publicKey;
+        const { privateKey: rootPrivateKey } = generateKeyPair();
 
         fastify.overrides.reqConfig = (config) => ({
           ...config,
