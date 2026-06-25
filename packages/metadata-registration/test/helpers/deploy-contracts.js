@@ -21,7 +21,8 @@ const {
 const {
   deployTestPermissionsContract,
 } = require('@verii/contract-permissions/test/helpers/deploy-test-permissions-contract');
-const { generateKeyPair, get2BytesHash } = require('@verii/crypto');
+const { generateDisposablePrivateKey } = require('@verii/blockchain-functions');
+const { get2BytesHash } = require('@verii/crypto');
 const { initProvider } = require('@verii/base-contract-io');
 const { initVerificationCoupon, initMetadataRegistry } = require('../../index');
 const verificationCouponAbi = require('../../src/contracts/verification-coupon.json');
@@ -32,7 +33,7 @@ const initRevocationRegistry = require('../../src/revocation-registry');
 const rpcUrl = 'http://localhost:8545';
 const authenticate = () => 'TOKEN';
 const rpcProvider = initProvider(rpcUrl, authenticate);
-const { privateKey: deployerPrivateKey } = generateKeyPair();
+const deployerPrivateKey = generateDisposablePrivateKey();
 
 const deployPermissionContract = async () => {
   const permissionsContract = await deployTestPermissionsContract(

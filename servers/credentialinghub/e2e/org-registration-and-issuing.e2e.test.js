@@ -22,7 +22,11 @@ const { MongoClient } = require('mongodb');
 const { nanoid, customAlphabet } = require('nanoid');
 const { lowercase } = require('nanoid-dictionary');
 const { filter, first, find, map, omit } = require('lodash/fp');
-const { KeyPurposes, generateKeyPair } = require('@verii/crypto');
+const {
+  KeyPurposes,
+  generateKeyPair,
+  jwkFromSecp256k1Key,
+} = require('@verii/crypto');
 const {
   applyOverrides,
   formatAsDate,
@@ -40,7 +44,6 @@ const {
   jwtVerify,
   generateDocJwt,
   generatePresentationJwt,
-  toJwk,
   jwtSign,
 } = require('@verii/jwt');
 const { getDidUriFromJwk } = require('@verii/did-doc');
@@ -520,7 +523,7 @@ describe('org registration and issuing e2e', () => {
     );
     const { payload: credentialManifest } = await jwtVerify(
       credentialManifestJson.issuing_request,
-      toJwk(key.didDocumentKey.publicKeyMultibase, false),
+      jwkFromSecp256k1Key(key.didDocumentKey.publicKeyMultibase, false),
     );
     expect(credentialManifest).toEqual({
       ...expectedCredentialManifest(profile, tenant, service, [

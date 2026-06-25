@@ -18,7 +18,7 @@
 /** @import { Issuer, Context } from "../../types/types" */
 
 const { initRevocationRegistry } = require('@verii/metadata-registration');
-const { initCallWithKmsKey, hexFromJwk } = require('@verii/crypto');
+const { initCallWithKmsKey } = require('@verii/crypto');
 
 /**
  * Get revocation registry
@@ -37,7 +37,7 @@ const getRevocationRegistry = (issuer, context) => {
       {
         contractAddress: revocationContractAddress,
         rpcProvider,
-        privateKey: hexFromJwk(key.privateJwk),
+        privateKey: key.privateJwk,
       },
       context,
     ),

@@ -594,6 +594,18 @@ describe('Tenants management test suite', () => {
         keyMetadatas: expectedKeyMetadatas(payload.keys),
         requestId: expect.any(String),
       });
+      expect(
+        mockContractPermissionsModule.initPermissions.mock.calls.map(
+          (call) => call.arguments,
+        ),
+      ).toContainEqual([
+        expect.objectContaining({
+          privateKey: payload.keys[0].jwk,
+          contractAddress: fastify.config.permissionsContractAddress,
+          rpcProvider: expect.any(Object),
+        }),
+        expect.any(Object),
+      ]);
 
       const tenantFromDb = await loadDbTenant(response.json.tenant.id);
 

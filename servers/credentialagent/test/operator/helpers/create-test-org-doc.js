@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-const { generateKeyPair, jwkFromSecp256k1Key } = require('@verii/crypto');
+const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 
 const { nanoid } = require('nanoid/non-secure');
 
 const createOrgDoc = async () => {
-  const { privateKey, publicKey } = generateKeyPair();
-  const publicKeyJwk = jwkFromSecp256k1Key(publicKey, false);
+  const { privateKey, publicKey } = generateKeyPair({
+    format: 'jwk',
+  });
   const key = {
     id: '#velocity-key-1',
-    publicKeyJwk,
+    publicKeyJwk: publicKey,
     algorithm: 'SECP256K1',
     encoding: 'hex',
     controller: 'did:key:01230123012',
@@ -51,8 +52,8 @@ const createOrgDoc = async () => {
       assertionMethod: [key.id],
       verificationMethod: [key],
     },
-    orgKey: privateKey,
-    orgPublicKey: publicKey,
+    orgKey: hexFromJwk(privateKey),
+    orgPublicKey: hexFromJwk(publicKey, false),
   };
 };
 module.exports = {

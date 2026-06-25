@@ -34,8 +34,11 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 
 const nock = require('../helpers/nock');
 const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
-const { generateKeyPair, KeyPurposes, hexFromJwk } = require('@verii/crypto');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const { generateKeyPair, KeyPurposes } = require('@verii/crypto');
+const {
+  generateAccount,
+  toEthereumAddress,
+} = require('@verii/blockchain-functions');
 const { ObjectId } = require('mongodb');
 
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
@@ -54,8 +57,8 @@ const getUrl = (tenant, credentialId) =>
 
 describe('Credentials checking tests', () => {
   const keyPair = generateKeyPair({ format: 'jwk' });
-  const primaryPair = generateKeyPair();
-  const primaryAddress = toEthereumAddress(primaryPair.privateKey);
+  const primaryAccount = generateAccount();
+  const primaryAddress = primaryAccount.address;
 
   let fastify;
   let tenant;
@@ -167,7 +170,7 @@ describe('Credentials checking tests', () => {
     ).toEqual([
       [
         expect.objectContaining({
-          privateKey: hexFromJwk(keyPair.privateKey, true),
+          privateKey: keyPair.privateKey,
         }),
         expect.any(Object),
       ],
@@ -221,7 +224,7 @@ describe('Credentials checking tests', () => {
       type: ['SomeType'],
       credentialStatus: {
         id: `ethereum:0xB457b50B6914A17Be513eD17c4aF9A9FECDB164C/getRevokedStatus?address=${toEthereumAddress(
-          hexFromJwk(fallbackKeyPair.publicKey, false),
+          fallbackKeyPair.publicKey,
         )}&listId=1000257453&index=5682`,
       },
       exchange,
@@ -253,7 +256,7 @@ describe('Credentials checking tests', () => {
       initRevocationRegistry.mock.calls.map((call) => call.arguments),
     ).toContainEqual([
       expect.objectContaining({
-        privateKey: hexFromJwk(fallbackKeyPair.privateKey),
+        privateKey: fallbackKeyPair.privateKey,
       }),
       expect.any(Object),
     ]);

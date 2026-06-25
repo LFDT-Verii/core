@@ -31,7 +31,6 @@ const {
   toLower,
   uniq,
 } = require('lodash/fp');
-const { hexFromJwk } = require('@verii/crypto');
 const { buildDecodedCredential, jwtDecode } = require('@verii/jwt');
 const {
   initMetadataRegistry,
@@ -175,7 +174,7 @@ const resolveVelocityDidDocument = async (
     const { privateJwk: dltJwk } = await kms.exportKeyOrSecret(
       relyingParty.dltOperatorKMSKeyId,
     );
-    dltPrivateKey = hexFromJwk(dltJwk);
+    dltPrivateKey = dltJwk;
   }
 
   const metadataRegistry = await initMetadataRegistry(

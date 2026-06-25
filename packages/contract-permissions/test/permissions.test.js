@@ -16,8 +16,7 @@
 const { after, afterEach, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 
-const { generateKeyPair } = require('@verii/crypto');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const { generateAccount } = require('@verii/blockchain-functions');
 const { initProvider } = require('@verii/base-contract-io');
 const {
   mongoFactoryWrapper,
@@ -44,11 +43,6 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
 
   let deployedContract;
 
-  const generateAccount = () => {
-    const keyPair = generateKeyPair();
-    return { address: toEthereumAddress(keyPair.publicKey), ...keyPair };
-  };
-
   const clientForAddress = async (privateKey, contract) => {
     return initPermissions(
       {
@@ -68,14 +62,14 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
   before(async () => {
     await mongoFactoryWrapper('test-permissions', context);
 
-    const rootKeyPair = generateKeyPair();
+    const rootAccount = generateAccount();
     deployedContract = await deployTestPermissionsContract(
-      rootKeyPair.privateKey,
+      rootAccount.privateKey,
       rpcUrl,
     );
 
     rootPermissioningContractClient = await clientForAddress(
-      rootKeyPair.privateKey,
+      rootAccount.privateKey,
       deployedContract,
     );
 
@@ -278,15 +272,14 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
     });
 
     it('Should return zero address if operator has not primary', async () => {
-      const { publicKey } = generateKeyPair();
-      const address = toEthereumAddress(publicKey);
+      const { address } = generateAccount();
       await expect(
         permissioningContractClient.lookupPrimary(address),
       ).resolves.toEqual(zeroAddress);
     });
 
     it("A key that is not the Primary's Permissioning key should not be able to add an operator", async () => {
-      const testOperatorKey = toEthereumAddress(generateKeyPair().publicKey);
+      const { address: testOperatorKey } = generateAccount();
 
       await expect(
         rootPermissioningContractClient.addOperatorKey({

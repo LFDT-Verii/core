@@ -16,9 +16,9 @@
 const { before, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
-const { generateKeyPairInHexAndJwk } = require('@verii/tests-helpers');
 const { omit, set, times, join } = require('lodash/fp');
 const { generateCredentialJwt } = require('@verii/jwt');
+const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 const { checkIssuerTrust } = require('../src/check-issuer-trust');
 const {
   verifyPrimarySourceIssuer,
@@ -32,7 +32,8 @@ describe('issuer checks', () => {
     warn: mock.fn(),
     error: mock.fn(),
   };
-  const issuerKeyPair = generateKeyPairInHexAndJwk();
+  const issuerKeyPair = generateKeyPair({ format: 'jwk' });
+  const issuerPublicKey = hexFromJwk(issuerKeyPair.publicKey, false);
 
   const issuerDid = 'did:ion:1234567890';
   const issuerKid = `${issuerDid}#key-1`;
@@ -46,7 +47,7 @@ describe('issuer checks', () => {
     },
   };
   const config = {
-    rootPublicKey: issuerKeyPair.publicKey,
+    rootPublicKey: issuerPublicKey,
     revocationContractAddress: 'any',
     rpcUrl: 'any',
     trustedIssuerCheckMinDate: '2024-02-28T00:00:00Z',
@@ -61,7 +62,7 @@ describe('issuer checks', () => {
   before(async () => {
     boundIssuerVc = await generateCredentialJwt(
       issuerCred,
-      issuerKeyPair.privateJwk,
+      issuerKeyPair.privateKey,
       issuerKid,
     );
     issuerDidDocument = {
@@ -69,7 +70,7 @@ describe('issuer checks', () => {
       verificationMethod: [
         {
           id: '#key-1',
-          publicKeyJwk: issuerKeyPair.publicJwk,
+          publicKeyJwk: issuerKeyPair.publicKey,
         },
       ],
     };
@@ -120,7 +121,7 @@ describe('issuer checks', () => {
         issuerDidDocument: {
           id: issuerDid,
           verificationMethod: [
-            { id: '#wrong-id', publicKeyJwk: issuerKeyPair.publicJwk },
+            { id: '#wrong-id', publicKeyJwk: issuerKeyPair.publicKey },
           ],
         },
       },
@@ -131,7 +132,7 @@ describe('issuer checks', () => {
   });
 
   it('Should FAIL when wrong key', async () => {
-    const { publicJwk: publicKeyJwk } = generateKeyPairInHexAndJwk();
+    const { publicKey: publicKeyJwk } = generateKeyPair({ format: 'jwk' });
 
     const result = await checkIssuerTrust(
       identityCredential,
@@ -174,7 +175,7 @@ describe('issuer checks', () => {
         ...defaultDependencies,
         boundIssuerVc: await generateCredentialJwt(
           issuerCred,
-          issuerKeyPair.privateJwk,
+          issuerKeyPair.privateKey,
         ),
       },
       context,
@@ -190,7 +191,7 @@ describe('issuer checks', () => {
           listId: 1,
         },
       },
-      issuerKeyPair.privateJwk,
+      issuerKeyPair.privateKey,
       issuerKid,
     );
 
@@ -222,10 +223,10 @@ describe('issuer checks', () => {
   });
 
   it('Should FAIL when boundIssuerVC signature invalid', async () => {
-    const { privateJwk } = generateKeyPairInHexAndJwk();
+    const { privateKey } = generateKeyPair({ format: 'jwk' });
     const wrongSigVc = await generateCredentialJwt(
       issuerCred,
-      privateJwk,
+      privateKey,
       issuerKid,
     );
 

@@ -19,6 +19,7 @@
   "dependencies": {
     "@verii/blockchain-functions": "workspace:*",
     "@verii/common-functions": "workspace:*",
+    "@verii/crypto": "workspace:*",
     "@verii/http-client": "workspace:*",
     "date-fns": "^4.4.0",
     "fastify-plugin": "^5.1.0",
@@ -26,9 +27,8 @@
     "lodash": "^4.18.1"
   },
   "devDependencies": {
-    "@verii/tests-helpers": "workspace:*",
     "@spencejs/spence-config": "1.1.0",
-    "@verii/crypto": "workspace:*",
+    "@verii/tests-helpers": "workspace:*",
     "expect": "30.4.1"
   },
   "nx": {

@@ -20,6 +20,7 @@ const {
   beforeEach,
   describe,
   it,
+  mock,
 } = require('node:test');
 const { expect } = require('expect');
 
@@ -31,7 +32,10 @@ const {
 const { env: config } = require('@spencejs/spence-config');
 const console = require('console');
 
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const {
+  generateAccount,
+  generateDisposablePrivateKey,
+} = require('@verii/blockchain-functions');
 
 const { wait } = require('@verii/common-functions');
 const testEventsAbi = require('./data/test-events-abi.json');
@@ -44,8 +48,8 @@ const context = {
 };
 
 describe('Contract Client Test Suite', { timeout: 15000 }, () => {
-  const { privateKey: deployerPrivateKey } = generateKeyPair();
-  const randomAccount = toEthereumAddress(generateKeyPair().publicKey);
+  const deployerPrivateKey = generateDisposablePrivateKey();
+  const randomAccount = generateAccount().address;
   const rpcUrl = 'http://localhost:8545';
   const authenticate = () => 'TOKEN';
   const rpcProvider = initProvider(rpcUrl, authenticate);
@@ -75,7 +79,7 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
       contractInstance = await deployContractThatHasEvents();
     });
     it('Creating a client with no contractAddress should fail', async () => {
-      const { privateKey: clientPrivateKey } = generateKeyPair();
+      const clientPrivateKey = generateDisposablePrivateKey();
       const func = async () =>
         initContractClient(
           {
@@ -91,22 +95,28 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
     });
 
     it('Create a client', async () => {
-      const { privateKey: clientPrivateKey } = generateKeyPair();
+      const { privateKey } = generateKeyPair({ format: 'jwk' });
+      const contractAddress = await contractInstance.getAddress();
+      const log = { info: mock.fn() };
 
       contractClient = await initContractClient(
         {
-          privateKey: clientPrivateKey,
-          contractAddress: await contractInstance.getAddress(),
+          privateKey,
+          contractAddress,
           contractAbi: testEventsAbi,
           rpcProvider,
         },
-        context,
+        { ...context, log },
       );
 
       expect(contractClient.wallet.provider).toEqual(rpcProvider);
       expect(contractClient.contractClient.runner.provider).toEqual(
         rpcProvider,
       );
+      expect(log.info.mock.calls.map((call) => call.arguments)).toEqual([
+        [{ contractAddress, hasPrivateKey: true }, 'initContractClient'],
+        ['initContractClient done'],
+      ]);
     });
   });
 
@@ -115,7 +125,7 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
 
     beforeEach(async () => {
       const contractInstance = await deployContractThatHasEvents();
-      const { privateKey: clientPrivateKey } = generateKeyPair();
+      const clientPrivateKey = generateDisposablePrivateKey();
 
       contractWithEventsClient = await initContractClient(
         {

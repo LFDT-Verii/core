@@ -42,6 +42,11 @@ Now that you have a set of credentials then you can create presentations for sen
 - Support organization signed credentials
 
 
+## Generating Keys
+`$ node ./src/verifgen.js keys --public-key-file pub.key.json --private-key-file prv.key.json`
+
+The key files are written as JSON Web Keys. The private key file contains a private JWK and must be stored securely.
+
 ## Creating agent jwt token
 `$ node ./src/verifgen agent-jwt --secret 'cc7e0d44fd473002f1c42167459001140ec6389b7353f8088f4d9a95f2f596f2' --email example@example.com --groupId 123654`
 
@@ -80,25 +85,18 @@ With a persona of johndoe, the following files would be expected.
    The important thing here is that the `id` property is present, and represents the identity of the persona
 
 
-2. One of the following:
-   1. A private jwk in a file named `johndoe.prv.key.json`, with JSON contents like:
-      ```
-      {
-        "kty": "...",
-        "crv": "...",
-        "d": "...",
-        "x": "...",
-        "y": "..."
-      }
-      ```
-   2. A private hex string in a file named `johndoe.prv.key` with a string like:
-      ```
-      8a2c1...
-      ```
-      The CLI will attempt to load the JWK first. 
-      Otherwise the CLI will attempt to load the hex file.
-      
-      This private key will be used to sign whatever JWTs are relevant to the CLI tool being used.
-      So using `verifgen presentation`, this key will be used to sign the presentation.
-      And using `verifgen proof`, this key will be used to sign the proof.
-      And same goes for other instances where the `-p <persona` option is specified.
+2. A private JWK in a file named `johndoe.prv.key.json`, with JSON contents like:
+   ```
+   {
+     "kty": "...",
+     "crv": "...",
+     "d": "...",
+     "x": "...",
+     "y": "..."
+   }
+   ```
+
+   This private key will be used to sign whatever JWTs are relevant to the CLI tool being used.
+   So using `verifgen presentation`, this key will be used to sign the presentation.
+   And using `verifgen proof`, this key will be used to sign the proof.
+   And same goes for other instances where the `-p <persona>` option is specified.

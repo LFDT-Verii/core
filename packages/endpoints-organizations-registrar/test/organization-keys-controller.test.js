@@ -447,7 +447,8 @@ describe('Organization Keys Test Suite', () => {
       it('Should return 400 when actual publicKey encoding does not match the specified encoding', async () => {
         const organization = await persistOrganization();
         const did = organization.didDoc.id;
-        const { publicKey } = generateKeyPair();
+        const { publicKey: publicJwk } = generateKeyPair({ format: 'jwk' });
+        const publicKey = hexFromJwk(publicJwk, false);
         const nonHexPublicKey = publicKey.replace(/.$/, 'g');
         const response = await fastify.injectJson({
           method: 'POST',

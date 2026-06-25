@@ -16,8 +16,7 @@
 
 const { rootPrivateKey } = require('@verii/sample-data');
 const { initPermissions } = require('@verii/contract-permissions');
-const { generateKeyPair } = require('@verii/crypto');
-const { toEthereumAddress } = require('@verii/blockchain-functions');
+const { generateAccount } = require('@verii/blockchain-functions');
 const { initProvider } = require('@verii/base-contract-io');
 
 const generatePrimaryAndAddOperatorToPrimary = async (
@@ -37,8 +36,8 @@ const generatePrimaryAndAddOperatorToPrimary = async (
     },
     { ...context, repos: {} },
   );
-  const primaryKeyPair = generateKeyPair();
-  const primaryPublicAddress = toEthereumAddress(primaryKeyPair.publicKey);
+  const primaryAccount = generateAccount();
+  const primaryPublicAddress = primaryAccount.address;
   await permissionRootContract.addPrimary({
     primary: primaryPublicAddress,
     permissioning: primaryPublicAddress,
@@ -46,7 +45,7 @@ const generatePrimaryAndAddOperatorToPrimary = async (
   });
   const permissionContract = await initPermissions(
     {
-      privateKey: primaryKeyPair.privateKey,
+      privateKey: primaryAccount.privateKey,
       contractAddress: permissionsContractAddress,
       rpcProvider,
     },

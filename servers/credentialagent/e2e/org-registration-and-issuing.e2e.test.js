@@ -39,7 +39,6 @@ const { ServiceTypes } = require('@verii/organizations-registry');
 //   jwtVerify,
 //   generateDocJwt,
 //   generatePresentationJwt,
-//   toJwk,
 //   jwtSign,
 // } = require('@verii/jwt');
 // const { getDidUriFromJwk } = require('@verii/did-doc');

@@ -24,7 +24,6 @@ module.exports = {
   ...require('./src/test-auth-token'),
   ...require('./src/jsonify'),
   ...require('./src/mongoify'),
-  ...require('./src/generate-key-pair-in-hex-and-jwk'),
   ...require('./src/jwk-matchers'),
   ...require('./src/generate-organization-key-matcher'),
   ...require('./src/test-oauth-user'),
