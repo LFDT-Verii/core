@@ -23,6 +23,7 @@ const { validationPlugin } = require('@verii/validation');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
   createCredentials,
+  NotificationStatuses,
   revokeCredential,
 } = require('../../../entities/credentials');
 const {
@@ -197,12 +198,7 @@ const credentialsController = async (fastify) => {
                   properties: {
                     status: {
                       type: 'string',
-                      enum: [
-                        'sent',
-                        'skipped_no_messaging_settings',
-                        'failed',
-                        'already_sent',
-                      ],
+                      enum: Object.values(NotificationStatuses),
                     },
                     error: {
                       type: 'string',

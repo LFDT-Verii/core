@@ -182,6 +182,8 @@ const sendRevocationMessage = async (
   }
 };
 
+// The latest VN API exchange carries the current wallet messaging settings,
+// which may differ from the credential's issuance-time exchange.
 const resolveCredentialExchange = (credential, { repos }) =>
   repos.exchanges.findLatestVnApiExchangeByDepotId(credential.depotId, {
     _id: 1,

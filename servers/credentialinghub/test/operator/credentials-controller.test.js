@@ -47,6 +47,7 @@ const {
 const { map, omit } = require('lodash/fp');
 const { hashOffer } = require('@verii/verii-issuing');
 const { VelocityRevocationListType } = require('@verii/vc-checks');
+const { KeyPurposes } = require('@verii/crypto');
 const { nanoid } = require('nanoid');
 const { applyOverrides } = require('@verii/common-functions');
 const createTestFastify = require('../helpers/create-test-fastify');
@@ -1119,6 +1120,46 @@ describe('Credentials Test suite', () => {
       );
     });
 
+    it('should 400 if the tenant revocation key is missing', async () => {
+      const { tenant: revokingTenant, credential } =
+        await setupRevocationTenant();
+      await mongoDb()
+        .collection('tenants')
+        .updateOne(
+          { _id: new ObjectId(revokingTenant._id) },
+          {
+            $unset: {
+              [`keysByPurpose.${KeyPurposes.DLT_TRANSACTIONS}`]: '',
+            },
+          },
+        );
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/revoke`,
+        payload: {
+          tenantId: revokingTenant._id,
+          credentialId: credential._id,
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: 'Revocation key not found',
+        }),
+      );
+      expect(mockSetRevokedStatusSigned.mock.calls).toHaveLength(0);
+      expect(mockHttpClient.post.mock.calls).toHaveLength(0);
+
+      const dbCredential = await mongoDb()
+        .collection('credentials')
+        .findOne({ _id: new ObjectId(credential._id) });
+      expect(dbCredential).toEqual(mongoify(credential));
+    });
+
     it('should revoke credential and skip notification when no messaging settings are saved', async () => {
       const { tenant: revokingTenant, credential } =
         await setupRevocationTenant();
@@ -1350,6 +1391,57 @@ describe('Credentials Test suite', () => {
         .findOne({ _id: new ObjectId(credential._id) });
       expect(dbCredential.revokedAt).toEqual(expect.any(Date));
       expect(dbCredential.notifiedOfRevocationAt).toBeUndefined();
+    });
+
+    it('should notify without revoking on chain when credential was already revoked but not notified', async () => {
+      const revokedAt = new Date();
+      const messagingSettings = {
+        webhookUrl: 'https://wallet.example.com/push',
+        authToken: 'push-token-123',
+      };
+      const { tenant: revokingTenant, depot: revokingDepot } =
+        await setupRevocationTenant({ messagingSettings });
+      const credential = await persistIssuedCredential(
+        revokingTenant,
+        revokingDepot,
+        { revokedAt },
+      );
+      mockHttpClient.post.mock.mockImplementationOnce(() =>
+        Promise.resolve({}),
+      );
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/revoke`,
+        payload: {
+          tenantId: revokingTenant._id,
+          credentialId: credential._id,
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        credential: expect.objectContaining({
+          id: credential._id,
+          did: credential.did,
+          revokedAt: revokedAt.toISOString(),
+          notifiedOfRevocationAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        }),
+        notification: { status: 'sent' },
+        requestId: expect.any(String),
+      });
+      expect(mockSetRevokedStatusSigned.mock.calls).toHaveLength(0);
+      expect(mockHttpClient.post.mock.calls).toHaveLength(1);
+
+      const dbCredential = await mongoDb()
+        .collection('credentials')
+        .findOne({ _id: new ObjectId(credential._id) });
+      expect(dbCredential).toEqual({
+        ...mongoify(credential),
+        revokedAt,
+        notifiedOfRevocationAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
     });
 
     it('should not revoke or notify again if already notified', async () => {
