@@ -27,7 +27,6 @@ const {
   jwkFromSecp256k1Key,
 } = require('@verii/crypto');
 
-const { rootPrivateKey } = require('@verii/sample-data');
 const {
   verificationKeyType,
   signatureKeyType,
@@ -282,24 +281,6 @@ describe('DID Documents Common', () => {
         verificationMethod: 'VERIFICATION-METHOD',
       };
       const jws = signPayload(payload, hexFromJwk(privateKey), testProof);
-
-      expect(proof).toEqual({ ...testProof, jws });
-    });
-
-    it('Should generate a proof with a private hex key', () => {
-      const payload = { field: 'value' };
-      const proof = generateProof(
-        payload,
-        rootPrivateKey,
-        'VERIFICATION-METHOD',
-      );
-      const testProof = {
-        type: signatureKeyType,
-        proofPurpose: 'assertionMethod',
-        created: proof.created,
-        verificationMethod: 'VERIFICATION-METHOD',
-      };
-      const jws = signPayload(payload, rootPrivateKey, testProof);
 
       expect(proof).toEqual({ ...testProof, jws });
     });

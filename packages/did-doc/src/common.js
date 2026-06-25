@@ -62,9 +62,6 @@ const generatePublicKeySection = (
   return publicKey;
 };
 
-const toProofSigningKey = (privateKey) =>
-  privateKey?.d == null ? privateKey : hexFromJwk(privateKey);
-
 const generateProof = (payload, privateKey, verificationMethod) => {
   if (isNil(payload)) {
     throw newError('Payload is null or undefined', {
@@ -81,7 +78,7 @@ const generateProof = (payload, privateKey, verificationMethod) => {
     verificationMethod,
   };
 
-  const jws = signPayload(payload, toProofSigningKey(privateKey), options);
+  const jws = signPayload(payload, hexFromJwk(privateKey), options);
 
   return {
     ...options,
