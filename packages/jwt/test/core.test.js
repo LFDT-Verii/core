@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { before, describe, it } = require('node:test');
+const { before, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const {
@@ -37,7 +37,6 @@ const {
   tamperJwt,
   deriveJwk,
   safeJwtDecode,
-  toJwk,
   jwkToPublicBase64Url,
   base64UrlToJwk,
 } = require('../src/core');
@@ -361,42 +360,6 @@ describe('JWT Tests', () => {
   });
 
   describe('Parse key', () => {
-    it('should generate jwks for public keys hexes', () => {
-      const secp256kKeyPair1 = generateKeyPair();
-      expect(jwkFromSecp256k1Key(secp256kKeyPair1.publicKey, false)).toEqual({
-        kty: 'EC',
-        crv: 'secp256k1',
-        use: 'sig',
-        x: expect.any(String),
-        y: expect.any(String),
-      });
-    });
-
-    it('should generate jwks for private keys from private key only', () => {
-      const secp256kKeyPair1 = generateKeyPair();
-      const publicJwk = jwkFromSecp256k1Key(secp256kKeyPair1.publicKey, false);
-      expect(jwkFromSecp256k1Key(secp256kKeyPair1.privateKey)).toEqual({
-        ...publicJwk,
-        d: expect.any(String),
-      });
-    });
-
-    it('should generate public jwks from private keys', async () => {
-      const secp256kKeyPair1 = generateKeyPair();
-      const publicJwk = jwkFromSecp256k1Key(secp256kKeyPair1.publicKey, false);
-      const publicJwkFromPrivateKey = jwkFromSecp256k1Key(
-        secp256kKeyPair1.privateKey,
-        false,
-      );
-      const jwt = await jwtSign(
-        { message: 'HELLO MR NAUGHTY' },
-        jwkFromSecp256k1Key(secp256kKeyPair1.privateKey),
-      );
-      expect(await jwtVerify(jwt, publicJwkFromPrivateKey)).toEqual(
-        await jwtVerify(jwt, publicJwk),
-      );
-    });
-
     it('Should fail to verify a modified jwt ', async () => {
       const jwt = await jwtSign(payload, secp256kKeyPair.privateKey);
       await expect(() =>
@@ -527,37 +490,21 @@ describe('JWT Tests', () => {
       expect(derivedJwk).toEqual(publicKey);
     });
     it('Should derive jwk when hex is passed explicitly', async () => {
+      const emitWarning = mock.method(process, 'emitWarning', () => {});
       const { privateKey, publicKey } = generateKeyPair();
       const privateKeyJwk = jwkFromSecp256k1Key(privateKey, true);
       const publicKeyJwk = jwkFromSecp256k1Key(privateKey, false);
       const jwt = await jwtSign({ foo: 'bar' }, privateKeyJwk);
       const derivedJwk = deriveJwk(jwt, publicKey);
       expect(derivedJwk).toEqual(publicKeyJwk);
-    });
-  });
-
-  describe('toJwk test suite', () => {
-    it('Should return original public jwk if already a public jwk', async () => {
-      const { publicKey } = generateKeyPair({ format: 'jwk' });
-      const result = toJwk(publicKey, false);
-      expect(result).toEqual(publicKey);
-    });
-
-    it('Should return original private jwk if already a private jwk', async () => {
-      const { privateKey } = generateKeyPair({ format: 'jwk' });
-      const result = toJwk(privateKey, true);
-      expect(result).toEqual(privateKey);
-    });
-
-    it('Should return equivalent public jwk of a public hex', async () => {
-      const { publicKey } = generateKeyPair();
-      const result = toJwk(publicKey, false);
-      expect(result).toEqual(jwkFromSecp256k1Key(publicKey, false));
-    });
-    it('Should return equivalent private jwk of a private hex', async () => {
-      const { privateKey } = generateKeyPair();
-      const result = toJwk(privateKey, true);
-      expect(result).toEqual(jwkFromSecp256k1Key(privateKey, true));
+      expect(emitWarning.mock.calls).toHaveLength(1);
+      expect(emitWarning.mock.calls[0].arguments).toEqual([
+        'Passing a hex key to deriveJwk is deprecated. Pass a JWK instead.',
+        {
+          code: 'VERII_JWT_DEP001',
+          type: 'DeprecationWarning',
+        },
+      ]);
     });
   });
 });

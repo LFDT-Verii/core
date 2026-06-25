@@ -57,6 +57,16 @@ const toKeyObject = (key, header) => {
 
 const DEFAULT_ASYMMETRIC_ALG = 'ES256K';
 const DEFAULT_SYMMETRIC_ALG = 'HS256';
+const DERIVE_JWK_HEX_DEPRECATION_CODE = 'VERII_JWT_DEP001';
+
+const emitDeriveJwkHexDeprecationWarning = () =>
+  process.emitWarning(
+    'Passing a hex key to deriveJwk is deprecated. Pass a JWK instead.',
+    {
+      code: DERIVE_JWK_HEX_DEPRECATION_CODE,
+      type: 'DeprecationWarning',
+    },
+  );
 
 const jwtSign = async (
   payload,
@@ -177,13 +187,11 @@ const jwtSignSymmetric = async (payload, key, { alg = 'HS256' } = {}) => {
 
 const deriveJwk = (jwt, key) => {
   const candidate = key != null ? key : jwtDecode(jwt)?.header?.jwk;
-  return candidate.x != null
-    ? candidate
-    : jwkFromSecp256k1Key(candidate, false);
-};
-
-const toJwk = (key, priv = true) => {
-  return key.x != null ? key : jwkFromSecp256k1Key(key, priv);
+  if (candidate.x != null) {
+    return candidate;
+  }
+  emitDeriveJwkHexDeprecationWarning();
+  return jwkFromSecp256k1Key(candidate, false);
 };
 
 const prepAlgAndKey = async (keyOrSecret, optionsAlg) =>
@@ -215,7 +223,6 @@ module.exports = {
   safeJwtDecode,
   stringifyJwk,
   tamperJwt,
-  toJwk,
   base64UrlToJwk,
   jwkToPublicBase64Url,
   keyAlgorithmToJoseAlg,

@@ -1,6 +1,6 @@
 const { isEmpty } = require('lodash/fp');
 const { publicKeyFromPrivateKey } = require('@verii/crypto');
-const { jwtSign, toJwk } = require('@verii/jwt');
+const { jwtSign } = require('@verii/jwt');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const common = require('../common');
 
@@ -42,10 +42,10 @@ const loadNonce = (options) => {
 };
 
 const buildProofJwt = async ({ nonce, keyPair, typ, options }) => {
-  const kid = getDidUriFromJwk(toJwk(keyPair.publicKey, false));
+  const kid = getDidUriFromJwk(keyPair.publicKey);
   const jwt = await jwtSign(
     { aud: options.audience, nonce, iss: kid },
-    toJwk(keyPair.privateKey),
+    keyPair.privateKey,
     {
       kid: `${kid}#0`,
       typ,
