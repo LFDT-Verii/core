@@ -17,6 +17,9 @@
 const { genericConfig } = require('@verii/config');
 const { from } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
+const {
+  buildNotificationConfig,
+} = require('../entities/notifications/domain/notification-config');
 const packageJson = require('../../package.json');
 
 const { isTest } = genericConfig;
@@ -58,6 +61,10 @@ const swaggerConfig = {
 };
 
 const openid4vcConfig = {};
+const notificationsEnabled = env
+  .get('NOTIFICATIONS_ENABLED')
+  .default('false')
+  .asBool();
 
 module.exports = {
   ...genericConfig,
@@ -115,4 +122,44 @@ module.exports = {
     .get('CREDENTIAL_SUBJECT_CONTEXT')
     .default('false')
     .asBool(),
+  notifications: buildNotificationConfig({
+    enabled: notificationsEnabled,
+    queueType: env.get('NOTIFICATIONS_QUEUE_TYPE').default('mongo').asString(),
+    workerMode: env
+      .get('NOTIFICATIONS_WORKER_MODE')
+      .default('embedded-child')
+      .asString(),
+    retentionDays: env.get('NOTIFICATIONS_RETENTION_DAYS').default(30).asInt(),
+    webhookUrl: env
+      .get('NOTIFICATIONS_WEBHOOK_URL')
+      .required(notificationsEnabled)
+      .asString(),
+    webhookEventTypes: env
+      .get('NOTIFICATIONS_WEBHOOK_EVENTS')
+      .default(
+        'depot.presentation.received,depot.credential.issued,depot.credential.rejected',
+      )
+      .asString(),
+    webhookSecret: env
+      .get('NOTIFICATIONS_WEBHOOK_SECRET')
+      .required(notificationsEnabled)
+      .asString(),
+    signatureHeaderName: env
+      .get('NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME')
+      .default('Verii-Signature')
+      .asString(),
+    webhookTimeoutMs: env
+      .get('NOTIFICATIONS_WEBHOOK_TIMEOUT_MS')
+      .default(5000)
+      .asInt(),
+    maxAttempts: env.get('NOTIFICATIONS_MAX_ATTEMPTS').default(12).asInt(),
+    maxConcurrency: env
+      .get('NOTIFICATIONS_WORKER_MAX_CONCURRENCY')
+      .default(4)
+      .asInt(),
+    allowInsecureWebhookUrl: env
+      .get('NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL')
+      .default('false')
+      .asBool(),
+  }),
 };

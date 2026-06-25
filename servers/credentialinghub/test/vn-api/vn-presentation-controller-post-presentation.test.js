@@ -17,7 +17,7 @@
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const { ObjectId } = require('mongodb');
-const { mongoDb } = require('@spencejs/spence-mongo-repos');
+const { mongoDb, tableRegistry } = require('@spencejs/spence-mongo-repos');
 const { mapWithIndex } = require('@verii/common-functions');
 const { generateKeyPair } = require('@verii/crypto');
 const {
@@ -57,6 +57,7 @@ const {
 const {
   PresentationFormat,
 } = require('../../src/entities/presentations/domain/presentation-format');
+const { NotificationEventTypes } = require('../../src/entities/notifications');
 
 const vnUrl = ({ did }) => `/vn-api/r/${did}`;
 
@@ -112,6 +113,7 @@ describe('vn-api > presentations', () => {
     await mongoDb().collection('exchanges').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('presentations').deleteMany({});
+    await mongoDb().collection('notification_events').deleteMany({});
     resetMockHttpClient();
     relyingPartyService = await persistRelyingPartyService({
       tenant,
@@ -506,6 +508,125 @@ describe('vn-api > presentations', () => {
             .find({ depotId: new ObjectId(depot._id) })
             .toArray(),
         ).resolves.toEqual([expectedDbPresentation(tenant, exchange, jwtVp)]);
+        await expect(
+          mongoDb().collection('notification_events').countDocuments({}),
+        ).resolves.toEqual(0);
+      });
+      it('should enqueue presentation notification events when notifications are enabled', async () => {
+        fastify.overrides.reqConfig = enableNotifications([
+          NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+        ]);
+        const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+        const jwtVp = await vpWrapper.jwtVp();
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: jwtVp,
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+
+        await expect(
+          mongoDb().collection('notification_events').find({}).toArray(),
+        ).resolves.toEqual([
+          expect.objectContaining({
+            _id: expect.stringMatching(/^evt_/),
+            type: NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+            version: 1,
+            status: 'pending',
+            attempts: 0,
+            nextAttemptAt: expect.any(Date),
+            lockedBy: null,
+            lockedUntil: null,
+            lastError: null,
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+            deliveredAt: null,
+            deadAt: null,
+            retentionExpiresAt: null,
+            payload: expect.objectContaining({
+              id: expect.stringMatching(/^evt_/),
+              type: NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+              version: 1,
+              occurredAt: expect.any(String),
+              tenantId: tenant._id,
+              tenantDid: tenant.did,
+              serviceId: relyingPartyService._id,
+              depotId: depot._id,
+              exchangeId: exchange._id,
+              resource: {
+                type: 'presentation',
+                id: expect.any(String),
+              },
+              data: {
+                format: PresentationFormat.JWT_VP,
+                verificationStatus: 'received',
+              },
+            }),
+          }),
+        ]);
+        const [event] = await mongoDb()
+          .collection('notification_events')
+          .find({})
+          .toArray();
+        expect(JSON.stringify(event.payload)).not.toContain(jwtVp);
+      });
+      it('should skip presentation notifications filtered out by event type config', async () => {
+        fastify.overrides.reqConfig = enableNotifications([
+          NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+        ]);
+        const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: await vpWrapper.jwtVp(),
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        await expect(
+          mongoDb().collection('notification_events').countDocuments({}),
+        ).resolves.toEqual(0);
+      });
+      it('should not fail presentation submission when notification enqueue fails', async () => {
+        fastify.overrides.reqConfig = enableNotifications([
+          NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+        ]);
+        const originalRepoFactory = tableRegistry.notification_events;
+        const insertEvents = mock.fn(() =>
+          Promise.reject(new Error('outbox unavailable')),
+        );
+        tableRegistry.notification_events = (context) => ({
+          ...originalRepoFactory(context),
+          insertEvents,
+        });
+
+        try {
+          const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: testUrl(tenant),
+            payload: {
+              exchange_id: exchange._id,
+              jwt_vp: await vpWrapper.jwtVp(),
+            },
+          });
+
+          expect(response.statusCode).toEqual(200);
+          expect(insertEvents.mock.callCount()).toEqual(1);
+          await expect(
+            mongoDb().collection('notification_events').countDocuments({}),
+          ).resolves.toEqual(0);
+        } finally {
+          tableRegistry.notification_events = originalRepoFactory;
+        }
       });
       it('should 200 and set the accessToken expiration from authTokensExpireIn', async () => {
         const relyingPartyService2 = await persistRelyingPartyService({
@@ -968,3 +1089,17 @@ const expectedDbPresentation = (tenant, exchange, jwtVp, overrides = {}) =>
     },
     overrides,
   );
+
+const enableNotifications = (eventTypes) => (config) => ({
+  ...config,
+  notifications: {
+    ...config.notifications,
+    enabled: true,
+    webhook: {
+      ...config.notifications.webhook,
+      url: 'https://operator.localhost.test/events',
+      eventTypes,
+      secret: 'test-secret',
+    },
+  },
+});

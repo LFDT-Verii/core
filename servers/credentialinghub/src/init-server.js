@@ -24,6 +24,9 @@ const {
 const { pick } = require('lodash/fp');
 const { openid4vciPlugin } = require('./entities/openid4vci');
 const { openid4vpPlugin } = require('./entities/openid4vp');
+const {
+  notificationEnqueueAdapterPlugin,
+} = require('./entities/notifications');
 
 const initServer = (server) => {
   if (!server.config.isTest) {
@@ -32,6 +35,7 @@ const initServer = (server) => {
 
   return server
     .register(rpcProviderPlugin)
+    .register(notificationEnqueueAdapterPlugin)
     .register(fastifyAutoload, {
       dir: path.join(__dirname, 'controllers'),
       autoHooks: true,

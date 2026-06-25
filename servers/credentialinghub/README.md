@@ -2,6 +2,10 @@
 
 Credentialing Hub runtime code is maintained in this package.
 
+## Design Docs
+
+- [Notification webhooks design](docs/notification-webhooks-design.md)
+
 ## Data Migrations
 
 Credentialing Hub database migrations remain in the monorepo Docker/wrapper package under `servers/credentialinghub/migrations`.
