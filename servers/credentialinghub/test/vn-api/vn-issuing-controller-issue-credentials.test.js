@@ -59,6 +59,7 @@ const { jwtDecode, jwtSign } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
 const { generateKeyPair } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
+const { VelocityRevocationListType } = require('@verii/vc-checks');
 const { DID_FORMAT } = require('@verii/test-regexes');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const { applyOverrides } = require('@verii/common-functions');
@@ -1191,11 +1192,24 @@ const expectedDbCredential = (credential, tenant, overrides) =>
       tenantId: tenant._id,
       acceptedAt: expect.any(Date),
       credentialSubjectId: expect.stringMatching(DID_FORMAT),
+      credentialStatus: expectedCredentialStatus(overrides),
       digestSRI: expect.stringMatching(/sha384-[a-zA-Z0-9+/]+/),
       updatedAt: expect.any(Date),
     }),
     overrides,
   );
+
+const expectedCredentialStatus = (overrides = {}) => {
+  if (overrides.jwtVc != null) {
+    return jwtDecode(overrides.jwtVc).payload.vc.credentialStatus;
+  }
+  return {
+    id: expect.stringMatching(
+      '^ethereum:0x[0-9a-fA-F]+/getRevokedStatus\\?address=0x[0-9a-zA-F]+&listId=\\d+&index=\\d+$',
+    ),
+    type: VelocityRevocationListType,
+  };
+};
 
 const expectedDbExchange = (tenant, exchange, newEvents, overrides) => {
   const exchangeEvents = newEvents ?? [

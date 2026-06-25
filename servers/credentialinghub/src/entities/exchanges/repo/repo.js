@@ -22,6 +22,9 @@ const { multitenantExtension } = require('@verii/spencer-mongo-extensions');
 const {
   exchangeStateRepoExtension,
 } = require('./exchange-state-repo-extension');
+const {
+  findLatestVnApiExchangeByDepotIdExtension,
+} = require('./find-latest-vn-api-exchange-by-depot-id');
 
 module.exports = (app, options, next = () => {}) => {
   next();
@@ -45,6 +48,7 @@ module.exports = (app, options, next = () => {}) => {
         autoboxIdsExtension,
         multitenantExtension(),
         exchangeStateRepoExtension,
+        findLatestVnApiExchangeByDepotIdExtension,
       ],
     },
     app,

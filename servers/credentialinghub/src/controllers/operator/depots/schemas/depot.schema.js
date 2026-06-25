@@ -16,18 +16,6 @@ const depotSchema = {
       type: 'string',
       description: 'the serviceId this depot is used for',
     },
-    messagingSettings: {
-      type: 'object',
-      description: 'the wallet messaging settings',
-      properties: {
-        webhookUrl: {
-          type: 'string',
-        },
-        authToken: {
-          type: 'string',
-        },
-      },
-    },
   },
 };
 

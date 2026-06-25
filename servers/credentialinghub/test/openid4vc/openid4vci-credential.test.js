@@ -392,6 +392,7 @@ describe('openid4vc credential test suite', () => {
           ...mongoify(credential),
           credentialSubjectId: holderDid,
           did: expect.stringMatching(DID_FORMAT),
+          credentialStatus: decodedVcs[0].payload.vc.credentialStatus,
           digestSRI: expect.any(String),
           jwtVc: response.json.credentials[0].credential,
           exchange: expectedDbExchange(

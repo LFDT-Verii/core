@@ -1,6 +1,25 @@
 const { mutableEntitySchema } = require('@verii/common-schemas');
 const newCredentialSchema = require('./new-credential.schema.json');
 
+const credentialStatusSchema = {
+  type: 'object',
+  description: 'the issued credential status',
+  properties: {
+    id: {
+      type: 'string',
+    },
+    statusListCredential: {
+      type: 'string',
+    },
+    statusListIndex: {
+      type: 'integer',
+    },
+    type: {
+      type: 'string',
+    },
+  },
+};
+
 const credentialSchema = {
   $id: 'Credential',
   type: 'object',
@@ -10,6 +29,24 @@ const credentialSchema = {
     depotId: {
       type: 'string',
       description: 'the depot that contains this credential',
+    },
+    did: {
+      type: 'string',
+      description: 'the issued credential id',
+    },
+    credentialSubjectId: {
+      type: 'string',
+      description: 'the issued credential subject id',
+    },
+    credentialStatus: {
+      description: 'the issued credential status',
+      anyOf: [
+        credentialStatusSchema,
+        {
+          type: 'array',
+          items: credentialStatusSchema,
+        },
+      ],
     },
     contentHash: {
       type: 'string',
@@ -32,6 +69,16 @@ const credentialSchema = {
     rejectedReason: {
       type: 'string',
       description: 'an optional reason that was captured during rejection',
+    },
+    revokedAt: {
+      type: 'string',
+      description: 'when the issued credential was revoked',
+      format: 'date-time',
+    },
+    notifiedOfRevocationAt: {
+      type: 'string',
+      description: 'when the wallet was notified of revocation',
+      format: 'date-time',
     },
   },
   required: [
