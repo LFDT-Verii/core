@@ -8,9 +8,6 @@ const credentialStatusSchema = {
     id: {
       type: 'string',
     },
-    linkCodeCommit: {
-      type: 'string',
-    },
     statusListCredential: {
       type: 'string',
     },
