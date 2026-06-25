@@ -16,7 +16,7 @@
 const { mock } = require('node:test');
 const { NotFoundError } = require('http-errors');
 
-const mockRoutes = { get: {}, post: {} };
+const mockRoutes = { get: {} };
 const buildDefaultImplementation =
   (method) =>
   (...args) => {
@@ -34,7 +34,6 @@ const buildDefaultImplementation =
 
 const mockHttpClient = {
   get: mock.fn(buildDefaultImplementation('get')),
-  post: mock.fn(buildDefaultImplementation('post')),
   responseType: 'promise',
 };
 const mockCache = mock.fn();
@@ -80,17 +79,12 @@ const mockHttpClientError = (method, error) => {
 
 const restMockHttpClient = () => {
   mockRoutes.get = {};
-  mockRoutes.post = {};
 };
 const resetMockHttpClient = () => {
-  counter = { get: 0, post: 0 };
-  jsonResponses = { get: [], post: [] };
+  counter = { get: 0 };
+  jsonResponses = { get: [] };
   mockHttpClient.get.mock.resetCalls();
   mockHttpClient.get.mock.mockImplementation(buildDefaultImplementation('get'));
-  mockHttpClient.post.mock.resetCalls();
-  mockHttpClient.post.mock.mockImplementation(
-    buildDefaultImplementation('post'),
-  );
 };
 resetMockHttpClient();
 
