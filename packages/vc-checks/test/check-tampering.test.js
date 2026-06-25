@@ -24,7 +24,7 @@ const { checkJwsVcTampering } = require('../src/check-jws-vc-tampering');
 const { CheckResults } = require('../src/check-results');
 
 describe('tampering checks', () => {
-  const { privateKey: privateJwk, publicKey: publicJwk } = generateKeyPair({
+  const { privateKey, publicKey } = generateKeyPair({
     format: 'jwk',
   });
   const context = { log: console };
@@ -34,15 +34,15 @@ describe('tampering checks', () => {
   before(async () => {
     signedCredential = await generateCredentialJwt(
       credentialUnexpired,
-      privateJwk,
+      privateKey,
       'KID',
     );
   });
 
-  it('Should return FAIL when tampered', async () => {
+  it('should return FAIL when tampered', async () => {
     const otherCredential = await generateCredentialJwt(
       { ...credentialUnexpired, issuer: 'TAMPERED' },
-      privateJwk,
+      privateKey,
       'KID',
     );
 
@@ -54,17 +54,17 @@ describe('tampering checks', () => {
 
     const result = await checkJwsVcTampering(
       tamperedCredential,
-      publicJwk,
+      publicKey,
       context,
     );
 
     expect(result).toEqual(CheckResults.FAIL);
   });
 
-  it('Should return PASS when untampered', async () => {
+  it('should return PASS when untampered', async () => {
     const result = await checkJwsVcTampering(
       signedCredential,
-      publicJwk,
+      publicKey,
       context,
     );
 

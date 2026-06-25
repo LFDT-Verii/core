@@ -219,36 +219,37 @@ describe('DID Documents Common', () => {
   });
 
   describe('DID Proof Generation', () => {
-    it('Should throw error when payload is undefined', () => {
+    const { privateKey } = generateKeyPair({ format: 'jwk' });
+
+    it('should throw when payload is undefined', () => {
       const result = () =>
-        generateProof(undefined, 'PRIVATE-KEY', 'VERIFICATION-METHOD');
+        generateProof(undefined, privateKey, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when payload is null', () => {
+    it('should throw when payload is null', () => {
       const result = () =>
-        generateProof(null, 'PRIVATE-KEY', 'VERIFICATION-METHOD');
+        generateProof(null, privateKey, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when payload is an empty string', () => {
-      const result = () =>
-        generateProof('', 'PRIVATE-KEY', 'VERIFICATION-METHOD');
+    it('should throw when payload is an empty string', () => {
+      const result = () => generateProof('', privateKey, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when payload is not JSON', () => {
+    it('should throw when payload is not JSON', () => {
       const payload = 'NOT_JSON';
       const result = () =>
-        generateProof(payload, 'PRIVATE-KEY', 'VERIFICATION-METHOD');
+        generateProof(payload, privateKey, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when private key is undefined', () => {
+    it('should throw when private key is undefined', () => {
       const payload = { field: 'value' };
       const result = () =>
         generateProof(payload, undefined, 'VERIFICATION-METHOD');
@@ -256,23 +257,22 @@ describe('DID Documents Common', () => {
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when private key is null', () => {
+    it('should throw when private key is null', () => {
       const payload = { field: 'value' };
       const result = () => generateProof(payload, null, 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should throw error when private key is an empty string', () => {
+    it('should throw when private key is an empty string', () => {
       const payload = { field: 'value' };
       const result = () => generateProof(payload, '', 'VERIFICATION-METHOD');
 
       expect(result).toThrow(Error);
     });
 
-    it('Should generate a proof with a private jwk', () => {
+    it('should generate a JsonWebKey2020 proof signed with a private JWK', () => {
       const payload = { field: 'value' };
-      const { privateKey } = generateKeyPair({ format: 'jwk' });
       const proof = generateProof(payload, privateKey, 'VERIFICATION-METHOD');
       const testProof = {
         type: signatureKeyType,

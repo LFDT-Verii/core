@@ -474,8 +474,8 @@ describe('JWT Tests', () => {
     });
   });
 
-  describe('deriveJwk from JWT test suite', () => {
-    it('Should derive jwk from JWT when jwk is embedded in the header', async () => {
+  describe('deriveJwk', () => {
+    it('should derive a JWK from the JWT header', async () => {
       const { privateKey, publicKey } = generateKeyPair({ format: 'jwk' });
       const jwt = await jwtSign({ foo: 'bar' }, privateKey, {
         jwk: publicKey,
@@ -483,13 +483,13 @@ describe('JWT Tests', () => {
       const derivedJwk = deriveJwk(jwt);
       expect(derivedJwk).toEqual(publicKey);
     });
-    it('Should derive jwk when jwk is passed explicitly', async () => {
+    it('should return an explicitly passed JWK', async () => {
       const { privateKey, publicKey } = generateKeyPair({ format: 'jwk' });
       const jwt = await jwtSign({ foo: 'bar' }, privateKey);
       const derivedJwk = deriveJwk(jwt, publicKey);
       expect(derivedJwk).toEqual(publicKey);
     });
-    it('Should derive jwk when hex is passed explicitly', async () => {
+    it('should derive a JWK from deprecated hex input and warn', async () => {
       const emitWarning = mock.method(process, 'emitWarning', () => {});
       const { privateKey, publicKey } = generateKeyPair();
       const privateKeyJwk = jwkFromSecp256k1Key(privateKey, true);

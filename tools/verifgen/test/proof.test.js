@@ -18,7 +18,7 @@ const createPersona = async (testDir, name, privateKey) => {
   await fs.writeFile(path.join(testDir, `${name}.did`), JSON.stringify({}));
 };
 
-describe('Test proof cli tool', () => {
+describe('proof cli tool', () => {
   let keyPair;
   let originalCwd;
   let testDir;
@@ -46,7 +46,7 @@ describe('Test proof cli tool', () => {
     ).rejects.toThrow('Persona not-exist DID File not found');
   });
 
-  it('should generate a proof by the default prv.key.json persona', async () => {
+  it('should generate a proof using the default persona private JWK', async () => {
     const proof = await generateProof({
       challenge: 'abc',
       persona: 'persona1',
@@ -73,17 +73,17 @@ describe('Test proof cli tool', () => {
     });
   });
 
-  it('should generate a proof by a prv.key.json', async () => {
-    const persona2Keypair = await generateKeyPair({ format: 'jwk' });
-    await createPersona(testDir, 'persona2', persona2Keypair.privateKey);
+  it('should generate a proof using a named persona private JWK', async () => {
+    const persona2KeyPair = await generateKeyPair({ format: 'jwk' });
+    await createPersona(testDir, 'persona2', persona2KeyPair.privateKey);
     const proof = await generateProof({
       challenge: 'abc',
       persona: 'persona2',
       audience: 'http://test.com',
     });
     expect(proof).toBeDefined();
-    const parsedJwt = await jwtVerify(proof, persona2Keypair.publicKey);
-    const expectedKid = getDidUriFromJwk(persona2Keypair.publicKey);
+    const parsedJwt = await jwtVerify(proof, persona2KeyPair.publicKey);
+    const expectedKid = getDidUriFromJwk(persona2KeyPair.publicKey);
     expect(parsedJwt).toStrictEqual({
       header: {
         alg: 'ES256K',
@@ -99,9 +99,9 @@ describe('Test proof cli tool', () => {
     });
   });
 
-  it('should generate an openid4vci proof by a prv.key.json', async () => {
-    const persona2Keypair = await generateKeyPair({ format: 'jwk' });
-    await createPersona(testDir, 'persona2', persona2Keypair.privateKey);
+  it('should generate an OpenID4VCI proof using a named persona private JWK', async () => {
+    const persona2KeyPair = await generateKeyPair({ format: 'jwk' });
+    await createPersona(testDir, 'persona2', persona2KeyPair.privateKey);
     const proof = await generateProof({
       challenge: 'abc',
       persona: 'persona2',
@@ -109,8 +109,8 @@ describe('Test proof cli tool', () => {
       openid4vci: true,
     });
     expect(proof).toBeDefined();
-    const parsedJwt = await jwtVerify(proof, persona2Keypair.publicKey);
-    const expectedKid = getDidUriFromJwk(persona2Keypair.publicKey);
+    const parsedJwt = await jwtVerify(proof, persona2KeyPair.publicKey);
+    const expectedKid = getDidUriFromJwk(persona2KeyPair.publicKey);
     expect(parsedJwt).toStrictEqual({
       header: {
         alg: 'ES256K',

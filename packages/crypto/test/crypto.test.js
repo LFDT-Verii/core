@@ -240,7 +240,7 @@ describe('Crypto tests', () => {
   });
 
   describe('signing and verifying object payloads', () => {
-    it('should sign and verify a object payload', () => {
+    it('should sign and verify an object payload', () => {
       const payload = { message: 'TEST MESSAGE' };
       const signature = signPayload(payload, privateKey);
       expect(signature).toEqual(
@@ -251,7 +251,7 @@ describe('Crypto tests', () => {
       expect(verifiedPayload).toEqual(true);
     });
 
-    it('should sign and fail to verify a object payload', () => {
+    it('should sign and fail to verify an object payload', () => {
       const { publicKey: fakePublicKey } = generateKeyPair();
       const payload = { message: 'TEST MESSAGE' };
       const signature = signPayload(payload, privateKey);
@@ -382,7 +382,7 @@ describe('Crypto tests', () => {
       const buildRefreshToken = initBuildRefreshToken();
       expect(buildRefreshToken()).toHaveLength(128);
     });
-    it('should use input param to override the dfault token length', async () => {
+    it('should use input param to override the default token length', async () => {
       const buildRefreshToken = initBuildRefreshToken(256);
       expect(buildRefreshToken()).toHaveLength(64);
     });

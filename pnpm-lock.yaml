@@ -2319,6 +2319,9 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
+      '@verii/crypto':
+        specifier: workspace:*
+        version: link:../crypto
       '@verii/sample-data':
         specifier: workspace:*
         version: link:../sample-data
