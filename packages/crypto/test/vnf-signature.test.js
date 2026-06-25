@@ -130,9 +130,12 @@ describe('vnf signature library', () => {
     });
 
     it('should fail to verify if the key changes', () => {
+      const { publicKey: wrongPublicKey } = generateKeyPair({ format: 'hex' });
       expect(
         verifyVnfSignature(body, proof, {
-          publicKey: generateKeyPair().publicKey,
+          config: {
+            vnfHeaderSignatureVerificationKey: wrongPublicKey,
+          },
         }),
       ).toEqual(false);
     });

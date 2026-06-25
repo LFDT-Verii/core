@@ -4,10 +4,10 @@ const common = require('./common');
 
 const generateKeys = (publicKeyFile, privateKeyFile) => {
   try {
-    const { privateKey, publicKey } = generateKeyPair();
+    const { privateKey, publicKey } = generateKeyPair({ format: 'jwk' });
 
-    common.writeFile(publicKeyFile, publicKey);
-    common.writeFile(privateKeyFile, privateKey);
+    common.writeFile(publicKeyFile, common.stringifyJson(publicKey));
+    common.writeFile(privateKeyFile, common.stringifyJson(privateKey));
   } catch (ex) {
     common.printError(ex);
   }
@@ -20,12 +20,12 @@ program
   .option(
     '-b, --public-key-file <filename>',
     'Output public key file name',
-    'pub.key',
+    'pub.key.json',
   )
   .option(
     '-v, --private-key-file <filename>',
     'Output private key file name',
-    'prv.key',
+    'prv.key.json',
   )
   .action(() => {
     const options = program.opts();

@@ -1,10 +1,9 @@
 const console = require('console');
 const chalkModule = require('chalk');
 const fs = require('fs');
-const { default: bs58 } = require('bs58');
 const path = require('path');
 const { getOr } = require('lodash/fp');
-const { generateKeyPair } = require('@verii/crypto');
+const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { generateProof } = require('@verii/did-doc');
 
@@ -43,12 +42,18 @@ const resolveInputPath = (filePath) => {
 
 const printError = (ex) => console.error(ex);
 const printInfo = (data) => console.info(data);
+const stringifyJson = (value) => JSON.stringify(value, null, 2);
+
+const toProofSigningKey = (privateKey) =>
+  privateKey?.d == null ? privateKey : hexFromJwk(privateKey);
 
 const generateDid = (controller = {}) => {
-  const { privateKey, publicKey } = generateKeyPair();
+  const { privateKey, publicKey } = generateKeyPair({ format: 'jwk' });
   const address = toEthereumAddress(publicKey);
   const did = `did:velocity:${address}`;
-  const proofSigningKey = getOr(privateKey, 'privateKey', controller);
+  const proofSigningKey = toProofSigningKey(
+    getOr(privateKey, 'privateKey', controller),
+  );
   const proofController = getOr(did, 'did.id', controller);
   const didObject = {
     '@context': [
@@ -59,9 +64,9 @@ const generateDid = (controller = {}) => {
     publicKey: [
       {
         id: `${did}#key-1`,
-        type: 'EcdsaSecp256k1VerificationKey2019',
+        type: 'JsonWebKey2020',
         controller: did,
-        publicKeyBase58: bs58.encode(Buffer.from(publicKey, 'hex')),
+        publicKeyJwk: publicKey,
       },
     ],
     created: new Date().toISOString(),
@@ -93,12 +98,8 @@ const loadPersonaFiles = (persona) => {
 const loadPersonaPrivateKey = (persona) => {
   const missingErrorMessage = `Persona ${persona}  private key file not found`;
   const jwkFilePath = resolveInputPath(`${persona}.prv.key.json`);
-  const filePath = resolveInputPath(`${persona}.prv.key`);
-  if (fs.existsSync(jwkFilePath)) {
-    const jsonStr = readFile(jwkFilePath, missingErrorMessage);
-    return JSON.parse(jsonStr);
-  }
-  return readFile(filePath, missingErrorMessage);
+  const jsonStr = readFile(jwkFilePath, missingErrorMessage);
+  return JSON.parse(jsonStr);
 };
 
 module.exports = {
@@ -113,4 +114,5 @@ module.exports = {
   dataPath,
   resolveDataPath,
   resolveInputPath,
+  stringifyJson,
 };

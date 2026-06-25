@@ -34,7 +34,6 @@ const {
   jwtVerify,
   jwsVerify,
   jwkFromSecp256k1Key,
-  hexFromJwk,
   tamperJwt,
   deriveJwk,
   safeJwtDecode,
@@ -417,22 +416,14 @@ describe('JWT Tests', () => {
       );
     });
 
-    it('should convert jwks to hex', () => {
-      const { publicKey } = generateKeyPair();
-      const publicJwk = jwkFromSecp256k1Key(publicKey, false);
-      expect(hexFromJwk(publicJwk, false)).toEqual(publicKey);
-    });
-
     it('Should init JWK key', async () => {
-      const { privateKey } = generateKeyPair();
-      const jwkKey = jwkFromSecp256k1Key(privateKey);
+      const { privateKey: jwkKey } = generateKeyPair({ format: 'jwk' });
       const jwt = await jwtSign(payload, jwkKey);
       const verified = await jwtVerify(jwt, jwkKey);
 
       expect(jwkKey).toEqual({
         kty: 'EC',
         crv: 'secp256k1',
-        use: 'sig',
         x: expect.any(String),
         y: expect.any(String),
         d: expect.any(String),
@@ -451,8 +442,7 @@ describe('JWT Tests', () => {
     });
 
     it('should verify with a JWK key missing alg', async () => {
-      const { privateKey } = generateKeyPair();
-      const jwkKey = jwkFromSecp256k1Key(privateKey);
+      const { privateKey: jwkKey } = generateKeyPair({ format: 'jwk' });
       const jwt = await jwtSign(payload, jwkKey);
       const verified = await jwtVerify(jwt, omit(['alg'], jwkKey));
       expect(verified).toEqual({
