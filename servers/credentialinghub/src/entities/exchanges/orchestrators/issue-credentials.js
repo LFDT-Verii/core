@@ -23,6 +23,11 @@ const { parseAccessToken } = require('../../tokens');
 const { ExchangeStates, verifyProofOfKeyPossession } = require('../domain');
 const { authorizeExchange } = require('../domain/authorize-exchange');
 const { issueVeriiCredentialsFacade } = require('../../credentials');
+const {
+  buildCredentialIssuedEvent,
+  buildCredentialRejectedEvent,
+  enqueueNotificationEvents,
+} = require('../../notifications');
 
 const issueCredentials = async (
   token,
@@ -62,6 +67,29 @@ const issueCredentials = async (
       ...map('_id', issuedCredentials),
     ]),
   });
+  await enqueueNotificationEvents(
+    () => [
+      ...map(
+        (credential) =>
+          buildCredentialRejectedEvent({
+            tenant: context.tenant,
+            exchange,
+            credential,
+          }),
+        rejectedCredentials,
+      ),
+      ...map(
+        (credential) =>
+          buildCredentialIssuedEvent({
+            tenant: context.tenant,
+            exchange,
+            credential,
+          }),
+        issuedCredentials,
+      ),
+    ],
+    context,
+  );
 
   return jwtVcs;
 };

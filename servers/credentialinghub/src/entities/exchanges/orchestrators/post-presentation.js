@@ -22,6 +22,10 @@ const {
   PresentationFormat,
   validatePresentation,
 } = require('../../presentations');
+const {
+  buildPresentationReceivedEvent,
+  enqueueNotificationEvents,
+} = require('../../notifications');
 
 const postPresentation = async (
   exchangeId,
@@ -52,6 +56,15 @@ const postPresentation = async (
     format: PresentationFormat.JWT_VP,
     presentation: jwtPresentationSubmission,
   });
+  await enqueueNotificationEvents(
+    () =>
+      buildPresentationReceivedEvent({
+        tenant: context.tenant,
+        exchange,
+        presentation,
+      }),
+    context,
+  );
   return [relyingPartyService, exchange, presentation];
 };
 

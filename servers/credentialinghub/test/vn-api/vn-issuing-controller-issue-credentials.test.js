@@ -77,6 +77,7 @@ const {
 const { initDepotFactory } = require('../../src/entities/depots');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
+const { NotificationEventTypes } = require('../../src/entities/notifications');
 
 const testUrl = (tenant2) => `/vn-api/r/${tenant2.did}/issue-credentials`;
 
@@ -124,9 +125,11 @@ describe('vn-api > issue credentials', () => {
   });
 
   beforeEach(async () => {
+    fastify.resetOverrides();
     await mongoDb().collection('exchanges').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
+    await mongoDb().collection('notification_events').deleteMany({});
     resetMockHttpClient();
     mockAddRevocationListSigned.mock.mockImplementation(() =>
       Promise.resolve(true),
@@ -975,6 +978,66 @@ describe('vn-api > issue credentials', () => {
         expectedDbCredential(credentials[1], tenant, { jwtVc: vcs[0] }),
       ]);
     });
+    it('should enqueue issued credential notification events when notifications are enabled', async () => {
+      fastify.overrides.reqConfig = enableNotifications([
+        NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+      ]);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await testAccessToken(
+            tenant.did,
+            exchange._id,
+            depots[0]._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: {
+          approvedOfferIds: [credentials[0]._id, credentials[1]._id],
+          proof: await buildProof(
+            holderDid,
+            holderKeyPair,
+            await loadChallenge(exchange._id),
+          ),
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      const events = await mongoDb()
+        .collection('notification_events')
+        .find({})
+        .toArray();
+      expect(events).toHaveLength(2);
+      expect(events).toEqual(
+        expect.arrayContaining([
+          expectedCredentialNotificationEvent({
+            eventType: NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+            credential: credentials[0],
+            credentialType: 'EmailV1.0',
+            data: {
+              credentialDid: expect.stringMatching(DID_FORMAT),
+              digestSRI: expect.stringMatching(/^sha384-/),
+            },
+          }),
+          expectedCredentialNotificationEvent({
+            eventType: NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+            credential: credentials[1],
+            credentialType: 'PhoneV1.0',
+            data: {
+              credentialDid: expect.stringMatching(DID_FORMAT),
+              digestSRI: expect.stringMatching(/^sha384-/),
+            },
+          }),
+        ]),
+      );
+      events.forEach((event) => {
+        expect(event.payload.id).toEqual(event._id);
+      });
+      expect(JSON.stringify(events)).not.toContain('bob.foobar@example.com');
+      expect(JSON.stringify(events)).not.toContain('+15558094151');
+    });
     it('should return many credentials and not write the jwtVC if autoCleanPII is on', async () => {
       fastify.overrides.reqConfig = (config) => ({
         ...config,
@@ -1094,6 +1157,61 @@ describe('vn-api > issue credentials', () => {
         ),
       );
     });
+    it('should enqueue rejected credential notification events when notifications are enabled', async () => {
+      fastify.overrides.reqConfig = enableNotifications([
+        NotificationEventTypes.DEPOT_CREDENTIAL_REJECTED,
+      ]);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await testAccessToken(
+            tenant.did,
+            exchange._id,
+            depots[0]._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: {
+          rejectedOfferIds: [credentials[0]._id, credentials[1]._id],
+          proof: await buildProof(
+            holderDid,
+            holderKeyPair,
+            await loadChallenge(exchange._id),
+          ),
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      const events = await mongoDb()
+        .collection('notification_events')
+        .find({})
+        .toArray();
+      expect(events).toHaveLength(2);
+      expect(events).toEqual(
+        expect.arrayContaining([
+          expectedCredentialNotificationEvent({
+            eventType: NotificationEventTypes.DEPOT_CREDENTIAL_REJECTED,
+            credential: credentials[0],
+            credentialType: 'EmailV1.0',
+            data: {
+              rejectedAt: expect.any(String),
+            },
+          }),
+          expectedCredentialNotificationEvent({
+            eventType: NotificationEventTypes.DEPOT_CREDENTIAL_REJECTED,
+            credential: credentials[1],
+            credentialType: 'PhoneV1.0',
+            data: {
+              rejectedAt: expect.any(String),
+            },
+          }),
+        ]),
+      );
+      expect(JSON.stringify(events)).not.toContain('bob.foobar@example.com');
+      expect(JSON.stringify(events)).not.toContain('+15558094151');
+    });
     it('should not be able to approve rejected credentials', async () => {
       const accessToken = await testAccessToken(
         tenant.did,
@@ -1143,6 +1261,48 @@ describe('vn-api > issue credentials', () => {
       .collection('credentials')
       .find({ _id: { $in: map((id) => new ObjectId(id), ids) } })
       .toArray();
+
+  const expectedCredentialNotificationEvent = ({
+    eventType,
+    credential,
+    credentialType,
+    data,
+  }) =>
+    expect.objectContaining({
+      _id: expect.stringMatching(/^evt_/),
+      type: eventType,
+      version: 1,
+      status: 'pending',
+      attempts: 0,
+      nextAttemptAt: expect.any(Date),
+      lockedBy: null,
+      lockedUntil: null,
+      lastError: null,
+      createdAt: expect.any(Date),
+      updatedAt: expect.any(Date),
+      deliveredAt: null,
+      deadAt: null,
+      retentionExpiresAt: null,
+      payload: expect.objectContaining({
+        id: expect.stringMatching(/^evt_/),
+        type: eventType,
+        version: 1,
+        occurredAt: expect.any(String),
+        tenantId: tenant._id,
+        tenantDid: tenant.did,
+        serviceId: preauthIssuerService._id,
+        depotId: depots[0]._id,
+        exchangeId: exchange._id,
+        resource: {
+          type: 'credential',
+          id: credential._id,
+        },
+        data: expect.objectContaining({
+          credentialTypes: [credentialType],
+          ...data,
+        }),
+      }),
+    });
 });
 
 const testAccessToken = (tenantDid, exchangeId, depotId, secret) => {
@@ -1325,3 +1485,17 @@ const credentialTypeMetadata = keyBy('credentialType', [
     jsonldContext: ['https://imsglobal.org/schemas/clr-context.json'],
   },
 ]);
+
+const enableNotifications = (eventTypes) => (config) => ({
+  ...config,
+  notifications: {
+    ...config.notifications,
+    enabled: true,
+    webhook: {
+      ...config.notifications.webhook,
+      url: 'https://operator.localhost.test/events',
+      eventTypes,
+      secret: 'test-secret',
+    },
+  },
+});
