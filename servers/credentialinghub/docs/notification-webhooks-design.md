@@ -458,7 +458,7 @@ const lockUntil = new Date(now.getTime() + lockDurationMs);
 
 const result = await collection.findOneAndUpdate(
   {
-    status: { $in: ['pending', 'retrying'] },
+    status: { $in: ['pending', 'retrying', 'delivering'] },
     nextAttemptAt: { $lte: now },
     $or: [
       { lockedUntil: { $exists: false } },
@@ -483,6 +483,7 @@ const result = await collection.findOneAndUpdate(
 ```
 
 Multiple worker processes are safe because only one process can claim a document at a time.
+An event already marked `delivering` is claimable only after its lock expires, which lets workers recover events left behind by a crashed delivery attempt.
 
 ## Delivery Rules
 

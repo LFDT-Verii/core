@@ -84,6 +84,20 @@ describe('notification domain', () => {
         'Invalid notifications queue type: rabbit',
       );
     });
+
+    it('should reject invalid signature header names', () => {
+      expect(() =>
+        buildNotificationConfig({ signatureHeaderName: '' }),
+      ).toThrow(
+        'NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME must be a non-empty HTTP header name',
+      );
+
+      expect(() =>
+        buildNotificationConfig({ signatureHeaderName: 'Verii Signature' }),
+      ).toThrow(
+        'NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME contains invalid characters',
+      );
+    });
   });
 
   describe('event type matching', () => {
@@ -226,6 +240,30 @@ describe('notification domain', () => {
       expect(JSON.stringify([issuedEvent, rejectedEvent])).not.toContain(
         'full-vc-jwt',
       );
+    });
+
+    it('should omit invalid date values without throwing', () => {
+      const event = buildCredentialRejectedEvent({
+        tenant: { _id: 'tenant-id', did: 'did:web:issuer.example' },
+        exchange: {
+          _id: 'exchange-id',
+          serviceId: 'service-id',
+          depotId: 'depot-id',
+        },
+        credential: {
+          _id: 'credential-id',
+          rejectedAt: 'not-a-date',
+          content: {},
+        },
+        id: 'evt_rejected',
+      });
+
+      expect(event).toEqual(
+        expect.objectContaining({
+          occurredAt: undefined,
+        }),
+      );
+      expect(event.data).not.toHaveProperty('rejectedAt');
     });
   });
 

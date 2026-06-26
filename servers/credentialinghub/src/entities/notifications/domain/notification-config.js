@@ -37,6 +37,7 @@ const DEFAULT_NOTIFICATION_CONFIG_OPTIONS = {
   maxConcurrency: 4,
   allowInsecureWebhookUrl: false,
 };
+const HTTP_HEADER_NAME_PATTERN = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/;
 
 const buildNotificationConfig = (options = {}) => {
   const normalizedOptions = normalizeNotificationConfigOptions(options);
@@ -64,12 +65,14 @@ const validateNotificationConfigOptions = ({
   workerMode,
   queueType,
   retentionDays,
+  signatureHeaderName,
   webhookTimeoutMs,
   maxAttempts,
   maxConcurrency,
 }) => {
   validateWorkerMode(workerMode);
   validateQueueType(queueType);
+  validateSignatureHeaderName(signatureHeaderName);
   validatePositiveInteger(retentionDays, 'NOTIFICATIONS_RETENTION_DAYS');
   validatePositiveInteger(webhookTimeoutMs, 'NOTIFICATIONS_WEBHOOK_TIMEOUT_MS');
   validatePositiveInteger(maxAttempts, 'NOTIFICATIONS_MAX_ATTEMPTS');
@@ -197,6 +200,22 @@ const validateRequiredString = (value, envVarName) => {
   }
 
   throw new Error(`${envVarName} is required when notifications are enabled`);
+};
+
+const validateSignatureHeaderName = (signatureHeaderName) => {
+  if (typeof signatureHeaderName !== 'string' || !signatureHeaderName.trim()) {
+    throw new Error(
+      'NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME must be a non-empty HTTP header name',
+    );
+  }
+
+  if (HTTP_HEADER_NAME_PATTERN.test(signatureHeaderName)) {
+    return;
+  }
+
+  throw new Error(
+    'NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME contains invalid characters',
+  );
 };
 
 const validatePositiveInteger = (value, envVarName) => {

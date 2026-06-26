@@ -15,10 +15,54 @@
  *
  */
 
+const {
+  buildCredentialIssuedEvent,
+  buildCredentialRejectedEvent,
+  buildPresentationReceivedEvent,
+  newNotificationEventId,
+} = require('./domain/build-notification-event');
+const {
+  matchesNotificationEventType,
+  shouldEmitNotificationEvent,
+} = require('./domain/event-type-matching');
+const {
+  DefaultNotificationEventTypes,
+  NotificationEventTypes,
+} = require('./domain/event-types');
+const {
+  DEFAULT_SIGNATURE_HEADER_NAME,
+  buildWebhookSignatureHeaders,
+} = require('./domain/hmac-headers');
+const {
+  NotificationWorkerModes,
+  buildNotificationConfig,
+  parseNotificationEventTypes,
+} = require('./domain/notification-config');
+const { NotificationQueueTypes } = require('./domain/notification-queue-types');
+const { NotificationEventStatuses } = require('./domain/notification-statuses');
+const {
+  enqueueNotificationEvents,
+} = require('./orchestrators/enqueue-notification-events');
+const {
+  notificationEnqueueAdapterPlugin,
+} = require('./plugins/notification-enqueue-adapter-plugin');
+
 module.exports = {
-  ...require('./adapters'),
-  ...require('./domain'),
-  ...require('./orchestrators'),
-  ...require('./plugins'),
-  ...require('./repo'),
+  DEFAULT_SIGNATURE_HEADER_NAME,
+  DefaultNotificationEventTypes,
+  NotificationEventStatuses,
+  NotificationEventTypes,
+  NotificationQueueTypes,
+  NotificationWorkerModes,
+  buildCredentialIssuedEvent,
+  buildCredentialRejectedEvent,
+  buildNotificationConfig,
+  buildPresentationReceivedEvent,
+  buildWebhookSignatureHeaders,
+  enqueueNotificationEvents,
+  matchesNotificationEventType,
+  newNotificationEventId,
+  notificationEnqueueAdapterPlugin,
+  parseNotificationEventTypes,
+  shouldEmitNotificationEvent,
 };

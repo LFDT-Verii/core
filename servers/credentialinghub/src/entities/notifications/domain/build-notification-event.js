@@ -188,9 +188,13 @@ const toIsoString = (value) => {
     return undefined;
   }
 
-  return value instanceof Date
-    ? value.toISOString()
-    : new Date(value).toISOString();
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+
+  return date.toISOString();
 };
 
 module.exports = {

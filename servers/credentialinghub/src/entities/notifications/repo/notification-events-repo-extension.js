@@ -41,6 +41,7 @@ const notificationEventsRepoExtension = (parent) => ({
           $in: [
             NotificationEventStatuses.PENDING,
             NotificationEventStatuses.RETRYING,
+            NotificationEventStatuses.DELIVERING,
           ],
         },
         nextAttemptAt: { $lte: now },
