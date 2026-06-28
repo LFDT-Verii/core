@@ -20,7 +20,7 @@
     "date-fns": "^4.4.0",
     "http-errors": "^2.0.1",
     "lodash": "^4.18.1",
-    "nanoid": "^5.1.15",
+    "nanoid": "^5.1.16",
     "undici": "^7.28.0",
     "undici-oidc-interceptor": "0.9.0"
   },

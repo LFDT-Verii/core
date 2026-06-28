@@ -25,7 +25,7 @@
     "env-var": "^7.5.0",
     "expect": "30.4.1",
     "lodash": "^4.18.1",
-    "nanoid": "^5.1.15"
+    "nanoid": "^5.1.16"
   },
   "peerDependencies": {
     "@spencejs/spence-mongo-repos": "^1.1.0",

@@ -35,7 +35,7 @@
     "fastify-plugin": "^5.1.0",
     "http-errors": "^2.0.1",
     "lodash": "^4.18.0",
-    "nanoid": "^5.1.15"
+    "nanoid": "^5.1.16"
   },
   "peerDependencies": {
     "@spencejs/spence-mongo-repos": "^1.1.0",
