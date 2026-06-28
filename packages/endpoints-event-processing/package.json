@@ -62,7 +62,7 @@
     "eslint-watch": "8.0.0",
     "ethers": "^6.17.0",
     "expect": "30.4.1",
-    "globals": "17.6.0",
+    "globals": "17.7.0",
     "mongodb": "^7.3.0",
     "prettier": "3.8.3"
   }
