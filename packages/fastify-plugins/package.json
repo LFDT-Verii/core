@@ -40,7 +40,7 @@
     "expect": "30.4.1",
     "fastify": "^5.8.5",
     "globals": "17.7.0",
-    "nock": "15.0.0-beta.11",
+    "nock": "15.0.0-beta.12",
     "prettier": "3.8.3"
   },
   "nx": {
