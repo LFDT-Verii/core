@@ -16,7 +16,7 @@
   "author": "Itay Podhajcer",
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1045.0",
+    "@aws-sdk/client-s3": "3.1075.0",
     "@verii/common-functions": "workspace:*",
     "@verii/crypto": "workspace:*",
     "@verii/jwt": "workspace:*",
