@@ -16,15 +16,22 @@
  */
 
 const matchesNotificationEventType = (eventType, configuredType) => {
+  if (configuredType === '*') {
+    return true;
+  }
+
   if (eventType === configuredType) {
     return true;
   }
 
-  if (!configuredType?.endsWith('.*')) {
-    return false;
+  if (
+    configuredType?.endsWith('.*') &&
+    eventType.startsWith(configuredType.slice(0, -1))
+  ) {
+    return true;
   }
 
-  return eventType.startsWith(configuredType.slice(0, -1));
+  return false;
 };
 
 const shouldEmitNotificationEvent = (eventType, notificationsConfig = {}) => {

@@ -18,17 +18,17 @@
 const { castArray, map } = require('lodash/fp');
 const { shouldEmitNotificationEvent } = require('../domain');
 
-const enqueueNotificationEvents = async (eventsOrBuilder, context) => {
+const enqueueNotificationEvents = async (eventsBuilder, context) => {
   const { config, log } = context;
 
-  if (!areNotificationsEnabled(config)) {
+  if (config.notifications?.enabled !== true) {
     return [];
   }
 
+  let events = [];
   try {
-    const events = resolveNotificationEvents(
-      eventsOrBuilder,
-      config.notifications,
+    events = castArray(eventsBuilder()).filter(({ type }) =>
+      shouldEmitNotificationEvent(type, config.notifications),
     );
 
     if (events.length === 0) {
@@ -43,40 +43,13 @@ const enqueueNotificationEvents = async (eventsOrBuilder, context) => {
     log.error(
       {
         err: error,
-        eventTypes: getEventTypes(eventsOrBuilder),
-        queueType: getNotificationQueueType(config),
+        eventTypes: map('type', events),
+        queueType: config.notifications.queue?.type,
       },
       'Unable to enqueue notification events',
     );
     return [];
   }
-};
-
-const areNotificationsEnabled = ({ notifications }) =>
-  notifications?.enabled === true;
-
-const getNotificationQueueType = ({ notifications }) =>
-  notifications.queue?.type;
-
-const resolveNotificationEvents = (eventsOrBuilder, notificationsConfig) =>
-  castArray(resolveNotificationEventsOrBuilder(eventsOrBuilder)).filter(
-    ({ type }) => shouldEmitNotificationEvent(type, notificationsConfig),
-  );
-
-const resolveNotificationEventsOrBuilder = (eventsOrBuilder) => {
-  if (typeof eventsOrBuilder === 'function') {
-    return eventsOrBuilder();
-  }
-
-  return eventsOrBuilder;
-};
-
-const getEventTypes = (eventsOrBuilder) => {
-  if (typeof eventsOrBuilder === 'function') {
-    return undefined;
-  }
-
-  return map('type', castArray(eventsOrBuilder));
 };
 
 module.exports = { enqueueNotificationEvents };

@@ -40,7 +40,7 @@ describe('notification events repo extension', () => {
       notificationEventsRepo.insertEvents([
         {
           id: 'evt_test',
-          type: 'depot.credential.issued',
+          type: 'credential.issued',
           version: 1,
           occurredAt: '2026-06-25T10:15:30.000Z',
           resource: {
@@ -54,7 +54,7 @@ describe('notification events repo extension', () => {
     ).resolves.toEqual([
       expect.objectContaining({
         _id: 'evt_test',
-        type: 'depot.credential.issued',
+        type: 'credential.issued',
         version: 1,
         status: NotificationEventStatuses.PENDING,
         attempts: 0,

@@ -514,7 +514,7 @@ describe('vn-api > presentations', () => {
       });
       it('should enqueue presentation notification events when notifications are enabled', async () => {
         fastify.overrides.reqConfig = enableNotifications([
-          NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+          NotificationEventTypes.PRESENTATION_RECEIVED,
         ]);
         const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
         const jwtVp = await vpWrapper.jwtVp();
@@ -535,7 +535,7 @@ describe('vn-api > presentations', () => {
         ).resolves.toEqual([
           expect.objectContaining({
             _id: expect.stringMatching(/^evt_/),
-            type: NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+            type: NotificationEventTypes.PRESENTATION_RECEIVED,
             version: 1,
             status: 'pending',
             attempts: 0,
@@ -550,7 +550,7 @@ describe('vn-api > presentations', () => {
             retentionExpiresAt: null,
             payload: expect.objectContaining({
               id: expect.stringMatching(/^evt_/),
-              type: NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+              type: NotificationEventTypes.PRESENTATION_RECEIVED,
               version: 1,
               occurredAt: expect.any(String),
               tenantId: tenant._id,
@@ -577,7 +577,7 @@ describe('vn-api > presentations', () => {
       });
       it('should skip presentation notifications filtered out by event type config', async () => {
         fastify.overrides.reqConfig = enableNotifications([
-          NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+          NotificationEventTypes.CREDENTIAL_ISSUED,
         ]);
         const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
 
@@ -597,7 +597,7 @@ describe('vn-api > presentations', () => {
       });
       it('should not fail presentation submission when notification enqueue fails', async () => {
         fastify.overrides.reqConfig = enableNotifications([
-          NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+          NotificationEventTypes.PRESENTATION_RECEIVED,
         ]);
         const originalRepoFactory = tableRegistry.notification_events;
         const insertEvents = mock.fn(() =>

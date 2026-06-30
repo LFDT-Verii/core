@@ -16,6 +16,7 @@
  */
 
 const { nanoid } = require('nanoid');
+const { castArray, compact, isNil, omitBy, uniq } = require('lodash/fp');
 const { NotificationEventTypes } = require('./event-types');
 
 const NOTIFICATION_PAYLOAD_VERSION = 1;
@@ -28,12 +29,12 @@ const buildPresentationReceivedEvent = ({
   id = newNotificationEventId(),
   occurredAt = presentation.createdAt ?? new Date(),
 }) => {
-  const tenantId = stringifyId(tenant._id);
-  const presentationId = stringifyId(presentation._id);
+  const tenantId = tenant._id.toString();
+  const presentationId = presentation._id.toString();
 
   return buildBaseEvent({
     id,
-    type: NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
+    type: NotificationEventTypes.PRESENTATION_RECEIVED,
     occurredAt,
     tenant,
     exchange,
@@ -60,12 +61,12 @@ const buildCredentialIssuedEvent = ({
   id = newNotificationEventId(),
   occurredAt = credential.acceptedAt ?? new Date(),
 }) => {
-  const tenantId = stringifyId(tenant._id);
-  const credentialId = stringifyId(credential._id);
+  const tenantId = tenant._id.toString();
+  const credentialId = credential._id.toString();
 
   return buildBaseEvent({
     id,
-    type: NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+    type: NotificationEventTypes.CREDENTIAL_ISSUED,
     occurredAt,
     tenant,
     exchange,
@@ -73,7 +74,7 @@ const buildCredentialIssuedEvent = ({
       type: 'credential',
       id: credentialId,
     },
-    data: compactObject({
+    data: omitBy(isNil, {
       credentialDid: credential.did,
       credentialReference: credential.credentialReference,
       credentialTypes: getCredentialTypes(credential),
@@ -94,12 +95,12 @@ const buildCredentialRejectedEvent = ({
   id = newNotificationEventId(),
   occurredAt = credential.rejectedAt ?? new Date(),
 }) => {
-  const tenantId = stringifyId(tenant._id);
-  const credentialId = stringifyId(credential._id);
+  const tenantId = tenant._id.toString();
+  const credentialId = credential._id.toString();
 
   return buildBaseEvent({
     id,
-    type: NotificationEventTypes.DEPOT_CREDENTIAL_REJECTED,
+    type: NotificationEventTypes.CREDENTIAL_REJECTED,
     occurredAt,
     tenant,
     exchange,
@@ -107,10 +108,10 @@ const buildCredentialRejectedEvent = ({
       type: 'credential',
       id: credentialId,
     },
-    data: compactObject({
+    data: omitBy(isNil, {
       credentialReference: credential.credentialReference,
       credentialTypes: getCredentialTypes(credential),
-      rejectionReason: sanitizeRejectionReason(credential.rejectedReason),
+      rejectionReason: credential.rejectedReason?.trim().slice(0, 500),
       rejectedAt: toIsoString(credential.rejectedAt),
     }),
     links: {
@@ -135,11 +136,11 @@ const buildBaseEvent = ({
   type,
   version: NOTIFICATION_PAYLOAD_VERSION,
   occurredAt: toIsoString(occurredAt),
-  tenantId: stringifyId(tenant._id),
+  tenantId: tenant._id.toString(),
   tenantDid: tenant.did,
-  serviceId: stringifyId(exchange.serviceId),
-  depotId: stringifyId(exchange.depotId),
-  exchangeId: stringifyId(exchange._id),
+  serviceId: exchange.serviceId.toString(),
+  depotId: exchange.depotId.toString(),
+  exchangeId: exchange._id.toString(),
   resource,
   data,
   links,
@@ -147,41 +148,10 @@ const buildBaseEvent = ({
 
 const newNotificationEventId = () => `evt_${nanoid()}`;
 
-const getCredentialTypes = (credential) => {
-  const contentTypes = Array.isArray(credential.content?.type)
-    ? credential.content.type
-    : [credential.content?.type];
-  const typeMetadataType = credential.typeMetadata?.credentialType;
-  const types = [...contentTypes, typeMetadataType].filter(
-    (type) => type && type !== VERIFIABLE_CREDENTIAL_TYPE,
+const getCredentialTypes = (credential) =>
+  uniq(compact(castArray(credential.content?.type))).filter(
+    (type) => type !== VERIFIABLE_CREDENTIAL_TYPE,
   );
-
-  return [...new Set(types)];
-};
-
-const sanitizeRejectionReason = (rejectedReason) => {
-  if (typeof rejectedReason !== 'string') {
-    return undefined;
-  }
-
-  const trimmedReason = rejectedReason.trim();
-  if (!trimmedReason) {
-    return undefined;
-  }
-
-  return trimmedReason.slice(0, 500);
-};
-
-const compactObject = (obj) =>
-  Object.fromEntries(Object.entries(obj).filter(([, value]) => value != null));
-
-const stringifyId = (value) => {
-  if (value == null) {
-    return undefined;
-  }
-
-  return value.toString();
-};
 
 const toIsoString = (value) => {
   if (value == null) {
@@ -189,10 +159,6 @@ const toIsoString = (value) => {
   }
 
   const date = value instanceof Date ? value : new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return undefined;
-  }
 
   return date.toISOString();
 };

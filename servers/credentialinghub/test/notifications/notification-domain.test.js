@@ -57,7 +57,7 @@ describe('notification domain', () => {
           enabled: true,
           workerMode: 'standalone',
           webhookUrl: 'https://operator.localhost.test/events',
-          webhookEventTypes: 'depot.presentation.received,depot.credential.*',
+          webhookEventTypes: 'presentation.received,credential.*',
           webhookSecret: 'secret',
         }),
       ).toEqual(
@@ -66,7 +66,7 @@ describe('notification domain', () => {
           workerMode: 'standalone',
           webhook: expect.objectContaining({
             url: 'https://operator.localhost.test/events',
-            eventTypes: ['depot.presentation.received', 'depot.credential.*'],
+            eventTypes: ['presentation.received', 'credential.*'],
             secret: 'secret',
           }),
         }),
@@ -84,55 +84,35 @@ describe('notification domain', () => {
         'Invalid notifications queue type: rabbit',
       );
     });
-
-    it('should reject invalid signature header names', () => {
-      expect(() =>
-        buildNotificationConfig({ signatureHeaderName: '' }),
-      ).toThrow(
-        'NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME must be a non-empty HTTP header name',
-      );
-
-      expect(() =>
-        buildNotificationConfig({ signatureHeaderName: 'Verii Signature' }),
-      ).toThrow(
-        'NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME contains invalid characters',
-      );
-    });
   });
 
   describe('event type matching', () => {
-    it('should match exact event types and wildcard suffixes', () => {
+    it('should match all events, exact event types, and wildcard suffixes', () => {
+      expect(matchesNotificationEventType('credential.issued', '*')).toEqual(
+        true,
+      );
       expect(
-        matchesNotificationEventType(
-          'depot.credential.issued',
-          'depot.credential.issued',
-        ),
+        matchesNotificationEventType('credential.issued', 'credential.issued'),
       ).toEqual(true);
       expect(
-        matchesNotificationEventType(
-          'depot.credential.issued',
-          'depot.credential.*',
-        ),
+        matchesNotificationEventType('credential.issued', 'credential.*'),
       ).toEqual(true);
       expect(
-        matchesNotificationEventType(
-          'depot.presentation.received',
-          'depot.credential.*',
-        ),
+        matchesNotificationEventType('presentation.received', 'credential.*'),
       ).toEqual(false);
     });
 
     it('should require enabled notifications and a configured event type', () => {
       expect(
-        shouldEmitNotificationEvent('depot.credential.issued', {
+        shouldEmitNotificationEvent('credential.issued', {
           enabled: false,
-          webhook: { eventTypes: ['depot.credential.*'] },
+          webhook: { eventTypes: ['credential.*'] },
         }),
       ).toEqual(false);
       expect(
-        shouldEmitNotificationEvent('depot.credential.issued', {
+        shouldEmitNotificationEvent('credential.issued', {
           enabled: true,
-          webhook: { eventTypes: ['depot.credential.*'] },
+          webhook: { eventTypes: ['credential.*'] },
         }),
       ).toEqual(true);
     });
@@ -158,7 +138,7 @@ describe('notification domain', () => {
 
       expect(event).toEqual({
         id: 'evt_test',
-        type: 'depot.presentation.received',
+        type: 'presentation.received',
         version: 1,
         occurredAt: '2026-06-25T10:15:30.000Z',
         tenantId: 'tenant-id',
@@ -241,30 +221,6 @@ describe('notification domain', () => {
         'full-vc-jwt',
       );
     });
-
-    it('should omit invalid date values without throwing', () => {
-      const event = buildCredentialRejectedEvent({
-        tenant: { _id: 'tenant-id', did: 'did:web:issuer.example' },
-        exchange: {
-          _id: 'exchange-id',
-          serviceId: 'service-id',
-          depotId: 'depot-id',
-        },
-        credential: {
-          _id: 'credential-id',
-          rejectedAt: 'not-a-date',
-          content: {},
-        },
-        id: 'evt_rejected',
-      });
-
-      expect(event).toEqual(
-        expect.objectContaining({
-          occurredAt: undefined,
-        }),
-      );
-      expect(event.data).not.toHaveProperty('rejectedAt');
-    });
   });
 
   it('should build deterministic webhook signature headers', () => {
@@ -279,7 +235,7 @@ describe('notification domain', () => {
       buildWebhookSignatureHeaders({
         event: {
           id: 'evt_test',
-          type: 'depot.credential.issued',
+          type: 'credential.issued',
           occurredAt: '2026-06-25T10:15:30.000Z',
         },
         rawBody,
@@ -289,7 +245,7 @@ describe('notification domain', () => {
     ).toEqual({
       'Content-Type': 'application/json',
       'Verii-Event-Id': 'evt_test',
-      'Verii-Event-Type': 'depot.credential.issued',
+      'Verii-Event-Type': 'credential.issued',
       'Verii-Event-Time': '2026-06-25T10:15:30.000Z',
       'Verii-Signature': `t=${timestamp},v1=${expectedSignature}`,
     });

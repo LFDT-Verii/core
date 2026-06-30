@@ -979,7 +979,7 @@ describe('vn-api > issue credentials', () => {
     });
     it('should enqueue issued credential notification events when notifications are enabled', async () => {
       fastify.overrides.reqConfig = enableNotifications([
-        NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+        NotificationEventTypes.CREDENTIAL_ISSUED,
       ]);
 
       const response = await fastify.injectJson({
@@ -1012,7 +1012,7 @@ describe('vn-api > issue credentials', () => {
       expect(events).toEqual(
         expect.arrayContaining([
           expectedCredentialNotificationEvent({
-            eventType: NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+            eventType: NotificationEventTypes.CREDENTIAL_ISSUED,
             credential: credentials[0],
             credentialType: 'EmailV1.0',
             data: {
@@ -1021,7 +1021,7 @@ describe('vn-api > issue credentials', () => {
             },
           }),
           expectedCredentialNotificationEvent({
-            eventType: NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
+            eventType: NotificationEventTypes.CREDENTIAL_ISSUED,
             credential: credentials[1],
             credentialType: 'PhoneV1.0',
             data: {
@@ -1158,7 +1158,7 @@ describe('vn-api > issue credentials', () => {
     });
     it('should enqueue rejected credential notification events when notifications are enabled', async () => {
       fastify.overrides.reqConfig = enableNotifications([
-        NotificationEventTypes.DEPOT_CREDENTIAL_REJECTED,
+        NotificationEventTypes.CREDENTIAL_REJECTED,
       ]);
 
       const response = await fastify.injectJson({
@@ -1191,7 +1191,7 @@ describe('vn-api > issue credentials', () => {
       expect(events).toEqual(
         expect.arrayContaining([
           expectedCredentialNotificationEvent({
-            eventType: NotificationEventTypes.DEPOT_CREDENTIAL_REJECTED,
+            eventType: NotificationEventTypes.CREDENTIAL_REJECTED,
             credential: credentials[0],
             credentialType: 'EmailV1.0',
             data: {
@@ -1199,7 +1199,7 @@ describe('vn-api > issue credentials', () => {
             },
           }),
           expectedCredentialNotificationEvent({
-            eventType: NotificationEventTypes.DEPOT_CREDENTIAL_REJECTED,
+            eventType: NotificationEventTypes.CREDENTIAL_REJECTED,
             credential: credentials[1],
             credentialType: 'PhoneV1.0',
             data: {

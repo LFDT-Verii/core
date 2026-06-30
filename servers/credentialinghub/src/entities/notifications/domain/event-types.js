@@ -16,15 +16,15 @@
  */
 
 const NotificationEventTypes = {
-  DEPOT_PRESENTATION_RECEIVED: 'depot.presentation.received',
-  DEPOT_CREDENTIAL_ISSUED: 'depot.credential.issued',
-  DEPOT_CREDENTIAL_REJECTED: 'depot.credential.rejected',
+  PRESENTATION_RECEIVED: 'presentation.received',
+  CREDENTIAL_ISSUED: 'credential.issued',
+  CREDENTIAL_REJECTED: 'credential.rejected',
 };
 
 const DefaultNotificationEventTypes = [
-  NotificationEventTypes.DEPOT_PRESENTATION_RECEIVED,
-  NotificationEventTypes.DEPOT_CREDENTIAL_ISSUED,
-  NotificationEventTypes.DEPOT_CREDENTIAL_REJECTED,
+  NotificationEventTypes.PRESENTATION_RECEIVED,
+  NotificationEventTypes.CREDENTIAL_ISSUED,
+  NotificationEventTypes.CREDENTIAL_REJECTED,
 ];
 
 module.exports = {

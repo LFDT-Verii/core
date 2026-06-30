@@ -19,7 +19,17 @@ const { from } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
 const {
   buildNotificationConfig,
+  NotificationWorkerModes,
 } = require('../entities/notifications/domain/notification-config');
+const {
+  DefaultNotificationEventTypes,
+} = require('../entities/notifications/domain/event-types');
+const {
+  DEFAULT_SIGNATURE_HEADER_NAME,
+} = require('../entities/notifications/domain/hmac-headers');
+const {
+  NotificationQueueTypes,
+} = require('../entities/notifications/domain/notification-queue-types');
 const packageJson = require('../../package.json');
 
 const { isTest } = genericConfig;
@@ -65,6 +75,9 @@ const notificationsEnabled = env
   .get('NOTIFICATIONS_ENABLED')
   .default('false')
   .asBool();
+const notificationWebhookUrl = notificationsEnabled
+  ? env.get('NOTIFICATIONS_WEBHOOK_URL').required().asUrlString()
+  : env.get('NOTIFICATIONS_WEBHOOK_URL').asString();
 
 module.exports = {
   ...genericConfig,
@@ -124,39 +137,43 @@ module.exports = {
     .asBool(),
   notifications: buildNotificationConfig({
     enabled: notificationsEnabled,
-    queueType: env.get('NOTIFICATIONS_QUEUE_TYPE').default('mongo').asString(),
+    queueType: env
+      .get('NOTIFICATIONS_QUEUE_TYPE')
+      .default(NotificationQueueTypes.MONGO)
+      .asEnum(Object.values(NotificationQueueTypes)),
     workerMode: env
       .get('NOTIFICATIONS_WORKER_MODE')
-      .default('embedded-child')
-      .asString(),
-    retentionDays: env.get('NOTIFICATIONS_RETENTION_DAYS').default(30).asInt(),
-    webhookUrl: env
-      .get('NOTIFICATIONS_WEBHOOK_URL')
-      .required(notificationsEnabled)
-      .asString(),
+      .default(NotificationWorkerModes.EMBEDDED_CHILD)
+      .asEnum(Object.values(NotificationWorkerModes)),
+    retentionDays: env
+      .get('NOTIFICATIONS_RETENTION_DAYS')
+      .default('30')
+      .asIntPositive(),
+    webhookUrl: notificationWebhookUrl,
     webhookEventTypes: env
       .get('NOTIFICATIONS_WEBHOOK_EVENTS')
-      .default(
-        'depot.presentation.received,depot.credential.issued,depot.credential.rejected',
-      )
-      .asString(),
+      .default(DefaultNotificationEventTypes.join(','))
+      .asArray(),
     webhookSecret: env
       .get('NOTIFICATIONS_WEBHOOK_SECRET')
       .required(notificationsEnabled)
       .asString(),
     signatureHeaderName: env
       .get('NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME')
-      .default('Verii-Signature')
+      .default(DEFAULT_SIGNATURE_HEADER_NAME)
       .asString(),
     webhookTimeoutMs: env
       .get('NOTIFICATIONS_WEBHOOK_TIMEOUT_MS')
-      .default(5000)
-      .asInt(),
-    maxAttempts: env.get('NOTIFICATIONS_MAX_ATTEMPTS').default(12).asInt(),
+      .default('5000')
+      .asIntPositive(),
+    maxAttempts: env
+      .get('NOTIFICATIONS_MAX_ATTEMPTS')
+      .default('12')
+      .asIntPositive(),
     maxConcurrency: env
       .get('NOTIFICATIONS_WORKER_MAX_CONCURRENCY')
-      .default(4)
-      .asInt(),
+      .default('4')
+      .asIntPositive(),
     allowInsecureWebhookUrl: env
       .get('NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL')
       .default('false')

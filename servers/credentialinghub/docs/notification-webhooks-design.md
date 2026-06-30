@@ -96,9 +96,9 @@ Suggested config shape:
     "webhook": {
       "url": "https://operator-lan.example/internal/credentialing-hub/events",
       "eventTypes": [
-        "depot.presentation.received",
-        "depot.credential.issued",
-        "depot.credential.rejected"
+        "presentation.received",
+        "credential.issued",
+        "credential.rejected"
       ],
       "secret": "env-or-kms-secret",
       "signatureHeaderName": "Verii-Signature",
@@ -116,7 +116,7 @@ Implementation notes:
 - Do not expose the secret through operator APIs or logs.
 - Validate `url` at startup when notifications are enabled.
 - For MVP, support exactly one webhook destination.
-- Allow `eventTypes` to include exact event types and wildcard suffixes like `depot.credential.*`.
+- Allow `eventTypes` to include `*`, exact event types, and wildcard suffixes like `credential.*`.
 - Retain terminal events for 30 days by default so operators can inspect recent product events and support future operational recovery features.
 - Apply retention to the `notification_events` collection, not to a specific receiver.
 
@@ -126,7 +126,7 @@ Suggested env variables:
 NOTIFICATIONS_ENABLED=true
 NOTIFICATIONS_WORKER_MODE=embedded-child
 NOTIFICATIONS_WEBHOOK_URL=https://operator-lan.example/internal/credentialing-hub/events
-NOTIFICATIONS_WEBHOOK_EVENTS=depot.presentation.received,depot.credential.issued,depot.credential.rejected
+NOTIFICATIONS_WEBHOOK_EVENTS=presentation.received,credential.issued,credential.rejected
 NOTIFICATIONS_WEBHOOK_SECRET=...
 NOTIFICATIONS_WEBHOOK_TIMEOUT_MS=5000
 NOTIFICATIONS_WORKER_MAX_CONCURRENCY=4
@@ -145,9 +145,9 @@ Expose curated product events, not raw exchange states.
 Initial event types:
 
 ```text
-depot.presentation.received
-depot.credential.issued
-depot.credential.rejected
+presentation.received
+credential.issued
+credential.rejected
 ```
 
 Future event types are tracked in [Future Extensions](#future-extensions).
@@ -165,7 +165,7 @@ Event naming rules:
 ```json
 {
   "id": "evt_01J...",
-  "type": "depot.credential.issued",
+  "type": "credential.issued",
   "version": 1,
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "65...",
@@ -210,7 +210,7 @@ Emit after the presentation is verified, validated, and inserted.
 Event type:
 
 ```text
-depot.presentation.received
+presentation.received
 ```
 
 Payload example:
@@ -218,7 +218,7 @@ Payload example:
 ```json
 {
   "id": "evt_01J...",
-  "type": "depot.presentation.received",
+  "type": "presentation.received",
   "version": 1,
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
@@ -251,7 +251,7 @@ Emit once per issued credential after the credential record has `did`, `digestSR
 Event type:
 
 ```text
-depot.credential.issued
+credential.issued
 ```
 
 Payload example:
@@ -259,7 +259,7 @@ Payload example:
 ```json
 {
   "id": "evt_01J...",
-  "type": "depot.credential.issued",
+  "type": "credential.issued",
   "version": 1,
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
@@ -294,7 +294,7 @@ Emit once per rejected credential after `rejectedAt` is set.
 Event type:
 
 ```text
-depot.credential.rejected
+credential.rejected
 ```
 
 Payload example:
@@ -302,7 +302,7 @@ Payload example:
 ```json
 {
   "id": "evt_01J...",
-  "type": "depot.credential.rejected",
+  "type": "credential.rejected",
   "version": 1,
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
@@ -348,7 +348,7 @@ Document shape:
 ```json
 {
   "_id": "evt_01J...",
-  "type": "depot.credential.issued",
+  "type": "credential.issued",
   "version": 1,
   "payload": {},
   "status": "pending",
@@ -577,7 +577,7 @@ Send:
 
 ```text
 Verii-Event-Id: evt_01J...
-Verii-Event-Type: depot.credential.issued
+Verii-Event-Type: credential.issued
 Verii-Event-Time: 2026-06-25T10:15:30.000Z
 Verii-Signature: t=1792913730,v1=<hex-hmac-sha256>
 ```
@@ -749,9 +749,9 @@ Acceptance:
 
 ### Phase 2: Event Emission from Existing Flows
 
-1. Emit `depot.presentation.received` from `postPresentation()`.
-2. Emit `depot.credential.issued` from `issueCredentials()` for each issued credential.
-3. Emit `depot.credential.rejected` from `issueCredentials()` for each rejected credential.
+1. Emit `presentation.received` from `postPresentation()`.
+2. Emit `credential.issued` from `issueCredentials()` for each issued credential.
+3. Emit `credential.rejected` from `issueCredentials()` for each rejected credential.
 4. Ensure enqueue failures are logged but do not fail the API request.
 5. Add integration tests from public-facing endpoints:
    - `POST /r/:tenantId/presentation`.
@@ -831,9 +831,9 @@ Unit tests:
 
 Integration tests:
 
-- Presentation endpoint enqueues `depot.presentation.received`.
-- Issuing endpoint enqueues `depot.credential.issued`.
-- Issuing endpoint enqueues `depot.credential.rejected`.
+- Presentation endpoint enqueues `presentation.received`.
+- Issuing endpoint enqueues `credential.issued`.
+- Issuing endpoint enqueues `credential.rejected`.
 - Notifications disabled means no outbox insert.
 - Worker delivers event to mocked HTTP server.
 - Worker retries 500/429/timeouts.
@@ -919,8 +919,8 @@ Receiver expectations:
 
 ### Authentication Events
 
-- Emit `depot.authentication.succeeded` after `AUTHENTICATION_SUCCESS`.
-- Emit `depot.authentication.failed` from exchange error paths for supported failure states.
+- Emit `authentication.succeeded` after `AUTHENTICATION_SUCCESS`.
+- Emit `authentication.failed` from exchange error paths for supported failure states.
 
 ### Stored Subscriptions
 
