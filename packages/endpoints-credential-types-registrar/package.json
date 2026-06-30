@@ -50,7 +50,7 @@
     "@verii/server-provider": "workspace:*",
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
-    "eslint": "9.39.4",
+    "eslint": "10.6.0",
     "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-better-mutation": "2.1.0",
