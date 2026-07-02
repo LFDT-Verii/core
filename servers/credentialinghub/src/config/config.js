@@ -17,6 +17,19 @@
 const { genericConfig } = require('@verii/config');
 const { from } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
+const {
+  buildNotificationConfig,
+  NotificationWorkerModes,
+} = require('../entities/notifications/domain/notification-config');
+const {
+  DefaultNotificationEventTypes,
+} = require('../entities/notifications/domain/event-types');
+const {
+  DEFAULT_SIGNATURE_HEADER_NAME,
+} = require('../entities/notifications/domain/hmac-headers');
+const {
+  NotificationQueueTypes,
+} = require('../entities/notifications/domain/notification-queue-types');
 const packageJson = require('../../package.json');
 
 const { isTest } = genericConfig;
@@ -58,6 +71,13 @@ const swaggerConfig = {
 };
 
 const openid4vcConfig = {};
+const notificationsEnabled = env
+  .get('NOTIFICATIONS_ENABLED')
+  .default('false')
+  .asBool();
+const notificationWebhookUrl = notificationsEnabled
+  ? env.get('NOTIFICATIONS_WEBHOOK_URL').required().asUrlString()
+  : env.get('NOTIFICATIONS_WEBHOOK_URL').asString();
 
 module.exports = {
   ...genericConfig,
@@ -115,4 +135,48 @@ module.exports = {
     .get('CREDENTIAL_SUBJECT_CONTEXT')
     .default('false')
     .asBool(),
+  notifications: buildNotificationConfig({
+    enabled: notificationsEnabled,
+    queueType: env
+      .get('NOTIFICATIONS_QUEUE_TYPE')
+      .default(NotificationQueueTypes.MONGO)
+      .asEnum(Object.values(NotificationQueueTypes)),
+    workerMode: env
+      .get('NOTIFICATIONS_WORKER_MODE')
+      .default(NotificationWorkerModes.EMBEDDED_CHILD)
+      .asEnum(Object.values(NotificationWorkerModes)),
+    retentionDays: env
+      .get('NOTIFICATIONS_RETENTION_DAYS')
+      .default('30')
+      .asIntPositive(),
+    webhookUrl: notificationWebhookUrl,
+    webhookEventTypes: env
+      .get('NOTIFICATIONS_WEBHOOK_EVENTS')
+      .default(DefaultNotificationEventTypes.join(','))
+      .asArray(),
+    webhookSecret: env
+      .get('NOTIFICATIONS_WEBHOOK_SECRET')
+      .required(notificationsEnabled)
+      .asString(),
+    signatureHeaderName: env
+      .get('NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME')
+      .default(DEFAULT_SIGNATURE_HEADER_NAME)
+      .asString(),
+    webhookTimeoutMs: env
+      .get('NOTIFICATIONS_WEBHOOK_TIMEOUT_MS')
+      .default('5000')
+      .asIntPositive(),
+    maxAttempts: env
+      .get('NOTIFICATIONS_MAX_ATTEMPTS')
+      .default('12')
+      .asIntPositive(),
+    maxConcurrency: env
+      .get('NOTIFICATIONS_WORKER_MAX_CONCURRENCY')
+      .default('4')
+      .asIntPositive(),
+    allowInsecureWebhookUrl: env
+      .get('NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL')
+      .default('false')
+      .asBool(),
+  }),
 };
