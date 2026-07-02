@@ -67,9 +67,16 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Log in to GHCR
-        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        run: |
+          if [ -z "$GHCR_READ_USER" ] || [ -z "$GHCR_READ_TOKEN" ]; then
+            echo "::error::GHCR_READ_USER and GHCR_READ_TOKEN secrets are required to pull the Fineract image"
+            exit 1
+          fi
+
+          echo "$GHCR_READ_TOKEN" | docker login ghcr.io -u "$GHCR_READ_USER" --password-stdin
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GHCR_READ_USER: ${{ secrets.GHCR_READ_USER }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
 
       - name: Start Containers
         run: docker compose -f "$COMPOSE_FILE" up -d --build
