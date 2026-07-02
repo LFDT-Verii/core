@@ -37,30 +37,6 @@
     "start:rebuild": "docker compose up --build",
     "stop": "docker compose down -v"
   },
-  "// mocha-serialize-javascript-override-note": "Temporary: remove this mocha>serialize-javascript override once the Hardhat dependency path no longer resolves serialize-javascript 6.x (Dependabot alert #148 / GHSA-5c6j-r48x-rmvq).",
-  "// auth0-uuid-override-note": "Temporary: remove this auth0>uuid override once auth0 no longer resolves uuid 9.x through its auth0-legacy dependency path.",
-  "// lodash-override-note": "Temporary: remove this eslint-plugin-better-mutation>lodash override once eslint-plugin-better-mutation stops pinning lodash 4.17.x.",
-  "// jsdom-undici-override-note": "Temporary: remove this jsdom>undici override once jsdom publishes a release that depends on patched undici instead of 7.25.0.",
-  "pnpm": {
-    "overrides": {
-      "mocha>serialize-javascript": "7.0.6",
-      "auth0>uuid": "14.0.1",
-      "eslint-plugin-better-mutation>lodash": "4.18.1",
-      "jsdom>undici": "7.28.0"
-    },
-    "onlyBuiltDependencies": [
-      "@sentry/profiling-node",
-      "@swc/core",
-      "argon2",
-      "browser-tabs-lock",
-      "esbuild",
-      "husky",
-      "keccak",
-      "nx",
-      "secp256k1",
-      "unrs-resolver"
-    ]
-  },
   "devDependencies": {
     "@commitlint/cli": "21.1.0",
     "@commitlint/config-conventional": "21.1.0",

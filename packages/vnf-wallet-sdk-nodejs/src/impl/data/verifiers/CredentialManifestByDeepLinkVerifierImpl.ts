@@ -17,16 +17,12 @@ export default class CredentialManifestByDeepLinkVerifierImpl implements Credent
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
     ): void {
-        if (
-            !(
-                (didDocument.id === credentialManifest.issuerId &&
-                    didDocument.id === deepLink.did) ||
-                (didDocument.alsoKnownAs.includes(
-                    credentialManifest.issuerId,
-                ) &&
-                    didDocument.alsoKnownAs.includes(deepLink.did!))
-            )
-        ) {
+        if (!(
+            (didDocument.id === credentialManifest.issuerId &&
+                didDocument.id === deepLink.did) ||
+            (didDocument.alsoKnownAs.includes(credentialManifest.issuerId) &&
+                didDocument.alsoKnownAs.includes(deepLink.did!))
+        )) {
             throw new VCLError({
                 errorCode: VCLErrorCode.MismatchedRequestIssuerDid.toString(),
                 message: `credential manifest: ${credentialManifest.jwt.encodedJwt} \ndidDocument: ${didDocument}`,
