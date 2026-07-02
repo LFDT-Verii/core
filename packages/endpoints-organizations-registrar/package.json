@@ -67,7 +67,7 @@
     "mongodb": "^7.0.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-ses": "3.1045.0",
+    "@aws-sdk/client-ses": "3.1075.0",
     "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/common-functions": "workspace:*",
     "@verii/error-aggregation": "workspace:*",
