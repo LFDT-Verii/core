@@ -1,4 +1,28 @@
 linkWorkspacePackages: true
+overrides:
+  # Temporary: remove this override once the Hardhat dependency path no longer
+  # resolves serialize-javascript 6.x (Dependabot alert #148 / GHSA-5c6j-r48x-rmvq).
+  "mocha>serialize-javascript": "7.0.6"
+  # Temporary: remove this override once auth0 no longer resolves uuid 9.x
+  # through its auth0-legacy dependency path.
+  "auth0>uuid": "14.0.1"
+  # Temporary: remove this override once eslint-plugin-better-mutation stops
+  # pinning lodash 4.17.x.
+  "eslint-plugin-better-mutation>lodash": "4.18.1"
+  # Temporary: remove this override once jsdom publishes a release that depends
+  # on patched undici instead of 7.25.0.
+  "jsdom>undici": "7.28.0"
+onlyBuiltDependencies:
+  - "@sentry/profiling-node"
+  - "@swc/core"
+  - argon2
+  - browser-tabs-lock
+  - esbuild
+  - husky
+  - keccak
+  - nx
+  - secp256k1
+  - unrs-resolver
 packages:
   - contracts/*
   - packages/*
