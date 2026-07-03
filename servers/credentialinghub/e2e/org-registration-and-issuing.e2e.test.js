@@ -16,6 +16,8 @@
  */
 const { after, before, describe, it } = require('node:test');
 const console = require('console');
+const crypto = require('node:crypto');
+const http = require('node:http');
 const path = require('path');
 const { expect } = require('expect');
 const { MongoClient } = require('mongodb');
@@ -61,11 +63,15 @@ const {
 } = require('../test/helpers/sample-education-degree-graduation');
 const { CredentialFormat } = require('../src/entities/credentials');
 const { PresentationFormat } = require('../src/entities/presentations');
+const { NotificationEventTypes } = require('../src/entities/notifications');
 
 const registrarUrl = 'https://localhost:13004';
 const fineractUrl = 'http://localhost:13008';
 const cihUrl = 'https://localhost:13002';
 const rpcUrl = 'http://localhost:18545';
+const WEBHOOK_RECEIVER_PORT = 13019;
+const WEBHOOK_RECEIVER_PATH = '/cih-notification-webhooks';
+const WEBHOOK_SECRET = 'e2e-notification-secret';
 
 const authenticate = () => 'TOKEN';
 const rpcProvider = initProvider(rpcUrl, authenticate);
@@ -90,14 +96,21 @@ const EDUCATION_DEGREE_CREDENTIAL_TYPE = 'EducationDegreeGraduationV1.1';
 
 describe('org registration and issuing e2e', () => {
   let client;
+  let webhookReceiver;
+  let receivedWebhooks;
 
   let holderKeyPair;
   let holderDid;
 
   after(async () => {
+    await new Promise((resolve, reject) => {
+      webhookReceiver.close((error) => (error ? reject(error) : resolve()));
+    });
     await client.close();
   });
   before(async () => {
+    receivedWebhooks = [];
+    webhookReceiver = await startWebhookReceiver(receivedWebhooks);
     client = await MongoClient.connect('mongodb://localhost:17017');
 
     // Generate holder DID and key pair for fake wallet
@@ -376,6 +389,48 @@ describe('org registration and issuing e2e', () => {
     const { depot } = createDepotJson;
     console.dir({ msg: 'Depot created', depot });
 
+    // Relying Party Service Creation
+    const createRelyingPartyServicePayload = {
+      tenantId: tenant.id,
+      service: {
+        mode: 'single',
+        velocityNetworkServiceId: serviceEndpoints[2].id,
+        description: 'presentation service',
+        termsUrl: 'http://www.example.com/terms.html',
+        disclosureRequest: {
+          types: [{ type: EDUCATION_DEGREE_CREDENTIAL_TYPE }],
+          purpose: 'Verify education degree',
+          retentionPeriod: 'P30D',
+        },
+        authTokensExpireIn: 100000,
+      },
+    };
+    const createRelyingPartyServiceResponse = await fetch(
+      `${cihUrl}/operator/relying-party-services/create`,
+      {
+        method: 'POST',
+        body: JSON.stringify(createRelyingPartyServicePayload),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPERATOR_API_TOKEN}`,
+        },
+      },
+    );
+    expect(createRelyingPartyServiceResponse.status).toEqual(200);
+    const createRelyingPartyServiceJson =
+      await createRelyingPartyServiceResponse.json();
+    expect(createRelyingPartyServiceJson).toEqual({
+      service: expectedEntity(createRelyingPartyServicePayload.service, {
+        presentationRequestsExpireIn: 600,
+      }),
+      requestId: expect.any(String),
+    });
+    const { service: relyingPartyService } = createRelyingPartyServiceJson;
+    console.dir({
+      msg: 'Relying party service created',
+      service: relyingPartyService,
+    });
+
     // Badge Credential Creation
     const createBadgeCredentialPayload = {
       tenantId: tenant.id,
@@ -412,6 +467,54 @@ describe('org registration and issuing e2e', () => {
       msg: 'Badge Credential added',
       credential: badgeCredential,
       content: badgeCredential.content,
+    });
+
+    // Rejected Badge Credential Creation
+    const createRejectedBadgeCredentialPayload = {
+      tenantId: tenant.id,
+      depotId: depot.id,
+      credential: {
+        credentialReference: 'cred-rejected-badge',
+        content: buildBadgeCredential(createFullOrganizationResponse, {
+          achievementDescription:
+            'A declined Velocity Network Board badge for 2022',
+          achievementId: 'mailto:declined-conformance@imsglobal.org',
+          identityHash: 'declined-conformance@imsglobal.org',
+          name: 'Declined Velocity Network Board Member 2022',
+        }),
+      },
+    };
+    const createRejectedBadgeCredentialResponse = await fetch(
+      `${cihUrl}/operator/credentials/create`,
+      {
+        method: 'POST',
+        body: JSON.stringify(createRejectedBadgeCredentialPayload),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPERATOR_API_TOKEN}`,
+        },
+      },
+    );
+    expect(createRejectedBadgeCredentialResponse.status).toEqual(200);
+    const createRejectedBadgeCredentialJson =
+      await createRejectedBadgeCredentialResponse.json();
+    expect(createRejectedBadgeCredentialJson).toEqual({
+      credential: expectedEntity(
+        createRejectedBadgeCredentialPayload.credential,
+        {
+          depotId: depot.id,
+          contentHash: (expectedCredential) =>
+            hashOffer(expectedCredential.content),
+        },
+      ),
+      requestId: expect.any(String),
+    });
+    const { credential: rejectedBadgeCredential } =
+      createRejectedBadgeCredentialJson;
+    console.dir({
+      msg: 'Rejected badge credential added',
+      credential: rejectedBadgeCredential,
+      content: rejectedBadgeCredential.content,
     });
 
     // Education Credential Creation
@@ -594,18 +697,22 @@ describe('org registration and issuing e2e', () => {
     );
     expect(credentialOffersResponse.status).toEqual(200);
     const credentialOffersJson = await credentialOffersResponse.json();
+    const expectedCredentialOffers = map(
+      ({ content, id, contentHash }) => ({
+        id,
+        hash: contentHash,
+        issuer: { id: did },
+        ...content,
+      }),
+      [credential, badgeCredential, rejectedBadgeCredential],
+    );
     expect(credentialOffersJson).toEqual({
       challenge: expect.any(String),
-      offers: map(
-        ({ content, id, contentHash }) => ({
-          id,
-          hash: contentHash,
-          issuer: { id: did },
-          ...content,
-        }),
-        [credential, badgeCredential],
-      ),
+      offers: expect.arrayContaining(expectedCredentialOffers),
     });
+    expect(credentialOffersJson.offers).toHaveLength(
+      expectedCredentialOffers.length,
+    );
     console.dir({
       msg: 'Offers received',
       offers: credentialOffersJson.offers,
@@ -621,7 +728,8 @@ describe('org registration and issuing e2e', () => {
           authorization: `Bearer ${authenticateHolderJson.token}`,
         },
         body: JSON.stringify({
-          approvedOfferIds: map('id', credentialOffersJson.offers),
+          approvedOfferIds: [credential.id, badgeCredential.id],
+          rejectedOfferIds: [rejectedBadgeCredential.id],
           proof: await buildProof(
             cihUrl,
             holderDid,
@@ -722,7 +830,304 @@ describe('org registration and issuing e2e', () => {
       },
       requestId: expect.any(String),
     });
+
+    // Presentation Link Creation
+    const presentationLinksPayload = {
+      tenantId: tenant.id,
+      serviceId: relyingPartyService.id,
+    };
+    const presentationLinksResponse = await fetch(
+      `${cihUrl}/operator/presentation-links/refresh`,
+      {
+        method: 'POST',
+        body: JSON.stringify(presentationLinksPayload),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPERATOR_API_TOKEN}`,
+        },
+      },
+    );
+    expect(presentationLinksResponse.status).toEqual(200);
+    const presentationLinksJson = await presentationLinksResponse.json();
+    expect(presentationLinksJson).toEqual({
+      redirectUrl: expect.any(String),
+      vnProtocolLink: expect.any(String),
+      openid4vpProtocolLink: expect.any(String),
+      requestId: expect.any(String),
+    });
+    console.dir({
+      msg: 'Presentation links refreshed',
+      presentationLinksJson,
+    });
+
+    const presentationRequestUrl = new URL(
+      presentationLinksJson.vnProtocolLink,
+    ).searchParams.get('request_uri');
+    const presentationRequestResponse = await fetch(presentationRequestUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    expect(presentationRequestResponse.status).toEqual(200);
+    const presentationRequestJson = await presentationRequestResponse.json();
+    expect(presentationRequestJson).toEqual({
+      presentation_request: expect.any(String),
+    });
+    const { payload: presentationRequest } = await jwtVerify(
+      presentationRequestJson.presentation_request,
+      jwkFromSecp256k1Key(key.didDocumentKey.publicKeyMultibase, false),
+    );
+    expect(presentationRequest).toEqual(
+      expect.objectContaining({
+        exchange_id: expect.any(String),
+        presentation_definition: expect.objectContaining({
+          id: expect.any(String),
+          input_descriptors: expect.any(Array),
+        }),
+        metadata: expect.objectContaining({
+          submit_presentation_uri: `${cihUrl}${vnUrl(tenant)}/presentation`,
+        }),
+      }),
+    );
+    console.dir({ msg: 'Presentation request retrieved', presentationRequest });
+
+    const presentationSubmission = await generatePresentationJwt(
+      {
+        '@context': 'https://www.w3.org/2018/credentials/v1',
+        id: nanoid(),
+        verifiableCredential: vcs,
+        issuer: holderDid,
+        presentation_submission: {
+          id: nanoid(),
+          definition_id: presentationRequest.presentation_definition.id,
+          descriptor_map: mapWithIndex(
+            (vc, i) => ({
+              id: nanoid(),
+              path: `$.verifiableCredential[${i}]`,
+              format: 'jwt_vc',
+            }),
+            vcs,
+          ),
+        },
+      },
+      holderKeyPair.privateKey,
+      `${holderDid}#key`,
+    );
+    const presentationSubmissionResponse = await fetch(
+      presentationRequest.metadata.submit_presentation_uri,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          exchange_id: presentationRequest.exchange_id,
+          jwt_vp: presentationSubmission,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+    expect(presentationSubmissionResponse.status).toEqual(200);
+    await expect(presentationSubmissionResponse.json()).resolves.toEqual({
+      token: expect.any(String),
+      exchange: {
+        disclosureComplete: true,
+        exchangeComplete: true,
+        id: presentationRequest.exchange_id,
+        type: 'DISCLOSURE',
+      },
+    });
+    console.dir({ msg: 'Presentation submitted' });
+
+    const webhookEvents = await waitForWebhookEvents(receivedWebhooks, [
+      {
+        type: NotificationEventTypes.CREDENTIAL_REJECTED,
+        resourceId: rejectedBadgeCredential.id,
+      },
+      {
+        type: NotificationEventTypes.CREDENTIAL_ISSUED,
+        resourceId: credential.id,
+      },
+      {
+        type: NotificationEventTypes.CREDENTIAL_ISSUED,
+        resourceId: badgeCredential.id,
+      },
+      { type: NotificationEventTypes.PRESENTATION_RECEIVED },
+    ]);
+    expect(webhookEvents).toEqual([
+      expectedWebhookEvent({
+        type: NotificationEventTypes.CREDENTIAL_REJECTED,
+        tenant,
+        service,
+        depot,
+        resource: { type: 'credential', id: rejectedBadgeCredential.id },
+        data: {
+          credentialReference: rejectedBadgeCredential.credentialReference,
+          credentialTypes: ['OpenBadgeCredential'],
+          rejectedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        },
+      }),
+      expectedWebhookEvent({
+        type: NotificationEventTypes.CREDENTIAL_ISSUED,
+        tenant,
+        service,
+        depot,
+        resource: { type: 'credential', id: credential.id },
+        data: {
+          credentialDid: decodedVcs[0].payload.vc.id,
+          credentialReference: credential.credentialReference,
+          credentialTypes: [EDUCATION_DEGREE_CREDENTIAL_TYPE],
+          digestSRI: expect.any(String),
+        },
+      }),
+      expectedWebhookEvent({
+        type: NotificationEventTypes.CREDENTIAL_ISSUED,
+        tenant,
+        service,
+        depot,
+        resource: { type: 'credential', id: badgeCredential.id },
+        data: {
+          credentialDid: decodedVcs[1].payload.vc.id,
+          credentialReference: badgeCredential.credentialReference,
+          credentialTypes: ['OpenBadgeCredential'],
+          digestSRI: expect.any(String),
+        },
+      }),
+      expectedWebhookEvent({
+        type: NotificationEventTypes.PRESENTATION_RECEIVED,
+        tenant,
+        service: relyingPartyService,
+        depotId: expect.stringMatching(OBJECT_ID_FORMAT),
+        resource: {
+          type: 'presentation',
+          id: expect.stringMatching(OBJECT_ID_FORMAT),
+        },
+        data: {
+          format: PresentationFormat.JWT_VP,
+          verificationStatus: 'received',
+        },
+      }),
+    ]);
   }, 45000);
+});
+
+const startWebhookReceiver = (receivedWebhooks) =>
+  new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      if (req.method !== 'POST' || req.url !== WEBHOOK_RECEIVER_PATH) {
+        res.writeHead(404).end();
+        return;
+      }
+
+      const chunks = [];
+      req.on('data', (chunk) => chunks.push(chunk));
+      req.on('end', () => {
+        const rawBody = Buffer.concat(chunks).toString('utf8');
+        receivedWebhooks.push({
+          body: JSON.parse(rawBody),
+          headers: req.headers,
+          rawBody,
+        });
+        res.writeHead(204).end();
+      });
+    });
+
+    server.once('error', reject);
+    server.listen(WEBHOOK_RECEIVER_PORT, '0.0.0.0', () => {
+      server.off('error', reject);
+      resolve(server);
+    });
+  });
+
+const waitForWebhookEvents = async (receivedWebhooks, expectedTypes) => {
+  const deadline = Date.now() + 15000;
+
+  return pollForWebhookEvents({ deadline, expectedTypes, receivedWebhooks });
+};
+
+const pollForWebhookEvents = async ({
+  deadline,
+  expectedTypes,
+  receivedWebhooks,
+}) => {
+  const matchingEvents = expectedTypes.map((expectedEvent) =>
+    receivedWebhooks.find((webhook) =>
+      isExpectedWebhookEvent(webhook, expectedEvent),
+    ),
+  );
+
+  if (matchingEvents.every(Boolean)) {
+    return matchingEvents.map(assertWebhookSignature);
+  }
+
+  if (Date.now() < deadline) {
+    await wait(250);
+    return pollForWebhookEvents({ deadline, expectedTypes, receivedWebhooks });
+  }
+
+  throw new Error(
+    `Timed out waiting for notification webhooks. Expected ${expectedTypes
+      .map(formatExpectedWebhookEvent)
+      .join(
+        ', ',
+      )}; received ${receivedWebhooks.map(({ body }) => body.type).join(', ')}`,
+  );
+};
+
+const isExpectedWebhookEvent = ({ body }, { type, resourceId }) =>
+  body.type === type &&
+  (resourceId == null || body.resource?.id === resourceId);
+
+const formatExpectedWebhookEvent = ({ type, resourceId }) =>
+  resourceId == null ? type : `${type}:${resourceId}`;
+
+const assertWebhookSignature = (webhook) => {
+  const { body, headers, rawBody } = webhook;
+  const signatureHeader = headers['verii-signature'];
+  const signatureParts = Object.fromEntries(
+    signatureHeader.split(',').map((part) => part.split('=')),
+  );
+  const expectedSignature = crypto
+    .createHmac('sha256', WEBHOOK_SECRET)
+    .update(`${signatureParts.t}.${rawBody}`)
+    .digest('hex');
+
+  expect(headers['content-type']).toEqual('application/json');
+  expect(headers['verii-event-id']).toEqual(body.id);
+  expect(headers['verii-event-type']).toEqual(body.type);
+  expect(headers['verii-event-time']).toEqual(body.occurredAt);
+  expect(signatureHeader).toEqual(
+    expect.stringMatching(/^t=\d+,v1=[a-f0-9]+$/),
+  );
+  expect(signatureParts.v1).toEqual(expectedSignature);
+
+  return webhook;
+};
+
+const expectedWebhookEvent = ({
+  type,
+  tenant,
+  service,
+  depot,
+  depotId = depot?.id,
+  resource,
+  data,
+}) => ({
+  body: expect.objectContaining({
+    id: expect.stringMatching(/^evt_/),
+    type,
+    version: 1,
+    occurredAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+    tenantId: tenant.id,
+    tenantDid: tenant.did,
+    serviceId: service.id,
+    depotId,
+    exchangeId: expect.stringMatching(OBJECT_ID_FORMAT),
+    resource,
+    data: expect.objectContaining(data),
+    links: expect.any(Object),
+  }),
+  headers: expect.any(Object),
+  rawBody: expect.any(String),
 });
 
 const initMintBundle = async () => {
@@ -911,9 +1316,17 @@ const generatePreauthCodeAuthJwt = (
   return generateDocJwt(payload, keyPair.privateKey, options);
 };
 
-const buildBadgeCredential = (organization) => ({
+const buildBadgeCredential = (
+  organization,
+  {
+    achievementDescription = 'A member of the Velocity Network Board in 2022',
+    achievementId = 'mailto:conformance@imsglobal.org',
+    identityHash = 'conformance@imsglobal.org',
+    name = 'Velocity Network Board Member 2022',
+  } = {},
+) => ({
   type: ['OpenBadgeCredential'],
-  name: 'Velocity Network Board Member 2022',
+  name,
   validFrom: '2022-12-31T00:00:00Z',
   issuer: { type: ['Profile'], id: organization.didDoc.id },
   credentialSchema: [
@@ -926,14 +1339,14 @@ const buildBadgeCredential = (organization) => ({
     type: ['AchievementSubject'],
     achievement: {
       type: ['Achievement'],
-      id: 'mailto:conformance@imsglobal.org',
+      id: achievementId,
       identifier: {
         type: ['IdentifierEntry'],
         identityType: 'emailAddress',
-        identityHash: 'conformance@imsglobal.org',
+        identityHash,
       },
-      name: 'Velocity Network Board Member 2022',
-      description: 'A member of the Velocity Network Board in 2022',
+      name,
+      description: achievementDescription,
       criteria: {
         narrative:
           // eslint-disable-next-line max-len

@@ -41,8 +41,10 @@ const {
 const { NotificationQueueTypes } = require('./domain/notification-queue-types');
 const { NotificationEventStatuses } = require('./domain/notification-statuses');
 const {
+  deliverNextNotificationEvent,
   enqueueNotificationEvents,
-} = require('./orchestrators/enqueue-notification-events');
+  startNotificationDeliveryWorker,
+} = require('./orchestrators');
 const {
   notificationEnqueueAdapterPlugin,
 } = require('./plugins/notification-enqueue-adapter-plugin');
@@ -59,10 +61,12 @@ module.exports = {
   buildNotificationConfig,
   buildPresentationReceivedEvent,
   buildWebhookSignatureHeaders,
+  deliverNextNotificationEvent,
   enqueueNotificationEvents,
   matchesNotificationEventType,
   newNotificationEventId,
   notificationEnqueueAdapterPlugin,
   parseNotificationEventTypes,
   shouldEmitNotificationEvent,
+  startNotificationDeliveryWorker,
 };

@@ -15,6 +15,11 @@
  */
 
 const { startAppServer } = require('./start-app-server');
+const { startNotificationWorker } = require('./start-notification-worker');
+const {
+  NotificationWorkerModes,
+} = require('./entities/notifications/domain/notification-config');
+const config = require('./config');
 
 /* istanbul ignore next */
 process.on('unhandledRejection', (error) => {
@@ -22,4 +27,14 @@ process.on('unhandledRejection', (error) => {
   process.exit(1);
 });
 
-startAppServer();
+if (
+  config.notifications.enabled &&
+  config.notifications.workerMode === NotificationWorkerModes.STANDALONE
+) {
+  startNotificationWorker().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+} else {
+  startAppServer();
+}

@@ -14,7 +14,7 @@ RUN apt-get update \
 
 USER node
 
-COPY --chown=node:node package*.json pnpm-lock.yaml pnpm-workspace.yaml lerna.json ./
+COPY --chown=node:node package*.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --chown=node:node .husky ./.husky
 COPY --chown=node:node packages ./packages
 COPY --chown=node:node servers ./servers
