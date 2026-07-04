@@ -15,6 +15,7 @@
  */
 
 const { bindRepo } = require('@spencejs/spence-mongo-repos');
+const { initHttpClient } = require('@verii/http-client');
 const { createServer } = require('@verii/server-provider');
 const { flow } = require('lodash/fp');
 const config = require('./config');
@@ -27,6 +28,7 @@ const startNotificationWorker = async () => {
 
   const worker = startNotificationDeliveryWorker({
     config: server.config,
+    httpClient: buildNotificationHttpClient(server),
     log: server.log,
     repos: bindRepo(server),
   });
@@ -47,6 +49,30 @@ const startNotificationWorker = async () => {
   return { server, worker };
 };
 
+const buildNotificationHttpClient = (server) => {
+  const initClient = initHttpClient({
+    isTest: server.config.isTest,
+    nodeEnv: server.config.nodeEnv,
+    requestTimeout: server.config.notifications.webhook.timeoutMs,
+    tlsRejectUnauthorized: server.config.tlsRejectUnauthorized,
+    traceIdHeader: server.config.traceIdHeader,
+  });
+
+  return initClient(server);
+};
+
+const startNotificationWorkerCli = () => {
+  startNotificationWorker().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+};
+
+if (require.main === module) {
+  startNotificationWorkerCli();
+}
+
 module.exports = {
+  buildNotificationHttpClient,
   startNotificationWorker,
 };

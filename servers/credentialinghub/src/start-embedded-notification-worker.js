@@ -32,7 +32,7 @@ const startEmbeddedNotificationWorker = (server) => {
   let child;
 
   server.addHook('onReady', async () => {
-    child = fork(path.join(__dirname, 'notification-worker.js'), {
+    child = fork(path.join(__dirname, 'start-notification-worker.js'), {
       env: {
         ...process.env,
         NOTIFICATIONS_WORKER_MODE: NotificationWorkerModes.STANDALONE,
