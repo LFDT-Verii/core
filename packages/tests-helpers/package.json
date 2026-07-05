@@ -43,6 +43,6 @@
     "eslint-watch": "8.0.0",
     "globals": "17.7.0",
     "mongodb": "^7.3.0",
-    "prettier": "3.9.1"
+    "prettier": "3.9.4"
   }
 }

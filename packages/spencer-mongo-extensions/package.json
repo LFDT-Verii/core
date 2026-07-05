@@ -39,7 +39,7 @@
     "globals": "17.7.0",
     "mongodb": "^7.3.0",
     "nanoid": "^5.1.16",
-    "prettier": "3.9.1"
+    "prettier": "3.9.4"
   },
   "nx": {
     "tags": [
