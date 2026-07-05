@@ -19,29 +19,24 @@ const { nanoid } = require('nanoid');
 const { wait } = require('@verii/common-functions');
 const {
   deliverNextNotificationEvent,
-  isNotificationDeliveryEnabled,
 } = require('./deliver-notification-event');
 
 const DEFAULT_POLL_INTERVAL_MS = 500;
 
 const startNotificationDeliveryWorker = ({
   config,
-  httpClient,
+  fetch,
   log,
   pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
   repos,
   workerId = newNotificationWorkerId(),
 }) => {
-  if (!isNotificationDeliveryEnabled(config)) {
-    return buildStoppedWorker(workerId);
-  }
-
   const state = {
     running: true,
   };
   const completion = runNotificationDeliveryLoop({
     config,
-    httpClient,
+    fetch,
     log,
     pollIntervalMs,
     repos,
@@ -59,20 +54,9 @@ const startNotificationDeliveryWorker = ({
   };
 };
 
-const buildStoppedWorker = (workerId) => {
-  return {
-    stop: stopAlreadyStoppedWorker,
-    workerId,
-  };
-};
-
-const stopAlreadyStoppedWorker = async () => {
-  return undefined;
-};
-
 const runNotificationDeliveryLoop = async ({
   config,
-  httpClient,
+  fetch,
   log,
   pollIntervalMs,
   repos,
@@ -83,7 +67,7 @@ const runNotificationDeliveryLoop = async ({
 
   await pollNotificationDelivery({
     config,
-    httpClient,
+    fetch,
     log,
     pollIntervalMs,
     repos,
@@ -96,7 +80,7 @@ const runNotificationDeliveryLoop = async ({
 
 const pollNotificationDelivery = async ({
   config,
-  httpClient,
+  fetch,
   log,
   pollIntervalMs,
   repos,
@@ -109,7 +93,7 @@ const pollNotificationDelivery = async ({
 
   await deliverOrWait({
     config,
-    httpClient,
+    fetch,
     log,
     pollIntervalMs,
     repos,
@@ -117,7 +101,7 @@ const pollNotificationDelivery = async ({
   });
   await pollNotificationDelivery({
     config,
-    httpClient,
+    fetch,
     log,
     pollIntervalMs,
     repos,
@@ -128,7 +112,7 @@ const pollNotificationDelivery = async ({
 
 const deliverOrWait = async ({
   config,
-  httpClient,
+  fetch,
   log,
   pollIntervalMs,
   repos,
@@ -137,7 +121,7 @@ const deliverOrWait = async ({
   try {
     const deliveredEvent = await deliverNextNotificationEvent({
       config,
-      httpClient,
+      fetch,
       log,
       repos,
       workerId,
@@ -153,9 +137,8 @@ const deliverOrWait = async ({
   await wait(pollIntervalMs);
 };
 
-const newNotificationWorkerId = () => {
-  return `notification-worker-${process.pid}-${nanoid(6)}`;
-};
+const newNotificationWorkerId = () =>
+  `notification-worker-${process.pid}-${nanoid(6)}`;
 
 module.exports = {
   startNotificationDeliveryWorker,

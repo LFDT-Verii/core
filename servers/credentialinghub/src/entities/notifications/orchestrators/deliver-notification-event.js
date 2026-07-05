@@ -24,13 +24,13 @@ const RETRYABLE_STATUS_CODES = new Set([408, 425, 429]);
 
 const deliverNextNotificationEvent = async ({
   config,
-  httpClient,
+  fetch = globalThis.fetch,
   log,
   now = new Date(),
   repos,
   workerId,
 }) => {
-  if (!isNotificationDeliveryEnabled(config)) {
+  if (!areNotificationsEnabled(config)) {
     return false;
   }
 
@@ -47,7 +47,7 @@ const deliverNextNotificationEvent = async ({
   await deliverClaimedNotificationEvent({
     config,
     event,
-    httpClient,
+    fetch,
     log,
     now,
     repos,
@@ -55,89 +55,72 @@ const deliverNextNotificationEvent = async ({
   return true;
 };
 
-const isNotificationDeliveryEnabled = (config) => {
-  return config.notifications?.enabled === true;
-};
+const areNotificationsEnabled = (config) =>
+  config.notifications?.enabled === true;
 
-const getLockDurationMs = (config) => {
-  return (
-    config.notifications.worker?.lockDurationMs ?? DEFAULT_LOCK_DURATION_MS
-  );
-};
+const getLockDurationMs = (config) =>
+  config.notifications.worker?.lockDurationMs ?? DEFAULT_LOCK_DURATION_MS;
 
 const deliverClaimedNotificationEvent = async ({
   config,
   event,
-  httpClient,
+  fetch,
   log,
   now,
   repos,
 }) => {
-  let response;
-
   try {
-    response = await postWebhook({ config, event, httpClient });
+    const response = await postWebhook({ config, event, fetch });
+
+    if (response.ok) {
+      await repos.notification_events.markDelivered(
+        buildDeliveredUpdate(event, config, now),
+      );
+      return;
+    }
+
+    const error = await buildHttpDeliveryError(response);
+    await markFailedDelivery({ config, error, event, now, repos });
   } catch (error) {
     log?.warn?.({ err: error, eventId: event._id }, 'Webhook delivery failed');
     await markFailedDelivery({ config, error, event, now, repos });
-    return;
   }
-
-  if (isSuccessfulHttpResponse(response)) {
-    await markDelivered({ config, event, log, now, repos });
-    return;
-  }
-
-  const error = await buildHttpDeliveryError(response);
-  await markFailedDelivery({ config, error, event, now, repos });
 };
 
-const postWebhook = async ({ config, event, httpClient }) => {
+const postWebhook = async ({ config, event, fetch }) => {
   const rawBody = JSON.stringify(event.payload);
+  const abortController = new AbortController();
+  const timeout = setTimeout(
+    () => abortController.abort(),
+    config.notifications.webhook.timeoutMs,
+  );
 
-  return httpClient.post(config.notifications.webhook.url, rawBody, {
-    headers: buildWebhookSignatureHeaders({
-      event: event.payload,
-      rawBody,
-      secret: config.notifications.webhook.secret,
-      signatureHeaderName: config.notifications.webhook.signatureHeaderName,
-    }),
-  });
+  try {
+    return await fetch(config.notifications.webhook.url, {
+      body: rawBody,
+      headers: buildWebhookSignatureHeaders({
+        event: event.payload,
+        rawBody,
+        secret: config.notifications.webhook.secret,
+        signatureHeaderName: config.notifications.webhook.signatureHeaderName,
+      }),
+      method: 'POST',
+      signal: abortController.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 };
 
-const isSuccessfulHttpResponse = ({ statusCode }) => {
-  return statusCode >= 200 && statusCode < 300;
-};
-
-const buildHttpDeliveryError = async (response) => {
-  return {
-    message: `Webhook delivery failed with status ${response.statusCode}`,
-    responseBody: await readResponseExcerpt(response),
-    statusCode: response.statusCode,
-  };
-};
+const buildHttpDeliveryError = async (response) => ({
+  message: `Webhook delivery failed with status ${response.status}`,
+  responseBody: await readResponseExcerpt(response),
+  statusCode: response.status,
+});
 
 const readResponseExcerpt = async (response) => {
   const body = await response.text();
   return body.slice(0, MAX_ERROR_BODY_LENGTH);
-};
-
-const markDelivered = async ({ config, event, log, now, repos }) => {
-  try {
-    const deliveredEvent = await repos.notification_events.markDelivered(
-      buildDeliveredUpdate(event, config, now),
-    );
-
-    if (deliveredEvent == null) {
-      throw new Error('Notification event was not marked delivered');
-    }
-  } catch (error) {
-    log?.error?.(
-      { err: error, eventId: event._id },
-      'Webhook delivered but delivery state update failed',
-    );
-    throw error;
-  }
 };
 
 const markFailedDelivery = async ({ config, error, event, now, repos }) => {
@@ -161,41 +144,31 @@ const markFailedDelivery = async ({ config, error, event, now, repos }) => {
   });
 };
 
-const shouldRetryDelivery = (error, event, config) => {
-  return (
-    event.attempts < config.notifications.webhook.maxAttempts &&
-    (error.statusCode == null ||
-      error.statusCode >= 500 ||
-      RETRYABLE_STATUS_CODES.has(error.statusCode))
-  );
-};
+const shouldRetryDelivery = (error, event, config) =>
+  event.attempts < config.notifications.webhook.maxAttempts &&
+  (error.statusCode == null ||
+    error.statusCode >= 500 ||
+    RETRYABLE_STATUS_CODES.has(error.statusCode));
 
-const normalizeDeliveryError = (error) => {
-  return {
-    message: error.message,
-    responseBody: error.responseBody,
-    statusCode: error.statusCode,
-  };
-};
+const normalizeDeliveryError = (error) => ({
+  message: error.message,
+  responseBody: error.responseBody,
+  statusCode: error.statusCode,
+});
 
-const buildDeliveredUpdate = (event, config, now) => {
-  return {
-    eventId: event._id,
-    now,
-    retentionExpiresAt: retentionExpiresAt(config, now),
-  };
-};
+const buildDeliveredUpdate = (event, config, now) => ({
+  eventId: event._id,
+  now,
+  retentionExpiresAt: retentionExpiresAt(config, now),
+});
 
-const retentionExpiresAt = (config, now) => {
-  return new Date(now.getTime() + config.notifications.retentionDays * DAY_MS);
-};
+const retentionExpiresAt = (config, now) =>
+  new Date(now.getTime() + config.notifications.retentionDays * DAY_MS);
 
-const nextAttemptAt = (now, attempts) => {
-  return new Date(now.getTime() + Math.min(60000, 1000 * 2 ** (attempts - 1)));
-};
+const nextAttemptAt = (now, attempts) =>
+  new Date(now.getTime() + Math.min(60000, 1000 * 2 ** (attempts - 1)));
 
 module.exports = {
   deliverClaimedNotificationEvent,
   deliverNextNotificationEvent,
-  isNotificationDeliveryEnabled,
 };

@@ -75,9 +75,8 @@ const notificationEventsRepoExtension = (parent) => ({
     now = new Date(),
     retentionExpiresAt,
     projection = parent.defaultColumnsSelection,
-  }) => {
-    return findOneAndUpdateEvent(
-      parent,
+  }) =>
+    parent.collection().findOneAndUpdate(
       { _id: eventId },
       {
         $set: {
@@ -92,18 +91,20 @@ const notificationEventsRepoExtension = (parent) => ({
           lastError: '',
         },
       },
-      projection,
-    );
-  },
+      {
+        returnDocument: 'after',
+        includeResultMetadata: true,
+        projection,
+      },
+    ),
   markRetrying: ({
     eventId,
     lastError,
     nextAttemptAt,
     now = new Date(),
     projection = parent.defaultColumnsSelection,
-  }) => {
-    return findOneAndUpdateEvent(
-      parent,
+  }) =>
+    parent.collection().findOneAndUpdate(
       { _id: eventId },
       {
         $set: {
@@ -117,18 +118,20 @@ const notificationEventsRepoExtension = (parent) => ({
           lockedUntil: '',
         },
       },
-      projection,
-    );
-  },
+      {
+        returnDocument: 'after',
+        includeResultMetadata: true,
+        projection,
+      },
+    ),
   markDead: ({
     eventId,
     lastError,
     now = new Date(),
     retentionExpiresAt,
     projection = parent.defaultColumnsSelection,
-  }) => {
-    return findOneAndUpdateEvent(
-      parent,
+  }) =>
+    parent.collection().findOneAndUpdate(
       { _id: eventId },
       {
         $set: {
@@ -143,21 +146,14 @@ const notificationEventsRepoExtension = (parent) => ({
           lockedUntil: '',
         },
       },
-      projection,
-    );
-  },
+      {
+        returnDocument: 'after',
+        includeResultMetadata: true,
+        projection,
+      },
+    ),
   extensions: parent.extensions.concat(['notificationEventsRepoExtension']),
 });
-
-const findOneAndUpdateEvent = async (parent, filter, update, projection) => {
-  const result = await parent.collection().findOneAndUpdate(filter, update, {
-    returnDocument: 'after',
-    includeResultMetadata: true,
-    projection,
-  });
-
-  return result.value;
-};
 
 const buildNotificationEventDocument = (event) => {
   const now = new Date();
