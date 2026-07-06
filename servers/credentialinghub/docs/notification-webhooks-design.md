@@ -103,8 +103,7 @@ Suggested config shape:
       "secret": "env-or-kms-secret",
       "signatureHeaderName": "Verii-Signature",
       "timeoutMs": 5000,
-      "maxAttempts": 12,
-      "maxConcurrency": 4
+      "maxAttempts": 12
     }
   }
 }
@@ -129,7 +128,6 @@ NOTIFICATIONS_WEBHOOK_URL=https://operator-lan.example/internal/credentialing-hu
 NOTIFICATIONS_WEBHOOK_EVENTS=presentation.received,credential.issued,credential.rejected
 NOTIFICATIONS_WEBHOOK_SECRET=...
 NOTIFICATIONS_WEBHOOK_TIMEOUT_MS=5000
-NOTIFICATIONS_WORKER_MAX_CONCURRENCY=4
 NOTIFICATIONS_MAX_ATTEMPTS=12
 NOTIFICATIONS_RETENTION_DAYS=30
 ```
@@ -541,9 +539,9 @@ Timeout:
 
 Concurrency:
 
-- Default max concurrency: 4.
-- Make configurable.
-- Do not start unbounded parallel deliveries.
+- MVP delivery is serial: one in-flight delivery per worker process.
+- Do not expose a concurrency config knob until bounded concurrency is implemented.
+- Track configurable bounded concurrency, process scaling, backpressure, metrics, and rollout guidance in follow-up issue #804.
 
 Backoff:
 
@@ -771,7 +769,7 @@ Acceptance:
 2. Add delivery client using `fetch` and `AbortController`.
 3. Add HMAC signing headers.
 4. Add retry/dead-letter logic.
-5. Add bounded concurrency.
+5. Keep MVP delivery serial and track bounded concurrency as follow-up.
 6. Add graceful shutdown.
 7. Add integration tests against local mocked webhook receiver.
 

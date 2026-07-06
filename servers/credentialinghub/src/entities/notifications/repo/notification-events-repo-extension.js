@@ -70,6 +70,88 @@ const notificationEventsRepoExtension = (parent) => ({
 
     return result.value;
   },
+  markDelivered: ({
+    eventId,
+    now = new Date(),
+    retentionExpiresAt,
+    projection = parent.defaultColumnsSelection,
+  }) =>
+    parent.collection().findOneAndUpdate(
+      { _id: eventId },
+      {
+        $set: {
+          status: NotificationEventStatuses.DELIVERED,
+          deliveredAt: now,
+          retentionExpiresAt,
+          updatedAt: now,
+        },
+        $unset: {
+          lockedBy: '',
+          lockedUntil: '',
+          lastError: '',
+        },
+      },
+      {
+        returnDocument: 'after',
+        includeResultMetadata: true,
+        projection,
+      },
+    ),
+  markRetrying: ({
+    eventId,
+    lastError,
+    nextAttemptAt,
+    now = new Date(),
+    projection = parent.defaultColumnsSelection,
+  }) =>
+    parent.collection().findOneAndUpdate(
+      { _id: eventId },
+      {
+        $set: {
+          status: NotificationEventStatuses.RETRYING,
+          lastError,
+          nextAttemptAt,
+          updatedAt: now,
+        },
+        $unset: {
+          lockedBy: '',
+          lockedUntil: '',
+        },
+      },
+      {
+        returnDocument: 'after',
+        includeResultMetadata: true,
+        projection,
+      },
+    ),
+  markDead: ({
+    eventId,
+    lastError,
+    now = new Date(),
+    retentionExpiresAt,
+    projection = parent.defaultColumnsSelection,
+  }) =>
+    parent.collection().findOneAndUpdate(
+      { _id: eventId },
+      {
+        $set: {
+          status: NotificationEventStatuses.DEAD,
+          deadAt: now,
+          lastError,
+          retentionExpiresAt,
+          updatedAt: now,
+        },
+        $unset: {
+          lockedBy: '',
+          lockedUntil: '',
+        },
+      },
+      {
+        returnDocument: 'after',
+        includeResultMetadata: true,
+        projection,
+      },
+    ),
   extensions: parent.extensions.concat(['notificationEventsRepoExtension']),
 });
 
