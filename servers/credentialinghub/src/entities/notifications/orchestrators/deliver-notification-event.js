@@ -22,11 +22,9 @@ const DEFAULT_LOCK_DURATION_MS = 30000;
 const MAX_ERROR_BODY_LENGTH = 500;
 const RETRYABLE_STATUS_CODES = new Set([408, 425, 429]);
 
-const deliverNextNotificationEvent = async (
-  { now = new Date(), workerId },
-  context,
-) => {
+const deliverNextNotificationEvent = async ({ workerId }, context) => {
   const { config, repos } = context;
+  const now = new Date();
 
   if (!areNotificationsEnabled(config)) {
     return false;
@@ -42,7 +40,7 @@ const deliverNextNotificationEvent = async (
     return false;
   }
 
-  await deliverClaimedNotificationEvent(event, { now }, context);
+  await deliverClaimedNotificationEvent(event, now, context);
   return true;
 };
 
@@ -52,7 +50,7 @@ const areNotificationsEnabled = (config) =>
 const getLockDurationMs = (config) =>
   config.notifications.worker?.lockDurationMs ?? DEFAULT_LOCK_DURATION_MS;
 
-const deliverClaimedNotificationEvent = async (event, { now }, context) => {
+const deliverClaimedNotificationEvent = async (event, now, context) => {
   const { config, log, repos } = context;
 
   try {
@@ -66,10 +64,10 @@ const deliverClaimedNotificationEvent = async (event, { now }, context) => {
     }
 
     const error = await buildHttpDeliveryError(response);
-    await markFailedDelivery(event, error, { now }, context);
+    await markFailedDelivery(event, error, now, context);
   } catch (error) {
     log?.warn?.({ err: error, eventId: event._id }, 'Webhook delivery failed');
-    await markFailedDelivery(event, error, { now }, context);
+    await markFailedDelivery(event, error, now, context);
   }
 };
 
@@ -110,7 +108,7 @@ const readResponseExcerpt = async (response) => {
   return body.slice(0, MAX_ERROR_BODY_LENGTH);
 };
 
-const markFailedDelivery = async (event, error, { now }, context) => {
+const markFailedDelivery = async (event, error, now, context) => {
   const { config, repos } = context;
   const failedUpdate = {
     eventId: event._id,

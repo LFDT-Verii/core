@@ -36,6 +36,9 @@ const {
 } = require('../../src/entities/notifications');
 
 const WEBHOOK_SECRET = 'delivery-secret';
+const DAY_MS = 24 * 60 * 60 * 1000;
+const RETENTION_DAYS = 30;
+const INITIAL_RETRY_DELAY_MS = 1000;
 
 describe('notification delivery worker', () => {
   let fastify;
@@ -122,6 +125,7 @@ describe('notification delivery worker', () => {
         status: NotificationEventStatuses.DELIVERED,
       }),
     );
+    expectRetentionExpiresAt(storedEvent, 'deliveredAt');
     expect(storedEvent).not.toHaveProperty('lastError');
     expect(storedEvent).not.toHaveProperty('lockedBy');
     expect(storedEvent).not.toHaveProperty('lockedUntil');
@@ -159,6 +163,9 @@ describe('notification delivery worker', () => {
         status: NotificationEventStatuses.RETRYING,
       }),
     );
+    expect(storedEvent.nextAttemptAt.getTime()).toEqual(
+      storedEvent.updatedAt.getTime() + INITIAL_RETRY_DELAY_MS,
+    );
     expect(storedEvent).not.toHaveProperty('lockedBy');
     expect(storedEvent).not.toHaveProperty('lockedUntil');
   });
@@ -193,6 +200,7 @@ describe('notification delivery worker', () => {
         status: NotificationEventStatuses.DEAD,
       }),
     );
+    expectRetentionExpiresAt(storedEvent, 'deadAt');
     expect(storedEvent).not.toHaveProperty('lockedBy');
     expect(storedEvent).not.toHaveProperty('lockedUntil');
   });
@@ -284,11 +292,18 @@ const buildTestNotificationConfig = (webhookUrl, overrides = {}) =>
   buildNotificationConfig({
     allowInsecureWebhookUrl: true,
     enabled: true,
+    retentionDays: RETENTION_DAYS,
     webhookSecret: WEBHOOK_SECRET,
     webhookTimeoutMs: 1000,
     webhookUrl,
     ...overrides,
   });
+
+const expectRetentionExpiresAt = (storedEvent, retainedFromField) => {
+  expect(storedEvent.retentionExpiresAt.getTime()).toEqual(
+    storedEvent[retainedFromField].getTime() + RETENTION_DAYS * DAY_MS,
+  );
+};
 
 const buildWorkerContext = ({ fastify, repos }) => ({
   config: fastify.config,
