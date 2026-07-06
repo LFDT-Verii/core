@@ -84,6 +84,15 @@ describe('notification domain', () => {
         'Invalid notifications queue type: rabbit',
       );
     });
+
+    it('should not expose worker concurrency config in the serial MVP', () => {
+      expect(buildNotificationConfig().webhook).not.toHaveProperty(
+        'maxConcurrency',
+      );
+      expect(
+        buildNotificationConfig({ maxConcurrency: 2 }).webhook,
+      ).not.toHaveProperty('maxConcurrency');
+    });
   });
 
   describe('event type matching', () => {

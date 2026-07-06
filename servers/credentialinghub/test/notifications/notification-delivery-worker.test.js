@@ -17,36 +17,62 @@
 
 const crypto = require('node:crypto');
 const http = require('node:http');
-const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+} = require('node:test');
+const { bindRepo, mongoDb } = require('@spencejs/spence-mongo-repos');
+const { wait } = require('@verii/common-functions');
 const { expect } = require('expect');
+const createTestFastify = require('../helpers/create-test-fastify');
 const {
   NotificationEventStatuses,
-  deliverNextNotificationEvent,
+  buildNotificationConfig,
+  startNotificationDeliveryWorker,
 } = require('../../src/entities/notifications');
 
 const WEBHOOK_SECRET = 'delivery-secret';
 
 describe('notification delivery worker', () => {
+  let fastify;
   let receiver;
-  let receiverBody;
-  let receiverStatusCode;
+  let receiverBehavior;
   let receiverUrl;
   let receivedRequests;
+  let repos;
+  let worker;
 
   before(async () => {
     receivedRequests = [];
-    receiver = await startWebhookReceiver(receivedRequests, () => ({
-      body: receiverBody,
-      statusCode: receiverStatusCode,
-    }));
+    receiver = await startWebhookReceiver(receivedRequests, () =>
+      receiverBehavior(),
+    );
     const { port } = receiver.address();
     receiverUrl = `http://127.0.0.1:${port}/notifications`;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     receivedRequests.splice(0, receivedRequests.length);
-    receiverBody = '';
-    receiverStatusCode = 204;
+    receiverBehavior = async () => ({ body: '', statusCode: 204 });
+    fastify = createTestFastify({
+      notifications: buildTestNotificationConfig(receiverUrl),
+    });
+    await fastify.ready();
+    repos = bindRepo(fastify);
+    await mongoDb().collection('notification_events').deleteMany({});
+  });
+
+  afterEach(async () => {
+    if (worker != null) {
+      await worker.stop();
+
+      worker = undefined;
+    }
+    await fastify.close();
   });
 
   after(async () => {
@@ -55,180 +81,211 @@ describe('notification delivery worker', () => {
     });
   });
 
-  it('should deliver a claimed event and mark it delivered', async () => {
-    const now = new Date('2026-06-25T10:15:30.000Z');
-    const event = {
-      id: 'evt_test',
-      type: 'credential.issued',
-      version: 1,
-      occurredAt: '2026-06-25T10:15:29.000Z',
-      resource: { type: 'credential', id: 'credential-id' },
-      data: {},
-      links: {},
-    };
-    const repos = buildRepos({
-      claimedEvent: {
-        _id: event.id,
-        attempts: 1,
-        payload: event,
-        status: NotificationEventStatuses.DELIVERING,
-      },
+  it('should deliver a pending event and mark it delivered', async () => {
+    const event = buildEvent({ id: 'evt_delivered' });
+    await repos.notification_events.insertEvents([event]);
+
+    worker = startNotificationDeliveryWorker({
+      config: fastify.config,
+      log: fastify.log,
+      pollIntervalMs: 5,
+      repos,
+      workerId: 'worker-1',
     });
 
-    await expect(
-      deliverNextNotificationEvent({
-        config: buildConfig(receiverUrl),
-        log: testLog,
-        now,
-        repos,
-        workerId: 'worker-1',
-      }),
-    ).resolves.toEqual(true);
+    await waitForCondition(() => receivedRequests.length === 1);
 
-    expect(receivedRequests).toEqual([
+    expect(receivedRequests[0]).toEqual(
       expect.objectContaining({
         body: event,
         headers: expect.objectContaining({
           'content-type': 'application/json',
           'verii-event-id': event.id,
-          'verii-event-type': event.type,
           'verii-event-time': event.occurredAt,
+          'verii-event-type': event.type,
           'verii-signature': expect.stringMatching(/^t=\d+,v1=[a-f0-9]+$/),
         }),
       }),
-    ]);
+    );
     expectWebhookSignature(receivedRequests[0]);
-    expect(
-      repos.notification_events.markDelivered.mock.calls[0].arguments[0],
-    ).toEqual({
-      eventId: event.id,
-      now,
-      retentionExpiresAt: new Date('2026-07-25T10:15:30.000Z'),
-    });
+    await waitForEventStatus(event.id, NotificationEventStatuses.DELIVERED);
+    await stopWorker();
+
+    const storedEvent = await loadEvent(event.id);
+    expect(storedEvent).toEqual(
+      expect.objectContaining({
+        _id: event.id,
+        deliveredAt: expect.any(Date),
+        retentionExpiresAt: expect.any(Date),
+        status: NotificationEventStatuses.DELIVERED,
+      }),
+    );
+    expect(storedEvent).not.toHaveProperty('lastError');
+    expect(storedEvent).not.toHaveProperty('lockedBy');
+    expect(storedEvent).not.toHaveProperty('lockedUntil');
   });
 
-  it('should return false when no due event is available', async () => {
-    const repos = buildRepos({ claimedEvent: null });
+  it('should mark retryable webhook failures for another attempt', async () => {
+    receiverBehavior = async () => ({
+      body: 'temporary outage',
+      statusCode: 500,
+    });
+    const event = buildEvent({ id: 'evt_retry' });
+    await repos.notification_events.insertEvents([event]);
 
-    await expect(
-      deliverNextNotificationEvent({
-        config: buildConfig(receiverUrl),
-        log: testLog,
-        repos,
-        workerId: 'worker-1',
+    worker = startNotificationDeliveryWorker({
+      config: fastify.config,
+      log: fastify.log,
+      pollIntervalMs: 5,
+      repos,
+      workerId: 'worker-1',
+    });
+
+    await waitForEventStatus(event.id, NotificationEventStatuses.RETRYING);
+    await stopWorker();
+
+    const storedEvent = await loadEvent(event.id);
+    expect(storedEvent).toEqual(
+      expect.objectContaining({
+        _id: event.id,
+        lastError: {
+          message: 'Webhook delivery failed with status 500',
+          responseBody: 'temporary outage',
+          statusCode: 500,
+        },
+        nextAttemptAt: expect.any(Date),
+        status: NotificationEventStatuses.RETRYING,
       }),
-    ).resolves.toEqual(false);
+    );
+    expect(storedEvent).not.toHaveProperty('lockedBy');
+    expect(storedEvent).not.toHaveProperty('lockedUntil');
+  });
+
+  it('should mark permanent webhook failures dead', async () => {
+    receiverBehavior = async () => ({ body: 'bad request', statusCode: 400 });
+    const event = buildEvent({ id: 'evt_dead' });
+    await repos.notification_events.insertEvents([event]);
+
+    worker = startNotificationDeliveryWorker({
+      config: fastify.config,
+      log: fastify.log,
+      pollIntervalMs: 5,
+      repos,
+      workerId: 'worker-1',
+    });
+
+    await waitForEventStatus(event.id, NotificationEventStatuses.DEAD);
+    await stopWorker();
+
+    const storedEvent = await loadEvent(event.id);
+    expect(storedEvent).toEqual(
+      expect.objectContaining({
+        _id: event.id,
+        deadAt: expect.any(Date),
+        lastError: {
+          message: 'Webhook delivery failed with status 400',
+          responseBody: 'bad request',
+          statusCode: 400,
+        },
+        retentionExpiresAt: expect.any(Date),
+        status: NotificationEventStatuses.DEAD,
+      }),
+    );
+    expect(storedEvent).not.toHaveProperty('lockedBy');
+    expect(storedEvent).not.toHaveProperty('lockedUntil');
+  });
+
+  it('should mark timed out webhook deliveries for retry', async () => {
+    receiverBehavior = async () => {
+      await wait(50);
+      return { body: '', statusCode: 204 };
+    };
+    await replaceFastify({
+      notifications: buildTestNotificationConfig(receiverUrl, {
+        webhookTimeoutMs: 5,
+      }),
+    });
+    await mongoDb().collection('notification_events').deleteMany({});
+    const event = buildEvent({ id: 'evt_timeout' });
+    await repos.notification_events.insertEvents([event]);
+
+    worker = startNotificationDeliveryWorker({
+      config: fastify.config,
+      log: fastify.log,
+      pollIntervalMs: 5,
+      repos,
+      workerId: 'worker-1',
+    });
+
+    await waitForEventStatus(event.id, NotificationEventStatuses.RETRYING);
+    await stopWorker();
+
+    expect(await loadEvent(event.id)).toEqual(
+      expect.objectContaining({
+        _id: event.id,
+        lastError: expect.objectContaining({
+          message: expect.stringMatching(/abort/i),
+        }),
+        status: NotificationEventStatuses.RETRYING,
+      }),
+    );
+  });
+
+  it('should not poll or deliver when notifications are disabled', async () => {
+    await replaceFastify({
+      notifications: buildNotificationConfig({ enabled: false }),
+    });
+    await mongoDb().collection('notification_events').deleteMany({});
+    const event = buildEvent({ id: 'evt_disabled' });
+    await repos.notification_events.insertEvents([event]);
+
+    worker = startNotificationDeliveryWorker({
+      config: fastify.config,
+      log: fastify.log,
+      pollIntervalMs: 5,
+      repos,
+      workerId: 'worker-disabled',
+    });
+
+    expect(worker.workerId).toEqual('worker-disabled');
+    await stopWorker();
 
     expect(receivedRequests).toEqual([]);
-    expect(repos.notification_events.markDelivered.mock.callCount()).toEqual(0);
-    expect(repos.notification_events.markRetrying.mock.callCount()).toEqual(0);
-    expect(repos.notification_events.markDead.mock.callCount()).toEqual(0);
-  });
-
-  it('should mark retryable failures for another attempt', async () => {
-    const now = new Date('2026-06-25T10:15:30.000Z');
-    receiverBody = 'temporary outage';
-    receiverStatusCode = 500;
-    const repos = buildRepos({
-      claimedEvent: {
-        _id: 'evt_retry',
-        attempts: 1,
-        payload: buildEvent({ id: 'evt_retry' }),
-        status: NotificationEventStatuses.DELIVERING,
-      },
-    });
-
-    await expect(
-      deliverNextNotificationEvent({
-        config: buildConfig(receiverUrl),
-        log: testLog,
-        now,
-        repos,
-        workerId: 'worker-1',
+    expect(await loadEvent(event.id)).toEqual(
+      expect.objectContaining({
+        _id: event.id,
+        status: NotificationEventStatuses.PENDING,
       }),
-    ).resolves.toEqual(true);
-
-    expect(
-      repos.notification_events.markRetrying.mock.calls[0].arguments[0],
-    ).toEqual({
-      eventId: 'evt_retry',
-      lastError: {
-        message: 'Webhook delivery failed with status 500',
-        responseBody: 'temporary outage',
-        statusCode: 500,
-      },
-      nextAttemptAt: new Date('2026-06-25T10:15:31.000Z'),
-      now,
-    });
-    expect(repos.notification_events.markDelivered.mock.callCount()).toEqual(0);
-    expect(repos.notification_events.markDead.mock.callCount()).toEqual(0);
+    );
   });
 
-  it('should mark permanent failures dead', async () => {
-    const now = new Date('2026-06-25T10:15:30.000Z');
-    receiverBody = 'bad request';
-    receiverStatusCode = 400;
-    const repos = buildRepos({
-      claimedEvent: {
-        _id: 'evt_dead',
-        attempts: 1,
-        payload: buildEvent({ id: 'evt_dead' }),
-        status: NotificationEventStatuses.DELIVERING,
-      },
-    });
+  const replaceFastify = async (configOverrides) => {
+    await fastify.close();
 
-    await expect(
-      deliverNextNotificationEvent({
-        config: buildConfig(receiverUrl),
-        log: testLog,
-        now,
-        repos,
-        workerId: 'worker-1',
-      }),
-    ).resolves.toEqual(true);
+    fastify = undefined;
 
-    expect(
-      repos.notification_events.markDead.mock.calls[0].arguments[0],
-    ).toEqual({
-      eventId: 'evt_dead',
-      lastError: {
-        message: 'Webhook delivery failed with status 400',
-        responseBody: 'bad request',
-        statusCode: 400,
-      },
-      now,
-      retentionExpiresAt: new Date('2026-07-25T10:15:30.000Z'),
-    });
-    expect(repos.notification_events.markDelivered.mock.callCount()).toEqual(0);
-    expect(repos.notification_events.markRetrying.mock.callCount()).toEqual(0);
-  });
+    fastify = createTestFastify(configOverrides);
+    await fastify.ready();
+
+    repos = bindRepo(fastify);
+  };
+
+  const stopWorker = async () => {
+    await worker.stop();
+
+    worker = undefined;
+  };
 });
 
-const buildRepos = ({ claimedEvent }) => ({
-  notification_events: {
-    claimDueEvent: mock.fn(async () => claimedEvent),
-    markDead: mock.fn(async () => claimedEvent),
-    markDelivered: mock.fn(async () => claimedEvent),
-    markRetrying: mock.fn(async () => claimedEvent),
-  },
-});
-
-const buildConfig = (webhookUrl) => ({
-  notifications: {
+const buildTestNotificationConfig = (webhookUrl, overrides = {}) =>
+  buildNotificationConfig({
+    allowInsecureWebhookUrl: true,
     enabled: true,
-    retentionDays: 30,
-    webhook: {
-      maxAttempts: 3,
-      secret: WEBHOOK_SECRET,
-      signatureHeaderName: 'Verii-Signature',
-      timeoutMs: 1000,
-      url: webhookUrl,
-    },
-    worker: {
-      lockDurationMs: 30000,
-    },
-  },
-});
+    webhookSecret: WEBHOOK_SECRET,
+    webhookTimeoutMs: 1000,
+    webhookUrl,
+    ...overrides,
+  });
 
 const buildEvent = ({ id = 'evt_test' } = {}) => ({
   id,
@@ -240,20 +297,50 @@ const buildEvent = ({ id = 'evt_test' } = {}) => ({
   links: {},
 });
 
+const loadEvent = (eventId) =>
+  mongoDb().collection('notification_events').findOne({ _id: eventId });
+
+const waitForEventStatus = (eventId, status) =>
+  waitForCondition(async () => {
+    const event = await loadEvent(eventId);
+    return event?.status === status;
+  });
+
+const waitForCondition = async (
+  condition,
+  timeoutMs = 1000,
+  deadline = Date.now() + timeoutMs,
+) => {
+  if (await condition()) {
+    return;
+  }
+
+  if (Date.now() > deadline) {
+    throw new Error('Timed out waiting for condition');
+  }
+
+  await wait(5);
+  await waitForCondition(condition, timeoutMs, deadline);
+};
+
 const startWebhookReceiver = (receivedRequests, responseBuilder) =>
   new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
       const chunks = [];
       req.on('data', (chunk) => chunks.push(chunk));
-      req.on('end', () => {
-        const rawBody = Buffer.concat(chunks).toString('utf8');
-        receivedRequests.push({
-          body: JSON.parse(rawBody),
-          headers: req.headers,
-          rawBody,
-        });
-        const response = responseBuilder();
-        res.writeHead(response.statusCode).end(response.body);
+      req.on('end', async () => {
+        try {
+          const rawBody = Buffer.concat(chunks).toString('utf8');
+          receivedRequests.push({
+            body: JSON.parse(rawBody),
+            headers: req.headers,
+            rawBody,
+          });
+          const response = await responseBuilder();
+          res.writeHead(response.statusCode).end(response.body);
+        } catch (error) {
+          res.writeHead(500).end(error.message);
+        }
       });
     });
 
@@ -274,11 +361,4 @@ const expectWebhookSignature = ({ headers, rawBody }) => {
     .digest('hex');
 
   expect(signatureParts.v1).toEqual(expectedSignature);
-};
-
-const testLog = {
-  debug: () => {},
-  error: () => {},
-  info: () => {},
-  warn: () => {},
 };

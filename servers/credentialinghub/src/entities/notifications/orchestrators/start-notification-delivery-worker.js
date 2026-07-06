@@ -31,6 +31,10 @@ const startNotificationDeliveryWorker = ({
   repos,
   workerId = newNotificationWorkerId(),
 }) => {
+  if (!isNotificationDeliveryEnabled(config)) {
+    return buildStoppedWorker(workerId);
+  }
+
   const state = {
     running: true,
   };
@@ -53,6 +57,14 @@ const startNotificationDeliveryWorker = ({
     workerId,
   };
 };
+
+const isNotificationDeliveryEnabled = (config) =>
+  config.notifications?.enabled === true;
+
+const buildStoppedWorker = (workerId) => ({
+  stop: async () => undefined,
+  workerId,
+});
 
 const runNotificationDeliveryLoop = async ({
   config,

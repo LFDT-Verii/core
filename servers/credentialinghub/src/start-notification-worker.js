@@ -31,22 +31,50 @@ const startNotificationWorker = async () => {
     repos: bindRepo(server),
   });
 
-  const shutdown = async () => {
-    await worker.stop();
-    await server.close();
+  let shutdownPromise;
+  const shutdown = () => {
+    if (shutdownPromise == null) {
+      // eslint-disable-next-line better-mutation/no-mutation
+      shutdownPromise = stopNotificationWorker({ server, worker });
+    }
+
+    return shutdownPromise;
+  };
+  const shutdownOrExit = () => {
+    shutdown().catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
   };
 
-  process.once('SIGINT', shutdown);
-  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdownOrExit);
+  process.once('SIGTERM', shutdownOrExit);
   process.once('message', (message) => {
     if (message === 'shutdown') {
-      shutdown();
+      shutdownOrExit();
     }
   });
 
   return { server, worker };
 };
 
+const stopNotificationWorker = async ({ server, worker }) => {
+  await worker.stop();
+  await server.close();
+};
+
+const startNotificationWorkerCli = () => {
+  startNotificationWorker().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+};
+
+if (require.main === module) {
+  startNotificationWorkerCli();
+}
+
 module.exports = {
   startNotificationWorker,
+  startNotificationWorkerCli,
 };
