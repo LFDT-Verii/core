@@ -35,14 +35,14 @@
     "fastify-plugin": "^5.1.0",
     "http-errors": "^2.0.1",
     "lodash": "^4.18.0",
-    "nanoid": "^5.1.15"
+    "nanoid": "^5.1.16"
   },
   "peerDependencies": {
     "@spencejs/spence-mongo-repos": "^1.1.0",
     "mongodb": "^7.0.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "3.1045.0",
+    "@aws-sdk/client-s3": "3.1075.0",
     "@spencejs/spence-factories": "^1.1.0",
     "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/crypto": "workspace:*",
@@ -56,13 +56,13 @@
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
-    "eslint-plugin-prettier": "5.5.5",
+    "eslint-plugin-prettier": "5.5.6",
     "eslint-watch": "8.0.0",
     "expect": "30.4.1",
     "form-data": "4.0.6",
-    "globals": "17.6.0",
+    "globals": "17.7.0",
     "mongodb": "^7.3.0",
-    "nock": "15.0.0-beta.11",
-    "prettier": "3.8.3"
+    "nock": "15.0.0-beta.12",
+    "prettier": "3.9.4"
   }
 }

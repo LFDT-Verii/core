@@ -16,4 +16,5 @@
  */
 module.exports = {
   ...require('./create-credentials'),
+  ...require('./revoke-credential'),
 };

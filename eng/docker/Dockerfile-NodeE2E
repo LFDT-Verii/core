@@ -1,4 +1,4 @@
-FROM node:24.17.0-slim@sha256:c2d5ade763cacfb03fe9cb8e8af5d1be5041ff331921fa26a9b231ca3a4f780a AS builder
+FROM node:24.18.0-slim@sha256:b31e7a42fdf8b8aa5f5ed477c72d694301273f1069c5a2f71d53c6482e99a2fc AS builder
 ARG NODE_ENV=production
 ARG SERVICE
 WORKDIR /app
@@ -14,14 +14,14 @@ RUN apt-get update \
 
 USER node
 
-COPY --chown=node:node package*.json pnpm-lock.yaml pnpm-workspace.yaml lerna.json ./
+COPY --chown=node:node package*.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --chown=node:node .husky ./.husky
 COPY --chown=node:node packages ./packages
 COPY --chown=node:node servers ./servers
 COPY --chown=node:node samples ./samples
 RUN HUSKY=0 pnpm install --frozen-lockfile
 
-FROM node:24.17.0-slim@sha256:c2d5ade763cacfb03fe9cb8e8af5d1be5041ff331921fa26a9b231ca3a4f780a
+FROM node:24.18.0-slim@sha256:b31e7a42fdf8b8aa5f5ed477c72d694301273f1069c5a2f71d53c6482e99a2fc
 ARG SERVICE
 WORKDIR /app
 RUN corepack enable \

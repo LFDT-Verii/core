@@ -16,6 +16,7 @@
  */
 
 const { calcSha384 } = require('@verii/crypto');
+const { jwtDecode } = require('@verii/jwt');
 const { buildExchangeEvent } = require('../../exchanges/domain');
 
 const updateExtensions = (parent, context) => ({
@@ -28,11 +29,15 @@ const updateExtensions = (parent, context) => ({
     exchange,
   ) => {
     const digestSRI = `sha384-${calcSha384(jwtVc)}`;
+    const credentialStatus = extractCredentialStatus(jwtVc);
     const $set = {
       did: credentialDid,
       credentialSubjectId,
       digestSRI,
     };
+    if (credentialStatus != null) {
+      $set.credentialStatus = credentialStatus;
+    }
     if (isAccepted) {
       $set.acceptedAt = new Date();
     }
@@ -56,5 +61,8 @@ const updateExtensions = (parent, context) => ({
       },
     ),
 });
+
+const extractCredentialStatus = (jwtVc) =>
+  jwtDecode(jwtVc)?.payload?.vc?.credentialStatus;
 
 module.exports = { updateExtensions };
