@@ -22,14 +22,12 @@ const DEFAULT_LOCK_DURATION_MS = 30000;
 const MAX_ERROR_BODY_LENGTH = 500;
 const RETRYABLE_STATUS_CODES = new Set([408, 425, 429]);
 
-const deliverNextNotificationEvent = async ({
-  config,
-  fetch = globalThis.fetch,
-  log,
-  now = new Date(),
-  repos,
-  workerId,
-}) => {
+const deliverNextNotificationEvent = async (
+  { now = new Date(), workerId },
+  context,
+) => {
+  const { config, repos } = context;
+
   if (!areNotificationsEnabled(config)) {
     return false;
   }
@@ -44,14 +42,7 @@ const deliverNextNotificationEvent = async ({
     return false;
   }
 
-  await deliverClaimedNotificationEvent({
-    config,
-    event,
-    fetch,
-    log,
-    now,
-    repos,
-  });
+  await deliverClaimedNotificationEvent(event, { now }, context);
   return true;
 };
 
@@ -61,16 +52,11 @@ const areNotificationsEnabled = (config) =>
 const getLockDurationMs = (config) =>
   config.notifications.worker?.lockDurationMs ?? DEFAULT_LOCK_DURATION_MS;
 
-const deliverClaimedNotificationEvent = async ({
-  config,
-  event,
-  fetch,
-  log,
-  now,
-  repos,
-}) => {
+const deliverClaimedNotificationEvent = async (event, { now }, context) => {
+  const { config, log, repos } = context;
+
   try {
-    const response = await postWebhook({ config, event, fetch });
+    const response = await postWebhook(event, context);
 
     if (response.ok) {
       await repos.notification_events.markDelivered(
@@ -80,14 +66,15 @@ const deliverClaimedNotificationEvent = async ({
     }
 
     const error = await buildHttpDeliveryError(response);
-    await markFailedDelivery({ config, error, event, now, repos });
+    await markFailedDelivery(event, error, { now }, context);
   } catch (error) {
     log?.warn?.({ err: error, eventId: event._id }, 'Webhook delivery failed');
-    await markFailedDelivery({ config, error, event, now, repos });
+    await markFailedDelivery(event, error, { now }, context);
   }
 };
 
-const postWebhook = async ({ config, event, fetch }) => {
+const postWebhook = async (event, context) => {
+  const { config, fetch = globalThis.fetch } = context;
   const rawBody = JSON.stringify(event.payload);
   const abortController = new AbortController();
   const timeout = setTimeout(
@@ -123,7 +110,8 @@ const readResponseExcerpt = async (response) => {
   return body.slice(0, MAX_ERROR_BODY_LENGTH);
 };
 
-const markFailedDelivery = async ({ config, error, event, now, repos }) => {
+const markFailedDelivery = async (event, error, { now }, context) => {
+  const { config, repos } = context;
   const failedUpdate = {
     eventId: event._id,
     lastError: normalizeDeliveryError(error),

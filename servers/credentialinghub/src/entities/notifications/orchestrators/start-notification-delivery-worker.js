@@ -23,14 +23,13 @@ const {
 
 const DEFAULT_POLL_INTERVAL_MS = 500;
 
-const startNotificationDeliveryWorker = ({
-  config,
-  fetch,
-  log,
-  pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
-  repos,
-  workerId = newNotificationWorkerId(),
-}) => {
+const startNotificationDeliveryWorker = (options, context) => {
+  const {
+    pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
+    workerId = newNotificationWorkerId(),
+  } = options ?? {};
+  const { config } = context;
+
   if (!isNotificationDeliveryEnabled(config)) {
     return buildStoppedWorker(workerId);
   }
@@ -38,15 +37,14 @@ const startNotificationDeliveryWorker = ({
   const state = {
     running: true,
   };
-  const completion = runNotificationDeliveryLoop({
-    config,
-    fetch,
-    log,
-    pollIntervalMs,
-    repos,
-    state,
-    workerId,
-  });
+  const completion = runNotificationDeliveryLoop(
+    {
+      pollIntervalMs,
+      state,
+      workerId,
+    },
+    context,
+  );
 
   return {
     stop: async () => {
@@ -66,78 +64,59 @@ const buildStoppedWorker = (workerId) => ({
   workerId,
 });
 
-const runNotificationDeliveryLoop = async ({
-  config,
-  fetch,
-  log,
-  pollIntervalMs,
-  repos,
-  state,
-  workerId,
-}) => {
+const runNotificationDeliveryLoop = async (
+  { pollIntervalMs, state, workerId },
+  context,
+) => {
+  const { log } = context;
+
   log.info({ workerId }, 'Notification delivery worker started');
 
-  await pollNotificationDelivery({
-    config,
-    fetch,
-    log,
-    pollIntervalMs,
-    repos,
-    state,
-    workerId,
-  });
+  await pollNotificationDelivery(
+    {
+      pollIntervalMs,
+      state,
+      workerId,
+    },
+    context,
+  );
 
   log.info({ workerId }, 'Notification delivery worker stopped');
 };
 
-const pollNotificationDelivery = async ({
-  config,
-  fetch,
-  log,
-  pollIntervalMs,
-  repos,
-  state,
-  workerId,
-}) => {
+const pollNotificationDelivery = async (
+  { pollIntervalMs, state, workerId },
+  context,
+) => {
   if (!state.running) {
     return;
   }
 
-  await deliverOrWait({
-    config,
-    fetch,
-    log,
-    pollIntervalMs,
-    repos,
-    workerId,
-  });
-  await pollNotificationDelivery({
-    config,
-    fetch,
-    log,
-    pollIntervalMs,
-    repos,
-    state,
-    workerId,
-  });
+  await deliverOrWait(
+    {
+      pollIntervalMs,
+      workerId,
+    },
+    context,
+  );
+  await pollNotificationDelivery(
+    {
+      pollIntervalMs,
+      state,
+      workerId,
+    },
+    context,
+  );
 };
 
-const deliverOrWait = async ({
-  config,
-  fetch,
-  log,
-  pollIntervalMs,
-  repos,
-  workerId,
-}) => {
+const deliverOrWait = async ({ pollIntervalMs, workerId }, context) => {
+  const { log } = context;
+
   try {
-    const deliveredEvent = await deliverNextNotificationEvent({
-      config,
-      fetch,
-      log,
-      repos,
-      workerId,
-    });
+    const deliveredEvent = await deliverNextNotificationEvent(
+      { workerId },
+      context,
+    );
 
     if (deliveredEvent) {
       return;

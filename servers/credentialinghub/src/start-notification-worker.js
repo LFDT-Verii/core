@@ -25,11 +25,14 @@ const startNotificationWorker = async () => {
   const server = flow(createServer, initServer)(config);
   await server.ready();
 
-  const worker = startNotificationDeliveryWorker({
-    config: server.config,
-    log: server.log,
-    repos: bindRepo(server),
-  });
+  const worker = startNotificationDeliveryWorker(
+    {},
+    {
+      config: server.config,
+      log: server.log,
+      repos: bindRepo(server),
+    },
+  );
 
   let shutdownPromise;
   const shutdown = () => {

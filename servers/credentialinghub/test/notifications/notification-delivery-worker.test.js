@@ -43,6 +43,7 @@ describe('notification delivery worker', () => {
   let receiverBehavior;
   let receiverUrl;
   let receivedRequests;
+  let context;
   let repos;
   let worker;
 
@@ -63,6 +64,7 @@ describe('notification delivery worker', () => {
     });
     await fastify.ready();
     repos = bindRepo(fastify);
+    context = buildWorkerContext({ fastify, repos });
     await mongoDb().collection('notification_events').deleteMany({});
   });
 
@@ -85,13 +87,13 @@ describe('notification delivery worker', () => {
     const event = buildEvent({ id: 'evt_delivered' });
     await repos.notification_events.insertEvents([event]);
 
-    worker = startNotificationDeliveryWorker({
-      config: fastify.config,
-      log: fastify.log,
-      pollIntervalMs: 5,
-      repos,
-      workerId: 'worker-1',
-    });
+    worker = startNotificationDeliveryWorker(
+      {
+        pollIntervalMs: 5,
+        workerId: 'worker-1',
+      },
+      context,
+    );
 
     await waitForCondition(() => receivedRequests.length === 1);
 
@@ -133,13 +135,13 @@ describe('notification delivery worker', () => {
     const event = buildEvent({ id: 'evt_retry' });
     await repos.notification_events.insertEvents([event]);
 
-    worker = startNotificationDeliveryWorker({
-      config: fastify.config,
-      log: fastify.log,
-      pollIntervalMs: 5,
-      repos,
-      workerId: 'worker-1',
-    });
+    worker = startNotificationDeliveryWorker(
+      {
+        pollIntervalMs: 5,
+        workerId: 'worker-1',
+      },
+      context,
+    );
 
     await waitForEventStatus(event.id, NotificationEventStatuses.RETRYING);
     await stopWorker();
@@ -166,13 +168,13 @@ describe('notification delivery worker', () => {
     const event = buildEvent({ id: 'evt_dead' });
     await repos.notification_events.insertEvents([event]);
 
-    worker = startNotificationDeliveryWorker({
-      config: fastify.config,
-      log: fastify.log,
-      pollIntervalMs: 5,
-      repos,
-      workerId: 'worker-1',
-    });
+    worker = startNotificationDeliveryWorker(
+      {
+        pollIntervalMs: 5,
+        workerId: 'worker-1',
+      },
+      context,
+    );
 
     await waitForEventStatus(event.id, NotificationEventStatuses.DEAD);
     await stopWorker();
@@ -209,13 +211,13 @@ describe('notification delivery worker', () => {
     const event = buildEvent({ id: 'evt_timeout' });
     await repos.notification_events.insertEvents([event]);
 
-    worker = startNotificationDeliveryWorker({
-      config: fastify.config,
-      log: fastify.log,
-      pollIntervalMs: 5,
-      repos,
-      workerId: 'worker-1',
-    });
+    worker = startNotificationDeliveryWorker(
+      {
+        pollIntervalMs: 5,
+        workerId: 'worker-1',
+      },
+      context,
+    );
 
     await waitForEventStatus(event.id, NotificationEventStatuses.RETRYING);
     await stopWorker();
@@ -239,13 +241,13 @@ describe('notification delivery worker', () => {
     const event = buildEvent({ id: 'evt_disabled' });
     await repos.notification_events.insertEvents([event]);
 
-    worker = startNotificationDeliveryWorker({
-      config: fastify.config,
-      log: fastify.log,
-      pollIntervalMs: 5,
-      repos,
-      workerId: 'worker-disabled',
-    });
+    worker = startNotificationDeliveryWorker(
+      {
+        pollIntervalMs: 5,
+        workerId: 'worker-disabled',
+      },
+      context,
+    );
 
     expect(worker.workerId).toEqual('worker-disabled');
     await stopWorker();
@@ -268,6 +270,7 @@ describe('notification delivery worker', () => {
     await fastify.ready();
 
     repos = bindRepo(fastify);
+    context = buildWorkerContext({ fastify, repos });
   };
 
   const stopWorker = async () => {
@@ -286,6 +289,12 @@ const buildTestNotificationConfig = (webhookUrl, overrides = {}) =>
     webhookUrl,
     ...overrides,
   });
+
+const buildWorkerContext = ({ fastify, repos }) => ({
+  config: fastify.config,
+  log: fastify.log,
+  repos,
+});
 
 const buildEvent = ({ id = 'evt_test' } = {}) => ({
   id,
