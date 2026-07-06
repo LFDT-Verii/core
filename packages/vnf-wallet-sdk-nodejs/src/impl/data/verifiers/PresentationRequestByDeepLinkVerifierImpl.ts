@@ -17,14 +17,12 @@ export default class PresentationRequestByDeepLinkVerifierImpl implements Presen
         deepLink: VCLDeepLink,
         didDocument: VCLDidDocument,
     ): void {
-        if (
-            !(
-                this.isDidBoundToDidDocument(
-                    presentationRequest.iss,
-                    didDocument,
-                ) && this.isDidBoundToDidDocument(deepLink.did!, didDocument)
-            )
-        ) {
+        if (!(
+            this.isDidBoundToDidDocument(
+                presentationRequest.iss,
+                didDocument,
+            ) && this.isDidBoundToDidDocument(deepLink.did!, didDocument)
+        )) {
             throw new VCLError({
                 errorCode:
                     VCLErrorCode.MismatchedPresentationRequestInspectorDid.toString(),

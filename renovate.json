@@ -3,6 +3,8 @@
   "timezone": "Asia/Jerusalem",
   "extends": [
     "config:best-practices",
+    ":pinAllExceptPeerDependencies",
+    ":widenPeerDependencies",
     "security:minimumReleaseAgeNpm",
     "group:allDigest",
     "group:linters",
@@ -26,6 +28,11 @@
       "matchDatasources": [
         "npm"
       ],
+      "matchDepTypes": [
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies"
+      ],
       "matchCurrentValue": "/^[~^]?[1-9]\\d*\\.\\d+\\.\\d+$/",
       "rangeStrategy": "bump",
       "description": "Keep stable npm v1+ semver dependencies current in package manifests so shared pnpm lockfile refreshes don't split into lockfile-only PRs."
@@ -37,6 +44,11 @@
       "matchUpdateTypes": [
         "pin"
       ],
+      "matchDepTypes": [
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies"
+      ],
       "matchCurrentValue": "/^[~^]?[1-9]\\d*\\.\\d+\\.\\d+$/",
       "enabled": false,
       "description": "Stable npm v1+ packages should remain range-based instead of being pinned by config:best-practices."
@@ -44,6 +56,11 @@
     {
       "matchDatasources": [
         "npm"
+      ],
+      "matchDepTypes": [
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies"
       ],
       "matchCurrentValue": "!/^[~^]?[1-9]\\d*\\.\\d+\\.\\d+$/",
       "rangeStrategy": "pin",

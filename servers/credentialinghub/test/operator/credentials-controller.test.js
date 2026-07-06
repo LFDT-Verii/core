@@ -76,6 +76,7 @@ describe('Credentials Test suite', () => {
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
+    await mongoDb().collection('exchanges').deleteMany({});
     tenant = await persistTenant();
     issuerService = await persistIssuerService({ tenant });
     depot = await persistDepot({ tenant, service: issuerService });

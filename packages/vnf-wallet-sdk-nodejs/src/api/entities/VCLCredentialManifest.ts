@@ -42,11 +42,9 @@ export default class VCLCredentialManifest {
         }
 
         const issuerMap = payload[VCLCredentialManifest.KeyIssuer] as
-            | Record<string, any>
-            | undefined;
+            Record<string, any> | undefined;
         const issuerId = issuerMap?.[VCLCredentialManifest.KeyId] as
-            | string
-            | undefined;
+            string | undefined;
 
         return issuerId ?? '';
     }

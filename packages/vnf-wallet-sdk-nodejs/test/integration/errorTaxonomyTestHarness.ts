@@ -324,8 +324,7 @@ export const issuingEntryPoint = () =>
 const setupRouter = (
     entryPoint: EntryPoint,
     descriptor:
-        | VCLCredentialManifestDescriptor
-        | VCLPresentationRequestDescriptor,
+        VCLCredentialManifestDescriptor | VCLPresentationRequestDescriptor,
     router: BaselineRouter,
     capturedRequest?: CapturedRequest,
 ) => {
@@ -467,8 +466,7 @@ const isHttpUrl = (value: string): boolean => {
 
 const safeDescriptorDid = (
     descriptor:
-        | VCLCredentialManifestDescriptor
-        | VCLPresentationRequestDescriptor,
+        VCLCredentialManifestDescriptor | VCLPresentationRequestDescriptor,
 ) => {
     try {
         return descriptor.did;

@@ -24,7 +24,7 @@
   "dependencies": {
     "@fastify/autoload": "^6.3.1",
     "@fastify/helmet": "^13.0.2",
-    "@fastify/jwt": "^10.0.0",
+    "@fastify/jwt": "^10.1.0",
     "@fastify/sensible": "^6.0.4",
     "@fastify/swagger": "^9.7.0",
     "@fastify/swagger-ui": "^5.2.6",
@@ -46,7 +46,7 @@
     "http-errors": "^2.0.1",
     "lodash": "^4.18.1",
     "mongodb": "^7.3.0",
-    "nanoid": "^5.1.15"
+    "nanoid": "^5.1.16"
   },
   "devDependencies": {
     "@spencejs/spence-factories": "^1.1.0",
@@ -60,12 +60,12 @@
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-prefer-arrow-functions": "3.9.1",
-    "eslint-plugin-prettier": "5.5.5",
+    "eslint-plugin-prettier": "5.5.6",
     "eslint-watch": "8.0.0",
     "expect": "30.4.1",
-    "globals": "17.6.0",
-    "nock": "15.0.0-beta.11",
+    "globals": "17.7.0",
+    "nock": "15.0.0-beta.12",
     "nodemon": "3.1.14",
-    "prettier": "3.8.3"
+    "prettier": "3.9.4"
   }
 }
