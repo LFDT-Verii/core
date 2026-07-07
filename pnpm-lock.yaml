@@ -207,7 +207,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -909,7 +909,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -1028,7 +1028,7 @@ importers:
         specifier: ~1.0.16
         version: 1.0.16
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -1179,7 +1179,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -1357,7 +1357,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -1546,7 +1546,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -2067,7 +2067,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -2292,7 +2292,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -2776,7 +2776,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -2958,7 +2958,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -3151,7 +3151,7 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -3371,7 +3371,7 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -3489,7 +3489,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.8.5
+        specifier: ^5.9.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
