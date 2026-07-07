@@ -61,7 +61,6 @@ const initServer = (server) => {
           ],
           server.config,
         ),
-        rejectUnauthorized: true,
       },
     })
     .register(httpClientPlugin, {
@@ -77,7 +76,6 @@ const initServer = (server) => {
           ],
           server.config,
         ),
-        rejectUnauthorized: true,
         prefixUrl: server.config.registrarUrl,
       },
     })

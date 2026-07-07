@@ -180,7 +180,7 @@ describe('Http Client Package', () => {
         }),
       );
     });
-    it('should create a client with rejectUnauthorized false', () => {
+    it('should create a client with tlsRejectUnauthorized false', () => {
       expect(
         parseOptions({
           requestTimeout: 2,
@@ -228,7 +228,6 @@ describe('Http Client Package', () => {
 
       before(() => {
         httpClient = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           prefixUrl: origin,
         })(origin, {
@@ -300,7 +299,6 @@ describe('Http Client Package', () => {
           .reply(400, { error: 'bad request' });
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           prefixUrl: origin,
           responseErrorMode: 'return',
@@ -324,7 +322,6 @@ describe('Http Client Package', () => {
           .reply(500, 'server error');
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           prefixUrl: origin,
           responseErrorMode: 'return',
@@ -342,7 +339,6 @@ describe('Http Client Package', () => {
       it('should throw when responseErrorMode is invalid', () => {
         const result = () =>
           initHttpClient({
-            rejectUnauthorized: false,
             isTest: true,
             prefixUrl: origin,
             responseErrorMode: 'invalid',
@@ -363,7 +359,6 @@ describe('Http Client Package', () => {
           .reply(400);
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           prefixUrl: origin,
           responseErrorMode: null,
@@ -477,7 +472,6 @@ describe('Http Client Package', () => {
         const cache = initCache();
         const httpClient2 = initHttpClient({
           cache,
-          rejectUnauthorized: false,
           isTest: true,
           prefixUrl: origin,
         })(origin, {
@@ -567,7 +561,6 @@ describe('Http Client Package', () => {
           .reply(200, { message: 'matched' });
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
         })({
           log: console,
@@ -591,7 +584,6 @@ describe('Http Client Package', () => {
 
       it('should throw when a relative url is used without a host', async () => {
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
         })({
           log: console,
@@ -610,7 +602,6 @@ describe('Http Client Package', () => {
           .reply(200, { message: 'matched' });
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
         })({
           log: console,
@@ -827,7 +818,6 @@ describe('Http Client Package', () => {
           .reply(200, { message: 'matched' });
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
         })({
           log: console,
@@ -885,7 +875,6 @@ describe('Http Client Package', () => {
           .reply(200);
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           bearerToken: 'TOKEN',
         })({
@@ -922,7 +911,6 @@ describe('Http Client Package', () => {
           .reply(200);
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           tokensEndpoint: 'https://auth.example.com/tokens',
           clientId: 'CLIENT-ID',
@@ -949,7 +937,6 @@ describe('Http Client Package', () => {
       it("should have a 'promise' responseType ", async () => {
         const client = initHttpClient({
           prefixUrl: `${origin}/json`,
-          rejectUnauthorized: false,
         })({
           log: console,
           traceId: 'TRACE-ID',
@@ -961,7 +948,6 @@ describe('Http Client Package', () => {
       it('should throw for invalid client factory arguments', () => {
         const createClient = initHttpClient({
           prefixUrl: `${origin}/json`,
-          rejectUnauthorized: false,
         });
 
         expect(() => createClient()).toThrow(

@@ -80,7 +80,6 @@ const loadSchema = async (credentialTypeMetadata, context) => {
   const client = initHttpClient({
     requestTimeout: context.config.requestTimeout,
     traceIdHeader: context.config.traceIdHeader,
-    rejectUnauthorized: true,
   })(context);
   const response = await client.get(credentialTypeMetadata.schemaUrl);
   return response.json();
