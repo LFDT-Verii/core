@@ -70,7 +70,7 @@
     "date-fns": "^4.4.0",
     "env-var": "^7.5.0",
     "eth-url-parser": "^1.0.4",
-    "fastify": "^5.8.5",
+    "fastify": "^5.9.0",
     "fastify-plugin": "^5.1.0",
     "handlebars": "^4.7.9",
     "http-errors": "^2.0.1",
