@@ -4,6 +4,8 @@ export type HttpRawBody = Dispatcher.ResponseData['body'];
 
 export type HttpCacheStore = InstanceType<typeof cacheStores.MemoryCacheStore>;
 
+export type HttpResponseErrorMode = 'throw' | 'return';
+
 export interface HttpClientContext {
   traceId?: string;
   log?: {
@@ -47,6 +49,7 @@ export interface HttpClientInitOptions {
   isTest?: boolean;
   bearerToken?: string;
   requestTimeout?: number;
+  responseErrorMode?: HttpResponseErrorMode;
   traceIdHeader?: string;
   customHeaders?: Record<string, string>;
   cache?: HttpCacheStore;
