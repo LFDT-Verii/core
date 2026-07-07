@@ -221,6 +221,31 @@ describe('notification domain', () => {
         'full-vc-jwt',
       );
     });
+
+    it('should omit blank credential rejection reasons', () => {
+      const rejectedEvent = buildCredentialRejectedEvent({
+        tenant: { _id: 'tenant-id', did: 'did:web:issuer.example' },
+        exchange: {
+          _id: 'exchange-id',
+          serviceId: 'service-id',
+          depotId: 'depot-id',
+        },
+        credential: {
+          _id: 'credential-id',
+          rejectedAt: new Date('2026-06-25T10:16:30.000Z'),
+          rejectedReason: '   ',
+          content: {
+            type: ['VerifiableCredential', 'EducationDegree'],
+          },
+        },
+        id: 'evt_rejected',
+      });
+
+      expect(rejectedEvent.data).toEqual({
+        credentialTypes: ['EducationDegree'],
+        rejectedAt: '2026-06-25T10:16:30.000Z',
+      });
+    });
   });
 
   it('should build deterministic webhook signature headers', () => {

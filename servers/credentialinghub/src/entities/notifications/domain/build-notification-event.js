@@ -111,7 +111,7 @@ const buildCredentialRejectedEvent = ({
     data: omitBy(isNil, {
       credentialReference: credential.credentialReference,
       credentialTypes: getCredentialTypes(credential),
-      rejectionReason: credential.rejectedReason?.trim().slice(0, 500),
+      rejectionReason: sanitizeRejectionReason(credential.rejectedReason),
       rejectedAt: toIsoString(credential.rejectedAt),
     }),
     links: {
@@ -152,6 +152,12 @@ const getCredentialTypes = (credential) =>
   uniq(compact(castArray(credential.content?.type))).filter(
     (type) => type !== VERIFIABLE_CREDENTIAL_TYPE,
   );
+
+const sanitizeRejectionReason = (rejectedReason) => {
+  const trimmedReason = rejectedReason?.trim();
+
+  return trimmedReason ? trimmedReason.slice(0, 500) : undefined;
+};
 
 const toIsoString = (value) => {
   if (value == null) {

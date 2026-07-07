@@ -34,6 +34,8 @@ const notificationEventsRepoExtension = (parent) => ({
     lockDurationMs,
     projection = parent.defaultColumnsSelection,
   }) => {
+    validateLockDurationMs(lockDurationMs);
+
     const lockedUntil = new Date(now.getTime() + lockDurationMs);
     const result = await parent.collection().findOneAndUpdate(
       {
@@ -93,6 +95,14 @@ const buildNotificationEventDocument = (event) => {
     deadAt: null,
     retentionExpiresAt: null,
   };
+};
+
+const validateLockDurationMs = (lockDurationMs) => {
+  if (Number.isFinite(lockDurationMs) && lockDurationMs > 0) {
+    return;
+  }
+
+  throw new Error('Notification event lock duration must be positive');
 };
 
 module.exports = {

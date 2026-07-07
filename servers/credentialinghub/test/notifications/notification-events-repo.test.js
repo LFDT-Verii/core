@@ -161,4 +161,28 @@ describe('notification events repo extension', () => {
       ],
     ]);
   });
+
+  it('should reject invalid lock durations before claiming due events', async () => {
+    let findOneAndUpdateCalled = false;
+    const notificationEventsRepo = notificationEventsRepoExtension({
+      defaultColumnsSelection: { _id: 1 },
+      extensions: [],
+      collection: () => ({
+        findOneAndUpdate: async () => {
+          findOneAndUpdateCalled = true;
+          return { value: null };
+        },
+      }),
+    });
+
+    await expect(
+      notificationEventsRepo.claimDueEvent({
+        now: new Date('2026-06-25T10:15:30.000Z'),
+        workerId: 'worker-1',
+        lockDurationMs: Number.NaN,
+      }),
+    ).rejects.toThrow('Notification event lock duration must be positive');
+
+    expect(findOneAndUpdateCalled).toEqual(false);
+  });
 });
