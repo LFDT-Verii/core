@@ -80,6 +80,7 @@ describe('Credentials Test suite', () => {
     tenant = await persistTenant();
     issuerService = await persistIssuerService({ tenant });
     depot = await persistDepot({ tenant, service: issuerService });
+    fastify.overrides.reqConfig = (config) => config;
     resetMockHttpClient();
   });
 
@@ -217,6 +218,10 @@ describe('Credentials Test suite', () => {
     it('should 200 and create credential', async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
       mockHttpClientJsonResponse('get', schemas[0]);
+      fastify.overrides.reqConfig = (config) => ({
+        ...config,
+        tlsRejectUnauthorized: false,
+      });
       const credentialItem = {
         depotId: depot._id,
         credential: {
@@ -248,6 +253,11 @@ describe('Credentials Test suite', () => {
       expect(mockHttpClient.get.mock.calls[1].arguments).toEqual([
         'https://example.com/foo-schema.schema.json',
       ]);
+      expect(
+        mockHttpClientModule.initHttpClient.mock.calls[0].arguments[0],
+      ).toMatchObject({
+        tlsRejectUnauthorized: false,
+      });
       const dbCredentials = await mongoDb()
         .collection('credentials')
         .find({})
