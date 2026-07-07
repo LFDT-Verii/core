@@ -224,7 +224,22 @@ const buildInterceptorChain = (
 };
 
 const buildResponseErrorInterceptors = (responseErrorMode) =>
-  responseErrorMode === 'throw' ? [interceptors.responseError()] : [];
+  parseResponseErrorMode(responseErrorMode) === 'throw'
+    ? [interceptors.responseError()]
+    : [];
+
+const parseResponseErrorMode = (responseErrorMode) => {
+  if (responseErrorMode == null) {
+    return 'throw';
+  }
+
+  if (responseErrorMode === 'throw' || responseErrorMode === 'return') {
+    return responseErrorMode;
+  }
+  throw new Error(
+    `HttpClient: Unsupported responseErrorMode '${responseErrorMode}'`,
+  );
+};
 
 const parsePrefixUrl = (prefixUrl) => {
   const url = new URL(prefixUrl);

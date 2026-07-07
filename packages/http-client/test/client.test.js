@@ -339,6 +339,43 @@ describe('Http Client Package', () => {
         await expect(response.text()).resolves.toEqual('server error');
       });
 
+      it('should throw when responseErrorMode is invalid', () => {
+        const result = () =>
+          initHttpClient({
+            rejectUnauthorized: false,
+            isTest: true,
+            prefixUrl: origin,
+            responseErrorMode: 'invalid',
+          })(origin, {
+            log: console,
+            traceId: 'TRACE-ID',
+          });
+
+        expect(result).toThrow(
+          "HttpClient: Unsupported responseErrorMode 'invalid'",
+        );
+      });
+
+      it('Should default to throwing response errors when responseErrorMode is null', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/null_response_error_mode', method: 'GET' })
+          .reply(400);
+
+        const httpClient2 = initHttpClient({
+          rejectUnauthorized: false,
+          isTest: true,
+          prefixUrl: origin,
+          responseErrorMode: null,
+        })(origin, {
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+        const result = () => httpClient2.get('null_response_error_mode');
+
+        await expect(result).rejects.toThrow(ResponseStatusCodeError);
+      });
+
       it('Should handle empty body in 204 response for get()', async () => {
         mockAgent
           .get(origin)
@@ -986,10 +1023,16 @@ describe('Http Client Package', () => {
 const startDelayedHeadersServer = ({ delayMs }) =>
   new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
+        if (res.destroyed) {
+          return;
+        }
+
         res.writeHead(200, { 'content-type': 'text/plain' });
         res.end('late response');
       }, delayMs);
+
+      res.on('close', () => clearTimeout(timeout));
     });
 
     server.once('error', reject);
