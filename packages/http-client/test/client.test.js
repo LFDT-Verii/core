@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const http = require('node:http');
 const { before, describe, it } = require('node:test');
 const { expect } = require('expect');
 const { NotFoundError } = require('http-errors');
 const { entries, set } = require('lodash/fp');
 const {
   MockAgent,
-  interceptors,
   ResponseStatusCodeError,
   cacheStores,
   setGlobalDispatcher,
@@ -175,11 +175,12 @@ describe('Http Client Package', () => {
         }),
       ).toEqual(
         expectedHttpOptions({
+          'clientOptions.headersTimeout': 3,
           'clientOptions.bodyTimeout': 3,
         }),
       );
     });
-    it('should create a client with rejectUnauthorized false', () => {
+    it('should create a client with tlsRejectUnauthorized false', () => {
       expect(
         parseOptions({
           requestTimeout: 2,
@@ -187,6 +188,7 @@ describe('Http Client Package', () => {
         }),
       ).toEqual(
         expectedHttpOptions({
+          'clientOptions.headersTimeout': 2,
           'clientOptions.bodyTimeout': 2,
           'clientOptions.connect.rejectUnauthorized': false,
         }),
@@ -216,7 +218,7 @@ describe('Http Client Package', () => {
     let mockAgent;
 
     before(() => {
-      mockAgent = new MockAgent().compose(interceptors.responseError());
+      mockAgent = new MockAgent();
       mockAgent.disableNetConnect();
       setGlobalDispatcher(mockAgent);
     });
@@ -226,7 +228,6 @@ describe('Http Client Package', () => {
 
       before(() => {
         httpClient = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           prefixUrl: origin,
         })(origin, {
@@ -287,6 +288,85 @@ describe('Http Client Package', () => {
           .intercept({ path: '/internal_server_error', method: 'POST' })
           .reply(500);
         const result = () => httpClient.post('internal_server_error');
+
+        await expect(result).rejects.toThrow(ResponseStatusCodeError);
+      });
+
+      it('Should return 4xx response when responseErrorMode is return', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/return_bad_request', method: 'GET' })
+          .reply(400, { error: 'bad request' });
+
+        const httpClient2 = initHttpClient({
+          isTest: true,
+          prefixUrl: origin,
+          responseErrorMode: 'return',
+        })(origin, {
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+
+        const response = await httpClient2.get('return_bad_request');
+
+        expect(response.statusCode).toEqual(400);
+        await expect(response.json()).resolves.toEqual({
+          error: 'bad request',
+        });
+      });
+
+      it('Should return 5xx response when responseErrorMode is return', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/return_internal_error', method: 'POST' })
+          .reply(500, 'server error');
+
+        const httpClient2 = initHttpClient({
+          isTest: true,
+          prefixUrl: origin,
+          responseErrorMode: 'return',
+        })(origin, {
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+
+        const response = await httpClient2.post('return_internal_error');
+
+        expect(response.statusCode).toEqual(500);
+        await expect(response.text()).resolves.toEqual('server error');
+      });
+
+      it('should throw when responseErrorMode is invalid', () => {
+        const result = () =>
+          initHttpClient({
+            isTest: true,
+            prefixUrl: origin,
+            responseErrorMode: 'invalid',
+          })(origin, {
+            log: console,
+            traceId: 'TRACE-ID',
+          });
+
+        expect(result).toThrow(
+          "HttpClient: Unsupported responseErrorMode 'invalid'",
+        );
+      });
+
+      it('Should default to throwing response errors when responseErrorMode is null', async () => {
+        mockAgent
+          .get(origin)
+          .intercept({ path: '/null_response_error_mode', method: 'GET' })
+          .reply(400);
+
+        const httpClient2 = initHttpClient({
+          isTest: true,
+          prefixUrl: origin,
+          responseErrorMode: null,
+        })(origin, {
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+        const result = () => httpClient2.get('null_response_error_mode');
 
         await expect(result).rejects.toThrow(ResponseStatusCodeError);
       });
@@ -392,7 +472,6 @@ describe('Http Client Package', () => {
         const cache = initCache();
         const httpClient2 = initHttpClient({
           cache,
-          rejectUnauthorized: false,
           isTest: true,
           prefixUrl: origin,
         })(origin, {
@@ -482,7 +561,6 @@ describe('Http Client Package', () => {
           .reply(200, { message: 'matched' });
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
         })({
           log: console,
@@ -506,7 +584,6 @@ describe('Http Client Package', () => {
 
       it('should throw when a relative url is used without a host', async () => {
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
         })({
           log: console,
@@ -525,7 +602,6 @@ describe('Http Client Package', () => {
           .reply(200, { message: 'matched' });
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
         })({
           log: console,
@@ -742,7 +818,6 @@ describe('Http Client Package', () => {
           .reply(200, { message: 'matched' });
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
         })({
           log: console,
@@ -800,7 +875,6 @@ describe('Http Client Package', () => {
           .reply(200);
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           bearerToken: 'TOKEN',
         })({
@@ -837,7 +911,6 @@ describe('Http Client Package', () => {
           .reply(200);
 
         const httpClient2 = initHttpClient({
-          rejectUnauthorized: false,
           isTest: true,
           tokensEndpoint: 'https://auth.example.com/tokens',
           clientId: 'CLIENT-ID',
@@ -864,7 +937,6 @@ describe('Http Client Package', () => {
       it("should have a 'promise' responseType ", async () => {
         const client = initHttpClient({
           prefixUrl: `${origin}/json`,
-          rejectUnauthorized: false,
         })({
           log: console,
           traceId: 'TRACE-ID',
@@ -876,16 +948,115 @@ describe('Http Client Package', () => {
       it('should throw for invalid client factory arguments', () => {
         const createClient = initHttpClient({
           prefixUrl: `${origin}/json`,
-          rejectUnauthorized: false,
         });
 
         expect(() => createClient()).toThrow(
           'HttpClient: Expected 1 or 2 arguments, received 0',
         );
       });
+
+      it('should apply requestTimeout before response headers arrive', async () => {
+        const { server, origin: delayedOrigin } =
+          await startDelayedHeadersServer({
+            delayMs: 2200,
+          });
+        const httpClient2 = initHttpClient({
+          prefixUrl: delayedOrigin,
+          requestTimeout: 500,
+        })({
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+
+        try {
+          await expect(httpClient2.get('slow')).rejects.toMatchObject({
+            code: 'UND_ERR_HEADERS_TIMEOUT',
+            name: 'HeadersTimeoutError',
+            url: `${delayedOrigin}/slow`,
+          });
+        } finally {
+          await closeServer(server);
+        }
+      });
+
+      it('should apply requestTimeout while waiting for response body', async () => {
+        const { server, origin: delayedOrigin } = await startDelayedBodyServer({
+          delayMs: 2200,
+        });
+        const httpClient2 = initHttpClient({
+          prefixUrl: delayedOrigin,
+          requestTimeout: 500,
+        })({
+          log: console,
+          traceId: 'TRACE-ID',
+        });
+
+        try {
+          const response = await httpClient2.get('slow-body');
+
+          await expect(response.text()).rejects.toMatchObject({
+            code: 'UND_ERR_BODY_TIMEOUT',
+            name: 'BodyTimeoutError',
+          });
+        } finally {
+          await closeServer(server);
+        }
+      });
     });
   });
 });
+
+const startDelayedHeadersServer = ({ delayMs }) =>
+  new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      const timeout = setTimeout(() => {
+        if (res.destroyed) {
+          return;
+        }
+
+        res.writeHead(200, { 'content-type': 'text/plain' });
+        res.end('late response');
+      }, delayMs);
+
+      res.on('close', () => clearTimeout(timeout));
+    });
+
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      resolve({ server, origin: `http://127.0.0.1:${port}` });
+    });
+  });
+
+const startDelayedBodyServer = ({ delayMs }) =>
+  new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      const timeout = setTimeout(() => {
+        res.end('late response');
+      }, delayMs);
+
+      res.on('close', () => clearTimeout(timeout));
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      res.flushHeaders();
+    });
+
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      resolve({ server, origin: `http://127.0.0.1:${port}` });
+    });
+  });
+
+const closeServer = (server) =>
+  new Promise((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
 
 const expectedHttpOptions = (overrides) => {
   let expectation = {

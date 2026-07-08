@@ -83,6 +83,7 @@ const restMockHttpClient = () => {
 const resetMockHttpClient = () => {
   counter = { get: 0 };
   jsonResponses = { get: [] };
+  mockHttpClientModule.initHttpClient.mock.resetCalls();
   mockHttpClient.get.mock.resetCalls();
   mockHttpClient.get.mock.mockImplementation(buildDefaultImplementation('get'));
 };

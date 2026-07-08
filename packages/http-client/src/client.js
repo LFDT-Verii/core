@@ -66,10 +66,8 @@ const initHttpClient = (options) => {
         path,
         method,
         headers: reqHeaders,
+        ...(body ? { body } : {}),
       };
-      if (body) {
-        httpRequest.body = body;
-      }
       const httpResponse = await agent.request(httpRequest);
       const { statusCode, headers: resHeaders, body: rawBody } = httpResponse;
       return {
@@ -172,6 +170,7 @@ const parseOptions = (options) => {
     },
   };
   if (options.requestTimeout != null) {
+    clientOptions.headersTimeout = options.requestTimeout;
     clientOptions.bodyTimeout = options.requestTimeout;
   }
 
@@ -192,6 +191,7 @@ const buildInterceptorChain = (
     clientSecret,
     scopes,
     audience,
+    responseErrorMode = 'throw',
   },
 ) => {
   const chain = [];
@@ -201,7 +201,7 @@ const buildInterceptorChain = (
     );
   }
 
-  chain.push(interceptors.responseError());
+  chain.push(...buildResponseErrorInterceptors(responseErrorMode));
 
   if (cacheStore != null) {
     chain.push(interceptors.cache({ store: cacheStore, methods: ['GET'] }));
@@ -221,6 +221,24 @@ const buildInterceptorChain = (
   }
 
   return chain;
+};
+
+const buildResponseErrorInterceptors = (responseErrorMode) =>
+  parseResponseErrorMode(responseErrorMode) === 'throw'
+    ? [interceptors.responseError()]
+    : [];
+
+const parseResponseErrorMode = (responseErrorMode) => {
+  if (responseErrorMode == null) {
+    return 'throw';
+  }
+
+  if (responseErrorMode === 'throw' || responseErrorMode === 'return') {
+    return responseErrorMode;
+  }
+  throw new Error(
+    `HttpClient: Unsupported responseErrorMode '${responseErrorMode}'`,
+  );
 };
 
 const parsePrefixUrl = (prefixUrl) => {
