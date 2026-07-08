@@ -78,7 +78,7 @@
     "lint:fix": "cross-env NODE_OPTIONS=--experimental-specifier-resolution=node eslint src --fix"
   },
   "dependencies": {
-    "@auth0/auth0-react": "^2.16.2",
+    "@auth0/auth0-react": "^2.20.0",
     "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
     "@react-pdf/renderer": "^4.5.1",
