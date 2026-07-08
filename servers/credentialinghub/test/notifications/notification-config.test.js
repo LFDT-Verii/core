@@ -16,7 +16,7 @@
  */
 
 const path = require('node:path');
-const { beforeEach, describe, it } = require('node:test');
+const { after, beforeEach, describe, it } = require('node:test');
 const { loadTestEnv } = require('@verii/tests-helpers');
 const { expect } = require('expect');
 
@@ -25,6 +25,11 @@ const CONFIG_MODULE_PATH = '../../src/config/config';
 const originalEnv = { ...process.env };
 
 describe('notification config env validation', () => {
+  after(() => {
+    process.env = originalEnv;
+    delete require.cache[require.resolve(CONFIG_MODULE_PATH)];
+  });
+
   beforeEach(() => {
     process.env = { ...originalEnv, NODE_ENV: 'test' };
     loadTestEnv(TEST_ENV_PATH);
