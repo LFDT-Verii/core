@@ -20,7 +20,12 @@ const {
   NotificationWorkerModes,
 } = require('./entities/notifications/domain/notification-config');
 
-const startEmbeddedNotificationWorker = (server) => {
+const DEFAULT_SHUTDOWN_GRACE_MS = 5000;
+
+const startEmbeddedNotificationWorker = (
+  server,
+  { shutdownGraceMs = DEFAULT_SHUTDOWN_GRACE_MS } = {},
+) => {
   if (
     server.config.notifications?.enabled !== true ||
     server.config.notifications.workerMode !==
@@ -45,11 +50,14 @@ const startEmbeddedNotificationWorker = (server) => {
       'Notification delivery worker child started',
     );
 
+    const notificationWorkerPid = child.pid;
     child.on('exit', (code, signal) => {
       server.log.warn(
-        { code, notificationWorkerPid: child.pid, signal },
+        { code, notificationWorkerPid, signal },
         'Notification delivery worker child exited',
       );
+      // eslint-disable-next-line better-mutation/no-mutation
+      child = undefined;
     });
   });
 
@@ -58,15 +66,37 @@ const startEmbeddedNotificationWorker = (server) => {
       return;
     }
 
+    const childExit = waitForChildExit(child, shutdownGraceMs);
+
     if (child.connected) {
       child.send('shutdown');
     }
 
-    child.kill('SIGTERM');
+    if (await childExit) {
+      return;
+    }
+
+    if (!child.killed) {
+      child.kill('SIGTERM');
+    }
   });
 
   return undefined;
 };
+
+const waitForChildExit = (child, timeoutMs) =>
+  new Promise((resolve) => {
+    const onExit = () => {
+      clearTimeout(timeout);
+      resolve(true);
+    };
+    const timeout = setTimeout(() => {
+      child.off('exit', onExit);
+      resolve(false);
+    }, timeoutMs);
+
+    child.once('exit', onExit);
+  });
 
 module.exports = {
   startEmbeddedNotificationWorker,

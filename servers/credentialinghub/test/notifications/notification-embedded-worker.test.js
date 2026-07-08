@@ -20,7 +20,8 @@ const { afterEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const createTestFastify = require('../helpers/create-test-fastify');
 
-const fork = mock.fn(() => buildChild({ pid: 101 }));
+let nextChild;
+const fork = mock.fn(() => nextChild ?? buildChild({ pid: 101 }));
 
 mock.module('node:child_process', {
   namedExports: {
@@ -45,9 +46,11 @@ describe('embedded notification worker', () => {
 
       fastify = undefined;
     }
+    nextChild = undefined;
   });
 
   it('should fork the standalone notification worker entrypoint on ready', async () => {
+    nextChild = buildChild({ exitOnShutdown: true, pid: 101 });
     fastify = createTestFastify({
       notifications: buildEnabledNotificationConfig(
         NotificationWorkerModes.EMBEDDED_CHILD,
@@ -81,13 +84,68 @@ describe('embedded notification worker', () => {
     expect(fork.mock.callCount()).toEqual(callCountBeforeReady);
   });
 
-  it('should signal the child process when Fastify closes', async () => {
+  it('should close cleanly when the server stops before the child starts', async () => {
     fastify = createTestFastify({
       notifications: buildEnabledNotificationConfig(
         NotificationWorkerModes.EMBEDDED_CHILD,
       ),
     });
     startEmbeddedNotificationWorker(fastify);
+    const callCountBeforeClose = fork.mock.callCount();
+
+    await fastify.close();
+
+    expect(fork.mock.callCount()).toEqual(callCountBeforeClose);
+
+    fastify = undefined;
+  });
+
+  it('should close cleanly when the child exited before the server stops', async () => {
+    nextChild = buildChild({ pid: 101 });
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify);
+    await fastify.ready();
+
+    const child = fork.mock.calls.at(-1).result;
+    child.emit('exit', 0, null);
+    await fastify.close();
+
+    expect(child.sentMessages).toEqual([]);
+    expect(child.killSignals).toEqual([]);
+
+    fastify = undefined;
+  });
+
+  it('should allow the child process to gracefully exit when Fastify closes', async () => {
+    nextChild = buildChild({ exitOnShutdown: true, pid: 101 });
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify);
+    await fastify.ready();
+
+    const child = fork.mock.calls.at(-1).result;
+    await fastify.close();
+
+    expect(child.sentMessages).toEqual(['shutdown']);
+    expect(child.killSignals).toEqual([]);
+
+    fastify = undefined;
+  });
+
+  it('should terminate the child process when it does not exit after shutdown', async () => {
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify, { shutdownGraceMs: 1 });
     await fastify.ready();
 
     const child = fork.mock.calls.at(-1).result;
@@ -109,7 +167,7 @@ const buildEnabledNotificationConfig = (workerMode) =>
     workerMode,
   });
 
-const buildChild = ({ pid }) => {
+const buildChild = ({ exitOnShutdown = false, pid }) => {
   const child = new EventEmitter();
   child.connected = true;
   child.kill = (signal = 'SIGTERM') => {
@@ -123,6 +181,10 @@ const buildChild = ({ pid }) => {
   child.sentMessages = [];
   child.send = (message) => {
     child.sentMessages.push(message);
+    if (exitOnShutdown && message === 'shutdown') {
+      child.connected = false;
+      child.emit('exit', 0, null);
+    }
   };
   return child;
 };

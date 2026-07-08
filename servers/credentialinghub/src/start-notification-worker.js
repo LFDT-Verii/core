@@ -22,8 +22,13 @@ const config = require('./config');
 const { initServer } = require('./init-server');
 const { startNotificationDeliveryWorker } = require('./entities/notifications');
 
-const startNotificationWorker = async () => {
-  const server = flow(createServer, initServer)(config);
+const createNotificationWorkerServer = () =>
+  flow(createServer, initServer)(config);
+
+const startNotificationWorker = async ({
+  createAppServer = createNotificationWorkerServer,
+} = {}) => {
+  const server = await createAppServer();
   await server.ready();
 
   const worker = startNotificationDeliveryWorker(
@@ -79,6 +84,7 @@ const stopNotificationWorker = async ({ server, worker }) => {
   await server.close();
 };
 
+/* istanbul ignore next */
 const startNotificationWorkerCli = () => {
   startNotificationWorker().catch((error) => {
     console.error(error);
@@ -86,12 +92,14 @@ const startNotificationWorkerCli = () => {
   });
 };
 
+/* istanbul ignore next */
 if (require.main === module) {
   startNotificationWorkerCli();
 }
 
 module.exports = {
   buildNotificationDeliveryFetch,
+  createNotificationWorkerServer,
   startNotificationWorker,
   startNotificationWorkerCli,
 };

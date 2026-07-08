@@ -104,6 +104,7 @@ const markFailedDelivery = async (event, error, now, context) => {
   const failedUpdate = {
     eventId: event._id,
     lastError: normalizeDeliveryError(error),
+    lockedBy: event.lockedBy,
     now,
   };
 
@@ -135,6 +136,7 @@ const normalizeDeliveryError = (error) => ({
 
 const buildDeliveredUpdate = (event, config, now) => ({
   eventId: event._id,
+  lockedBy: event.lockedBy,
   now,
   retentionExpiresAt: retentionExpiresAt(config, now),
 });

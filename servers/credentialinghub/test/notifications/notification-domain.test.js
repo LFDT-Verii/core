@@ -43,45 +43,24 @@ describe('notification domain', () => {
       );
     });
 
-    it('should validate enabled webhook config', () => {
-      expect(() =>
-        buildNotificationConfig({
-          enabled: true,
-          webhookUrl: 'http://operator.localhost.test/events',
-          webhookSecret: 'secret',
-        }),
-      ).toThrow('Notifications webhook URL must use https');
-
+    it('should build enabled webhook config from already validated values', () => {
       expect(
         buildNotificationConfig({
           enabled: true,
           workerMode: 'standalone',
-          webhookUrl: 'https://operator.localhost.test/events',
+          webhookUrl: 'http://operator.localhost.test/events',
           webhookEventTypes: 'presentation.received,credential.*',
-          webhookSecret: 'secret',
         }),
       ).toEqual(
         expect.objectContaining({
           enabled: true,
           workerMode: 'standalone',
           webhook: expect.objectContaining({
-            url: 'https://operator.localhost.test/events',
+            url: 'http://operator.localhost.test/events',
             eventTypes: ['presentation.received', 'credential.*'],
-            secret: 'secret',
+            secret: undefined,
           }),
         }),
-      );
-    });
-
-    it('should reject invalid worker modes', () => {
-      expect(() =>
-        buildNotificationConfig({ workerMode: 'in-process' }),
-      ).toThrow('Invalid notifications worker mode: in-process');
-    });
-
-    it('should reject invalid queue types', () => {
-      expect(() => buildNotificationConfig({ queueType: 'rabbit' })).toThrow(
-        'Invalid notifications queue type: rabbit',
       );
     });
 
@@ -97,6 +76,14 @@ describe('notification domain', () => {
   });
 
   describe('event type matching', () => {
+    it('should normalize missing event type config to an empty list', () => {
+      expect(
+        buildNotificationConfig({
+          webhookEventTypes: null,
+        }).webhook.eventTypes,
+      ).toEqual([]);
+    });
+
     it('should match all events, exact event types, and wildcard suffixes', () => {
       expect(matchesNotificationEventType('credential.issued', '*')).toEqual(
         true,

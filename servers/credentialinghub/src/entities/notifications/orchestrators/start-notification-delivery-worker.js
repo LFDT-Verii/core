@@ -88,25 +88,17 @@ const pollNotificationDelivery = async (
   { pollIntervalMs, state, workerId },
   context,
 ) => {
-  if (!state.running) {
-    return;
+  while (state.running) {
+    // Serial delivery is intentional for the MVP.
+    // eslint-disable-next-line no-await-in-loop
+    await deliverOrWait(
+      {
+        pollIntervalMs,
+        workerId,
+      },
+      context,
+    );
   }
-
-  await deliverOrWait(
-    {
-      pollIntervalMs,
-      workerId,
-    },
-    context,
-  );
-  await pollNotificationDelivery(
-    {
-      pollIntervalMs,
-      state,
-      workerId,
-    },
-    context,
-  );
 };
 
 const deliverOrWait = async ({ pollIntervalMs, workerId }, context) => {

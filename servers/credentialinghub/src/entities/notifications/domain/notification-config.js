@@ -40,29 +40,16 @@ const DEFAULT_NOTIFICATION_CONFIG_OPTIONS = {
 const buildNotificationConfig = (options = {}) => {
   const normalizedOptions = normalizeNotificationConfigOptions(options);
 
-  validateNotificationConfigOptions(normalizedOptions);
-
   const eventTypes = parseNotificationEventTypes(
     normalizedOptions.webhookEventTypes,
   );
-  const config = buildStaticNotificationConfig(normalizedOptions, eventTypes);
-
-  if (normalizedOptions.enabled) {
-    validateEnabledWebhookConfig(normalizedOptions);
-  }
-
-  return config;
+  return buildStaticNotificationConfig(normalizedOptions, eventTypes);
 };
 
 const normalizeNotificationConfigOptions = (options) => ({
   ...DEFAULT_NOTIFICATION_CONFIG_OPTIONS,
   ...options,
 });
-
-const validateNotificationConfigOptions = ({ workerMode, queueType }) => {
-  validateWorkerMode(workerMode);
-  validateQueueType(queueType);
-};
 
 const buildStaticNotificationConfig = (
   {
@@ -94,15 +81,6 @@ const buildStaticNotificationConfig = (
   },
 });
 
-const validateEnabledWebhookConfig = ({
-  webhookUrl,
-  webhookSecret,
-  allowInsecureWebhookUrl,
-}) => {
-  validateWebhookUrl(webhookUrl, { allowInsecureWebhookUrl });
-  validateRequiredString(webhookSecret, 'NOTIFICATIONS_WEBHOOK_SECRET');
-};
-
 const parseNotificationEventTypes = (eventTypes) => {
   if (Array.isArray(eventTypes)) {
     return eventTypes.map((eventType) => eventType.trim()).filter(Boolean);
@@ -116,70 +94,6 @@ const parseNotificationEventTypes = (eventTypes) => {
     .split(',')
     .map((eventType) => eventType.trim())
     .filter(Boolean);
-};
-
-const validateWorkerMode = (workerMode) => {
-  if (Object.values(NotificationWorkerModes).includes(workerMode)) {
-    return;
-  }
-
-  throw new Error(`Invalid notifications worker mode: ${workerMode}`);
-};
-
-const validateQueueType = (queueType) => {
-  if (Object.values(NotificationQueueTypes).includes(queueType)) {
-    return;
-  }
-
-  throw new Error(`Invalid notifications queue type: ${queueType}`);
-};
-
-const validateWebhookUrl = (webhookUrl, { allowInsecureWebhookUrl }) => {
-  validateRequiredString(webhookUrl, 'NOTIFICATIONS_WEBHOOK_URL');
-  const parsedUrl = parseWebhookUrl(webhookUrl);
-
-  validateWebhookUrlHost(parsedUrl);
-  validateWebhookUrlCredentials(parsedUrl);
-  validateWebhookUrlProtocol(parsedUrl, { allowInsecureWebhookUrl });
-};
-
-const parseWebhookUrl = (webhookUrl) => {
-  let parsedUrl;
-  try {
-    parsedUrl = new URL(webhookUrl);
-  } catch (error) {
-    throw new Error(`Invalid notifications webhook URL: ${webhookUrl}`, {
-      cause: error,
-    });
-  }
-
-  return parsedUrl;
-};
-
-const validateWebhookUrlHost = (parsedUrl) => {
-  if (!parsedUrl.hostname) {
-    throw new Error('Notifications webhook URL must include a host');
-  }
-};
-
-const validateWebhookUrlCredentials = (parsedUrl) => {
-  if (parsedUrl.username || parsedUrl.password) {
-    throw new Error('Notifications webhook URL must not include credentials');
-  }
-};
-
-const validateWebhookUrlProtocol = (parsedUrl, { allowInsecureWebhookUrl }) => {
-  if (parsedUrl.protocol !== 'https:' && !allowInsecureWebhookUrl) {
-    throw new Error('Notifications webhook URL must use https');
-  }
-};
-
-const validateRequiredString = (value, envVarName) => {
-  if (typeof value === 'string' && value.trim()) {
-    return;
-  }
-
-  throw new Error(`${envVarName} is required when notifications are enabled`);
 };
 
 module.exports = {

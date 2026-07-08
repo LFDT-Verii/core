@@ -25,6 +25,7 @@ const createTestFastify = require('../helpers/create-test-fastify');
 const {
   NotificationEventStatuses,
   buildNotificationConfig,
+  deliverNextNotificationEvent,
   startNotificationDeliveryWorker,
 } = require('../../src/entities/notifications');
 const {
@@ -250,7 +251,28 @@ describe('notification delivery worker', () => {
     );
 
     expect(worker.workerId).toEqual('worker-disabled');
+    await wait(10);
     await stopWorker();
+
+    expect(await loadEvent(event.id)).toEqual(
+      expect.objectContaining({
+        _id: event.id,
+        status: NotificationEventStatuses.PENDING,
+      }),
+    );
+  });
+
+  it('should skip delivery when notifications are disabled', async () => {
+    await replaceFastify({
+      notifications: buildNotificationConfig({ enabled: false }),
+    });
+    await mongoDb().collection('notification_events').deleteMany({});
+    const event = buildEvent({ id: 'evt_deliver_disabled' });
+    await repos.notification_events.insertEvents([event]);
+
+    await expect(
+      deliverNextNotificationEvent({ workerId: 'worker-disabled' }, context),
+    ).resolves.toEqual(false);
 
     expect(await loadEvent(event.id)).toEqual(
       expect.objectContaining({
