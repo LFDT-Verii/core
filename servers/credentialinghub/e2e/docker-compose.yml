@@ -36,6 +36,14 @@ services:
       - SERVER_CERTIFICATE_FILE=/certs/cert.crt
       - SERVER_CERTIFICATE_KEY_FILE=/certs/key.pem
       - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - NOTIFICATIONS_ENABLED=true
+      - NOTIFICATIONS_WORKER_MODE=embedded-child
+      - NOTIFICATIONS_WEBHOOK_URL=http://host.docker.internal:13019/cih-notification-webhooks
+      - NOTIFICATIONS_WEBHOOK_SECRET=e2e-notification-secret
+      - NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL=true
+      - NOTIFICATIONS_WEBHOOK_TIMEOUT_MS=2000
+    extra_hosts:
+      - host.docker.internal:host-gateway
     healthcheck:
       test:
         [
