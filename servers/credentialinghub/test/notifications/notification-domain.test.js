@@ -84,6 +84,16 @@ describe('notification domain', () => {
         'Invalid notifications queue type: rabbit',
       );
     });
+
+    it('should not expose worker concurrency config in the serial MVP', () => {
+      expect(
+        buildNotificationConfig({
+          enabled: true,
+          webhookSecret: 'secret',
+          webhookUrl: 'https://operator.localhost.test/events',
+        }).webhook,
+      ).not.toHaveProperty('maxConcurrency');
+    });
   });
 
   describe('event type matching', () => {

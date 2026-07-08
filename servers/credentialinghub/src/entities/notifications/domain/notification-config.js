@@ -34,7 +34,6 @@ const DEFAULT_NOTIFICATION_CONFIG_OPTIONS = {
   signatureHeaderName: DEFAULT_SIGNATURE_HEADER_NAME,
   webhookTimeoutMs: 5000,
   maxAttempts: 12,
-  maxConcurrency: 4,
   allowInsecureWebhookUrl: false,
 };
 
@@ -76,7 +75,6 @@ const buildStaticNotificationConfig = (
     signatureHeaderName,
     webhookTimeoutMs,
     maxAttempts,
-    maxConcurrency,
   },
   eventTypes,
 ) => ({
@@ -93,7 +91,6 @@ const buildStaticNotificationConfig = (
     signatureHeaderName,
     timeoutMs: webhookTimeoutMs,
     maxAttempts,
-    maxConcurrency,
   },
 });
 

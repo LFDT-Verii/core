@@ -170,10 +170,6 @@ module.exports = {
       .get('NOTIFICATIONS_MAX_ATTEMPTS')
       .default('12')
       .asIntPositive(),
-    maxConcurrency: env
-      .get('NOTIFICATIONS_WORKER_MAX_CONCURRENCY')
-      .default('4')
-      .asIntPositive(),
     allowInsecureWebhookUrl: env
       .get('NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL')
       .default('false')

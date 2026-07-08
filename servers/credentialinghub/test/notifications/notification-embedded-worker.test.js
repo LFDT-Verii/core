@@ -1,0 +1,128 @@
+/*
+ * Copyright 2026 Velocity Team
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+const { EventEmitter } = require('node:events');
+const { afterEach, describe, it, mock } = require('node:test');
+const { expect } = require('expect');
+const createTestFastify = require('../helpers/create-test-fastify');
+
+const fork = mock.fn(() => buildChild({ pid: 101 }));
+
+mock.module('node:child_process', {
+  namedExports: {
+    fork,
+  },
+});
+
+const {
+  NotificationWorkerModes,
+  buildNotificationConfig,
+} = require('../../src/entities/notifications');
+const {
+  startEmbeddedNotificationWorker,
+} = require('../../src/start-embedded-notification-worker');
+
+describe('embedded notification worker', () => {
+  let fastify;
+
+  afterEach(async () => {
+    if (fastify != null) {
+      await fastify.close();
+
+      fastify = undefined;
+    }
+  });
+
+  it('should fork the standalone notification worker entrypoint on ready', async () => {
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify);
+    const callCountBeforeReady = fork.mock.callCount();
+
+    await fastify.ready();
+
+    expect(fork.mock.callCount()).toEqual(callCountBeforeReady + 1);
+    expect(fork.mock.calls.at(-1).arguments[0]).toMatch(
+      /start-notification-worker\.js$/,
+    );
+    expect(fork.mock.calls.at(-1).arguments[1].env).toEqual(
+      expect.objectContaining({
+        NOTIFICATIONS_WORKER_MODE: NotificationWorkerModes.STANDALONE,
+      }),
+    );
+  });
+
+  it('should not fork when notifications are disabled', async () => {
+    fastify = createTestFastify({
+      notifications: buildNotificationConfig({ enabled: false }),
+    });
+    startEmbeddedNotificationWorker(fastify);
+    const callCountBeforeReady = fork.mock.callCount();
+
+    await fastify.ready();
+
+    expect(fork.mock.callCount()).toEqual(callCountBeforeReady);
+  });
+
+  it('should signal the child process when Fastify closes', async () => {
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify);
+    await fastify.ready();
+
+    const child = fork.mock.calls.at(-1).result;
+    await fastify.close();
+
+    expect(child.sentMessages).toEqual(['shutdown']);
+    expect(child.killSignals).toEqual(['SIGTERM']);
+
+    fastify = undefined;
+  });
+});
+
+const buildEnabledNotificationConfig = (workerMode) =>
+  buildNotificationConfig({
+    allowInsecureWebhookUrl: true,
+    enabled: true,
+    webhookSecret: 'delivery-secret',
+    webhookUrl: 'http://127.0.0.1:65535/notifications',
+    workerMode,
+  });
+
+const buildChild = ({ pid }) => {
+  const child = new EventEmitter();
+  child.connected = true;
+  child.kill = (signal = 'SIGTERM') => {
+    child.killSignals.push(signal);
+    child.killed = true;
+    child.emit('exit', null, signal);
+  };
+  child.killed = false;
+  child.killSignals = [];
+  child.pid = pid;
+  child.sentMessages = [];
+  child.send = (message) => {
+    child.sentMessages.push(message);
+  };
+  return child;
+};
