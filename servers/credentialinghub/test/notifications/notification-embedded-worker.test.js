@@ -65,7 +65,8 @@ describe('embedded notification worker', () => {
     expect(fork.mock.calls.at(-1).arguments[0]).toMatch(
       /start-notification-worker\.js$/,
     );
-    expect(fork.mock.calls.at(-1).arguments[1].env).toEqual(
+    expect(fork.mock.calls.at(-1).arguments[1]).toEqual([]);
+    expect(fork.mock.calls.at(-1).arguments[2].env).toEqual(
       expect.objectContaining({
         NOTIFICATIONS_WORKER_MODE: NotificationWorkerModes.STANDALONE,
       }),

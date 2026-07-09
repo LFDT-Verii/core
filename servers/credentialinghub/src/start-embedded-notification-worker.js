@@ -45,6 +45,7 @@ const startEmbeddedNotificationWorker = (
   server.addHook('onReady', async () => {
     const childProcess = fork(
       path.join(__dirname, 'start-notification-worker.js'),
+      [],
       {
         env: {
           ...process.env,
