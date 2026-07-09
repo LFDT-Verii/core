@@ -120,6 +120,26 @@ describe('embedded notification worker', () => {
     fastify = undefined;
   });
 
+  it('should close cleanly when the child emits an error', async () => {
+    nextChild = buildChild({ pid: 101 });
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify);
+    await fastify.ready();
+
+    const child = fork.mock.calls.at(-1).result;
+    expect(() => child.emit('error', new Error('spawn failed'))).not.toThrow();
+    await fastify.close();
+
+    expect(child.sentMessages).toEqual([]);
+    expect(child.killSignals).toEqual([]);
+
+    fastify = undefined;
+  });
+
   it('should allow the child process to gracefully exit when Fastify closes', async () => {
     nextChild = buildChild({ exitOnShutdown: true, pid: 101 });
     fastify = createTestFastify({

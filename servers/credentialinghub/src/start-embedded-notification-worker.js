@@ -45,12 +45,22 @@ const startEmbeddedNotificationWorker = (
       stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
     });
 
+    const notificationWorkerPid = child.pid;
+
+    child.on('error', (error) => {
+      server.log.error(
+        { err: error, notificationWorkerPid },
+        'Notification delivery worker child error',
+      );
+      // eslint-disable-next-line better-mutation/no-mutation
+      child = undefined;
+    });
+
     server.log.info(
-      { notificationWorkerPid: child.pid },
+      { notificationWorkerPid },
       'Notification delivery worker child started',
     );
 
-    const notificationWorkerPid = child.pid;
     child.on('exit', (code, signal) => {
       server.log.warn(
         { code, notificationWorkerPid, signal },
