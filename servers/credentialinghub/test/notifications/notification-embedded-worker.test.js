@@ -120,8 +120,8 @@ describe('embedded notification worker', () => {
     fastify = undefined;
   });
 
-  it('should close cleanly when the child emits an error', async () => {
-    nextChild = buildChild({ pid: 101 });
+  it('should close cleanly when the child fails before spawning', async () => {
+    nextChild = buildChild();
     fastify = createTestFastify({
       notifications: buildEnabledNotificationConfig(
         NotificationWorkerModes.EMBEDDED_CHILD,
@@ -136,6 +136,26 @@ describe('embedded notification worker', () => {
 
     expect(child.sentMessages).toEqual([]);
     expect(child.killSignals).toEqual([]);
+
+    fastify = undefined;
+  });
+
+  it('should still shut down a live child that emitted an error before server close', async () => {
+    nextChild = buildChild({ pid: 101 });
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify, { shutdownGraceMs: 1 });
+    await fastify.ready();
+
+    const child = fork.mock.calls.at(-1).result;
+    child.emit('error', new Error('ipc send failed'));
+    await fastify.close();
+
+    expect(child.sentMessages).toEqual(['shutdown']);
+    expect(child.killSignals).toEqual(['SIGTERM']);
 
     fastify = undefined;
   });
@@ -155,6 +175,25 @@ describe('embedded notification worker', () => {
 
     expect(child.sentMessages).toEqual(['shutdown']);
     expect(child.killSignals).toEqual([]);
+
+    fastify = undefined;
+  });
+
+  it('should terminate the child when it emits an error during graceful shutdown', async () => {
+    nextChild = buildChild({ errorOnShutdown: true, pid: 101 });
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify, { shutdownGraceMs: 1 });
+    await fastify.ready();
+
+    const child = fork.mock.calls.at(-1).result;
+    await fastify.close();
+
+    expect(child.sentMessages).toEqual(['shutdown']);
+    expect(child.killSignals).toEqual(['SIGTERM']);
 
     fastify = undefined;
   });
@@ -187,7 +226,11 @@ const buildEnabledNotificationConfig = (workerMode) =>
     workerMode,
   });
 
-const buildChild = ({ exitOnShutdown = false, pid }) => {
+const buildChild = ({
+  errorOnShutdown = false,
+  exitOnShutdown = false,
+  pid,
+} = {}) => {
   const child = new EventEmitter();
   child.connected = true;
   child.kill = (signal = 'SIGTERM') => {
@@ -201,6 +244,9 @@ const buildChild = ({ exitOnShutdown = false, pid }) => {
   child.sentMessages = [];
   child.send = (message) => {
     child.sentMessages.push(message);
+    if (errorOnShutdown && message === 'shutdown') {
+      child.emit('error', new Error('ipc send failed'));
+    }
     if (exitOnShutdown && message === 'shutdown') {
       child.connected = false;
       child.emit('exit', 0, null);

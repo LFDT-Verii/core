@@ -35,25 +35,37 @@ const startEmbeddedNotificationWorker = (
   }
 
   let child;
+  const clearChild = (childProcess) => {
+    if (child === childProcess) {
+      // eslint-disable-next-line better-mutation/no-mutation
+      child = undefined;
+    }
+  };
 
   server.addHook('onReady', async () => {
-    child = fork(path.join(__dirname, 'start-notification-worker.js'), {
-      env: {
-        ...process.env,
-        NOTIFICATIONS_WORKER_MODE: NotificationWorkerModes.STANDALONE,
+    const childProcess = fork(
+      path.join(__dirname, 'start-notification-worker.js'),
+      {
+        env: {
+          ...process.env,
+          NOTIFICATIONS_WORKER_MODE: NotificationWorkerModes.STANDALONE,
+        },
+        stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
       },
-      stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-    });
+    );
 
-    const notificationWorkerPid = child.pid;
+    child = childProcess;
 
-    child.on('error', (error) => {
+    const notificationWorkerPid = childProcess.pid;
+
+    childProcess.on('error', (error) => {
       server.log.error(
         { err: error, notificationWorkerPid },
         'Notification delivery worker child error',
       );
-      // eslint-disable-next-line better-mutation/no-mutation
-      child = undefined;
+      if (childProcess.pid == null) {
+        clearChild(childProcess);
+      }
     });
 
     server.log.info(
@@ -61,33 +73,33 @@ const startEmbeddedNotificationWorker = (
       'Notification delivery worker child started',
     );
 
-    child.on('exit', (code, signal) => {
+    childProcess.on('exit', (code, signal) => {
       server.log.warn(
         { code, notificationWorkerPid, signal },
         'Notification delivery worker child exited',
       );
-      // eslint-disable-next-line better-mutation/no-mutation
-      child = undefined;
+      clearChild(childProcess);
     });
   });
 
   server.addHook('onClose', async () => {
-    if (child == null || child.killed) {
+    const childProcess = child;
+    if (childProcess == null || childProcess.killed) {
       return;
     }
 
-    const childExit = waitForChildExit(child, shutdownGraceMs);
+    const childExit = waitForChildExit(childProcess, shutdownGraceMs);
 
-    if (child.connected) {
-      child.send('shutdown');
+    if (childProcess.connected) {
+      childProcess.send('shutdown');
     }
 
     if (await childExit) {
       return;
     }
 
-    if (!child.killed) {
-      child.kill('SIGTERM');
+    if (!childProcess.killed) {
+      childProcess.kill('SIGTERM');
     }
   });
 
