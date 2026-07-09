@@ -29,43 +29,48 @@ const startNotificationWorker = async ({
   createAppServer = createNotificationWorkerServer,
 } = {}) => {
   const server = await createAppServer();
-  await server.ready();
+  try {
+    await server.ready();
 
-  const worker = startNotificationDeliveryWorker(
-    {},
-    {
-      config: server.config,
-      fetch: buildNotificationDeliveryFetch(server.config, server.log),
-      log: server.log,
-      repos: bindRepo(server),
-    },
-  );
+    const worker = startNotificationDeliveryWorker(
+      {},
+      {
+        config: server.config,
+        fetch: buildNotificationDeliveryFetch(server.config, server.log),
+        log: server.log,
+        repos: bindRepo(server),
+      },
+    );
 
-  let shutdownPromise;
-  const shutdown = () => {
-    if (shutdownPromise == null) {
-      // eslint-disable-next-line better-mutation/no-mutation
-      shutdownPromise = stopNotificationWorker({ server, worker });
-    }
+    let shutdownPromise;
+    const shutdown = () => {
+      if (shutdownPromise == null) {
+        // eslint-disable-next-line better-mutation/no-mutation
+        shutdownPromise = stopNotificationWorker({ server, worker });
+      }
 
-    return shutdownPromise;
-  };
-  const shutdownOrExit = () => {
-    shutdown().catch((error) => {
-      console.error(error);
-      process.exit(1);
+      return shutdownPromise;
+    };
+    const shutdownOrExit = () => {
+      shutdown().catch((error) => {
+        console.error(error);
+        process.exit(1);
+      });
+    };
+
+    process.once('SIGINT', shutdownOrExit);
+    process.once('SIGTERM', shutdownOrExit);
+    process.once('message', (message) => {
+      if (message === 'shutdown') {
+        shutdownOrExit();
+      }
     });
-  };
 
-  process.once('SIGINT', shutdownOrExit);
-  process.once('SIGTERM', shutdownOrExit);
-  process.once('message', (message) => {
-    if (message === 'shutdown') {
-      shutdownOrExit();
-    }
-  });
-
-  return { server, worker };
+    return { server, worker };
+  } catch (error) {
+    await server.close();
+    throw error;
+  }
 };
 
 const buildNotificationDeliveryFetch = (serverConfig, log) =>
@@ -80,8 +85,11 @@ const buildNotificationDeliveryFetch = (serverConfig, log) =>
   });
 
 const stopNotificationWorker = async ({ server, worker }) => {
-  await worker.stop();
-  await server.close();
+  try {
+    await worker.stop();
+  } finally {
+    await server.close();
+  }
 };
 
 /* istanbul ignore next */
