@@ -101,8 +101,31 @@ const readResponseExcerpt = async (response) => {
     return OVERSIZED_ERROR_BODY_MESSAGE;
   }
 
-  const body = await response.text();
-  return body.slice(0, MAX_ERROR_BODY_LENGTH);
+  return readRawBodyExcerpt(response.rawBody);
+};
+
+const readRawBodyExcerpt = async (rawBody) => {
+  if (rawBody == null) {
+    return '';
+  }
+
+  const chunks = [];
+  let bodyLength = 0;
+
+  for await (const chunk of rawBody) {
+    const bodyChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+
+    bodyLength += bodyChunk.length;
+
+    if (bodyLength > MAX_ERROR_BODY_LENGTH) {
+      rawBody.destroy?.();
+      return OVERSIZED_ERROR_BODY_MESSAGE;
+    }
+
+    chunks.push(bodyChunk);
+  }
+
+  return Buffer.concat(chunks, bodyLength).toString();
 };
 
 const isResponseBodyTooLarge = (response) => {

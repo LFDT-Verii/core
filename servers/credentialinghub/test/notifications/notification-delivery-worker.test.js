@@ -16,6 +16,7 @@
  */
 
 const crypto = require('node:crypto');
+const { Readable } = require('node:stream');
 const { after, afterEach, beforeEach, describe, it } = require('node:test');
 const { bindRepo, mongoDb } = require('@spencejs/spence-mongo-repos');
 const { wait } = require('@verii/common-functions');
@@ -171,6 +172,39 @@ describe('notification delivery worker', () => {
       statusCode: 500,
     });
     const event = buildEvent({ id: 'evt_large_failure_body' });
+    await repos.notification_events.insertEvents([event]);
+
+    worker = startNotificationDeliveryWorker(
+      {
+        pollIntervalMs: 5,
+        workerId: 'worker-1',
+      },
+      context,
+    );
+
+    await waitForEventStatus(event.id, NotificationEventStatuses.RETRYING);
+    await stopWorker();
+
+    const storedEvent = await loadEvent(event.id);
+    expect(storedEvent).toEqual(
+      expect.objectContaining({
+        _id: event.id,
+        lastError: {
+          message: 'Webhook delivery failed with status 500',
+          responseBody: '[omitted: response body exceeds 500 bytes]',
+          statusCode: 500,
+        },
+        status: NotificationEventStatuses.RETRYING,
+      }),
+    );
+  });
+
+  it('should omit streamed oversized webhook failure bodies without content length', async () => {
+    nockWebhook({
+      body: Readable.from(['x'.repeat(501)]),
+      statusCode: 500,
+    });
+    const event = buildEvent({ id: 'evt_streamed_large_failure_body' });
     await repos.notification_events.insertEvents([event]);
 
     worker = startNotificationDeliveryWorker(
