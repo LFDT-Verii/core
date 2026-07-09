@@ -208,9 +208,9 @@ describe('notification events repo extension', () => {
 
     it('should return the updated document when marking a locked event delivered', async () => {
       const event = buildEvent({ id: 'evt_mark_delivered' });
-      const now = new Date();
-      const retentionExpiresAt = new Date(now.getTime() + 30000);
       await repos.notification_events.insertEvents([event]);
+      const now = await buildClaimTimeAfterNextAttempt(event.id);
+      const retentionExpiresAt = new Date(now.getTime() + 30000);
       await expect(
         repos.notification_events.claimDueEvent({
           now,
@@ -241,8 +241,8 @@ describe('notification events repo extension', () => {
 
     it('should not mark an event delivered when the lock owner changed', async () => {
       const event = buildEvent({ id: 'evt_stale_delivered' });
-      const now = new Date();
       await repos.notification_events.insertEvents([event]);
+      const now = await buildClaimTimeAfterNextAttempt(event.id);
       await expect(
         repos.notification_events.claimDueEvent({
           now,
@@ -297,3 +297,8 @@ const buildEvent = ({ id = 'evt_test' } = {}) => ({
 
 const loadEvent = (eventId) =>
   mongoDb().collection('notification_events').findOne({ _id: eventId });
+
+const buildClaimTimeAfterNextAttempt = async (eventId) => {
+  const { nextAttemptAt } = await loadEvent(eventId);
+  return new Date(nextAttemptAt.getTime() + 1);
+};
