@@ -93,6 +93,38 @@ describe('standalone notification worker', () => {
     server = undefined;
     worker = undefined;
   });
+
+  it('should close the server when startup fails after server creation', async () => {
+    processListeners = snapshotProcessListeners();
+    const startupError = new Error('startup failed');
+    let serverClosed = false;
+
+    await expect(
+      startNotificationWorker({
+        createAppServer: () => {
+          const app = createTestFastify();
+          app.addHook('onReady', async () => {
+            throw startupError;
+          });
+          app.addHook('onClose', () => {
+            serverClosed = true;
+          });
+          return app;
+        },
+      }),
+    ).rejects.toThrow(startupError);
+
+    expect(serverClosed).toEqual(true);
+    expect(process.listeners('SIGINT').length).toEqual(
+      processListeners.SIGINT.length,
+    );
+    expect(process.listeners('SIGTERM').length).toEqual(
+      processListeners.SIGTERM.length,
+    );
+    expect(process.listeners('message').length).toEqual(
+      processListeners.message.length,
+    );
+  });
 });
 
 const snapshotProcessListeners = () =>

@@ -52,6 +52,7 @@ const startNotificationWorker = async ({
       return shutdownPromise;
     };
     const shutdownOrExit = () => {
+      /* node:coverage ignore next */
       shutdown().catch((error) => {
         console.error(error);
         process.exit(1);
@@ -92,6 +93,7 @@ const stopNotificationWorker = async ({ server, worker }) => {
   }
 };
 
+/* node:coverage ignore next */
 /* istanbul ignore next */
 const startNotificationWorkerCli = () => {
   startNotificationWorker().catch((error) => {
@@ -100,6 +102,7 @@ const startNotificationWorkerCli = () => {
   });
 };
 
+/* node:coverage ignore next */
 /* istanbul ignore next */
 if (require.main === module) {
   startNotificationWorkerCli();
