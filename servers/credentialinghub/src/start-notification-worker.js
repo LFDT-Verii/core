@@ -61,11 +61,14 @@ const startNotificationWorker = async ({
 
     process.once('SIGINT', shutdownOrExit);
     process.once('SIGTERM', shutdownOrExit);
-    process.once('message', (message) => {
+    const shutdownOnMessage = (message) => {
       if (message === 'shutdown') {
+        process.off('message', shutdownOnMessage);
         shutdownOrExit();
       }
-    });
+    };
+
+    process.on('message', shutdownOnMessage);
 
     return { server, worker };
   } catch (error) {

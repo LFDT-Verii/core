@@ -48,7 +48,8 @@ describe('notification domain', () => {
         buildNotificationConfig({
           enabled: true,
           workerMode: 'standalone',
-          webhookUrl: 'http://operator.localhost.test/events',
+          webhookSecret: 'secret',
+          webhookUrl: 'https://operator.localhost.test/events',
           webhookEventTypes: 'presentation.received,credential.*',
         }),
       ).toEqual(
@@ -56,9 +57,9 @@ describe('notification domain', () => {
           enabled: true,
           workerMode: 'standalone',
           webhook: expect.objectContaining({
-            url: 'http://operator.localhost.test/events',
+            url: 'https://operator.localhost.test/events',
             eventTypes: ['presentation.received', 'credential.*'],
-            secret: undefined,
+            secret: 'secret',
           }),
         }),
       );
