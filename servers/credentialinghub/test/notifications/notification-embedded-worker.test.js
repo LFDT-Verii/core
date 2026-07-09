@@ -199,6 +199,25 @@ describe('embedded notification worker', () => {
     fastify = undefined;
   });
 
+  it('should terminate the child when graceful shutdown send throws', async () => {
+    nextChild = buildChild({ pid: 101, throwOnShutdown: true });
+    fastify = createTestFastify({
+      notifications: buildEnabledNotificationConfig(
+        NotificationWorkerModes.EMBEDDED_CHILD,
+      ),
+    });
+    startEmbeddedNotificationWorker(fastify, { shutdownGraceMs: 1 });
+    await fastify.ready();
+
+    const child = fork.mock.calls.at(-1).result;
+    await expect(fastify.close()).resolves.toEqual(undefined);
+
+    expect(child.sentMessages).toEqual(['shutdown']);
+    expect(child.killSignals).toEqual(['SIGTERM']);
+
+    fastify = undefined;
+  });
+
   it('should terminate the child process when it does not exit after shutdown', async () => {
     fastify = createTestFastify({
       notifications: buildEnabledNotificationConfig(
@@ -231,6 +250,7 @@ const buildChild = ({
   errorOnShutdown = false,
   exitOnShutdown = false,
   pid,
+  throwOnShutdown = false,
 } = {}) => {
   const child = new EventEmitter();
   child.connected = true;
@@ -245,13 +265,31 @@ const buildChild = ({
   child.sentMessages = [];
   child.send = (message) => {
     child.sentMessages.push(message);
-    if (errorOnShutdown && message === 'shutdown') {
-      child.emit('error', new Error('ipc send failed'));
-    }
-    if (exitOnShutdown && message === 'shutdown') {
-      child.connected = false;
-      child.emit('exit', 0, null);
-    }
+    handleChildMessage(child, message, {
+      errorOnShutdown,
+      exitOnShutdown,
+      throwOnShutdown,
+    });
   };
   return child;
+};
+
+const handleChildMessage = (
+  child,
+  message,
+  { errorOnShutdown, exitOnShutdown, throwOnShutdown },
+) => {
+  if (message !== 'shutdown') {
+    return;
+  }
+  if (throwOnShutdown) {
+    throw new Error('ipc channel closed');
+  }
+  if (errorOnShutdown) {
+    child.emit('error', new Error('ipc send failed'));
+  }
+  if (exitOnShutdown) {
+    child.connected = false;
+    child.emit('exit', 0, null);
+  }
 };

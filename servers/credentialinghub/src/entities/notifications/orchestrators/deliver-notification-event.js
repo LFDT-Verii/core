@@ -20,6 +20,7 @@ const { buildWebhookSignatureHeaders } = require('../domain');
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_LOCK_DURATION_MS = 30000;
 const MAX_ERROR_BODY_LENGTH = 500;
+const OVERSIZED_ERROR_BODY_MESSAGE = `[omitted: response body exceeds ${MAX_ERROR_BODY_LENGTH} bytes]`;
 const RETRYABLE_STATUS_CODES = new Set([408, 425, 429]);
 
 const deliverNextNotificationEvent = async ({ workerId }, context) => {
@@ -95,8 +96,27 @@ const buildHttpDeliveryError = async (response) => ({
 });
 
 const readResponseExcerpt = async (response) => {
+  if (isResponseBodyTooLarge(response)) {
+    response.rawBody?.destroy?.();
+    return OVERSIZED_ERROR_BODY_MESSAGE;
+  }
+
   const body = await response.text();
   return body.slice(0, MAX_ERROR_BODY_LENGTH);
+};
+
+const isResponseBodyTooLarge = (response) => {
+  const contentLength = parseContentLength(response.resHeaders);
+  return contentLength != null && contentLength > MAX_ERROR_BODY_LENGTH;
+};
+
+const parseContentLength = (headers = {}) => {
+  const headerValue = headers['content-length'] ?? headers['Content-Length'];
+  const normalizedValue = Array.isArray(headerValue)
+    ? headerValue[0]
+    : headerValue;
+  const contentLength = Number(normalizedValue);
+  return Number.isFinite(contentLength) ? contentLength : undefined;
 };
 
 const markFailedDelivery = async (event, error, now, context) => {

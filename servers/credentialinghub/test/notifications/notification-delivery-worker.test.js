@@ -161,6 +161,43 @@ describe('notification delivery worker', () => {
     expect(storedEvent).not.toHaveProperty('lockedUntil');
   });
 
+  it('should omit oversized webhook failure bodies', async () => {
+    const oversizedBody = 'x'.repeat(501);
+    nockWebhook({
+      body: oversizedBody,
+      headers: {
+        'content-length': String(oversizedBody.length),
+      },
+      statusCode: 500,
+    });
+    const event = buildEvent({ id: 'evt_large_failure_body' });
+    await repos.notification_events.insertEvents([event]);
+
+    worker = startNotificationDeliveryWorker(
+      {
+        pollIntervalMs: 5,
+        workerId: 'worker-1',
+      },
+      context,
+    );
+
+    await waitForEventStatus(event.id, NotificationEventStatuses.RETRYING);
+    await stopWorker();
+
+    const storedEvent = await loadEvent(event.id);
+    expect(storedEvent).toEqual(
+      expect.objectContaining({
+        _id: event.id,
+        lastError: {
+          message: 'Webhook delivery failed with status 500',
+          responseBody: '[omitted: response body exceeds 500 bytes]',
+          statusCode: 500,
+        },
+        status: NotificationEventStatuses.RETRYING,
+      }),
+    );
+  });
+
   it('should mark permanent webhook failures dead', async () => {
     nockWebhook({ body: 'bad request', statusCode: 400 });
     const event = buildEvent({ id: 'evt_dead' });
@@ -325,7 +362,13 @@ const buildWorkerContext = ({ fastify, repos }) => ({
   repos,
 });
 
-const nockWebhook = ({ body = '', error, event, statusCode = 204 } = {}) => {
+const nockWebhook = ({
+  body = '',
+  error,
+  event,
+  headers,
+  statusCode = 204,
+} = {}) => {
   const url = new URL(WEBHOOK_URL);
   const webhook = {
     body: undefined,
@@ -349,7 +392,7 @@ const nockWebhook = ({ body = '', error, event, statusCode = 204 } = {}) => {
     return webhook;
   }
 
-  const scope = interceptor.reply(statusCode, body);
+  const scope = interceptor.reply(statusCode, body, headers);
 
   webhook.scope = scope;
   return webhook;

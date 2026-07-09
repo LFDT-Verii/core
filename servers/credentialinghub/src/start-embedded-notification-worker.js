@@ -85,21 +85,19 @@ const startEmbeddedNotificationWorker = (
 
   server.addHook('onClose', async () => {
     const childProcess = child;
-    if (childProcess == null || childProcess.killed) {
+    if (childProcess == null || !isChildRunning(childProcess)) {
       return;
     }
 
     const childExit = waitForChildExit(childProcess, shutdownGraceMs);
 
-    if (childProcess.connected) {
-      childProcess.send('shutdown');
-    }
+    sendShutdownMessage(childProcess, server.log);
 
     if (await childExit) {
       return;
     }
 
-    if (!childProcess.killed) {
+    if (isChildRunning(childProcess)) {
       childProcess.kill('SIGTERM');
     }
   });
@@ -120,6 +118,26 @@ const waitForChildExit = (child, timeoutMs) =>
 
     child.once('exit', onExit);
   });
+
+const isChildRunning = (childProcess) =>
+  !childProcess.killed &&
+  childProcess.exitCode == null &&
+  childProcess.signalCode == null;
+
+const sendShutdownMessage = (childProcess, log) => {
+  if (!childProcess.connected) {
+    return;
+  }
+
+  try {
+    childProcess.send('shutdown');
+  } catch (error) {
+    log.warn(
+      { err: error, notificationWorkerPid: childProcess.pid },
+      'Notification delivery worker child shutdown signal failed',
+    );
+  }
+};
 
 module.exports = {
   startEmbeddedNotificationWorker,
