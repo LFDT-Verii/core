@@ -103,8 +103,7 @@ Suggested config shape:
       "secret": "env-or-kms-secret",
       "signatureHeaderName": "Verii-Signature",
       "timeoutMs": 5000,
-      "maxAttempts": 12,
-      "maxConcurrency": 4
+      "maxAttempts": 12
     }
   }
 }
@@ -129,7 +128,6 @@ NOTIFICATIONS_WEBHOOK_URL=https://operator-lan.example/internal/credentialing-hu
 NOTIFICATIONS_WEBHOOK_EVENTS=presentation.received,credential.issued,credential.rejected
 NOTIFICATIONS_WEBHOOK_SECRET=...
 NOTIFICATIONS_WEBHOOK_TIMEOUT_MS=5000
-NOTIFICATIONS_WORKER_MAX_CONCURRENCY=4
 NOTIFICATIONS_MAX_ATTEMPTS=12
 NOTIFICATIONS_RETENTION_DAYS=30
 ```
@@ -535,15 +533,15 @@ Permanent failures should mark the event `dead`, not block later events.
 
 Timeout:
 
-- Use `AbortController`.
+- Use the Credentialing Hub HTTP client request timeout.
 - Default timeout: 5 seconds.
 - Make timeout configurable.
 
 Concurrency:
 
-- Default max concurrency: 4.
-- Make configurable.
-- Do not start unbounded parallel deliveries.
+- MVP delivery is serial: one event at a time per worker process.
+- Add bounded configurable concurrency in a follow-up when there is enough operational evidence to set the right default.
+- Never start unbounded parallel deliveries.
 
 Backoff:
 
@@ -768,12 +766,11 @@ Acceptance:
 ### Phase 3: Worker Delivery
 
 1. Add worker loop that claims due events.
-2. Add delivery client using `fetch` and `AbortController`.
+2. Add delivery client using the Credentialing Hub HTTP client.
 3. Add HMAC signing headers.
 4. Add retry/dead-letter logic.
-5. Add bounded concurrency.
-6. Add graceful shutdown.
-7. Add integration tests against local mocked webhook receiver.
+5. Add graceful shutdown.
+6. Add integration tests against a mocked webhook receiver.
 
 Acceptance:
 

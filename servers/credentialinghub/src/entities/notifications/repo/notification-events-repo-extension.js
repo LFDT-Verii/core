@@ -72,8 +72,106 @@ const notificationEventsRepoExtension = (parent) => ({
 
     return result.value;
   },
+  markDelivered: ({
+    eventId,
+    lockedBy,
+    now = new Date(),
+    retentionExpiresAt,
+    projection = parent.defaultColumnsSelection,
+  }) =>
+    markEventState(
+      parent,
+      {
+        _id: eventId,
+        lockedBy,
+        status: NotificationEventStatuses.DELIVERING,
+      },
+      {
+        $set: {
+          status: NotificationEventStatuses.DELIVERED,
+          deliveredAt: now,
+          retentionExpiresAt,
+          updatedAt: now,
+        },
+        $unset: {
+          lockedBy: '',
+          lockedUntil: '',
+          lastError: '',
+        },
+      },
+      projection,
+    ),
+  markRetrying: ({
+    eventId,
+    lastError,
+    lockedBy,
+    nextAttemptAt,
+    now = new Date(),
+    projection = parent.defaultColumnsSelection,
+  }) =>
+    markEventState(
+      parent,
+      {
+        _id: eventId,
+        lockedBy,
+        status: NotificationEventStatuses.DELIVERING,
+      },
+      {
+        $set: {
+          status: NotificationEventStatuses.RETRYING,
+          lastError,
+          nextAttemptAt,
+          updatedAt: now,
+        },
+        $unset: {
+          lockedBy: '',
+          lockedUntil: '',
+        },
+      },
+      projection,
+    ),
+  markDead: ({
+    eventId,
+    lastError,
+    lockedBy,
+    now = new Date(),
+    retentionExpiresAt,
+    projection = parent.defaultColumnsSelection,
+  }) =>
+    markEventState(
+      parent,
+      {
+        _id: eventId,
+        lockedBy,
+        status: NotificationEventStatuses.DELIVERING,
+      },
+      {
+        $set: {
+          status: NotificationEventStatuses.DEAD,
+          deadAt: now,
+          lastError,
+          retentionExpiresAt,
+          updatedAt: now,
+        },
+        $unset: {
+          lockedBy: '',
+          lockedUntil: '',
+        },
+      },
+      projection,
+    ),
   extensions: parent.extensions.concat(['notificationEventsRepoExtension']),
 });
+
+const markEventState = async (parent, filter, update, projection) => {
+  const result = await parent.collection().findOneAndUpdate(filter, update, {
+    returnDocument: 'after',
+    includeResultMetadata: true,
+    projection,
+  });
+
+  return result.value;
+};
 
 const buildNotificationEventDocument = (event) => {
   const now = new Date();

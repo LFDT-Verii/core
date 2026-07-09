@@ -15,7 +15,7 @@
  *
  */
 const { genericConfig } = require('@verii/config');
-const { from } = require('env-var');
+const { accessors, from } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
 const {
   buildNotificationConfig,
@@ -34,7 +34,23 @@ const packageJson = require('../../package.json');
 
 const { isTest } = genericConfig;
 
-const env = from(process.env, { asMs: (value) => parseDuration(value) });
+const env = from(process.env, {
+  asMs: (value) => parseDuration(value),
+  asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
+    const webhookUrl = accessors.asUrlString(value);
+    const parsedUrl = new URL(webhookUrl);
+
+    if (parsedUrl.username || parsedUrl.password) {
+      throw new Error('must not include credentials');
+    }
+
+    if (parsedUrl.protocol !== 'https:' && !allowInsecureWebhookUrl) {
+      throw new Error('must use https');
+    }
+
+    return webhookUrl;
+  },
+});
 
 const ajvConfig = {
   ajvOptions: {
@@ -75,8 +91,15 @@ const notificationsEnabled = env
   .get('NOTIFICATIONS_ENABLED')
   .default('false')
   .asBool();
+const allowInsecureNotificationWebhookUrl = env
+  .get('NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL')
+  .default('false')
+  .asBool();
 const notificationWebhookUrl = notificationsEnabled
-  ? env.get('NOTIFICATIONS_WEBHOOK_URL').required().asUrlString()
+  ? env
+      .get('NOTIFICATIONS_WEBHOOK_URL')
+      .required()
+      .asNotificationWebhookUrl(allowInsecureNotificationWebhookUrl)
   : env.get('NOTIFICATIONS_WEBHOOK_URL').asString();
 
 module.exports = {
@@ -170,13 +193,6 @@ module.exports = {
       .get('NOTIFICATIONS_MAX_ATTEMPTS')
       .default('12')
       .asIntPositive(),
-    maxConcurrency: env
-      .get('NOTIFICATIONS_WORKER_MAX_CONCURRENCY')
-      .default('4')
-      .asIntPositive(),
-    allowInsecureWebhookUrl: env
-      .get('NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL')
-      .default('false')
-      .asBool(),
+    allowInsecureWebhookUrl: allowInsecureNotificationWebhookUrl,
   }),
 };

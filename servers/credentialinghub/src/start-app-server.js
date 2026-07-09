@@ -18,9 +18,16 @@ const { createServer, listenServer } = require('@verii/server-provider');
 const { flow } = require('lodash/fp');
 const config = require('./config');
 const { initServer } = require('./init-server');
+const {
+  startEmbeddedNotificationWorker,
+} = require('./start-embedded-notification-worker');
 
-const startAppServer = () =>
-  flow(createServer, initServer, listenServer)(config);
+const startAppServer = () => {
+  const server = flow(createServer, initServer)(config);
+  startEmbeddedNotificationWorker(server);
+  listenServer(server);
+  return server;
+};
 
 module.exports = {
   startAppServer,
