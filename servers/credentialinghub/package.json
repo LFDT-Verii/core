@@ -83,7 +83,7 @@
     "nanoid-dictionary": "5.0.0",
     "nock": "15.0.0-beta.12",
     "nodemon": "3.1.14",
-    "prettier": "3.9.4",
+    "prettier": "3.9.5",
     "qs": "6.15.3"
   }
 }
