@@ -24,7 +24,7 @@
     "lodash": "^4.18.1"
   },
   "devDependencies": {
-    "eslint": "9.39.5",
+    "eslint": "10.7.0",
     "eslint-config-airbnb-extended": "3.1.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-better-mutation": "2.1.0",
