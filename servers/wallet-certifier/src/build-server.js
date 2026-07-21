@@ -2,7 +2,9 @@ const Fastify = require('fastify');
 const helmet = require('@fastify/helmet');
 const configController = require('./controllers/config-controller');
 const walletsController = require('./controllers/wallets-controller');
+const runsController = require('./controllers/runs-controller');
 const { createRegistrarClient } = require('./adapters/registrar-client');
+const { createHubClient } = require('./adapters/hub-client');
 
 const { LogController } = Fastify;
 
@@ -10,6 +12,13 @@ const buildServer = async ({
   config,
   db,
   registrarClient = createRegistrarClient({ baseUrl: config.registrarUrl }),
+  hubClient = createHubClient({
+    baseUrl: config.hubUrl,
+    operatorToken: config.hubOperatorToken,
+    tenantId: config.tenantId,
+  }),
+  now = () => new Date(),
+  tokenFactory,
   loggerStream,
 }) => {
   const server = Fastify({
@@ -45,6 +54,18 @@ const buildServer = async ({
         message: 'Wallet search is temporarily unavailable.',
       });
     }
+    if (error.publicCode) {
+      return reply.status(error.statusCode).send({
+        error: error.publicCode,
+        message: error.message,
+      });
+    }
+    if (error.code === 'HUB_UNAVAILABLE') {
+      return reply.status(502).send({
+        error: 'credentialing_hub_unavailable',
+        message: 'Credentialing Hub is temporarily unavailable.',
+      });
+    }
     request.log.error({ errorCode: 'internal_error' }, 'Request failed');
     return reply.status(500).send({
       error: 'internal_error',
@@ -69,6 +90,15 @@ const buildServer = async ({
   await server.register(walletsController, {
     prefix: '/api',
     registrarClient,
+  });
+  await server.register(runsController, {
+    prefix: '/api',
+    config,
+    db,
+    registrarClient,
+    hubClient,
+    now,
+    tokenFactory,
   });
 
   return server;

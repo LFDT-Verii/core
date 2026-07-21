@@ -14,7 +14,7 @@ const getProxy = async () => {
       secrets.mongoConnectionString,
       config.databaseName,
     );
-    const server = await buildServer({ config, db });
+    const server = await buildServer({ config: { ...config, ...secrets }, db });
     // eslint-disable-next-line better-mutation/no-mutation
     proxy = awsLambdaFastify(server);
   }

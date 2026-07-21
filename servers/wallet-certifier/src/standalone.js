@@ -10,7 +10,7 @@ const start = async () => {
     secrets.mongoConnectionString,
     config.databaseName,
   );
-  const server = await buildServer({ config, db });
+  const server = await buildServer({ config: { ...config, ...secrets }, db });
   await server.listen({ host: config.host, port: config.port });
 };
 
