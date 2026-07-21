@@ -39,6 +39,51 @@ const bearerToken = (authorization = '') => {
   return scheme === 'Bearer' ? token : undefined;
 };
 
+const baseRunResponse = (run) => ({
+  runId: run.runId,
+  capability: run.capability,
+  state: run.state,
+  actionDeadline: run.actionDeadline?.toISOString(),
+  absoluteDeadline: run.absoluteDeadline?.toISOString(),
+});
+
+const loadEvidence = (run, context) =>
+  context.db.collection('runEvidence').findOne({ runId: run.runId });
+
+const isVerificationResult = (run) =>
+  run.capability === 'VERIFICATION' &&
+  [RunStates.PASSED, RunStates.FAILED].includes(run.state);
+
+const presentRun = async (run, context) => {
+  const response = baseRunResponse(run);
+  if (run.state === RunStates.PREPARING_DISCLOSURE) {
+    const evidence = await loadEvidence(run, context);
+    return { ...response, setupCredential: evidence.issuedCredential };
+  }
+  if (isVerificationResult(run)) {
+    const evidence = await loadEvidence(run, context);
+    return {
+      ...response,
+      result: {
+        ...evidence.presentationResult,
+        completedAt: run.completedAt.toISOString(),
+      },
+    };
+  }
+  if (run.state === RunStates.PASSED) {
+    const evidence = await loadEvidence(run, context);
+    return {
+      ...response,
+      result: {
+        passed: true,
+        completedAt: run.completedAt.toISOString(),
+        credential: evidence.issuedCredential,
+      },
+    };
+  }
+  return run.failure ? { ...response, failure: run.failure } : response;
+};
+
 module.exports = async (fastify, context) => {
   fastify.post(
     '/runs',
@@ -106,26 +151,7 @@ module.exports = async (fastify, context) => {
         context,
       );
       const run = await reconcileRun(authorized, context);
-      const response = {
-        runId: run.runId,
-        capability: run.capability,
-        state: run.state,
-        actionDeadline: run.actionDeadline?.toISOString(),
-        absoluteDeadline: run.absoluteDeadline?.toISOString(),
-      };
-      if (run.state === RunStates.PASSED) {
-        const evidence = await context.db
-          .collection('runEvidence')
-          .findOne({ runId: run.runId });
-        response.result = {
-          passed: true,
-          completedAt: run.completedAt.toISOString(),
-          credential: evidence.issuedCredential,
-        };
-      } else if (run.failure) {
-        response.failure = run.failure;
-      }
-      return response;
+      return presentRun(run, context);
     },
   );
 };

@@ -77,23 +77,102 @@ const queueNotifications = async ({
   );
 };
 
-const completeRun = async ({ run, state, failure, credential, context }) => {
+const prepareDisclosure = async ({ run, credential, context }) => {
+  const updatedAt = new Date(context.now());
+  await context.db.collection('runEvidence').updateOne(
+    { runId: run.runId },
+    {
+      $set: { issuedCredential: credential, updatedAt },
+    },
+  );
+  await context.db.collection('certificationRuns').updateOne(
+    { runId: run.runId, state: run.state },
+    {
+      $set: {
+        state: 'PREPARING_DISCLOSURE',
+        setupCredentialFingerprint: fingerprintJwt(credential.jwt),
+        leaseUntil: null,
+        updatedAt,
+      },
+      $inc: { revision: 1 },
+      $push: { journal: { state: 'PREPARING_DISCLOSURE', at: updatedAt } },
+      $unset: {
+        actionDeadline: '',
+        absoluteDeadline: '',
+        nextCheckAt: '',
+      },
+    },
+  );
+  return context.db
+    .collection('certificationRuns')
+    .findOne({ runId: run.runId });
+};
+
+const persistTerminalEvidence = async ({
+  run,
+  credential,
+  evidenceFields,
+  completedAt,
+  context,
+}) => {
+  if (!credential && !evidenceFields) {
+    return;
+  }
+  await context.db.collection('runEvidence').updateOne(
+    { runId: run.runId },
+    {
+      $set: {
+        ...(credential ? { issuedCredential: credential } : {}),
+        ...evidenceFields,
+        updatedAt: completedAt,
+      },
+    },
+  );
+};
+
+const terminalFields = ({
+  state,
+  token,
+  completedAt,
+  credential,
+  failure,
+  resultSummary,
+  context,
+}) => ({
+  state,
+  completedAt,
+  resultCapabilityHash: hashCapability(token, context.config.capabilityPepper),
+  resultCapabilityExpiresAt: new Date(completedAt.getTime() + 7 * DAY_IN_MS),
+  ...(credential
+    ? { setupCredentialFingerprint: fingerprintJwt(credential.jwt) }
+    : {}),
+  ...(failure ? { failure } : {}),
+  ...(resultSummary ? { resultSummary } : {}),
+  leaseUntil: null,
+  updatedAt: completedAt,
+});
+
+const completeRun = async ({
+  run,
+  state,
+  failure,
+  credential,
+  evidenceFields,
+  resultSummary,
+  context,
+}) => {
   const completedAt = new Date(context.now());
   const token = (context.tokenFactory ?? defaultTokenFactory)();
   const evidence = await context.db.collection('runEvidence').findOne({
     runId: run.runId,
   });
-  if (credential) {
-    await context.db.collection('runEvidence').updateOne(
-      { runId: run.runId },
-      {
-        $set: {
-          issuedCredential: credential,
-          updatedAt: completedAt,
-        },
-      },
-    );
-  }
+  await persistTerminalEvidence({
+    run,
+    credential,
+    evidenceFields,
+    completedAt,
+    context,
+  });
   const terminalRun = {
     ...run,
     state,
@@ -110,21 +189,15 @@ const completeRun = async ({ run, state, failure, credential, context }) => {
     { runId: run.runId, state: run.state },
     {
       $set: {
-        state,
-        completedAt,
-        resultCapabilityHash: hashCapability(
+        ...terminalFields({
+          state,
           token,
-          context.config.capabilityPepper,
-        ),
-        resultCapabilityExpiresAt: new Date(
-          completedAt.getTime() + 7 * DAY_IN_MS,
-        ),
-        ...(credential
-          ? { setupCredentialFingerprint: fingerprintJwt(credential.jwt) }
-          : {}),
-        ...(failure ? { failure } : {}),
-        leaseUntil: null,
-        updatedAt: completedAt,
+          completedAt,
+          credential,
+          failure,
+          resultSummary,
+          context,
+        }),
       },
       $inc: { revision: 1 },
       $push: { journal: { state, at: completedAt } },
@@ -142,4 +215,9 @@ const credentialResult = (hubCredential) => ({
   jwt: hubCredential.jwtVc,
 });
 
-module.exports = { completeRun, credentialResult, decodeCredential };
+module.exports = {
+  completeRun,
+  credentialResult,
+  decodeCredential,
+  prepareDisclosure,
+};

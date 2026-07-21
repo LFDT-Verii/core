@@ -75,17 +75,66 @@ const ensureSetupCredential = async (run, evidence, context) => {
   );
 };
 
-const buildVnInteraction = (run, links, startedAt) => {
+const buildVnInteraction = (
+  run,
+  links,
+  startedAt,
+  state = RunStates.ISSUING,
+) => {
   const redirect = new URL(links.redirectUrl);
   redirect.searchParams.delete('openid4vc_uri');
   redirect.searchParams.set('deeplink', links.vnProtocolLink);
   redirect.searchParams.set('wallet', run.walletId);
   return {
-    state: RunStates.ISSUING,
+    state,
     redirectUrl: redirect.toString(),
     qrValue: links.vnProtocolLink,
     ...newDeadlines(startedAt),
   };
+};
+
+const startDisclosure = async (run, evidence, context) => {
+  if (evidence.disclosureInteraction) {
+    return evidence.disclosureInteraction;
+  }
+  const links = await context.hubClient.refreshPresentationLink(
+    context.config.relyingPartyServiceId,
+    run.depotId,
+  );
+  const startedAt = new Date(context.now()).toISOString();
+  const interaction = buildVnInteraction(
+    run,
+    links,
+    startedAt,
+    RunStates.DISCLOSING,
+  );
+  await context.db.collection('runEvidence').updateOne(
+    { runId: run.runId },
+    {
+      $set: {
+        disclosureInteraction: interaction,
+        updatedAt: new Date(context.now()),
+      },
+    },
+  );
+  await context.db.collection('certificationRuns').updateOne(
+    { runId: run.runId, state: RunStates.PREPARING_DISCLOSURE },
+    {
+      $set: {
+        state: RunStates.DISCLOSING,
+        interactionPhase: 'DISCLOSING',
+        actionDeadline: new Date(interaction.actionDeadline),
+        absoluteDeadline: new Date(interaction.absoluteDeadline),
+        nextCheckAt: new Date(context.now()),
+        updatedAt: new Date(context.now()),
+      },
+      $inc: { revision: 1 },
+      $push: {
+        journal: { state: RunStates.DISCLOSING, at: new Date(context.now()) },
+      },
+    },
+  );
+  return interaction;
 };
 
 const startRun = async (runId, token, context) => {
@@ -93,6 +142,12 @@ const startRun = async (runId, token, context) => {
   const evidence = await context.db
     .collection('runEvidence')
     .findOne({ runId });
+  if (run.state === RunStates.PREPARING_DISCLOSURE) {
+    return startDisclosure(run, evidence, context);
+  }
+  if (evidence.disclosureInteraction) {
+    return evidence.disclosureInteraction;
+  }
   if (evidence.issueInteraction) {
     return evidence.issueInteraction;
   }
@@ -119,6 +174,7 @@ const startRun = async (runId, token, context) => {
     {
       $set: {
         state: RunStates.ISSUING,
+        interactionPhase: 'ISSUING',
         actionDeadline: new Date(interaction.actionDeadline),
         absoluteDeadline: new Date(interaction.absoluteDeadline),
         nextCheckAt: new Date(context.now()),
