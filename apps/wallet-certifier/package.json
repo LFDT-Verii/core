@@ -13,6 +13,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --import tsx --import ./setup-tests.js --test 'src/**/*.test.jsx'",
     "test:ci": "NODE_ENV=test node --import tsx --import ./setup-tests.js --test --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'src/**/*.test.jsx'",
+    "test:e2e": "playwright test",
     "lint": "eslint .",
     "lint:ci": "eslint . --format json --output-file eslint-results.json",
     "lint:fix": "eslint . --fix"

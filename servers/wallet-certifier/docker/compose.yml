@@ -1,0 +1,92 @@
+name: wallet_certifier
+
+include:
+  - ../../../eng/docker/services/shared-compose.yml
+
+services:
+  localstack-init:
+    image: localstack/localstack@sha256:0bc4495b8a204f80ee16779d968c857f570fd4ea08d3e2e898c226782fe1d74d
+    depends_on:
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ../local/init-localstack.sh:/etc/localstack/init.sh:ro
+    entrypoint: ["sh", "/etc/localstack/init.sh"]
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - LOCALSTACK_HOST=localstack
+
+  mock-dependencies:
+    image: velocitycore/wallet-certifier-node:local
+    build:
+      context: ../../..
+      dockerfile: eng/docker/Dockerfile-NodeE2E
+      target: builder
+      args:
+        SERVICE: wallet-certifier
+    command: node servers/wallet-certifier/local/mock-dependencies.mjs
+    environment:
+      - PORT=14082
+      - PUBLIC_URL=http://localhost:14082
+    ports:
+      - 14082:14082
+    volumes:
+      - ../:/app/servers/wallet-certifier
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:14082/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  wallet-certifier-api:
+    image: velocitycore/wallet-certifier-node:local
+    depends_on:
+      velocity-mongo:
+        condition: service_healthy
+      localstack-init:
+        condition: service_completed_successfully
+      mock-dependencies:
+        condition: service_healthy
+    command: pnpm --dir servers/wallet-certifier start
+    env_file:
+      - ../.localdev.env
+    ports:
+      - 14081:14081
+    volumes:
+      - ../:/app/servers/wallet-certifier
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:14081/api/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  wallet-certifier-monitor:
+    image: velocitycore/wallet-certifier-node:local
+    depends_on:
+      wallet-certifier-api:
+        condition: service_healthy
+    command: node servers/wallet-certifier/local/run-monitor.mjs
+    env_file:
+      - ../.localdev.env
+    volumes:
+      - ../:/app/servers/wallet-certifier
+
+  wallet-certifier-app:
+    image: velocitycore/wallet-certifier-node:local
+    depends_on:
+      wallet-certifier-api:
+        condition: service_healthy
+    command: pnpm --dir apps/wallet-certifier dev
+    environment:
+      - VITE_API_PROXY_TARGET=http://wallet-certifier-api:14081
+    ports:
+      - 14080:14080
+    volumes:
+      - ../../../apps/wallet-certifier:/app/apps/wallet-certifier
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:14080').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 3s
+      timeout: 3s
+      retries: 30

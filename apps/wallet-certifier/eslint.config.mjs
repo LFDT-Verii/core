@@ -32,4 +32,8 @@ export default [
       ...reactHooks.configs.recommended.rules,
     },
   },
+  {
+    files: ['playwright.config.js'],
+    rules: { 'import/no-extraneous-dependencies': 'off' },
+  },
 ];

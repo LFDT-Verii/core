@@ -18,8 +18,12 @@ const requestJson = async (path, options = {}) => {
 
 export const api = {
   getConfig: () => requestJson('/api/config'),
-  searchWallets: (query) =>
-    requestJson(`/api/wallets?q=${encodeURIComponent(query)}`),
+  searchWallets: async (query) => {
+    const { wallets } = await requestJson(
+      `/api/wallets?q=${encodeURIComponent(query)}`,
+    );
+    return wallets;
+  },
   createRun: (payload) =>
     requestJson('/api/runs', {
       method: 'POST',

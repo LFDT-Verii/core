@@ -41,12 +41,22 @@ services:
     ports:
       - 14566:4566
       - 14510-14559:4510-4559
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4566/_localstack/health"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
 
   velocity-mongo:
     image: mongo:8.0@sha256:7bd28e5eea1c5766a084d5818254046f3ebe3b8f20a65e3a274640189e296667
     restart: on-failure
     ports:
-      - 17017:27017
+      - ${VELOCITY_MONGO_PORT:-17017}:27017
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
   certgen:
     image: alpine/openssl@sha256:f4dead2cc05e01fb683f04ef5573da53ecf2004c8d7603e1c65f6994d8d38313

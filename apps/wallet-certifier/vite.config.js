@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     port: 14080,
     proxy: {
-      '/api': 'http://localhost:14081',
+      '/api': process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:14081',
     },
   },
 });
