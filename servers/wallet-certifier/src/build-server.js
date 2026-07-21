@@ -1,0 +1,77 @@
+const Fastify = require('fastify');
+const helmet = require('@fastify/helmet');
+const configController = require('./controllers/config-controller');
+const walletsController = require('./controllers/wallets-controller');
+const { createRegistrarClient } = require('./adapters/registrar-client');
+
+const { LogController } = Fastify;
+
+const buildServer = async ({
+  config,
+  db,
+  registrarClient = createRegistrarClient({ baseUrl: config.registrarUrl }),
+  loggerStream,
+}) => {
+  const server = Fastify({
+    bodyLimit: config.bodyLimit,
+    logController: new LogController({ disableRequestLogging: true }),
+    logger: {
+      level: config.logSeverity,
+      ...(loggerStream ? { stream: loggerStream } : {}),
+      redact: [
+        'req.headers.authorization',
+        'req.headers.cookie',
+        'res.headers.set-cookie',
+      ],
+    },
+    ajv: {
+      customOptions: {
+        removeAdditional: false,
+        coerceTypes: false,
+      },
+    },
+  });
+
+  server.setErrorHandler((error, request, reply) => {
+    if (error.validation) {
+      return reply.status(400).send({
+        error: 'request_validation_failed',
+        message: 'Request validation failed.',
+      });
+    }
+    if (error.code === 'REGISTRAR_UNAVAILABLE') {
+      return reply.status(502).send({
+        error: 'wallet_search_unavailable',
+        message: 'Wallet search is temporarily unavailable.',
+      });
+    }
+    request.log.error({ errorCode: 'internal_error' }, 'Request failed');
+    return reply.status(500).send({
+      error: 'internal_error',
+      message: 'The request could not be completed.',
+    });
+  });
+
+  await server.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        connectSrc: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+    referrerPolicy: { policy: 'no-referrer' },
+  });
+  await server.register(configController, { prefix: '/api', config, db });
+  await server.register(walletsController, {
+    prefix: '/api',
+    registrarClient,
+  });
+
+  return server;
+};
+
+module.exports = { buildServer };
