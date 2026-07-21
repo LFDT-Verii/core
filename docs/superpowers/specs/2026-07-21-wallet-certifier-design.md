@@ -139,6 +139,8 @@ The architecture omits DynamoDB, Dynamo Streams, SQS, an application evidence bu
 - Runtime branding and environment configuration.
 - No secrets or tenant-selection controls.
 
+The application follows the established React application conventions in the sibling monorepo: React 18 and React DOM, Vite with the React SWC plugin, React Router 7, MUI/Emotion, React Hook Form, Testing Library, and the standard Nx lint/build/test scripts. `qrcode.react` renders the wallet fallback QR code. A dedicated MUI theme and small, feature-local styled components implement the Trust Ledger direction; React Admin, Auth0, Redux, analytics, and a second styling framework are unnecessary.
+
 The root workspace configuration adds `apps/*` so this application participates in normal build, lint, and test tooling.
 
 #### `servers/wallet-certifier`
@@ -155,6 +157,10 @@ The root workspace configuration adds `apps/*` so this application participates 
 There is no separate domain workspace package. Pure domain modules remain small and independently testable inside the server, matching existing repository conventions.
 
 Issuing and verification implement a common workflow interface for preparation, reconciliation, result projection, and terminal notification. The two workflows may have different states, but the API and persistence layers dispatch by the stored capability. A future certification capability can therefore add a workflow without changing the public run lifecycle.
+
+The HTTP API uses Fastify 5 and the official `@fastify/aws-lambda` adapter. The server package exports a `buildServer()` factory that registers routes, validation, security headers, sanitized logging, repositories, and downstream clients. The Lambda entry point creates the Fastify proxy once at module scope for warm-start reuse. A small standalone entry point runs the same server locally, and integration tests exercise public routes with Fastify injection.
+
+The scheduled monitor/notification handler imports the same reconciliation, repository, and notification services directly; it does not route EventBridge events through Fastify. The implementation reuses compatible Verii schemas, logger conventions, and Fastify plugins selectively, but does not call `@verii/server-provider.createServer()` because its long-running-server defaults and full debug request/response hooks do not satisfy this application's Lambda and evidence-redaction requirements. No change to the shared server-provider package is required.
 
 #### `servers/credentialinghub`
 
