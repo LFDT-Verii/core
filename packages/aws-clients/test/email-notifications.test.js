@@ -68,7 +68,14 @@ describe('Email notifications test suite', () => {
   it('Should email with legacy client when awsEndpoint param exists', async () => {
     const sendEmail = initSendEmailNotification({ awsEndpoint: 'foo' });
 
-    await sendEmail(params);
+    const result = await sendEmail(params);
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        Source: 'fooSender',
+        Destination: { ToAddresses: ['fooRecipient'] },
+      }),
+    );
 
     expect(
       mockSESSendEmail.mock.calls.map((call) => call.arguments),

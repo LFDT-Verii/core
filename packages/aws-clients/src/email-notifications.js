@@ -81,7 +81,7 @@ const initSendEmailNotification =
         awsEndpoint,
       });
 
-      await awsSes.send(
+      return awsSes.send(
         new SESSendEmailCommand({
           Source: sender,
           Destination: destination,
@@ -115,48 +115,47 @@ const initSendEmailNotification =
           },
         }),
       );
-    } else {
-      const awsSesV2 = createSesV2Client({
-        awsRegion,
-      });
-
-      await awsSesV2.send(
-        new SESv2SendEmailCommand({
-          FromEmailAddress: sender,
-          Destination: destination,
-          ReplyToAddresses: [replyTo],
-          Content: {
-            ...(isEmpty(attachment)
-              ? {
-                  Simple: {
-                    Body: {
-                      [html ? 'Html' : 'Text']: {
-                        Data: message,
-                      },
-                    },
-                    Subject: {
-                      Data: subject,
-                    },
-                  },
-                }
-              : {
-                  Raw: {
-                    Data: buildRawMessage({
-                      subject,
-                      message,
-                      sender,
-                      recipients,
-                      ccs,
-                      attachment,
-                      contentType,
-                      attachmentName,
-                    }),
-                  },
-                }),
-          },
-        }),
-      );
     }
+    const awsSesV2 = createSesV2Client({
+      awsRegion,
+    });
+
+    return awsSesV2.send(
+      new SESv2SendEmailCommand({
+        FromEmailAddress: sender,
+        Destination: destination,
+        ReplyToAddresses: [replyTo],
+        Content: {
+          ...(isEmpty(attachment)
+            ? {
+                Simple: {
+                  Body: {
+                    [html ? 'Html' : 'Text']: {
+                      Data: message,
+                    },
+                  },
+                  Subject: {
+                    Data: subject,
+                  },
+                },
+              }
+            : {
+                Raw: {
+                  Data: buildRawMessage({
+                    subject,
+                    message,
+                    sender,
+                    recipients,
+                    ccs,
+                    attachment,
+                    contentType,
+                    attachmentName,
+                  }),
+                },
+              }),
+        },
+      }),
+    );
   };
 
 const buildRawMessage = ({
