@@ -23,11 +23,12 @@
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1075.0",
     "@aws-sdk/client-sesv2": "^3.1075.0",
-    "@verii/aws-clients": "workspace:*",
     "@fastify/aws-lambda": "^6.4.0",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
+    "@verii/aws-clients": "workspace:*",
     "env-var": "^7.5.0",
     "fastify": "^5.10.0",
     "mongodb": "7.3.0",

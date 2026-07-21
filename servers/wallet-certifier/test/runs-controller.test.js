@@ -39,6 +39,17 @@ const wallets = [
   },
 ];
 
+const injectRepeatedly = async (api, request, attempts, statusCodes = []) => {
+  if (attempts === 0) {
+    return statusCodes;
+  }
+  const response = await api.inject(request);
+  return injectRepeatedly(api, request, attempts - 1, [
+    ...statusCodes,
+    response.statusCode,
+  ]);
+};
+
 describe('certification run creation and start', () => {
   let api;
   let dependencyServer;
@@ -251,6 +262,27 @@ describe('certification run creation and start', () => {
     expect(wrong.statusCode).toEqual(401);
     expect(expired.statusCode).toEqual(401);
     expect(hubRequests).toHaveLength(0);
+  });
+
+  it('rate limits repeated capability authorization attempts', async () => {
+    const created = await createRun();
+    const { runId } = created.json();
+    const statusCodes = await injectRepeatedly(
+      api,
+      {
+        method: 'GET',
+        url: `/api/runs/${runId}`,
+        headers: { authorization: 'Bearer wrong-token' },
+      },
+      121,
+    );
+
+    expect(statusCodes.filter((statusCode) => statusCode === 401)).toHaveLength(
+      120,
+    );
+    expect(statusCodes.filter((statusCode) => statusCode === 429)).toHaveLength(
+      1,
+    );
   });
 
   it('creates the depot, personalized badge, and VN-only issue redirect once', async () => {

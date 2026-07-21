@@ -56,14 +56,7 @@ const exchangeFor = (depotId, phase) => {
   return exchange;
 };
 
-const walletPage = (depotId, phase) => {
-  const issueActions = `
-    <button data-action="accept">Accept credential</button>
-    <button class="secondary" data-action="reject">Reject credential</button>`;
-  const disclosureActions = `
-    <button data-action="share">Share credentials</button>
-    <button class="secondary" data-action="share-without-setup">Share without setup badge</button>`;
-  return `<!doctype html>
+const walletPage = () => `<!doctype html>
   <html lang="en">
     <head>
       <meta charset="utf-8" />
@@ -84,21 +77,35 @@ const walletPage = (depotId, phase) => {
     </head>
     <body>
       <main>
-        <small>Local wallet simulator / ${phase}</small>
-        <h1>${phase === 'issue' ? 'Credential offer.' : 'Presentation request.'}</h1>
+        <small>Local wallet simulator / <span id="phase-label"></span></small>
+        <h1 id="page-title"></h1>
         <p>Choose a deterministic outcome. This simulator changes only the local Credentialing Hub state.</p>
         <nav>
-          ${phase === 'issue' ? issueActions : disclosureActions}
+          <button data-phase="issue" data-action="accept">Accept credential</button>
+          <button data-phase="issue" class="secondary" data-action="reject">Reject credential</button>
+          <button data-phase="disclosure" data-action="share">Share credentials</button>
+          <button data-phase="disclosure" class="secondary" data-action="share-without-setup">Share without setup badge</button>
           <button class="secondary" data-action="error">Raise exchange error</button>
         </nav>
         <div id="status" role="status"></div>
       </main>
       <script>
+        const searchParams = new URLSearchParams(window.location.search);
+        const depotId = searchParams.get('depotId');
+        const phase = searchParams.get('phase');
+        const isIssue = phase === 'issue';
+        document.getElementById('phase-label').textContent = phase;
+        document.getElementById('page-title').textContent = isIssue
+          ? 'Credential offer.'
+          : 'Presentation request.';
+        document.querySelectorAll('[data-phase]').forEach((element) => {
+          element.hidden = element.dataset.phase !== phase;
+        });
         document.querySelectorAll('button').forEach((button) => button.addEventListener('click', async () => {
           const response = await fetch('/scenario', {
             method: 'POST',
             headers: {'content-type':'application/json'},
-            body: JSON.stringify({depotId:'${depotId}', phase:'${phase}', action:button.dataset.action})
+            body: JSON.stringify({depotId, phase, action:button.dataset.action})
           });
           const result = await response.json();
           document.getElementById('status').textContent = result.message;
@@ -107,7 +114,6 @@ const walletPage = (depotId, phase) => {
       </script>
     </body>
   </html>`;
-};
 
 const passingCredential = (jwt, w3cCredential) => ({
   format: 'JWT_VC',
@@ -258,41 +264,52 @@ const registrarSearch = {
   ],
 };
 
+const getCredential = (url, response) => {
+  const credential = credentials.get(url.searchParams.get('credentialId'));
+  return json(response, 200, { credentials: credential ? [credential] : [] });
+};
+
+const getExchange = (url, response) => {
+  const exchange = exchanges.get(url.searchParams.get('depotId'));
+  return exchange
+    ? json(response, 200, { exchange })
+    : json(response, 404, { error: 'exchange_not_found' });
+};
+
+const getPresentations = (url, response) => {
+  const exchange = exchanges.get(url.searchParams.get('depotId'));
+  const results = (exchange?.presentationIds ?? [])
+    .map((id) => presentations.get(id))
+    .filter(Boolean);
+  return json(response, 200, { presentations: results });
+};
+
+const getWalletRedirect = (url, response) => {
+  const depotId = url.searchParams.get('depotId');
+  const phase = url.searchParams.get('phase');
+  if (!depotId || !['issue', 'disclosure'].includes(phase)) {
+    return json(response, 400, { error: 'invalid_wallet_redirect' });
+  }
+  return html(response, 200, walletPage());
+};
+
+const getRoutes = new Map([
+  ['/health', (_url, response) => json(response, 200, { status: 'ok' })],
+  [
+    '/api/v0.6/organizations/search-profiles',
+    (_url, response) => json(response, 200, registrarSearch),
+  ],
+  ['/operator/credentials/get', getCredential],
+  ['/operator/exchanges/get', getExchange],
+  ['/operator/presentations/get', getPresentations],
+  ['/app-redirect', getWalletRedirect],
+]);
+
 const routeGet = (url, response) => {
-  if (url.pathname === '/health') {
-    return json(response, 200, { status: 'ok' });
-  }
-  if (url.pathname === '/api/v0.6/organizations/search-profiles') {
-    return json(response, 200, registrarSearch);
-  }
-  if (url.pathname === '/operator/credentials/get') {
-    const credential = credentials.get(url.searchParams.get('credentialId'));
-    return json(response, 200, { credentials: credential ? [credential] : [] });
-  }
-  if (url.pathname === '/operator/exchanges/get') {
-    const exchange = exchanges.get(url.searchParams.get('depotId'));
-    return exchange
-      ? json(response, 200, { exchange })
-      : json(response, 404, { error: 'exchange_not_found' });
-  }
-  if (url.pathname === '/operator/presentations/get') {
-    const exchange = exchanges.get(url.searchParams.get('depotId'));
-    const results = (exchange?.presentationIds ?? [])
-      .map((id) => presentations.get(id))
-      .filter(Boolean);
-    return json(response, 200, { presentations: results });
-  }
-  if (url.pathname === '/app-redirect') {
-    return html(
-      response,
-      200,
-      walletPage(
-        url.searchParams.get('depotId'),
-        url.searchParams.get('phase'),
-      ),
-    );
-  }
-  return json(response, 404, { error: 'not_found' });
+  const handler = getRoutes.get(url.pathname);
+  return handler
+    ? handler(url, response)
+    : json(response, 404, { error: 'not_found' });
 };
 
 const createDepot = (body, response) => {
@@ -343,27 +360,31 @@ const verify = (body, response) => {
   return json(response, 200, { verification });
 };
 
+const postRoutes = new Map([
+  ['/operator/depots/create', createDepot],
+  ['/operator/credentials/create', createCredential],
+  [
+    '/operator/issue-links/refresh',
+    (body, response) => refreshLink(body, response, 'issue'),
+  ],
+  [
+    '/operator/presentation-links/refresh',
+    (body, response) => refreshLink(body, response, 'disclosure'),
+  ],
+  ['/operator/presentations/verify', verify],
+  [
+    '/scenario',
+    (body, response) => json(response, 200, { message: applyScenario(body) }),
+  ],
+]);
+
 const routePost = async (url, request, response) => {
+  const handler = postRoutes.get(url.pathname);
+  if (!handler) {
+    return json(response, 404, { error: 'not_found' });
+  }
   const body = await bodyJson(request);
-  if (url.pathname === '/operator/depots/create') {
-    return createDepot(body, response);
-  }
-  if (url.pathname === '/operator/credentials/create') {
-    return createCredential(body, response);
-  }
-  if (url.pathname === '/operator/issue-links/refresh') {
-    return refreshLink(body, response, 'issue');
-  }
-  if (url.pathname === '/operator/presentation-links/refresh') {
-    return refreshLink(body, response, 'disclosure');
-  }
-  if (url.pathname === '/operator/presentations/verify') {
-    return verify(body, response);
-  }
-  if (url.pathname === '/scenario') {
-    return json(response, 200, { message: applyScenario(body) });
-  }
-  return json(response, 404, { error: 'not_found' });
+  return handler(body, response);
 };
 
 const server = createServer(async (request, response) => {

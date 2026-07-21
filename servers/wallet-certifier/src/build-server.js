@@ -1,6 +1,7 @@
 const Fastify = require('fastify');
 const helmet = require('@fastify/helmet');
 const cookie = require('@fastify/cookie');
+const rateLimit = require('@fastify/rate-limit');
 const configController = require('./controllers/config-controller');
 const walletsController = require('./controllers/wallets-controller');
 const runsController = require('./controllers/runs-controller');
@@ -74,6 +75,12 @@ const buildServer = async ({
         message: 'Credentialing Hub is temporarily unavailable.',
       });
     }
+    if (error.statusCode === 429) {
+      return reply.status(429).send({
+        error: 'rate_limit_exceeded',
+        message: 'Too many requests. Try again shortly.',
+      });
+    }
     request.log.error({ errorCode: 'internal_error' }, 'Request failed');
     return reply.status(500).send({
       error: 'internal_error',
@@ -95,6 +102,7 @@ const buildServer = async ({
     referrerPolicy: { policy: 'no-referrer' },
   });
   await server.register(cookie);
+  await server.register(rateLimit, { global: false });
   await server.register(configController, { prefix: '/api', config, db });
   await server.register(walletsController, {
     prefix: '/api',
