@@ -102,21 +102,23 @@ const buildServer = async ({
     referrerPolicy: { policy: 'no-referrer' },
   });
   await server.register(cookie);
-  await server.register(rateLimit, { global: false });
   await server.register(configController, { prefix: '/api', config, db });
   await server.register(walletsController, {
     prefix: '/api',
     registrarClient,
   });
-  await server.register(runsController, {
-    prefix: '/api',
-    config,
-    db,
-    registrarClient,
-    hubClient,
-    now,
-    tokenFactory,
-    sendEmail,
+  await server.register(async (runServer) => {
+    await runServer.register(rateLimit, { global: false });
+    await runServer.register(runsController, {
+      prefix: '/api',
+      config,
+      db,
+      registrarClient,
+      hubClient,
+      now,
+      tokenFactory,
+      sendEmail,
+    });
   });
   await server.register(resultSessionsController, {
     prefix: '/api',

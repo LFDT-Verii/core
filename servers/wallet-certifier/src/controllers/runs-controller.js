@@ -109,11 +109,6 @@ const presentRun = async (run, context) => {
 };
 
 module.exports = async (fastify, context) => {
-  const resultReadRateLimit = fastify.rateLimit({
-    max: 120,
-    timeWindow: '1 minute',
-  });
-
   fastify.post(
     '/runs',
     {
@@ -163,7 +158,9 @@ module.exports = async (fastify, context) => {
   fastify.get(
     '/runs/:runId',
     {
-      onRequest: resultReadRateLimit,
+      config: {
+        rateLimit: { max: 120, timeWindow: '1 minute' },
+      },
       schema: {
         params: {
           type: 'object',
