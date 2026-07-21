@@ -2,6 +2,7 @@ const { createRun } = require('../services/create-run');
 const { reconcileRun } = require('../services/reconcile-run');
 const { loadAuthorizedRun, startRun } = require('../services/start-run');
 const { RunStates } = require('../domain/states');
+const { loadApplicantResultRun } = require('../services/result-capabilities');
 
 const runInputSchema = {
   type: 'object',
@@ -49,6 +50,18 @@ const baseRunResponse = (run) => ({
 
 const loadEvidence = (run, context) =>
   context.db.collection('runEvidence').findOne({ runId: run.runId });
+
+const loadRequestRun = (request, context) => {
+  const token = bearerToken(request.headers.authorization);
+  if (token) {
+    return loadAuthorizedRun(request.params.runId, token, context);
+  }
+  return loadApplicantResultRun(
+    request.params.runId,
+    request.cookies[`wc_result_${request.params.runId}`],
+    context,
+  );
+};
 
 const isVerificationResult = (run) =>
   run.capability === 'VERIFICATION' &&
@@ -144,12 +157,7 @@ module.exports = async (fastify, context) => {
       },
     },
     async (request) => {
-      const token = bearerToken(request.headers.authorization);
-      const authorized = await loadAuthorizedRun(
-        request.params.runId,
-        token,
-        context,
-      );
+      const authorized = await loadRequestRun(request, context);
       const run = await reconcileRun(authorized, context);
       return presentRun(run, context);
     },

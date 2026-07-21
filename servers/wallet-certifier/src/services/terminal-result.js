@@ -31,14 +31,15 @@ const notificationMessage = ({ config, run, token, role }) => {
   }
   return [
     `Wallet certification run ${run.runId} completed with status ${status}.`,
-    `Review the run: ${config.publicAppUrl}/support/runs/${run.runId}`,
+    `Review the run: ${config.publicAppUrl}/support/runs/${run.runId}#token=${token}`,
+    'This private link expires in 7 days.',
   ].join('\n\n');
 };
 
 const queueNotifications = async ({
   run,
   evidence,
-  token,
+  tokens,
   completedAt,
   context,
 }) => {
@@ -54,7 +55,7 @@ const queueNotifications = async ({
     message: notificationMessage({
       config: context.config,
       run,
-      token,
+      token: tokens[role],
       role,
     }),
     status: 'PENDING',
@@ -132,7 +133,8 @@ const persistTerminalEvidence = async ({
 
 const terminalFields = ({
   state,
-  token,
+  applicantToken,
+  supportToken,
   completedAt,
   credential,
   failure,
@@ -141,7 +143,18 @@ const terminalFields = ({
 }) => ({
   state,
   completedAt,
-  resultCapabilityHash: hashCapability(token, context.config.capabilityPepper),
+  resultCapabilityHash: hashCapability(
+    applicantToken,
+    context.config.capabilityPepper,
+  ),
+  applicantResultCapabilityHash: hashCapability(
+    applicantToken,
+    context.config.capabilityPepper,
+  ),
+  supportResultCapabilityHash: hashCapability(
+    supportToken,
+    context.config.capabilityPepper,
+  ),
   resultCapabilityExpiresAt: new Date(completedAt.getTime() + 7 * DAY_IN_MS),
   ...(credential
     ? { setupCredentialFingerprint: fingerprintJwt(credential.jwt) }
@@ -162,7 +175,11 @@ const completeRun = async ({
   context,
 }) => {
   const completedAt = new Date(context.now());
-  const token = (context.tokenFactory ?? defaultTokenFactory)();
+  const createToken = context.tokenFactory ?? defaultTokenFactory;
+  const tokens = {
+    APPLICANT: createToken(),
+    SUPPORT: createToken(),
+  };
   const evidence = await context.db.collection('runEvidence').findOne({
     runId: run.runId,
   });
@@ -181,7 +198,7 @@ const completeRun = async ({
   await queueNotifications({
     run: terminalRun,
     evidence,
-    token,
+    tokens,
     completedAt,
     context,
   });
@@ -191,7 +208,8 @@ const completeRun = async ({
       $set: {
         ...terminalFields({
           state,
-          token,
+          applicantToken: tokens.APPLICANT,
+          supportToken: tokens.SUPPORT,
           completedAt,
           credential,
           failure,

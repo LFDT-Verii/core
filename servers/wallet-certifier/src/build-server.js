@@ -1,8 +1,11 @@
 const Fastify = require('fastify');
 const helmet = require('@fastify/helmet');
+const cookie = require('@fastify/cookie');
 const configController = require('./controllers/config-controller');
 const walletsController = require('./controllers/wallets-controller');
 const runsController = require('./controllers/runs-controller');
+const resultSessionsController = require('./controllers/result-sessions-controller');
+const supportController = require('./controllers/support-controller');
 const { createRegistrarClient } = require('./adapters/registrar-client');
 const { createHubClient } = require('./adapters/hub-client');
 const { createEmailSender } = require('./adapters/email-sender');
@@ -91,6 +94,7 @@ const buildServer = async ({
     },
     referrerPolicy: { policy: 'no-referrer' },
   });
+  await server.register(cookie);
   await server.register(configController, { prefix: '/api', config, db });
   await server.register(walletsController, {
     prefix: '/api',
@@ -105,6 +109,16 @@ const buildServer = async ({
     now,
     tokenFactory,
     sendEmail,
+  });
+  await server.register(resultSessionsController, {
+    prefix: '/api',
+    config,
+    db,
+    now,
+  });
+  await server.register(supportController, {
+    prefix: '/api',
+    db,
   });
 
   return server;
