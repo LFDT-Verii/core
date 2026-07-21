@@ -133,4 +133,4 @@ const startRun = async (runId, token, context) => {
   return interaction;
 };
 
-module.exports = { buildVnInteraction, startRun };
+module.exports = { buildVnInteraction, loadAuthorizedRun, startRun };

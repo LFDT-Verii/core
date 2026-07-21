@@ -1,5 +1,7 @@
 const { createRun } = require('../services/create-run');
-const { startRun } = require('../services/start-run');
+const { reconcileRun } = require('../services/reconcile-run');
+const { loadAuthorizedRun, startRun } = require('../services/start-run');
+const { RunStates } = require('../domain/states');
 
 const runInputSchema = {
   type: 'object',
@@ -82,5 +84,48 @@ module.exports = async (fastify, context) => {
         bearerToken(request.headers.authorization),
         context,
       ),
+  );
+
+  fastify.get(
+    '/runs/:runId',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['runId'],
+          properties: { runId: { type: 'string', minLength: 1 } },
+        },
+      },
+    },
+    async (request) => {
+      const token = bearerToken(request.headers.authorization);
+      const authorized = await loadAuthorizedRun(
+        request.params.runId,
+        token,
+        context,
+      );
+      const run = await reconcileRun(authorized, context);
+      const response = {
+        runId: run.runId,
+        capability: run.capability,
+        state: run.state,
+        actionDeadline: run.actionDeadline?.toISOString(),
+        absoluteDeadline: run.absoluteDeadline?.toISOString(),
+      };
+      if (run.state === RunStates.PASSED) {
+        const evidence = await context.db
+          .collection('runEvidence')
+          .findOne({ runId: run.runId });
+        response.result = {
+          passed: true,
+          completedAt: run.completedAt.toISOString(),
+          credential: evidence.issuedCredential,
+        };
+      } else if (run.failure) {
+        response.failure = run.failure;
+      }
+      return response;
+    },
   );
 };

@@ -5,6 +5,7 @@ const walletsController = require('./controllers/wallets-controller');
 const runsController = require('./controllers/runs-controller');
 const { createRegistrarClient } = require('./adapters/registrar-client');
 const { createHubClient } = require('./adapters/hub-client');
+const { createEmailSender } = require('./adapters/email-sender');
 
 const { LogController } = Fastify;
 
@@ -19,6 +20,10 @@ const buildServer = async ({
   }),
   now = () => new Date(),
   tokenFactory,
+  sendEmail = createEmailSender({
+    awsRegion: config.awsRegion,
+    awsEndpoint: config.awsEndpoint,
+  }),
   loggerStream,
 }) => {
   const server = Fastify({
@@ -99,6 +104,7 @@ const buildServer = async ({
     hubClient,
     now,
     tokenFactory,
+    sendEmail,
   });
 
   return server;

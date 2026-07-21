@@ -3652,6 +3652,9 @@ importers:
       '@fastify/helmet':
         specifier: ^13.0.2
         version: 13.1.0
+      '@verii/aws-clients':
+        specifier: workspace:*
+        version: link:../../packages/aws-clients
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
