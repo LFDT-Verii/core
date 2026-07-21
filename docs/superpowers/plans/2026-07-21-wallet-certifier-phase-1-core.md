@@ -1,6 +1,6 @@
 # Wallet Certifier Phase One Core Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Deliver the phase-one Wallet Certifier React application, Fastify/Lambda API, Credentialing Hub exchange inspection endpoint, local Mongo/LocalStack environment, and deployable build artifacts in `LFDT-Verii/core`.
 
@@ -87,7 +87,7 @@
 - Produces app scripts `dev`, `build`, `test`, `test:ci`, `lint`, and `lint:fix`.
 - Produces server scripts `start`, `start:dev`, `test`, `test:ci`, `lint`, and `lint:fix`.
 
-- [ ] **Step 1: Add a failing React render test**
+- [x] **Step 1: Add a failing React render test**
 
 ```jsx
 import { test } from "node:test";
@@ -103,13 +103,13 @@ test("renders the wallet certifier heading", () => {
 });
 ```
 
-- [ ] **Step 2: Run the test and verify the workspace does not yet know the app**
+- [x] **Step 2: Run the test and verify the workspace does not yet know the app**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app test`
 
 Expected: FAIL because the package is not in the workspace.
 
-- [ ] **Step 3: Add `apps/*`, package manifests, Vite/SWC, React 18, Router 7, MUI/Emotion, React Hook Form, Testing Library, Playwright, Fastify 5, MongoDB, SES client, and Lambda adapter dependencies**
+- [x] **Step 3: Add `apps/*`, package manifests, Vite/SWC, React 18, Router 7, MUI/Emotion, React Hook Form, Testing Library, Playwright, Fastify 5, MongoDB, SES client, and Lambda adapter dependencies**
 
 The minimal initial app implementation is:
 
@@ -121,11 +121,11 @@ export default App;
 
 The server package must be private and expose `src/standalone.js` as `start`, with Node 24 engine metadata.
 
-- [ ] **Step 4: Update CI cache/report globs and the local Node Docker build to include `apps/*`**
+- [x] **Step 4: Update CI cache/report globs and the local Node Docker build to include `apps/*`**
 
 Add `apps/*/node_modules`, `apps/*/eslint-results.json`, `apps/*/test-results.junit.xml`, and `apps/*/lcov.info` alongside the existing server/package paths. Add `COPY --chown=node:node apps ./apps` to the builder image.
 
-- [ ] **Step 5: Install and run the two package smoke checks**
+- [x] **Step 5: Install and run the two package smoke checks**
 
 Run:
 
@@ -137,7 +137,7 @@ corepack $(node -p "require('./package.json').packageManager") --filter @verii/w
 
 Expected: one passing render test and a successful Vite build.
 
-- [ ] **Step 6: Fix lint and commit**
+- [x] **Step 6: Fix lint and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app lint:fix
@@ -159,7 +159,7 @@ git commit -s -m "feat(wallet-certifier): add workspace foundations"
 - Produces `GET /operator/exchanges/get?tenantId=<id>&depotId=<id>`.
 - Returns `{ exchange: { id, depotId, serviceId, type, protocol, state, events, error, credentialIds, presentationIds, createdAt }, requestId }`.
 
-- [ ] **Step 1: Write endpoint integration tests**
+- [x] **Step 1: Write endpoint integration tests**
 
 Cover missing filters, both filters supplied, tenant isolation, direct exchange lookup, latest VN_API depot lookup, not found, presentation/credential references, and error sanitization. The sanitization expectation is:
 
@@ -171,13 +171,13 @@ expect(response.json.exchange.error).toEqual({
 expect(JSON.stringify(response.json)).not.toContain("database password");
 ```
 
-- [ ] **Step 2: Run the focused Hub test and verify 404/failure**
+- [x] **Step 2: Run the focused Hub test and verify 404/failure**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-credentialing-hub test -- test/operator/exchanges-controller.test.js`
 
 Expected: FAIL because the route is absent.
 
-- [ ] **Step 3: Implement the schema and controller**
+- [x] **Step 3: Implement the schema and controller**
 
 Use exactly one of `exchangeId` and `depotId`. Derive safe errors from the latest failure state:
 
@@ -200,7 +200,7 @@ const SAFE_ERRORS = {
 
 Never return `exchange.err` or protocol message bodies.
 
-- [ ] **Step 4: Run Hub tests and lint**
+- [x] **Step 4: Run Hub tests and lint**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-credentialing-hub test
@@ -209,7 +209,7 @@ corepack $(node -p "require('./package.json').packageManager") --filter @verii/s
 
 Expected: all Credentialing Hub tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add servers/credentialinghub
@@ -232,7 +232,7 @@ git commit -s -m "feat(credentialinghub): expose safe exchange inspection"
 
 - Produces `newDeadlines(startedAt)`, `classifyDeadline(run, exchange, now)`, `hashCapability(token, pepper)`, `fingerprintJwt(jwt)`, `evaluateVerification(input)`, and `buildSetupBadge(input)`.
 
-- [ ] **Step 1: Write unit tests for every state/deadline/result rule**
+- [x] **Step 1: Write unit tests for every state/deadline/result rule**
 
 The exact-badge pass case must resemble:
 
@@ -251,17 +251,17 @@ expect(
 
 Add failing cases for missing setup badge, failed presentation, a failed setup check, and a failed additional credential.
 
-- [ ] **Step 2: Run domain tests and verify failures**
+- [x] **Step 2: Run domain tests and verify failures**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/domain`
 
 Expected: FAIL because domain modules are absent.
 
-- [ ] **Step 3: Implement immutable pure functions**
+- [x] **Step 3: Implement immutable pure functions**
 
 `newDeadlines(startedAt)` returns ISO timestamps exactly 10 and 15 minutes after `startedAt`. `buildSetupBadge` emits Open Badges 3.0 `AchievementSubject` content with the applicant email represented as an `IdentityObject`, the applicant and wallet names in the achievement, and no log side effects.
 
-- [ ] **Step 4: Run tests, fix lint, and commit**
+- [x] **Step 4: Run tests, fix lint, and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/domain
@@ -291,17 +291,17 @@ git commit -s -m "feat(wallet-certifier): add certification domain rules"
 - Produces `GET /api/config`, `GET /api/health`, and `GET /api/wallets?q=`.
 - Produces `initMongo(connectionString, databaseName)` with warm-process connection reuse and index creation.
 
-- [ ] **Step 1: Write public endpoint integration tests with a real test Mongo database and stub Registrar HTTP server**
+- [x] **Step 1: Write public endpoint integration tests with a real test Mongo database and stub Registrar HTTP server**
 
 Verify bounded search, mapped wallet fields, VN/dual eligibility, OpenID-only disabled reason, Registrar failure mapping, security headers, and that logs omit query email-like data.
 
-- [ ] **Step 2: Run the focused test and verify failure**
+- [x] **Step 2: Run the focused test and verify failure**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/config-wallets-controller.test.js`
 
 Expected: FAIL because `buildServer` is absent.
 
-- [ ] **Step 3: Implement Fastify and repositories**
+- [x] **Step 3: Implement Fastify and repositories**
 
 Fastify must be created with redacted logging and explicit schemas:
 
@@ -321,7 +321,7 @@ const server = Fastify({
 
 Create unique/index/TTL indexes for run IDs, due active runs, evidence purge, and notification job IDs. Cache `MongoClient` at module scope; do not close it after each Lambda invocation.
 
-- [ ] **Step 4: Run test, lint, and commit**
+- [x] **Step 4: Run test, lint, and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/config-wallets-controller.test.js
@@ -345,7 +345,7 @@ git commit -s -m "feat(wallet-certifier): add API and wallet search"
 - Produces `POST /api/runs` and `POST /api/runs/:runId/start`.
 - Produces Hub client methods `createDepot`, `createCredential`, `refreshIssueLink`, `getCredential`, `refreshPresentationLink`, `getPresentations`, `verifyPresentation`, and `getExchange`.
 
-- [ ] **Step 1: Write endpoint integration tests**
+- [x] **Step 1: Write endpoint integration tests**
 
 Cover validation, server-side wallet revalidation, capability hashing, no PII in `certificationRuns`, PII in expiring `runEvidence`, issuing setup, verification setup, idempotent repeated start, wrong/expired capability, and VN-only redirect construction.
 
@@ -360,17 +360,17 @@ expect(redirect.searchParams.get("deeplink")).toEqual(
 expect(redirect.searchParams.has("openid4vc_uri")).toBe(false);
 ```
 
-- [ ] **Step 2: Run tests and verify failure**
+- [x] **Step 2: Run tests and verify failure**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/runs-controller.test.js`
 
 Expected: FAIL because the run routes are absent.
 
-- [ ] **Step 3: Implement create/start orchestration**
+- [x] **Step 3: Implement create/start orchestration**
 
 Create the depot, badge, credential, and issue link in order. Persist each returned Hub identifier with conditional updates. Return the interaction token only at initial creation and never store it in plaintext.
 
-- [ ] **Step 4: Run tests, lint, and commit**
+- [x] **Step 4: Run tests, lint, and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/runs-controller.test.js
@@ -395,25 +395,25 @@ git commit -s -m "feat(wallet-certifier): create and start certification runs"
 - Produces `reconcileRun(runId, context)` and `processNotificationJobs(context)`.
 - `GET /api/runs/:runId` performs a due reconciliation and returns applicant-safe progress/result.
 
-- [ ] **Step 1: Write endpoint integration tests for pending, issued, rejected, exchange error, 10-minute inactivity, 15-minute finalization, transient Hub retry, concurrent GETs, and terminal immutability**
+- [x] **Step 1: Write endpoint integration tests for pending, issued, rejected, exchange error, 10-minute inactivity, 15-minute finalization, transient Hub retry, concurrent GETs, and terminal immutability**
 
 Verify two deterministic notification jobs on every terminal outcome and no raw JWT in those jobs' rendered email bodies.
 
-- [ ] **Step 2: Run and observe failure**
+- [x] **Step 2: Run and observe failure**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/issuance-reconciliation.test.js`
 
 Expected: FAIL because reconciliation is absent.
 
-- [ ] **Step 3: Implement leased reconciliation and terminal transaction ordering**
+- [x] **Step 3: Implement leased reconciliation and terminal transaction ordering**
 
 Use `findOneAndUpdate` with `revision`, active state, `nextCheckAt`, and an expired/missing lease. Store raw issued JSON/JWT in a 30-day evidence document, store only SHA-256 fingerprints and summaries on the run, commit the terminal state, then upsert applicant/support notification jobs.
 
-- [ ] **Step 4: Implement SES delivery with deterministic job leases**
+- [x] **Step 4: Implement SES delivery with deterministic job leases**
 
 Use `@verii/aws-clients.initSendEmailNotification`. With a local AWS endpoint, it automatically selects SES v1 supported by LocalStack. Record SES message ID, attempt count, last safe error code, and next attempt.
 
-- [ ] **Step 5: Run tests, lint, and commit**
+- [x] **Step 5: Run tests, lint, and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/issuance-reconciliation.test.js
@@ -436,21 +436,21 @@ git commit -s -m "feat(wallet-certifier): reconcile issuance and notify results"
 - Extends `POST /api/runs/:runId/start` to start disclosure after setup issuance.
 - Extends `GET /api/runs/:runId` to return presentation and per-credential results.
 
-- [ ] **Step 1: Write integration tests for the complete verification workflow**
+- [x] **Step 1: Write integration tests for the complete verification workflow**
 
 Cover setup pending/success/reject/error/timeout, disclosure pending/error/timeout, presentation pass/fail, exact setup badge present/absent, failed setup credential, failed additional credential, and multiple passing credentials.
 
-- [ ] **Step 2: Run and verify failure**
+- [x] **Step 2: Run and verify failure**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/verification-reconciliation.test.js`
 
 Expected: FAIL at disclosure start/reconciliation.
 
-- [ ] **Step 3: Implement disclosure and verification orchestration**
+- [x] **Step 3: Implement disclosure and verification orchestration**
 
 After setup success, retain the issued JWT fingerprint, move to `PREPARING_DISCLOSURE`, and wait for an explicit start call. On presentation receipt, call Hub verification once per presentation ID, map its top-level and credential checks, fingerprint every disclosed JWT, and call `evaluateVerification`.
 
-- [ ] **Step 4: Run tests, lint, and commit**
+- [x] **Step 4: Run tests, lint, and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/verification-reconciliation.test.js
@@ -474,25 +474,25 @@ git commit -s -m "feat(wallet-certifier): certify credential verification"
 
 - Produces `POST /api/result-sessions`, `GET /api/support/runs/:runId`, and `handler(event)` for EventBridge.
 
-- [ ] **Step 1: Write integration tests for capability exchange and result cookies**
+- [x] **Step 1: Write integration tests for capability exchange and result cookies**
 
 Assert applicant/support role separation, seven-day expiry, fragment token never appears in logs, `Secure`/`HttpOnly`/`SameSite=Strict` production cookies, and redacted support output.
 
-- [ ] **Step 2: Write monitor integration tests**
+- [x] **Step 2: Write monitor integration tests**
 
 Insert due active runs and pending notification jobs, invoke the handler, and assert leased reconciliation/delivery. Insert non-due and terminal runs and assert they are untouched.
 
-- [ ] **Step 3: Run tests and verify failure**
+- [x] **Step 3: Run tests and verify failure**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test -- test/result-access.test.js test/monitor-handler.test.js`
 
 Expected: FAIL because routes/handler are absent.
 
-- [ ] **Step 4: Implement session cookie, support projection, and monitor**
+- [x] **Step 4: Implement session cookie, support projection, and monitor**
 
 The support projection includes identifiers, state, counters, safe errors, journal, and email status only. The monitor processes a bounded batch and returns `{ reconciled, notificationsProcessed, failures }` without throwing the entire batch for one run.
 
-- [ ] **Step 5: Run the complete server suite, lint, and commit**
+- [x] **Step 5: Run the complete server suite, lint, and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/server-wallet-certifier test
@@ -518,21 +518,21 @@ git commit -s -m "feat(wallet-certifier): secure results and scheduled monitorin
 
 - Produces `/` setup route and API methods `searchWallets`, `createRun`, `startRun`, `getRun`, and `createResultSession`.
 
-- [ ] **Step 1: Write Testing Library tests for wallet search, VN eligibility, OpenID disabled state, registration prompt, name/email validation, and capability selection**
+- [x] **Step 1: Write Testing Library tests for wallet search, VN eligibility, OpenID disabled state, registration prompt, name/email validation, and capability selection**
 
 Use role/name assertions and keyboard interaction; do not assert implementation-specific MUI class names.
 
-- [ ] **Step 2: Run tests and verify failure**
+- [x] **Step 2: Run tests and verify failure**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app test -- src/pages/SetupPage.test.jsx`
 
 Expected: FAIL because the page is absent.
 
-- [ ] **Step 3: Implement the Trust Ledger setup page**
+- [x] **Step 3: Implement the Trust Ledger setup page**
 
 Use the approved warm paper palette, `#0d0d0c` text, restrained ledger rules, typographic VNF wordmark fallback, responsive dossier rail, accessible form controls, and no generic card grid. Open a blank wallet tab synchronously from the final start click before awaiting API responses.
 
-- [ ] **Step 4: Run tests/build, lint, and commit**
+- [x] **Step 4: Run tests/build, lint, and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app test
@@ -560,21 +560,21 @@ git commit -s -m "feat(wallet-certifier): build Trust Ledger setup journey"
 
 - Produces `/runs/:runId`, `/results/:runId`, and result-fragment exchange behavior.
 
-- [ ] **Step 1: Write UI tests**
+- [x] **Step 1: Write UI tests**
 
 Cover countdown, do-not-close copy, QR/link fallback, disclosure continue action, all terminal failure copy, presentation verified dot, exactly one dot per verified status, inline JSON/JWT, per-check icons/text, result-link fragment removal, and new-test navigation.
 
-- [ ] **Step 2: Run and verify failure**
+- [x] **Step 2: Run and verify failure**
 
 Run: `corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app test -- src/pages`
 
 Expected: FAIL because pages are absent.
 
-- [ ] **Step 3: Implement pages and polling**
+- [x] **Step 3: Implement pages and polling**
 
 Poll active runs every three seconds while visible and every fifteen seconds while hidden. Stop on terminal state. Announce state changes through an `aria-live` region. Render one bright-green `StatusDot` for success; never combine it with a pseudo-element marker.
 
-- [ ] **Step 4: Run tests/build/lint and commit**
+- [x] **Step 4: Run tests/build/lint and commit**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app test
@@ -598,32 +598,32 @@ git commit -s -m "feat(wallet-certifier): add waiting and result journeys"
 
 **Interfaces:**
 
-- Produces `docker compose -f servers/wallet-certifier/docker/compose.yml up --build --wait`.
-- Exposes app `http://localhost:14080`, API `http://localhost:14081`, mock dependencies `http://localhost:14082`, Mongo `localhost:17017`, and LocalStack `localhost:14566`.
+- Produces `VELOCITY_MONGO_PORT=17018 docker compose -f servers/wallet-certifier/docker/compose.yml up --build -d`.
+- Exposes app `http://localhost:14080`, API `http://localhost:14081`, mock dependencies `http://localhost:14082`, Mongo `localhost:17018`, and LocalStack `localhost:14566`.
 
-- [ ] **Step 1: Write Playwright success/failure flows against deterministic mocks**
+- [x] **Step 1: Write Playwright success/failure flows against deterministic mocks**
 
 Cover issuing accepted/rejected, verification with exact setup badge, verification missing setup badge, QR fallback, and result rendering.
 
-- [ ] **Step 2: Create the compose stack by including the existing shared services**
+- [x] **Step 2: Create the compose stack by including the existing shared services**
 
 Override Mongo and LocalStack with health checks, run an SES initialization container, and start app/API/mock services only after dependencies are healthy. Use local-only test values and never commit real secrets.
 
-- [ ] **Step 3: Implement the dependency mock**
+- [x] **Step 3: Implement the dependency mock**
 
 The mock Registrar returns VN, dual, and OpenID-only wallets. The mock Hub implements only the operator routes used by Wallet Certifier plus an interactive `/app-redirect` page with Accept, Reject, Exchange error, and Share without setup badge actions.
 
-- [ ] **Step 4: Start the stack and run browser tests**
+- [x] **Step 4: Start the stack and run browser tests**
 
 ```bash
-docker compose -f servers/wallet-certifier/docker/compose.yml up --build --wait
+VELOCITY_MONGO_PORT=17018 docker compose -f servers/wallet-certifier/docker/compose.yml up --build -d
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app test:e2e
-docker compose -f servers/wallet-certifier/docker/compose.yml down -v
+VELOCITY_MONGO_PORT=17018 docker compose -f servers/wallet-certifier/docker/compose.yml down -v
 ```
 
 Expected: all services healthy and Playwright flows pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add servers/wallet-certifier apps/wallet-certifier eng/docker/Dockerfile-NodeE2E
@@ -644,11 +644,11 @@ git commit -s -m "test(wallet-certifier): add local integration environment"
 - Produces artifacts `wallet-certifier-app.zip` and `wallet-certifier-lambda.zip` from a workflow dispatch/run.
 - Lambda ZIP contains both `src/lambda-api.handler` and `src/lambda-monitor.handler` entry points.
 
-- [ ] **Step 1: Add artifact build scripts and workflow**
+- [x] **Step 1: Add artifact build scripts and workflow**
 
 The workflow checks out the repository, installs with the lockfile, runs app/server/Hub tests and lint, builds the SPA, creates a production server deployment with pnpm deploy, zips both outputs, and uploads named artifacts.
 
-- [ ] **Step 2: Build artifacts locally and inspect their contents**
+- [x] **Step 2: Build artifacts locally and inspect their contents**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app build
@@ -659,7 +659,7 @@ unzip -l servers/wallet-certifier/dist/wallet-certifier-lambda.zip
 
 Expected: app contains `index.html` and hashed assets; Lambda contains both handlers and production dependencies.
 
-- [ ] **Step 3: Run full affected verification**
+- [x] **Step 3: Run full affected verification**
 
 ```bash
 corepack $(node -p "require('./package.json').packageManager") lint:fix:affected --base=origin/main --head=HEAD
@@ -671,7 +671,7 @@ git diff --check origin/main...HEAD
 
 Expected: all affected lint, test, and build targets pass with no whitespace errors.
 
-- [ ] **Step 4: Update plan checkboxes, commit final workflow/docs, and prepare PR evidence**
+- [x] **Step 4: Update plan checkboxes, commit final workflow/docs, and prepare PR evidence**
 
 ```bash
 git add .github/workflows/build-wallet-certifier.workflow.yml apps/wallet-certifier servers/wallet-certifier docs/superpowers/plans

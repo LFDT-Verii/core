@@ -13,6 +13,7 @@
   "scripts": {
     "start": "node src/standalone.js",
     "start:dev": "nodemon src/standalone.js",
+    "build:lambda": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && pnpm --filter @verii/server-wallet-certifier deploy --prod --legacy dist/lambda && cd dist/lambda && zip -qry ../wallet-certifier-lambda.zip .",
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --test-reporter=spec 'test/**/*.test.js'",
     "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
     "lint": "eslint .",

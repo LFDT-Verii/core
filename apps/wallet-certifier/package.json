@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "build:artifact": "vite build && cd dist && zip -qr wallet-certifier-app.zip index.html assets",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --import tsx --import ./setup-tests.js --test 'src/**/*.test.jsx'",
     "test:ci": "NODE_ENV=test node --import tsx --import ./setup-tests.js --test --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'src/**/*.test.jsx'",
