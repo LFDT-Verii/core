@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { api as defaultApi } from './api';
 import AppShell from './components/AppShell.jsx';
 import SetupPage from './pages/SetupPage.jsx';
+import WaitingPage from './pages/WaitingPage.jsx';
+import ResultLinkPage from './pages/ResultLinkPage.jsx';
 import { theme } from './theme';
 
 const defaultConfig = {
@@ -12,6 +20,30 @@ const defaultConfig = {
   environmentName: 'devnet',
   registrationUrl: 'https://velocitynetwork.foundation/',
 };
+
+const storedRun = (runId) => {
+  try {
+    return JSON.parse(sessionStorage.getItem(`wallet-certifier:${runId}`));
+  } catch {
+    return undefined;
+  }
+};
+
+const WaitingRoute = ({ api }) => {
+  const { runId } = useParams();
+  return <WaitingPage api={api} runId={runId} initialRun={storedRun(runId)} />;
+};
+
+// eslint-disable-next-line better-mutation/no-mutation
+WaitingRoute.propTypes = { api: PropTypes.object.isRequired };
+
+const ResultRoute = ({ api }) => {
+  const { runId } = useParams();
+  return <ResultLinkPage api={api} runId={runId} />;
+};
+
+// eslint-disable-next-line better-mutation/no-mutation
+ResultRoute.propTypes = { api: PropTypes.object.isRequired };
 
 const AppRoutes = ({ api, config }) => {
   const navigate = useNavigate();
@@ -25,6 +57,12 @@ const AppRoutes = ({ api, config }) => {
 
   return (
     <Routes>
+      <Route
+        path="/"
+        element={<SetupPage api={api} config={config} onStarted={onStarted} />}
+      />
+      <Route path="/runs/:runId" element={<WaitingRoute api={api} />} />
+      <Route path="/results/:runId" element={<ResultRoute api={api} />} />
       <Route
         path="*"
         element={<SetupPage api={api} config={config} onStarted={onStarted} />}
