@@ -1117,6 +1117,29 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
       );
     });
 
+    it('Should soft delete a partially created organization', async () => {
+      const organization = await persistOrganization();
+      await persistGroup({ groupId: organization.didDoc.id });
+      await mongoDb()
+        .collection('organizations')
+        .updateOne(
+          { 'didDoc.id': organization.didDoc.id },
+          { $unset: { activatedServiceIds: '' } },
+        );
+
+      const response = await fastify.injectJson({
+        method: 'DELETE',
+        url: `${baseUrl}/${organization.didDoc.id}`,
+        headers: {
+          'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+        },
+      });
+
+      expect(response.statusCode).toEqual(204);
+      const orgFromDb = await getOrganizationFromDb(organization.didDoc.id);
+      expect(orgFromDb.deletedAt).toEqual(expect.any(Date));
+    });
+
     it('Should soft delete an organization with superuser role', async () => {
       const organization = await persistOrganization();
       await persistGroup({ groupId: organization.didDoc.id });

@@ -589,7 +589,7 @@ const organizationController = async (fastify) => {
             OrganizationErrorMessages.ORGANIZATION_NOT_FOUND,
           );
         }
-        if (orgToDelete.activatedServiceIds.length > 0) {
+        if (!isEmpty(orgToDelete.activatedServiceIds)) {
           throw newError(400, 'Cant delete. First remove activated services', {
             errorCode: 'deletion_forbidden',
           });
@@ -608,7 +608,7 @@ const organizationController = async (fastify) => {
         );
 
         const modifiedProfile = { ...orgToDelete, deletedAt: new Date() };
-        repos.organizations.update(orgToDelete._id, modifiedProfile);
+        await repos.organizations.update(orgToDelete._id, modifiedProfile);
 
         return reply.status(204).send();
       },
