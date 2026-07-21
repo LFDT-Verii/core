@@ -2,7 +2,11 @@ const { createRun } = require('../services/create-run');
 const { reconcileRun } = require('../services/reconcile-run');
 const { loadAuthorizedRun, startRun } = require('../services/start-run');
 const { RunStates } = require('../domain/states');
-const { loadApplicantResultRun } = require('../services/result-capabilities');
+const {
+  loadResultRun,
+  resolveResultRole,
+} = require('../services/result-capabilities');
+const { loadSupportRun } = require('../services/support-run');
 
 const runInputSchema = {
   type: 'object',
@@ -51,16 +55,23 @@ const baseRunResponse = (run) => ({
 const loadEvidence = (run, context) =>
   context.db.collection('runEvidence').findOne({ runId: run.runId });
 
-const loadRequestRun = (request, context) => {
+const loadRequestRun = async (request, context) => {
   const token = bearerToken(request.headers.authorization);
   if (token) {
-    return loadAuthorizedRun(request.params.runId, token, context);
+    return {
+      audience: 'INTERACTION',
+      run: await loadAuthorizedRun(request.params.runId, token, context),
+    };
   }
-  return loadApplicantResultRun(
-    request.params.runId,
-    request.cookies[`wc_result_${request.params.runId}`],
+  const run = await loadResultRun(request.params.runId, context);
+  const applicantToken = request.cookies[`wc_result_${request.params.runId}`];
+  const supportToken = request.cookies[`wc_support_${request.params.runId}`];
+  const audience = resolveResultRole(
+    run,
+    applicantToken ?? supportToken,
     context,
   );
+  return { audience, run };
 };
 
 const isVerificationResult = (run) =>
@@ -158,7 +169,10 @@ module.exports = async (fastify, context) => {
     },
     async (request) => {
       const authorized = await loadRequestRun(request, context);
-      const run = await reconcileRun(authorized, context);
+      if (authorized.audience === 'SUPPORT') {
+        return loadSupportRun(authorized.run.runId, context.db, authorized.run);
+      }
+      const run = await reconcileRun(authorized.run, context);
       return presentRun(run, context);
     },
   );

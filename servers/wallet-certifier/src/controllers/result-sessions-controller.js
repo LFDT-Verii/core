@@ -22,9 +22,7 @@ const cookieDetails = (run, role, token, config, now) => {
       httpOnly: true,
       secure: config.nodeEnv === 'production',
       sameSite: 'strict',
-      path: applicant
-        ? `/api/runs/${run.runId}`
-        : `/api/support/runs/${run.runId}`,
+      path: `/api/runs/${run.runId}`,
       maxAge: Math.max(
         0,
         Math.floor(

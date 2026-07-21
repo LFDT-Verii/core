@@ -190,6 +190,38 @@ describe('result sessions and support diagnostics', () => {
 
     expect(response.statusCode).toEqual(204);
     expect(response.headers['set-cookie']).toContain('wc_support_run-1=');
+    expect(response.headers['set-cookie']).toContain('Path=/api/runs/run-1');
+  });
+
+  it('returns sanitized diagnostics with a support result cookie', async () => {
+    const session = await api.inject({
+      method: 'POST',
+      url: '/api/result-sessions',
+      payload: { runId: 'run-1', token: 'support-result-token' },
+    });
+    const cookie = session.headers['set-cookie'].split(';')[0];
+
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/runs/run-1',
+      headers: { cookie },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json()).toEqual(
+      expect.objectContaining({
+        audience: 'SUPPORT',
+        runId: 'run-1',
+        state: RunStates.PASSED,
+        notifications: [
+          expect.objectContaining({ role: 'APPLICANT', status: 'SENT' }),
+          expect.objectContaining({ role: 'SUPPORT', status: 'PENDING' }),
+        ],
+      }),
+    );
+    expect(response.body).not.toContain('alex@example.com');
+    expect(response.body).not.toContain('private.jwt.value');
+    expect(response.body).not.toContain('private applicant link');
   });
 
   it('returns sanitized IAM-perimeter support diagnostics', async () => {

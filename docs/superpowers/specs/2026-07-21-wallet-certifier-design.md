@@ -333,7 +333,10 @@ No restart endpoint is required. Starting again creates a new run.
 - Result pages use a strict Content Security Policy, security headers, `noindex`, no analytics, and no third-party scripts.
 - The server is hard-bound to the configured VNF tenant and service IDs. Browser input cannot select another tenant.
 
-The IAM-authorized support route provides read-only run diagnostics. A phase-one support UI is unnecessary.
+The IAM-authorized support route provides read-only run diagnostics for
+operators. The emailed support capability opens a minimal, sanitized browser
+view through the applicant-safe run endpoint; it never exposes raw evidence or
+applicant contact details.
 
 ## 11. Credentialing Hub changes
 

@@ -63,6 +63,7 @@ const AppRoutes = ({ api, config }) => {
       />
       <Route path="/runs/:runId" element={<WaitingRoute api={api} />} />
       <Route path="/results/:runId" element={<ResultRoute api={api} />} />
+      <Route path="/support/runs/:runId" element={<ResultRoute api={api} />} />
       <Route
         path="*"
         element={<SetupPage api={api} config={config} onStarted={onStarted} />}

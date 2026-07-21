@@ -40,3 +40,40 @@ test('exchanges and removes a fragment token before loading the result', async (
   expect(calls).toEqual([{ runId: 'run-1', token: 'result-token-value' }]);
   expect(window.location.hash).toEqual('');
 });
+
+test('renders sanitized support diagnostics from a support result link', async () => {
+  window.history.replaceState(
+    {},
+    '',
+    '/support/runs/run-1#token=support-token-value',
+  );
+  render(
+    <ResultLinkPage
+      api={{
+        createResultSession: async () => {},
+        getRun: async () => ({
+          audience: 'SUPPORT',
+          runId: 'run-1',
+          capability: 'VERIFICATION',
+          state: 'PASSED',
+          walletName: 'Velocity Test Wallet',
+          walletOrganizationName: 'Example Wallet Company',
+          completedAt: '2026-07-21T01:05:00.000Z',
+          journal: [
+            { state: 'DISCLOSING', at: '2026-07-21T01:04:00.000Z' },
+            { state: 'PASSED', at: '2026-07-21T01:05:00.000Z' },
+          ],
+          notifications: [
+            { role: 'APPLICANT', status: 'SENT', attemptCount: 1 },
+            { role: 'SUPPORT', status: 'SENT', attemptCount: 1 },
+          ],
+        }),
+      }}
+      runId="run-1"
+    />,
+  );
+
+  expect(await screen.findByText('Support diagnostics')).toBeTruthy();
+  expect(screen.getByText('Velocity Test Wallet')).toBeTruthy();
+  expect(screen.queryByText('private.jwt.value')).toBeNull();
+});

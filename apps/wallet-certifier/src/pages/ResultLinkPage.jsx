@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import ResultPage from './ResultPage.jsx';
+import SupportResultPage from './SupportResultPage.jsx';
 
 const ResultLinkPage = ({ api, runId }) => {
   const [token] = useState(() =>
@@ -44,7 +45,11 @@ const ResultLinkPage = ({ api, runId }) => {
       </main>
     );
   }
-  return <ResultPage run={run} />;
+  return run.audience === 'SUPPORT' ? (
+    <SupportResultPage run={run} />
+  ) : (
+    <ResultPage run={run} />
+  );
 };
 
 // eslint-disable-next-line better-mutation/no-mutation
