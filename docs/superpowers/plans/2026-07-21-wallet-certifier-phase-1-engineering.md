@@ -48,13 +48,13 @@
 - Consumes protected `TF_VAR_database_users` JSON.
 - Produces one `readWrite` user scoped to `wallet_certifier_dev` and one scoped to `wallet_certifier_staging` in the nonproduction Atlas project.
 
-- [ ] **Step 1: Create a sibling worktree from `origin/main`**
+- [x] **Step 1: Create a sibling worktree from `origin/main`**
 
 ```bash
 git worktree add ../engineering-codex-wallet-certifier -b codex/wallet-certifier origin/main
 ```
 
-- [ ] **Step 2: Add a typed `database_users` input**
+- [x] **Step 2: Add a typed `database_users` input**
 
 ```hcl
 variable "database_users" {
@@ -68,7 +68,7 @@ variable "database_users" {
 }
 ```
 
-- [ ] **Step 3: Create scoped Atlas users**
+- [x] **Step 3: Create scoped Atlas users**
 
 ```hcl
 resource "mongodbatlas_database_user" "application" {
@@ -87,11 +87,11 @@ resource "mongodbatlas_database_user" "application" {
 
 Expose only usernames/database names as a sensitive output; never output passwords.
 
-- [ ] **Step 4: Pass the protected JSON input in the Mongo deploy workflow**
+- [x] **Step 4: Pass the protected JSON input in the Mongo deploy workflow**
 
 Use `TF_VAR_database_users: ${{ secrets.DATABASE_USERS }}` in plan only. The encrypted Terraform plan remains the source for apply.
 
-- [ ] **Step 5: Format, validate, and commit**
+- [x] **Step 5: Format, validate, and commit**
 
 ```bash
 terraform -chdir=tf/16-atlas-mongodb fmt -recursive
@@ -118,31 +118,31 @@ git commit -s -m "feat(mongodb): add wallet certifier users"
 - Consumes `wallet-certifier-app.zip`, `wallet-certifier-lambda.zip`, certificate ARN, Cloudflare token, and protected secret values.
 - Produces CloudFront URL, API endpoint, bucket name, Lambda names, and secret ARNs.
 
-- [ ] **Step 1: Define typed environment inputs**
+- [x] **Step 1: Define typed environment inputs**
 
 The environment object must include fixed values for `hub_url`, `registrar_url`, `tenant_id`, `issuer_service_id`, `relying_party_service_id`, `app_hostname`, `database_name`, `support_email`, `sender_email`, registration URL, logo URL, and badge metadata URLs. Secret values are a separate sensitive map containing Mongo URI, Hub operator token, and capability pepper.
 
-- [ ] **Step 2: Add static site and CloudFront resources**
+- [x] **Step 2: Add static site and CloudFront resources**
 
 Use a private bucket, origin access control, TLS 1.2+, SPA 403 fallback to `/index.html`, no caching for `/api/*`, and long immutable caching only for hashed assets. Route `/api/*` to the API Gateway origin and forward cookies, query strings, and required headers.
 
-- [ ] **Step 3: Add API and monitor Lambdas**
+- [x] **Step 3: Add API and monitor Lambdas**
 
 Both use `wallet-certifier-lambda.zip`, Node.js 24, existing private subnets/security group remote state, 512 MiB, module-scoped Mongo reuse, 30-second timeout, and reserved concurrency suitable for low volume. Handlers are `src/lambda-api.handler` and `src/lambda-monitor.handler`.
 
-- [ ] **Step 4: Add API Gateway and EventBridge**
+- [x] **Step 4: Add API Gateway and EventBridge**
 
 Create a `$default` HTTP API integration and an explicit IAM-authorized `GET /api/support/runs/{runId}` route. Create a one-minute EventBridge rule and permission for the monitor Lambda.
 
-- [ ] **Step 5: Add secrets, SES, IAM, WAF, logs, and alarms**
+- [x] **Step 5: Add secrets, SES, IAM, WAF, logs, and alarms**
 
 Create versioned Secrets Manager entries from the sensitive input map; grant both functions only `GetSecretValue` for those ARNs and `ses:SendEmail` for the configured sender. Add WAF managed rules, an IP rate rule, and a higher suspicious threshold using CAPTCHA. Add alarms for Lambda errors/throttles, API 5xx, EventBridge failed invocation, and monitor duration.
 
-- [ ] **Step 6: Add dev/staging configuration**
+- [x] **Step 6: Add dev/staging configuration**
 
 `dev.tfvars` uses the existing dev Hub/Registrar endpoints and `wallet_certifier_dev`. `staging.tfvars` uses the existing staging Hub/Registrar endpoints and `wallet_certifier_staging`. The workflow passes the matching preconfigured Hub identifiers from protected GitHub environment variables named `WALLET_CERTIFIER_TENANT_ID`, `WALLET_CERTIFIER_ISSUER_SERVICE_ID`, and `WALLET_CERTIFIER_RELYING_PARTY_SERVICE_ID`; no empty or guessed identifiers are committed.
 
-- [ ] **Step 7: Format and validate**
+- [x] **Step 7: Format and validate**
 
 ```bash
 terraform -chdir=tf/22-wallet-certifier fmt -recursive
@@ -152,7 +152,7 @@ terraform -chdir=tf/22-wallet-certifier validate
 
 Expected: formatting produces no diff on a second run and validation succeeds.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add tf/22-wallet-certifier
@@ -171,19 +171,19 @@ git commit -s -m "feat(wallet-certifier): provision serverless stacks"
 - Consumes a successful `build-wallet-certifier.workflow.yml` run ID from `LFDT-Verii/core`.
 - Deploys only `dev` or `staging` after validate/plan approval.
 
-- [ ] **Step 1: Add workflow dispatch inputs**
+- [x] **Step 1: Add workflow dispatch inputs**
 
 Inputs are `environment` (`dev` or `staging`) and `core_run_id`. Use protected environments `wallet-certifier-dev` and `wallet-certifier-staging`.
 
-- [ ] **Step 2: Download and verify core artifacts**
+- [x] **Step 2: Download and verify core artifacts**
 
 Download both named artifacts from `LFDT-Verii/core`, calculate SHA-256 checksums, unzip only the app artifact for S3 sync, and place the Lambda ZIP in `tf/22-wallet-certifier/` before Terraform planning.
 
-- [ ] **Step 3: Plan/apply and deploy static assets safely**
+- [x] **Step 3: Plan/apply and deploy static assets safely**
 
 Validate Terraform without a backend, plan with the environment tfvars and protected secret JSON, encrypt the plan as existing workflows do, apply the downloaded plan, sync the SPA with `--delete`, then invalidate CloudFront. Apply infrastructure before the static sync so new distributions work on first deployment.
 
-- [ ] **Step 4: Add the Terraform root to Dependabot and validate workflow syntax**
+- [x] **Step 4: Add the Terraform root to Dependabot and validate workflow syntax**
 
 Run the repository's GitHub workflow lint job after the PR opens, and perform local static checks with:
 
@@ -192,7 +192,7 @@ git diff --check
 terraform fmt -check -recursive tf/22-wallet-certifier tf/16-atlas-mongodb
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add .github/workflows/deploy-wallet-certifier.workflow.yml .github/dependabot.yml
@@ -209,11 +209,11 @@ git commit -s -m "ci(wallet-certifier): deploy core artifacts"
 
 - Produces an operator runbook for prerequisites, initial secrets, Atlas apply order, stack apply, SES sandbox behavior, smoke tests, alarms, rollback, and deletion safeguards.
 
-- [ ] **Step 1: Write the runbook**
+- [x] **Step 1: Write the runbook**
 
 Document the exact protected secret keys `DATABASE_USERS`, `WALLET_CERTIFIER_SECRET_VALUES`, AWS credentials, Cloudflare token, and artifact run ID flow without including values. Document that Hub tenant/service IDs must refer to the existing VNF tenant in the matching environment.
 
-- [ ] **Step 2: Validate both Terraform roots and workflows**
+- [x] **Step 2: Validate both Terraform roots and workflows**
 
 ```bash
 terraform fmt -check -recursive tf/16-atlas-mongodb tf/22-wallet-certifier
@@ -226,7 +226,7 @@ git diff --check origin/main...HEAD
 
 Expected: all commands exit zero.
 
-- [ ] **Step 3: Commit final documentation**
+- [x] **Step 3: Commit final documentation**
 
 ```bash
 git add tf/22-wallet-certifier/README.md
