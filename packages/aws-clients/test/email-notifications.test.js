@@ -52,6 +52,8 @@ const {
 describe('Email notifications test suite', () => {
   let params;
   beforeEach(() => {
+    mockSESSendEmail.mock.mockImplementation((payload) => payload);
+    mockSESv2SendEmail.mock.mockImplementation((payload) => payload);
     params = {
       subject: 'fooSubject',
       message: 'fooMessage',
@@ -66,9 +68,13 @@ describe('Email notifications test suite', () => {
   });
 
   it('Should email with legacy client when awsEndpoint param exists', async () => {
+    const providerResponse = { MessageId: 'message-id' };
+    mockSESSendEmail.mock.mockImplementation(() => providerResponse);
     const sendEmail = initSendEmailNotification({ awsEndpoint: 'foo' });
 
-    await sendEmail(params);
+    const result = await sendEmail(params);
+
+    expect(result).toEqual(providerResponse);
 
     expect(
       mockSESSendEmail.mock.calls.map((call) => call.arguments),
@@ -137,9 +143,13 @@ describe('Email notifications test suite', () => {
   });
 
   it('Should email with non-legacy client when awsEndpoint param is missing', async () => {
+    const providerResponse = { MessageId: 'message-id' };
+    mockSESv2SendEmail.mock.mockImplementation(() => providerResponse);
     const sendEmail = initSendEmailNotification({});
 
-    await sendEmail(params);
+    const result = await sendEmail(params);
+
+    expect(result).toEqual(providerResponse);
 
     expect(
       mockSESv2SendEmail.mock.calls.map((call) => call.arguments),

@@ -19,7 +19,7 @@ const { ObjectId } = require('mongodb');
 const { isEmpty, map } = require('lodash/fp');
 
 const findersExtension = (parent) => ({
-  search: async ({ presentationIds, exchangeId, depotId }) => {
+  search: async ({ presentationIds, exchangeId, depotId }, projection) => {
     const filter = {};
     if (!isEmpty(presentationIds)) {
       filter._id = {
@@ -33,7 +33,7 @@ const findersExtension = (parent) => ({
       filter.depotId = new ObjectId(depotId);
     }
 
-    return parent.find({ filter });
+    return parent.find({ filter }, projection);
   },
   findByDepotId: async ({ depotId }) => {
     const filter = {
