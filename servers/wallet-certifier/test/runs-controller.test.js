@@ -264,6 +264,7 @@ describe('certification run creation and start', () => {
       }),
     );
     expect(run.purgeAt).toEqual(new Date('2027-07-21T01:00:00.000Z'));
+    expect(run).not.toHaveProperty('nextCheckAt');
   });
 
   it('rejects wrong and expired interaction capabilities', async () => {

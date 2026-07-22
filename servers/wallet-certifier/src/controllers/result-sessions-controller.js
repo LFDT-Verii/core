@@ -48,6 +48,10 @@ module.exports = async (fastify, context) => {
         context.config,
         context.now(),
       );
+      const oppositeCookieName = `${
+        role === 'APPLICANT' ? 'wc_support' : 'wc_result'
+      }_${run.runId}`;
+      reply.clearCookie(oppositeCookieName, { path: cookie.options.path });
       reply.setCookie(cookie.name, cookie.value, cookie.options);
       return reply.status(204).send();
     },

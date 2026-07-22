@@ -30,8 +30,7 @@ const ensureActiveResult = (run, token, context) => {
   }
 };
 
-const resolveResultRole = (run, token, context) => {
-  ensureActiveResult(run, token, context);
+const matchingResultRole = (run, token, context) => {
   const applicantHash =
     run.applicantResultCapabilityHash ?? run.resultCapabilityHash;
   if (matches(token, applicantHash, context)) {
@@ -39,6 +38,27 @@ const resolveResultRole = (run, token, context) => {
   }
   if (matches(token, run.supportResultCapabilityHash, context)) {
     return 'SUPPORT';
+  }
+  return undefined;
+};
+
+const resolveResultRole = (run, token, context) => {
+  ensureActiveResult(run, token, context);
+  const role = matchingResultRole(run, token, context);
+  if (role) {
+    return role;
+  }
+  throw invalidCapability();
+};
+
+const resolveResultRoleFromTokens = (run, tokens, context) => {
+  const candidates = tokens.filter(Boolean);
+  ensureActiveResult(run, candidates[0], context);
+  for (const token of candidates) {
+    const role = matchingResultRole(run, token, context);
+    if (role) {
+      return role;
+    }
   }
   throw invalidCapability();
 };
@@ -51,4 +71,9 @@ const loadApplicantResultRun = async (runId, token, context) => {
   return run;
 };
 
-module.exports = { loadApplicantResultRun, loadResultRun, resolveResultRole };
+module.exports = {
+  loadApplicantResultRun,
+  loadResultRun,
+  resolveResultRole,
+  resolveResultRoleFromTokens,
+};

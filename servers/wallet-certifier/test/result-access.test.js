@@ -9,6 +9,9 @@ const { closeMongo, initMongo } = require('../src/repositories/mongodb');
 const mongoConnectionString =
   process.env.MONGO_URI ?? 'mongodb://localhost:27017';
 const databaseName = 'test-wallet-certifier-result-access';
+const setCookies = (response) => [response.headers['set-cookie']].flat();
+const findSetCookie = (response, name) =>
+  setCookies(response).find((cookie) => cookie.startsWith(`${name}=`));
 
 describe('result sessions and support diagnostics', () => {
   let api;
@@ -130,11 +133,11 @@ describe('result sessions and support diagnostics', () => {
     });
 
     expect(response.statusCode).toEqual(204);
-    expect(response.headers['set-cookie']).toContain('wc_result_run-1=');
-    expect(response.headers['set-cookie']).toContain('Path=/api/runs/run-1');
-    expect(response.headers['set-cookie']).toContain('HttpOnly');
-    expect(response.headers['set-cookie']).toContain('Secure');
-    expect(response.headers['set-cookie']).toContain('SameSite=Strict');
+    const cookie = findSetCookie(response, 'wc_result_run-1');
+    expect(cookie).toContain('Path=/api/runs/run-1');
+    expect(cookie).toContain('HttpOnly');
+    expect(cookie).toContain('Secure');
+    expect(cookie).toContain('SameSite=Strict');
     expect(response.body).not.toContain('applicant-result-token');
     expect(logs.join('')).not.toContain('applicant-result-token');
   });
@@ -145,7 +148,7 @@ describe('result sessions and support diagnostics', () => {
       url: '/api/result-sessions',
       payload: { runId: 'run-1', token: 'applicant-result-token' },
     });
-    const cookie = session.headers['set-cookie'].split(';')[0];
+    const cookie = findSetCookie(session, 'wc_result_run-1').split(';')[0];
 
     const response = await api.inject({
       method: 'GET',
@@ -189,8 +192,49 @@ describe('result sessions and support diagnostics', () => {
     });
 
     expect(response.statusCode).toEqual(204);
-    expect(response.headers['set-cookie']).toContain('wc_support_run-1=');
-    expect(response.headers['set-cookie']).toContain('Path=/api/runs/run-1');
+    const cookies = setCookies(response);
+    expect(
+      cookies.some((cookie) => cookie.startsWith('wc_support_run-1=')),
+    ).toEqual(true);
+    expect(
+      cookies.every((cookie) => cookie.includes('Path=/api/runs/run-1')),
+    ).toEqual(true);
+    expect(
+      cookies.some((cookie) => cookie.startsWith('wc_result_run-1=;')),
+    ).toEqual(true);
+  });
+
+  it('uses a valid support cookie when the applicant cookie is stale', async () => {
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/runs/run-1',
+      headers: {
+        cookie:
+          'wc_result_run-1=stale-applicant-token; wc_support_run-1=support-result-token',
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json()).toEqual(
+      expect.objectContaining({ audience: 'SUPPORT', runId: 'run-1' }),
+    );
+  });
+
+  it('prefers sanitized support access when both result cookies are valid', async () => {
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/runs/run-1',
+      headers: {
+        cookie:
+          'wc_result_run-1=applicant-result-token; wc_support_run-1=support-result-token',
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json()).toEqual(
+      expect.objectContaining({ audience: 'SUPPORT', runId: 'run-1' }),
+    );
+    expect(response.body).not.toContain('private.jwt.value');
   });
 
   it('returns sanitized diagnostics with a support result cookie', async () => {
@@ -199,7 +243,7 @@ describe('result sessions and support diagnostics', () => {
       url: '/api/result-sessions',
       payload: { runId: 'run-1', token: 'support-result-token' },
     });
-    const cookie = session.headers['set-cookie'].split(';')[0];
+    const cookie = findSetCookie(session, 'wc_support_run-1').split(';')[0];
 
     const response = await api.inject({
       method: 'GET',

@@ -76,7 +76,6 @@ const createRun = async (
     journal: [{ state: RunStates.CREATED, at: createdAt }],
     createdAt,
     updatedAt: createdAt,
-    nextCheckAt: createdAt,
     purgeAt: addYear(createdAt),
   };
   const evidence = {

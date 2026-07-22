@@ -69,7 +69,7 @@
 /**
  * @typedef {object} FindDueRunsQuery
  * @property {Date} now
- * @property {CertificationRunState[]} terminalStates
+ * @property {CertificationRunState[]} states
  * @property {number} limit
  */
 

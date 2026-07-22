@@ -106,6 +106,41 @@ describe('scheduled run monitor', () => {
     expect(future.nextCheckAt).toEqual(new Date('2026-07-21T01:06:00.000Z'));
   });
 
+  it('ignores due runs that have not started an interaction', async () => {
+    await mongo.db.collection('certificationRuns').insertOne({
+      runId: 'created-run',
+      capability: 'ISSUING',
+      state: RunStates.CREATED,
+      nextCheckAt: new Date('2026-07-21T01:04:00.000Z'),
+      revision: 0,
+      journal: [],
+      updatedAt: new Date('2026-07-21T01:00:00.000Z'),
+    });
+    const credentialIds = [];
+    const handler = createMonitorHandler({
+      config,
+      repositories: mongo.repositories,
+      hubClient: {
+        getCredential: async (credentialId) => {
+          credentialIds.push(credentialId);
+          return undefined;
+        },
+        getExchange: async () => ({ state: 'NEW', events: [] }),
+      },
+      sendEmail: async () => ({}),
+      now: () => nowValue,
+    });
+
+    const result = await handler({ source: 'aws.events' });
+
+    expect(result).toEqual({
+      reconciled: 0,
+      notificationsProcessed: 0,
+      failures: 0,
+    });
+    expect(credentialIds).toHaveLength(0);
+  });
+
   it('isolates one unexpected reconciliation failure', async () => {
     await Promise.all([
       seedRun(

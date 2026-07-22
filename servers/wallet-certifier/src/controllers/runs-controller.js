@@ -4,7 +4,7 @@ const { loadAuthorizedRun, startRun } = require('../services/start-run');
 const { RunStates } = require('../domain/states');
 const {
   loadResultRun,
-  resolveResultRole,
+  resolveResultRoleFromTokens,
 } = require('../services/result-capabilities');
 const { loadSupportDiagnostics } = require('../services/support-diagnostics');
 
@@ -66,9 +66,9 @@ const loadRequestRun = async (request, context) => {
   const run = await loadResultRun(request.params.runId, context);
   const applicantToken = request.cookies[`wc_result_${request.params.runId}`];
   const supportToken = request.cookies[`wc_support_${request.params.runId}`];
-  const audience = resolveResultRole(
+  const audience = resolveResultRoleFromTokens(
     run,
-    applicantToken ?? supportToken,
+    [supportToken, applicantToken],
     context,
   );
   return { audience, run };

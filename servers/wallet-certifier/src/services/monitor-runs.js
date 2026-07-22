@@ -1,12 +1,18 @@
-const { TerminalRunStates } = require('../domain/states');
+const { RunStates } = require('../domain/states');
 const { processNotificationJobs } = require('./process-notifications');
 const { reconcileRun } = require('./reconcile-run');
+
+const RECONCILABLE_STATES = [
+  RunStates.ISSUING,
+  RunStates.DISCLOSING,
+  RunStates.FINALIZING,
+];
 
 const dueRuns = (context) => {
   const now = new Date(context.now());
   return context.repositories.certificationRuns.findDue({
     now,
-    terminalStates: [...TerminalRunStates],
+    states: RECONCILABLE_STATES,
     limit: 25,
   });
 };

@@ -156,11 +156,11 @@ const createCertificationRunsRepository = (db) => {
           { returnDocument: 'after', projection },
         )
         .then((run) => run ?? undefined),
-    findDue: ({ now, terminalStates, limit }) =>
+    findDue: ({ now, states, limit }) =>
       collection
         .find(
           {
-            state: { $nin: terminalStates },
+            state: { $in: states },
             nextCheckAt: { $lte: now },
             $or: [
               { leaseUntil: { $exists: false } },
