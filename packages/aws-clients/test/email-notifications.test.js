@@ -52,6 +52,7 @@ const {
 describe('Email notifications test suite', () => {
   let params;
   beforeEach(() => {
+    mockSESSendEmail.mock.mockImplementation((payload) => payload);
     params = {
       subject: 'fooSubject',
       message: 'fooMessage',
@@ -66,16 +67,13 @@ describe('Email notifications test suite', () => {
   });
 
   it('Should email with legacy client when awsEndpoint param exists', async () => {
+    const providerResponse = { MessageId: 'message-id' };
+    mockSESSendEmail.mock.mockImplementation(() => providerResponse);
     const sendEmail = initSendEmailNotification({ awsEndpoint: 'foo' });
 
     const result = await sendEmail(params);
 
-    expect(result).toEqual(
-      expect.objectContaining({
-        Source: 'fooSender',
-        Destination: { ToAddresses: ['fooRecipient'] },
-      }),
-    );
+    expect(result).toEqual(providerResponse);
 
     expect(
       mockSESSendEmail.mock.calls.map((call) => call.arguments),
