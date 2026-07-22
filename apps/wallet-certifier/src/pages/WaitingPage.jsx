@@ -4,6 +4,14 @@ import { QRCodeSVG } from 'qrcode.react';
 import useRunPolling from '../hooks/useRunPolling';
 import ResultPage from './ResultPage.jsx';
 
+const TERMINAL_STATES = new Set([
+  'PASSED',
+  'FAILED',
+  'REJECTED',
+  'TIMED_OUT',
+  'ERROR',
+]);
+
 const copyFor = (state) => {
   if (state === 'DISCLOSING') {
     return {
@@ -50,16 +58,17 @@ const WaitingPage = ({ api, runId, initialRun }) => {
   const [now, setNow] = useState(0);
   const [startingDisclosure, setStartingDisclosure] = useState(false);
   const [startError, setStartError] = useState('');
+  const terminal = TERMINAL_STATES.has(run?.state);
 
   useEffect(() => {
+    if (terminal) {
+      return undefined;
+    }
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [terminal]);
 
-  if (
-    run &&
-    ['PASSED', 'FAILED', 'REJECTED', 'TIMED_OUT', 'ERROR'].includes(run.state)
-  ) {
+  if (terminal) {
     return <ResultPage run={run} />;
   }
 

@@ -168,3 +168,42 @@ test('retries polling after a server error', async (context) => {
   ).toBeTruthy();
   expect(scheduled.map(({ delay }) => delay)).toEqual([5000]);
 });
+
+test('clears the countdown interval when the run becomes terminal', async (context) => {
+  const intervalId = 41;
+  const clearedIntervals = [];
+  context.mock.method(window, 'setInterval', () => intervalId);
+  context.mock.method(window, 'clearInterval', (id) =>
+    clearedIntervals.push(id),
+  );
+
+  render(
+    <WaitingPage
+      api={{
+        getRun: async () => ({
+          runId: 'run-1',
+          capability: 'ISSUING',
+          state: 'REJECTED',
+          failure: {
+            code: 'credential_rejected',
+            message: 'The credential was rejected by the wallet user.',
+          },
+        }),
+        startRun: async () => interaction,
+      }}
+      runId="run-1"
+      initialRun={{
+        interactionToken: 'interaction-token',
+        capability: 'ISSUING',
+        interaction,
+      }}
+    />,
+  );
+
+  expect(
+    await screen.findByRole('heading', {
+      name: /certification not completed/i,
+    }),
+  ).toBeTruthy();
+  expect(clearedIntervals).toContain(intervalId);
+});

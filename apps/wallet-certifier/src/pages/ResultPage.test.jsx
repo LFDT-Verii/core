@@ -98,6 +98,54 @@ test('renders presentation status and every credential check without duplicate d
   expect(screen.getByText('other.jwt')).toBeTruthy();
 });
 
+test('associates each evidence section with unique headings', () => {
+  const { container } = render(
+    <ResultPage
+      run={{
+        runId: 'run-2',
+        capability: 'VERIFICATION',
+        state: 'PASSED',
+        result: {
+          passed: true,
+          setupBadgePresent: true,
+          completedAt: '2026-07-21T01:05:00.000Z',
+          presentation: { verified: true, checks: { tamper: 'PASS' } },
+          credentials: [
+            {
+              format: 'JWT_VC',
+              json: { type: ['OpenBadgeCredential'] },
+              jwt: 'setup.jwt',
+              verified: true,
+              checks,
+            },
+            {
+              format: 'JWT_VC',
+              json: { type: ['EmploymentCredential'] },
+              jwt: 'other.jwt',
+              verified: true,
+              checks,
+            },
+          ],
+        },
+      }}
+    />,
+  );
+
+  const evidenceSections = [
+    ...container.querySelectorAll('.evidence-section section'),
+  ];
+  const headingIds = evidenceSections.map((section) =>
+    section.getAttribute('aria-labelledby'),
+  );
+
+  expect(new Set(headingIds).size).toEqual(evidenceSections.length);
+  for (const section of evidenceSections) {
+    expect(section.querySelector('h4').id).toEqual(
+      section.getAttribute('aria-labelledby'),
+    );
+  }
+});
+
 test('renders terminal failure guidance and a new-test action', () => {
   render(
     <ResultPage
