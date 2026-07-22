@@ -36,6 +36,21 @@ const fetchHubJson = async (fetchImpl, url, options) => {
   return response.json();
 };
 
+const validateHubResponse = (response, baseUrl) => {
+  if (response?.redirectUrl == null) {
+    return response;
+  }
+  try {
+    const redirect = new URL(response.redirectUrl);
+    if (redirect.origin !== new URL(baseUrl).origin) {
+      throw new HubUnavailableError();
+    }
+  } catch {
+    throw new HubUnavailableError();
+  }
+  return response;
+};
+
 const createHubClient = ({
   baseUrl,
   operatorToken,
@@ -45,10 +60,13 @@ const createHubClient = ({
   const callJson = async (path, { method = 'GET', body, query } = {}) => {
     const url = new URL(path, baseUrl);
     addQuery(url, query);
-    return fetchHubJson(
-      fetchImpl,
-      url,
-      requestOptions(method, body, operatorToken),
+    return validateHubResponse(
+      await fetchHubJson(
+        fetchImpl,
+        url,
+        requestOptions(method, body, operatorToken),
+      ),
+      baseUrl,
     );
   };
 

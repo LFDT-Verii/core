@@ -56,6 +56,8 @@ describe('certification run creation and start', () => {
   let dependencyUrl;
   let mongo;
   let hubRequests;
+  let hubRedirectUrl;
+  let hubLinkStatus;
 
   before(async () => {
     const cleanupClient = new MongoClient(mongoConnectionString);
@@ -63,6 +65,8 @@ describe('certification run creation and start', () => {
     await cleanupClient.db(databaseName).dropDatabase();
     await cleanupClient.close();
 
+    // This in-test dependency server intentionally dispatches every simulated route.
+    // eslint-disable-next-line complexity
     dependencyServer = createServer(async (request, response) => {
       const url = new URL(request.url, 'http://dependencies.test');
       if (url.pathname.endsWith('/search-profiles')) {
@@ -72,6 +76,17 @@ describe('certification run creation and start', () => {
         );
         response.writeHead(200, { 'content-type': 'application/json' });
         response.end(JSON.stringify({ result }));
+        return;
+      }
+
+      if (
+        url.pathname === '/operator/issue-links/refresh' &&
+        hubLinkStatus !== 200
+      ) {
+        response.writeHead(hubLinkStatus, {
+          'content-type': 'application/json',
+        });
+        response.end(JSON.stringify({ error: 'hub unavailable' }));
         return;
       }
 
@@ -96,10 +111,21 @@ describe('certification run creation and start', () => {
       if (url.pathname === '/operator/issue-links/refresh') {
         response.end(
           JSON.stringify({
-            redirectUrl:
-              'https://hub.example.test/app-redirect?openid4vc_uri=private-offer&deeplink=old',
+            redirectUrl: hubRedirectUrl,
             vnProtocolLink: 'velocity-network-devnet://issue',
             openidCredentialOffer: 'openid-credential-offer://private',
+          }),
+        );
+        return;
+      }
+      if (url.pathname === '/operator/credentials/get') {
+        response.end(JSON.stringify({ credentials: [{ id: 'credential-1' }] }));
+        return;
+      }
+      if (url.pathname === '/operator/exchanges/get') {
+        response.end(
+          JSON.stringify({
+            exchange: { id: 'exchange-1', state: 'NEW', events: [] },
           }),
         );
         return;
@@ -146,6 +172,8 @@ describe('certification run creation and start', () => {
 
   beforeEach(async () => {
     hubRequests = [];
+    hubRedirectUrl = `${dependencyUrl}/app-redirect?openid4vc_uri=private-offer&deeplink=old`;
+    hubLinkStatus = 200;
     await Promise.all([
       mongo.db.collection('certificationRuns').deleteMany({}),
       mongo.db.collection('runEvidence').deleteMany({}),
@@ -355,6 +383,69 @@ describe('certification run creation and start', () => {
       'velocity-network-devnet://issue',
     );
     expect(evidence.issueInteraction).toEqual(started.json());
+  });
+
+  it('rejects a Hub interaction redirect from another origin', async () => {
+    hubRedirectUrl = 'https://attacker.example/app-redirect';
+    const created = await createRun();
+
+    const started = await api.inject({
+      method: 'POST',
+      url: `/api/runs/${created.json().runId}/start`,
+      headers: { authorization: 'Bearer test-interaction-token' },
+    });
+
+    expect(started.statusCode).toEqual(502);
+    expect(started.json()).toEqual({
+      error: 'credentialing_hub_unavailable',
+      message: 'Credentialing Hub is temporarily unavailable.',
+    });
+    expect(started.body).not.toContain('attacker.example');
+  });
+
+  it('maps a Hub link failure to the sanitized dependency error', async () => {
+    hubLinkStatus = 503;
+    const created = await createRun();
+
+    const started = await api.inject({
+      method: 'POST',
+      url: `/api/runs/${created.json().runId}/start`,
+      headers: { authorization: 'Bearer test-interaction-token' },
+    });
+
+    expect(started.statusCode).toEqual(502);
+    expect(started.json()).toEqual({
+      error: 'credentialing_hub_unavailable',
+      message: 'Credentialing Hub is temporarily unavailable.',
+    });
+    expect(started.body).not.toContain('hub unavailable');
+  });
+
+  it('reads pending Hub status through query endpoints', async () => {
+    const created = await createRun();
+    const { runId } = created.json();
+    await api.inject({
+      method: 'POST',
+      url: `/api/runs/${runId}/start`,
+      headers: { authorization: 'Bearer test-interaction-token' },
+    });
+
+    const status = await api.inject({
+      method: 'GET',
+      url: `/api/runs/${runId}`,
+      headers: { authorization: 'Bearer test-interaction-token' },
+      remoteAddress: '198.51.100.1',
+    });
+
+    expect(status.statusCode).toEqual(200);
+    expect(status.json().state).toEqual(RunStates.ISSUING);
+    expect(hubRequests.map(({ path }) => path)).toEqual([
+      '/operator/depots/create',
+      '/operator/credentials/create',
+      '/operator/issue-links/refresh',
+      '/operator/credentials/get',
+      '/operator/exchanges/get',
+    ]);
   });
 
   it('uses the same setup issuance for verification certification', async () => {

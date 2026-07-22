@@ -286,6 +286,8 @@ The shared reconciler:
 
 The timeline records state changes and changed errors rather than every pending check. Counters and last-check fields retain polling diagnostics without making the journal unreadable.
 
+Concurrent initialization of the same interaction stage is phase-two work. Phase one returns a stored interaction for sequential retries and prevents duplicate applicant actions in the UI, but it does not serialize simultaneous first `POST /runs/{runId}/start` requests. Phase two will claim atomic ownership before creating a depot, setup credential, or Hub link so concurrent and transport-level retries share one initialization result.
+
 ## 9. API design
 
 All request bodies have explicit size limits and schema validation.

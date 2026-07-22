@@ -33,7 +33,12 @@ module.exports = async (fastify, { registrarClient }) => {
           additionalProperties: false,
           required: ['q'],
           properties: {
-            q: { type: 'string', minLength: 2, maxLength: 80 },
+            q: {
+              type: 'string',
+              minLength: 2,
+              maxLength: 80,
+              pattern: '^\\s*\\S.*\\S\\s*$',
+            },
           },
         },
         response: {

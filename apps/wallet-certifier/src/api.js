@@ -1,3 +1,12 @@
+export class ApiError extends Error {
+  constructor(message, { status, code } = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 const requestJson = async (path, options = {}) => {
   const response = await fetch(path, {
     ...options,
@@ -7,13 +16,32 @@ const requestJson = async (path, options = {}) => {
     },
   });
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message ?? 'The request could not be completed.');
+    const errorBody = await response.json().catch(() => ({}));
+    throw new ApiError(
+      errorBody.message ?? 'The request could not be completed.',
+      { status: response.status, code: errorBody.error },
+    );
   }
   if (response.status === 204) {
     return undefined;
   }
   return response.json();
+};
+
+const normalizeInteraction = (interaction) => {
+  let redirect;
+  try {
+    redirect = new URL(interaction.redirectUrl);
+  } catch {
+    throw new ApiError('The wallet interaction URL is invalid.');
+  }
+  const isLoopbackHttp =
+    redirect.protocol === 'http:' &&
+    ['localhost', '127.0.0.1', '[::1]'].includes(redirect.hostname);
+  if (redirect.protocol !== 'https:' && !isLoopbackHttp) {
+    throw new ApiError('The wallet interaction URL is invalid.');
+  }
+  return { ...interaction, redirectUrl: redirect.toString() };
 };
 
 export const api = {
@@ -29,11 +57,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  startRun: (runId, token) =>
-    requestJson(`/api/runs/${encodeURIComponent(runId)}/start`, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${token}` },
-    }),
+  startRun: async (runId, token) =>
+    normalizeInteraction(
+      await requestJson(`/api/runs/${encodeURIComponent(runId)}/start`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}` },
+      }),
+    ),
   getRun: (runId, token) =>
     requestJson(`/api/runs/${encodeURIComponent(runId)}`, {
       headers: token ? { authorization: `Bearer ${token}` } : {},

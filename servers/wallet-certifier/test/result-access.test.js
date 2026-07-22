@@ -248,4 +248,17 @@ describe('result sessions and support diagnostics', () => {
     expect(serialized).not.toContain('private.jwt.value');
     expect(serialized).not.toContain('private applicant link');
   });
+
+  it('returns not found from the IAM-perimeter support endpoint', async () => {
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/support/runs/missing-run',
+    });
+
+    expect(response.statusCode).toEqual(404);
+    expect(response.json()).toEqual({
+      error: 'run_not_found',
+      message: 'Certification run not found.',
+    });
+  });
 });

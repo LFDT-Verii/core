@@ -8,6 +8,11 @@ const TERMINAL_STATES = new Set([
   'ERROR',
 ]);
 
+const isRetryableError = (requestError) =>
+  requestError.status == null ||
+  requestError.status === 429 ||
+  requestError.status >= 500;
+
 const useRunPolling = ({ api, runId, token }) => {
   const [run, setRun] = useState();
   const [error, setError] = useState('');
@@ -15,6 +20,17 @@ const useRunPolling = ({ api, runId, token }) => {
   useEffect(() => {
     let active = true;
     let timer;
+    const handleError = (requestError, poll) => {
+      if (!active) {
+        return;
+      }
+      setError(requestError.message);
+      if (!isRetryableError(requestError)) {
+        return;
+      }
+      // eslint-disable-next-line better-mutation/no-mutation
+      timer = window.setTimeout(poll, 5000);
+    };
     const poll = async () => {
       try {
         const value = await api.getRun(runId, token);
@@ -29,11 +45,7 @@ const useRunPolling = ({ api, runId, token }) => {
           timer = window.setTimeout(poll, delay);
         }
       } catch (requestError) {
-        if (active) {
-          setError(requestError.message);
-          // eslint-disable-next-line better-mutation/no-mutation
-          timer = window.setTimeout(poll, 5000);
-        }
+        handleError(requestError, poll);
       }
     };
     poll();

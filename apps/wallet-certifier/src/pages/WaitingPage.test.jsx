@@ -51,7 +51,11 @@ test('shows waiting guidance, progress, countdown, and QR fallback', async () =>
 
 test('opens a disclosure tab before requesting the next verification step', async () => {
   const user = userEvent.setup();
-  const openedTab = { location: { href: '' }, close: () => {} };
+  const openedTab = {
+    location: { href: '' },
+    opener: window,
+    close: () => {},
+  };
   const originalOpen = window.open;
   let opened = false;
   window.open = () => {
@@ -75,6 +79,7 @@ test('opens a disclosure tab before requesting the next verification step', asyn
         }),
         startRun: async () => {
           expect(opened).toEqual(true);
+          expect(openedTab.opener).toBeNull();
           return nextInteraction;
         },
       }}
@@ -96,4 +101,70 @@ test('opens a disclosure tab before requesting the next verification step', asyn
     await screen.findByRole('heading', { name: /share the setup badge/i }),
   ).toBeTruthy();
   window.open = originalOpen;
+});
+
+test('stops polling after a non-retryable client error', async (context) => {
+  const scheduled = [];
+  context.mock.method(window, 'setTimeout', (callback, delay) => {
+    scheduled.push({ callback, delay });
+    return 1;
+  });
+  const requestError = Object.assign(
+    new Error('Certification run not found.'),
+    { status: 404 },
+  );
+
+  render(
+    <WaitingPage
+      api={{
+        getRun: async () => {
+          throw requestError;
+        },
+        startRun: async () => interaction,
+      }}
+      runId="missing-run"
+      initialRun={{
+        interactionToken: 'interaction-token',
+        capability: 'ISSUING',
+        interaction,
+      }}
+    />,
+  );
+
+  expect(await screen.findByText('Certification run not found.')).toBeTruthy();
+  expect(scheduled).toHaveLength(0);
+});
+
+test('retries polling after a server error', async (context) => {
+  const scheduled = [];
+  context.mock.method(window, 'setTimeout', (callback, delay) => {
+    scheduled.push({ callback, delay });
+    return 1;
+  });
+  const requestError = Object.assign(
+    new Error('The request could not be completed.'),
+    { status: 503 },
+  );
+
+  render(
+    <WaitingPage
+      api={{
+        getRun: async () => {
+          throw requestError;
+        },
+        startRun: async () => interaction,
+      }}
+      runId="run-1"
+      initialRun={{
+        interactionToken: 'interaction-token',
+        capability: 'ISSUING',
+        interaction,
+      }}
+    />,
+  );
+
+  expect(
+    await screen.findByText('The request could not be completed.'),
+  ).toBeTruthy();
+  expect(scheduled.map(({ delay }) => delay)).toEqual([5000]);
 });

@@ -77,6 +77,11 @@ describe('configuration, health, and wallet search endpoints', () => {
         response.end(JSON.stringify({ error: 'registrar unavailable' }));
         return;
       }
+      if (url.searchParams.get('q') === 'unexpected') {
+        response.writeHead(200, { 'content-type': 'application/json' });
+        response.end('{');
+        return;
+      }
       expect(url.pathname).toEqual('/api/v0.6/organizations/search-profiles');
       expect(url.searchParams.get('filter.serviceTypes')).toEqual(
         'HolderAppProvider',
@@ -206,12 +211,22 @@ describe('configuration, health, and wallet search endpoints', () => {
       method: 'GET',
       url: '/api/wallets?q=x',
     });
+    const whitespaceOnly = await api.inject({
+      method: 'GET',
+      url: '/api/wallets?q=%20%20',
+    });
+    const paddedTooShort = await api.inject({
+      method: 'GET',
+      url: '/api/wallets?q=%20x%20',
+    });
     const tooLong = await api.inject({
       method: 'GET',
       url: `/api/wallets?q=${'x'.repeat(81)}`,
     });
 
     expect(tooShort.statusCode).toEqual(400);
+    expect(whitespaceOnly.statusCode).toEqual(400);
+    expect(paddedTooShort.statusCode).toEqual(400);
     expect(tooLong.statusCode).toEqual(400);
   });
 
@@ -227,6 +242,23 @@ describe('configuration, health, and wallet search endpoints', () => {
       message: 'Wallet search is temporarily unavailable.',
     });
     expect(response.body).not.toContain('registrar unavailable');
+  });
+
+  it('logs unexpected errors while returning a sanitized response', async () => {
+    const logsBefore = logs.length;
+
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/wallets?q=unexpected',
+    });
+
+    expect(response.statusCode).toEqual(500);
+    expect(response.json()).toEqual({
+      error: 'internal_error',
+      message: 'The request could not be completed.',
+    });
+    expect(response.body).not.toContain('SyntaxError');
+    expect(logs.slice(logsBefore)).toContain('SyntaxError');
   });
 
   it('does not write wallet search terms to logs', async () => {

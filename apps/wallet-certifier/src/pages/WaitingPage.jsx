@@ -71,6 +71,10 @@ const WaitingPage = ({ api, runId, initialRun }) => {
 
   const continueToDisclosure = async () => {
     const walletTab = window.open('about:blank', 'wallet-certifier-wallet');
+    if (walletTab) {
+      // eslint-disable-next-line better-mutation/no-mutation
+      walletTab.opener = null;
+    }
     setStartingDisclosure(true);
     setStartError('');
     try {

@@ -81,7 +81,10 @@ const buildServer = async ({
         message: 'Too many requests. Try again shortly.',
       });
     }
-    request.log.error({ errorCode: 'internal_error' }, 'Request failed');
+    request.log.error(
+      { err: error, errorCode: 'internal_error' },
+      'Request failed',
+    );
     return reply.status(500).send({
       error: 'internal_error',
       message: 'The request could not be completed.',
