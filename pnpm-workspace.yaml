@@ -24,7 +24,6 @@ onlyBuiltDependencies:
   - secp256k1
   - unrs-resolver
 packages:
-  - apps/*
   - contracts/*
   - packages/*
   - servers/*

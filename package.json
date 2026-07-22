@@ -20,8 +20,8 @@
     "test:coverage-summary-local": "python3 -m unittest discover -s .github/scripts/tests -p 'test_coverage_summary.py' -v",
     "release:prepare": "node tools/release/prepare-release.js",
     "release:validate-pr": "node tools/release/validate-release-pr.js",
-    "depcheck": "knip --dependencies --workspace './apps/*' --workspace './contracts/*' --workspace './packages/*' --workspace './servers/*' --workspace './tools/*' --workspace './samples/*'",
-    "depcheck-ci": "knip --dependencies --reporter json --workspace './apps/*' --workspace './contracts/*' --workspace './packages/*' --workspace './servers/*' --workspace './tools/*' --workspace './samples/*'",
+    "depcheck": "knip --dependencies --workspace './contracts/*' --workspace './packages/*' --workspace './servers/*' --workspace './tools/*' --workspace './samples/*'",
+    "depcheck-ci": "knip --dependencies --reporter json --workspace './contracts/*' --workspace './packages/*' --workspace './servers/*' --workspace './tools/*' --workspace './samples/*'",
     "contracts:assert-target-env": "node contracts/test-utils/assert-target-env.js",
     "contracts:lint": "pnpm exec eslint --config contracts/eslint.config.mjs \"contracts/**/*.js\" --ignore-pattern \"contracts/legacy-truffle/**\"",
     "contracts:build:hardhat": "pnpm --filter @verii/permissions-contract run build:hardhat && pnpm --filter @verii/verification-coupon-contract run build:hardhat && pnpm --filter @verii/metadata-registry-contract run build:hardhat && pnpm --filter @verii/revocation-list-contract run build:hardhat",
@@ -63,7 +63,6 @@
     "typescript-eslint": "8.63.0"
   },
   "workspaces": [
-    "apps/*",
     "contracts/*",
     "packages/*",
     "servers/*",

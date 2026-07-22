@@ -84,79 +84,6 @@ importers:
         specifier: 8.63.0
         version: 8.63.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
 
-  apps/wallet-certifier:
-    dependencies:
-      '@emotion/react':
-        specifier: ^11.14.0
-        version: 11.14.0(@types/react@19.2.17)(react@18.3.1)
-      '@emotion/styled':
-        specifier: ^11.14.1
-        version: 11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react@18.3.1)
-      '@mui/icons-material':
-        specifier: ^6.5.0
-        version: 6.5.0(@mui/material@6.5.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@19.2.17)(react@18.3.1)
-      '@mui/material':
-        specifier: ^6.5.0
-        version: 6.5.0(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      prop-types:
-        specifier: ^15.8.1
-        version: 15.8.1
-      qrcode.react:
-        specifier: ^4.2.0
-        version: 4.2.0(react@18.3.1)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-hook-form:
-        specifier: ^7.81.0
-        version: 7.82.0(react@18.3.1)
-      react-router:
-        specifier: 7.15.1
-        version: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-router-dom:
-        specifier: 7.15.1
-        version: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-    devDependencies:
-      '@playwright/test':
-        specifier: 1.61.1
-        version: 1.61.1
-      '@testing-library/react':
-        specifier: 16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@testing-library/user-event':
-        specifier: 14.6.1
-        version: 14.6.1(@testing-library/dom@10.4.1)
-      '@vitejs/plugin-react-swc':
-        specifier: 4.3.1
-        version: 4.3.1(@swc/helpers@0.5.23)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.5)(yaml@2.9.0))
-      eslint-plugin-react:
-        specifier: 7.37.5
-        version: 7.37.5(eslint@9.39.5(jiti@2.7.0))
-      eslint-plugin-react-hooks:
-        specifier: 7.1.1
-        version: 7.1.1(eslint@9.39.5(jiti@2.7.0))
-      expect:
-        specifier: 30.4.1
-        version: 30.4.1
-      global-jsdom:
-        specifier: 29.0.0
-        version: 29.0.0(jsdom@29.1.1(@noble/hashes@1.8.0))
-      globals:
-        specifier: 17.7.0
-        version: 17.7.0
-      jsdom:
-        specifier: 29.1.1
-        version: 29.1.1(@noble/hashes@1.8.0)
-      tsx:
-        specifier: 4.22.5
-        version: 4.22.5
-      vite:
-        specifier: 8.1.5
-        version: 8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.5)(yaml@2.9.0)
-
   contracts/metadata-registry:
     devDependencies:
       '@openzeppelin/contracts':
@@ -237,10 +164,10 @@ importers:
   packages/auth:
     dependencies:
       '@fastify/jwt':
-        specifier: ^10.1.0
+        specifier: ^10.2.0
         version: 10.2.0
       fastify-auth0-verify:
-        specifier: ^4.1.1
+        specifier: ^4.1.3
         version: 4.1.3
       fastify-plugin:
         specifier: ^5.1.0
@@ -280,7 +207,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -982,7 +909,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -1056,19 +983,19 @@ importers:
   packages/endpoints-credential-types-registrar:
     dependencies:
       '@fastify/autoload':
-        specifier: ^6.3.1
+        specifier: ^6.4.0
         version: 6.4.0
       '@fastify/helmet':
-        specifier: ^13.0.2
+        specifier: ^13.1.0
         version: 13.1.0
       '@fastify/multipart':
-        specifier: ^10.0.0
+        specifier: ^10.1.0
         version: 10.1.0
       '@fastify/sensible':
         specifier: ^6.0.4
         version: 6.0.4
       '@fastify/swagger':
-        specifier: ^9.7.0
+        specifier: ^9.8.1
         version: 9.8.1
       '@fastify/swagger-ui':
         specifier: ^5.2.6
@@ -1101,7 +1028,7 @@ importers:
         specifier: ~1.0.16
         version: 1.0.16
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -1186,19 +1113,19 @@ importers:
   packages/endpoints-event-processing:
     dependencies:
       '@fastify/autoload':
-        specifier: ^6.3.1
+        specifier: ^6.4.0
         version: 6.4.0
       '@fastify/basic-auth':
         specifier: ^6.2.0
         version: 6.2.0
       '@fastify/helmet':
-        specifier: ^13.0.2
+        specifier: ^13.1.0
         version: 13.1.0
       '@fastify/sensible':
         specifier: ^6.0.4
         version: 6.0.4
       '@fastify/swagger':
-        specifier: ^9.7.0
+        specifier: ^9.8.1
         version: 9.8.1
       '@fastify/swagger-ui':
         specifier: ^5.2.6
@@ -1252,7 +1179,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -1319,16 +1246,16 @@ importers:
   packages/endpoints-organizations-registrar:
     dependencies:
       '@fastify/autoload':
-        specifier: ^6.3.1
+        specifier: ^6.4.0
         version: 6.4.0
       '@fastify/helmet':
-        specifier: ^13.0.2
+        specifier: ^13.1.0
         version: 13.1.0
       '@fastify/sensible':
         specifier: ^6.0.4
         version: 6.0.4
       '@fastify/swagger':
-        specifier: ^9.7.0
+        specifier: ^9.8.1
         version: 9.8.1
       '@fastify/swagger-ui':
         specifier: ^5.2.6
@@ -1430,7 +1357,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -1561,7 +1488,7 @@ importers:
   packages/fastify-plugins:
     dependencies:
       '@fastify/cors':
-        specifier: ^11.2.0
+        specifier: ^11.3.0
         version: 11.3.0
       '@verii/crypto':
         specifier: workspace:*
@@ -1619,7 +1546,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -2140,7 +2067,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -2365,7 +2292,7 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       globals:
         specifier: 17.7.0
@@ -2789,19 +2716,19 @@ importers:
   samples/sample-registrar-server:
     dependencies:
       '@fastify/autoload':
-        specifier: ^6.3.1
+        specifier: ^6.4.0
         version: 6.4.0
       '@fastify/basic-auth':
         specifier: ^6.2.0
         version: 6.2.0
       '@fastify/helmet':
-        specifier: ^13.0.2
+        specifier: ^13.1.0
         version: 13.1.0
       '@fastify/sensible':
         specifier: ^6.0.4
         version: 6.0.4
       '@fastify/swagger':
-        specifier: ^9.7.0
+        specifier: ^9.8.1
         version: 9.8.1
       '@fastify/swagger-ui':
         specifier: ^5.2.6
@@ -2849,7 +2776,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -3013,10 +2940,10 @@ importers:
   samples/sample-web-wallet-server:
     dependencies:
       '@fastify/autoload':
-        specifier: ^6.3.1
+        specifier: ^6.4.0
         version: 6.4.0
       '@fastify/cors':
-        specifier: ^11.2.0
+        specifier: ^11.3.0
         version: 11.3.0
       '@verii/vc-checks':
         specifier: workspace:*
@@ -3031,7 +2958,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -3101,13 +3028,13 @@ importers:
   servers/credentialagent:
     dependencies:
       '@fastify/autoload':
-        specifier: ^6.3.1
+        specifier: ^6.4.0
         version: 6.4.0
       '@fastify/cors':
-        specifier: ^11.2.0
+        specifier: ^11.3.0
         version: 11.3.0
       '@fastify/helmet':
-        specifier: ^13.0.2
+        specifier: ^13.1.0
         version: 13.1.0
       '@fastify/routes':
         specifier: ^6.0.2
@@ -3116,10 +3043,10 @@ importers:
         specifier: ^6.0.4
         version: 6.0.4
       '@fastify/static':
-        specifier: ^9.1.3
+        specifier: ^9.3.0
         version: 9.3.0
       '@fastify/swagger':
-        specifier: ^9.7.0
+        specifier: ^9.8.1
         version: 9.8.1
       '@fastify/swagger-ui':
         specifier: ^5.2.6
@@ -3224,7 +3151,7 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -3327,25 +3254,25 @@ importers:
   servers/credentialinghub:
     dependencies:
       '@fastify/autoload':
-        specifier: ^6.3.1
+        specifier: ^6.4.0
         version: 6.4.0
       '@fastify/bearer-auth':
         specifier: ^10.1.2
         version: 10.1.2
       '@fastify/cors':
-        specifier: ^11.2.0
+        specifier: ^11.3.0
         version: 11.3.0
       '@fastify/formbody':
         specifier: ^8.0.2
         version: 8.0.2
       '@fastify/helmet':
-        specifier: ^13.0.2
+        specifier: ^13.1.0
         version: 13.1.0
       '@fastify/sensible':
         specifier: ^6.0.4
         version: 6.0.4
       '@fastify/swagger':
-        specifier: ^9.7.0
+        specifier: ^9.8.1
         version: 9.8.1
       '@fastify/swagger-ui':
         specifier: ^5.2.6
@@ -3444,7 +3371,7 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -3505,19 +3432,19 @@ importers:
   servers/mockvendor:
     dependencies:
       '@fastify/autoload':
-        specifier: ^6.3.1
+        specifier: ^6.4.0
         version: 6.4.0
       '@fastify/helmet':
-        specifier: ^13.0.2
+        specifier: ^13.1.0
         version: 13.1.0
       '@fastify/jwt':
-        specifier: ^10.1.0
+        specifier: ^10.2.0
         version: 10.2.0
       '@fastify/sensible':
         specifier: ^6.0.4
         version: 6.0.4
       '@fastify/swagger':
-        specifier: ^9.7.0
+        specifier: ^9.8.1
         version: 9.8.1
       '@fastify/swagger-ui':
         specifier: ^5.2.6
@@ -3562,7 +3489,7 @@ importers:
         specifier: ^7.5.0
         version: 7.5.0
       fastify:
-        specifier: ^5.9.0
+        specifier: ^5.10.0
         version: 5.10.0
       fastify-plugin:
         specifier: ^5.1.0
@@ -3634,58 +3561,6 @@ importers:
       prettier:
         specifier: 3.9.5
         version: 3.9.5
-
-  servers/wallet-certifier:
-    dependencies:
-      '@aws-sdk/client-secrets-manager':
-        specifier: ^3.1075.0
-        version: 3.1091.0
-      '@aws-sdk/client-sesv2':
-        specifier: ^3.1075.0
-        version: 3.1075.0
-      '@fastify/aws-lambda':
-        specifier: ^6.4.0
-        version: 6.4.0
-      '@fastify/cookie':
-        specifier: ^11.0.2
-        version: 11.1.2
-      '@fastify/cors':
-        specifier: ^11.2.0
-        version: 11.3.0
-      '@fastify/helmet':
-        specifier: ^13.0.2
-        version: 13.1.0
-      '@fastify/rate-limit':
-        specifier: ^10.3.0
-        version: 10.3.0
-      '@verii/aws-clients':
-        specifier: workspace:*
-        version: link:../../packages/aws-clients
-      env-var:
-        specifier: ^7.5.0
-        version: 7.5.0
-      fastify:
-        specifier: ^5.10.0
-        version: 5.10.0
-      mongodb:
-        specifier: 7.3.0
-        version: 7.3.0
-      nanoid:
-        specifier: ^5.1.16
-        version: 5.1.16
-    devDependencies:
-      cross-env:
-        specifier: 10.1.0
-        version: 10.1.0
-      expect:
-        specifier: 30.4.1
-        version: 30.4.1
-      nock:
-        specifier: 15.0.0-beta.12
-        version: 15.0.0-beta.12
-      nodemon:
-        specifier: 3.1.14
-        version: 3.1.14
 
   tools/agentdb-cli:
     dependencies:
@@ -4061,10 +3936,6 @@ packages:
 
   '@aws-sdk/client-s3@3.1075.0':
     resolution: {integrity: sha512-h1A6nIl1YX6Y45enGsTK7ef3ZrOnBiQJ1qF5R2K/nMWfsu6A9mc2Y5T66nxerABzyjjyyvign3MrzafnFoQKmA==}
-    engines: {node: '>=20.0.0'}
-
-  '@aws-sdk/client-secrets-manager@3.1091.0':
-    resolution: {integrity: sha512-VrJUAZAU6/pEUzy5bqXhBV2xqBcIp5an3rS7BYYaCZhLCAg1avI8EtxodQKhT6PNxBbfAmcoYHcb/JJ4Fn1ZCw==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/client-ses@3.1075.0':
@@ -5233,9 +5104,6 @@ packages:
   '@fastify/autoload@6.4.0':
     resolution: {integrity: sha512-aUuu8Owoye+cypaveiOrizbKgQEx125kbLgHtPdiOMpJdhNVGG0hkytj0eDvlqp0MKx8dkIAqNqzOi8oSj22jw==}
 
-  '@fastify/aws-lambda@6.4.0':
-    resolution: {integrity: sha512-7iCx4Bl+SoeeRP0ALv1Rg4AR63yBW8XxgQiQ4OrTJApUObMzMtN1VPFtnoAqGhtpruAeVUTxgGpsW1hasYxU8Q==}
-
   '@fastify/basic-auth@6.2.0':
     resolution: {integrity: sha512-Ao9Jf8TyW8v7p3CPy++c+E3qcCDeWfAlSIfFo0CsKrfvm81i0OCpnobIMwaSSkg/At0rzsLzbJPDWrgNru0G1w==}
 
@@ -5284,9 +5152,6 @@ packages:
 
   '@fastify/proxy-addr@5.1.0':
     resolution: {integrity: sha512-INS+6gh91cLUjB+PVHfu1UqcB76Sqtpyp7bnL+FYojhjygvOPA9ctiD/JDKsyD9Xgu4hUhCSJBPig/w7duNajw==}
-
-  '@fastify/rate-limit@10.3.0':
-    resolution: {integrity: sha512-eIGkG9XKQs0nyynatApA3EVrojHOuq4l6fhB4eeCk4PIOeadvOJz9/4w3vGI44Go17uaXOWEcPkaD8kuKm7g6Q==}
 
   '@fastify/routes@6.0.2':
     resolution: {integrity: sha512-5OIl4DwNwRhUytGkc1GmrfzysOBLxVXCaWHA+p9NV2plVLoqiyFeGau/QsVxKGTfBJKTvWPoXtYe7Z/18phfQg==}
@@ -6312,11 +6177,6 @@ packages:
   '@pkgr/core@0.3.6':
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
-
-  '@playwright/test@1.61.1':
-    resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
-    engines: {node: '>=18'}
-    hasBin: true
 
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
@@ -8665,11 +8525,6 @@ packages:
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
-
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -10042,16 +9897,6 @@ packages:
     resolution: {integrity: sha512-r34yH/GlQpKZbU1BvFFqOjhISRo1MNx1tWYsYvmj6KIRHSPMT2+yHOEb1SG6NMvRoHRF0a07kCOox/9yakl1vg==}
     hasBin: true
 
-  playwright-core@1.61.1:
-    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  playwright@1.61.1:
-    resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
-    engines: {node: '>=18'}
-    hasBin: true
-
   png-js@2.0.0:
     resolution: {integrity: sha512-GdzJuUMc6ZSpxFJWVxtOH1bzYHym+TOnveqUjb+VJIbZWbZzyiRGFiKhbiielfpYbgMlhHVhsJ0FTazfuRFkMA==}
 
@@ -10148,11 +9993,6 @@ packages:
 
   qr-image@3.2.0:
     resolution: {integrity: sha512-rXKDS5Sx3YipVsqmlMJsJsk6jXylEpiHRC2+nJy66fxA5ExYyGa4PqwteW69SaVmAb2OQ18HbYriT7cGQMbduw==}
-
-  qrcode.react@4.2.0:
-    resolution: {integrity: sha512-QpgqWi8rD9DsS9EP3z7BT+5lY5SFhsqGjpgW5DY/i3mK4M9DTBNz3ErMi8BWYEfI3L0d8GIbGmcdFAS1uIRGjA==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   qs@6.15.3:
     resolution: {integrity: sha512-O9gl3zCl5h5blw1KGUzQKhA5oUXSl8rwUIM5o0S3nCXMliSvy5Dzx7/DJcI+SwgICv+IneSZwhBh1oSyEHA71A==}
@@ -10923,11 +10763,6 @@ packages:
   tsort@0.0.1:
     resolution: {integrity: sha512-Tyrf5mxF8Ofs1tNoxA13lFeZ2Zrbd6cKbuH3V+MQ5sb6DtBj5FjrXVsRWT8YvNAQTqNoz66dz1WsbigI22aEnw==}
 
-  tsx@4.22.5:
-    resolution: {integrity: sha512-F7JnSfPl5ASt6LqwWyUQ3T8BwN3q0eQEbFMYa2iRWaVQmmudo0d7fRmwM4O002gsvW1bs0yBYioutsAjqLJMvQ==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-
   tsx@4.23.1:
     resolution: {integrity: sha512-GQHnkIfxyx1wYCOS/wonik5MVRZU9hi1TEZmzGZSCJB1y9YgoZ8H6itNE/u4suE+yLmOzuE4E5S4TZ/ZX2wcWQ==}
     engines: {node: '>=18.0.0'}
@@ -11541,17 +11376,6 @@ snapshots:
       '@aws-sdk/middleware-flexible-checksums': 3.974.43
       '@aws-sdk/middleware-sdk-s3': 3.972.64
       '@aws-sdk/signature-v4-multi-region': 3.996.41
-      '@aws-sdk/types': 3.974.2
-      '@smithy/core': 3.29.6
-      '@smithy/fetch-http-handler': 5.6.8
-      '@smithy/node-http-handler': 4.9.8
-      '@smithy/types': 4.16.1
-      tslib: 2.8.1
-
-  '@aws-sdk/client-secrets-manager@3.1091.0':
-    dependencies:
-      '@aws-sdk/core': 3.975.3
-      '@aws-sdk/credential-provider-node': 3.972.70
       '@aws-sdk/types': 3.974.2
       '@smithy/core': 3.29.6
       '@smithy/fetch-http-handler': 5.6.8
@@ -13092,8 +12916,6 @@ snapshots:
 
   '@fastify/autoload@6.4.0': {}
 
-  '@fastify/aws-lambda@6.4.0': {}
-
   '@fastify/basic-auth@6.2.0':
     dependencies:
       '@fastify/error': 4.2.0
@@ -13162,12 +12984,6 @@ snapshots:
     dependencies:
       '@fastify/forwarded': 3.0.1
       ipaddr.js: 2.4.0
-
-  '@fastify/rate-limit@10.3.0':
-    dependencies:
-      '@lukeed/ms': 2.0.2
-      fastify-plugin: 5.1.0
-      toad-cache: 3.7.4
 
   '@fastify/routes@6.0.2':
     dependencies:
@@ -14244,10 +14060,6 @@ snapshots:
 
   '@pkgr/core@0.3.6': {}
 
-  '@playwright/test@1.61.1':
-    dependencies:
-      playwright: 1.61.1
-
   '@popperjs/core@2.11.8': {}
 
   '@prisma/instrumentation@5.22.0':
@@ -15148,14 +14960,6 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
-
-  '@vitejs/plugin-react-swc@4.3.1(@swc/helpers@0.5.23)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.5)(yaml@2.9.0))':
-    dependencies:
-      '@rolldown/pluginutils': 1.0.1
-      '@swc/core': 1.15.43(@swc/helpers@0.5.23)
-      vite: 8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.5)(yaml@2.9.0)
-    transitivePeerDependencies:
-      - '@swc/helpers'
 
   '@vitejs/plugin-react-swc@4.3.1(@swc/helpers@0.5.23)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0))':
     dependencies:
@@ -17010,9 +16814,6 @@ snapshots:
 
   fs.realpath@1.0.0: {}
 
-  fsevents@2.3.2:
-    optional: true
-
   fsevents@2.3.3:
     optional: true
 
@@ -18612,14 +18413,6 @@ snapshots:
       sonic-boom: 4.2.1
       thread-stream: 4.2.0
 
-  playwright-core@1.61.1: {}
-
-  playwright@1.61.1:
-    dependencies:
-      playwright-core: 1.61.1
-    optionalDependencies:
-      fsevents: 2.3.2
-
   png-js@2.0.0:
     dependencies:
       fflate: 0.8.3
@@ -18708,10 +18501,6 @@ snapshots:
   punycode@2.3.1: {}
 
   qr-image@3.2.0: {}
-
-  qrcode.react@4.2.0(react@18.3.1):
-    dependencies:
-      react: 18.3.1
 
   qs@6.15.3:
     dependencies:
@@ -19565,12 +19354,6 @@ snapshots:
 
   tsort@0.0.1: {}
 
-  tsx@4.22.5:
-    dependencies:
-      esbuild: 0.28.1
-    optionalDependencies:
-      fsevents: 2.3.3
-
   tsx@4.23.1:
     dependencies:
       esbuild: 0.28.1
@@ -19795,21 +19578,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
-
-  vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.5)(yaml@2.9.0):
-    dependencies:
-      lightningcss: 1.33.0
-      picomatch: 4.0.5
-      postcss: 8.5.20
-      rolldown: 1.1.5
-      tinyglobby: 0.2.17
-    optionalDependencies:
-      '@types/node': 24.13.3
-      esbuild: 0.28.1
-      fsevents: 2.3.3
-      jiti: 2.7.0
-      tsx: 4.22.5
-      yaml: 2.9.0
 
   vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0):
     dependencies:
