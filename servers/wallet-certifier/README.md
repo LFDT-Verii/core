@@ -17,8 +17,8 @@ The dedicated Mongo port keeps this stack runnable alongside the Credentialing H
 Open:
 
 - App: <http://localhost:14080>
-- API health: <http://localhost:14081/api/health>
-- Interactive dependency simulator: <http://localhost:14082/health>
+- API health: <http://localhost:14081/api/>
+- Interactive dependency simulator: <http://localhost:14082/>
 - MongoDB: `mongodb://localhost:17018/wallet_certifier_local`
 - LocalStack: <http://localhost:14566>
 
@@ -36,7 +36,7 @@ docker compose -f servers/wallet-certifier/docker/compose.yml logs -f wallet-cer
 Run the full browser suite against the stack:
 
 ```bash
-corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app test:e2e
+corepack $(node -p "require('./package.json').packageManager") --filter @verii/wallet-certifier-app test:browser-functional
 ```
 
 Inspect a sanitized support record (production protects this route with API Gateway IAM authorization):

@@ -27,59 +27,33 @@ const failures = Object.freeze({
 
 const leaseRun = (run, context) => {
   const now = new Date(context.now());
-  return context.db.collection('certificationRuns').findOneAndUpdate(
-    {
-      runId: run.runId,
-      state: run.state,
-      nextCheckAt: { $lte: now },
-      $or: [
-        { leaseUntil: { $exists: false } },
-        { leaseUntil: null },
-        { leaseUntil: { $lte: now } },
-      ],
-    },
-    {
-      $set: {
-        leaseUntil: new Date(now.getTime() + LEASE_IN_MS),
-        updatedAt: now,
-      },
-    },
-    { returnDocument: 'after' },
-  );
+  return context.repositories.certificationRuns.acquireLease({
+    runId: run.runId,
+    state: run.state,
+    now,
+    leaseUntil: new Date(now.getTime() + LEASE_IN_MS),
+  });
 };
 
-const scheduleRun = async (run, state, context) => {
+const scheduleRun = (run, state, context) => {
   const now = new Date(context.now());
-  const stateChanged = run.state !== state;
-  await context.db.collection('certificationRuns').updateOne(
-    { runId: run.runId, state: run.state },
-    {
-      $set: {
-        state,
-        nextCheckAt: new Date(now.getTime() + POLL_IN_MS),
-        leaseUntil: null,
-        updatedAt: now,
-      },
-      $inc: { revision: 1 },
-      ...(stateChanged ? { $push: { journal: { state, at: now } } } : {}),
-    },
-  );
+  return context.repositories.certificationRuns.schedule({
+    runId: run.runId,
+    expectedState: run.state,
+    state,
+    nextCheckAt: new Date(now.getTime() + POLL_IN_MS),
+    updatedAt: now,
+  });
 };
 
-const retryRun = async (run, context) => {
+const retryRun = (run, context) => {
   const now = new Date(context.now());
-  await context.db.collection('certificationRuns').updateOne(
-    { runId: run.runId, state: run.state },
-    {
-      $set: {
-        lastReconcileErrorCode: 'hub_unavailable',
-        nextCheckAt: new Date(now.getTime() + POLL_IN_MS),
-        leaseUntil: null,
-        updatedAt: now,
-      },
-      $inc: { reconcileFailures: 1, revision: 1 },
-    },
-  );
+  return context.repositories.certificationRuns.recordReconcileFailure({
+    runId: run.runId,
+    expectedState: run.state,
+    nextCheckAt: new Date(now.getTime() + POLL_IN_MS),
+    updatedAt: now,
+  });
 };
 
 const timeoutFailure = (run) =>
@@ -196,8 +170,7 @@ const finishOrScheduleExchange = async (run, exchange, context) => {
       context,
     });
   }
-  await scheduleRun(run, deadlineState, context);
-  return loadCurrentRun(run.runId, context);
+  return scheduleRun(run, deadlineState, context);
 };
 
 const reconcileDisclosure = async (run, context) => {
@@ -240,10 +213,7 @@ const reconcileExchange = async (run, context) => {
       context,
     });
   }
-  await scheduleRun(run, deadlineState, context);
-  return context.db
-    .collection('certificationRuns')
-    .findOne({ runId: run.runId });
+  return scheduleRun(run, deadlineState, context);
 };
 
 const reconcileIssuance = async (run, context) => {
@@ -269,7 +239,7 @@ const isDue = (run, now) =>
   new Date(run.nextCheckAt) <= new Date(now);
 
 const loadCurrentRun = (runId, context) =>
-  context.db.collection('certificationRuns').findOne({ runId });
+  context.repositories.certificationRuns.findByRunId(runId);
 
 const reconcileLeased = async (run, context) => {
   try {

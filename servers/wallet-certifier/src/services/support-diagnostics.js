@@ -16,7 +16,7 @@ const notificationProjection = ({
   updatedAt,
 });
 
-const projectSupportRun = (run, notifications) => ({
+const projectSupportDiagnostics = (run, notifications) => ({
   audience: 'SUPPORT',
   runId: run.runId,
   environmentName: run.environmentName,
@@ -42,15 +42,12 @@ const projectSupportRun = (run, notifications) => ({
   notifications: notifications.map(notificationProjection),
 });
 
-const loadSupportRun = async (runId, db, existingRun) => {
+const loadSupportDiagnostics = async (runId, repositories, existingRun) => {
   const [run, notifications] = await Promise.all([
-    existingRun ?? db.collection('certificationRuns').findOne({ runId }),
-    db
-      .collection('notificationJobs')
-      .find({ runId }, { sort: { role: 1 } })
-      .toArray(),
+    existingRun ?? repositories.certificationRuns.findByRunId(runId),
+    repositories.notificationJobs.findDiagnosticsByRunId(runId),
   ]);
-  return run ? projectSupportRun(run, notifications) : undefined;
+  return run ? projectSupportDiagnostics(run, notifications) : undefined;
 };
 
-module.exports = { loadSupportRun, projectSupportRun };
+module.exports = { loadSupportDiagnostics, projectSupportDiagnostics };

@@ -35,7 +35,7 @@ services:
     volumes:
       - ../:/app/servers/wallet-certifier
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:14082/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:14082/').then(r=>{if(!r.ok)process.exit(1)})"]
       interval: 3s
       timeout: 3s
       retries: 20
@@ -57,7 +57,7 @@ services:
     volumes:
       - ../:/app/servers/wallet-certifier
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:14081/api/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:14081/api/').then(r=>{if(!r.ok)process.exit(1)})"]
       interval: 3s
       timeout: 3s
       retries: 30

@@ -4,27 +4,13 @@ const RETRY_IN_MS = 60 * 1000;
 const providerMessageId = (response) =>
   response?.MessageId ?? response?.messageId;
 
-const leaseJob = (db, now) =>
-  db.collection('notificationJobs').findOneAndUpdate(
-    {
-      status: { $in: ['PENDING', 'RETRY'] },
-      nextAttemptAt: { $lte: now },
-      $or: [
-        { leaseUntil: { $exists: false } },
-        { leaseUntil: null },
-        { leaseUntil: { $lte: now } },
-      ],
-    },
-    {
-      $set: {
-        leaseUntil: new Date(now.getTime() + LEASE_IN_MS),
-        updatedAt: now,
-      },
-    },
-    { returnDocument: 'after' },
-  );
+const leaseJob = (repositories, now) =>
+  repositories.notificationJobs.acquireNext({
+    now,
+    leaseUntil: new Date(now.getTime() + LEASE_IN_MS),
+  });
 
-const sendJob = async (job, { config, db, now, sendEmail }) => {
+const sendJob = async (job, { config, repositories, now, sendEmail }) => {
   const attemptedAt = new Date(now());
   try {
     const response = await sendEmail({
@@ -34,34 +20,20 @@ const sendJob = async (job, { config, db, now, sendEmail }) => {
       recipients: [job.recipient],
       replyTo: config.supportEmail,
     });
-    await db.collection('notificationJobs').updateOne(
-      { jobId: job.jobId },
-      {
-        $set: {
-          status: 'SENT',
-          providerMessageId: providerMessageId(response),
-          sentAt: attemptedAt,
-          updatedAt: attemptedAt,
-          leaseUntil: null,
-        },
-        $inc: { attemptCount: 1 },
-      },
-    );
+    await repositories.notificationJobs.markSent({
+      jobId: job.jobId,
+      providerMessageId: providerMessageId(response),
+      sentAt: attemptedAt,
+      updatedAt: attemptedAt,
+    });
     return true;
   } catch {
-    await db.collection('notificationJobs').updateOne(
-      { jobId: job.jobId },
-      {
-        $set: {
-          status: 'RETRY',
-          lastErrorCode: 'delivery_failed',
-          nextAttemptAt: new Date(attemptedAt.getTime() + RETRY_IN_MS),
-          updatedAt: attemptedAt,
-          leaseUntil: null,
-        },
-        $inc: { attemptCount: 1 },
-      },
-    );
+    await repositories.notificationJobs.markRetry({
+      jobId: job.jobId,
+      lastErrorCode: 'delivery_failed',
+      nextAttemptAt: new Date(attemptedAt.getTime() + RETRY_IN_MS),
+      updatedAt: attemptedAt,
+    });
     return false;
   }
 };
@@ -70,7 +42,7 @@ const processNextJob = async (context, totals) => {
   if (totals.processed >= 25) {
     return totals;
   }
-  const job = await leaseJob(context.db, new Date(context.now()));
+  const job = await leaseJob(context.repositories, new Date(context.now()));
   if (!job) {
     return totals;
   }

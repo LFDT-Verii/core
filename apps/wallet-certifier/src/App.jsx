@@ -18,7 +18,7 @@ import { theme } from './theme';
 const defaultConfig = {
   brandName: 'Velocity Network Foundation',
   environmentName: 'devnet',
-  registrationUrl: 'https://velocitynetwork.foundation/',
+  registrationUrl: '',
 };
 
 const storedRun = (runId) => {

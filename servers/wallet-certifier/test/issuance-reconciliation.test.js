@@ -8,7 +8,7 @@ const { RunStates } = require('../src/domain/states');
 const {
   processNotificationJobs,
 } = require('../src/services/process-notifications');
-const { closeMongo, initMongo } = require('../src/repositories/mongo');
+const { closeMongo, initMongo } = require('../src/repositories/mongodb');
 
 const mongoConnectionString =
   process.env.MONGO_URI ?? 'mongodb://localhost:27017';
@@ -72,7 +72,7 @@ describe('issuance reconciliation and notifications', () => {
     };
     api = await buildServer({
       config,
-      db: mongo.db,
+      repositories: mongo.repositories,
       registrarClient: { searchWallets: async () => [] },
       hubClient,
       now: () => nowValue,
@@ -395,7 +395,7 @@ describe('issuance reconciliation and notifications', () => {
 
     const result = await processNotificationJobs({
       config,
-      db: mongo.db,
+      repositories: mongo.repositories,
       now: () => nowValue,
       sendEmail,
     });

@@ -31,12 +31,12 @@ const selectWallet = (wallets, walletId) => {
   return wallet;
 };
 
-const persistRun = async (db, run, evidence) => {
-  await db.collection('certificationRuns').insertOne(run);
+const persistRun = async (repositories, run, evidence) => {
+  await repositories.certificationRuns.create(run);
   try {
-    await db.collection('runEvidence').insertOne(evidence);
+    await repositories.runEvidence.create(evidence);
   } catch (error) {
-    await db.collection('certificationRuns').deleteOne({ runId: run.runId });
+    await repositories.certificationRuns.removeByRunId(run.runId);
     throw error;
   }
 };
@@ -45,7 +45,7 @@ const createRun = async (
   input,
   {
     config,
-    db,
+    repositories,
     registrarClient,
     now = () => new Date(),
     runIdFactory = randomUUID,
@@ -88,7 +88,7 @@ const createRun = async (
     purgeAt: addDays(createdAt, 30),
   };
 
-  await persistRun(db, run, evidence);
+  await persistRun(repositories, run, evidence);
 
   return {
     runId,

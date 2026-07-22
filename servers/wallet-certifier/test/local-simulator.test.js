@@ -22,7 +22,7 @@ const delay = () =>
 
 const waitForHealth = async (baseUrl, attemptsRemaining = 50) => {
   try {
-    const response = await fetch(`${baseUrl}/health`);
+    const response = await fetch(`${baseUrl}/`);
     if (response.ok) {
       return undefined;
     }

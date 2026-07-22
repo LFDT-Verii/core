@@ -10,6 +10,9 @@ test('renders the wallet certifier heading', () => {
   expect(
     screen.getByRole('heading', { name: /wallet certifier/i }),
   ).toBeTruthy();
+  expect(screen.getByText('Register your wallet').getAttribute('href')).toEqual(
+    '',
+  );
 });
 
 test('routes private support links to sanitized diagnostics', async () => {

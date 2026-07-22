@@ -6,7 +6,7 @@ const {
   loadResultRun,
   resolveResultRole,
 } = require('../services/result-capabilities');
-const { loadSupportRun } = require('../services/support-run');
+const { loadSupportDiagnostics } = require('../services/support-diagnostics');
 
 const runInputSchema = {
   type: 'object',
@@ -53,7 +53,7 @@ const baseRunResponse = (run) => ({
 });
 
 const loadEvidence = (run, context) =>
-  context.db.collection('runEvidence').findOne({ runId: run.runId });
+  context.repositories.runEvidence.findByRunId(run.runId);
 
 const loadRequestRun = async (request, context) => {
   const token = bearerToken(request.headers.authorization);
@@ -173,7 +173,11 @@ module.exports = async (fastify, context) => {
     async (request) => {
       const authorized = await loadRequestRun(request, context);
       if (authorized.audience === 'SUPPORT') {
-        return loadSupportRun(authorized.run.runId, context.db, authorized.run);
+        return loadSupportDiagnostics(
+          authorized.run.runId,
+          context.repositories,
+          authorized.run,
+        );
       }
       const run = await reconcileRun(authorized.run, context);
       return presentRun(run, context);

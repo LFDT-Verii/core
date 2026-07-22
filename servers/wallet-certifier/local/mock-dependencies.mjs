@@ -294,7 +294,7 @@ const getWalletRedirect = (url, response) => {
 };
 
 const getRoutes = new Map([
-  ['/health', (_url, response) => json(response, 200, { status: 'ok' })],
+  ['/', (_url, response) => json(response, 200, { status: 'ok' })],
   [
     '/api/v0.6/organizations/search-profiles',
     (_url, response) => json(response, 200, registrarSearch),

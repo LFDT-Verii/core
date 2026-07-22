@@ -15,7 +15,7 @@ const { LogController } = Fastify;
 
 const buildServer = async ({
   config,
-  db,
+  repositories,
   registrarClient = createRegistrarClient({ baseUrl: config.registrarUrl }),
   hubClient = createHubClient({
     baseUrl: config.hubUrl,
@@ -102,7 +102,11 @@ const buildServer = async ({
     referrerPolicy: { policy: 'no-referrer' },
   });
   await server.register(cookie);
-  await server.register(configController, { prefix: '/api', config, db });
+  await server.register(configController, {
+    prefix: '/api',
+    config,
+    repositories,
+  });
   await server.register(walletsController, {
     prefix: '/api',
     registrarClient,
@@ -112,7 +116,7 @@ const buildServer = async ({
     await runServer.register(runsController, {
       prefix: '/api',
       config,
-      db,
+      repositories,
       registrarClient,
       hubClient,
       now,
@@ -123,12 +127,12 @@ const buildServer = async ({
   await server.register(resultSessionsController, {
     prefix: '/api',
     config,
-    db,
+    repositories,
     now,
   });
   await server.register(supportController, {
     prefix: '/api',
-    db,
+    repositories,
   });
 
   return server;

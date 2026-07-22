@@ -65,48 +65,22 @@ const queueNotifications = async ({
     updatedAt: completedAt,
     purgeAt: new Date(completedAt.getTime() + 30 * DAY_IN_MS),
   }));
-  await Promise.all(
-    jobs.map((job) =>
-      context.db
-        .collection('notificationJobs')
-        .updateOne(
-          { jobId: job.jobId },
-          { $setOnInsert: job },
-          { upsert: true },
-        ),
-    ),
-  );
+  await context.repositories.notificationJobs.enqueueOnce(jobs);
 };
 
 const prepareDisclosure = async ({ run, credential, context }) => {
   const updatedAt = new Date(context.now());
-  await context.db.collection('runEvidence').updateOne(
-    { runId: run.runId },
-    {
-      $set: { issuedCredential: credential, updatedAt },
-    },
-  );
-  await context.db.collection('certificationRuns').updateOne(
-    { runId: run.runId, state: run.state },
-    {
-      $set: {
-        state: 'PREPARING_DISCLOSURE',
-        setupCredentialFingerprint: fingerprintJwt(credential.jwt),
-        leaseUntil: null,
-        updatedAt,
-      },
-      $inc: { revision: 1 },
-      $push: { journal: { state: 'PREPARING_DISCLOSURE', at: updatedAt } },
-      $unset: {
-        actionDeadline: '',
-        absoluteDeadline: '',
-        nextCheckAt: '',
-      },
-    },
-  );
-  return context.db
-    .collection('certificationRuns')
-    .findOne({ runId: run.runId });
+  await context.repositories.runEvidence.saveIssuedCredential({
+    runId: run.runId,
+    credential,
+    updatedAt,
+  });
+  return context.repositories.certificationRuns.prepareDisclosure({
+    runId: run.runId,
+    expectedState: run.state,
+    setupCredentialFingerprint: fingerprintJwt(credential.jwt),
+    updatedAt,
+  });
 };
 
 const persistTerminalEvidence = async ({
@@ -119,16 +93,14 @@ const persistTerminalEvidence = async ({
   if (!credential && !evidenceFields) {
     return;
   }
-  await context.db.collection('runEvidence').updateOne(
-    { runId: run.runId },
-    {
-      $set: {
-        ...(credential ? { issuedCredential: credential } : {}),
-        ...evidenceFields,
-        updatedAt: completedAt,
-      },
+  await context.repositories.runEvidence.saveTerminalEvidence({
+    runId: run.runId,
+    fields: {
+      ...(credential ? { issuedCredential: credential } : {}),
+      ...evidenceFields,
     },
-  );
+    updatedAt: completedAt,
+  });
 };
 
 const terminalFields = ({
@@ -180,9 +152,9 @@ const completeRun = async ({
     APPLICANT: createToken(),
     SUPPORT: createToken(),
   };
-  const evidence = await context.db.collection('runEvidence').findOne({
-    runId: run.runId,
-  });
+  const evidence = await context.repositories.runEvidence.findByRunId(
+    run.runId,
+  );
   await persistTerminalEvidence({
     run,
     credential,
@@ -202,29 +174,22 @@ const completeRun = async ({
     completedAt,
     context,
   });
-  await context.db.collection('certificationRuns').updateOne(
-    { runId: run.runId, state: run.state },
-    {
-      $set: {
-        ...terminalFields({
-          state,
-          applicantToken: tokens.APPLICANT,
-          supportToken: tokens.SUPPORT,
-          completedAt,
-          credential,
-          failure,
-          resultSummary,
-          context,
-        }),
-      },
-      $inc: { revision: 1 },
-      $push: { journal: { state, at: completedAt } },
-      $unset: { nextCheckAt: '' },
-    },
-  );
-  return context.db
-    .collection('certificationRuns')
-    .findOne({ runId: run.runId });
+  return context.repositories.certificationRuns.complete({
+    runId: run.runId,
+    expectedState: run.state,
+    state,
+    fields: terminalFields({
+      state,
+      applicantToken: tokens.APPLICANT,
+      supportToken: tokens.SUPPORT,
+      completedAt,
+      credential,
+      failure,
+      resultSummary,
+      context,
+    }),
+    completedAt,
+  });
 };
 
 const credentialResult = (hubCredential) => ({

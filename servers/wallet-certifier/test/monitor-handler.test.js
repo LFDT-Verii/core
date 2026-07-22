@@ -3,7 +3,7 @@ const { expect } = require('expect');
 const { MongoClient } = require('mongodb');
 const { createMonitorHandler } = require('../src/lambda-monitor');
 const { RunStates } = require('../src/domain/states');
-const { closeMongo, initMongo } = require('../src/repositories/mongo');
+const { closeMongo, initMongo } = require('../src/repositories/mongodb');
 
 const mongoConnectionString =
   process.env.MONGO_URI ?? 'mongodb://localhost:27017';
@@ -73,7 +73,7 @@ describe('scheduled run monitor', () => {
     const sent = [];
     const handler = createMonitorHandler({
       config,
-      db: mongo.db,
+      repositories: mongo.repositories,
       hubClient: {
         getCredential: async () => ({ id: 'credential-1' }),
         getExchange: async () => ({ state: 'NEW', events: [] }),
@@ -114,7 +114,7 @@ describe('scheduled run monitor', () => {
     ]);
     const handler = createMonitorHandler({
       config,
-      db: mongo.db,
+      repositories: mongo.repositories,
       hubClient: {
         getCredential: async (credentialId) => {
           if (credentialId === 'broken-credential') {

@@ -5,9 +5,7 @@ const { PublicError } = require('../domain/public-error');
 const { RunStates } = require('../domain/states');
 
 const loadAuthorizedRun = async (runId, token, context) => {
-  const run = await context.db
-    .collection('certificationRuns')
-    .findOne({ runId });
+  const run = await context.repositories.certificationRuns.findByRunId(runId);
   if (!run) {
     throw new PublicError(404, 'run_not_found', 'Certification run not found.');
   }
@@ -29,14 +27,11 @@ const loadAuthorizedRun = async (runId, token, context) => {
 };
 
 const persistRunFields = async (runId, fields, context) => {
-  await context.db.collection('certificationRuns').updateOne(
-    { runId },
-    {
-      $set: { ...fields, updatedAt: new Date(context.now()) },
-      $inc: { revision: 1 },
-    },
-  );
-  return context.db.collection('certificationRuns').findOne({ runId });
+  return context.repositories.certificationRuns.setHubResources({
+    runId,
+    fields,
+    updatedAt: new Date(context.now()),
+  });
 };
 
 const ensureDepot = async (run, context) => {
@@ -108,40 +103,29 @@ const startDisclosure = async (run, evidence, context) => {
     startedAt,
     RunStates.DISCLOSING,
   );
-  await context.db.collection('runEvidence').updateOne(
-    { runId: run.runId },
-    {
-      $set: {
-        disclosureInteraction: interaction,
-        updatedAt: new Date(context.now()),
-      },
-    },
-  );
-  await context.db.collection('certificationRuns').updateOne(
-    { runId: run.runId, state: RunStates.PREPARING_DISCLOSURE },
-    {
-      $set: {
-        state: RunStates.DISCLOSING,
-        interactionPhase: 'DISCLOSING',
-        actionDeadline: new Date(interaction.actionDeadline),
-        absoluteDeadline: new Date(interaction.absoluteDeadline),
-        nextCheckAt: new Date(context.now()),
-        updatedAt: new Date(context.now()),
-      },
-      $inc: { revision: 1 },
-      $push: {
-        journal: { state: RunStates.DISCLOSING, at: new Date(context.now()) },
-      },
-    },
-  );
+  const updatedAt = new Date(context.now());
+  await context.repositories.runEvidence.saveInteraction({
+    runId: run.runId,
+    phase: 'disclosure',
+    interaction,
+    updatedAt,
+  });
+  await context.repositories.certificationRuns.startInteraction({
+    runId: run.runId,
+    expectedState: RunStates.PREPARING_DISCLOSURE,
+    state: RunStates.DISCLOSING,
+    interactionPhase: 'DISCLOSING',
+    actionDeadline: new Date(interaction.actionDeadline),
+    absoluteDeadline: new Date(interaction.absoluteDeadline),
+    nextCheckAt: updatedAt,
+    updatedAt,
+  });
   return interaction;
 };
 
 const startRun = async (runId, token, context) => {
   let run = await loadAuthorizedRun(runId, token, context);
-  const evidence = await context.db
-    .collection('runEvidence')
-    .findOne({ runId });
+  const evidence = await context.repositories.runEvidence.findByRunId(runId);
   if (run.state === RunStates.PREPARING_DISCLOSURE) {
     return startDisclosure(run, evidence, context);
   }
@@ -160,32 +144,23 @@ const startRun = async (runId, token, context) => {
   );
   const startedAt = new Date(context.now()).toISOString();
   const interaction = buildVnInteraction(run, links, startedAt);
-  await context.db.collection('runEvidence').updateOne(
-    { runId },
-    {
-      $set: {
-        issueInteraction: interaction,
-        updatedAt: new Date(context.now()),
-      },
-    },
-  );
-  await context.db.collection('certificationRuns').updateOne(
-    { runId },
-    {
-      $set: {
-        state: RunStates.ISSUING,
-        interactionPhase: 'ISSUING',
-        actionDeadline: new Date(interaction.actionDeadline),
-        absoluteDeadline: new Date(interaction.absoluteDeadline),
-        nextCheckAt: new Date(context.now()),
-        updatedAt: new Date(context.now()),
-      },
-      $inc: { revision: 1 },
-      $push: {
-        journal: { state: RunStates.ISSUING, at: new Date(context.now()) },
-      },
-    },
-  );
+  const updatedAt = new Date(context.now());
+  await context.repositories.runEvidence.saveInteraction({
+    runId,
+    phase: 'issue',
+    interaction,
+    updatedAt,
+  });
+  await context.repositories.certificationRuns.startInteraction({
+    runId,
+    expectedState: run.state,
+    state: RunStates.ISSUING,
+    interactionPhase: 'ISSUING',
+    actionDeadline: new Date(interaction.actionDeadline),
+    absoluteDeadline: new Date(interaction.absoluteDeadline),
+    nextCheckAt: updatedAt,
+    updatedAt,
+  });
   return interaction;
 };
 

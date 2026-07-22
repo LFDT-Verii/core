@@ -6,7 +6,7 @@ const { MongoClient } = require('mongodb');
 const { buildServer } = require('../src/build-server');
 const { createHubClient } = require('../src/adapters/hub-client');
 const { createRegistrarClient } = require('../src/adapters/registrar-client');
-const { closeMongo, initMongo } = require('../src/repositories/mongo');
+const { closeMongo, initMongo } = require('../src/repositories/mongodb');
 const { RunStates } = require('../src/domain/states');
 
 const mongoConnectionString =
@@ -131,7 +131,7 @@ describe('certification run creation and start', () => {
     };
     api = await buildServer({
       config,
-      db: mongo.db,
+      repositories: mongo.repositories,
       registrarClient: createRegistrarClient({ baseUrl: dependencyUrl }),
       hubClient: createHubClient({
         baseUrl: dependencyUrl,

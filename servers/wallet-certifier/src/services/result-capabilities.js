@@ -9,9 +9,7 @@ const invalidCapability = () =>
   );
 
 const loadResultRun = async (runId, context) => {
-  const run = await context.db
-    .collection('certificationRuns')
-    .findOne({ runId });
+  const run = await context.repositories.certificationRuns.findByRunId(runId);
   if (!run) {
     throw new PublicError(404, 'run_not_found', 'Certification run not found.');
   }

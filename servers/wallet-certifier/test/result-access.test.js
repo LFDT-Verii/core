@@ -4,7 +4,7 @@ const { MongoClient } = require('mongodb');
 const { buildServer } = require('../src/build-server');
 const { hashCapability } = require('../src/domain/capabilities');
 const { RunStates } = require('../src/domain/states');
-const { closeMongo, initMongo } = require('../src/repositories/mongo');
+const { closeMongo, initMongo } = require('../src/repositories/mongodb');
 
 const mongoConnectionString =
   process.env.MONGO_URI ?? 'mongodb://localhost:27017';
@@ -38,7 +38,7 @@ describe('result sessions and support diagnostics', () => {
     logs = [];
     api = await buildServer({
       config,
-      db: mongo.db,
+      repositories: mongo.repositories,
       registrarClient: { searchWallets: async () => [] },
       hubClient: {},
       sendEmail: async () => ({}),

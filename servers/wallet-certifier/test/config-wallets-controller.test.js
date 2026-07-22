@@ -5,7 +5,7 @@ const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 const { MongoClient } = require('mongodb');
 const { buildServer } = require('../src/build-server');
-const { closeMongo, initMongo } = require('../src/repositories/mongo');
+const { closeMongo, initMongo } = require('../src/repositories/mongodb');
 
 const mongoConnectionString =
   process.env.MONGO_URI ?? 'mongodb://localhost:27017';
@@ -101,7 +101,7 @@ describe('configuration, health, and wallet search endpoints', () => {
         logSeverity: 'info',
         bodyLimit: 64 * 1024,
       },
-      db: mongo.db,
+      repositories: mongo.repositories,
       loggerStream,
     });
     await api.ready();
@@ -131,7 +131,7 @@ describe('configuration, health, and wallet search endpoints', () => {
   });
 
   it('reports health after pinging Mongo', async () => {
-    const response = await api.inject({ method: 'GET', url: '/api/health' });
+    const response = await api.inject({ method: 'GET', url: '/api/' });
 
     expect(response.statusCode).toEqual(200);
     expect(response.json()).toEqual({ status: 'ok' });

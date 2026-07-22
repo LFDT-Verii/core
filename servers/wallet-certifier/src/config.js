@@ -35,11 +35,7 @@ const loadConfig = (env = process.env) => ({
     env,
     'CREDENTIALING_HUB_RELYING_PARTY_SERVICE_ID',
   ),
-  supportEmail: valueOrDefault(
-    env,
-    'SUPPORT_EMAIL',
-    'support@velocitynetwork.foundation',
-  ),
+  supportEmail: asRequired(env, 'SUPPORT_EMAIL'),
   senderEmail: asRequired(env, 'SENDER_EMAIL'),
   awsRegion: valueOrDefault(env, 'AWS_REGION', 'us-east-1'),
   awsEndpoint: optionalUrl(env.AWS_ENDPOINT),

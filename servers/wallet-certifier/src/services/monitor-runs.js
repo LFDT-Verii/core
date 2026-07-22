@@ -4,21 +4,11 @@ const { reconcileRun } = require('./reconcile-run');
 
 const dueRuns = (context) => {
   const now = new Date(context.now());
-  return context.db
-    .collection('certificationRuns')
-    .find(
-      {
-        state: { $nin: [...TerminalRunStates] },
-        nextCheckAt: { $lte: now },
-        $or: [
-          { leaseUntil: { $exists: false } },
-          { leaseUntil: null },
-          { leaseUntil: { $lte: now } },
-        ],
-      },
-      { sort: { nextCheckAt: 1 }, limit: 25 },
-    )
-    .toArray();
+  return context.repositories.certificationRuns.findDue({
+    now,
+    terminalStates: [...TerminalRunStates],
+    limit: 25,
+  });
 };
 
 const monitorRuns = async (context) => {

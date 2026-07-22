@@ -1,4 +1,4 @@
-const { loadSupportRun } = require('../services/support-run');
+const { loadSupportDiagnostics } = require('../services/support-diagnostics');
 
 module.exports = async (fastify, context) => {
   fastify.get(
@@ -14,7 +14,10 @@ module.exports = async (fastify, context) => {
       },
     },
     async (request, reply) => {
-      const run = await loadSupportRun(request.params.runId, context.db);
+      const run = await loadSupportDiagnostics(
+        request.params.runId,
+        context.repositories,
+      );
       if (!run) {
         return reply.status(404).send({
           error: 'run_not_found',

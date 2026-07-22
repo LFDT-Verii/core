@@ -1,4 +1,4 @@
-module.exports = async (fastify, { config, db }) => {
+module.exports = async (fastify, { config, repositories }) => {
   fastify.get(
     '/config',
     {
@@ -27,7 +27,7 @@ module.exports = async (fastify, { config, db }) => {
   );
 
   fastify.get(
-    '/health',
+    '/',
     {
       schema: {
         response: {
@@ -41,7 +41,7 @@ module.exports = async (fastify, { config, db }) => {
       },
     },
     async () => {
-      await db.command({ ping: 1 });
+      await repositories.ping();
       return { status: 'ok' };
     },
   );

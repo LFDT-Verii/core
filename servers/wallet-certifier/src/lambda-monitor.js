@@ -2,7 +2,7 @@ const { createEmailSender } = require('./adapters/email-sender');
 const { createHubClient } = require('./adapters/hub-client');
 const { loadSecrets } = require('./adapters/secret-loader');
 const { loadConfig } = require('./config');
-const { initMongo } = require('./repositories/mongo');
+const { initMongo } = require('./repositories/mongodb');
 const { monitorRuns } = require('./services/monitor-runs');
 
 const createMonitorHandler = (context) => async () => monitorRuns(context);
@@ -13,13 +13,13 @@ const initRuntimeHandler = async () => {
   const config = loadConfig();
   const secrets = await loadSecrets(config);
   const runtimeConfig = { ...config, ...secrets };
-  const { db } = await initMongo(
+  const { repositories } = await initMongo(
     secrets.mongoConnectionString,
     config.databaseName,
   );
   return createMonitorHandler({
     config: runtimeConfig,
-    db,
+    repositories,
     hubClient: createHubClient({
       baseUrl: config.hubUrl,
       operatorToken: secrets.hubOperatorToken,
