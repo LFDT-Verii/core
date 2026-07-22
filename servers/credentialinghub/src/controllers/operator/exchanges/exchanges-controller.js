@@ -46,6 +46,8 @@ const EXCHANGE_PROJECTION = {
   createdAt: 1,
 };
 
+const OBJECT_ID_PATTERN = '^[0-9a-fA-F]{24}$';
+
 const toId = (value) => value?.toString();
 const toTimestamp = (value) => new Date(value).toISOString();
 
@@ -112,8 +114,8 @@ module.exports = async (fastify) => {
             additionalProperties: false,
             properties: {
               tenantId: { type: 'string' },
-              exchangeId: { type: 'string' },
-              depotId: { type: 'string' },
+              exchangeId: { type: 'string', pattern: OBJECT_ID_PATTERN },
+              depotId: { type: 'string', pattern: OBJECT_ID_PATTERN },
             },
             oneOf: [
               {

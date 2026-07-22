@@ -75,6 +75,26 @@ describe('operator exchange inspection', () => {
     expect(response.json.errorCode).toEqual('request_validation_failed');
   });
 
+  it('rejects malformed exchange and depot identifiers', async () => {
+    const [exchangeResponse, depotResponse] = await Promise.all([
+      fastify.injectJson({
+        method: 'GET',
+        url: `${testUrl}?tenantId=${tenant._id}&exchangeId=not-an-object-id`,
+      }),
+      fastify.injectJson({
+        method: 'GET',
+        url: `${testUrl}?tenantId=${tenant._id}&depotId=not-an-object-id`,
+      }),
+    ]);
+
+    expect(exchangeResponse.statusCode).toEqual(400);
+    expect(exchangeResponse.json.errorCode).toEqual(
+      'request_validation_failed',
+    );
+    expect(depotResponse.statusCode).toEqual(400);
+    expect(depotResponse.json.errorCode).toEqual('request_validation_failed');
+  });
+
   it('returns a safe direct exchange projection with related identifiers', async () => {
     const depotId = new ObjectId();
     const offeredCredentialId = new ObjectId();
