@@ -146,9 +146,10 @@ module.exports = async (fastify) => {
             errorCode: 'exchange_not_found',
           });
         }
-        const presentations = await req.repos.presentations.search({
-          exchangeId: exchange._id,
-        });
+        const presentations = await req.repos.presentations.search(
+          { exchangeId: exchange._id },
+          { _id: 1 },
+        );
         return {
           exchange: buildExchangeResponse(exchange, presentations),
         };
