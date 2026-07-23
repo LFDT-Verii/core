@@ -106,3 +106,92 @@ describe('Server package variant tests ', () => {
     }
   });
 });
+
+describe('Swagger documentation', () => {
+  let server;
+
+  afterEach(async () => {
+    if (server) {
+      await server.close();
+    }
+  });
+
+  it('serves the default documentation endpoints', async () => {
+    server = createServer({
+      ...genericConfig,
+      mongoConnection,
+      swaggerInfo: {
+        info: { title: 'Public API', version: '1.0.0' },
+      },
+    });
+
+    const responses = await Promise.all(
+      ['/documentation/json', '/documentation/yaml', '/documentation/'].map(
+        (url) => server.inject({ method: 'get', url }),
+      ),
+    );
+
+    for (const response of responses) {
+      expect(response.statusCode).toEqual(200);
+    }
+  });
+
+  it('serves named documentation using its decorator and Swagger UI selector', async () => {
+    server = createServer({
+      ...genericConfig,
+      mongoConnection,
+      swaggerInfo: {
+        info: { title: 'Public API', version: '1.0.0' },
+      },
+      swaggerDocuments: {
+        primaryName: 'Public API',
+        documents: [
+          {
+            name: 'Internal API',
+            url: '/documentation/internal.json',
+            decorator: 'internalSwagger',
+            openapi: {
+              info: { title: 'Internal API', version: '1.0.0' },
+            },
+            transform: ({ schema, url }) => ({
+              schema: { ...schema, hide: url !== '/internal' },
+              url,
+            }),
+          },
+        ],
+      },
+    });
+    server.register((instance, options, done) => {
+      instance.get('/public', () => ({ public: true }));
+      instance.get('/internal', () => ({ internal: true }));
+      done();
+    });
+
+    const internalDocument = await server.inject({
+      method: 'get',
+      url: '/documentation/internal.json',
+    });
+    const swaggerUiInitializer = await server.inject({
+      method: 'get',
+      url: '/documentation/static/swagger-initializer.js',
+    });
+
+    expect(internalDocument.statusCode).toEqual(200);
+    expect(server.internalSwagger).toBeDefined();
+    expect(JSON.parse(internalDocument.body).info.title).toEqual(
+      'Internal API',
+    );
+    expect(JSON.parse(internalDocument.body).paths).toEqual({
+      '/internal': expect.any(Object),
+    });
+    expect(JSON.parse(internalDocument.body).paths).not.toHaveProperty(
+      '/documentation/internal.json',
+    );
+    expect(swaggerUiInitializer.statusCode).toEqual(200);
+    expect(swaggerUiInitializer.body).toContain('/documentation/json');
+    expect(swaggerUiInitializer.body).toContain('/documentation/internal.json');
+    expect(swaggerUiInitializer.body).toContain(
+      '"urls.primaryName":"Public API"',
+    );
+  });
+});
