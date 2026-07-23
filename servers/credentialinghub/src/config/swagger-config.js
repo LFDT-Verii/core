@@ -92,25 +92,28 @@ const createSwaggerConfig = (version) => ({
         openapi: {
           info: {
             title: OPENID4VC_TITLE,
-            description: 'Wallet-facing OpenID4VC APIs.',
+            description:
+              'Wallet-facing OpenID4VCI issuance and OpenID4VP presentation APIs.',
             version,
           },
           components: {
             securitySchemes: {
-              openid4vcAccessToken: {
+              openid4vciAccessToken: {
                 type: 'http',
                 scheme: 'bearer',
                 bearerFormat: 'JWT',
-                description: 'OpenID4VC access token',
+                description: 'OpenID4VCI access token',
               },
             },
           },
           tags: [
-            { name: 'OpenID4VCI', description: 'OpenID4VC issuance APIs.' },
-            { name: 'OpenID4VP', description: 'OpenID4VC presentation APIs.' },
             {
-              name: 'Metadata & OAuth',
-              description: 'OpenID4VC metadata and OAuth APIs.',
+              name: 'OpenID4VCI',
+              description: 'OpenID4VCI issuance APIs.',
+            },
+            {
+              name: 'OpenID4VP',
+              description: 'OpenID4VP presentation APIs.',
             },
           ],
         },

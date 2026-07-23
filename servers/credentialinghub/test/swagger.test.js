@@ -10,8 +10,20 @@ const DOCUMENTS = {
 };
 
 const OPERATOR_SECURITY = [{ operatorBearer: [] }];
-const OPENID4VC_SECURITY = [{ openid4vcAccessToken: [] }];
+const OPENID4VCI_SECURITY = [{ openid4vciAccessToken: [] }];
 const VN_API_SECURITY = [{ vnApiAccessToken: [] }];
+
+const EXPECTED_OPENID4VCI_SUMMARIES = {
+  'GET /.well-known/oauth-authorization-server/r/{tenantId}':
+    'Get OpenID4VCI authorization server metadata',
+  'GET /.well-known/openid-credential-issuer/r/{tenantId}':
+    'Get OpenID4VCI credential issuer metadata',
+  'POST /r/{tenantId}/oauth/token': 'Create an OpenID4VCI access token',
+  'POST /r/{tenantId}/openid4vc/credential': 'Create an OpenID4VCI credential',
+  'POST /r/{tenantId}/openid4vc/nonce': 'Create an OpenID4VCI nonce',
+  'POST /r/{tenantId}/openid4vc/notification':
+    'Submit an OpenID4VCI notification',
+};
 
 const EXPECTED_OPERATION_METADATA = {
   'GET /': ['Utilities', 'getServiceStatus'],
@@ -120,27 +132,27 @@ const EXPECTED_OPERATION_METADATA = {
     OPERATOR_SECURITY,
   ],
   'GET /.well-known/oauth-authorization-server/r/{tenantId}': [
-    'Metadata & OAuth',
-    'getOpenid4vcAuthorizationServerMetadata',
+    'OpenID4VCI',
+    'getOpenid4vciAuthorizationServerMetadata',
   ],
   'GET /.well-known/openid-credential-issuer/r/{tenantId}': [
-    'Metadata & OAuth',
-    'getOpenid4vcCredentialIssuerMetadata',
+    'OpenID4VCI',
+    'getOpenid4vciCredentialIssuerMetadata',
   ],
   'POST /r/{tenantId}/oauth/token': [
-    'Metadata & OAuth',
-    'createOpenid4vcAccessToken',
+    'OpenID4VCI',
+    'createOpenid4vciAccessToken',
   ],
   'POST /r/{tenantId}/openid4vc/credential': [
     'OpenID4VCI',
-    'createOpenid4vcCredential',
-    OPENID4VC_SECURITY,
+    'createOpenid4vciCredential',
+    OPENID4VCI_SECURITY,
   ],
-  'POST /r/{tenantId}/openid4vc/nonce': ['OpenID4VCI', 'createOpenid4vcNonce'],
+  'POST /r/{tenantId}/openid4vc/nonce': ['OpenID4VCI', 'createOpenid4vciNonce'],
   'POST /r/{tenantId}/openid4vc/notification': [
     'OpenID4VCI',
-    'submitOpenid4vcNotification',
-    OPENID4VC_SECURITY,
+    'submitOpenid4vciNotification',
+    OPENID4VCI_SECURITY,
   ],
   'POST /r/{tenantId}/openid4vp/authorization-request/{requestId}': [
     'OpenID4VP',
@@ -181,6 +193,7 @@ const EXPECTED_OPERATION_METADATA = {
 const EXPECTED_DOCUMENTS = {
   operator: {
     title: 'Velocity Credentialing Hub — Operator API',
+    securitySchemes: ['operatorBearer'],
     tags: [
       'Tenants',
       'Issuer Services',
@@ -223,7 +236,8 @@ const EXPECTED_DOCUMENTS = {
   },
   openid4vc: {
     title: 'Velocity Credentialing Hub — OpenID4VC Wallet API',
-    tags: ['OpenID4VCI', 'OpenID4VP', 'Metadata & OAuth'],
+    securitySchemes: ['openid4vciAccessToken'],
+    tags: ['OpenID4VCI', 'OpenID4VP'],
     operations: [
       'GET /.well-known/oauth-authorization-server/r/{tenantId}',
       'GET /.well-known/openid-credential-issuer/r/{tenantId}',
@@ -237,6 +251,7 @@ const EXPECTED_DOCUMENTS = {
   },
   vnApi: {
     title: 'Velocity Credentialing Hub — VN-API Wallet API',
+    securitySchemes: ['vnApiAccessToken'],
     tags: ['Issuing', 'Presentation'],
     operations: [
       'POST /vn-api/r/{tenantId}/authenticate',
@@ -379,6 +394,9 @@ describe('swagger documents', () => {
 
       expect(document.info.title).toEqual(expected.title);
       expect(document.info.version).toEqual(packageJson.version);
+      expect(Object.keys(document.components?.securitySchemes ?? {})).toEqual(
+        expected.securitySchemes,
+      );
       expect(document.tags.map(({ name }) => name)).toEqual(expected.tags);
       expect(operations).toEqual([...expected.operations].sort());
       expect(operations).not.toContain('GET /app-redirect');
@@ -411,6 +429,18 @@ describe('swagger documents', () => {
       Object.keys(EXPECTED_OPERATION_METADATA).length,
     );
     expect(new Set(operationIds).size).toEqual(operationIds.length);
+  });
+
+  it('uses OpenID4VCI terminology for issuance operations', () => {
+    const operations = Object.fromEntries(
+      getOperationEntries(documents.openid4vc),
+    );
+
+    for (const [operationKey, summary] of Object.entries(
+      EXPECTED_OPENID4VCI_SUMMARIES,
+    )) {
+      expect(operations[operationKey].summary).toEqual(summary);
+    }
   });
 
   it('emits only reachable schemas and no dangling component refs', () => {

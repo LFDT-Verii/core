@@ -30,8 +30,8 @@ const openid4vciController = async (fastify) => {
       '/r/:tenantId/openid4vc/nonce',
       {
         schema: fastify.autoSchema({
-          summary: 'Create an OpenID4VC nonce',
-          operationId: 'createOpenid4vcNonce',
+          summary: 'Create an OpenID4VCI nonce',
+          operationId: 'createOpenid4vciNonce',
           params: {
             type: 'object',
             properties: {
@@ -50,7 +50,7 @@ const openid4vciController = async (fastify) => {
       '/r/:tenantId/openid4vc/credential',
       {
         config: {
-          documentationSecurity: [{ openid4vcAccessToken: [] }],
+          documentationSecurity: [{ openid4vciAccessToken: [] }],
         },
         errorHandler: (e, request, reply) => {
           const error = fastify.openid4vcErrorHandler(e, request, reply);
@@ -62,8 +62,8 @@ const openid4vciController = async (fastify) => {
         },
         preHandler: (req, reply) => fastify.openid4vcBearerAuth(req, reply),
         schema: fastify.autoSchema({
-          summary: 'Create an OpenID4VC credential',
-          operationId: 'createOpenid4vcCredential',
+          summary: 'Create an OpenID4VCI credential',
+          operationId: 'createOpenid4vciCredential',
           params: {
             type: 'object',
             properties: {
@@ -83,7 +83,7 @@ const openid4vciController = async (fastify) => {
       '/r/:tenantId/openid4vc/notification',
       {
         config: {
-          documentationSecurity: [{ openid4vcAccessToken: [] }],
+          documentationSecurity: [{ openid4vciAccessToken: [] }],
         },
         errorHandler: (e, request, reply) => {
           const error = fastify.openid4vcErrorHandler(e, request, reply);
@@ -95,8 +95,8 @@ const openid4vciController = async (fastify) => {
         },
         preHandler: (req, reply) => fastify.openid4vcBearerAuth(req, reply),
         schema: fastify.autoSchema({
-          summary: 'Submit an OpenID4VC notification',
-          operationId: 'submitOpenid4vcNotification',
+          summary: 'Submit an OpenID4VCI notification',
+          operationId: 'submitOpenid4vciNotification',
           params: {
             type: 'object',
             properties: {

@@ -27,13 +27,13 @@ const APPLICATION_JWT_MEDIA_TYPE = 'application/jwt';
 const openid4vcMetadataController = async (fastify) => {
   fastify
     .register(cors, { origin: true })
-    .autoSchemaPreset({ tags: ['Metadata & OAuth'] })
+    .autoSchemaPreset({ tags: ['OpenID4VCI'] })
     .get(
       '/.well-known/openid-credential-issuer/r/:tenantId',
       {
         schema: fastify.autoSchema({
-          summary: 'Get OpenID4VC credential issuer metadata',
-          operationId: 'getOpenid4vcCredentialIssuerMetadata',
+          summary: 'Get OpenID4VCI credential issuer metadata',
+          operationId: 'getOpenid4vciCredentialIssuerMetadata',
         }),
       },
       async (req, reply) => {
@@ -55,8 +55,8 @@ const openid4vcMetadataController = async (fastify) => {
       '/.well-known/oauth-authorization-server/r/:tenantId',
       {
         schema: fastify.autoSchema({
-          summary: 'Get OpenID4VC authorization server metadata',
-          operationId: 'getOpenid4vcAuthorizationServerMetadata',
+          summary: 'Get OpenID4VCI authorization server metadata',
+          operationId: 'getOpenid4vciAuthorizationServerMetadata',
         }),
       },
       async (req) => {

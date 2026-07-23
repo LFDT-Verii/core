@@ -23,7 +23,7 @@ const oauthController = async (fastify) => {
   fastify
     .register(fastifyFormBody)
     .autoSchemaPreset({
-      tags: ['Metadata & OAuth'],
+      tags: ['OpenID4VCI'],
     })
     .post(
       '/r/:tenantId/oauth/token',
@@ -44,8 +44,8 @@ const oauthController = async (fastify) => {
         errorHandler: (error, request, reply) =>
           fastify.openid4vcErrorHandler(error, request, reply),
         schema: fastify.autoSchema({
-          summary: 'Create an OpenID4VC access token',
-          operationId: 'createOpenid4vcAccessToken',
+          summary: 'Create an OpenID4VCI access token',
+          operationId: 'createOpenid4vciAccessToken',
           params: {
             type: 'object',
             properties: {
