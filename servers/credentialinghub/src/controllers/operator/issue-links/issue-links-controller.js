@@ -18,57 +18,63 @@ const { refreshIssueLinks } = require('../../../entities/links');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 
 const issueLinksController = async (fastify) => {
-  fastify.register(tenantLoaderPlugin, { notFoundStatusCode: 400 }).post(
-    '/refresh',
-    {
-      schema: fastify.autoSchema({
-        body: {
-          type: 'object',
-          properties: {
-            tenantId: {
-              type: 'string',
-            },
-            serviceId: {
-              type: 'string',
-            },
-            depotId: {
-              type: 'string',
-            },
-          },
-          required: ['tenantId', 'serviceId'],
-        },
-        response: {
-          200: {
+  fastify
+    .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
+    .autoSchemaPreset({ tags: ['Issue Links'] })
+    .post(
+      '/refresh',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Refresh issue links',
+          operationId: 'refreshIssueLinks',
+          body: {
             type: 'object',
             properties: {
-              redirectUrl: {
+              tenantId: {
                 type: 'string',
-                format: 'uri',
               },
-              vnProtocolLink: {
+              serviceId: {
                 type: 'string',
-                format: 'uri',
               },
-              openidCredentialOffer: {
+              depotId: {
                 type: 'string',
-                format: 'uri',
-              },
-              preauthCode: {
-                type: 'string',
-                format: 'uri',
-              },
-              requestId: {
-                type: 'string',
-                format: 'uri',
               },
             },
-            required: ['redirectUrl', 'vnProtocolLink', 'requestId'],
+            required: ['tenantId', 'serviceId'],
           },
-        },
-      }),
-    },
-    async (req) => refreshIssueLinks(req.body.serviceId, req.body.depotId, req),
-  );
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                redirectUrl: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                vnProtocolLink: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                openidCredentialOffer: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                preauthCode: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                requestId: {
+                  type: 'string',
+                  format: 'uri',
+                },
+              },
+              required: ['redirectUrl', 'vnProtocolLink', 'requestId'],
+            },
+          },
+        }),
+      },
+      async (req) =>
+        refreshIssueLinks(req.body.serviceId, req.body.depotId, req),
+    );
 };
 
 module.exports = issueLinksController;

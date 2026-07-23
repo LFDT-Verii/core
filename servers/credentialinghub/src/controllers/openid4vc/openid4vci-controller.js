@@ -25,10 +25,13 @@ const { oauthErrorResponseSchema } = require('../../schemas');
 
 const openid4vciController = async (fastify) => {
   fastify
+    .autoSchemaPreset({ tags: ['OpenID4VCI'] })
     .post(
       '/r/:tenantId/openid4vc/nonce',
       {
         schema: fastify.autoSchema({
+          summary: 'Create an OpenID4VC nonce',
+          operationId: 'createOpenid4vcNonce',
           params: {
             type: 'object',
             properties: {
@@ -56,6 +59,9 @@ const openid4vciController = async (fastify) => {
         },
         preHandler: (req, reply) => fastify.openid4vcBearerAuth(req, reply),
         schema: fastify.autoSchema({
+          summary: 'Create an OpenID4VC credential',
+          operationId: 'createOpenid4vcCredential',
+          security: [{ openid4vcAccessToken: [] }],
           params: {
             type: 'object',
             properties: {
@@ -84,6 +90,9 @@ const openid4vciController = async (fastify) => {
         },
         preHandler: (req, reply) => fastify.openid4vcBearerAuth(req, reply),
         schema: fastify.autoSchema({
+          summary: 'Submit an OpenID4VC notification',
+          operationId: 'submitOpenid4vcNotification',
+          security: [{ openid4vcAccessToken: [] }],
           params: {
             type: 'object',
             properties: {

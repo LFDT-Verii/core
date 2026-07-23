@@ -30,7 +30,8 @@ const openid4vpController = async (fastify) => {
   fastify.register(fastifyFormBody);
   fastify
     .addSchema(presentationSubmissionSchema)
-    .addSchema(velocityPresentationSubmissionSchema);
+    .addSchema(velocityPresentationSubmissionSchema)
+    .autoSchemaPreset({ tags: ['OpenID4VP'] });
 
   fastify
     .post(
@@ -39,6 +40,8 @@ const openid4vpController = async (fastify) => {
         errorHandler: (error, request, reply) =>
           fastify.openid4vpErrorHandler(error, request, reply),
         schema: fastify.autoSchema({
+          summary: 'Create an OpenID4VP authorization request',
+          operationId: 'createOpenid4vpAuthorizationRequest',
           params: {
             type: 'object',
             properties: {
@@ -104,6 +107,8 @@ const openid4vpController = async (fastify) => {
         errorHandler: (error, request, reply) =>
           fastify.openid4vpErrorHandler(error, request, reply),
         schema: fastify.autoSchema({
+          summary: 'Submit an OpenID4VP authorization response',
+          operationId: 'submitOpenid4vpAuthorizationResponse',
           params: {
             type: 'object',
             properties: {

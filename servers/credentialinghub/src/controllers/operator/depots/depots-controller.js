@@ -24,10 +24,13 @@ const depotsController = async (fastify) => {
     .addSchema(newDepotSchema)
     .addSchema(depotSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
+    .autoSchemaPreset({ tags: ['Depots'] })
     .post(
       '/create',
       {
         schema: fastify.autoSchema({
+          summary: 'Create a depot',
+          operationId: 'createDepot',
           body: {
             type: 'object',
             properties: {
@@ -66,6 +69,8 @@ const depotsController = async (fastify) => {
       '/get',
       {
         schema: fastify.autoSchema({
+          summary: 'Get depots',
+          operationId: 'getDepots',
           query: {
             type: 'object',
             properties: {
@@ -119,6 +124,8 @@ const depotsController = async (fastify) => {
       '/delete',
       {
         schema: fastify.autoSchema({
+          summary: 'Delete a depot',
+          operationId: 'deleteDepot',
           body: {
             type: 'object',
             properties: {

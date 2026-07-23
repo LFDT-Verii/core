@@ -16,11 +16,14 @@
  */
 
 const rootController = async (fastify) => {
+  fastify.autoSchemaPreset({ tags: ['Utilities'] });
   fastify.get(
     '/',
     {
       config: { documentationAudience: 'operator' },
-      schema: {
+      schema: fastify.autoSchema({
+        summary: 'Get service status',
+        operationId: 'getServiceStatus',
         description: 'Healthcheck and version info',
         response: {
           200: {
@@ -28,8 +31,7 @@ const rootController = async (fastify) => {
             content: { 'text/plain': { schema: { type: 'string' } } },
           },
         },
-        tags: ['utilities'],
-      },
+      }),
     },
     async (req, reply) => {
       reply

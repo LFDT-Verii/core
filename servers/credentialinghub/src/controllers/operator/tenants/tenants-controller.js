@@ -39,10 +39,13 @@ module.exports = async (fastify) => {
     .addSchema(keyMetadataSchema)
     .addSchema(secretKeySchema)
     .addSchema(newKeySchema)
+    .autoSchemaPreset({ tags: ['Tenants'] })
     .post(
       '/create',
       {
         schema: fastify.autoSchema({
+          summary: 'Create a tenant',
+          operationId: 'createTenant',
           body: {
             type: 'object',
             properties: {
@@ -93,6 +96,8 @@ module.exports = async (fastify) => {
       '/get',
       {
         schema: fastify.autoSchema({
+          summary: 'Get tenants',
+          operationId: 'getTenants',
           query: {
             type: 'object',
             properties: {
@@ -139,6 +144,8 @@ module.exports = async (fastify) => {
       '/delete',
       {
         schema: fastify.autoSchema({
+          summary: 'Delete a tenant',
+          operationId: 'deleteTenant',
           body: {
             type: 'object',
             properties: {

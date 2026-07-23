@@ -45,10 +45,13 @@ module.exports = async (fastify) => {
     .addSchema(relyingPartyConfigurationSchema)
     .addSchema(newRelyingPartyConfigurationSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
+    .autoSchemaPreset({ tags: ['Relying Party Services'] })
     .post(
       '/create',
       {
         schema: fastify.autoSchema({
+          summary: 'Create a relying party service',
+          operationId: 'createRelyingPartyService',
           body: {
             type: 'object',
             properties: {
@@ -85,6 +88,8 @@ module.exports = async (fastify) => {
       '/get',
       {
         schema: fastify.autoSchema({
+          summary: 'Get relying party services',
+          operationId: 'getRelyingPartyServices',
           query: {
             type: 'object',
             properties: {
@@ -134,6 +139,8 @@ module.exports = async (fastify) => {
       '/update',
       {
         schema: fastify.autoSchema({
+          summary: 'Update a relying party service',
+          operationId: 'updateRelyingPartyService',
           body: {
             type: 'object',
             properties: {
@@ -174,6 +181,8 @@ module.exports = async (fastify) => {
       '/delete',
       {
         schema: fastify.autoSchema({
+          summary: 'Delete a relying party service',
+          operationId: 'deleteRelyingPartyService',
           body: {
             type: 'object',
             properties: {

@@ -20,77 +20,84 @@ const { createAccessToken } = require('../../entities/openid4vci');
 const { oauthErrorResponseSchema } = require('../../schemas');
 
 const oauthController = async (fastify) => {
-  fastify.register(fastifyFormBody).post(
-    '/r/:tenantId/oauth/token',
-    {
-      preValidation: async (req) => {
-        if (req.body.authorization_details == null) {
-          return;
-        }
-        try {
-          // eslint-disable-next-line better-mutation/no-mutation
-          req.body.authorization_details = JSON.parse(
-            req.body.authorization_details,
-          );
-        } catch (e) {
-          req.log.warn('failed to parse req.body.authorization_details', e);
-        }
-      },
-      errorHandler: (error, request, reply) =>
-        fastify.openid4vcErrorHandler(error, request, reply),
-      schema: fastify.autoSchema({
-        params: {
-          type: 'object',
-          properties: {
-            tenantId: { type: 'string' },
-          },
+  fastify
+    .register(fastifyFormBody)
+    .autoSchemaPreset({
+      tags: ['Metadata & OAuth'],
+    })
+    .post(
+      '/r/:tenantId/oauth/token',
+      {
+        preValidation: async (req) => {
+          if (req.body.authorization_details == null) {
+            return;
+          }
+          try {
+            // eslint-disable-next-line better-mutation/no-mutation
+            req.body.authorization_details = JSON.parse(
+              req.body.authorization_details,
+            );
+          } catch (e) {
+            req.log.warn('failed to parse req.body.authorization_details', e);
+          }
         },
-        headers: {
-          type: 'object',
-          properties: {
-            'content-type': {
-              type: 'string',
-              const: 'application/x-www-form-urlencoded',
+        errorHandler: (error, request, reply) =>
+          fastify.openid4vcErrorHandler(error, request, reply),
+        schema: fastify.autoSchema({
+          summary: 'Create an OpenID4VC access token',
+          operationId: 'createOpenid4vcAccessToken',
+          params: {
+            type: 'object',
+            properties: {
+              tenantId: { type: 'string' },
             },
           },
-          required: ['content-type'],
-        },
-        body: {
-          type: 'object',
-          properties: {
-            grant_type: {
-              type: 'string',
-            },
-            'pre-authorized_code': {
-              type: 'string',
-            },
-            authorization_details: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  type: {
-                    type: 'string',
-                    const: 'openid_credential',
-                  },
-                  credential_configuration_id: {
-                    type: 'string',
-                  },
-                },
-                required: ['type', 'credential_configuration_id'],
+          headers: {
+            type: 'object',
+            properties: {
+              'content-type': {
+                type: 'string',
+                const: 'application/x-www-form-urlencoded',
               },
             },
+            required: ['content-type'],
           },
-          required: ['grant_type', 'pre-authorized_code'],
-        },
-        response: {
-          400: oauthErrorResponseSchema,
-          500: oauthErrorResponseSchema,
-        },
-      }),
-    },
-    async (req) => createAccessToken(req.body, req),
-  );
+          body: {
+            type: 'object',
+            properties: {
+              grant_type: {
+                type: 'string',
+              },
+              'pre-authorized_code': {
+                type: 'string',
+              },
+              authorization_details: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      const: 'openid_credential',
+                    },
+                    credential_configuration_id: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['type', 'credential_configuration_id'],
+                },
+              },
+            },
+            required: ['grant_type', 'pre-authorized_code'],
+          },
+          response: {
+            400: oauthErrorResponseSchema,
+            500: oauthErrorResponseSchema,
+          },
+        }),
+      },
+      async (req) => createAccessToken(req.body, req),
+    );
 };
 
 module.exports = oauthController;
