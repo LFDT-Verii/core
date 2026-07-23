@@ -15,6 +15,14 @@
 - CIH Swagger titles must say `Velocity Credentialing Hub`, never `Credential Agent`.
 - `info.version` for all three documents comes from `servers/credentialinghub/package.json`.
 - Routes without an explicit audience are hidden from all three CIH documents.
+- The combined OpenID4VC document title, selector label,
+  `/documentation/openid4vc.json` URL, internal `openid4vc` audience, and
+  `openid4vcSwagger` decorator retain the OpenID4VC umbrella name.
+- Issuance-specific tags, summaries, operation IDs, descriptions, and the
+  `openid4vciAccessToken` security scheme use OpenID4VCI.
+- Credential issuer metadata, authorization server metadata, and the OAuth
+  token operation belong to the OpenID4VCI tag; there is no separate
+  `Metadata & OAuth` tag.
 - Existing servers without named-document configuration retain `/documentation/json`, `/documentation/yaml`, and their current Swagger UI behavior.
 - Test documentation orchestration from public HTTP endpoints.
 - Run ESLint with `--fix` on every changed JavaScript file.
@@ -152,7 +160,10 @@ const OPENID4VC_TITLE =
 const VN_API_TITLE = 'Velocity Credentialing Hub — VN-API Wallet API';
 ```
 
-Declare only the security schemes relevant to each document: `operatorBearer`, `openid4vcAccessToken`, and `vnApiAccessToken`. Build each transform with:
+Declare only the security schemes relevant to each document:
+`operatorBearer`, `openid4vciAccessToken`, and `vnApiAccessToken`. The
+OpenID4VC document declares only the `OpenID4VCI` and `OpenID4VP` tags. Build
+each transform with:
 
 ```js
 const createAudienceTransform = (audience) => ({ schema, url, route }) => ({
@@ -197,7 +208,7 @@ For every operation, assert one expected tag, a non-empty summary, and a globall
 
 ```js
 const OPERATOR_SECURITY = [{ operatorBearer: [] }];
-const OPENID4VC_SECURITY = [{ openid4vcAccessToken: [] }];
+const OPENID4VCI_SECURITY = [{ openid4vciAccessToken: [] }];
 const VN_API_SECURITY = [{ vnApiAccessToken: [] }];
 ```
 
@@ -209,13 +220,22 @@ Run the Task 2 Step 2 command. Expected: FAIL on missing tags, summaries, IDs, a
 
 - [ ] **Step 3: Apply controller-level tags and operation metadata**
 
-Call `fastify.autoSchemaPreset({ tags: ['<Tag>'] })` once per controller and add `summary` and `operationId` to every `fastify.autoSchema(...)` object. Use verb/entity IDs such as `createTenant`, `getIssuerServices`, `createOpenid4vcCredential`, and `submitVnApiPresentation`.
+Call `fastify.autoSchemaPreset({ tags: ['<Tag>'] })` once per controller and
+add `summary` and `operationId` to every `fastify.autoSchema(...)` object. Use
+verb/entity IDs such as `createTenant`, `getIssuerServices`,
+`createOpenid4vciCredential`, and `submitVnApiPresentation`.
 
-Add a schema to the two previously sparse metadata routes so they receive `Metadata & OAuth` tags, summaries, and IDs. Preserve every existing body, parameter, response, error handler, and runtime auth hook.
+Add a schema to the two previously sparse metadata routes so they receive
+`OpenID4VCI` tags, OpenID4VCI-specific summaries, and IDs. Preserve every
+existing body, parameter, response, error handler, and runtime auth hook.
 
 - [ ] **Step 4: Apply exact operation-level security**
 
-Rename the operator autohook preset to `{ security: [{ operatorBearer: [] }] }`. Add `{ security: [{ openid4vcAccessToken: [] }] }` only to OpenID4VC credential and notification schemas, and `{ security: [{ vnApiAccessToken: [] }] }` only to VN-API credential offers and issue credentials.
+Rename the operator autohook preset to
+`{ security: [{ operatorBearer: [] }] }`. Add
+`{ security: [{ openid4vciAccessToken: [] }] }` only to OpenID4VCI credential
+and notification schemas, and `{ security: [{ vnApiAccessToken: [] }] }` only
+to VN-API credential offers and issue credentials.
 
 - [ ] **Step 5: Run the CIH Swagger test and verify GREEN**
 
@@ -253,3 +273,133 @@ Expected: all CIH tests pass.
 - [ ] **Step 4: Review generated OpenAPI and the final diff**
 
 Assert no CIH source still contains `Credential Agent` or the old `bearerAuth` scheme, check the three operation sets programmatically, run `git diff --check`, and review `git diff --stat` plus `git status --short` before reporting completion.
+
+---
+
+### Task 5: Refine the OpenID4VCI taxonomy
+
+**Files:**
+- Modify: `servers/credentialinghub/test/swagger.test.js`
+- Modify: `servers/credentialinghub/src/config/swagger-config.js`
+- Modify: `servers/credentialinghub/src/controllers/openid4vc/openid4vci-controller.js`
+- Modify: `servers/credentialinghub/src/controllers/openid4vc/openid4vc-metadata-controller.js`
+- Modify: `servers/credentialinghub/src/controllers/openid4vc/oauth-controller.js`
+
+**Interfaces:**
+- Consumes: the existing combined OpenID4VC document at
+  `/documentation/openid4vc.json`.
+- Produces: the visible tags `OpenID4VCI` and `OpenID4VP`, the security scheme
+  `openid4vciAccessToken`, and OpenID4VCI-specific issuance summaries and
+  operation IDs.
+
+- [ ] **Step 1: Write the failing public-endpoint assertions**
+
+In `servers/credentialinghub/test/swagger.test.js`, rename the expected
+security constant and update all six issuance operations:
+
+```js
+const OPENID4VCI_SECURITY = [{ openid4vciAccessToken: [] }];
+
+const EXPECTED_OPENID4VCI_SUMMARIES = {
+  'GET /.well-known/oauth-authorization-server/r/{tenantId}':
+    'Get OpenID4VCI authorization server metadata',
+  'GET /.well-known/openid-credential-issuer/r/{tenantId}':
+    'Get OpenID4VCI credential issuer metadata',
+  'POST /r/{tenantId}/oauth/token': 'Create an OpenID4VCI access token',
+  'POST /r/{tenantId}/openid4vc/credential':
+    'Create an OpenID4VCI credential',
+  'POST /r/{tenantId}/openid4vc/nonce': 'Create an OpenID4VCI nonce',
+  'POST /r/{tenantId}/openid4vc/notification':
+    'Submit an OpenID4VCI notification',
+};
+```
+
+Change their expected tag to `OpenID4VCI`, their operation ID infix from
+`Openid4vc` to `Openid4vci`, and their protected-operation security to
+`OPENID4VCI_SECURITY`. Change the OpenID4VC document tag order to:
+
+```js
+tags: ['OpenID4VCI', 'OpenID4VP'],
+```
+
+Add a test that reads the combined document through the public endpoint
+fixture and verifies exact issuance summaries:
+
+```js
+it('uses OpenID4VCI terminology for issuance operations', () => {
+  const operations = Object.fromEntries(
+    getOperationEntries(documents.openid4vc),
+  );
+
+  for (const [operationKey, summary] of Object.entries(
+    EXPECTED_OPENID4VCI_SUMMARIES,
+  )) {
+    expect(operations[operationKey].summary).toEqual(summary);
+  }
+});
+```
+
+- [ ] **Step 2: Run the focused integration test and verify RED**
+
+Run:
+
+```bash
+PATH=/usr/local/bin:$PATH corepack $(PATH=/usr/local/bin:$PATH node -p "require('./package.json').packageManager") --filter @verii/server-credentialing-hub exec cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --test-reporter=spec test/swagger.test.js
+```
+
+Expected: FAIL because the document still declares `Metadata & OAuth` and
+`openid4vcAccessToken`, and the issuance operations still publish OpenID4VC
+summaries and `Openid4vc` operation IDs.
+
+- [ ] **Step 3: Implement the OpenID4VCI metadata**
+
+In `swagger-config.js`, retain `OPENID4VC_TITLE`, the selector name,
+`/documentation/openid4vc.json`, `openid4vcSwagger`, and the internal audience.
+Rename the document security scheme to:
+
+```js
+openid4vciAccessToken: {
+  type: 'http',
+  scheme: 'bearer',
+  bearerFormat: 'JWT',
+  description: 'OpenID4VCI access token',
+},
+```
+
+Declare only:
+
+```js
+tags: [
+  { name: 'OpenID4VCI', description: 'OpenID4VCI issuance APIs.' },
+  { name: 'OpenID4VP', description: 'OpenID4VP presentation APIs.' },
+],
+```
+
+In the three OpenID4VC controller files, use `OpenID4VCI` for all six tags and
+summaries, rename their operation ID infix to `Openid4vci`, and change only the
+credential and notification `documentationSecurity` keys to
+`openid4vciAccessToken`. Do not rename runtime route paths,
+`openid4vcBearerAuth`, handlers, the Swagger decorator, or the internal
+documentation audience.
+
+- [ ] **Step 4: Run ESLint and verify GREEN**
+
+Run ESLint with `--fix` on the five changed JavaScript files, then rerun the
+Task 5 Step 2 command. Expected: all Swagger integration tests pass.
+
+- [ ] **Step 5: Verify the live Compose document**
+
+Fetch `https://localhost:13002/documentation/openid4vc.json` with local TLS
+verification disabled and assert:
+
+- the title remains `Velocity Credentialing Hub — OpenID4VC Wallet API`;
+- tags equal `OpenID4VCI`, `OpenID4VP`;
+- `openid4vciAccessToken` is present and `openid4vcAccessToken` is absent;
+- all six issuance operations use the `OpenID4VCI` tag, OpenID4VCI summary,
+  and `Openid4vci` operation ID.
+
+- [ ] **Step 6: Run final branch verification and publish**
+
+Run the shared-server tests, the focused CIH Swagger test, `git diff --check`,
+and a targeted stale-terminology scan. Commit with signoff, push
+`codex/cih-swagger-cleanup`, and update the existing pull request.
