@@ -312,6 +312,42 @@ const getReachableSchemaNames = (document) => {
   return reachable;
 };
 
+const LOCAL_COMPONENT_REFERENCE_PREFIX = '#/components/';
+
+const getLocalComponentReference = (value) =>
+  typeof value.$ref === 'string' &&
+  value.$ref.startsWith(LOCAL_COMPONENT_REFERENCE_PREFIX)
+    ? value.$ref
+    : null;
+
+const getLocalComponentReferences = (value, seen = new WeakSet()) => {
+  if (!isUnvisitedObject(value, seen)) {
+    return new Set();
+  }
+
+  seen.add(value);
+  const references = new Set();
+  const localComponentReference = getLocalComponentReference(value);
+  if (localComponentReference != null) {
+    references.add(localComponentReference);
+  }
+
+  for (const child of Object.values(value)) {
+    for (const reference of getLocalComponentReferences(child, seen)) {
+      references.add(reference);
+    }
+  }
+
+  return references;
+};
+
+const resolveLocalReference = (document, reference) =>
+  reference
+    .slice(2)
+    .split('/')
+    .map((token) => token.replaceAll('~1', '/').replaceAll('~0', '~'))
+    .reduce((value, token) => value?.[token], document);
+
 describe('swagger documents', () => {
   let fastify;
   let documents;
@@ -377,11 +413,14 @@ describe('swagger documents', () => {
     expect(new Set(operationIds).size).toEqual(operationIds.length);
   });
 
-  it('emits only component schemas reachable by its audience paths', () => {
+  it('emits only reachable schemas and no dangling component refs', () => {
     for (const document of Object.values(documents)) {
       expect(new Set(Object.keys(document.components?.schemas ?? {}))).toEqual(
         getReachableSchemaNames(document),
       );
+      for (const reference of getLocalComponentReferences(document)) {
+        expect(resolveLocalReference(document, reference)).toBeDefined();
+      }
     }
   });
 

@@ -16,8 +16,8 @@
  */
 
 const {
-  pruneUnreferencedSchemas,
-} = require('../documentation/prune-unreferenced-schemas');
+  pruneUnreferencedComponents,
+} = require('../documentation/prune-unreferenced-components');
 
 const OPERATOR_TITLE = 'Velocity Credentialing Hub — Operator API';
 const OPENID4VC_TITLE = 'Velocity Credentialing Hub — OpenID4VC Wallet API';
@@ -80,7 +80,7 @@ const createSwaggerConfig = (version) => ({
   swaggerOptions: {
     transform: createAudienceTransform('operator'),
     transformObject: ({ openapiObject }) =>
-      pruneUnreferencedSchemas(openapiObject),
+      pruneUnreferencedComponents(openapiObject),
   },
   swaggerDocuments: {
     primaryName: 'Operator API',
@@ -116,7 +116,7 @@ const createSwaggerConfig = (version) => ({
         },
         transform: createAudienceTransform('openid4vc'),
         transformObject: ({ openapiObject }) =>
-          pruneUnreferencedSchemas(openapiObject),
+          pruneUnreferencedComponents(openapiObject),
       },
       {
         name: 'VN-API Wallet API',
@@ -148,7 +148,7 @@ const createSwaggerConfig = (version) => ({
         },
         transform: createAudienceTransform('vn-api'),
         transformObject: ({ openapiObject }) =>
-          pruneUnreferencedSchemas(openapiObject),
+          pruneUnreferencedComponents(openapiObject),
       },
     ],
   },
