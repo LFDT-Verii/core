@@ -466,7 +466,7 @@ importers:
   packages/components-organizations-registrar:
     dependencies:
       '@auth0/auth0-react':
-        specifier: ^2.20.0
+        specifier: ^2.22.0
         version: 2.22.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mui/icons-material':
         specifier: ^7.3.11
@@ -1345,8 +1345,8 @@ importers:
         specifier: workspace:*
         version: link:../verii-verification
       auth0:
-        specifier: 5.13.0
-        version: 5.13.0
+        specifier: 5.14.0
+        version: 5.14.0
       bs58:
         specifier: ^6.0.0
         version: 6.0.0
@@ -2616,7 +2616,7 @@ importers:
   samples/sample-registrar-app:
     dependencies:
       '@auth0/auth0-react':
-        specifier: ^2.20.0
+        specifier: ^2.22.0
         version: 2.22.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@csstools/normalize.css':
         specifier: ^12.1.1
@@ -7201,9 +7201,9 @@ packages:
     resolution: {integrity: sha512-o9ca0P+hHSUbiwOSFW+DS2GmCA5c6T6E1UJZhWcgKmjAI2Aid16wLzY4/y+XNFb7Im1rM+wQc5YkkNZuTy5FOw==}
     engines: {node: '>=18'}
 
-  auth0@5.13.0:
-    resolution: {integrity: sha512-/xExT44bBr1cxcb833osSvN78QPJxLl/Z2K6zxAuk2iJXXx/Zue1NKodWjKyolIeCQ9aI4mq713xZ9dSuLw1eQ==}
-    engines: {node: ^20.19.0 || ^22.12.0 || ^24.0.0}
+  auth0@5.14.0:
+    resolution: {integrity: sha512-zvrZchbs4tVCIjv7Z9dZTxyZDn+CEpG/WgqD78n3baai2OM3U7nU98Tm/poagmjCRA9detSyfJ6uPYCQm167GA==}
+    engines: {node: ^20.19.0 || ^22.12.0 || ^24.0.0 || ^26.0.0}
 
   autosuggest-highlight@3.3.4:
     resolution: {integrity: sha512-j6RETBD2xYnrVcoV1S5R4t3WxOlWZKyDQjkwnggDPSjF5L4jV98ZltBpvPvbkM1HtoSe5o+bNrTHyjPbieGeYA==}
@@ -15187,10 +15187,10 @@ snapshots:
       undici-types: 6.27.0
       uuid: 14.0.1
 
-  auth0@5.13.0:
+  auth0@5.14.0:
     dependencies:
       auth0-legacy: auth0@4.37.1
-      jose: 4.15.9
+      jose: 5.10.0
       uuid: 14.0.1
 
   autosuggest-highlight@3.3.4:

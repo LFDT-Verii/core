@@ -49,7 +49,7 @@
     "@verii/validation": "workspace:*",
     "@verii/vc-checks": "workspace:*",
     "@verii/verii-verification": "workspace:*",
-    "auth0": "5.13.0",
+    "auth0": "5.14.0",
     "bs58": "^6.0.0",
     "date-fns": "^4.4.0",
     "env-var": "^7.5.0",
