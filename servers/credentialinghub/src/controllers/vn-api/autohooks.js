@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Velocity Team
+ * Copyright 2026 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,11 @@
  * limitations under the License.
  *
  */
-const { responseRequestIdPlugin } = require('@verii/fastify-plugins');
-const fastifyBearerAuth = require('@fastify/bearer-auth');
-const { kmsPlugin } = require('../../entities/keys');
+
 const {
   setDocumentationAudience,
 } = require('../../documentation/set-documentation-audience');
 
 module.exports = async (fastify) => {
-  setDocumentationAudience(fastify, 'operator');
-  if (!fastify.config.isTest) {
-    fastify.register(fastifyBearerAuth, {
-      keys: new Set([fastify.config.operatorApiToken]),
-    });
-  }
-  fastify
-    .register(kmsPlugin)
-    .register(responseRequestIdPlugin)
-    .autoSchemaPreset({ security: [{ operatorBearer: [] }] });
+  setDocumentationAudience(fastify, 'vn-api');
 };

@@ -31,6 +31,7 @@ const {
   NotificationQueueTypes,
 } = require('../entities/notifications/domain/notification-queue-types');
 const packageJson = require('../../package.json');
+const { createSwaggerConfig } = require('./swagger-config');
 
 const { isTest } = genericConfig;
 
@@ -61,30 +62,7 @@ const ajvConfig = {
     strictTypes: 'log',
   },
 };
-const swaggerConfig = {
-  swaggerInfo: {
-    info: {
-      title: 'Credential Agent v2',
-      description: 'APIs for issuer and verifying verifiable credentials',
-      version: '2.0.0',
-    },
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-      },
-    },
-    tags: [
-      {
-        name: 'utilities',
-        description: 'Healthcheck and testing utilities',
-      },
-    ],
-  },
-};
+const swaggerConfig = createSwaggerConfig(packageJson.version);
 
 const openid4vcConfig = {};
 const notificationsEnabled = env

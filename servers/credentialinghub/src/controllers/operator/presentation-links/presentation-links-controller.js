@@ -19,58 +19,63 @@ const { refreshPresentationLinks } = require('../../../entities/links');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 
 const presentationLinksController = async (fastify) => {
-  fastify.register(tenantLoaderPlugin, { notFoundStatusCode: 400 }).post(
-    '/refresh',
-    {
-      schema: fastify.autoSchema({
-        body: {
-          type: 'object',
-          properties: {
-            tenantId: {
-              type: 'string',
-            },
-            serviceId: {
-              type: 'string',
-            },
-            depotId: {
-              type: 'string',
-            },
-          },
-          required: ['tenantId', 'serviceId'],
-        },
-        response: {
-          200: {
+  fastify
+    .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
+    .autoSchemaPreset({ tags: ['Presentation Links'] })
+    .post(
+      '/refresh',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Refresh presentation links',
+          operationId: 'refreshPresentationLinks',
+          body: {
             type: 'object',
             properties: {
-              redirectUrl: {
+              tenantId: {
                 type: 'string',
-                format: 'uri',
               },
-              vnProtocolLink: {
+              serviceId: {
                 type: 'string',
-                format: 'uri',
               },
-              openid4vpProtocolLink: {
-                type: 'string',
-                format: 'uri',
-              },
-              requestId: {
+              depotId: {
                 type: 'string',
               },
             },
-            required: [
-              'redirectUrl',
-              'vnProtocolLink',
-              'openid4vpProtocolLink',
-              'requestId',
-            ],
+            required: ['tenantId', 'serviceId'],
           },
-        },
-      }),
-    },
-    async (req) =>
-      refreshPresentationLinks(req.body.serviceId, req.body.depotId, req),
-  );
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                redirectUrl: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                vnProtocolLink: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                openid4vpProtocolLink: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                requestId: {
+                  type: 'string',
+                },
+              },
+              required: [
+                'redirectUrl',
+                'vnProtocolLink',
+                'openid4vpProtocolLink',
+                'requestId',
+              ],
+            },
+          },
+        }),
+      },
+      async (req) =>
+        refreshPresentationLinks(req.body.serviceId, req.body.depotId, req),
+    );
 };
 
 module.exports = presentationLinksController;

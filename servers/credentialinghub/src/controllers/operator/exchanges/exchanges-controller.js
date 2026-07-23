@@ -105,10 +105,13 @@ module.exports = async (fastify) => {
   fastify
     .addSchema(exchangeSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
+    .autoSchemaPreset({ tags: ['Exchanges'] })
     .get(
       '/get',
       {
         schema: fastify.autoSchema({
+          summary: 'Get an exchange',
+          operationId: 'getExchange',
           query: {
             type: 'object',
             additionalProperties: false,

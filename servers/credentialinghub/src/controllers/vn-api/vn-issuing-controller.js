@@ -59,10 +59,13 @@ const vnfIssuingController = async (fastify) => {
       auth: verifyAccessTokenAuth,
       addHook: false,
     })
+    .autoSchemaPreset({ tags: ['Issuing'] })
     .get(
       '/r/:tenantId/get-credential-manifest',
       {
         schema: fastify.autoSchema({
+          summary: 'Get a VN-API credential manifest',
+          operationId: 'getVnApiCredentialManifest',
           params: {
             type: 'object',
             properties: {
@@ -136,6 +139,8 @@ const vnfIssuingController = async (fastify) => {
       '/r/:tenantId/authenticate',
       {
         schema: fastify.autoSchema({
+          summary: 'Authenticate a VN-API wallet',
+          operationId: 'authenticateVnApiWallet',
           body: {
             type: 'object',
             properties: {
@@ -187,7 +192,12 @@ const vnfIssuingController = async (fastify) => {
     .post(
       '/r/:tenantId/credential-offers',
       {
+        config: {
+          documentationSecurity: [{ vnApiAccessToken: [] }],
+        },
         schema: fastify.autoSchema({
+          summary: 'Get VN-API credential offers',
+          operationId: 'getVnApiCredentialOffers',
           body: {
             type: 'object',
             properties: {
@@ -230,7 +240,12 @@ const vnfIssuingController = async (fastify) => {
     .post(
       '/r/:tenantId/issue-credentials',
       {
+        config: {
+          documentationSecurity: [{ vnApiAccessToken: [] }],
+        },
         schema: fastify.autoSchema({
+          summary: 'Issue VN-API credentials',
+          operationId: 'issueVnApiCredentials',
           body: {
             type: 'object',
             properties: {

@@ -15,6 +15,8 @@
  *
  */
 
+const { readFileSync } = require('node:fs');
+const { resolve } = require('node:path');
 const ajvFormatsPlugin = require('ajv-formats');
 const { loggerProvider } = require('@verii/logger');
 const { nanoid } = require('nanoid');
@@ -38,6 +40,13 @@ const { map } = require('lodash/fp');
 const { idKeyMapper } = require('@verii/common-functions');
 const fastifySwagger = require('@fastify/swagger');
 const fastifySwaggerUI = require('@fastify/swagger-ui');
+
+const velocityLogo = readFileSync(
+  resolve(__dirname, 'assets/velocity-logo.png'),
+);
+const velocityFavicon = readFileSync(
+  resolve(__dirname, 'assets/velocity-favicon.png'),
+);
 
 const commonCreateServer = (config, log) => {
   const { customFastifyOptions, traceIdHeader } = config;
@@ -73,79 +82,126 @@ const commonCreateServer = (config, log) => {
     },
   });
 
-  return (
-    server
-      // schemas
-      .addSchema(immutableEntitySchema)
-      .addSchema(mutableEntitySchema)
-      .register(autoSchemaPlugin)
-      // serialization rules
-      .addHook('preSerialization', async (req, reply, payload) => {
-        if (payload == null) {
-          return null;
-        }
+  server
+    // schemas
+    .addSchema(immutableEntitySchema)
+    .addSchema(mutableEntitySchema)
+    .register(autoSchemaPlugin)
+    // serialization rules
+    .addHook('preSerialization', async (req, reply, payload) => {
+      if (payload == null) {
+        return null;
+      }
 
-        if (Array.isArray(payload)) {
-          return map(idKeyMapper, payload);
-        }
+      if (Array.isArray(payload)) {
+        return map(idKeyMapper, payload);
+      }
 
-        return idKeyMapper(payload);
-      })
-      // config
-      .decorate('config', config)
-      .decorateRequest('config', null)
-      // error handling
-      .addSchema(errorSchema)
-      .register(errorsPlugin)
-      .register(sendErrorPlugin)
-      // traceIds & logging
-      .decorateRequest('traceId', null)
-      .addHook('preParsing', async (req) => {
-        req.traceId = req.headers[traceIdHeader] || `!${req.id}`;
-        req.log = req.log.child({
-          traceId: req.traceId,
-        });
-      })
-      .addHook('onRoute', (opts) => {
-        if (opts.path === '/') {
-          opts.logLevel = 'silent';
-        }
-      })
-      .addHook('onError', async (req, reply, error) => {
-        const { body } = req;
+      return idKeyMapper(payload);
+    })
+    // config
+    .decorate('config', config)
+    .decorateRequest('config', null)
+    // error handling
+    .addSchema(errorSchema)
+    .register(errorsPlugin)
+    .register(sendErrorPlugin)
+    // traceIds & logging
+    .decorateRequest('traceId', null)
+    .addHook('preParsing', async (req) => {
+      req.traceId = req.headers[traceIdHeader] || `!${req.id}`;
+      req.log = req.log.child({
+        traceId: req.traceId,
+      });
+    })
+    .addHook('onRoute', (opts) => {
+      if (opts.path === '/') {
+        opts.logLevel = 'silent';
+      }
+    })
+    .addHook('onError', async (req, reply, error) => {
+      const { body } = req;
 
-        if (error.validation) {
-          req.log.warn(
-            { req: req.raw, body, res: reply.raw, err: error },
-            error && error.message,
-          );
-        } else {
-          req.log.error(
-            { req: req.raw, body, res: reply.raw, err: error },
-            error && error.message,
-          );
-        }
-      })
-      // request cache
-      .register(cachePlugin)
-      // database connection
-      .register(mongodbPlugin)
-      .decorateRequest('repos', null)
-      .addHook('preValidation', async (req) => {
-        req.repos = bindRepo(req);
-      })
-      // swagger configuration
-      .register(fastifySwagger, {
-        openapi: config.swaggerInfo,
-        exposeRoute: true,
-      })
-      .register(fastifySwaggerUI, {
-        uiConfig: {
-          deepLinking: true,
+      if (error.validation) {
+        req.log.warn(
+          { req: req.raw, body, res: reply.raw, err: error },
+          error && error.message,
+        );
+      } else {
+        req.log.error(
+          { req: req.raw, body, res: reply.raw, err: error },
+          error && error.message,
+        );
+      }
+    })
+    // request cache
+    .register(cachePlugin)
+    // database connection
+    .register(mongodbPlugin)
+    .decorateRequest('repos', null)
+    .addHook('preValidation', async (req) => {
+      req.repos = bindRepo(req);
+    });
+
+  registerSwaggerDocumentation(server, config);
+
+  return server;
+};
+
+const registerSwaggerDocumentation = (server, config) => {
+  const documents = config.swaggerDocuments?.documents ?? [];
+  const hasNamedDocuments = documents.length > 0;
+  const uiConfig = hasNamedDocuments
+    ? {
+        deepLinking: true,
+        urls: [
+          {
+            name: config.swaggerDocuments.primaryName,
+            url: '/documentation/json',
+          },
+          ...documents.map(({ name, url }) => ({ name, url })),
+        ],
+        'urls.primaryName': config.swaggerDocuments.primaryName,
+      }
+    : { deepLinking: true };
+
+  server.register(fastifySwagger, {
+    openapi: config.swaggerInfo,
+    exposeRoute: true,
+    ...config.swaggerOptions,
+  });
+
+  for (const document of documents) {
+    server.register(fastifySwagger, {
+      openapi: document.openapi,
+      transform: document.transform,
+      transformObject: document.transformObject,
+      decorator: document.decorator,
+    });
+    server.get(document.url, { schema: { hide: true } }, () =>
+      server[document.decorator](),
+    );
+  }
+
+  server.register(fastifySwaggerUI, {
+    uiConfig,
+    initOAuth: {},
+    logo: {
+      type: 'image/png',
+      content: velocityLogo,
+    },
+    theme: {
+      favicon: [
+        {
+          filename: 'velocity-favicon.png',
+          rel: 'icon',
+          sizes: '32x32',
+          type: 'image/png',
+          content: velocityFavicon,
         },
-        initOAuth: {},
-      })
-  );
+      ],
+    },
+  });
 };
 
 const buildAjvOptions = (config) => {

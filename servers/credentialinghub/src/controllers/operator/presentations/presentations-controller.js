@@ -38,10 +38,13 @@ module.exports = async (fastify) => {
     .addSchema(presentationVerificationSchema)
     .addSchema(w3cPresentationSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
+    .autoSchemaPreset({ tags: ['Presentations'] })
     .get(
       '/get',
       {
         schema: fastify.autoSchema({
+          summary: 'Get presentations',
+          operationId: 'getPresentations',
           query: {
             type: 'object',
             properties: {
@@ -94,6 +97,8 @@ module.exports = async (fastify) => {
       '/verify',
       {
         schema: fastify.autoSchema({
+          summary: 'Verify a presentation',
+          operationId: 'verifyPresentation',
           body: {
             type: 'object',
             anyOf: [

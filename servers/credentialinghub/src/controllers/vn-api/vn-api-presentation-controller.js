@@ -37,10 +37,13 @@ const vnApiPresentationController = async (fastify) => {
     .addSchema(presentationSubmissionSchema)
     .addSchema(velocityPresentationSubmissionSchema)
     .addSchema(velocityPresentationSubmissionResponseSchema)
+    .autoSchemaPreset({ tags: ['Presentation'] })
     .get(
       '/r/:tenantId/get-presentation-request',
       {
         schema: fastify.autoSchema({
+          summary: 'Get a VN-API presentation request',
+          operationId: 'getVnApiPresentationRequest',
           params: {
             type: 'object',
             properties: {
@@ -107,6 +110,8 @@ const vnApiPresentationController = async (fastify) => {
       '/r/:tenantId/presentation',
       {
         schema: fastify.autoSchema({
+          summary: 'Submit a VN-API presentation',
+          operationId: 'submitVnApiPresentation',
           body: {
             type: 'object',
             properties: {

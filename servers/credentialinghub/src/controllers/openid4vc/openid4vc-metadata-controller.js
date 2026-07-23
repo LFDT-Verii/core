@@ -27,8 +27,15 @@ const APPLICATION_JWT_MEDIA_TYPE = 'application/jwt';
 const openid4vcMetadataController = async (fastify) => {
   fastify
     .register(cors, { origin: true })
+    .autoSchemaPreset({ tags: ['OpenID4VCI'] })
     .get(
       '/.well-known/openid-credential-issuer/r/:tenantId',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Get OpenID4VCI credential issuer metadata',
+          operationId: 'getOpenid4vciCredentialIssuerMetadata',
+        }),
+      },
       async (req, reply) => {
         const credentialIssuerMetadata = await getCredentialIssuerMetadata(req);
         if (req.headers.accept?.includes(APPLICATION_JWT_MEDIA_TYPE)) {
@@ -44,23 +51,32 @@ const openid4vcMetadataController = async (fastify) => {
         return credentialIssuerMetadata;
       },
     )
-    .get('/.well-known/oauth-authorization-server/r/:tenantId', async (req) => {
-      const authorizationServerMetadata =
-        await getAuthorizationServerMetadata(req);
-      const exchangesKey = req.tenant.keysByPurpose[KeyPurposes.EXCHANGES];
-      return {
-        signed_metadata: await req.kms.signJwt(
-          authorizationServerMetadata,
-          exchangesKey._id,
-          {
-            issuer: req.tenant.did,
-            subject: req.tenant.did,
-            kid: toDidUrl(req.tenant.did, exchangesKey.kidFragment),
-            expiresIn: '1w',
-          },
-        ),
-      };
-    });
+    .get(
+      '/.well-known/oauth-authorization-server/r/:tenantId',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Get OpenID4VCI authorization server metadata',
+          operationId: 'getOpenid4vciAuthorizationServerMetadata',
+        }),
+      },
+      async (req) => {
+        const authorizationServerMetadata =
+          await getAuthorizationServerMetadata(req);
+        const exchangesKey = req.tenant.keysByPurpose[KeyPurposes.EXCHANGES];
+        return {
+          signed_metadata: await req.kms.signJwt(
+            authorizationServerMetadata,
+            exchangesKey._id,
+            {
+              issuer: req.tenant.did,
+              subject: req.tenant.did,
+              kid: toDidUrl(req.tenant.did, exchangesKey.kidFragment),
+              expiresIn: '1w',
+            },
+          ),
+        };
+      },
+    );
 };
 
 module.exports = openid4vcMetadataController;

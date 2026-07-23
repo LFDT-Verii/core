@@ -14,13 +14,15 @@
  * limitations under the License.
  *
  */
-const { tenantLoaderPlugin } = require('../../entities/tenants');
-const { kmsPlugin } = require('../../entities/keys');
-const {
-  setDocumentationAudience,
-} = require('../../documentation/set-documentation-audience');
 
-module.exports = async (fastify) => {
-  setDocumentationAudience(fastify, 'openid4vc');
-  fastify.register(tenantLoaderPlugin).register(kmsPlugin);
+const setDocumentationAudience = (fastify, audience) => {
+  fastify.addHook('onRoute', (route) => {
+    if (route.schema?.hide) {
+      return;
+    }
+
+    route.config = { ...route.config, documentationAudience: audience };
+  });
 };
+
+module.exports = { setDocumentationAudience };

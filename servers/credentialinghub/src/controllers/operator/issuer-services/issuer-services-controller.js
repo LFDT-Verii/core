@@ -44,10 +44,13 @@ module.exports = async (fastify) => {
     .addSchema(issuerConfigurationSchema)
     .addSchema(newIssuerConfigurationSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
+    .autoSchemaPreset({ tags: ['Issuer Services'] })
     .post(
       '/create',
       {
         schema: fastify.autoSchema({
+          summary: 'Create an issuer service',
+          operationId: 'createIssuerService',
           body: {
             type: 'object',
             properties: {
@@ -84,6 +87,8 @@ module.exports = async (fastify) => {
       '/get',
       {
         schema: fastify.autoSchema({
+          summary: 'Get issuer services',
+          operationId: 'getIssuerServices',
           query: {
             type: 'object',
             properties: {
@@ -133,6 +138,8 @@ module.exports = async (fastify) => {
       '/update',
       {
         schema: fastify.autoSchema({
+          summary: 'Update an issuer service',
+          operationId: 'updateIssuerService',
           body: {
             type: 'object',
             properties: {
@@ -173,6 +180,8 @@ module.exports = async (fastify) => {
       '/delete',
       {
         schema: fastify.autoSchema({
+          summary: 'Delete an issuer service',
+          operationId: 'deleteIssuerService',
           body: {
             type: 'object',
             properties: {

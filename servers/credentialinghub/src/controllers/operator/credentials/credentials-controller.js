@@ -44,10 +44,13 @@ const credentialsController = async (fastify) => {
       ajv: { useDefaults: true, strictTypes: false },
       decorateRequest: ['addDocSchema', 'getDocValidator'],
     })
+    .autoSchemaPreset({ tags: ['Credentials'] })
     .post(
       '/create',
       {
         schema: fastify.autoSchema({
+          summary: 'Create a credential',
+          operationId: 'createCredential',
           body: {
             type: 'object',
             properties: {
@@ -86,6 +89,8 @@ const credentialsController = async (fastify) => {
       '/create-many',
       {
         schema: fastify.autoSchema({
+          summary: 'Create multiple credentials',
+          operationId: 'createCredentials',
           body: {
             type: 'object',
             properties: {
@@ -137,6 +142,8 @@ const credentialsController = async (fastify) => {
       '/get',
       {
         schema: fastify.autoSchema({
+          summary: 'Get credentials',
+          operationId: 'getCredentials',
           query: {
             type: 'object',
             properties: {
@@ -183,6 +190,8 @@ const credentialsController = async (fastify) => {
       '/revoke',
       {
         schema: fastify.autoSchema({
+          summary: 'Revoke a credential',
+          operationId: 'revokeCredential',
           body: {
             $ref: 'revoke-credential',
           },
@@ -227,6 +236,8 @@ const credentialsController = async (fastify) => {
       '/delete',
       {
         schema: fastify.autoSchema({
+          summary: 'Delete credentials',
+          operationId: 'deleteCredentials',
           body: {
             type: 'object',
             properties: {
