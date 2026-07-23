@@ -192,10 +192,12 @@ const vnfIssuingController = async (fastify) => {
     .post(
       '/r/:tenantId/credential-offers',
       {
+        config: {
+          documentationSecurity: [{ vnApiAccessToken: [] }],
+        },
         schema: fastify.autoSchema({
           summary: 'Get VN-API credential offers',
           operationId: 'getVnApiCredentialOffers',
-          security: [{ vnApiAccessToken: [] }],
           body: {
             type: 'object',
             properties: {
@@ -238,10 +240,12 @@ const vnfIssuingController = async (fastify) => {
     .post(
       '/r/:tenantId/issue-credentials',
       {
+        config: {
+          documentationSecurity: [{ vnApiAccessToken: [] }],
+        },
         schema: fastify.autoSchema({
           summary: 'Issue VN-API credentials',
           operationId: 'issueVnApiCredentials',
-          security: [{ vnApiAccessToken: [] }],
           body: {
             type: 'object',
             properties: {

@@ -49,6 +49,9 @@ const openid4vciController = async (fastify) => {
     .post(
       '/r/:tenantId/openid4vc/credential',
       {
+        config: {
+          documentationSecurity: [{ openid4vcAccessToken: [] }],
+        },
         errorHandler: (e, request, reply) => {
           const error = fastify.openid4vcErrorHandler(e, request, reply);
           if (error.error === Oauth2ErrorCodes.InvalidRequest) {
@@ -61,7 +64,6 @@ const openid4vciController = async (fastify) => {
         schema: fastify.autoSchema({
           summary: 'Create an OpenID4VC credential',
           operationId: 'createOpenid4vcCredential',
-          security: [{ openid4vcAccessToken: [] }],
           params: {
             type: 'object',
             properties: {
@@ -80,6 +82,9 @@ const openid4vciController = async (fastify) => {
     .post(
       '/r/:tenantId/openid4vc/notification',
       {
+        config: {
+          documentationSecurity: [{ openid4vcAccessToken: [] }],
+        },
         errorHandler: (e, request, reply) => {
           const error = fastify.openid4vcErrorHandler(e, request, reply);
           if (error.error === Oauth2ErrorCodes.InvalidRequest) {
@@ -92,7 +97,6 @@ const openid4vciController = async (fastify) => {
         schema: fastify.autoSchema({
           summary: 'Submit an OpenID4VC notification',
           operationId: 'submitOpenid4vcNotification',
-          security: [{ openid4vcAccessToken: [] }],
           params: {
             type: 'object',
             properties: {

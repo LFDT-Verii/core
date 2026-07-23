@@ -21,13 +21,19 @@ const VN_API_TITLE = 'Velocity Credentialing Hub — VN-API Wallet API';
 
 const createAudienceTransform =
   (audience) =>
-  ({ schema, url, route }) => ({
-    schema: {
-      ...schema,
-      hide: route?.config?.documentationAudience !== audience,
-    },
-    url,
-  });
+  ({ schema, url, route }) => {
+    const { documentationSecurity } = route?.config ?? {};
+    return {
+      schema: {
+        ...schema,
+        ...(documentationSecurity == null
+          ? {}
+          : { security: documentationSecurity }),
+        hide: route?.config?.documentationAudience !== audience,
+      },
+      url,
+    };
+  };
 
 const createSwaggerConfig = (version) => ({
   swaggerInfo: {
