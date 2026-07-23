@@ -15,6 +15,8 @@
  *
  */
 
+const { readFileSync } = require('node:fs');
+const { resolve } = require('node:path');
 const ajvFormatsPlugin = require('ajv-formats');
 const { loggerProvider } = require('@verii/logger');
 const { nanoid } = require('nanoid');
@@ -38,6 +40,13 @@ const { map } = require('lodash/fp');
 const { idKeyMapper } = require('@verii/common-functions');
 const fastifySwagger = require('@fastify/swagger');
 const fastifySwaggerUI = require('@fastify/swagger-ui');
+
+const velocityLogo = readFileSync(
+  resolve(__dirname, 'assets/velocity-logo.png'),
+);
+const velocityFavicon = readFileSync(
+  resolve(__dirname, 'assets/velocity-favicon.png'),
+);
 
 const commonCreateServer = (config, log) => {
   const { customFastifyOptions, traceIdHeader } = config;
@@ -177,6 +186,21 @@ const registerSwaggerDocumentation = (server, config) => {
   server.register(fastifySwaggerUI, {
     uiConfig,
     initOAuth: {},
+    logo: {
+      type: 'image/png',
+      content: velocityLogo,
+    },
+    theme: {
+      favicon: [
+        {
+          filename: 'velocity-favicon.png',
+          rel: 'icon',
+          sizes: '32x32',
+          type: 'image/png',
+          content: velocityFavicon,
+        },
+      ],
+    },
   });
 };
 

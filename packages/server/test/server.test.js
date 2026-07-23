@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const { createHash } = require('node:crypto');
 const { afterEach, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -23,6 +24,12 @@ const { genericConfig } = require('@verii/config');
 const { createServer } = require('../src/create-server');
 
 const mongoConnection = buildMongoConnection('credentialagent');
+const VELOCITY_LOGO_SHA256 =
+  '1078983907572b93f8672a1b97ee7671e809bd8b9b31ef7721564648f5f4bd9c';
+const VELOCITY_FAVICON_SHA256 =
+  '324b10dc04fc04c974013d718df366bda259e599b8bbbec47443a450105b211a';
+
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 
 const listenTestServer = async (server) => {
   const { appPort, appHost } = server.config;
@@ -134,6 +141,41 @@ describe('Swagger documentation', () => {
     for (const response of responses) {
       expect(response.statusCode).toEqual(200);
     }
+  });
+
+  it('serves the approved Velocity logo and favicon', async () => {
+    server = createServer({
+      ...genericConfig,
+      mongoConnection,
+      swaggerInfo: {
+        info: { title: 'Public API', version: '1.0.0' },
+      },
+    });
+
+    const [html, initializer, favicon] = await Promise.all([
+      server.inject({ method: 'get', url: '/documentation/' }),
+      server.inject({
+        method: 'get',
+        url: '/documentation/static/swagger-initializer.js',
+      }),
+      server.inject({
+        method: 'get',
+        url: '/documentation/static/theme/velocity-favicon.png',
+      }),
+    ]);
+    const [, logoBase64] =
+      initializer.body.match(/data:image\/png;base64,([^']+)/) ?? [];
+
+    expect(html.statusCode).toEqual(200);
+    expect(html.body).toContain('./static/theme/velocity-favicon.png');
+    expect(initializer.statusCode).toEqual(200);
+    expect(logoBase64).toBeDefined();
+    expect(sha256(Buffer.from(logoBase64, 'base64'))).toEqual(
+      VELOCITY_LOGO_SHA256,
+    );
+    expect(favicon.statusCode).toEqual(200);
+    expect(favicon.headers['content-type']).toEqual('image/png');
+    expect(sha256(favicon.rawPayload)).toEqual(VELOCITY_FAVICON_SHA256);
   });
 
   it('serves named documentation using its decorator and Swagger UI selector', async () => {
