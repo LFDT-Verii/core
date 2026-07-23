@@ -19,6 +19,7 @@ const rootController = async (fastify) => {
   fastify.get(
     '/',
     {
+      config: { documentationAudience: 'operator' },
       schema: {
         description: 'Healthcheck and version info',
         response: {

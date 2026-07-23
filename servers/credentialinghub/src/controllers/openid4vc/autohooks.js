@@ -16,7 +16,11 @@
  */
 const { kmsPlugin } = require('../../entities/keys');
 const { tenantLoaderPlugin } = require('../../entities/tenants');
+const {
+  setDocumentationAudience,
+} = require('../../documentation/set-documentation-audience');
 
 module.exports = async (fastify) => {
+  setDocumentationAudience(fastify, 'openid4vc');
   fastify.register(tenantLoaderPlugin).register(kmsPlugin);
 };

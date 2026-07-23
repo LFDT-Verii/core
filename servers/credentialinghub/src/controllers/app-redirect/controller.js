@@ -28,6 +28,7 @@ const rootController = async (fastify) => {
   fastify.get(
     '/app-redirect',
     {
+      config: { documentationAudience: 'hidden' },
       schema: fastify.autoSchema({
         querystring: {
           type: 'object',
