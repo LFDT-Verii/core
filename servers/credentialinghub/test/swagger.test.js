@@ -264,6 +264,54 @@ const getOperationEntries = (document) =>
     ]),
   );
 
+const SCHEMA_REFERENCE_PREFIX = '#/components/schemas/';
+
+const isUnvisitedObject = (value, seen) =>
+  value != null && typeof value === 'object' && !seen.has(value);
+
+const getSchemaReference = (value) =>
+  typeof value.$ref === 'string' &&
+  value.$ref.startsWith(SCHEMA_REFERENCE_PREFIX)
+    ? value.$ref.slice(SCHEMA_REFERENCE_PREFIX.length)
+    : null;
+
+const getSchemaReferences = (value, seen = new WeakSet()) => {
+  if (!isUnvisitedObject(value, seen)) {
+    return new Set();
+  }
+
+  seen.add(value);
+  const references = new Set();
+  const schemaReference = getSchemaReference(value);
+  if (schemaReference != null) {
+    references.add(schemaReference);
+  }
+
+  for (const child of Object.values(value)) {
+    for (const reference of getSchemaReferences(child, seen)) {
+      references.add(reference);
+    }
+  }
+
+  return references;
+};
+
+const getReachableSchemaNames = (document) => {
+  const schemas = document.components?.schemas ?? {};
+  const reachable = new Set();
+  const pending = [...getSchemaReferences(document.paths)];
+
+  while (pending.length > 0) {
+    const schemaName = pending.pop();
+    if (!reachable.has(schemaName)) {
+      reachable.add(schemaName);
+      pending.push(...getSchemaReferences(schemas[schemaName]));
+    }
+  }
+
+  return reachable;
+};
+
 describe('swagger documents', () => {
   let fastify;
   let documents;
@@ -327,6 +375,14 @@ describe('swagger documents', () => {
       Object.keys(EXPECTED_OPERATION_METADATA).length,
     );
     expect(new Set(operationIds).size).toEqual(operationIds.length);
+  });
+
+  it('emits only component schemas reachable by its audience paths', () => {
+    for (const document of Object.values(documents)) {
+      expect(new Set(Object.keys(document.components?.schemas ?? {}))).toEqual(
+        getReachableSchemaNames(document),
+      );
+    }
   });
 
   it('offers all documents in Swagger UI with Operator API selected', async () => {

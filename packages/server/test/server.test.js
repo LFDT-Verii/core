@@ -157,6 +157,13 @@ describe('Swagger documentation', () => {
               schema: { ...schema, hide: url !== '/internal' },
               url,
             }),
+            transformObject: ({ openapiObject }) => ({
+              ...openapiObject,
+              info: {
+                ...openapiObject.info,
+                title: `${openapiObject.info.title} (transformed)`,
+              },
+            }),
           },
         ],
       },
@@ -179,7 +186,7 @@ describe('Swagger documentation', () => {
     expect(internalDocument.statusCode).toEqual(200);
     expect(server.internalSwagger).toBeDefined();
     expect(JSON.parse(internalDocument.body).info.title).toEqual(
-      'Internal API',
+      'Internal API (transformed)',
     );
     expect(JSON.parse(internalDocument.body).paths).toEqual({
       '/internal': expect.any(Object),

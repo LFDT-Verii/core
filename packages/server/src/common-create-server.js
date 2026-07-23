@@ -166,6 +166,7 @@ const registerSwaggerDocumentation = (server, config) => {
     server.register(fastifySwagger, {
       openapi: document.openapi,
       transform: document.transform,
+      transformObject: document.transformObject,
       decorator: document.decorator,
     });
     server.get(document.url, { schema: { hide: true } }, () =>
