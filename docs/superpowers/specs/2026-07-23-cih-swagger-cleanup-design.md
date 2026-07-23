@@ -21,7 +21,8 @@ routing and runtime authentication behavior do not change.
 - Separate operator, OpenID4VC, and VN-API operations into distinct OpenAPI
   documents selectable from one Swagger UI.
 - Group operator operations by entity.
-- Group OpenID4VC operations into OpenID4VCI, OpenID4VP, and Metadata & OAuth.
+- Group OpenID4VC operations into OpenID4VCI and OpenID4VP, with issuer
+  metadata and OAuth token operations folded into OpenID4VCI.
 - Group VN-API operations into Issuing and Presentation.
 - Describe each document's actual authentication requirements accurately.
 - Replace the stale `Credential Agent v2` metadata with CIH-specific titles
@@ -157,16 +158,22 @@ OpenAPI title: `Velocity Credentialing Hub — OpenID4VC Wallet API`
 Tags, in order:
 
 1. OpenID4VCI
+   - credential issuer metadata
+   - authorization server metadata
+   - token
    - nonce
    - credential
    - notification
 2. OpenID4VP
    - authorization request
    - direct-post authorization response
-3. Metadata & OAuth
-   - credential issuer metadata
-   - authorization server metadata
-   - token
+
+The combined document title, selector label, and
+`/documentation/openid4vc.json` URL retain the OpenID4VC umbrella name because
+the document contains both OpenID4VCI and OpenID4VP operations. The internal
+`openid4vc` audience and Swagger decorator also retain that umbrella name.
+Issuance-specific tags, summaries, operation IDs, descriptions, and security
+scheme names use OpenID4VCI.
 
 Protocol-level requirements such as pre-authorized codes, proofs, wallet
 metadata, nonces, and state remain request parameters or body fields rather
@@ -214,13 +221,13 @@ Every operation in this table except `GET /` requires `operatorBearer`.
 | Tag | Operation | HTTP security |
 | --- | --- | --- |
 | OpenID4VCI | `POST /r/{tenantId}/openid4vc/nonce` | None |
-| OpenID4VCI | `POST /r/{tenantId}/openid4vc/credential` | `openid4vcAccessToken` |
-| OpenID4VCI | `POST /r/{tenantId}/openid4vc/notification` | `openid4vcAccessToken` |
+| OpenID4VCI | `POST /r/{tenantId}/openid4vc/credential` | `openid4vciAccessToken` |
+| OpenID4VCI | `POST /r/{tenantId}/openid4vc/notification` | `openid4vciAccessToken` |
 | OpenID4VP | `POST /r/{tenantId}/openid4vp/authorization-request/{requestId}` | None |
 | OpenID4VP | `POST /r/{tenantId}/openid4vp/direct-post` | None |
-| Metadata & OAuth | `GET /.well-known/openid-credential-issuer/r/{tenantId}` | None |
-| Metadata & OAuth | `GET /.well-known/oauth-authorization-server/r/{tenantId}` | None |
-| Metadata & OAuth | `POST /r/{tenantId}/oauth/token` | None; protocol request carries the pre-authorized grant |
+| OpenID4VCI | `GET /.well-known/openid-credential-issuer/r/{tenantId}` | None |
+| OpenID4VCI | `GET /.well-known/oauth-authorization-server/r/{tenantId}` | None |
+| OpenID4VCI | `POST /r/{tenantId}/oauth/token` | None; protocol request carries the pre-authorized grant |
 
 #### VN-API
 
@@ -244,15 +251,15 @@ interchangeable.
 | Scheme | Definition | Applied operations |
 | --- | --- | --- |
 | `operatorBearer` | HTTP bearer containing the opaque token configured by `OPERATOR_API_TOKEN`; no `bearerFormat: JWT` | All operator controller operations |
-| `openid4vcAccessToken` | HTTP bearer JWT returned by the OpenID4VC token endpoint | OpenID4VC credential and notification |
+| `openid4vciAccessToken` | HTTP bearer JWT returned by the OpenID4VCI token endpoint | OpenID4VCI credential and notification |
 | `vnApiAccessToken` | HTTP bearer JWT returned during a VN-API exchange | VN-API credential offers and issue credentials |
 
-The operator health operation is unauthenticated. OpenID4VC token, nonce,
-metadata, and OpenID4VP operations have no HTTP bearer requirement. VN-API
-manifest, authentication, presentation-request, and presentation-submission
-operations also have no HTTP bearer requirement. Their protocol payloads and
-exchange state continue to provide the checks already implemented by the
-handlers.
+The operator health operation is unauthenticated. OpenID4VCI token, nonce, and
+metadata operations and OpenID4VP operations have no HTTP bearer requirement.
+VN-API manifest, authentication, presentation-request, and
+presentation-submission operations also have no HTTP bearer requirement. Their
+protocol payloads and exchange state continue to provide the checks already
+implemented by the handlers.
 
 Keep security requirements operation-level so the generated document mirrors
 the actual protected routes. The existing operator schema preset remains the
