@@ -29,12 +29,12 @@
   "devDependencies": {
     "@spencejs/spence-config": "1.1.0",
     "@spencejs/spence-mongo-repos": "^1.1.0",
-    "@typescript-eslint/eslint-plugin": "8.63.0",
-    "@typescript-eslint/parser": "8.63.0",
+    "@typescript-eslint/eslint-plugin": "8.65.0",
+    "@typescript-eslint/parser": "8.65.0",
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
     "eslint": "9.39.5",
-    "eslint-config-airbnb-extended": "3.1.0",
+    "eslint-config-airbnb-extended": "3.1.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
@@ -46,9 +46,9 @@
     "fastify": "^5.10.0",
     "globals": "17.7.0",
     "mongodb": "^7.3.0",
-    "prettier": "3.9.5",
+    "prettier": "3.9.6",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.63.0"
+    "typescript-eslint": "8.65.0"
   },
   "nx": {
     "tags": [

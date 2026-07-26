@@ -110,7 +110,7 @@
     "@verii/tests-helpers": "workspace:*",
     "@vitejs/plugin-react-swc": "4.3.2",
     "eslint": "9.39.5",
-    "eslint-config-airbnb-extended": "3.1.0",
+    "eslint-config-airbnb-extended": "3.1.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-alias": "1.1.2",
     "eslint-plugin-better-mutation": "2.1.0",
