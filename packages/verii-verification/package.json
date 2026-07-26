@@ -34,7 +34,7 @@
     "@verii/tests-helpers": "workspace:*",
     "date-fns": "^4.4.0",
     "eslint": "9.39.5",
-    "eslint-config-airbnb-extended": "3.1.0",
+    "eslint-config-airbnb-extended": "3.1.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
@@ -45,7 +45,7 @@
     "globals": "17.7.0",
     "nanoid": "^5.1.16",
     "nock": "15.0.0-beta.12",
-    "prettier": "3.9.5",
+    "prettier": "3.9.6",
     "undici": "^7.28.0"
   },
   "nx": {
