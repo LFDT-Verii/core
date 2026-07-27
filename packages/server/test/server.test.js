@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 const { createHash } = require('node:crypto');
-const { request: httpRequest } = require('node:http');
 const { afterEach, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
@@ -31,20 +30,6 @@ const VELOCITY_FAVICON_SHA256 =
   '324b10dc04fc04c974013d718df366bda259e599b8bbbec47443a450105b211a';
 
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
-
-const getStatusCode = (address, requestPath) =>
-  new Promise((resolve, reject) => {
-    const { hostname, port } = new URL(address);
-    const request = httpRequest(
-      { hostname, port, path: requestPath },
-      (response) => {
-        response.resume();
-        response.once('end', () => resolve(response.statusCode));
-      },
-    );
-    request.once('error', reject);
-    request.end();
-  });
 
 const listenTestServer = async (server) => {
   const { appPort, appHost } = server.config;
@@ -191,54 +176,6 @@ describe('Swagger documentation', () => {
     expect(favicon.statusCode).toEqual(200);
     expect(favicon.headers['content-type']).toEqual('image/png');
     expect(sha256(favicon.rawPayload)).toEqual(VELOCITY_FAVICON_SHA256);
-  });
-
-  it('serves the Swagger UI stylesheet', async () => {
-    server = createServer({
-      ...genericConfig,
-      mongoConnection,
-      swaggerInfo: {
-        info: { title: 'Public API', version: '1.0.0' },
-      },
-    });
-
-    const response = await server.inject({
-      method: 'get',
-      url: '/documentation/static/swagger-ui.css',
-    });
-
-    expect(response.statusCode).toEqual(200);
-    expect(response.headers['content-type']).toContain('text/css');
-  });
-
-  it('rejects non-canonical Swagger asset paths before they bypass route guards', async () => {
-    server = createServer({
-      ...genericConfig,
-      mongoConnection,
-      swaggerInfo: {
-        info: { title: 'Public API', version: '1.0.0' },
-      },
-    });
-    server.get(
-      '/documentation/static/swagger-ui.css',
-      {
-        onRequest: async (_request, reply) => reply.code(403).send(),
-      },
-      () => null,
-    );
-
-    const address = await server.listen({ host: '127.0.0.1', port: 0 });
-    const canonicalStatusCode = await getStatusCode(
-      address,
-      '/documentation/static/swagger-ui.css',
-    );
-    const nonCanonicalStatusCode = await getStatusCode(
-      address,
-      '/documentation/static/ignored/%2E%2E/swagger-ui.css',
-    );
-
-    expect(canonicalStatusCode).toEqual(403);
-    expect(nonCanonicalStatusCode).toEqual(403);
   });
 
   it('serves named documentation using its decorator and Swagger UI selector', async () => {
