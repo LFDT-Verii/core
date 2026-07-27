@@ -97,7 +97,7 @@ const buildHttpDeliveryError = async (response) => ({
 
 const readResponseExcerpt = async (response) => {
   if (isResponseBodyTooLarge(response)) {
-    response.rawBody?.destroy?.();
+    await response.rawBody?.dump({ limit: MAX_ERROR_BODY_LENGTH });
     return OVERSIZED_ERROR_BODY_MESSAGE;
   }
 
@@ -118,7 +118,7 @@ const readRawBodyExcerpt = async (rawBody) => {
     bodyLength += bodyChunk.length;
 
     if (bodyLength > MAX_ERROR_BODY_LENGTH) {
-      rawBody.destroy?.();
+      await rawBody.dump({ limit: MAX_ERROR_BODY_LENGTH });
       return OVERSIZED_ERROR_BODY_MESSAGE;
     }
 
