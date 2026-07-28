@@ -924,11 +924,11 @@ describe('Organizations Test Suite', () => {
         });
       });
 
-      it('Should return a list with matching "filter.serviceTypes" and only activated services', async () => {
+      it('Should include unapproved services for any requested service type only when explicitly requested', async () => {
         const service = [
           {
-            id: '#identityIssuer-1',
-            type: ServiceTypes.IdDocumentIssuerType,
+            id: '#careerIssuer-1',
+            type: ServiceTypes.CareerIssuerType,
             serviceEndpoint: 'https://node.example.com',
           },
           {
@@ -942,13 +942,17 @@ describe('Organizations Test Suite', () => {
           service,
           activatedServiceIds: ['#careerIssuer-2'],
         });
-        const response = await fastify.injectJson({
+        const defaultResponse = await fastify.injectJson({
           method: 'GET',
           url: `${baseUrl}/search-profiles?filter.serviceTypes=Issuer`,
         });
+        const unapprovedResponse = await fastify.injectJson({
+          method: 'GET',
+          url: `${baseUrl}/search-profiles?filter.serviceTypes=Issuer&include-unapproved-services=true`,
+        });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.json).toEqual({
+        expect(defaultResponse.statusCode).toEqual(200);
+        expect(defaultResponse.json).toEqual({
           result: map(
             (_org) =>
               searchResult(_org, servicesByOrg[_org.didDoc.id] || [service[1]]),
@@ -962,78 +966,16 @@ describe('Organizations Test Suite', () => {
             ],
           ),
         });
-      });
-
-      it('Should mark activated holder services as approved when unapproved services are requested', async () => {
-        const response = await fastify.injectJson({
-          method: 'GET',
-          url: `${baseUrl}/search-profiles?q=Organization01&filter.serviceTypes=HolderAppProvider&include-unapproved-services=true`,
-        });
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.json).toEqual({
-          result: [
-            {
-              ...omit(
-                ['alsoKnownAs'],
-                searchResult(orgs[3], servicesByOrg[orgs[3].didDoc.id]),
-              ),
-              service: [
-                {
-                  ...buildPublicService(servicesByOrg[orgs[3].didDoc.id][0]),
-                  approved: true,
-                },
-              ],
-            },
-          ],
-        });
-      });
-
-      it('Should return awaiting-approval holder services only when explicitly requested', async () => {
-        await mongoDb()
-          .collection('organizations')
-          .updateOne(
-            { 'didDoc.id': orgs[3].didDoc.id },
-            { $set: { activatedServiceIds: [] } },
-          );
-
-        const defaultResponse = await fastify.injectJson({
-          method: 'GET',
-          url: `${baseUrl}/search-profiles?q=Organization01&filter.serviceTypes=HolderAppProvider`,
-        });
-        const pendingResponse = await fastify.injectJson({
-          method: 'GET',
-          url: `${baseUrl}/search-profiles?q=Organization01&filter.serviceTypes=HolderAppProvider&include-unapproved-services=1`,
-        });
-
-        expect(defaultResponse.statusCode).toEqual(200);
-        expect(defaultResponse.json).toEqual({ result: [] });
-        expect(pendingResponse.statusCode).toEqual(200);
-        expect(pendingResponse.json).toEqual({
-          result: [
-            {
-              ...omit(
-                ['alsoKnownAs'],
-                searchResult(orgs[3], servicesByOrg[orgs[3].didDoc.id]),
-              ),
-              service: [
-                {
-                  ...buildPublicService(servicesByOrg[orgs[3].didDoc.id][0]),
-                  approved: false,
-                },
-              ],
-            },
-          ],
-        });
-      });
-
-      it('Should reject unapproved service searches outside the Holder App Provider category', async () => {
-        const response = await fastify.injectJson({
-          method: 'GET',
-          url: `${baseUrl}/search-profiles?filter.serviceTypes=Issuer&include-unapproved-services=true`,
-        });
-
-        expect(response.statusCode).toEqual(400);
+        expect(unapprovedResponse.statusCode).toEqual(200);
+        const organization = unapprovedResponse.json.result.find(
+          ({ id }) => id === org.didDoc.id,
+        );
+        expect(
+          map(({ id, approved }) => ({ id, approved }), organization.service),
+        ).toEqual([
+          { id: '#careerIssuer-1', approved: false },
+          { id: '#careerIssuer-2', approved: true },
+        ]);
       });
 
       it('Should not return a list with an items when provided "filter.serviceTypes" param is not match with eatch item', async () => {

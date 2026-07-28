@@ -11,7 +11,6 @@ const {
 } = require('lodash/fp');
 const newError = require('http-errors');
 const { prepCamelCase } = require('@verii/common-functions');
-const { ServiceCategories } = require('@verii/organizations-registry');
 const {
   buildDidDocWithAlternativeId,
   getDidAndAliases,
@@ -44,21 +43,6 @@ const custodiedFinder = (existingFinder) => ({
     didNotCustodied: { $ne: true },
   },
 });
-
-const validateUnapprovedServiceSearch = (query) => {
-  if (!query.includeUnapprovedServices) {
-    return;
-  }
-  const serviceCategories = query.filter?.serviceTypes;
-  if (
-    serviceCategories?.length !== 1 ||
-    serviceCategories[0] !== ServiceCategories.HolderAppProvider
-  ) {
-    throw newError.BadRequest(
-      'Unapproved service search is only available for Holder App Providers.',
-    );
-  }
-};
 
 const organizationController = async (fastify) => {
   const prepareProfileVc = initPrepareProfileVc(fastify);
@@ -102,7 +86,6 @@ const organizationController = async (fastify) => {
       },
       async (req) => {
         const { repos, query } = req;
-        validateUnapprovedServiceSearch(query);
         const serviceTypes = getServiceTypesFromCategories(query);
 
         let organizations =
