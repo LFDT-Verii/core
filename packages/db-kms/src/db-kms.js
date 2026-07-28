@@ -101,6 +101,23 @@ const initDbKms = (fastify, kmsOptions = {}) => {
     };
 
     /**
+     * Deletes a key or secret
+     * @param {Id} keyId the key or secret id to delete
+     * @returns {Promise<boolean>} whether a key or secret was deleted
+     */
+    const deleteKeyOrSecret = async (keyId) => {
+      const existing = await repo.findOne(
+        { filter: { _id: keyId } },
+        { _id: 1 },
+      );
+      if (existing == null) {
+        return false;
+      }
+      await repo.del(existing._id);
+      return true;
+    };
+
+    /**
      * The key to load internally
      * @param {Id} keyId the key id to load
      * @returns {Promise<KeySpec & { _id: Id, privateJwk: JsonWebKey, secret: string }>} the key returned
@@ -202,6 +219,7 @@ const initDbKms = (fastify, kmsOptions = {}) => {
       createKey,
       importKey,
       importSecret,
+      deleteKeyOrSecret,
       exportKeyOrSecret,
       signJwt,
       verifyJwt,

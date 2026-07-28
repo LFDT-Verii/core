@@ -58,6 +58,7 @@ export interface KMS {
   createKey: (kmsSpec: KeySpec) => Promise<KmsKey>;
   importKey: (importableKey: ImportableKey) => Promise<KmsKey>;
   importSecret: (importableSecret: ImportableSecret) => Promise<KmsSecret>;
+  deleteKeyOrSecret: (keyId: Id) => Promise<boolean>;
   exportKeyOrSecret: (keyId: Id) => Promise<ExportedKey>;
   signJwt: (
     payload: Record<string, unknown>,
