@@ -46,7 +46,7 @@
     "nanoid": "^5.1.16",
     "nock": "15.0.0-beta.14",
     "prettier": "3.9.6",
-    "undici": "^7.28.0"
+    "undici": "^7.29.0"
   },
   "nx": {
     "tags": [
