@@ -38,7 +38,12 @@ const searchByAggregationExtension = (parent) => ({
     aggregationPipeline.push(matchStage);
 
     if (serviceTypes) {
-      aggregationPipeline.push(buildServiceAggregationStage(serviceTypes));
+      aggregationPipeline.push(
+        buildServiceAggregationStage(
+          serviceTypes,
+          input.includeUnapprovedServices,
+        ),
+      );
       aggregationPipeline.push({
         $match: {
           services: { $type: 'array', $ne: [] },
@@ -64,7 +69,10 @@ const transformIdFilter = (input) =>
         'didDoc.id': { $in: input.filter.did },
       });
 
-const buildServiceAggregationStage = (serviceTypes) => {
+const buildServiceAggregationStage = (
+  serviceTypes,
+  includeUnapprovedServices,
+) => {
   const [issuerServiceTypes, nonIssuerServiceTypes] = partition(
     (s) => ISSUER_SERVICE_TYPES.includes(s),
     serviceTypes,
@@ -88,9 +96,13 @@ const buildServiceAggregationStage = (serviceTypes) => {
                   [...issuerServiceTypes, ...nonIssuerServiceTypes],
                 ],
               },
-              {
-                $in: ['$$itemService.id', '$activatedServiceIds'],
-              },
+              ...(includeUnapprovedServices
+                ? []
+                : [
+                    {
+                      $in: ['$$itemService.id', '$activatedServiceIds'],
+                    },
+                  ]),
             ],
           },
         },
