@@ -26,8 +26,9 @@ const config = require('../../src/config');
 
 const mongoConnection = buildMongoConnection('test-credentialing-hub');
 
-module.exports = (configOverrides = {}) =>
-  flow(
-    createTestServer,
-    initServer,
-  )({ ...config, ...configOverrides, mongoConnection });
+module.exports = (configOverrides = {}, serverOptions = {}) =>
+  flow(createTestServer, (server) => initServer(server, serverOptions))({
+    ...config,
+    ...configOverrides,
+    mongoConnection,
+  });
