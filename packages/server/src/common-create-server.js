@@ -48,6 +48,9 @@ const velocityFavicon = readFileSync(
   resolve(__dirname, 'assets/velocity-favicon.png'),
 );
 
+const isSensitiveRoute = (req) =>
+  req.routeOptions?.config?.sensitiveLogging === true;
+
 const commonCreateServer = (config, log) => {
   const { customFastifyOptions, traceIdHeader } = config;
 
@@ -121,17 +124,14 @@ const commonCreateServer = (config, log) => {
     })
     .addHook('onError', async (req, reply, error) => {
       const { body } = req;
+      const errorLog = isSensitiveRoute(req)
+        ? { req: req.raw, err: error }
+        : { req: req.raw, body, res: reply.raw, err: error };
 
       if (error.validation) {
-        req.log.warn(
-          { req: req.raw, body, res: reply.raw, err: error },
-          error && error.message,
-        );
+        req.log.warn(errorLog, error && error.message);
       } else {
-        req.log.error(
-          { req: req.raw, body, res: reply.raw, err: error },
-          error && error.message,
-        );
+        req.log.error(errorLog, error && error.message);
       }
     })
     // request cache
