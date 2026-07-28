@@ -9,7 +9,7 @@ const DOCUMENTS = {
   vnApi: '/documentation/vn-api.json',
 };
 
-const OPERATOR_SECURITY = [{ operatorBearer: [] }];
+const OPERATOR_SECURITY = [{ operatorAuth: [] }];
 const OPENID4VCI_SECURITY = [{ openid4vciAccessToken: [] }];
 const VN_API_SECURITY = [{ vnApiAccessToken: [] }];
 
@@ -193,7 +193,7 @@ const EXPECTED_OPERATION_METADATA = {
 const EXPECTED_DOCUMENTS = {
   operator: {
     title: 'Velocity Credentialing Hub — Operator API',
-    securitySchemes: ['operatorBearer'],
+    securitySchemes: ['operatorAuth'],
     tags: [
       'Tenants',
       'Issuer Services',
@@ -454,7 +454,7 @@ describe('swagger documents', () => {
     }
   });
 
-  it('offers all documents in Swagger UI with Operator API selected', async () => {
+  it('offers all documents in Swagger UI without preconfigured OAuth credentials', async () => {
     const result = await fastify.inject({
       method: 'GET',
       url: '/documentation/static/swagger-initializer.js',
@@ -468,5 +468,8 @@ describe('swagger documents', () => {
     expect(result.body).toContain('VN-API Wallet API');
     expect(result.body).toContain(DOCUMENTS.vnApi);
     expect(result.body).toContain('"urls.primaryName":"Operator API"');
+    expect(result.body).toContain('ui.initOAuth({})');
+    expect(result.body).not.toContain('persistAuthorization');
+    expect(result.body).not.toContain('clientId');
   });
 });

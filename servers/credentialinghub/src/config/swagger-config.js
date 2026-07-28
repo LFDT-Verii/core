@@ -22,6 +22,32 @@ const {
 const OPERATOR_TITLE = 'Velocity Credentialing Hub — Operator API';
 const OPENID4VC_TITLE = 'Velocity Credentialing Hub — OpenID4VC Wallet API';
 const VN_API_TITLE = 'Velocity Credentialing Hub — VN-API Wallet API';
+const DEFAULT_OPERATOR_AUTH = {
+  type: 'http',
+  scheme: 'bearer',
+  description: 'Operator API token',
+};
+const DEFAULT_OPERATOR_TAGS = [
+  { name: 'Tenants', description: 'Manage Credentialing Hub tenants.' },
+  {
+    name: 'Issuer Services',
+    description: 'Manage issuer services.',
+  },
+  {
+    name: 'Relying Party Services',
+    description: 'Manage relying party services.',
+  },
+  { name: 'Depots', description: 'Manage depots.' },
+  { name: 'Credentials', description: 'Manage credentials.' },
+  { name: 'Presentations', description: 'Verify presentations.' },
+  { name: 'Issue Links', description: 'Manage issue links.' },
+  {
+    name: 'Presentation Links',
+    description: 'Manage presentation links.',
+  },
+  { name: 'Exchanges', description: 'Inspect exchanges.' },
+  { name: 'Utilities', description: 'Healthcheck and testing utilities.' },
+];
 
 const createAudienceTransform =
   (audience) =>
@@ -39,7 +65,20 @@ const createAudienceTransform =
     };
   };
 
-const createSwaggerConfig = (version) => ({
+const assertNoReservedScheme = (securitySchemes, reservedName) => {
+  if (Object.hasOwn(securitySchemes, reservedName)) {
+    throw new Error(`${reservedName} is reserved for operator authentication`);
+  }
+};
+
+const assertUniqueTagNames = (tags) => {
+  const names = tags.map(({ name }) => name);
+  if (new Set(names).size !== names.length) {
+    throw new Error('Swagger tag names must be unique');
+  }
+};
+
+const createDefaultSwaggerConfig = (version) => ({
   swaggerInfo: {
     info: {
       title: OPERATOR_TITLE,
@@ -48,34 +87,10 @@ const createSwaggerConfig = (version) => ({
     },
     components: {
       securitySchemes: {
-        operatorBearer: {
-          type: 'http',
-          scheme: 'bearer',
-          description: 'Operator API token',
-        },
+        operatorAuth: DEFAULT_OPERATOR_AUTH,
       },
     },
-    tags: [
-      { name: 'Tenants', description: 'Manage Credentialing Hub tenants.' },
-      {
-        name: 'Issuer Services',
-        description: 'Manage issuer services.',
-      },
-      {
-        name: 'Relying Party Services',
-        description: 'Manage relying party services.',
-      },
-      { name: 'Depots', description: 'Manage depots.' },
-      { name: 'Credentials', description: 'Manage credentials.' },
-      { name: 'Presentations', description: 'Verify presentations.' },
-      { name: 'Issue Links', description: 'Manage issue links.' },
-      {
-        name: 'Presentation Links',
-        description: 'Manage presentation links.',
-      },
-      { name: 'Exchanges', description: 'Inspect exchanges.' },
-      { name: 'Utilities', description: 'Healthcheck and testing utilities.' },
-    ],
+    tags: DEFAULT_OPERATOR_TAGS,
   },
   swaggerOptions: {
     transform: createAudienceTransform('operator'),
@@ -156,5 +171,31 @@ const createSwaggerConfig = (version) => ({
     ],
   },
 });
+
+const createSwaggerConfig = (version, operatorDocumentation = {}) => {
+  const config = createDefaultSwaggerConfig(version);
+  const operatorSecurityScheme =
+    operatorDocumentation.operatorSecurityScheme ?? DEFAULT_OPERATOR_AUTH;
+  const additionalSchemes = operatorDocumentation.securitySchemes ?? {};
+  const extensionTags = operatorDocumentation.tags ?? [];
+
+  assertNoReservedScheme(additionalSchemes, 'operatorAuth');
+  assertUniqueTagNames([...extensionTags, ...DEFAULT_OPERATOR_TAGS]);
+
+  return {
+    ...config,
+    swaggerInfo: {
+      ...config.swaggerInfo,
+      components: {
+        ...config.swaggerInfo.components,
+        securitySchemes: {
+          operatorAuth: operatorSecurityScheme,
+          ...additionalSchemes,
+        },
+      },
+      tags: [...extensionTags, ...DEFAULT_OPERATOR_TAGS],
+    },
+  };
+};
 
 module.exports = { createSwaggerConfig };
