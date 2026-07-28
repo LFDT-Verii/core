@@ -27,7 +27,7 @@
     "@verii/vc-checks": "workspace:*",
     "canonicalize": "^2.1.0",
     "eth-url-parser": "^1.0.4",
-    "fast-shuffle": "6.1.1",
+    "fast-shuffle": "6.2.1",
     "lodash": "^4.18.1"
   },
   "devDependencies": {

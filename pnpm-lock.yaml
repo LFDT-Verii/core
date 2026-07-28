@@ -2393,8 +2393,8 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       fast-shuffle:
-        specifier: 6.1.1
-        version: 6.1.1
+        specifier: 6.2.1
+        version: 6.2.1
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -8334,8 +8334,9 @@ packages:
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
-  fast-shuffle@6.1.1:
-    resolution: {integrity: sha512-HPxFJxEi18KPmVQuK5Hi5l4KSl3u50jtaxseRrPqrxewqfvU+sTPTaUpP33Hj+NdJoLuJP5ipx3ybTr+fa6dEw==}
+  fast-shuffle@6.2.1:
+    resolution: {integrity: sha512-a5xCB8x4LI0VhqRf6nFYO4H4tdalIywqzVU8xc3CoZ0xF8exohNIz12ugArWF2Zm9juXHWTbwt7t4fZgRk/TkQ==}
+    engines: {node: '>=14'}
 
   fast-uri@3.1.4:
     resolution: {integrity: sha512-8JnbkQ4juDyvYs4mgFGQqg4yCYtFDtUtmp2QIQq11ZZe5CFQ5wcqm1rqDgAh/QdMySuBnPzMUiJUNZG5N/AiQw==}
@@ -9362,9 +9363,6 @@ packages:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
     engines: {node: '>=10'}
 
-  long@5.2.3:
-    resolution: {integrity: sha512-lcHwpNoggQTObv5apGNCTdJrO69eHOZMi4BNC+rTLER8iHAqGrUVeLh/irVIM7zTw2bOXA8T6uNPeujwOLg/2Q==}
-
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
@@ -9825,8 +9823,9 @@ packages:
     resolution: {integrity: sha512-BT6eelPB1EyGHo8pC0o9Bl6k6SYVhKO1jEbd3lcTrtr7XHdjP8BW1YpfCV3G9Kwkxgattk+S5q2/RvuttCsS1g==}
     engines: {node: '>= 0.10'}
 
-  pcg@1.1.0:
-    resolution: {integrity: sha512-S+bYs8CV6l2lj01PRN4g9EiHDktcXJKD9FdE/FqpdXSuy1zImsRq8A8T5UK6gkXdI9O5YFdAgH40uPoR8Bk8aQ==}
+  pcg@3.0.0:
+    resolution: {integrity: sha512-lHETDr3c//q4xs0iZk9+LRFgmvjLtaUDIE3ztE2KN4IhwyHLcJ3H5VBv93SGop1XHZalC1UFSwoJepoZSMSVLQ==}
+    engines: {node: '>=18'}
 
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
@@ -10028,9 +10027,6 @@ packages:
       react-is: ^18.0.0 || ^19.0.0
       react-router: ^6.28.1 || ^7.1.1
       react-router-dom: ^6.28.1 || ^7.1.1
-
-  ramda@0.29.1:
-    resolution: {integrity: sha512-OfxIeWzd4xdUNxlWhgFazxsA/nl3mS4/jGZI5n00uWOoSSFRhC1b6gl6xvmzUamgmqELraWp0J/qqVlXYPDPyA==}
 
   random-number-csprng@1.0.2:
     resolution: {integrity: sha512-Gb7ZsEXfz6d9xAMCUg2tD0ouRZMOZRRvLsRoUyPlVS4/pNwO31IA88yAx6AEYXon/LzogWJdsCRwFQaFlQTaHw==}
@@ -16560,9 +16556,9 @@ snapshots:
 
   fast-safe-stringify@2.1.1: {}
 
-  fast-shuffle@6.1.1:
+  fast-shuffle@6.2.1:
     dependencies:
-      pcg: 1.1.0
+      pcg: 3.0.0
 
   fast-uri@3.1.4: {}
 
@@ -17659,8 +17655,6 @@ snapshots:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
 
-  long@5.2.3: {}
-
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
@@ -18280,10 +18274,7 @@ snapshots:
       sha.js: 2.4.12
       to-buffer: 1.2.2
 
-  pcg@1.1.0:
-    dependencies:
-      long: 5.2.3
-      ramda: 0.29.1
+  pcg@3.0.0: {}
 
   pg-int8@1.0.1: {}
 
@@ -18531,8 +18522,6 @@ snapshots:
       react-router: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-transition-group: 4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-
-  ramda@0.29.1: {}
 
   random-number-csprng@1.0.2:
     dependencies:
