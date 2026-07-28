@@ -26,6 +26,7 @@ module.exports = (app, options, next = () => {}) => {
     await mongoDb()
       .collection('tenants')
       .createIndex({ did: 1 }, { unique: true });
+    await mongoDb().collection('tenants').createIndex({ caoDid: 1, _id: 1 });
   });
   next();
   return repoFactory(

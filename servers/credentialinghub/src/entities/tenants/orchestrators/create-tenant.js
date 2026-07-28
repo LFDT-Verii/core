@@ -28,29 +28,31 @@ const {
 } = require('../../keys');
 const { loadTenantDidDoc, loadTenantProfile } = require('../adapters');
 const { validateNewTenant } = require('../domain');
+const { applyOperatorCaoDid } = require('../domain/operator-tenant-scope');
 
 const createTenant = async (newTenant, tenantKeys, context) => {
   const { repos, kms } = context;
+  const scopedNewTenant = applyOperatorCaoDid(newTenant, context);
 
   const [didDoc, orgProfile] = await Promise.all([
-    loadTenantDidDoc(newTenant.did, context),
-    loadTenantProfile(newTenant.did, context),
+    loadTenantDidDoc(scopedNewTenant.did, context),
+    loadTenantProfile(scopedNewTenant.did, context),
   ]);
 
-  validateNewTenant(newTenant, orgProfile, context);
+  validateNewTenant(scopedNewTenant, orgProfile, context);
 
   validateTenantKeys(tenantKeys, didDoc);
   const normalizedKeys = [
     generateAccessTokenSecret(CihKeyPurposes.HOLDER_ACCESS_TOKENS),
   ].concat(map(normalizeTenantKey, tenantKeys));
   const primaryAccount = await resolvePrimaryAccount(
-    newTenant,
+    scopedNewTenant,
     normalizedKeys,
     context,
   );
 
   const preparedTenant = await prepareTenant(
-    newTenant,
+    scopedNewTenant,
     normalizedKeys,
     primaryAccount,
     context,

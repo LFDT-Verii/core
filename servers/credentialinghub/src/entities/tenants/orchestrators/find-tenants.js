@@ -14,9 +14,12 @@
  * limitations under the License.
  *
  */
-const findTenants = (tenantIds, { repos }) => {
-  const filter = tenantIds == null ? {} : { _id: { $in: tenantIds } };
-  return repos.tenants.find({ filter });
+const { scopeTenantFilter } = require('../domain/operator-tenant-scope');
+
+const findTenants = (tenantIds, context) => {
+  const identifierFilter = tenantIds == null ? {} : { _id: { $in: tenantIds } };
+  const filter = scopeTenantFilter(identifierFilter, context);
+  return context.repos.tenants.find({ filter });
 };
 
 module.exports = { findTenants };

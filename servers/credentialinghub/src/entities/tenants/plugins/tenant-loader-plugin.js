@@ -16,6 +16,7 @@
 
 const fp = require('fastify-plugin');
 const newError = require('http-errors');
+const { scopeTenantFilter } = require('../domain/operator-tenant-scope');
 
 const extractTenantId = (req) => {
   if (req.params.tenantId != null) {
@@ -36,7 +37,10 @@ const loadTenant = async (options, req) => {
     throwTenantNotFound(options);
   }
 
-  const filter = options.useDID ? { did: tenantId } : { _id: tenantId };
+  const identifierFilter = options.useDID
+    ? { did: tenantId }
+    : { _id: tenantId };
+  const filter = scopeTenantFilter(identifierFilter, req);
   const tenant = await req.repos.tenants.findOne({ filter });
   if (tenant == null) {
     throwTenantNotFound(options);
