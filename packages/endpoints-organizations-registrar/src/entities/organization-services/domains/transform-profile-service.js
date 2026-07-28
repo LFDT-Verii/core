@@ -38,10 +38,21 @@ const transformProfileService = (
   caoServiceRefs,
   { query },
 ) => {
-  const pipeline = [
-    buildPublicServices,
-    filter((service) => includes(service.id, organization.activatedServiceIds)),
-  ];
+  const pipeline = [buildPublicServices];
+  if (query.includeUnapprovedServices) {
+    pipeline.push(
+      map((service) => ({
+        ...service,
+        approved: includes(service.id, organization.activatedServiceIds),
+      })),
+    );
+  } else {
+    pipeline.push(
+      filter((service) =>
+        includes(service.id, organization.activatedServiceIds),
+      ),
+    );
+  }
   if (!isEmpty(serviceTypes)) {
     pipeline.push(filter((service) => includes(service.type, serviceTypes)));
   }

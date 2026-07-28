@@ -44,6 +44,10 @@
     "no-service-endpoint-transform": {
       "type": "string",
       "enum": ["1", "true"]
+    },
+    "include-unapproved-services": {
+      "type": "string",
+      "enum": ["1", "true"]
     }
   },
   "additionalProperties": false
