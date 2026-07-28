@@ -91,7 +91,7 @@ module.exports = {
   },
   deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
   keyEncryptionSecret: env.get('KEY_ENCRYPTION_SECRET').required().asString(),
-  operatorApiToken: env.get('OPERATOR_API_TOKEN').required().asString(),
+  operatorApiToken: env.get('OPERATOR_API_TOKEN').asString(),
   registrarUrl: env.get('REGISTRAR_URL').required().asString(),
   libUrl: env.get('LIB_URL').required().asString(),
   credentialExtensionsContextUrl: env
@@ -126,8 +126,8 @@ module.exports = {
     .default('0xf755E1Ca66bE12F177178E7Ea696969E0A55Bb64')
     .asString(),
   defaultCaoDid: env.get('DEFAULT_CAO_DID').asString(),
-  vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').required().asString(),
-  vnfClientSecret: env.get('VNF_OAUTH_CLIENT_SECRET').required().asString(),
+  vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').asString(),
+  vnfClientSecret: env.get('VNF_OAUTH_CLIENT_SECRET').asString(),
   vnfOAuthTokensEndpoint: env
     .get('VNF_OAUTH_TOKENS_ENDPOINT')
     .required()

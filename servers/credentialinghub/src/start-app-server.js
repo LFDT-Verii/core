@@ -15,20 +15,40 @@
  */
 
 const { createServer, listenServer } = require('@verii/server-provider');
-const { flow } = require('lodash/fp');
 const config = require('./config');
+const { createSwaggerConfig } = require('./config/swagger-config');
 const { initServer } = require('./init-server');
 const {
   startEmbeddedNotificationWorker,
 } = require('./start-embedded-notification-worker');
 
-const startAppServer = () => {
-  const server = flow(createServer, initServer)(config);
+const createAppServer = ({
+  operatorAuthExtension,
+  configOverrides = {},
+} = {}) => {
+  const baseConfig = {
+    ...config,
+    ...configOverrides,
+  };
+  const serverConfig = {
+    ...baseConfig,
+    ...createSwaggerConfig(
+      baseConfig.version,
+      operatorAuthExtension?.documentation,
+    ),
+  };
+  const server = createServer(serverConfig);
+  return initServer(server, { operatorAuthExtension });
+};
+
+const startAppServer = (options = {}) => {
+  const server = createAppServer(options);
   startEmbeddedNotificationWorker(server);
   listenServer(server);
   return server;
 };
 
 module.exports = {
+  createAppServer,
   startAppServer,
 };
