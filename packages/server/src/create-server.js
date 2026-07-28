@@ -22,6 +22,9 @@ const {
   createCommonLog,
 } = require('./common-create-server');
 
+const isSensitiveRoute = (req) =>
+  req.routeOptions?.config?.sensitiveLogging === true;
+
 const createServer = (config) => {
   const log = createCommonLog(config);
   log.info(config, 'Server Configured');
@@ -36,12 +39,12 @@ const createServer = (config) => {
       })
       // logging
       .addHook('preValidation', async (req) => {
-        if (req.body) {
+        if (req.body && !isSensitiveRoute(req)) {
           req.log.debug({ headers: req.headers, body: req.body }, 'request');
         }
       })
       .addHook('preSerialization', async (req, reply, payload) => {
-        if (payload) {
+        if (payload && !isSensitiveRoute(req)) {
           req.log.debug({ body: payload }, 'response body');
         }
         return payload;

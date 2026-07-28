@@ -21,6 +21,104 @@ const { Writable } = require('node:stream');
 const { loggerProvider } = require('../index');
 
 const store = {};
+const CENSOR = '...shhh...';
+const sensitiveDataForLog = () => ({
+  operatorApiToken: 'static-token',
+  clientSecret: 'client-secret',
+  client_secret: 'oauth-client-secret',
+  vnfClientId: 'vnf-client-id',
+  vnfClientSecret: 'vnf-client-secret',
+  blockchainCredentials: {
+    secretId: 'kms-secret-id',
+  },
+  provisioningCode: 'provisioning-code',
+  headers: {
+    authorization: 'Basic Y2xpZW50OnNlY3JldA==',
+    'x-provisioning-code': 'provisioning-code',
+  },
+  body: {
+    access_token: 'jwt',
+    clientSecret: 'returned-secret',
+    vnfClientId: 'submitted-vnf-client-id',
+    vnfClientSecret: 'submitted-vnf-secret',
+    blockchainCredentials: {
+      secretId: 'submitted-kms-secret-id',
+    },
+  },
+});
+
+const additionalSensitiveDataForLog = () => ({
+  cao: {
+    blockchainCredentials: {
+      secretId: 'cao-kms-secret-id',
+    },
+  },
+  body: {
+    client_secret: 'submitted-oauth-client-secret',
+    provisioningCode: 'submitted-provisioning-code',
+  },
+});
+
+const expectSensitiveDataToBeRedacted = (output) => {
+  for (const secret of [
+    'static-token',
+    'client-secret',
+    'oauth-client-secret',
+    'vnf-client-id',
+    'vnf-client-secret',
+    'kms-secret-id',
+    'Basic Y2xpZW50OnNlY3JldA==',
+    'jwt',
+    'returned-secret',
+    'submitted-vnf-client-id',
+    'submitted-vnf-secret',
+    'submitted-kms-secret-id',
+  ]) {
+    expect(output).not.toContain(secret);
+  }
+  expect(output).not.toContain('"provisioningCode":"provisioning-code"');
+  expect(output).not.toContain('"x-provisioning-code":"provisioning-code"');
+
+  expect(JSON.parse(output)).toMatchObject({
+    operatorApiToken: CENSOR,
+    clientSecret: CENSOR,
+    client_secret: CENSOR,
+    vnfClientId: CENSOR,
+    vnfClientSecret: CENSOR,
+    blockchainCredentials: { secretId: CENSOR },
+    provisioningCode: CENSOR,
+    headers: {
+      authorization: CENSOR,
+      'x-provisioning-code': CENSOR,
+    },
+    body: {
+      access_token: CENSOR,
+      clientSecret: CENSOR,
+      vnfClientId: CENSOR,
+      vnfClientSecret: CENSOR,
+      blockchainCredentials: { secretId: CENSOR },
+    },
+  });
+};
+
+const expectAdditionalSensitiveDataToBeRedacted = (output) => {
+  for (const secret of [
+    'cao-kms-secret-id',
+    'submitted-oauth-client-secret',
+    'submitted-provisioning-code',
+  ]) {
+    expect(output).not.toContain(secret);
+  }
+
+  expect(JSON.parse(output)).toMatchObject({
+    cao: { blockchainCredentials: { secretId: CENSOR } },
+    body: {
+      client_secret: CENSOR,
+      provisioningCode: CENSOR,
+    },
+  });
+};
+
 class MemoryStream extends Writable {
   constructor(key, options) {
     super(options);
@@ -620,5 +718,65 @@ describe('Test pino logger provider with redaction', () => {
     const logInfo = '"body":{"file":"...large file..."}';
 
     expect(logStream.toString()).toMatch(logInfo);
+  });
+
+  it('redacts operator credentials in debug logs for dev', () => {
+    const stream = new MemoryStream('dev-debug-log');
+    const debugLog = loggerProvider({
+      nodeEnv: 'dev',
+      logSeverity: 'debug',
+      version: '1.0',
+      traceIdHeader: 'x-trace-id',
+      destination: stream,
+    });
+
+    debugLog.debug(sensitiveDataForLog());
+
+    expectSensitiveDataToBeRedacted(stream.toString());
+  });
+
+  it('redacts operator credentials in debug logs for development', () => {
+    const stream = new MemoryStream('development-debug-log');
+    const debugLog = loggerProvider({
+      nodeEnv: 'development',
+      logSeverity: 'debug',
+      version: '1.0',
+      traceIdHeader: 'x-trace-id',
+      destination: stream,
+    });
+
+    debugLog.debug(sensitiveDataForLog());
+
+    expectSensitiveDataToBeRedacted(stream.toString());
+  });
+
+  it('redacts additional operator credentials in debug logs for dev', () => {
+    const stream = new MemoryStream('additional-dev-debug-log');
+    const debugLog = loggerProvider({
+      nodeEnv: 'dev',
+      logSeverity: 'debug',
+      version: '1.0',
+      traceIdHeader: 'x-trace-id',
+      destination: stream,
+    });
+
+    debugLog.debug(additionalSensitiveDataForLog());
+
+    expectAdditionalSensitiveDataToBeRedacted(stream.toString());
+  });
+
+  it('redacts additional operator credentials in debug logs for development', () => {
+    const stream = new MemoryStream('additional-development-debug-log');
+    const debugLog = loggerProvider({
+      nodeEnv: 'development',
+      logSeverity: 'debug',
+      version: '1.0',
+      traceIdHeader: 'x-trace-id',
+      destination: stream,
+    });
+
+    debugLog.debug(additionalSensitiveDataForLog());
+
+    expectAdditionalSensitiveDataToBeRedacted(stream.toString());
   });
 });

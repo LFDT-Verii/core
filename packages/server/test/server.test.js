@@ -36,6 +36,32 @@ const listenTestServer = async (server) => {
   await server.listen({ port: appPort, host: appHost });
 };
 
+const captureLogs = async (server, callback) => {
+  const writes = [];
+  let logger = server.log;
+  let streamSymbol;
+  while (logger && !streamSymbol) {
+    streamSymbol = Object.getOwnPropertySymbols(logger).find(
+      (symbol) => symbol.toString() === 'Symbol(pino.stream)',
+    );
+    logger = Object.getPrototypeOf(logger);
+  }
+  const stream = server.log[streamSymbol];
+  server.log[streamSymbol] = {
+    write: (chunk) => {
+      writes.push(chunk.toString());
+    },
+  };
+
+  try {
+    await callback();
+  } finally {
+    server.log[streamSymbol] = stream;
+  }
+
+  return writes.join('');
+};
+
 describe('Server package variant tests ', () => {
   let server;
 
@@ -111,6 +137,112 @@ describe('Server package variant tests ', () => {
     } catch (e) {
       expect(e.response.statusCode).toEqual(500);
     }
+  });
+
+  it('omits sensitive route payloads from logs while retaining normal debug payload logs', async () => {
+    await server.close();
+    server = createServer({
+      ...genericConfig,
+      logSeverity: 'debug',
+      mongoConnection,
+    });
+    server.post(
+      '/sensitive',
+      { config: { sensitiveLogging: true } },
+      async () => ({
+        result: 'sensitive-response-body',
+        clientSecret: 'returned-secret',
+      }),
+    );
+    server.post(
+      '/sensitive-error',
+      { config: { sensitiveLogging: true } },
+      async () => {
+        throw new Error('safe failure');
+      },
+    );
+    server.post('/not-sensitive', async () => ({
+      result: 'public-response-body',
+    }));
+
+    const logs = await captureLogs(server, async () => {
+      const sensitiveResponse = await server.inject({
+        method: 'post',
+        url: '/sensitive',
+        headers: {
+          authorization: 'Basic c2Vuc2l0aXZlOnNlY3JldA==',
+          'x-provisioning-code': 'sensitive-provisioning-code',
+        },
+        payload: {
+          request: 'sensitive-request-body',
+          clientSecret: 'submitted-secret',
+        },
+      });
+      const sensitiveErrorResponse = await server.inject({
+        method: 'post',
+        url: '/sensitive-error',
+        headers: {
+          authorization: 'Basic ZmFpbHVyZTpzZWNyZXQ=',
+          'x-provisioning-code': 'failure-provisioning-code',
+        },
+        payload: {
+          request: 'sensitive-error-request-body',
+          clientSecret: 'failure-submitted-secret',
+        },
+      });
+      const normalResponse = await server.inject({
+        method: 'post',
+        url: '/not-sensitive',
+        payload: { request: 'public-request-body' },
+      });
+
+      expect(sensitiveResponse.statusCode).toEqual(200);
+      expect(sensitiveErrorResponse.statusCode).toEqual(500);
+      expect(normalResponse.statusCode).toEqual(200);
+    });
+
+    for (const sensitiveValue of [
+      'sensitive-request-body',
+      'sensitive-response-body',
+      'submitted-secret',
+      'returned-secret',
+      'sensitive-error-request-body',
+      'failure-submitted-secret',
+      'Basic c2Vuc2l0aXZlOnNlY3JldA==',
+      'Basic ZmFpbHVyZTpzZWNyZXQ=',
+      'sensitive-provisioning-code',
+      'failure-provisioning-code',
+    ]) {
+      expect(logs).not.toContain(sensitiveValue);
+    }
+
+    const logEntries = logs.trim().split('\n').map(JSON.parse);
+    const logEntriesForRoute = (url) => {
+      const requestLog = logEntries.find(
+        (entry) => entry.req?.url === url && entry.msg === 'incoming request',
+      );
+      return logEntries.filter((entry) => entry.reqId === requestLog.reqId);
+    };
+    const sensitiveLogs = logEntriesForRoute('/sensitive');
+    const sensitiveErrorLogs = logEntriesForRoute('/sensitive-error');
+    const publicLogs = logEntriesForRoute('/not-sensitive');
+
+    for (const logEntry of [...sensitiveLogs, ...sensitiveErrorLogs]) {
+      expect(logEntry).not.toHaveProperty('body');
+      expect(logEntry).not.toHaveProperty('headers');
+    }
+    expect(publicLogs).toContainEqual(
+      expect.objectContaining({
+        body: { request: 'public-request-body' },
+        msg: 'request',
+      }),
+    );
+    expect(publicLogs).toContainEqual(
+      expect.objectContaining({
+        body: { result: 'public-response-body' },
+        msg: 'response body',
+      }),
+    );
   });
 });
 
