@@ -9,31 +9,44 @@ Credentialing Hub runtime code is maintained in this package.
 ## CAO Security Provider
 
 The open-source Hub has a built-in single-CAO security provider. In production,
-the provider loads and requires `OPERATOR_API_TOKEN`, `DEFAULT_CAO_DID`,
-`VNF_OAUTH_CLIENT_ID`, and `VNF_OAUTH_CLIENT_SECRET`. It authenticates every
-Operator API request with the static bearer token. The blockchain contract
-calling code uses the configured client credentials directly, so the default
-provider does not install a blockchain credentials capability plugin. Startup
-fails when any of the four values is missing.
+the provider's config plugin loads and requires `OPERATOR_API_TOKEN`,
+`DEFAULT_CAO_DID`, `VNF_OAUTH_CLIENT_ID`, and `VNF_OAUTH_CLIENT_SECRET`,
+without replacing values supplied through `configOverrides`. It authenticates
+every Operator API request with the static bearer token. The blockchain
+contract calling code uses the configured client credentials directly, so the
+default provider does not install a blockchain credentials capability plugin.
+Startup fails when any of the four values is absent from both
+`configOverrides` and the environment.
 
-A wrapper that supports multiple CAOs can replace both capabilities by
+A wrapper that supports multiple CAOs can replace the default provider by
 supplying a `caoSecurityProvider` to `createAppServer` or `startAppServer`.
-The provider consists of two independent Fastify capability descriptors:
+The provider is a flat object with the following properties:
 
-- `operatorAuth` requires a `plugin` that authenticates Operator API requests
-  and sets `request.operatorPrincipal`, plus a `documentation` object for
-  Operator Swagger metadata. Use `documentation: {}` to retain the built-in
-  Swagger metadata.
-- `blockchainClientCredentials` requires a `plugin` that resolves the
+- `configPlugin` is an optional Fastify plugin for loading provider-specific
+  runtime configuration. It is registered before the capability plugins.
+- `operatorAuthPlugin` authenticates Operator API requests and sets
+  `request.operatorPrincipal`.
+- `blockchainClientCredentialsPlugin` resolves the
   blockchain client credentials for the CAO associated with a request.
+- `documentation` supplies Operator Swagger metadata. Use `documentation: {}`
+  to retain the built-in Swagger metadata.
 
-Both descriptors are required when a custom provider is supplied. In this
-mode, the four static environment variables are optional. The Hub does not
-fall back to any static value if either custom capability fails.
+Both capability plugins are required when a custom provider is supplied. The
+config plugin is optional. In this mode, the four static environment variables
+are optional, and the Hub does not fall back to any static value if either
+custom capability fails.
 
 ```js
 const fp = require('fastify-plugin');
+const { from } = require('env-var');
 const { startAppServer } = require('@verii/server-credentialing-hub');
+
+const configPlugin = fp(async (fastify) => {
+  const env = from(process.env);
+  fastify.config.caoSecurityIssuer =
+    fastify.config.caoSecurityIssuer ??
+    env.get('CAO_SECURITY_ISSUER').required().asString();
+});
 
 const operatorAuthPlugin = fp(async (fastify) => {
   fastify.decorate('authenticateOperator', async (request) => {
@@ -77,44 +90,45 @@ const blockchainClientCredentialsPlugin = fp(async (fastify) => {
 
 startAppServer({
   caoSecurityProvider: {
-    operatorAuth: {
-      plugin: operatorAuthPlugin,
-      documentation: {
-        operatorSecurityScheme: {
-          type: 'oauth2',
-          flows: {
-            clientCredentials: {
-              tokenUrl: '/operator/oauth/token',
-              scopes: {},
-            },
+    configPlugin,
+    operatorAuthPlugin,
+    blockchainClientCredentialsPlugin,
+    documentation: {
+      operatorSecurityScheme: {
+        type: 'oauth2',
+        flows: {
+          clientCredentials: {
+            tokenUrl: '/operator/oauth/token',
+            scopes: {},
           },
         },
-        securitySchemes: {
-          operatorClientBasic: { type: 'http', scheme: 'basic' },
-        },
-        tags: [
-          {
-            name: 'Operator Authentication',
-            description: 'Machine-to-machine authentication.',
-          },
-        ],
       },
-    },
-    blockchainClientCredentials: {
-      plugin: blockchainClientCredentialsPlugin,
+      securitySchemes: {
+        operatorClientBasic: { type: 'http', scheme: 'basic' },
+      },
+      tags: [
+        {
+          name: 'Operator Authentication',
+          description: 'Machine-to-machine authentication.',
+        },
+      ],
     },
   },
 });
 ```
 
-Each capability plugin must be wrapped with `fastify-plugin`. The Operator
-plugin must decorate `authenticateOperator`; the authenticator must either
-reject the request by throwing or sending a reply, or set
+Every supplied plugin must be wrapped with `fastify-plugin`. The optional
+config plugin may add provider-specific runtime values to `fastify.config` and
+should preserve explicit configuration overrides. It runs after the core
+server and Swagger configuration are constructed, so it cannot configure
+those concerns; Swagger metadata belongs in the top-level `documentation`
+property.
+
+The Operator plugin must decorate `authenticateOperator`; the authenticator
+must either reject the request by throwing or sending a reply, or set
 `request.operatorPrincipal` on success. The Hub owns the `operatorPrincipal`
 request decoration, so a provider must not redecorate it. The principal is
-provider-owned data and is not normalized by the Hub. Only
-`operatorAuth.documentation` contributes custom Swagger metadata; the
-blockchain capability has no documentation surface.
+provider-owned data and is not normalized by the Hub.
 
 The blockchain plugin must decorate
 `resolveBlockchainClientCredentials(request)`. Its result contains a stable,

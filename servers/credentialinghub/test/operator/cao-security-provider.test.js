@@ -33,6 +33,9 @@ const DEFAULT_OPERATOR_CONFIG = {
   vnfClientId: 'vnf-client',
   vnfClientSecret: 'vnf-secret',
 };
+const CAO_SECURITY_PROVIDER_MONGO_CONNECTION = buildMongoConnection(
+  'test-credentialing-hub-cao-security-provider',
+);
 const TEST_BLOCKCHAIN_CLIENT_CREDENTIALS_RESOLVER = async () => ({
   cacheKey: 'test-cao',
   loadCredentials: async () => ({
@@ -59,13 +62,10 @@ const createTestBlockchainClientCredentialsPlugin = ({
   });
 
 const createCaoSecurityProvider = (overrides = {}) => ({
-  operatorAuth: {
-    plugin: createTestOperatorAuthPlugin(),
-    documentation: {},
-  },
-  blockchainClientCredentials: {
-    plugin: createTestBlockchainClientCredentialsPlugin(),
-  },
+  operatorAuthPlugin: createTestOperatorAuthPlugin(),
+  blockchainClientCredentialsPlugin:
+    createTestBlockchainClientCredentialsPlugin(),
+  documentation: {},
   ...overrides,
 });
 
@@ -88,15 +88,11 @@ const createAuthenticationBoundary = (caoSecurityProvider, config = {}) => {
   const resolvedCaoSecurityProvider =
     resolveCaoSecurityProvider(caoSecurityProvider);
   fastify.decorate('config', {
-    ...resolvedCaoSecurityProvider.config,
     isTest: true,
     defaultCaoDid: undefined,
     ...config,
   });
-  registerCaoSecurityProvider(
-    fastify,
-    resolvedCaoSecurityProvider.caoSecurityProvider,
-  );
+  registerCaoSecurityProvider(fastify, resolvedCaoSecurityProvider);
   fastify.get(
     '/principal',
     {
@@ -115,7 +111,7 @@ const createProductionServer = (caoSecurityProvider, configOverrides = {}) =>
       configOverrides: {
         isTest: false,
         logSeverity: 'silent',
-        mongoConnection: buildMongoConnection('test-credentialing-hub'),
+        mongoConnection: CAO_SECURITY_PROVIDER_MONGO_CONNECTION,
         ...DEFAULT_OPERATOR_CONFIG,
         ...configOverrides,
       },
@@ -123,25 +119,73 @@ const createProductionServer = (caoSecurityProvider, configOverrides = {}) =>
   );
 
 describe('CAO security provider Operator authentication', () => {
+  it('registers provider config before its capability plugins', async () => {
+    const fastify = trackServer(
+      buildFastify(
+        {},
+        {
+          caoSecurityProvider: createCaoSecurityProvider({
+            configPlugin: fp(async (server) => {
+              server.config.providerAuthenticationError =
+                'provider-config-loaded';
+            }),
+            operatorAuthPlugin: fp(async (server) => {
+              const { providerAuthenticationError } = server.config;
+              if (providerAuthenticationError == null) {
+                throw new Error('provider config was not loaded');
+              }
+              server.decorate(
+                'authenticateOperator',
+                async (request, reply) => {
+                  await reply.code(401).send({
+                    error: providerAuthenticationError,
+                  });
+                },
+              );
+            }),
+            blockchainClientCredentialsPlugin: fp(async (server) => {
+              if (server.config.providerAuthenticationError == null) {
+                throw new Error('provider config was not loaded');
+              }
+              server.decorate(
+                'resolveBlockchainClientCredentials',
+                TEST_BLOCKCHAIN_CLIENT_CREDENTIALS_RESOLVER,
+              );
+            }),
+          }),
+        },
+      ),
+    );
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/operator/tenants/get',
+    });
+
+    expect(response.statusCode).toEqual(401);
+    expect(response.json()).toEqual(
+      expect.objectContaining({
+        error: 'provider-config-loaded',
+      }),
+    );
+  });
+
   it('authenticates core Operator routes through the provider', async () => {
     const fastify = trackServer(
       buildFastify(
         {},
         {
           caoSecurityProvider: createCaoSecurityProvider({
-            operatorAuth: {
-              plugin: fp(async (server) => {
-                server.decorate(
-                  'authenticateOperator',
-                  async (request, reply) => {
-                    await reply.code(401).send({
-                      error: 'provider-authenticator-ran',
-                    });
-                  },
-                );
-              }),
-              documentation: {},
-            },
+            operatorAuthPlugin: fp(async (server) => {
+              server.decorate(
+                'authenticateOperator',
+                async (request, reply) => {
+                  await reply.code(401).send({
+                    error: 'provider-authenticator-ran',
+                  });
+                },
+              );
+            }),
           }),
         },
       ),
@@ -163,22 +207,19 @@ describe('CAO security provider Operator authentication', () => {
   it('preserves the authenticator Fastify receiver', async () => {
     const fastify = createAuthenticationBoundary(
       createCaoSecurityProvider({
-        operatorAuth: {
-          plugin: fp(async (server) => {
-            server
-              .decorate('operatorCaoDid', TEST_PRINCIPAL.caoDid)
-              .decorate(
-                'authenticateOperator',
-                async function authenticateOperator(request) {
-                  request.operatorPrincipal = {
-                    ...TEST_PRINCIPAL,
-                    caoDid: this.operatorCaoDid,
-                  };
-                },
-              );
-          }),
-          documentation: {},
-        },
+        operatorAuthPlugin: fp(async (server) => {
+          server
+            .decorate('operatorCaoDid', TEST_PRINCIPAL.caoDid)
+            .decorate(
+              'authenticateOperator',
+              async function authenticateOperator(request) {
+                request.operatorPrincipal = {
+                  ...TEST_PRINCIPAL,
+                  caoDid: this.operatorCaoDid,
+                };
+              },
+            );
+        }),
       }),
     );
 
@@ -235,6 +276,77 @@ describe('default static CAO security', () => {
     });
   });
 
+  it('prefers built-in CAO config overrides to the environment', () => {
+    const childEnv = { ...process.env };
+    for (const environmentVariable of [
+      'OPERATOR_API_TOKEN',
+      'DEFAULT_CAO_DID',
+      'VNF_OAUTH_CLIENT_ID',
+      'VNF_OAUTH_CLIENT_SECRET',
+    ]) {
+      delete childEnv[environmentVariable];
+    }
+
+    const startup = spawnSync(
+      process.execPath,
+      [
+        '-e',
+        `
+        const { createAppServer } = require('./src');
+        const expectedConfig = {
+          operatorApiToken: 'overridden-operator-secret',
+          defaultCaoDid: 'did:example:overridden-cao',
+          vnfClientId: 'overridden-vnf-client',
+          vnfClientSecret: 'overridden-vnf-secret',
+        };
+        const fastify = createAppServer({
+          configOverrides: {
+            ...expectedConfig,
+            isTest: false,
+            logSeverity: 'silent',
+            mongoConnection: ${JSON.stringify(
+              CAO_SECURITY_PROVIDER_MONGO_CONNECTION,
+            )},
+          },
+        });
+        fastify.ready()
+          .then(async () => {
+            for (const [key, value] of Object.entries(expectedConfig)) {
+              if (fastify.config[key] !== value) {
+                throw new Error(\`\${key} did not retain its config override\`);
+              }
+            }
+            const response = await fastify.inject({
+              method: 'GET',
+              url: '/operator/tenants/get',
+              headers: {
+                authorization: 'Bearer overridden-operator-secret',
+              },
+            });
+            if (response.statusCode !== 200) {
+              throw new Error(
+                \`overridden Operator token returned \${response.statusCode}\`,
+              );
+            }
+          })
+          .then(() => fastify.close())
+          .then(() => process.exit(0))
+          .catch((error) => {
+            process.stderr.write(error.message);
+            process.exit(1);
+          });
+        `,
+      ],
+      {
+        cwd: require('node:path').resolve(__dirname, '../..'),
+        encoding: 'utf8',
+        env: childEnv,
+      },
+    );
+
+    expect(startup.status).toEqual(0);
+  });
+
   it('requires every built-in CAO security environment variable', () => {
     const requiredEnvironmentVariables = [
       'OPERATOR_API_TOKEN',
@@ -251,14 +363,27 @@ describe('default static CAO security', () => {
         [
           '-e',
           `
+          let fastify;
           try {
             const { createAppServer } = require('./src');
-            createAppServer();
-            process.exit(0);
+            fastify = createAppServer({
+              configOverrides: {
+                mongoConnection: ${JSON.stringify(
+                  CAO_SECURITY_PROVIDER_MONGO_CONNECTION,
+                )},
+              },
+            });
           } catch (error) {
-            process.stderr.write(error.message);
-            process.exit(1);
+            process.stderr.write(\`synchronous: \${error.message}\`);
+            process.exit(2);
           }
+          fastify.ready()
+            .then(() => fastify.close())
+            .then(() => process.exit(0))
+            .catch((error) => {
+              process.stderr.write(error.message);
+              process.exit(1);
+            });
           `,
         ],
         {
@@ -327,13 +452,9 @@ describe('blockchain client credentials capability', () => {
 
         const fastify = createAppServer({
           caoSecurityProvider: {
-            operatorAuth: {
-              plugin: operatorAuthPlugin,
-              documentation: {},
-            },
-            blockchainClientCredentials: {
-              plugin: blockchainClientCredentialsPlugin,
-            },
+            operatorAuthPlugin,
+            blockchainClientCredentialsPlugin,
+            documentation: {},
           },
           configOverrides: {
             isTest: false,
@@ -363,14 +484,12 @@ describe('blockchain client credentials capability', () => {
 
   it('rejects an incomplete provider instead of using static credentials', async () => {
     const fastify = createProductionServer({
-      operatorAuth: {
-        plugin: createTestOperatorAuthPlugin(),
-        documentation: {},
-      },
+      operatorAuthPlugin: createTestOperatorAuthPlugin(),
+      documentation: {},
     });
 
     await expect(fastify.ready()).rejects.toThrow(
-      /caoSecurityProvider\.blockchainClientCredentials/,
+      "Plugin must be a function or a promise. Received: 'undefined'",
     );
   });
 
@@ -388,16 +507,14 @@ describe('blockchain client credentials capability', () => {
       },
     );
     const caoSecurityProvider = createCaoSecurityProvider({
-      blockchainClientCredentials: {
-        plugin: fp(async (server) => {
-          server
-            .decorate('blockchainCredentialCacheKey', 'did:example:cao')
-            .decorate(
-              'resolveBlockchainClientCredentials',
-              resolveBlockchainClientCredentials,
-            );
-        }),
-      },
+      blockchainClientCredentialsPlugin: fp(async (server) => {
+        server
+          .decorate('blockchainCredentialCacheKey', 'did:example:cao')
+          .decorate(
+            'resolveBlockchainClientCredentials',
+            resolveBlockchainClientCredentials,
+          );
+      }),
     });
     const post = mock.fn(async () => ({
       json: async () => ({

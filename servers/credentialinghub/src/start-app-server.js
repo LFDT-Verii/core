@@ -33,20 +33,18 @@ const createAppServer = ({
     resolveCaoSecurityProvider(caoSecurityProvider);
   const baseConfig = {
     ...buildConfig(),
-    ...resolvedCaoSecurityProvider.config,
     ...configOverrides,
   };
   const serverConfig = {
     ...baseConfig,
     ...createSwaggerConfig(
       baseConfig.version,
-      resolvedCaoSecurityProvider.caoSecurityProvider.operatorAuth
-        .documentation,
+      resolvedCaoSecurityProvider.documentation,
     ),
   };
   const server = createServer(serverConfig);
   return initServer(server, {
-    caoSecurityProvider: resolvedCaoSecurityProvider.caoSecurityProvider,
+    caoSecurityProvider: resolvedCaoSecurityProvider,
   });
 };
 

@@ -37,11 +37,10 @@ module.exports = (configOverrides = {}, serverOptions = {}) => {
   return flow(createTestServer, (server) =>
     initServer(server, {
       ...serverOptions,
-      caoSecurityProvider: resolvedCaoSecurityProvider.caoSecurityProvider,
+      caoSecurityProvider: resolvedCaoSecurityProvider,
     }),
   )({
     ...config,
-    ...resolvedCaoSecurityProvider.config,
     ...configOverrides,
     mongoConnection,
   });

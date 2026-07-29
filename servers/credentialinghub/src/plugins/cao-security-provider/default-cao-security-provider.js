@@ -18,6 +18,26 @@ const fastifyBearerAuth = require('@fastify/bearer-auth');
 const { from } = require('env-var');
 const fp = require('fastify-plugin');
 
+const defaultCaoSecurityConfigPlugin = fp(async (fastify) => {
+  const env = from(process.env);
+  // Provider config plugins intentionally extend the existing Fastify config.
+  // eslint-disable-next-line better-mutation/no-mutating-functions
+  Object.assign(fastify.config, {
+    operatorApiToken:
+      fastify.config.operatorApiToken ??
+      env.get('OPERATOR_API_TOKEN').required().asString(),
+    defaultCaoDid:
+      fastify.config.defaultCaoDid ??
+      env.get('DEFAULT_CAO_DID').required().asString(),
+    vnfClientId:
+      fastify.config.vnfClientId ??
+      env.get('VNF_OAUTH_CLIENT_ID').required().asString(),
+    vnfClientSecret:
+      fastify.config.vnfClientSecret ??
+      env.get('VNF_OAUTH_CLIENT_SECRET').required().asString(),
+  });
+});
+
 const defaultOperatorAuthPlugin = fp(async (fastify) => {
   if (!fastify.config.isTest) {
     await fastify.register(fastifyBearerAuth, {
@@ -48,35 +68,16 @@ const defaultOperatorAuthPlugin = fp(async (fastify) => {
 });
 
 const defaultCaoSecurityProvider = {
-  operatorAuth: {
-    plugin: defaultOperatorAuthPlugin,
-    documentation: {},
-  },
-  // A default blockchainClientCredentials capability is unnecessary because
+  configPlugin: defaultCaoSecurityConfigPlugin,
+  operatorAuthPlugin: defaultOperatorAuthPlugin,
+  documentation: {},
+  // A default blockchainClientCredentialsPlugin is unnecessary because
   // base-contract-io's contract calling code reads the configured client
   // credentials directly.
 };
 
-const buildDefaultCaoSecurityConfig = () => {
-  const env = from(process.env);
-  return {
-    operatorApiToken: env.get('OPERATOR_API_TOKEN').required().asString(),
-    defaultCaoDid: env.get('DEFAULT_CAO_DID').required().asString(),
-    vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').required().asString(),
-    vnfClientSecret: env.get('VNF_OAUTH_CLIENT_SECRET').required().asString(),
-  };
-};
-
 const resolveCaoSecurityProvider = (caoSecurityProvider) =>
-  caoSecurityProvider == null
-    ? {
-        caoSecurityProvider: defaultCaoSecurityProvider,
-        config: buildDefaultCaoSecurityConfig(),
-      }
-    : {
-        caoSecurityProvider,
-        config: {},
-      };
+  caoSecurityProvider ?? defaultCaoSecurityProvider;
 
 module.exports = {
   defaultCaoSecurityProvider,

@@ -490,37 +490,33 @@ describe('CAO security provider documentation', () => {
     };
     const fastify = createAppServer({
       caoSecurityProvider: {
-        operatorAuth: {
-          plugin: fp(async (server) => {
-            server.decorate('authenticateOperator', async (request) => {
-              request.operatorPrincipal = {
-                caoDid: 'did:example:operator',
-                subject: 'operator-client',
-                subjectType: 'client',
-                authenticationMethod: 'test',
-              };
-            });
-          }),
-          documentation: {
-            operatorSecurityScheme,
-            tags: [
-              {
-                name: 'Operator Authentication',
-                description: 'Machine authentication.',
-              },
-            ],
-          },
-        },
-        blockchainClientCredentials: {
-          plugin: fp(async (server) => {
-            server.decorate('resolveBlockchainClientCredentials', async () => ({
-              cacheKey: 'did:example:operator',
-              loadCredentials: async () => ({
-                clientId: 'test-client',
-                clientSecret: 'test-secret',
-              }),
-            }));
-          }),
+        operatorAuthPlugin: fp(async (server) => {
+          server.decorate('authenticateOperator', async (request) => {
+            request.operatorPrincipal = {
+              caoDid: 'did:example:operator',
+              subject: 'operator-client',
+              subjectType: 'client',
+              authenticationMethod: 'test',
+            };
+          });
+        }),
+        blockchainClientCredentialsPlugin: fp(async (server) => {
+          server.decorate('resolveBlockchainClientCredentials', async () => ({
+            cacheKey: 'did:example:operator',
+            loadCredentials: async () => ({
+              clientId: 'test-client',
+              clientSecret: 'test-secret',
+            }),
+          }));
+        }),
+        documentation: {
+          operatorSecurityScheme,
+          tags: [
+            {
+              name: 'Operator Authentication',
+              description: 'Machine authentication.',
+            },
+          ],
         },
       },
       configOverrides: {

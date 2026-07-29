@@ -22,14 +22,16 @@ const {
 const installCaoSecurityProvider = fp(
   async (fastify, { caoSecurityProvider }) => {
     fastify.decorateRequest('operatorPrincipal', null);
-    await fastify.register(caoSecurityProvider.operatorAuth.plugin);
+    if (caoSecurityProvider.configPlugin != null) {
+      await fastify.register(caoSecurityProvider.configPlugin);
+    }
+    await fastify.register(caoSecurityProvider.operatorAuthPlugin);
 
     if (caoSecurityProvider === defaultCaoSecurityProvider) {
       return;
     }
 
-    const { plugin: blockchainClientCredentialsPlugin } =
-      caoSecurityProvider.blockchainClientCredentials;
+    const { blockchainClientCredentialsPlugin } = caoSecurityProvider;
     await fastify.register(blockchainClientCredentialsPlugin);
     const resolveBlockchainClientCredentials = fastify.getDecorator(
       'resolveBlockchainClientCredentials',
