@@ -13,12 +13,13 @@ mock.module('@verii/http-client', {
   },
 });
 
-const {
-  buildMongoConnection,
-  mongoCloseWrapper,
-} = require('@verii/tests-helpers');
+const { buildMongoConnection } = require('@verii/tests-helpers');
 const buildFastify = require('../helpers/create-test-fastify');
-const { createAppServer, registerCaoSecurityProvider } = require('../../src');
+const { createAppServer } = require('../../src');
+const {
+  registerCaoSecurityProvider,
+  resolveCaoSecurityProvider,
+} = require('../../src/plugins/cao-security-provider');
 
 const TEST_PRINCIPAL = {
   caoDid: 'did:example:operator',
@@ -54,9 +55,7 @@ const createTestBlockchainClientCredentialsPlugin = ({
   resolver = TEST_BLOCKCHAIN_CLIENT_CREDENTIALS_RESOLVER,
 } = {}) =>
   fp(async (fastify) => {
-    if (resolver != null) {
-      fastify.decorate('resolveBlockchainClientCredentials', resolver);
-    }
+    fastify.decorate('resolveBlockchainClientCredentials', resolver);
   });
 
 const createCaoSecurityProvider = (overrides = {}) => ({
@@ -86,12 +85,18 @@ afterEach(async () => {
 
 const createAuthenticationBoundary = (caoSecurityProvider, config = {}) => {
   const fastify = trackServer(Fastify());
+  const resolvedCaoSecurityProvider =
+    resolveCaoSecurityProvider(caoSecurityProvider);
   fastify.decorate('config', {
+    ...resolvedCaoSecurityProvider.config,
     isTest: true,
     defaultCaoDid: undefined,
     ...config,
   });
-  registerCaoSecurityProvider(fastify, caoSecurityProvider);
+  registerCaoSecurityProvider(
+    fastify,
+    resolvedCaoSecurityProvider.caoSecurityProvider,
+  );
   fastify.get(
     '/principal',
     {
@@ -116,15 +121,6 @@ const createProductionServer = (caoSecurityProvider, configOverrides = {}) =>
       },
     }),
   );
-
-const expectStartupError = async (fastify, message) => {
-  try {
-    await expect(fastify.ready()).rejects.toThrow(message);
-  } finally {
-    activeServers.delete(fastify);
-    await mongoCloseWrapper();
-  }
-};
 
 describe('CAO security provider Operator authentication', () => {
   it('authenticates core Operator routes through the provider', async () => {
@@ -208,92 +204,6 @@ describe('CAO security provider Operator authentication', () => {
       ...TEST_PRINCIPAL,
       privateClaim: 'provider-owned',
     });
-  });
-
-  it('fails startup when operatorAuth omits authenticateOperator', async () => {
-    const fastify = createAuthenticationBoundary(
-      createCaoSecurityProvider({
-        operatorAuth: {
-          plugin: fp(async () => {}),
-          documentation: {},
-        },
-      }),
-    );
-
-    await expect(fastify.ready()).rejects.toThrow(
-      'CAO security provider operatorAuth plugin must decorate authenticateOperator',
-    );
-  });
-
-  it('requires authenticateOperator to be a function', async () => {
-    const fastify = createAuthenticationBoundary(
-      createCaoSecurityProvider({
-        operatorAuth: {
-          plugin: fp(async (server) => {
-            server.decorate('authenticateOperator', 'not-a-function');
-          }),
-          documentation: {},
-        },
-      }),
-    );
-
-    await expect(fastify.ready()).rejects.toThrow(
-      'CAO security provider operatorAuth plugin must decorate authenticateOperator',
-    );
-  });
-
-  it('fails startup when the provider shape is invalid', async () => {
-    const invalidProviders = [
-      {
-        provider: 'oauth2',
-        message: 'caoSecurityProvider must be an object',
-      },
-      {
-        provider: {
-          blockchainClientCredentials:
-            createCaoSecurityProvider().blockchainClientCredentials,
-        },
-        message: 'caoSecurityProvider.operatorAuth must be an object',
-      },
-      {
-        provider: createCaoSecurityProvider({
-          operatorAuth: { documentation: {} },
-        }),
-        message: 'caoSecurityProvider.operatorAuth.plugin must be a function',
-      },
-      {
-        provider: createCaoSecurityProvider({
-          operatorAuth: {
-            plugin: createTestOperatorAuthPlugin(),
-            documentation: 'oauth2',
-          },
-        }),
-        message:
-          'caoSecurityProvider.operatorAuth.documentation must be an object',
-      },
-      {
-        provider: {
-          operatorAuth: createCaoSecurityProvider().operatorAuth,
-        },
-        message:
-          'caoSecurityProvider.blockchainClientCredentials must be an object',
-      },
-      {
-        provider: createCaoSecurityProvider({
-          blockchainClientCredentials: {},
-        }),
-        message:
-          'caoSecurityProvider.blockchainClientCredentials.plugin must be a function',
-      },
-    ];
-
-    await Promise.all(
-      invalidProviders.map(async ({ provider, message }) => {
-        const fastify = createAuthenticationBoundary(provider);
-        await expect(fastify.ready()).rejects.toThrow(message);
-        activeServers.delete(fastify);
-      }),
-    );
   });
 });
 
@@ -451,63 +361,16 @@ describe('blockchain client credentials capability', () => {
     expect(startup.status).toEqual(0);
   });
 
-  it('requires resolveBlockchainClientCredentials', async () => {
-    const fastify = createProductionServer(
-      createCaoSecurityProvider({
-        blockchainClientCredentials: {
-          plugin: createTestBlockchainClientCredentialsPlugin({
-            resolver: null,
-          }),
-        },
-      }),
-    );
+  it('rejects an incomplete provider instead of using static credentials', async () => {
+    const fastify = createProductionServer({
+      operatorAuth: {
+        plugin: createTestOperatorAuthPlugin(),
+        documentation: {},
+      },
+    });
 
-    await expectStartupError(
-      fastify,
-      'CAO security provider blockchainClientCredentials plugin must decorate resolveBlockchainClientCredentials',
-    );
-  });
-
-  it('requires resolveBlockchainClientCredentials to be a function', async () => {
-    const fastify = createProductionServer(
-      createCaoSecurityProvider({
-        blockchainClientCredentials: {
-          plugin: createTestBlockchainClientCredentialsPlugin({
-            resolver: 'not-a-function',
-          }),
-        },
-      }),
-    );
-
-    await expectStartupError(
-      fastify,
-      'CAO security provider blockchainClientCredentials plugin must decorate resolveBlockchainClientCredentials',
-    );
-  });
-
-  it('requires the blockchain capability plugin to own its resolver', async () => {
-    const fastify = createProductionServer(
-      createCaoSecurityProvider({
-        operatorAuth: {
-          plugin: fp(async (server) => {
-            server
-              .decorate('authenticateOperator', async () => {})
-              .decorate(
-                'resolveBlockchainClientCredentials',
-                TEST_BLOCKCHAIN_CLIENT_CREDENTIALS_RESOLVER,
-              );
-          }),
-          documentation: {},
-        },
-        blockchainClientCredentials: {
-          plugin: fp(async () => {}),
-        },
-      }),
-    );
-
-    await expectStartupError(
-      fastify,
-      'CAO security provider blockchainClientCredentials plugin must own resolveBlockchainClientCredentials',
+    await expect(fastify.ready()).rejects.toThrow(
+      /caoSecurityProvider\.blockchainClientCredentials/,
     );
   });
 

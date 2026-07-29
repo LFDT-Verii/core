@@ -15,38 +15,35 @@
  */
 
 const fp = require('fastify-plugin');
-const { isPlainObject } = require('lodash/fp');
-const { registerOperatorAuth } = require('../operator-auth');
 const {
-  registerBlockchainClientCredentials,
-} = require('../blockchain-client-credentials');
-
-const validateCaoSecurityProvider = (caoSecurityProvider) => {
-  if (!isPlainObject(caoSecurityProvider)) {
-    throw new TypeError('caoSecurityProvider must be an object');
-  }
-  if (!isPlainObject(caoSecurityProvider.operatorAuth)) {
-    throw new TypeError('caoSecurityProvider.operatorAuth must be an object');
-  }
-  if (!isPlainObject(caoSecurityProvider.blockchainClientCredentials)) {
-    throw new TypeError(
-      'caoSecurityProvider.blockchainClientCredentials must be an object',
-    );
-  }
-};
+  defaultCaoSecurityProvider,
+} = require('./default-cao-security-provider');
 
 const installCaoSecurityProvider = fp(
   async (fastify, { caoSecurityProvider }) => {
-    if (caoSecurityProvider == null) {
-      await registerOperatorAuth(fastify);
+    fastify.decorateRequest('operatorPrincipal', null);
+    await fastify.register(caoSecurityProvider.operatorAuth.plugin);
+
+    if (caoSecurityProvider === defaultCaoSecurityProvider) {
       return;
     }
 
-    validateCaoSecurityProvider(caoSecurityProvider);
-    await registerOperatorAuth(fastify, caoSecurityProvider.operatorAuth);
-    await registerBlockchainClientCredentials(
-      fastify,
-      caoSecurityProvider.blockchainClientCredentials,
+    const { plugin: blockchainClientCredentialsPlugin } =
+      caoSecurityProvider.blockchainClientCredentials;
+    await fastify.register(blockchainClientCredentialsPlugin);
+    const resolveBlockchainClientCredentials = fastify.getDecorator(
+      'resolveBlockchainClientCredentials',
+    );
+    fastify.decorate(
+      'resolveVnfClientOAuthCreds',
+      async function resolveVnfClientOAuthCreds(request) {
+        const { cacheKey, loadCredentials } =
+          (await resolveBlockchainClientCredentials.call(this, request)) ?? {};
+        return {
+          cacheKey,
+          loadOAuthCreds: loadCredentials,
+        };
+      },
     );
   },
   { name: 'credentialingHubCaoSecurityProvider' },

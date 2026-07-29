@@ -66,7 +66,7 @@ const swaggerConfig = createSwaggerConfig(packageJson.version);
 
 const openid4vcConfig = {};
 
-const buildConfig = ({ isDefaultCaoSecurityProvider = true } = {}) => {
+const buildConfig = () => {
   const notificationsEnabled = env
     .get('NOTIFICATIONS_ENABLED')
     .default('false')
@@ -93,10 +93,6 @@ const buildConfig = ({ isDefaultCaoSecurityProvider = true } = {}) => {
     },
     deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
     keyEncryptionSecret: env.get('KEY_ENCRYPTION_SECRET').required().asString(),
-    operatorApiToken: env
-      .get('OPERATOR_API_TOKEN')
-      .required(isDefaultCaoSecurityProvider)
-      .asString(),
     registrarUrl: env.get('REGISTRAR_URL').required().asString(),
     libUrl: env.get('LIB_URL').required().asString(),
     credentialExtensionsContextUrl: env
@@ -129,18 +125,6 @@ const buildConfig = ({ isDefaultCaoSecurityProvider = true } = {}) => {
       .get('REVOCATION_CONTRACT_ADDRESS')
       .required()
       .default('0xf755E1Ca66bE12F177178E7Ea696969E0A55Bb64')
-      .asString(),
-    defaultCaoDid: env
-      .get('DEFAULT_CAO_DID')
-      .required(isDefaultCaoSecurityProvider)
-      .asString(),
-    vnfClientId: env
-      .get('VNF_OAUTH_CLIENT_ID')
-      .required(isDefaultCaoSecurityProvider)
-      .asString(),
-    vnfClientSecret: env
-      .get('VNF_OAUTH_CLIENT_SECRET')
-      .required(isDefaultCaoSecurityProvider)
       .asString(),
     vnfOAuthTokensEndpoint: env
       .get('VNF_OAUTH_TOKENS_ENDPOINT')

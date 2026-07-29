@@ -15,5 +15,6 @@
  */
 
 module.exports = {
+  ...require('./default-cao-security-provider'),
   ...require('./register-cao-security-provider'),
 };

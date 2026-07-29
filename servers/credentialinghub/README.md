@@ -8,12 +8,13 @@ Credentialing Hub runtime code is maintained in this package.
 
 ## CAO Security Provider
 
-The open-source Hub has a built-in single-CAO security mode. In production,
-this mode requires `OPERATOR_API_TOKEN`, `DEFAULT_CAO_DID`,
+The open-source Hub has a built-in single-CAO security provider. In production,
+the provider loads and requires `OPERATOR_API_TOKEN`, `DEFAULT_CAO_DID`,
 `VNF_OAUTH_CLIENT_ID`, and `VNF_OAUTH_CLIENT_SECRET`. It authenticates every
-Operator API request with the static bearer token and uses the configured
-blockchain client credentials. Startup fails when any of the four values is
-missing.
+Operator API request with the static bearer token. The blockchain contract
+calling code uses the configured client credentials directly, so the default
+provider does not install a blockchain credentials capability plugin. Startup
+fails when any of the four values is missing.
 
 A wrapper that supports multiple CAOs can replace both capabilities by
 supplying a `caoSecurityProvider` to `createAppServer` or `startAppServer`.
@@ -123,10 +124,12 @@ the loaded tenant, while authenticated Operator requests can resolve it from
 the Operator principal. A multi-CAO provider should reject requests when both
 sources exist but disagree, or when neither source supplies a CAO DID.
 
-Provider descriptors and required decorators are checked during startup.
-Credential values are validated by the blockchain authentication layer when
-they are consumed. Provider errors are returned to the caller and never fall
-back to the built-in static credentials.
+Custom providers are trusted server setup code, so the Hub does not perform
+additional shape validation on their descriptors or principals. Fastify
+reports invalid plugin and missing decorator integrations through its normal
+startup and request behavior. Credential values are validated by the
+blockchain authentication layer when they are consumed. Provider errors are
+returned to the caller and never fall back to the built-in static credentials.
 
 ## Data Migrations
 

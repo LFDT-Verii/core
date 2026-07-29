@@ -15,6 +15,7 @@
  */
 
 const fastifyBearerAuth = require('@fastify/bearer-auth');
+const { from } = require('env-var');
 const fp = require('fastify-plugin');
 
 const defaultOperatorAuthPlugin = fp(async (fastify) => {
@@ -46,4 +47,38 @@ const defaultOperatorAuthPlugin = fp(async (fastify) => {
   });
 });
 
-module.exports = { defaultOperatorAuthPlugin };
+const defaultCaoSecurityProvider = {
+  operatorAuth: {
+    plugin: defaultOperatorAuthPlugin,
+    documentation: {},
+  },
+  // A default blockchainClientCredentials capability is unnecessary because
+  // base-contract-io's contract calling code reads the configured client
+  // credentials directly.
+};
+
+const buildDefaultCaoSecurityConfig = () => {
+  const env = from(process.env);
+  return {
+    operatorApiToken: env.get('OPERATOR_API_TOKEN').required().asString(),
+    defaultCaoDid: env.get('DEFAULT_CAO_DID').required().asString(),
+    vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').required().asString(),
+    vnfClientSecret: env.get('VNF_OAUTH_CLIENT_SECRET').required().asString(),
+  };
+};
+
+const resolveCaoSecurityProvider = (caoSecurityProvider) =>
+  caoSecurityProvider == null
+    ? {
+        caoSecurityProvider: defaultCaoSecurityProvider,
+        config: buildDefaultCaoSecurityConfig(),
+      }
+    : {
+        caoSecurityProvider,
+        config: {},
+      };
+
+module.exports = {
+  defaultCaoSecurityProvider,
+  resolveCaoSecurityProvider,
+};

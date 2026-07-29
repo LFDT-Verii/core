@@ -21,26 +21,33 @@ const { initServer } = require('./init-server');
 const {
   startEmbeddedNotificationWorker,
 } = require('./start-embedded-notification-worker');
+const {
+  resolveCaoSecurityProvider,
+} = require('./plugins/cao-security-provider');
 
 const createAppServer = ({
   caoSecurityProvider,
   configOverrides = {},
 } = {}) => {
+  const resolvedCaoSecurityProvider =
+    resolveCaoSecurityProvider(caoSecurityProvider);
   const baseConfig = {
-    ...buildConfig({
-      isDefaultCaoSecurityProvider: caoSecurityProvider == null,
-    }),
+    ...buildConfig(),
+    ...resolvedCaoSecurityProvider.config,
     ...configOverrides,
   };
   const serverConfig = {
     ...baseConfig,
     ...createSwaggerConfig(
       baseConfig.version,
-      caoSecurityProvider?.operatorAuth?.documentation,
+      resolvedCaoSecurityProvider.caoSecurityProvider.operatorAuth
+        .documentation,
     ),
   };
   const server = createServer(serverConfig);
-  return initServer(server, { caoSecurityProvider });
+  return initServer(server, {
+    caoSecurityProvider: resolvedCaoSecurityProvider.caoSecurityProvider,
+  });
 };
 
 const startAppServer = (options = {}) => {
