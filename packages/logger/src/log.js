@@ -100,6 +100,18 @@ const SECURITY_PATHS = [
   'vnfBrokerClientSecret',
   'vnfClientSecret',
   'yotiSecret',
+  'operatorApiToken',
+  'clientSecret',
+  'client_secret',
+  'blockchainCredentials.secretId',
+  'cao.blockchainCredentials.secretId',
+  'provisioningCode',
+  "headers['x-provisioning-code']",
+  'body.clientSecret',
+  'body.client_secret',
+  'body.vnfClientSecret',
+  'body.blockchainCredentials.secretId',
+  'body.provisioningCode',
 ];
 
 const prettyPrint = (nodeEnv) =>
@@ -148,10 +160,7 @@ const loggerProvider = ({
     }),
   };
   const redact = {};
-  redact.paths =
-    /^debug$/i.test(logSeverity) && nodeEnv === 'dev'
-      ? SPAM_PATHS
-      : [...SPAM_PATHS, ...SECURITY_PATHS, ...JSON_VC_PATHS];
+  redact.paths = [...SPAM_PATHS, ...SECURITY_PATHS, ...JSON_VC_PATHS];
   redact.censor = (value, path) => {
     if (last(path) === 'file') {
       return '...large file...';

@@ -2078,6 +2078,9 @@ importers:
       mongodb:
         specifier: ^7.5.0
         version: 7.5.0
+      pino-test:
+        specifier: ^2.0.0
+        version: 2.0.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -9861,6 +9864,9 @@ packages:
 
   pino-std-serializers@7.1.0:
     resolution: {integrity: sha512-BndPH67/JxGExRgiX1dX0w1FvZck5Wa4aal9198SrRhZjH3GxKQUKIBnYJTdj2HDN3UQAS06HlfcSbQj2OHmaw==}
+
+  pino-test@2.0.0:
+    resolution: {integrity: sha512-quHvIgAFMzm1Jx05xaHYRk2fdE/UQifabYzwGkbp8nbr34zxKcFPZqP5foGvk0EoqtepctrRTiDELvESOiwgIg==}
 
   pino@10.3.1:
     resolution: {integrity: sha512-r34yH/GlQpKZbU1BvFFqOjhISRo1MNx1tWYsYvmj6KIRHSPMT2+yHOEb1SG6NMvRoHRF0a07kCOox/9yakl1vg==}
@@ -18316,6 +18322,10 @@ snapshots:
       strip-json-comments: 5.0.3
 
   pino-std-serializers@7.1.0: {}
+
+  pino-test@2.0.0:
+    dependencies:
+      split2: 4.2.0
 
   pino@10.3.1:
     dependencies:

@@ -16,8 +16,10 @@
 const { createHash } = require('node:crypto');
 const { afterEach, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
+const pinoTest = require('pino-test');
 
 const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
+const { loggerProvider } = require('@verii/logger');
 
 loadTestEnv();
 const { genericConfig } = require('@verii/config');
@@ -111,6 +113,116 @@ describe('Server package variant tests ', () => {
     } catch (e) {
       expect(e.response.statusCode).toEqual(500);
     }
+  });
+
+  it('omits sensitive route payloads from logs while retaining normal debug payload logs', async () => {
+    await server.close();
+    const config = {
+      ...genericConfig,
+      logSeverity: 'debug',
+      mongoConnection,
+    };
+    const logEntries = [];
+    const logSink = pinoTest.sink();
+    logSink.on('data', (entry) => logEntries.push(entry));
+    const log = loggerProvider({ ...config, destination: logSink });
+    server = createServer(config, log);
+    server.post(
+      '/sensitive',
+      { config: { sensitiveLogging: true } },
+      async () => ({
+        result: 'sensitive-response-body',
+        clientSecret: 'returned-secret',
+      }),
+    );
+    server.post(
+      '/sensitive-error',
+      { config: { sensitiveLogging: true } },
+      async () => {
+        throw new Error('safe failure');
+      },
+    );
+    server.post('/not-sensitive', async () => ({
+      result: 'public-response-body',
+    }));
+
+    const sensitiveResponse = await server.inject({
+      method: 'post',
+      url: '/sensitive',
+      headers: {
+        authorization: 'Basic c2Vuc2l0aXZlOnNlY3JldA==',
+        'x-provisioning-code': 'sensitive-provisioning-code',
+      },
+      payload: {
+        request: 'sensitive-request-body',
+        clientSecret: 'submitted-secret',
+      },
+    });
+    const sensitiveErrorResponse = await server.inject({
+      method: 'post',
+      url: '/sensitive-error',
+      headers: {
+        authorization: 'Basic ZmFpbHVyZTpzZWNyZXQ=',
+        'x-provisioning-code': 'failure-provisioning-code',
+      },
+      payload: {
+        request: 'sensitive-error-request-body',
+        clientSecret: 'failure-submitted-secret',
+      },
+    });
+    const normalResponse = await server.inject({
+      method: 'post',
+      url: '/not-sensitive',
+      payload: { request: 'public-request-body' },
+    });
+
+    expect(sensitiveResponse.statusCode).toEqual(200);
+    expect(sensitiveErrorResponse.statusCode).toEqual(500);
+    expect(normalResponse.statusCode).toEqual(200);
+
+    const logs = JSON.stringify(logEntries);
+    for (const sensitiveValue of [
+      'sensitive-request-body',
+      'sensitive-response-body',
+      'submitted-secret',
+      'returned-secret',
+      'sensitive-error-request-body',
+      'failure-submitted-secret',
+      'Basic c2Vuc2l0aXZlOnNlY3JldA==',
+      'Basic ZmFpbHVyZTpzZWNyZXQ=',
+      'sensitive-provisioning-code',
+      'failure-provisioning-code',
+    ]) {
+      expect(logs).not.toContain(sensitiveValue);
+    }
+
+    expect(logEntries).not.toHaveLength(0);
+    const logEntriesForRoute = (url) => {
+      const requestLog = logEntries.find(
+        (entry) => entry.req?.url === url && entry.msg === 'incoming request',
+      );
+      return logEntries.filter((entry) => entry.reqId === requestLog.reqId);
+    };
+    const sensitiveLogs = logEntriesForRoute('/sensitive');
+    const sensitiveErrorLogs = logEntriesForRoute('/sensitive-error');
+    const publicLogs = logEntriesForRoute('/not-sensitive');
+
+    for (const logEntry of [...sensitiveLogs, ...sensitiveErrorLogs]) {
+      expect(logEntry).not.toHaveProperty('body');
+      expect(logEntry).not.toHaveProperty('headers');
+    }
+    expect(publicLogs).toContainEqual(
+      expect.objectContaining({
+        body: { request: 'public-request-body' },
+        msg: 'request',
+      }),
+    );
+    expect(publicLogs).toContainEqual(
+      expect.objectContaining({
+        body: { result: 'public-response-body' },
+        msg: 'response body',
+      }),
+    );
   });
 });
 

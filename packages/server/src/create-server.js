@@ -20,10 +20,10 @@ const fastifySensible = require('@fastify/sensible');
 const {
   commonCreateServer,
   createCommonLog,
+  isSensitiveRoute,
 } = require('./common-create-server');
 
-const createServer = (config) => {
-  const log = createCommonLog(config);
+const createServer = (config, log = createCommonLog(config)) => {
   log.info(config, 'Server Configured');
 
   const server = commonCreateServer(config, log);
@@ -36,12 +36,12 @@ const createServer = (config) => {
       })
       // logging
       .addHook('preValidation', async (req) => {
-        if (req.body) {
+        if (req.body && !isSensitiveRoute(req)) {
           req.log.debug({ headers: req.headers, body: req.body }, 'request');
         }
       })
       .addHook('preSerialization', async (req, reply, payload) => {
-        if (payload) {
+        if (payload && !isSensitiveRoute(req)) {
           req.log.debug({ body: payload }, 'response body');
         }
         return payload;
