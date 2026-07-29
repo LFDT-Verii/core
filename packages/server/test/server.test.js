@@ -16,8 +16,10 @@
 const { createHash } = require('node:crypto');
 const { afterEach, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
+const pinoTest = require('pino-test');
 
 const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
+const { loggerProvider } = require('@verii/logger');
 
 loadTestEnv();
 const { genericConfig } = require('@verii/config');
@@ -34,32 +36,6 @@ const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 const listenTestServer = async (server) => {
   const { appPort, appHost } = server.config;
   await server.listen({ port: appPort, host: appHost });
-};
-
-const captureLogs = async (server, callback) => {
-  const writes = [];
-  let logger = server.log;
-  let streamSymbol;
-  while (logger && !streamSymbol) {
-    streamSymbol = Object.getOwnPropertySymbols(logger).find(
-      (symbol) => symbol.toString() === 'Symbol(pino.stream)',
-    );
-    logger = Object.getPrototypeOf(logger);
-  }
-  const stream = server.log[streamSymbol];
-  server.log[streamSymbol] = {
-    write: (chunk) => {
-      writes.push(chunk.toString());
-    },
-  };
-
-  try {
-    await callback();
-  } finally {
-    server.log[streamSymbol] = stream;
-  }
-
-  return writes.join('');
 };
 
 describe('Server package variant tests ', () => {
@@ -141,11 +117,16 @@ describe('Server package variant tests ', () => {
 
   it('omits sensitive route payloads from logs while retaining normal debug payload logs', async () => {
     await server.close();
-    server = createServer({
+    const config = {
       ...genericConfig,
       logSeverity: 'debug',
       mongoConnection,
-    });
+    };
+    const logEntries = [];
+    const logSink = pinoTest.sink();
+    logSink.on('data', (entry) => logEntries.push(entry));
+    const log = loggerProvider({ ...config, destination: logSink });
+    server = createServer(config, log);
     server.post(
       '/sensitive',
       { config: { sensitiveLogging: true } },
@@ -165,42 +146,41 @@ describe('Server package variant tests ', () => {
       result: 'public-response-body',
     }));
 
-    const logs = await captureLogs(server, async () => {
-      const sensitiveResponse = await server.inject({
-        method: 'post',
-        url: '/sensitive',
-        headers: {
-          authorization: 'Basic c2Vuc2l0aXZlOnNlY3JldA==',
-          'x-provisioning-code': 'sensitive-provisioning-code',
-        },
-        payload: {
-          request: 'sensitive-request-body',
-          clientSecret: 'submitted-secret',
-        },
-      });
-      const sensitiveErrorResponse = await server.inject({
-        method: 'post',
-        url: '/sensitive-error',
-        headers: {
-          authorization: 'Basic ZmFpbHVyZTpzZWNyZXQ=',
-          'x-provisioning-code': 'failure-provisioning-code',
-        },
-        payload: {
-          request: 'sensitive-error-request-body',
-          clientSecret: 'failure-submitted-secret',
-        },
-      });
-      const normalResponse = await server.inject({
-        method: 'post',
-        url: '/not-sensitive',
-        payload: { request: 'public-request-body' },
-      });
-
-      expect(sensitiveResponse.statusCode).toEqual(200);
-      expect(sensitiveErrorResponse.statusCode).toEqual(500);
-      expect(normalResponse.statusCode).toEqual(200);
+    const sensitiveResponse = await server.inject({
+      method: 'post',
+      url: '/sensitive',
+      headers: {
+        authorization: 'Basic c2Vuc2l0aXZlOnNlY3JldA==',
+        'x-provisioning-code': 'sensitive-provisioning-code',
+      },
+      payload: {
+        request: 'sensitive-request-body',
+        clientSecret: 'submitted-secret',
+      },
+    });
+    const sensitiveErrorResponse = await server.inject({
+      method: 'post',
+      url: '/sensitive-error',
+      headers: {
+        authorization: 'Basic ZmFpbHVyZTpzZWNyZXQ=',
+        'x-provisioning-code': 'failure-provisioning-code',
+      },
+      payload: {
+        request: 'sensitive-error-request-body',
+        clientSecret: 'failure-submitted-secret',
+      },
+    });
+    const normalResponse = await server.inject({
+      method: 'post',
+      url: '/not-sensitive',
+      payload: { request: 'public-request-body' },
     });
 
+    expect(sensitiveResponse.statusCode).toEqual(200);
+    expect(sensitiveErrorResponse.statusCode).toEqual(500);
+    expect(normalResponse.statusCode).toEqual(200);
+
+    const logs = JSON.stringify(logEntries);
     for (const sensitiveValue of [
       'sensitive-request-body',
       'sensitive-response-body',
@@ -216,7 +196,7 @@ describe('Server package variant tests ', () => {
       expect(logs).not.toContain(sensitiveValue);
     }
 
-    const logEntries = logs.trim().split('\n').map(JSON.parse);
+    expect(logEntries).not.toHaveLength(0);
     const logEntriesForRoute = (url) => {
       const requestLog = logEntries.find(
         (entry) => entry.req?.url === url && entry.msg === 'incoming request',

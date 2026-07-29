@@ -25,8 +25,7 @@ const {
 const isSensitiveRoute = (req) =>
   req.routeOptions?.config?.sensitiveLogging === true;
 
-const createServer = (config) => {
-  const log = createCommonLog(config);
+const createServer = (config, log = createCommonLog(config)) => {
   log.info(config, 'Server Configured');
 
   const server = commonCreateServer(config, log);

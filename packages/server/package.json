@@ -55,6 +55,7 @@
     "globals": "17.7.0",
     "h2url": "0.2.0",
     "mongodb": "^7.5.0",
+    "pino-test": "^2.0.0",
     "prettier": "3.9.6"
   },
   "nx": {
