@@ -58,10 +58,6 @@ const {
   initIssuerServiceFactory,
 } = require('../../src/entities/issuer-services');
 const { CihKeyPurposes, initKeyFactory } = require('../../src/entities/keys');
-const {
-  TenantErrors,
-} = require('../../src/entities/tenants/domain/tenant-errors');
-
 const OPERATOR_CAO_DID = 'did:example:operator-cao';
 const OTHER_CAO_DID = 'did:example:other-cao';
 
@@ -76,7 +72,6 @@ const operatorAuthExtension = {
       };
     });
   }),
-  tenantIsolation: 'cao',
   documentation: {},
 };
 
@@ -415,32 +410,6 @@ describe('Tenants management test suite', () => {
       );
     });
 
-    it('should 400 if config.defaultCaoDid is not set and caoDID is not specified', async () => {
-      fastify.overrides.reqConfig = (config) => ({
-        ...config,
-        defaultCaoDid: undefined,
-      });
-
-      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
-
-      const payload = {
-        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
-        keys: orgKeys,
-      };
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: createUrl,
-        payload,
-      });
-      expect(response.statusCode).toEqual(400);
-      expect(response.json).toEqual(
-        errorResponseMatcher({
-          errorCode: TenantErrors.CAO_DID_REQUIRED,
-          message: TenantErrors.CAO_DID_REQUIRED,
-        }),
-      );
-    });
-
     it('should 400 when name is missing', async () => {
       const tenantPayload = omit(['name'], await newTenantMinimalPayload());
       const payload = {
@@ -677,8 +646,7 @@ describe('Tenants management test suite', () => {
       );
     });
 
-    // eslint-disable-next-line max-len
-    it('should 200 and create tenant, multiple key entities & overridden primaryAddress, hostUrl, caoDID, and name and logo matching profile commercialEntity', async () => {
+    it('should 200 and create tenant with multiple keys and allowed field overrides', async () => {
       const { didDoc: orgDoc2, keys: orgKeys2 } = buildIssuerDidDoc({
         keyPerPurpose: true,
       });
@@ -701,7 +669,6 @@ describe('Tenants management test suite', () => {
           logo: 'https://localhost.test/bar.png',
         })),
         primaryAccount,
-        caoDid: orgDoc2.id,
         hostUrl: 'https://example.com',
       };
       const payload = {

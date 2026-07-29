@@ -29,7 +29,7 @@ const initTenantFactory = (app) =>
       return {
         did: `did:test:${didSuffix}`,
         primaryAccount: `0x${didSuffix}`,
-        caoDid: 'did:test:e89fYWr0Lkfd_pa18fdk',
+        caoDid: app.config.defaultCaoDid,
         hostUrl: 'https://localhost.test',
         name: 'fooName',
         logo: 'https://localhost.test/logo.png',

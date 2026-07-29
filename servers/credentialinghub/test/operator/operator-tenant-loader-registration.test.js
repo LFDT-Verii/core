@@ -37,7 +37,6 @@ const operatorAuthExtension = {
       };
     });
   }),
-  tenantIsolation: 'cao',
   documentation: {},
 };
 

@@ -28,27 +28,24 @@ const {
 const CAO_A_DID = 'did:example:cao-a';
 const CAO_B_DID = 'did:example:cao-b';
 
-const createOperatorAuthExtension = (tenantIsolation) => ({
+const operatorAuthExtension = {
   plugin: fp(async (fastify) => {
     fastify.decorate('authenticateOperator', async (request) => {
       request.operatorPrincipal = {
-        caoDid: tenantIsolation === 'cao' ? CAO_A_DID : null,
+        caoDid: CAO_A_DID,
         subject: 'test-operator',
         subjectType: 'client',
         authenticationMethod: 'test',
       };
     });
   }),
-  tenantIsolation,
   documentation: {},
-});
+};
 
-const createTenantLoaderServer = async (tenantIsolation) => {
+const createTenantLoaderServer = async () => {
   const fastify = createTestFastify(
     { logSeverity: 'fatal' },
-    {
-      operatorAuthExtension: createOperatorAuthExtension(tenantIsolation),
-    },
+    { operatorAuthExtension },
   );
   fastify.register(async (server) => {
     server.addHook('onRequest', server.authenticateOperator);
@@ -73,7 +70,7 @@ describe('tenant loader CAO isolation', () => {
   let foreignTenant;
 
   before(async () => {
-    fastify = await createTenantLoaderServer('cao');
+    fastify = await createTenantLoaderServer();
     ({ persistTenant } = initTenantFactory(fastify));
   });
 
@@ -112,35 +109,5 @@ describe('tenant loader CAO isolation', () => {
     expect(comparableResponse(foreignResponse)).toEqual(
       comparableResponse(unknownResponse),
     );
-  });
-});
-
-describe('tenant loader legacy isolation', () => {
-  let fastify;
-  let persistTenant;
-
-  before(async () => {
-    fastify = await createTenantLoaderServer('legacy');
-    ({ persistTenant } = initTenantFactory(fastify));
-  });
-
-  beforeEach(async () => {
-    await mongoDb().collection('tenants').deleteMany({});
-  });
-
-  after(async () => {
-    await fastify.close();
-  });
-
-  it('loads a tenant by ID without applying a CAO filter', async () => {
-    const tenant = await persistTenant({ caoDid: CAO_B_DID });
-
-    const response = await fastify.injectJson({
-      method: 'GET',
-      url: `/test/operator-tenants/${tenant._id}`,
-    });
-
-    expect(response.statusCode).toEqual(200);
-    expect(response.json).toEqual({ tenantId: tenant._id });
   });
 });

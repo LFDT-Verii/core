@@ -18,10 +18,7 @@ const { ObjectId } = require('mongodb');
 const { isEmpty, map } = require('lodash/fp');
 const newError = require('http-errors');
 const { TenantErrors } = require('../domain');
-const {
-  getOperatorCaoDid,
-  scopeTenantFilter,
-} = require('../domain/operator-tenant-scope');
+const { scopeTenantFilter } = require('../domain/operator-tenant-scope');
 
 const deleteTenant = async (tenantId, context) => {
   const { repos } = context;
@@ -29,7 +26,7 @@ const deleteTenant = async (tenantId, context) => {
   const tenantFilter = scopeTenantFilter({ _id: boxedTenantId }, context);
   const tenant = await repos.tenants.findOne({ filter: tenantFilter });
   if (tenant == null) {
-    throwTenantNotFound(tenantId, context);
+    throwTenantNotFound();
   }
 
   const issuerServices = await repos.issuerServices.find({
@@ -57,10 +54,7 @@ const deleteTenant = async (tenantId, context) => {
   ]);
 };
 
-const throwTenantNotFound = (tenantId, context) => {
-  if (getOperatorCaoDid(context) == null) {
-    throw new newError.NotFound(`tenant ${tenantId} not found`);
-  }
+const throwTenantNotFound = () => {
   throw newError(404, 'Tenant not found', {
     errorCode: 'tenant_not_found',
   });
