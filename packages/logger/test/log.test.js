@@ -213,6 +213,38 @@ describe('Test pino logger provider with redaction', () => {
     );
   });
 
+  it('Redaction should shh App Check request security fields', () => {
+    const dataForLog = {
+      headers: {
+        'x-firebase-appcheck': 'app-check-token',
+        'x-vcl-installation-id': 'installation-id',
+      },
+      body: {
+        value: '+15551234567',
+        verificationCode: '123456',
+        account: {
+          id_token: 'account-id-token',
+        },
+      },
+    };
+
+    log.info(dataForLog);
+
+    expect(JSON.parse(logStream.toString())).toMatchObject({
+      headers: {
+        'x-firebase-appcheck': '...shhh...',
+        'x-vcl-installation-id': '...shhh...',
+      },
+      body: {
+        value: '...shhh...',
+        verificationCode: '...shhh...',
+        account: {
+          id_token: '...shhh...',
+        },
+      },
+    });
+  });
+
   it('Redaction should shh vnfClientSecret', () => {
     const dataForLog = {
       vnfClientSecret: 'vnfClientSecret',
