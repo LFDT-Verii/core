@@ -31,11 +31,28 @@ const operatorAuthPlugin = fp(async (fastify) => {
 
   // Optional. Omit this decorator to use VNF_OAUTH_CLIENT_ID and
   // VNF_OAUTH_CLIENT_SECRET.
-  fastify.decorate('resolveVnfClientCredentials', async (request) => ({
-    cacheKey: `${request.operatorPrincipal.caoDid}:1`,
-    loadCredentials: async () =>
-      loadVnfCredentials(request.operatorPrincipal.caoDid),
-  }));
+  fastify.decorate('resolveVnfClientCredentials', async (request) => {
+    const tenantCaoDid = request.tenant?.caoDid;
+    const principalCaoDid = request.operatorPrincipal?.caoDid;
+
+    if (
+      tenantCaoDid != null &&
+      principalCaoDid != null &&
+      tenantCaoDid !== principalCaoDid
+    ) {
+      throw new Error('tenant and Operator principal CAO DIDs must match');
+    }
+
+    const caoDid = tenantCaoDid ?? principalCaoDid;
+    if (caoDid == null) {
+      throw new Error('request must resolve to a CAO DID');
+    }
+
+    return {
+      cacheKey: `${caoDid}:1`,
+      loadCredentials: async () => loadVnfCredentials(caoDid),
+    };
+  });
 
   // Keep private endpoints encapsulated beneath the capability plugin.
   fastify.register(privateOperatorRoutes);
@@ -76,7 +93,11 @@ normalized fields on `request.operatorPrincipal`.
 
 The optional VNF resolver is selected by decoration, not configuration. Once
 a custom resolver is installed, its errors are returned to the caller and
-never fall back to the static VNF client ID and secret.
+never fall back to the static VNF client ID and secret. Public VN/OpenID
+requests resolve their CAO from the loaded tenant, while authenticated Operator
+requests resolve it from the Operator principal. A resolver must reject the
+request when both sources exist but disagree, or when neither source supplies a
+CAO DID.
 
 ## Data Migrations
 
