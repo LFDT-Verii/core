@@ -31,5 +31,5 @@ module.exports = async (fastify) => {
   fastify
     .register(kmsPlugin)
     .register(responseRequestIdPlugin)
-    .autoSchemaPreset({ security: [{ operatorBearer: [] }] });
+    .autoSchemaPreset({ security: [{ operatorAuth: [] }] });
 };
