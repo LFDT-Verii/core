@@ -98,15 +98,12 @@ const SECURITY_PATHS = [
   'operatorApiToken',
   'clientSecret',
   'client_secret',
-  'vnfClientId',
-  'vnfClientSecret',
   'blockchainCredentials.secretId',
   'cao.blockchainCredentials.secretId',
   'provisioningCode',
   "headers['x-provisioning-code']",
   'body.clientSecret',
   'body.client_secret',
-  'body.vnfClientId',
   'body.vnfClientSecret',
   'body.blockchainCredentials.secretId',
   'body.provisioningCode',
@@ -158,11 +155,7 @@ const loggerProvider = ({
     }),
   };
   const redact = {};
-  const verbosePayloadPaths =
-    /^debug$/i.test(logSeverity) && nodeEnv === 'development'
-      ? []
-      : JSON_VC_PATHS;
-  redact.paths = [...SPAM_PATHS, ...SECURITY_PATHS, ...verbosePayloadPaths];
+  redact.paths = [...SPAM_PATHS, ...SECURITY_PATHS, ...JSON_VC_PATHS];
   redact.censor = (value, path) => {
     if (last(path) === 'file') {
       return '...large file...';

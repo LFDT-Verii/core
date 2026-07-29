@@ -20,10 +20,8 @@ const fastifySensible = require('@fastify/sensible');
 const {
   commonCreateServer,
   createCommonLog,
+  isSensitiveRoute,
 } = require('./common-create-server');
-
-const isSensitiveRoute = (req) =>
-  req.routeOptions?.config?.sensitiveLogging === true;
 
 const createServer = (config, log = createCommonLog(config)) => {
   log.info(config, 'Server Configured');

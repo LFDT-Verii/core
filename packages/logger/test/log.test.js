@@ -64,13 +64,11 @@ const expectSensitiveDataToBeRedacted = (output) => {
     'static-token',
     'client-secret',
     'oauth-client-secret',
-    'vnf-client-id',
     'vnf-client-secret',
     'kms-secret-id',
     'Basic Y2xpZW50OnNlY3JldA==',
     'jwt',
     'returned-secret',
-    'submitted-vnf-client-id',
     'submitted-vnf-secret',
     'submitted-kms-secret-id',
   ]) {
@@ -83,7 +81,7 @@ const expectSensitiveDataToBeRedacted = (output) => {
     operatorApiToken: CENSOR,
     clientSecret: CENSOR,
     client_secret: CENSOR,
-    vnfClientId: CENSOR,
+    vnfClientId: 'vnf-client-id',
     vnfClientSecret: CENSOR,
     blockchainCredentials: { secretId: CENSOR },
     provisioningCode: CENSOR,
@@ -94,7 +92,7 @@ const expectSensitiveDataToBeRedacted = (output) => {
     body: {
       access_token: CENSOR,
       clientSecret: CENSOR,
-      vnfClientId: CENSOR,
+      vnfClientId: 'submitted-vnf-client-id',
       vnfClientSecret: CENSOR,
       blockchainCredentials: { secretId: CENSOR },
     },
@@ -748,6 +746,27 @@ describe('Test pino logger provider with redaction', () => {
     debugLog.debug(sensitiveDataForLog());
 
     expectSensitiveDataToBeRedacted(stream.toString());
+  });
+
+  it('redacts credential payloads in development debug logs', () => {
+    const stream = new MemoryStream('development-debug-credential-log');
+    const debugLog = loggerProvider({
+      nodeEnv: 'development',
+      logSeverity: 'debug',
+      version: '1.0',
+      traceIdHeader: 'x-trace-id',
+      destination: stream,
+    });
+
+    debugLog.debug({
+      credentialSubject: { givenName: 'Ada' },
+      relatedResource: { id: 'https://example.com/private-resource' },
+    });
+
+    expect(JSON.parse(stream.toString())).toMatchObject({
+      credentialSubject: CENSOR,
+      relatedResource: { id: CENSOR },
+    });
   });
 
   it('redacts additional operator credentials in debug logs for dev', () => {

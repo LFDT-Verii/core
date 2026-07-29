@@ -237,4 +237,4 @@ const createCommonLog = (config) => {
   return loggerProvider({ nodeEnv, logSeverity, version });
 };
 
-module.exports = { commonCreateServer, createCommonLog };
+module.exports = { commonCreateServer, createCommonLog, isSensitiveRoute };
