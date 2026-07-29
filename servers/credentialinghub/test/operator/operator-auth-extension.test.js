@@ -106,6 +106,34 @@ describe('operator authentication extension', () => {
     );
   });
 
+  it('preserves the authenticator Fastify receiver through the HTTP boundary', async () => {
+    const fastify = createAuthenticationBoundary(
+      createExtension({
+        plugin: fp(async (server) => {
+          server
+            .decorate('operatorCaoDid', TEST_PRINCIPAL.caoDid)
+            .decorate(
+              'authenticateOperator',
+              async function authenticateOperator(request) {
+                request.operatorPrincipal = {
+                  ...TEST_PRINCIPAL,
+                  caoDid: this.operatorCaoDid,
+                };
+              },
+            );
+        }),
+      }),
+    );
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/principal',
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json()).toEqual(TEST_PRINCIPAL);
+  });
+
   it('exposes only the normalized principal after authentication', async () => {
     const fastify = createAuthenticationBoundary(createExtension());
 

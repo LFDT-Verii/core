@@ -123,8 +123,11 @@ const installOperatorAuthPlugin = fp(
     const { authenticateOperator } = fastify;
     // Replace the capability implementation with the stable, validating seam.
     // eslint-disable-next-line better-mutation/no-mutation
-    fastify.authenticateOperator = async (request, reply) => {
-      await authenticateOperator(request, reply);
+    fastify.authenticateOperator = async function authenticateAndNormalize(
+      request,
+      reply,
+    ) {
+      await authenticateOperator.call(this, request, reply);
       if (!reply.sent) {
         // eslint-disable-next-line better-mutation/no-mutation
         request.operatorPrincipal = normalizePrincipal(
