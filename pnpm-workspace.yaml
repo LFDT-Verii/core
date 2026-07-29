@@ -11,9 +11,6 @@ overrides:
   # Temporary: remove this override once eslint-plugin-better-mutation stops
   # pinning lodash 4.17.x.
   "eslint-plugin-better-mutation>lodash": "4.18.1"
-  # Temporary: remove this override once jsdom publishes a release that depends
-  # on patched undici instead of 7.25.0.
-  "jsdom>undici": "7.29.0"
 onlyBuiltDependencies:
   - "@sentry/profiling-node"
   - "@swc/core"
