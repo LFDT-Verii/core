@@ -493,6 +493,46 @@ describe('blockchain client credentials capability', () => {
     );
   });
 
+  it('rejects a missing blockchain credential cache key', async () => {
+    const caoSecurityProvider = createCaoSecurityProvider({
+      blockchainClientCredentialsPlugin:
+        createTestBlockchainClientCredentialsPlugin({
+          resolver: async () => ({
+            loadCredentials: async () => ({
+              clientId: 'cao-client',
+              clientSecret: 'cao-secret',
+            }),
+          }),
+        }),
+    });
+    const post = mock.fn(async () => ({
+      json: async () => ({
+        access_token: 'cao-access-token',
+        expires_in: 60,
+      }),
+    }));
+    initHttpClient.mock.mockImplementation(() => () => ({ post }));
+    const fastify = createProductionServer(caoSecurityProvider, {
+      blockchainApiAudience: 'https://blockchain.example.test',
+      vnfOAuthTokensEndpoint: 'http://blockchain-auth.test/oauth/token',
+    });
+    fastify.get('/test/blockchain-authentication', async (request) => ({
+      accessToken: await request.vnfBlockchainAuthenticate(),
+    }));
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/test/blockchain-authentication',
+    });
+
+    expect(response.statusCode).toEqual(500);
+    expect(response.json()).toEqual(
+      expect.objectContaining({
+        message: 'VNF OAuth creds resolver cacheKey must be non-empty',
+      }),
+    );
+  });
+
   it('supplies resolved credentials through request blockchain authentication', async () => {
     const loadCredentials = mock.fn(async () => ({
       clientId: 'cao-client',

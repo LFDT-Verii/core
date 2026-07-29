@@ -16,7 +16,11 @@ every Operator API request with the static bearer token. The blockchain
 contract calling code uses the configured client credentials directly, so the
 default provider does not install a blockchain credentials capability plugin.
 Startup fails when any of the four values is absent from both
-`configOverrides` and the environment.
+`configOverrides` and the environment. This applies to every entry point that
+uses the built-in provider, including the standalone notification worker.
+Deployments upgrading from the earlier static-token setup must now supply
+`DEFAULT_CAO_DID`; it was previously optional because tenant creation could
+instead receive a `caoDid` in the request.
 
 A wrapper that supports multiple CAOs can replace the default provider by
 supplying a `caoSecurityProvider` to `createAppServer` or `startAppServer`.
@@ -28,8 +32,8 @@ The provider is a flat object with the following properties:
   `request.operatorPrincipal`.
 - `blockchainClientCredentialsPlugin` resolves the
   blockchain client credentials for the CAO associated with a request.
-- `documentation` supplies Operator Swagger metadata. Use `documentation: {}`
-  to retain the built-in Swagger metadata.
+- `documentation` optionally supplies Operator Swagger metadata. Omit it or use
+  `documentation: {}` to retain the built-in Swagger metadata.
 
 Both capability plugins are required when a custom provider is supplied. The
 config plugin is optional. In this mode, the four static environment variables

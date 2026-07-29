@@ -42,7 +42,8 @@ const installCaoSecurityProvider = fp(
         const { cacheKey, loadCredentials } =
           (await resolveBlockchainClientCredentials.call(this, request)) ?? {};
         return {
-          cacheKey,
+          // Undefined selects base-contract-io's single-client default key.
+          cacheKey: cacheKey ?? null,
           loadOAuthCreds: loadCredentials,
         };
       },
