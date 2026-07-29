@@ -502,10 +502,14 @@ describe('vn-api > presentations', () => {
             .collection('depots')
             .findOne({ _id: new ObjectId(depot._id) }),
         ).resolves.toEqual(expectedDbDepot(tenant, relyingPartyService, depot));
-        const [presentation] = await mongoDb()
+        const presentations = await mongoDb()
           .collection('presentations')
           .find({ depotId: new ObjectId(depot._id) })
           .toArray();
+        expect(presentations).toEqual([
+          expectedDbPresentation(tenant, exchange, jwtVp),
+        ]);
+        const [presentation] = presentations;
         const operatorResponse = await fastify.injectJson({
           method: 'GET',
           url: `/operator/exchanges/get?tenantId=${tenant._id}&exchangeId=${exchange._id}`,
@@ -515,9 +519,6 @@ describe('vn-api > presentations', () => {
         expect(operatorResponse.json.exchange.presentationIds).toEqual([
           presentation._id.toString(),
         ]);
-        expect(presentation).toEqual(
-          expectedDbPresentation(tenant, exchange, jwtVp),
-        );
         await expect(
           mongoDb().collection('notification_events').countDocuments({}),
         ).resolves.toEqual(0);
