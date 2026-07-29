@@ -61,7 +61,6 @@ const operatorAuthPlugin = fp(async (fastify) => {
 startAppServer({
   operatorAuthExtension: {
     plugin: operatorAuthPlugin,
-    tenantIsolation: 'cao',
     documentation: {
       operatorSecurityScheme: {
         type: 'oauth2',
@@ -86,10 +85,9 @@ startAppServer({
 });
 ```
 
-`tenantIsolation` must be either `legacy` or `cao`. CAO isolation requires a
-non-empty principal `caoDid`; every principal also requires `subject`,
-`subjectType`, and `authenticationMethod`. The Hub exposes only those four
-normalized fields on `request.operatorPrincipal`.
+Every Operator principal requires non-empty `caoDid`, `subject`, `subjectType`,
+and `authenticationMethod` values. The Hub exposes only those four normalized
+fields on `request.operatorPrincipal`.
 
 The optional VNF resolver is selected by decoration, not configuration. Once
 a custom resolver is installed, its errors are returned to the caller and
