@@ -35,7 +35,6 @@ const createTestOperatorAuthPlugin = ({
 
 const createExtension = (overrides = {}) => ({
   plugin: createTestOperatorAuthPlugin(),
-  tenantIsolation: 'cao',
   documentation: {},
   ...overrides,
 });
@@ -146,7 +145,7 @@ describe('operator authentication extension', () => {
     expect(response.json()).toEqual(TEST_PRINCIPAL);
   });
 
-  it('rejects a missing or empty CAO DID in CAO isolation mode', async () => {
+  it('rejects a missing or empty CAO DID', async () => {
     await Promise.all(
       [undefined, ''].map(async (caoDid) => {
         const fastify = createAuthenticationBoundary(
@@ -164,32 +163,10 @@ describe('operator authentication extension', () => {
 
         expect(response.statusCode).toEqual(500);
         expect(response.json().message).toEqual(
-          'operatorPrincipal.caoDid must be a non-empty string for CAO isolation',
+          'operatorPrincipal.caoDid must be a non-empty string',
         );
       }),
     );
-  });
-
-  it('allows a null CAO DID in legacy isolation mode', async () => {
-    const fastify = createAuthenticationBoundary(
-      createExtension({
-        tenantIsolation: 'legacy',
-        plugin: createTestOperatorAuthPlugin({
-          principal: { ...TEST_PRINCIPAL, caoDid: undefined },
-        }),
-      }),
-    );
-
-    const response = await fastify.inject({
-      method: 'GET',
-      url: '/principal',
-    });
-
-    expect(response.statusCode).toEqual(200);
-    expect(response.json()).toEqual({
-      ...TEST_PRINCIPAL,
-      caoDid: null,
-    });
   });
 
   it('fails startup when the extension omits authenticateOperator', async () => {
@@ -205,13 +182,8 @@ describe('operator authentication extension', () => {
   it('fails startup when the extension shape is invalid', async () => {
     const invalidExtensions = [
       {
-        extension: { tenantIsolation: 'cao', documentation: {} },
+        extension: { documentation: {} },
         message: 'operatorAuthExtension.plugin must be a function',
-      },
-      {
-        extension: createExtension({ tenantIsolation: 'organization' }),
-        message:
-          "operatorAuthExtension.tenantIsolation must be 'legacy' or 'cao'",
       },
       {
         extension: createExtension({ documentation: 'oauth2' }),
@@ -257,19 +229,39 @@ describe('default static Operator authentication', () => {
     });
   });
 
-  it('requires the static token only when no extension is supplied', async () => {
-    const staticFastify = createAuthenticationBoundary(undefined, {
-      isTest: false,
-      operatorApiToken: undefined,
-    });
-    await expect(staticFastify.ready()).rejects.toThrow(
-      'OPERATOR_API_TOKEN must be a non-empty string',
+  it('requires the static token and its CAO DID only when no extension is supplied', async () => {
+    const cases = [
+      {
+        config: {
+          operatorApiToken: undefined,
+          defaultCaoDid: 'did:example:default-cao',
+        },
+        message: 'OPERATOR_API_TOKEN must be a non-empty string',
+      },
+      {
+        config: {
+          operatorApiToken: 'operator-secret',
+          defaultCaoDid: undefined,
+        },
+        message: 'DEFAULT_CAO_DID must be a non-empty string',
+      },
+    ];
+
+    await Promise.all(
+      cases.map(async ({ config, message }) => {
+        const staticFastify = createAuthenticationBoundary(undefined, {
+          isTest: false,
+          ...config,
+        });
+        await expect(staticFastify.ready()).rejects.toThrow(message);
+        activeServers.delete(staticFastify);
+      }),
     );
-    activeServers.delete(staticFastify);
 
     const extensionFastify = createAuthenticationBoundary(createExtension(), {
       isTest: false,
       operatorApiToken: undefined,
+      defaultCaoDid: undefined,
     });
     await extensionFastify.ready();
   });
@@ -339,7 +331,6 @@ describe('VNF OAuth creds resolver registration', () => {
             plugin: fp(async (server) => {
               server.decorate('authenticateOperator', async () => {});
             }, { name: 'testOperatorAuth' }),
-            tenantIsolation: 'cao',
             documentation: {},
           });
           fastify.register(authenticateVnfClientPlugin);

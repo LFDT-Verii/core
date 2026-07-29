@@ -26,6 +26,7 @@ const assertNonEmpty = (value, name) => {
 const defaultOperatorAuthPlugin = fp(async (fastify) => {
   if (!fastify.config.isTest) {
     assertNonEmpty(fastify.config.operatorApiToken, 'OPERATOR_API_TOKEN');
+    assertNonEmpty(fastify.config.defaultCaoDid, 'DEFAULT_CAO_DID');
     await fastify.register(fastifyBearerAuth, {
       keys: new Set([fastify.config.operatorApiToken]),
       addHook: false,
@@ -45,7 +46,7 @@ const defaultOperatorAuthPlugin = fp(async (fastify) => {
       });
     }
     request.operatorPrincipal = {
-      caoDid: fastify.config.defaultCaoDid ?? null,
+      caoDid: fastify.config.defaultCaoDid,
       subject: 'legacy-operator-token',
       subjectType: 'client',
       authenticationMethod: 'static_bearer',

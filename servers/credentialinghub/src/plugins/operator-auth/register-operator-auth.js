@@ -17,8 +17,8 @@
 const fp = require('fastify-plugin');
 const { defaultOperatorAuthPlugin } = require('./default-operator-auth-plugin');
 
-const TENANT_ISOLATION_MODES = new Set(['legacy', 'cao']);
 const PRINCIPAL_STRING_FIELDS = [
+  'caoDid',
   'subject',
   'subjectType',
   'authenticationMethod',
@@ -33,11 +33,6 @@ const validateExtension = (extension) => {
   }
   if (typeof extension.plugin !== 'function') {
     throw new TypeError('operatorAuthExtension.plugin must be a function');
-  }
-  if (!TENANT_ISOLATION_MODES.has(extension.tenantIsolation)) {
-    throw new TypeError(
-      "operatorAuthExtension.tenantIsolation must be 'legacy' or 'cao'",
-    );
   }
   if (extension.documentation != null && !isObject(extension.documentation)) {
     throw new TypeError(
@@ -54,30 +49,7 @@ const assertNonEmptyPrincipalField = (principal, field) => {
   }
 };
 
-const isNonEmptyString = (value) =>
-  typeof value === 'string' && value.length > 0;
-
-const normalizeCaoDid = (caoDid, tenantIsolation) => {
-  if (tenantIsolation === 'cao') {
-    if (!isNonEmptyString(caoDid)) {
-      throw new TypeError(
-        'operatorPrincipal.caoDid must be a non-empty string for CAO isolation',
-      );
-    }
-    return caoDid;
-  }
-  if (caoDid == null) {
-    return null;
-  }
-  if (!isNonEmptyString(caoDid)) {
-    throw new TypeError(
-      'operatorPrincipal.caoDid must be null or a non-empty string',
-    );
-  }
-  return caoDid;
-};
-
-const normalizePrincipal = (principal, tenantIsolation) => {
+const normalizePrincipal = (principal) => {
   if (!isObject(principal)) {
     throw new TypeError('operatorPrincipal must be an object');
   }
@@ -87,7 +59,7 @@ const normalizePrincipal = (principal, tenantIsolation) => {
   }
 
   return {
-    caoDid: normalizeCaoDid(principal.caoDid, tenantIsolation),
+    caoDid: principal.caoDid,
     subject: principal.subject,
     subjectType: principal.subjectType,
     authenticationMethod: principal.authenticationMethod,
@@ -100,14 +72,11 @@ const installOperatorAuthPlugin = fp(
       extension == null
         ? {
             plugin: defaultOperatorAuthPlugin,
-            tenantIsolation: 'legacy',
           }
         : extension;
     validateExtension(resolvedExtension);
 
-    fastify
-      .decorateRequest('operatorPrincipal', null)
-      .decorate('operatorTenantIsolation', resolvedExtension.tenantIsolation);
+    fastify.decorateRequest('operatorPrincipal', null);
 
     await fastify.register(resolvedExtension.plugin);
 
@@ -132,7 +101,6 @@ const installOperatorAuthPlugin = fp(
         // eslint-disable-next-line better-mutation/no-mutation
         request.operatorPrincipal = normalizePrincipal(
           request.operatorPrincipal,
-          resolvedExtension.tenantIsolation,
         );
       }
     };

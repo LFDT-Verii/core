@@ -500,7 +500,6 @@ describe('operator authentication extension documentation', () => {
             };
           });
         }),
-        tenantIsolation: 'cao',
         documentation: {
           operatorSecurityScheme,
           tags: [
