@@ -196,6 +196,22 @@ describe('db kms', () => {
     });
   });
 
+  describe('deleting keys & secrets', () => {
+    it('should delete imported secrets and generated asymmetric keys', async () => {
+      const imported = await kms.importSecret({ secret: 'vnf-secret' });
+
+      await expect(kms.deleteKeyOrSecret(imported.id)).resolves.toBe(true);
+      await expect(kms.exportKeyOrSecret(imported.id)).resolves.toBeNull();
+      await expect(kms.deleteKeyOrSecret(imported.id)).resolves.toBe(false);
+
+      const key = await kms.createKey(keySpecs.es256);
+
+      await expect(kms.deleteKeyOrSecret(key.id)).resolves.toBe(true);
+      await expect(kms.exportKeyOrSecret(key.id)).resolves.toBeNull();
+      await expect(kms.deleteKeyOrSecret(key.id)).resolves.toBe(false);
+    });
+  });
+
   describe('jwt operations', () => {
     let keys;
     let alternativeKeys;
