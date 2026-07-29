@@ -924,11 +924,11 @@ describe('Organizations Test Suite', () => {
         });
       });
 
-      it('Should return a list with matching "filter.serviceTypes" and only activated services', async () => {
+      it('Should include unapproved services for any requested service type only when explicitly requested', async () => {
         const service = [
           {
-            id: '#identityIssuer-1',
-            type: ServiceTypes.IdDocumentIssuerType,
+            id: '#careerIssuer-1',
+            type: ServiceTypes.CareerIssuerType,
             serviceEndpoint: 'https://node.example.com',
           },
           {
@@ -942,13 +942,17 @@ describe('Organizations Test Suite', () => {
           service,
           activatedServiceIds: ['#careerIssuer-2'],
         });
-        const response = await fastify.injectJson({
+        const defaultResponse = await fastify.injectJson({
           method: 'GET',
           url: `${baseUrl}/search-profiles?filter.serviceTypes=Issuer`,
         });
+        const unapprovedResponse = await fastify.injectJson({
+          method: 'GET',
+          url: `${baseUrl}/search-profiles?filter.serviceTypes=Issuer&include-unapproved-services=true`,
+        });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.json).toEqual({
+        expect(defaultResponse.statusCode).toEqual(200);
+        expect(defaultResponse.json).toEqual({
           result: map(
             (_org) =>
               searchResult(_org, servicesByOrg[_org.didDoc.id] || [service[1]]),
@@ -962,6 +966,16 @@ describe('Organizations Test Suite', () => {
             ],
           ),
         });
+        expect(unapprovedResponse.statusCode).toEqual(200);
+        const organization = unapprovedResponse.json.result.find(
+          ({ id }) => id === org.didDoc.id,
+        );
+        expect(
+          map(({ id, approved }) => ({ id, approved }), organization.service),
+        ).toEqual([
+          { id: '#careerIssuer-1', approved: false },
+          { id: '#careerIssuer-2', approved: true },
+        ]);
       });
 
       it('Should not return a list with an items when provided "filter.serviceTypes" param is not match with eatch item', async () => {

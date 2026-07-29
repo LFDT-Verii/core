@@ -45,7 +45,7 @@
     "expect": "30.4.1",
     "fastify": "^5.10.0",
     "globals": "17.7.0",
-    "mongodb": "^7.3.0",
+    "mongodb": "^7.5.0",
     "prettier": "3.9.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.65.0"

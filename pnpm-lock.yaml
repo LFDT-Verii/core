@@ -9,7 +9,7 @@ overrides:
   mocha>serialize-javascript: 7.0.7
   auth0>uuid: 14.0.1
   eslint-plugin-better-mutation>lodash: 4.18.1
-  jsdom>undici: 7.28.0
+  jsdom>undici: 7.29.0
 
 importers:
 
@@ -495,10 +495,10 @@ importers:
         version: 15.8.1
       ra-core:
         specifier: ^5.15.0
-        version: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+        version: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       ra-data-local-storage:
         specifier: ^5.15.0
-        version: 5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
+        version: 5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -512,11 +512,11 @@ importers:
         specifier: ^7.53.0
         version: 7.83.0(react@18.3.1)
       react-router:
-        specifier: 7.15.1
-        version: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.18.2
+        version: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom:
-        specifier: 7.15.1
-        version: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.18.2
+        version: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@eslint/js':
         specifier: 9.39.5
@@ -693,8 +693,8 @@ importers:
   packages/country-data:
     dependencies:
       country-codes-list:
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.1.0
+        version: 2.1.0
       i18n-iso-countries:
         specifier: 7.14.0
         version: 7.14.0
@@ -866,7 +866,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@typescript-eslint/eslint-plugin':
         specifier: 8.65.0
         version: 8.65.0(@typescript-eslint/parser@8.65.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
@@ -916,8 +916,8 @@ importers:
         specifier: 17.7.0
         version: 17.7.0
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -1052,7 +1052,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@verii/crypto':
         specifier: workspace:*
         version: link:../crypto
@@ -1102,8 +1102,8 @@ importers:
         specifier: 17.7.0
         version: 17.7.0
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       nock:
         specifier: 15.0.0-beta.14
         version: 15.0.0-beta.14
@@ -1194,7 +1194,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../common-functions
@@ -1238,8 +1238,8 @@ importers:
         specifier: 17.7.0
         version: 17.7.0
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -1387,7 +1387,7 @@ importers:
         version: 3.1075.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@verii/error-aggregation':
         specifier: workspace:*
         version: link:../error-aggregation
@@ -1437,8 +1437,8 @@ importers:
         specifier: 17.7.0
         version: 17.7.0
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       nock:
         specifier: 15.0.0-beta.14
         version: 15.0.0-beta.14
@@ -1632,7 +1632,7 @@ importers:
         specifier: ^5.1.16
         version: 5.1.16
       undici:
-        specifier: ^7.28.0
+        specifier: ^7.29.0
         version: 7.29.0
       undici-oidc-interceptor:
         specifier: 0.9.0
@@ -2030,7 +2030,7 @@ importers:
     devDependencies:
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@verii/config':
         specifier: workspace:*
         version: link:../config
@@ -2077,8 +2077,8 @@ importers:
         specifier: 0.2.0
         version: 0.2.0
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -2132,8 +2132,8 @@ importers:
         specifier: 17.7.0
         version: 17.7.0
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -2209,7 +2209,7 @@ importers:
     devDependencies:
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)
@@ -2238,8 +2238,8 @@ importers:
         specifier: 17.7.0
         version: 17.7.0
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -2393,8 +2393,8 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       fast-shuffle:
-        specifier: 6.1.1
-        version: 6.1.1
+        specifier: 6.2.1
+        version: 6.2.1
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -2445,8 +2445,8 @@ importers:
         specifier: 17.7.0
         version: 17.7.0
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -2545,7 +2545,7 @@ importers:
         specifier: 3.9.6
         version: 3.9.6
       undici:
-        specifier: ^7.28.0
+        specifier: ^7.29.0
         version: 7.29.0
 
   packages/vnf-wallet-sdk-nodejs:
@@ -2651,10 +2651,10 @@ importers:
         version: 15.8.1
       ra-core:
         specifier: ^5.15.0
-        version: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+        version: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       ra-data-local-storage:
         specifier: ^5.15.0
-        version: 5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
+        version: 5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -2665,14 +2665,14 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
       react-hook-form:
-        specifier: ^7.82.0
+        specifier: ^7.83.0
         version: 7.83.0(react@18.3.1)
       react-router:
-        specifier: 7.15.1
-        version: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.18.2
+        version: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom:
-        specifier: 7.15.1
-        version: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.18.2
+        version: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@vitejs/plugin-react-swc':
         specifier: 4.3.2
@@ -2736,7 +2736,7 @@ importers:
         version: 5.2.6
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -2836,7 +2836,7 @@ importers:
         version: 17.7.0
       migrate-mongo:
         specifier: 14.0.7
-        version: 14.0.7(mongodb@7.3.0)
+        version: 14.0.7(mongodb@7.5.0)
       nodemon:
         specifier: 3.1.14
         version: 3.1.14
@@ -3060,7 +3060,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@verii/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -3170,8 +3170,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -3238,7 +3238,7 @@ importers:
         version: 5.10.0
       migrate-mongo:
         specifier: 14.0.7
-        version: 14.0.7(mongodb@7.3.0)
+        version: 14.0.7(mongodb@7.5.0)
       nanoid-dictionary:
         specifier: 5.0.0
         version: 5.0.0
@@ -3298,7 +3298,7 @@ importers:
         version: 1.1.0
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@verii/base-contract-io':
         specifier: workspace:*
         version: link:../../packages/base-contract-io
@@ -3390,8 +3390,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: 7.3.0
-        version: 7.3.0
+        specifier: 7.5.0
+        version: 7.5.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -3452,7 +3452,7 @@ importers:
         version: 5.2.6
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
-        version: 1.1.0(mongodb@7.3.0)
+        version: 1.1.0(mongodb@7.5.0)
       '@verii/common-functions':
         specifier: workspace:*
         version: link:../../packages/common-functions
@@ -3502,8 +3502,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -3575,8 +3575,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       mongodb:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.5.0
+        version: 7.5.0
     devDependencies:
       '@verii/tests-helpers':
         specifier: workspace:*
@@ -7657,8 +7657,8 @@ packages:
       typescript:
         optional: true
 
-  country-codes-list@2.0.0:
-    resolution: {integrity: sha512-KZqq/LBdCD76hQCa6nOx0bA/nIjYly1OtV8+Bbt/4SW+mJEqGk7oZHjUj7PRrV0gXJJKs6Tv2cIntFdofBByvA==}
+  country-codes-list@2.1.0:
+    resolution: {integrity: sha512-YKZY8roDLQyG3VKcDRMRvtsO6/s/XUjEpEyAU/LkPEaioc65G4hrzwkmR6PpNY9dzbduw2i5LcHM9jwbA8zEng==}
 
   create-error@0.3.1:
     resolution: {integrity: sha512-n/Q4aSCtYuuDneEW5Q+nd0IIZwbwmX/oF6wKcDUhXGJNwhmp2WHEoWKz7X+/H7rBtjimInW7f0ceouxU0SmuzQ==}
@@ -8334,8 +8334,9 @@ packages:
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
-  fast-shuffle@6.1.1:
-    resolution: {integrity: sha512-HPxFJxEi18KPmVQuK5Hi5l4KSl3u50jtaxseRrPqrxewqfvU+sTPTaUpP33Hj+NdJoLuJP5ipx3ybTr+fa6dEw==}
+  fast-shuffle@6.2.1:
+    resolution: {integrity: sha512-a5xCB8x4LI0VhqRf6nFYO4H4tdalIywqzVU8xc3CoZ0xF8exohNIz12ugArWF2Zm9juXHWTbwt7t4fZgRk/TkQ==}
+    engines: {node: '>=14'}
 
   fast-uri@3.1.4:
     resolution: {integrity: sha512-8JnbkQ4juDyvYs4mgFGQqg4yCYtFDtUtmp2QIQq11ZZe5CFQ5wcqm1rqDgAh/QdMySuBnPzMUiJUNZG5N/AiQw==}
@@ -9362,9 +9363,6 @@ packages:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
     engines: {node: '>=10'}
 
-  long@5.2.3:
-    resolution: {integrity: sha512-lcHwpNoggQTObv5apGNCTdJrO69eHOZMi4BNC+rTLER8iHAqGrUVeLh/irVIM7zTw2bOXA8T6uNPeujwOLg/2Q==}
-
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
@@ -9518,15 +9516,15 @@ packages:
     resolution: {integrity: sha512-ZoS07RoFqpKYQwAk59qmrx8+jJHNHU30UjlU96QktiGn1ltvDr+vCznLX5DiUBLEpMAHatHNWV1nM/74ul66kA==}
     engines: {node: '>=20.19.0'}
 
-  mongodb@7.3.0:
-    resolution: {integrity: sha512-WpCqSx7JAU9vcyjm/SU7ydnHls2YrfU3Y3sx4Ml9D7sPe4mXPlaapndiurDXrQ7/VvJkB4/i7b7WovHb8bd8sg==}
+  mongodb@7.5.0:
+    resolution: {integrity: sha512-5FnrEDLnvp6ycUOGLNLLU33BfCx2qmp2mJjGPDwKLruYsVzXVSK5fsGpoDXvsXJwBfBsD7ebMRdawbDxC2814g==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.806.0
       '@mongodb-js/zstd': ^7.0.0
       gcp-metadata: ^7.0.1
       kerberos: ^7.0.0
-      mongodb-client-encryption: '>=7.0.0 <7.1.0'
+      mongodb-client-encryption: ^7.2.0
       snappy: ^7.3.2
       socks: ^2.8.6
     peerDependenciesMeta:
@@ -9825,8 +9823,9 @@ packages:
     resolution: {integrity: sha512-BT6eelPB1EyGHo8pC0o9Bl6k6SYVhKO1jEbd3lcTrtr7XHdjP8BW1YpfCV3G9Kwkxgattk+S5q2/RvuttCsS1g==}
     engines: {node: '>= 0.10'}
 
-  pcg@1.1.0:
-    resolution: {integrity: sha512-S+bYs8CV6l2lj01PRN4g9EiHDktcXJKD9FdE/FqpdXSuy1zImsRq8A8T5UK6gkXdI9O5YFdAgH40uPoR8Bk8aQ==}
+  pcg@3.0.0:
+    resolution: {integrity: sha512-lHETDr3c//q4xs0iZk9+LRFgmvjLtaUDIE3ztE2KN4IhwyHLcJ3H5VBv93SGop1XHZalC1UFSwoJepoZSMSVLQ==}
+    engines: {node: '>=18'}
 
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
@@ -10029,9 +10028,6 @@ packages:
       react-router: ^6.28.1 || ^7.1.1
       react-router-dom: ^6.28.1 || ^7.1.1
 
-  ramda@0.29.1:
-    resolution: {integrity: sha512-OfxIeWzd4xdUNxlWhgFazxsA/nl3mS4/jGZI5n00uWOoSSFRhC1b6gl6xvmzUamgmqELraWp0J/qqVlXYPDPyA==}
-
   random-number-csprng@1.0.2:
     resolution: {integrity: sha512-Gb7ZsEXfz6d9xAMCUg2tD0ouRZMOZRRvLsRoUyPlVS4/pNwO31IA88yAx6AEYXon/LzogWJdsCRwFQaFlQTaHw==}
 
@@ -10088,15 +10084,15 @@ packages:
   react-is@19.2.8:
     resolution: {integrity: sha512-s5un28nYxKJw5gvUHyW5PCC28CvBqLu9r3cWgzHT4Vo/5fqqkFcdRYsGcKf50WMPpjjFZS5d76fn3YCo2njKwQ==}
 
-  react-router-dom@7.15.1:
-    resolution: {integrity: sha512-AzF62gjY6U9rkMq4RfP/r2EVtQ7DMfNMjyOp/flLTCrtRylLiK4wT4pSq6O8rOXZ2eXdZYJPEYe+ifomiv+Igg==}
+  react-router-dom@7.18.2:
+    resolution: {integrity: sha512-AIKJ/jgGlFb3EbfCXk5Gzshiwt+l3mqbCrNjmEWMMjqQxNJ3svBa6bgzFyCC2Sw3RA0VWF1kg3uQf2OFhxb8hw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
 
-  react-router@7.15.1:
-    resolution: {integrity: sha512-R8rl9HhgikFYoPJymnUtPXWbnDb3oget6lQnfIoupbt61aT9aOhRkDsY2XRhZRyX1Z/8a5sL74fXmFNm3NRK5A==}
+  react-router@7.18.2:
+    resolution: {integrity: sha512-aUVMjFm3GAPTTZL7oYr5E7ETiqfQCHRLH+B+5afnICvf0r7kkK4eR6SMuwbSTJw/7t+12khT/Kahij49fqOCIg==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
@@ -10825,10 +10821,6 @@ packages:
   undici@6.28.0:
     resolution: {integrity: sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==}
     engines: {node: '>=18.17'}
-
-  undici@7.28.0:
-    resolution: {integrity: sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==}
-    engines: {node: '>=20.18.1'}
 
   undici@7.29.0:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
@@ -14402,13 +14394,13 @@ snapshots:
     dependencies:
       lodash: 4.18.1
 
-  '@spencejs/spence-mongo-repos@1.1.0(mongodb@7.3.0)':
+  '@spencejs/spence-mongo-repos@1.1.0(mongodb@7.5.0)':
     dependencies:
       '@spencejs/spence-events': 1.1.0
       fastify-plugin: 5.1.0
       http-errors: 2.0.1
       lodash: 4.18.1
-      mongodb: 7.3.0
+      mongodb: 7.5.0
 
   '@stylistic/eslint-plugin@5.10.0(eslint@9.39.5(jiti@2.7.0))':
     dependencies:
@@ -15626,7 +15618,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  country-codes-list@2.0.0: {}
+  country-codes-list@2.1.0: {}
 
   create-error@0.3.1: {}
 
@@ -16564,9 +16556,9 @@ snapshots:
 
   fast-safe-stringify@2.1.1: {}
 
-  fast-shuffle@6.1.1:
+  fast-shuffle@6.2.1:
     dependencies:
-      pcg: 1.1.0
+      pcg: 3.0.0
 
   fast-uri@3.1.4: {}
 
@@ -17412,7 +17404,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.2
-      undici: 7.28.0
+      undici: 7.29.0
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -17663,8 +17655,6 @@ snapshots:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
 
-  long@5.2.3: {}
-
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
@@ -17726,11 +17716,11 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.2
 
-  migrate-mongo@14.0.7(mongodb@7.3.0):
+  migrate-mongo@14.0.7(mongodb@7.5.0):
     dependencies:
       cli-table3: 0.6.5
       commander: 14.0.3
-      mongodb: 7.3.0
+      mongodb: 7.5.0
 
   mime-db@1.52.0: {}
 
@@ -17816,7 +17806,7 @@ snapshots:
       '@types/whatwg-url': 13.0.0
       whatwg-url: 14.2.0
 
-  mongodb@7.3.0:
+  mongodb@7.5.0:
     dependencies:
       '@mongodb-js/saslprep': 1.4.13
       bson: 7.3.1
@@ -18284,10 +18274,7 @@ snapshots:
       sha.js: 2.4.12
       to-buffer: 1.2.2
 
-  pcg@1.1.0:
-    dependencies:
-      long: 5.2.3
-      ramda: 0.29.1
+  pcg@3.0.0: {}
 
   pg-int8@1.0.1: {}
 
@@ -18456,7 +18443,7 @@ snapshots:
 
   quick-lru@7.3.0: {}
 
-  ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
+  ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
     dependencies:
       '@tanstack/react-query': 5.101.4(react@18.3.1)
       date-fns: 3.6.0
@@ -18470,24 +18457,24 @@ snapshots:
       react-error-boundary: 4.1.2(react@18.3.1)
       react-hook-form: 7.83.0(react@18.3.1)
       react-is: 19.2.8
-      react-router: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-router-dom: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router-dom: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
-  ra-data-fakerest@5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)):
+  ra-data-fakerest@5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)):
     dependencies:
       fakerest: 4.2.1
-      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
 
-  ra-data-local-storage@5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)):
+  ra-data-local-storage@5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)):
     dependencies:
       lodash: 4.18.1
-      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      ra-data-fakerest: 5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
+      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      ra-data-fakerest: 5.15.0(ra-core@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1))
 
-  ra-i18n-polyglot@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
+  ra-i18n-polyglot@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
     dependencies:
       node-polyglot: 2.6.0
-      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
       - '@tanstack/react-query'
       - react
@@ -18496,9 +18483,9 @@ snapshots:
       - react-router
       - react-router-dom
 
-  ra-language-english@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
+  ra-language-english@5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
     dependencies:
-      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
       - '@tanstack/react-query'
       - react
@@ -18507,7 +18494,7 @@ snapshots:
       - react-router
       - react-router-dom
 
-  ra-ui-materialui@5.15.1(7182bc382e86547154909416513815ba):
+  ra-ui-materialui@5.15.1(2a2d2803e2c926fe97cf9dec0c5f21c6):
     dependencies:
       '@mui/icons-material': 7.3.11(@mui/material@7.3.11(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@19.2.17)(react@18.3.1)
       '@mui/material': 7.3.11(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -18524,7 +18511,7 @@ snapshots:
       jsonexport: 3.2.0
       lodash: 4.18.1
       query-string: 7.1.3
-      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-dropzone: 14.4.1(react@18.3.1)
@@ -18532,11 +18519,9 @@ snapshots:
       react-hook-form: 7.83.0(react@18.3.1)
       react-hotkeys-hook: 5.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-is: 19.2.8
-      react-router: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-router-dom: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router-dom: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-transition-group: 4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-
-  ramda@0.29.1: {}
 
   random-number-csprng@1.0.2:
     dependencies:
@@ -18561,15 +18546,15 @@ snapshots:
       '@mui/icons-material': 7.3.11(@mui/material@7.3.11(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@19.2.17)(react@18.3.1)
       '@mui/material': 7.3.11(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react@18.3.1))(@types/react@19.2.17)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/react-query': 5.101.4(react@18.3.1)
-      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      ra-i18n-polyglot: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      ra-language-english: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
-      ra-ui-materialui: 5.15.1(7182bc382e86547154909416513815ba)
+      ra-core: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      ra-i18n-polyglot: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      ra-language-english: 5.15.0(@tanstack/react-query@5.101.4(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react-hook-form@7.83.0(react@18.3.1))(react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
+      ra-ui-materialui: 5.15.1(2a2d2803e2c926fe97cf9dec0c5f21c6)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-hook-form: 7.83.0(react@18.3.1)
-      react-router: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-router-dom: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router-dom: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
       - '@mui/material-pigment-css'
       - '@mui/system'
@@ -18614,13 +18599,13 @@ snapshots:
 
   react-is@19.2.8: {}
 
-  react-router-dom@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-router-dom@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      react-router: 7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router: 7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
-  react-router@7.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-router@7.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       cookie: 1.1.1
       react: 18.3.1
@@ -19398,8 +19383,6 @@ snapshots:
       '@fastify/busboy': 2.1.1
 
   undici@6.28.0: {}
-
-  undici@7.28.0: {}
 
   undici@7.29.0: {}
 

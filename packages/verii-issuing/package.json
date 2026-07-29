@@ -27,7 +27,7 @@
     "@verii/vc-checks": "workspace:*",
     "canonicalize": "^2.1.0",
     "eth-url-parser": "^1.0.4",
-    "fast-shuffle": "6.1.1",
+    "fast-shuffle": "6.2.1",
     "lodash": "^4.18.1"
   },
   "devDependencies": {
@@ -46,7 +46,7 @@
     "eslint-watch": "8.0.0",
     "expect": "30.4.1",
     "globals": "17.7.0",
-    "mongodb": "^7.3.0",
+    "mongodb": "^7.5.0",
     "nanoid": "^5.1.16",
     "prettier": "3.9.6",
     "typescript": "5.9.3",
