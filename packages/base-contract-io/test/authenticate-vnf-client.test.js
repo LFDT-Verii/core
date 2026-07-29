@@ -105,7 +105,7 @@ describe('VNF Identity Provider Authentication', () => {
   describe('VNF authenticate', () => {
     it('loads credentials lazily and posts the client credentials grant', async () => {
       tokenResponses.push({ access_token: 'TOKEN', expires_in: 60 });
-      const loadCredentials = mock.fn(async () => ({
+      const loadOAuthCreds = mock.fn(async () => ({
         clientId: 'cao-a-client',
         clientSecret: 'cao-a-secret',
       }));
@@ -114,13 +114,13 @@ describe('VNF Identity Provider Authentication', () => {
         {
           audience: BLOCKCHAIN_AUDIENCE,
           cacheKey: 'did:velocity:cao-a:3',
-          loadCredentials,
+          loadOAuthCreds,
         },
         {},
       );
 
       expect(result).toEqual('TOKEN');
-      expect(loadCredentials.mock.callCount()).toEqual(1);
+      expect(loadOAuthCreds.mock.callCount()).toEqual(1);
       expect(post.mock.calls[0].arguments).toEqual([
         TOKEN_ENDPOINT,
         {
@@ -153,23 +153,50 @@ describe('VNF Identity Provider Authentication', () => {
       });
     });
 
+    it('reuses the legacy token cache without deriving its key from the client ID', async () => {
+      tokenResponses.push({ access_token: 'LEGACY_TOKEN', expires_in: 60 });
+
+      const firstToken = await authenticateVnfClient(
+        {
+          audience: BLOCKCHAIN_AUDIENCE,
+          clientId: 'legacy-client-a',
+          clientSecret: 'legacy-secret-a',
+        },
+        {},
+      );
+      const secondToken = await authenticateVnfClient(
+        {
+          audience: BLOCKCHAIN_AUDIENCE,
+          clientId: 'legacy-client-b',
+          clientSecret: 'legacy-secret-b',
+        },
+        {},
+      );
+
+      expect([firstToken, secondToken]).toEqual([
+        'LEGACY_TOKEN',
+        'LEGACY_TOKEN',
+      ]);
+      expect(post.mock.callCount()).toEqual(1);
+    });
+
     it('reuses a token for the same audience and resolver cache key', async () => {
       tokenResponses.push({ access_token: 'TOKEN', expires_in: 60 });
-      const loadCredentials = mock.fn(async () => ({
+      const loadOAuthCreds = mock.fn(async () => ({
         clientId: 'cao-a-client',
         clientSecret: 'cao-a-secret',
       }));
       const authentication = {
         audience: BLOCKCHAIN_AUDIENCE,
         cacheKey: 'did:velocity:cao-a:3',
-        loadCredentials,
+        loadOAuthCreds,
       };
 
       const firstToken = await authenticateVnfClient(authentication, {});
       const secondToken = await authenticateVnfClient(authentication, {});
 
       expect([firstToken, secondToken]).toEqual(['TOKEN', 'TOKEN']);
-      expect(loadCredentials.mock.callCount()).toEqual(1);
+      expect(loadOAuthCreds.mock.callCount()).toEqual(1);
       expect(post.mock.callCount()).toEqual(1);
     });
 
@@ -185,7 +212,7 @@ describe('VNF Identity Provider Authentication', () => {
         JSON.stringify([BLOCKCHAIN_AUDIENCE, 'did:velocity:cao-a:3']),
         {
           accessToken: 'CACHED_TOKEN',
-          expiresAt: new Date(Date.now() + 60000),
+          expiresAt: Date.now() + 60000,
         },
       );
 
@@ -193,7 +220,7 @@ describe('VNF Identity Provider Authentication', () => {
         {
           audience: BLOCKCHAIN_AUDIENCE,
           cacheKey: 'did:velocity:cao-a:3',
-          loadCredentials: async () => {
+          loadOAuthCreds: async () => {
             throw new Error('credentials should not be loaded');
           },
         },
@@ -209,11 +236,11 @@ describe('VNF Identity Provider Authentication', () => {
         { access_token: 'CAO_A_TOKEN', expires_in: 60 },
         { access_token: 'CAO_B_TOKEN', expires_in: 60 },
       );
-      const loadCaoACredentials = mock.fn(async () => ({
+      const loadCaoAOAuthCreds = mock.fn(async () => ({
         clientId: 'cao-a-client',
         clientSecret: 'cao-a-secret',
       }));
-      const loadCaoBCredentials = mock.fn(async () => ({
+      const loadCaoBOAuthCreds = mock.fn(async () => ({
         clientId: 'cao-b-client',
         clientSecret: 'cao-b-secret',
       }));
@@ -222,7 +249,7 @@ describe('VNF Identity Provider Authentication', () => {
         {
           audience: BLOCKCHAIN_AUDIENCE,
           cacheKey: 'did:velocity:cao-a:3',
-          loadCredentials: loadCaoACredentials,
+          loadOAuthCreds: loadCaoAOAuthCreds,
         },
         {},
       );
@@ -230,7 +257,7 @@ describe('VNF Identity Provider Authentication', () => {
         {
           audience: BLOCKCHAIN_AUDIENCE,
           cacheKey: 'did:velocity:cao-b:7',
-          loadCredentials: loadCaoBCredentials,
+          loadOAuthCreds: loadCaoBOAuthCreds,
         },
         {},
       );
@@ -244,21 +271,21 @@ describe('VNF Identity Provider Authentication', () => {
         { access_token: 'EXPIRED_TOKEN', expires_in: 0 },
         { access_token: 'FRESH_TOKEN', expires_in: 60 },
       );
-      const loadCredentials = mock.fn(async () => ({
+      const loadOAuthCreds = mock.fn(async () => ({
         clientId: 'cao-a-client',
         clientSecret: 'cao-a-secret',
       }));
       const authentication = {
         audience: BLOCKCHAIN_AUDIENCE,
         cacheKey: 'did:velocity:cao-a:3',
-        loadCredentials,
+        loadOAuthCreds,
       };
 
       await authenticateVnfClient(authentication, {});
       const result = await authenticateVnfClient(authentication, {});
 
       expect(result).toEqual('FRESH_TOKEN');
-      expect(loadCredentials.mock.callCount()).toEqual(2);
+      expect(loadOAuthCreds.mock.callCount()).toEqual(2);
       expect(post.mock.callCount()).toEqual(2);
     });
 
@@ -266,18 +293,18 @@ describe('VNF Identity Provider Authentication', () => {
       tokenResponses.push({ access_token: 'NEW_TOKEN', expires_in: 60 });
       fastify.vnfAuthTokensCache.set('legacy-unreachable-entry', {
         accessToken: 'EXPIRED_TOKEN',
-        expiresAt: new Date(0),
+        expiresAt: 0,
       });
       fastify.vnfAuthTokensCache.set('live-entry', {
         accessToken: 'LIVE_TOKEN',
-        expiresAt: new Date(Date.now() + 60000),
+        expiresAt: Date.now() + 60000,
       });
 
       await authenticateVnfClient(
         {
           audience: BLOCKCHAIN_AUDIENCE,
           cacheKey: 'did:velocity:cao-a:3',
-          loadCredentials: async () => ({
+          loadOAuthCreds: async () => ({
             clientId: 'cao-a-client',
             clientSecret: 'cao-a-secret',
           }),
@@ -293,7 +320,7 @@ describe('VNF Identity Provider Authentication', () => {
     });
 
     it('rejects an empty resolver cache key before loading credentials', async () => {
-      const loadCredentials = mock.fn(async () => ({
+      const loadOAuthCreds = mock.fn(async () => ({
         clientId: 'cao-a-client',
         clientSecret: 'cao-a-secret',
       }));
@@ -303,26 +330,12 @@ describe('VNF Identity Provider Authentication', () => {
           {
             audience: BLOCKCHAIN_AUDIENCE,
             cacheKey: '',
-            loadCredentials,
+            loadOAuthCreds,
           },
           {},
         ),
       ).rejects.toThrow('cacheKey');
-      expect(loadCredentials.mock.callCount()).toEqual(0);
-      expect(post.mock.callCount()).toEqual(0);
-    });
-
-    it('rejects a non-function credential loader before requesting a token', async () => {
-      await expect(
-        authenticateVnfClient(
-          {
-            audience: BLOCKCHAIN_AUDIENCE,
-            cacheKey: 'did:velocity:cao-a:3',
-            loadCredentials: null,
-          },
-          {},
-        ),
-      ).rejects.toThrow('loadCredentials');
+      expect(loadOAuthCreds.mock.callCount()).toEqual(0);
       expect(post.mock.callCount()).toEqual(0);
     });
 
@@ -332,7 +345,7 @@ describe('VNF Identity Provider Authentication', () => {
           {
             audience: BLOCKCHAIN_AUDIENCE,
             cacheKey: 'did:velocity:cao-a:3',
-            loadCredentials: async () => ({
+            loadOAuthCreds: async () => ({
               clientSecret: 'cao-a-secret',
             }),
           },
@@ -348,7 +361,7 @@ describe('VNF Identity Provider Authentication', () => {
           {
             audience: BLOCKCHAIN_AUDIENCE,
             cacheKey: 'did:velocity:cao-a:3',
-            loadCredentials: async () => ({
+            loadOAuthCreds: async () => ({
               clientId: 'cao-a-client',
             }),
           },
@@ -368,11 +381,11 @@ describe('VNF Identity Provider Authentication', () => {
       });
 
       await registerPlugin(fastify);
-      const resolution = await fastify.resolveVnfClientCredentials({});
+      const resolution = await fastify.resolveVnfClientOAuthCreds({});
       const result = await invokeRequestAuthentication(fastify);
 
-      expect(resolution.cacheKey).toEqual('config:configured-client');
-      await expect(resolution.loadCredentials()).resolves.toEqual({
+      expect(resolution.cacheKey).toEqual('default');
+      await expect(resolution.loadOAuthCreds()).resolves.toEqual({
         clientId: 'configured-client',
         clientSecret: 'configured-secret',
       });
@@ -387,19 +400,19 @@ describe('VNF Identity Provider Authentication', () => {
 
     it('resolves metadata for every request but loads credentials only on a cache miss', async () => {
       tokenResponses.push({ access_token: 'CUSTOM_TOKEN', expires_in: 60 });
-      const loadCredentials = mock.fn(async () => ({
+      const loadOAuthCreds = mock.fn(async () => ({
         clientId: 'cao-a-client',
         clientSecret: 'cao-a-secret',
       }));
-      const resolveVnfClientCredentials = mock.fn(async () => ({
+      const resolveVnfClientOAuthCreds = mock.fn(async () => ({
         cacheKey: 'did:velocity:cao-a:3',
-        loadCredentials,
+        loadOAuthCreds,
       }));
       fastify = createFastify({
         vnfClientId: undefined,
         vnfClientSecret: undefined,
       });
-      fastify.resolveVnfClientCredentials = resolveVnfClientCredentials;
+      fastify.resolveVnfClientOAuthCreds = resolveVnfClientOAuthCreds;
 
       await registerPlugin(fastify);
       const firstToken = await invokeRequestAuthentication(fastify, {
@@ -413,16 +426,16 @@ describe('VNF Identity Provider Authentication', () => {
         'CUSTOM_TOKEN',
         'CUSTOM_TOKEN',
       ]);
-      expect(resolveVnfClientCredentials.mock.callCount()).toEqual(2);
-      expect(loadCredentials.mock.callCount()).toEqual(1);
+      expect(resolveVnfClientOAuthCreds.mock.callCount()).toEqual(2);
+      expect(loadOAuthCreds.mock.callCount()).toEqual(1);
       expect(post.mock.callCount()).toEqual(1);
     });
 
     it('resolves credential metadata once when a request makes multiple RPC calls', async () => {
       tokenResponses.push({ access_token: 'CUSTOM_TOKEN', expires_in: 60 });
-      const resolveVnfClientCredentials = mock.fn(async () => ({
+      const resolveVnfClientOAuthCreds = mock.fn(async () => ({
         cacheKey: 'did:velocity:cao-a:3',
-        loadCredentials: async () => ({
+        loadOAuthCreds: async () => ({
           clientId: 'cao-a-client',
           clientSecret: 'cao-a-secret',
         }),
@@ -431,7 +444,7 @@ describe('VNF Identity Provider Authentication', () => {
         vnfClientId: undefined,
         vnfClientSecret: undefined,
       });
-      fastify.resolveVnfClientCredentials = resolveVnfClientCredentials;
+      fastify.resolveVnfClientOAuthCreds = resolveVnfClientOAuthCreds;
       const request = { id: 'request-1' };
 
       await registerPlugin(fastify);
@@ -443,7 +456,7 @@ describe('VNF Identity Provider Authentication', () => {
         'CUSTOM_TOKEN',
         'CUSTOM_TOKEN',
       ]);
-      expect(resolveVnfClientCredentials.mock.callCount()).toEqual(1);
+      expect(resolveVnfClientOAuthCreds.mock.callCount()).toEqual(1);
       expect(post.mock.callCount()).toEqual(1);
     });
 
@@ -451,7 +464,7 @@ describe('VNF Identity Provider Authentication', () => {
       tokenResponses.push({ access_token: 'CUSTOM_TOKEN', expires_in: 60 });
       const customResolver = async () => ({
         cacheKey: 'did:velocity:cao-a:3',
-        loadCredentials: async () => ({
+        loadOAuthCreds: async () => ({
           clientId: 'custom-client',
           clientSecret: 'custom-secret',
         }),
@@ -460,13 +473,13 @@ describe('VNF Identity Provider Authentication', () => {
         vnfClientId: undefined,
         vnfClientSecret: undefined,
       });
-      fastify.resolveVnfClientCredentials = customResolver;
+      fastify.resolveVnfClientOAuthCreds = customResolver;
 
       await registerPlugin(fastify);
       const result = await invokeRequestAuthentication(fastify);
 
       expect(result).toEqual('CUSTOM_TOKEN');
-      expect(fastify.resolveVnfClientCredentials).toBe(customResolver);
+      expect(fastify.resolveVnfClientOAuthCreds).toBe(customResolver);
       expect(post.mock.calls[0].arguments[1]).toEqual({
         grant_type: 'client_credentials',
         client_id: 'custom-client',
@@ -481,10 +494,10 @@ describe('VNF Identity Provider Authentication', () => {
         vnfClientId: undefined,
         vnfClientSecret: undefined,
       });
-      fastify.resolveVnfClientCredentials = async () => ({
+      fastify.resolveVnfClientOAuthCreds = async () => ({
         audience: 'https://unexpected-audience.test',
         cacheKey: 'did:velocity:cao-a:3',
-        loadCredentials: async () => ({
+        loadOAuthCreds: async () => ({
           clientId: 'custom-client',
           clientSecret: 'custom-secret',
         }),
@@ -520,7 +533,7 @@ describe('VNF Identity Provider Authentication', () => {
       });
       fastify = createFastify();
       fastify.config = config;
-      fastify.resolveVnfClientCredentials = async () => {
+      fastify.resolveVnfClientOAuthCreds = async () => {
         throw customError;
       };
 

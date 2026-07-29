@@ -1,11 +1,11 @@
 # `@verii/base-contract-io`
 
-## VNF client credential resolution
+## VNF client OAuth creds resolution
 
 The VNF authentication plugin decorates Fastify with
-`resolveVnfClientCredentials(request)`. Applications can install this
+`resolveVnfClientOAuthCreds(request)`. Applications can install this
 decorator before registering `authenticateVnfClientPlugin` to select VNF
-credentials for each request.
+OAuth creds for each request.
 
 Register the custom decorator before `authenticateVnfClientPlugin`. When the
 decorator is installed from another Fastify plugin, wrap that plugin with
@@ -14,22 +14,24 @@ Registering it later causes the authentication plugin to install its default
 decorator first, and the custom registration will fail because the decorator
 already exists.
 
-A resolver returns credential metadata and a lazy credential loader:
+A resolver returns OAuth client metadata and a lazy OAuth creds loader:
 
 ```js
-fastify.decorate('resolveVnfClientCredentials', async (request) => ({
-  cacheKey: `tenant:${request.tenantId}:version:2`,
-  loadCredentials: async () => ({
+fastify.decorate('resolveVnfClientOAuthCreds', async (request) => ({
+  cacheKey: request.tenantId,
+  loadOAuthCreds: async () => ({
     clientId: await readClientId(request.tenantId),
     clientSecret: await readClientSecret(request.tenantId),
   }),
 }));
 ```
 
-`cacheKey` must be a non-empty, stable, non-secret string that changes whenever
-the selected credential pair changes. Do not include a client secret, a digest
-of a client secret, or any value derived from a client secret. Tokens are
-cached by both their audience and this resolver cache key.
+`cacheKey` must be a non-empty, stable, non-secret string. Use the identity that
+owns the OAuth creds, such as a tenant or CAO DID. Do not include a client
+secret, a digest of a client secret, or any value derived from a client secret.
+Tokens are cached by both their audience and this resolver cache key, so an
+existing token remains usable until its normal expiry after the stored OAuth
+creds change.
 
 The plugin calls the resolver once per incoming Fastify request so that an
 application can select the current credential version. Blockchain operations
@@ -37,7 +39,7 @@ may make multiple JSON-RPC calls during that request; all of them reuse the
 same resolver result. A resolver rejection is likewise retained for the
 remainder of that request.
 
-The plugin invokes `loadCredentials` only when there is no live token for the
+The plugin invokes `loadOAuthCreds` only when there is no live token for the
 resulting audience and cache key. It must resolve to non-empty string
 `clientId` and `clientSecret` values. This allows credential stores such as KMS
 to remain untouched on token-cache hits.
