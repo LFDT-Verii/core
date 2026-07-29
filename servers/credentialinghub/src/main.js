@@ -19,7 +19,9 @@ const { startNotificationWorker } = require('./start-notification-worker');
 const {
   NotificationWorkerModes,
 } = require('./entities/notifications/domain/notification-config');
-const config = require('./config');
+const { buildConfig } = require('./config');
+
+const config = buildConfig();
 
 /* istanbul ignore next */
 process.on('unhandledRejection', (error) => {

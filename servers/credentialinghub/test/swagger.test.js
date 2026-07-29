@@ -499,6 +499,7 @@ describe('operator authentication extension documentation', () => {
               authenticationMethod: 'test',
             };
           });
+          server.decorate('resolveVnfClientOAuthCreds', async () => undefined);
         }),
         documentation: {
           operatorSecurityScheme,

@@ -3,7 +3,10 @@ const { afterEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 const Fastify = require('fastify');
 const fp = require('fastify-plugin');
-const { buildMongoConnection } = require('@verii/tests-helpers');
+const {
+  buildMongoConnection,
+  mongoCloseWrapper,
+} = require('@verii/tests-helpers');
 const buildFastify = require('../helpers/create-test-fastify');
 const { createAppServer, registerOperatorAuth } = require('../../src');
 
@@ -13,10 +16,23 @@ const TEST_PRINCIPAL = {
   subjectType: 'client',
   authenticationMethod: 'test',
 };
+const DEFAULT_OPERATOR_CONFIG = {
+  operatorApiToken: 'operator-secret',
+  defaultCaoDid: 'did:example:default-cao',
+  vnfClientId: 'vnf-client',
+  vnfClientSecret: 'vnf-secret',
+};
+const TEST_VNF_RESOLVER = async () => ({
+  cacheKey: 'test-cao',
+  loadOAuthCreds: async () => ({
+    clientId: 'test-vnf-client',
+    clientSecret: 'test-vnf-secret',
+  }),
+});
 
 const createTestOperatorAuthPlugin = ({
   principal = TEST_PRINCIPAL,
-  resolveVnfClientOAuthCreds,
+  resolveVnfClientOAuthCreds = TEST_VNF_RESOLVER,
 } = {}) =>
   fp(async (fastify) => {
     fastify.decorate('authenticateOperator', async (request) => {
@@ -70,6 +86,29 @@ const createAuthenticationBoundary = (extension, config = {}) => {
   return fastify;
 };
 
+const createProductionServer = (operatorAuthExtension, configOverrides = {}) =>
+  trackServer(
+    createAppServer({
+      operatorAuthExtension,
+      configOverrides: {
+        isTest: false,
+        logSeverity: 'silent',
+        mongoConnection: buildMongoConnection('test-credentialing-hub'),
+        ...DEFAULT_OPERATOR_CONFIG,
+        ...configOverrides,
+      },
+    }),
+  );
+
+const expectStartupError = async (fastify, message) => {
+  try {
+    await expect(fastify.ready()).rejects.toThrow(message);
+  } finally {
+    activeServers.delete(fastify);
+    await mongoCloseWrapper();
+  }
+};
+
 describe('operator authentication extension', () => {
   it('authenticates core Operator routes through the extension', async () => {
     const fastify = trackServer(
@@ -86,6 +125,7 @@ describe('operator authentication extension', () => {
                   });
                 },
               );
+              server.decorate('resolveVnfClientOAuthCreds', TEST_VNF_RESOLVER);
             }),
           }),
         },
@@ -119,7 +159,8 @@ describe('operator authentication extension', () => {
                   caoDid: this.operatorCaoDid,
                 };
               },
-            );
+            )
+            .decorate('resolveVnfClientOAuthCreds', TEST_VNF_RESOLVER);
         }),
       }),
     );
@@ -229,125 +270,147 @@ describe('default static Operator authentication', () => {
     });
   });
 
-  it('requires the static token and its CAO DID only when no extension is supplied', async () => {
-    const cases = [
-      {
-        config: {
-          operatorApiToken: undefined,
-          defaultCaoDid: 'did:example:default-cao',
-        },
-        message: 'OPERATOR_API_TOKEN must be a non-empty string',
-      },
-      {
-        config: {
-          operatorApiToken: 'operator-secret',
-          defaultCaoDid: undefined,
-        },
-        message: 'DEFAULT_CAO_DID must be a non-empty string',
-      },
+  it('requires every built-in Operator environment variable', () => {
+    const requiredEnvironmentVariables = [
+      'OPERATOR_API_TOKEN',
+      'DEFAULT_CAO_DID',
+      'VNF_OAUTH_CLIENT_ID',
+      'VNF_OAUTH_CLIENT_SECRET',
     ];
 
-    await Promise.all(
-      cases.map(async ({ config, message }) => {
-        const staticFastify = createAuthenticationBoundary(undefined, {
-          isTest: false,
-          ...config,
-        });
-        await expect(staticFastify.ready()).rejects.toThrow(message);
-        activeServers.delete(staticFastify);
-      }),
-    );
-
-    const extensionFastify = createAuthenticationBoundary(createExtension(), {
-      isTest: false,
-      operatorApiToken: undefined,
-      defaultCaoDid: undefined,
-    });
-    await extensionFastify.ready();
-  });
-});
-
-describe('VNF OAuth creds resolver registration', () => {
-  const createProductionServer = (operatorAuthExtension) =>
-    trackServer(
-      createAppServer({
-        operatorAuthExtension,
-        configOverrides: {
-          isTest: false,
-          logSeverity: 'silent',
-          mongoConnection: buildMongoConnection('test-credentialing-hub'),
-          operatorApiToken: undefined,
-          vnfClientId: undefined,
-          vnfClientSecret: undefined,
-        },
-      }),
-    );
-
-  it('installs an extension resolver before VNF authentication starts', async () => {
-    const fastify = createProductionServer(
-      createExtension({
-        plugin: createTestOperatorAuthPlugin({
-          resolveVnfClientOAuthCreds: async () => ({
-            cacheKey: 'test-cao',
-            loadOAuthCreds: async () => ({
-              clientId: 'test-vnf-client',
-              clientSecret: 'test-vnf-secret',
-            }),
-          }),
-        }),
-      }),
-    );
-
-    await fastify.ready();
-  });
-
-  it('uses the default resolver and requires both config values when no custom resolver is installed', async () => {
-    const cases = [
-      {
-        config: { vnfClientId: undefined, vnfClientSecret: 'secret' },
-        message: 'fastify.config.vnfClientId is required',
-      },
-      {
-        config: { vnfClientId: 'client-id', vnfClientSecret: undefined },
-        message: 'fastify.config.vnfClientSecret is required',
-      },
-    ];
-
-    for (const { config, message } of cases) {
+    for (const environmentVariable of requiredEnvironmentVariables) {
+      const childEnv = { ...process.env };
+      delete childEnv[environmentVariable];
       const startup = spawnSync(
         process.execPath,
         [
           '-e',
           `
-          const Fastify = require('fastify');
-          const fp = require('fastify-plugin');
-          const { authenticateVnfClientPlugin } =
-            require('@verii/base-contract-io');
-          const { registerOperatorAuth } =
-            require('./src/plugins/operator-auth');
-          const fastify = Fastify();
-          fastify.decorate('config', ${JSON.stringify(config)});
-          registerOperatorAuth(fastify, {
-            plugin: fp(async (server) => {
-              server.decorate('authenticateOperator', async () => {});
-            }, { name: 'testOperatorAuth' }),
-            documentation: {},
-          });
-          fastify.register(authenticateVnfClientPlugin);
-          fastify.ready((error) => {
-            process.stderr.write(error?.message ?? 'ready');
-            process.exit(error == null ? 0 : 1);
-          });
-        `,
+          try {
+            const { createAppServer } = require('./src');
+            createAppServer();
+            process.exit(0);
+          } catch (error) {
+            process.stderr.write(error.message);
+            process.exit(1);
+          }
+          `,
         ],
         {
           cwd: require('node:path').resolve(__dirname, '../..'),
           encoding: 'utf8',
+          env: childEnv,
         },
       );
 
       expect(startup.status).toEqual(1);
-      expect(startup.stderr).toContain(message);
+      expect(startup.stderr).toContain(
+        `"${environmentVariable}" is a required variable`,
+      );
     }
+  });
+});
+
+describe('VNF OAuth creds resolver registration', () => {
+  it('allows a custom authenticator and VNF resolver without static configuration', () => {
+    const childEnv = { ...process.env };
+    for (const environmentVariable of [
+      'OPERATOR_API_TOKEN',
+      'DEFAULT_CAO_DID',
+      'VNF_OAUTH_CLIENT_ID',
+      'VNF_OAUTH_CLIENT_SECRET',
+    ]) {
+      delete childEnv[environmentVariable];
+    }
+
+    const startup = spawnSync(
+      process.execPath,
+      [
+        '-e',
+        `
+        const fp = require('fastify-plugin');
+        const { createAppServer } = require('./src');
+
+        const operatorAuthPlugin = fp(
+          async (fastify) => {
+            fastify.decorate('authenticateOperator', async (request) => {
+              request.operatorPrincipal = {
+                caoDid: 'did:example:operator',
+                subject: 'test-client',
+                subjectType: 'client',
+                authenticationMethod: 'test',
+              };
+            });
+            fastify.decorate('resolveVnfClientOAuthCreds', async () => ({
+              cacheKey: 'test-cao',
+              loadOAuthCreds: async () => ({
+                clientId: 'test-vnf-client',
+                clientSecret: 'test-vnf-secret',
+              }),
+            }));
+          },
+          { name: 'testOperatorAuth' },
+        );
+
+        const fastify = createAppServer({
+          operatorAuthExtension: {
+            plugin: operatorAuthPlugin,
+            documentation: {},
+          },
+          configOverrides: {
+            isTest: false,
+            logSeverity: 'silent',
+            mongoConnection:
+              'mongodb://localhost:27017/test-credentialing-hub-custom-auth',
+          },
+        });
+        fastify.ready()
+          .then(() => fastify.close())
+          .then(() => process.exit(0))
+          .catch((error) => {
+            process.stderr.write(error.message);
+            process.exit(1);
+          });
+        `,
+      ],
+      {
+        cwd: require('node:path').resolve(__dirname, '../..'),
+        encoding: 'utf8',
+        env: childEnv,
+      },
+    );
+
+    expect(startup.status).toEqual(0);
+    expect(startup.stderr).toEqual('');
+  });
+
+  it('requires a custom VNF resolver with a custom authenticator', async () => {
+    const fastify = createProductionServer(
+      createExtension({
+        plugin: createTestOperatorAuthPlugin({
+          resolveVnfClientOAuthCreds: null,
+        }),
+      }),
+    );
+
+    await expectStartupError(
+      fastify,
+      'operator authentication plugin must decorate resolveVnfClientOAuthCreds',
+    );
+  });
+
+  it('requires the custom VNF resolver to be a function', async () => {
+    const fastify = createProductionServer(
+      createExtension({
+        plugin: createTestOperatorAuthPlugin({
+          resolveVnfClientOAuthCreds: 'not-a-function',
+        }),
+      }),
+    );
+
+    await expectStartupError(
+      fastify,
+      'operator authentication plugin must decorate resolveVnfClientOAuthCreds',
+    );
   });
 });

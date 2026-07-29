@@ -14,6 +14,4 @@
  * limitations under the License.
  *
  */
-module.exports = {
-  ...require('./config'),
-};
+module.exports = require('./config');

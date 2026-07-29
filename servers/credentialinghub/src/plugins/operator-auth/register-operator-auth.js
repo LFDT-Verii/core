@@ -27,6 +27,9 @@ const PRINCIPAL_STRING_FIELDS = [
 const isObject = (value) =>
   value != null && typeof value === 'object' && !Array.isArray(value);
 
+const hasFunctionDecorator = (fastify, name) =>
+  fastify.hasDecorator(name) && typeof fastify[name] === 'function';
+
 const validateExtension = (extension) => {
   if (!isObject(extension)) {
     throw new TypeError('operatorAuthExtension must be an object');
@@ -80,12 +83,17 @@ const installOperatorAuthPlugin = fp(
 
     await fastify.register(resolvedExtension.plugin);
 
-    if (
-      !fastify.hasDecorator('authenticateOperator') ||
-      typeof fastify.authenticateOperator !== 'function'
-    ) {
+    if (!hasFunctionDecorator(fastify, 'authenticateOperator')) {
       throw new TypeError(
         'operator authentication plugin must decorate authenticateOperator',
+      );
+    }
+    if (
+      extension != null &&
+      !hasFunctionDecorator(fastify, 'resolveVnfClientOAuthCreds')
+    ) {
+      throw new TypeError(
+        'operator authentication plugin must decorate resolveVnfClientOAuthCreds',
       );
     }
 

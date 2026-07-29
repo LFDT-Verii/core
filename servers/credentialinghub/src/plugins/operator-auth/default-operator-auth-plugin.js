@@ -17,16 +17,8 @@
 const fastifyBearerAuth = require('@fastify/bearer-auth');
 const fp = require('fastify-plugin');
 
-const assertNonEmpty = (value, name) => {
-  if (typeof value !== 'string' || value.length === 0) {
-    throw new TypeError(`${name} must be a non-empty string`);
-  }
-};
-
 const defaultOperatorAuthPlugin = fp(async (fastify) => {
   if (!fastify.config.isTest) {
-    assertNonEmpty(fastify.config.operatorApiToken, 'OPERATOR_API_TOKEN');
-    assertNonEmpty(fastify.config.defaultCaoDid, 'DEFAULT_CAO_DID');
     await fastify.register(fastifyBearerAuth, {
       keys: new Set([fastify.config.operatorApiToken]),
       addHook: false,

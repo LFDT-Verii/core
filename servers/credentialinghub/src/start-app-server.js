@@ -15,7 +15,7 @@
  */
 
 const { createServer, listenServer } = require('@verii/server-provider');
-const config = require('./config');
+const { buildConfig } = require('./config');
 const { createSwaggerConfig } = require('./config/swagger-config');
 const { initServer } = require('./init-server');
 const {
@@ -27,7 +27,7 @@ const createAppServer = ({
   configOverrides = {},
 } = {}) => {
   const baseConfig = {
-    ...config,
+    ...buildConfig({ isDefaultAuth: operatorAuthExtension == null }),
     ...configOverrides,
   };
   const serverConfig = {

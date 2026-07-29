@@ -102,5 +102,5 @@ describe('notification config env validation', () => {
 const loadConfig = (envOverrides) => {
   Object.assign(process.env, envOverrides);
   delete require.cache[require.resolve(CONFIG_MODULE_PATH)];
-  return require(CONFIG_MODULE_PATH);
+  return require(CONFIG_MODULE_PATH).buildConfig();
 };

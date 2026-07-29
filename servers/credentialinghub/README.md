@@ -12,6 +12,12 @@ The open-source Hub uses a static `OPERATOR_API_TOKEN` bearer token by
 default. A wrapper can replace that behavior by supplying an Operator
 authentication extension to `createAppServer` or `startAppServer`:
 
+In production, the built-in Operator mode requires
+`OPERATOR_API_TOKEN`, `DEFAULT_CAO_DID`, `VNF_OAUTH_CLIENT_ID`, and
+`VNF_OAUTH_CLIENT_SECRET`. Startup fails when any required value is missing;
+missing VNF OAuth credentials are never interpreted as unauthenticated ledger
+access.
+
 ```js
 const fp = require('fastify-plugin');
 const {
@@ -29,8 +35,7 @@ const operatorAuthPlugin = fp(async (fastify) => {
     };
   });
 
-  // Optional. Omit this decorator to use VNF_OAUTH_CLIENT_ID and
-  // VNF_OAUTH_CLIENT_SECRET.
+  // Required when replacing the built-in Operator authentication.
   fastify.decorate('resolveVnfClientOAuthCreds', async (request) => {
     const tenantCaoDid = request.tenant?.caoDid;
     const principalCaoDid = request.operatorPrincipal?.caoDid;
@@ -85,17 +90,24 @@ startAppServer({
 });
 ```
 
+The extension plugin must be wrapped with `fastify-plugin` and must decorate
+both `authenticateOperator` and `resolveVnfClientOAuthCreds`. The authenticator
+must either reject the request by throwing or sending a reply, or set
+`request.operatorPrincipal` on success. The Hub owns the `operatorPrincipal`
+request decoration, so the extension must not redecorate it.
+
 Every Operator principal requires non-empty `caoDid`, `subject`, `subjectType`,
 and `authenticationMethod` values. The Hub exposes only those four normalized
 fields on `request.operatorPrincipal`.
 
-The optional VNF resolver is selected by decoration, not configuration. Once
-a custom resolver is installed, its errors are returned to the caller and
-never fall back to the static VNF client ID and secret. Public VN/OpenID
-requests resolve their CAO from the loaded tenant, while authenticated Operator
-requests resolve it from the Operator principal. A resolver must reject the
-request when both sources exist but disagree, or when neither source supplies a
-CAO DID.
+The custom VNF resolver is selected by decoration, not configuration. Its
+errors are returned to the caller and never fall back to the static VNF client
+ID and secret. Public VN/OpenID requests resolve their CAO from the loaded
+tenant, while authenticated Operator requests resolve it from the Operator
+principal. A resolver must reject the request when both sources exist but
+disagree, or when neither source supplies a CAO DID. A custom authentication
+extension that omits the resolver fails startup, even if static VNF OAuth
+credentials are present.
 
 ## Data Migrations
 
