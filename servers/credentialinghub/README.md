@@ -31,7 +31,7 @@ const operatorAuthPlugin = fp(async (fastify) => {
 
   // Optional. Omit this decorator to use VNF_OAUTH_CLIENT_ID and
   // VNF_OAUTH_CLIENT_SECRET.
-  fastify.decorate('resolveVnfClientCredentials', async (request) => {
+  fastify.decorate('resolveVnfClientOAuthCreds', async (request) => {
     const tenantCaoDid = request.tenant?.caoDid;
     const principalCaoDid = request.operatorPrincipal?.caoDid;
 
@@ -49,8 +49,8 @@ const operatorAuthPlugin = fp(async (fastify) => {
     }
 
     return {
-      cacheKey: `${caoDid}:1`,
-      loadCredentials: async () => loadVnfCredentials(caoDid),
+      cacheKey: caoDid,
+      loadOAuthCreds: async () => loadVnfOAuthCreds(caoDid),
     };
   });
 

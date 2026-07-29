@@ -16,7 +16,7 @@ const TEST_PRINCIPAL = {
 
 const createTestOperatorAuthPlugin = ({
   principal = TEST_PRINCIPAL,
-  resolveVnfClientCredentials,
+  resolveVnfClientOAuthCreds,
 } = {}) =>
   fp(async (fastify) => {
     fastify.decorate('authenticateOperator', async (request) => {
@@ -25,10 +25,10 @@ const createTestOperatorAuthPlugin = ({
         privateClaim: 'must-not-leak',
       };
     });
-    if (resolveVnfClientCredentials != null) {
+    if (resolveVnfClientOAuthCreds != null) {
       fastify.decorate(
-        'resolveVnfClientCredentials',
-        resolveVnfClientCredentials,
+        'resolveVnfClientOAuthCreds',
+        resolveVnfClientOAuthCreds,
       );
     }
   });
@@ -275,7 +275,7 @@ describe('default static Operator authentication', () => {
   });
 });
 
-describe('VNF credential resolver registration', () => {
+describe('VNF OAuth creds resolver registration', () => {
   const createProductionServer = (operatorAuthExtension) =>
     trackServer(
       createAppServer({
@@ -295,9 +295,9 @@ describe('VNF credential resolver registration', () => {
     const fastify = createProductionServer(
       createExtension({
         plugin: createTestOperatorAuthPlugin({
-          resolveVnfClientCredentials: async () => ({
-            cacheKey: 'test-cao:1',
-            loadCredentials: async () => ({
+          resolveVnfClientOAuthCreds: async () => ({
+            cacheKey: 'test-cao',
+            loadOAuthCreds: async () => ({
               clientId: 'test-vnf-client',
               clientSecret: 'test-vnf-secret',
             }),
