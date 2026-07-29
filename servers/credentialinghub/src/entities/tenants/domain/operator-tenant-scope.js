@@ -19,7 +19,8 @@ const newError = require('http-errors');
 const CAO_DID_MISMATCH = 'cao_did_mismatch';
 
 const getOperatorCaoDid = (context) =>
-  context.server.operatorTenantIsolation === 'cao'
+  context.server.operatorTenantIsolation === 'cao' &&
+  context.operatorPrincipal != null
     ? context.operatorPrincipal.caoDid
     : null;
 
