@@ -31,6 +31,9 @@ const { initTenantFactory } = require('../../src/entities/tenants');
 const {
   initIssuerServiceFactory,
 } = require('../../src/entities/issuer-services');
+const {
+  initRelyingPartyServiceFactory,
+} = require('../../src/entities/relying-party-services');
 const { initDepotFactory } = require('../../src/entities/depots');
 const { initCredentialFactory } = require('../../src/entities/credentials');
 
@@ -39,6 +42,7 @@ describe('Depots Test suite', () => {
   let fastify;
   let persistTenant;
   let persistIssuerService;
+  let persistRelyingPartyService;
   let persistDepot;
   let persistCredential;
 
@@ -51,6 +55,7 @@ describe('Depots Test suite', () => {
 
     ({ persistTenant } = initTenantFactory(fastify));
     ({ persistIssuerService } = initIssuerServiceFactory(fastify));
+    ({ persistRelyingPartyService } = initRelyingPartyServiceFactory(fastify));
     ({ persistDepot } = initDepotFactory(fastify));
     ({ persistCredential } = initCredentialFactory(fastify));
   });
@@ -59,6 +64,7 @@ describe('Depots Test suite', () => {
     await mongoDb().collection('tenants').deleteMany({});
     await mongoDb().collection('keys').deleteMany({});
     await mongoDb().collection('issuerServices').deleteMany({});
+    await mongoDb().collection('relyingPartyServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     tenant = await persistTenant();
     issuerService = await persistIssuerService({
@@ -96,6 +102,29 @@ describe('Depots Test suite', () => {
           depot: { userReference: 'ABC123' },
         },
       });
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          message: 'referenced_service_not_found',
+          errorCode: 'referenced_service_not_found',
+        }),
+      );
+    });
+    it('should 400 if referenced relying party service is deactivated', async () => {
+      const relyingPartyService = await persistRelyingPartyService({
+        tenant,
+        deactivationDate: new Date(),
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: relyingPartyService._id,
+          depot: { userReference: 'RP-USER-123' },
+        },
+      });
+
       expect(response.json).toEqual(
         errorResponseMatcher({
           statusCode: 400,
@@ -191,6 +220,36 @@ describe('Depots Test suite', () => {
         requestId: expect.any(String),
       });
 
+      await expect(
+        mongoDb().collection('depots').find({}).toArray(),
+      ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);
+    });
+
+    it('should 200 for a relying party service depot', async () => {
+      const relyingPartyService = await persistRelyingPartyService({ tenant });
+      const payload = {
+        tenantId: tenant._id,
+        serviceId: relyingPartyService._id,
+        depot: { userReference: 'RP-USER-123' },
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        depot: {
+          ...payload.depot,
+          serviceId: payload.serviceId,
+          id: expect.stringMatching(OBJECT_ID_FORMAT),
+          createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+          updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        },
+        requestId: expect.any(String),
+      });
       await expect(
         mongoDb().collection('depots').find({}).toArray(),
       ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);

@@ -15,12 +15,25 @@
  *
  */
 const { ObjectId } = require('mongodb');
+const {
+  validateReferencedService,
+} = require('../../exchanges/domain/validate-referenced-service');
 const { validateDepot } = require('../domain');
 
 const createDepot = async (newDepot, serviceId, { repos }) => {
-  const service = await repos.issuerServices.findOne({
+  const issuerService = await repos.issuerServices.findOne({
     filter: { _id: serviceId },
   });
+  const relyingPartyService =
+    issuerService == null
+      ? await repos.relyingPartyServices.findOne({
+          filter: { _id: serviceId },
+        })
+      : undefined;
+  if (relyingPartyService != null) {
+    validateReferencedService(relyingPartyService);
+  }
+  const service = issuerService ?? relyingPartyService;
   validateDepot(newDepot, service);
   return repos.depots.insert({
     ...newDepot,
