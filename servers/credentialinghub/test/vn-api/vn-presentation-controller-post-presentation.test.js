@@ -502,12 +502,22 @@ describe('vn-api > presentations', () => {
             .collection('depots')
             .findOne({ _id: new ObjectId(depot._id) }),
         ).resolves.toEqual(expectedDbDepot(tenant, relyingPartyService, depot));
-        await expect(
-          mongoDb()
-            .collection('presentations')
-            .find({ depotId: new ObjectId(depot._id) })
-            .toArray(),
-        ).resolves.toEqual([expectedDbPresentation(tenant, exchange, jwtVp)]);
+        const [presentation] = await mongoDb()
+          .collection('presentations')
+          .find({ depotId: new ObjectId(depot._id) })
+          .toArray();
+        const operatorResponse = await fastify.injectJson({
+          method: 'GET',
+          url: `/operator/exchanges/get?tenantId=${tenant._id}&exchangeId=${exchange._id}`,
+        });
+
+        expect(operatorResponse.statusCode).toEqual(200);
+        expect(operatorResponse.json.exchange.presentationIds).toEqual([
+          presentation._id.toString(),
+        ]);
+        expect(presentation).toEqual(
+          expectedDbPresentation(tenant, exchange, jwtVp),
+        );
         await expect(
           mongoDb().collection('notification_events').countDocuments({}),
         ).resolves.toEqual(0);
@@ -1079,7 +1089,7 @@ const expectedDbPresentation = (tenant, exchange, jwtVp, overrides = {}) =>
   applyOverrides(
     {
       _id: expect.any(ObjectId),
-      exchangeId: exchange._id,
+      exchangeId: new ObjectId(exchange._id),
       depotId: new ObjectId(exchange.depotId),
       tenantId: new ObjectId(tenant._id),
       format: PresentationFormat.JWT_VP,
