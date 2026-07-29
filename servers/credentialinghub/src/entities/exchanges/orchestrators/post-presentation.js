@@ -52,7 +52,7 @@ const postPresentation = async (
   validatePresentation(vp, exchange, context, vp.presentation_submission);
   const presentation = await repos.presentations.insert({
     depotId: exchange.depotId,
-    exchangeId,
+    exchangeId: exchange._id,
     format: PresentationFormat.JWT_VP,
     presentation: jwtPresentationSubmission,
   });
