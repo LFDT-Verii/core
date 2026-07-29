@@ -18,9 +18,13 @@ const { ObjectId } = require('mongodb');
 const { validateDepot } = require('../domain');
 
 const createDepot = async (newDepot, serviceId, { repos }) => {
-  const service = await repos.issuerServices.findOne({
-    filter: { _id: serviceId },
-  });
+  const service =
+    (await repos.issuerServices.findOne({
+      filter: { _id: serviceId },
+    })) ??
+    (await repos.relyingPartyServices.findOne({
+      filter: { _id: serviceId },
+    }));
   validateDepot(newDepot, service);
   return repos.depots.insert({
     ...newDepot,
