@@ -18,11 +18,38 @@
 const fp = require('fastify-plugin');
 const { addSeconds } = require('date-fns/fp');
 const { initHttpClient } = require('@verii/http-client');
+const once = require('lodash/once');
 
 const TOKEN_EXPIRATION_SAFE_BUFFER = 5;
 
 const buildTokenCacheKey = (audience, resolverCacheKey) =>
   JSON.stringify([audience, resolverCacheKey]);
+
+const isNonEmptyString = (value) =>
+  typeof value === 'string' && value.length > 0;
+
+const assertNonEmptyString = (value, field) => {
+  if (!isNonEmptyString(value)) {
+    throw new TypeError(`VNF credential resolver ${field} must be non-empty`);
+  }
+};
+
+const normalizeCredentialSource = ({
+  cacheKey,
+  loadCredentials,
+  clientId,
+  clientSecret,
+}) => {
+  const usesPublishedCredentials =
+    loadCredentials == null && (clientId != null || clientSecret != null);
+
+  return usesPublishedCredentials
+    ? {
+        cacheKey: `client:${clientId}`,
+        loadCredentials: async () => ({ clientId, clientSecret }),
+      }
+    : { cacheKey, loadCredentials };
+};
 
 const pruneExpiredTokens = (tokensCache) => {
   const now = new Date();
@@ -34,32 +61,34 @@ const pruneExpiredTokens = (tokensCache) => {
 };
 
 const initAuthenticateVnfClient = (fastify) => {
-  return async ({ audience, cacheKey, loadCredentials }, req) => {
-    if (typeof cacheKey !== 'string' || cacheKey.length === 0) {
-      throw new TypeError('VNF credential resolver cacheKey must be non-empty');
-    }
+  return async ({ audience, ...credentialSource }, req) => {
+    const { cacheKey, loadCredentials } =
+      normalizeCredentialSource(credentialSource);
+    assertNonEmptyString(cacheKey, 'cacheKey');
     if (typeof loadCredentials !== 'function') {
       throw new TypeError(
         'VNF credential resolver loadCredentials must be a function',
       );
     }
 
-    pruneExpiredTokens(fastify.vnfAuthTokensCache);
     const tokenCacheKey = buildTokenCacheKey(audience, cacheKey);
     const cachedToken = fastify.vnfAuthTokensCache.get(tokenCacheKey);
 
-    if (cachedToken) {
+    if (cachedToken?.expiresAt > new Date()) {
       return cachedToken.accessToken;
     }
 
-    const { clientId, clientSecret } = await loadCredentials();
+    pruneExpiredTokens(fastify.vnfAuthTokensCache);
+    const resolvedCredentials = await loadCredentials();
+    assertNonEmptyString(resolvedCredentials?.clientId, 'clientId');
+    assertNonEmptyString(resolvedCredentials?.clientSecret, 'clientSecret');
     const httpClient = initHttpClient(fastify.config)(req);
     const response = await httpClient.post(
       fastify.config.vnfOAuthTokensEndpoint,
       {
         grant_type: 'client_credentials',
-        client_id: clientId,
-        client_secret: clientSecret,
+        client_id: resolvedCredentials.clientId,
+        client_secret: resolvedCredentials.clientSecret,
         audience,
       },
     );
@@ -88,13 +117,18 @@ const initDefaultVnfClientCredentialsResolver = (fastify) => async () => ({
 
 const initAuthenticateVnfBlockchainClient = (fastify, req) => {
   const authenticateVnfClient = initAuthenticateVnfClient(fastify);
+  const resolveVnfClientCredentials = once(() =>
+    fastify.resolveVnfClientCredentials(req),
+  );
   return async () => {
-    const resolution = await fastify.resolveVnfClientCredentials(req);
+    const { cacheKey, loadCredentials } =
+      (await resolveVnfClientCredentials()) ?? {};
 
     return authenticateVnfClient(
       {
         audience: fastify.config.blockchainApiAudience,
-        ...resolution,
+        cacheKey,
+        loadCredentials,
       },
       req,
     );
