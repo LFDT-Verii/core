@@ -110,6 +110,30 @@ describe('Depots Test suite', () => {
         }),
       );
     });
+    it('should 400 if referenced issuer service is deactivated', async () => {
+      const deactivatedIssuerService = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth'],
+        deactivationDate: new Date(),
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: deactivatedIssuerService._id,
+          depot: { userReference: 'ABC123' },
+        },
+      });
+
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          message: 'referenced_service_not_found',
+          errorCode: 'referenced_service_not_found',
+        }),
+      );
+    });
     it('should 400 if referenced relying party service is deactivated', async () => {
       const relyingPartyService = await persistRelyingPartyService({
         tenant,

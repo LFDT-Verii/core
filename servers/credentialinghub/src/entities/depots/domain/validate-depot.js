@@ -16,10 +16,11 @@
  */
 const newError = require('http-errors');
 const { isEmpty } = require('lodash/fp');
+const { isBefore } = require('date-fns/fp');
 const { DepotErrors } = require('./depot-errors');
 
 const validateDepot = (depot, service) => {
-  if (service == null) {
+  if (isMissingOrDeactivated(service)) {
     throw newError(400, DepotErrors.REFERENCED_SERVICE_NOT_FOUND, {
       errorCode: DepotErrors.REFERENCED_SERVICE_NOT_FOUND,
     });
@@ -34,5 +35,10 @@ const validateDepot = (depot, service) => {
     });
   }
 };
+
+const isMissingOrDeactivated = (service) =>
+  service == null ||
+  (service.deactivationDate != null &&
+    isBefore(new Date(), service.deactivationDate));
 
 module.exports = { validateDepot };
