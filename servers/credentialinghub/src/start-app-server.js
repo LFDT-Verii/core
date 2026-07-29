@@ -23,22 +23,24 @@ const {
 } = require('./start-embedded-notification-worker');
 
 const createAppServer = ({
-  operatorAuthExtension,
+  caoSecurityProvider,
   configOverrides = {},
 } = {}) => {
   const baseConfig = {
-    ...buildConfig({ isDefaultAuth: operatorAuthExtension == null }),
+    ...buildConfig({
+      isDefaultCaoSecurityProvider: caoSecurityProvider == null,
+    }),
     ...configOverrides,
   };
   const serverConfig = {
     ...baseConfig,
     ...createSwaggerConfig(
       baseConfig.version,
-      operatorAuthExtension?.documentation,
+      caoSecurityProvider?.operatorAuth?.documentation,
     ),
   };
   const server = createServer(serverConfig);
-  return initServer(server, { operatorAuthExtension });
+  return initServer(server, { caoSecurityProvider });
 };
 
 const startAppServer = (options = {}) => {

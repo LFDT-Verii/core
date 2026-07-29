@@ -15,108 +15,53 @@
  */
 
 const fp = require('fastify-plugin');
+const { isPlainObject } = require('lodash/fp');
 const { defaultOperatorAuthPlugin } = require('./default-operator-auth-plugin');
-
-const PRINCIPAL_STRING_FIELDS = [
-  'caoDid',
-  'subject',
-  'subjectType',
-  'authenticationMethod',
-];
-
-const isObject = (value) =>
-  value != null && typeof value === 'object' && !Array.isArray(value);
 
 const hasFunctionDecorator = (fastify, name) =>
   fastify.hasDecorator(name) && typeof fastify[name] === 'function';
 
-const validateExtension = (extension) => {
-  if (!isObject(extension)) {
-    throw new TypeError('operatorAuthExtension must be an object');
+const validateOperatorAuth = (operatorAuth) => {
+  if (!isPlainObject(operatorAuth)) {
+    throw new TypeError('caoSecurityProvider.operatorAuth must be an object');
   }
-  if (typeof extension.plugin !== 'function') {
-    throw new TypeError('operatorAuthExtension.plugin must be a function');
-  }
-  if (extension.documentation != null && !isObject(extension.documentation)) {
+  if (typeof operatorAuth.plugin !== 'function') {
     throw new TypeError(
-      'operatorAuthExtension.documentation must be an object',
+      'caoSecurityProvider.operatorAuth.plugin must be a function',
     );
   }
-};
-
-const assertNonEmptyPrincipalField = (principal, field) => {
-  if (typeof principal[field] !== 'string' || principal[field].length === 0) {
+  if (!isPlainObject(operatorAuth.documentation)) {
     throw new TypeError(
-      `operatorPrincipal.${field} must be a non-empty string`,
+      'caoSecurityProvider.operatorAuth.documentation must be an object',
     );
   }
-};
-
-const normalizePrincipal = (principal) => {
-  if (!isObject(principal)) {
-    throw new TypeError('operatorPrincipal must be an object');
-  }
-
-  for (const field of PRINCIPAL_STRING_FIELDS) {
-    assertNonEmptyPrincipalField(principal, field);
-  }
-
-  return {
-    caoDid: principal.caoDid,
-    subject: principal.subject,
-    subjectType: principal.subjectType,
-    authenticationMethod: principal.authenticationMethod,
-  };
 };
 
 const installOperatorAuthPlugin = fp(
-  async (fastify, { extension }) => {
-    const resolvedExtension =
-      extension == null
+  async (fastify, { operatorAuth }) => {
+    const resolvedOperatorAuth =
+      operatorAuth == null
         ? {
             plugin: defaultOperatorAuthPlugin,
+            documentation: {},
           }
-        : extension;
-    validateExtension(resolvedExtension);
+        : operatorAuth;
+    validateOperatorAuth(resolvedOperatorAuth);
 
     fastify.decorateRequest('operatorPrincipal', null);
 
-    await fastify.register(resolvedExtension.plugin);
+    await fastify.register(resolvedOperatorAuth.plugin);
 
     if (!hasFunctionDecorator(fastify, 'authenticateOperator')) {
       throw new TypeError(
-        'operator authentication plugin must decorate authenticateOperator',
+        'CAO security provider operatorAuth plugin must decorate authenticateOperator',
       );
     }
-    if (
-      extension != null &&
-      !hasFunctionDecorator(fastify, 'resolveVnfClientOAuthCreds')
-    ) {
-      throw new TypeError(
-        'operator authentication plugin must decorate resolveVnfClientOAuthCreds',
-      );
-    }
-
-    const { authenticateOperator } = fastify;
-    // Replace the capability implementation with the stable, validating seam.
-    // eslint-disable-next-line better-mutation/no-mutation
-    fastify.authenticateOperator = async function authenticateAndNormalize(
-      request,
-      reply,
-    ) {
-      await authenticateOperator.call(this, request, reply);
-      if (!reply.sent) {
-        // eslint-disable-next-line better-mutation/no-mutation
-        request.operatorPrincipal = normalizePrincipal(
-          request.operatorPrincipal,
-        );
-      }
-    };
   },
   { name: 'credentialingHubOperatorAuth' },
 );
 
-const registerOperatorAuth = (server, extension) =>
-  server.register(installOperatorAuthPlugin, { extension });
+const registerOperatorAuth = (server, operatorAuth) =>
+  server.register(installOperatorAuthPlugin, { operatorAuth });
 
 module.exports = { registerOperatorAuth };

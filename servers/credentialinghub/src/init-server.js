@@ -27,10 +27,12 @@ const { openid4vpPlugin } = require('./entities/openid4vp');
 const {
   notificationEnqueueAdapterPlugin,
 } = require('./entities/notifications');
-const { registerOperatorAuth } = require('./plugins/operator-auth');
+const {
+  registerCaoSecurityProvider,
+} = require('./plugins/cao-security-provider');
 
-const initServer = (server, { operatorAuthExtension } = {}) => {
-  registerOperatorAuth(server, operatorAuthExtension);
+const initServer = (server, { caoSecurityProvider } = {}) => {
+  registerCaoSecurityProvider(server, caoSecurityProvider);
 
   if (!server.config.isTest) {
     server.register(authenticateVnfClientPlugin);

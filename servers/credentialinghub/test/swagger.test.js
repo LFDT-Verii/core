@@ -477,8 +477,8 @@ describe('swagger documents', () => {
   });
 });
 
-describe('operator authentication extension documentation', () => {
-  it('includes extension metadata supplied while constructing the server', async () => {
+describe('CAO security provider documentation', () => {
+  it('includes Operator auth metadata supplied by the provider', async () => {
     const operatorSecurityScheme = {
       type: 'oauth2',
       flows: {
@@ -489,26 +489,38 @@ describe('operator authentication extension documentation', () => {
       },
     };
     const fastify = createAppServer({
-      operatorAuthExtension: {
-        plugin: fp(async (server) => {
-          server.decorate('authenticateOperator', async (request) => {
-            request.operatorPrincipal = {
-              caoDid: 'did:example:operator',
-              subject: 'operator-client',
-              subjectType: 'client',
-              authenticationMethod: 'test',
-            };
-          });
-          server.decorate('resolveVnfClientOAuthCreds', async () => undefined);
-        }),
-        documentation: {
-          operatorSecurityScheme,
-          tags: [
-            {
-              name: 'Operator Authentication',
-              description: 'Machine authentication.',
-            },
-          ],
+      caoSecurityProvider: {
+        operatorAuth: {
+          plugin: fp(async (server) => {
+            server.decorate('authenticateOperator', async (request) => {
+              request.operatorPrincipal = {
+                caoDid: 'did:example:operator',
+                subject: 'operator-client',
+                subjectType: 'client',
+                authenticationMethod: 'test',
+              };
+            });
+          }),
+          documentation: {
+            operatorSecurityScheme,
+            tags: [
+              {
+                name: 'Operator Authentication',
+                description: 'Machine authentication.',
+              },
+            ],
+          },
+        },
+        blockchainClientCredentials: {
+          plugin: fp(async (server) => {
+            server.decorate('resolveBlockchainClientCredentials', async () => ({
+              cacheKey: 'did:example:operator',
+              loadCredentials: async () => ({
+                clientId: 'test-client',
+                clientSecret: 'test-secret',
+              }),
+            }));
+          }),
         },
       },
       configOverrides: {

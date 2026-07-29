@@ -6,23 +6,33 @@ Credentialing Hub runtime code is maintained in this package.
 
 - [Notification webhooks design](docs/notification-webhooks-design.md)
 
-## Operator Authentication Extension
+## CAO Security Provider
 
-The open-source Hub uses a static `OPERATOR_API_TOKEN` bearer token by
-default. A wrapper can replace that behavior by supplying an Operator
-authentication extension to `createAppServer` or `startAppServer`:
+The open-source Hub has a built-in single-CAO security mode. In production,
+this mode requires `OPERATOR_API_TOKEN`, `DEFAULT_CAO_DID`,
+`VNF_OAUTH_CLIENT_ID`, and `VNF_OAUTH_CLIENT_SECRET`. It authenticates every
+Operator API request with the static bearer token and uses the configured
+blockchain client credentials. Startup fails when any of the four values is
+missing.
 
-In production, the built-in Operator mode requires
-`OPERATOR_API_TOKEN`, `DEFAULT_CAO_DID`, `VNF_OAUTH_CLIENT_ID`, and
-`VNF_OAUTH_CLIENT_SECRET`. Startup fails when any required value is missing;
-missing VNF OAuth credentials are never interpreted as unauthenticated ledger
-access.
+A wrapper that supports multiple CAOs can replace both capabilities by
+supplying a `caoSecurityProvider` to `createAppServer` or `startAppServer`.
+The provider consists of two independent Fastify capability descriptors:
+
+- `operatorAuth` requires a `plugin` that authenticates Operator API requests
+  and sets `request.operatorPrincipal`, plus a `documentation` object for
+  Operator Swagger metadata. Use `documentation: {}` to retain the built-in
+  Swagger metadata.
+- `blockchainClientCredentials` requires a `plugin` that resolves the
+  blockchain client credentials for the CAO associated with a request.
+
+Both descriptors are required when a custom provider is supplied. In this
+mode, the four static environment variables are optional. The Hub does not
+fall back to any static value if either custom capability fails.
 
 ```js
 const fp = require('fastify-plugin');
-const {
-  startAppServer,
-} = require('@verii/server-credentialing-hub');
+const { startAppServer } = require('@verii/server-credentialing-hub');
 
 const operatorAuthPlugin = fp(async (fastify) => {
   fastify.decorate('authenticateOperator', async (request) => {
@@ -35,8 +45,12 @@ const operatorAuthPlugin = fp(async (fastify) => {
     };
   });
 
-  // Required when replacing the built-in Operator authentication.
-  fastify.decorate('resolveVnfClientOAuthCreds', async (request) => {
+  // Private routes may be kept encapsulated beneath this capability plugin.
+  fastify.register(privateOperatorRoutes);
+});
+
+const blockchainClientCredentialsPlugin = fp(async (fastify) => {
+  fastify.decorate('resolveBlockchainClientCredentials', async (request) => {
     const tenantCaoDid = request.tenant?.caoDid;
     const principalCaoDid = request.operatorPrincipal?.caoDid;
 
@@ -55,59 +69,64 @@ const operatorAuthPlugin = fp(async (fastify) => {
 
     return {
       cacheKey: caoDid,
-      loadOAuthCreds: async () => loadVnfOAuthCreds(caoDid),
+      loadCredentials: async () => loadBlockchainClientCredentials(caoDid),
     };
   });
-
-  // Keep private endpoints encapsulated beneath the capability plugin.
-  fastify.register(privateOperatorRoutes);
 });
 
 startAppServer({
-  operatorAuthExtension: {
-    plugin: operatorAuthPlugin,
-    documentation: {
-      operatorSecurityScheme: {
-        type: 'oauth2',
-        flows: {
-          clientCredentials: {
-            tokenUrl: '/operator/oauth/token',
-            scopes: {},
+  caoSecurityProvider: {
+    operatorAuth: {
+      plugin: operatorAuthPlugin,
+      documentation: {
+        operatorSecurityScheme: {
+          type: 'oauth2',
+          flows: {
+            clientCredentials: {
+              tokenUrl: '/operator/oauth/token',
+              scopes: {},
+            },
           },
         },
-      },
-      securitySchemes: {
-        operatorClientBasic: { type: 'http', scheme: 'basic' },
-      },
-      tags: [
-        {
-          name: 'Operator Authentication',
-          description: 'Machine-to-machine authentication.',
+        securitySchemes: {
+          operatorClientBasic: { type: 'http', scheme: 'basic' },
         },
-      ],
+        tags: [
+          {
+            name: 'Operator Authentication',
+            description: 'Machine-to-machine authentication.',
+          },
+        ],
+      },
+    },
+    blockchainClientCredentials: {
+      plugin: blockchainClientCredentialsPlugin,
     },
   },
 });
 ```
 
-The extension plugin must be wrapped with `fastify-plugin` and must decorate
-both `authenticateOperator` and `resolveVnfClientOAuthCreds`. The authenticator
-must either reject the request by throwing or sending a reply, or set
+Each capability plugin must be wrapped with `fastify-plugin`. The Operator
+plugin must decorate `authenticateOperator`; the authenticator must either
+reject the request by throwing or sending a reply, or set
 `request.operatorPrincipal` on success. The Hub owns the `operatorPrincipal`
-request decoration, so the extension must not redecorate it.
+request decoration, so a provider must not redecorate it. The principal is
+provider-owned data and is not normalized by the Hub. Only
+`operatorAuth.documentation` contributes custom Swagger metadata; the
+blockchain capability has no documentation surface.
 
-Every Operator principal requires non-empty `caoDid`, `subject`, `subjectType`,
-and `authenticationMethod` values. The Hub exposes only those four normalized
-fields on `request.operatorPrincipal`.
+The blockchain plugin must decorate
+`resolveBlockchainClientCredentials(request)`. Its result contains a stable,
+non-secret `cacheKey` and a lazy `loadCredentials` function returning
+`{ clientId, clientSecret }`. Public wallet requests can resolve their CAO from
+the loaded tenant, while authenticated Operator requests can resolve it from
+the Operator principal. A multi-CAO provider should reject requests when both
+sources exist but disagree, or when neither source supplies a CAO DID.
 
-The custom VNF resolver is selected by decoration, not configuration. Its
-errors are returned to the caller and never fall back to the static VNF client
-ID and secret. Public VN/OpenID requests resolve their CAO from the loaded
-tenant, while authenticated Operator requests resolve it from the Operator
-principal. A resolver must reject the request when both sources exist but
-disagree, or when neither source supplies a CAO DID. A custom authentication
-extension that omits the resolver fails startup, even if static VNF OAuth
-credentials are present.
+Provider descriptors and required decorators are checked during startup.
+Credential values are validated by the blockchain authentication layer when
+they are consumed. Provider errors are returned to the caller and never fall
+back to the built-in static credentials.
 
 ## Data Migrations
 

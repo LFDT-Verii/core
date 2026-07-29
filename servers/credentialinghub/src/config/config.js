@@ -66,7 +66,7 @@ const swaggerConfig = createSwaggerConfig(packageJson.version);
 
 const openid4vcConfig = {};
 
-const buildConfig = ({ isDefaultAuth = true } = {}) => {
+const buildConfig = ({ isDefaultCaoSecurityProvider = true } = {}) => {
   const notificationsEnabled = env
     .get('NOTIFICATIONS_ENABLED')
     .default('false')
@@ -95,7 +95,7 @@ const buildConfig = ({ isDefaultAuth = true } = {}) => {
     keyEncryptionSecret: env.get('KEY_ENCRYPTION_SECRET').required().asString(),
     operatorApiToken: env
       .get('OPERATOR_API_TOKEN')
-      .required(isDefaultAuth)
+      .required(isDefaultCaoSecurityProvider)
       .asString(),
     registrarUrl: env.get('REGISTRAR_URL').required().asString(),
     libUrl: env.get('LIB_URL').required().asString(),
@@ -132,15 +132,15 @@ const buildConfig = ({ isDefaultAuth = true } = {}) => {
       .asString(),
     defaultCaoDid: env
       .get('DEFAULT_CAO_DID')
-      .required(isDefaultAuth)
+      .required(isDefaultCaoSecurityProvider)
       .asString(),
     vnfClientId: env
       .get('VNF_OAUTH_CLIENT_ID')
-      .required(isDefaultAuth)
+      .required(isDefaultCaoSecurityProvider)
       .asString(),
     vnfClientSecret: env
       .get('VNF_OAUTH_CLIENT_SECRET')
-      .required(isDefaultAuth)
+      .required(isDefaultCaoSecurityProvider)
       .asString(),
     vnfOAuthTokensEndpoint: env
       .get('VNF_OAUTH_TOKENS_ENDPOINT')
