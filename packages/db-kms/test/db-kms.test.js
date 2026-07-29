@@ -208,6 +208,7 @@ describe('db kms', () => {
 
       await expect(kms.deleteKeyOrSecret(key.id)).resolves.toBe(true);
       await expect(kms.exportKeyOrSecret(key.id)).resolves.toBeNull();
+      await expect(kms.deleteKeyOrSecret(key.id)).resolves.toBe(false);
     });
   });
 
