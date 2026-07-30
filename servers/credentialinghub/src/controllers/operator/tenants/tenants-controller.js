@@ -50,17 +50,7 @@ module.exports = async (fastify) => {
             type: 'object',
             properties: {
               tenant: {
-                allOf: [
-                  {
-                    $ref: 'new-tenant#',
-                  },
-                  {
-                    not: {
-                      type: 'object',
-                      required: ['caoDid'],
-                    },
-                  },
-                ],
+                $ref: 'new-tenant#',
               },
               keys: {
                 type: 'array',
