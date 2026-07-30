@@ -15,20 +15,47 @@
  */
 
 const { createServer, listenServer } = require('@verii/server-provider');
-const { flow } = require('lodash/fp');
-const config = require('./config');
+const { buildConfig } = require('./config');
+const { createSwaggerConfig } = require('./config/swagger-config');
 const { initServer } = require('./init-server');
 const {
   startEmbeddedNotificationWorker,
 } = require('./start-embedded-notification-worker');
+const {
+  resolveCaoSecurityProvider,
+} = require('./plugins/cao-security-provider');
 
-const startAppServer = () => {
-  const server = flow(createServer, initServer)(config);
+const createAppServer = ({
+  caoSecurityProvider,
+  configOverrides = {},
+} = {}) => {
+  const resolvedCaoSecurityProvider =
+    resolveCaoSecurityProvider(caoSecurityProvider);
+  const baseConfig = {
+    ...buildConfig(),
+    ...configOverrides,
+  };
+  const serverConfig = {
+    ...baseConfig,
+    ...createSwaggerConfig(
+      baseConfig.version,
+      resolvedCaoSecurityProvider.documentation,
+    ),
+  };
+  const server = createServer(serverConfig);
+  return initServer(server, {
+    caoSecurityProvider: resolvedCaoSecurityProvider,
+  });
+};
+
+const startAppServer = (options = {}) => {
+  const server = createAppServer(options);
   startEmbeddedNotificationWorker(server);
   listenServer(server);
   return server;
 };
 
 module.exports = {
+  createAppServer,
   startAppServer,
 };

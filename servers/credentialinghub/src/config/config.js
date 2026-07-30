@@ -65,112 +65,113 @@ const ajvConfig = {
 const swaggerConfig = createSwaggerConfig(packageJson.version);
 
 const openid4vcConfig = {};
-const notificationsEnabled = env
-  .get('NOTIFICATIONS_ENABLED')
-  .default('false')
-  .asBool();
-const allowInsecureNotificationWebhookUrl = env
-  .get('NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL')
-  .default('false')
-  .asBool();
-const notificationWebhookUrl = notificationsEnabled
-  ? env
-      .get('NOTIFICATIONS_WEBHOOK_URL')
-      .required()
-      .asNotificationWebhookUrl(allowInsecureNotificationWebhookUrl)
-  : env.get('NOTIFICATIONS_WEBHOOK_URL').asString();
 
-module.exports = {
-  ...genericConfig,
-  ...ajvConfig,
-  ...swaggerConfig,
-  ...openid4vcConfig,
-  version: packageJson.version,
-  customFastifyOptions: {
-    bodyLimit: 8388608,
-  },
-  deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
-  keyEncryptionSecret: env.get('KEY_ENCRYPTION_SECRET').required().asString(),
-  operatorApiToken: env.get('OPERATOR_API_TOKEN').required().asString(),
-  registrarUrl: env.get('REGISTRAR_URL').required().asString(),
-  libUrl: env.get('LIB_URL').required().asString(),
-  credentialExtensionsContextUrl: env
-    .get('CREDENTIAL_EXTENSIONS_CONTEXT_URL')
-    .default(
-      'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
-    )
-    .asString(),
-  challengesExpireIn: env.get('CHALLENGES_EXPIRE_IN').default('3d').asMs(),
-  // blockchain setup
-  rpcUrl: env
-    .get('RPC_NODE_URL')
-    .required()
-    .default('http://34.244.131.79:8547')
-    .asString(),
-  chainId: env.get('CHAIN_ID').default(2020).asInt(),
-  metadataRegistryContractAddress: env
-    .get('METADATA_REGISTRY_CONTRACT_ADDRESS')
-    .required(!isTest)
-    .asString(),
-  permissionsContractAddress: env
-    .get('PERMISSIONS_CONTRACT_ADDRESS')
-    .required()
-    .asString(),
-  couponContractAddress: env
-    .get('COUPON_CONTRACT_ADDRESS')
-    .required()
-    .asString(),
-  revocationContractAddress: env
-    .get('REVOCATION_CONTRACT_ADDRESS')
-    .required()
-    .default('0xf755E1Ca66bE12F177178E7Ea696969E0A55Bb64')
-    .asString(),
-  defaultCaoDid: env.get('DEFAULT_CAO_DID').asString(),
-  vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').required().asString(),
-  vnfClientSecret: env.get('VNF_OAUTH_CLIENT_SECRET').required().asString(),
-  vnfOAuthTokensEndpoint: env
-    .get('VNF_OAUTH_TOKENS_ENDPOINT')
-    .required()
-    .asString(),
-  credentialSubjectContext: env
-    .get('CREDENTIAL_SUBJECT_CONTEXT')
+const buildConfig = () => {
+  const notificationsEnabled = env
+    .get('NOTIFICATIONS_ENABLED')
     .default('false')
-    .asBool(),
-  notifications: buildNotificationConfig({
-    enabled: notificationsEnabled,
-    queueType: env
-      .get('NOTIFICATIONS_QUEUE_TYPE')
-      .default(NotificationQueueTypes.MONGO)
-      .asEnum(Object.values(NotificationQueueTypes)),
-    workerMode: env
-      .get('NOTIFICATIONS_WORKER_MODE')
-      .default(NotificationWorkerModes.EMBEDDED_CHILD)
-      .asEnum(Object.values(NotificationWorkerModes)),
-    retentionDays: env
-      .get('NOTIFICATIONS_RETENTION_DAYS')
-      .default('30')
-      .asIntPositive(),
-    webhookUrl: notificationWebhookUrl,
-    webhookEventTypes: env
-      .get('NOTIFICATIONS_WEBHOOK_EVENTS')
-      .default(DefaultNotificationEventTypes.join(','))
-      .asArray(),
-    webhookSecret: env
-      .get('NOTIFICATIONS_WEBHOOK_SECRET')
-      .required(notificationsEnabled)
+    .asBool();
+  const allowInsecureNotificationWebhookUrl = env
+    .get('NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL')
+    .default('false')
+    .asBool();
+  const notificationWebhookUrl = notificationsEnabled
+    ? env
+        .get('NOTIFICATIONS_WEBHOOK_URL')
+        .required()
+        .asNotificationWebhookUrl(allowInsecureNotificationWebhookUrl)
+    : env.get('NOTIFICATIONS_WEBHOOK_URL').asString();
+
+  return {
+    ...genericConfig,
+    ...ajvConfig,
+    ...swaggerConfig,
+    ...openid4vcConfig,
+    version: packageJson.version,
+    customFastifyOptions: {
+      bodyLimit: 8388608,
+    },
+    deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
+    keyEncryptionSecret: env.get('KEY_ENCRYPTION_SECRET').required().asString(),
+    registrarUrl: env.get('REGISTRAR_URL').required().asString(),
+    libUrl: env.get('LIB_URL').required().asString(),
+    credentialExtensionsContextUrl: env
+      .get('CREDENTIAL_EXTENSIONS_CONTEXT_URL')
+      .default(
+        'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
+      )
       .asString(),
-    signatureHeaderName: env
-      .get('NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME')
-      .default(DEFAULT_SIGNATURE_HEADER_NAME)
+    challengesExpireIn: env.get('CHALLENGES_EXPIRE_IN').default('3d').asMs(),
+    // blockchain setup
+    rpcUrl: env
+      .get('RPC_NODE_URL')
+      .required()
+      .default('http://34.244.131.79:8547')
       .asString(),
-    webhookTimeoutMs: env
-      .get('NOTIFICATIONS_WEBHOOK_TIMEOUT_MS')
-      .default('5000')
-      .asIntPositive(),
-    maxAttempts: env
-      .get('NOTIFICATIONS_MAX_ATTEMPTS')
-      .default('12')
-      .asIntPositive(),
-    allowInsecureWebhookUrl: allowInsecureNotificationWebhookUrl,
-  }),
+    chainId: env.get('CHAIN_ID').default(2020).asInt(),
+    metadataRegistryContractAddress: env
+      .get('METADATA_REGISTRY_CONTRACT_ADDRESS')
+      .required(!isTest)
+      .asString(),
+    permissionsContractAddress: env
+      .get('PERMISSIONS_CONTRACT_ADDRESS')
+      .required()
+      .asString(),
+    couponContractAddress: env
+      .get('COUPON_CONTRACT_ADDRESS')
+      .required()
+      .asString(),
+    revocationContractAddress: env
+      .get('REVOCATION_CONTRACT_ADDRESS')
+      .required()
+      .default('0xf755E1Ca66bE12F177178E7Ea696969E0A55Bb64')
+      .asString(),
+    vnfOAuthTokensEndpoint: env
+      .get('VNF_OAUTH_TOKENS_ENDPOINT')
+      .required()
+      .asString(),
+    credentialSubjectContext: env
+      .get('CREDENTIAL_SUBJECT_CONTEXT')
+      .default('false')
+      .asBool(),
+    notifications: buildNotificationConfig({
+      enabled: notificationsEnabled,
+      queueType: env
+        .get('NOTIFICATIONS_QUEUE_TYPE')
+        .default(NotificationQueueTypes.MONGO)
+        .asEnum(Object.values(NotificationQueueTypes)),
+      workerMode: env
+        .get('NOTIFICATIONS_WORKER_MODE')
+        .default(NotificationWorkerModes.EMBEDDED_CHILD)
+        .asEnum(Object.values(NotificationWorkerModes)),
+      retentionDays: env
+        .get('NOTIFICATIONS_RETENTION_DAYS')
+        .default('30')
+        .asIntPositive(),
+      webhookUrl: notificationWebhookUrl,
+      webhookEventTypes: env
+        .get('NOTIFICATIONS_WEBHOOK_EVENTS')
+        .default(DefaultNotificationEventTypes.join(','))
+        .asArray(),
+      webhookSecret: env
+        .get('NOTIFICATIONS_WEBHOOK_SECRET')
+        .required(notificationsEnabled)
+        .asString(),
+      signatureHeaderName: env
+        .get('NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME')
+        .default(DEFAULT_SIGNATURE_HEADER_NAME)
+        .asString(),
+      webhookTimeoutMs: env
+        .get('NOTIFICATIONS_WEBHOOK_TIMEOUT_MS')
+        .default('5000')
+        .asIntPositive(),
+      maxAttempts: env
+        .get('NOTIFICATIONS_MAX_ATTEMPTS')
+        .default('12')
+        .asIntPositive(),
+      allowInsecureWebhookUrl: allowInsecureNotificationWebhookUrl,
+    }),
+  };
 };
+
+module.exports = { buildConfig };

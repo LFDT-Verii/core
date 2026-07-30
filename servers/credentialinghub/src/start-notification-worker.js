@@ -16,14 +16,12 @@
 
 const { bindRepo } = require('@spencejs/spence-mongo-repos');
 const { initHttpClient } = require('@verii/http-client');
-const { createServer } = require('@verii/server-provider');
-const { flow } = require('lodash/fp');
-const config = require('./config');
-const { initServer } = require('./init-server');
+const {
+  createAppServer: createCredentialingHubServer,
+} = require('./start-app-server');
 const { startNotificationDeliveryWorker } = require('./entities/notifications');
 
-const createNotificationWorkerServer = () =>
-  flow(createServer, initServer)(config);
+const createNotificationWorkerServer = () => createCredentialingHubServer();
 
 const startNotificationWorker = async ({
   createAppServer = createNotificationWorkerServer,

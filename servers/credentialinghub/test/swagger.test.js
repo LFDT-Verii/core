@@ -1,7 +1,10 @@
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
+const fp = require('fastify-plugin');
+const { buildMongoConnection } = require('@verii/tests-helpers');
 const packageJson = require('../package.json');
 const buildFastify = require('./helpers/create-test-fastify');
+const { createAppServer } = require('../src');
 
 const DOCUMENTS = {
   operator: '/documentation/json',
@@ -471,5 +474,73 @@ describe('swagger documents', () => {
     expect(result.body).toContain('ui.initOAuth({})');
     expect(result.body).not.toContain('persistAuthorization');
     expect(result.body).not.toContain('clientId');
+  });
+});
+
+describe('CAO security provider documentation', () => {
+  it('includes Operator auth metadata supplied by the provider', async () => {
+    const operatorSecurityScheme = {
+      type: 'oauth2',
+      flows: {
+        clientCredentials: {
+          tokenUrl: '/operator/oauth/token',
+          scopes: {},
+        },
+      },
+    };
+    const fastify = createAppServer({
+      caoSecurityProvider: {
+        operatorAuthPlugin: fp(async (server) => {
+          server.decorate('authenticateOperator', async (request) => {
+            request.operatorPrincipal = {
+              caoDid: 'did:example:operator',
+              subject: 'operator-client',
+              subjectType: 'client',
+              authenticationMethod: 'test',
+            };
+          });
+        }),
+        blockchainClientCredentialsPlugin: fp(async (server) => {
+          server.decorate('resolveBlockchainClientCredentials', async () => ({
+            cacheKey: 'did:example:operator',
+            loadCredentials: async () => ({
+              clientId: 'test-client',
+              clientSecret: 'test-secret',
+            }),
+          }));
+        }),
+        documentation: {
+          operatorSecurityScheme,
+          tags: [
+            {
+              name: 'Operator Authentication',
+              description: 'Machine authentication.',
+            },
+          ],
+        },
+      },
+      configOverrides: {
+        isTest: false,
+        mongoConnection: buildMongoConnection('test-credentialing-hub'),
+      },
+    });
+
+    try {
+      const response = await fastify.inject({
+        method: 'GET',
+        url: DOCUMENTS.operator,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json().components.securitySchemes.operatorAuth).toEqual(
+        operatorSecurityScheme,
+      );
+      expect(response.json().tags[0]).toEqual({
+        name: 'Operator Authentication',
+        description: 'Machine authentication.',
+      });
+    } finally {
+      await fastify.close();
+    }
   });
 });

@@ -27,8 +27,13 @@ const { openid4vpPlugin } = require('./entities/openid4vp');
 const {
   notificationEnqueueAdapterPlugin,
 } = require('./entities/notifications');
+const {
+  registerCaoSecurityProvider,
+} = require('./plugins/cao-security-provider');
 
-const initServer = (server) => {
+const initServer = (server, { caoSecurityProvider } = {}) => {
+  registerCaoSecurityProvider(server, caoSecurityProvider);
+
   if (!server.config.isTest) {
     server.register(authenticateVnfClientPlugin);
   }

@@ -15,7 +15,6 @@
  *
  */
 const { responseRequestIdPlugin } = require('@verii/fastify-plugins');
-const fastifyBearerAuth = require('@fastify/bearer-auth');
 const { kmsPlugin } = require('../../entities/keys');
 const {
   setDocumentationAudience,
@@ -23,11 +22,9 @@ const {
 
 module.exports = async (fastify) => {
   setDocumentationAudience(fastify, 'operator');
-  if (!fastify.config.isTest) {
-    fastify.register(fastifyBearerAuth, {
-      keys: new Set([fastify.config.operatorApiToken]),
-    });
-  }
+  fastify.addHook('onRequest', async (request, reply) => {
+    await fastify.authenticateOperator(request, reply);
+  });
   fastify
     .register(kmsPlugin)
     .register(responseRequestIdPlugin)

@@ -19,15 +19,29 @@ const path = require('path');
 const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
 const { flow } = require('lodash/fp');
 const { createTestServer } = require('@verii/server-provider');
-const { initServer } = require('../../src/init-server');
 
 loadTestEnv(path.resolve(__dirname, '.env.test'));
-const config = require('../../src/config');
+const { buildConfig } = require('../../src/config');
+const { initServer } = require('../../src/init-server');
+const {
+  resolveCaoSecurityProvider,
+} = require('../../src/plugins/cao-security-provider');
 
+const config = buildConfig();
 const mongoConnection = buildMongoConnection('test-credentialing-hub');
 
-module.exports = (configOverrides = {}) =>
-  flow(
-    createTestServer,
-    initServer,
-  )({ ...config, ...configOverrides, mongoConnection });
+module.exports = (configOverrides = {}, serverOptions = {}) => {
+  const resolvedCaoSecurityProvider = resolveCaoSecurityProvider(
+    serverOptions.caoSecurityProvider,
+  );
+  return flow(createTestServer, (server) =>
+    initServer(server, {
+      ...serverOptions,
+      caoSecurityProvider: resolvedCaoSecurityProvider,
+    }),
+  )({
+    ...config,
+    ...configOverrides,
+    mongoConnection,
+  });
+};
