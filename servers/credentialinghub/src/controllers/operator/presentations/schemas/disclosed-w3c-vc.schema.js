@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Velocity Team
+ * Copyright 2026 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,36 @@
  * limitations under the License.
  *
  */
+const { w3cVcSchema } = require('@verii/common-schemas');
+
+const disclosedTypeSchema = {
+  oneOf: [
+    {
+      type: 'string',
+    },
+    {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+      minItems: 1,
+    },
+  ],
+};
+
+const disclosedW3cVcSchema = {
+  ...w3cVcSchema,
+  $id: 'disclosed-w3c-vc',
+  properties: {
+    ...w3cVcSchema.properties,
+    type: {
+      ...disclosedTypeSchema,
+      description: w3cVcSchema.properties.type.description,
+    },
+  },
+};
+
 module.exports = {
-  ...require('./base-presentation.schema'),
-  ...require('./credential-verification.schema'),
-  ...require('./disclosed-w3c-vc.schema'),
-  ...require('./presentation.schema'),
-  ...require('./presentation-verification.schema'),
-  ...require('./w3c-presentation'),
+  disclosedTypeSchema,
+  disclosedW3cVcSchema,
 };

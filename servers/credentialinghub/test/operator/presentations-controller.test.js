@@ -562,6 +562,60 @@ describe('Presentations Test Suite', () => {
         });
       });
 
+      it('should verify scalar disclosure types', async () => {
+        const scalarTypeCredential = buildOpenBadgeCredential(
+          tenant,
+          credentialDid,
+          holderDid,
+          {
+            ...openBadgeCredentialContent,
+            type: 'OpenBadgeCredential',
+          },
+        );
+        const scalarTypeVc = await generateCredentialJwt(
+          scalarTypeCredential,
+          vcKeyPair.privateKey,
+          `${credentialDid}#key-1`,
+        );
+        const scalarTypeVp = await generatePresentationJwt(
+          {
+            type: 'VerifiablePresentation',
+            verifiableCredential: [scalarTypeVc],
+            issuer: holderDid,
+          },
+          holderKeyPair.privateKey,
+          `${holderDid}#key`,
+        );
+
+        mockResolveDidDocument.mock.mockImplementationOnce(() =>
+          Promise.resolve(
+            presentationDIDResolution(
+              [credentialDid],
+              [vcKeyPair],
+              [boundIssuerVc],
+            ),
+          ),
+        );
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/verify`,
+          payload: {
+            tenantId: tenant._id,
+            format: PresentationFormat.JWT_VP,
+            presentation: scalarTypeVp,
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.w3cPresentation.type).toEqual(
+          'VerifiablePresentation',
+        );
+        expect(
+          response.json.verification.credentials[0].w3cCredential.type,
+        ).toEqual('OpenBadgeCredential');
+      });
+
       it('should be able to verify a presentation on demand', async () => {
         mockResolveDidDocument.mock.mockImplementationOnce(() =>
           Promise.resolve(
