@@ -21,8 +21,7 @@ const http = require('node:http');
 const path = require('path');
 const { expect } = require('expect');
 const { MongoClient } = require('mongodb');
-const { nanoid, customAlphabet } = require('nanoid');
-const { lowercase } = require('nanoid-dictionary');
+const { nanoid } = require('nanoid');
 const { filter, first, find, map, omit } = require('lodash/fp');
 const {
   KeyPurposes,
@@ -92,6 +91,10 @@ dotenv.config({
 console.dir(e2eEnv);
 
 const OPERATOR_API_TOKEN = 'foo';
+const CAO_WEBSITE = 'https://www.acmecorp-cih-e2e.com';
+// The registrar derives this did:web from its configured host and the CAO
+// website hostname. Keep it aligned with DEFAULT_CAO_DID in .localdev.env.
+const DEFAULT_CAO_DID = 'did:web:registrar-proxy:d:www.acmecorp-cih-e2e.com';
 const EDUCATION_DEGREE_CREDENTIAL_TYPE = 'EducationDegreeGraduationV1.1';
 
 describe('org registration and issuing e2e', () => {
@@ -133,7 +136,7 @@ describe('org registration and issuing e2e', () => {
           logo: 'https://www.acmecorp.com/betamax-logo.png',
         },
       ],
-      website: `https://www.acmecorp-${customAlphabet(lowercase)()}.com`,
+      website: CAO_WEBSITE,
       registrationNumbers: [
         {
           authority: 'DunnAndBradstreet',
@@ -215,6 +218,7 @@ describe('org registration and issuing e2e', () => {
     // json response checks
     expect(createFullOrganizationResponse.id).toMatch(DID_FORMAT);
     const { id: did, ids, profile, keys } = createFullOrganizationResponse;
+    expect(did).toEqual(DEFAULT_CAO_DID);
     console.dir({ msg: 'Organization registered', did, keys });
 
     await wait(500);
@@ -293,7 +297,6 @@ describe('org registration and issuing e2e', () => {
     const createTenantPayload = {
       tenant: {
         did,
-        caoDid: did,
         name: createFullOrganizationResponse.profile.name,
         logo: createFullOrganizationResponse.profile.logo,
       },
@@ -321,7 +324,10 @@ describe('org registration and issuing e2e', () => {
     expect(createTenantResponse.status).toEqual(200);
     const createTenantJson = await createTenantResponse.json();
     expect(createTenantJson).toEqual({
-      tenant: expectedTenant(createTenantPayload.tenant, ids.ethereumAccount),
+      tenant: expectedTenant(
+        { ...createTenantPayload.tenant, caoDid: DEFAULT_CAO_DID },
+        ids.ethereumAccount,
+      ),
       keyMetadatas: expectedKeyMetadatas(createTenantPayload.keys),
       requestId: expect.any(String),
     });
