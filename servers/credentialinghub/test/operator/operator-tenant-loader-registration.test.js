@@ -16,29 +16,24 @@
 
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
-const fp = require('fastify-plugin');
 const { omit } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const createTestFastify = require('../helpers/create-test-fastify');
+const {
+  createTestCaoSecurityProvider,
+} = require('../helpers/create-test-cao-security-provider');
 const { initTenantFactory } = require('../../src/entities/tenants');
 
 const CAO_A_DID = 'did:example:cao-a';
 const CAO_B_DID = 'did:example:cao-b';
 
-const operatorAuthExtension = {
-  plugin: fp(async (fastify) => {
-    fastify.decorate('authenticateOperator', async (request) => {
-      request.operatorPrincipal = {
-        caoDid: CAO_A_DID,
-        subject: 'test-operator',
-        subjectType: 'client',
-        authenticationMethod: 'test',
-      };
-    });
-  }),
-  documentation: {},
-};
+const caoSecurityProvider = createTestCaoSecurityProvider({
+  caoDid: CAO_A_DID,
+  subject: 'test-operator',
+  subjectType: 'client',
+  authenticationMethod: 'test',
+});
 
 const requestCases = [
   {
@@ -119,7 +114,7 @@ describe('operator controller tenant-loader registration', () => {
   before(async () => {
     fastify = createTestFastify(
       { logSeverity: 'fatal' },
-      { operatorAuthExtension },
+      { caoSecurityProvider },
     );
     await fastify.ready();
     ({ persistTenant } = initTenantFactory(fastify));

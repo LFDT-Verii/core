@@ -14,16 +14,26 @@
  * limitations under the License.
  *
  */
+const newError = require('http-errors');
+const { isString, trim } = require('lodash/fp');
 const { responseRequestIdPlugin } = require('@verii/fastify-plugins');
 const { kmsPlugin } = require('../../entities/keys');
 const {
   setDocumentationAudience,
 } = require('../../documentation/set-documentation-audience');
 
+const OPERATOR_CAO_DID_INVALID = 'operator_cao_did_invalid';
+
 module.exports = async (fastify) => {
   setDocumentationAudience(fastify, 'operator');
   fastify.addHook('onRequest', async (request, reply) => {
     await fastify.authenticateOperator(request, reply);
+    const caoDid = request.operatorPrincipal?.caoDid;
+    if (!reply.sent && (!isString(caoDid) || trim(caoDid) === '')) {
+      throw newError(401, OPERATOR_CAO_DID_INVALID, {
+        errorCode: OPERATOR_CAO_DID_INVALID,
+      });
+    }
   });
   fastify
     .register(kmsPlugin)

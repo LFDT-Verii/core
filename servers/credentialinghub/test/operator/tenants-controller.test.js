@@ -17,7 +17,6 @@
 
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
-const fp = require('fastify-plugin');
 
 const mockLookupPrimary = mock.fn();
 const mockContractPermissionsModule = {
@@ -52,6 +51,9 @@ const { toEthereumAddress } = require('@verii/blockchain-functions');
 
 const { applyOverrides } = require('@verii/common-functions');
 const createTestFastify = require('../helpers/create-test-fastify');
+const {
+  createTestCaoSecurityProvider,
+} = require('../helpers/create-test-cao-security-provider');
 const { buildIssuerDidDoc } = require('../helpers/build-issuer-did-doc');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -61,19 +63,12 @@ const { CihKeyPurposes, initKeyFactory } = require('../../src/entities/keys');
 const OPERATOR_CAO_DID = 'did:example:operator-cao';
 const OTHER_CAO_DID = 'did:example:other-cao';
 
-const operatorAuthExtension = {
-  plugin: fp(async (fastify) => {
-    fastify.decorate('authenticateOperator', async (request) => {
-      request.operatorPrincipal = {
-        caoDid: OPERATOR_CAO_DID,
-        subject: 'test-operator',
-        subjectType: 'client',
-        authenticationMethod: 'test',
-      };
-    });
-  }),
-  documentation: {},
-};
+const caoSecurityProvider = createTestCaoSecurityProvider({
+  caoDid: OPERATOR_CAO_DID,
+  subject: 'test-operator',
+  subjectType: 'client',
+  authenticationMethod: 'test',
+});
 
 describe('Tenants management test suite', () => {
   let fastify;
@@ -994,7 +989,7 @@ describe('CAO-isolated tenant management', () => {
   before(async () => {
     fastify = createTestFastify(
       { logSeverity: 'fatal' },
-      { operatorAuthExtension },
+      { caoSecurityProvider },
     );
     await fastify.ready();
     ({ persistTenant, newTenant } = initTenantFactory(fastify));

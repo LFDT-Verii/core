@@ -131,8 +131,19 @@ property.
 The Operator plugin must decorate `authenticateOperator`; the authenticator
 must either reject the request by throwing or sending a reply, or set
 `request.operatorPrincipal` on success. The Hub owns the `operatorPrincipal`
-request decoration, so a provider must not redecorate it. The principal is
-provider-owned data and is not normalized by the Hub.
+request decoration, so a provider must not redecorate it. A successful
+principal must have a non-empty string `caoDid`. The Hub rejects an Operator
+request with `401 operator_cao_did_invalid` before controller or tenant-loading
+logic runs when the returned principal does not meet that requirement. Other
+principal fields are provider-owned data and are not normalized by the Hub.
+
+Operator tenant access is scoped to the authenticated principal's `caoDid`.
+Tenant creation assigns that CAO DID when the request omits it and rejects a
+different supplied value with `400 cao_did_mismatch`. Tenant listing, explicit
+tenant lookup, and deletion include the CAO DID in their repository filters.
+A tenant owned by another CAO is therefore concealed using the same
+`tenant_not_found` response as an unknown tenant. Public VN and OpenID routes
+continue to load tenants without an Operator principal.
 
 The blockchain plugin must decorate
 `resolveBlockchainClientCredentials(request)`. Its result contains a stable,
@@ -142,12 +153,13 @@ the loaded tenant, while authenticated Operator requests can resolve it from
 the Operator principal. A multi-CAO provider should reject requests when both
 sources exist but disagree, or when neither source supplies a CAO DID.
 
-Custom providers are trusted server setup code, so the Hub does not perform
-additional shape validation on their descriptors or principals. Fastify
-reports invalid plugin and missing decorator integrations through its normal
-startup and request behavior. Credential values are validated by the
-blockchain authentication layer when they are consumed. Provider errors are
-returned to the caller and never fall back to the built-in static credentials.
+Custom providers are trusted server setup code, so apart from the Operator
+principal's required `caoDid`, the Hub does not perform additional shape
+validation on their descriptors or principals. Fastify reports invalid plugin
+and missing decorator integrations through its normal startup and request
+behavior. Credential values are validated by the blockchain authentication
+layer when they are consumed. Provider errors are returned to the caller and
+never fall back to the built-in static credentials.
 
 ## Data Migrations
 

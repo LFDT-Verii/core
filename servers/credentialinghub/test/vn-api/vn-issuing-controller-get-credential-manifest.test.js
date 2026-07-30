@@ -17,7 +17,6 @@
 
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
-const fp = require('fastify-plugin');
 const {
   mockHttpClientJsonResponse,
   mockHttpClient,
@@ -46,24 +45,20 @@ const {
   initIssuerServiceFactory,
 } = require('../../src/entities/issuer-services');
 const createTestFastify = require('../helpers/create-test-fastify');
+const {
+  createTestCaoSecurityProvider,
+} = require('../helpers/create-test-cao-security-provider');
 const { constructTenant } = require('../helpers/construct-tenant');
 
 const agentUrl = 'https://localhost.test';
 const OPERATOR_CAO_DID = 'did:example:operator-cao';
 
-const operatorAuthExtension = {
-  plugin: fp(async (fastify) => {
-    fastify.decorate('authenticateOperator', async (request) => {
-      request.operatorPrincipal = {
-        caoDid: OPERATOR_CAO_DID,
-        subject: 'test-operator',
-        subjectType: 'client',
-        authenticationMethod: 'test',
-      };
-    });
-  }),
-  documentation: {},
-};
+const caoSecurityProvider = createTestCaoSecurityProvider({
+  caoDid: OPERATOR_CAO_DID,
+  subject: 'test-operator',
+  subjectType: 'client',
+  authenticationMethod: 'test',
+});
 
 const vnUrl = ({ did }) => `/vn-api/r/${did}`;
 
@@ -495,7 +490,7 @@ describe('VN API tenant loading with CAO-isolated operator routes', () => {
   before(async () => {
     fastify = createTestFastify(
       { logSeverity: 'fatal' },
-      { operatorAuthExtension },
+      { caoSecurityProvider },
     );
     await fastify.ready();
     const { persistTenant } = initTenantFactory(fastify);
