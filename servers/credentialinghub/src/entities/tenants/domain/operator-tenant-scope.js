@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-const newError = require('http-errors');
-
-const CAO_DID_MISMATCH = 'cao_did_mismatch';
-
 const getOperatorCaoDid = (context) =>
   context.operatorPrincipal?.caoDid ?? null;
 
@@ -31,11 +27,6 @@ const applyOperatorCaoDid = (newTenant, context) => {
   // rejects requests before controller execution unless the provider returns
   // a valid CAO DID. The default provider puts defaultCaoDid on that principal.
   const { caoDid } = context.operatorPrincipal;
-  if (newTenant.caoDid != null && newTenant.caoDid !== caoDid) {
-    throw newError(400, CAO_DID_MISMATCH, {
-      errorCode: CAO_DID_MISMATCH,
-    });
-  }
   return { ...newTenant, caoDid };
 };
 

@@ -16,6 +16,9 @@
           "type": "string",
           "pattern": "^did:[a-z0-9]+:[A-Za-z0-9._:?=&%;-]+$"
         },
+        "caoDid": {
+          "type": "string"
+        },
         "name": {
           "type": "string",
           "description": "did for the org"

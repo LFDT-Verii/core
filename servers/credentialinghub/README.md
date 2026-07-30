@@ -20,7 +20,8 @@ Startup fails when any of the four values is absent from both
 uses the built-in provider, including the standalone notification worker.
 Deployments upgrading from the earlier static-token setup must now supply
 `DEFAULT_CAO_DID`; it was previously optional because tenant creation could
-instead receive a `caoDid` in the request.
+instead receive a `caoDid` in the request. The current Operator create endpoint
+does not accept that field.
 
 A wrapper that supports multiple CAOs can replace the default provider by
 supplying a `caoSecurityProvider` to `createAppServer` or `startAppServer`.
@@ -141,12 +142,13 @@ Provider-owned routes registered inside a capability plugin, such as a token
 endpoint, remain responsible for their own authentication behavior.
 
 Operator tenant access is scoped to the authenticated principal's `caoDid`.
-Tenant creation assigns that CAO DID when the request omits it and rejects a
-different supplied value with `400 cao_did_mismatch`. Tenant listing, explicit
-tenant lookup, and deletion include the CAO DID in their repository filters.
-A tenant owned by another CAO is therefore concealed using the same
-`tenant_not_found` response as an unknown tenant. Public VN and OpenID routes
-continue to load tenants without an Operator principal.
+Tenant creation always assigns that CAO DID and rejects a request containing
+`tenant.caoDid` with `400 request_validation_failed`. The persisted CAO DID
+remains present in tenant responses. Tenant listing, explicit tenant lookup,
+and deletion include the CAO DID in their repository filters. A tenant owned
+by another CAO is therefore concealed using the same `tenant_not_found`
+response as an unknown tenant. Public VN and OpenID routes continue to load
+tenants without an Operator principal.
 
 The blockchain plugin must decorate
 `resolveBlockchainClientCredentials(request)`. Its result contains a stable,

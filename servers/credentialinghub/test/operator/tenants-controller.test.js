@@ -1055,21 +1055,8 @@ describe('CAO-isolated tenant management', () => {
     );
   });
 
-  it('accepts create when the supplied caoDid matches the authenticated CAO', async () => {
+  it('rejects create when the request supplies caoDid', async () => {
     const payload = await buildCreatePayload(OPERATOR_CAO_DID);
-
-    const response = await fastify.injectJson({
-      method: 'POST',
-      url: '/operator/tenants/create',
-      payload,
-    });
-
-    expect(response.statusCode).toEqual(200);
-    expect(response.json.tenant.caoDid).toEqual(OPERATOR_CAO_DID);
-  });
-
-  it('rejects create when the supplied caoDid conflicts with the authenticated CAO', async () => {
-    const payload = await buildCreatePayload(OTHER_CAO_DID);
 
     const response = await fastify.injectJson({
       method: 'POST',
@@ -1079,11 +1066,10 @@ describe('CAO-isolated tenant management', () => {
 
     expect(response.statusCode).toEqual(400);
     expect(response.json).toEqual(
-      errorResponseMatcher({
+      expect.objectContaining({
         statusCode: 400,
         error: 'Bad Request',
-        message: 'cao_did_mismatch',
-        errorCode: 'cao_did_mismatch',
+        errorCode: 'request_validation_failed',
       }),
     );
     await expect(

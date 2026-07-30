@@ -14,9 +14,6 @@
     "primaryAccount": {
       "type": "string"
     },
-    "caoDid": {
-      "type": "string"
-    },
     "name": {
       "type": "string"
     },
