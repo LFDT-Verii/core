@@ -18,12 +18,7 @@ const newError = require('http-errors');
 const { find } = require('lodash/fp');
 const { TenantErrors } = require('./tenant-errors');
 
-const validateNewTenant = (newTenant, orgProfile, context) => {
-  if (newTenant.caoDid == null && context.config.defaultCaoDid == null) {
-    throw newError(400, TenantErrors.CAO_DID_REQUIRED, {
-      errorCode: TenantErrors.CAO_DID_REQUIRED,
-    });
-  }
+const validateNewTenant = (newTenant, orgProfile) => {
   validateNameAndLogo(newTenant, orgProfile);
 };
 

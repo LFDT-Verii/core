@@ -136,6 +136,9 @@ principal must have a non-empty string `caoDid`. The Hub rejects an Operator
 request with `401 operator_cao_did_invalid` before controller or tenant-loading
 logic runs when the returned principal does not meet that requirement. Other
 principal fields are provider-owned data and are not normalized by the Hub.
+This validation covers every core route auto-loaded under `/operator`.
+Provider-owned routes registered inside a capability plugin, such as a token
+endpoint, remain responsible for their own authentication behavior.
 
 Operator tenant access is scoped to the authenticated principal's `caoDid`.
 Tenant creation assigns that CAO DID when the request omits it and rejects a

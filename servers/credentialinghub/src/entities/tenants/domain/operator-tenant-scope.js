@@ -27,17 +27,16 @@ const scopeTenantFilter = (filter, context) => {
 };
 
 const applyOperatorCaoDid = (newTenant, context) => {
-  const caoDid = getOperatorCaoDid(context);
-  if (
-    caoDid != null &&
-    newTenant.caoDid != null &&
-    newTenant.caoDid !== caoDid
-  ) {
+  // Core tenant creation is registered beneath the Operator autohook, which
+  // rejects requests before controller execution unless the provider returns
+  // a valid CAO DID. The default provider puts defaultCaoDid on that principal.
+  const { caoDid } = context.operatorPrincipal;
+  if (newTenant.caoDid != null && newTenant.caoDid !== caoDid) {
     throw newError(400, CAO_DID_MISMATCH, {
       errorCode: CAO_DID_MISMATCH,
     });
   }
-  return caoDid == null ? { ...newTenant } : { ...newTenant, caoDid };
+  return { ...newTenant, caoDid };
 };
 
 module.exports = {

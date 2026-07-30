@@ -39,7 +39,7 @@ const createTenant = async (newTenant, tenantKeys, context) => {
     loadTenantProfile(scopedNewTenant.did, context),
   ]);
 
-  validateNewTenant(scopedNewTenant, orgProfile, context);
+  validateNewTenant(scopedNewTenant, orgProfile);
 
   validateTenantKeys(tenantKeys, didDoc);
   const normalizedKeys = [
@@ -90,9 +90,6 @@ const prepareTenant = async (
   newTenant.primaryAccount = primaryAccount;
   if (newTenant.hostUrl == null) {
     newTenant.hostUrl = context.config.hostUrl;
-  }
-  if (newTenant.caoDid == null) {
-    newTenant.caoDid = context.config.defaultCaoDid;
   }
   newTenant.keysByPurpose = flow(
     flatMap((key) => {

@@ -26,6 +26,9 @@ const OPERATOR_CAO_DID_INVALID = 'operator_cao_did_invalid';
 
 module.exports = async (fastify) => {
   setDocumentationAudience(fastify, 'operator');
+  // This hook cascades to every core controller under /operator. Routes owned
+  // by a custom provider and registered inside its plugin remain responsible
+  // for their own authentication contract.
   fastify.addHook('onRequest', async (request, reply) => {
     await fastify.authenticateOperator(request, reply);
     const caoDid = request.operatorPrincipal?.caoDid;
