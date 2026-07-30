@@ -17,6 +17,7 @@
 module.exports = {
   ...require('./adapters'),
   ...require('./domain'),
+  ...require('./domain/operator-tenant-scope'),
   ...require('./factories'),
   ...require('./orchestrators'),
   ...require('./plugins'),

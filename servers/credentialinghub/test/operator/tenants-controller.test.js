@@ -51,15 +51,24 @@ const { toEthereumAddress } = require('@verii/blockchain-functions');
 
 const { applyOverrides } = require('@verii/common-functions');
 const createTestFastify = require('../helpers/create-test-fastify');
+const {
+  createTestCaoSecurityProvider,
+} = require('../helpers/create-test-cao-security-provider');
 const { buildIssuerDidDoc } = require('../helpers/build-issuer-did-doc');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
   initIssuerServiceFactory,
 } = require('../../src/entities/issuer-services');
 const { CihKeyPurposes, initKeyFactory } = require('../../src/entities/keys');
-const {
-  TenantErrors,
-} = require('../../src/entities/tenants/domain/tenant-errors');
+const OPERATOR_CAO_DID = 'did:example:operator-cao';
+const OTHER_CAO_DID = 'did:example:other-cao';
+
+const caoSecurityProvider = createTestCaoSecurityProvider({
+  caoDid: OPERATOR_CAO_DID,
+  subject: 'test-operator',
+  subjectType: 'client',
+  authenticationMethod: 'test',
+});
 
 describe('Tenants management test suite', () => {
   let fastify;
@@ -396,32 +405,6 @@ describe('Tenants management test suite', () => {
       );
     });
 
-    it('should 400 if config.defaultCaoDid is not set and caoDID is not specified', async () => {
-      fastify.overrides.reqConfig = (config) => ({
-        ...config,
-        defaultCaoDid: undefined,
-      });
-
-      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
-
-      const payload = {
-        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
-        keys: orgKeys,
-      };
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: createUrl,
-        payload,
-      });
-      expect(response.statusCode).toEqual(400);
-      expect(response.json).toEqual(
-        errorResponseMatcher({
-          errorCode: TenantErrors.CAO_DID_REQUIRED,
-          message: TenantErrors.CAO_DID_REQUIRED,
-        }),
-      );
-    });
-
     it('should 400 when name is missing', async () => {
       const tenantPayload = omit(['name'], await newTenantMinimalPayload());
       const payload = {
@@ -658,8 +641,7 @@ describe('Tenants management test suite', () => {
       );
     });
 
-    // eslint-disable-next-line max-len
-    it('should 200 and create tenant, multiple key entities & overridden primaryAddress, hostUrl, caoDID, and name and logo matching profile commercialEntity', async () => {
+    it('should 200 and create tenant with multiple keys and allowed field overrides', async () => {
       const { didDoc: orgDoc2, keys: orgKeys2 } = buildIssuerDidDoc({
         keyPerPurpose: true,
       });
@@ -682,7 +664,6 @@ describe('Tenants management test suite', () => {
           logo: 'https://localhost.test/bar.png',
         })),
         primaryAccount,
-        caoDid: orgDoc2.id,
         hostUrl: 'https://example.com',
       };
       const payload = {
@@ -996,6 +977,192 @@ describe('Tenants management test suite', () => {
         tenantId: new ObjectId(tenantId),
       })
       .toArray();
+});
+
+describe('CAO-isolated tenant management', () => {
+  let fastify;
+  let newTenant;
+  let persistTenant;
+  let persistKey;
+  let persistIssuerService;
+
+  before(async () => {
+    fastify = createTestFastify(
+      { logSeverity: 'fatal' },
+      { caoSecurityProvider },
+    );
+    await fastify.ready();
+    ({ persistTenant, newTenant } = initTenantFactory(fastify));
+    ({ persistKey } = initKeyFactory(fastify));
+    ({ persistIssuerService } = initIssuerServiceFactory(fastify));
+  });
+
+  beforeEach(async () => {
+    fastify.resetOverrides();
+    await Promise.all([
+      mongoDb().collection('tenants').deleteMany({}),
+      mongoDb().collection('keys').deleteMany({}),
+      mongoDb().collection('issuerServices').deleteMany({}),
+    ]);
+  });
+
+  after(async () => {
+    await fastify.close();
+  });
+
+  const buildCreatePayload = async (caoDid) => {
+    const { didDoc, keys } = buildIssuerDidDoc();
+    setupCreateTenantRegistrarMocks(didDoc.id, didDoc);
+    const tenant = await newTenant({ did: didDoc.id });
+    return {
+      tenant: {
+        ...pick(['did', 'name', 'logo', 'primaryAccount'], tenant),
+        ...(caoDid == null ? {} : { caoDid }),
+      },
+      keys,
+    };
+  };
+
+  const comparableResponse = (response) => ({
+    statusCode: response.statusCode,
+    body: omit(['requestId'], response.json),
+  });
+
+  const loadTenant = (tenantId) =>
+    mongoDb()
+      .collection('tenants')
+      .findOne({ _id: new ObjectId(tenantId) });
+
+  const loadKeys = (tenantId) =>
+    mongoDb()
+      .collection('keys')
+      .find({ tenantId: new ObjectId(tenantId) })
+      .toArray();
+
+  it('assigns the authenticated CAO when create omits caoDid', async () => {
+    const payload = await buildCreatePayload();
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: '/operator/tenants/create',
+      payload,
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json.tenant.caoDid).toEqual(OPERATOR_CAO_DID);
+    await expect(loadTenant(response.json.tenant.id)).resolves.toEqual(
+      expect.objectContaining({ caoDid: OPERATOR_CAO_DID }),
+    );
+  });
+
+  it('rejects create when the request supplies caoDid', async () => {
+    const payload = await buildCreatePayload(OPERATOR_CAO_DID);
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: '/operator/tenants/create',
+      payload,
+    });
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.json).toEqual(
+      expect.objectContaining({
+        statusCode: 400,
+        error: 'Bad Request',
+        errorCode: 'request_validation_failed',
+      }),
+    );
+    await expect(
+      mongoDb().collection('tenants').countDocuments(),
+    ).resolves.toEqual(0);
+    await expect(
+      mongoDb().collection('keys').countDocuments(),
+    ).resolves.toEqual(0);
+  });
+
+  it("lists only the authenticated CAO's tenants", async () => {
+    const [ownTenantA, ownTenantB] = await Promise.all([
+      persistTenant({ caoDid: OPERATOR_CAO_DID }),
+      persistTenant({ caoDid: OPERATOR_CAO_DID }),
+      persistTenant({ caoDid: OTHER_CAO_DID }),
+    ]);
+
+    const response = await fastify.injectJson({
+      method: 'GET',
+      url: '/operator/tenants/get',
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(map('id', response.json.tenants).sort()).toEqual(
+      [ownTenantA._id, ownTenantB._id].sort(),
+    );
+  });
+
+  it("filters explicit tenant IDs to the authenticated CAO's tenants", async () => {
+    const [ownTenant, foreignTenant] = await Promise.all([
+      persistTenant({ caoDid: OPERATOR_CAO_DID }),
+      persistTenant({ caoDid: OTHER_CAO_DID }),
+    ]);
+
+    const response = await fastify.injectJson({
+      method: 'GET',
+      url: `/operator/tenants/get?tenantId=${ownTenant._id}&tenantId=${foreignTenant._id}`,
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(map('id', response.json.tenants)).toEqual([ownTenant._id]);
+  });
+
+  it('deletes a tenant owned by the authenticated CAO and its keys', async () => {
+    const tenant = await persistTenant({ caoDid: OPERATOR_CAO_DID });
+    await persistKey({ tenant });
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: '/operator/tenants/delete',
+      payload: { tenantId: tenant._id },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    await expect(loadTenant(tenant._id)).resolves.toBeNull();
+    await expect(loadKeys(tenant._id)).resolves.toEqual([]);
+  });
+
+  it('conceals a foreign tenant before checking or removing related records', async () => {
+    const foreignTenant = await persistTenant({ caoDid: OTHER_CAO_DID });
+    const foreignKey = await persistKey({ tenant: foreignTenant });
+    const foreignService = await persistIssuerService({
+      tenant: foreignTenant,
+    });
+    const unknownResponse = await fastify.injectJson({
+      method: 'POST',
+      url: '/operator/tenants/delete',
+      payload: { tenantId: new ObjectId() },
+    });
+
+    const foreignResponse = await fastify.injectJson({
+      method: 'POST',
+      url: '/operator/tenants/delete',
+      payload: { tenantId: foreignTenant._id },
+    });
+
+    expect(comparableResponse(foreignResponse)).toEqual(
+      comparableResponse(unknownResponse),
+    );
+    await expect(loadTenant(foreignTenant._id)).resolves.toEqual(
+      expect.objectContaining({ caoDid: OTHER_CAO_DID }),
+    );
+    await expect(loadKeys(foreignTenant._id)).resolves.toEqual([
+      expect.objectContaining({ _id: new ObjectId(foreignKey._id) }),
+    ]);
+    await expect(
+      mongoDb()
+        .collection('issuerServices')
+        .findOne({ _id: new ObjectId(foreignService._id) }),
+    ).resolves.toEqual(
+      expect.objectContaining({ _id: new ObjectId(foreignService._id) }),
+    );
+  });
 });
 
 const expectedTenant = (tenant, overrides) =>

@@ -45,9 +45,20 @@ const {
   initIssuerServiceFactory,
 } = require('../../src/entities/issuer-services');
 const createTestFastify = require('../helpers/create-test-fastify');
+const {
+  createTestCaoSecurityProvider,
+} = require('../helpers/create-test-cao-security-provider');
 const { constructTenant } = require('../helpers/construct-tenant');
 
 const agentUrl = 'https://localhost.test';
+const OPERATOR_CAO_DID = 'did:example:operator-cao';
+
+const caoSecurityProvider = createTestCaoSecurityProvider({
+  caoDid: OPERATOR_CAO_DID,
+  subject: 'test-operator',
+  subjectType: 'client',
+  authenticationMethod: 'test',
+});
 
 const vnUrl = ({ did }) => `/vn-api/r/${did}`;
 
@@ -468,6 +479,58 @@ describe('vn-api > get credential manifests', () => {
         },
       ]);
     });
+  });
+});
+
+describe('VN API tenant loading with CAO-isolated operator routes', () => {
+  let fastify;
+  let tenant;
+  let persistIssuerService;
+
+  before(async () => {
+    fastify = createTestFastify(
+      { logSeverity: 'fatal' },
+      { caoSecurityProvider },
+    );
+    await fastify.ready();
+    const { persistTenant } = initTenantFactory(fastify);
+    const { persistKey } = initKeyFactory(fastify);
+    ({ persistIssuerService } = initIssuerServiceFactory(fastify));
+
+    await Promise.all([
+      mongoDb().collection('tenants').deleteMany({}),
+      mongoDb().collection('keys').deleteMany({}),
+      mongoDb().collection('issuerServices').deleteMany({}),
+      mongoDb().collection('exchanges').deleteMany({}),
+    ]);
+    ({ tenant } = await constructTenant(persistTenant, persistKey));
+  });
+
+  after(async () => {
+    await fastify.close();
+  });
+
+  it('loads a public VN API tenant without an operator principal', async () => {
+    const issuerService = await persistIssuerService({
+      tenant,
+      description: 'Credential Issuance Disclosure',
+      authMethods: ['preauth'],
+    });
+
+    const response = await fastify.injectJson({
+      method: 'GET',
+      url: testUrl(tenant, {
+        id: issuerService._id,
+        format: 'json',
+      }),
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json.issuing_request).toEqual(
+      expect.objectContaining({
+        issuer: { id: tenant.did },
+      }),
+    );
   });
 });
 

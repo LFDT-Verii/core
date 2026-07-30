@@ -2,6 +2,7 @@
   "title": "Tenant creation",
   "$id": "new-tenant",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "did": {
       "type": "string",
@@ -12,9 +13,6 @@
       "format": "uri"
     },
     "primaryAccount": {
-      "type": "string"
-    },
-    "caoDid": {
       "type": "string"
     },
     "name": {

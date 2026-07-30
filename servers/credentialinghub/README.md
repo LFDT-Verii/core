@@ -20,7 +20,8 @@ Startup fails when any of the four values is absent from both
 uses the built-in provider, including the standalone notification worker.
 Deployments upgrading from the earlier static-token setup must now supply
 `DEFAULT_CAO_DID`; it was previously optional because tenant creation could
-instead receive a `caoDid` in the request.
+instead receive a `caoDid` in the request. The current Operator create endpoint
+does not accept that field.
 
 A wrapper that supports multiple CAOs can replace the default provider by
 supplying a `caoSecurityProvider` to `createAppServer` or `startAppServer`.
@@ -131,8 +132,23 @@ property.
 The Operator plugin must decorate `authenticateOperator`; the authenticator
 must either reject the request by throwing or sending a reply, or set
 `request.operatorPrincipal` on success. The Hub owns the `operatorPrincipal`
-request decoration, so a provider must not redecorate it. The principal is
-provider-owned data and is not normalized by the Hub.
+request decoration, so a provider must not redecorate it. A successful
+principal must have a non-empty string `caoDid`. The Hub rejects an Operator
+request with `401 operator_cao_did_invalid` before controller or tenant-loading
+logic runs when the returned principal does not meet that requirement. Other
+principal fields are provider-owned data and are not normalized by the Hub.
+This validation covers every core route auto-loaded under `/operator`.
+Provider-owned routes registered inside a capability plugin, such as a token
+endpoint, remain responsible for their own authentication behavior.
+
+Operator tenant access is scoped to the authenticated principal's `caoDid`.
+Tenant creation always assigns that CAO DID and rejects a request containing
+`tenant.caoDid` with `400 request_validation_failed`. The persisted CAO DID
+remains present in tenant responses. Tenant listing, explicit tenant lookup,
+and deletion include the CAO DID in their repository filters. A tenant owned
+by another CAO is therefore concealed using the same `tenant_not_found`
+response as an unknown tenant. Public VN and OpenID routes continue to load
+tenants without an Operator principal.
 
 The blockchain plugin must decorate
 `resolveBlockchainClientCredentials(request)`. Its result contains a stable,
@@ -142,12 +158,13 @@ the loaded tenant, while authenticated Operator requests can resolve it from
 the Operator principal. A multi-CAO provider should reject requests when both
 sources exist but disagree, or when neither source supplies a CAO DID.
 
-Custom providers are trusted server setup code, so the Hub does not perform
-additional shape validation on their descriptors or principals. Fastify
-reports invalid plugin and missing decorator integrations through its normal
-startup and request behavior. Credential values are validated by the
-blockchain authentication layer when they are consumed. Provider errors are
-returned to the caller and never fall back to the built-in static credentials.
+Custom providers are trusted server setup code, so apart from the Operator
+principal's required `caoDid`, the Hub does not perform additional shape
+validation on their descriptors or principals. Fastify reports invalid plugin
+and missing decorator integrations through its normal startup and request
+behavior. Credential values are validated by the blockchain authentication
+layer when they are consumed. Provider errors are returned to the caller and
+never fall back to the built-in static credentials.
 
 ## Data Migrations
 
