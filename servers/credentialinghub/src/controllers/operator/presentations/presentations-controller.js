@@ -15,15 +15,13 @@
  *
  */
 const newError = require('http-errors');
-const {
-  w3cVcSchema,
-  newOfferRelatedResourceSchema,
-} = require('@verii/common-schemas');
+const { newOfferRelatedResourceSchema } = require('@verii/common-schemas');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const { verifyPresentation } = require('../../../entities/presentations');
 const {
   basePresentationSchema,
   credentialVerificationSchema,
+  disclosedW3cVcSchema,
   presentationVerificationSchema,
   presentationSchema,
   w3cPresentationSchema,
@@ -32,7 +30,7 @@ const {
 module.exports = async (fastify) => {
   fastify
     .addSchema(newOfferRelatedResourceSchema)
-    .addSchema(w3cVcSchema)
+    .addSchema(disclosedW3cVcSchema)
     .addSchema(credentialVerificationSchema)
     .addSchema(presentationSchema)
     .addSchema(presentationVerificationSchema)

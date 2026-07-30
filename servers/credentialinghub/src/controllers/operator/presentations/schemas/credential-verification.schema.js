@@ -38,7 +38,7 @@ const credentialVerificationSchema = {
       type: 'string',
     },
     w3cCredential: {
-      $ref: 'https://velocitycareerlabs.io/w3c-vc.schema.json',
+      $ref: 'disclosed-w3c-vc#',
     },
     verified: {
       type: 'boolean',

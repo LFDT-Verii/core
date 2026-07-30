@@ -14,6 +14,8 @@
  * limitations under the License.
  *
  */
+const { disclosedTypeSchema } = require('./disclosed-w3c-vc.schema');
+
 const w3cPresentationSchema = {
   title: 'w3c presentation',
   $id: 'w3c-presentation',
@@ -24,19 +26,15 @@ const w3cPresentationSchema = {
       type: 'string',
     },
     type: {
-      type: 'array',
-      description: 'The JSON-LD type of the credential.',
-      items: {
-        type: 'string',
-      },
-      minItems: 1,
+      ...disclosedTypeSchema,
+      description: 'The JSON-LD type of the presentation.',
     },
     verifiableCredential: {
       type: 'array',
       items: {
         oneOf: [
           {
-            $ref: 'https://velocitycareerlabs.io/w3c-vc.schema.json',
+            $ref: 'disclosed-w3c-vc#',
           },
           {
             type: 'string',
