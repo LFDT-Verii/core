@@ -49,7 +49,7 @@
     "mongodb": "^7.5.0",
     "nanoid": "^5.1.16",
     "prettier": "3.9.6",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "typescript-eslint": "8.65.0"
   },
   "nx": {
