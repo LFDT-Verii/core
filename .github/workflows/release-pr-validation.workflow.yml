@@ -7,8 +7,10 @@ on:
       - '.github/releases/*.md'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - 'nx.json'
       - 'packages/*/package.json'
       - 'servers/*/package.json'
+      - 'tools/release/**'
       - 'tools/*/package.json'
 
 env:
@@ -31,6 +33,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: Enable Corepack
         run: corepack enable
+      - name: Install dependencies
+        run: >-
+          corepack "$(node -p "require('./package.json').packageManager")"
+          install --frozen-lockfile
+      - name: Test release preparation
+        run: >-
+          corepack "$(node -p "require('./package.json').packageManager")"
+          run test:release
       - name: Fetch base branch
         run: git fetch origin "${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
       - name: Validate release PR

@@ -40,7 +40,7 @@
       "currentVersionResolver": "disk",
       "preserveLocalDependencyProtocols": true,
       "preserveMatchingDependencyRanges": false,
-      "updateDependents": "always"
+      "updateDependents": "auto"
     },
     "versionPlans": {
       "ignorePatternsForPlanCheck": [
