@@ -36,4 +36,3 @@ Presentation verification responses now preserve and serialize both string and s
 
 - The built-in Operator authentication provider now requires `DEFAULT_CAO_DID`.
 - Operator tenant creation derives `caoDid` from the authenticated principal and rejects caller-supplied `caoDid` values.
-- Custom `caoSecurityProvider` implementations must supply a non-empty string `caoDid` on the authenticated Operator principal; all Operator tenant access is scoped to that CAO.
