@@ -1,6 +1,6 @@
 {
   "name": "@verii/server-credentialing-hub",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Credentialing Hub",
   "repository": "https://github.com/LFDT-Verii/core",
   "engines": {
