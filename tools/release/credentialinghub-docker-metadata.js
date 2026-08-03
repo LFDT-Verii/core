@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
-/* eslint-disable complexity */
-
 const fs = require('node:fs');
 const path = require('node:path');
 
 const IMAGE_NAME = 'verii/credentialing-hub';
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
+/* eslint-disable complexity */
 const buildCredentialingHubDockerMetadata = ({
   environment,
   groups,
@@ -55,6 +54,7 @@ const buildCredentialingHubDockerMetadata = ({
     tags: [`${IMAGE_NAME}:${version}`, `${IMAGE_NAME}:latest`],
   };
 };
+/* eslint-enable complexity */
 
 const writeGithubOutput = ({ outputFile, publish, version, tags }) => {
   if (typeof outputFile !== 'string' || outputFile.length === 0) {
