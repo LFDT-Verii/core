@@ -1,4 +1,4 @@
-# Generic Verii Server Docker Images Design
+# Generic Credentialing Hub Docker Image Design
 
 **Date:** 2026-08-03
 
@@ -6,35 +6,34 @@
 
 ## Summary
 
-Verii will publish generic, environment-independent Docker images for
-Credential Agent and Credentialing Hub to Docker Hub as
-`verii/credential-agent` and `verii/credentialing-hub`. Both images will be
-built directly from their existing `@verii/server-*` workspace packages with a
-shared production Dockerfile and runtime entrypoint. No Docker wrapper packages
+Verii will publish a generic, environment-independent Credentialing Hub Docker
+image to Docker Hub as `verii/credentialing-hub`. The image will be built
+directly from the existing `@verii/server-credentialing-hub` workspace package
+with a production Dockerfile and runtime entrypoint. No Docker wrapper package
 will be added.
 
-The images will accept individual runtime variables for an OAuth
-client-credentials-protected Ethereum network. They will also provide
+The image will accept individual runtime variables for an OAuth
+client-credentials-protected Ethereum network. It will also provide
 `--velocity-devnet`, `--velocity-testnet`, and `--velocity-mainnet` shortcuts
 that install the public configuration for the corresponding Velocity Network.
 The shortcuts never change the image contents and never select an image tag.
 
-The private monorepo image builds remain unchanged because automated Velocity
-deployments still require them and Credentialing Hub will gain private provider
-logic that cannot be published in the open-source image.
+The private monorepo Credentialing Hub image build remains unchanged because
+automated Velocity deployments still require it and the Hub will gain private
+provider logic that cannot be published in the open-source image.
 
 ## Context
 
-The existing `velocitycareerlabs/monorepo` workflow builds Credential Agent and
-Credentialing Hub images for a particular Velocity environment. Its Dockerfile
-bakes values from `eng/environments/dev.sh`, `staging.sh`, or `prod.sh` into the
-image. Consequently, the artifact is tied to devnet, testnet, or mainnet before
-it starts.
+The existing `velocitycareerlabs/monorepo` workflow builds the Credentialing
+Hub image for a particular Velocity environment. Its Dockerfile bakes values
+from `eng/environments/dev.sh`, `staging.sh`, or `prod.sh` into the image.
+Consequently, the artifact is tied to devnet, testnet, or mainnet before it
+starts.
 
-Verii now owns the runtime packages and their independent release versions, but
-does not own their production Docker distribution. The new images move the
+Verii now owns the Hub runtime package and its independent release version, but
+does not own its production Docker distribution. The new image moves the
 generic open-source distribution into Verii without replacing the private
-deployment wrappers.
+deployment wrapper.
 
 The shared RPC provider currently always obtains an OAuth token and sends a
 Bearer header. True unauthenticated RPC support does not exist yet: the local
@@ -45,8 +44,8 @@ and is not part of this design.
 
 ## Goals
 
-- Publish `verii/credential-agent` and `verii/credentialing-hub` to Docker Hub.
-- Build each image directly from the matching Verii server package and its
+- Publish `verii/credentialing-hub` to Docker Hub.
+- Build the image directly from the Verii Credentialing Hub package and its
   production workspace dependency graph.
 - Keep all network selection at container startup rather than image build time.
 - Support arbitrary Ethereum networks protected by OAuth client credentials
@@ -56,20 +55,20 @@ and is not part of this design.
 - Reject ambiguous mixtures of shortcut-owned and individually supplied
   network configuration before the server starts.
 - Preserve the legacy `VNF_*` runtime contract used by existing wrappers.
-- Align Docker tags with the existing independent Credential Agent and
-  Credentialing Hub package releases.
+- Align Docker tags with the independent Credentialing Hub package release.
 - Avoid routine Docker Hub prerelease churn by making prerelease image
   publishing explicitly opt-in.
 - Exercise the publishable Credentialing Hub artifact in its E2E test.
-- Correct the Credential Agent E2E workflow's stale Compose-file reference.
 
 ## Non-goals
 
 - Removing or changing the monorepo GHCR image builds.
 - Open-sourcing private Credentialing Hub provider logic.
-- Adding Docker-specific server wrapper packages.
-- Supporting unauthenticated blockchain RPC in either image. Hub support is
-  deferred to issue #890; Agent support is not currently planned.
+- Adding a Docker-specific server wrapper package.
+- Publishing or changing a Credential Agent Docker image, workflow, E2E stack,
+  documentation, or runtime behavior.
+- Supporting unauthenticated blockchain RPC in the Hub image. Support is
+  deferred to issue #890.
 - Refactoring authentication setup in existing contract or RPC tests.
 - Adding devnet, testnet, or mainnet Docker tags.
 - Moving Credentialing Hub migrations into Verii. The former migration
@@ -77,14 +76,13 @@ and is not part of this design.
 
 ## Architecture
 
-### Shared production Dockerfile
+### Credentialing Hub production Dockerfile
 
-A single multi-stage Dockerfile under `eng/docker/` accepts a `SERVICE` build
-argument whose allowed values are `credentialagent` and `credentialinghub`.
-The build stage uses the repository's pinned package manager, installs the
-locked workspace, and creates a production deployment for only the selected
-server and its workspace dependencies. The final stage contains that deployed
-tree plus the shared runtime entrypoint.
+A Hub-specific multi-stage Dockerfile under `servers/credentialinghub/docker/`
+uses the repository's pinned package manager, installs the locked workspace,
+and creates a production deployment containing only Credentialing Hub and its
+workspace dependencies. The final stage contains that deployed tree plus the
+runtime entrypoint.
 
 The final image:
 
@@ -97,16 +95,16 @@ The final image:
   credentials, or registry credentials baked into a layer;
 - carries OCI source, revision, version, and Apache-2.0 license labels supplied
   as build metadata; and
-- starts the selected server through the shared runtime entrypoint.
+- starts Credentialing Hub through the runtime entrypoint.
 
 ### Runtime entrypoint and resolver
 
 The entrypoint is JavaScript so its parsing and validation rules can be tested
 as pure logic. The pure resolver receives an argument list and environment
-object and returns the environment additions required before loading the
-server's existing `src/main.js`. The executable entrypoint applies those
-additions and loads the server in the same Node process, preserving normal
-container signal and exit behavior.
+object and returns the environment additions required before loading the Hub's
+existing `src/main.js`. The executable entrypoint applies those additions and
+loads the server in the same Node process, preserving normal container signal
+and exit behavior.
 
 The entrypoint accepts zero or one of these exact arguments:
 
@@ -119,8 +117,8 @@ three-dash form fail with a concise usage message before server startup. Users
 who need another container command can override the Docker entrypoint.
 
 With no shortcut, the resolver only maps generic OAuth variable aliases to the
-server's existing internal names. All other application validation continues
-to be owned by the existing server configuration.
+Hub's existing internal names. All other application validation continues to
+be owned by the existing server configuration.
 
 ### Velocity Network presets
 
@@ -129,7 +127,7 @@ snapshot of the public settings in the legacy monorepo at commit
 `1b10884abb`, using `dev.sh` for devnet, `staging.sh` for testnet, and `prod.sh`
 for mainnet.
 
-The common preset owns these runtime values:
+Each preset owns these Hub runtime values:
 
 - `RPC_NODE_URL`
 - `CHAIN_ID`
@@ -145,22 +143,10 @@ The common preset owns these runtime values:
 - `LIB_URL`
 - `CREDENTIAL_EXTENSIONS_CONTEXT_URL`
 
-The Credential Agent preset additionally owns:
-
-- `VNF_OAUTH_AUTHORIZATION_ENDPOINT`
-- `VNF_DID`
-- `DEFAULT_CA_WALLET_CONFIG`
-- `DEFAULT_WALLET_MOBILE`
-- `DEFAULT_WALLET_DESKTOP`
-
-Credentialing Hub ignores the Agent-only values rather than receiving an
-unnecessary superset.
-
 The preset does not own deployment or secret values. Variables such as
 `MONGO_URI`, `HOST_URL`, `PORT`, `LOG_SEVERITY`, TLS certificate paths,
-Credential Agent secrets, Hub encryption secrets, CAO/operator settings, and
-OAuth client ID/secret remain allowed and required according to the selected
-server's existing rules.
+Hub encryption secrets, CAO/operator settings, and OAuth client ID/secret
+remain allowed and required according to the Hub's existing rules.
 
 ### Conflict rules
 
@@ -200,7 +186,7 @@ The entrypoint maps them to the existing application configuration:
 
 Existing `VNF_OAUTH_*` and `BLOCKCHAIN_API_AUDIENCE` variables continue to
 work directly. This preserves compatibility for existing deployments while
-giving the public images a network-neutral interface.
+giving the public image a network-neutral interface.
 
 The OAuth flow remains the current client-credentials grant. Token acquisition,
 per-CAO Credentialing Hub credential resolution, caching, and Bearer-header
@@ -210,11 +196,11 @@ unauthenticated request.
 ### Generic network mode
 
 Without a shortcut, callers supply the individual blockchain, contract,
-network-service, application, and secret variables required by the chosen
-server. This mode can target an OAuth-protected Besu or other Ethereum JSON-RPC
-deployment. It does not imply that every Ethereum deployment is compatible
-with Velocity contracts or server semantics; the caller is responsible for
-supplying matching deployed contract addresses and network services.
+network-service, application, and secret variables required by the Hub. This
+mode can target an OAuth-protected Besu or other Ethereum JSON-RPC deployment.
+It does not imply that every Ethereum deployment is compatible with Velocity
+contracts or Hub semantics; the caller is responsible for supplying matching
+deployed contract addresses and network services.
 
 ### Shortcut mode
 
@@ -229,14 +215,13 @@ The existing `.github/workflows/publish-packages.workflow.yml` remains the
 single release entrypoint. Docker publishing is conditional on the selected
 Nx release groups:
 
-- the `credentialagent` group controls `verii/credential-agent`;
 - the `credentialinghub` group controls `verii/credentialing-hub`; and
-- selecting unrelated release groups never builds or publishes these images.
+- selecting any other release group does not build or publish the Hub image.
 
 ### Prerelease
 
 Automatic `main` pushes continue publishing npm prereleases but do not publish
-Docker images. A new boolean workflow-dispatch input, defaulting to false,
+the Docker image. A new boolean workflow-dispatch input, defaulting to false,
 allows a release operator to opt into Docker publishing during a manual
 prerelease run. An opted-in image receives only its exact package prerelease
 tag, for example `2.2.0-pre.1785474026.0`. It does not move `latest` and does
@@ -244,10 +229,10 @@ not receive a network name tag.
 
 ### Production
 
-A manual production promotion always publishes Docker images for the selected
-server release groups after the npm publication succeeds. Each image receives
-its exact stable package version and `latest`, for example `2.2.0` and
-`latest`.
+A manual production promotion always publishes the Docker image when the
+`credentialinghub` release group is selected and its npm publication succeeds.
+The image receives its exact stable package version and `latest`, for example
+`2.2.0` and `latest`.
 
 The version is read from the already-versioned package manifest in the same
 job workspace used for npm publishing. This prevents an image tag from
@@ -275,12 +260,6 @@ with the already documented `docker compose up --build` flow.
 The current `.localdev.env` and LocalAuth0 setup remain unchanged. The Hub E2E
 continues exercising OAuth client credentials against the local Besu node; it
 does not become a no-auth test.
-
-The Credential Agent E2E workflow currently references the nonexistent
-`servers/credentialagent/e2e/docker-compose.yml`. This work changes the
-workflow reference to the tracked `servers/credentialagent/docker/compose.yml`.
-Changing Agent E2E authentication or converting its development Compose image
-is outside this design.
 
 ## Validation and error handling
 
@@ -310,7 +289,7 @@ orchestration or validation is exercised through its public boundary.
 Unit tests for the pure runtime resolver cover:
 
 - no-shortcut pass-through;
-- every service and Velocity preset combination;
+- every Velocity preset;
 - generic-to-legacy OAuth alias mapping;
 - unknown, malformed, and multiple shortcuts;
 - every preset-variable conflict class;
@@ -319,21 +298,21 @@ Unit tests for the pure runtime resolver cover:
 
 ### Container smoke tests
 
-Docker smoke tests build both service values from the shared Dockerfile and
+Docker smoke tests build the Hub image from its production Dockerfile and
 verify:
 
-- each image runs as a non-root user;
+- the image runs as a non-root user;
 - network values are absent from image configuration;
 - invalid shortcut combinations fail through the real entrypoint; and
-- the final image contains the selected server rather than the other server's
-  full workspace.
+- the final image contains the Hub's production workspace dependency graph
+  rather than the full repository workspace.
 
 ### Integration and regression checks
 
 - Run the Credentialing Hub E2E stack using the locally built production
   image and existing LocalAuth0 flow.
-- Run the existing Credential Agent and Credentialing Hub test targets relevant
-  to changed configuration and startup files.
+- Run the existing Credentialing Hub test targets relevant to changed
+  configuration and startup files.
 - Run ESLint with `--fix` on every changed JavaScript file before verification.
 - Run actionlint against the modified publishing and E2E workflows.
 - Build both supported platforms through Buildx in CI; local verification may
@@ -344,7 +323,7 @@ for issue #890. Existing contract and RPC tests remain unchanged.
 
 ## Documentation
 
-Credential Agent and Credentialing Hub READMEs will document:
+The Credentialing Hub README will document:
 
 - the Docker Hub image name;
 - stable and prerelease tag behavior;
@@ -354,18 +333,17 @@ Credential Agent and Credentialing Hub READMEs will document:
 - the need to override the entrypoint for maintenance commands.
 
 `RELEASING.md` will document the manual prerelease Docker opt-in, automatic
-production publishing for selected server groups, tag policy, multi-platform
-targets, and required Docker Hub secrets.
+production publishing for the `credentialinghub` release group, tag policy,
+multi-platform targets, and required Docker Hub secrets.
 
 The stale Credentialing Hub migration section will be removed because neither
 the Verii package nor the current monorepo wrapper contains that migration
-scaffolding. Credential Agent migration documentation will be updated to use an
-explicit entrypoint override with the new image.
+scaffolding.
 
 ## Rollout and compatibility
 
-The new Docker Hub repositories are additive. Existing GHCR and ECR deployment
-references continue to resolve to monorepo-built artifacts. Existing package
+The new Docker Hub repository is additive. Existing GHCR and ECR deployment
+references continue to resolve to the monorepo-built artifact. Existing package
 consumers and legacy `VNF_*` variables retain their behavior.
 
 The first production publication writes the package version and `latest` tags.
@@ -379,7 +357,7 @@ requires rebuilding for a different network.
   deployment secret is included in an image layer or OCI label.
 - Presets contain public network metadata only.
 - Error messages never print environment values.
-- Images run as a non-root user.
+- The image runs as a non-root user.
 - Docker base images and GitHub Actions remain digest-pinned according to the
   repository's existing dependency policy.
 - OAuth failures cannot downgrade to an unauthenticated RPC request.
