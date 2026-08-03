@@ -21,6 +21,10 @@ on:
         options:
           - preminor
           - prepatch
+      publish_docker_image:
+        type: boolean
+        description: Publish the selected Credentialing Hub prerelease to Docker Hub
+        default: false
   push:
     branches: [main]
     paths:
@@ -90,6 +94,13 @@ jobs:
           --preid "${{ steps.prerelease-version.outputs.preid }}"
           --git-commit=false
           --git-tag=false
+      - name: Plan Credentialing Hub prerelease image
+        id: credentialinghub-docker
+        env:
+          RELEASE_ENVIRONMENT: prerelease
+          RELEASE_GROUPS: ${{ env.RELEASE_GROUPS }}
+          PUBLISH_PRERELEASE_IMAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_docker_image || false }}
+        run: node tools/release/credentialinghub-docker-metadata.js
       - name: Publish prerelease packages
         run: >-
           pnpm exec nx release publish
@@ -97,6 +108,30 @@ jobs:
           --tag prerelease
           --registry https://registry.npmjs.org
           --parallel=1
+      - name: Set up QEMU
+        if: steps.credentialinghub-docker.outputs.publish == 'true'
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - name: Set up Docker Buildx
+        if: steps.credentialinghub-docker.outputs.publish == 'true'
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Log in to Docker Hub
+        if: steps.credentialinghub-docker.outputs.publish == 'true'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Publish Credentialing Hub prerelease image
+        if: steps.credentialinghub-docker.outputs.publish == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        with:
+          context: .
+          file: servers/credentialinghub/docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.credentialinghub-docker.outputs.tags }}
+          build-args: |
+            IMAGE_VERSION=${{ steps.credentialinghub-docker.outputs.version }}
+            IMAGE_REVISION=${{ github.sha }}
 
   promote-release:
     name: Publish production packages
@@ -171,6 +206,13 @@ jobs:
               exit 1
             fi
           done < /tmp/release-groups.tsv
+      - name: Plan Credentialing Hub production image
+        id: credentialinghub-docker
+        env:
+          RELEASE_ENVIRONMENT: production
+          RELEASE_GROUPS: ${{ inputs.groups }}
+          PUBLISH_PRERELEASE_IMAGE: "false"
+        run: node tools/release/credentialinghub-docker-metadata.js
       - name: Publish production packages
         env:
           RELEASE_GROUPS: ${{ inputs.groups }}
@@ -180,6 +222,30 @@ jobs:
           --tag latest
           --registry https://registry.npmjs.org
           --parallel=1
+      - name: Set up QEMU
+        if: steps.credentialinghub-docker.outputs.publish == 'true'
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - name: Set up Docker Buildx
+        if: steps.credentialinghub-docker.outputs.publish == 'true'
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Log in to Docker Hub
+        if: steps.credentialinghub-docker.outputs.publish == 'true'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Publish Credentialing Hub production image
+        if: steps.credentialinghub-docker.outputs.publish == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        with:
+          context: .
+          file: servers/credentialinghub/docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.credentialinghub-docker.outputs.tags }}
+          build-args: |
+            IMAGE_VERSION=${{ steps.credentialinghub-docker.outputs.version }}
+            IMAGE_REVISION=${{ github.sha }}
       - name: Create production tags and GitHub releases
         env:
           GH_TOKEN: ${{ github.token }}

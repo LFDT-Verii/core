@@ -16,20 +16,16 @@ services:
         condition: service_healthy
       velocity-mongo:
         condition: service_started
-    image: velocitycore/credentialinghub:local
+    image: verii/credentialing-hub:local
     build:
       context: ../../..
-      dockerfile: eng/docker/Dockerfile-NodeE2E
-      target: builder
+      dockerfile: servers/credentialinghub/docker/Dockerfile
       args:
-        SERVICE: credentialinghub
+        IMAGE_VERSION: 0.0.0-e2e
+        IMAGE_REVISION: e2e
     restart: on-failure
     volumes:
-      - ../../../packages:/app/packages
-      - /app/servers/credentialinghub/node_modules
-      - ..:/app/servers/credentialinghub
       - httpscert:/certs
-    command: pnpm --dir servers/credentialinghub exec nodemon --exec "pnpm start"
     env_file:
       - ../.localdev.env
     environment:

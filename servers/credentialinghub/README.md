@@ -2,6 +2,94 @@
 
 Credentialing Hub runtime code is maintained in this package.
 
+## Docker Image
+
+The public image is `verii/credentialing-hub`. Stable releases publish both an
+exact version tag (for example, `verii/credentialing-hub:2.1.0`) and `latest`.
+Opt-in prerelease builds publish an exact prerelease version tag only; they do
+not move `latest`.
+
+The image defaults to `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=3000`, and
+`LOG_SEVERITY=info`. Override these only when the deployment requires it.
+
+The image accepts generic blockchain OAuth names as aliases for the existing
+Hub configuration names:
+
+| Generic image variable | Existing Hub variable |
+| --- | --- |
+| `BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT` | `VNF_OAUTH_TOKENS_ENDPOINT` |
+| `BLOCKCHAIN_OAUTH_CLIENT_ID` | `VNF_OAUTH_CLIENT_ID` |
+| `BLOCKCHAIN_OAUTH_CLIENT_SECRET` | `VNF_OAUTH_CLIENT_SECRET` |
+| `BLOCKCHAIN_OAUTH_AUDIENCE` | `BLOCKCHAIN_API_AUDIENCE` |
+
+Supply one name from each alias pair, never both: the image rejects a
+configuration that provides both names in a pair.
+
+For a generic authenticated Besu/JSON-RPC deployment, put the configuration in
+an environment file such as `hub.env`:
+
+```dotenv
+RPC_NODE_URL=https://besu.example.org
+CHAIN_ID=1234
+REGISTRAR_URL=https://registrar.example.org
+REVOCATION_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000001
+METADATA_REGISTRY_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000002
+COUPON_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000003
+PERMISSIONS_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000004
+ROOT_PUBLIC_KEY=04your-root-public-key
+DEEP_LINK_PROTOCOL=example-network://
+LIB_URL=https://lib.example.org
+CREDENTIAL_EXTENSIONS_CONTEXT_URL=https://lib.example.org/contexts/credential-extensions.jsonld
+BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT=https://auth.example.org/oauth/token
+BLOCKCHAIN_OAUTH_CLIENT_ID=credentialing-hub
+BLOCKCHAIN_OAUTH_CLIENT_SECRET=replace-with-client-secret
+BLOCKCHAIN_OAUTH_AUDIENCE=https://besu.example.org
+MONGO_URI=mongodb://mongo:27017/credentialinghub
+HOST_URL=https://hub.example.org
+SECRET=replace-with-session-secret
+KEY_ENCRYPTION_SECRET=replace-with-key-encryption-secret
+OPERATOR_API_TOKEN=replace-with-operator-api-token
+DEFAULT_CAO_DID=did:example:cao
+```
+
+Run the image with that file:
+
+```bash
+docker run --rm --env-file hub.env -p 3000:3000 verii/credentialing-hub:latest
+```
+
+The Hub blockchain client still requires OAuth, even when the RPC endpoint
+itself has no HTTP authentication. Supporting unauthenticated RPC separately
+is tracked in issue #890.
+
+For Velocity Network environments, use exactly one shortcut argument:
+
+```bash
+docker run --rm --env-file hub-secrets.env -p 3000:3000 \
+  verii/credentialing-hub:latest --velocity-devnet
+docker run --rm --env-file hub-secrets.env -p 3000:3000 \
+  verii/credentialing-hub:latest --velocity-testnet
+docker run --rm --env-file hub-secrets.env -p 3000:3000 \
+  verii/credentialing-hub:latest --velocity-mainnet
+```
+
+Each shortcut owns `RPC_NODE_URL`, `CHAIN_ID`, `REGISTRAR_URL`,
+`REVOCATION_CONTRACT_ADDRESS`, `METADATA_REGISTRY_CONTRACT_ADDRESS`,
+`COUPON_CONTRACT_ADDRESS`, `PERMISSIONS_CONTRACT_ADDRESS`, `ROOT_PUBLIC_KEY`,
+`VNF_OAUTH_TOKENS_ENDPOINT`, `BLOCKCHAIN_API_AUDIENCE`, `DEEP_LINK_PROTOCOL`,
+`LIB_URL`, and `CREDENTIAL_EXTENSIONS_CONTEXT_URL`. The associated generic
+aliases `BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT` and `BLOCKCHAIN_OAUTH_AUDIENCE` are
+also shortcut-owned. Supplying any shortcut-owned value with a shortcut
+hard-fails. OAuth client ID and secret settings, plus operational and built-in
+CAO settings, remain allowed.
+
+Image arguments are reserved for a Velocity Network shortcut. For advanced
+wrappers, override the entrypoint instead:
+
+```bash
+docker run --rm --entrypoint node verii/credentialing-hub:latest src/main.js
+```
+
 ## Design Docs
 
 - [Notification webhooks design](docs/notification-webhooks-design.md)
@@ -165,13 +253,3 @@ and missing decorator integrations through its normal startup and request
 behavior. Credential values are validated by the blockchain authentication
 layer when they are consumed. Provider errors are returned to the caller and
 never fall back to the built-in static credentials.
-
-## Data Migrations
-
-Credentialing Hub database migrations remain in the monorepo Docker/wrapper package under `servers/credentialinghub/migrations`.
-
-Run migrations from the monorepo image:
-
-```sh
-docker run --name credentialinghub-migrations -e MONGO_URI=**** ghcr.io/velocitynetworkfoundation/credentialinghub:latest sh -c "cd servers/credentialinghub && pnpm migrate:up"
-```

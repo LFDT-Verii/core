@@ -68,14 +68,16 @@ The workflow:
 3. Publishes to npm with the `prerelease` dist-tag.
 4. Does not consume version plans.
 5. Fails if run from any branch other than `main`.
+6. Never publishes Docker images for automatic `main` runs.
 
 To publish a credentialing hub patch prerelease from the current `2.0.0` baseline, run the workflow manually from `main` with:
 
 - `environment`: `prerelease`
 - `groups`: `credentialinghub`
 - `prerelease_bump`: `prepatch`
+- `publish_docker_image`: `true`
 
-That produces a package version like `2.0.1-pre.<epoch>.0` and does not create git tags or GitHub Releases.
+Set `publish_docker_image` only when an intentionally requested disposable Credentialing Hub image is needed. That produces a package version like `2.0.1-pre.<epoch>.0` and publishes only the exact Docker tag `verii/credentialing-hub:2.0.1-pre.<epoch>.0`; it does not move `latest` or create git tags or GitHub Releases.
 
 ## Preparing A Release
 
@@ -163,9 +165,11 @@ Patch branches do not publish prerelease versions. Keep releasing exact patch ve
 Run `.github/workflows/publish-packages.workflow.yml` manually from the commit to promote. All npm publishing stays in this existing workflow filename so npm Trusted Publisher configuration does not need to change.
 
 - `prerelease` publishes disposable prerelease versions from the selected commit with a `pre.<epoch-seconds>` prerelease id and the npm `prerelease` dist-tag. Manual runs default to `preminor` and can select `prepatch`.
-- `production` validates the checked-in release notes for each selected group, fails if any target group tag or GitHub Release already exists, publishes the exact package versions from the selected commit with the npm `latest` dist-tag, creates group git tags, and creates GitHub Releases from those notes.
+- `production` validates the checked-in release notes for each selected group, fails if any target group tag or GitHub Release already exists, publishes the exact package versions from the selected commit with the npm `latest` dist-tag, creates group git tags, and creates GitHub Releases from those notes. Selecting `credentialinghub` also publishes `verii/credentialing-hub:<package version>` and moves `verii/credentialing-hub:latest` to that image.
 
 Prerelease publishing does not consume version plans and does not create tags or GitHub Releases. Production uses the package versions already committed by the prepare-release PR.
+
+Docker Hub publication requires the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets only for jobs whose Credentialing Hub image metadata opts into publishing. Selecting any other release group without `credentialinghub` never triggers Docker publication.
 
 ## Tag Policy
 
