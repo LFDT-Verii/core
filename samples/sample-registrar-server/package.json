@@ -22,7 +22,7 @@
   "author": "Yauheni Pozdnyakov",
   "license": "Apache-2.0",
   "dependencies": {
-    "@fastify/autoload": "^6.4.0",
+    "@fastify/autoload": "^6.5.0",
     "@fastify/basic-auth": "^6.2.0",
     "@fastify/helmet": "^13.1.0",
     "@fastify/sensible": "^6.0.4",
@@ -42,7 +42,7 @@
     "@verii/server-provider": "workspace:*",
     "@verii/validation": "workspace:*",
     "env-var": "^7.5.0",
-    "fastify": "^5.10.0",
+    "fastify": "^5.11.0",
     "fastify-plugin": "^5.1.0",
     "http-errors": "^2.0.1",
     "lodash": "^4.18.0"
