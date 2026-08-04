@@ -25,7 +25,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@fastify/autoload": "^6.4.0",
+    "@fastify/autoload": "^6.5.0",
     "@fastify/bearer-auth": "^10.1.2",
     "@fastify/formbody": "^8.0.2",
     "@fastify/cors": "^11.3.0",
@@ -64,7 +64,7 @@
     "date-fns": "^4.4.0",
     "env-var": "^7.5.0",
     "eth-url-parser": "^1.0.4",
-    "fastify": "^5.10.0",
+    "fastify": "^5.11.0",
     "fastify-plugin": "^5.1.0",
     "handlebars": "^4.7.9",
     "http-errors": "^2.0.1",
