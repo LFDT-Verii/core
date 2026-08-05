@@ -60,8 +60,8 @@ importers:
         specifier: 5.5.6
         version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.6)
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       hardhat:
         specifier: 2.28.6
         version: 2.28.6(typescript@5.9.3)
@@ -210,8 +210,8 @@ importers:
         specifier: ^5.11.0
         version: 5.11.2
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nock:
         specifier: 15.0.0-beta.14
         version: 15.0.0-beta.14
@@ -286,8 +286,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -369,8 +369,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -409,8 +409,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -452,8 +452,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -581,8 +581,8 @@ importers:
         specifier: 29.0.0
         version: 29.0.0(jsdom@30.0.1(@noble/hashes@1.8.0))
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       identity-obj-proxy:
         specifier: 3.0.0
         version: 3.0.0
@@ -683,8 +683,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -732,8 +732,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -793,8 +793,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -836,8 +836,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -912,8 +912,8 @@ importers:
         specifier: ^5.11.0
         version: 5.11.2
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       mongodb:
         specifier: ^7.5.0
         version: 7.5.0
@@ -1098,8 +1098,8 @@ importers:
         specifier: 4.0.6
         version: 4.0.6
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       mongodb:
         specifier: ^7.5.0
         version: 7.5.0
@@ -1234,8 +1234,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       mongodb:
         specifier: ^7.5.0
         version: 7.5.0
@@ -1433,8 +1433,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       mongodb:
         specifier: ^7.5.0
         version: 7.5.0
@@ -1479,8 +1479,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -1549,8 +1549,8 @@ importers:
         specifier: ^5.11.0
         version: 5.11.2
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nock:
         specifier: 15.0.0-beta.14
         version: 15.0.0-beta.14
@@ -1607,8 +1607,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nock:
         specifier: 15.0.0-beta.14
         version: 15.0.0-beta.14
@@ -1665,8 +1665,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nodemon:
         specifier: 3.1.14
         version: 3.1.14
@@ -1704,8 +1704,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -1765,8 +1765,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -1817,8 +1817,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -1860,8 +1860,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -1971,8 +1971,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -2070,8 +2070,8 @@ importers:
         specifier: ^5.11.0
         version: 5.11.2
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       h2url:
         specifier: 0.2.0
         version: 0.2.0
@@ -2131,8 +2131,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       mongodb:
         specifier: ^7.5.0
         version: 7.5.0
@@ -2170,8 +2170,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -2237,8 +2237,8 @@ importers:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       mongodb:
         specifier: ^7.5.0
         version: 7.5.0
@@ -2298,8 +2298,8 @@ importers:
         specifier: ^5.11.0
         version: 5.11.2
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -2359,8 +2359,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -2444,8 +2444,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       mongodb:
         specifier: ^7.5.0
         version: 7.5.0
@@ -2535,8 +2535,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nanoid:
         specifier: ^5.1.16
         version: 5.1.16
@@ -2707,8 +2707,8 @@ importers:
         specifier: 7.1.1
         version: 7.1.1(eslint@9.39.5(jiti@2.7.0))
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       postcss-normalize:
         specifier: 13.0.1
         version: 13.0.1(browserslist@4.28.7)(postcss@8.5.23)
@@ -2834,8 +2834,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       migrate-mongo:
         specifier: 14.0.7
         version: 14.0.7(mongodb@7.5.0)
@@ -2919,8 +2919,8 @@ importers:
         specifier: 29.0.0
         version: 29.0.0(jsdom@30.0.1(@noble/hashes@1.8.0))
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       tsx:
         specifier: 4.23.1
         version: 4.23.1
@@ -3007,8 +3007,8 @@ importers:
         specifier: 29.0.0
         version: 29.0.0(jsdom@30.0.1(@noble/hashes@1.8.0))
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       json-schema-to-ts:
         specifier: 3.1.1
         version: 3.1.1
@@ -3230,8 +3230,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       jest-json-schema:
         specifier: 6.1.0
         version: 6.1.0
@@ -3553,8 +3553,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nock:
         specifier: 15.0.0-beta.14
         version: 15.0.0-beta.14
@@ -3608,8 +3608,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -3687,8 +3687,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       nock:
         specifier: 15.0.0-beta.14
         version: 15.0.0-beta.14
@@ -3760,8 +3760,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -3800,8 +3800,8 @@ importers:
         specifier: 30.4.1
         version: 30.4.1
       globals:
-        specifier: 17.7.0
-        version: 17.7.0
+        specifier: 17.8.0
+        version: 17.8.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -8611,8 +8611,8 @@ packages:
     resolution: {integrity: sha512-7ACyT3wmyp3I61S4fG682L0VA2RGD9otkqGJIwNUMF1SWUombIIk+af1unuDYgMm082aHYwD+mzJvv9Iu8dsgg==}
     engines: {node: '>=18'}
 
-  globals@17.7.0:
-    resolution: {integrity: sha512-Czmyns5dUsq4seFBR/Kdydhmo8y9kC79hiSkPn0YcGtNnYWnrgt0vjrSjx9tspoDGWm2CMarffRuLjM4xUz8xg==}
+  globals@17.8.0:
+    resolution: {integrity: sha512-Zz/LMDZScFmkakeL2cTHzf+PbWKdpU3uclqkZT7TjDG58j5WPt0PpA+n9uPI24fZtlw07q0OtEi84K+umsRzqQ==}
     engines: {node: '>=18'}
 
   globalthis@1.0.4:
@@ -16112,7 +16112,7 @@ snapshots:
       eslint-plugin-n: 18.2.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-react: 7.37.5(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.5(jiti@2.7.0))
-      globals: 17.7.0
+      globals: 17.8.0
       typescript-eslint: 8.65.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
     transitivePeerDependencies:
       - '@typescript-eslint/parser'
@@ -16849,7 +16849,7 @@ snapshots:
 
   globals@15.15.0: {}
 
-  globals@17.7.0: {}
+  globals@17.8.0: {}
 
   globalthis@1.0.4:
     dependencies:
