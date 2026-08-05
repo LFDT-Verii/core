@@ -2,6 +2,8 @@ linkWorkspacePackages: true
 overrides:
   # Temporary: remove once @fastify/swagger-ui supports patched @fastify/static 10.x.
   "@fastify/swagger-ui>@fastify/static": "10.1.2"
+  # Temporary: remove once fast-json-stringify no longer resolves vulnerable fast-uri 4.1.1.
+  "fast-json-stringify@7.0.1>fast-uri": "4.1.2"
   # Temporary: remove this override once the Hardhat dependency path no longer
   # resolves serialize-javascript 6.x (Dependabot alert #148 / GHSA-5c6j-r48x-rmvq).
   "mocha>serialize-javascript": "7.0.7"
