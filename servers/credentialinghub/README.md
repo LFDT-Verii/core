@@ -4,8 +4,8 @@ Credentialing Hub runtime code is maintained in this package.
 
 ## Docker Image
 
-The public image is `verii/credentialing-hub`. Stable releases publish both an
-exact version tag (for example, `verii/credentialing-hub:2.1.0`) and `latest`.
+The public image is `lfdecentralizedtrust/verii-credentialing-hub`. Stable releases publish both an
+exact version tag (for example, `lfdecentralizedtrust/verii-credentialing-hub:2.1.0`) and `latest`.
 Opt-in prerelease builds publish an exact prerelease version tag only; they do
 not move `latest`.
 
@@ -55,7 +55,7 @@ DEFAULT_CAO_DID=did:example:cao
 Run the image with that file:
 
 ```bash
-docker run --rm --env-file hub.env -p 3000:3000 verii/credentialing-hub:latest
+docker run --rm --env-file hub.env -p 3000:3000 lfdecentralizedtrust/verii-credentialing-hub:latest
 ```
 
 The Hub blockchain client still requires OAuth, even when the RPC endpoint
@@ -66,11 +66,11 @@ For Velocity Network environments, use exactly one shortcut argument:
 
 ```bash
 docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  verii/credentialing-hub:latest --velocity-devnet
+  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-devnet
 docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  verii/credentialing-hub:latest --velocity-testnet
+  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-testnet
 docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  verii/credentialing-hub:latest --velocity-mainnet
+  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-mainnet
 ```
 
 Each shortcut owns `RPC_NODE_URL`, `CHAIN_ID`, `REGISTRAR_URL`,
@@ -87,7 +87,7 @@ Image arguments are reserved for a Velocity Network shortcut. For advanced
 wrappers, override the entrypoint instead:
 
 ```bash
-docker run --rm --entrypoint node verii/credentialing-hub:latest src/main.js
+docker run --rm --entrypoint node lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
 ```
 
 ## Design Docs
