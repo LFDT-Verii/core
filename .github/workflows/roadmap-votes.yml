@@ -6,7 +6,8 @@ name: Roadmap vote counts
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    # Offset from the top of the hour, when scheduled Actions load is highest.
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -17,33 +18,40 @@ concurrency:
   group: roadmap-votes
   cancel-in-progress: true
 
+env:
+  # slug:discussion-number — add a line when a roadmap item is added
+  ROADMAP_ITEMS: |
+    automatic-presentation-verification:698
+    event-webhooks:699
+    credential-status-endpoint:700
+    tenant-key-management:701
+    additional-kms-backends:702
+    vp-holder-authentication:703
+    authentication-extension:704
+    openid4vci-extensions:705
+    dcql:706
+    openid4vp-extensions:707
+    issuer-authmode:708
+    standardized-holder-auth-apis:709
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Build and publish votes.json
+      - name: Fetch and validate vote counts
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
-          # slug:discussion-number — add a line when a roadmap item is added
-          items=(
-            automatic-presentation-verification:698
-            event-webhooks:699
-            credential-status-endpoint:700
-            tenant-key-management:701
-            additional-kms-backends:702
-            vp-holder-authentication:703
-            authentication-extension:704
-            openid4vci-extensions:705
-            dcql:706
-            openid4vp-extensions:707
-            issuer-authmode:708
-            standardized-holder-auth-apis:709
-          )
+          items=()
+          while IFS= read -r item; do
+            [[ -n "${item}" ]] && items+=("${item}")
+          done <<< "${ROADMAP_ITEMS}"
+          error_file="${RUNNER_TEMP}/roadmap-votes-error.log"
+          response_file="${RUNNER_TEMP}/roadmap-votes-response.json"
 
           # one GraphQL round-trip: alias each discussion as d<number>
           query="query{repository(owner:\"LFDT-Verii\",name:\"core\"){"
@@ -52,16 +60,73 @@ jobs:
             query="${query}d${num}:discussion(number:${num}){upvoteCount} "
           done
           query="${query}}}"
-          resp=$(gh api graphql -f query="${query}")
 
-          : > /tmp/pairs
+          response_is_valid() {
+            local num pair
+
+            jq -e '
+              ((.errors // []) | length) == 0 and
+              (.data.repository | type) == "object"
+            ' "${response_file}" >/dev/null || return 1
+
+            for pair in "${items[@]}"; do
+              num="${pair##*:}"
+              jq -e ".data.repository.d${num}.upvoteCount |
+                type == \"number\" and . >= 0 and floor == .
+              " "${response_file}" >/dev/null || return 1
+            done
+          }
+
+          for attempt in 1 2 3; do
+            failure_reason="GitHub GraphQL request failed."
+            if gh api graphql -f query="${query}" > "${response_file}" 2> "${error_file}"; then
+              if response_is_valid; then
+                exit 0
+              fi
+              failure_reason="GitHub GraphQL returned missing or invalid upvote data."
+            fi
+
+            if (( attempt < 3 )); then
+              echo "::warning title=Roadmap vote fetch retry::Attempt ${attempt} failed; retrying."
+              sleep "$((attempt * 5))"
+            fi
+          done
+
+          echo "::error title=Roadmap vote fetch failed::${failure_reason} Three attempts were exhausted."
+          if [[ -s "${error_file}" ]]; then
+            sed -n '1,20p' "${error_file}"
+          elif jq -e '.errors | length > 0' "${response_file}" >/dev/null 2>&1; then
+            jq -r '.errors[]?.message' "${response_file}"
+          fi
+          exit 1
+
+      - name: Build votes.json
+        run: |
+          set -euo pipefail
+          trap 'echo "::error title=Roadmap vote build failed::Unable to build votes.json from the validated response."' ERR
+
+          items=()
+          while IFS= read -r item; do
+            [[ -n "${item}" ]] && items+=("${item}")
+          done <<< "${ROADMAP_ITEMS}"
+          pairs_file="${RUNNER_TEMP}/roadmap-vote-pairs"
+          response_file="${RUNNER_TEMP}/roadmap-votes-response.json"
+          votes_file="${RUNNER_TEMP}/votes.json"
+
+          : > "${pairs_file}"
           for pair in "${items[@]}"; do
             slug="${pair%%:*}"; num="${pair##*:}"
-            count=$(printf '%s' "$resp" | jq -r ".data.repository.d${num}.upvoteCount // 0")
-            printf '%s %s\n' "$slug" "$count" >> /tmp/pairs
+            count=$(jq -er ".data.repository.d${num}.upvoteCount" "${response_file}")
+            printf '%s %s\n' "${slug}" "${count}" >> "${pairs_file}"
           done
-          jq -Rn '[inputs | split(" ") | {(.[0]): (.[1] | tonumber)}] | add' /tmp/pairs | jq -S . > /tmp/votes.json
-          cat /tmp/votes.json
+          jq -Rn '[inputs | split(" ") | {(.[0]): (.[1] | tonumber)}] | add' "${pairs_file}" |
+            jq -S . > "${votes_file}"
+          cat "${votes_file}"
+
+      - name: Publish votes.json
+        run: |
+          set -euo pipefail
+          trap 'echo "::error title=Roadmap vote publish failed::Unable to update the votes-data branch."' ERR
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -72,7 +137,7 @@ jobs:
             git checkout --orphan votes-data
             git rm -rf . >/dev/null 2>&1 || true
           fi
-          cp /tmp/votes.json votes.json
+          cp "${RUNNER_TEMP}/votes.json" votes.json
           git add votes.json
           if git diff --staged --quiet; then
             echo "No change in vote counts."
