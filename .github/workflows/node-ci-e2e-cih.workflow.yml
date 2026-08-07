@@ -73,10 +73,9 @@ jobs:
             exit 1
           fi
 
-          echo "$GHCR_READ_TOKEN" | docker login ghcr.io -u "$GHCR_READ_USER" --password-stdin
+          echo "$GHCR_READ_TOKEN" | docker login ghcr.io -u ops@velocitycareerlabs.com --password-stdin
         env:
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
-          GHCR_READ_USER: ops@velocitycareerlabs.com
 
       - name: Start Containers
         run: docker compose -f "$COMPOSE_FILE" up -d --build
