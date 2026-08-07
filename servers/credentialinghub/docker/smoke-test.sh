@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-readonly image='verii/credentialing-hub:local-smoke'
+readonly image='lfdecentralizedtrust/verii-credentialing-hub:local-smoke'
 readonly output_directory="$(mktemp -d)"
 
 cleanup() {

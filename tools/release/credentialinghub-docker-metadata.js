@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const IMAGE_NAME = 'verii/credentialing-hub';
+const IMAGE_NAME = 'lfdecentralizedtrust/verii-credentialing-hub';
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
 /* eslint-disable complexity */
