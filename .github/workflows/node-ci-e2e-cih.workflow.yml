@@ -68,14 +68,13 @@ jobs:
 
       - name: Log in to GHCR
         run: |
-          if [ -z "$GHCR_READ_USER" ] || [ -z "$GHCR_READ_TOKEN" ]; then
-            echo "::error::GHCR_READ_USER and GHCR_READ_TOKEN secrets are required to pull the Fineract image"
+          if [ -z "$GHCR_READ_TOKEN" ]; then
+            echo "::error::GHCR_READ_TOKEN secret is required to pull the Fineract image"
             exit 1
           fi
 
-          echo "$GHCR_READ_TOKEN" | docker login ghcr.io -u "$GHCR_READ_USER" --password-stdin
+          echo "$GHCR_READ_TOKEN" | docker login ghcr.io -u ops@velocitycareerlabs.com --password-stdin
         env:
-          GHCR_READ_USER: ${{ secrets.GHCR_READ_USER }}
           GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
 
       - name: Start Containers
