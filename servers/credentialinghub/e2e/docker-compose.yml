@@ -16,7 +16,7 @@ services:
         condition: service_healthy
       velocity-mongo:
         condition: service_started
-    image: verii/credentialing-hub:local
+    image: lfdecentralizedtrust/verii-credentialing-hub:local
     build:
       context: ../../..
       dockerfile: servers/credentialinghub/docker/Dockerfile

@@ -9,7 +9,7 @@ const {
   buildCredentialingHubDockerMetadata,
 } = require('./credentialinghub-docker-metadata');
 
-const imageName = 'verii/credentialing-hub';
+const imageName = 'lfdecentralizedtrust/verii-credentialing-hub';
 
 test('returns publication metadata for each Credentialing Hub release policy', () => {
   const cases = [
