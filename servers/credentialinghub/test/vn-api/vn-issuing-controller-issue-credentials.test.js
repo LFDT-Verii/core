@@ -131,6 +131,9 @@ describe('vn-api > issue credentials', () => {
     await mongoDb().collection('credentials').deleteMany({});
     await mongoDb().collection('notification_events').deleteMany({});
     resetMockHttpClient();
+    mockAddCredentialMetadataEntry.mock.resetCalls();
+    mockAddRevocationListSigned.mock.resetCalls();
+    mockCreateCredentialMetadataList.mock.resetCalls();
     mockAddRevocationListSigned.mock.mockImplementation(() =>
       Promise.resolve(true),
     );
@@ -430,6 +433,47 @@ describe('vn-api > issue credentials', () => {
     await expect(
       mongoDb().collection('notification_events').countDocuments({}),
     ).resolves.toEqual(0);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+  });
+
+  it('should retry a temporary anchor failure without changing credential identity', async () => {
+    let attempts = 0;
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() => {
+      attempts += 1;
+      if (attempts === 1) {
+        return Promise.reject(new Error('temporary anchor failure'));
+      }
+      return Promise.resolve(true);
+    });
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: testUrl(tenant),
+      headers: {
+        authorization: `Bearer ${await testAccessToken(
+          tenant.did,
+          exchange._id,
+          depots[0]._id,
+          holderAccessTokensSecret,
+        )}`,
+      },
+      payload: {
+        approvedOfferIds: [credentials[0]._id],
+        proof: await buildProof(
+          holderDid,
+          holderKeyPair,
+          await loadChallenge(exchange._id),
+        ),
+      },
+    });
+    const [firstAttempt, secondAttempt] =
+      mockAddCredentialMetadataEntry.mock.calls;
+
+    expect(response.statusCode).toEqual(200);
+    expect(firstAttempt.arguments[0]).toBe(secondAttempt.arguments[0]);
+    expect(jwtDecode(response.json[0]).header.kid).toEqual(
+      `${firstAttempt.arguments[0].credentialId}#key-1`,
+    );
   });
 
   describe('proof of key possession failures', () => {

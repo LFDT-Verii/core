@@ -410,6 +410,7 @@ describe('openid4vc credential test suite', () => {
             {
               credentialMetadata: {
                 contentHash: expect.any(String),
+                credentialId: expect.stringMatching(DID_FORMAT),
                 credentialType: 'Employment',
                 credentialTypeEncoded: '0xfe3f',
                 index: expect.any(Number),

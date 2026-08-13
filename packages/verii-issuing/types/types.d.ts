@@ -1,5 +1,6 @@
 export interface CredentialMetadata extends AllocationListEntry {
   contentHash: string;
+  credentialId: string;
   credentialType: string;
   credentialTypeByteEncoding: string;
   publicKey: string;

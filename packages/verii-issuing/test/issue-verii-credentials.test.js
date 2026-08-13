@@ -21,6 +21,9 @@ const { ALG_TYPE } = require('@verii/metadata-registration');
 const mockAddCredentialMetadataEntry = mock.fn();
 const mockCreateCredentialMetadataList = mock.fn();
 const mockAddRevocationListSigned = mock.fn();
+const mockIsFreeCredentialType = mock.fn();
+const mockResolveDidDocument = mock.fn();
+let supportsCredentialReadBack = true;
 
 mock.module('@verii/metadata-registration', {
   namedExports: {
@@ -31,6 +34,12 @@ mock.module('@verii/metadata-registration', {
     initMetadataRegistry: () => ({
       addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
       createCredentialMetadataList: mockCreateCredentialMetadataList,
+      ...(supportsCredentialReadBack
+        ? {
+            isFreeCredentialType: mockIsFreeCredentialType,
+            resolveDidDocument: mockResolveDidDocument,
+          }
+        : {}),
     }),
   },
 });
@@ -42,7 +51,7 @@ mockCreateCredentialMetadataList.mock.mockImplementation(() =>
   Promise.resolve(true),
 );
 
-const { KeyAlgorithms } = require('@verii/crypto');
+const { generateJWAKeyPair, KeyAlgorithms } = require('@verii/crypto');
 const { jwtDecode, jwtVerify, jwtSign } = require('@verii/jwt');
 const { publicJwkMatcher } = require('@verii/tests-helpers');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
@@ -51,7 +60,10 @@ const { MongoClient } = require('mongodb');
 const { first, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { hashOffer } = require('../src/domain/hash-offer');
-const { issueVeriiCredentials } = require('../src/issue-verii-credentials');
+const {
+  anchorVeriiCredentials,
+  issueVeriiCredentials,
+} = require('../src/issue-verii-credentials');
 const { collectionClient } = require('./helpers/collection-client');
 const { entityFactory } = require('./helpers/entity-factory');
 const { offerFactory } = require('./helpers/offer-factory');
@@ -102,9 +114,15 @@ describe('issuing velocity verifiable credentials', () => {
 
   beforeEach(async () => {
     await allocationsCollection.deleteMany();
+    supportsCredentialReadBack = true;
     mockAddRevocationListSigned.mock.resetCalls();
     mockAddCredentialMetadataEntry.mock.resetCalls();
     mockCreateCredentialMetadataList.mock.resetCalls();
+    mockIsFreeCredentialType.mock.resetCalls();
+    mockResolveDidDocument.mock.resetCalls();
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(false),
+    );
     context = buildContext({
       issuerEntity,
       caoEntity,
@@ -236,6 +254,197 @@ describe('issuing velocity verifiable credentials', () => {
         header: expect.objectContaining({ alg: 'ES256' }),
       }),
     );
+  });
+
+  it('retries anchoring with the same credential and key identity', async () => {
+    let attempts = 0;
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() => {
+      attempts += 1;
+      if (attempts === 1) {
+        return Promise.reject(new Error('temporary anchor failure'));
+      }
+      return Promise.resolve(true);
+    });
+
+    const [credential] = await issueVeriiCredentials(
+      [offerFactory({ issuerId: issuerEntity.did })],
+      createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      context,
+      ['ES256'],
+    );
+    const [firstAttempt, secondAttempt] =
+      mockAddCredentialMetadataEntry.mock.calls;
+
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+    expect(firstAttempt.arguments[0]).toBe(secondAttempt.arguments[0]);
+    expect(jwtDecode(credential).header.kid).toEqual(
+      `${firstAttempt.arguments[0].credentialId}#key-1`,
+    );
+  });
+
+  it('requires supported anchor read-back to match the signing key', async () => {
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) => {
+      const { publicKey } =
+        mockAddCredentialMetadataEntry.mock.calls[0].arguments[0];
+      return Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      });
+    });
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        context,
+        ['ES256'],
+      ),
+    ).resolves.toEqual([expect.any(String)]);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(1);
+  });
+
+  it('continues when the metadata registry does not support anchor read-back', async () => {
+    supportsCredentialReadBack = false;
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        context,
+        ['ES256'],
+      ),
+    ).resolves.toEqual([expect.any(String)]);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(0);
+  });
+
+  it('reads back legacy metadata without a stored credential id', async () => {
+    const { publicKey } = generateJWAKeyPair(KeyAlgorithms.ES256);
+    const metadata = {
+      algType: ALG_TYPE.COSEKEY_AES_256,
+      contentHash: 'abcdef',
+      credentialType: 'EmailV1.0',
+      index: 9,
+      listId: 7,
+      publicKey,
+    };
+    const credentialId = `did:velocity:v2:${toLower(
+      issuer.dltPrimaryAddress,
+    )}:7:9:abcdef`;
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) =>
+      Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      }),
+    );
+
+    await expect(
+      anchorVeriiCredentials([metadata], issuer, context),
+    ).resolves.toBeUndefined();
+    expect(mockResolveDidDocument.mock.calls[0].arguments[0]).toEqual(
+      expect.objectContaining({ did: credentialId }),
+    );
+  });
+
+  it('rejects a supported anchor read-back with a different key', async () => {
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) =>
+      Promise.resolve({
+        didDocument: {
+          publicKey: [
+            {
+              id: `${did}#key-1`,
+              publicKeyJwk: {
+                crv: 'P-256',
+                kty: 'EC',
+                x: 'different',
+                y: 'different',
+              },
+            },
+          ],
+        },
+        didResolutionMetadata: {},
+      }),
+    );
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        context,
+        ['ES256'],
+      ),
+    ).rejects.toThrow('Credential metadata read-back does not match');
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+  });
+
+  it('rejects a supported anchor read-back with a different key type', async () => {
+    const { publicKey } = generateJWAKeyPair(KeyAlgorithms.RS256);
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) =>
+      Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      }),
+    );
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        context,
+        ['ES256'],
+      ),
+    ).rejects.toThrow('Credential metadata read-back does not match');
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+  });
+
+  it('rejects a supported anchor read-back resolution error', async () => {
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(() =>
+      Promise.resolve({
+        didResolutionMetadata: { error: 'DATA_INTEGRITY_ERROR' },
+      }),
+    );
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        context,
+        ['ES256'],
+      ),
+    ).rejects.toThrow('Credential metadata could not be read');
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
   });
 
   it('should create vcs with context in credentialSubject (allocation lists exists)', async () => {

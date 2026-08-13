@@ -194,8 +194,10 @@ describe('openid4vc notification test suite', () => {
       });
       it('should 400 with server_error due to anchoring error', async () => {
         const errorMessage = 'Mock Error';
+        const anchorError = new Error(errorMessage);
+        anchorError.errorCode = 'metadata_anchor_failed';
         mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() =>
-          Promise.reject(new Error(errorMessage)),
+          Promise.reject(anchorError),
         );
         const issuerService = await persistIssuerService({ tenant });
         const depot = await persistDepot({
@@ -257,7 +259,7 @@ describe('openid4vc notification test suite', () => {
           exchange: expectedDbExchange(
             exchange,
             [ExchangeStates.UNEXPECTED_ERROR],
-            { err: errorMessage },
+            { err: errorMessage, errorCode: anchorError.errorCode },
           ),
           updatedAt: expect.any(Date),
         });

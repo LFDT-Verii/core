@@ -15,8 +15,7 @@
  */
 
 const { KeyAlgorithms } = require('@verii/crypto');
-
-const CredentialSigningAlgorithms = Object.freeze(Object.values(KeyAlgorithms));
+const { CredentialSigningAlgorithms } = require('@verii/verii-issuing');
 
 const getCredentialSigningAlgorithmsSupported = ({
   tenant = {},

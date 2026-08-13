@@ -17,11 +17,12 @@
 
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
+const { ALG_TYPE } = require('@verii/metadata-registration');
 
 const { mockHttpClientModule } = require('../helpers/mock-http-client');
 
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
-mock.module('@verii/metadata-registration', { namedExports: {} });
+mock.module('@verii/metadata-registration', { namedExports: { ALG_TYPE } });
 mock.module('@verii/common-fetchers', { namedExports: {} });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');

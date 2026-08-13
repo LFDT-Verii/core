@@ -245,6 +245,25 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       issuerEntity,
     });
   });
+
+  it('anchors an Open Badge ES256 override and preserves its RS256 default', async () => {
+    const openBadgeOffer = offerFactory({
+      credentialType: 'OpenBadgeCredential',
+      issuerId: issuerEntity.did,
+    });
+    const credentials = await issueVeriiCredentials(
+      [openBadgeOffer, openBadgeOffer],
+      createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      context,
+      [KeyAlgorithms.ES256, undefined],
+    );
+
+    expect(
+      credentials.map((credential) => jwtDecode(credential).header.alg),
+    ).toEqual(['ES256', 'RS256']);
+  });
 });
 
 const issueResolveAndVerify = async (

@@ -18,6 +18,7 @@
 const { initMetadataRegistry } = require('@verii/metadata-registration');
 const { jsonLdToUnsignedVcJwtContent } = require('@verii/jwt');
 const { KeyAlgorithms, initCallWithKmsKey } = require('@verii/crypto');
+const { toLower } = require('lodash/fp');
 const { buildIssuerVcUrl } = require('./build-issuer-vc-url');
 
 /** @import { Issuer, CredentialMetadata, Context } from "../../types/types" */
@@ -27,7 +28,8 @@ const { buildIssuerVcUrl } = require('./build-issuer-vc-url');
  * @param {Context} context the context
  * @returns {Promise<{
  *    addEntry: function(CredentialMetadata): Promise<void>,
- *    createList: function(number, string): Promise<boolean>
+ *    createList: function(number, string): Promise<boolean>,
+ *    readEntry: function(CredentialMetadata): Promise<object | undefined>
  *    }>} the contract interface to create metadata
  */
 const initCredentialMetadataContract = async (issuer, context) => {
@@ -93,7 +95,59 @@ const initCredentialMetadataContract = async (issuer, context) => {
         algType,
       );
     },
+    /**
+     * Reads a free credential metadata entry back from the DLT.
+     * @param {CredentialMetadata} metadata the anchored credential metadata
+     * @returns {Promise<object | undefined>} the resolved public key when the contract supports a free read
+     */
+    readEntry: async (metadata) => {
+      if (!(await supportsReadBack(credentialMetadataRegistry, metadata))) {
+        return undefined;
+      }
+
+      const credentialId =
+        metadata.credentialId ?? buildCredentialId(metadata, issuer, context);
+      const { didDocument, didResolutionMetadata } =
+        await credentialMetadataRegistry.resolveDidDocument({
+          burnerDid: issuer.did,
+          caoDid,
+          credentials: [
+            {
+              contentHash: metadata.contentHash,
+              credentialType: metadata.credentialType,
+              id: credentialId,
+            },
+          ],
+          did: credentialId,
+        });
+      if (didResolutionMetadata?.error != null) {
+        throw new Error(
+          `Credential metadata could not be read for ${credentialId}`,
+        );
+      }
+      return didDocument.publicKey?.[0];
+    },
   };
+};
+
+const supportsReadBack = async (metadataRegistry, metadata) => {
+  const supportsResolution = [
+    metadataRegistry.isFreeCredentialType,
+    metadataRegistry.resolveDidDocument,
+  ].every((method) => method != null);
+  if (!supportsResolution) {
+    return false;
+  }
+  return metadataRegistry.isFreeCredentialType(metadata.credentialType);
+};
+
+const buildCredentialId = (metadata, issuer, context) => {
+  const id = `did:velocity:v2:${toLower(issuer.dltPrimaryAddress)}:${
+    metadata.listId
+  }:${metadata.index}`;
+  return context.config.includeContentHashInCredentialId === true
+    ? `${id}:${metadata.contentHash}`
+    : id;
 };
 
 module.exports = { initCredentialMetadataContract };

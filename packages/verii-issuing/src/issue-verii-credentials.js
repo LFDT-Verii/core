@@ -136,10 +136,69 @@ const signVeriiCredentials = async (
  * @param {Context} context the context
  */
 const anchorVeriiCredentials = async (credentialMetadatas, issuer, context) => {
-  const { addEntry } = await initCredentialMetadataContract(issuer, context);
+  const { addEntry, readEntry } = await initCredentialMetadataContract(
+    issuer,
+    context,
+  );
 
   // create credential metadata entries on dlt
-  await Promise.all(map((metadata) => addEntry(metadata), credentialMetadatas));
+  await Promise.all(
+    map(
+      (metadata) => anchorCredentialMetadata(metadata, addEntry, readEntry),
+      credentialMetadatas,
+    ),
+  );
+};
+
+const anchorCredentialMetadata = async (
+  metadata,
+  addEntry,
+  readEntry,
+  attempt = 1,
+) => {
+  try {
+    await addEntry(metadata);
+    const anchoredKey = await readEntry(metadata);
+    if (!isAnchoredKeyValid(anchoredKey, metadata)) {
+      throw new Error(
+        `Credential metadata read-back does not match ${metadata.credentialId}`,
+      );
+    }
+  } catch (error) {
+    if (attempt >= 2 || error.errorCode != null) {
+      throw error;
+    }
+    return anchorCredentialMetadata(metadata, addEntry, readEntry, attempt + 1);
+  }
+  return undefined;
+};
+
+const isAnchoredKeyValid = (anchoredKey, metadata) => {
+  if (anchoredKey == null) {
+    return true;
+  }
+  const idMatches =
+    metadata.credentialId == null ||
+    anchoredKey.id === `${metadata.credentialId}#key-1`;
+  return (
+    idMatches && publicKeysMatch(anchoredKey.publicKeyJwk, metadata.publicKey)
+  );
+};
+
+const publicKeysMatch = (anchoredKey, signingKey) => {
+  if (anchoredKey?.kty !== signingKey?.kty) {
+    return false;
+  }
+  if (anchoredKey.kty === 'EC') {
+    return [
+      anchoredKey.crv === signingKey.crv,
+      anchoredKey.x === signingKey.x,
+      anchoredKey.y === signingKey.y,
+    ].every(Boolean);
+  }
+  return [anchoredKey.n === signingKey.n, anchoredKey.e === signingKey.e].every(
+    Boolean,
+  );
 };
 
 /**
