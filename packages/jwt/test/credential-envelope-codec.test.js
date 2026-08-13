@@ -183,6 +183,14 @@ describe('credential envelope classification', () => {
     { name: 'numeric', type: 42 },
     { name: 'unrelated', type: ['ExampleCredential'] },
     { name: 'presentation', type: ['VerifiablePresentation'] },
+    {
+      name: 'mixed credential and presentation',
+      type: ['VerifiableCredential', 'VerifiablePresentation'],
+    },
+    {
+      name: 'a malformed array member',
+      type: ['VerifiableCredential', 42],
+    },
   ]) {
     it(`rejects a direct VC 2.0 document with ${name} credential type`, () => {
       const compact = compactCredentialFixture(
@@ -208,6 +216,27 @@ describe('credential envelope classification', () => {
       envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
     });
   });
+
+  for (const typ of [
+    null,
+    '',
+    'vp+jwt',
+    'vp+sd-jwt',
+    'application/vp+jwt',
+    'application/vc+jwt',
+  ]) {
+    it(`rejects nested VC 1.1 with explicit nonlegacy typ ${String(typ)}`, () => {
+      const compact = compactCredentialFixture(
+        { alg: 'ES256K', typ },
+        legacyPayload,
+      );
+
+      expectEnvelopeError(
+        () => decodeCredentialEnvelope(compact),
+        CredentialEnvelopeErrorCodes.WRONG_TYPE,
+      );
+    });
+  }
 
   for (const { name, payload } of [
     {
