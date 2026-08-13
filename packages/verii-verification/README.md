@@ -16,6 +16,11 @@ Verifies one or more compact Verifiable Credentials. The verifier accepts the
 legacy VC 1.1 `jwt_vc_json-ld` envelope and the direct VC 2.0 `vc+jwt`
 envelope, and reports which profile and signing algorithm it verified.
 
+VC 2.0 results also expose the JWT verifier's separate `proof`, `conformance`,
+and `policy` assessments. During the compatibility period, any failure in
+those assessments is also translated to `credentialChecks.UNTAMPERED: 'FAIL'`.
+The credential value is `null` when proof, conformance, or policy fails.
+
 ```ts
 import { verifyCredentials } from '@velocitycareerlabs/verii-verification';
 
@@ -78,6 +83,21 @@ console.log(verified);
 //   },
 //   ...
 // ]
+```
+
+A successful VC 2.0 entry additionally contains:
+
+```js
+{
+  proof: { status: 'PASS', errors: [] },
+  conformance: { status: 'PASS', errors: [], warnings: [] },
+  policy: {
+    status: 'PASS',
+    profile: 'velocity-vc-v2',
+    errors: [],
+    warnings: []
+  }
+}
 ```
 
 ### 2. `verifyVerifiablePresentationJwt`

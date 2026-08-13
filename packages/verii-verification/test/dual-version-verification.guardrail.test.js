@@ -398,6 +398,11 @@ describe('dual-version verification guardrails', () => {
 
         expect(result).toEqual([
           {
+            conformance: {
+              errors: [],
+              status: 'PASS',
+              warnings: [],
+            },
             credential,
             credentialChecks: {
               TRUSTED_HOLDER: CheckResults.PASS,
@@ -408,11 +413,73 @@ describe('dual-version verification guardrails', () => {
             },
             dataModelVersion: '2.0',
             envelopeFormat: 'vc+jwt',
+            policy: {
+              errors: [],
+              profile: 'velocity-vc-v2',
+              status: 'PASS',
+              warnings: [],
+            },
+            proof: {
+              errors: [],
+              status: 'PASS',
+            },
             signingAlgorithm: joseAlgorithm,
           },
         ]);
       });
     }
+
+    it('maps a VC 2.0 proof failure to the legacy tampering check', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const attacker = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        credentialSubject: { id: 'did:example:holder' },
+        id: 'https://example.com/credentials/123',
+        issuer: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        validFrom: '2026-01-01T00:00:00.000Z',
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+      const forged = compactSign(credential, attacker.keyPair.privateKey, {
+        alg: signing.joseAlgorithm,
+        cty: 'vc',
+        kid: signing.kid,
+        typ: 'vc+jwt',
+      });
+
+      const [result] = await verify(forged);
+
+      expect(result).toMatchObject({
+        conformance: { status: 'NOT_CHECKED' },
+        credential: null,
+        credentialChecks: { UNTAMPERED: CheckResults.FAIL },
+        policy: { status: 'NOT_CHECKED' },
+        proof: { status: 'FAIL' },
+      });
+    });
+
+    it('maps a VC 2.0 profile failure to the legacy tampering check', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        credentialSubject: { id: 'did:example:holder' },
+        issuer: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        validFrom: '2026-01-01T00:00:00.000Z',
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+
+      const [result] = await verify(issueV2Credential(credential, signing));
+
+      expect(result).toMatchObject({
+        conformance: { status: 'PASS' },
+        credential: null,
+        credentialChecks: { UNTAMPERED: CheckResults.FAIL },
+        policy: { status: 'FAIL' },
+        proof: { status: 'PASS' },
+      });
+    });
 
     it('fails a v2 credential before validFrom', async () => {
       const signing = prepareAlgorithm(algorithms[1]);
@@ -476,6 +543,12 @@ describe('dual-version verification guardrails', () => {
         UNEXPIRED: CheckResults.NOT_CHECKED,
         UNREVOKED: CheckResults.NOT_CHECKED,
         UNTAMPERED: CheckResults.FAIL,
+      });
+      expect(result[0]).toMatchObject({
+        conformance: { status: 'FAIL' },
+        credential: null,
+        policy: { status: 'NOT_CHECKED' },
+        proof: { status: 'PASS' },
       });
     });
 

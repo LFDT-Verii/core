@@ -92,7 +92,9 @@
           }
         }
       ]
-    }
+    },
+    "vc": false,
+    "vp": false
   },
   "$defs": {
     "contextEntry": {

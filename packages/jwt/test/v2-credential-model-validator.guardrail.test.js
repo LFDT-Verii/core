@@ -46,6 +46,24 @@ describe('VC 2.0 credential model validator guardrails', () => {
     expect(isVelocityV2Credential(profileCredential)).toBe(true);
   });
 
+  it('accepts permitted registered JWT claims and rejects only vc and vp', () => {
+    const { isV2CoreCredential } = loadValidators();
+    const registeredClaims = {
+      ...coreCredential,
+      aud: ['https://verifier.example'],
+      exp: 4070908800,
+      iat: 1767225600,
+      iss: 'did:example:issuer',
+      jti: 'https://example.com/credentials/123',
+      nbf: 1767225600,
+      sub: 'did:example:holder',
+    };
+
+    expect(isV2CoreCredential(registeredClaims)).toBe(true);
+    expect(isV2CoreCredential({ ...registeredClaims, vc: {} })).toBe(false);
+    expect(isV2CoreCredential({ ...registeredClaims, vp: {} })).toBe(false);
+  });
+
   for (const [name, issuer] of [
     ['a missing issuer', undefined],
     ['an empty issuer id', ''],

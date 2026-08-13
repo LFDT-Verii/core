@@ -24,6 +24,7 @@ const V2CredentialModelViolationTypes = Object.freeze({
   CONTEXT: 'context',
   DATE_TIME: 'date-time',
   MODEL: 'model',
+  PROFILE: 'profile',
   SCHEMA: 'schema',
 });
 
@@ -41,25 +42,36 @@ ajv.addSchema(v2CoreSchema);
 const validateV2CoreCredential = ajv.getSchema(v2CoreSchema.$id);
 const validateVelocityV2Credential = ajv.compile(velocityV2JoseProfileSchema);
 
-const getV2CredentialModelViolation = (credential) => {
+const getV2CoreCredentialModelViolation = (credential) => {
   if (!validateV2CoreCredential(credential)) {
     return violationFromCoreErrors(validateV2CoreCredential.errors);
   }
-  if (!validateVelocityV2Credential(credential)) {
-    return violationFromProfileErrors(
-      credential,
-      validateVelocityV2Credential.errors,
-    );
+  const invalidDateTime = invalidDateTimeProperty(credential);
+  if (invalidDateTime != null) {
+    return {
+      property: invalidDateTime,
+      type: V2CredentialModelViolationTypes.DATE_TIME,
+    };
   }
-  for (const property of ['validFrom', 'validUntil']) {
-    if (
-      credential[property] != null &&
-      !Number.isFinite(Date.parse(credential[property]))
-    ) {
-      return { property, type: V2CredentialModelViolationTypes.DATE_TIME };
-    }
+  if (hasReversedValidityInterval(credential)) {
+    return {
+      property: 'validUntil',
+      type: V2CredentialModelViolationTypes.DATE_TIME,
+    };
   }
   return undefined;
+};
+
+const getV2CredentialModelViolation = (credential) =>
+  getV2CoreCredentialModelViolation(credential) ??
+  getVelocityV2CredentialModelViolation(credential);
+
+const getVelocityV2CredentialModelViolation = (credential) => {
+  if (validateVelocityV2Credential(credential)) {
+    return undefined;
+  }
+
+  return violationFromProfileErrors(validateVelocityV2Credential.errors);
 };
 
 const isV2CoreCredential = (credential) => validateV2CoreCredential(credential);
@@ -67,16 +79,17 @@ const isV2CoreCredential = (credential) => validateV2CoreCredential(credential);
 const isVelocityV2Credential = (credential) =>
   validateVelocityV2Credential(credential);
 
-const V2_FORBIDDEN_COMPATIBILITY_CLAIMS = Object.freeze([
-  'exp',
-  'iat',
-  'iss',
-  'jti',
-  'nbf',
-  'sub',
-  'vc',
-  'vp',
-]);
+const hasReversedValidityInterval = ({ validFrom, validUntil }) =>
+  validFrom != null &&
+  validUntil != null &&
+  Date.parse(validUntil) < Date.parse(validFrom);
+
+const invalidDateTimeProperty = (credential) =>
+  ['validFrom', 'validUntil'].find(
+    (property) =>
+      credential[property] != null &&
+      !Number.isFinite(Date.parse(credential[property])),
+  );
 
 const violationFromCoreErrors = (errors) => {
   if (hasPropertyError(errors, '@context')) {
@@ -85,31 +98,33 @@ const violationFromCoreErrors = (errors) => {
   if (hasPropertyError(errors, 'credentialSchema')) {
     return { type: V2CredentialModelViolationTypes.SCHEMA };
   }
-  for (const property of ['validFrom', 'validUntil']) {
-    if (hasPropertyError(errors, property)) {
-      return { property, type: V2CredentialModelViolationTypes.DATE_TIME };
-    }
+  const compatibilityClaim = ['vc', 'vp'].find((property) =>
+    hasPropertyError(errors, property),
+  );
+  if (compatibilityClaim != null) {
+    return {
+      property: compatibilityClaim,
+      type: V2CredentialModelViolationTypes.COMPATIBILITY_CLAIM,
+    };
+  }
+  const dateTime = ['validFrom', 'validUntil'].find((property) =>
+    hasPropertyError(errors, property),
+  );
+  if (dateTime != null) {
+    return {
+      property: dateTime,
+      type: V2CredentialModelViolationTypes.DATE_TIME,
+    };
   }
   return { type: V2CredentialModelViolationTypes.MODEL };
 };
 
-const violationFromProfileErrors = (credential, errors) => {
-  const forbiddenClaim = V2_FORBIDDEN_COMPATIBILITY_CLAIMS.find((claim) =>
-    Object.hasOwn(credential, claim),
-  );
-  if (forbiddenClaim != null) {
-    return {
-      property: forbiddenClaim,
-      type: V2CredentialModelViolationTypes.COMPATIBILITY_CLAIM,
-    };
-  }
-  for (const property of ['validFrom', 'validUntil']) {
-    if (hasPropertyError(errors, property)) {
-      return { property, type: V2CredentialModelViolationTypes.DATE_TIME };
-    }
-  }
-  return { type: V2CredentialModelViolationTypes.MODEL };
-};
+const violationFromProfileErrors = (errors) => ({
+  property: ['id', 'validFrom'].find((property) =>
+    hasPropertyError(errors, property),
+  ),
+  type: V2CredentialModelViolationTypes.PROFILE,
+});
 
 const hasPropertyError = (errors, property) =>
   errors.some(
@@ -121,7 +136,9 @@ const hasPropertyError = (errors, property) =>
 
 module.exports = {
   V2CredentialModelViolationTypes,
+  getV2CoreCredentialModelViolation,
   getV2CredentialModelViolation,
+  getVelocityV2CredentialModelViolation,
   isV2CoreCredential,
   isVelocityV2Credential,
 };

@@ -20,6 +20,8 @@ const { expect } = require('expect');
 const { generateJWAKeyPair, KeyAlgorithms } = require('@verii/crypto');
 const {
   CredentialVerificationErrorCodes,
+  CredentialVerificationStatuses,
+  CredentialVerificationWarningCodes,
   verifyCredentialEnvelope,
 } = require('../src/credential-envelope-verifier');
 
@@ -50,7 +52,7 @@ const prepareSigning = ({ algorithm, joseAlgorithm }) => {
   return {
     joseAlgorithm,
     keyPair,
-    kid: `did:example:credential-${joseAlgorithm}#key-1`,
+    kid: `did:example:issuer-${joseAlgorithm}#key-1`,
   };
 };
 
@@ -62,9 +64,9 @@ const buildV2Credential = (signing, overrides = {}) => ({
       employer: 'https://example.com/employer',
     },
   ],
-  id: signing.kid.split('#')[0],
+  id: `https://example.com/credentials/${signing.joseAlgorithm}`,
   type: ['VerifiableCredential', 'EmploymentCredential'],
-  issuer: 'did:example:issuer',
+  issuer: signing.kid.split('#')[0],
   validFrom: '2026-01-01T00:00:00.000Z',
   validUntil: '2099-01-01T00:00:00.000Z',
   credentialSubject: {
@@ -91,28 +93,46 @@ const signV2 = (signing, overrides = {}, headerOverrides = {}) =>
     },
   );
 
+const expectFailure = async (promise, assessment, code) => {
+  const result = await promise;
+  expect(result).toMatchObject({
+    [assessment]: {
+      errors: expect.arrayContaining([expect.objectContaining({ code })]),
+      status: CredentialVerificationStatuses.FAIL,
+    },
+    credential: null,
+  });
+  return result;
+};
+
+// eslint-disable-next-line complexity
 describe('credential envelope verifier', () => {
   for (const algorithmConfig of algorithmConfigs) {
     const { joseAlgorithm } = algorithmConfig;
 
     it(`verifies VC 2.0 with ${joseAlgorithm}`, async () => {
       const signing = prepareSigning(algorithmConfig);
-      const compact = signV2(signing);
 
       await expect(
-        verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-      ).resolves.toEqual(
-        expect.objectContaining({
-          credential: buildV2Credential(signing),
-          dataModelVersion: '2.0',
-          envelopeFormat: 'vc+jwt',
-          signingAlgorithm: joseAlgorithm,
-        }),
-      );
+        verifyCredentialEnvelope(signV2(signing), signing.keyPair.publicKey),
+      ).resolves.toMatchObject({
+        conformance: { errors: [], status: 'PASS', warnings: [] },
+        credential: buildV2Credential(signing),
+        dataModelVersion: '2.0',
+        envelopeFormat: 'vc+jwt',
+        policy: {
+          errors: [],
+          profile: 'velocity-vc-v2',
+          status: 'PASS',
+          warnings: [],
+        },
+        proof: { errors: [], status: 'PASS' },
+        signingAlgorithm: joseAlgorithm,
+      });
     });
   }
 
-  it('preserves VC 1.1 verification without applying v2 model rules', async () => {
+  it('preserves VC 1.1 verification without applying v2 rules', async () => {
     const signing = prepareSigning(algorithmConfigs[0]);
     const credential = {
       '@context': ['https://www.w3.org/2018/credentials/v1'],
@@ -129,38 +149,45 @@ describe('credential envelope verifier', () => {
 
     await expect(
       verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).resolves.toEqual(
-      expect.objectContaining({
-        dataModelVersion: '1.1',
-        envelopeFormat: 'jwt_vc_json-ld',
-        signingAlgorithm: 'ES256K',
-      }),
-    );
-  });
-
-  it('rejects an algorithm outside the version allowlist before crypto', async () => {
-    const signing = prepareSigning(algorithmConfigs[1]);
-    const compact = signV2(signing, {}, { alg: 'HS256' });
-
-    await expect(
-      verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.UNSUPPORTED_ALGORITHM,
+    ).resolves.toMatchObject({
+      conformance: { status: 'NOT_APPLICABLE' },
+      credential: {
+        ...credential,
+        issuer: { id: 'did:example:issuer' },
+      },
+      dataModelVersion: '1.1',
+      envelopeFormat: 'jwt_vc_json-ld',
+      policy: { status: 'NOT_APPLICABLE' },
+      proof: { status: 'PASS' },
+      signingAlgorithm: 'ES256K',
     });
   });
 
-  it('accepts an object issuer, subject list, and absent optional schema and end date', async () => {
+  it('reports an algorithm outside the version allowlist as a proof failure', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+
+    await expectFailure(
+      verifyCredentialEnvelope(
+        signV2(signing, {}, { alg: 'HS256' }),
+        signing.keyPair.publicKey,
+      ),
+      'proof',
+      CredentialVerificationErrorCodes.UNSUPPORTED_ALGORITHM,
+    );
+  });
+
+  it('accepts optional core properties and object/list forms', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
     const compact = signV2(signing, {
       credentialSchema: undefined,
       credentialSubject: [{ id: 'did:example:holder' }],
-      issuer: { id: 'did:example:issuer', name: 'Example Issuer' },
+      issuer: { id: signing.kid.split('#')[0], name: 'Example Issuer' },
       validUntil: undefined,
     });
 
     await expect(
       verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).resolves.toEqual(expect.objectContaining({ signingAlgorithm: 'ES256' }));
+    ).resolves.toMatchObject({ credential: expect.any(Object) });
   });
 
   for (const [name, signingConfig, keyConfig] of [
@@ -168,39 +195,89 @@ describe('credential envelope verifier', () => {
     ['ES256K with P-256', algorithmConfigs[0], algorithmConfigs[1]],
     ['RS256 with EC', algorithmConfigs[2], algorithmConfigs[1]],
   ]) {
-    it(`rejects ${name}`, async () => {
+    it(`reports ${name} as a proof failure`, async () => {
       const signing = prepareSigning(signingConfig);
       const wrongKey = prepareSigning(keyConfig).keyPair.publicKey;
 
-      await expect(
+      await expectFailure(
         verifyCredentialEnvelope(signV2(signing), wrongKey),
-      ).rejects.toMatchObject({
-        code: CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
-      });
+        'proof',
+        CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
+      );
     });
   }
 
-  for (const [name, headerOverrides] of [
-    ['an expanded typ', { typ: 'application/vc+jwt' }],
-    ['a missing cty', { cty: undefined }],
-    ['an incorrect cty', { cty: 'application/vc' }],
+  for (const [name, headerOverrides, warningCode] of [
+    [
+      'an expanded typ',
+      { typ: 'application/vc+jwt' },
+      CredentialVerificationWarningCodes.TYP_NOT_RECOMMENDED,
+    ],
+    [
+      'a generic JWT typ',
+      { typ: 'JWT' },
+      CredentialVerificationWarningCodes.TYP_NOT_RECOMMENDED,
+    ],
+    [
+      'a missing typ',
+      { typ: undefined },
+      CredentialVerificationWarningCodes.TYP_MISSING,
+    ],
+    ['a missing cty', { cty: undefined }, undefined],
+    [
+      'an alternate cty',
+      { cty: 'application/vc' },
+      CredentialVerificationWarningCodes.CTY_NOT_RECOMMENDED,
+    ],
   ]) {
-    it(`rejects ${name}`, async () => {
+    it(`accepts ${name}`, async () => {
       const signing = prepareSigning(algorithmConfigs[1]);
+      const result = await verifyCredentialEnvelope(
+        signV2(signing, {}, headerOverrides),
+        signing.keyPair.publicKey,
+      );
 
-      await expect(
-        verifyCredentialEnvelope(
-          signV2(signing, {}, headerOverrides),
-          signing.keyPair.publicKey,
-        ),
-      ).rejects.toMatchObject({
-        code: CredentialVerificationErrorCodes.HEADER_INVALID,
+      expect(result).toMatchObject({
+        conformance: { status: 'PASS' },
+        credential: expect.any(Object),
       });
+      if (warningCode == null) {
+        expect(result.conformance.warnings).toEqual([]);
+      } else {
+        expect(result.conformance.warnings).toContainEqual(
+          expect.objectContaining({ code: warningCode }),
+        );
+      }
     });
   }
+
+  it('rejects a malformed cty value as a conformance failure', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+
+    await expectFailure(
+      verifyCredentialEnvelope(
+        signV2(signing, {}, { cty: 42 }),
+        signing.keyPair.publicKey,
+      ),
+      'conformance',
+      CredentialVerificationErrorCodes.HEADER_INVALID,
+    );
+  });
+
+  it('rejects a malformed typ value as a conformance failure', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+
+    await expectFailure(
+      verifyCredentialEnvelope(
+        signV2(signing, {}, { typ: 42 }),
+        signing.keyPair.publicKey,
+      ),
+      'conformance',
+      CredentialVerificationErrorCodes.HEADER_INVALID,
+    );
+  });
 
   for (const [name, overrides, expectedCode] of [
-    ['a missing id', { id: undefined }, 'CREDENTIAL_MODEL_INVALID'],
     ['a missing issuer', { issuer: undefined }, 'CREDENTIAL_MODEL_INVALID'],
     [
       'a missing subject',
@@ -208,8 +285,8 @@ describe('credential envelope verifier', () => {
       'CREDENTIAL_MODEL_INVALID',
     ],
     [
-      'a missing validFrom',
-      { validFrom: undefined },
+      'a missing VerifiableCredential type',
+      { type: ['EmploymentCredential'] },
       'CREDENTIAL_MODEL_INVALID',
     ],
     [
@@ -259,9 +336,7 @@ describe('credential envelope verifier', () => {
     ],
     [
       'a schema descriptor with a malformed id URL',
-      {
-        credentialSchema: { id: 'not a uri', type: 'JsonSchema' },
-      },
+      { credentialSchema: { id: 'not a uri', type: 'JsonSchema' } },
       'CREDENTIAL_MODEL_INVALID',
     ],
     [
@@ -269,11 +344,8 @@ describe('credential envelope verifier', () => {
       { credentialSchema: [] },
       'CREDENTIAL_MODEL_INVALID',
     ],
-    [
-      'a compatibility claim',
-      { iss: 'did:example:issuer' },
-      'CREDENTIAL_MODEL_INVALID',
-    ],
+    ['a prohibited vc claim', { vc: {} }, 'CREDENTIAL_MODEL_INVALID'],
+    ['a prohibited vp claim', { vp: {} }, 'CREDENTIAL_MODEL_INVALID'],
     [
       'an insecure context',
       {
@@ -305,211 +377,269 @@ describe('credential envelope verifier', () => {
       'CREDENTIAL_CONTEXT_INVALID',
     ],
   ]) {
-    it(`rejects ${name}`, async () => {
+    it(`reports ${name} as a conformance failure`, async () => {
       const signing = prepareSigning(algorithmConfigs[1]);
-      await expect(
+      await expectFailure(
         verifyCredentialEnvelope(
           signV2(signing, overrides),
           signing.keyPair.publicKey,
         ),
-      ).rejects.toMatchObject({ code: expectedCode });
+        'conformance',
+        expectedCode,
+      );
     });
   }
 
-  it('maps malformed contexts and model properties to stable public errors', async () => {
+  for (const [name, overrides] of [
+    ['a missing id', { id: undefined }],
+    ['a missing validFrom', { validFrom: undefined }],
+  ]) {
+    it(`reports ${name} as a Velocity policy failure`, async () => {
+      const signing = prepareSigning(algorithmConfigs[1]);
+      await expectFailure(
+        verifyCredentialEnvelope(
+          signV2(signing, overrides),
+          signing.keyPair.publicKey,
+        ),
+        'policy',
+        CredentialVerificationErrorCodes.PROFILE_INVALID,
+      );
+    });
+  }
+
+  it('accepts registered JWT claims and reports SHOULD mismatches as warnings', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+    const result = await verifyCredentialEnvelope(
+      signV2(signing, {
+        aud: ['https://verifier.example'],
+        exp: 4070908800,
+        iat: 1767225600,
+        iss: signing.kid.split('#')[0],
+        jti: 'https://example.com/another-credential-id',
+        nbf: 1767225600,
+        sub: 'did:example:another-holder',
+      }),
+      signing.keyPair.publicKey,
+      { audience: 'https://verifier.example', currentTime: 1798761600000 },
+    );
+
+    expect(result).toMatchObject({
+      conformance: { errors: [], status: 'PASS' },
+      credential: expect.any(Object),
+      policy: { errors: [], status: 'PASS' },
+    });
+    expect(result.conformance.warnings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'CREDENTIAL_JTI_ID_MISMATCH' }),
+        expect.objectContaining({ code: 'CREDENTIAL_NBF_NOT_RECOMMENDED' }),
+        expect.objectContaining({ code: 'CREDENTIAL_SUBJECT_ID_MISMATCH' }),
+      ]),
+    );
+  });
+
+  it('reports an iss mismatch as a warning', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+    const result = await verifyCredentialEnvelope(
+      signV2(signing, { iss: 'did:example:another-issuer' }),
+      signing.keyPair.publicKey,
+    );
+
+    expect(result).toMatchObject({
+      conformance: { errors: [], status: 'PASS' },
+      credential: expect.any(Object),
+    });
+    expect(result.conformance.warnings).toContainEqual(
+      expect.objectContaining({
+        code: CredentialVerificationWarningCodes.ISSUER_CLAIM_MISMATCH,
+      }),
+    );
+  });
+
+  for (const [claim, value] of [
+    ['aud', []],
+    ['exp', '2099-01-01T00:00:00Z'],
+    ['iat', '2026-01-01T00:00:00Z'],
+    ['iss', 42],
+    ['jti', 42],
+    ['nbf', '2026-01-01T00:00:00Z'],
+    ['sub', 42],
+  ]) {
+    it(`reports a malformed ${claim} claim as conformance`, async () => {
+      const signing = prepareSigning(algorithmConfigs[1]);
+      await expectFailure(
+        verifyCredentialEnvelope(
+          signV2(signing, { [claim]: value }),
+          signing.keyPair.publicKey,
+        ),
+        'conformance',
+        CredentialVerificationErrorCodes.JWT_CLAIM_INVALID,
+      );
+    });
+  }
+
+  it('evaluates registered time and audience claims as policy', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
 
-    await expect(
+    await expectFailure(
       verifyCredentialEnvelope(
-        signV2(signing, {
-          '@context': [
-            'https://www.w3.org/ns/credentials/v2',
-            'http://example.com/context',
-          ],
-          issuer: undefined,
-        }),
+        signV2(signing, { exp: 1, nbf: 4070908800 }),
         signing.keyPair.publicKey,
+        { audience: 'https://verifier.example', currentTime: 1798761600000 },
       ),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.CONTEXT_INVALID,
-      message:
-        'VC 2.0 contexts must be a bounded list of HTTPS URLs or inline definitions',
-    });
-
-    await expect(
-      verifyCredentialEnvelope(
-        signV2(signing, { issuer: { name: 'Missing id' } }),
-        signing.keyPair.publicKey,
-      ),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.MODEL_INVALID,
-      message:
-        'VC 2.0 credential is missing or has invalid required properties',
-    });
+      'policy',
+      CredentialVerificationErrorCodes.TOKEN_EXPIRED,
+    );
   });
 
-  it('rejects an unrelated kid even when the signature key is known', async () => {
-    const signing = prepareSigning(algorithmConfigs[1]);
-    const compact = signV2(signing, {}, { kid: 'did:example:other#key-1' });
-
-    await expect(
-      verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.KID_BINDING_INVALID,
-    });
-  });
-
-  it('rejects a did:jwk self-signed credential with another issuer', async () => {
-    const signing = prepareSigning(algorithmConfigs[1]);
-    const didJwk = `did:jwk:${Buffer.from(
-      JSON.stringify(signing.keyPair.publicKey),
-    ).toString('base64url')}`;
-    const didJwkSigning = { ...signing, kid: `${didJwk}#0` };
-    const compact = signV2(didJwkSigning, {
-      issuer: 'did:example:another-issuer',
-    });
-
-    await expect(
-      verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.KID_BINDING_INVALID,
-    });
-  });
-
-  it('accepts a did:jwk self-signed credential with the key controller issuer', async () => {
-    const signing = prepareSigning(algorithmConfigs[1]);
-    const didJwk = `did:jwk:${Buffer.from(
-      JSON.stringify(signing.keyPair.publicKey),
-    ).toString('base64url')}`;
-    const didJwkSigning = { ...signing, kid: `${didJwk}#0` };
-    const compact = signV2(didJwkSigning, { issuer: didJwk });
-
-    await expect(
-      verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).resolves.toEqual(expect.objectContaining({ signingAlgorithm: 'ES256' }));
-  });
-
-  it('rejects a kid with an empty fragment', async () => {
+  it('does not bind kid to the credential id', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
     const compact = signV2(
       signing,
       {},
-      { kid: `${signing.kid.split('#')[0]}#` },
+      { kid: 'did:example:issuer#other-key' },
     );
 
     await expect(
       verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.KID_BINDING_INVALID,
-    });
+    ).resolves.toMatchObject({ credential: expect.any(Object) });
   });
 
-  it('rejects a kid over the resolution bound', async () => {
+  it('enforces did:jwk self-signed issuer binding as conformance', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
-    const compact = signV2(signing, {}, { kid: `${'a'.repeat(2048)}#key` });
+    const didJwk = `did:jwk:${Buffer.from(
+      JSON.stringify(signing.keyPair.publicKey),
+    ).toString('base64url')}`;
+    const didJwkSigning = { ...signing, kid: `${didJwk}#0` };
+
+    await expectFailure(
+      verifyCredentialEnvelope(
+        signV2(didJwkSigning, { issuer: 'did:example:another-issuer' }),
+        signing.keyPair.publicKey,
+      ),
+      'conformance',
+      CredentialVerificationErrorCodes.SELF_SIGNED_ISSUER_INVALID,
+    );
 
     await expect(
-      verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.KID_BINDING_INVALID,
-    });
+      verifyCredentialEnvelope(
+        signV2(didJwkSigning, { issuer: didJwk }),
+        signing.keyPair.publicKey,
+      ),
+    ).resolves.toMatchObject({ credential: expect.any(Object) });
   });
 
-  it('rejects a malformed context URL', async () => {
+  it('accepts an externally resolved kid with an empty fragment', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
-    const compact = signV2(signing, {
-      '@context': ['https://www.w3.org/ns/credentials/v2', 'not a URL'],
-    });
 
     await expect(
-      verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.CONTEXT_INVALID,
-    });
+      verifyCredentialEnvelope(
+        signV2(signing, {}, { kid: `${signing.kid.split('#')[0]}#` }),
+        signing.keyPair.publicKey,
+      ),
+    ).resolves.toMatchObject({ credential: expect.any(Object) });
   });
 
-  it('rejects more than the bounded number of contexts', async () => {
+  it('reports a kid over the local resolution bound as conformance', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
-    const compact = signV2(signing, {
-      '@context': [
+    await expectFailure(
+      verifyCredentialEnvelope(
+        signV2(signing, {}, { kid: `${'a'.repeat(2048)}#key` }),
+        signing.keyPair.publicKey,
+      ),
+      'conformance',
+      CredentialVerificationErrorCodes.KID_INVALID,
+    );
+  });
+
+  for (const [name, context] of [
+    [
+      'a malformed context URL',
+      ['https://www.w3.org/ns/credentials/v2', 'not a URL'],
+    ],
+    [
+      'too many contexts',
+      [
         'https://www.w3.org/ns/credentials/v2',
         ...Array.from(
           { length: 16 },
           (_, index) => `https://example.com/context-${index}`,
         ),
       ],
+    ],
+  ]) {
+    it(`reports ${name} as conformance`, async () => {
+      const signing = prepareSigning(algorithmConfigs[1]);
+      await expectFailure(
+        verifyCredentialEnvelope(
+          signV2(signing, { '@context': context }),
+          signing.keyPair.publicKey,
+        ),
+        'conformance',
+        CredentialVerificationErrorCodes.CONTEXT_INVALID,
+      );
     });
+  }
 
-    await expect(
-      verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.CONTEXT_INVALID,
-    });
-  });
-
-  it('rejects an unexpected curve property on an RSA key', async () => {
+  it('reports an unexpected RSA curve as a proof failure', async () => {
     const signing = prepareSigning(algorithmConfigs[2]);
-
-    await expect(
+    await expectFailure(
       verifyCredentialEnvelope(signV2(signing), {
         ...signing.keyPair.publicKey,
         crv: 'P-256',
       }),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
-    });
+      'proof',
+      CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
+    );
   });
 
-  it('rejects a tampered signed payload', async () => {
+  it('reports a tampered signed payload as proof failure', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
-    const compact = signV2(signing);
-    const segments = compact.split('.');
+    const segments = signV2(signing).split('.');
     const tampered = `${segments[0]}.${Buffer.from(
       JSON.stringify(buildV2Credential(signing, { issuer: 'did:attacker' })),
     ).toString('base64url')}.${segments[2]}`;
 
-    await expect(
+    await expectFailure(
       verifyCredentialEnvelope(tampered, signing.keyPair.publicKey),
-    ).rejects.toThrow('signature verification failed');
+      'proof',
+      CredentialVerificationErrorCodes.SIGNATURE_INVALID,
+    );
   });
 
   it('does not accept a caller-controlled signature verifier', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
-    const compact = signV2(signing);
-    const segments = compact.split('.');
+    const segments = signV2(signing).split('.');
     const tampered = `${segments[0]}.${Buffer.from(
       JSON.stringify(
         buildV2Credential(signing, {
-          credentialSubject: {
-            id: 'did:example:attacker',
-            role: 'admin',
-          },
+          credentialSubject: { id: 'did:example:attacker', role: 'admin' },
         }),
       ),
     ).toString('base64url')}.${segments[2]}`;
 
-    await expect(
+    await expectFailure(
       verifyCredentialEnvelope(
         tampered,
         signing.keyPair.publicKey,
         async () => undefined,
       ),
-    ).rejects.toThrow('signature verification failed');
+      'proof',
+      CredentialVerificationErrorCodes.SIGNATURE_INVALID,
+    );
   });
 
   it('does not expose the decoded credential to a key resolver', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
-    const compact = signV2(signing);
     const mutateEnvelope = (envelope) => {
       envelope.credential.credentialSubject.role = 'admin';
       return signing.keyPair.publicKey;
     };
 
-    await expect(
-      verifyCredentialEnvelope(compact, mutateEnvelope),
-    ).rejects.toMatchObject({
-      code: CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
-    });
+    await expectFailure(
+      verifyCredentialEnvelope(signV2(signing), mutateEnvelope),
+      'proof',
+      CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
+    );
   });
 
   it('rejects an unsupported fixed verification mode', async () => {

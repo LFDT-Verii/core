@@ -36,6 +36,7 @@ const {
   decodeCredentialEnvelope,
   getCredentialId,
   getCredentialIssuer,
+  isCredentialVerificationAccepted,
   verifyCredentialEnvelope,
 } = require('@verii/jwt');
 const {
@@ -160,10 +161,20 @@ const assertRoutingIdentifier = (value, name) => {
 };
 
 const buildFormatMetadata = ({
+  conformance,
   dataModelVersion,
   envelopeFormat,
+  policy,
+  proof,
   signingAlgorithm,
-}) => ({ dataModelVersion, envelopeFormat, signingAlgorithm });
+}) => ({
+  dataModelVersion,
+  envelopeFormat,
+  ...(dataModelVersion === CredentialDataModelVersions.V2_0 && proof != null
+    ? { conformance, policy, proof }
+    : {}),
+  signingAlgorithm,
+});
 
 const emptyCredentialStatusRefs = () => ({ credentialStatusesMap: {} });
 
@@ -267,7 +278,7 @@ const resolveVelocityDidDocument = async (
   );
   try {
     const multiDid = `did:velocity:v2:multi:${flow(
-      map(({ id }) => id.split(':v2:')[1]),
+      map(({ keyMetadata }) => keyMetadata.kid.split('#')[0].split(':v2:')[1]),
       join(';'),
     )(credentialData)}`;
 
@@ -410,6 +421,21 @@ const verifyCredentialData = async (data, { keyMap, errors }, context) => {
       data.jwtVc,
       verificationKey,
     );
+    if (!isCredentialVerificationAccepted(verifiedEnvelope)) {
+      context.log.error(
+        {
+          credentialId: data.id,
+          conformance: verifiedEnvelope.conformance,
+          policy: verifiedEnvelope.policy,
+          proof: verifiedEnvelope.proof,
+        },
+        'credential verification failed',
+      );
+      return failedCredentialData(
+        { ...data, ...verifiedEnvelope },
+        CheckResults.FAIL,
+      );
+    }
     return {
       ...data,
       ...verifiedEnvelope,

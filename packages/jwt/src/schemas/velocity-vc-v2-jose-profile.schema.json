@@ -15,15 +15,7 @@
         },
         "validFrom": {
           "$ref": "https://velocitynetwork.foundation/schemas/w3c-vc-v2-core.schema.json#/$defs/dateTime"
-        },
-        "exp": false,
-        "iat": false,
-        "iss": false,
-        "jti": false,
-        "nbf": false,
-        "sub": false,
-        "vc": false,
-        "vp": false
+        }
       }
     }
   ]
