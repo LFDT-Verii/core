@@ -253,6 +253,13 @@ describe('credential envelope verifier', () => {
       'CREDENTIAL_MODEL_INVALID',
     ],
     [
+      'a schema descriptor with a malformed id URL',
+      {
+        credentialSchema: { id: 'not a uri', type: 'JsonSchema' },
+      },
+      'CREDENTIAL_MODEL_INVALID',
+    ],
+    [
       'an empty schema list',
       { credentialSchema: [] },
       'CREDENTIAL_MODEL_INVALID',
@@ -293,6 +300,38 @@ describe('credential envelope verifier', () => {
       ).rejects.toMatchObject({ code: expectedCode });
     });
   }
+
+  it('maps malformed contexts and model properties to stable public errors', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+
+    await expect(
+      verifyCredentialEnvelope(
+        signV2(signing, {
+          '@context': [
+            'https://www.w3.org/ns/credentials/v2',
+            'http://example.com/context',
+          ],
+          issuer: undefined,
+        }),
+        signing.keyPair.publicKey,
+      ),
+    ).rejects.toMatchObject({
+      code: CredentialVerificationErrorCodes.CONTEXT_INVALID,
+      message:
+        'VC 2.0 contexts must be a bounded list of HTTPS URLs or inline definitions',
+    });
+
+    await expect(
+      verifyCredentialEnvelope(
+        signV2(signing, { issuer: { name: 'Missing id' } }),
+        signing.keyPair.publicKey,
+      ),
+    ).rejects.toMatchObject({
+      code: CredentialVerificationErrorCodes.MODEL_INVALID,
+      message:
+        'VC 2.0 credential is missing or has invalid required properties',
+    });
+  });
 
   it('rejects an unrelated kid even when the signature key is known', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
