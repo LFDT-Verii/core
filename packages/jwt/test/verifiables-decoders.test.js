@@ -33,6 +33,14 @@ const {
   verifyPresentationJwt,
 } = require('../src/verifiable-decoders');
 const { jwtDecode } = require('../src/core');
+const {
+  CredentialEnvelopeErrorCodes,
+  CredentialEnvelopeLimits,
+} = require('../src/credential-envelope-codec');
+const {
+  expectedLegacyCredential,
+  legacyCredentialFixtures,
+} = require('./fixtures/credential-envelope-fixtures');
 
 describe('Verifiable Decoder Tests', () => {
   const keyPair = generateKeyPair({ format: 'jwk' });
@@ -59,6 +67,14 @@ describe('Verifiable Decoder Tests', () => {
   };
 
   describe('Decode credential JWT', () => {
+    for (const fixture of legacyCredentialFixtures) {
+      it(`Should preserve ${fixture.name}`, () => {
+        expect(decodeCredentialJwt(fixture.compact)).toEqual(
+          expectedLegacyCredential,
+        );
+      });
+    }
+
     it('Should decode credential from JWT', async () => {
       const credentialJwt = await generateCredentialJwt(
         credential,
@@ -101,6 +117,26 @@ describe('Verifiable Decoder Tests', () => {
   });
 
   describe('Verify credential JWT', () => {
+    it('Should reject an oversized credential before verification', async () => {
+      await expect(
+        verifyCredentialJwt(
+          'a'.repeat(CredentialEnvelopeLimits.MAX_COMPACT_CHARACTERS + 1),
+        ),
+      ).rejects.toMatchObject({
+        code: CredentialEnvelopeErrorCodes.COMPACT_JWS_INVALID,
+      });
+    });
+
+    it('Should reject alg none before verification', async () => {
+      const header = Buffer.from(JSON.stringify({ alg: 'none' })).toString(
+        'base64url',
+      );
+
+      await expect(verifyCredentialJwt(`${header}.=.`)).rejects.toMatchObject({
+        code: CredentialEnvelopeErrorCodes.ALG_NONE,
+      });
+    });
+
     it('Should verify credential from JWT', async () => {
       const credentialJwt = await generateCredentialJwt(
         credential,

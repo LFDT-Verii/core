@@ -18,6 +18,8 @@ const { generateDocJwt } = require('./src/docs');
 
 module.exports = {
   ...require('./src/core'),
+  ...require('./src/credential-envelope-codec'),
+  ...require('./src/credential-envelope-legacy'),
   ...require('./src/verifiable-generators'),
   ...require('./src/verifiable-decoders'),
   ...require('./src/vc-mappers'),
