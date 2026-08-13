@@ -15,6 +15,7 @@
  */
 
 const { map } = require('lodash/fp');
+const { extractCredentialType } = require('@verii/vc-checks');
 const {
   allocateGenericListEntries,
   allocateMetadataListEntries,
@@ -23,6 +24,7 @@ const {
   initCredentialMetadataContract,
 } = require('./adapters/init-credential-metadata-contract');
 const { createRevocationList } = require('./adapters/create-revocation-list');
+const { getCredentialSigningProfile } = require('./credential-signing-profile');
 const { prepareJwtVcs } = require('./domain/prepare-jwt-vcs');
 
 const REVOCATION_LIST_SIZE = 10240;
@@ -81,13 +83,19 @@ const signVeriiCredentials = async (
   context,
   credentialSigningAlgorithms,
 ) => {
+  const resolvedCredentialSigningAlgorithms =
+    resolveCredentialSigningAlgorithms(
+      offers,
+      credentialTypesMap,
+      credentialSigningAlgorithms,
+    );
   const metadataEntries = await allocateMetadataListEntries(
     offers,
     credentialTypesMap,
     issuer,
     METADATA_LIST_SIZE,
     context,
-    credentialSigningAlgorithms,
+    resolvedCredentialSigningAlgorithms,
   );
   const newMetadataListEntries = getNewListEntries(metadataEntries);
   if (newMetadataListEntries.length > 0) {
@@ -125,9 +133,31 @@ const signVeriiCredentials = async (
     revocationListEntries,
     credentialTypesMap,
     context,
-    credentialSigningAlgorithms,
+    resolvedCredentialSigningAlgorithms,
   );
 };
+
+/**
+ * Resolves every configured signing algorithm to the internal key vocabulary.
+ * @param {CredentialOffer[]} offers array of offers
+ * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
+ * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @returns {(string | undefined)[]} signing algorithms aligned with the offers
+ */
+const resolveCredentialSigningAlgorithms = (
+  offers,
+  credentialTypesMap,
+  credentialSigningAlgorithms,
+) =>
+  offers.map((offer, index) => {
+    const algorithm =
+      credentialSigningAlgorithms?.[index] ??
+      credentialTypesMap?.[extractCredentialType(offer)]
+        ?.defaultSignatureAlgorithm;
+    return algorithm == null
+      ? undefined
+      : getCredentialSigningProfile(algorithm).keyAlgorithm;
+  });
 
 /**
  * Anchors prepared verifiable credentials to the blockchain using their credential metadata.

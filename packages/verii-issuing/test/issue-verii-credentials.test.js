@@ -260,6 +260,37 @@ describe('issuing velocity verifiable credentials', () => {
     );
   });
 
+  it('normalizes a legacy ES256K metadata alias before allocation and signing', async () => {
+    const credentialTypesWithLegacyAlias = {
+      ...credentialTypesMap,
+      'EmailV1.0': {
+        ...credentialTypesMap['EmailV1.0'],
+        defaultSignatureAlgorithm: 'ES256K',
+      },
+    };
+
+    const [credential] = await issueVeriiCredentials(
+      [offerFactory({ issuerId: issuerEntity.did })],
+      createExampleDid(),
+      credentialTypesWithLegacyAlias,
+      issuer,
+      context,
+    );
+    const [{ publicKey }] = mockAddCredentialMetadataEntry.mock.calls.map(
+      (call) => call.arguments[0],
+    );
+
+    expect(mockAddCredentialMetadataEntry.mock.calls[0].arguments[3]).toEqual(
+      ALG_TYPE.HEX_AES_256,
+    );
+    expect(publicKey).toEqual(publicJwkMatcher(KeyAlgorithms.SECP256K1));
+    await expect(jwtVerify(credential, publicKey, false)).resolves.toEqual(
+      expect.objectContaining({
+        header: expect.objectContaining({ alg: 'ES256K' }),
+      }),
+    );
+  });
+
   it('reconciles an uncertain write without replaying the anchor transaction', async () => {
     mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
       Promise.reject(new Error('receipt confirmation failed')),
