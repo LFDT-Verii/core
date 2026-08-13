@@ -21,8 +21,12 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { CihKeyPurposes } = require('../../src/entities/keys');
 
-const constructTenant = async (persistTenant, persistKey) => {
-  const tenant = await persistTenant({});
+const constructTenant = async (
+  persistTenant,
+  persistKey,
+  tenantOverrides = {},
+) => {
+  const tenant = await persistTenant(tenantOverrides);
   const issuerKeyPair = generateKeyPair({ format: 'jwk' });
   const issuerKey = await persistKey({
     tenant,

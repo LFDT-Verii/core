@@ -198,6 +198,35 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
   });
 
+  it('should use an explicitly resolved ES256 algorithm instead of the Open Badge RS256 default', async () => {
+    const offers = [
+      offerFactory({
+        credentialType: 'OpenBadgeCredential',
+        issuerId: issuerEntity.did,
+      }),
+    ];
+    const [credential] = await issueVeriiCredentials(
+      offers,
+      createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      context,
+      [KeyAlgorithms.ES256],
+    );
+
+    const { header } = jwtDecode(credential);
+    expect(header.alg).toEqual('ES256');
+    const [{ publicKey }] = mockAddCredentialMetadataEntry.mock.calls.map(
+      (call) => call.arguments[0],
+    );
+    expect(publicKey).toEqual(publicJwkMatcher(KeyAlgorithms.ES256));
+    await expect(jwtVerify(credential, publicKey, false)).resolves.toEqual(
+      expect.objectContaining({
+        header: expect.objectContaining({ alg: 'ES256' }),
+      }),
+    );
+  });
+
   it('should create vcs with context in credentialSubject (allocation lists exists)', async () => {
     context.config.credentialSubjectContext = true;
     allocationsCollection.insertOne({
