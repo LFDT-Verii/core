@@ -424,6 +424,12 @@ describe('vn-api > issue credentials', () => {
         statusCode: 502,
       }),
     );
+    await expect(
+      findCredentials([credentials[0]._id, credentials[1]._id]),
+    ).resolves.toEqual([mongoify(credentials[0]), mongoify(credentials[1])]);
+    await expect(
+      mongoDb().collection('notification_events').countDocuments({}),
+    ).resolves.toEqual(0);
   });
 
   describe('proof of key possession failures', () => {
@@ -1018,7 +1024,10 @@ describe('vn-api > issue credentials', () => {
             credentialType: 'EmailV1.0',
             data: {
               credentialDid: expect.stringMatching(DID_FORMAT),
+              dataModelVersion: '1.1',
               digestSRI: expect.stringMatching(/^sha384-/),
+              envelopeFormat: 'jwt_vc_json-ld',
+              signingAlgorithm: 'ES256K',
             },
           }),
           expectedCredentialNotificationEvent({
@@ -1027,7 +1036,10 @@ describe('vn-api > issue credentials', () => {
             credentialType: 'PhoneV1.0',
             data: {
               credentialDid: expect.stringMatching(DID_FORMAT),
+              dataModelVersion: '1.1',
               digestSRI: expect.stringMatching(/^sha384-/),
+              envelopeFormat: 'jwt_vc_json-ld',
+              signingAlgorithm: 'ES256K',
             },
           }),
         ]),
@@ -1353,7 +1365,10 @@ const expectedDbCredential = (credential, tenant, overrides) =>
       acceptedAt: expect.any(Date),
       credentialSubjectId: expect.stringMatching(DID_FORMAT),
       credentialStatus: expectedCredentialStatus(overrides),
+      dataModelVersion: '1.1',
       digestSRI: expect.stringMatching(/sha384-[a-zA-Z0-9+/]+/),
+      envelopeFormat: 'jwt_vc_json-ld',
+      signingAlgorithm: 'ES256K',
       updatedAt: expect.any(Date),
     }),
     overrides,
