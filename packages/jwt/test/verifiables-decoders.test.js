@@ -144,6 +144,7 @@ describe('Verifiable Decoder Tests', () => {
       await expect(
         verifyCredentialJwt(
           'a'.repeat(CredentialEnvelopeLimits.MAX_COMPACT_CHARACTERS + 1),
+          'not-a-hex-key',
         ),
       ).rejects.toMatchObject({
         code: CredentialEnvelopeErrorCodes.COMPACT_JWS_INVALID,

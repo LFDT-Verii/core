@@ -31,9 +31,8 @@ const decodePresentationJwt = (presentationJwt) => {
 };
 
 const verifyCredentialJwt = async (credentialJwt, key) => {
-  const normalizedKey = key == null ? undefined : deriveJwk(credentialJwt, key);
   const verified = assertCredentialVerificationAccepted(
-    await verifyCredentialEnvelope(credentialJwt, normalizedKey, {
+    await verifyCredentialEnvelope(credentialJwt, key, {
       mode: 'legacy-jwt',
     }),
   );

@@ -20,7 +20,12 @@ const {
   CredentialEnvelopeFormats,
   decodeCredentialEnvelope,
 } = require('./credential-envelope-codec');
-const { jwsVerify, jwtVerify } = require('./core');
+const {
+  deriveJwk,
+  jwkToPublicBase64Url,
+  jwsVerify,
+  jwtVerify,
+} = require('./core');
 const {
   V2CredentialModelViolationTypes,
   getV2CoreCredentialModelViolation,
@@ -139,7 +144,10 @@ const verifyCredentialEnvelopeWithOptions = async (
     });
   }
 
-  const conformance = assessCredentialConformance(envelope);
+  const conformance = assessCredentialConformance(
+    envelope,
+    resolvedVerificationKey,
+  );
   const policy = assessCredentialPolicy(envelope, conformance, {
     audience,
     clockToleranceMilliseconds,
@@ -153,7 +161,7 @@ const verifyCredentialEnvelopeWithOptions = async (
   });
 };
 
-const assessCredentialConformance = (envelope) => {
+const assessCredentialConformance = (envelope, verificationKey) => {
   if (envelope.dataModelVersion === CredentialDataModelVersions.V1_1) {
     return notApplicableAssessment();
   }
@@ -164,7 +172,11 @@ const assessCredentialConformance = (envelope) => {
     ...errorsFromModelViolation(modelViolation),
     ...headerErrors(protectedHeader),
     ...jwtClaimErrors(credential),
-    ...selfSignedIssuerErrors(credential.issuer, protectedHeader.kid),
+    ...selfSignedIssuerErrors(
+      credential.issuer,
+      protectedHeader.kid,
+      verificationKey,
+    ),
   ];
   const warnings = [
     ...headerWarnings(protectedHeader),
@@ -566,10 +578,13 @@ const verificationOptionsFrom = ({
   mode = CredentialVerificationModes.JWS,
 }) => ({ audience, clockToleranceMilliseconds, currentTime, mode });
 
-const legacyJwtKey = (envelope, verificationKey, mode) =>
-  mode === CredentialVerificationModes.LEGACY_JWT
-    ? (verificationKey ?? envelope.protectedHeader.jwk)
-    : verificationKey;
+const legacyJwtKey = (envelope, verificationKey, mode) => {
+  if (mode !== CredentialVerificationModes.LEGACY_JWT) {
+    return verificationKey;
+  }
+  const key = verificationKey ?? envelope.protectedHeader.jwk;
+  return key == null ? undefined : deriveJwk(envelope.compact, key);
+};
 
 const issuerIdFrom = (issuer) =>
   typeof issuer === 'string' ? issuer : issuer?.id;
@@ -586,7 +601,7 @@ const notCheckedAssessment = () => ({
   warnings: [],
 });
 
-const selfSignedIssuerErrors = (issuer, kid) => {
+const selfSignedIssuerErrors = (issuer, kid, verificationKey) => {
   if (typeof kid !== 'string') {
     return [];
   }
@@ -594,7 +609,11 @@ const selfSignedIssuerErrors = (issuer, kid) => {
   if (!keyController.startsWith('did:jwk:')) {
     return [];
   }
-  return issuerIdFrom(issuer) === keyController
+  const verificationKeyController = `did:jwk:${jwkToPublicBase64Url(
+    verificationKey,
+  )}`;
+  return issuerIdFrom(issuer) === keyController &&
+    verificationKeyController === keyController
     ? []
     : [
         verificationIssue(

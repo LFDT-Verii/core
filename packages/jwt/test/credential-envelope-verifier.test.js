@@ -24,6 +24,7 @@ const {
   CredentialVerificationWarningCodes,
   verifyCredentialEnvelope,
 } = require('../src/credential-envelope-verifier');
+const { jwkToPublicBase64Url } = require('../src/core');
 
 const algorithmConfigs = [
   { algorithm: KeyAlgorithms.SECP256K1, joseAlgorithm: 'ES256K' },
@@ -506,9 +507,7 @@ describe('credential envelope verifier', () => {
 
   it('enforces did:jwk self-signed issuer binding as conformance', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
-    const didJwk = `did:jwk:${Buffer.from(
-      JSON.stringify(signing.keyPair.publicKey),
-    ).toString('base64url')}`;
+    const didJwk = `did:jwk:${jwkToPublicBase64Url(signing.keyPair.publicKey)}`;
     const didJwkSigning = { ...signing, kid: `${didJwk}#0` };
 
     await expectFailure(
@@ -526,6 +525,24 @@ describe('credential envelope verifier', () => {
         signing.keyPair.publicKey,
       ),
     ).resolves.toMatchObject({ credential: expect.any(Object) });
+  });
+
+  it('rejects a did:jwk controller that encodes a different key', async () => {
+    const attacker = prepareSigning(algorithmConfigs[1]);
+    const claimedKey = prepareSigning(algorithmConfigs[1]);
+    const claimedDid = `did:jwk:${jwkToPublicBase64Url(
+      claimedKey.keyPair.publicKey,
+    )}`;
+    const attackerSigning = { ...attacker, kid: `${claimedDid}#0` };
+
+    await expectFailure(
+      verifyCredentialEnvelope(
+        signV2(attackerSigning, { issuer: claimedDid }),
+        attacker.keyPair.publicKey,
+      ),
+      'conformance',
+      CredentialVerificationErrorCodes.SELF_SIGNED_ISSUER_INVALID,
+    );
   });
 
   it('accepts an externally resolved kid with an empty fragment', async () => {
