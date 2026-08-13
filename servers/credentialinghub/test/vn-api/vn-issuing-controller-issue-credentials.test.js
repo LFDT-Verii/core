@@ -28,6 +28,8 @@ mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 const mockAddCredentialMetadataEntry = mock.fn();
 const mockCreateCredentialMetadataList = mock.fn();
 const mockAddRevocationListSigned = mock.fn();
+const mockIsFreeCredentialType = mock.fn();
+const mockResolveDidDocument = mock.fn();
 mock.module('@verii/metadata-registration', {
   namedExports: {
     ...require('@verii/metadata-registration'),
@@ -37,6 +39,8 @@ mock.module('@verii/metadata-registration', {
     initMetadataRegistry: () => ({
       addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
       createCredentialMetadataList: mockCreateCredentialMetadataList,
+      isFreeCredentialType: mockIsFreeCredentialType,
+      resolveDidDocument: mockResolveDidDocument,
     }),
     initVerificationCoupon: () => ({}),
   },
@@ -134,6 +138,8 @@ describe('vn-api > issue credentials', () => {
     mockAddCredentialMetadataEntry.mock.resetCalls();
     mockAddRevocationListSigned.mock.resetCalls();
     mockCreateCredentialMetadataList.mock.resetCalls();
+    mockIsFreeCredentialType.mock.resetCalls();
+    mockResolveDidDocument.mock.resetCalls();
     mockAddRevocationListSigned.mock.mockImplementation(() =>
       Promise.resolve(true),
     );
@@ -142,6 +148,9 @@ describe('vn-api > issue credentials', () => {
     );
     mockCreateCredentialMetadataList.mock.mockImplementation(() =>
       Promise.resolve(true),
+    );
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(false),
     );
 
     holderKeyPair = generateKeyPair({ format: 'jwk' });
@@ -436,14 +445,22 @@ describe('vn-api > issue credentials', () => {
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
   });
 
-  it('should retry a temporary anchor failure without changing credential identity', async () => {
-    let attempts = 0;
+  it('should reconcile an uncertain anchor write without changing credential identity', async () => {
     mockAddCredentialMetadataEntry.mock.mockImplementation(() => {
-      attempts += 1;
-      if (attempts === 1) {
-        return Promise.reject(new Error('temporary anchor failure'));
-      }
-      return Promise.resolve(true);
+      return Promise.reject(new Error('receipt confirmation failed'));
+    });
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) => {
+      const { publicKey } =
+        mockAddCredentialMetadataEntry.mock.calls[0].arguments[0];
+      return Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      });
     });
 
     const response = await fastify.injectJson({
@@ -466,13 +483,13 @@ describe('vn-api > issue credentials', () => {
         ),
       },
     });
-    const [firstAttempt, secondAttempt] =
-      mockAddCredentialMetadataEntry.mock.calls;
+    const [writeAttempt] = mockAddCredentialMetadataEntry.mock.calls;
 
     expect(response.statusCode).toEqual(200);
-    expect(firstAttempt.arguments[0]).toBe(secondAttempt.arguments[0]);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(1);
     expect(jwtDecode(response.json[0]).header.kid).toEqual(
-      `${firstAttempt.arguments[0].credentialId}#key-1`,
+      `${writeAttempt.arguments[0].credentialId}#key-1`,
     );
   });
 

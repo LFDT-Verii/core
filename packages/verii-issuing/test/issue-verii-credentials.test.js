@@ -259,14 +259,22 @@ describe('issuing velocity verifiable credentials', () => {
     );
   });
 
-  it('retries anchoring with the same credential and key identity', async () => {
-    let attempts = 0;
-    mockAddCredentialMetadataEntry.mock.mockImplementation(() => {
-      attempts += 1;
-      if (attempts === 1) {
-        return Promise.reject(new Error('temporary anchor failure'));
-      }
-      return Promise.resolve(true);
+  it('reconciles an uncertain write without replaying the anchor transaction', async () => {
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+      Promise.reject(new Error('receipt confirmation failed')),
+    );
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) => {
+      const { publicKey } =
+        mockAddCredentialMetadataEntry.mock.calls[0].arguments[0];
+      return Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      });
     });
 
     const [credential] = await issueVeriiCredentials(
@@ -277,13 +285,12 @@ describe('issuing velocity verifiable credentials', () => {
       context,
       ['ES256'],
     );
-    const [firstAttempt, secondAttempt] =
-      mockAddCredentialMetadataEntry.mock.calls;
+    const [writeAttempt] = mockAddCredentialMetadataEntry.mock.calls;
 
-    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
-    expect(firstAttempt.arguments[0]).toBe(secondAttempt.arguments[0]);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(1);
     expect(jwtDecode(credential).header.kid).toEqual(
-      `${firstAttempt.arguments[0].credentialId}#key-1`,
+      `${writeAttempt.arguments[0].credentialId}#key-1`,
     );
   });
 
@@ -329,6 +336,24 @@ describe('issuing velocity verifiable credentials', () => {
     ).resolves.toEqual([expect.any(String)]);
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
     expect(mockResolveDidDocument.mock.callCount()).toEqual(2);
+  });
+
+  it('does not replay an uncertain write when read-back is unsupported', async () => {
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+      Promise.reject(new Error('receipt confirmation failed')),
+    );
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        context,
+        ['ES256'],
+      ),
+    ).rejects.toThrow('receipt confirmation failed');
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
   });
 
   it('requires supported anchor read-back to match the signing key', async () => {

@@ -151,16 +151,33 @@ const anchorVeriiCredentials = async (credentialMetadatas, issuer, context) => {
 };
 
 const anchorCredentialMetadata = async (metadata, addEntry, readEntry) => {
-  await retryTransientOperation(() => addEntry(metadata));
+  try {
+    await addEntry(metadata);
+  } catch (error) {
+    if (error.errorCode != null) {
+      throw error;
+    }
+    const reconciledKey = await retryTransientOperation(() =>
+      readEntry(metadata),
+    );
+    if (reconciledKey == null) {
+      throw error;
+    }
+    assertAnchoredKeyValid(reconciledKey, metadata);
+    return;
+  }
   await retryTransientOperation(async () => {
     const anchoredKey = await readEntry(metadata);
-    if (!isAnchoredKeyValid(anchoredKey, metadata)) {
-      throw new Error(
-        `Credential metadata read-back does not match ${metadata.credentialId}`,
-      );
-    }
+    assertAnchoredKeyValid(anchoredKey, metadata);
   });
-  return undefined;
+};
+
+const assertAnchoredKeyValid = (anchoredKey, metadata) => {
+  if (!isAnchoredKeyValid(anchoredKey, metadata)) {
+    throw new Error(
+      `Credential metadata read-back does not match ${metadata.credentialId}`,
+    );
+  }
 };
 
 const isAnchoredKeyValid = (anchoredKey, metadata) => {
