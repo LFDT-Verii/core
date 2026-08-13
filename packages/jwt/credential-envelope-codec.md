@@ -17,5 +17,7 @@ layer after successful signature verification.
 The codec intentionally rejects direct VC 1.1 documents, nested VC 2.0
 documents, mixed `vc`/`vp` compatibility claims, `alg: none`, unsupported first
 contexts, malformed compact JWS input, and inputs that exceed its documented
-limits. Existing `decodeCredentialJwt` and `verifyCredentialJwt` exports remain
-available for legacy callers.
+limits. A legacy `vc` compatibility claim may omit `@context` to preserve
+historical bound issuer credentials; when present, its first context must be the
+VC 1.1 context. Existing `decodeCredentialJwt` and `verifyCredentialJwt` exports
+remain available for legacy callers.
