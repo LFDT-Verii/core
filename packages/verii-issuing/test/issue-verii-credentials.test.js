@@ -291,6 +291,39 @@ describe('issuing velocity verifiable credentials', () => {
     );
   });
 
+  it('propagates an anchor error without reading or retrying the write', async () => {
+    const anchorError = new Error('metadata anchor failed');
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+      Promise.reject(anchorError),
+    );
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) => {
+      const { publicKey } =
+        mockAddCredentialMetadataEntry.mock.calls[0].arguments[0];
+      return Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      });
+    });
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        context,
+        ['ES256'],
+      ),
+    ).rejects.toBe(anchorError);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(0);
+  });
+
   it('reconciles an uncertain write without replaying the anchor transaction', async () => {
     mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
       Promise.reject(new Error('receipt confirmation failed')),
