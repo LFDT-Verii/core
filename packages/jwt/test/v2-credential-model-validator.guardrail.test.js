@@ -17,7 +17,6 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 
-// eslint-disable-next-line import/extensions
 const loadValidators = () => require('../src/v2-credential-model-validator');
 
 const coreCredential = Object.freeze({
