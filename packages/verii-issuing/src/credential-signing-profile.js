@@ -51,6 +51,12 @@ const CredentialSigningAlgorithms = Object.freeze([
 ]);
 const ResolvedCredentialSigningProfiles = new Map();
 
+/**
+ * Validates a generated credential signing key pair against the selected profile.
+ * @param {object} keyPair the generated private and public JWK pair
+ * @param {string} algorithm the requested signing algorithm
+ * @returns {object} the validated key pair
+ */
 const assertCredentialSigningKeyPair = (keyPair, algorithm) => {
   const profile = getCredentialSigningProfile(algorithm);
   if (!isKeyPairValid(keyPair, profile)) {
@@ -61,6 +67,11 @@ const assertCredentialSigningKeyPair = (keyPair, algorithm) => {
   return keyPair;
 };
 
+/**
+ * Resolves the complete execution profile for a supported signing algorithm.
+ * @param {string} algorithm the requested signing algorithm
+ * @returns {object} the resolved signing profile
+ */
 const getCredentialSigningProfile = (algorithm) => {
   const normalizedAlgorithm = normalizeCredentialSigningAlgorithm(algorithm);
   const profile = CredentialSigningProfiles[normalizedAlgorithm];
@@ -72,9 +83,19 @@ const getCredentialSigningProfile = (algorithm) => {
   return resolveAlgType(profile);
 };
 
+/**
+ * Converts the legacy key-generation name to its JOSE algorithm alias.
+ * @param {string} algorithm the signing algorithm
+ * @returns {string} the normalized JOSE algorithm
+ */
 const normalizeCredentialSigningAlgorithm = (algorithm) =>
   algorithm === KeyAlgorithms.SECP256K1 ? 'ES256K' : algorithm;
 
+/**
+ * Adds the metadata registry encoding constant to a signing profile.
+ * @param {object} profile the unresolved signing profile
+ * @returns {object} the signing profile with its metadata algorithm type
+ */
 const resolveAlgType = (profile) => {
   const resolvedProfile = ResolvedCredentialSigningProfiles.get(
     profile.joseAlgorithm,
@@ -94,6 +115,12 @@ const resolveAlgType = (profile) => {
   return profileWithAlgType;
 };
 
+/**
+ * Derives public JWK material from a private JWK.
+ * @param {object} privateKey the private JWK
+ * @param {object} profile the resolved signing profile
+ * @returns {object} the derived public JWK
+ */
 const derivePublicJwk = (privateKey, profile) => {
   if (profile.keyType === 'EC') {
     const ecdh = createECDH(
@@ -113,12 +140,31 @@ const derivePublicJwk = (privateKey, profile) => {
   ).export({ format: 'jwk' });
 };
 
+/**
+ * Checks a JWK's optional algorithm restriction.
+ * @param {object} key the JWK
+ * @param {object} profile the resolved signing profile
+ * @returns {boolean} whether the restriction matches the profile
+ */
 const hasExpectedAlgorithm = (key, profile) =>
   key.alg == null || key.alg === profile.joseAlgorithm;
 
+/**
+ * Checks a JWK's optional operation restriction.
+ * @param {object} key the JWK
+ * @param {string} operation the required key operation
+ * @returns {boolean} whether the operation is permitted
+ */
 const hasExpectedKeyOperation = (key, operation) =>
   key.key_ops == null || key.key_ops.includes(operation);
 
+/**
+ * Checks the key type, curve, and private-material shape of a JWK.
+ * @param {object} key the JWK
+ * @param {object} profile the resolved signing profile
+ * @param {boolean} isPrivate whether private key material is required
+ * @returns {boolean} whether the JWK has the expected shape
+ */
 const hasExpectedKeyShape = (key, profile, isPrivate) => {
   return [
     key?.kty === profile.keyType,
@@ -127,14 +173,37 @@ const hasExpectedKeyShape = (key, profile, isPrivate) => {
   ].every(Boolean);
 };
 
+/**
+ * Checks a JWK's optional use restriction.
+ * @param {object} key the JWK
+ * @returns {boolean} whether the JWK permits signatures
+ */
 const hasExpectedUse = (key) => key.use == null || key.use === 'sig';
 
+/**
+ * Checks an EC JWK's curve against a signing profile.
+ * @param {object} key the JWK
+ * @param {object} profile the resolved signing profile
+ * @returns {boolean} whether the curve matches or is not applicable
+ */
 const hasExpectedCurve = (key, profile) =>
   profile.keyType !== 'EC' || key?.crv === profile.curve;
 
+/**
+ * Checks that private JWK material is present only where expected.
+ * @param {object} key the JWK
+ * @param {boolean} isPrivate whether private material is required
+ * @returns {boolean} whether private material has the expected presence
+ */
 const hasExpectedPrivateMaterial = (key, isPrivate) =>
   isPrivate ? key?.d != null : key?.d == null;
 
+/**
+ * Checks key metadata and proves that the private key derives the public key.
+ * @param {object} keyPair the private and public JWK pair
+ * @param {object} profile the resolved signing profile
+ * @returns {boolean} whether the key pair matches the profile
+ */
 const isKeyPairValid = (keyPair, profile) => {
   const { privateKey, publicKey } = keyPair ?? {};
   const metadataIsValid = [
@@ -159,6 +228,13 @@ const isKeyPairValid = (keyPair, profile) => {
   }
 };
 
+/**
+ * Compares the public coordinates or modulus from two public JWKs.
+ * @param {object} publicKey the generated public JWK
+ * @param {object} derivedPublicKey the public JWK derived from private material
+ * @param {object} profile the resolved signing profile
+ * @returns {boolean} whether the public key material matches
+ */
 const publicKeyMatchesProfile = (publicKey, derivedPublicKey, profile) => {
   if (profile.keyType === 'EC') {
     return [

@@ -150,6 +150,12 @@ const anchorVeriiCredentials = async (credentialMetadatas, issuer, context) => {
   );
 };
 
+/**
+ * Anchors one credential and confirms the stored signing key when read-back is supported.
+ * @param {CredentialMetadata} metadata the credential metadata to anchor
+ * @param {(metadata: CredentialMetadata) => Promise<void>} addEntry the metadata anchor operation
+ * @param {(metadata: CredentialMetadata) => Promise<object | undefined>} readEntry the metadata read-back operation
+ */
 const anchorCredentialMetadata = async (metadata, addEntry, readEntry) => {
   try {
     await addEntry(metadata);
@@ -172,6 +178,11 @@ const anchorCredentialMetadata = async (metadata, addEntry, readEntry) => {
   });
 };
 
+/**
+ * Rejects an anchored key that does not match the credential signature key.
+ * @param {object | undefined} anchoredKey the resolved metadata verification method
+ * @param {CredentialMetadata} metadata the signed credential metadata
+ */
 const assertAnchoredKeyValid = (anchoredKey, metadata) => {
   if (!isAnchoredKeyValid(anchoredKey, metadata)) {
     throw new Error(
@@ -180,6 +191,12 @@ const assertAnchoredKeyValid = (anchoredKey, metadata) => {
   }
 };
 
+/**
+ * Checks the resolved verification method id and public key material.
+ * @param {object | undefined} anchoredKey the resolved metadata verification method
+ * @param {CredentialMetadata} metadata the signed credential metadata
+ * @returns {boolean} whether supported read-back matches the signed credential
+ */
 const isAnchoredKeyValid = (anchoredKey, metadata) => {
   if (anchoredKey == null) {
     return true;
@@ -192,6 +209,12 @@ const isAnchoredKeyValid = (anchoredKey, metadata) => {
   );
 };
 
+/**
+ * Compares anchored EC or RSA public JWK material with the signing key.
+ * @param {object} anchoredKey the anchored public JWK
+ * @param {object} signingKey the credential signing public JWK
+ * @returns {boolean} whether the public key material is identical
+ */
 const publicKeysMatch = (anchoredKey, signingKey) => {
   if (anchoredKey?.kty !== signingKey?.kty) {
     return false;
@@ -208,6 +231,13 @@ const publicKeysMatch = (anchoredKey, signingKey) => {
   );
 };
 
+/**
+ * Retries an infrastructure operation once unless it returned a domain error.
+ * @template T
+ * @param {() => Promise<T>} operation the asynchronous operation
+ * @param {number} attempt the current attempt number
+ * @returns {Promise<T>} the operation result
+ */
 const retryTransientOperation = async (operation, attempt = 1) => {
   try {
     return await operation();

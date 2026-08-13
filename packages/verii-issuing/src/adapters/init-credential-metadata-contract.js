@@ -130,6 +130,12 @@ const initCredentialMetadataContract = async (issuer, context) => {
   };
 };
 
+/**
+ * Checks whether the registry can resolve a metadata entry without spending a coupon.
+ * @param {object} metadataRegistry the initialized metadata registry
+ * @param {CredentialMetadata} metadata the credential metadata to resolve
+ * @returns {Promise<boolean>} whether free read-back is supported
+ */
 const supportsReadBack = async (metadataRegistry, metadata) => {
   const supportsResolution = [
     metadataRegistry.isFreeCredentialType,
@@ -141,6 +147,13 @@ const supportsReadBack = async (metadataRegistry, metadata) => {
   return metadataRegistry.isFreeCredentialType(metadata.credentialType);
 };
 
+/**
+ * Reconstructs the Velocity metadata DID for legacy entries without a stored id.
+ * @param {CredentialMetadata} metadata the credential metadata
+ * @param {Issuer} issuer the issuer
+ * @param {Context} context the context
+ * @returns {string} the credential metadata DID
+ */
 const buildCredentialId = (metadata, issuer, context) => {
   const id = `did:velocity:v2:${toLower(issuer.dltPrimaryAddress)}:${
     metadata.listId
