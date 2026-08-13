@@ -391,6 +391,51 @@ describe('Credential Revocation Test Suite', () => {
     expect(dbCredential).not.toHaveProperty('signingAlgorithm');
   });
 
+  it('should omit unavailable null envelope metadata from a revocation message without backfilling', async () => {
+    const messagingSettings = {
+      webhookUrl: 'https://wallet.example.com/push',
+      authToken: 'push-token-123',
+    };
+    const { tenant: revokingTenant, credential } = await setupRevocationTenant({
+      messagingSettings,
+    });
+    await mongoDb()
+      .collection('credentials')
+      .updateOne(
+        { _id: new ObjectId(credential._id) },
+        {
+          $set: {
+            dataModelVersion: null,
+            envelopeFormat: null,
+            jwtVc: 'not-a-compact-credential',
+            signingAlgorithm: null,
+          },
+        },
+      );
+    const { nockedWebhook, getBody } = nockWebhook(messagingSettings);
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: `${testUrl}/revoke`,
+      payload: {
+        tenantId: revokingTenant._id,
+        credentialId: credential._id,
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(nockedWebhook.isDone()).toEqual(true);
+    expect(getBody().data).not.toHaveProperty('dataModelVersion');
+    expect(getBody().data).not.toHaveProperty('envelopeFormat');
+    expect(getBody().data).not.toHaveProperty('signingAlgorithm');
+    const dbCredential = await mongoDb()
+      .collection('credentials')
+      .findOne({ _id: new ObjectId(credential._id) });
+    expect(dbCredential).toHaveProperty('dataModelVersion', null);
+    expect(dbCredential).toHaveProperty('envelopeFormat', null);
+    expect(dbCredential).toHaveProperty('signingAlgorithm', null);
+  });
+
   it('should send replacement notification when linked credential is supplied', async () => {
     const messagingSettings = {
       webhookUrl: 'https://wallet.example.com/push',

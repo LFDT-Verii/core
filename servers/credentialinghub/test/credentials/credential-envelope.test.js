@@ -126,15 +126,27 @@ describe('credential envelope persistence metadata', () => {
   });
 
   it('leaves missing and invalid pre-migration compact values readable', () => {
-    const missingCompact = { id: 'missing-compact' };
-    const invalidCompact = { id: 'invalid-compact', jwtVc: 'invalid' };
+    const missingCompact = {
+      dataModelVersion: null,
+      id: 'missing-compact',
+      signingAlgorithm: 'stored-algorithm',
+    };
+    const invalidCompact = {
+      envelopeFormat: null,
+      id: 'invalid-compact',
+      jwtVc: 'invalid',
+      signingAlgorithm: 'stored-algorithm',
+    };
 
-    expect(inferCredentialEnvelopeMetadata(missingCompact)).toBe(
-      missingCompact,
-    );
-    expect(inferCredentialEnvelopeMetadata(invalidCompact)).toBe(
-      invalidCompact,
-    );
+    expect(inferCredentialEnvelopeMetadata(missingCompact)).toEqual({
+      id: 'missing-compact',
+      signingAlgorithm: 'stored-algorithm',
+    });
+    expect(inferCredentialEnvelopeMetadata(invalidCompact)).toEqual({
+      id: 'invalid-compact',
+      jwtVc: 'invalid',
+      signingAlgorithm: 'stored-algorithm',
+    });
   });
 });
 

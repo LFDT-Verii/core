@@ -20,6 +20,12 @@ const {
   getCredentialStatus,
 } = require('@verii/jwt');
 
+const credentialEnvelopeMetadataKeys = [
+  'dataModelVersion',
+  'envelopeFormat',
+  'signingAlgorithm',
+];
+
 const buildIssuedCredentialEnvelope = (jwtVc) => {
   const envelope = decodeCredentialEnvelope(jwtVc);
   const credentialDid = getCredentialId(envelope);
@@ -38,8 +44,11 @@ const buildIssuedCredentialEnvelope = (jwtVc) => {
 };
 
 const inferCredentialEnvelopeMetadata = (credential) => {
-  if (credential?.jwtVc == null || hasCredentialEnvelopeMetadata(credential)) {
+  if (credential == null || hasCredentialEnvelopeMetadata(credential)) {
     return credential;
+  }
+  if (credential.jwtVc == null) {
+    return omitUnavailableCredentialEnvelopeMetadata(credential);
   }
 
   try {
@@ -50,7 +59,7 @@ const inferCredentialEnvelopeMetadata = (credential) => {
   } catch {
     // Pre-migration records must remain readable even if their compact value
     // cannot be classified by the stricter shared codec.
-    return credential;
+    return omitUnavailableCredentialEnvelopeMetadata(credential);
   }
 };
 
@@ -75,6 +84,18 @@ const mergeCredentialEnvelopeMetadata = (credential, metadata) => ({
   envelopeFormat: credential.envelopeFormat ?? metadata.envelopeFormat,
   signingAlgorithm: credential.signingAlgorithm ?? metadata.signingAlgorithm,
 });
+
+const omitUnavailableCredentialEnvelopeMetadata = (credential) => {
+  const normalizedCredential = { ...credential };
+
+  for (const key of credentialEnvelopeMetadataKeys) {
+    if (normalizedCredential[key] == null) {
+      delete normalizedCredential[key];
+    }
+  }
+
+  return normalizedCredential;
+};
 
 module.exports = {
   buildIssuedCredentialEnvelope,

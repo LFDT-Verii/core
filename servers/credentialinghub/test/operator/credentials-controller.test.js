@@ -988,6 +988,18 @@ describe('Credentials Test suite', () => {
         did: `did:test:${nanoid()}`,
         jwtVc: 'not-a-compact-credential',
       });
+      await mongoDb()
+        .collection('credentials')
+        .updateOne(
+          { _id: new ObjectId(credential._id) },
+          {
+            $set: {
+              dataModelVersion: null,
+              envelopeFormat: null,
+              signingAlgorithm: null,
+            },
+          },
+        );
 
       const response = await fastify.injectJson({
         method: 'GET',
@@ -999,6 +1011,12 @@ describe('Credentials Test suite', () => {
         requestId: expect.any(String),
         credentials: [expectedResponseCredential(credential, depot)],
       });
+      const dbCredential = await mongoDb()
+        .collection('credentials')
+        .findOne({ _id: new ObjectId(credential._id) });
+      expect(dbCredential).toHaveProperty('dataModelVersion', null);
+      expect(dbCredential).toHaveProperty('envelopeFormat', null);
+      expect(dbCredential).toHaveProperty('signingAlgorithm', null);
     });
 
     it('should 200 with no credentials when credentialId not matched', async () => {
