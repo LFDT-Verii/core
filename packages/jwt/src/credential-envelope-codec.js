@@ -125,23 +125,27 @@ const assertDepth = (value, depth = 1) => {
   }
 };
 
-const assertNotMixed = ({
-  directContext,
+const hasCompatibilityClaimWithV2Type = ({
   hasVcClaim,
   hasVpClaim,
-  nestedContext,
   usesV2Type,
-}) => {
-  const directWithCompatibilityClaim =
-    directContext != null && [hasVcClaim, hasVpClaim].includes(true);
-  const nestedWithV2Signal =
-    hasVcClaim &&
-    [usesV2Type, nestedContext === CredentialContexts.V2_0].includes(true);
+}) => (hasVcClaim || hasVpClaim) && usesV2Type;
 
-  if ([directWithCompatibilityClaim, nestedWithV2Signal].includes(true)) {
+const hasConflictingCompatibilityClaims = ({ hasVcClaim, hasVpClaim }) =>
+  hasVcClaim && hasVpClaim;
+
+const hasNestedV2Context = ({ hasVcClaim, nestedContext }) =>
+  hasVcClaim && nestedContext === CredentialContexts.V2_0;
+
+const assertNotMixed = (formatSignals) => {
+  if (
+    hasCompatibilityClaimWithV2Type(formatSignals) ||
+    hasConflictingCompatibilityClaims(formatSignals) ||
+    hasNestedV2Context(formatSignals)
+  ) {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.MIXED_FORMAT,
-      'Credential envelope contains mixed VC 1.1 and VC 2.0 signals',
+      'Credential envelope contains contradictory format signals',
     );
   }
 };
@@ -155,7 +159,6 @@ const classifyCredential = (payload, protectedHeader) => {
     normalizeProtectedType(protectedHeader.typ) === V2_CREDENTIAL_MEDIA_TYPE;
 
   assertNotMixed({
-    directContext,
     hasVcClaim,
     hasVpClaim,
     nestedContext,

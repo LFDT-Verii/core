@@ -19,8 +19,11 @@ documents, mixed `vc`/`vp` compatibility claims, `alg: none`, unsupported first
 contexts, malformed compact JWS input, and inputs that exceed its documented
 limits. A legacy `vc` compatibility claim may omit `@context` to preserve
 historical bound issuer credentials; when present, its first context must be the
-VC 1.1 context. Existing `decodeCredentialJwt` and `verifyCredentialJwt` exports
-remain available for legacy callers.
+VC 1.1 context. When `vc` is present, additional top-level JWT claims, including
+`@context`, do not participate in envelope routing. A nested VC 2.0 context or a
+VC 2.0 `typ` remains contradictory and is rejected. Existing
+`decodeCredentialJwt` and `verifyCredentialJwt` exports remain available for
+legacy callers.
 
 `verifyCredentialEnvelope` applies the trust boundary after classification. It
 allows `ES256K`, `ES256`, and `RS256`, requires the resolved JWK type and curve
