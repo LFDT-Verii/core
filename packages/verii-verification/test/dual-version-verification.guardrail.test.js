@@ -30,7 +30,12 @@ mock.module('@verii/metadata-registration', {
 
 const { generateJWAKeyPair, KeyAlgorithms } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
-const { generateCredentialJwt, tamperJwt } = require('@verii/jwt');
+const {
+  CredentialVerificationErrorCodes,
+  CredentialVerificationStatuses,
+  generateCredentialJwt,
+  tamperJwt,
+} = require('@verii/jwt');
 const {
   CheckResults,
   VeriiProtocolVersions,
@@ -429,6 +434,54 @@ describe('dual-version verification guardrails', () => {
       });
     }
 
+    it('reports an invalid credential id without aborting the batch', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const validCredential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        credentialSubject: { id: 'did:example:holder' },
+        id: signing.did,
+        issuer: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        validFrom: '2026-01-01T00:00:00.000Z',
+      };
+      const invalidCredential = { ...validCredential, id: 42 };
+
+      const result = await verifyCredentials(
+        {
+          credentials: [
+            issueV2Credential(invalidCredential, signing),
+            issueV2Credential(validCredential, signing),
+          ],
+          expectedHolderDid: 'did:example:holder',
+        },
+        fetchers,
+        context,
+      );
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toMatchObject({
+        conformance: {
+          errors: [
+            expect.objectContaining({
+              code: CredentialVerificationErrorCodes.MODEL_INVALID,
+            }),
+          ],
+          status: CredentialVerificationStatuses.FAIL,
+        },
+        credentialChecks: { UNTAMPERED: CheckResults.FAIL },
+        policy: { status: CredentialVerificationStatuses.NOT_CHECKED },
+        proof: { status: CredentialVerificationStatuses.PASS },
+      });
+      expect(result[0]).not.toHaveProperty('credential');
+      expect(result[1]).toMatchObject({
+        conformance: { status: CredentialVerificationStatuses.PASS },
+        credential: validCredential,
+        credentialChecks: { UNTAMPERED: CheckResults.PASS },
+        policy: { status: CredentialVerificationStatuses.PASS },
+        proof: { status: CredentialVerificationStatuses.PASS },
+      });
+    });
+
     it('maps a VC 2.0 proof failure to the legacy tampering check', async () => {
       const signing = prepareAlgorithm(algorithms[1]);
       const attacker = prepareAlgorithm(algorithms[1]);
@@ -579,6 +632,22 @@ describe('dual-version verification guardrails', () => {
         UNEXPIRED: CheckResults.NOT_CHECKED,
         UNREVOKED: CheckResults.NOT_CHECKED,
         UNTAMPERED: CheckResults.DATA_INTEGRITY_ERROR,
+      });
+      expect(result[0]).toMatchObject({
+        conformance: {
+          errors: [],
+          status: CredentialVerificationStatuses.NOT_CHECKED,
+          warnings: [],
+        },
+        policy: {
+          errors: [],
+          status: CredentialVerificationStatuses.NOT_CHECKED,
+          warnings: [],
+        },
+        proof: {
+          errors: [],
+          status: CredentialVerificationStatuses.NOT_CHECKED,
+        },
       });
       expect(result[0]).not.toHaveProperty('credential');
     });

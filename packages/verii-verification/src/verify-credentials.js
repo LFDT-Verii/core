@@ -34,6 +34,7 @@ const {
 } = require('lodash/fp');
 const {
   CredentialDataModelVersions,
+  CredentialVerificationStatuses,
   decodeCredentialEnvelope,
   getCredentialId,
   getCredentialIssuer,
@@ -137,7 +138,6 @@ const buildCredentialDataFromJwtVc = (jwtVc, index) => {
   const envelope = decodeCredentialEnvelope(jwtVc);
   const { credential, protectedHeader } = envelope;
   const issuer = getCredentialIssuer(envelope);
-  assertRoutingIdentifier(credential.id, 'credential id');
   assertRoutingIdentifier(protectedHeader.kid, 'kid');
   return {
     ...envelope,
@@ -174,10 +174,27 @@ const buildFormatMetadata = ({
 }) => ({
   dataModelVersion,
   envelopeFormat,
-  ...(dataModelVersion === CredentialDataModelVersions.V2_0 && proof != null
-    ? { conformance, policy, proof }
+  ...(dataModelVersion === CredentialDataModelVersions.V2_0
+    ? buildV2Assessments({ conformance, policy, proof })
     : {}),
   signingAlgorithm,
+});
+
+const buildV2Assessments = ({ conformance, policy, proof }) => ({
+  conformance: conformance ?? notCheckedAssessment(),
+  policy: policy ?? notCheckedAssessment(),
+  proof: proof ?? notCheckedProofAssessment(),
+});
+
+const notCheckedAssessment = () => ({
+  errors: [],
+  status: CredentialVerificationStatuses.NOT_CHECKED,
+  warnings: [],
+});
+
+const notCheckedProofAssessment = () => ({
+  errors: [],
+  status: CredentialVerificationStatuses.NOT_CHECKED,
 });
 
 const emptyCredentialStatusRefs = () => ({ credentialStatusesMap: {} });
