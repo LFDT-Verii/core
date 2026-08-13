@@ -61,6 +61,9 @@ const CredentialEnvelopeLimits = Object.freeze({
   MAX_SIGNATURE_BYTES: 16384,
 });
 
+const LEGACY_CREDENTIAL_MEDIA_TYPE = 'application/jwt';
+const V2_CREDENTIAL_MEDIA_TYPE = 'application/vc+jwt';
+
 /**
  * Parses and classifies a compact credential without verifying its signature.
  * The result is safe only for format routing. Authorization, issuer trust,
@@ -148,7 +151,8 @@ const classifyCredential = (payload, protectedHeader) => {
   const hasVcClaim = Object.hasOwn(payload, 'vc');
   const hasVpClaim = Object.hasOwn(payload, 'vp');
   const nestedContext = firstContext(payload.vc);
-  const usesV2Type = protectedHeader.typ === CredentialEnvelopeFormats.VC_JWT;
+  const usesV2Type =
+    normalizeProtectedType(protectedHeader.typ) === V2_CREDENTIAL_MEDIA_TYPE;
 
   assertNotMixed({
     directContext,
@@ -321,6 +325,17 @@ const firstDefined = (...values) => values.find((value) => value != null);
 
 const maximumEncodedLength = (maximumBytes) => Math.ceil(maximumBytes / 3) * 4;
 
+const normalizeProtectedType = (protectedType) => {
+  if (typeof protectedType !== 'string') {
+    return protectedType;
+  }
+
+  const lowerCaseType = protectedType.toLowerCase();
+  return lowerCaseType.includes('/')
+    ? lowerCaseType
+    : `application/${lowerCaseType}`;
+};
+
 const parseCompactJws = (compact) => {
   assertCompactJws(compact);
 
@@ -394,7 +409,8 @@ const assertJsonObject = (value, name) => {
 };
 
 const assertLegacyProtectedType = (protectedType) => {
-  if (![undefined, 'JWT'].includes(protectedType)) {
+  const normalizedType = normalizeProtectedType(protectedType);
+  if (![undefined, LEGACY_CREDENTIAL_MEDIA_TYPE].includes(normalizedType)) {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.WRONG_TYPE,
       'A VC 1.1 compatibility envelope requires typ JWT or no typ',

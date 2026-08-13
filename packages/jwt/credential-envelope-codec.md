@@ -4,6 +4,10 @@
 credential envelopes as either the legacy VC 1.1 `jwt_vc_json-ld` shape or a
 direct VC 2.0 `vc+jwt` shape.
 
+JOSE `typ` values are compared as media types: comparison is case-insensitive,
+and a slashless value is treated as though it had the `application/` prefix.
+The decoded result retains the protected header exactly as received.
+
 Decoding does **not** authenticate the credential. Its result may be used to
 select a verification path, but it must not be used to make decisions about
 issuer trust, authorization, credential status, holder binding, or schema

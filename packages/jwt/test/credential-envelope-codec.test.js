@@ -217,14 +217,37 @@ describe('credential envelope classification', () => {
     });
   });
 
-  for (const typ of [
-    null,
-    '',
-    'vp+jwt',
-    'vp+sd-jwt',
-    'application/vp+jwt',
-    'application/vc+jwt',
-  ]) {
+  for (const typ of ['VC+JWT', 'application/vc+jwt', 'Application/VC+JWT']) {
+    it(`accepts the equivalent direct VC 2.0 typ ${typ}`, () => {
+      const compact = compactCredentialFixture(
+        { alg: 'ES256', typ },
+        v2Credential,
+      );
+
+      expect(decodeCredentialEnvelope(compact)).toMatchObject({
+        dataModelVersion: CredentialDataModelVersions.V2_0,
+        envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+        protectedHeader: { typ },
+      });
+    });
+  }
+
+  for (const typ of ['jwt', 'application/jwt', 'Application/JWT']) {
+    it(`accepts the equivalent nested VC 1.1 typ ${typ}`, () => {
+      const compact = compactCredentialFixture(
+        { alg: 'ES256K', typ },
+        legacyPayload,
+      );
+
+      expect(decodeCredentialEnvelope(compact)).toMatchObject({
+        dataModelVersion: CredentialDataModelVersions.V1_1,
+        envelopeFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+        protectedHeader: { typ },
+      });
+    });
+  }
+
+  for (const typ of [null, '', 'vp+jwt', 'vp+sd-jwt', 'application/vp+jwt']) {
     it(`rejects nested VC 1.1 with explicit nonlegacy typ ${String(typ)}`, () => {
       const compact = compactCredentialFixture(
         { alg: 'ES256K', typ },
