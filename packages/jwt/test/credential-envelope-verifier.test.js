@@ -511,4 +511,14 @@ describe('credential envelope verifier', () => {
       code: CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
     });
   });
+
+  it('rejects an unsupported fixed verification mode', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+
+    await expect(
+      verifyCredentialEnvelope(signV2(signing), signing.keyPair.publicKey, {
+        mode: 'no-verification',
+      }),
+    ).rejects.toThrow('Unsupported credential verification mode');
+  });
 });

@@ -31,8 +31,8 @@ const verifyCredentialJwt = async (credentialJwt, key) => {
   const normalizedKey = key == null ? undefined : deriveJwk(credentialJwt, key);
   const verified = await verifyCredentialEnvelope(
     credentialJwt,
-    ({ protectedHeader }) => normalizedKey ?? protectedHeader.jwk,
-    jwtVerify,
+    normalizedKey,
+    { mode: 'legacy-jwt' },
   );
   return verified.credential;
 };

@@ -20,7 +20,7 @@ const {
   CredentialEnvelopeFormats,
   decodeCredentialEnvelope,
 } = require('./credential-envelope-codec');
-const { jwsVerify } = require('./core');
+const { jwsVerify, jwtVerify } = require('./core');
 const {
   V2CredentialModelViolationTypes,
   getV2CredentialModelViolation,
@@ -63,28 +63,53 @@ const VersionAlgorithmAllowlists = Object.freeze({
 
 const MAX_KID_CHARACTERS = 2048;
 
-const verifyCredentialEnvelope = async (
+const CredentialVerificationModes = Object.freeze({
+  JWS: 'jws',
+  LEGACY_JWT: 'legacy-jwt',
+});
+
+const verifyCredentialEnvelope = (
   compact,
   verificationKey,
-  verifyCompact = jwsVerify,
+  { mode = CredentialVerificationModes.JWS } = {},
+) => verifyCredentialEnvelopeWithMode(compact, verificationKey, mode);
+
+const verifyCredentialEnvelopeWithMode = async (
+  compact,
+  verificationKey,
+  verificationMode,
 ) => {
+  assertVerificationMode(verificationMode);
   const verifiedEnvelope = decodeCredentialEnvelope(compact);
   const resolvedVerificationKey =
-    typeof verificationKey === 'function'
-      ? verificationKey(verifiedEnvelope)
+    verificationMode === CredentialVerificationModes.LEGACY_JWT
+      ? (verificationKey ?? verifiedEnvelope.protectedHeader.jwk)
       : verificationKey;
   assertProtectedHeader(verifiedEnvelope);
   assertAlgorithmKeyMatch(
     verifiedEnvelope.protectedHeader.alg,
     resolvedVerificationKey,
   );
-  await verifyCompact(compact, resolvedVerificationKey);
+  await verifyCompact(compact, resolvedVerificationKey, verificationMode);
   assertCredentialModel(verifiedEnvelope);
 
   return {
     ...verifiedEnvelope,
     signingAlgorithm: verifiedEnvelope.protectedHeader.alg,
   };
+};
+
+const assertVerificationMode = (verificationMode) => {
+  if (!Object.values(CredentialVerificationModes).includes(verificationMode)) {
+    throw new TypeError('Unsupported credential verification mode');
+  }
+};
+
+const verifyCompact = (compact, verificationKey, verificationMode) => {
+  if (verificationMode === CredentialVerificationModes.LEGACY_JWT) {
+    return jwtVerify(compact, verificationKey);
+  }
+  return jwsVerify(compact, verificationKey);
 };
 
 const assertAlgorithmKeyMatch = (algorithm, jwk) => {
