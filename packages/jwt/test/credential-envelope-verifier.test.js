@@ -472,4 +472,43 @@ describe('credential envelope verifier', () => {
       verifyCredentialEnvelope(tampered, signing.keyPair.publicKey),
     ).rejects.toThrow('signature verification failed');
   });
+
+  it('does not accept a caller-controlled signature verifier', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+    const compact = signV2(signing);
+    const segments = compact.split('.');
+    const tampered = `${segments[0]}.${Buffer.from(
+      JSON.stringify(
+        buildV2Credential(signing, {
+          credentialSubject: {
+            id: 'did:example:attacker',
+            role: 'admin',
+          },
+        }),
+      ),
+    ).toString('base64url')}.${segments[2]}`;
+
+    await expect(
+      verifyCredentialEnvelope(
+        tampered,
+        signing.keyPair.publicKey,
+        async () => undefined,
+      ),
+    ).rejects.toThrow('signature verification failed');
+  });
+
+  it('does not expose the decoded credential to a key resolver', async () => {
+    const signing = prepareSigning(algorithmConfigs[1]);
+    const compact = signV2(signing);
+    const mutateEnvelope = (envelope) => {
+      envelope.credential.credentialSubject.role = 'admin';
+      return signing.keyPair.publicKey;
+    };
+
+    await expect(
+      verifyCredentialEnvelope(compact, mutateEnvelope),
+    ).rejects.toMatchObject({
+      code: CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
+    });
+  });
 });
