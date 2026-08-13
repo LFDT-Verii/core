@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { jwtDecode, jwtVerify, deriveJwk } = require('./core');
+const { deriveJwk, jwtDecode, jwtVerify } = require('./core');
 const { buildDecodedPresentation } = require('./credential-envelope-legacy');
 const { decodeCredentialEnvelope } = require('./credential-envelope-codec');
 const { verifyCredentialEnvelope } = require('./credential-envelope-verifier');
@@ -28,9 +28,11 @@ const decodePresentationJwt = (presentationJwt) => {
 };
 
 const verifyCredentialJwt = async (credentialJwt, key) => {
+  const normalizedKey = key == null ? undefined : deriveJwk(credentialJwt, key);
   const verified = await verifyCredentialEnvelope(
     credentialJwt,
-    ({ protectedHeader }) => key ?? protectedHeader.jwk,
+    ({ protectedHeader }) => normalizedKey ?? protectedHeader.jwk,
+    jwtVerify,
   );
   return verified.credential;
 };

@@ -30,6 +30,7 @@ const {
   generateCredentialJwt,
   generatePresentationJwt,
 } = require('../src/verifiable-generators');
+const { jwtSign } = require('../src/core');
 const {
   decodeCredentialJwt,
   verifyCredentialJwt,
@@ -41,6 +42,7 @@ const {
   CredentialEnvelopeErrorCodes,
   CredentialEnvelopeLimits,
 } = require('../src/credential-envelope-codec');
+const { hexFromJwk } = require('../src/key-transformer');
 const {
   expectedLegacyCredential,
   legacyCredentialFixtures,
@@ -121,6 +123,23 @@ describe('Verifiable Decoder Tests', () => {
   });
 
   describe('Verify credential JWT', () => {
+    for (const [name, claims] of [
+      ['expired', { exp: Math.floor(Date.now() / 1000) - 3600 }],
+      ['not-yet-valid', { nbf: Math.floor(Date.now() / 1000) + 3600 }],
+    ]) {
+      it(`Should reject a ${name} credential JWT`, async () => {
+        const credentialJwt = await jwtSign(
+          { vc: credential },
+          keyPair.privateKey,
+          { ...claims, jwk: keyPair.publicKey, kid: 'KEY-ID' },
+        );
+
+        await expect(
+          verifyCredentialJwt(credentialJwt, keyPair.publicKey),
+        ).rejects.toThrow();
+      });
+    }
+
     it('Should reject an oversized credential before verification', async () => {
       await expect(
         verifyCredentialJwt(
@@ -179,6 +198,21 @@ describe('Verifiable Decoder Tests', () => {
       const decoded = await verifyCredentialJwt(
         credentialJwt,
         rsaKeyPair.publicKey,
+      );
+
+      expect(decoded).toEqual(credential);
+    });
+
+    it('Should preserve deprecated public hex verification', async () => {
+      const credentialJwt = await generateCredentialJwt(
+        credential,
+        keyPair.privateKey,
+        'KEY-ID',
+      );
+
+      const decoded = await verifyCredentialJwt(
+        credentialJwt,
+        hexFromJwk(keyPair.publicKey, false),
       );
 
       expect(decoded).toEqual(credential);

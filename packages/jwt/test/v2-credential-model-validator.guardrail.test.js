@@ -114,4 +114,27 @@ describe('VC 2.0 credential model validator guardrails', () => {
     expect(isVelocityV2Credential(input)).toBe(true);
     expect(input).toEqual(beforeValidation);
   });
+
+  it('requires the base context first and forbids duplicate contexts', () => {
+    const { isV2CoreCredential, isVelocityV2Credential } = loadValidators();
+    const wrongFirst = {
+      ...profileCredential,
+      '@context': [
+        'https://example.com/credentials/context',
+        'https://www.w3.org/ns/credentials/v2',
+      ],
+    };
+    const duplicate = {
+      ...profileCredential,
+      '@context': [
+        'https://www.w3.org/ns/credentials/v2',
+        'https://www.w3.org/ns/credentials/v2',
+      ],
+    };
+
+    expect(isV2CoreCredential(wrongFirst)).toBe(false);
+    expect(isVelocityV2Credential(wrongFirst)).toBe(false);
+    expect(isV2CoreCredential(duplicate)).toBe(false);
+    expect(isVelocityV2Credential(duplicate)).toBe(false);
+  });
 });

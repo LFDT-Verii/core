@@ -74,4 +74,13 @@ describe('checkValidity', () => {
   it('is not applicable without either validity bound', () => {
     expect(checkValidity({}, now)).toEqual(CheckResults.NOT_APPLICABLE);
   });
+
+  it('fails closed for unparseable validity bounds', () => {
+    expect(checkValidity({ validFrom: '2099-12-31T23:59:60Z' }, now)).toEqual(
+      CheckResults.FAIL,
+    );
+    expect(checkValidity({ validUntil: 'not-a-date' }, now)).toEqual(
+      CheckResults.FAIL,
+    );
+  });
 });

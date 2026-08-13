@@ -9,11 +9,14 @@
       "type": "array",
       "minItems": 1,
       "maxItems": 16,
-      "items": {
+      "uniqueItems": true,
+      "items": [
+        {
+          "const": "https://www.w3.org/ns/credentials/v2"
+        }
+      ],
+      "additionalItems": {
         "$ref": "#/$defs/contextEntry"
-      },
-      "contains": {
-        "const": "https://www.w3.org/ns/credentials/v2"
       }
     },
     "id": {

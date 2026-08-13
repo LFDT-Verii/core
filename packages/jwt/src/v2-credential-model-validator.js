@@ -32,6 +32,7 @@ const ajv = new Ajv2019({
   coerceTypes: false,
   removeAdditional: false,
   strict: true,
+  strictTuples: false,
   useDefaults: false,
 });
 ajvFormats(ajv);
@@ -49,6 +50,14 @@ const getV2CredentialModelViolation = (credential) => {
       credential,
       validateVelocityV2Credential.errors,
     );
+  }
+  for (const property of ['validFrom', 'validUntil']) {
+    if (
+      credential[property] != null &&
+      !Number.isFinite(Date.parse(credential[property]))
+    ) {
+      return { property, type: V2CredentialModelViolationTypes.DATE_TIME };
+    }
   }
   return undefined;
 };

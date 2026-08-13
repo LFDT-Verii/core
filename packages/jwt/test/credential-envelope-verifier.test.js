@@ -243,6 +243,11 @@ describe('credential envelope verifier', () => {
       'CREDENTIAL_MODEL_INVALID',
     ],
     [
+      'a leap-second validFrom',
+      { validFrom: '2099-12-31T23:59:60Z', validUntil: undefined },
+      'CREDENTIAL_MODEL_INVALID',
+    ],
+    [
       'a reversed validity interval',
       { validUntil: '2025-01-01T00:00:00.000Z' },
       'CREDENTIAL_MODEL_INVALID',
@@ -287,6 +292,16 @@ describe('credential envelope verifier', () => {
     [
       'a non-string context',
       { '@context': ['https://www.w3.org/ns/credentials/v2', 42] },
+      'CREDENTIAL_CONTEXT_INVALID',
+    ],
+    [
+      'a duplicated base context',
+      {
+        '@context': [
+          'https://www.w3.org/ns/credentials/v2',
+          'https://www.w3.org/ns/credentials/v2',
+        ],
+      },
       'CREDENTIAL_CONTEXT_INVALID',
     ],
   ]) {

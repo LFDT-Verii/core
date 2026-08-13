@@ -37,6 +37,7 @@ const envelope = Object.freeze({
 const verificationKey = Object.freeze({ crv: 'secp256k1', kty: 'EC' });
 const decodeCredentialEnvelope = mock.fn(() => envelope);
 const jwsVerify = mock.fn(async () => undefined);
+const jwtVerify = mock.fn(async () => undefined);
 
 mock.module('../src/credential-envelope-codec.js', {
   namedExports: {
@@ -48,6 +49,7 @@ mock.module('../src/core.js', {
   namedExports: {
     ...jwtCore,
     jwsVerify,
+    jwtVerify,
   },
 });
 
@@ -60,6 +62,7 @@ describe('credential envelope codec reuse guardrails', () => {
   beforeEach(() => {
     decodeCredentialEnvelope.mock.resetCalls();
     jwsVerify.mock.resetCalls();
+    jwtVerify.mock.resetCalls();
   });
 
   after(() => {
@@ -81,6 +84,10 @@ describe('credential envelope codec reuse guardrails', () => {
     const result = await verifyCredentialJwt(compact, verificationKey);
 
     expect(decodeCredentialEnvelope.mock.callCount()).toBe(1);
+    expect(jwtVerify.mock.calls[0].arguments).toEqual([
+      compact,
+      verificationKey,
+    ]);
     expect(result).toBe(credential);
   });
 });

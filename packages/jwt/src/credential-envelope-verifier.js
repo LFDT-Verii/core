@@ -63,7 +63,11 @@ const VersionAlgorithmAllowlists = Object.freeze({
 
 const MAX_KID_CHARACTERS = 2048;
 
-const verifyCredentialEnvelope = async (compact, verificationKey) => {
+const verifyCredentialEnvelope = async (
+  compact,
+  verificationKey,
+  verifyCompact = jwsVerify,
+) => {
   const verifiedEnvelope = decodeCredentialEnvelope(compact);
   const resolvedVerificationKey =
     typeof verificationKey === 'function'
@@ -74,7 +78,7 @@ const verifyCredentialEnvelope = async (compact, verificationKey) => {
     verifiedEnvelope.protectedHeader.alg,
     resolvedVerificationKey,
   );
-  await jwsVerify(compact, resolvedVerificationKey);
+  await verifyCompact(compact, resolvedVerificationKey);
   assertCredentialModel(verifiedEnvelope);
 
   return {

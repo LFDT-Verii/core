@@ -19,10 +19,7 @@ const { CheckResults } = require('./check-results');
 const checkValidity = (credential, now = Date.now()) => {
   const { validFrom, validUntil } = credential;
 
-  if (isAfter(validFrom, now)) {
-    return CheckResults.FAIL;
-  }
-  if (isBefore(validUntil, now)) {
+  if (isInvalidValidityInterval(validFrom, validUntil, now)) {
     return CheckResults.FAIL;
   }
   return validUntil == null && validFrom == null
@@ -33,5 +30,13 @@ const checkValidity = (credential, now = Date.now()) => {
 const isAfter = (date, time) => date != null && Date.parse(date) > time;
 
 const isBefore = (date, time) => date != null && Date.parse(date) < time;
+
+const isInvalidValidityInterval = (validFrom, validUntil, now) =>
+  !isParseable(validFrom) ||
+  !isParseable(validUntil) ||
+  isAfter(validFrom, now) ||
+  isBefore(validUntil, now);
+
+const isParseable = (date) => date == null || Number.isFinite(Date.parse(date));
 
 module.exports = { checkValidity };
