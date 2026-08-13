@@ -278,11 +278,16 @@ const classifyCredential = (payload, protectedHeader) => {
     normalizeProtectedType(protectedHeader.typ) === V2_CREDENTIAL_MEDIA_TYPE;
 
   assertNotMixed({
+    directContext,
     hasVcClaim,
     hasVpClaim,
     nestedContext,
     usesV2Type,
   });
+
+  if (hasDirectV2Shape(payload, directContext, hasVcClaim, hasVpClaim)) {
+    return classifyDirectCredential(directContext);
+  }
 
   if (hasVpClaim) {
     throw new CredentialEnvelopeError(
@@ -299,13 +304,17 @@ const classifyCredential = (payload, protectedHeader) => {
     );
   }
 
-  return classifyDirectCredential(payload, directContext, usesV2Type);
+  return classifyDirectCredential(directContext);
 };
 
 const firstContext = (value) =>
   isJsonObject(value) && Array.isArray(value['@context'])
     ? value['@context'][0]
     : undefined;
+
+const hasDirectV2Shape = (payload, directContext, hasVcClaim, hasVpClaim) =>
+  directContext === CredentialContexts.V2_0 &&
+  ((!hasVcClaim && !hasVpClaim) || hasCredentialType(payload.type));
 
 const normalizeProtectedType = (protectedType) => {
   if (typeof protectedType !== 'string') {
@@ -319,13 +328,19 @@ const normalizeProtectedType = (protectedType) => {
 };
 
 const assertNotMixed = ({
+  directContext,
   hasVcClaim,
   hasVpClaim,
   nestedContext,
   usesV2Type,
 }) => {
   if (
-    hasCompatibilityClaimWithV2Type(hasVcClaim, hasVpClaim, usesV2Type) ||
+    hasCompatibilityClaimWithV2Type(
+      directContext,
+      hasVcClaim,
+      hasVpClaim,
+      usesV2Type,
+    ) ||
     hasConflictingCompatibilityClaims(hasVcClaim, hasVpClaim) ||
     hasNestedV2Context(hasVcClaim, nestedContext)
   ) {
@@ -336,8 +351,15 @@ const assertNotMixed = ({
   }
 };
 
-const hasCompatibilityClaimWithV2Type = (hasVcClaim, hasVpClaim, usesV2Type) =>
-  (hasVcClaim || hasVpClaim) && usesV2Type;
+const hasCompatibilityClaimWithV2Type = (
+  directContext,
+  hasVcClaim,
+  hasVpClaim,
+  usesV2Type,
+) =>
+  directContext !== CredentialContexts.V2_0 &&
+  (hasVcClaim || hasVpClaim) &&
+  usesV2Type;
 
 const hasConflictingCompatibilityClaims = (hasVcClaim, hasVpClaim) =>
   hasVcClaim && hasVpClaim;
@@ -376,27 +398,13 @@ const assertLegacyProtectedType = (protectedType) => {
   }
 };
 
-const classifyDirectCredential = (payload, directContext, usesV2Type) => {
+const classifyDirectCredential = (directContext) => {
   assertSupportedContext(directContext);
 
   if (directContext === CredentialContexts.V1_1) {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.UNSUPPORTED_FORMAT,
       'A VC 1.1 document must use the vc compatibility claim',
-    );
-  }
-
-  if (!hasCredentialType(payload.type)) {
-    throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.CREDENTIAL_TYPE_INVALID,
-      'A direct VC 2.0 document requires type VerifiableCredential',
-    );
-  }
-
-  if (!usesV2Type) {
-    throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.WRONG_TYPE,
-      'A direct VC 2.0 document requires typ vc+jwt',
     );
   }
 

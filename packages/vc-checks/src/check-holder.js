@@ -15,29 +15,45 @@
  */
 
 const { VeriiProtocolVersions } = require('./verii-protocol-versions');
+const { CredentialDataModelVersions } = require('@verii/jwt');
 const { CheckResults } = require('./check-results');
 
-// eslint-disable-next-line complexity
-const checkHolder = (credential, expectedHolderDid, { log }) => {
+const checkHolder = (
+  dataModelVersion,
+  credential,
+  expectedHolderDid,
+  { log },
+) => {
   const {
     vnfProtocolVersion = VeriiProtocolVersions.PROTOCOL_VERSION_1,
     credentialSubject,
   } = credential;
-  if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
+  if (!isHolderCheckRequired(dataModelVersion, vnfProtocolVersion)) {
     return CheckResults.NOT_APPLICABLE;
   }
 
+  const credentialSubjectIds = subjectIdsFrom(credentialSubject);
   if (
     expectedHolderDid == null ||
-    credentialSubject?.id !== expectedHolderDid
+    !credentialSubjectIds.includes(expectedHolderDid)
   ) {
     log.error(
-      { credentialSubjectId: credentialSubject?.id, expectedHolderDid },
+      { credentialSubjectIds, expectedHolderDid },
       'holder check failed',
     );
     return CheckResults.FAIL;
   }
   return CheckResults.PASS;
 };
+
+const isHolderCheckRequired = (dataModelVersion, vnfProtocolVersion) =>
+  dataModelVersion === CredentialDataModelVersions.V2_0 ||
+  vnfProtocolVersion >= VeriiProtocolVersions.PROTOCOL_VERSION_2;
+
+const subjectIdsFrom = (credentialSubject) =>
+  (Array.isArray(credentialSubject)
+    ? credentialSubject
+    : [credentialSubject]
+  ).flatMap((subject) => (typeof subject?.id === 'string' ? [subject.id] : []));
 
 module.exports = { checkHolder };

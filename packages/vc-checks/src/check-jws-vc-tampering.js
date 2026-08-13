@@ -14,21 +14,55 @@
  * limitations under the License.
  */
 
-const { jwsVerify, decodeCredentialJwt } = require('@verii/jwt');
+const {
+  decodeCredentialEnvelope,
+  isCredentialVerificationAccepted,
+  verifyCredentialEnvelope,
+} = require('@verii/jwt');
 const { CheckResults } = require('./check-results');
 
 const checkJwsVcTampering = async (jwt, verificationKey, { log }) => {
   try {
-    await jwsVerify(jwt, verificationKey);
-    return CheckResults.PASS;
+    const verification = await verifyCredentialEnvelope(jwt, verificationKey);
+    if (isCredentialVerificationAccepted(verification)) {
+      return CheckResults.PASS;
+    }
+    logVerificationFailure(jwt, verificationKey, verification, log);
+    return verificationKey == null
+      ? CheckResults.DATA_INTEGRITY_ERROR
+      : CheckResults.FAIL;
   } catch (error) {
     log.error(
-      { credentialId: decodeCredentialJwt(jwt).id, verificationKey },
+      { credentialId: safeCredentialId(jwt), verificationKey },
       `jwt tamper check failed: ${error.message}`,
     );
     return verificationKey == null
       ? CheckResults.DATA_INTEGRITY_ERROR
       : CheckResults.FAIL;
+  }
+};
+
+const logVerificationFailure = (jwt, verificationKey, verification, log) => {
+  const errors = [
+    verification.proof,
+    verification.conformance,
+    verification.policy,
+  ].flatMap(({ errors: assessmentErrors }) => assessmentErrors);
+  log.error(
+    {
+      credentialId: safeCredentialId(jwt),
+      verificationErrors: errors,
+      verificationKey,
+    },
+    'jwt tamper check failed',
+  );
+};
+
+const safeCredentialId = (compact) => {
+  try {
+    return decodeCredentialEnvelope(compact).credential.id;
+  } catch {
+    return undefined;
   }
 };
 

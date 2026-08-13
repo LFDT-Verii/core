@@ -16,7 +16,7 @@
 const { before, describe, it } = require('node:test');
 const { expect } = require('expect');
 
-const { generateCredentialJwt } = require('@verii/jwt');
+const { generateCredentialJwt, jwtSign } = require('@verii/jwt');
 const { credentialUnexpired } = require('@verii/sample-data');
 const { generateKeyPair } = require('@verii/crypto');
 const console = require('console');
@@ -69,5 +69,35 @@ describe('tampering checks', () => {
     );
 
     expect(result).toEqual(CheckResults.PASS);
+  });
+
+  it('should translate a VC 2.0 conformance failure to FAIL', async () => {
+    const signedV2Credential = await jwtSign(
+      {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        credentialSubject: { id: 'did:example:holder' },
+        id: 'https://example.com/credentials/123',
+        type: ['VerifiableCredential'],
+        validFrom: '2026-01-01T00:00:00Z',
+      },
+      privateKey,
+      { cty: 'vc', kid: 'KID', typ: 'vc+jwt' },
+    );
+
+    await expect(
+      checkJwsVcTampering(signedV2Credential, publicKey, context),
+    ).resolves.toEqual(CheckResults.FAIL);
+  });
+
+  it('should return DATA_INTEGRITY_ERROR when the key is unavailable', async () => {
+    const result = await checkJwsVcTampering(signedCredential, null, context);
+
+    expect(result).toEqual(CheckResults.DATA_INTEGRITY_ERROR);
+  });
+
+  it('should safely report a malformed compact credential', async () => {
+    const result = await checkJwsVcTampering('not-a-jws', null, context);
+
+    expect(result).toEqual(CheckResults.DATA_INTEGRITY_ERROR);
   });
 });

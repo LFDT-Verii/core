@@ -26,13 +26,15 @@ const generateAccessToken = (
   { kms, tenant, tenantKeysByPurpose, config },
 ) => {
   const accessTokensSecret = tenantKeysByPurpose[KeyPurposes.EXCHANGES];
+  const issuedAt = new Date();
   return kms.signJwt({}, accessTokensSecret.keyId, {
     jti: id == null ? nanoid(16) : id.toString(),
     issuer: tenant.did,
     audience: tenant.did,
     kid: accessTokensSecret.kidFragment,
     subject,
-    nbf: new Date(),
+    iat: issuedAt,
+    nbf: issuedAt,
     expiresIn: disclosure?.authTokensExpireIn
       ? `${disclosure?.authTokensExpireIn}m`
       : config.defaultOAuthTokenExpiration,

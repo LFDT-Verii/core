@@ -12,7 +12,16 @@ npm install @velocitycareerlabs/verii-verification
 
 ### 1. `verifyCredentials`
 
-Verifies one or more Verifiable Credentials (VCs) in JWT format.
+Verifies one or more compact Verifiable Credentials. The verifier accepts the
+legacy VC 1.1 `jwt_vc_json-ld` envelope and the direct VC 2.0 `vc+jwt`
+envelope, and reports which profile and signing algorithm it verified.
+
+VC 2.0 results also expose the JWT verifier's separate `proof`, `conformance`,
+and `policy` assessments. During the compatibility period, any failure in
+those assessments is also translated to `credentialChecks.UNTAMPERED: 'FAIL'`.
+The `credential` property is omitted when proof, conformance, or policy fails.
+The Velocity profile is defined once, at its enforcement layer, in the
+[`@verii/jwt` README](../jwt/README.md#velocity-vc-20-profile).
 
 ```ts
 import { verifyCredentials } from '@velocitycareerlabs/verii-verification';
@@ -61,18 +70,36 @@ console.log(verified);
 //   { 
 //     credential: 
 //     { 
-//       ... // The jwt's `payload.vc` value (ie. the unsigned jsonld representation of the VC) 
+//       ... // The normalized, signature-verified VC document
 //     }, 
+//     dataModelVersion: '1.1',
+//     envelopeFormat: 'jwt_vc_json-ld',
+//     signingAlgorithm: 'ES256K',
 //     credentialChecks: {      
 //       UNTAMPERED: 'PASS',
 //       TRUSTED_ISSUER: 'PASS',
 //       TRUSTED_HOLDER: 'PASS',
 //       UNEXPIRED: 'PASS',
 //       UNREVOKED: 'PASS' 
-//     } 
+//     }
 //   },
 //   ...
 // ]
+```
+
+A successful VC 2.0 entry additionally contains:
+
+```js
+{
+  proof: { status: 'PASS', errors: [] },
+  conformance: { status: 'PASS', errors: [], warnings: [] },
+  policy: {
+    status: 'PASS',
+    profile: 'velocity-vc-v2',
+    errors: [],
+    warnings: []
+  }
+}
 ```
 
 ### 2. `verifyVerifiablePresentationJwt`

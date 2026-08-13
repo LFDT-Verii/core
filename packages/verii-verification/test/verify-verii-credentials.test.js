@@ -210,6 +210,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -237,6 +240,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -264,6 +270,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -312,6 +321,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -351,6 +363,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: credentialWithArrayOfStatus,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -378,6 +393,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -408,6 +426,9 @@ describe('Verify verii credentials', () => {
         );
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.VOUCHER_RESERVE_EXHAUSTED,
@@ -458,6 +479,9 @@ describe('Verify verii credentials', () => {
         });
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: unsignedCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
@@ -490,6 +514,9 @@ describe('Verify verii credentials', () => {
           ),
         ).resolves.toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
@@ -522,6 +549,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.FAIL,
@@ -580,6 +610,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toMatchObject([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.DATA_INTEGRITY_ERROR,
@@ -615,6 +648,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -649,6 +685,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toMatchObject([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -685,6 +724,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -721,6 +763,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toMatchObject([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -767,6 +812,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -802,6 +850,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toMatchObject([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -828,6 +879,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -868,6 +922,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: credentialWithoutCorrectStatus,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -899,6 +956,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
@@ -930,6 +990,9 @@ describe('Verify verii credentials', () => {
 
         expect(result).toEqual([
           {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
             credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
