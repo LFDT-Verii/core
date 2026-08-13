@@ -14,23 +14,10 @@
  * limitations under the License.
  */
 
-const { beforeEach, describe, it, mock } = require('node:test');
+const { describe, it } = require('node:test');
 const { expect } = require('expect');
-
-const crypto = require('@verii/crypto');
-
-const mockGenerateJWAKeyPair = mock.fn(crypto.generateJWAKeyPair);
-
-mock.module('@verii/crypto', {
-  namedExports: {
-    ...crypto,
-    generateJWAKeyPair: mockGenerateJWAKeyPair,
-  },
-});
-
-const { KeyAlgorithms } = crypto;
+const { KeyAlgorithms } = require('@verii/crypto');
 const {
-  assertCredentialSigningKeyPair,
   CredentialSigningAlgorithms,
   getCredentialSigningProfile,
 } = require('../src/credential-signing-profile');
@@ -40,18 +27,7 @@ const { credentialTypesMap } = require('./helpers/credential-types-map');
 const { createExampleDid } = require('./helpers/create-example-did');
 const { offerFactory } = require('./helpers/offer-factory');
 
-const keyPairs = {
-  ES256: crypto.generateJWAKeyPair(KeyAlgorithms.ES256),
-  ES256K: crypto.generateJWAKeyPair(KeyAlgorithms.SECP256K1),
-  RS256: crypto.generateJWAKeyPair(KeyAlgorithms.RS256),
-};
-
 describe('credential signing algorithm guardrails', () => {
-  beforeEach(() => {
-    mockGenerateJWAKeyPair.mock.resetCalls();
-    mockGenerateJWAKeyPair.mock.mockImplementation(crypto.generateJWAKeyPair);
-  });
-
   it('preserves the metadata encoding for every signing algorithm', () => {
     expect(
       [KeyAlgorithms.SECP256K1, KeyAlgorithms.ES256, KeyAlgorithms.RS256].map(
@@ -67,43 +43,26 @@ describe('credential signing algorithm guardrails', () => {
       KeyAlgorithms.ES256,
       KeyAlgorithms.RS256,
     ]);
-    expect(getCredentialSigningProfile('ES256K')).toEqual(
+    expect(getCredentialSigningProfile(KeyAlgorithms.SECP256K1)).toEqual(
       expect.objectContaining({
         algTypeName: 'HEX_AES_256',
-        curve: 'secp256k1',
+        joseAlgorithm: 'ES256K',
         keyAlgorithm: KeyAlgorithms.SECP256K1,
-        keyType: 'EC',
       }),
     );
     expect(getCredentialSigningProfile('ES256')).toEqual(
       expect.objectContaining({
         algTypeName: 'COSEKEY_AES_256',
-        curve: 'P-256',
+        joseAlgorithm: 'ES256',
         keyAlgorithm: KeyAlgorithms.ES256,
-        keyType: 'EC',
       }),
     );
     expect(getCredentialSigningProfile('RS256')).toEqual(
       expect.objectContaining({
         algTypeName: 'COSEKEY_AES_256',
+        joseAlgorithm: 'RS256',
         keyAlgorithm: KeyAlgorithms.RS256,
-        keyType: 'RSA',
       }),
-    );
-    expect(getCredentialSigningProfile(KeyAlgorithms.SECP256K1)).toBe(
-      getCredentialSigningProfile('ES256K'),
-    );
-  });
-
-  it('accepts generated signing pairs for every allowed algorithm', () => {
-    expect(assertCredentialSigningKeyPair(keyPairs.ES256K, 'ES256K')).toBe(
-      keyPairs.ES256K,
-    );
-    expect(assertCredentialSigningKeyPair(keyPairs.ES256, 'ES256')).toBe(
-      keyPairs.ES256,
-    );
-    expect(assertCredentialSigningKeyPair(keyPairs.RS256, 'RS256')).toBe(
-      keyPairs.RS256,
     );
   });
 
@@ -113,92 +72,7 @@ describe('credential signing algorithm guardrails', () => {
     );
   });
 
-  for (const [title, algorithm, keyPair] of [
-    ['ES256K with P-256', 'ES256K', keyPairs.ES256],
-    ['ES256 with secp256k1', 'ES256', keyPairs.ES256K],
-    ['RS256 with EC', 'RS256', keyPairs.ES256],
-    [
-      'ES256 with different public and private keys',
-      'ES256',
-      {
-        privateKey: keyPairs.ES256.privateKey,
-        publicKey: crypto.generateJWAKeyPair(KeyAlgorithms.ES256).publicKey,
-      },
-    ],
-    [
-      'ES256 with a non-signing public key',
-      'ES256',
-      {
-        privateKey: keyPairs.ES256.privateKey,
-        publicKey: { ...keyPairs.ES256.publicKey, use: 'enc' },
-      },
-    ],
-    [
-      'ES256 with a non-signing private key',
-      'ES256',
-      {
-        privateKey: { ...keyPairs.ES256.privateKey, use: 'enc' },
-        publicKey: keyPairs.ES256.publicKey,
-      },
-    ],
-    [
-      'ES256 with incompatible JWK algorithms',
-      'ES256',
-      {
-        privateKey: { ...keyPairs.ES256.privateKey, alg: 'ES256K' },
-        publicKey: { ...keyPairs.ES256.publicKey, alg: 'ES256K' },
-      },
-    ],
-    [
-      'ES256 with incompatible JWK operations',
-      'ES256',
-      {
-        privateKey: { ...keyPairs.ES256.privateKey, key_ops: ['verify'] },
-        publicKey: { ...keyPairs.ES256.publicKey, key_ops: ['sign'] },
-      },
-    ],
-    [
-      'ES256 with private material in its public key',
-      'ES256',
-      {
-        privateKey: keyPairs.ES256.privateKey,
-        publicKey: keyPairs.ES256.privateKey,
-      },
-    ],
-    [
-      'ES256 with malformed private material',
-      'ES256',
-      {
-        privateKey: { ...keyPairs.ES256.privateKey, d: 'malformed' },
-        publicKey: keyPairs.ES256.publicKey,
-      },
-    ],
-    [
-      'RS256 with incomplete private material',
-      'RS256',
-      {
-        privateKey: {
-          d: keyPairs.RS256.privateKey.d,
-          e: keyPairs.RS256.privateKey.e,
-          kty: 'RSA',
-          n: keyPairs.RS256.privateKey.n,
-        },
-        publicKey: keyPairs.RS256.publicKey,
-      },
-    ],
-  ]) {
-    it(`rejects ${title} before producing a credential`, async () => {
-      mockGenerateJWAKeyPair.mock.mockImplementation(() => keyPair);
-
-      await expect(prepareCredential(algorithm)).rejects.toThrow(
-        `Credential signing key pair is not valid for ${algorithm}`,
-      );
-    });
-  }
-
   it('rejects a metadata allocation for the wrong encoding profile', async () => {
-    mockGenerateJWAKeyPair.mock.mockImplementation(() => keyPairs.ES256);
-
     await expect(
       prepareCredential('ES256', { algType: 'aes-256-gcm' }),
     ).rejects.toThrow('Credential metadata algorithm does not match ES256');

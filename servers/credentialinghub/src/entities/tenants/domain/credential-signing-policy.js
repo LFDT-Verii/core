@@ -15,10 +15,7 @@
  */
 
 const { KeyAlgorithms } = require('@verii/crypto');
-const {
-  CredentialSigningAlgorithms,
-  normalizeCredentialSigningAlgorithm,
-} = require('@verii/verii-issuing');
+const { CredentialSigningAlgorithms } = require('@verii/verii-issuing');
 
 const getCredentialSigningAlgorithmsSupported = ({
   tenant = {},
@@ -31,14 +28,10 @@ const getCredentialSigningAlgorithmsSupported = ({
   if (tenant.credentialSigningAlgorithm != null) {
     return [effectiveAlgorithm];
   }
-  const normalizedEffectiveAlgorithm =
-    normalizeCredentialSigningAlgorithm(effectiveAlgorithm);
   return [
     effectiveAlgorithm,
     ...CredentialSigningAlgorithms.filter(
-      (algorithm) =>
-        normalizeCredentialSigningAlgorithm(algorithm) !==
-        normalizedEffectiveAlgorithm,
+      (algorithm) => algorithm !== effectiveAlgorithm,
     ),
   ];
 };

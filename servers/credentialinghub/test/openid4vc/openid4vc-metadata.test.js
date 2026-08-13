@@ -130,36 +130,6 @@ describe('.well-known openid4vc metadata test suite', () => {
       ).toEqual(['RS256', 'ES256K', 'ES256']);
     });
 
-    it('should advertise the legacy ES256K type default only once', async () => {
-      const credentialTypeMetadatas = [
-        {
-          credentialType: 'EmailV1.0',
-          defaultSignatureAlgorithm: 'ES256K',
-          issuerCategory: 'RegularIssuer',
-          schemaUrl: 'https://example.com/email.schema.json',
-        },
-      ];
-      const profile = {
-        credentialSubject: {
-          permittedVelocityServiceCategory: ['Inspector', 'Issuer'],
-        },
-      };
-      mockHttpClientJsonResponse('get', credentialTypeMetadatas);
-      mockHttpClientJsonResponse('get', profile);
-
-      const response = await fastify.injectJson({
-        method: 'GET',
-        url: `.well-known/openid-credential-issuer/r/${tenant._id}`,
-      });
-
-      expect(response.statusCode).toEqual(200);
-      expect(
-        response.json.credential_configurations_supported[
-          'foundation.velocitynetwork.EmailV1.0'
-        ].credential_signing_alg_values_supported,
-      ).toEqual(['ES256K', 'ES256', 'RS256']);
-    });
-
     it('should keep algorithms used by pending credentials advertised after a type-default change', async () => {
       const credentialTypeMetadatas = [
         {

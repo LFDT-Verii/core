@@ -502,54 +502,6 @@ describe('vn-api > issue credentials', () => {
     expect(mockResolveDidDocument.mock.callCount()).toEqual(0);
   });
 
-  it('should reconcile an uncertain anchor write without changing credential identity', async () => {
-    mockAddCredentialMetadataEntry.mock.mockImplementation(() => {
-      return Promise.reject(new Error('receipt confirmation failed'));
-    });
-    mockIsFreeCredentialType.mock.mockImplementation(() =>
-      Promise.resolve(true),
-    );
-    mockResolveDidDocument.mock.mockImplementation(({ did }) => {
-      const { publicKey } =
-        mockAddCredentialMetadataEntry.mock.calls[0].arguments[0];
-      return Promise.resolve({
-        didDocument: {
-          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
-        },
-        didResolutionMetadata: {},
-      });
-    });
-
-    const response = await fastify.injectJson({
-      method: 'POST',
-      url: testUrl(tenant),
-      headers: {
-        authorization: `Bearer ${await testAccessToken(
-          tenant.did,
-          exchange._id,
-          depots[0]._id,
-          holderAccessTokensSecret,
-        )}`,
-      },
-      payload: {
-        approvedOfferIds: [credentials[0]._id],
-        proof: await buildProof(
-          holderDid,
-          holderKeyPair,
-          await loadChallenge(exchange._id),
-        ),
-      },
-    });
-    const [writeAttempt] = mockAddCredentialMetadataEntry.mock.calls;
-
-    expect(response.statusCode).toEqual(200);
-    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
-    expect(mockResolveDidDocument.mock.callCount()).toEqual(1);
-    expect(jwtDecode(response.json[0]).header.kid).toEqual(
-      `${writeAttempt.arguments[0].credentialId}#key-1`,
-    );
-  });
-
   describe('proof of key possession failures', () => {
     it('should 400 if proof is missing', async () => {
       const response = await fastify.injectJson({

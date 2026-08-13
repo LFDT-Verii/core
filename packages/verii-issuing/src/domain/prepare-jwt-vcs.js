@@ -28,7 +28,6 @@ const { hashOffer } = require('./hash-offer');
 const { buildRevocationUrl } = require('../adapters/build-revocation-url');
 const { buildJsonLdCredential } = require('./build-jsonld-credential');
 const {
-  assertCredentialSigningKeyPair,
   getCredentialSigningProfile,
 } = require('../credential-signing-profile');
 
@@ -61,18 +60,19 @@ const prepareJwtVcs = async (
     mapWithIndex(async (offer, i) => {
       const metadataEntry = metadataEntries[i];
       const credentialType = extractCredentialType(offer);
-      const signingProfile = getCredentialSigningProfile(
+      const configuredAlgorithm =
         credentialSigningAlgorithms?.[i] ??
-          credentialTypesMap[credentialType].defaultSignatureAlgorithm ??
-          KeyAlgorithms.SECP256K1,
+        credentialTypesMap[credentialType].defaultSignatureAlgorithm;
+      const signingProfile = getCredentialSigningProfile(
+        configuredAlgorithm ?? KeyAlgorithms.SECP256K1,
       );
 
-      const keyPair = assertCredentialSigningKeyPair(
-        generateJWAKeyPair(signingProfile.keyAlgorithm),
-        signingProfile.joseAlgorithm,
-      );
+      const keyPair = generateJWAKeyPair(signingProfile.keyAlgorithm);
 
-      if (metadataEntry.algType !== signingProfile.algType) {
+      if (
+        configuredAlgorithm != null &&
+        metadataEntry.algType !== signingProfile.algType
+      ) {
         throw new Error(
           `Credential metadata algorithm does not match ${signingProfile.joseAlgorithm}`,
         );
@@ -88,7 +88,6 @@ const prepareJwtVcs = async (
       const metadata = {
         ...metadataEntry,
         contentHash,
-        credentialId,
         credentialType,
         credentialTypeEncoded: get2BytesHash(credentialType), // TODO replace with bytes encoding from credentialMetadata
         publicKey: keyPair.publicKey,
