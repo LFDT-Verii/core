@@ -20,6 +20,8 @@ VC 2.0 results also expose the JWT verifier's separate `proof`, `conformance`,
 and `policy` assessments. During the compatibility period, any failure in
 those assessments is also translated to `credentialChecks.UNTAMPERED: 'FAIL'`.
 The credential value is `null` when proof, conformance, or policy fails.
+The Velocity profile is defined once, at its enforcement layer, in the
+[`@verii/jwt` README](../jwt/README.md#velocity-vc-20-profile).
 
 ```ts
 import { verifyCredentials } from '@velocitycareerlabs/verii-verification';
