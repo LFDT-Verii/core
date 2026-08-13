@@ -178,6 +178,37 @@ describe('credential envelope classification', () => {
     );
   });
 
+  for (const { name, type } of [
+    { name: 'missing', type: undefined },
+    { name: 'numeric', type: 42 },
+    { name: 'unrelated', type: ['ExampleCredential'] },
+    { name: 'presentation', type: ['VerifiablePresentation'] },
+  ]) {
+    it(`rejects a direct VC 2.0 document with ${name} credential type`, () => {
+      const compact = compactCredentialFixture(
+        { alg: 'ES256', typ: 'vc+jwt' },
+        { ...v2Credential, type },
+      );
+
+      expectEnvelopeError(
+        () => decodeCredentialEnvelope(compact),
+        CredentialEnvelopeErrorCodes.CREDENTIAL_TYPE_INVALID,
+      );
+    });
+  }
+
+  it('accepts a string VerifiableCredential type', () => {
+    const compact = compactCredentialFixture(
+      { alg: 'ES256', typ: 'vc+jwt' },
+      { ...v2Credential, type: 'VerifiableCredential' },
+    );
+
+    expect(decodeCredentialEnvelope(compact)).toMatchObject({
+      dataModelVersion: CredentialDataModelVersions.V2_0,
+      envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+    });
+  });
+
   for (const { name, payload } of [
     {
       name: 'a direct unknown first context',
@@ -442,5 +473,14 @@ describe('credential envelope public contract', () => {
       validFrom: undefined,
       validUntil: undefined,
     });
+  });
+
+  it('does not confuse a raw credential extension with a decoded envelope', () => {
+    const rawCredential = {
+      id: 'did:example:outer',
+      credential: { id: 'did:example:extension' },
+    };
+
+    expect(getCredentialId(rawCredential)).toBe('did:example:outer');
   });
 });

@@ -37,6 +37,7 @@ class CredentialEnvelopeError extends Error {
 const CredentialEnvelopeErrorCodes = Object.freeze({
   ALG_NONE: 'CREDENTIAL_ENVELOPE_ALG_NONE',
   COMPACT_JWS_INVALID: 'CREDENTIAL_ENVELOPE_COMPACT_JWS_INVALID',
+  CREDENTIAL_TYPE_INVALID: 'CREDENTIAL_ENVELOPE_CREDENTIAL_TYPE_INVALID',
   JSON_DEPTH_EXCEEDED: 'CREDENTIAL_ENVELOPE_JSON_DEPTH_EXCEEDED',
   JSON_INVALID: 'CREDENTIAL_ENVELOPE_JSON_INVALID',
   JSON_NOT_OBJECT: 'CREDENTIAL_ENVELOPE_JSON_NOT_OBJECT',
@@ -168,16 +169,23 @@ const classifyCredential = (payload, protectedHeader) => {
     return classifyNestedCredential(payload.vc, nestedContext);
   }
 
-  return classifyDirectCredential(directContext, usesV2Type);
+  return classifyDirectCredential(payload, directContext, usesV2Type);
 };
 
-const classifyDirectCredential = (directContext, usesV2Type) => {
+const classifyDirectCredential = (payload, directContext, usesV2Type) => {
   assertSupportedContext(directContext);
 
   if (directContext === CredentialContexts.V1_1) {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.UNSUPPORTED_FORMAT,
       'A VC 1.1 document must use the vc compatibility claim',
+    );
+  }
+
+  if (!hasCredentialType(payload.type)) {
+    throw new CredentialEnvelopeError(
+      CredentialEnvelopeErrorCodes.CREDENTIAL_TYPE_INVALID,
+      'A direct VC 2.0 document requires type VerifiableCredential',
     );
   }
 
@@ -204,7 +212,8 @@ const classifyNestedCredential = (credential, nestedContext) => {
   };
 };
 
-const credentialFrom = (value) => value?.credential ?? value;
+const credentialFrom = (value) =>
+  isDecodedCredentialEnvelope(value) ? value.credential : value;
 
 const decodeJsonSegment = (segment, name, maximumBytes) => {
   const decoded = decodeSegment(segment, name, maximumBytes);
@@ -279,6 +288,24 @@ const firstContext = (value) =>
 
 const isJsonObject = (value) =>
   value != null && typeof value === 'object' && !Array.isArray(value);
+
+const hasCredentialType = (type) =>
+  type === 'VerifiableCredential' ||
+  (Array.isArray(type) && type.includes('VerifiableCredential'));
+
+const isDecodedCredentialEnvelope = (value) => {
+  if (!isJsonObject(value)) {
+    return false;
+  }
+
+  return [
+    typeof value.compact === 'string',
+    isJsonObject(value.credential),
+    Object.values(CredentialDataModelVersions).includes(value.dataModelVersion),
+    Object.values(CredentialEnvelopeFormats).includes(value.envelopeFormat),
+    isJsonObject(value.protectedHeader),
+  ].every(Boolean);
+};
 
 const firstDefined = (...values) => values.find((value) => value != null);
 
