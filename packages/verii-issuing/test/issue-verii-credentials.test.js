@@ -284,6 +284,36 @@ describe('issuing velocity verifiable credentials', () => {
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
+  it('rejects unsupported metadata algorithms before any durable side effect', async () => {
+    const unsupportedCredentialTypesMap = {
+      ...credentialTypesMap,
+      'EmailV1.0': {
+        ...credentialTypesMap['EmailV1.0'],
+        defaultSignatureAlgorithm: 'constructor',
+      },
+    };
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        unsupportedCredentialTypesMap,
+        issuer,
+        undefined,
+        context,
+      ),
+    ).rejects.toThrow(
+      'Credential signing algorithm is not supported: constructor',
+    );
+
+    await expect(
+      allocationsCollection.collection().countDocuments(),
+    ).resolves.toEqual(0);
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(0);
+    expect(mockAddRevocationListSigned.mock.callCount()).toEqual(0);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+  });
+
   it('should use an explicitly resolved ES256 algorithm instead of the Open Badge RS256 default', async () => {
     const offers = [
       offerFactory({
