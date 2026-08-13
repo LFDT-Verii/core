@@ -129,6 +129,7 @@ const verifyCredentialEnvelopeWithOptions = async (
   const { audience, clockToleranceMilliseconds, currentTime, mode } =
     verificationOptionsFrom(options);
   assertVerificationMode(mode);
+  assertVerificationTimeOptions({ clockToleranceMilliseconds, currentTime });
   const envelope = decodeCredentialEnvelope(compact);
   const resolvedVerificationKey = legacyJwtKey(envelope, verificationKey, mode);
   const proof = await verifyCredentialProof(
@@ -254,6 +255,23 @@ const assertProtectedAlgorithm = ({ dataModelVersion, protectedHeader }) => {
 const assertVerificationMode = (verificationMode) => {
   if (!Object.values(CredentialVerificationModes).includes(verificationMode)) {
     throw new TypeError('Unsupported credential verification mode');
+  }
+};
+
+const assertVerificationTimeOptions = ({
+  clockToleranceMilliseconds,
+  currentTime,
+}) => {
+  if (!Number.isFinite(currentTime)) {
+    throw new TypeError('currentTime must be a finite number');
+  }
+  if (
+    !Number.isFinite(clockToleranceMilliseconds) ||
+    clockToleranceMilliseconds < 0
+  ) {
+    throw new TypeError(
+      'clockToleranceMilliseconds must be a finite non-negative number',
+    );
   }
 };
 

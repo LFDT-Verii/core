@@ -18,20 +18,21 @@
 const newError = require('http-errors');
 const { CredentialCheckResultValue } = require('./constants');
 
-const checkFailedMessage = (reason, id, value) =>
-  `${reason} credential check failed for credential ${id}. Was '${value}', expected 'PASS'`;
+const checkFailedMessage = (reason, id, value) => {
+  const credentialReference = id === undefined ? '' : ` for credential ${id}`;
+  return `${reason} credential check failed${credentialReference}. Was '${value}', expected 'PASS'`;
+};
+
+const credentialIdFrom = ({ id } = {}) => id;
 
 const buildFailedCheckResultError = (
   { credential, credentialChecks },
   { log },
 ) => {
+  const credentialId = credentialIdFrom(credential);
   if (credentialChecks.UNTAMPERED !== CredentialCheckResultValue.PASS) {
     log.error(
-      checkFailedMessage(
-        'tampered',
-        credential.id,
-        credentialChecks.UNTAMPERED,
-      ),
+      checkFailedMessage('tampered', credentialId, credentialChecks.UNTAMPERED),
     );
     return newError(401, 'presentation_credential_tampered', {
       errorCode: 'presentation_credential_failed_tampered',
@@ -41,7 +42,7 @@ const buildFailedCheckResultError = (
     log.error(
       checkFailedMessage(
         'trusted_issuer',
-        credential.id,
+        credentialId,
         credentialChecks.TRUSTED_ISSUER,
       ),
     );
@@ -51,7 +52,7 @@ const buildFailedCheckResultError = (
   }
   if (credentialChecks.UNREVOKED !== CredentialCheckResultValue.PASS) {
     log.error(
-      checkFailedMessage('revoked', credential.id, credentialChecks.UNREVOKED),
+      checkFailedMessage('revoked', credentialId, credentialChecks.UNREVOKED),
     );
     return newError(401, 'presentation_credential_revoked', {
       errorCode: 'presentation_credential_revoked',
@@ -64,7 +65,7 @@ const buildFailedCheckResultError = (
     ].includes(credentialChecks.UNEXPIRED)
   ) {
     log.error(
-      checkFailedMessage('expired', credential.id, credentialChecks.UNEXPIRED, [
+      checkFailedMessage('expired', credentialId, credentialChecks.UNEXPIRED, [
         CredentialCheckResultValue.NOT_APPLICABLE,
       ]),
     );
@@ -81,7 +82,7 @@ const buildFailedCheckResultError = (
     log.error(
       checkFailedMessage(
         'trusted_holder',
-        credential.id,
+        credentialId,
         credentialChecks.TRUSTED_HOLDER,
         [CredentialCheckResultValue.NOT_APPLICABLE],
       ),

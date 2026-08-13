@@ -34,6 +34,7 @@ const shareIdentificationCredentials = async (
   checkedCredentials,
   context,
 ) => {
+  throwOnRejectedCredentialError(checkedCredentials, context);
   if (context.config.autoIdentityCheck) {
     throwOnFailedCheckResultError(checkedCredentials, context);
   }
@@ -98,9 +99,18 @@ const sendIdentification = async (identityDoc, vendorData, context) => {
 const throwOnFailedCheckResultError = (checkedCredentials, context) => {
   for (const checkedCredential of checkedCredentials) {
     const error = buildFailedCheckResultError(checkedCredential, context);
-    if (error != null) {
+    if (error !== undefined) {
       throw error;
     }
+  }
+};
+
+const throwOnRejectedCredentialError = (checkedCredentials, context) => {
+  const rejectedCredential = checkedCredentials.find(
+    ({ credential }) => credential === undefined,
+  );
+  if (rejectedCredential !== undefined) {
+    throw buildFailedCheckResultError(rejectedCredential, context);
   }
 };
 

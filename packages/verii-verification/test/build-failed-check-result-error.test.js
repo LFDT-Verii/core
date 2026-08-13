@@ -24,6 +24,23 @@ const { CredentialCheckResultValue } = require('../src/constants');
 
 const didVelocity = `did:velocity:${nanoid()}`;
 describe('throw error on failed check result', () => {
+  it('should report tampering if the verified credential is unavailable', () => {
+    expect(
+      buildFailedCheckResultError(
+        {
+          credentialChecks: {
+            UNTAMPERED: CredentialCheckResultValue.FAIL,
+            TRUSTED_ISSUER: CredentialCheckResultValue.PASS,
+            TRUSTED_HOLDER: CredentialCheckResultValue.PASS,
+            UNREVOKED: CredentialCheckResultValue.PASS,
+            UNEXPIRED: CredentialCheckResultValue.PASS,
+          },
+        },
+        { log: console },
+      ),
+    ).toEqual(new Error('presentation_credential_tampered'));
+  });
+
   it('should throw if tampered', () => {
     expect(
       buildFailedCheckResultError(

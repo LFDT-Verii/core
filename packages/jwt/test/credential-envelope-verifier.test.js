@@ -492,6 +492,46 @@ describe('credential envelope verifier', () => {
     );
   });
 
+  for (const [name, options, message] of [
+    [
+      'a NaN current time',
+      { currentTime: Number.NaN },
+      'currentTime must be a finite number',
+    ],
+    [
+      'an infinite current time',
+      { currentTime: Number.POSITIVE_INFINITY },
+      'currentTime must be a finite number',
+    ],
+    [
+      'a NaN clock tolerance',
+      { clockToleranceMilliseconds: Number.NaN },
+      'clockToleranceMilliseconds must be a finite non-negative number',
+    ],
+    [
+      'an infinite clock tolerance',
+      { clockToleranceMilliseconds: Number.POSITIVE_INFINITY },
+      'clockToleranceMilliseconds must be a finite non-negative number',
+    ],
+    [
+      'a negative clock tolerance',
+      { clockToleranceMilliseconds: -1 },
+      'clockToleranceMilliseconds must be a finite non-negative number',
+    ],
+  ]) {
+    it(`rejects ${name}`, async () => {
+      const signing = prepareSigning(algorithmConfigs[1]);
+
+      await expect(
+        verifyCredentialEnvelope(
+          signV2(signing, { exp: 1, nbf: 4070908800 }),
+          signing.keyPair.publicKey,
+          options,
+        ),
+      ).rejects.toThrow(new TypeError(message));
+    });
+  }
+
   it('does not bind kid to the credential id', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
     const compact = signV2(

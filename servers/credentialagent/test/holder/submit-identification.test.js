@@ -78,6 +78,22 @@ const {
   verificationIdentifierPayload,
 } = require('./helpers/generate-presentation');
 
+const setMockRejectedCredential = () => {
+  mockVerifyCredentials.mock.mockImplementation(async ({ credentials }) =>
+    Promise.resolve(
+      credentials.map(() => ({
+        credentialChecks: {
+          TRUSTED_HOLDER: CredentialCheckResultValue.NOT_CHECKED,
+          TRUSTED_ISSUER: CredentialCheckResultValue.NOT_CHECKED,
+          UNEXPIRED: CredentialCheckResultValue.NOT_CHECKED,
+          UNTAMPERED: CredentialCheckResultValue.FAIL,
+          UNREVOKED: CredentialCheckResultValue.NOT_CHECKED,
+        },
+      })),
+    ),
+  );
+};
+
 const setMockVerifyCredentials = (checkResults = DEFAULT_CREDENTIAL_CHECKS) => {
   const { decodeCredentialJwt } = require('@verii/jwt');
   // mockVerifyCredentials.reset();
@@ -4336,6 +4352,52 @@ describe('submit identification disclosure', () => {
     });
 
     describe('autoIdentityCheck Test Suite', () => {
+      const expectRejectedCredentialToFail = async (autoIdentityCheck) => {
+        setMockRejectedCredential();
+        fastify.overrides.reqConfig = (config) => ({
+          ...config,
+          autoIdentityCheck,
+        });
+        const presentationEmail = await generateKYCPresentation(
+          exchange,
+          'email',
+        );
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: idUrl(tenant),
+          headers: {
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
+          },
+          payload: {
+            jwt_vp: await presentationEmail.sign(
+              holderKid,
+              holderKeys.privateKey,
+              holderDid,
+            ),
+            exchange_id: exchange._id,
+          },
+        });
+
+        expect(response.statusCode).toEqual(401);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Unauthorized',
+            message: 'presentation_credential_tampered',
+            statusCode: 401,
+            errorCode: 'presentation_credential_failed_tampered',
+          }),
+        );
+      };
+
+      it('should 401 without exposing a rejected credential when autoIdentityCheck is on', async () => {
+        await expectRejectedCredentialToFail(true);
+      });
+
+      it('should 401 without exposing a rejected credential when autoIdentityCheck is off', async () => {
+        await expectRejectedCredentialToFail(false);
+      });
+
       it('should 401 when autoIdentityCheck is on and credential has invalid check result', async () => {
         setMockVerifyCredentials({
           ...DEFAULT_CREDENTIAL_CHECKS,
