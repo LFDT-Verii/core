@@ -18,6 +18,7 @@ const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const {
   CredentialSigningAlgorithms,
+  getCredentialSigningAlgorithmsSupported,
   resolveCredentialSigningAlgorithm,
 } = require('../src/entities/tenants');
 const expectedAlgorithms = ['ES256K', 'ES256', 'RS256'];
@@ -73,6 +74,24 @@ describe('tenant credential signing policy guardrails', () => {
         },
       }),
     ).toEqual('ES256K');
+  });
+
+  it('advertises all supported algorithms with the current type default first when there is no tenant override', () => {
+    expect(
+      getCredentialSigningAlgorithmsSupported({
+        tenant: {},
+        credentialTypeMetadata: { defaultSignatureAlgorithm: 'RS256' },
+      }),
+    ).toEqual(['RS256', 'ES256K', 'ES256']);
+  });
+
+  it('advertises only the algorithm locked by a tenant override', () => {
+    expect(
+      getCredentialSigningAlgorithmsSupported({
+        tenant: { credentialSigningAlgorithm: 'ES256' },
+        credentialTypeMetadata: { defaultSignatureAlgorithm: 'RS256' },
+      }),
+    ).toEqual(['ES256']);
   });
 
   [undefined, null].forEach((credentialSigningAlgorithm) => {

@@ -452,6 +452,20 @@ describe('swagger documents', () => {
     }
   });
 
+  it('uses an OpenAPI 3.0-compatible nullable tenant signing policy schema', () => {
+    const schema =
+      documents.operator.paths['/operator/tenants/update-signing-policy'].post
+        .requestBody.content['application/json'].schema.properties
+        .credentialSigningAlgorithm;
+
+    expect(documents.operator.openapi).toEqual('3.0.3');
+    expect(schema).toEqual({
+      enum: ['ES256K', 'ES256', 'RS256', null],
+      nullable: true,
+      type: 'string',
+    });
+  });
+
   it('emits only reachable schemas and no dangling component refs', () => {
     for (const document of Object.values(documents)) {
       expect(new Set(Object.keys(document.components?.schemas ?? {}))).toEqual(

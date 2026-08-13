@@ -36,6 +36,25 @@ const resolveCredentialSigningAlgorithm = ({
   );
 };
 
+const getCredentialSigningAlgorithmsSupported = ({
+  tenant = {},
+  credentialTypeMetadata = {},
+} = {}) => {
+  const effectiveAlgorithm = resolveCredentialSigningAlgorithm({
+    tenant,
+    credentialTypeMetadata,
+  });
+  if (tenant.credentialSigningAlgorithm != null) {
+    return [effectiveAlgorithm];
+  }
+  return [
+    effectiveAlgorithm,
+    ...CredentialSigningAlgorithms.filter(
+      (algorithm) => algorithm !== effectiveAlgorithm,
+    ),
+  ];
+};
+
 const assertCredentialSigningAlgorithm = (algorithm) => {
   if (!CredentialSigningAlgorithms.includes(algorithm)) {
     throw newError(
@@ -55,5 +74,6 @@ const normalizeCredentialTypeAlgorithm = (algorithm) =>
 module.exports = {
   CredentialSigningAlgorithms,
   DEFAULT_CREDENTIAL_SIGNING_ALGORITHM,
+  getCredentialSigningAlgorithmsSupported,
   resolveCredentialSigningAlgorithm,
 };

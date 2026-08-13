@@ -157,7 +157,8 @@ module.exports = async (fastify) => {
             additionalProperties: false,
             properties: {
               credentialSigningAlgorithm: {
-                type: ['string', 'null'],
+                type: 'string',
+                nullable: true,
                 enum: [...CredentialSigningAlgorithms, null],
               },
               expectedUpdatedAt: {
