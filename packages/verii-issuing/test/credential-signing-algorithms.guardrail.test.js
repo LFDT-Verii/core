@@ -72,6 +72,23 @@ describe('credential signing algorithm guardrails', () => {
       prepareCredential('ES256', { algType: 'aes-256-gcm' }),
     ).rejects.toThrow('Credential metadata algorithm does not match ES256');
   });
+
+  it('preserves the historical prepared credential result', async () => {
+    const [preparedCredential] = await prepareCredential(
+      KeyAlgorithms.SECP256K1,
+      { algType: 'aes-256-gcm', index: 2, listId: 1 },
+    );
+
+    expect(preparedCredential).toEqual({
+      jsonLdCredential: expect.objectContaining({
+        id: expect.any(String),
+      }),
+      metadata: expect.objectContaining({
+        credentialType: 'EmailV1.0',
+      }),
+      vcJwt: expect.any(String),
+    });
+  });
 });
 
 const prepareCredential = (

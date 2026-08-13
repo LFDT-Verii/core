@@ -87,6 +87,32 @@ describe('credential envelope persistence metadata', () => {
     });
   });
 
+  it('rejects incomplete neutral issuance results', () => {
+    const completeResult = {
+      compact: 'intentionally-not-decodable',
+      credentialId: 'did:test:credential',
+      dataModelVersion: '2.0',
+      envelopeFormat: 'vc+jwt',
+      signingAlgorithm: 'ES256',
+    };
+
+    expect(() => buildIssuedCredentialEnvelope(null)).toThrow(
+      'Issued credential envelope is missing credential id',
+    );
+    expect(() =>
+      buildIssuedCredentialEnvelope({
+        ...completeResult,
+        compact: undefined,
+      }),
+    ).toThrow('Issued credential envelope is missing compact value');
+    expect(() =>
+      buildIssuedCredentialEnvelope({
+        ...completeResult,
+        envelopeFormat: undefined,
+      }),
+    ).toThrow('Issued credential envelope is missing format metadata');
+  });
+
   it('rejects an issued compact credential without a credential id', () => {
     const credential = buildCredential({
       context: 'https://www.w3.org/2018/credentials/v1',

@@ -66,6 +66,7 @@ const {
   issueVeriiCredentials,
   issueVersionedCredentials,
   signVeriiCredentials,
+  signVersionedCredentials,
 } = require('../src');
 const { collectionClient } = require('./helpers/collection-client');
 const { entityFactory } = require('./helpers/entity-factory');
@@ -315,6 +316,58 @@ describe('issuing velocity verifiable credentials', () => {
     });
   });
 
+  it('preserves the historical unanchored signing result', async () => {
+    const credentialSubjectId = createExampleDid();
+    const [signedCredential] = await signVeriiCredentials(
+      [offerFactory({ issuerId: issuerEntity.did })],
+      credentialSubjectId,
+      credentialTypesMap,
+      issuer,
+      [KeyAlgorithms.SECP256K1],
+      context,
+    );
+    const envelope = decodeCredentialEnvelope(signedCredential.vcJwt);
+
+    expect(signedCredential).toEqual({
+      jsonLdCredential: envelope.credential,
+      metadata: expect.objectContaining({
+        credentialType: 'EmailV1.0',
+        publicKey: publicJwkMatcher(KeyAlgorithms.SECP256K1),
+      }),
+      vcJwt: expect.any(String),
+    });
+    expect(envelope).toEqual(
+      expect.objectContaining({
+        dataModelVersion: CredentialDataModelVersions.V1_1,
+        envelopeFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+      }),
+    );
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+  });
+
+  it('signs an explicit versioned result without anchoring it', async () => {
+    const [{ issuanceResult, metadata }] = await signVersionedCredentials({
+      context,
+      credentialFormat: CredentialEnvelopeFormats.VC_JWT,
+      credentialSigningAlgorithms: [KeyAlgorithms.ES256],
+      credentialSubjectId: createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      offers: [offerFactory({ issuerId: issuerEntity.did })],
+    });
+
+    expect(issuanceResult).toEqual(
+      expect.objectContaining({
+        compact: expect.any(String),
+        dataModelVersion: CredentialDataModelVersions.V2_0,
+        envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+        signingAlgorithm: 'ES256',
+      }),
+    );
+    expect(metadata.publicKey).toEqual(publicJwkMatcher(KeyAlgorithms.ES256));
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+  });
+
   it('[desired] returns ordered neutral v2 results for every supported internal signing algorithm', async () => {
     const credentialSubjectId = createExampleDid();
     const offers = [
@@ -407,6 +460,29 @@ describe('issuing velocity verifiable credentials', () => {
         ],
       }),
     ).rejects.toThrow('A credential batch must use one supported format');
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+  });
+
+  it('rejects missing and unknown formats before allocating list entries', async () => {
+    for (const credentialFormat of [undefined, 'unknown-format']) {
+      // eslint-disable-next-line no-await-in-loop
+      await expect(
+        issueVersionedCredentials({
+          context,
+          credentialFormat,
+          credentialSubjectId: createExampleDid(),
+          credentialTypesMap,
+          issuer,
+          offers: [offerFactory({ issuerId: issuerEntity.did })],
+        }),
+      ).rejects.toThrow('A credential batch must use one supported format');
+    }
+
+    expect(await allocationsCollection.collection().countDocuments()).toEqual(
+      0,
+    );
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(0);
+    expect(mockAddRevocationListSigned.mock.callCount()).toEqual(0);
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
