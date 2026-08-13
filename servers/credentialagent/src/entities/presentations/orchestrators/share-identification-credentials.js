@@ -17,7 +17,10 @@
 
 const newError = require('http-errors');
 const { isString, isEmpty } = require('lodash/fp');
-const { buildFailedCheckResultError } = require('@verii/verii-verification');
+const {
+  buildFailedCheckResultError,
+  CredentialCheckResultValue,
+} = require('@verii/verii-verification');
 const { ExchangeStates } = require('../../exchanges');
 const { identifyUserOnVendor } = require('../../../fetchers');
 const { VendorEndpoint } = require('../../disclosures');
@@ -107,7 +110,9 @@ const throwOnFailedCheckResultError = (checkedCredentials, context) => {
 
 const throwOnRejectedCredentialError = (checkedCredentials, context) => {
   const rejectedCredential = checkedCredentials.find(
-    ({ credential }) => credential === undefined,
+    ({ credential, credentialChecks }) =>
+      credential === undefined ||
+      credentialChecks.UNTAMPERED !== CredentialCheckResultValue.PASS,
   );
   if (rejectedCredential !== undefined) {
     throw buildFailedCheckResultError(rejectedCredential, context);

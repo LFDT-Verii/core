@@ -25,12 +25,16 @@ const checkFailedMessage = (reason, id, value) => {
 
 const credentialIdFrom = ({ id } = {}) => id;
 
+const isTamperingFailure = (credential, credentialChecks) =>
+  credential === undefined ||
+  credentialChecks.UNTAMPERED !== CredentialCheckResultValue.PASS;
+
 const buildFailedCheckResultError = (
   { credential, credentialChecks },
   { log },
 ) => {
   const credentialId = credentialIdFrom(credential);
-  if (credentialChecks.UNTAMPERED !== CredentialCheckResultValue.PASS) {
+  if (isTamperingFailure(credential, credentialChecks)) {
     log.error(
       checkFailedMessage('tampered', credentialId, credentialChecks.UNTAMPERED),
     );

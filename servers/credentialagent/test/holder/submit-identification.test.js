@@ -4352,8 +4352,18 @@ describe('submit identification disclosure', () => {
     });
 
     describe('autoIdentityCheck Test Suite', () => {
-      const expectRejectedCredentialToFail = async (autoIdentityCheck) => {
-        setMockRejectedCredential();
+      const expectRejectedCredentialToFail = async (
+        autoIdentityCheck,
+        retainCredential = false,
+      ) => {
+        if (retainCredential) {
+          setMockVerifyCredentials({
+            ...DEFAULT_CREDENTIAL_CHECKS,
+            UNTAMPERED: CredentialCheckResultValue.FAIL,
+          });
+        } else {
+          setMockRejectedCredential();
+        }
         fastify.overrides.reqConfig = (config) => ({
           ...config,
           autoIdentityCheck,
@@ -4396,6 +4406,10 @@ describe('submit identification disclosure', () => {
 
       it('should 401 without exposing a rejected credential when autoIdentityCheck is off', async () => {
         await expectRejectedCredentialToFail(false);
+      });
+
+      it('should 401 for a retained tampered credential when autoIdentityCheck is off', async () => {
+        await expectRejectedCredentialToFail(false, true);
       });
 
       it('should 401 when autoIdentityCheck is on and credential has invalid check result', async () => {
