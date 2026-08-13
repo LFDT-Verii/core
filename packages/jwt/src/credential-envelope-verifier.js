@@ -17,9 +17,14 @@
 const {
   CredentialDataModelVersions,
   CredentialEnvelopeError,
+  CredentialEnvelopeFormats,
   decodeCredentialEnvelope,
 } = require('./credential-envelope-codec');
 const { jwsVerify } = require('./core');
+const {
+  V2CredentialModelViolationTypes,
+  getV2CredentialModelViolation,
+} = require('./v2-credential-model-validator');
 
 const CredentialVerificationErrorCodes = Object.freeze({
   ALGORITHM_KEY_MISMATCH: 'CREDENTIAL_ALGORITHM_KEY_MISMATCH',
@@ -56,27 +61,20 @@ const VersionAlgorithmAllowlists = Object.freeze({
   ]),
 });
 
-const MAX_CONTEXTS = 16;
-const MAX_CONTEXT_CHARACTERS = 2048;
 const MAX_KID_CHARACTERS = 2048;
-const V2_FORBIDDEN_COMPATIBILITY_CLAIMS = Object.freeze([
-  'exp',
-  'iat',
-  'iss',
-  'jti',
-  'nbf',
-  'sub',
-  'vc',
-  'vp',
-]);
 
 const verifyCredentialEnvelope = async (compact, verificationKey) => {
-  const routingEnvelope = decodeCredentialEnvelope(compact);
-  assertProtectedHeader(routingEnvelope);
-  assertAlgorithmKeyMatch(routingEnvelope.protectedHeader.alg, verificationKey);
-  await jwsVerify(compact, verificationKey);
-
   const verifiedEnvelope = decodeCredentialEnvelope(compact);
+  const resolvedVerificationKey =
+    typeof verificationKey === 'function'
+      ? verificationKey(verifiedEnvelope)
+      : verificationKey;
+  assertProtectedHeader(verifiedEnvelope);
+  assertAlgorithmKeyMatch(
+    verifiedEnvelope.protectedHeader.alg,
+    resolvedVerificationKey,
+  );
+  await jwsVerify(compact, resolvedVerificationKey);
   assertCredentialModel(verifiedEnvelope);
 
   return {
@@ -101,24 +99,10 @@ const assertCredentialModel = (envelope) => {
   }
 
   const { credential, protectedHeader } = envelope;
-  assertV2Contexts(credential['@context']);
-  assertV2RequiredProperties(credential);
-  assertV2Schema(credential.credentialSchema);
-  assertNoCompatibilityClaims(credential);
+  assertV2StaticModel(credential);
+  assertV2ValidityInterval(credential);
   assertKidBinding(credential.id, protectedHeader.kid);
   assertSelfSignedIssuerBinding(credential.issuer, protectedHeader.kid);
-};
-
-const assertNoCompatibilityClaims = (credential) => {
-  const forbiddenClaim = V2_FORBIDDEN_COMPATIBILITY_CLAIMS.find((claim) =>
-    Object.hasOwn(credential, claim),
-  );
-  if (forbiddenClaim != null) {
-    throw new CredentialVerificationError(
-      CredentialVerificationErrorCodes.MODEL_INVALID,
-      `VC 2.0 direct payload contains forbidden ${forbiddenClaim} claim`,
-    );
-  }
 };
 
 const assertKidBinding = (credentialId, kid) => {
@@ -136,15 +120,6 @@ const assertKidBinding = (credentialId, kid) => {
   }
 };
 
-const assertNoInvalidDate = (value, property) => {
-  if (value != null && !isIsoDate(value)) {
-    throw new CredentialVerificationError(
-      CredentialVerificationErrorCodes.MODEL_INVALID,
-      `VC 2.0 ${property} must be an ISO date-time`,
-    );
-  }
-};
-
 const assertProtectedHeader = ({ dataModelVersion, protectedHeader }) => {
   const allowedAlgorithms = VersionAlgorithmAllowlists[dataModelVersion];
   if (!allowedAlgorithms.includes(protectedHeader.alg)) {
@@ -156,7 +131,8 @@ const assertProtectedHeader = ({ dataModelVersion, protectedHeader }) => {
 
   if (
     dataModelVersion === CredentialDataModelVersions.V2_0 &&
-    (protectedHeader.typ !== 'vc+jwt' || protectedHeader.cty !== 'vc')
+    (protectedHeader.typ !== CredentialEnvelopeFormats.VC_JWT ||
+      protectedHeader.cty !== 'vc')
   ) {
     throw new CredentialVerificationError(
       CredentialVerificationErrorCodes.HEADER_INVALID,
@@ -180,35 +156,44 @@ const assertSelfSignedIssuerBinding = (issuer, kid) => {
   }
 };
 
-const assertV2Contexts = (contexts) => {
-  const isBoundedContextArray =
-    Array.isArray(contexts) &&
-    contexts.length > 0 &&
-    contexts.length <= MAX_CONTEXTS;
-  if (!isBoundedContextArray || !contexts.every(isValidContextEntry)) {
+const assertV2StaticModel = (credential) => {
+  const violation = getV2CredentialModelViolation(credential);
+  if (violation == null) {
+    return;
+  }
+
+  if (violation.type === V2CredentialModelViolationTypes.CONTEXT) {
     throw new CredentialVerificationError(
       CredentialVerificationErrorCodes.CONTEXT_INVALID,
       'VC 2.0 contexts must be a bounded list of HTTPS URLs or inline definitions',
     );
   }
+  if (violation.type === V2CredentialModelViolationTypes.COMPATIBILITY_CLAIM) {
+    throw new CredentialVerificationError(
+      CredentialVerificationErrorCodes.MODEL_INVALID,
+      `VC 2.0 direct payload contains forbidden ${violation.property} claim`,
+    );
+  }
+  if (violation.type === V2CredentialModelViolationTypes.DATE_TIME) {
+    throw new CredentialVerificationError(
+      CredentialVerificationErrorCodes.MODEL_INVALID,
+      `VC 2.0 ${violation.property} must be an ISO date-time`,
+    );
+  }
+  if (violation.type === V2CredentialModelViolationTypes.SCHEMA) {
+    throw new CredentialVerificationError(
+      CredentialVerificationErrorCodes.MODEL_INVALID,
+      'VC 2.0 credentialSchema must contain bounded id and type values',
+    );
+  }
+  throw new CredentialVerificationError(
+    CredentialVerificationErrorCodes.MODEL_INVALID,
+    'VC 2.0 credential is missing or has invalid required properties',
+  );
 };
 
-const assertV2RequiredProperties = (credential) => {
-  const issuerId =
-    typeof credential.issuer === 'string'
-      ? credential.issuer
-      : credential.issuer?.id;
-  assertNoInvalidDate(credential.validFrom, 'validFrom');
-  assertNoInvalidDate(credential.validUntil, 'validUntil');
-  const requiredPropertiesValid = [
-    isNonEmptyString(credential.id),
-    isNonEmptyString(issuerId),
-    isCredentialSubject(credential.credentialSubject),
-    credential.validFrom != null,
-    isValidityIntervalOrdered(credential.validFrom, credential.validUntil),
-  ].every(Boolean);
-
-  if (!requiredPropertiesValid) {
+const assertV2ValidityInterval = ({ validFrom, validUntil }) => {
+  if (!isValidityIntervalOrdered(validFrom, validUntil)) {
     throw new CredentialVerificationError(
       CredentialVerificationErrorCodes.MODEL_INVALID,
       'VC 2.0 credential is missing or has invalid required properties',
@@ -216,82 +201,8 @@ const assertV2RequiredProperties = (credential) => {
   }
 };
 
-const assertV2Schema = (credentialSchema) => {
-  if (credentialSchema == null) {
-    return;
-  }
-
-  const schemas = Array.isArray(credentialSchema)
-    ? credentialSchema
-    : [credentialSchema];
-  const valid =
-    schemas.length > 0 &&
-    schemas.length <= MAX_CONTEXTS &&
-    schemas.every(
-      (schema) =>
-        isJsonObject(schema) &&
-        typeof schema.id === 'string' &&
-        schema.id.length <= MAX_CONTEXT_CHARACTERS &&
-        typeof schema.type === 'string' &&
-        schema.type.length > 0,
-    );
-  if (!valid) {
-    throw new CredentialVerificationError(
-      CredentialVerificationErrorCodes.MODEL_INVALID,
-      'VC 2.0 credentialSchema must contain bounded id and type values',
-    );
-  }
-};
-
-const RFC3339_DATE_TIME_PATTERN =
-  /^(?<date>\d{4}-\d{2}-\d{2})T(?<time>\d{2}:\d{2}:\d{2})(?:\.\d+)?(?<offset>Z|[+-]\d{2}:\d{2})$/u;
-
-// eslint-disable-next-line complexity
-const isIsoDate = (value) => {
-  if (typeof value !== 'string' || value.length > 64) {
-    return false;
-  }
-  const match = RFC3339_DATE_TIME_PATTERN.exec(value);
-  if (match == null || !isValidOffset(match.groups.offset)) {
-    return false;
-  }
-
-  const { date, time } = match.groups;
-  const [year, month, day] = date.split('-').map(Number);
-  const [hour, minute, second] = time.split(':').map(Number);
-  const calendarDate = new Date(Date.UTC(year, month - 1, day));
-  return (
-    year >= 1 &&
-    month === calendarDate.getUTCMonth() + 1 &&
-    day === calendarDate.getUTCDate() &&
-    hour <= 23 &&
-    minute <= 59 &&
-    second <= 59 &&
-    !Number.isNaN(Date.parse(value))
-  );
-};
-
-const isValidOffset = (offset) => {
-  if (offset === 'Z') {
-    return true;
-  }
-  const [, hour, minute] = /^[-+](\d{2}):(\d{2})$/u.exec(offset) ?? [];
-  return Number(hour) <= 23 && Number(minute) <= 59;
-};
-
 const isJsonObject = (value) =>
   value != null && typeof value === 'object' && !Array.isArray(value);
-
-const isCredentialSubject = (credentialSubject) => {
-  if (isJsonObject(credentialSubject)) {
-    return true;
-  }
-  return (
-    Array.isArray(credentialSubject) &&
-    credentialSubject.length > 0 &&
-    credentialSubject.every(isJsonObject)
-  );
-};
 
 const isExpectedKey = (jwk, expectedKey) => {
   if (jwk.kty !== expectedKey?.kty) {
@@ -302,30 +213,8 @@ const isExpectedKey = (jwk, expectedKey) => {
     : jwk.crv === expectedKey.crv;
 };
 
-const isNonEmptyString = (value) =>
-  typeof value === 'string' && value.length > 0;
-
 const isValidityIntervalOrdered = (validFrom, validUntil) =>
   validUntil == null || Date.parse(validUntil) >= Date.parse(validFrom);
-
-const isValidContextEntry = (context) => {
-  if (isJsonObject(context)) {
-    return Object.keys(context).length > 0;
-  }
-  if (
-    typeof context !== 'string' ||
-    context.length === 0 ||
-    context.length > MAX_CONTEXT_CHARACTERS
-  ) {
-    return false;
-  }
-
-  try {
-    return new URL(context).protocol === 'https:';
-  } catch {
-    return false;
-  }
-};
 
 module.exports = {
   AlgorithmKeyProfiles,

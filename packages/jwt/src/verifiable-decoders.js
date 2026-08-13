@@ -28,9 +28,10 @@ const decodePresentationJwt = (presentationJwt) => {
 };
 
 const verifyCredentialJwt = async (credentialJwt, key) => {
-  decodeCredentialEnvelope(credentialJwt);
-  const jwk = deriveJwk(credentialJwt, key);
-  const verified = await verifyCredentialEnvelope(credentialJwt, jwk);
+  const verified = await verifyCredentialEnvelope(
+    credentialJwt,
+    ({ protectedHeader }) => key ?? protectedHeader.jwk,
+  );
   return verified.credential;
 };
 

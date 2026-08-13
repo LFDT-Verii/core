@@ -31,4 +31,7 @@ to match the protected `alg`, verifies the compact signature, and only then
 returns the normalized credential. The VC 2.0 profile additionally requires
 the exact `typ: vc+jwt` and `cty: vc` headers, a bounded `kid` anchored to the
 credential identifier, valid v2 contexts and required properties, and no
-legacy JWT compatibility claims in the direct payload.
+legacy JWT compatibility claims in the direct payload. Static VC 2.0 structure
+is validated by separately compiled W3C core and Velocity JOSE profile schemas.
+Validation is non-mutating; cryptographic, binding, temporal ordering, and trust
+checks remain explicit verifier responsibilities.
