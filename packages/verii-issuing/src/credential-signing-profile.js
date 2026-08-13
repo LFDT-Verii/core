@@ -47,13 +47,12 @@ const CredentialSigningAlgorithms = Object.freeze([
  * @returns {object} the resolved signing profile
  */
 const getCredentialSigningProfile = (algorithm) => {
-  const profile = CredentialSigningProfiles[algorithm];
-  if (profile == null) {
+  if (!Object.hasOwn(CredentialSigningProfiles, algorithm)) {
     throw new Error(
       `Credential signing algorithm is not supported: ${algorithm}`,
     );
   }
-  return profile;
+  return CredentialSigningProfiles[algorithm];
 };
 
 module.exports = {

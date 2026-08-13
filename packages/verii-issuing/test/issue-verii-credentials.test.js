@@ -258,17 +258,23 @@ describe('issuing velocity verifiable credentials', () => {
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
-  it('rejects an unsupported algorithm before any durable side effect', async () => {
-    await expect(
-      issueVeriiCredentials(
-        [offerFactory({ issuerId: issuerEntity.did })],
-        createExampleDid(),
-        credentialTypesMap,
-        issuer,
-        ['EdDSA'],
-        context,
+  it('rejects unsupported algorithms before any durable side effect', async () => {
+    await Promise.all(
+      ['EdDSA', 'constructor', 'toString'].map((algorithm) =>
+        expect(
+          issueVeriiCredentials(
+            [offerFactory({ issuerId: issuerEntity.did })],
+            createExampleDid(),
+            credentialTypesMap,
+            issuer,
+            [algorithm],
+            context,
+          ),
+        ).rejects.toThrow(
+          `Credential signing algorithm is not supported: ${algorithm}`,
+        ),
       ),
-    ).rejects.toThrow('Credential signing algorithm is not supported: EdDSA');
+    );
 
     await expect(
       allocationsCollection.collection().countDocuments(),
