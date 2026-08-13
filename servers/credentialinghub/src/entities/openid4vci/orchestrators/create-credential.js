@@ -15,6 +15,7 @@
  *
  */
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
+const { getCredentialTypeMetadata } = require('@verii/common-fetchers');
 const { jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
 const {
@@ -55,8 +56,21 @@ const createCredential = async (credentialRequestParameters, context) => {
   try {
     const { payload } = jwtDecode(credentialRequest.proofs.jwt[0]);
     const credentialSubjectId = payload.iss;
+    const credentialTypeMetadataList = await getCredentialTypeMetadata(
+      [credential.typeMetadata.credentialType],
+      context,
+    );
+    const currentCredentialTypeMetadata = credentialTypeMetadataList.find(
+      ({ credentialType }) =>
+        credentialType === credential.typeMetadata.credentialType,
+    );
+    if (currentCredentialTypeMetadata == null) {
+      throw new Error(
+        `Credential type metadata ${credential.typeMetadata.credentialType} not found`,
+      );
+    }
     const credentialSigningAlgorithm = resolveCredentialSigningAlgorithm({
-      credentialTypeMetadata: credential.typeMetadata,
+      credentialTypeMetadata: currentCredentialTypeMetadata,
       tenant: context.tenant,
     });
 

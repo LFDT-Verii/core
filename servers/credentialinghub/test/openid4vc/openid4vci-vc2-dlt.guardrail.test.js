@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
-const { after, before, beforeEach, describe, it } = require('node:test');
+const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const console = require('node:console');
 const { expect } = require('expect');
+const {
+  mockHttpClientJsonResponse,
+  mockHttpClientModule,
+  resetMockHttpClient,
+} = require('../helpers/mock-http-client');
+
+mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
+
 const { ObjectId } = require('mongodb');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { buildMongoConnection } = require('@verii/tests-helpers');
@@ -155,6 +163,7 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
   });
 
   beforeEach(async () => {
+    resetMockHttpClient();
     await Promise.all(
       [
         'allocations',
@@ -278,6 +287,7 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
 
   const issueAndAcceptCredential = async (testCase) => {
     const setup = await setupCredential(testCase);
+    mockHttpClientJsonResponse('get', [setup.credential.typeMetadata]);
     const nonceResponse = await fastify.injectJson({
       method: 'POST',
       url: `/r/${tenant._id}/openid4vc/nonce`,

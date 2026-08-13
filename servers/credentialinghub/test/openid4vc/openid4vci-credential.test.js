@@ -39,6 +39,7 @@ const { getDidUriFromJwk } = require('@verii/did-doc');
 const { ObjectId } = require('mongodb');
 const { applyOverrides } = require('@verii/common-functions');
 const {
+  mockHttpClientJsonResponse,
   mockHttpClientModule,
   resetMockHttpClient,
 } = require('../helpers/mock-http-client');
@@ -287,7 +288,53 @@ describe('openid4vc credential test suite', () => {
         });
       });
 
+      it('should 400 when current credential-type metadata is unavailable', async () => {
+        mockHttpClientJsonResponse('get', []);
+        const encryptedNonce = encrypt(
+          `${Date.now()}`,
+          hexFromJwk(issuerKeyPair.privateKey, true),
+        );
+        const proof = await buildProof(
+          holderDid,
+          holderKeyPair,
+          encryptedNonce,
+          { typ: 'openid4vci-proof+jwt' },
+        );
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/credential`,
+          headers: {
+            authorization: `Bearer ${authToken}`,
+          },
+          payload: {
+            credential_identifier: credential._id,
+            proofs: { jwt: [proof.jwt] },
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'server_error',
+          error_description: 'Credential type metadata Employment not found',
+        });
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(credential._id) }),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            exchange: expectedDbExchange(
+              issuerService,
+              [ExchangeStates.NEW, ExchangeStates.UNEXPECTED_ERROR],
+              { err: 'Credential type metadata Employment not found' },
+            ),
+          }),
+        );
+      });
+
       it('should 400 if server issue', async () => {
+        mockHttpClientJsonResponse('get', [credential.typeMetadata]);
         const encryptedNonce = encrypt(
           `${Date.now()}`,
           hexFromJwk(issuerKeyPair.privateKey, true),
@@ -339,6 +386,7 @@ describe('openid4vc credential test suite', () => {
     });
     describe('openid4vc credential endpoint success cases', () => {
       it('should 200 with a credential', async () => {
+        mockHttpClientJsonResponse('get', [credential.typeMetadata]);
         const encryptedNonce = encrypt(
           `${Date.now()}`,
           hexFromJwk(issuerKeyPair.privateKey, true),
@@ -453,6 +501,7 @@ describe('openid4vc credential test suite', () => {
       });
 
       it('should sign with ES256 when the tenant policy overrides the type default', async () => {
+        mockHttpClientJsonResponse('get', [credential.typeMetadata]);
         await mongoDb()
           .collection('tenants')
           .updateOne(
@@ -501,6 +550,77 @@ describe('openid4vc credential test suite', () => {
               }),
             }),
           }),
+        );
+      });
+
+      it('should issue with the current credential-type algorithm advertised by metadata', async () => {
+        const persistedTypeMetadata = {
+          ...credential.typeMetadata,
+          defaultSignatureAlgorithm: 'RS256',
+        };
+        const currentTypeMetadata = {
+          ...persistedTypeMetadata,
+          defaultSignatureAlgorithm: 'ES256',
+          issuerCategory: 'RegularIssuer',
+        };
+        await mongoDb()
+          .collection('credentials')
+          .updateOne(
+            { _id: new ObjectId(credential._id) },
+            { $set: { typeMetadata: persistedTypeMetadata } },
+          );
+        mockHttpClientJsonResponse('get', [currentTypeMetadata]);
+        mockHttpClientJsonResponse('get', {
+          credentialSubject: {
+            permittedVelocityServiceCategory: ['Issuer'],
+          },
+        });
+        mockHttpClientJsonResponse('get', [currentTypeMetadata]);
+
+        const metadataResponse = await fastify.injectJson({
+          method: 'GET',
+          url: `.well-known/openid-credential-issuer/r/${tenant._id}`,
+        });
+        expect(metadataResponse.statusCode).toEqual(200);
+        expect(
+          metadataResponse.json.credential_configurations_supported[
+            'foundation.velocitynetwork.Employment'
+          ].credential_signing_alg_values_supported,
+        ).toEqual(['ES256']);
+
+        const encryptedNonce = encrypt(
+          `${Date.now()}`,
+          hexFromJwk(issuerKeyPair.privateKey, true),
+        );
+        const proof = await buildProof(
+          holderDid,
+          holderKeyPair,
+          encryptedNonce,
+          { typ: 'openid4vci-proof+jwt' },
+        );
+        const credentialResponse = await fastify.injectJson({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/credential`,
+          headers: {
+            authorization: `Bearer ${authToken}`,
+          },
+          payload: {
+            credential_identifier: credential._id,
+            proofs: { jwt: [proof.jwt] },
+          },
+        });
+
+        expect(credentialResponse.statusCode).toEqual(200);
+        expect(
+          jwtDecode(credentialResponse.json.credentials[0].credential).header
+            .alg,
+        ).toEqual('ES256');
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(credential._id) }),
+        ).resolves.toEqual(
+          expect.objectContaining({ signingAlgorithm: 'ES256' }),
         );
       });
     });
