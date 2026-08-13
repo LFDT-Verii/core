@@ -66,7 +66,6 @@ const createCredential = async (credentialRequestParameters, context) => {
     );
     await repos.credentials.updateIssuedCredential(
       credential._id,
-      jwtDecode(vcJwt).payload.vc.id,
       vcJwt,
       credentialSubjectId,
       false,

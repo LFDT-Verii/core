@@ -18,7 +18,6 @@
 const newError = require('http-errors');
 const { isEmpty, map, uniq } = require('lodash/fp');
 const { mapWithIndex } = require('@verii/common-functions');
-const { jwtDecode } = require('@verii/jwt');
 const { parseAccessToken } = require('../../tokens');
 const { ExchangeStates, verifyProofOfKeyPossession } = require('../domain');
 const { authorizeExchange } = require('../domain/authorize-exchange');
@@ -145,7 +144,6 @@ const issueApprovedCredentials = async (
       async (credential, i) =>
         repos.credentials.updateIssuedCredential(
           credential._id,
-          jwtDecode(jwtVcs[i]).payload.vc.id,
           jwtVcs[i],
           credentialSubjectId,
           true,

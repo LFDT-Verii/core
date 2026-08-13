@@ -78,7 +78,10 @@ const buildCredentialIssuedEvent = ({
       credentialDid: credential.did,
       credentialReference: credential.credentialReference,
       credentialTypes: getCredentialTypes(credential),
+      dataModelVersion: credential.dataModelVersion,
       digestSRI: credential.digestSRI,
+      envelopeFormat: credential.envelopeFormat,
+      signingAlgorithm: credential.signingAlgorithm,
     }),
     links: {
       credential: `/operator/credentials/get?tenantId=${encodeURIComponent(

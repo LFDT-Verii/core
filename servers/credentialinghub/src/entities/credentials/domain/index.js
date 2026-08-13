@@ -17,6 +17,7 @@
 module.exports = {
   ...require('./canonicalize-credentials'),
   ...require('./credential-errors'),
+  ...require('./credential-envelope'),
   ...require('./credential-format'),
   ...require('./validate-credential'),
 };

@@ -16,24 +16,34 @@
  */
 
 const { calcSha384 } = require('@verii/crypto');
-const { jwtDecode } = require('@verii/jwt');
 const { buildExchangeEvent } = require('../../exchanges/domain');
+const {
+  buildIssuedCredentialEnvelope,
+} = require('../domain/credential-envelope');
 
 const updateExtensions = (parent, context) => ({
   updateIssuedCredential: async (
     credentialId,
-    credentialDid,
     jwtVc,
     credentialSubjectId,
     isAccepted,
     exchange,
   ) => {
+    const {
+      credentialDid,
+      credentialStatus,
+      dataModelVersion,
+      envelopeFormat,
+      signingAlgorithm,
+    } = buildIssuedCredentialEnvelope(jwtVc);
     const digestSRI = `sha384-${calcSha384(jwtVc)}`;
-    const credentialStatus = extractCredentialStatus(jwtVc);
     const $set = {
+      dataModelVersion,
       did: credentialDid,
       credentialSubjectId,
       digestSRI,
+      envelopeFormat,
+      signingAlgorithm,
     };
     if (credentialStatus != null) {
       $set.credentialStatus = credentialStatus;
@@ -61,8 +71,5 @@ const updateExtensions = (parent, context) => ({
       },
     ),
 });
-
-const extractCredentialStatus = (jwtVc) =>
-  jwtDecode(jwtVc)?.payload?.vc?.credentialStatus;
 
 module.exports = { updateExtensions };

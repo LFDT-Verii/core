@@ -20,6 +20,9 @@ const {
 } = require('@spencejs/spence-mongo-repos');
 const { multitenantExtension } = require('@verii/spencer-mongo-extensions');
 const { findersExtension } = require('./finders-extension');
+const {
+  credentialEnvelopeExtension,
+} = require('./credential-envelope-extension');
 const { updateExtensions } = require('./update-issued-credential');
 
 module.exports = (app, options, next = () => {}) => {
@@ -36,7 +39,9 @@ module.exports = (app, options, next = () => {}) => {
         content: 1,
         contentHash: 1,
         credentialStatus: 1,
+        dataModelVersion: 1,
         digestSRI: 1,
+        envelopeFormat: 1,
         tags: 1,
         acceptedAt: 1,
         jwtVc: 1,
@@ -46,6 +51,7 @@ module.exports = (app, options, next = () => {}) => {
         failedAt: 1,
         deletedAt: 1,
         rejectedReason: 1,
+        signingAlgorithm: 1,
         typeMetadata: 1,
         openid4vcMetadata: 1,
         error: 1,
@@ -57,6 +63,7 @@ module.exports = (app, options, next = () => {}) => {
       extensions: [
         autoboxIdsExtension,
         multitenantExtension(),
+        credentialEnvelopeExtension,
         findersExtension,
         updateExtensions,
       ],

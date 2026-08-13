@@ -48,6 +48,11 @@ const credentialSchema = {
         },
       ],
     },
+    dataModelVersion: {
+      type: 'string',
+      enum: ['1.1', '2.0'],
+      description: 'the W3C Verifiable Credentials data model version',
+    },
     contentHash: {
       type: 'string',
       description: 'the credential content hash',
@@ -60,6 +65,11 @@ const credentialSchema = {
     jwtVc: {
       type: 'string',
       description: 'the issued credential',
+    },
+    envelopeFormat: {
+      type: 'string',
+      enum: ['jwt_vc_json-ld', 'vc+jwt'],
+      description: 'the issued credential envelope format',
     },
     rejectedAt: {
       type: 'string',
@@ -79,6 +89,10 @@ const credentialSchema = {
       type: 'string',
       description: 'when the wallet was notified of revocation',
       format: 'date-time',
+    },
+    signingAlgorithm: {
+      type: 'string',
+      description: 'the JOSE algorithm used to sign the credential',
     },
   },
   required: [
