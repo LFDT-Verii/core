@@ -55,7 +55,10 @@ const { MongoClient } = require('mongodb');
 const { first, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { hashOffer } = require('../src/domain/hash-offer');
-const { issueVeriiCredentials } = require('../src/issue-verii-credentials');
+const {
+  issueVeriiCredentials,
+  signVeriiCredentials,
+} = require('../src/issue-verii-credentials');
 const { collectionClient } = require('./helpers/collection-client');
 const { entityFactory } = require('./helpers/entity-factory');
 const { offerFactory } = require('./helpers/offer-factory');
@@ -171,8 +174,8 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
-      context,
       [KeyAlgorithms.SECP256K1, KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256],
+      context,
     );
 
     expect(credentials.length).toEqual(3);
@@ -211,6 +214,70 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
   });
 
+  it('uses generic metadata fallback when algorithms are omitted explicitly', async () => {
+    const offer = offerFactory({ issuerId: issuerEntity.did });
+    const [credential] = await issueVeriiCredentials(
+      [offer],
+      createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      undefined,
+      context,
+    );
+
+    const { header } = jwtDecode(credential);
+    expect(header.alg).toEqual('ES256K');
+    const [{ publicKey }] = mockAddCredentialMetadataEntry.mock.calls.map(
+      (call) => call.arguments[0],
+    );
+    expect(publicKey).toEqual(publicJwkMatcher(KeyAlgorithms.SECP256K1));
+    expect(mockAddCredentialMetadataEntry.mock.calls[0].arguments[3]).toEqual(
+      ALG_TYPE.COSEKEY_AES_256,
+    );
+    await verifyCreateMetadataListCall(
+      mockCreateCredentialMetadataList.mock.calls[0],
+      issuer,
+      mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
+      ALG_TYPE.COSEKEY_AES_256,
+      { issuerEntity, caoEntity },
+    );
+  });
+
+  it('signs without anchoring when algorithms are omitted explicitly', async () => {
+    const offer = offerFactory({ issuerId: issuerEntity.did });
+    const [{ vcJwt }] = await signVeriiCredentials(
+      [offer],
+      createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      undefined,
+      context,
+    );
+
+    expect(jwtDecode(vcJwt).header.alg).toEqual('ES256K');
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+  });
+
+  it('rejects an unsupported algorithm before any durable side effect', async () => {
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        ['EdDSA'],
+        context,
+      ),
+    ).rejects.toThrow('Credential signing algorithm is not supported: EdDSA');
+
+    await expect(
+      allocationsCollection.collection().countDocuments(),
+    ).resolves.toEqual(0);
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(0);
+    expect(mockAddRevocationListSigned.mock.callCount()).toEqual(0);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+  });
+
   it('should use an explicitly resolved ES256 algorithm instead of the Open Badge RS256 default', async () => {
     const offers = [
       offerFactory({
@@ -223,8 +290,8 @@ describe('issuing velocity verifiable credentials', () => {
       createExampleDid(),
       credentialTypesMap,
       issuer,
-      context,
       [KeyAlgorithms.ES256],
+      context,
     );
 
     const { header } = jwtDecode(credential);
@@ -276,8 +343,8 @@ describe('issuing velocity verifiable credentials', () => {
         createExampleDid(),
         credentialTypesMap,
         issuer,
-        context,
         ['ES256'],
+        context,
       ),
     ).rejects.toBe(anchorError);
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
@@ -337,8 +404,8 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
-      context,
       [KeyAlgorithms.SECP256K1, KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256],
+      context,
     );
 
     expect(credentials.length).toEqual(3);
@@ -383,8 +450,8 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
-      context,
       [KeyAlgorithms.SECP256K1],
+      context,
     );
 
     expect(credentials).toEqual([expect.any(String)]);
@@ -441,8 +508,8 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
-      context,
       [KeyAlgorithms.SECP256K1],
+      context,
     );
 
     expect(credentials).toEqual([expect.any(String)]);

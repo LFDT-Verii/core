@@ -17,6 +17,7 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const { KeyAlgorithms } = require('@verii/crypto');
+const { ALG_TYPE } = require('@verii/metadata-registration');
 const {
   CredentialSigningAlgorithms,
   getCredentialSigningProfile,
@@ -37,33 +38,27 @@ describe('credential signing algorithm guardrails', () => {
     ).toEqual(['HEX_AES_256', 'COSEKEY_AES_256', 'COSEKEY_AES_256']);
   });
 
-  it('defines one execution profile for every allowed key algorithm', () => {
+  it('defines one complete execution profile for every allowed key algorithm', () => {
     expect(CredentialSigningAlgorithms).toEqual([
       KeyAlgorithms.SECP256K1,
       KeyAlgorithms.ES256,
       KeyAlgorithms.RS256,
     ]);
-    expect(getCredentialSigningProfile(KeyAlgorithms.SECP256K1)).toEqual(
-      expect.objectContaining({
-        algTypeName: 'HEX_AES_256',
-        joseAlgorithm: 'ES256K',
-        keyAlgorithm: KeyAlgorithms.SECP256K1,
-      }),
-    );
-    expect(getCredentialSigningProfile('ES256')).toEqual(
-      expect.objectContaining({
-        algTypeName: 'COSEKEY_AES_256',
-        joseAlgorithm: 'ES256',
-        keyAlgorithm: KeyAlgorithms.ES256,
-      }),
-    );
-    expect(getCredentialSigningProfile('RS256')).toEqual(
-      expect.objectContaining({
-        algTypeName: 'COSEKEY_AES_256',
-        joseAlgorithm: 'RS256',
-        keyAlgorithm: KeyAlgorithms.RS256,
-      }),
-    );
+    expect(getCredentialSigningProfile(KeyAlgorithms.SECP256K1)).toEqual({
+      algType: ALG_TYPE.HEX_AES_256,
+      joseAlgorithm: 'ES256K',
+      keyAlgorithm: KeyAlgorithms.SECP256K1,
+    });
+    expect(getCredentialSigningProfile('ES256')).toEqual({
+      algType: ALG_TYPE.COSEKEY_AES_256,
+      joseAlgorithm: 'ES256',
+      keyAlgorithm: KeyAlgorithms.ES256,
+    });
+    expect(getCredentialSigningProfile('RS256')).toEqual({
+      algType: ALG_TYPE.COSEKEY_AES_256,
+      joseAlgorithm: 'RS256',
+      keyAlgorithm: KeyAlgorithms.RS256,
+    });
   });
 
   it('rejects an algorithm outside the tenant policy allowlist', () => {
@@ -93,6 +88,7 @@ const prepareCredential = (
     [metadataEntry],
     [{ index: 4, listId: 3 }],
     credentialTypesMap,
+    [algorithm],
     {
       config: {
         credentialExtensionsContextUrl:
@@ -101,5 +97,4 @@ const prepareCredential = (
         revocationContractAddress: '0x1234',
       },
     },
-    [algorithm],
   );

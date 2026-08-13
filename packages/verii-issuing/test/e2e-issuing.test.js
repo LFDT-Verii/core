@@ -209,8 +209,8 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       userId,
       credentialTypesMap,
       issuer,
-      context,
       [KeyAlgorithms.ES256],
+      context,
     );
 
     expect(credentials.length).toEqual(offers.length);
@@ -256,8 +256,8 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       createExampleDid(),
       credentialTypesMap,
       issuer,
-      context,
       [KeyAlgorithms.ES256, undefined],
+      context,
     );
 
     expect(
@@ -279,8 +279,8 @@ const issueResolveAndVerify = async (
     createExampleDid(),
     credentialTypesMap,
     issuer,
-    context,
     [algorithm],
+    context,
   );
   const { header, payload } = jwtDecode(credential);
   const metadataRegistry = await initMetadataRegistry(
