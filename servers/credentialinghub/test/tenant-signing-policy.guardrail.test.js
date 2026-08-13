@@ -85,6 +85,15 @@ describe('tenant credential signing policy guardrails', () => {
     ).toEqual(['RS256', 'SECP256K1', 'ES256']);
   });
 
+  it('advertises the legacy ES256K alias without repeating its canonical algorithm', () => {
+    expect(
+      getCredentialSigningAlgorithmsSupported({
+        tenant: {},
+        credentialTypeMetadata: { defaultSignatureAlgorithm: 'ES256K' },
+      }),
+    ).toEqual(['ES256K', 'ES256', 'RS256']);
+  });
+
   it('advertises only the internal algorithm selected by a tenant override', () => {
     expect(
       getCredentialSigningAlgorithmsSupported({
