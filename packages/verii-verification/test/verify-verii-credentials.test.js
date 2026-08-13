@@ -552,7 +552,7 @@ describe('Verify verii credentials', () => {
             dataModelVersion: '1.1',
             envelopeFormat: 'jwt_vc_json-ld',
             signingAlgorithm: 'ES256K',
-            credential: null,
+            credential: openBadgeCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.FAIL,
               TRUSTED_ISSUER: CheckResults.NOT_CHECKED,

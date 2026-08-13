@@ -452,11 +452,11 @@ describe('dual-version verification guardrails', () => {
 
       expect(result).toMatchObject({
         conformance: { status: 'NOT_CHECKED' },
-        credential: null,
         credentialChecks: { UNTAMPERED: CheckResults.FAIL },
         policy: { status: 'NOT_CHECKED' },
         proof: { status: 'FAIL' },
       });
+      expect(result).not.toHaveProperty('credential');
     });
 
     it('maps a VC 2.0 profile failure to the legacy tampering check', async () => {
@@ -474,11 +474,11 @@ describe('dual-version verification guardrails', () => {
 
       expect(result).toMatchObject({
         conformance: { status: 'PASS' },
-        credential: null,
         credentialChecks: { UNTAMPERED: CheckResults.FAIL },
         policy: { status: 'FAIL' },
         proof: { status: 'PASS' },
       });
+      expect(result).not.toHaveProperty('credential');
     });
 
     it('fails a v2 credential before validFrom', async () => {
@@ -546,10 +546,10 @@ describe('dual-version verification guardrails', () => {
       });
       expect(result[0]).toMatchObject({
         conformance: { status: 'FAIL' },
-        credential: null,
         policy: { status: 'NOT_CHECKED' },
         proof: { status: 'PASS' },
       });
+      expect(result[0]).not.toHaveProperty('credential');
     });
 
     it('rejects an unresolved did:jwk kid instead of trusting its header jwk', async () => {
@@ -580,6 +580,7 @@ describe('dual-version verification guardrails', () => {
         UNREVOKED: CheckResults.NOT_CHECKED,
         UNTAMPERED: CheckResults.DATA_INTEGRITY_ERROR,
       });
+      expect(result[0]).not.toHaveProperty('credential');
     });
 
     it('uses canonical v2 validUntil instead of a legacy alias', async () => {

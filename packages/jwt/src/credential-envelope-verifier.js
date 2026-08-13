@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const { omit } = require('lodash/fp');
 const {
   CredentialDataModelVersions,
   CredentialEnvelopeError,
@@ -271,12 +272,9 @@ const buildVerificationResult = (envelope, { conformance, policy, proof }) => {
     signingAlgorithm: envelope.protectedHeader.alg,
   };
 
-  return {
-    ...result,
-    credential: isCredentialVerificationAccepted(result)
-      ? envelope.credential
-      : null,
-  };
+  return isCredentialVerificationAccepted(result)
+    ? result
+    : omit(['credential'], result);
 };
 
 const credentialSubjectIds = (credentialSubject) => {

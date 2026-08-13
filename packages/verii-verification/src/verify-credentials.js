@@ -23,6 +23,7 @@ const {
   join,
   keyBy,
   map,
+  omit,
   partition,
   reduce,
   size,
@@ -96,7 +97,9 @@ const verifyCredentials = async (
       if (data.tamperingCheck !== CheckResults.PASS) {
         return {
           credentialChecks: tamperErrorCheckResults(data.tamperingCheck),
-          credential: data.credential,
+          ...(Object.hasOwn(data, 'credential')
+            ? { credential: data.credential }
+            : {}),
           ...buildFormatMetadata(data),
         };
       }
@@ -457,7 +460,9 @@ const verifyCredentialData = async (data, { keyMap, errors }, context) => {
 };
 
 const failedCredentialData = (data, tamperingCheck) => ({
-  ...data,
+  ...(data.dataModelVersion === CredentialDataModelVersions.V2_0
+    ? omit(['credential'], data)
+    : data),
   signingAlgorithm: data.protectedHeader.alg,
   tamperingCheck,
 });

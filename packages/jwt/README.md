@@ -34,9 +34,9 @@ contradictory and is rejected. Existing `decodeCredentialJwt` and
 
 `verifyCredentialEnvelope` returns separate `proof`, `conformance`, and
 `policy` assessments. Each has a status and typed errors; conformance and
-policy can also contain warnings. A failed assessment returns `credential:
-null`. VC 1.1 retains its legacy proof behavior and reports conformance and
-policy as `NOT_APPLICABLE`.
+policy can also contain warnings. The `credential` property is present only
+when all required assessments pass. VC 1.1 retains its legacy proof behavior
+and reports conformance and policy as `NOT_APPLICABLE`.
 
 Proof verification allows `ES256K`, `ES256`, and `RS256`, checks that the
 resolved JWK type and curve match the protected `alg`, and verifies the

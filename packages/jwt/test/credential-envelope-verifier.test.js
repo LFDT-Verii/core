@@ -101,8 +101,8 @@ const expectFailure = async (promise, assessment, code) => {
       errors: expect.arrayContaining([expect.objectContaining({ code })]),
       status: CredentialVerificationStatuses.FAIL,
     },
-    credential: null,
   });
+  expect(result).not.toHaveProperty('credential');
   return result;
 };
 
