@@ -15,7 +15,7 @@
  *
  */
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
-const { jwtDecode } = require('@verii/jwt');
+const { CredentialEnvelopeFormats, jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
 const { Oidc4vciErrors } = require('../domain');
 const {
@@ -24,7 +24,7 @@ const {
   ExchangeStates,
   ExchangeTypes,
 } = require('../../exchanges');
-const { signVeriiCredentialsFacade } = require('../../credentials');
+const { signVersionedCredentialsFacade } = require('../../credentials');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 
 const createCredential = async (credentialRequestParameters, context) => {
@@ -56,14 +56,16 @@ const createCredential = async (credentialRequestParameters, context) => {
       tenant: context.tenant,
     });
 
-    const { vcJwt, credentialMetadata } = await signVeriiCredentialsFacade(
-      [credential.content],
-      credentialSubjectId,
-      [credential.typeMetadata],
-      [credentialSigningAlgorithm],
-      service,
-      context,
-    );
+    const { issuanceResult, credentialMetadata } =
+      await signVersionedCredentialsFacade({
+        context,
+        credentialContentList: [credential.content],
+        credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+        credentialSigningAlgorithms: [credentialSigningAlgorithm],
+        credentialSubjectId,
+        credentialTypeMetadatas: [credential.typeMetadata],
+        issuerService: service,
+      });
 
     const newExchange = buildExchange(
       service,
@@ -72,14 +74,14 @@ const createCredential = async (credentialRequestParameters, context) => {
     );
     await repos.credentials.updateIssuedCredential(
       credential._id,
-      vcJwt,
+      issuanceResult,
       credentialSubjectId,
       false,
       newExchange,
     );
 
     return {
-      credentials: [{ credential: vcJwt }],
+      credentials: [{ credential: issuanceResult.compact }],
       notification_id: newExchange.id,
     };
   } catch (error) {

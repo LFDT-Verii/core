@@ -16,9 +16,11 @@
 
 import {
   buildVcV2Credential,
+  type CredentialIssuanceResult,
   type VcV2CredentialBuildOptions,
   type VcV2LinkedData,
   type VcV2SchemaDescriptor,
+  type VersionedCredentialIssuingOptions,
 } from '../../types/types';
 
 declare const validBuildOptions: VcV2CredentialBuildOptions;
@@ -39,4 +41,17 @@ export const invalidSchemaDescriptor: VcV2SchemaDescriptor = {
   id: 'https://example.com/schema.json',
   // @ts-expect-error VC 2.0 schema descriptors require one type string.
   type: ['JsonSchema', 'OtherSchema'],
+};
+
+declare const issuanceOptions: VersionedCredentialIssuingOptions;
+declare const issuanceResult: CredentialIssuanceResult;
+
+export const explicitCredentialFormat = issuanceOptions.credentialFormat;
+export const neutralCompact = issuanceResult.compact;
+export const neutralCredentialId = issuanceResult.credentialId;
+
+export const invalidCredentialFormat: VersionedCredentialIssuingOptions = {
+  ...issuanceOptions,
+  // @ts-expect-error New facade callers cannot omit or invent the format.
+  credentialFormat: 'jwt',
 };

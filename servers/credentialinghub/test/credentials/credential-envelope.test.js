@@ -61,6 +61,32 @@ describe('credential envelope persistence metadata', () => {
     });
   });
 
+  it('maps a neutral issuance result without decoding its compact value', () => {
+    const credentialStatus = { id: 'https://example.com/status/1' };
+
+    expect(
+      buildIssuedCredentialEnvelope({
+        compact: 'intentionally-not-decodable',
+        credential: buildCredential({
+          context: 'https://www.w3.org/ns/credentials/v2',
+          credentialStatus,
+        }),
+        credentialId: 'did:test:credential',
+        credentialStatus,
+        dataModelVersion: '2.0',
+        envelopeFormat: 'vc+jwt',
+        signingAlgorithm: 'ES256',
+      }),
+    ).toEqual({
+      credentialDid: 'did:test:credential',
+      credentialStatus,
+      dataModelVersion: '2.0',
+      envelopeFormat: 'vc+jwt',
+      jwtVc: 'intentionally-not-decodable',
+      signingAlgorithm: 'ES256',
+    });
+  });
+
   it('rejects an issued compact credential without a credential id', () => {
     const credential = buildCredential({
       context: 'https://www.w3.org/2018/credentials/v1',

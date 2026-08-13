@@ -5,6 +5,35 @@ export interface CredentialMetadata extends AllocationListEntry {
   publicKey: string;
 }
 
+export type CredentialDataModelVersion = '1.1' | '2.0';
+
+export type CredentialEnvelopeFormat = 'jwt_vc_json-ld' | 'vc+jwt';
+
+export interface CredentialIssuanceResult {
+  compact: string;
+  credential: JsonLdCredential | VcV2Credential;
+  credentialId: string;
+  credentialStatus: LinkedData | LinkedData[];
+  dataModelVersion: CredentialDataModelVersion;
+  envelopeFormat: CredentialEnvelopeFormat;
+  signingAlgorithm: 'ES256K' | 'ES256' | 'RS256';
+}
+
+export interface VersionedCredentialIssuingOptions {
+  context: Context;
+  credentialFormat: CredentialEnvelopeFormat;
+  credentialSigningAlgorithms?: Array<'SECP256K1' | 'ES256' | 'RS256'>;
+  credentialSubjectId?: string;
+  credentialTypesMap: Record<string, CredentialTypeMetadata>;
+  issuer: Issuer;
+  offers: CredentialOffer[];
+}
+
+export interface VersionedCredentialSigningResult {
+  issuanceResult: CredentialIssuanceResult;
+  metadata: CredentialMetadata;
+}
+
 export interface VcV2CredentialBuildOptions {
   contentHash: string;
   context: Context;
@@ -293,3 +322,11 @@ export interface VcV2SchemaDescriptor extends LinkedData {
 export function buildVcV2Credential(
   options: VcV2CredentialBuildOptions,
 ): VcV2Credential;
+
+export function issueVersionedCredentials(
+  options: VersionedCredentialIssuingOptions,
+): Promise<CredentialIssuanceResult[]>;
+
+export function signVersionedCredentials(
+  options: VersionedCredentialIssuingOptions,
+): Promise<VersionedCredentialSigningResult[]>;

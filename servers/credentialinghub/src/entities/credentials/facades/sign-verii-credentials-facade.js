@@ -17,8 +17,9 @@
 
 const {
   mongoAllocationListQueries,
-  signVeriiCredentials,
+  signVersionedCredentials,
 } = require('@verii/verii-issuing');
+const { CredentialEnvelopeFormats } = require('@verii/jwt');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { keyBy } = require('lodash/fp');
 const { buildVeriiIssuer } = require('./build-verii-issuer');
@@ -31,6 +32,31 @@ const signVeriiCredentialsFacade = async (
   issuerService,
   context,
 ) => {
+  const { credentialMetadata, issuanceResult } =
+    await signVersionedCredentialsFacade({
+      context,
+      credentialContentList,
+      credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+      credentialSigningAlgorithms,
+      credentialSubjectId,
+      credentialTypeMetadatas,
+      issuerService,
+    });
+  return {
+    credentialMetadata,
+    vcJwt: issuanceResult?.compact,
+  };
+};
+
+const signVersionedCredentialsFacade = async ({
+  context,
+  credentialContentList,
+  credentialFormat,
+  credentialSigningAlgorithms,
+  credentialSubjectId,
+  credentialTypeMetadatas,
+  issuerService,
+}) => {
   const { tenant } = context;
 
   // eslint-disable-next-line better-mutation/no-mutation
@@ -41,18 +67,22 @@ const signVeriiCredentialsFacade = async (
   // eslint-disable-next-line better-mutation/no-mutation
   context.caoDid = context.tenant.caoDid;
 
-  const result = await signVeriiCredentials(
-    credentialContentList,
-    credentialSubjectId,
-    keyBy('credentialType', credentialTypeMetadatas),
-    buildVeriiIssuer(tenant, issuerService),
-    credentialSigningAlgorithms,
+  const result = await signVersionedCredentials({
     context,
-  );
+    credentialFormat,
+    credentialSigningAlgorithms,
+    credentialSubjectId,
+    credentialTypesMap: keyBy('credentialType', credentialTypeMetadatas),
+    issuer: buildVeriiIssuer(tenant, issuerService),
+    offers: credentialContentList,
+  });
   return {
     credentialMetadata: result?.[0]?.metadata,
-    vcJwt: result?.[0]?.vcJwt,
+    issuanceResult: result?.[0]?.issuanceResult,
   };
 };
 
-module.exports = { signVeriiCredentialsFacade };
+module.exports = {
+  signVeriiCredentialsFacade,
+  signVersionedCredentialsFacade,
+};

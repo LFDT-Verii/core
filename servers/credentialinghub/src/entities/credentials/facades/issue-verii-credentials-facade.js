@@ -16,11 +16,12 @@
  */
 
 const {
+  issueVersionedCredentials,
   mongoAllocationListQueries,
-  issueVeriiCredentials,
 } = require('@verii/verii-issuing');
+const { CredentialEnvelopeFormats } = require('@verii/jwt');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { keyBy } = require('lodash/fp');
+const { keyBy, map } = require('lodash/fp');
 const newError = require('http-errors');
 const { buildVeriiIssuer } = require('./build-verii-issuer');
 
@@ -31,7 +32,26 @@ const issueVeriiCredentialsFacade = async (
   credentialSigningAlgorithms,
   issuerService,
   context,
-) => {
+) =>
+  issueVersionedCredentialsFacade({
+    approvedCredentialsContent,
+    context,
+    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    credentialSigningAlgorithms,
+    credentialSubjectId,
+    credentialTypeMetadatas,
+    issuerService,
+  }).then(map('compact'));
+
+const issueVersionedCredentialsFacade = async ({
+  approvedCredentialsContent,
+  context,
+  credentialFormat,
+  credentialSigningAlgorithms,
+  credentialSubjectId,
+  credentialTypeMetadatas,
+  issuerService,
+}) => {
   const { tenant } = context;
 
   // eslint-disable-next-line better-mutation/no-mutation
@@ -42,14 +62,15 @@ const issueVeriiCredentialsFacade = async (
   // eslint-disable-next-line better-mutation/no-mutation
   context.caoDid = context.tenant.caoDid;
 
-  return issueVeriiCredentials(
-    approvedCredentialsContent,
-    credentialSubjectId,
-    keyBy('credentialType', credentialTypeMetadatas),
-    buildVeriiIssuer(tenant, issuerService),
-    credentialSigningAlgorithms,
+  return issueVersionedCredentials({
     context,
-  ).catch((e) => {
+    credentialFormat,
+    credentialSigningAlgorithms,
+    credentialSubjectId,
+    credentialTypesMap: keyBy('credentialType', credentialTypeMetadatas),
+    issuer: buildVeriiIssuer(tenant, issuerService),
+    offers: approvedCredentialsContent,
+  }).catch((e) => {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':
       case 'identity_issuing_not_permitted':
@@ -61,4 +82,7 @@ const issueVeriiCredentialsFacade = async (
   });
 };
 
-module.exports = { issueVeriiCredentialsFacade };
+module.exports = {
+  issueVeriiCredentialsFacade,
+  issueVersionedCredentialsFacade,
+};

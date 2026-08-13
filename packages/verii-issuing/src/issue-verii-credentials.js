@@ -16,6 +16,7 @@
 
 const { extractCredentialType } = require('@verii/vc-checks');
 const { map } = require('lodash/fp');
+const { CredentialEnvelopeFormats } = require('@verii/jwt');
 const {
   allocateGenericListEntries,
   allocateMetadataListEntries,
@@ -25,7 +26,7 @@ const {
 } = require('./adapters/init-credential-metadata-contract');
 const { createRevocationList } = require('./adapters/create-revocation-list');
 const { getCredentialSigningProfile } = require('./credential-signing-profile');
-const { prepareJwtVcs } = require('./domain/prepare-jwt-vcs');
+const { prepareVersionedCredentials } = require('./domain/prepare-jwt-vcs');
 
 const REVOCATION_LIST_SIZE = 10240;
 const METADATA_LIST_SIZE = 10000;
@@ -50,18 +51,41 @@ const issueVeriiCredentials = async (
   credentialSigningAlgorithms,
   context,
 ) => {
-  const vcs = await signVeriiCredentials(
-    offers,
+  const results = await issueVersionedCredentials({
+    context,
+    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    credentialSigningAlgorithms,
     credentialSubjectId,
     credentialTypesMap,
     issuer,
-    credentialSigningAlgorithms,
-    context,
+    offers,
+  });
+
+  return map('compact', results);
+};
+
+/**
+ * Issues a credential batch in one explicitly selected representation.
+ * @param {object} options versioned issuance options
+ * @param {Context} options.context application context
+ * @param {string} options.credentialFormat explicit credential format
+ * @param {string[]} [options.credentialSigningAlgorithms] resolved algorithms
+ * @param {string} [options.credentialSubjectId] bound credential subject
+ * @param {{[Name: string]: CredentialTypeMetadata}} options.credentialTypesMap credential type metadata
+ * @param {Issuer} options.issuer issuer
+ * @param {CredentialOffer[]} options.offers credential offers
+ * @returns {Promise<object[]>} neutral issuance results in offer order
+ */
+const issueVersionedCredentials = async (options) => {
+  const signedCredentials = await signVersionedCredentials(options);
+
+  await anchorVeriiCredentials(
+    map('metadata', signedCredentials),
+    options.issuer,
+    options.context,
   );
 
-  await anchorVeriiCredentials(map('metadata', vcs), issuer, context);
-
-  return map('vcJwt', vcs);
+  return map('issuanceResult', signedCredentials);
 };
 
 /**
@@ -83,13 +107,52 @@ const signVeriiCredentials = async (
   credentialSigningAlgorithms,
   context,
 ) => {
+  const signedCredentials = await signVersionedCredentials({
+    context,
+    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    credentialSigningAlgorithms,
+    credentialSubjectId,
+    credentialTypesMap,
+    issuer,
+    offers,
+  });
+
+  return signedCredentials.map(({ issuanceResult, metadata }) => ({
+    jsonLdCredential: issuanceResult.credential,
+    metadata,
+    vcJwt: issuanceResult.compact,
+  }));
+};
+
+/**
+ * Prepares and signs an explicitly selected credential representation without
+ * anchoring it.
+ * @param {object} options versioned signing options
+ * @param {Context} options.context application context
+ * @param {string} options.credentialFormat explicit credential format
+ * @param {string[]} [options.credentialSigningAlgorithms] resolved algorithms
+ * @param {string} [options.credentialSubjectId] bound credential subject
+ * @param {{[Name: string]: CredentialTypeMetadata}} options.credentialTypesMap credential type metadata
+ * @param {Issuer} options.issuer issuer
+ * @param {CredentialOffer[]} options.offers credential offers
+ * @returns {Promise<object[]>} signed neutral results and DLT metadata
+ */
+const signVersionedCredentials = async ({
+  context,
+  credentialFormat,
+  credentialSigningAlgorithms,
+  credentialSubjectId,
+  credentialTypesMap,
+  issuer,
+  offers,
+}) => {
+  assertCredentialFormat(credentialFormat);
   const effectiveCredentialSigningAlgorithms =
     resolveEffectiveCredentialSigningAlgorithms(
       offers,
       credentialTypesMap,
       credentialSigningAlgorithms,
     );
-
   const metadataEntries = await allocateMetadataListEntries(
     offers,
     credentialTypesMap,
@@ -126,16 +189,28 @@ const signVeriiCredentials = async (
     await createRevocationList(newRevocationListEntry.listId, issuer, context);
   }
 
-  return prepareJwtVcs(
-    offers,
+  return prepareVersionedCredentials({
+    context,
+    credentialFormat,
+    credentialSigningAlgorithms: effectiveCredentialSigningAlgorithms,
     credentialSubjectId,
+    credentialTypesMap,
     issuer,
     metadataEntries,
+    offers,
     revocationListEntries,
-    credentialTypesMap,
-    effectiveCredentialSigningAlgorithms,
-    context,
-  );
+  });
+};
+
+/**
+ * Validates that one supported format applies to the whole batch.
+ * @param {unknown} credentialFormat credential format candidate
+ * @returns {void}
+ */
+const assertCredentialFormat = (credentialFormat) => {
+  if (!Object.values(CredentialEnvelopeFormats).includes(credentialFormat)) {
+    throw new TypeError('A credential batch must use one supported format');
+  }
 };
 
 /**
@@ -187,5 +262,7 @@ const getNewListEntries = (entries) =>
 module.exports = {
   anchorVeriiCredentials,
   issueVeriiCredentials,
+  issueVersionedCredentials,
   signVeriiCredentials,
+  signVersionedCredentials,
 };

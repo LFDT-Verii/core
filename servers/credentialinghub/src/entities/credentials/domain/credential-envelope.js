@@ -26,14 +26,20 @@ const credentialEnvelopeMetadataKeys = [
   'signingAlgorithm',
 ];
 
-const buildIssuedCredentialEnvelope = (jwtVc) => {
+const buildIssuedCredentialEnvelope = (issuedCredential) => {
+  if (typeof issuedCredential !== 'string') {
+    return buildIssuedCredentialEnvelopeFromResult(issuedCredential);
+  }
+
+  const jwtVc = issuedCredential;
   const envelope = decodeCredentialEnvelope(jwtVc);
   const credentialDid = getCredentialId(envelope);
   const metadata = buildCredentialEnvelopeMetadata(envelope);
 
-  if (typeof credentialDid !== 'string' || credentialDid.length === 0) {
-    throw new Error('Issued credential envelope is missing credential id');
-  }
+  assertNonEmptyString(
+    credentialDid,
+    'Issued credential envelope is missing credential id',
+  );
 
   return {
     credentialDid,
@@ -41,6 +47,60 @@ const buildIssuedCredentialEnvelope = (jwtVc) => {
     jwtVc,
     ...metadata,
   };
+};
+
+const buildIssuedCredentialEnvelopeFromResult = (issuedCredential) => {
+  assertIssuedCredentialResult(issuedCredential);
+  const {
+    compact: jwtVc,
+    credentialId: credentialDid,
+    credentialStatus,
+    dataModelVersion,
+    envelopeFormat,
+    signingAlgorithm,
+  } = issuedCredential;
+
+  return {
+    credentialDid,
+    credentialStatus,
+    dataModelVersion,
+    envelopeFormat,
+    jwtVc,
+    signingAlgorithm,
+  };
+};
+
+const assertIssuedCredentialResult = (issuedCredential) => {
+  const {
+    compact,
+    credentialId,
+    dataModelVersion,
+    envelopeFormat,
+    signingAlgorithm,
+  } = issuedCredential ?? {};
+  assertNonEmptyString(
+    credentialId,
+    'Issued credential envelope is missing credential id',
+  );
+  assertNonEmptyString(
+    compact,
+    'Issued credential envelope is missing compact value',
+  );
+  if (
+    !hasCredentialEnvelopeMetadata({
+      dataModelVersion,
+      envelopeFormat,
+      signingAlgorithm,
+    })
+  ) {
+    throw new Error('Issued credential envelope is missing format metadata');
+  }
+};
+
+const assertNonEmptyString = (value, errorMessage) => {
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new Error(errorMessage);
+  }
 };
 
 const inferCredentialEnvelopeMetadata = (credential) => {
