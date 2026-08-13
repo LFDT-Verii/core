@@ -181,6 +181,7 @@ describe('issuing velocity verifiable credentials', () => {
       credentialTypesMap,
       issuer,
       context,
+      [KeyAlgorithms.SECP256K1, KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256],
     );
 
     expect(credentials.length).toEqual(3);
@@ -203,14 +204,14 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.COSEKEY_AES_256,
+      ALG_TYPE.HEX_AES_256,
       { issuerEntity, caoEntity },
     );
     await verifyCreateMetadataListCall(
       mockCreateCredentialMetadataList.mock.calls[1],
       issuer,
-      mockAddCredentialMetadataEntry.mock.calls[1].arguments[0].listId,
-      ALG_TYPE.HEX_AES_256,
+      mockAddCredentialMetadataEntry.mock.calls[2].arguments[0].listId,
+      ALG_TYPE.COSEKEY_AES_256,
       { issuerEntity, caoEntity },
     );
 
@@ -576,6 +577,7 @@ describe('issuing velocity verifiable credentials', () => {
       credentialTypesMap,
       issuer,
       context,
+      [KeyAlgorithms.SECP256K1, KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256],
     );
 
     expect(credentials.length).toEqual(3);
@@ -621,6 +623,7 @@ describe('issuing velocity verifiable credentials', () => {
       credentialTypesMap,
       issuer,
       context,
+      [KeyAlgorithms.SECP256K1],
     );
 
     expect(credentials).toEqual([expect.any(String)]);
@@ -638,7 +641,7 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.COSEKEY_AES_256,
+      ALG_TYPE.HEX_AES_256,
       { issuerEntity, caoEntity },
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
@@ -678,6 +681,7 @@ describe('issuing velocity verifiable credentials', () => {
       credentialTypesMap,
       issuer,
       context,
+      [KeyAlgorithms.SECP256K1],
     );
 
     expect(credentials).toEqual([expect.any(String)]);
@@ -695,7 +699,7 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.COSEKEY_AES_256,
+      ALG_TYPE.HEX_AES_256,
       { issuerEntity, caoEntity },
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
@@ -814,7 +818,14 @@ const verifyCredentialAndAddEntryExpectations = async (
     }),
     hashOffer(offer),
     caoEntity.did,
-    ALG_TYPE[calcAlgTypeName(credentialTypeMetadata[extractOfferType(offer)])],
+    ALG_TYPE[
+      calcAlgTypeName({
+        ...credentialTypeMetadata[extractOfferType(offer)],
+        defaultSignatureAlgorithm:
+          credentialTypeMetadata[extractOfferType(offer)]
+            .defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1,
+      })
+    ],
   ]);
 
   const { publicKey } = first(credentialMetadataArgs);
