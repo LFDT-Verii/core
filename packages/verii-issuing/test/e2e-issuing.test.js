@@ -35,7 +35,7 @@ const {
 } = require('@verii/metadata-registration/test/helpers/deploy-contracts');
 
 const { nanoid } = require('nanoid');
-const { hexFromJwk } = require('@verii/crypto');
+const { hexFromJwk, KeyAlgorithms } = require('@verii/crypto');
 const { jwtSign, jwtDecode } = require('@verii/jwt');
 const { MongoClient } = require('mongodb');
 const { map } = require('lodash/fp');
@@ -169,7 +169,7 @@ describe('E2E issuing', { timeout: 60000 }, () => {
     });
   });
 
-  it('should create vcs', async () => {
+  it('should create vcs with ES256, RS256, and SECP256K1 metadata', async () => {
     const offers = map(offerFactory, [
       { issuerId: issuerEntity.did }, // default email credential
       {
@@ -209,9 +209,11 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       credentialTypesMap,
       issuer,
       context,
+      [KeyAlgorithms.ES256],
     );
 
     expect(credentials.length).toEqual(offers.length);
+    expect(jwtDecode(credentials[0]).header.alg).toEqual('ES256');
     for (let i = 0; i < credentials.length; i += 1) {
       const jwtVc = jwtDecode(credentials[i]);
 
