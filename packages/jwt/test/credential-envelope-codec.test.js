@@ -131,6 +131,29 @@ describe('credential envelope classification', () => {
     });
   });
 
+  describe('additional top-level legacy JWT claims', () => {
+    for (const { name, topLevelContext } of [
+      { name: 'an empty array', topLevelContext: [] },
+      { name: 'a malformed value', topLevelContext: VC_V1_CONTEXT },
+      { name: 'the VC 2.0 context', topLevelContext: [VC_V2_CONTEXT] },
+    ]) {
+      it(`ignores ${name} as an additional top-level JWT claim`, () => {
+        const compact = compactCredentialFixture(
+          { alg: 'ES256K', typ: 'JWT' },
+          { ...legacyPayload, '@context': topLevelContext },
+        );
+
+        expect(decodeCredentialEnvelope(compact)).toEqual({
+          compact,
+          credential: expectedLegacyCredential,
+          dataModelVersion: CredentialDataModelVersions.V1_1,
+          envelopeFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+          protectedHeader: { alg: 'ES256K', typ: 'JWT' },
+        });
+      });
+    }
+  });
+
   it('rejects a VC 2.0 document nested in the legacy vc claim', () => {
     const compact = compactCredentialFixture(
       { alg: 'ES256', typ: 'vc+jwt' },
@@ -171,6 +194,18 @@ describe('credential envelope classification', () => {
     const compact = compactCredentialFixture(
       { alg: 'ES256', typ: 'vc+jwt' },
       legacyPayload,
+    );
+
+    expectEnvelopeError(
+      () => decodeCredentialEnvelope(compact),
+      CredentialEnvelopeErrorCodes.MIXED_FORMAT,
+    );
+  });
+
+  it('rejects mixed credential and presentation compatibility claims', () => {
+    const compact = compactCredentialFixture(
+      { alg: 'ES256K', typ: 'JWT' },
+      { vc: legacyPayload.vc, vp: {} },
     );
 
     expectEnvelopeError(

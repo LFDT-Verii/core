@@ -126,22 +126,27 @@ const assertDepth = (value, depth = 1) => {
 };
 
 const assertNotMixed = ({
-  directContext,
   hasVcClaim,
   hasVpClaim,
   nestedContext,
   usesV2Type,
 }) => {
-  const directWithCompatibilityClaim =
-    directContext != null && [hasVcClaim, hasVpClaim].includes(true);
-  const nestedWithV2Signal =
-    hasVcClaim &&
-    [usesV2Type, nestedContext === CredentialContexts.V2_0].includes(true);
+  const hasCompatibilityClaim = [hasVcClaim, hasVpClaim].includes(true);
+  const hasConflictingCompatibilityClaims = hasVcClaim && hasVpClaim;
+  const compatibilityClaimWithV2Type = hasCompatibilityClaim && usesV2Type;
+  const nestedWithV2Context =
+    hasVcClaim && nestedContext === CredentialContexts.V2_0;
 
-  if ([directWithCompatibilityClaim, nestedWithV2Signal].includes(true)) {
+  if (
+    [
+      compatibilityClaimWithV2Type,
+      hasConflictingCompatibilityClaims,
+      nestedWithV2Context,
+    ].includes(true)
+  ) {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.MIXED_FORMAT,
-      'Credential envelope contains mixed VC 1.1 and VC 2.0 signals',
+      'Credential envelope contains contradictory format signals',
     );
   }
 };
@@ -155,7 +160,6 @@ const classifyCredential = (payload, protectedHeader) => {
     normalizeProtectedType(protectedHeader.typ) === V2_CREDENTIAL_MEDIA_TYPE;
 
   assertNotMixed({
-    directContext,
     hasVcClaim,
     hasVpClaim,
     nestedContext,
