@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Velocity Team
+ * Copyright 2026 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,10 +12,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
+
+const {
+  CredentialDataModelVersions,
+  CredentialEnvelopeFormats,
+} = require('@verii/jwt');
+
+const Openid4vciCredentialProfile = Object.freeze({
+  context: 'https://www.w3.org/ns/credentials/v2',
+  dataModelVersion: CredentialDataModelVersions.V2_0,
+  envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+  format: 'application/vc+jwt',
+});
+
+const isOpenid4vciCredentialFormat = (format) =>
+  format == null || format === Openid4vciCredentialProfile.format;
+
 module.exports = {
-  ...require('./openid4vci-credential-profile'),
-  ...require('./openid4vci-errors'),
-  ...require('./to-credential-configuration-id'),
+  isOpenid4vciCredentialFormat,
+  Openid4vciCredentialProfile,
 };

@@ -21,6 +21,7 @@ const { Openid4vciIssuer } = require('@openid4vc/openid4vci');
 const {
   Oauth2AuthorizationServer,
   Oauth2ErrorCodes,
+  Oauth2ServerErrorResponseError,
 } = require('@openid4vc/oauth2');
 const { castArray, isEmpty } = require('lodash/fp');
 const {
@@ -42,9 +43,11 @@ const { ServiceCategories } = require('@verii/organizations-registry');
 const { KeyPurposes } = require('@verii/crypto');
 const { getJwkFromDidUri } = require('@verii/did-doc');
 const { jwtVerify, keyAlgorithmToJoseAlg } = require('@verii/jwt');
+const { resolveCredentialSigningAlgorithm } = require('../../tenants/domain');
 const {
-  getCredentialSigningAlgorithmsSupported,
-} = require('../../tenants/domain');
+  isOpenid4vciCredentialFormat,
+  Openid4vciCredentialProfile,
+} = require('../domain');
 
 const openid4vciPlugin = async (fastify) => {
   fastify.decorateRequest(
@@ -181,16 +184,19 @@ const buildIssuer = async (context) => {
       map((credentialMetadata) => [
         toCredentialConfigurationId(credentialMetadata.credentialType),
         {
-          format: 'jwt_vc_json-ld',
+          format: Openid4vciCredentialProfile.format,
           cryptographic_binding_methods_supported: ['did:jwk'],
-          credential_signing_alg_values_supported:
-            getCredentialSigningAlgorithmsSupported({
-              credentialTypeMetadata: credentialMetadata,
-              tenant,
-            }).map(keyAlgorithmToJoseAlg),
+          credential_signing_alg_values_supported: [
+            keyAlgorithmToJoseAlg(
+              resolveCredentialSigningAlgorithm({
+                credentialTypeMetadata: credentialMetadata,
+                tenant,
+              }),
+            ),
+          ],
           credential_definition: {
             '@context': [
-              'https://www.w3.org/2018/credentials/v1',
+              Openid4vciCredentialProfile.context,
               credentialExtensionsContextUrl,
             ],
             type: ['VerifiableCredential', credentialMetadata.credentialType],
@@ -260,6 +266,12 @@ const buildIssuer = async (context) => {
   };
 
   const getCredentialRequest = async (parameters) => {
+    if (!isOpenid4vciCredentialFormat(parameters.format)) {
+      throw new Oauth2ServerErrorResponseError({
+        error: Oauth2ErrorCodes.InvalidCredentialRequest,
+        error_description: `Unsupported credential format ${parameters.format}`,
+      });
+    }
     const credentialRequest = issuer.parseCredentialRequest({
       credentialRequest: {
         credential_identifier: parameters.credential_identifier,

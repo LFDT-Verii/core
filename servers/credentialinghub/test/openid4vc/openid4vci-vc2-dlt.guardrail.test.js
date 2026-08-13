@@ -260,7 +260,7 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
     });
   }
 
-  it('[expected-red] rejects the legacy OpenID credential profile with a stable client error', async () => {
+  it('rejects the legacy OpenID credential profile with a stable client error', async () => {
     const setup = await setupCredential({});
     const proof = await buildProof(setup.holderDid, setup.holderKeyPair);
     const response = await fastify.injectJson({
@@ -277,7 +277,7 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
     expect(response.statusCode).toEqual(400);
     expect(response.json).toEqual({
       error: 'invalid_credential_request',
-      error_description: expect.any(String),
+      error_description: 'Unsupported credential format jwt_vc_json-ld',
     });
   });
 
@@ -301,6 +301,7 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
       headers: { authorization: `Bearer ${setup.authToken}` },
       payload: {
         credential_identifier: setup.credential._id,
+        format: 'application/vc+jwt',
         proofs: { jwt: [proof] },
       },
     });
