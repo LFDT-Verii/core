@@ -14,21 +14,32 @@
  * limitations under the License.
  */
 
-const { jwsVerify, decodeCredentialJwt } = require('@verii/jwt');
+const {
+  decodeCredentialEnvelope,
+  verifyCredentialEnvelope,
+} = require('@verii/jwt');
 const { CheckResults } = require('./check-results');
 
 const checkJwsVcTampering = async (jwt, verificationKey, { log }) => {
   try {
-    await jwsVerify(jwt, verificationKey);
+    await verifyCredentialEnvelope(jwt, verificationKey);
     return CheckResults.PASS;
   } catch (error) {
     log.error(
-      { credentialId: decodeCredentialJwt(jwt).id, verificationKey },
+      { credentialId: safeCredentialId(jwt), verificationKey },
       `jwt tamper check failed: ${error.message}`,
     );
     return verificationKey == null
       ? CheckResults.DATA_INTEGRITY_ERROR
       : CheckResults.FAIL;
+  }
+};
+
+const safeCredentialId = (compact) => {
+  try {
+    return decodeCredentialEnvelope(compact).credential.id;
+  } catch {
+    return undefined;
   }
 };
 

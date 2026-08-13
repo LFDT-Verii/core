@@ -31,7 +31,13 @@ const {
   toLower,
   uniq,
 } = require('lodash/fp');
-const { buildDecodedCredential, jwtDecode } = require('@verii/jwt');
+const {
+  CredentialDataModelVersions,
+  decodeCredentialEnvelope,
+  getCredentialId,
+  getCredentialIssuer,
+  verifyCredentialEnvelope,
+} = require('@verii/jwt');
 const {
   initMetadataRegistry,
   initVerificationCoupon,
@@ -41,7 +47,7 @@ const {
   CheckResults,
   CredentialStatus,
   checkExpiration,
-  checkJwsVcTampering,
+  checkValidity,
   checkCredentialStatus,
   checkIssuerTrust,
   checkHolder,
@@ -51,26 +57,46 @@ const {
 const { mapWithIndex } = require('@verii/common-functions');
 const { resolveDidJwkDocument, toDidUrl } = require('@verii/did-doc');
 
+const MAX_CREDENTIALS_PER_VERIFICATION = 100;
+const MAX_ROUTING_IDENTIFIER_CHARACTERS = 2048;
+
 const verifyCredentials = async (
   { credentials: jwtVcs, expectedHolderDid, relyingParty },
   fetchers,
   context,
 ) => {
+  assertCredentialBatch(jwtVcs);
   const credentialDataList = mapWithIndex(buildCredentialDataFromJwtVc, jwtVcs);
 
-  const [keyRefs, issuerRefs, credentialStatusRefs] = await Promise.all([
-    resolveKeyRefs(credentialDataList, relyingParty, context),
-    resolveIssuerMetadata(credentialDataList, fetchers, context),
-    resolveCredentialStatuses(credentialDataList, context),
-  ]);
+  const keyRefs = await resolveKeyRefs(
+    credentialDataList,
+    relyingParty,
+    context,
+  );
+  const verifiedCredentialDataList = await Promise.all(
+    map(
+      (data) => verifyCredentialData(data, keyRefs, context),
+      credentialDataList,
+    ),
+  );
+  const trustedCredentialDataList = filter(
+    ({ tamperingCheck }) => tamperingCheck === CheckResults.PASS,
+    verifiedCredentialDataList,
+  );
+  const [issuerRefs, credentialStatusRefs] = isEmpty(trustedCredentialDataList)
+    ? [emptyIssuerRefs(), emptyCredentialStatusRefs()]
+    : await Promise.all([
+        resolveIssuerMetadata(trustedCredentialDataList, fetchers, context),
+        resolveCredentialStatuses(trustedCredentialDataList, context),
+      ]);
 
   return Promise.all(
     map(async (data) => {
-      const tamperingCheck = await runTamperingCheck(data, keyRefs, context);
-      if (tamperingCheck !== CheckResults.PASS) {
+      if (data.tamperingCheck !== CheckResults.PASS) {
         return {
-          credentialChecks: tamperErrorCheckResults(tamperingCheck),
+          credentialChecks: tamperErrorCheckResults(data.tamperingCheck),
           credential: data.credential,
+          ...buildFormatMetadata(data),
         };
       }
 
@@ -90,26 +116,72 @@ const verifyCredentials = async (
           context,
         ),
         UNREVOKED: runCredentialStatusCheck(data, credentialStatusRefs),
-        UNEXPIRED: checkExpiration(data.credential),
+        UNEXPIRED: runValidityCheck(data),
       };
 
-      return { credentialChecks, credential: data.credential };
-    }, credentialDataList),
+      return {
+        credentialChecks,
+        credential: data.credential,
+        ...buildFormatMetadata(data),
+      };
+    }, verifiedCredentialDataList),
   );
 };
 
 const buildCredentialDataFromJwtVc = (jwtVc, index) => {
-  const { header, payload } = jwtDecode(jwtVc);
+  const envelope = decodeCredentialEnvelope(jwtVc);
+  const { credential, protectedHeader } = envelope;
+  const issuer = getCredentialIssuer(envelope);
+  assertRoutingIdentifier(credential.id, 'credential id');
+  assertRoutingIdentifier(protectedHeader.kid, 'kid');
   return {
-    id: payload.jti,
+    ...envelope,
+    id: getCredentialId(envelope),
     index,
-    credentialType: extractCredentialType(payload.vc),
-    contentHash: payload.vc.contentHash?.value,
-    issuerId: payload.iss,
-    keyMetadata: header,
+    credentialType: extractCredentialType(credential),
+    contentHash: credential.contentHash?.value,
+    issuerId: issuer?.id ?? issuer,
+    keyMetadata: protectedHeader,
     jwtVc,
-    credential: buildDecodedCredential(payload),
   };
+};
+
+const assertRoutingIdentifier = (value, name) => {
+  if (
+    value != null &&
+    (typeof value !== 'string' ||
+      value.length === 0 ||
+      value.length > MAX_ROUTING_IDENTIFIER_CHARACTERS)
+  ) {
+    throw new TypeError(
+      `credential ${name} must be a bounded non-empty string when present`,
+    );
+  }
+};
+
+const buildFormatMetadata = ({
+  dataModelVersion,
+  envelopeFormat,
+  signingAlgorithm,
+}) => ({ dataModelVersion, envelopeFormat, signingAlgorithm });
+
+const emptyCredentialStatusRefs = () => ({ credentialStatusesMap: {} });
+
+const emptyIssuerRefs = () => ({
+  accreditationVCMap: {},
+  credentialTypeMetadatasMap: {},
+  issuerDidDocumentMap: {},
+});
+
+const assertCredentialBatch = (jwtVcs) => {
+  if (
+    !Array.isArray(jwtVcs) ||
+    jwtVcs.length > MAX_CREDENTIALS_PER_VERIFICATION
+  ) {
+    throw new TypeError(
+      `credentials must contain at most ${MAX_CREDENTIALS_PER_VERIFICATION} compact credentials`,
+    );
+  }
 };
 
 const isIssuerTheSubject = (header) => !isDidVelocityCredential(header);
@@ -277,14 +349,16 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
 const resolveCredentialStatuses = async (credentialData, context) => {
   try {
     const resolveCredentialStatus = await initResolveCredentialStatus(context);
-    const credentialStatuses = await Promise.all(
+    const resolvedStatuses = await Promise.all(
       map(
-        ({ credential }) =>
-          resolveCredentialStatus(credential.credentialStatus),
+        async ({ credential, index }) => ({
+          index,
+          status: await resolveCredentialStatus(credential.credentialStatus),
+        }),
         credentialData,
       ),
     );
-    return { credentialStatuses };
+    return { credentialStatusesMap: keyBy('index', resolvedStatuses) };
   } catch {
     return { errors: { credentialStatusRetrievalError: true } };
   }
@@ -320,25 +394,65 @@ const initResolveCredentialStatus = async (context) => {
   };
 };
 
-const runTamperingCheck = (
-  { jwtVc, keyMetadata },
-  { keyMap, errors },
-  context,
-  // eslint-disable-next-line complexity
-) => {
+const verifyCredentialData = async (data, { keyMap, errors }, context) => {
+  const resolutionFailure = resolutionFailureFrom(errors);
+  if (resolutionFailure != null) {
+    return failedCredentialData(data, resolutionFailure);
+  }
+
+  const verificationKey = getVerificationKey(data, keyMap);
+  if (verificationKey == null) {
+    return failedCredentialData(data, CheckResults.DATA_INTEGRITY_ERROR);
+  }
+
+  try {
+    const verifiedEnvelope = await verifyCredentialEnvelope(
+      data.jwtVc,
+      verificationKey,
+    );
+    return {
+      ...data,
+      ...verifiedEnvelope,
+      credentialType: extractCredentialType(verifiedEnvelope.credential),
+      id: getCredentialId(verifiedEnvelope),
+      issuerId: issuerIdFrom(verifiedEnvelope.credential.issuer),
+      tamperingCheck: CheckResults.PASS,
+    };
+  } catch (error) {
+    context.log.error(
+      {
+        credentialId: data.id,
+        errorCode: error.code,
+      },
+      `credential verification failed: ${error.message}`,
+    );
+    return failedCredentialData(data, CheckResults.FAIL);
+  }
+};
+
+const failedCredentialData = (data, tamperingCheck) => ({
+  ...data,
+  signingAlgorithm: data.protectedHeader.alg,
+  tamperingCheck,
+});
+
+const resolutionFailureFrom = (errors) => {
   if (errors?.vouchersExhausted) {
     return CheckResults.VOUCHER_RESERVE_EXHAUSTED;
   }
-  if (errors?.keyResolutionError) {
-    return CheckResults.DEPENDENCY_RESOLUTION_ERROR;
-  }
-
-  let key = keyMap[toLower(keyMetadata.kid)]?.publicKeyJwk;
-  if (key == null && isIssuerTheSubject(keyMetadata)) {
-    key = keyMetadata.jwk;
-  }
-  return checkJwsVcTampering(jwtVc, key, context);
+  return errors?.keyResolutionError
+    ? CheckResults.DEPENDENCY_RESOLUTION_ERROR
+    : null;
 };
+
+const getVerificationKey = ({ keyMetadata }, keyMap) => {
+  if (keyMetadata.kid != null) {
+    return keyMap[toLower(keyMetadata.kid)]?.publicKeyJwk;
+  }
+  return isIssuerTheSubject(keyMetadata) ? keyMetadata.jwk : null;
+};
+
+const issuerIdFrom = (issuer) => issuer?.id ?? issuer;
 
 const runIssuerTrustCheck = (
   { id, keyMetadata, issuerId, credentialType, credential },
@@ -379,10 +493,18 @@ const runIssuerTrustCheck = (
   return checkIssuerTrust(credential, issuerId, resolvedDeps, context);
 };
 
-const runCredentialStatusCheck = ({ index }, { credentialStatuses, errors }) =>
+const runCredentialStatusCheck = (
+  { index },
+  { credentialStatusesMap, errors },
+) =>
   errors?.credentialStatusRetrievalError
     ? CheckResults.DEPENDENCY_RESOLUTION_ERROR
-    : checkCredentialStatus(credentialStatuses[index]);
+    : checkCredentialStatus(credentialStatusesMap[index]?.status);
+
+const runValidityCheck = ({ credential, dataModelVersion }) =>
+  dataModelVersion === CredentialDataModelVersions.V1_1
+    ? checkExpiration(credential)
+    : checkValidity(credential);
 
 const getVelocityCredentialStatus = (credentialStatus) => {
   if (isArray(credentialStatus)) {

@@ -19,3 +19,11 @@ documents, mixed `vc`/`vp` compatibility claims, `alg: none`, unsupported first
 contexts, malformed compact JWS input, and inputs that exceed its documented
 limits. Existing `decodeCredentialJwt` and `verifyCredentialJwt` exports remain
 available for legacy callers.
+
+`verifyCredentialEnvelope` applies the trust boundary after classification. It
+allows `ES256K`, `ES256`, and `RS256`, requires the resolved JWK type and curve
+to match the protected `alg`, verifies the compact signature, and only then
+returns the normalized credential. The VC 2.0 profile additionally requires
+the exact `typ: vc+jwt` and `cty: vc` headers, a bounded `kid` anchored to the
+credential identifier, valid v2 contexts and required properties, and no
+legacy JWT compatibility claims in the direct payload.

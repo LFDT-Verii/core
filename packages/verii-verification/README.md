@@ -12,7 +12,9 @@ npm install @velocitycareerlabs/verii-verification
 
 ### 1. `verifyCredentials`
 
-Verifies one or more Verifiable Credentials (VCs) in JWT format.
+Verifies one or more compact Verifiable Credentials. The verifier accepts the
+legacy VC 1.1 `jwt_vc_json-ld` envelope and the direct VC 2.0 `vc+jwt`
+envelope, and reports which profile and signing algorithm it verified.
 
 ```ts
 import { verifyCredentials } from '@velocitycareerlabs/verii-verification';
@@ -61,15 +63,18 @@ console.log(verified);
 //   { 
 //     credential: 
 //     { 
-//       ... // The jwt's `payload.vc` value (ie. the unsigned jsonld representation of the VC) 
+//       ... // The normalized, signature-verified VC document
 //     }, 
+//     dataModelVersion: '1.1',
+//     envelopeFormat: 'jwt_vc_json-ld',
+//     signingAlgorithm: 'ES256K',
 //     credentialChecks: {      
 //       UNTAMPERED: 'PASS',
 //       TRUSTED_ISSUER: 'PASS',
 //       TRUSTED_HOLDER: 'PASS',
 //       UNEXPIRED: 'PASS',
 //       UNREVOKED: 'PASS' 
-//     } 
+//     }
 //   },
 //   ...
 // ]

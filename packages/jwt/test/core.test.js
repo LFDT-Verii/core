@@ -489,6 +489,10 @@ describe('JWT Tests', () => {
       const derivedJwk = deriveJwk(jwt, publicKey);
       expect(derivedJwk).toEqual(publicKey);
     });
+    it('should return an explicitly passed RSA JWK', async () => {
+      const rsaPublicKey = { e: 'AQAB', kty: 'RSA', n: 'modulus' };
+      expect(deriveJwk('unused.jwt.value', rsaPublicKey)).toEqual(rsaPublicKey);
+    });
     it('should derive a JWK from deprecated hex input and warn', async () => {
       const emitWarning = mock.method(process, 'emitWarning', () => {});
       const { privateKey, publicKey } = generateKeyPair();

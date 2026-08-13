@@ -19,7 +19,11 @@ const { expect } = require('expect');
 const { get } = require('lodash/fp');
 const { getUnixTime } = require('date-fns/fp');
 const { credentialUnexpired } = require('@verii/sample-data');
-const { generateKeyPair } = require('@verii/crypto');
+const {
+  generateJWAKeyPair,
+  generateKeyPair,
+  KeyAlgorithms,
+} = require('@verii/crypto');
 const { omit } = require('lodash/fp');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const {
@@ -147,6 +151,22 @@ describe('Verifiable Decoder Tests', () => {
       const decoded = await verifyCredentialJwt(
         credentialJwt,
         keyPair.publicKey,
+      );
+
+      expect(decoded).toEqual(credential);
+    });
+
+    it('Should verify an RS256 credential from an RSA JWK', async () => {
+      const rsaKeyPair = generateJWAKeyPair(KeyAlgorithms.RS256);
+      const credentialJwt = await generateCredentialJwt(
+        credential,
+        rsaKeyPair.privateKey,
+        'KEY-ID',
+        KeyAlgorithms.RS256,
+      );
+      const decoded = await verifyCredentialJwt(
+        credentialJwt,
+        rsaKeyPair.publicKey,
       );
 
       expect(decoded).toEqual(credential);

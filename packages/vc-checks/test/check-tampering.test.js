@@ -70,4 +70,16 @@ describe('tampering checks', () => {
 
     expect(result).toEqual(CheckResults.PASS);
   });
+
+  it('should return DATA_INTEGRITY_ERROR when the key is unavailable', async () => {
+    const result = await checkJwsVcTampering(signedCredential, null, context);
+
+    expect(result).toEqual(CheckResults.DATA_INTEGRITY_ERROR);
+  });
+
+  it('should safely report a malformed compact credential', async () => {
+    const result = await checkJwsVcTampering('not-a-jws', null, context);
+
+    expect(result).toEqual(CheckResults.DATA_INTEGRITY_ERROR);
+  });
 });

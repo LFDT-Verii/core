@@ -20,6 +20,7 @@ const {
   buildDecodedPresentation,
 } = require('./credential-envelope-legacy');
 const { decodeCredentialEnvelope } = require('./credential-envelope-codec');
+const { verifyCredentialEnvelope } = require('./credential-envelope-verifier');
 
 const decodeCredentialJwt = (credentialJwt) =>
   decodeCredentialEnvelope(credentialJwt).credential;
@@ -30,10 +31,10 @@ const decodePresentationJwt = (presentationJwt) => {
 };
 
 const verifyCredentialJwt = async (credentialJwt, key) => {
-  const decoded = decodeCredentialEnvelope(credentialJwt);
+  decodeCredentialEnvelope(credentialJwt);
   const jwk = deriveJwk(credentialJwt, key);
-  await jwtVerify(credentialJwt, jwk);
-  return decoded.credential;
+  const verified = await verifyCredentialEnvelope(credentialJwt, jwk);
+  return verified.credential;
 };
 
 const verifyPresentationJwt = async (presentationJwt, key) => {

@@ -64,4 +64,17 @@ describe('holder checks', () => {
 
     expect(result).toEqual(CheckResults.PASS);
   });
+
+  it('Should return PASS when the holder matches a credential subject array', () => {
+    const result = checkHolder(
+      {
+        credentialSubject: [{ id: 'holder-1' }, { id: 'holder-2' }],
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      },
+      'holder-2',
+      context,
+    );
+
+    expect(result).toEqual(CheckResults.PASS);
+  });
 });

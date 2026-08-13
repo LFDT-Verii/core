@@ -346,6 +346,25 @@ describe('dual-version verification guardrails', () => {
         });
       });
     }
+
+    it('preserves legacy expiration-only validity semantics', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        ...baseCredential,
+        issuer: signing.did,
+        validFrom: '2099-01-01T00:00:00.000Z',
+      };
+      const result = await verify(
+        await issueLegacyCredential(credential, signing),
+      );
+
+      expect(result[0].credentialChecks).toEqual(
+        expect.objectContaining({
+          UNEXPIRED: CheckResults.PASS,
+          UNTAMPERED: CheckResults.PASS,
+        }),
+      );
+    });
   });
 
   describe('VC 2.0 desired behavior', () => {
@@ -394,5 +413,212 @@ describe('dual-version verification guardrails', () => {
         ]);
       });
     }
+
+    it('fails a v2 credential before validFrom', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: signing.did,
+        validFrom: '2099-01-01T00:00:00.000Z',
+        credentialSubject: { id: 'did:example:holder' },
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+      const result = await verify(issueV2Credential(credential, signing));
+
+      expect(result[0].credentialChecks).toEqual(
+        expect.objectContaining({
+          UNEXPIRED: CheckResults.FAIL,
+          UNTAMPERED: CheckResults.PASS,
+        }),
+      );
+    });
+
+    it('fails a v2 credential after validUntil', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: signing.did,
+        validFrom: '2020-01-01T00:00:00.000Z',
+        validUntil: '2021-01-01T00:00:00.000Z',
+        credentialSubject: { id: 'did:example:holder' },
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+      const result = await verify(issueV2Credential(credential, signing));
+
+      expect(result[0].credentialChecks).toEqual(
+        expect.objectContaining({
+          UNEXPIRED: CheckResults.FAIL,
+          UNTAMPERED: CheckResults.PASS,
+        }),
+      );
+    });
+
+    it('rejects a v2 did:jwk credential with a different issuer', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: 'did:example:wrong-issuer',
+        validFrom: '2026-01-01T00:00:00.000Z',
+        credentialSubject: { id: 'did:example:holder' },
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+      const result = await verify(issueV2Credential(credential, signing));
+
+      expect(result[0].credentialChecks).toEqual({
+        TRUSTED_HOLDER: CheckResults.NOT_CHECKED,
+        TRUSTED_ISSUER: CheckResults.NOT_CHECKED,
+        UNEXPIRED: CheckResults.NOT_CHECKED,
+        UNREVOKED: CheckResults.NOT_CHECKED,
+        UNTAMPERED: CheckResults.FAIL,
+      });
+    });
+
+    it('rejects an unresolved did:jwk kid instead of trusting its header jwk', async () => {
+      const victim = prepareAlgorithm(algorithms[1]);
+      const attacker = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: victim.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: victim.did,
+        validFrom: '2026-01-01T00:00:00.000Z',
+        credentialSubject: { id: 'did:example:holder' },
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+      const forged = compactSign(credential, attacker.keyPair.privateKey, {
+        alg: attacker.joseAlgorithm,
+        cty: 'vc',
+        jwk: attacker.keyPair.publicKey,
+        kid: `${victim.did}#attacker`,
+        typ: 'vc+jwt',
+      });
+      const result = await verify(forged);
+
+      expect(result[0].credentialChecks).toEqual({
+        TRUSTED_HOLDER: CheckResults.NOT_CHECKED,
+        TRUSTED_ISSUER: CheckResults.NOT_CHECKED,
+        UNEXPIRED: CheckResults.NOT_CHECKED,
+        UNREVOKED: CheckResults.NOT_CHECKED,
+        UNTAMPERED: CheckResults.DATA_INTEGRITY_ERROR,
+      });
+    });
+
+    it('uses canonical v2 validUntil instead of a legacy alias', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: signing.did,
+        validFrom: '2020-01-01T00:00:00.000Z',
+        validUntil: '2021-01-01T00:00:00.000Z',
+        expirationDate: '2099-01-01T00:00:00.000Z',
+        credentialSubject: { id: 'did:example:holder' },
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+      const result = await verify(issueV2Credential(credential, signing));
+
+      expect(result[0].credentialChecks.UNEXPIRED).toEqual(CheckResults.FAIL);
+    });
+
+    it('matches the expected holder within a v2 subject array', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: signing.did,
+        validFrom: '2026-01-01T00:00:00.000Z',
+        credentialSubject: [
+          { id: 'did:example:holder-1' },
+          { id: 'did:example:holder-2' },
+        ],
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+      const result = await verify(
+        issueV2Credential(credential, signing),
+        'did:example:holder-2',
+      );
+
+      expect(result[0].credentialChecks.TRUSTED_HOLDER).toEqual(
+        CheckResults.PASS,
+      );
+    });
+
+    it('does not use unverified content for metadata or status resolution', async () => {
+      fetchers.getCredentialTypeMetadata.mock.resetCalls();
+      fetchers.getOrganizationVerifiedProfile.mock.resetCalls();
+      fetchers.resolveDid.mock.resetCalls();
+      initRevocationRegistry.mock.resetCalls();
+      const signing = prepareAlgorithm(algorithms[0]);
+      const credential = {
+        ...baseCredential,
+        issuer: signing.did,
+      };
+      const signed = await issueLegacyCredential(credential, signing);
+
+      await verify(
+        tamperJwt(signed, {
+          vc: {
+            ...credential,
+            credentialStatus: {
+              id: 'https://attacker.example/status',
+              type: VelocityRevocationListType,
+            },
+            issuer: 'https://attacker.example/issuer',
+            type: ['VerifiableCredential', 'AttackerCredential'],
+          },
+        }),
+      );
+
+      expect(fetchers.getCredentialTypeMetadata.mock.callCount()).toEqual(0);
+      expect(fetchers.getOrganizationVerifiedProfile.mock.callCount()).toEqual(
+        0,
+      );
+      expect(fetchers.resolveDid.mock.callCount()).toEqual(0);
+      expect(initRevocationRegistry.mock.callCount()).toEqual(0);
+    });
+
+    it('bounds the credential batch before envelope parsing', async () => {
+      await expect(
+        verifyCredentials(
+          { credentials: Array.from({ length: 101 }, () => 'not-a-jws') },
+          fetchers,
+          context,
+        ),
+      ).rejects.toThrow('credentials must contain at most 100');
+    });
+
+    it('bounds kid before DID resolution', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: signing.did,
+        validFrom: '2026-01-01T00:00:00.000Z',
+        credentialSubject: { id: 'did:example:holder' },
+      };
+      const compact = issueV2Credential(credential, {
+        ...signing,
+        kid: `did:jwk:${'a'.repeat(2048)}#0`,
+      });
+
+      await expect(verify(compact)).rejects.toThrow(
+        'credential kid must be a bounded non-empty string',
+      );
+    });
+
+    it('preserves the empty verification batch result', async () => {
+      await expect(
+        verifyCredentials({ credentials: [] }, fetchers, context),
+      ).resolves.toEqual([]);
+    });
   });
 });
