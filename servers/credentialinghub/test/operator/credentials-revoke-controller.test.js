@@ -351,6 +351,91 @@ describe('Credential Revocation Test Suite', () => {
     });
   });
 
+  it('should infer envelope metadata for a pre-migration revocation message without backfilling', async () => {
+    const messagingSettings = {
+      webhookUrl: 'https://wallet.example.com/push',
+      authToken: 'push-token-123',
+    };
+    const { tenant: revokingTenant, credential } = await setupRevocationTenant({
+      messagingSettings,
+    });
+    const jwtVc = buildLegacyCredentialCompact(credential);
+    await mongoDb()
+      .collection('credentials')
+      .updateOne({ _id: new ObjectId(credential._id) }, { $set: { jwtVc } });
+    const { nockedWebhook, getBody } = nockWebhook(messagingSettings);
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: `${testUrl}/revoke`,
+      payload: {
+        tenantId: revokingTenant._id,
+        credentialId: credential._id,
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(nockedWebhook.isDone()).toEqual(true);
+    expect(getBody().data).toEqual(
+      expect.objectContaining({
+        dataModelVersion: '1.1',
+        envelopeFormat: 'jwt_vc_json-ld',
+        signingAlgorithm: 'RS256',
+      }),
+    );
+    const dbCredential = await mongoDb()
+      .collection('credentials')
+      .findOne({ _id: new ObjectId(credential._id) });
+    expect(dbCredential).not.toHaveProperty('dataModelVersion');
+    expect(dbCredential).not.toHaveProperty('envelopeFormat');
+    expect(dbCredential).not.toHaveProperty('signingAlgorithm');
+  });
+
+  it('should omit unavailable null envelope metadata from a revocation message without backfilling', async () => {
+    const messagingSettings = {
+      webhookUrl: 'https://wallet.example.com/push',
+      authToken: 'push-token-123',
+    };
+    const { tenant: revokingTenant, credential } = await setupRevocationTenant({
+      messagingSettings,
+    });
+    await mongoDb()
+      .collection('credentials')
+      .updateOne(
+        { _id: new ObjectId(credential._id) },
+        {
+          $set: {
+            dataModelVersion: null,
+            envelopeFormat: null,
+            jwtVc: 'not-a-compact-credential',
+            signingAlgorithm: null,
+          },
+        },
+      );
+    const { nockedWebhook, getBody } = nockWebhook(messagingSettings);
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: `${testUrl}/revoke`,
+      payload: {
+        tenantId: revokingTenant._id,
+        credentialId: credential._id,
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(nockedWebhook.isDone()).toEqual(true);
+    expect(getBody().data).not.toHaveProperty('dataModelVersion');
+    expect(getBody().data).not.toHaveProperty('envelopeFormat');
+    expect(getBody().data).not.toHaveProperty('signingAlgorithm');
+    const dbCredential = await mongoDb()
+      .collection('credentials')
+      .findOne({ _id: new ObjectId(credential._id) });
+    expect(dbCredential).toHaveProperty('dataModelVersion', null);
+    expect(dbCredential).toHaveProperty('envelopeFormat', null);
+    expect(dbCredential).toHaveProperty('signingAlgorithm', null);
+  });
+
   it('should send replacement notification when linked credential is supplied', async () => {
     const messagingSettings = {
       webhookUrl: 'https://wallet.example.com/push',
@@ -600,6 +685,27 @@ describe('Credential Revocation Test Suite', () => {
       ...overrides,
     });
 });
+
+const buildLegacyCredentialCompact = (credential) =>
+  [
+    { alg: 'RS256', typ: 'JWT' },
+    {
+      vc: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        credentialStatus: credential.credentialStatus,
+        credentialSubject: { id: credential.credentialSubjectId },
+        id: credential.did,
+        type: ['VerifiableCredential', ...credential.content.type],
+      },
+    },
+    'signature',
+  ]
+    .map((value) =>
+      Buffer.from(
+        typeof value === 'string' ? value : JSON.stringify(value),
+      ).toString('base64url'),
+    )
+    .join('.');
 
 const buildRevocationUrl = (revokingTenant) =>
   ethUrlParser.build({

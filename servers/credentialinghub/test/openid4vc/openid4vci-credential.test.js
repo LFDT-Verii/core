@@ -393,8 +393,11 @@ describe('openid4vc credential test suite', () => {
           credentialSubjectId: holderDid,
           did: expect.stringMatching(DID_FORMAT),
           credentialStatus: decodedVcs[0].payload.vc.credentialStatus,
+          dataModelVersion: '1.1',
           digestSRI: expect.any(String),
+          envelopeFormat: 'jwt_vc_json-ld',
           jwtVc: response.json.credentials[0].credential,
+          signingAlgorithm: 'ES256K',
           exchange: expectedDbExchange(
             issuerService,
             [ExchangeStates.NEW, ExchangeStates.CREDENTIALS_SIGNED],

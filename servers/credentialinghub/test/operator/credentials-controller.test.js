@@ -34,6 +34,8 @@ const {
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
 const { map, omit } = require('lodash/fp');
+const { generateKeyPair } = require('@verii/crypto');
+const { jwtSign } = require('@verii/jwt');
 const { hashOffer } = require('@verii/verii-issuing');
 const { nanoid } = require('nanoid');
 const { applyOverrides } = require('@verii/common-functions');
@@ -931,6 +933,92 @@ describe('Credentials Test suite', () => {
       });
     });
 
+    it('should infer envelope metadata when fetching a pre-migration issued credential', async () => {
+      const credentialDid = `did:test:${nanoid()}`;
+      const jwtVc = await buildLegacyCredentialCompact(credentialDid);
+      const credential = await persistCredential({
+        tenant,
+        depot,
+        acceptedAt: new Date(),
+        did: credentialDid,
+        jwtVc,
+      });
+      await mongoDb()
+        .collection('credentials')
+        .updateOne(
+          { _id: new ObjectId(credential._id) },
+          {
+            $set: {
+              dataModelVersion: null,
+              envelopeFormat: null,
+              signingAlgorithm: null,
+            },
+          },
+        );
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${testUrl}/get?tenantId=${tenant._id}&credentialId=${credential._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        requestId: expect.any(String),
+        credentials: [
+          expectedResponseCredential(credential, depot, {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
+          }),
+        ],
+      });
+      const dbCredential = await mongoDb()
+        .collection('credentials')
+        .findOne({ _id: new ObjectId(credential._id) });
+      expect(dbCredential).toHaveProperty('dataModelVersion', null);
+      expect(dbCredential).toHaveProperty('envelopeFormat', null);
+      expect(dbCredential).toHaveProperty('signingAlgorithm', null);
+    });
+
+    it('should keep a pre-migration credential fetchable when compact data is invalid', async () => {
+      const credential = await persistCredential({
+        tenant,
+        depot,
+        acceptedAt: new Date(),
+        did: `did:test:${nanoid()}`,
+        jwtVc: 'not-a-compact-credential',
+      });
+      await mongoDb()
+        .collection('credentials')
+        .updateOne(
+          { _id: new ObjectId(credential._id) },
+          {
+            $set: {
+              dataModelVersion: null,
+              envelopeFormat: null,
+              signingAlgorithm: null,
+            },
+          },
+        );
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${testUrl}/get?tenantId=${tenant._id}&credentialId=${credential._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        requestId: expect.any(String),
+        credentials: [expectedResponseCredential(credential, depot)],
+      });
+      const dbCredential = await mongoDb()
+        .collection('credentials')
+        .findOne({ _id: new ObjectId(credential._id) });
+      expect(dbCredential).toHaveProperty('dataModelVersion', null);
+      expect(dbCredential).toHaveProperty('envelopeFormat', null);
+      expect(dbCredential).toHaveProperty('signingAlgorithm', null);
+    });
+
     it('should 200 with no credentials when credentialId not matched', async () => {
       await persistCredential({ tenant, depot });
       await persistCredential({ tenant, depot });
@@ -1026,6 +1114,23 @@ describe('Credentials Test suite', () => {
     });
   });
 });
+
+const buildLegacyCredentialCompact = async (credentialDid) => {
+  const keyPair = generateKeyPair({ format: 'jwk' });
+
+  return jwtSign(
+    {
+      vc: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        credentialSubject: { id: 'did:test:holder' },
+        id: credentialDid,
+        type: ['VerifiableCredential', 'Employment'],
+      },
+    },
+    keyPair.privateKey,
+    { alg: 'ES256K' },
+  );
+};
 
 const expectedResponseCredential = (credential, depot, overrides) =>
   expectedCredential(
