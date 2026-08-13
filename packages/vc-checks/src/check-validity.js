@@ -31,7 +31,11 @@ const isAfter = (date, time) => date != null && Date.parse(date) > time;
 
 const isBefore = (date, time) => date != null && Date.parse(date) < time;
 
+const isInvalidCurrentTime = (validFrom, validUntil, now) =>
+  (validFrom != null || validUntil != null) && !Number.isFinite(now);
+
 const isInvalidValidityInterval = (validFrom, validUntil, now) =>
+  isInvalidCurrentTime(validFrom, validUntil, now) ||
   !isParseable(validFrom) ||
   !isParseable(validUntil) ||
   isAfter(validFrom, now) ||

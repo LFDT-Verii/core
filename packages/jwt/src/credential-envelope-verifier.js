@@ -375,7 +375,7 @@ const headerWarnings = (protectedHeader) => {
     );
   } else if (
     typeof typ === 'string' &&
-    typ !== CredentialEnvelopeFormats.VC_JWT
+    typ.toLowerCase() !== CredentialEnvelopeFormats.VC_JWT
   ) {
     warnings.push(
       verificationIssue(

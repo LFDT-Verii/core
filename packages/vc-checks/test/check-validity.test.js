@@ -73,6 +73,15 @@ describe('checkValidity', () => {
 
   it('is not applicable without either validity bound', () => {
     expect(checkValidity({}, now)).toEqual(CheckResults.NOT_APPLICABLE);
+    expect(checkValidity({}, Number.NaN)).toEqual(CheckResults.NOT_APPLICABLE);
+  });
+
+  it('fails closed for non-finite current times', () => {
+    for (const currentTime of [Number.NaN, Infinity, -Infinity]) {
+      expect(
+        checkValidity({ validFrom: '2026-08-13T00:00:00.000Z' }, currentTime),
+      ).toEqual(CheckResults.FAIL);
+    }
   });
 
   it('fails closed for unparseable validity bounds', () => {

@@ -209,6 +209,7 @@ describe('credential envelope verifier', () => {
   }
 
   for (const [name, headerOverrides, warningCode] of [
+    ['a case-insensitive typ', { typ: 'VC+JWT' }, undefined],
     [
       'an expanded typ',
       { typ: 'application/vc+jwt' },
