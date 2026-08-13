@@ -18,6 +18,7 @@ const { expect } = require('expect');
 
 const { set, flow } = require('lodash/fp');
 const { credentialUnexpired } = require('@verii/sample-data');
+const { CredentialDataModelVersions } = require('@verii/jwt');
 const console = require('console');
 const { VeriiProtocolVersions } = require('../src/verii-protocol-versions');
 const { checkHolder } = require('../src/check-holder');
@@ -30,6 +31,7 @@ describe('holder checks', () => {
 
   it('Should return FAIL when presentation issuer is not the credential subject id', async () => {
     const result = checkHolder(
+      CredentialDataModelVersions.V1_1,
       flow(
         set('credentialSubject.id', 'not-match'),
         set('vnfProtocolVersion', VeriiProtocolVersions.PROTOCOL_VERSION_2),
@@ -42,11 +44,36 @@ describe('holder checks', () => {
   });
 
   it('Should return NOT_APPLICABLE when vnf protocol version is less than 2', async () => {
-    const result1 = checkHolder({}, '', context);
-    const result2 = checkHolder({ vnfProtocolVersion: 0 }, '', context);
-    const result3 = checkHolder({ vnfProtocolVersion: null }, '', context);
-    const result4 = checkHolder({ vnfProtocolVersion: 1.9 }, '', context);
-    const result5 = checkHolder({ vnfProtocolVersion: 2 }, '', context);
+    const result1 = checkHolder(
+      CredentialDataModelVersions.V1_1,
+      {},
+      '',
+      context,
+    );
+    const result2 = checkHolder(
+      CredentialDataModelVersions.V1_1,
+      { vnfProtocolVersion: 0 },
+      '',
+      context,
+    );
+    const result3 = checkHolder(
+      CredentialDataModelVersions.V1_1,
+      { vnfProtocolVersion: null },
+      '',
+      context,
+    );
+    const result4 = checkHolder(
+      CredentialDataModelVersions.V1_1,
+      { vnfProtocolVersion: 1.9 },
+      '',
+      context,
+    );
+    const result5 = checkHolder(
+      CredentialDataModelVersions.V1_1,
+      { vnfProtocolVersion: 2 },
+      '',
+      context,
+    );
     expect(result1).toEqual(CheckResults.NOT_APPLICABLE);
     expect(result2).toEqual(CheckResults.NOT_APPLICABLE);
     expect(result3).toEqual(CheckResults.NOT_APPLICABLE);
@@ -60,18 +87,45 @@ describe('holder checks', () => {
       set('vnfProtocolVersion', VeriiProtocolVersions.PROTOCOL_VERSION_2),
     )(credentialUnexpired);
     expect(decodedCredential.credentialSubject.id).toEqual('match');
-    const result = checkHolder(decodedCredential, 'match', context);
+    const result = checkHolder(
+      CredentialDataModelVersions.V1_1,
+      decodedCredential,
+      'match',
+      context,
+    );
 
     expect(result).toEqual(CheckResults.PASS);
   });
 
   it('Should return PASS when the holder matches a credential subject array', () => {
     const result = checkHolder(
+      CredentialDataModelVersions.V2_0,
       {
         credentialSubject: [{ id: 'holder-1' }, { id: 'holder-2' }],
-        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
       },
       'holder-2',
+      context,
+    );
+
+    expect(result).toEqual(CheckResults.PASS);
+  });
+
+  it('Should return FAIL for a wrong VC 2.0 holder without a protocol version', () => {
+    const result = checkHolder(
+      CredentialDataModelVersions.V2_0,
+      { credentialSubject: { id: 'holder-1' } },
+      'holder-2',
+      context,
+    );
+
+    expect(result).toEqual(CheckResults.FAIL);
+  });
+
+  it('Should return PASS for a matching VC 2.0 holder without a protocol version', () => {
+    const result = checkHolder(
+      CredentialDataModelVersions.V2_0,
+      { credentialSubject: { id: 'holder-1' } },
+      'holder-1',
       context,
     );
 

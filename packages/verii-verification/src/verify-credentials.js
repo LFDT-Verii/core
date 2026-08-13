@@ -115,6 +115,7 @@ const verifyCredentials = async (
           context,
         ),
         TRUSTED_HOLDER: checkHolder(
+          data.dataModelVersion,
           data.credential,
           expectedHolderDid,
           context,

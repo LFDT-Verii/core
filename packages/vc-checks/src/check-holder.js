@@ -15,14 +15,20 @@
  */
 
 const { VeriiProtocolVersions } = require('./verii-protocol-versions');
+const { CredentialDataModelVersions } = require('@verii/jwt');
 const { CheckResults } = require('./check-results');
 
-const checkHolder = (credential, expectedHolderDid, { log }) => {
+const checkHolder = (
+  dataModelVersion,
+  credential,
+  expectedHolderDid,
+  { log },
+) => {
   const {
     vnfProtocolVersion = VeriiProtocolVersions.PROTOCOL_VERSION_1,
     credentialSubject,
   } = credential;
-  if (vnfProtocolVersion < VeriiProtocolVersions.PROTOCOL_VERSION_2) {
+  if (!isHolderCheckRequired(dataModelVersion, vnfProtocolVersion)) {
     return CheckResults.NOT_APPLICABLE;
   }
 
@@ -39,6 +45,10 @@ const checkHolder = (credential, expectedHolderDid, { log }) => {
   }
   return CheckResults.PASS;
 };
+
+const isHolderCheckRequired = (dataModelVersion, vnfProtocolVersion) =>
+  dataModelVersion === CredentialDataModelVersions.V2_0 ||
+  vnfProtocolVersion >= VeriiProtocolVersions.PROTOCOL_VERSION_2;
 
 const subjectIdsFrom = (credentialSubject) =>
   (Array.isArray(credentialSubject)

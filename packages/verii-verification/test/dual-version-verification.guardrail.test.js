@@ -613,7 +613,6 @@ describe('dual-version verification guardrails', () => {
           { id: 'did:example:holder-1' },
           { id: 'did:example:holder-2' },
         ],
-        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
       };
       const result = await verify(
         issueV2Credential(credential, signing),
@@ -622,6 +621,26 @@ describe('dual-version verification guardrails', () => {
 
       expect(result[0].credentialChecks.TRUSTED_HOLDER).toEqual(
         CheckResults.PASS,
+      );
+    });
+
+    it('rejects a wrong holder when v2 omits the Velocity protocol version', async () => {
+      const signing = prepareAlgorithm(algorithms[1]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: signing.did,
+        validFrom: '2026-01-01T00:00:00.000Z',
+        credentialSubject: { id: 'did:example:holder-1' },
+      };
+      const result = await verify(
+        issueV2Credential(credential, signing),
+        'did:example:holder-2',
+      );
+
+      expect(result[0].credentialChecks.TRUSTED_HOLDER).toEqual(
+        CheckResults.FAIL,
       );
     });
 
