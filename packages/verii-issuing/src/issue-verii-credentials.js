@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const { extractCredentialType } = require('@verii/vc-checks');
 const { map } = require('lodash/fp');
 const {
   allocateGenericListEntries,
@@ -82,16 +83,19 @@ const signVeriiCredentials = async (
   credentialSigningAlgorithms,
   context,
 ) => {
-  credentialSigningAlgorithms
-    ?.filter((algorithm) => algorithm != null)
-    .forEach(getCredentialSigningProfile);
+  const effectiveCredentialSigningAlgorithms =
+    resolveEffectiveCredentialSigningAlgorithms(
+      offers,
+      credentialTypesMap,
+      credentialSigningAlgorithms,
+    );
 
   const metadataEntries = await allocateMetadataListEntries(
     offers,
     credentialTypesMap,
     issuer,
     METADATA_LIST_SIZE,
-    credentialSigningAlgorithms,
+    effectiveCredentialSigningAlgorithms,
     context,
   );
   const newMetadataListEntries = getNewListEntries(metadataEntries);
@@ -129,10 +133,35 @@ const signVeriiCredentials = async (
     metadataEntries,
     revocationListEntries,
     credentialTypesMap,
-    credentialSigningAlgorithms,
+    effectiveCredentialSigningAlgorithms,
     context,
   );
 };
+
+/**
+ * Resolves and validates the effective signing algorithm for every offer.
+ * @param {CredentialOffer[]} offers array of offers
+ * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
+ * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @returns {(string | undefined)[]} the effective algorithms in offer order
+ */
+const resolveEffectiveCredentialSigningAlgorithms = (
+  offers,
+  credentialTypesMap,
+  credentialSigningAlgorithms,
+) =>
+  offers.map((offer, index) => {
+    const credentialType = extractCredentialType(offer);
+    const algorithm =
+      credentialSigningAlgorithms?.[index] ??
+      credentialTypesMap?.[credentialType]?.defaultSignatureAlgorithm;
+
+    if (algorithm != null) {
+      getCredentialSigningProfile(algorithm);
+    }
+
+    return algorithm;
+  });
 
 /**
  * Anchors prepared verifiable credentials to the blockchain using their credential metadata.
