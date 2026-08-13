@@ -150,26 +150,16 @@ const anchorVeriiCredentials = async (credentialMetadatas, issuer, context) => {
   );
 };
 
-const anchorCredentialMetadata = async (
-  metadata,
-  addEntry,
-  readEntry,
-  attempt = 1,
-) => {
-  try {
-    await addEntry(metadata);
+const anchorCredentialMetadata = async (metadata, addEntry, readEntry) => {
+  await retryTransientOperation(() => addEntry(metadata));
+  await retryTransientOperation(async () => {
     const anchoredKey = await readEntry(metadata);
     if (!isAnchoredKeyValid(anchoredKey, metadata)) {
       throw new Error(
         `Credential metadata read-back does not match ${metadata.credentialId}`,
       );
     }
-  } catch (error) {
-    if (attempt >= 2 || error.errorCode != null) {
-      throw error;
-    }
-    return anchorCredentialMetadata(metadata, addEntry, readEntry, attempt + 1);
-  }
+  });
   return undefined;
 };
 
@@ -199,6 +189,17 @@ const publicKeysMatch = (anchoredKey, signingKey) => {
   return [anchoredKey.n === signingKey.n, anchoredKey.e === signingKey.e].every(
     Boolean,
   );
+};
+
+const retryTransientOperation = async (operation, attempt = 1) => {
+  try {
+    return await operation();
+  } catch (error) {
+    if (attempt >= 2 || error.errorCode != null) {
+      throw error;
+    }
+    return retryTransientOperation(operation, attempt + 1);
+  }
 };
 
 /**

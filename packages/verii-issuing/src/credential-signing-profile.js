@@ -20,11 +20,9 @@ const {
   createPublicKey,
 } = require('node:crypto');
 const { KeyAlgorithms } = require('@verii/crypto');
-const { ALG_TYPE } = require('@verii/metadata-registration');
 
 const CredentialSigningProfiles = Object.freeze({
   ES256K: Object.freeze({
-    algType: ALG_TYPE.HEX_AES_256,
     algTypeName: 'HEX_AES_256',
     curve: 'secp256k1',
     joseAlgorithm: 'ES256K',
@@ -32,7 +30,6 @@ const CredentialSigningProfiles = Object.freeze({
     keyType: 'EC',
   }),
   ES256: Object.freeze({
-    algType: ALG_TYPE.COSEKEY_AES_256,
     algTypeName: 'COSEKEY_AES_256',
     curve: 'P-256',
     joseAlgorithm: 'ES256',
@@ -40,7 +37,6 @@ const CredentialSigningProfiles = Object.freeze({
     keyType: 'EC',
   }),
   RS256: Object.freeze({
-    algType: ALG_TYPE.COSEKEY_AES_256,
     algTypeName: 'COSEKEY_AES_256',
     joseAlgorithm: 'RS256',
     keyAlgorithm: KeyAlgorithms.RS256,
@@ -53,6 +49,7 @@ const CredentialSigningAlgorithms = Object.freeze([
   KeyAlgorithms.ES256,
   KeyAlgorithms.RS256,
 ]);
+const ResolvedCredentialSigningProfiles = new Map();
 
 const assertCredentialSigningKeyPair = (keyPair, algorithm) => {
   const profile = getCredentialSigningProfile(algorithm);
@@ -72,11 +69,30 @@ const getCredentialSigningProfile = (algorithm) => {
       `Credential signing algorithm is not supported: ${algorithm}`,
     );
   }
-  return profile;
+  return resolveAlgType(profile);
 };
 
 const normalizeCredentialSigningAlgorithm = (algorithm) =>
   algorithm === KeyAlgorithms.SECP256K1 ? 'ES256K' : algorithm;
+
+const resolveAlgType = (profile) => {
+  const resolvedProfile = ResolvedCredentialSigningProfiles.get(
+    profile.joseAlgorithm,
+  );
+  if (resolvedProfile != null) {
+    return resolvedProfile;
+  }
+  const { ALG_TYPE } = require('@verii/metadata-registration');
+  const profileWithAlgType = Object.freeze({
+    ...profile,
+    algType: ALG_TYPE[profile.algTypeName],
+  });
+  ResolvedCredentialSigningProfiles.set(
+    profile.joseAlgorithm,
+    profileWithAlgType,
+  );
+  return profileWithAlgType;
+};
 
 const derivePublicJwk = (privateKey, profile) => {
   if (profile.keyType === 'EC') {

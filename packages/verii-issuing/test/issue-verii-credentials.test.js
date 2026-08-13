@@ -120,6 +120,9 @@ describe('issuing velocity verifiable credentials', () => {
     mockCreateCredentialMetadataList.mock.resetCalls();
     mockIsFreeCredentialType.mock.resetCalls();
     mockResolveDidDocument.mock.resetCalls();
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
     mockIsFreeCredentialType.mock.mockImplementation(() =>
       Promise.resolve(false),
     );
@@ -284,6 +287,50 @@ describe('issuing velocity verifiable credentials', () => {
     );
   });
 
+  it('retries a transient read-back without replaying the anchor write', async () => {
+    let readAttempts = 0;
+    let wasAdded = false;
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() => {
+      if (wasAdded) {
+        const error = new Error('Index already used');
+        error.errorCode = 'INVALID_ARGUMENT';
+        return Promise.reject(error);
+      }
+      wasAdded = true;
+      return Promise.resolve(true);
+    });
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) => {
+      readAttempts += 1;
+      if (readAttempts === 1) {
+        return Promise.reject(new Error('temporary read-back failure'));
+      }
+      const { publicKey } =
+        mockAddCredentialMetadataEntry.mock.calls[0].arguments[0];
+      return Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      });
+    });
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        context,
+        ['ES256'],
+      ),
+    ).resolves.toEqual([expect.any(String)]);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(2);
+  });
+
   it('requires supported anchor read-back to match the signing key', async () => {
     mockIsFreeCredentialType.mock.mockImplementation(() =>
       Promise.resolve(true),
@@ -394,7 +441,8 @@ describe('issuing velocity verifiable credentials', () => {
         ['ES256'],
       ),
     ).rejects.toThrow('Credential metadata read-back does not match');
-    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(2);
   });
 
   it('rejects a supported anchor read-back with a different key type', async () => {
@@ -421,7 +469,8 @@ describe('issuing velocity verifiable credentials', () => {
         ['ES256'],
       ),
     ).rejects.toThrow('Credential metadata read-back does not match');
-    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(2);
   });
 
   it('rejects a supported anchor read-back resolution error', async () => {
@@ -444,7 +493,8 @@ describe('issuing velocity verifiable credentials', () => {
         ['ES256'],
       ),
     ).rejects.toThrow('Credential metadata could not be read');
-    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(2);
   });
 
   it('should create vcs with context in credentialSubject (allocation lists exists)', async () => {
