@@ -61,7 +61,6 @@ const CredentialEnvelopeLimits = Object.freeze({
   MAX_SIGNATURE_BYTES: 16384,
 });
 
-const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/u;
 const LEGACY_CREDENTIAL_MEDIA_TYPE = 'application/jwt';
 const V2_CREDENTIAL_MEDIA_TYPE = 'application/vc+jwt';
 
@@ -72,20 +71,15 @@ const V2_CREDENTIAL_MEDIA_TYPE = 'application/vc+jwt';
  */
 const decodeCredentialEnvelope = (compact) => {
   const { payload, protectedHeader } = parseCompactJws(compact);
-  const { dataModelVersion, envelopeFormat } = classifyCredential(
-    payload,
-    protectedHeader,
-  );
-  const credential =
-    dataModelVersion === CredentialDataModelVersions.V1_1
-      ? buildDecodedCredential(payload)
-      : payload;
+  const classification = classifyCredential(payload, protectedHeader);
 
   return {
     compact,
-    credential,
-    dataModelVersion,
-    envelopeFormat,
+    credential:
+      classification.dataModelVersion === CredentialDataModelVersions.V1_1
+        ? buildDecodedCredential(payload)
+        : payload,
+    ...classification,
     protectedHeader,
   };
 };
@@ -107,55 +101,141 @@ const getCredentialValidity = (value) => {
   const credential = credentialFrom(value) || {};
 
   return {
-    validFrom: credential.validFrom ?? credential.issuanceDate,
-    validUntil: credential.validUntil ?? credential.expirationDate,
+    validFrom: firstDefined(credential.validFrom, credential.issuanceDate),
+    validUntil: firstDefined(credential.validUntil, credential.expirationDate),
   };
 };
 
-const parseCompactJws = (compact) => {
-  assertCompactJws(compact);
+const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/u;
 
-  const segments = compact.split('.');
-  if (segments.length !== 3) {
+const assertDepth = (value, depth = 1) => {
+  if (depth > CredentialEnvelopeLimits.MAX_JSON_DEPTH) {
     throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.COMPACT_JWS_INVALID,
-      'Credential envelope must contain exactly three compact JWS segments',
+      CredentialEnvelopeErrorCodes.JSON_DEPTH_EXCEEDED,
+      `Credential envelope JSON exceeds maximum depth ${CredentialEnvelopeLimits.MAX_JSON_DEPTH}`,
     );
   }
 
-  const [protectedHeaderSegment, payloadSegment, signatureSegment] = segments;
-  const protectedHeader = decodeJsonSegment(
-    protectedHeaderSegment,
-    'protected header',
-    CredentialEnvelopeLimits.MAX_PROTECTED_HEADER_BYTES,
-  );
-  assertSupportedAlgorithm(protectedHeader);
+  if (value == null || typeof value !== 'object') {
+    return;
+  }
 
-  const payload = decodeJsonSegment(
-    payloadSegment,
-    'payload',
-    CredentialEnvelopeLimits.MAX_PAYLOAD_BYTES,
-  );
-  decodeSegment(
-    signatureSegment,
-    'signature',
-    CredentialEnvelopeLimits.MAX_SIGNATURE_BYTES,
-  );
-
-  return { payload, protectedHeader };
+  for (const nestedValue of Object.values(value)) {
+    assertDepth(nestedValue, depth + 1);
+  }
 };
 
-const assertCompactJws = (compact) => {
+const assertNotMixed = ({
+  hasVcClaim,
+  hasVpClaim,
+  nestedContext,
+  usesV2Type,
+}) => {
+  const hasCompatibilityClaim = hasVcClaim || hasVpClaim;
+  const hasConflictingCompatibilityClaims = hasVcClaim && hasVpClaim;
+  const compatibilityClaimWithV2Type = hasCompatibilityClaim && usesV2Type;
+  const nestedWithV2Context =
+    hasVcClaim && nestedContext === CredentialContexts.V2_0;
+
   if (
-    typeof compact !== 'string' ||
-    compact.length > CredentialEnvelopeLimits.MAX_COMPACT_CHARACTERS
+    hasMixedFormat(
+      compatibilityClaimWithV2Type,
+      hasConflictingCompatibilityClaims,
+      nestedWithV2Context,
+    )
   ) {
     throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.COMPACT_JWS_INVALID,
-      'Credential envelope must be a bounded compact JWS string',
+      CredentialEnvelopeErrorCodes.MIXED_FORMAT,
+      'Credential envelope contains contradictory format signals',
     );
   }
 };
+
+const hasMixedFormat = (
+  compatibilityClaimWithV2Type,
+  hasConflictingCompatibilityClaims,
+  nestedWithV2Context,
+) =>
+  compatibilityClaimWithV2Type ||
+  hasConflictingCompatibilityClaims ||
+  nestedWithV2Context;
+
+const classifyCredential = (payload, protectedHeader) => {
+  const directContext = firstContext(payload);
+  const hasVcClaim = Object.hasOwn(payload, 'vc');
+  const hasVpClaim = Object.hasOwn(payload, 'vp');
+  const nestedContext = firstContext(payload.vc);
+  const usesV2Type =
+    normalizeProtectedType(protectedHeader.typ) === V2_CREDENTIAL_MEDIA_TYPE;
+
+  assertNotMixed({
+    hasVcClaim,
+    hasVpClaim,
+    nestedContext,
+    usesV2Type,
+  });
+
+  if (hasVpClaim) {
+    throw new CredentialEnvelopeError(
+      CredentialEnvelopeErrorCodes.UNSUPPORTED_FORMAT,
+      'Credential envelope payload contains a presentation claim',
+    );
+  }
+
+  if (hasVcClaim) {
+    return classifyNestedCredential(
+      payload.vc,
+      nestedContext,
+      protectedHeader.typ,
+    );
+  }
+
+  return classifyDirectCredential(payload, directContext, usesV2Type);
+};
+
+const classifyDirectCredential = (payload, directContext, usesV2Type) => {
+  assertSupportedContext(directContext);
+
+  if (directContext === CredentialContexts.V1_1) {
+    throw new CredentialEnvelopeError(
+      CredentialEnvelopeErrorCodes.UNSUPPORTED_FORMAT,
+      'A VC 1.1 document must use the vc compatibility claim',
+    );
+  }
+
+  if (!hasCredentialType(payload.type)) {
+    throw new CredentialEnvelopeError(
+      CredentialEnvelopeErrorCodes.CREDENTIAL_TYPE_INVALID,
+      'A direct VC 2.0 document requires type VerifiableCredential',
+    );
+  }
+
+  if (!usesV2Type) {
+    throw new CredentialEnvelopeError(
+      CredentialEnvelopeErrorCodes.WRONG_TYPE,
+      'A direct VC 2.0 document requires typ vc+jwt',
+    );
+  }
+
+  return {
+    dataModelVersion: CredentialDataModelVersions.V2_0,
+    envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+  };
+};
+
+const classifyNestedCredential = (credential, nestedContext, protectedType) => {
+  assertJsonObject(credential, 'vc claim');
+  assertNestedCredentialContext(credential, nestedContext);
+  assertLegacyProtectedType(protectedType);
+
+  return {
+    dataModelVersion: CredentialDataModelVersions.V1_1,
+    envelopeFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+  };
+};
+
+const credentialFrom = (value) =>
+  isDecodedCredentialEnvelope(value) ? value.credential : value;
 
 const decodeJsonSegment = (segment, name, maximumBytes) => {
   const decoded = decodeSegment(segment, name, maximumBytes);
@@ -223,29 +303,88 @@ const assertDecodedSize = (decoded, name, maximumBytes) => {
   }
 };
 
-const assertJsonObject = (value, name) => {
-  if (!isJsonObject(value)) {
-    throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.JSON_NOT_OBJECT,
-      `Credential envelope ${name} must be a JSON object`,
-    );
+const firstContext = (value) =>
+  isJsonObject(value) && Array.isArray(value['@context'])
+    ? value['@context'][0]
+    : undefined;
+
+const isJsonObject = (value) =>
+  value != null && typeof value === 'object' && !Array.isArray(value);
+
+const hasCredentialType = (type) =>
+  type === 'VerifiableCredential' || isCredentialTypeArray(type);
+
+const isCredentialTypeArray = (type) =>
+  Array.isArray(type) &&
+  type.every((entry) => typeof entry === 'string') &&
+  type.includes('VerifiableCredential') &&
+  !type.includes('VerifiablePresentation');
+
+const isDecodedCredentialEnvelope = (value) =>
+  isJsonObject(value) &&
+  typeof value.compact === 'string' &&
+  isJsonObject(value.credential) &&
+  Object.values(CredentialDataModelVersions).includes(value.dataModelVersion) &&
+  Object.values(CredentialEnvelopeFormats).includes(value.envelopeFormat) &&
+  isJsonObject(value.protectedHeader);
+
+const firstDefined = (...values) => values.find((value) => value != null);
+
+const maximumEncodedLength = (maximumBytes) => Math.ceil(maximumBytes / 3) * 4;
+
+const normalizeProtectedType = (protectedType) => {
+  if (typeof protectedType !== 'string') {
+    return protectedType;
   }
+
+  const lowerCaseType = protectedType.toLowerCase();
+  return lowerCaseType.includes('/')
+    ? lowerCaseType
+    : `application/${lowerCaseType}`;
 };
 
-const assertDepth = (value, depth = 1) => {
-  if (depth > CredentialEnvelopeLimits.MAX_JSON_DEPTH) {
+const parseCompactJws = (compact) => {
+  assertCompactJws(compact);
+
+  const segments = compact.split('.');
+  if (segments.length !== 3) {
     throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.JSON_DEPTH_EXCEEDED,
-      `Credential envelope JSON exceeds maximum depth ${CredentialEnvelopeLimits.MAX_JSON_DEPTH}`,
+      CredentialEnvelopeErrorCodes.COMPACT_JWS_INVALID,
+      'Credential envelope must contain exactly three compact JWS segments',
     );
   }
 
-  if (value === null || typeof value !== 'object') {
-    return;
-  }
+  const protectedHeader = decodeJsonSegment(
+    segments[0],
+    'protected header',
+    CredentialEnvelopeLimits.MAX_PROTECTED_HEADER_BYTES,
+  );
+  assertSupportedAlgorithm(protectedHeader);
 
-  for (const nestedValue of Object.values(value)) {
-    assertDepth(nestedValue, depth + 1);
+  const payload = decodeJsonSegment(
+    segments[1],
+    'payload',
+    CredentialEnvelopeLimits.MAX_PAYLOAD_BYTES,
+  );
+  decodeSegment(
+    segments[2],
+    'signature',
+    CredentialEnvelopeLimits.MAX_SIGNATURE_BYTES,
+  );
+
+  return { payload, protectedHeader };
+};
+
+const assertCompactJws = (compact) => {
+  const isBounded =
+    typeof compact === 'string' &&
+    compact.length <= CredentialEnvelopeLimits.MAX_COMPACT_CHARACTERS;
+
+  if (!isBounded) {
+    throw new CredentialEnvelopeError(
+      CredentialEnvelopeErrorCodes.COMPACT_JWS_INVALID,
+      'Credential envelope must be a bounded compact JWS string',
+    );
   }
 };
 
@@ -256,7 +395,6 @@ const assertSupportedAlgorithm = (protectedHeader) => {
       'Credential envelope alg none is not allowed',
     );
   }
-
   if (
     typeof protectedHeader.alg !== 'string' ||
     protectedHeader.alg.length === 0
@@ -268,96 +406,18 @@ const assertSupportedAlgorithm = (protectedHeader) => {
   }
 };
 
-const classifyCredential = (payload, protectedHeader) => {
-  const directContext = firstContext(payload);
-  const hasVcClaim = Object.hasOwn(payload, 'vc');
-  const hasVpClaim = Object.hasOwn(payload, 'vp');
-  const nestedContext = firstContext(payload.vc);
-  const usesV2Type =
-    normalizeProtectedType(protectedHeader.typ) === V2_CREDENTIAL_MEDIA_TYPE;
-
-  assertNoConflictingFormatSignals({
-    hasVcClaim,
-    hasVpClaim,
-    nestedContext,
-    usesV2Type,
-  });
-
-  if (hasVpClaim) {
+const assertJsonObject = (value, name) => {
+  if (!isJsonObject(value)) {
     throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.UNSUPPORTED_FORMAT,
-      'Credential envelope payload contains a presentation claim',
-    );
-  }
-
-  if (hasVcClaim) {
-    return classifyNestedCredential(
-      payload.vc,
-      nestedContext,
-      protectedHeader.typ,
-    );
-  }
-
-  return classifyDirectCredential(payload, directContext, usesV2Type);
-};
-
-const assertNoConflictingFormatSignals = ({
-  hasVcClaim,
-  hasVpClaim,
-  nestedContext,
-  usesV2Type,
-}) => {
-  if (
-    isCompatibilityClaimConflict(hasVcClaim, hasVpClaim) ||
-    isV2TypeConflict(usesV2Type, hasVcClaim, hasVpClaim) ||
-    isNestedV2Context(hasVcClaim, nestedContext)
-  ) {
-    throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.MIXED_FORMAT,
-      'Credential envelope contains contradictory format signals',
-    );
-  }
-};
-
-const isCompatibilityClaimConflict = (hasVcClaim, hasVpClaim) =>
-  hasVcClaim && hasVpClaim;
-
-const isV2TypeConflict = (usesV2Type, hasVcClaim, hasVpClaim) =>
-  usesV2Type && (hasVcClaim || hasVpClaim);
-
-const isNestedV2Context = (hasVcClaim, nestedContext) =>
-  hasVcClaim && nestedContext === CredentialContexts.V2_0;
-
-const classifyNestedCredential = (credential, nestedContext, protectedType) => {
-  assertJsonObject(credential, 'vc claim');
-  assertNestedCredentialContext(credential, nestedContext);
-  assertLegacyProtectedType(protectedType);
-
-  return {
-    dataModelVersion: CredentialDataModelVersions.V1_1,
-    envelopeFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
-  };
-};
-
-const assertNestedCredentialContext = (credential, context) => {
-  if (
-    Object.hasOwn(credential, '@context') &&
-    context !== CredentialContexts.V1_1
-  ) {
-    throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.UNSUPPORTED_CONTEXT,
-      'Credential envelope has an unsupported first context',
+      CredentialEnvelopeErrorCodes.JSON_NOT_OBJECT,
+      `Credential envelope ${name} must be a JSON object`,
     );
   }
 };
 
 const assertLegacyProtectedType = (protectedType) => {
   const normalizedType = normalizeProtectedType(protectedType);
-
-  if (
-    normalizedType !== undefined &&
-    normalizedType !== LEGACY_CREDENTIAL_MEDIA_TYPE
-  ) {
+  if (![undefined, LEGACY_CREDENTIAL_MEDIA_TYPE].includes(normalizedType)) {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.WRONG_TYPE,
       'A VC 1.1 compatibility envelope requires typ JWT or no typ',
@@ -365,41 +425,9 @@ const assertLegacyProtectedType = (protectedType) => {
   }
 };
 
-const classifyDirectCredential = (payload, directContext, usesV2Type) => {
-  assertSupportedContext(directContext);
-
-  if (directContext === CredentialContexts.V1_1) {
-    throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.UNSUPPORTED_FORMAT,
-      'A VC 1.1 document must use the vc compatibility claim',
-    );
-  }
-
-  if (!hasCredentialType(payload.type)) {
-    throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.CREDENTIAL_TYPE_INVALID,
-      'A direct VC 2.0 document requires type VerifiableCredential',
-    );
-  }
-
-  if (!usesV2Type) {
-    throw new CredentialEnvelopeError(
-      CredentialEnvelopeErrorCodes.WRONG_TYPE,
-      'A direct VC 2.0 document requires typ vc+jwt',
-    );
-  }
-
-  return {
-    dataModelVersion: CredentialDataModelVersions.V2_0,
-    envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
-  };
-};
-
-const assertSupportedContext = (context) => {
-  if (
-    context !== CredentialContexts.V1_1 &&
-    context !== CredentialContexts.V2_0
-  ) {
+const assertNestedCredentialContext = (credential, context) => {
+  const hasContext = Object.hasOwn(credential, '@context');
+  if (hasContext && context !== CredentialContexts.V1_1) {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.UNSUPPORTED_CONTEXT,
       'Credential envelope has an unsupported first context',
@@ -407,59 +435,14 @@ const assertSupportedContext = (context) => {
   }
 };
 
-const hasCredentialType = (type) =>
-  type === 'VerifiableCredential' || isCredentialTypeArray(type);
-
-const isCredentialTypeArray = (type) =>
-  Array.isArray(type) &&
-  type.every((entry) => typeof entry === 'string') &&
-  type.includes('VerifiableCredential') &&
-  !type.includes('VerifiablePresentation');
-
-const firstContext = (value) => {
-  if (!isJsonObject(value) || !Array.isArray(value['@context'])) {
-    return undefined;
+const assertSupportedContext = (context) => {
+  if (!Object.values(CredentialContexts).includes(context)) {
+    throw new CredentialEnvelopeError(
+      CredentialEnvelopeErrorCodes.UNSUPPORTED_CONTEXT,
+      'Credential envelope has an unsupported first context',
+    );
   }
-
-  return value['@context'][0];
 };
-
-const normalizeProtectedType = (protectedType) => {
-  if (typeof protectedType !== 'string') {
-    return protectedType;
-  }
-
-  const lowerCaseType = protectedType.toLowerCase();
-  if (lowerCaseType.includes('/')) {
-    return lowerCaseType;
-  }
-
-  return `application/${lowerCaseType}`;
-};
-
-const credentialFrom = (value) =>
-  isDecodedCredentialEnvelope(value) ? value.credential : value;
-
-const isDecodedCredentialEnvelope = (value) =>
-  isJsonObject(value) &&
-  typeof value.compact === 'string' &&
-  isJsonObject(value.credential) &&
-  isSupportedDataModelVersion(value.dataModelVersion) &&
-  isSupportedEnvelopeFormat(value.envelopeFormat) &&
-  isJsonObject(value.protectedHeader);
-
-const isSupportedDataModelVersion = (version) =>
-  version === CredentialDataModelVersions.V1_1 ||
-  version === CredentialDataModelVersions.V2_0;
-
-const isSupportedEnvelopeFormat = (format) =>
-  format === CredentialEnvelopeFormats.JWT_VC_JSON_LD ||
-  format === CredentialEnvelopeFormats.VC_JWT;
-
-const isJsonObject = (value) =>
-  value !== null && typeof value === 'object' && !Array.isArray(value);
-
-const maximumEncodedLength = (maximumBytes) => Math.ceil(maximumBytes / 3) * 4;
 
 module.exports = {
   CredentialContexts,
