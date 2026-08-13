@@ -545,6 +545,36 @@ describe('Tenants management test suite', () => {
       });
     });
 
+    it('should reject a null credential signing algorithm on create', async () => {
+      const payload = {
+        tenant: {
+          ...(await newTenantMinimalPayload({ did: orgDoc.id })),
+          credentialSigningAlgorithm: null,
+        },
+        keys: orgKeys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'request_validation_failed',
+          message: 'body/tenant/credentialSigningAlgorithm must be string',
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+      await expect(
+        mongoDb().collection('keys').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
     it('should 400 when name does not match profile', async () => {
       setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
       const tenantPayload = await newTenantMinimalPayload({
@@ -1058,6 +1088,9 @@ describe('Tenants management test suite', () => {
       });
 
       expect(updateResponse.statusCode).toEqual(200);
+      expect(updateResponse.json.tenant.updatedAt).not.toEqual(
+        payload.expectedUpdatedAt,
+      );
       expect(updateResponse.json).toEqual({
         tenant: expectedTenant(tenant, {
           credentialSigningAlgorithm: 'ES256',
@@ -1152,18 +1185,23 @@ describe('Tenants management test suite', () => {
       });
     });
 
-    it('should reject a stale optimistic-concurrency token without changing policy', async () => {
+    it('should reject a reused optimistic-concurrency token without changing the latest policy', async () => {
       const tenant = await persistTenant();
-      await mongoDb()
-        .collection('tenants')
-        .updateOne(
-          { _id: new ObjectId(tenant._id) },
-          {
-            $set: {
-              updatedAt: new Date(new Date(tenant.updatedAt).getTime() + 1),
-            },
-          },
-        );
+      const expectedUpdatedAt = new Date(tenant.updatedAt).toISOString();
+      const firstResponse = await fastify.injectJson({
+        method: 'POST',
+        url: updateUrl,
+        payload: {
+          tenantId: tenant._id,
+          credentialSigningAlgorithm: 'RS256',
+          expectedUpdatedAt,
+        },
+      });
+
+      expect(firstResponse.statusCode).toEqual(200);
+      expect(firstResponse.json.tenant.updatedAt).not.toEqual(
+        expectedUpdatedAt,
+      );
 
       const response = await fastify.injectJson({
         method: 'POST',
@@ -1171,7 +1209,7 @@ describe('Tenants management test suite', () => {
         payload: {
           tenantId: tenant._id,
           credentialSigningAlgorithm: 'ES256',
-          expectedUpdatedAt: new Date(tenant.updatedAt).toISOString(),
+          expectedUpdatedAt,
         },
       });
 
@@ -1184,8 +1222,50 @@ describe('Tenants management test suite', () => {
           statusCode: 409,
         }),
       );
-      await expect(loadDbTenant(tenant._id)).resolves.not.toEqual(
-        expect.objectContaining({ credentialSigningAlgorithm: 'ES256' }),
+      await expect(loadDbTenant(tenant._id)).resolves.toEqual(
+        expect.objectContaining({ credentialSigningAlgorithm: 'RS256' }),
+      );
+    });
+
+    it('should return the stable not-found contract for an unknown tenant', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: updateUrl,
+        payload: {
+          tenantId: new ObjectId(),
+          credentialSigningAlgorithm: 'ES256',
+          expectedUpdatedAt: new Date().toISOString(),
+        },
+      });
+
+      expect(response.statusCode).toEqual(404);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Not Found',
+          errorCode: 'tenant_not_found',
+          message: 'tenant_not_found',
+          statusCode: 404,
+        }),
+      );
+    });
+
+    it('should reject a malformed tenant id before loading tenant state', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: updateUrl,
+        payload: {
+          tenantId: 'not-an-object-id',
+          credentialSigningAlgorithm: 'ES256',
+          expectedUpdatedAt: new Date().toISOString(),
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'request_validation_failed',
+          message: 'body/tenantId must match pattern "^[0-9a-fA-F]{24}$"',
+        }),
       );
     });
   });

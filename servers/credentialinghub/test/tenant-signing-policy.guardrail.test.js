@@ -64,6 +64,17 @@ describe('tenant credential signing policy guardrails', () => {
     ).toEqual('RS256');
   });
 
+  it('normalizes the existing SECP256K1 credential-type default to JOSE ES256K', () => {
+    expect(
+      resolveCredentialSigningAlgorithm({
+        tenant: {},
+        credentialTypeMetadata: {
+          defaultSignatureAlgorithm: 'SECP256K1',
+        },
+      }),
+    ).toEqual('ES256K');
+  });
+
   [undefined, null].forEach((credentialSigningAlgorithm) => {
     it(`falls back to ES256K when the tenant override is ${credentialSigningAlgorithm} and the type has no default`, () => {
       expect(

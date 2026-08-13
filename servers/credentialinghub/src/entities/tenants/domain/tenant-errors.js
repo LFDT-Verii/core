@@ -16,11 +16,15 @@
  */
 
 const TenantErrors = {
+  CREDENTIAL_SIGNING_ALGORITHM_NOT_SUPPORTED:
+    'credential_signing_algorithm_not_supported',
   DID_DOCUMENT_NOT_FOUND: 'did_document_not_found',
   ORG_PROFILE_NOT_FOUND: 'org_profile_not_found',
   KEY_PURPOSES_MUST_BE_UNIQUE: 'key_purposes_must_be_unique',
   KEY_KID_FRAGMENT_NOT_FOUND: 'key_kidFragment_not_found',
   TENANTS_MUST_BE_UNIQUE: 'tenant_must_be_unique',
+  TENANT_NOT_FOUND: 'tenant_not_found',
+  TENANT_UPDATE_CONFLICT: 'tenant_update_conflict',
   RELATED_SERVICE_UNDELETED: 'related_service_undeleted',
   NAME_MUST_MATCH_PROFILE: 'name_must_match_profile',
   LOGO_MUST_MATCH_PROFILE: 'logo_must_match_profile',

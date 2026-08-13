@@ -20,6 +20,9 @@ const {
   mongoDb,
 } = require('@spencejs/spence-mongo-repos');
 const { insertTenantExtension } = require('./insert-tenant-extension');
+const {
+  updateSigningPolicyExtension,
+} = require('./update-signing-policy-extension');
 
 module.exports = (app, options, next = () => {}) => {
   app.ready(async () => {
@@ -40,12 +43,17 @@ module.exports = (app, options, next = () => {}) => {
         keysByPurpose: 1,
         hostUrl: 1,
         caoDid: 1,
+        credentialSigningAlgorithm: 1,
         name: 1,
         logo: 1,
         createdAt: 1,
         updatedAt: 1,
       },
-      extensions: [autoboxIdsExtension, insertTenantExtension],
+      extensions: [
+        autoboxIdsExtension,
+        insertTenantExtension,
+        updateSigningPolicyExtension,
+      ],
     },
     app,
   );

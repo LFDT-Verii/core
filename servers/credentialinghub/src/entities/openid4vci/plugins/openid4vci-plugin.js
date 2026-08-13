@@ -42,6 +42,7 @@ const { ServiceCategories } = require('@verii/organizations-registry');
 const { KeyPurposes } = require('@verii/crypto');
 const { getJwkFromDidUri } = require('@verii/did-doc');
 const { jwtVerify } = require('@verii/jwt');
+const { resolveCredentialSigningAlgorithm } = require('../../tenants/domain');
 
 const openid4vciPlugin = async (fastify) => {
   fastify.decorateRequest(
@@ -180,7 +181,12 @@ const buildIssuer = async (context) => {
         {
           format: 'jwt_vc_json-ld',
           cryptographic_binding_methods_supported: ['did:jwk'],
-          credential_signing_alg_values_supported: ['ES256K'],
+          credential_signing_alg_values_supported: [
+            resolveCredentialSigningAlgorithm({
+              credentialTypeMetadata: credentialMetadata,
+              tenant,
+            }),
+          ],
           credential_definition: {
             '@context': [
               'https://www.w3.org/2018/credentials/v1',

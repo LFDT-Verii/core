@@ -15,7 +15,7 @@
  *
  */
 const jwkSchema = require('./jwk.schema.json');
-const newTenantSchema = require('./new-tenant.schema.json');
+const newTenantSchema = require('./new-tenant.schema');
 const tenantSchema = require('./tenant.schema');
 const newKeyMetadataSchema = require('./new-key-metadata.schema.json');
 const keyMetadataSchema = require('./key-metadata.schema.json');

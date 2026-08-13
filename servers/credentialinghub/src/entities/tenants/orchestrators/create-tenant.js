@@ -27,12 +27,18 @@ const {
   CihKeyPurposes,
 } = require('../../keys');
 const { loadTenantDidDoc, loadTenantProfile } = require('../adapters');
-const { validateNewTenant } = require('../domain');
+const {
+  resolveCredentialSigningAlgorithm,
+  validateNewTenant,
+} = require('../domain');
 const { applyOperatorCaoDid } = require('../domain/operator-tenant-scope');
 
 const createTenant = async (newTenant, tenantKeys, context) => {
   const { repos, kms } = context;
   const scopedNewTenant = applyOperatorCaoDid(newTenant, context);
+  if (scopedNewTenant.credentialSigningAlgorithm != null) {
+    resolveCredentialSigningAlgorithm({ tenant: scopedNewTenant });
+  }
 
   const [didDoc, orgProfile] = await Promise.all([
     loadTenantDidDoc(scopedNewTenant.did, context),

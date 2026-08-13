@@ -783,6 +783,97 @@ describe('vn-api > issue credentials', () => {
   });
 
   describe('offer approval use cases', () => {
+    const issueOpenBadge = async (tenantOverrides) => {
+      const {
+        holderAccessTokensSecret: policyTenantSecret,
+        tenant: policyTenant,
+      } = await constructTenant(persistTenant, persistKey, tenantOverrides);
+      const policyService = await persistIssuerService({
+        tenant: policyTenant,
+        authMethods: ['preauth'],
+      });
+      const policyDepot = await persistDepot({
+        service: policyService,
+        tenant: policyTenant,
+      });
+      const policyExchange = await persistExchange({
+        depotId: new ObjectId(policyDepot._id),
+        events: [
+          {
+            state: ExchangeStates.AUTHENTICATION_SUCCESS,
+            timestamp: new Date(),
+          },
+        ],
+        service: policyService,
+        tenant: policyTenant,
+      });
+      const openBadge = await persistCredential({
+        content: {
+          credentialSubject: { achievement: 'Architecture badge' },
+          type: ['OpenBadgeCredential'],
+        },
+        depot: policyDepot,
+        tenant: policyTenant,
+        typeMetadata: credentialTypeMetadata.OpenBadgeCredential,
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(policyTenant),
+        headers: {
+          authorization: `Bearer ${await testAccessToken(
+            policyTenant.did,
+            policyExchange._id,
+            policyDepot._id,
+            policyTenantSecret,
+          )}`,
+        },
+        payload: {
+          approvedOfferIds: [openBadge._id],
+          proof: await buildProof(
+            holderDid,
+            holderKeyPair,
+            await buildIssuingChallenge(
+              policyExchange._id,
+              policyTenantSecret,
+              policyTenant.hostUrl,
+              fastify.config.challengesExpireIn,
+            ),
+          ),
+        },
+      });
+      return { openBadge, policyTenant, response };
+    };
+
+    it('should apply an ES256 tenant override to an Open Badge with an RS256 type default', async () => {
+      const { openBadge, response } = await issueOpenBadge({
+        credentialSigningAlgorithm: 'ES256',
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(jwtDecode(response.json[0]).header.alg).toEqual('ES256');
+      await expect(
+        mongoDb()
+          .collection('credentials')
+          .findOne({ _id: new ObjectId(openBadge._id) }),
+      ).resolves.toEqual(
+        expect.objectContaining({ signingAlgorithm: 'ES256' }),
+      );
+    });
+
+    it('should preserve the Open Badge RS256 type default without a tenant override', async () => {
+      const { openBadge, response } = await issueOpenBadge({});
+
+      expect(response.statusCode).toEqual(200);
+      expect(jwtDecode(response.json[0]).header.alg).toEqual('RS256');
+      await expect(
+        mongoDb()
+          .collection('credentials')
+          .findOne({ _id: new ObjectId(openBadge._id) }),
+      ).resolves.toEqual(
+        expect.objectContaining({ signingAlgorithm: 'RS256' }),
+      );
+    });
+
     it('should not be able to approve previously approved credentials', async () => {
       const approvedCredential = await persistCredential({
         tenant,
@@ -1440,6 +1531,13 @@ const buildProof = async (
 };
 
 const credentialTypeMetadata = keyBy('credentialType', [
+  {
+    credentialType: 'OpenBadgeCredential',
+    defaultSignatureAlgorithm: 'RS256',
+    layer1: false,
+    schemaUrl: 'https://imsglobal.org/schemas/open-badge-credential.json',
+    jsonldContext: ['https://imsglobal.org/schemas/openbadge-context.json'],
+  },
   {
     credentialType: 'EmailV1.0',
     layer1: true,

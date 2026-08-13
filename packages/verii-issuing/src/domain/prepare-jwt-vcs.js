@@ -40,6 +40,7 @@ const { buildJsonLdCredential } = require('./build-jsonld-credential');
  * @param {AllocationListEntry[]} revocationListEntries revocation list entries
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types
  * @param {Context} context the context
+ * @param {string[]} [credentialSigningAlgorithms] explicitly resolved JOSE algorithms
  * @returns {Promise<{vcJwt: string, jsonLdCredential: JsonLdCredential, metadata: CredentialMetadata}[]>} the vc and its metadata
  */
 const prepareJwtVcs = async (
@@ -50,14 +51,17 @@ const prepareJwtVcs = async (
   revocationListEntries,
   credentialTypesMap,
   context,
+  credentialSigningAlgorithms,
 ) => {
   return Promise.all(
     mapWithIndex(async (offer, i) => {
       const metadataEntry = metadataEntries[i];
       const credentialType = extractCredentialType(offer);
-      const digitalSignatureAlgorithm =
-        credentialTypesMap[credentialType].defaultSignatureAlgorithm ??
-        KeyAlgorithms.SECP256K1;
+      const digitalSignatureAlgorithm = toKeyGenerationAlgorithm(
+        credentialSigningAlgorithms?.[i] ??
+          credentialTypesMap[credentialType].defaultSignatureAlgorithm ??
+          KeyAlgorithms.SECP256K1,
+      );
 
       const keyPair = generateJWAKeyPair(digitalSignatureAlgorithm);
 
@@ -102,6 +106,11 @@ const prepareJwtVcs = async (
     }, offers),
   );
 };
+
+const toKeyGenerationAlgorithm = (credentialSigningAlgorithm) =>
+  credentialSigningAlgorithm === 'ES256K'
+    ? KeyAlgorithms.SECP256K1
+    : credentialSigningAlgorithm;
 
 /**
  * Builds a credential metadata DID URI

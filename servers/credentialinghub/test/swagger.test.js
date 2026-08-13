@@ -134,6 +134,11 @@ const EXPECTED_OPERATION_METADATA = {
     'deleteTenant',
     OPERATOR_SECURITY,
   ],
+  'POST /operator/tenants/update-signing-policy': [
+    'Tenants',
+    'updateTenantSigningPolicy',
+    OPERATOR_SECURITY,
+  ],
   'GET /.well-known/oauth-authorization-server/r/{tenantId}': [
     'OpenID4VCI',
     'getOpenid4vciAuthorizationServerMetadata',
@@ -235,6 +240,7 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/tenants/create',
       'GET /operator/tenants/get',
       'POST /operator/tenants/delete',
+      'POST /operator/tenants/update-signing-policy',
     ],
   },
   openid4vc: {

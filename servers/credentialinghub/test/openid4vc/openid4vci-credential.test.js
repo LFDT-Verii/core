@@ -109,6 +109,12 @@ describe('openid4vc credential test suite', () => {
   beforeEach(async () => {
     resetMockHttpClient();
     mockAddRevocationListSigned.mock.resetCalls();
+    await mongoDb()
+      .collection('tenants')
+      .updateOne(
+        { _id: new ObjectId(tenant._id) },
+        { $unset: { credentialSigningAlgorithm: '' } },
+      );
     await mongoDb().collection('allocations').deleteMany({});
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
@@ -421,6 +427,58 @@ describe('openid4vc credential test suite', () => {
           ),
           updatedAt: expect.any(Date),
         });
+      });
+
+      it('should sign with ES256 when the tenant policy overrides the type default', async () => {
+        await mongoDb()
+          .collection('tenants')
+          .updateOne(
+            { _id: new ObjectId(tenant._id) },
+            { $set: { credentialSigningAlgorithm: 'ES256' } },
+          );
+        const encryptedNonce = encrypt(
+          `${Date.now()}`,
+          hexFromJwk(issuerKeyPair.privateKey, true),
+        );
+        const proof = await buildProof(
+          holderDid,
+          holderKeyPair,
+          encryptedNonce,
+          { typ: 'openid4vci-proof+jwt' },
+        );
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/credential`,
+          headers: {
+            authorization: `Bearer ${authToken}`,
+          },
+          payload: {
+            credential_identifier: credential._id,
+            proofs: { jwt: [proof.jwt] },
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        const { header } = jwtDecode(response.json.credentials[0].credential);
+        expect(header.alg).toEqual('ES256');
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(credential._id) }),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            signingAlgorithm: 'ES256',
+            exchange: expect.objectContaining({
+              credentialMetadata: expect.objectContaining({
+                publicKey: expect.objectContaining({
+                  crv: 'P-256',
+                  kty: 'EC',
+                }),
+              }),
+            }),
+          }),
+        );
       });
     });
   });

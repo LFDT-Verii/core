@@ -1,5 +1,5 @@
 const { mutableEntitySchema } = require('@verii/common-schemas');
-const newTenantSchema = require('./new-tenant.schema.json');
+const newTenantSchema = require('./new-tenant.schema');
 
 const tenantSchema = {
   title: 'Tenant',

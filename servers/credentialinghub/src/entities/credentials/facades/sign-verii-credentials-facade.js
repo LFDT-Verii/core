@@ -27,6 +27,7 @@ const signVeriiCredentialsFacade = async (
   credentialContentList,
   credentialSubjectId,
   credentialTypeMetadatas,
+  credentialSigningAlgorithms,
   issuerService,
   context,
 ) => {
@@ -46,6 +47,7 @@ const signVeriiCredentialsFacade = async (
     keyBy('credentialType', credentialTypeMetadatas),
     buildVeriiIssuer(tenant, issuerService),
     context,
+    credentialSigningAlgorithms,
   );
   return {
     credentialMetadata: result?.[0]?.metadata,

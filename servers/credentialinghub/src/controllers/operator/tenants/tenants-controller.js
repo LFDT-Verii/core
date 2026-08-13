@@ -19,7 +19,11 @@ const {
   createTenant,
   deleteTenant,
   findTenants,
+  updateTenantSigningPolicy,
 } = require('../../../entities/tenants');
+const {
+  CredentialSigningAlgorithms,
+} = require('../../../entities/tenants/domain');
 const {
   jwkSchema,
   newTenantSchema,
@@ -29,6 +33,8 @@ const {
   secretKeySchema,
   newKeySchema,
 } = require('./schemas');
+
+const OBJECT_ID_PATTERN = '^[0-9a-fA-F]{24}$';
 
 module.exports = async (fastify) => {
   fastify
@@ -139,6 +145,65 @@ module.exports = async (fastify) => {
         );
         return { tenants };
       },
+    )
+    .post(
+      '/update-signing-policy',
+      {
+        schema: fastify.autoSchema({
+          summary: "Update a tenant's credential signing policy",
+          operationId: 'updateTenantSigningPolicy',
+          body: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              credentialSigningAlgorithm: {
+                type: ['string', 'null'],
+                enum: [...CredentialSigningAlgorithms, null],
+              },
+              expectedUpdatedAt: {
+                type: 'string',
+                format: 'date-time',
+              },
+              tenantId: {
+                type: 'string',
+                pattern: OBJECT_ID_PATTERN,
+              },
+            },
+            required: [
+              'credentialSigningAlgorithm',
+              'expectedUpdatedAt',
+              'tenantId',
+            ],
+          },
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                tenant: {
+                  $ref: 'tenant#',
+                },
+                requestId: {
+                  type: 'string',
+                },
+              },
+            },
+            404: {
+              $ref: 'error#',
+            },
+            409: {
+              $ref: 'error#',
+            },
+          },
+        }),
+      },
+      async (req) => ({
+        tenant: await updateTenantSigningPolicy(
+          req.body.tenantId,
+          req.body.credentialSigningAlgorithm,
+          req.body.expectedUpdatedAt,
+          req,
+        ),
+      }),
     )
     .post(
       '/delete',
