@@ -37,7 +37,14 @@ const { initMetadataRegistry } = require('@verii/metadata-registration');
 
 const { nanoid } = require('nanoid');
 const { hexFromJwk, KeyAlgorithms } = require('@verii/crypto');
-const { jwtDecode, jwtSign, jwtVerify } = require('@verii/jwt');
+const {
+  CredentialDataModelVersions,
+  CredentialEnvelopeFormats,
+  jwsVerify,
+  jwtDecode,
+  jwtSign,
+  jwtVerify,
+} = require('@verii/jwt');
 const { MongoClient } = require('mongodb');
 const { map } = require('lodash/fp');
 const { collectionClient } = require('./helpers/collection-client');
@@ -47,7 +54,7 @@ const freeCredentialTypesList = ['EmailV1.0', 'DrivingLicenseV1.0'];
 
 const { offerFactory } = require('./helpers/offer-factory');
 const { createExampleDid } = require('./helpers/create-example-did');
-const { issueVeriiCredentials } = require('../src/issue-verii-credentials');
+const { issueVeriiCredentials, issueVersionedCredentials } = require('../src');
 const { credentialTypesMap } = require('./helpers/credential-types-map');
 const { jwtVcExpectation } = require('./helpers/jwt-vc-expectation');
 const {
@@ -246,6 +253,21 @@ describe('E2E issuing', { timeout: 60000 }, () => {
     });
   });
 
+  it('supports explicit VC 2.0 issue, anchor, resolution, and verification for every algorithm', async () => {
+    for (const algorithm of [
+      KeyAlgorithms.SECP256K1,
+      KeyAlgorithms.ES256,
+      KeyAlgorithms.RS256,
+    ]) {
+      // eslint-disable-next-line no-await-in-loop
+      await issueV2ResolveAndVerify(algorithm, {
+        context,
+        issuer,
+        issuerEntity,
+      });
+    }
+  });
+
   it('anchors an Open Badge ES256 override and preserves its RS256 default', async () => {
     const openBadgeOffer = offerFactory({
       credentialType: 'OpenBadgeCredential',
@@ -319,6 +341,74 @@ const issueResolveAndVerify = async (
   await expect(jwtVerify(credential, publicKeyJwk, false)).resolves.toEqual(
     expect.objectContaining({ header }),
   );
+};
+
+const issueV2ResolveAndVerify = async (
+  algorithm,
+  { context, issuer, issuerEntity },
+) => {
+  const [result] = await issueVersionedCredentials({
+    context,
+    credentialFormat: CredentialEnvelopeFormats.VC_JWT,
+    credentialSigningAlgorithms: [algorithm],
+    credentialSubjectId: createExampleDid(),
+    credentialTypesMap,
+    issuer,
+    offers: [
+      offerFactory({
+        credentialType: 'EmailV1.0',
+        issuerId: issuerEntity.did,
+      }),
+    ],
+  });
+  const metadataRegistry = await initMetadataRegistry(
+    {
+      contractAddress: context.config.metadataRegistryContractAddress,
+      privateKey: issuerEntity.keyPair.privateKey,
+      rpcProvider: context.rpcProvider,
+    },
+    context,
+  );
+  const { didDocument, didResolutionMetadata } =
+    await metadataRegistry.resolveDidDocument({
+      burnerDid: issuer.did,
+      caoDid: context.caoDid,
+      credentials: [
+        {
+          contentHash: result.credential.contentHash.value,
+          credentialType: 'EmailV1.0',
+          id: result.credentialId,
+        },
+      ],
+      did: result.credentialId,
+    });
+  const [{ id, publicKeyJwk }] = didDocument.publicKey;
+  const joseAlgorithm =
+    algorithm === KeyAlgorithms.SECP256K1 ? 'ES256K' : algorithm;
+
+  expect(didResolutionMetadata).toEqual({});
+  expect(result).toEqual(
+    expect.objectContaining({
+      compact: expect.any(String),
+      credentialId: result.credential.id,
+      credentialStatus: result.credential.credentialStatus,
+      dataModelVersion: CredentialDataModelVersions.V2_0,
+      envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+      signingAlgorithm: joseAlgorithm,
+    }),
+  );
+  expect(publicKeyJwk).toEqual(
+    expect.objectContaining(getPublicKeyExpectation(algorithm)),
+  );
+  await expect(jwsVerify(result.compact, publicKeyJwk)).resolves.toEqual({
+    header: {
+      alg: joseAlgorithm,
+      cty: 'vc',
+      kid: id,
+      typ: 'vc+jwt',
+    },
+    payload: result.credential,
+  });
 };
 
 const getPublicKeyExpectation = (algorithm) => {
