@@ -31,6 +31,26 @@ const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
 
 const issuerUrl = (tenant) => `https://localhost.test/r/${tenant._id}`;
+const vc2CredentialConfigurationExpectation = (
+  credentialType,
+  signingAlgorithm,
+) => ({
+  credential_definition: {
+    '@context': [
+      'https://www.w3.org/ns/credentials/v2',
+      'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
+    ],
+    type: ['VerifiableCredential', credentialType],
+  },
+  credential_signing_alg_values_supported: [signingAlgorithm],
+  cryptographic_binding_methods_supported: ['did:jwk'],
+  format: 'application/vc+jwt',
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: ['ES256', 'ES256K'],
+    },
+  },
+});
 
 describe('.well-known openid4vc metadata test suite', () => {
   let fastify;
@@ -66,6 +86,91 @@ describe('.well-known openid4vc metadata test suite', () => {
   });
 
   describe('openid4vc credential metadata test suite', () => {
+    it('[expected-red] advertises one VC 2.0 JOSE profile per credential algorithm', async () => {
+      const credentialTypeMetadatas = [
+        {
+          credentialType: 'Employment',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/employment.schema.json',
+        },
+        {
+          credentialType: 'EmailV1.0',
+          defaultSignatureAlgorithm: 'ES256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/email.schema.json',
+        },
+        {
+          credentialType: 'OpenBadgeCredential',
+          defaultSignatureAlgorithm: 'RS256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/open-badge.schema.json',
+        },
+      ];
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer'],
+        },
+      };
+      mockHttpClientJsonResponse('get', credentialTypeMetadatas);
+      mockHttpClientJsonResponse('get', profile);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `.well-known/openid-credential-issuer/r/${tenant._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.credential_configurations_supported).toEqual({
+        'foundation.velocitynetwork.EmailV1.0':
+          vc2CredentialConfigurationExpectation('EmailV1.0', 'ES256'),
+        'foundation.velocitynetwork.Employment':
+          vc2CredentialConfigurationExpectation('Employment', 'ES256K'),
+        'foundation.velocitynetwork.OpenBadgeCredential':
+          vc2CredentialConfigurationExpectation('OpenBadgeCredential', 'RS256'),
+      });
+    });
+
+    it('[expected-red] advertises an ES256 tenant override for Open Badge and non-badge credential configurations', async () => {
+      const { tenant: es256Tenant } = await constructTenant(
+        persistTenant,
+        persistKey,
+        { credentialSigningAlgorithm: 'ES256' },
+      );
+      const credentialTypeMetadatas = [
+        {
+          credentialType: 'Employment',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/employment.schema.json',
+        },
+        {
+          credentialType: 'OpenBadgeCredential',
+          defaultSignatureAlgorithm: 'RS256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/open-badge.schema.json',
+        },
+      ];
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer'],
+        },
+      };
+      mockHttpClientJsonResponse('get', credentialTypeMetadatas);
+      mockHttpClientJsonResponse('get', profile);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `.well-known/openid-credential-issuer/r/${es256Tenant._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.credential_configurations_supported).toEqual({
+        'foundation.velocitynetwork.Employment':
+          vc2CredentialConfigurationExpectation('Employment', 'ES256'),
+        'foundation.velocitynetwork.OpenBadgeCredential':
+          vc2CredentialConfigurationExpectation('OpenBadgeCredential', 'ES256'),
+      });
+    });
+
     it('should 200 with json credential metadata', async () => {
       const credentialTypeMetadatas = [
         {
