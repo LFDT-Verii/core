@@ -16,6 +16,7 @@
 
 module.exports = {
   ...require('./src/check-expiration'),
+  ...require('./src/check-validity'),
   ...require('./src/check-results'),
   ...require('./src/check-holder'),
   ...require('./src/check-identity-issuer'),

@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-const { jwtDecode, jwtVerify, deriveJwk } = require('./core');
+const { deriveJwk, jwtDecode, jwtVerify } = require('./core');
 const { buildDecodedPresentation } = require('./credential-envelope-legacy');
 const { decodeCredentialEnvelope } = require('./credential-envelope-codec');
+const {
+  assertCredentialVerificationAccepted,
+  verifyCredentialEnvelope,
+} = require('./credential-envelope-verifier');
 
 const decodeCredentialJwt = (credentialJwt) =>
   decodeCredentialEnvelope(credentialJwt).credential;
@@ -27,10 +31,12 @@ const decodePresentationJwt = (presentationJwt) => {
 };
 
 const verifyCredentialJwt = async (credentialJwt, key) => {
-  const decoded = decodeCredentialEnvelope(credentialJwt);
-  const jwk = deriveJwk(credentialJwt, key);
-  await jwtVerify(credentialJwt, jwk);
-  return decoded.credential;
+  const verified = assertCredentialVerificationAccepted(
+    await verifyCredentialEnvelope(credentialJwt, key, {
+      mode: 'legacy-jwt',
+    }),
+  );
+  return verified.credential;
 };
 
 const verifyPresentationJwt = async (presentationJwt, key) => {

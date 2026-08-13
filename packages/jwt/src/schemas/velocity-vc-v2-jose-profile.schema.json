@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://velocitynetwork.foundation/schemas/velocity-vc-v2-jose-profile.schema.json",
+  "title": "Velocity VC 2.0 JOSE profile",
+  "allOf": [
+    {
+      "$ref": "https://velocitynetwork.foundation/schemas/w3c-vc-v2-core.schema.json"
+    },
+    {
+      "type": "object",
+      "required": ["id", "validFrom"],
+      "properties": {
+        "id": {
+          "$ref": "https://velocitynetwork.foundation/schemas/w3c-vc-v2-core.schema.json#/$defs/uri"
+        },
+        "validFrom": {
+          "$ref": "https://velocitynetwork.foundation/schemas/w3c-vc-v2-core.schema.json#/$defs/dateTime"
+        }
+      }
+    }
+  ]
+}

@@ -187,7 +187,7 @@ const jwtSignSymmetric = async (payload, key, { alg = 'HS256' } = {}) => {
 
 const deriveJwk = (jwt, key) => {
   const candidate = key != null ? key : jwtDecode(jwt)?.header?.jwk;
-  if (candidate.x != null) {
+  if (candidate != null && typeof candidate === 'object') {
     return candidate;
   }
   emitDeriveJwkHexDeprecationWarning();

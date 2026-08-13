@@ -166,28 +166,30 @@ describe('credential envelope classification', () => {
     );
   });
 
-  it('rejects mixed direct and nested credential signals', () => {
+  it('classifies a direct VC 2.0 payload containing a prohibited vc claim', () => {
     const compact = compactCredentialFixture(
       { alg: 'ES256', typ: 'vc+jwt' },
       { ...v2Credential, vc: legacyPayload.vc },
     );
 
-    expectEnvelopeError(
-      () => decodeCredentialEnvelope(compact),
-      CredentialEnvelopeErrorCodes.MIXED_FORMAT,
-    );
+    expect(decodeCredentialEnvelope(compact)).toMatchObject({
+      credential: { vc: legacyPayload.vc },
+      dataModelVersion: CredentialDataModelVersions.V2_0,
+      envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+    });
   });
 
-  it('rejects mixed direct and presentation signals', () => {
+  it('classifies a direct VC 2.0 payload containing a prohibited vp claim', () => {
     const compact = compactCredentialFixture(
       { alg: 'ES256', typ: 'vc+jwt' },
       { ...v2Credential, vp: {} },
     );
 
-    expectEnvelopeError(
-      () => decodeCredentialEnvelope(compact),
-      CredentialEnvelopeErrorCodes.MIXED_FORMAT,
-    );
+    expect(decodeCredentialEnvelope(compact)).toMatchObject({
+      credential: { vp: {} },
+      dataModelVersion: CredentialDataModelVersions.V2_0,
+      envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+    });
   });
 
   it('rejects a legacy credential with the v2 type', () => {
@@ -238,16 +240,25 @@ describe('credential envelope classification', () => {
     );
   });
 
-  it('rejects a direct VC 2.0 document without typ vc+jwt', () => {
+  it('classifies a direct VC 2.0 document with a non-recommended typ', () => {
     const compact = compactCredentialFixture(
       { alg: 'ES256', typ: 'JWT' },
       v2Credential,
     );
 
-    expectEnvelopeError(
-      () => decodeCredentialEnvelope(compact),
-      CredentialEnvelopeErrorCodes.WRONG_TYPE,
-    );
+    expect(decodeCredentialEnvelope(compact)).toMatchObject({
+      dataModelVersion: CredentialDataModelVersions.V2_0,
+      envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+    });
+  });
+
+  it('accepts a direct VC 2.0 document without typ', () => {
+    const compact = compactCredentialFixture({ alg: 'ES256' }, v2Credential);
+
+    expect(decodeCredentialEnvelope(compact)).toMatchObject({
+      dataModelVersion: CredentialDataModelVersions.V2_0,
+      envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+    });
   });
 
   for (const { name, type } of [
@@ -264,16 +275,16 @@ describe('credential envelope classification', () => {
       type: ['VerifiableCredential', 42],
     },
   ]) {
-    it(`rejects a direct VC 2.0 document with ${name} credential type`, () => {
+    it(`classifies a direct VC 2.0 document with ${name} credential type`, () => {
       const compact = compactCredentialFixture(
         { alg: 'ES256', typ: 'vc+jwt' },
         { ...v2Credential, type },
       );
 
-      expectEnvelopeError(
-        () => decodeCredentialEnvelope(compact),
-        CredentialEnvelopeErrorCodes.CREDENTIAL_TYPE_INVALID,
-      );
+      expect(decodeCredentialEnvelope(compact)).toMatchObject({
+        dataModelVersion: CredentialDataModelVersions.V2_0,
+        envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
+      });
     });
   }
 

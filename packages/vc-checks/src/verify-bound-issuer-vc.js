@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const { verifyCredentialJwt, safeJwtDecode } = require('@verii/jwt');
+const { deriveJwk, jwtVerify, safeJwtDecode } = require('@verii/jwt');
 const { extractVerificationKey, isDidMatching } = require('@verii/did-doc');
 
 const verifyBoundIssuerVc = async (
@@ -32,7 +32,8 @@ const verifyBoundIssuerVc = async (
 
   try {
     const verificationKey = extractVerificationKey(issuerDidDocument, kid);
-    await verifyCredentialJwt(boundIssuerVc, verificationKey);
+    const jwk = deriveJwk(boundIssuerVc, verificationKey);
+    await jwtVerify(boundIssuerVc, jwk);
   } catch {
     log.error(
       { decodedBoundIssuerVc },
