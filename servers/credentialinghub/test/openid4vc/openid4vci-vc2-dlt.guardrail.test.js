@@ -180,32 +180,27 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
     {
       expectedJoseAlgorithm: 'ES256K',
       expectedKey: { crv: 'secp256k1', kty: 'EC' },
-      signingAlgorithm: KeyAlgorithms.SECP256K1,
     },
     {
       expectedJoseAlgorithm: 'ES256',
       expectedKey: { crv: 'P-256', kty: 'EC' },
-      signingAlgorithm: KeyAlgorithms.ES256,
       tenantOverride: KeyAlgorithms.ES256,
     },
     {
       expectedJoseAlgorithm: 'RS256',
       expectedKey: { kty: 'RSA' },
-      signingAlgorithm: KeyAlgorithms.RS256,
       tenantOverride: KeyAlgorithms.RS256,
     },
     {
       badge: true,
       expectedJoseAlgorithm: 'ES256',
       expectedKey: { crv: 'P-256', kty: 'EC' },
-      signingAlgorithm: KeyAlgorithms.ES256,
       tenantOverride: KeyAlgorithms.ES256,
     },
     {
       badge: true,
       expectedJoseAlgorithm: 'RS256',
       expectedKey: { kty: 'RSA' },
-      signingAlgorithm: KeyAlgorithms.RS256,
     },
   ];
 
@@ -225,7 +220,7 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
     const policyLabel =
       testCase.badge && testCase.tenantOverride == null ? ' type default' : '';
 
-    it(`[expected-red] issues a direct v2${badgeLabel} using ${testCase.expectedJoseAlgorithm}${policyLabel}`, async () => {
+    it(`issues a direct v2${badgeLabel} using ${testCase.expectedJoseAlgorithm}${policyLabel}`, async () => {
       const result = await issueAndAcceptCredential(testCase);
 
       expect(result.header).toEqual({
@@ -254,7 +249,7 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
         expect.objectContaining({
           dataModelVersion: '2.0',
           envelopeFormat: 'vc+jwt',
-          signingAlgorithm: testCase.signingAlgorithm,
+          signingAlgorithm: testCase.expectedJoseAlgorithm,
         }),
       );
     });

@@ -26,10 +26,23 @@ const Openid4vciCredentialProfile = Object.freeze({
   format: 'application/vc+jwt',
 });
 
+const assertOpenid4vciCredentialResult = ({
+  dataModelVersion,
+  envelopeFormat,
+} = {}) => {
+  if (
+    dataModelVersion !== Openid4vciCredentialProfile.dataModelVersion ||
+    envelopeFormat !== Openid4vciCredentialProfile.envelopeFormat
+  ) {
+    throw new Error('OpenID4VCI issuer returned an unsupported credential');
+  }
+};
+
 const isOpenid4vciCredentialFormat = (format) =>
   format === undefined || format === Openid4vciCredentialProfile.format;
 
 module.exports = {
+  assertOpenid4vciCredentialResult,
   isOpenid4vciCredentialFormat,
   Openid4vciCredentialProfile,
 };

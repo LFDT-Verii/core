@@ -15,9 +15,13 @@
  *
  */
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
-const { CredentialEnvelopeFormats, jwtDecode } = require('@verii/jwt');
+const { jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
-const { Oidc4vciErrors } = require('../domain');
+const {
+  assertOpenid4vciCredentialResult,
+  Oidc4vciErrors,
+  Openid4vciCredentialProfile,
+} = require('../domain');
 const {
   buildExchangeEvent,
   ExchangeProtocols,
@@ -60,12 +64,13 @@ const createCredential = async (credentialRequestParameters, context) => {
       await secureVeriiCredentialsFacade({
         context,
         credentialContentList: [credential.content],
-        credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+        credentialFormat: Openid4vciCredentialProfile.envelopeFormat,
         credentialSigningAlgorithms: [credentialSigningAlgorithm],
         credentialSubjectId,
         credentialTypeMetadatas: [credential.typeMetadata],
         issuerService: service,
       });
+    assertOpenid4vciCredentialResult(issuanceResult);
 
     const newExchange = buildExchange(
       service,

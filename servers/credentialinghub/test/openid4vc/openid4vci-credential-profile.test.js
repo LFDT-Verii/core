@@ -17,6 +17,7 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const {
+  assertOpenid4vciCredentialResult,
   isOpenid4vciCredentialFormat,
   Openid4vciCredentialProfile,
 } = require('../../src/entities/openid4vci/domain');
@@ -41,5 +42,23 @@ describe('OpenID4VCI credential profile', () => {
     expect(isOpenid4vciCredentialFormat(null)).toEqual(false);
     expect(isOpenid4vciCredentialFormat('jwt_vc_json-ld')).toEqual(false);
     expect(isOpenid4vciCredentialFormat('vc+jwt')).toEqual(false);
+  });
+
+  it('accepts only a neutral result matching the profile', () => {
+    expect(() =>
+      assertOpenid4vciCredentialResult({
+        dataModelVersion: '2.0',
+        envelopeFormat: 'vc+jwt',
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertOpenid4vciCredentialResult({
+        dataModelVersion: '1.1',
+        envelopeFormat: 'jwt_vc_json-ld',
+      }),
+    ).toThrow('OpenID4VCI issuer returned an unsupported credential');
+    expect(() => assertOpenid4vciCredentialResult()).toThrow(
+      'OpenID4VCI issuer returned an unsupported credential',
+    );
   });
 });

@@ -46,10 +46,14 @@ const {
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { jwtSign, tamperJwt, jwtDecode } = require('@verii/jwt');
-const { NANO_ID_FORMAT, DID_FORMAT } = require('@verii/test-regexes');
+const {
+  DID_FORMAT,
+  ISO_DATETIME_FORMAT,
+  NANO_ID_FORMAT,
+} = require('@verii/test-regexes');
 const { mongoify } = require('@verii/tests-helpers');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { map, find, isEqual, omit, entries, set } = require('lodash/fp');
+const { entries, set } = require('lodash/fp');
 const { initKeyFactory } = require('../../src/entities/keys');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -59,7 +63,6 @@ const { initDepotFactory } = require('../../src/entities/depots');
 const { initCredentialFactory } = require('../../src/entities/credentials');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
-const { jwtVcExpectation } = require('../helpers/jwt-vc-expectation');
 const {
   ExchangeStates,
   ExchangeProtocols,
@@ -131,7 +134,16 @@ describe('openid4vc credential test suite', () => {
       tenant,
       service: issuerService,
     });
-    credential = await persistCredential({ tenant, depot });
+    credential = await persistCredential({
+      depot,
+      tenant,
+      typeMetadata: {
+        credentialType: 'Employment',
+        jsonldContext: [],
+        layer1: true,
+        schemaUrl: 'https://example.com/Employment.schema.json',
+      },
+    });
   });
 
   after(async () => {
@@ -360,35 +372,46 @@ describe('openid4vc credential test suite', () => {
           ],
           notification_id: expect.any(String),
         });
-        const decodedVcs = map(
-          ({ credential: vcJwt }) => jwtDecode(vcJwt),
-          response.json.credentials,
-        );
-        expect(decodedVcs).toEqual(
-          map(
-            ({ payload: { vc, jti } }) =>
-              jwtVcExpectation({
-                tenant,
-                issuerService,
-                credentialId: jti,
-                subjectId: holderDid,
-                credential: find(
-                  ({ content }) =>
-                    isEqual(
-                      omit(['id', '@context'], vc.credentialSubject),
-                      content.credentialSubject,
-                    ),
-                  [credential],
-                ),
-                credentialTypeMetadata: {
-                  credentialType: 'Employment',
-                  layer1: true,
-                  jsonldContext: [],
-                },
-              }),
-            decodedVcs,
-          ),
-        );
+        const [{ credential: compactCredential }] = response.json.credentials;
+        const { header, payload } = jwtDecode(compactCredential);
+        expect(header).toEqual({
+          alg: 'ES256K',
+          cty: 'vc',
+          kid: `${payload.id}#key-1`,
+          typ: 'vc+jwt',
+        });
+        expect(payload).toEqual({
+          '@context': [
+            'https://www.w3.org/ns/credentials/v2',
+            'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
+          ],
+          contentHash: {
+            type: 'VelocityContentHash2020',
+            value: credential.contentHash,
+          },
+          credentialSchema: {
+            id: credential.typeMetadata.schemaUrl,
+            type: 'JsonSchemaValidator2018',
+          },
+          credentialStatus: {
+            id: expect.any(String),
+            type: 'VelocityRevocationListJan2021',
+          },
+          credentialSubject: {
+            id: holderDid,
+            ...credential.content.credentialSubject,
+          },
+          id: expect.stringMatching(DID_FORMAT),
+          issuer: { id: tenant.did },
+          refreshService: {
+            id: `${tenant.did}${issuerService.velocityNetworkServiceId}`,
+            type: 'VelocityNetworkRefreshService2024',
+          },
+          type: ['VerifiableCredential', 'Employment'],
+          validFrom: expect.stringMatching(ISO_DATETIME_FORMAT),
+          vnfProtocolVersion: 2,
+        });
+        expect(payload).not.toHaveProperty('vc');
 
         await expect(
           mongoDb()
@@ -397,12 +420,12 @@ describe('openid4vc credential test suite', () => {
         ).resolves.toEqual({
           ...mongoify(credential),
           credentialSubjectId: holderDid,
-          did: expect.stringMatching(DID_FORMAT),
-          credentialStatus: decodedVcs[0].payload.vc.credentialStatus,
-          dataModelVersion: '1.1',
+          did: payload.id,
+          credentialStatus: payload.credentialStatus,
+          dataModelVersion: '2.0',
           digestSRI: expect.any(String),
-          envelopeFormat: 'jwt_vc_json-ld',
-          jwtVc: response.json.credentials[0].credential,
+          envelopeFormat: 'vc+jwt',
+          jwtVc: compactCredential,
           signingAlgorithm: 'ES256K',
           exchange: expectedDbExchange(
             issuerService,
