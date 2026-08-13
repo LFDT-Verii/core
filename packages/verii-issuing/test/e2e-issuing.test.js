@@ -33,10 +33,11 @@ const {
   deployerPrivateKey,
   rpcProvider,
 } = require('@verii/metadata-registration/test/helpers/deploy-contracts');
+const { initMetadataRegistry } = require('@verii/metadata-registration');
 
 const { nanoid } = require('nanoid');
 const { hexFromJwk, KeyAlgorithms } = require('@verii/crypto');
-const { jwtSign, jwtDecode } = require('@verii/jwt');
+const { jwtDecode, jwtSign, jwtVerify } = require('@verii/jwt');
 const { MongoClient } = require('mongodb');
 const { map } = require('lodash/fp');
 const { collectionClient } = require('./helpers/collection-client');
@@ -225,7 +226,91 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       });
     }
   });
+
+  it('preserves ES256K and RS256 issue, anchor, resolution, and verification', async () => {
+    for (const algorithm of [KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256]) {
+      // eslint-disable-next-line no-await-in-loop
+      await issueResolveAndVerify(algorithm, {
+        context,
+        issuer,
+        issuerEntity,
+      });
+    }
+  });
+
+  it('supports ES256 issue, anchor, resolution, and verification', async () => {
+    await issueResolveAndVerify(KeyAlgorithms.ES256, {
+      context,
+      issuer,
+      issuerEntity,
+    });
+  });
 });
+
+const issueResolveAndVerify = async (
+  algorithm,
+  { context, issuer, issuerEntity },
+) => {
+  const offer = offerFactory({
+    credentialType: 'EmailV1.0',
+    issuerId: issuerEntity.did,
+  });
+  const [credential] = await issueVeriiCredentials(
+    [offer],
+    createExampleDid(),
+    credentialTypesMap,
+    issuer,
+    context,
+    [algorithm],
+  );
+  const { header, payload } = jwtDecode(credential);
+  const metadataRegistry = await initMetadataRegistry(
+    {
+      contractAddress: context.config.metadataRegistryContractAddress,
+      privateKey: issuerEntity.keyPair.privateKey,
+      rpcProvider: context.rpcProvider,
+    },
+    context,
+  );
+  const { didDocument, didResolutionMetadata } =
+    await metadataRegistry.resolveDidDocument({
+      burnerDid: issuer.did,
+      caoDid: context.caoDid,
+      credentials: [
+        {
+          contentHash: payload.vc.contentHash.value,
+          credentialType: 'EmailV1.0',
+          id: payload.jti,
+        },
+      ],
+      did: payload.jti,
+    });
+  const [{ id, publicKeyJwk }] = didDocument.publicKey;
+
+  expect(didResolutionMetadata).toEqual({});
+  expect(header).toEqual(
+    expect.objectContaining({
+      alg: algorithm === KeyAlgorithms.SECP256K1 ? 'ES256K' : algorithm,
+      kid: id,
+    }),
+  );
+  expect(publicKeyJwk).toEqual(
+    expect.objectContaining(getPublicKeyExpectation(algorithm)),
+  );
+  await expect(jwtVerify(credential, publicKeyJwk, false)).resolves.toEqual(
+    expect.objectContaining({ header }),
+  );
+};
+
+const getPublicKeyExpectation = (algorithm) => {
+  if (algorithm === KeyAlgorithms.SECP256K1) {
+    return { crv: 'secp256k1', kty: 'EC' };
+  }
+  if (algorithm === KeyAlgorithms.ES256) {
+    return { crv: 'P-256', kty: 'EC' };
+  }
+  return { kty: 'RSA' };
+};
 
 const buildContext = ({
   issuerEntity,
