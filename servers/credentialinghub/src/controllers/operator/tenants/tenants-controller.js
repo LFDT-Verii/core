@@ -19,15 +19,13 @@ const {
   createTenant,
   deleteTenant,
   findTenants,
-  updateTenantSigningPolicy,
+  updateTenant,
 } = require('../../../entities/tenants');
-const {
-  CredentialSigningAlgorithms,
-} = require('../../../entities/tenants/domain');
 const {
   jwkSchema,
   newTenantSchema,
   tenantSchema,
+  updateTenantSchema,
   newKeyMetadataSchema,
   keyMetadataSchema,
   secretKeySchema,
@@ -41,6 +39,7 @@ module.exports = async (fastify) => {
     .addSchema(jwkSchema)
     .addSchema(newTenantSchema)
     .addSchema(tenantSchema)
+    .addSchema(updateTenantSchema)
     .addSchema(newKeyMetadataSchema)
     .addSchema(keyMetadataSchema)
     .addSchema(secretKeySchema)
@@ -147,34 +146,24 @@ module.exports = async (fastify) => {
       },
     )
     .post(
-      '/update-signing-policy',
+      '/update',
       {
         schema: fastify.autoSchema({
-          summary: "Update a tenant's credential signing policy",
-          operationId: 'updateTenantSigningPolicy',
+          summary: 'Update a tenant',
+          operationId: 'updateTenant',
           body: {
             type: 'object',
             additionalProperties: false,
             properties: {
-              credentialSigningAlgorithm: {
-                type: 'string',
-                nullable: true,
-                enum: [...CredentialSigningAlgorithms, null],
-              },
-              expectedUpdatedAt: {
-                type: 'string',
-                format: 'date-time',
-              },
               tenantId: {
                 type: 'string',
                 pattern: OBJECT_ID_PATTERN,
               },
+              tenant: {
+                $ref: 'update-tenant#',
+              },
             },
-            required: [
-              'credentialSigningAlgorithm',
-              'expectedUpdatedAt',
-              'tenantId',
-            ],
+            required: ['tenantId', 'tenant'],
           },
           response: {
             200: {
@@ -191,19 +180,11 @@ module.exports = async (fastify) => {
             404: {
               $ref: 'error#',
             },
-            409: {
-              $ref: 'error#',
-            },
           },
         }),
       },
       async (req) => ({
-        tenant: await updateTenantSigningPolicy(
-          req.body.tenantId,
-          req.body.credentialSigningAlgorithm,
-          req.body.expectedUpdatedAt,
-          req,
-        ),
+        tenant: await updateTenant(req.body.tenantId, req.body.tenant, req),
       }),
     )
     .post(

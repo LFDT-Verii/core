@@ -21,17 +21,17 @@ const {
   getCredentialSigningAlgorithmsSupported,
   resolveCredentialSigningAlgorithm,
 } = require('../src/entities/tenants');
-const expectedAlgorithms = ['ES256K', 'ES256', 'RS256'];
+const expectedAlgorithms = ['SECP256K1', 'ES256', 'RS256'];
 
 describe('tenant credential signing policy guardrails', () => {
-  it('exposes the exact initial JOSE algorithm allowlist', () => {
+  it('exposes the exact key algorithm allowlist', () => {
     expect(CredentialSigningAlgorithms).toEqual(expectedAlgorithms);
   });
 
   expectedAlgorithms.forEach((credentialSigningAlgorithm) => {
     it(`gives the tenant ${credentialSigningAlgorithm} override precedence over every credential-type default`, () => {
       expect(
-        ['ES256K', 'ES256', 'RS256', undefined].map(
+        ['SECP256K1', 'ES256', 'RS256', undefined].map(
           (defaultSignatureAlgorithm) =>
             resolveCredentialSigningAlgorithm({
               tenant: { credentialSigningAlgorithm },
@@ -65,7 +65,7 @@ describe('tenant credential signing policy guardrails', () => {
     ).toEqual('RS256');
   });
 
-  it('normalizes the existing SECP256K1 credential-type default to JOSE ES256K', () => {
+  it('preserves the existing SECP256K1 credential-type default', () => {
     expect(
       resolveCredentialSigningAlgorithm({
         tenant: {},
@@ -73,19 +73,19 @@ describe('tenant credential signing policy guardrails', () => {
           defaultSignatureAlgorithm: 'SECP256K1',
         },
       }),
-    ).toEqual('ES256K');
+    ).toEqual('SECP256K1');
   });
 
-  it('advertises all supported algorithms with the current type default first when there is no tenant override', () => {
+  it('advertises every internal algorithm with the type default first when there is no tenant override', () => {
     expect(
       getCredentialSigningAlgorithmsSupported({
         tenant: {},
         credentialTypeMetadata: { defaultSignatureAlgorithm: 'RS256' },
       }),
-    ).toEqual(['RS256', 'ES256K', 'ES256']);
+    ).toEqual(['RS256', 'SECP256K1', 'ES256']);
   });
 
-  it('advertises only the algorithm locked by a tenant override', () => {
+  it('advertises only the internal algorithm selected by a tenant override', () => {
     expect(
       getCredentialSigningAlgorithmsSupported({
         tenant: { credentialSigningAlgorithm: 'ES256' },
@@ -95,27 +95,13 @@ describe('tenant credential signing policy guardrails', () => {
   });
 
   [undefined, null].forEach((credentialSigningAlgorithm) => {
-    it(`falls back to ES256K when the tenant override is ${credentialSigningAlgorithm} and the type has no default`, () => {
+    it(`falls back to SECP256K1 when the tenant override is ${credentialSigningAlgorithm} and the type has no default`, () => {
       expect(
         resolveCredentialSigningAlgorithm({
           tenant: { credentialSigningAlgorithm },
           credentialTypeMetadata: {},
         }),
-      ).toEqual('ES256K');
-    });
-  });
-
-  [
-    ['tenant override', { tenant: { credentialSigningAlgorithm: 'es256' } }],
-    [
-      'credential-type default',
-      { credentialTypeMetadata: { defaultSignatureAlgorithm: 'EdDSA' } },
-    ],
-  ].forEach(([description, input]) => {
-    it(`rejects an unsupported or case-mismatched ${description}`, () => {
-      expect(() => resolveCredentialSigningAlgorithm(input)).toThrow(
-        'credential_signing_algorithm_not_supported',
-      );
+      ).toEqual('SECP256K1');
     });
   });
 });

@@ -41,7 +41,7 @@ const {
 const { ServiceCategories } = require('@verii/organizations-registry');
 const { KeyPurposes } = require('@verii/crypto');
 const { getJwkFromDidUri } = require('@verii/did-doc');
-const { jwtVerify } = require('@verii/jwt');
+const { jwtVerify, keyAlgorithmToJoseAlg } = require('@verii/jwt');
 const {
   getCredentialSigningAlgorithmsSupported,
 } = require('../../tenants/domain');
@@ -187,7 +187,7 @@ const buildIssuer = async (context) => {
             getCredentialSigningAlgorithmsSupported({
               credentialTypeMetadata: credentialMetadata,
               tenant,
-            }),
+            }).map(keyAlgorithmToJoseAlg),
           credential_definition: {
             '@context': [
               'https://www.w3.org/2018/credentials/v1',

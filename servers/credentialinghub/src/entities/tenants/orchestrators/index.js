@@ -18,5 +18,5 @@ module.exports = {
   ...require('./create-tenant'),
   ...require('./delete-tenant'),
   ...require('./find-tenants'),
-  ...require('./update-tenant-signing-policy'),
+  ...require('./update-tenant'),
 };

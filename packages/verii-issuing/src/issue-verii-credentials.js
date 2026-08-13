@@ -37,7 +37,7 @@ const METADATA_LIST_SIZE = 10000;
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
  * @param {Context} context the context
- * @param {string[]} [credentialSigningAlgorithms] explicitly resolved JOSE algorithms
+ * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
  * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
  */
 const issueVeriiCredentials = async (
@@ -70,7 +70,7 @@ const issueVeriiCredentials = async (
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
  * @param {Context} context the context
- * @param {string[]} [credentialSigningAlgorithms] explicitly resolved JOSE algorithms
+ * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
  * @returns {Promise<{vcJwt: string, metadata: CredentialMetadata}[]>} Returns array of signed vcs (in jwt format) and their metadata
  */
 const signVeriiCredentials = async (

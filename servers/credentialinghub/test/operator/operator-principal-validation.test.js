@@ -83,11 +83,14 @@ describe('operator principal validation', () => {
         }),
         fastify.injectJson({
           method: 'POST',
-          url: '/operator/tenants/update-signing-policy',
+          url: '/operator/tenants/update',
           payload: {
             tenantId: '000000000000000000000000',
-            credentialSigningAlgorithm: 'ES256',
-            expectedUpdatedAt: '2026-08-13T00:00:00.000Z',
+            tenant: {
+              credentialSigningAlgorithm: 'ES256',
+              logo: 'https://localhost.test/logo.png',
+              name: 'fooName',
+            },
           },
         }),
       ]);

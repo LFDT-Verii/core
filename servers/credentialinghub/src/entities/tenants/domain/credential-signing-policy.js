@@ -14,27 +14,9 @@
  * limitations under the License.
  */
 
-const newError = require('http-errors');
-const { TenantErrors } = require('./tenant-errors');
+const { KeyAlgorithms } = require('@verii/crypto');
 
-const CredentialSigningAlgorithms = Object.freeze(['ES256K', 'ES256', 'RS256']);
-const DEFAULT_CREDENTIAL_SIGNING_ALGORITHM = 'ES256K';
-
-const resolveCredentialSigningAlgorithm = ({
-  tenant = {},
-  credentialTypeMetadata = {},
-} = {}) => {
-  if (tenant.credentialSigningAlgorithm != null) {
-    return assertCredentialSigningAlgorithm(tenant.credentialSigningAlgorithm);
-  }
-
-  const credentialTypeAlgorithm = normalizeCredentialTypeAlgorithm(
-    credentialTypeMetadata.defaultSignatureAlgorithm,
-  );
-  return assertCredentialSigningAlgorithm(
-    credentialTypeAlgorithm ?? DEFAULT_CREDENTIAL_SIGNING_ALGORITHM,
-  );
-};
+const CredentialSigningAlgorithms = Object.freeze(Object.values(KeyAlgorithms));
 
 const getCredentialSigningAlgorithmsSupported = ({
   tenant = {},
@@ -55,25 +37,16 @@ const getCredentialSigningAlgorithmsSupported = ({
   ];
 };
 
-const assertCredentialSigningAlgorithm = (algorithm) => {
-  if (!CredentialSigningAlgorithms.includes(algorithm)) {
-    throw newError(
-      400,
-      TenantErrors.CREDENTIAL_SIGNING_ALGORITHM_NOT_SUPPORTED,
-      {
-        errorCode: TenantErrors.CREDENTIAL_SIGNING_ALGORITHM_NOT_SUPPORTED,
-      },
-    );
-  }
-  return algorithm;
-};
-
-const normalizeCredentialTypeAlgorithm = (algorithm) =>
-  algorithm === 'SECP256K1' ? 'ES256K' : algorithm;
+const resolveCredentialSigningAlgorithm = ({
+  tenant = {},
+  credentialTypeMetadata = {},
+} = {}) =>
+  tenant.credentialSigningAlgorithm ??
+  credentialTypeMetadata.defaultSignatureAlgorithm ??
+  KeyAlgorithms.SECP256K1;
 
 module.exports = {
   CredentialSigningAlgorithms,
-  DEFAULT_CREDENTIAL_SIGNING_ALGORITHM,
   getCredentialSigningAlgorithmsSupported,
   resolveCredentialSigningAlgorithm,
 };

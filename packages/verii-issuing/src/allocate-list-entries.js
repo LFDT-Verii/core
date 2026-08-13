@@ -55,7 +55,7 @@ const allocateGenericListEntries = async (
  * @param {Issuer}  issuer the issuer
  * @param {number} listSize the list size
  * @param {Context} context the context
- * @param {string[]} [credentialSigningAlgorithms] explicitly resolved JOSE algorithms
+ * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
  * @returns {Promise<AllocationListEntry[]>} the allocated entries
  */
 const allocateMetadataListEntries = async (
@@ -68,13 +68,11 @@ const allocateMetadataListEntries = async (
 ) => {
   const entries = [];
   for (let i = 0; i < offers.length; i += 1) {
-    const credentialTypeMetadata =
-      credentialTypesMap?.[extractCredentialType(offers[i])];
     const credentialSigningAlgorithm = credentialSigningAlgorithms?.[i];
     const algTypeName = calcAlgTypeName(
-      credentialSigningAlgorithm == null
-        ? credentialTypeMetadata
-        : { defaultSignatureAlgorithm: credentialSigningAlgorithm },
+      credentialSigningAlgorithm != null
+        ? { defaultSignatureAlgorithm: credentialSigningAlgorithm }
+        : credentialTypesMap?.[extractCredentialType(offers[i])],
     );
     entries.push({
       algType: ALG_TYPE[algTypeName],

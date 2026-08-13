@@ -134,9 +134,9 @@ const EXPECTED_OPERATION_METADATA = {
     'deleteTenant',
     OPERATOR_SECURITY,
   ],
-  'POST /operator/tenants/update-signing-policy': [
+  'POST /operator/tenants/update': [
     'Tenants',
-    'updateTenantSigningPolicy',
+    'updateTenant',
     OPERATOR_SECURITY,
   ],
   'GET /.well-known/oauth-authorization-server/r/{tenantId}': [
@@ -240,7 +240,7 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/tenants/create',
       'GET /operator/tenants/get',
       'POST /operator/tenants/delete',
-      'POST /operator/tenants/update-signing-policy',
+      'POST /operator/tenants/update',
     ],
   },
   openid4vc: {
@@ -450,20 +450,6 @@ describe('swagger documents', () => {
     )) {
       expect(operations[operationKey].summary).toEqual(summary);
     }
-  });
-
-  it('uses an OpenAPI 3.0-compatible nullable tenant signing policy schema', () => {
-    const schema =
-      documents.operator.paths['/operator/tenants/update-signing-policy'].post
-        .requestBody.content['application/json'].schema.properties
-        .credentialSigningAlgorithm;
-
-    expect(documents.operator.openapi).toEqual('3.0.3');
-    expect(schema).toEqual({
-      enum: ['ES256K', 'ES256', 'RS256', null],
-      nullable: true,
-      type: 'string',
-    });
   });
 
   it('emits only reachable schemas and no dangling component refs', () => {

@@ -468,7 +468,7 @@ describe('Tenants management test suite', () => {
       );
     });
 
-    ['ES256K', 'ES256', 'RS256'].forEach((credentialSigningAlgorithm) => {
+    ['SECP256K1', 'ES256', 'RS256'].forEach((credentialSigningAlgorithm) => {
       it(`should create and read back a tenant configured for ${credentialSigningAlgorithm} credential signing`, async () => {
         setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
         const payload = {
@@ -1070,15 +1070,20 @@ describe('Tenants management test suite', () => {
     });
   });
 
-  describe('Tenant signing policy update tests', () => {
-    const updateUrl = '/operator/tenants/update-signing-policy';
+  describe('Tenant update tests', () => {
+    const updateUrl = '/operator/tenants/update';
 
-    it('should update an existing tenant to ES256, audit it, and read it back', async () => {
+    it('should update and read back non-identity tenant properties', async () => {
       const tenant = await persistTenant();
+      setupCreateTenantRegistrarMocks(tenant.did, orgDoc);
       const payload = {
         tenantId: tenant._id,
-        credentialSigningAlgorithm: 'ES256',
-        expectedUpdatedAt: new Date(tenant.updatedAt).toISOString(),
+        tenant: {
+          credentialSigningAlgorithm: 'ES256',
+          hostUrl: 'https://updated.example.com',
+          logo: tenant.logo,
+          name: tenant.name,
+        },
       };
 
       const updateResponse = await fastify.injectJson({
@@ -1088,35 +1093,18 @@ describe('Tenants management test suite', () => {
       });
 
       expect(updateResponse.statusCode).toEqual(200);
-      expect(updateResponse.json.tenant.updatedAt).not.toEqual(
-        payload.expectedUpdatedAt,
-      );
       expect(updateResponse.json).toEqual({
         tenant: expectedTenant(tenant, {
           credentialSigningAlgorithm: 'ES256',
+          hostUrl: 'https://updated.example.com',
           updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         }),
         requestId: expect.any(String),
       });
-
-      const tenantFromDb = await loadDbTenant(tenant._id);
-      expect(tenantFromDb).toEqual(
+      await expect(loadDbTenant(tenant._id)).resolves.toEqual(
         expect.objectContaining({
           credentialSigningAlgorithm: 'ES256',
-          operatorAuditEvents: [
-            {
-              actor: {
-                authenticationMethod: 'static_bearer',
-                caoDid: 'did:ion:e89fYWr0Lkfd_pa18fdk',
-                subject: 'legacy-operator-token',
-                subjectType: 'client',
-              },
-              credentialSigningAlgorithm: 'ES256',
-              previousCredentialSigningAlgorithm: null,
-              timestamp: expect.any(Date),
-              type: 'credential_signing_algorithm_updated',
-            },
-          ],
+          hostUrl: 'https://updated.example.com',
           updatedAt: expect.any(Date),
         }),
       );
@@ -1131,7 +1119,7 @@ describe('Tenants management test suite', () => {
       ]);
     });
 
-    it('should clear an existing override when the update value is null', async () => {
+    it('should reject a null signing algorithm', async () => {
       const tenant = await persistTenant({
         credentialSigningAlgorithm: 'RS256',
       });
@@ -1141,27 +1129,124 @@ describe('Tenants management test suite', () => {
         url: updateUrl,
         payload: {
           tenantId: tenant._id,
-          credentialSigningAlgorithm: null,
-          expectedUpdatedAt: new Date(tenant.updatedAt).toISOString(),
+          tenant: {
+            credentialSigningAlgorithm: null,
+            logo: tenant.logo,
+            name: tenant.name,
+          },
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'request_validation_failed',
+          message: 'body/tenant/credentialSigningAlgorithm must be string',
+        }),
+      );
+      await expect(loadDbTenant(tenant._id)).resolves.toEqual(
+        expect.objectContaining({ credentialSigningAlgorithm: 'RS256' }),
+      );
+    });
+
+    it('should validate updated name and logo against the tenant DID profile', async () => {
+      const tenant = await persistTenant();
+      setupCreateTenantRegistrarMocks(tenant.did, orgDoc, {
+        commercialEntities: [
+          {
+            name: 'Updated Tenant',
+            logo: 'https://updated.example.com/logo.png',
+          },
+        ],
+      });
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: updateUrl,
+        payload: {
+          tenantId: tenant._id,
+          tenant: {
+            name: 'Updated Tenant',
+            logo: 'https://updated.example.com/logo.png',
+          },
         },
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(response.json.tenant).not.toHaveProperty(
-        'credentialSigningAlgorithm',
-      );
-      const tenantFromDb = await loadDbTenant(tenant._id);
-      expect(tenantFromDb).not.toHaveProperty('credentialSigningAlgorithm');
-      expect(tenantFromDb.operatorAuditEvents).toEqual([
+      expect(response.json.tenant).toEqual(
         expect.objectContaining({
-          credentialSigningAlgorithm: null,
-          previousCredentialSigningAlgorithm: 'RS256',
+          name: 'Updated Tenant',
+          logo: 'https://updated.example.com/logo.png',
         }),
-      ]);
+      );
     });
 
-    ['es256', 'EdDSA', 'RS512'].forEach((credentialSigningAlgorithm) => {
-      it(`should reject invalid update algorithm ${credentialSigningAlgorithm}`, async () => {
+    it('should reject a name that does not match the tenant DID profile', async () => {
+      const tenant = await persistTenant();
+      setupCreateTenantRegistrarMocks(tenant.did, orgDoc);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: updateUrl,
+        payload: {
+          tenantId: tenant._id,
+          tenant: {
+            logo: tenant.logo,
+            name: 'Unrelated Tenant',
+          },
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'name_must_match_profile',
+          message: 'name_must_match_profile',
+        }),
+      );
+    });
+
+    ['es256', 'ES256K', 'EdDSA', 'RS512'].forEach(
+      (credentialSigningAlgorithm) => {
+        it(`should reject invalid update algorithm ${credentialSigningAlgorithm}`, async () => {
+          const tenant = await persistTenant();
+
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: updateUrl,
+            payload: {
+              tenantId: tenant._id,
+              tenant: {
+                credentialSigningAlgorithm,
+                logo: tenant.logo,
+                name: tenant.name,
+              },
+            },
+          });
+
+          expect(response.statusCode).toEqual(400);
+          expect(response.json).toEqual(
+            errorResponseMatcher({
+              errorCode: 'request_validation_failed',
+              message:
+                'body/tenant/credentialSigningAlgorithm must be equal to one of the allowed values',
+            }),
+          );
+        });
+      },
+    );
+
+    [
+      'did',
+      'primaryAccount',
+      'caoDid',
+      'keys',
+      'id',
+      '_id',
+      'createdAt',
+      'updatedAt',
+    ].forEach((property) => {
+      it(`should reject the identity or scoping property ${property}`, async () => {
         const tenant = await persistTenant();
 
         const response = await fastify.injectJson({
@@ -1169,8 +1254,11 @@ describe('Tenants management test suite', () => {
           url: updateUrl,
           payload: {
             tenantId: tenant._id,
-            credentialSigningAlgorithm,
-            expectedUpdatedAt: new Date(tenant.updatedAt).toISOString(),
+            tenant: {
+              [property]: 'not-allowed',
+              logo: tenant.logo,
+              name: tenant.name,
+            },
           },
         });
 
@@ -1178,53 +1266,33 @@ describe('Tenants management test suite', () => {
         expect(response.json).toEqual(
           errorResponseMatcher({
             errorCode: 'request_validation_failed',
-            message:
-              'body/credentialSigningAlgorithm must be equal to one of the allowed values',
+            message: 'body/tenant must NOT have additional properties',
           }),
         );
       });
     });
 
-    it('should reject a reused optimistic-concurrency token without changing the latest policy', async () => {
-      const tenant = await persistTenant();
-      const expectedUpdatedAt = new Date(tenant.updatedAt).toISOString();
-      const firstResponse = await fastify.injectJson({
-        method: 'POST',
-        url: updateUrl,
-        payload: {
-          tenantId: tenant._id,
-          credentialSigningAlgorithm: 'RS256',
-          expectedUpdatedAt,
-        },
+    [
+      ['logo', { name: 'fooName' }],
+      ['name', { logo: 'https://localhost.test/logo.png' }],
+    ].forEach(([property, tenantUpdate]) => {
+      it(`should reject an update missing required mutable property ${property}`, async () => {
+        const tenant = await persistTenant();
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: updateUrl,
+          payload: { tenantId: tenant._id, tenant: tenantUpdate },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            errorCode: 'request_validation_failed',
+            message: `body/tenant must have required property '${property}'`,
+          }),
+        );
       });
-
-      expect(firstResponse.statusCode).toEqual(200);
-      expect(firstResponse.json.tenant.updatedAt).not.toEqual(
-        expectedUpdatedAt,
-      );
-
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: updateUrl,
-        payload: {
-          tenantId: tenant._id,
-          credentialSigningAlgorithm: 'ES256',
-          expectedUpdatedAt,
-        },
-      });
-
-      expect(response.statusCode).toEqual(409);
-      expect(response.json).toEqual(
-        errorResponseMatcher({
-          error: 'Conflict',
-          errorCode: 'tenant_update_conflict',
-          message: 'tenant_update_conflict',
-          statusCode: 409,
-        }),
-      );
-      await expect(loadDbTenant(tenant._id)).resolves.toEqual(
-        expect.objectContaining({ credentialSigningAlgorithm: 'RS256' }),
-      );
     });
 
     it('should return the stable not-found contract for an unknown tenant', async () => {
@@ -1233,8 +1301,11 @@ describe('Tenants management test suite', () => {
         url: updateUrl,
         payload: {
           tenantId: new ObjectId(),
-          credentialSigningAlgorithm: 'ES256',
-          expectedUpdatedAt: new Date().toISOString(),
+          tenant: {
+            credentialSigningAlgorithm: 'ES256',
+            logo: 'https://localhost.test/logo.png',
+            name: 'fooName',
+          },
         },
       });
 
@@ -1255,8 +1326,11 @@ describe('Tenants management test suite', () => {
         url: updateUrl,
         payload: {
           tenantId: 'not-an-object-id',
-          credentialSigningAlgorithm: 'ES256',
-          expectedUpdatedAt: new Date().toISOString(),
+          tenant: {
+            credentialSigningAlgorithm: 'ES256',
+            logo: 'https://localhost.test/logo.png',
+            name: 'fooName',
+          },
         },
       });
 
@@ -1471,22 +1545,25 @@ describe('CAO-isolated tenant management', () => {
     );
   });
 
-  it('conceals a foreign tenant from signing-policy updates', async () => {
+  it('conceals a foreign tenant from updates', async () => {
     const foreignTenant = await persistTenant({ caoDid: OTHER_CAO_DID });
     const unknownPayload = {
       tenantId: new ObjectId(),
-      credentialSigningAlgorithm: 'ES256',
-      expectedUpdatedAt: new Date(foreignTenant.updatedAt).toISOString(),
+      tenant: {
+        credentialSigningAlgorithm: 'ES256',
+        logo: foreignTenant.logo,
+        name: foreignTenant.name,
+      },
     };
 
     const unknownResponse = await fastify.injectJson({
       method: 'POST',
-      url: '/operator/tenants/update-signing-policy',
+      url: '/operator/tenants/update',
       payload: unknownPayload,
     });
     const foreignResponse = await fastify.injectJson({
       method: 'POST',
-      url: '/operator/tenants/update-signing-policy',
+      url: '/operator/tenants/update',
       payload: { ...unknownPayload, tenantId: foreignTenant._id },
     });
 
