@@ -17,6 +17,8 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const {
+  buildDecodedCredential,
+  buildDecodedPresentation,
   CredentialContexts,
   CredentialDataModelVersions,
   CredentialEnvelopeError,
@@ -32,6 +34,11 @@ const {
   getCredentialTypes,
   getCredentialValidity,
 } = require('..');
+const {
+  buildDecodedCredential: buildLegacyCredential,
+  buildDecodedPresentation: buildLegacyPresentation,
+} = require('../src/credential-envelope-legacy');
+const verifiableDecoderExports = require('../src/verifiable-decoders');
 const {
   compactCredentialFixture,
   expectedLegacyCredential,
@@ -91,6 +98,36 @@ describe('credential envelope classification', () => {
       dataModelVersion: '1.1',
       envelopeFormat: 'jwt_vc_json-ld',
       protectedHeader: legacyCredentialFixtures[0].header,
+    });
+  });
+
+  it('classifies a legacy VC 1.1 envelope without a nested context', () => {
+    const payload = {
+      iss: 'did:ion:1234567890',
+      vc: {
+        id: 'did:velocity:v2:1:BBB:42',
+        type: ['CredentialMetadataListHeader'],
+        credentialSubject: {
+          accountId: 'BBB',
+          listId: 1,
+        },
+      },
+    };
+    const compact = compactCredentialFixture(
+      { alg: 'ES256K', typ: 'JWT' },
+      payload,
+    );
+
+    expect(decodeCredentialEnvelope(compact)).toMatchObject({
+      compact,
+      credential: {
+        issuer: { id: payload.iss },
+        credentialSubject: payload.vc.credentialSubject,
+        type: payload.vc.type,
+      },
+      dataModelVersion: CredentialDataModelVersions.V1_1,
+      envelopeFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+      protectedHeader: { alg: 'ES256K', typ: 'JWT' },
     });
   });
 
@@ -272,6 +309,15 @@ describe('credential envelope classification', () => {
         vc: {
           ...legacyPayload.vc,
           '@context': ['https://example.com/unknown', VC_V1_CONTEXT],
+        },
+      },
+    },
+    {
+      name: 'a nested non-array context',
+      payload: {
+        vc: {
+          ...legacyPayload.vc,
+          '@context': VC_V1_CONTEXT,
         },
       },
     },
@@ -470,6 +516,17 @@ describe('credential envelope public contract', () => {
     expect(Object.isFrozen(CredentialEnvelopeErrorCodes)).toBe(true);
     expect(Object.isFrozen(CredentialEnvelopeFormats)).toBe(true);
     expect(Object.isFrozen(CredentialEnvelopeLimits)).toBe(true);
+  });
+
+  it('exports legacy builders from the legacy module', () => {
+    expect(buildDecodedCredential).toBe(buildLegacyCredential);
+    expect(buildDecodedPresentation).toBe(buildLegacyPresentation);
+    expect(verifiableDecoderExports).not.toHaveProperty(
+      'buildDecodedCredential',
+    );
+    expect(verifiableDecoderExports).not.toHaveProperty(
+      'buildDecodedPresentation',
+    );
   });
 
   it('reads neutral fields from a normalized envelope', () => {

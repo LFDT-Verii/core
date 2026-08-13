@@ -15,10 +15,7 @@
  */
 
 const { jwtDecode, jwtVerify, deriveJwk } = require('./core');
-const {
-  buildDecodedCredential,
-  buildDecodedPresentation,
-} = require('./credential-envelope-legacy');
+const { buildDecodedPresentation } = require('./credential-envelope-legacy');
 const { decodeCredentialEnvelope } = require('./credential-envelope-codec');
 const { verifyCredentialEnvelope } = require('./credential-envelope-verifier');
 
@@ -45,9 +42,7 @@ const verifyPresentationJwt = async (presentationJwt, key) => {
 
 module.exports = {
   decodeCredentialJwt,
-  verifyCredentialJwt,
   decodePresentationJwt,
+  verifyCredentialJwt,
   verifyPresentationJwt,
-  buildDecodedCredential,
-  buildDecodedPresentation,
 };

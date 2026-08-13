@@ -212,7 +212,7 @@ const classifyDirectCredential = (payload, directContext, usesV2Type) => {
 
 const classifyNestedCredential = (credential, nestedContext, protectedType) => {
   assertJsonObject(credential, 'vc claim');
-  assertSupportedContext(nestedContext);
+  assertNestedCredentialContext(credential, nestedContext);
   assertLegacyProtectedType(protectedType);
 
   return {
@@ -307,19 +307,13 @@ const isCredentialTypeArray = (type) =>
   type.includes('VerifiableCredential') &&
   !type.includes('VerifiablePresentation');
 
-const isDecodedCredentialEnvelope = (value) => {
-  if (!isJsonObject(value)) {
-    return false;
-  }
-
-  return [
-    typeof value.compact === 'string',
-    isJsonObject(value.credential),
-    Object.values(CredentialDataModelVersions).includes(value.dataModelVersion),
-    Object.values(CredentialEnvelopeFormats).includes(value.envelopeFormat),
-    isJsonObject(value.protectedHeader),
-  ].every(Boolean);
-};
+const isDecodedCredentialEnvelope = (value) =>
+  isJsonObject(value) &&
+  typeof value.compact === 'string' &&
+  isJsonObject(value.credential) &&
+  Object.values(CredentialDataModelVersions).includes(value.dataModelVersion) &&
+  Object.values(CredentialEnvelopeFormats).includes(value.envelopeFormat) &&
+  isJsonObject(value.protectedHeader);
 
 const firstDefined = (...values) => values.find((value) => value != null);
 
@@ -414,6 +408,16 @@ const assertLegacyProtectedType = (protectedType) => {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.WRONG_TYPE,
       'A VC 1.1 compatibility envelope requires typ JWT or no typ',
+    );
+  }
+};
+
+const assertNestedCredentialContext = (credential, context) => {
+  const hasContext = Object.hasOwn(credential, '@context');
+  if (hasContext && context !== CredentialContexts.V1_1) {
+    throw new CredentialEnvelopeError(
+      CredentialEnvelopeErrorCodes.UNSUPPORTED_CONTEXT,
+      'Credential envelope has an unsupported first context',
     );
   }
 };

@@ -41,6 +41,10 @@ const {
   CredentialEnvelopeErrorCodes,
   CredentialEnvelopeLimits,
 } = require('../src/credential-envelope-codec');
+const {
+  expectedLegacyCredential,
+  legacyCredentialFixtures,
+} = require('./fixtures/credential-envelope-fixtures');
 
 describe('Verifiable Decoder Tests', () => {
   const keyPair = generateKeyPair({ format: 'jwk' });
@@ -67,6 +71,14 @@ describe('Verifiable Decoder Tests', () => {
   };
 
   describe('Decode credential JWT', () => {
+    for (const fixture of legacyCredentialFixtures) {
+      it(`Should preserve ${fixture.name}`, () => {
+        expect(decodeCredentialJwt(fixture.compact)).toEqual(
+          expectedLegacyCredential,
+        );
+      });
+    }
+
     it('Should decode credential from JWT', async () => {
       const credentialJwt = await generateCredentialJwt(
         credential,
