@@ -1,8 +1,10 @@
+import type { JsonWebKey } from 'crypto';
+
 export interface CredentialMetadata extends AllocationListEntry {
   contentHash: string;
   credentialType: string;
   credentialTypeByteEncoding: string;
-  publicKey: string;
+  publicKey: JsonWebKey;
 }
 
 export type CredentialDataModelVersion = '1.1' | '2.0';
