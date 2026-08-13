@@ -125,24 +125,23 @@ const assertDepth = (value, depth = 1) => {
   }
 };
 
-const assertNotMixed = ({
+const hasCompatibilityClaimWithV2Type = ({
   hasVcClaim,
   hasVpClaim,
-  nestedContext,
   usesV2Type,
-}) => {
-  const hasCompatibilityClaim = hasVcClaim || hasVpClaim;
-  const hasConflictingCompatibilityClaims = hasVcClaim && hasVpClaim;
-  const compatibilityClaimWithV2Type = hasCompatibilityClaim && usesV2Type;
-  const nestedWithV2Context =
-    hasVcClaim && nestedContext === CredentialContexts.V2_0;
+}) => (hasVcClaim || hasVpClaim) && usesV2Type;
 
+const hasConflictingCompatibilityClaims = ({ hasVcClaim, hasVpClaim }) =>
+  hasVcClaim && hasVpClaim;
+
+const hasNestedV2Context = ({ hasVcClaim, nestedContext }) =>
+  hasVcClaim && nestedContext === CredentialContexts.V2_0;
+
+const assertNotMixed = (formatSignals) => {
   if (
-    hasMixedFormat(
-      compatibilityClaimWithV2Type,
-      hasConflictingCompatibilityClaims,
-      nestedWithV2Context,
-    )
+    hasCompatibilityClaimWithV2Type(formatSignals) ||
+    hasConflictingCompatibilityClaims(formatSignals) ||
+    hasNestedV2Context(formatSignals)
   ) {
     throw new CredentialEnvelopeError(
       CredentialEnvelopeErrorCodes.MIXED_FORMAT,
@@ -150,15 +149,6 @@ const assertNotMixed = ({
     );
   }
 };
-
-const hasMixedFormat = (
-  compatibilityClaimWithV2Type,
-  hasConflictingCompatibilityClaims,
-  nestedWithV2Context,
-) =>
-  compatibilityClaimWithV2Type ||
-  hasConflictingCompatibilityClaims ||
-  nestedWithV2Context;
 
 const classifyCredential = (payload, protectedHeader) => {
   const directContext = firstContext(payload);
