@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-const { isEmpty, isObject } = require('lodash/fp');
 const { jwtDecode, jwtVerify, deriveJwk } = require('./core');
+const {
+  buildDecodedCredential,
+  buildDecodedPresentation,
+} = require('./credential-envelope-legacy');
+const { decodeCredentialEnvelope } = require('./credential-envelope-codec');
 
-const decodeCredentialJwt = (credentialJwt) => {
-  const { payload } = jwtDecode(credentialJwt);
-  return buildDecodedCredential(payload);
-};
+const decodeCredentialJwt = (credentialJwt) =>
+  decodeCredentialEnvelope(credentialJwt).credential;
 
 const decodePresentationJwt = (presentationJwt) => {
   const { payload } = jwtDecode(presentationJwt);
@@ -29,8 +31,8 @@ const decodePresentationJwt = (presentationJwt) => {
 
 const verifyCredentialJwt = async (credentialJwt, key) => {
   const jwk = deriveJwk(credentialJwt, key);
-  const { payload } = await jwtVerify(credentialJwt, jwk);
-  return buildDecodedCredential(payload);
+  await jwtVerify(credentialJwt, jwk);
+  return decodeCredentialJwt(credentialJwt);
 };
 
 const verifyPresentationJwt = async (presentationJwt, key) => {
@@ -38,58 +40,6 @@ const verifyPresentationJwt = async (presentationJwt, key) => {
   const { payload } = await jwtVerify(presentationJwt, jwk);
   return buildDecodedPresentation(payload);
 };
-
-const timestampToIsoDateString = (timestamp) =>
-  new Date(timestamp * 1000).toISOString();
-
-const credentialSubject = (payload) => ({
-  credentialSubject: {
-    ...payload.vc.credentialSubject,
-    ...(payload.sub ? { id: payload.sub } : {}),
-  },
-});
-
-const issuanceDate = (payload, existingIssuanceDate) =>
-  existingIssuanceDate == null && (payload.iat ?? payload.nbf)
-    ? { issuanceDate: timestampToIsoDateString(payload.iat ?? payload.nbf) }
-    : {};
-
-const expirationDate = (payload) =>
-  payload.exp ? { expirationDate: timestampToIsoDateString(payload.exp) } : {};
-
-// eslint-disable-next-line complexity
-const issuer = ({ iss, vc }) => {
-  const issuerPayload = vc?.issuer || {};
-
-  if (isEmpty(iss) && isEmpty(issuerPayload)) {
-    return {};
-  }
-
-  return {
-    issuer: {
-      ...(isObject(issuerPayload) ? issuerPayload : {}),
-      ...(iss ? { id: iss } : {}),
-    },
-  };
-};
-const verifier = ({ aud }) => (aud ? { verifier: aud } : {});
-const buildDecodedCredential = (payload) => ({
-  ...payload.vc,
-  id: payload.jti,
-  ...issuer(payload),
-  ...credentialSubject(payload),
-  ...issuanceDate(payload, payload.vc.issuanceDate),
-  ...expirationDate(payload),
-});
-
-const buildDecodedPresentation = (payload) => ({
-  ...payload.vp,
-  id: payload.jti,
-  ...issuer(payload),
-  ...verifier(payload),
-  ...issuanceDate(payload, payload.vp.issuanceDate),
-  ...expirationDate(payload),
-});
 
 module.exports = {
   decodeCredentialJwt,

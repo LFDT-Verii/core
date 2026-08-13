@@ -34,8 +34,15 @@ const createCredential = (context, overrides = {}) => ({
     id: 'did:velocity:v2:issuer-from-vc',
     name: 'Velocity University',
   },
-  issuanceDate: '2026-01-02T03:04:05.000Z',
-  expirationDate: '2027-01-02T03:04:05.000Z',
+  ...(context === VC_V1_CONTEXT
+    ? {
+        expirationDate: '2027-01-02T03:04:05.000Z',
+        issuanceDate: '2026-01-02T03:04:05.000Z',
+      }
+    : {
+        validFrom: '2026-01-02T03:04:05.000Z',
+        validUntil: '2027-01-02T03:04:05.000Z',
+      }),
   credentialSubject: {
     id: 'did:velocity:v2:subject-from-vc',
     degree: 'Computer Science',
@@ -117,14 +124,7 @@ const legacyCredentialFixtures = Object.freeze([
   }),
 ]);
 
-const v2Credential = Object.freeze(
-  createCredential(VC_V2_CONTEXT, {
-    validFrom: '2026-01-02T03:04:05.000Z',
-    validUntil: '2027-01-02T03:04:05.000Z',
-    issuanceDate: undefined,
-    expirationDate: undefined,
-  }),
-);
+const v2Credential = Object.freeze(createCredential(VC_V2_CONTEXT));
 
 const v2CredentialFixture = compactCredentialFixture(
   {
