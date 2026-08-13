@@ -42,8 +42,8 @@ const {
  * @param {AllocationListEntry[]} metadataEntries metadata entries
  * @param {AllocationListEntry[]} revocationListEntries revocation list entries
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types
- * @param {Context} context the context
  * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @param {Context} context the context
  * @returns {Promise<{vcJwt: string, jsonLdCredential: JsonLdCredential, metadata: CredentialMetadata}[]>} the vc and its metadata
  */
 const prepareJwtVcs = async (
@@ -53,8 +53,8 @@ const prepareJwtVcs = async (
   metadataEntries,
   revocationListEntries,
   credentialTypesMap,
-  context,
   credentialSigningAlgorithms,
+  context,
 ) => {
   return Promise.all(
     mapWithIndex(async (offer, i) => {

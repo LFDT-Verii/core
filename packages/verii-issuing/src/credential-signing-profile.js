@@ -15,20 +15,21 @@
  */
 
 const { KeyAlgorithms } = require('@verii/crypto');
+const { ALG_TYPE } = require('@verii/metadata-registration');
 
 const CredentialSigningProfiles = Object.freeze({
   [KeyAlgorithms.SECP256K1]: Object.freeze({
-    algTypeName: 'HEX_AES_256',
+    algType: ALG_TYPE.HEX_AES_256,
     joseAlgorithm: 'ES256K',
     keyAlgorithm: KeyAlgorithms.SECP256K1,
   }),
   [KeyAlgorithms.ES256]: Object.freeze({
-    algTypeName: 'COSEKEY_AES_256',
+    algType: ALG_TYPE.COSEKEY_AES_256,
     joseAlgorithm: 'ES256',
     keyAlgorithm: KeyAlgorithms.ES256,
   }),
   [KeyAlgorithms.RS256]: Object.freeze({
-    algTypeName: 'COSEKEY_AES_256',
+    algType: ALG_TYPE.COSEKEY_AES_256,
     joseAlgorithm: 'RS256',
     keyAlgorithm: KeyAlgorithms.RS256,
   }),
@@ -39,7 +40,6 @@ const CredentialSigningAlgorithms = Object.freeze([
   KeyAlgorithms.ES256,
   KeyAlgorithms.RS256,
 ]);
-const ResolvedCredentialSigningProfiles = new Map();
 
 /**
  * Resolves the complete execution profile for a supported signing algorithm.
@@ -53,31 +53,7 @@ const getCredentialSigningProfile = (algorithm) => {
       `Credential signing algorithm is not supported: ${algorithm}`,
     );
   }
-  return resolveAlgType(profile);
-};
-
-/**
- * Adds the metadata registry encoding constant to a signing profile.
- * @param {object} profile the unresolved signing profile
- * @returns {object} the signing profile with its metadata algorithm type
- */
-const resolveAlgType = (profile) => {
-  const resolvedProfile = ResolvedCredentialSigningProfiles.get(
-    profile.keyAlgorithm,
-  );
-  if (resolvedProfile != null) {
-    return resolvedProfile;
-  }
-  const { ALG_TYPE } = require('@verii/metadata-registration');
-  const profileWithAlgType = Object.freeze({
-    ...profile,
-    algType: ALG_TYPE[profile.algTypeName],
-  });
-  ResolvedCredentialSigningProfiles.set(
-    profile.keyAlgorithm,
-    profileWithAlgType,
-  );
-  return profileWithAlgType;
+  return profile;
 };
 
 module.exports = {

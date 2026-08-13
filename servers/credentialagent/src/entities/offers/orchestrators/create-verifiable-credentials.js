@@ -128,8 +128,8 @@ const doIssueVerifiableCredentials = async (
       dltOperatorKMSKeyId: dltOperatorKey.keyId,
       dltPrimaryAddress: tenant.primaryAddress,
     },
-    context,
     credentialSigningAlgorithms,
+    context,
   ).catch((e) => {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':

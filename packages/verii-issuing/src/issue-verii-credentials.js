@@ -23,6 +23,7 @@ const {
   initCredentialMetadataContract,
 } = require('./adapters/init-credential-metadata-contract');
 const { createRevocationList } = require('./adapters/create-revocation-list');
+const { getCredentialSigningProfile } = require('./credential-signing-profile');
 const { prepareJwtVcs } = require('./domain/prepare-jwt-vcs');
 
 const REVOCATION_LIST_SIZE = 10240;
@@ -36,8 +37,8 @@ const METADATA_LIST_SIZE = 10000;
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
- * @param {Context} context the context
  * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @param {Context} context the context
  * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
  */
 const issueVeriiCredentials = async (
@@ -45,16 +46,16 @@ const issueVeriiCredentials = async (
   credentialSubjectId,
   credentialTypesMap,
   issuer,
-  context,
   credentialSigningAlgorithms,
+  context,
 ) => {
   const vcs = await signVeriiCredentials(
     offers,
     credentialSubjectId,
     credentialTypesMap,
     issuer,
-    context,
     credentialSigningAlgorithms,
+    context,
   );
 
   await anchorVeriiCredentials(map('metadata', vcs), issuer, context);
@@ -69,8 +70,8 @@ const issueVeriiCredentials = async (
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
- * @param {Context} context the context
  * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @param {Context} context the context
  * @returns {Promise<{vcJwt: string, metadata: CredentialMetadata}[]>} Returns array of signed vcs (in jwt format) and their metadata
  */
 const signVeriiCredentials = async (
@@ -78,16 +79,20 @@ const signVeriiCredentials = async (
   credentialSubjectId,
   credentialTypesMap,
   issuer,
-  context,
   credentialSigningAlgorithms,
+  context,
 ) => {
+  credentialSigningAlgorithms
+    ?.filter((algorithm) => algorithm != null)
+    .forEach(getCredentialSigningProfile);
+
   const metadataEntries = await allocateMetadataListEntries(
     offers,
     credentialTypesMap,
     issuer,
     METADATA_LIST_SIZE,
-    context,
     credentialSigningAlgorithms,
+    context,
   );
   const newMetadataListEntries = getNewListEntries(metadataEntries);
   if (newMetadataListEntries.length > 0) {
@@ -124,8 +129,8 @@ const signVeriiCredentials = async (
     metadataEntries,
     revocationListEntries,
     credentialTypesMap,
-    context,
     credentialSigningAlgorithms,
+    context,
   );
 };
 
