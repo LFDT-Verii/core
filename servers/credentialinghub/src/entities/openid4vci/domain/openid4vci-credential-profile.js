@@ -27,7 +27,7 @@ const Openid4vciCredentialProfile = Object.freeze({
 });
 
 const isOpenid4vciCredentialFormat = (format) =>
-  format == null || format === Openid4vciCredentialProfile.format;
+  format === undefined || format === Openid4vciCredentialProfile.format;
 
 module.exports = {
   isOpenid4vciCredentialFormat,
