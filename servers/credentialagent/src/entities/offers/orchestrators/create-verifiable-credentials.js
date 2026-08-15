@@ -16,9 +16,15 @@
 
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 const { mapWithIndex } = require('@verii/common-functions');
-const { KeyPurposes, calcSha384, hexFromJwk } = require('@verii/crypto');
+const {
+  KeyAlgorithms,
+  KeyPurposes,
+  calcSha384,
+  hexFromJwk,
+} = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');
 const { jwtDecode } = require('@verii/jwt');
+const { extractCredentialType } = require('@verii/vc-checks');
 const {
   issueVeriiCredentials,
   mongoAllocationListQueries,
@@ -89,6 +95,12 @@ const doIssueVerifiableCredentials = async (
 
   // Load credential types
   const credentialTypesMap = await loadCredentialTypesMap(offers, context);
+  const credentialSigningAlgorithms = map(
+    (offer) =>
+      credentialTypesMap[extractCredentialType(offer)]
+        ?.defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1,
+    offers,
+  );
 
   // eslint-disable-next-line better-mutation/no-mutation
   context.allocationListQueries = mongoAllocationListQueries(
@@ -117,6 +129,7 @@ const doIssueVerifiableCredentials = async (
       dltPrimaryAddress: tenant.primaryAddress,
     },
     context,
+    credentialSigningAlgorithms,
   ).catch((e) => {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':

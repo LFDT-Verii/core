@@ -182,14 +182,14 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.HEX_AES_256,
+      ALG_TYPE.COSEKEY_AES_256,
       { issuerEntity, caoEntity },
     );
     await verifyCreateMetadataListCall(
       mockCreateCredentialMetadataList.mock.calls[1],
       issuer,
-      mockAddCredentialMetadataEntry.mock.calls[2].arguments[0].listId,
-      ALG_TYPE.COSEKEY_AES_256,
+      mockAddCredentialMetadataEntry.mock.calls[1].arguments[0].listId,
+      ALG_TYPE.HEX_AES_256,
       { issuerEntity, caoEntity },
     );
 
@@ -198,9 +198,49 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
   });
 
+  it('should use an explicitly resolved ES256 algorithm instead of the Open Badge RS256 default', async () => {
+    const offers = [
+      offerFactory({
+        credentialType: 'OpenBadgeCredential',
+        issuerId: issuerEntity.did,
+      }),
+    ];
+    const [credential] = await issueVeriiCredentials(
+      offers,
+      createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      context,
+      [KeyAlgorithms.ES256],
+    );
+
+    const { header } = jwtDecode(credential);
+    expect(header.alg).toEqual('ES256');
+    const [{ publicKey }] = mockAddCredentialMetadataEntry.mock.calls.map(
+      (call) => call.arguments[0],
+    );
+    expect(publicKey).toEqual(publicJwkMatcher(KeyAlgorithms.ES256));
+    expect(mockAddCredentialMetadataEntry.mock.calls[0].arguments[3]).toEqual(
+      ALG_TYPE.COSEKEY_AES_256,
+    );
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(1);
+    await verifyCreateMetadataListCall(
+      mockCreateCredentialMetadataList.mock.calls[0],
+      issuer,
+      mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
+      ALG_TYPE.COSEKEY_AES_256,
+      { issuerEntity, caoEntity },
+    );
+    await expect(jwtVerify(credential, publicKey, false)).resolves.toEqual(
+      expect.objectContaining({
+        header: expect.objectContaining({ alg: 'ES256' }),
+      }),
+    );
+  });
+
   it('should create vcs with context in credentialSubject (allocation lists exists)', async () => {
     context.config.credentialSubjectContext = true;
-    allocationsCollection.insertOne({
+    await allocationsCollection.insertOne({
       tenantId: issuer.id,
       entityName: 'HEX_AES_256_MetadataListAllocations',
       freeIndexes: [1, 2],
@@ -209,7 +249,7 @@ describe('issuing velocity verifiable credentials', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    allocationsCollection.insertOne({
+    await allocationsCollection.insertOne({
       tenantId: issuer.id,
       entityName: 'COSEKEY_AES_256_MetadataListAllocations',
       freeIndexes: [99, 100],
@@ -314,7 +354,7 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.HEX_AES_256,
+      ALG_TYPE.COSEKEY_AES_256,
       { issuerEntity, caoEntity },
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
@@ -371,7 +411,7 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.HEX_AES_256,
+      ALG_TYPE.COSEKEY_AES_256,
       { issuerEntity, caoEntity },
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([

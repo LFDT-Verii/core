@@ -19,22 +19,27 @@ const {
   createTenant,
   deleteTenant,
   findTenants,
+  updateTenant,
 } = require('../../../entities/tenants');
 const {
   jwkSchema,
   newTenantSchema,
   tenantSchema,
+  updateTenantSchema,
   newKeyMetadataSchema,
   keyMetadataSchema,
   secretKeySchema,
   newKeySchema,
 } = require('./schemas');
 
+const OBJECT_ID_PATTERN = '^[0-9a-fA-F]{24}$';
+
 module.exports = async (fastify) => {
   fastify
     .addSchema(jwkSchema)
     .addSchema(newTenantSchema)
     .addSchema(tenantSchema)
+    .addSchema(updateTenantSchema)
     .addSchema(newKeyMetadataSchema)
     .addSchema(keyMetadataSchema)
     .addSchema(secretKeySchema)
@@ -139,6 +144,48 @@ module.exports = async (fastify) => {
         );
         return { tenants };
       },
+    )
+    .post(
+      '/update',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Update a tenant',
+          operationId: 'updateTenant',
+          body: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              tenantId: {
+                type: 'string',
+                pattern: OBJECT_ID_PATTERN,
+              },
+              tenant: {
+                $ref: 'update-tenant#',
+              },
+            },
+            required: ['tenantId', 'tenant'],
+          },
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                tenant: {
+                  $ref: 'tenant#',
+                },
+                requestId: {
+                  type: 'string',
+                },
+              },
+            },
+            404: {
+              $ref: 'error#',
+            },
+          },
+        }),
+      },
+      async (req) => ({
+        tenant: await updateTenant(req.body.tenantId, req.body.tenant, req),
+      }),
     )
     .post(
       '/delete',

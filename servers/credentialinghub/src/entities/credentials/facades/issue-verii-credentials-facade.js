@@ -28,6 +28,7 @@ const issueVeriiCredentialsFacade = async (
   approvedCredentialsContent,
   credentialSubjectId,
   credentialTypeMetadatas,
+  credentialSigningAlgorithms,
   issuerService,
   context,
 ) => {
@@ -47,6 +48,7 @@ const issueVeriiCredentialsFacade = async (
     keyBy('credentialType', credentialTypeMetadatas),
     buildVeriiIssuer(tenant, issuerService),
     context,
+    credentialSigningAlgorithms,
   ).catch((e) => {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':

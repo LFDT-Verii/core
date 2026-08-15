@@ -15,8 +15,9 @@
  *
  */
 const jwkSchema = require('./jwk.schema.json');
-const newTenantSchema = require('./new-tenant.schema.json');
+const newTenantSchema = require('./new-tenant.schema');
 const tenantSchema = require('./tenant.schema');
+const updateTenantSchema = require('./update-tenant.schema');
 const newKeyMetadataSchema = require('./new-key-metadata.schema.json');
 const keyMetadataSchema = require('./key-metadata.schema.json');
 const secretKeySchema = require('./secret-key.schema.json');
@@ -26,6 +27,7 @@ module.exports = {
   jwkSchema,
   newTenantSchema,
   tenantSchema,
+  updateTenantSchema,
   newKeyMetadataSchema,
   keyMetadataSchema,
   secretKeySchema,

@@ -68,7 +68,7 @@ const credentialTypeMetadata = keyBy('credentialType', [
   },
 ]);
 
-const nockCredentialTypes = (times = 2) => {
+const nockCredentialTypes = (times = 2, metadataOverrides = {}) => {
   nock('http://oracle.localhost.test')
     .get('/api/v0.6/credential-types')
     .query((query) =>
@@ -85,7 +85,10 @@ const nockCredentialTypes = (times = 2) => {
       const query = new URLSearchParams(searchParamsString);
       return Object.values(
         pick(query.getAll('credentialType'), credentialTypeMetadata),
-      );
+      ).map((metadata) => ({
+        ...metadata,
+        ...metadataOverrides[metadata.credentialType],
+      }));
     });
 };
 

@@ -16,15 +16,17 @@
  */
 /** @import { CredentialTypeMetadata } from "../../types/types" */
 
+const { KeyAlgorithms } = require('@verii/crypto');
+
 /**
  * Calculates the algTypeName based on credentialTypeMetadata
- * Currently RS signatures use COSEKEY, otherwise HEX encoding
- * @param {CredentialTypeMetadata} credentialTypeMetadata the credential type metadata
+ * Only SECP256K1 signatures use HEX encoding; all other signatures use COSEKEY
+ * @param {CredentialTypeMetadata} [credentialTypeMetadata] the credential type metadata
  * @returns {string} the alg type name
  */
 const calcAlgTypeName = (credentialTypeMetadata) =>
-  credentialTypeMetadata?.defaultSignatureAlgorithm?.startsWith('RS')
-    ? 'COSEKEY_AES_256'
-    : 'HEX_AES_256';
+  credentialTypeMetadata?.defaultSignatureAlgorithm === KeyAlgorithms.SECP256K1
+    ? 'HEX_AES_256'
+    : 'COSEKEY_AES_256';
 
 module.exports = { calcAlgTypeName };

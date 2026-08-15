@@ -240,7 +240,7 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
       .collection('exchanges')
       .updateOne(
         { _id: new ObjectId(exchange._id) },
-        { $set: { offerIds: { $push: [new ObjectId(val._id)] } } },
+        { $push: { offerIds: new ObjectId(val._id) } },
       );
     return val;
   };
@@ -299,6 +299,69 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
       tenantId: new ObjectId(tenant._id),
       updatedAt: expect.any(Date),
     });
+  });
+  it('should issue each offer using its credential type signing algorithm', async () => {
+    nock.cleanAll();
+    nockCredentialTypes(1, {
+      EducationDegree: { defaultSignatureAlgorithm: 'RS256' },
+      'EmploymentCurrentV1.1': { defaultSignatureAlgorithm: 'ES256' },
+    });
+    const es256Offer = await persistFinalizableOffer({
+      type: ['EmploymentCurrentV1.1'],
+    });
+    const rs256Offer = await persistFinalizableOffer({
+      type: ['EducationDegree'],
+    });
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: issuingUrl(tenant, 'finalize-offers'),
+      payload: {
+        exchangeId: exchange._id,
+        approvedOfferIds: [offer._id, es256Offer._id, rs256Offer._id],
+      },
+      headers: {
+        authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json).toHaveLength(3);
+    const credentials = response.json.map(jwtDecode);
+    expect(credentials).toEqual([
+      jwtVcExpectation({
+        tenant,
+        credentialId: credentials[0].payload.jti,
+        offer,
+      }),
+      withAlgorithm(
+        jwtVcExpectation({
+          tenant,
+          credentialId: credentials[1].payload.jti,
+          offer: es256Offer,
+        }),
+        'ES256',
+      ),
+      withAlgorithm(
+        jwtVcExpectation({
+          tenant,
+          credentialId: credentials[2].payload.jti,
+          offer: rs256Offer,
+        }),
+        'RS256',
+      ),
+    ]);
+    const metadataListAllocations = await mongoDb()
+      .collection('allocations')
+      .find({ entityName: /_MetadataListAllocations$/u })
+      .project({ _id: 0, entityName: 1 })
+      .toArray();
+    expect(metadataListAllocations).toEqual(
+      expect.arrayContaining([
+        { entityName: 'HEX_AES_256_MetadataListAllocations' },
+        { entityName: 'COSEKEY_AES_256_MetadataListAllocations' },
+      ]),
+    );
   });
   it('should issue and anchor to the blockchain when legacy tenantKey doesnt contain publicKey', async () => {
     await mongoDb()
@@ -414,6 +477,11 @@ describe('e2e issuing tests', { timeout: 45000 }, () => {
 
 const issuingUrl = ({ did }, suffix = '') =>
   `/api/holder/v0.6/org/${did}/issue/${suffix}`;
+
+const withAlgorithm = (credentialExpectation, algorithm) => ({
+  ...credentialExpectation,
+  header: { ...credentialExpectation.header, alg: algorithm },
+});
 
 const genAuthToken = async (tenant, tenantKeys, exchange, user, keyPair) =>
   generateTestAccessToken(

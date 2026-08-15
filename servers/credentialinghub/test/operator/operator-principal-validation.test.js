@@ -76,20 +76,36 @@ describe('operator principal validation', () => {
         },
       );
 
-      const response = await fastify.injectJson({
-        method: 'GET',
-        url: '/operator/tenants/get',
-      });
-
-      expect(response.statusCode).toEqual(401);
-      expect(response.json).toEqual(
-        errorResponseMatcher({
-          statusCode: 401,
-          error: 'Unauthorized',
-          message: OPERATOR_CAO_DID_INVALID,
-          errorCode: OPERATOR_CAO_DID_INVALID,
+      const responses = await Promise.all([
+        fastify.injectJson({
+          method: 'GET',
+          url: '/operator/tenants/get',
         }),
-      );
+        fastify.injectJson({
+          method: 'POST',
+          url: '/operator/tenants/update',
+          payload: {
+            tenantId: '000000000000000000000000',
+            tenant: {
+              credentialSigningAlgorithm: 'ES256',
+              logo: 'https://localhost.test/logo.png',
+              name: 'fooName',
+            },
+          },
+        }),
+      ]);
+
+      responses.forEach((response) => {
+        expect(response.statusCode).toEqual(401);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 401,
+            error: 'Unauthorized',
+            message: OPERATOR_CAO_DID_INVALID,
+            errorCode: OPERATOR_CAO_DID_INVALID,
+          }),
+        );
+      });
     });
   });
 });

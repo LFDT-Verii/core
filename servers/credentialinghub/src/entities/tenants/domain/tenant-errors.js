@@ -21,6 +21,7 @@ const TenantErrors = {
   KEY_PURPOSES_MUST_BE_UNIQUE: 'key_purposes_must_be_unique',
   KEY_KID_FRAGMENT_NOT_FOUND: 'key_kidFragment_not_found',
   TENANTS_MUST_BE_UNIQUE: 'tenant_must_be_unique',
+  TENANT_NOT_FOUND: 'tenant_not_found',
   RELATED_SERVICE_UNDELETED: 'related_service_undeleted',
   NAME_MUST_MATCH_PROFILE: 'name_must_match_profile',
   LOGO_MUST_MATCH_PROFILE: 'logo_must_match_profile',

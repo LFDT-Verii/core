@@ -40,6 +40,7 @@ const { buildJsonLdCredential } = require('./build-jsonld-credential');
  * @param {AllocationListEntry[]} revocationListEntries revocation list entries
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types
  * @param {Context} context the context
+ * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
  * @returns {Promise<{vcJwt: string, jsonLdCredential: JsonLdCredential, metadata: CredentialMetadata}[]>} the vc and its metadata
  */
 const prepareJwtVcs = async (
@@ -50,12 +51,14 @@ const prepareJwtVcs = async (
   revocationListEntries,
   credentialTypesMap,
   context,
+  credentialSigningAlgorithms,
 ) => {
   return Promise.all(
     mapWithIndex(async (offer, i) => {
       const metadataEntry = metadataEntries[i];
       const credentialType = extractCredentialType(offer);
       const digitalSignatureAlgorithm =
+        credentialSigningAlgorithms?.[i] ??
         credentialTypesMap[credentialType].defaultSignatureAlgorithm ??
         KeyAlgorithms.SECP256K1;
 

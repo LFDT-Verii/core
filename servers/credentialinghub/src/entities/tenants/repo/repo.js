@@ -40,6 +40,7 @@ module.exports = (app, options, next = () => {}) => {
         keysByPurpose: 1,
         hostUrl: 1,
         caoDid: 1,
+        credentialSigningAlgorithm: 1,
         name: 1,
         logo: 1,
         createdAt: 1,

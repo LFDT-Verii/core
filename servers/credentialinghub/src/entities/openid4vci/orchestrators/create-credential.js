@@ -25,6 +25,7 @@ const {
   ExchangeTypes,
 } = require('../../exchanges');
 const { signVeriiCredentialsFacade } = require('../../credentials');
+const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 
 const createCredential = async (credentialRequestParameters, context) => {
   const { repos } = context;
@@ -50,11 +51,16 @@ const createCredential = async (credentialRequestParameters, context) => {
   try {
     const { payload } = jwtDecode(credentialRequest.proofs.jwt[0]);
     const credentialSubjectId = payload.iss;
+    const credentialSigningAlgorithm = resolveCredentialSigningAlgorithm({
+      credentialTypeMetadata: credential.typeMetadata,
+      tenant: context.tenant,
+    });
 
     const { vcJwt, credentialMetadata } = await signVeriiCredentialsFacade(
       [credential.content],
       credentialSubjectId,
       [credential.typeMetadata],
+      [credentialSigningAlgorithm],
       service,
       context,
     );

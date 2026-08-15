@@ -15,6 +15,7 @@
  *
  */
 module.exports = {
+  ...require('./credential-signing-policy'),
   ...require('./tenant-errors'),
   ...require('./validate-new-tenant'),
 };

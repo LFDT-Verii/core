@@ -100,6 +100,106 @@ describe('.well-known openid4vc metadata test suite', () => {
       expect(response.headers['access-control-allow-origin']).toEqual('foo');
     });
 
+    it('should advertise every supported algorithm with the RS256 credential-type default first when the tenant has no override', async () => {
+      const credentialTypeMetadatas = [
+        {
+          credentialType: 'OpenBadgeCredential',
+          defaultSignatureAlgorithm: 'RS256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/open-badge.schema.json',
+        },
+      ];
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer'],
+        },
+      };
+      mockHttpClientJsonResponse('get', credentialTypeMetadatas);
+      mockHttpClientJsonResponse('get', profile);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `.well-known/openid-credential-issuer/r/${tenant._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(
+        response.json.credential_configurations_supported[
+          'foundation.velocitynetwork.OpenBadgeCredential'
+        ].credential_signing_alg_values_supported,
+      ).toEqual(['RS256', 'ES256K', 'ES256']);
+    });
+
+    it('should keep algorithms used by pending credentials advertised after a type-default change', async () => {
+      const credentialTypeMetadatas = [
+        {
+          credentialType: 'OpenBadgeCredential',
+          defaultSignatureAlgorithm: 'ES256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/open-badge.schema.json',
+        },
+      ];
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer'],
+        },
+      };
+      mockHttpClientJsonResponse('get', credentialTypeMetadatas);
+      mockHttpClientJsonResponse('get', profile);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `.well-known/openid-credential-issuer/r/${tenant._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(
+        response.json.credential_configurations_supported[
+          'foundation.velocitynetwork.OpenBadgeCredential'
+        ].credential_signing_alg_values_supported,
+      ).toEqual(['ES256', 'ES256K', 'RS256']);
+    });
+
+    it('should advertise one ES256 tenant override for badge and non-badge credential types', async () => {
+      const { tenant: es256Tenant } = await constructTenant(
+        persistTenant,
+        persistKey,
+        { credentialSigningAlgorithm: 'ES256' },
+      );
+      const credentialTypeMetadatas = [
+        {
+          credentialType: 'OpenBadgeCredential',
+          defaultSignatureAlgorithm: 'RS256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/open-badge.schema.json',
+        },
+        {
+          credentialType: 'EmailV1.0',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/email.schema.json',
+        },
+      ];
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer'],
+        },
+      };
+      mockHttpClientJsonResponse('get', credentialTypeMetadatas);
+      mockHttpClientJsonResponse('get', profile);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `.well-known/openid-credential-issuer/r/${es256Tenant._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(
+        Object.values(response.json.credential_configurations_supported).map(
+          ({ credential_signing_alg_values_supported: values }) => values,
+        ),
+      ).toEqual([['ES256'], ['ES256']]);
+    });
+
     it('should 200 with jwt credential metadata', async () => {
       const credentialTypeMetadatas = [
         {
@@ -205,7 +305,7 @@ const expectedCredentialMetadata = (tenant) => ({
         ],
         type: ['VerifiableCredential', 'fooType'],
       },
-      credential_signing_alg_values_supported: ['ES256K'],
+      credential_signing_alg_values_supported: ['ES256K', 'ES256', 'RS256'],
       cryptographic_binding_methods_supported: ['did:jwk'],
       format: 'jwt_vc_json-ld',
       proof_types_supported: {

@@ -22,6 +22,7 @@ const { parseAccessToken } = require('../../tokens');
 const { ExchangeStates, verifyProofOfKeyPossession } = require('../domain');
 const { authorizeExchange } = require('../domain/authorize-exchange');
 const { issueVeriiCredentialsFacade } = require('../../credentials');
+const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 const {
   buildCredentialIssuedEvent,
   buildCredentialRejectedEvent,
@@ -131,10 +132,21 @@ const issueApprovedCredentials = async (
     context,
   );
 
+  const credentialContents = map('content', approvedCredentials);
+  const credentialTypeMetadatas = map('typeMetadata', approvedCredentials);
+  const credentialSigningAlgorithms = map(
+    (credentialTypeMetadata) =>
+      resolveCredentialSigningAlgorithm({
+        credentialTypeMetadata,
+        tenant: context.tenant,
+      }),
+    credentialTypeMetadatas,
+  );
   const jwtVcs = await issueVeriiCredentialsFacade(
-    map('content', approvedCredentials),
+    credentialContents,
     credentialSubjectId,
-    map('typeMetadata', approvedCredentials),
+    credentialTypeMetadatas,
+    credentialSigningAlgorithms,
     issuerService,
     context,
   );
