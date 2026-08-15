@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+const { extractCredentialType } = require('@verii/vc-checks');
 const { map } = require('lodash/fp');
 const {
   allocateGenericListEntries,
@@ -23,6 +24,7 @@ const {
   initCredentialMetadataContract,
 } = require('./adapters/init-credential-metadata-contract');
 const { createRevocationList } = require('./adapters/create-revocation-list');
+const { getCredentialSigningProfile } = require('./credential-signing-profile');
 const { prepareJwtVcs } = require('./domain/prepare-jwt-vcs');
 
 const REVOCATION_LIST_SIZE = 10240;
@@ -36,8 +38,8 @@ const METADATA_LIST_SIZE = 10000;
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
- * @param {Context} context the context
  * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @param {Context} context the context
  * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
  */
 const issueVeriiCredentials = async (
@@ -45,16 +47,16 @@ const issueVeriiCredentials = async (
   credentialSubjectId,
   credentialTypesMap,
   issuer,
-  context,
   credentialSigningAlgorithms,
+  context,
 ) => {
   const vcs = await signVeriiCredentials(
     offers,
     credentialSubjectId,
     credentialTypesMap,
     issuer,
-    context,
     credentialSigningAlgorithms,
+    context,
   );
 
   await anchorVeriiCredentials(map('metadata', vcs), issuer, context);
@@ -69,8 +71,8 @@ const issueVeriiCredentials = async (
  * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
  * @param {Issuer} issuer  the issuer
- * @param {Context} context the context
  * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @param {Context} context the context
  * @returns {Promise<{vcJwt: string, metadata: CredentialMetadata}[]>} Returns array of signed vcs (in jwt format) and their metadata
  */
 const signVeriiCredentials = async (
@@ -78,16 +80,23 @@ const signVeriiCredentials = async (
   credentialSubjectId,
   credentialTypesMap,
   issuer,
-  context,
   credentialSigningAlgorithms,
+  context,
 ) => {
+  const effectiveCredentialSigningAlgorithms =
+    resolveEffectiveCredentialSigningAlgorithms(
+      offers,
+      credentialTypesMap,
+      credentialSigningAlgorithms,
+    );
+
   const metadataEntries = await allocateMetadataListEntries(
     offers,
     credentialTypesMap,
     issuer,
     METADATA_LIST_SIZE,
+    effectiveCredentialSigningAlgorithms,
     context,
-    credentialSigningAlgorithms,
   );
   const newMetadataListEntries = getNewListEntries(metadataEntries);
   if (newMetadataListEntries.length > 0) {
@@ -124,10 +133,35 @@ const signVeriiCredentials = async (
     metadataEntries,
     revocationListEntries,
     credentialTypesMap,
+    effectiveCredentialSigningAlgorithms,
     context,
-    credentialSigningAlgorithms,
   );
 };
+
+/**
+ * Resolves and validates the effective signing algorithm for every offer.
+ * @param {CredentialOffer[]} offers array of offers
+ * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
+ * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @returns {(string | undefined)[]} the effective algorithms in offer order
+ */
+const resolveEffectiveCredentialSigningAlgorithms = (
+  offers,
+  credentialTypesMap,
+  credentialSigningAlgorithms,
+) =>
+  offers.map((offer, index) => {
+    const credentialType = extractCredentialType(offer);
+    const algorithm =
+      credentialSigningAlgorithms?.[index] ??
+      credentialTypesMap?.[credentialType]?.defaultSignatureAlgorithm;
+
+    if (algorithm != null) {
+      getCredentialSigningProfile(algorithm);
+    }
+
+    return algorithm;
+  });
 
 /**
  * Anchors prepared verifiable credentials to the blockchain using their credential metadata.

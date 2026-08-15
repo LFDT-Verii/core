@@ -28,6 +28,8 @@ mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 const mockAddCredentialMetadataEntry = mock.fn();
 const mockCreateCredentialMetadataList = mock.fn();
 const mockAddRevocationListSigned = mock.fn();
+const mockIsFreeCredentialType = mock.fn();
+const mockResolveDidDocument = mock.fn();
 mock.module('@verii/metadata-registration', {
   namedExports: {
     ...require('@verii/metadata-registration'),
@@ -37,6 +39,8 @@ mock.module('@verii/metadata-registration', {
     initMetadataRegistry: () => ({
       addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
       createCredentialMetadataList: mockCreateCredentialMetadataList,
+      isFreeCredentialType: mockIsFreeCredentialType,
+      resolveDidDocument: mockResolveDidDocument,
     }),
     initVerificationCoupon: () => ({}),
   },
@@ -131,6 +135,11 @@ describe('vn-api > issue credentials', () => {
     await mongoDb().collection('credentials').deleteMany({});
     await mongoDb().collection('notification_events').deleteMany({});
     resetMockHttpClient();
+    mockAddCredentialMetadataEntry.mock.resetCalls();
+    mockAddRevocationListSigned.mock.resetCalls();
+    mockCreateCredentialMetadataList.mock.resetCalls();
+    mockIsFreeCredentialType.mock.resetCalls();
+    mockResolveDidDocument.mock.resetCalls();
     mockAddRevocationListSigned.mock.mockImplementation(() =>
       Promise.resolve(true),
     );
@@ -139,6 +148,9 @@ describe('vn-api > issue credentials', () => {
     );
     mockCreateCredentialMetadataList.mock.mockImplementation(() =>
       Promise.resolve(true),
+    );
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(false),
     );
 
     holderKeyPair = generateKeyPair({ format: 'jwk' });
@@ -430,6 +442,64 @@ describe('vn-api > issue credentials', () => {
     await expect(
       mongoDb().collection('notification_events').countDocuments({}),
     ).resolves.toEqual(0);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+  });
+
+  it('should preserve records and notifications when an anchor write fails', async () => {
+    const anchorError = new Error('metadata anchor failed');
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+      Promise.reject(anchorError),
+    );
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) => {
+      const { publicKey } =
+        mockAddCredentialMetadataEntry.mock.calls[0].arguments[0];
+      return Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      });
+    });
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: testUrl(tenant),
+      headers: {
+        authorization: `Bearer ${await testAccessToken(
+          tenant.did,
+          exchange._id,
+          depots[0]._id,
+          holderAccessTokensSecret,
+        )}`,
+      },
+      payload: {
+        approvedOfferIds: [credentials[0]._id],
+        proof: await buildProof(
+          holderDid,
+          holderKeyPair,
+          await loadChallenge(exchange._id),
+        ),
+      },
+    });
+
+    expect(response.statusCode).toEqual(500);
+    expect(response.json).toEqual(
+      expect.objectContaining({
+        message: anchorError.message,
+        statusCode: 500,
+      }),
+    );
+    await expect(findCredentials([credentials[0]._id])).resolves.toEqual([
+      mongoify(credentials[0]),
+    ]);
+    await expect(
+      mongoDb().collection('notification_events').countDocuments({}),
+    ).resolves.toEqual(0);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(0);
   });
 
   describe('proof of key possession failures', () => {

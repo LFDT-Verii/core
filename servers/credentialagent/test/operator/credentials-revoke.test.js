@@ -15,6 +15,7 @@
  */
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
+const { ALG_TYPE } = require('@verii/metadata-registration');
 
 mock.module('../../src/fetchers/push-gateway/generate-push-gateway-token.js', {
   namedExports: { generatePushGatewayToken: () => Promise.resolve('token') },
@@ -27,7 +28,7 @@ const initRevocationRegistry = mock.fn(() =>
   }),
 );
 mock.module('@verii/metadata-registration', {
-  namedExports: { initRevocationRegistry },
+  namedExports: { ALG_TYPE, initRevocationRegistry },
 });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');

@@ -54,8 +54,8 @@ const allocateGenericListEntries = async (
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types
  * @param {Issuer}  issuer the issuer
  * @param {number} listSize the list size
- * @param {Context} context the context
  * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @param {Context} context the context
  * @returns {Promise<AllocationListEntry[]>} the allocated entries
  */
 const allocateMetadataListEntries = async (
@@ -63,8 +63,8 @@ const allocateMetadataListEntries = async (
   credentialTypesMap,
   issuer,
   listSize,
-  context,
   credentialSigningAlgorithms,
+  context,
 ) => {
   const entries = [];
   for (let i = 0; i < offers.length; i += 1) {

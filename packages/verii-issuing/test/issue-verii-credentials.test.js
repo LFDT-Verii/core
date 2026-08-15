@@ -21,6 +21,8 @@ const { ALG_TYPE } = require('@verii/metadata-registration');
 const mockAddCredentialMetadataEntry = mock.fn();
 const mockCreateCredentialMetadataList = mock.fn();
 const mockAddRevocationListSigned = mock.fn();
+const mockIsFreeCredentialType = mock.fn();
+const mockResolveDidDocument = mock.fn();
 
 mock.module('@verii/metadata-registration', {
   namedExports: {
@@ -31,6 +33,8 @@ mock.module('@verii/metadata-registration', {
     initMetadataRegistry: () => ({
       addCredentialMetadataEntry: mockAddCredentialMetadataEntry,
       createCredentialMetadataList: mockCreateCredentialMetadataList,
+      isFreeCredentialType: mockIsFreeCredentialType,
+      resolveDidDocument: mockResolveDidDocument,
     }),
   },
 });
@@ -51,7 +55,10 @@ const { MongoClient } = require('mongodb');
 const { first, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { hashOffer } = require('../src/domain/hash-offer');
-const { issueVeriiCredentials } = require('../src/issue-verii-credentials');
+const {
+  issueVeriiCredentials,
+  signVeriiCredentials,
+} = require('../src/issue-verii-credentials');
 const { collectionClient } = require('./helpers/collection-client');
 const { entityFactory } = require('./helpers/entity-factory');
 const { offerFactory } = require('./helpers/offer-factory');
@@ -105,6 +112,14 @@ describe('issuing velocity verifiable credentials', () => {
     mockAddRevocationListSigned.mock.resetCalls();
     mockAddCredentialMetadataEntry.mock.resetCalls();
     mockCreateCredentialMetadataList.mock.resetCalls();
+    mockIsFreeCredentialType.mock.resetCalls();
+    mockResolveDidDocument.mock.resetCalls();
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(false),
+    );
     context = buildContext({
       issuerEntity,
       caoEntity,
@@ -159,6 +174,7 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
+      [KeyAlgorithms.SECP256K1, KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256],
       context,
     );
 
@@ -182,20 +198,120 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.COSEKEY_AES_256,
+      ALG_TYPE.HEX_AES_256,
       { issuerEntity, caoEntity },
     );
     await verifyCreateMetadataListCall(
       mockCreateCredentialMetadataList.mock.calls[1],
       issuer,
-      mockAddCredentialMetadataEntry.mock.calls[1].arguments[0].listId,
-      ALG_TYPE.HEX_AES_256,
+      mockAddCredentialMetadataEntry.mock.calls[2].arguments[0].listId,
+      ALG_TYPE.COSEKEY_AES_256,
       { issuerEntity, caoEntity },
     );
 
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
       [expect.any(Number), caoEntity.did],
     ]);
+  });
+
+  it('uses generic metadata fallback when algorithms are omitted explicitly', async () => {
+    const offer = offerFactory({ issuerId: issuerEntity.did });
+    const [credential] = await issueVeriiCredentials(
+      [offer],
+      createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      undefined,
+      context,
+    );
+
+    const { header } = jwtDecode(credential);
+    expect(header.alg).toEqual('ES256K');
+    const [{ publicKey }] = mockAddCredentialMetadataEntry.mock.calls.map(
+      (call) => call.arguments[0],
+    );
+    expect(publicKey).toEqual(publicJwkMatcher(KeyAlgorithms.SECP256K1));
+    expect(mockAddCredentialMetadataEntry.mock.calls[0].arguments[3]).toEqual(
+      ALG_TYPE.COSEKEY_AES_256,
+    );
+    await verifyCreateMetadataListCall(
+      mockCreateCredentialMetadataList.mock.calls[0],
+      issuer,
+      mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
+      ALG_TYPE.COSEKEY_AES_256,
+      { issuerEntity, caoEntity },
+    );
+  });
+
+  it('signs without anchoring when algorithms are omitted explicitly', async () => {
+    const offer = offerFactory({ issuerId: issuerEntity.did });
+    const [{ vcJwt }] = await signVeriiCredentials(
+      [offer],
+      createExampleDid(),
+      credentialTypesMap,
+      issuer,
+      undefined,
+      context,
+    );
+
+    expect(jwtDecode(vcJwt).header.alg).toEqual('ES256K');
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+  });
+
+  it('rejects unsupported algorithms before any durable side effect', async () => {
+    await Promise.all(
+      ['EdDSA', 'constructor', 'toString'].map((algorithm) =>
+        expect(
+          issueVeriiCredentials(
+            [offerFactory({ issuerId: issuerEntity.did })],
+            createExampleDid(),
+            credentialTypesMap,
+            issuer,
+            [algorithm],
+            context,
+          ),
+        ).rejects.toThrow(
+          `Credential signing algorithm is not supported: ${algorithm}`,
+        ),
+      ),
+    );
+
+    await expect(
+      allocationsCollection.collection().countDocuments(),
+    ).resolves.toEqual(0);
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(0);
+    expect(mockAddRevocationListSigned.mock.callCount()).toEqual(0);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+  });
+
+  it('rejects unsupported metadata algorithms before any durable side effect', async () => {
+    const unsupportedCredentialTypesMap = {
+      ...credentialTypesMap,
+      'EmailV1.0': {
+        ...credentialTypesMap['EmailV1.0'],
+        defaultSignatureAlgorithm: 'constructor',
+      },
+    };
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        unsupportedCredentialTypesMap,
+        issuer,
+        undefined,
+        context,
+      ),
+    ).rejects.toThrow(
+      'Credential signing algorithm is not supported: constructor',
+    );
+
+    await expect(
+      allocationsCollection.collection().countDocuments(),
+    ).resolves.toEqual(0);
+    expect(mockCreateCredentialMetadataList.mock.callCount()).toEqual(0);
+    expect(mockAddRevocationListSigned.mock.callCount()).toEqual(0);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
   it('should use an explicitly resolved ES256 algorithm instead of the Open Badge RS256 default', async () => {
@@ -210,8 +326,8 @@ describe('issuing velocity verifiable credentials', () => {
       createExampleDid(),
       credentialTypesMap,
       issuer,
-      context,
       [KeyAlgorithms.ES256],
+      context,
     );
 
     const { header } = jwtDecode(credential);
@@ -236,6 +352,39 @@ describe('issuing velocity verifiable credentials', () => {
         header: expect.objectContaining({ alg: 'ES256' }),
       }),
     );
+  });
+
+  it('propagates an anchor error without reading or retrying the write', async () => {
+    const anchorError = new Error('metadata anchor failed');
+    mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
+      Promise.reject(anchorError),
+    );
+    mockIsFreeCredentialType.mock.mockImplementation(() =>
+      Promise.resolve(true),
+    );
+    mockResolveDidDocument.mock.mockImplementation(({ did }) => {
+      const { publicKey } =
+        mockAddCredentialMetadataEntry.mock.calls[0].arguments[0];
+      return Promise.resolve({
+        didDocument: {
+          publicKey: [{ id: `${did}#key-1`, publicKeyJwk: publicKey }],
+        },
+        didResolutionMetadata: {},
+      });
+    });
+
+    await expect(
+      issueVeriiCredentials(
+        [offerFactory({ issuerId: issuerEntity.did })],
+        createExampleDid(),
+        credentialTypesMap,
+        issuer,
+        ['ES256'],
+        context,
+      ),
+    ).rejects.toBe(anchorError);
+    expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+    expect(mockResolveDidDocument.mock.callCount()).toEqual(0);
   });
 
   it('should create vcs with context in credentialSubject (allocation lists exists)', async () => {
@@ -291,6 +440,7 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
+      [KeyAlgorithms.SECP256K1, KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256],
       context,
     );
 
@@ -336,6 +486,7 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
+      [KeyAlgorithms.SECP256K1],
       context,
     );
 
@@ -354,7 +505,7 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.COSEKEY_AES_256,
+      ALG_TYPE.HEX_AES_256,
       { issuerEntity, caoEntity },
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
@@ -393,6 +544,7 @@ describe('issuing velocity verifiable credentials', () => {
       userId,
       credentialTypesMap,
       issuer,
+      [KeyAlgorithms.SECP256K1],
       context,
     );
 
@@ -411,7 +563,7 @@ describe('issuing velocity verifiable credentials', () => {
       mockCreateCredentialMetadataList.mock.calls[0],
       issuer,
       mockAddCredentialMetadataEntry.mock.calls[0].arguments[0].listId,
-      ALG_TYPE.COSEKEY_AES_256,
+      ALG_TYPE.HEX_AES_256,
       { issuerEntity, caoEntity },
     );
     expect(map('arguments', mockAddRevocationListSigned.mock.calls)).toEqual([
@@ -530,7 +682,14 @@ const verifyCredentialAndAddEntryExpectations = async (
     }),
     hashOffer(offer),
     caoEntity.did,
-    ALG_TYPE[calcAlgTypeName(credentialTypeMetadata[extractOfferType(offer)])],
+    ALG_TYPE[
+      calcAlgTypeName({
+        ...credentialTypeMetadata[extractOfferType(offer)],
+        defaultSignatureAlgorithm:
+          credentialTypeMetadata[extractOfferType(offer)]
+            .defaultSignatureAlgorithm ?? KeyAlgorithms.SECP256K1,
+      })
+    ],
   ]);
 
   const { publicKey } = first(credentialMetadataArgs);

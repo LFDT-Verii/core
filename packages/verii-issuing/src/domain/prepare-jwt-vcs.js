@@ -27,6 +27,9 @@ const { extractCredentialType } = require('@verii/vc-checks');
 const { hashOffer } = require('./hash-offer');
 const { buildRevocationUrl } = require('../adapters/build-revocation-url');
 const { buildJsonLdCredential } = require('./build-jsonld-credential');
+const {
+  getCredentialSigningProfile,
+} = require('../credential-signing-profile');
 
 // eslint-disable-next-line max-len
 /** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context, JsonLdCredential } from "../types/types" */
@@ -39,8 +42,8 @@ const { buildJsonLdCredential } = require('./build-jsonld-credential');
  * @param {AllocationListEntry[]} metadataEntries metadata entries
  * @param {AllocationListEntry[]} revocationListEntries revocation list entries
  * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types
- * @param {Context} context the context
  * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
+ * @param {Context} context the context
  * @returns {Promise<{vcJwt: string, jsonLdCredential: JsonLdCredential, metadata: CredentialMetadata}[]>} the vc and its metadata
  */
 const prepareJwtVcs = async (
@@ -50,34 +53,45 @@ const prepareJwtVcs = async (
   metadataEntries,
   revocationListEntries,
   credentialTypesMap,
-  context,
   credentialSigningAlgorithms,
+  context,
 ) => {
   return Promise.all(
     mapWithIndex(async (offer, i) => {
       const metadataEntry = metadataEntries[i];
       const credentialType = extractCredentialType(offer);
-      const digitalSignatureAlgorithm =
+      const configuredAlgorithm =
         credentialSigningAlgorithms?.[i] ??
-        credentialTypesMap[credentialType].defaultSignatureAlgorithm ??
-        KeyAlgorithms.SECP256K1;
+        credentialTypesMap[credentialType].defaultSignatureAlgorithm;
+      const signingProfile = getCredentialSigningProfile(
+        configuredAlgorithm ?? KeyAlgorithms.SECP256K1,
+      );
 
-      const keyPair = generateJWAKeyPair(digitalSignatureAlgorithm);
+      const keyPair = generateJWAKeyPair(signingProfile.keyAlgorithm);
 
-      const metadata = {
-        ...metadataEntry,
-        credentialType,
-        credentialTypeEncoded: get2BytesHash(credentialType), // TODO replace with bytes encoding from credentialMetadata
-        contentHash: hashOffer(offer),
-        publicKey: keyPair.publicKey,
-      };
+      if (
+        configuredAlgorithm != null &&
+        metadataEntry.algType !== signingProfile.algType
+      ) {
+        throw new Error(
+          `Credential metadata algorithm does not match ${signingProfile.joseAlgorithm}`,
+        );
+      }
 
+      const contentHash = hashOffer(offer);
       const credentialId = buildVelocityCredentialMetadataDID(
         metadataEntry,
         issuer,
-        metadata.contentHash,
+        contentHash,
         context.config.includeContentHashInCredentialId,
       );
+      const metadata = {
+        ...metadataEntry,
+        contentHash,
+        credentialType,
+        credentialTypeEncoded: get2BytesHash(credentialType), // TODO replace with bytes encoding from credentialMetadata
+        publicKey: keyPair.publicKey,
+      };
       const revocationUrl = buildRevocationUrl(
         revocationListEntries[i],
         issuer,
@@ -96,7 +110,7 @@ const prepareJwtVcs = async (
 
       const { header, payload } = jsonLdToUnsignedVcJwtContent(
         jsonLdCredential,
-        digitalSignatureAlgorithm,
+        signingProfile.keyAlgorithm,
         `${credentialId}#key-1`,
       );
       const vcJwt = await jwtSign(payload, keyPair.privateKey, header);
