@@ -40,54 +40,21 @@ const {
 } = require('../credential-signing-profile');
 
 // eslint-disable-next-line max-len
-/** @import { Issuer, AllocationListEntry, CredentialDataModelVersion, CredentialEnvelopeFormat, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context, JsonLdCredential, VcV2Credential } from "../types/types" */
+/** @import { Issuer, AllocationListEntry, CredentialFormat, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context, JsonLdCredential, VcV2Credential, VcV2CredentialBuildOptions } from "../types/types" */
 
 /**
- * Builds the VCs
- * @param {CredentialOffer[]} offers  array of offers
- * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
- * @param {Issuer} issuer  the issuer
- * @param {AllocationListEntry[]} metadataEntries metadata entries
- * @param {AllocationListEntry[]} revocationListEntries revocation list entries
- * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types
- * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
- * @param {Context} context the context
- * @returns {Promise<{vcJwt: string, jsonLdCredential: JsonLdCredential, metadata: CredentialMetadata}[]>} the vc and its metadata
+ * @typedef {object} UnsignedCredential
+ * @property {object} header protected header
+ * @property {object} payload signing payload
+ * @property {(payload: object, keyOrSecret: object | string, header: object) => Promise<string>} sign signing function
  */
-const prepareJwtVcs = async (
-  offers,
-  credentialSubjectId,
-  issuer,
-  metadataEntries,
-  revocationListEntries,
-  credentialTypesMap,
-  credentialSigningAlgorithms,
-  context,
-) =>
-  prepareVersionedCredentials({
-    context,
-    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
-    credentialSigningAlgorithms,
-    credentialSubjectId,
-    credentialTypesMap,
-    issuer,
-    metadataEntries,
-    offers,
-    revocationListEntries,
-  }).then((credentials) =>
-    credentials.map(({ issuanceResult, metadata }) => ({
-      jsonLdCredential: issuanceResult.credential,
-      metadata,
-      vcJwt: issuanceResult.compact,
-    })),
-  );
 
 /**
- * Builds version-specific credential representations from shared identity,
- * key, status, and anchoring inputs.
- * @param {object} options versioned preparation options
+ * Builds secured credential representations from shared identity, key, status,
+ * and anchoring inputs.
+ * @param {object} options credential preparation options
  * @param {Context} options.context application context
- * @param {string} options.credentialFormat explicit credential format
+ * @param {CredentialFormat} options.credentialFormat credential format
  * @param {string[]} [options.credentialSigningAlgorithms] resolved algorithms
  * @param {string} [options.credentialSubjectId] bound credential subject
  * @param {{[Name: string]: CredentialTypeMetadata}} options.credentialTypesMap credential type metadata
@@ -97,7 +64,7 @@ const prepareJwtVcs = async (
  * @param {AllocationListEntry[]} options.revocationListEntries status entries
  * @returns {Promise<object[]>} signed neutral credentials and DLT metadata
  */
-const prepareVersionedCredentials = async ({
+const prepareCredentials = async ({
   context,
   credentialFormat,
   credentialSigningAlgorithms,
@@ -107,8 +74,10 @@ const prepareVersionedCredentials = async ({
   metadataEntries,
   offers,
   revocationListEntries,
-}) =>
-  Promise.all(
+}) => {
+  const formatHandler = getCredentialFormatHandler(credentialFormat);
+
+  return Promise.all(
     mapWithIndex(async (offer, i) => {
       const metadataEntry = metadataEntries[i];
       const credentialType = extractCredentialType(offer);
@@ -151,135 +120,149 @@ const prepareVersionedCredentials = async ({
       );
       const credentialTypeMetadata =
         credentialTypesMap[metadata.credentialType];
-      const { credential, dataModelVersion, envelopeFormat } =
-        buildCredentialRepresentation({
-          contentHash: metadata.contentHash,
-          context,
-          credentialFormat,
-          credentialId,
-          credentialSubjectId,
-          credentialTypeMetadata,
-          issuer,
-          offer,
-          revocationUrl,
-        });
-      const { header, payload, sign } = buildUnsignedCredentialEnvelope({
+      const credential = formatHandler.buildCredential({
+        contentHash: metadata.contentHash,
+        context,
+        credentialId,
+        credentialSubjectId,
+        credentialTypeMetadata,
+        issuer,
+        offer,
+        revocationUrl,
+      });
+      const { header, payload, sign } = formatHandler.buildUnsignedCredential({
         credential,
-        credentialFormat,
         credentialId,
         keyAlgorithm: signingProfile.keyAlgorithm,
       });
-      const compact = await sign(payload, keyPair.privateKey, header);
+      const securedCredential = await sign(payload, keyPair.privateKey, header);
 
       return {
-        issuanceResult: {
-          compact,
+        issuedCredential: {
           credential,
+          credentialFormat,
           credentialId,
           credentialStatus: credential.credentialStatus,
-          dataModelVersion,
-          envelopeFormat,
-          signingAlgorithm: signingProfile.joseAlgorithm,
+          dataModelVersion: formatHandler.dataModelVersion,
+          securedCredential,
+          securingMechanism: {
+            algorithm: signingProfile.joseAlgorithm,
+            type: 'jose',
+          },
         },
         metadata,
       };
     }, offers),
   );
+};
 
 /**
- * Builds the selected credential document.
- * @param {object} options representation dependencies
+ * Returns the implementation registered for a credential format.
+ * @param {CredentialFormat} credentialFormat credential format
+ * @returns {object} credential format handler
+ */
+const getCredentialFormatHandler = (credentialFormat) => {
+  const formatHandler = credentialFormatHandlers[credentialFormat];
+  if (formatHandler == null) {
+    throw new TypeError('A credential batch must use one supported format');
+  }
+  return formatHandler;
+};
+
+/**
+ * Builds a W3C VC 1.1 JSON-LD credential for a JWT envelope.
+ * @param {object} options credential dependencies
  * @param {string} options.contentHash offer content hash
  * @param {Context} options.context application context
- * @param {CredentialEnvelopeFormat} options.credentialFormat credential format
  * @param {string} options.credentialId credential identifier
  * @param {string} [options.credentialSubjectId] bound credential subject
  * @param {CredentialTypeMetadata} options.credentialTypeMetadata type metadata
  * @param {Issuer} options.issuer issuer
  * @param {CredentialOffer} options.offer credential offer
  * @param {string} options.revocationUrl credential status URL
- * @returns {{
- *   credential: JsonLdCredential | VcV2Credential,
- *   dataModelVersion: CredentialDataModelVersion,
- *   envelopeFormat: CredentialEnvelopeFormat
- * }} credential and neutral format metadata
+ * @returns {JsonLdCredential} credential document
  */
-const buildCredentialRepresentation = ({
+const buildJwtVcJsonLdCredential = ({
   contentHash,
   context,
-  credentialFormat,
   credentialId,
   credentialSubjectId,
   credentialTypeMetadata,
   issuer,
   offer,
   revocationUrl,
-}) => {
-  if (credentialFormat === CredentialEnvelopeFormats.JWT_VC_JSON_LD) {
-    return {
-      credential: buildJsonLdCredential(
-        issuer,
-        credentialSubjectId,
-        offer,
-        credentialId,
-        contentHash,
-        credentialTypeMetadata,
-        revocationUrl,
-        context,
-      ),
-      dataModelVersion: CredentialDataModelVersions.V1_1,
-      envelopeFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
-    };
-  }
-
-  return {
-    credential: buildVcV2Credential({
-      contentHash,
-      context,
-      credentialId,
-      credentialSubjectId,
-      credentialTypeMetadata,
-      issuer,
-      offer,
-      revocationUrl,
-    }),
-    dataModelVersion: CredentialDataModelVersions.V2_0,
-    envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
-  };
-};
+}) =>
+  buildJsonLdCredential(
+    issuer,
+    credentialSubjectId,
+    offer,
+    credentialId,
+    contentHash,
+    credentialTypeMetadata,
+    revocationUrl,
+    context,
+  );
 
 /**
- * Builds the selected unsigned envelope without changing shared credential
- * identity or key material.
+ * Builds a W3C VC 2.0 credential for a VC-JWT envelope.
+ * @param {VcV2CredentialBuildOptions} options credential dependencies
+ * @returns {VcV2Credential} credential document
+ */
+const buildVcJwtCredential = (options) => buildVcV2Credential(options);
+
+/**
+ * Builds an unsigned JWT-VC JSON-LD representation.
  * @param {object} options envelope dependencies
- * @param {JsonLdCredential | VcV2Credential} options.credential credential
- * @param {CredentialEnvelopeFormat} options.credentialFormat credential format
+ * @param {JsonLdCredential} options.credential credential document
  * @param {string} options.credentialId credential identifier
  * @param {string} options.keyAlgorithm internal key algorithm
- * @returns {{
- *   header: object,
- *   payload: object,
- *   sign: (payload: object, keyOrSecret: object | string, header: object) => Promise<string>
- * }} unsigned envelope
+ * @returns {UnsignedCredential} unsigned credential
  */
-const buildUnsignedCredentialEnvelope = ({
+const buildUnsignedJwtVcJsonLdCredential = ({
   credential,
-  credentialFormat,
   credentialId,
   keyAlgorithm,
 }) => {
   const kid = `${credentialId}#key-1`;
-  if (credentialFormat === CredentialEnvelopeFormats.JWT_VC_JSON_LD) {
-    return {
-      ...jsonLdToUnsignedVcJwtContent(credential, keyAlgorithm, kid),
-      sign: jwtSign,
-    };
-  }
   return {
-    ...jsonLdToUnsignedVcV2JwsContent(credential, keyAlgorithm, kid),
-    sign: jwsSign,
+    ...jsonLdToUnsignedVcJwtContent(credential, keyAlgorithm, kid),
+    sign: jwtSign,
   };
 };
+
+/**
+ * Builds an unsigned VC-JWT representation.
+ * @param {object} options envelope dependencies
+ * @param {VcV2Credential} options.credential credential document
+ * @param {string} options.credentialId credential identifier
+ * @param {string} options.keyAlgorithm internal key algorithm
+ * @returns {UnsignedCredential} unsigned credential
+ */
+const buildUnsignedVcJwtCredential = ({
+  credential,
+  credentialId,
+  keyAlgorithm,
+}) => ({
+  ...jsonLdToUnsignedVcV2JwsContent(
+    credential,
+    keyAlgorithm,
+    `${credentialId}#key-1`,
+  ),
+  sign: jwsSign,
+});
+
+const credentialFormatHandlers = Object.freeze({
+  [CredentialEnvelopeFormats.JWT_VC_JSON_LD]: Object.freeze({
+    buildCredential: buildJwtVcJsonLdCredential,
+    buildUnsignedCredential: buildUnsignedJwtVcJsonLdCredential,
+    dataModelVersion: CredentialDataModelVersions.V1_1,
+  }),
+  [CredentialEnvelopeFormats.VC_JWT]: Object.freeze({
+    buildCredential: buildVcJwtCredential,
+    buildUnsignedCredential: buildUnsignedVcJwtCredential,
+    dataModelVersion: CredentialDataModelVersions.V2_0,
+  }),
+});
 
 /**
  * Builds a credential metadata DID URI
@@ -304,4 +287,4 @@ const buildVelocityCredentialMetadataDID = (
   return id;
 };
 
-module.exports = { prepareJwtVcs, prepareVersionedCredentials };
+module.exports = { getCredentialFormatHandler, prepareCredentials };

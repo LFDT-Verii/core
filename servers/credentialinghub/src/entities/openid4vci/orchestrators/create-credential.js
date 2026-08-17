@@ -24,7 +24,7 @@ const {
   ExchangeStates,
   ExchangeTypes,
 } = require('../../exchanges');
-const { signVersionedCredentialsFacade } = require('../../credentials');
+const { signVeriiCredentialsFacade } = require('../../credentials');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 
 const createCredential = async (credentialRequestParameters, context) => {
@@ -56,8 +56,8 @@ const createCredential = async (credentialRequestParameters, context) => {
       tenant: context.tenant,
     });
 
-    const { issuanceResult, credentialMetadata } =
-      await signVersionedCredentialsFacade({
+    const { issuedCredential, credentialMetadata } =
+      await signVeriiCredentialsFacade({
         context,
         credentialContentList: [credential.content],
         credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
@@ -74,14 +74,14 @@ const createCredential = async (credentialRequestParameters, context) => {
     );
     await repos.credentials.updateIssuedCredential(
       credential._id,
-      issuanceResult,
+      issuedCredential,
       credentialSubjectId,
       false,
       newExchange,
     );
 
     return {
-      credentials: [{ credential: issuanceResult.compact }],
+      credentials: [{ credential: issuedCredential.securedCredential }],
       notification_id: newExchange.id,
     };
   } catch (error) {

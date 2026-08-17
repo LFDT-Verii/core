@@ -62,12 +62,7 @@ const { MongoClient } = require('mongodb');
 const { first, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { hashOffer } = require('../src/domain/hash-offer');
-const {
-  issueVeriiCredentials,
-  issueVersionedCredentials,
-  signVeriiCredentials,
-  signVersionedCredentials,
-} = require('../src');
+const { issueCredentials, signCredentials } = require('../src');
 const { collectionClient } = require('./helpers/collection-client');
 const { entityFactory } = require('./helpers/entity-factory');
 const { offerFactory } = require('./helpers/offer-factory');
@@ -101,6 +96,14 @@ describe('issuing velocity verifiable credentials', () => {
   let issuerEntity;
   let caoEntity;
   let context;
+
+  const buildCredentialOptions = (overrides) => ({
+    context,
+    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    credentialTypesMap,
+    issuer,
+    ...overrides,
+  });
 
   before(async () => {
     allocationsCollection = await collectionClient({
@@ -184,14 +187,18 @@ describe('issuing velocity verifiable credentials', () => {
       },
     ]);
     const userId = createExampleDid();
-    const credentials = await issueVeriiCredentials(
-      offers,
-      userId,
-      credentialTypesMap,
-      issuer,
-      [KeyAlgorithms.SECP256K1, KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256],
-      context,
+    const issuedCredentials = await issueCredentials(
+      buildCredentialOptions({
+        credentialSigningAlgorithms: [
+          KeyAlgorithms.SECP256K1,
+          KeyAlgorithms.SECP256K1,
+          KeyAlgorithms.RS256,
+        ],
+        credentialSubjectId: userId,
+        offers,
+      }),
     );
+    const credentials = map('securedCredential', issuedCredentials);
 
     expect(credentials.length).toEqual(3);
     for (let i = 0; i < credentials.length; i += 1) {
@@ -229,7 +236,7 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
   });
 
-  it('[legacy guardrail] preserves v1 claim mapping, result order, and one anchor write per credential', async () => {
+  it('preserves v1 claim mapping, result order, and one anchor write per credential', async () => {
     const offers = [
       offerFactory({
         credentialSubject: { email: 'first@example.com' },
@@ -242,17 +249,23 @@ describe('issuing velocity verifiable credentials', () => {
     ];
     const credentialSubjectId = createExampleDid();
 
-    const credentials = await issueVeriiCredentials(
-      offers,
-      credentialSubjectId,
-      credentialTypesMap,
-      issuer,
-      [KeyAlgorithms.SECP256K1, KeyAlgorithms.ES256],
-      context,
+    const credentials = await issueCredentials(
+      buildCredentialOptions({
+        credentialSigningAlgorithms: [
+          KeyAlgorithms.SECP256K1,
+          KeyAlgorithms.ES256,
+        ],
+        credentialSubjectId,
+        offers,
+      }),
     );
-    const decodedCredentials = credentials.map(jwtDecode);
+    const securedCredentials = map('securedCredential', credentials);
+    const decodedCredentials = securedCredentials.map(jwtDecode);
 
-    expect(credentials).toEqual([expect.any(String), expect.any(String)]);
+    expect(securedCredentials).toEqual([
+      expect.any(String),
+      expect.any(String),
+    ]);
     expect(decodedCredentials.map(({ header }) => header.alg)).toEqual([
       'ES256K',
       'ES256',
@@ -293,48 +306,50 @@ describe('issuing velocity verifiable credentials', () => {
     ).toEqual([true, true]);
   });
 
-  it('[desired] returns a neutral result when the new facade selects legacy format explicitly', async () => {
-    const [result] = await issueVersionedCredentials({
-      context,
-      credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
-      credentialSigningAlgorithms: [KeyAlgorithms.SECP256K1],
-      credentialSubjectId: createExampleDid(),
-      credentialTypesMap,
-      issuer,
-      offers: [offerFactory({ issuerId: issuerEntity.did })],
-    });
-    const envelope = decodeCredentialEnvelope(result.compact);
+  it('returns a format-neutral result for JWT-VC JSON-LD', async () => {
+    const [result] = await issueCredentials(
+      buildCredentialOptions({
+        credentialSigningAlgorithms: [KeyAlgorithms.SECP256K1],
+        credentialSubjectId: createExampleDid(),
+        offers: [offerFactory({ issuerId: issuerEntity.did })],
+      }),
+    );
+    const envelope = decodeCredentialEnvelope(result.securedCredential);
 
     expect(result).toEqual({
-      compact: expect.any(String),
       credential: envelope.credential,
+      credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
       credentialId: envelope.credential.id,
       credentialStatus: envelope.credential.credentialStatus,
       dataModelVersion: CredentialDataModelVersions.V1_1,
-      envelopeFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
-      signingAlgorithm: 'ES256K',
+      securedCredential: expect.any(String),
+      securingMechanism: { algorithm: 'ES256K', type: 'jose' },
     });
   });
 
-  it('preserves the historical unanchored signing result', async () => {
+  it('returns a neutral unanchored signing result', async () => {
     const credentialSubjectId = createExampleDid();
-    const [signedCredential] = await signVeriiCredentials(
-      [offerFactory({ issuerId: issuerEntity.did })],
-      credentialSubjectId,
-      credentialTypesMap,
-      issuer,
-      [KeyAlgorithms.SECP256K1],
-      context,
+    const [signedCredential] = await signCredentials(
+      buildCredentialOptions({
+        credentialSigningAlgorithms: [KeyAlgorithms.SECP256K1],
+        credentialSubjectId,
+        offers: [offerFactory({ issuerId: issuerEntity.did })],
+      }),
     );
-    const envelope = decodeCredentialEnvelope(signedCredential.vcJwt);
+    const envelope = decodeCredentialEnvelope(
+      signedCredential.issuedCredential.securedCredential,
+    );
 
     expect(signedCredential).toEqual({
-      jsonLdCredential: envelope.credential,
+      issuedCredential: expect.objectContaining({
+        credential: envelope.credential,
+        credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+        securedCredential: expect.any(String),
+      }),
       metadata: expect.objectContaining({
         credentialType: 'EmailV1.0',
         publicKey: publicJwkMatcher(KeyAlgorithms.SECP256K1),
       }),
-      vcJwt: expect.any(String),
     });
     expect(envelope).toEqual(
       expect.objectContaining({
@@ -345,30 +360,29 @@ describe('issuing velocity verifiable credentials', () => {
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
-  it('signs an explicit versioned result without anchoring it', async () => {
-    const [{ issuanceResult, metadata }] = await signVersionedCredentials({
-      context,
+  it('signs an explicitly selected format without anchoring it', async () => {
+    const [{ issuedCredential, metadata }] = await signCredentials({
+      ...buildCredentialOptions({
+        credentialSigningAlgorithms: [KeyAlgorithms.ES256],
+        credentialSubjectId: createExampleDid(),
+        offers: [offerFactory({ issuerId: issuerEntity.did })],
+      }),
       credentialFormat: CredentialEnvelopeFormats.VC_JWT,
-      credentialSigningAlgorithms: [KeyAlgorithms.ES256],
-      credentialSubjectId: createExampleDid(),
-      credentialTypesMap,
-      issuer,
-      offers: [offerFactory({ issuerId: issuerEntity.did })],
     });
 
-    expect(issuanceResult).toEqual(
+    expect(issuedCredential).toEqual(
       expect.objectContaining({
-        compact: expect.any(String),
+        credentialFormat: CredentialEnvelopeFormats.VC_JWT,
         dataModelVersion: CredentialDataModelVersions.V2_0,
-        envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
-        signingAlgorithm: 'ES256',
+        securedCredential: expect.any(String),
+        securingMechanism: { algorithm: 'ES256', type: 'jose' },
       }),
     );
     expect(metadata.publicKey).toEqual(publicJwkMatcher(KeyAlgorithms.ES256));
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
-  it('[desired] returns ordered neutral v2 results for every supported internal signing algorithm', async () => {
+  it('returns ordered v2 results for every supported internal signing algorithm', async () => {
     const credentialSubjectId = createExampleDid();
     const offers = [
       offerFactory({
@@ -387,14 +401,13 @@ describe('issuing velocity verifiable credentials', () => {
       }),
     ];
 
-    const results = await issueVersionedCredentials({
-      context,
+    const results = await issueCredentials({
+      ...buildCredentialOptions({
+        credentialSigningAlgorithms: INTERNAL_SIGNING_ALGORITHMS,
+        credentialSubjectId,
+        offers,
+      }),
       credentialFormat: CredentialEnvelopeFormats.VC_JWT,
-      credentialSigningAlgorithms: INTERNAL_SIGNING_ALGORITHMS,
-      credentialSubjectId,
-      credentialTypesMap,
-      issuer,
-      offers,
     });
 
     expect(results.map(({ dataModelVersion }) => dataModelVersion)).toEqual([
@@ -402,14 +415,14 @@ describe('issuing velocity verifiable credentials', () => {
       CredentialDataModelVersions.V2_0,
       CredentialDataModelVersions.V2_0,
     ]);
-    expect(results.map(({ envelopeFormat }) => envelopeFormat)).toEqual([
+    expect(results.map(({ credentialFormat }) => credentialFormat)).toEqual([
       CredentialEnvelopeFormats.VC_JWT,
       CredentialEnvelopeFormats.VC_JWT,
       CredentialEnvelopeFormats.VC_JWT,
     ]);
-    expect(results.map(({ signingAlgorithm }) => signingAlgorithm)).toEqual(
-      JOSE_ALGORITHMS,
-    );
+    expect(
+      results.map(({ securingMechanism }) => securingMechanism.algorithm),
+    ).toEqual(JOSE_ALGORITHMS);
     expect(
       results.map(({ credential }) => credential.credentialSubject),
     ).toEqual([
@@ -420,7 +433,7 @@ describe('issuing velocity verifiable credentials', () => {
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(3);
 
     for (const [index, result] of results.entries()) {
-      const envelope = decodeCredentialEnvelope(result.compact);
+      const envelope = decodeCredentialEnvelope(result.securedCredential);
       expect(envelope.credential).toEqual(result.credential);
       expect(envelope.protectedHeader).toEqual(
         expect.objectContaining({
@@ -439,24 +452,23 @@ describe('issuing velocity verifiable credentials', () => {
     }
   });
 
-  it('[desired] rejects a mixed-format batch before attempting an anchor write', async () => {
+  it('rejects a mixed-format batch before attempting an anchor write', async () => {
     await expect(
-      issueVersionedCredentials({
-        context,
+      issueCredentials({
+        ...buildCredentialOptions({
+          credentialSigningAlgorithms: [
+            KeyAlgorithms.SECP256K1,
+            KeyAlgorithms.ES256,
+          ],
+          credentialSubjectId: createExampleDid(),
+          offers: [
+            offerFactory({ issuerId: issuerEntity.did }),
+            offerFactory({ issuerId: issuerEntity.did }),
+          ],
+        }),
         credentialFormat: [
           CredentialEnvelopeFormats.JWT_VC_JSON_LD,
           CredentialEnvelopeFormats.VC_JWT,
-        ],
-        credentialSigningAlgorithms: [
-          KeyAlgorithms.SECP256K1,
-          KeyAlgorithms.ES256,
-        ],
-        credentialSubjectId: createExampleDid(),
-        credentialTypesMap,
-        issuer,
-        offers: [
-          offerFactory({ issuerId: issuerEntity.did }),
-          offerFactory({ issuerId: issuerEntity.did }),
         ],
       }),
     ).rejects.toThrow('A credential batch must use one supported format');
@@ -467,13 +479,12 @@ describe('issuing velocity verifiable credentials', () => {
     for (const credentialFormat of [undefined, 'unknown-format']) {
       // eslint-disable-next-line no-await-in-loop
       await expect(
-        issueVersionedCredentials({
-          context,
+        issueCredentials({
+          ...buildCredentialOptions({
+            credentialSubjectId: createExampleDid(),
+            offers: [offerFactory({ issuerId: issuerEntity.did })],
+          }),
           credentialFormat,
-          credentialSubjectId: createExampleDid(),
-          credentialTypesMap,
-          issuer,
-          offers: [offerFactory({ issuerId: issuerEntity.did })],
         }),
       ).rejects.toThrow('A credential batch must use one supported format');
     }
@@ -486,7 +497,7 @@ describe('issuing velocity verifiable credentials', () => {
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
-  it('[desired] propagates a partial v2 anchor failure after one write attempt per credential', async () => {
+  it('propagates a partial v2 anchor failure after one write attempt per credential', async () => {
     const anchorError = new Error('second metadata anchor failed');
     mockAddCredentialMetadataEntry.mock.mockImplementation((metadata) =>
       metadata.credentialType === 'EmploymentCurrentV1.1'
@@ -495,23 +506,22 @@ describe('issuing velocity verifiable credentials', () => {
     );
 
     await expect(
-      issueVersionedCredentials({
-        context,
+      issueCredentials({
+        ...buildCredentialOptions({
+          credentialSigningAlgorithms: [
+            KeyAlgorithms.SECP256K1,
+            KeyAlgorithms.ES256,
+          ],
+          credentialSubjectId: createExampleDid(),
+          offers: [
+            offerFactory({ issuerId: issuerEntity.did }),
+            offerFactory({
+              credentialType: 'EmploymentCurrentV1.1',
+              issuerId: issuerEntity.did,
+            }),
+          ],
+        }),
         credentialFormat: CredentialEnvelopeFormats.VC_JWT,
-        credentialSigningAlgorithms: [
-          KeyAlgorithms.SECP256K1,
-          KeyAlgorithms.ES256,
-        ],
-        credentialSubjectId: createExampleDid(),
-        credentialTypesMap,
-        issuer,
-        offers: [
-          offerFactory({ issuerId: issuerEntity.did }),
-          offerFactory({
-            credentialType: 'EmploymentCurrentV1.1',
-            issuerId: issuerEntity.did,
-          }),
-        ],
       }),
     ).rejects.toBe(anchorError);
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
@@ -520,16 +530,14 @@ describe('issuing velocity verifiable credentials', () => {
 
   it('uses generic metadata fallback when algorithms are omitted explicitly', async () => {
     const offer = offerFactory({ issuerId: issuerEntity.did });
-    const [credential] = await issueVeriiCredentials(
-      [offer],
-      createExampleDid(),
-      credentialTypesMap,
-      issuer,
-      undefined,
-      context,
+    const [credential] = await issueCredentials(
+      buildCredentialOptions({
+        credentialSubjectId: createExampleDid(),
+        offers: [offer],
+      }),
     );
 
-    const { header } = jwtDecode(credential);
+    const { header } = jwtDecode(credential.securedCredential);
     expect(header.alg).toEqual('ES256K');
     const [{ publicKey }] = mockAddCredentialMetadataEntry.mock.calls.map(
       (call) => call.arguments[0],
@@ -549,16 +557,16 @@ describe('issuing velocity verifiable credentials', () => {
 
   it('signs without anchoring when algorithms are omitted explicitly', async () => {
     const offer = offerFactory({ issuerId: issuerEntity.did });
-    const [{ vcJwt }] = await signVeriiCredentials(
-      [offer],
-      createExampleDid(),
-      credentialTypesMap,
-      issuer,
-      undefined,
-      context,
+    const [{ issuedCredential }] = await signCredentials(
+      buildCredentialOptions({
+        credentialSubjectId: createExampleDid(),
+        offers: [offer],
+      }),
     );
 
-    expect(jwtDecode(vcJwt).header.alg).toEqual('ES256K');
+    expect(jwtDecode(issuedCredential.securedCredential).header.alg).toEqual(
+      'ES256K',
+    );
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
@@ -566,13 +574,12 @@ describe('issuing velocity verifiable credentials', () => {
     await Promise.all(
       ['EdDSA', 'constructor', 'toString'].map((algorithm) =>
         expect(
-          issueVeriiCredentials(
-            [offerFactory({ issuerId: issuerEntity.did })],
-            createExampleDid(),
-            credentialTypesMap,
-            issuer,
-            [algorithm],
-            context,
+          issueCredentials(
+            buildCredentialOptions({
+              credentialSigningAlgorithms: [algorithm],
+              credentialSubjectId: createExampleDid(),
+              offers: [offerFactory({ issuerId: issuerEntity.did })],
+            }),
           ),
         ).rejects.toThrow(
           `Credential signing algorithm is not supported: ${algorithm}`,
@@ -598,13 +605,12 @@ describe('issuing velocity verifiable credentials', () => {
     };
 
     await expect(
-      issueVeriiCredentials(
-        [offerFactory({ issuerId: issuerEntity.did })],
-        createExampleDid(),
-        unsupportedCredentialTypesMap,
-        issuer,
-        undefined,
-        context,
+      issueCredentials(
+        buildCredentialOptions({
+          credentialSubjectId: createExampleDid(),
+          credentialTypesMap: unsupportedCredentialTypesMap,
+          offers: [offerFactory({ issuerId: issuerEntity.did })],
+        }),
       ),
     ).rejects.toThrow(
       'Credential signing algorithm is not supported: constructor',
@@ -625,16 +631,15 @@ describe('issuing velocity verifiable credentials', () => {
         issuerId: issuerEntity.did,
       }),
     ];
-    const [credential] = await issueVeriiCredentials(
-      offers,
-      createExampleDid(),
-      credentialTypesMap,
-      issuer,
-      [KeyAlgorithms.ES256],
-      context,
+    const [credential] = await issueCredentials(
+      buildCredentialOptions({
+        credentialSigningAlgorithms: [KeyAlgorithms.ES256],
+        credentialSubjectId: createExampleDid(),
+        offers,
+      }),
     );
 
-    const { header } = jwtDecode(credential);
+    const { header } = jwtDecode(credential.securedCredential);
     expect(header.alg).toEqual('ES256');
     const [{ publicKey }] = mockAddCredentialMetadataEntry.mock.calls.map(
       (call) => call.arguments[0],
@@ -651,14 +656,16 @@ describe('issuing velocity verifiable credentials', () => {
       ALG_TYPE.COSEKEY_AES_256,
       { issuerEntity, caoEntity },
     );
-    await expect(jwtVerify(credential, publicKey, false)).resolves.toEqual(
+    await expect(
+      jwtVerify(credential.securedCredential, publicKey, false),
+    ).resolves.toEqual(
       expect.objectContaining({
         header: expect.objectContaining({ alg: 'ES256' }),
       }),
     );
   });
 
-  it('[legacy guardrail] propagates an anchor error without reading or retrying the write', async () => {
+  it('propagates an anchor error without reading or retrying the write', async () => {
     const anchorError = new Error('metadata anchor failed');
     mockAddCredentialMetadataEntry.mock.mockImplementation(() =>
       Promise.reject(anchorError),
@@ -678,13 +685,12 @@ describe('issuing velocity verifiable credentials', () => {
     });
 
     await expect(
-      issueVeriiCredentials(
-        [offerFactory({ issuerId: issuerEntity.did })],
-        createExampleDid(),
-        credentialTypesMap,
-        issuer,
-        ['ES256'],
-        context,
+      issueCredentials(
+        buildCredentialOptions({
+          credentialSigningAlgorithms: ['ES256'],
+          credentialSubjectId: createExampleDid(),
+          offers: [offerFactory({ issuerId: issuerEntity.did })],
+        }),
       ),
     ).rejects.toBe(anchorError);
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
@@ -739,14 +745,18 @@ describe('issuing velocity verifiable credentials', () => {
       },
     ]);
     const userId = createExampleDid();
-    const credentials = await issueVeriiCredentials(
-      offers,
-      userId,
-      credentialTypesMap,
-      issuer,
-      [KeyAlgorithms.SECP256K1, KeyAlgorithms.SECP256K1, KeyAlgorithms.RS256],
-      context,
+    const issuedCredentials = await issueCredentials(
+      buildCredentialOptions({
+        credentialSigningAlgorithms: [
+          KeyAlgorithms.SECP256K1,
+          KeyAlgorithms.SECP256K1,
+          KeyAlgorithms.RS256,
+        ],
+        credentialSubjectId: userId,
+        offers,
+      }),
     );
+    const credentials = map('securedCredential', issuedCredentials);
 
     expect(credentials.length).toEqual(3);
     for (let i = 0; i < credentials.length; i += 1) {
@@ -785,14 +795,14 @@ describe('issuing velocity verifiable credentials', () => {
     ]);
     const userId = createExampleDid();
 
-    const credentials = await issueVeriiCredentials(
-      offers,
-      userId,
-      credentialTypesMap,
-      issuer,
-      [KeyAlgorithms.SECP256K1],
-      context,
+    const issuedCredentials = await issueCredentials(
+      buildCredentialOptions({
+        credentialSigningAlgorithms: [KeyAlgorithms.SECP256K1],
+        credentialSubjectId: userId,
+        offers,
+      }),
     );
+    const credentials = map('securedCredential', issuedCredentials);
 
     expect(credentials).toEqual([expect.any(String)]);
     for (let i = 0; i < credentials.length; i += 1) {
@@ -843,14 +853,14 @@ describe('issuing velocity verifiable credentials', () => {
 
     const userId = createExampleDid();
 
-    const credentials = await issueVeriiCredentials(
-      offers,
-      userId,
-      credentialTypesMap,
-      issuer,
-      [KeyAlgorithms.SECP256K1],
-      context,
+    const issuedCredentials = await issueCredentials(
+      buildCredentialOptions({
+        credentialSigningAlgorithms: [KeyAlgorithms.SECP256K1],
+        credentialSubjectId: userId,
+        offers,
+      }),
     );
+    const credentials = map('securedCredential', issuedCredentials);
 
     expect(credentials).toEqual([expect.any(String)]);
     for (let i = 0; i < credentials.length; i += 1) {

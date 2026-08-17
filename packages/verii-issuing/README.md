@@ -4,7 +4,7 @@ This package provides core utilities for issuing Verifiable Credentials (VCs) in
 
 ## Features
 
-- Issue credentials with `issueVeriiCredentials`
+- Issue credentials with `issueCredentials`
 - Prepare credential offers
 - Finalize credential exchanges
 - Load and resolve credential references
@@ -18,22 +18,22 @@ npm install @velocitycareerlabs/verii-issuing
 
 ## TL;DR
 This package enables issuers to create W3C Verifiable Credentials using a Verii network (such as Velocity Network) data 
-model and schema. Call `issueVeriiCredentials()` with your credential payload, configuration, and trace ID.
+model and schema. Call `issueCredentials()` with an explicit credential format and issuing context.
 
 ## Usage
 
-### Main Entry: issueVeriiCredentials
+### Main Entry: issueCredentials
 
 This function is the recommended entry point for issuing one or more Verifiable Credentials. It handles validation, 
 offer preparation, issuance, and anchoring to the blockchain.
 
 ```ts
-import { issueVeriiCredentials } from '@velocitycareerlabs/velocity';
+import { issueCredentials } from '@verii/verii-issuing';
 
 const unsignedCredentialOffers = [
     {
-        type: 'EducationDegreeRegistrationV1.1',
-        issuerId: 'did:web:example.com',
+        type: ['EducationDegreeRegistrationV1.1'],
+        issuer: { id: 'did:web:example.com' },
         credentialSubject: {
             degree: 'MSc in Policy Analysis',
             recipient: {
@@ -48,7 +48,9 @@ const unsignedCredentialOffers = [
 // Credential Metadata describes the schemaUrl & jsonld context for a specific type
 const credentialMetadata = {
     "EducationDegreeRegistrationV1.1": {
+        id: 'https://velocitynetwork.foundation/credential-types/education-degree-registration-v1.1',
         credentialType: 'EducationDegreeRegistrationV1.1',
+        defaultSignatureAlgorithm: 'ES256',
         schemaUrl: 'https://velocitynetwork.foundation/schemas/education-degree-registration-v1.1.schema.json',
         jsonldContext: ['https://velocitynetwork.foundation/contexts/layer1-credentials-v1.1.json']
     }
@@ -56,23 +58,26 @@ const credentialMetadata = {
 
 const credentialSubjectId = "did:jwk:eyJrdHkiOiJFQyIsInVzZSI6InNpZyIsImNydiI6I..."; // credential subject id 
 
-const result = await issueVeriiCredentials(
-    unsignedCredentialOffers,
-    credentialMetadata,
-    issuerIds,  // see below
+const result = await issueCredentials({
+    context,
+    credentialFormat: 'jwt_vc_json-ld',
     credentialSubjectId,
-    context // see below
-);
+    credentialTypesMap: credentialMetadata,
+    issuer,
+    offers: unsignedCredentialOffers,
+});
 
 console.log(result); // Issued credential(s) or summary metadata
 
 // Output
-// The function returns an array of W3C Verifiable Credential v1.1 JWTs:
+// The function returns format-neutral issued credential results:
 
-// [
-//   "eyJhbGciOiJFUzI1NiIsInR5cCI6...",
-//   "eyJhbGciOiJFUzI1NiIsInR5cCI6..."
-// ]
+// [{
+//   credentialFormat: 'jwt_vc_json-ld',
+//   credentialId: 'did:velocity:v2:...',
+//   securedCredential: 'eyJhbGciOiJFUzI1NiIsInR5cCI6...',
+//   securingMechanism: { type: 'jose', algorithm: 'ES256' },
+// }]
 ```
 
 ### Context
@@ -155,13 +160,13 @@ const context = {
 };
 ```
 
-### Issuer Ids
+### Issuer
 Finally, the issuer will need to utilize multiple ids when interacting with the service provider, the DID document, 
 the service provider's KMS and the DLT
 
 ```js
 
-const issuerIds = {
+const issuer = {
     // Database id for the issuer
     id: "64c3b6dcb3f1d83a94e3c1f7",
     

@@ -9,21 +9,11 @@ export interface CredentialMetadata extends AllocationListEntry {
 
 export type CredentialDataModelVersion = '1.1' | '2.0';
 
-export type CredentialEnvelopeFormat = 'jwt_vc_json-ld' | 'vc+jwt';
+export type CredentialFormat = 'jwt_vc_json-ld' | 'vc+jwt';
 
-export interface CredentialIssuanceResult {
-  compact: string;
-  credential: JsonLdCredential | VcV2Credential;
-  credentialId: string;
-  credentialStatus: LinkedData | LinkedData[];
-  dataModelVersion: CredentialDataModelVersion;
-  envelopeFormat: CredentialEnvelopeFormat;
-  signingAlgorithm: 'ES256K' | 'ES256' | 'RS256';
-}
-
-export interface VersionedCredentialIssuingOptions {
+export interface CredentialIssuingOptions {
   context: Context;
-  credentialFormat: CredentialEnvelopeFormat;
+  credentialFormat: CredentialFormat;
   credentialSigningAlgorithms?: Array<'SECP256K1' | 'ES256' | 'RS256'>;
   credentialSubjectId?: string;
   credentialTypesMap: Record<string, CredentialTypeMetadata>;
@@ -31,9 +21,24 @@ export interface VersionedCredentialIssuingOptions {
   offers: CredentialOffer[];
 }
 
-export interface VersionedCredentialSigningResult {
-  issuanceResult: CredentialIssuanceResult;
+export interface CredentialSigningResult {
+  issuedCredential: IssuedCredential;
   metadata: CredentialMetadata;
+}
+
+export interface IssuedCredential {
+  credential: JsonLdCredential | VcV2Credential;
+  credentialFormat: CredentialFormat;
+  credentialId: string;
+  credentialStatus?: LinkedData | LinkedData[];
+  dataModelVersion?: CredentialDataModelVersion;
+  securedCredential: string | Record<string, unknown>;
+  securingMechanism: JoseCredentialSecuringMechanism;
+}
+
+export interface JoseCredentialSecuringMechanism {
+  algorithm: 'ES256K' | 'ES256' | 'RS256';
+  type: 'jose';
 }
 
 export interface VcV2CredentialBuildOptions {
@@ -325,10 +330,10 @@ export function buildVcV2Credential(
   options: VcV2CredentialBuildOptions,
 ): VcV2Credential;
 
-export function issueVersionedCredentials(
-  options: VersionedCredentialIssuingOptions,
-): Promise<CredentialIssuanceResult[]>;
+export function issueCredentials(
+  options: CredentialIssuingOptions,
+): Promise<IssuedCredential[]>;
 
-export function signVersionedCredentials(
-  options: VersionedCredentialIssuingOptions,
-): Promise<VersionedCredentialSigningResult[]>;
+export function signCredentials(
+  options: CredentialIssuingOptions,
+): Promise<CredentialSigningResult[]>;

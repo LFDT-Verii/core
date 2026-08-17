@@ -54,7 +54,7 @@ const freeCredentialTypesList = ['EmailV1.0', 'DrivingLicenseV1.0'];
 
 const { offerFactory } = require('./helpers/offer-factory');
 const { createExampleDid } = require('./helpers/create-example-did');
-const { issueVeriiCredentials, issueVersionedCredentials } = require('../src');
+const { issueCredentials } = require('../src');
 const { credentialTypesMap } = require('./helpers/credential-types-map');
 const { jwtVcExpectation } = require('./helpers/jwt-vc-expectation');
 const {
@@ -211,14 +211,16 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       },
     ]);
     const userId = createExampleDid();
-    const credentials = await issueVeriiCredentials(
-      offers,
-      userId,
+    const issuedCredentials = await issueCredentials({
+      context,
+      credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+      credentialSigningAlgorithms: [KeyAlgorithms.ES256],
+      credentialSubjectId: userId,
       credentialTypesMap,
       issuer,
-      [KeyAlgorithms.ES256],
-      context,
-    );
+      offers,
+    });
+    const credentials = map('securedCredential', issuedCredentials);
 
     expect(credentials.length).toEqual(offers.length);
     expect(jwtDecode(credentials[0]).header.alg).toEqual('ES256');
@@ -273,14 +275,16 @@ describe('E2E issuing', { timeout: 60000 }, () => {
       credentialType: 'OpenBadgeCredential',
       issuerId: issuerEntity.did,
     });
-    const credentials = await issueVeriiCredentials(
-      [openBadgeOffer, openBadgeOffer],
-      createExampleDid(),
+    const issuedCredentials = await issueCredentials({
+      context,
+      credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+      credentialSigningAlgorithms: [KeyAlgorithms.ES256, undefined],
+      credentialSubjectId: createExampleDid(),
       credentialTypesMap,
       issuer,
-      [KeyAlgorithms.ES256, undefined],
-      context,
-    );
+      offers: [openBadgeOffer, openBadgeOffer],
+    });
+    const credentials = map('securedCredential', issuedCredentials);
 
     expect(
       credentials.map((credential) => jwtDecode(credential).header.alg),
@@ -296,14 +300,16 @@ const issueResolveAndVerify = async (
     credentialType: 'EmailV1.0',
     issuerId: issuerEntity.did,
   });
-  const [credential] = await issueVeriiCredentials(
-    [offer],
-    createExampleDid(),
+  const [issuedCredential] = await issueCredentials({
+    context,
+    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    credentialSigningAlgorithms: [algorithm],
+    credentialSubjectId: createExampleDid(),
     credentialTypesMap,
     issuer,
-    [algorithm],
-    context,
-  );
+    offers: [offer],
+  });
+  const { securedCredential: credential } = issuedCredential;
   const { header, payload } = jwtDecode(credential);
   const metadataRegistry = await initMetadataRegistry(
     {
@@ -347,7 +353,7 @@ const issueV2ResolveAndVerify = async (
   algorithm,
   { context, issuer, issuerEntity },
 ) => {
-  const [result] = await issueVersionedCredentials({
+  const [result] = await issueCredentials({
     context,
     credentialFormat: CredentialEnvelopeFormats.VC_JWT,
     credentialSigningAlgorithms: [algorithm],
@@ -389,18 +395,20 @@ const issueV2ResolveAndVerify = async (
   expect(didResolutionMetadata).toEqual({});
   expect(result).toEqual(
     expect.objectContaining({
-      compact: expect.any(String),
+      credentialFormat: CredentialEnvelopeFormats.VC_JWT,
       credentialId: result.credential.id,
       credentialStatus: result.credential.credentialStatus,
       dataModelVersion: CredentialDataModelVersions.V2_0,
-      envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
-      signingAlgorithm: joseAlgorithm,
+      securedCredential: expect.any(String),
+      securingMechanism: { algorithm: joseAlgorithm, type: 'jose' },
     }),
   );
   expect(publicKeyJwk).toEqual(
     expect.objectContaining(getPublicKeyExpectation(algorithm)),
   );
-  await expect(jwsVerify(result.compact, publicKeyJwk)).resolves.toEqual({
+  await expect(
+    jwsVerify(result.securedCredential, publicKeyJwk),
+  ).resolves.toEqual({
     header: {
       alg: joseAlgorithm,
       cty: 'vc',

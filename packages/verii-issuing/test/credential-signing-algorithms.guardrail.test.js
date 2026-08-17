@@ -17,12 +17,13 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const { KeyAlgorithms } = require('@verii/crypto');
+const { CredentialEnvelopeFormats } = require('@verii/jwt');
 const { ALG_TYPE } = require('@verii/metadata-registration');
 const {
   CredentialSigningAlgorithms,
   getCredentialSigningProfile,
 } = require('../src/credential-signing-profile');
-const { prepareJwtVcs } = require('../src/domain/prepare-jwt-vcs');
+const { prepareCredentials } = require('../src/domain/prepare-credentials');
 const { calcAlgTypeName } = require('../src/utils/calc-alg-type-name');
 const { credentialTypesMap } = require('./helpers/credential-types-map');
 const { createExampleDid } = require('./helpers/create-example-did');
@@ -73,20 +74,23 @@ describe('credential signing algorithm guardrails', () => {
     ).rejects.toThrow('Credential metadata algorithm does not match ES256');
   });
 
-  it('preserves the historical prepared credential result', async () => {
+  it('returns a format-neutral prepared credential result', async () => {
     const [preparedCredential] = await prepareCredential(
       KeyAlgorithms.SECP256K1,
       { algType: 'aes-256-gcm', index: 2, listId: 1 },
     );
 
     expect(preparedCredential).toEqual({
-      jsonLdCredential: expect.objectContaining({
-        id: expect.any(String),
+      issuedCredential: expect.objectContaining({
+        credential: expect.objectContaining({
+          id: expect.any(String),
+        }),
+        credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+        securedCredential: expect.any(String),
       }),
       metadata: expect.objectContaining({
         credentialType: 'EmailV1.0',
       }),
-      vcJwt: expect.any(String),
     });
   });
 });
@@ -95,18 +99,8 @@ const prepareCredential = (
   algorithm,
   metadataEntry = { algType: 'cosekey:aes-256-gcm', index: 2, listId: 1 },
 ) =>
-  prepareJwtVcs(
-    [offerFactory({ credentialType: 'EmailV1.0' })],
-    createExampleDid(),
-    {
-      did: createExampleDid(),
-      dltPrimaryAddress: '0x00112233445566778899aabbccddeeff00112233',
-    },
-    [metadataEntry],
-    [{ index: 4, listId: 3 }],
-    credentialTypesMap,
-    [algorithm],
-    {
+  prepareCredentials({
+    context: {
       config: {
         credentialExtensionsContextUrl:
           'https://example.com/credential-extensions.json',
@@ -114,4 +108,15 @@ const prepareCredential = (
         revocationContractAddress: '0x1234',
       },
     },
-  );
+    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    credentialSigningAlgorithms: [algorithm],
+    credentialSubjectId: createExampleDid(),
+    credentialTypesMap,
+    issuer: {
+      did: createExampleDid(),
+      dltPrimaryAddress: '0x00112233445566778899aabbccddeeff00112233',
+    },
+    metadataEntries: [metadataEntry],
+    offers: [offerFactory({ credentialType: 'EmailV1.0' })],
+    revocationListEntries: [{ index: 4, listId: 3 }],
+  });

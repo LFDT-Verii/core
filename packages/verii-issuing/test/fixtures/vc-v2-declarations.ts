@@ -16,12 +16,12 @@
 
 import {
   buildVcV2Credential,
-  type CredentialIssuanceResult,
+  type CredentialIssuingOptions,
+  type CredentialSigningResult,
+  type IssuedCredential,
   type VcV2CredentialBuildOptions,
   type VcV2LinkedData,
   type VcV2SchemaDescriptor,
-  type VersionedCredentialIssuingOptions,
-  type VersionedCredentialSigningResult,
 } from '../../types/types';
 
 declare const validBuildOptions: VcV2CredentialBuildOptions;
@@ -44,16 +44,16 @@ export const invalidSchemaDescriptor: VcV2SchemaDescriptor = {
   type: ['JsonSchema', 'OtherSchema'],
 };
 
-declare const issuanceOptions: VersionedCredentialIssuingOptions;
-declare const issuanceResult: CredentialIssuanceResult;
-declare const signingResult: VersionedCredentialSigningResult;
+declare const issuanceOptions: CredentialIssuingOptions;
+declare const issuedCredential: IssuedCredential;
+declare const signingResult: CredentialSigningResult;
 
 export const explicitCredentialFormat = issuanceOptions.credentialFormat;
-export const neutralCompact = issuanceResult.compact;
-export const neutralCredentialId = issuanceResult.credentialId;
+export const neutralCredentialId = issuedCredential.credentialId;
+export const { securedCredential } = issuedCredential;
 export const neutralPublicKeyType = signingResult.metadata.publicKey.kty;
 
-export const invalidCredentialFormat: VersionedCredentialIssuingOptions = {
+export const invalidCredentialFormat: CredentialIssuingOptions = {
   ...issuanceOptions,
   // @ts-expect-error New facade callers cannot omit or invent the format.
   credentialFormat: 'jwt',

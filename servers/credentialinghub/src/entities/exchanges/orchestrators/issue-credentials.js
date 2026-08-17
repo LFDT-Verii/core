@@ -22,7 +22,7 @@ const { mapWithIndex } = require('@verii/common-functions');
 const { parseAccessToken } = require('../../tokens');
 const { ExchangeStates, verifyProofOfKeyPossession } = require('../domain');
 const { authorizeExchange } = require('../domain/authorize-exchange');
-const { issueVersionedCredentialsFacade } = require('../../credentials');
+const { issueVeriiCredentialsFacade } = require('../../credentials');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 const {
   buildCredentialIssuedEvent,
@@ -53,13 +53,14 @@ const issueCredentials = async (
     context,
   );
 
-  const [issuedCredentials, issuanceResults] = await issueApprovedCredentials(
-    approvedCredentialIds,
-    keyPossessionProof,
-    exchange,
-    issuerService,
-    context,
-  );
+  const [issuedCredentials, issuedCredentialResults] =
+    await issueApprovedCredentials(
+      approvedCredentialIds,
+      keyPossessionProof,
+      exchange,
+      issuerService,
+      context,
+    );
 
   await repos.exchanges.addState(exchange._id, ExchangeStates.COMPLETE, {
     finalizedCredentialIds: uniq([
@@ -92,7 +93,7 @@ const issueCredentials = async (
     context,
   );
 
-  return map('compact', issuanceResults);
+  return map('securedCredential', issuedCredentialResults);
 };
 
 const rejectCredentials = (credentialIds, { repos }) => {
@@ -143,7 +144,7 @@ const issueApprovedCredentials = async (
       }),
     credentialTypeMetadatas,
   );
-  const issuanceResults = await issueVersionedCredentialsFacade({
+  const issuedCredentialResults = await issueVeriiCredentialsFacade({
     approvedCredentialsContent: credentialContents,
     context,
     credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
@@ -158,7 +159,7 @@ const issueApprovedCredentials = async (
       async (credential, i) =>
         repos.credentials.updateIssuedCredential(
           credential._id,
-          issuanceResults[i],
+          issuedCredentialResults[i],
           credentialSubjectId,
           true,
         ),
@@ -166,7 +167,7 @@ const issueApprovedCredentials = async (
     ),
   );
 
-  return [issuedCredentials, issuanceResults];
+  return [issuedCredentials, issuedCredentialResults];
 };
 
 module.exports = { issueCredentials };

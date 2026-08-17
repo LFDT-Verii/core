@@ -17,38 +17,13 @@
 
 const {
   mongoAllocationListQueries,
-  signVersionedCredentials,
+  signCredentials,
 } = require('@verii/verii-issuing');
-const { CredentialEnvelopeFormats } = require('@verii/jwt');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { keyBy } = require('lodash/fp');
 const { buildVeriiIssuer } = require('./build-verii-issuer');
 
-const signVeriiCredentialsFacade = async (
-  credentialContentList,
-  credentialSubjectId,
-  credentialTypeMetadatas,
-  credentialSigningAlgorithms,
-  issuerService,
-  context,
-) => {
-  const { credentialMetadata, issuanceResult } =
-    await signVersionedCredentialsFacade({
-      context,
-      credentialContentList,
-      credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
-      credentialSigningAlgorithms,
-      credentialSubjectId,
-      credentialTypeMetadatas,
-      issuerService,
-    });
-  return {
-    credentialMetadata,
-    vcJwt: issuanceResult?.compact,
-  };
-};
-
-const signVersionedCredentialsFacade = async ({
+const signVeriiCredentialsFacade = async ({
   context,
   credentialContentList,
   credentialFormat,
@@ -67,7 +42,7 @@ const signVersionedCredentialsFacade = async ({
   // eslint-disable-next-line better-mutation/no-mutation
   context.caoDid = context.tenant.caoDid;
 
-  const result = await signVersionedCredentials({
+  const result = await signCredentials({
     context,
     credentialFormat,
     credentialSigningAlgorithms,
@@ -78,11 +53,10 @@ const signVersionedCredentialsFacade = async ({
   });
   return {
     credentialMetadata: result?.[0]?.metadata,
-    issuanceResult: result?.[0]?.issuanceResult,
+    issuedCredential: result?.[0]?.issuedCredential,
   };
 };
 
 module.exports = {
   signVeriiCredentialsFacade,
-  signVersionedCredentialsFacade,
 };

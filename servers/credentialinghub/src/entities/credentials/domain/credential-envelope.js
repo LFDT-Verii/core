@@ -15,9 +15,10 @@
  */
 
 const {
+  CredentialDataModelVersions,
+  CredentialEnvelopeFormats,
+  VersionAlgorithmAllowlists,
   decodeCredentialEnvelope,
-  getCredentialId,
-  getCredentialStatus,
 } = require('@verii/jwt');
 
 const credentialEnvelopeMetadataKeys = [
@@ -27,37 +28,14 @@ const credentialEnvelopeMetadataKeys = [
 ];
 
 const buildIssuedCredentialEnvelope = (issuedCredential) => {
-  if (typeof issuedCredential !== 'string') {
-    return buildIssuedCredentialEnvelopeFromResult(issuedCredential);
-  }
-
-  const jwtVc = issuedCredential;
-  const envelope = decodeCredentialEnvelope(jwtVc);
-  const credentialDid = getCredentialId(envelope);
-  const metadata = buildCredentialEnvelopeMetadata(envelope);
-
-  assertNonEmptyString(
-    credentialDid,
-    'Issued credential envelope is missing credential id',
-  );
-
-  return {
-    credentialDid,
-    credentialStatus: getCredentialStatus(envelope),
-    jwtVc,
-    ...metadata,
-  };
-};
-
-const buildIssuedCredentialEnvelopeFromResult = (issuedCredential) => {
-  assertIssuedCredentialResult(issuedCredential);
+  assertIssuedCredential(issuedCredential);
   const {
-    compact: jwtVc,
+    credentialFormat: envelopeFormat,
     credentialId: credentialDid,
     credentialStatus,
     dataModelVersion,
-    envelopeFormat,
-    signingAlgorithm,
+    securedCredential: jwtVc,
+    securingMechanism: { algorithm: signingAlgorithm },
   } = issuedCredential;
 
   return {
@@ -70,30 +48,50 @@ const buildIssuedCredentialEnvelopeFromResult = (issuedCredential) => {
   };
 };
 
-const assertIssuedCredentialResult = (issuedCredential) => {
+const assertIssuedCredential = (issuedCredential) => {
   const {
-    compact,
+    credentialFormat,
     credentialId,
     dataModelVersion,
-    envelopeFormat,
-    signingAlgorithm,
+    securedCredential,
+    securingMechanism,
   } = issuedCredential ?? {};
   assertNonEmptyString(
     credentialId,
     'Issued credential envelope is missing credential id',
   );
   assertNonEmptyString(
-    compact,
-    'Issued credential envelope is missing compact value',
+    securedCredential,
+    'Issued credential envelope is missing secured credential',
   );
+  assertSupportedDataModelVersion(dataModelVersion);
+  assertSupportedCredentialFormat(credentialFormat);
+  assertSupportedSecuringMechanism(dataModelVersion, securingMechanism);
+};
+
+const assertSupportedCredentialFormat = (credentialFormat) => {
+  if (!Object.values(CredentialEnvelopeFormats).includes(credentialFormat)) {
+    throw new Error('Issued credential has an unsupported format');
+  }
+};
+
+const assertSupportedDataModelVersion = (dataModelVersion) => {
+  if (!Object.values(CredentialDataModelVersions).includes(dataModelVersion)) {
+    throw new Error('Issued credential has an unsupported data model version');
+  }
+};
+
+const assertSupportedSecuringMechanism = (
+  dataModelVersion,
+  securingMechanism,
+) => {
   if (
-    !hasCredentialEnvelopeMetadata({
-      dataModelVersion,
-      envelopeFormat,
-      signingAlgorithm,
-    })
+    securingMechanism?.type !== 'jose' ||
+    !VersionAlgorithmAllowlists[dataModelVersion].includes(
+      securingMechanism.algorithm,
+    )
   ) {
-    throw new Error('Issued credential envelope is missing format metadata');
+    throw new Error('Issued credential has an unsupported securing mechanism');
   }
 };
 
