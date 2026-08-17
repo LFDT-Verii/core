@@ -39,6 +39,7 @@ const { getDidUriFromJwk } = require('@verii/did-doc');
 const { ObjectId } = require('mongodb');
 const { applyOverrides } = require('@verii/common-functions');
 const {
+  mockHttpClientJsonResponse,
   mockHttpClientModule,
   resetMockHttpClient,
 } = require('../helpers/mock-http-client');
@@ -665,6 +666,31 @@ describe('openid4vc credential test suite', () => {
             { $set: { typeMetadata: persistedTypeMetadata } },
           );
 
+        mockHttpClientJsonResponse('get', [
+          {
+            ...persistedTypeMetadata,
+            defaultSignatureAlgorithm: 'ES256',
+            issuerCategory: 'RegularIssuer',
+          },
+        ]);
+        mockHttpClientJsonResponse('get', {
+          credentialSubject: {
+            permittedVelocityServiceCategory: ['Issuer'],
+          },
+        });
+        const metadataResponse = await fastify.injectJson({
+          method: 'GET',
+          url: `.well-known/openid-credential-issuer/r/${tenant._id}`,
+        });
+
+        expect(metadataResponse.statusCode).toEqual(200);
+        const advertisedSigningAlgorithms = Object.values(
+          metadataResponse.json.credential_configurations_supported,
+        ).map(
+          ({ credential_signing_alg_values_supported: signingAlgorithms }) =>
+            signingAlgorithms,
+        );
+
         const encryptedNonce = encrypt(
           `${Date.now()}`,
           hexFromJwk(issuerKeyPair.privateKey, true),
@@ -688,10 +714,15 @@ describe('openid4vc credential test suite', () => {
         });
 
         expect(credentialResponse.statusCode).toEqual(200);
+        const { alg: issuedAlgorithm } = jwtDecode(
+          credentialResponse.json.credentials[0].credential,
+        ).header;
+        expect(issuedAlgorithm).toEqual('RS256');
         expect(
-          jwtDecode(credentialResponse.json.credentials[0].credential).header
-            .alg,
-        ).toEqual('RS256');
+          advertisedSigningAlgorithms.every((signingAlgorithms) =>
+            signingAlgorithms.includes(issuedAlgorithm),
+          ),
+        ).toEqual(true);
         await expect(
           mongoDb()
             .collection('credentials')

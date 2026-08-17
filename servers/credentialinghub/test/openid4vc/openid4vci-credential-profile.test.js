@@ -35,12 +35,14 @@ describe('OpenID4VCI credential profile', () => {
         credentialFormat: 'jwt_vc_json-ld',
         dataModelVersion: '1.1',
         format: 'jwt_vc_json-ld',
+        selectionPriority: 0,
       },
       'vc+jwt': {
         context: 'https://www.w3.org/ns/credentials/v2',
         credentialFormat: 'vc+jwt',
         dataModelVersion: '2.0',
         format: 'application/vc+jwt',
+        selectionPriority: 1,
       },
     });
     expect(Object.isFrozen(Openid4vciCredentialProfiles)).toEqual(true);

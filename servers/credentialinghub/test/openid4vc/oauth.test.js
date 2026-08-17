@@ -352,6 +352,7 @@ describe('OAuth test suite', () => {
       const testCredentialConfigurationBinding = (
         name,
         requestedCredentialConfigurationIds,
+        expectedCredentialConfigurationId,
       ) => {
         it(`binds ${name} to the credential identifier`, async () => {
           const issuerService = await persistIssuerService({ tenant });
@@ -381,8 +382,7 @@ describe('OAuth test suite', () => {
           expect(response.statusCode).toEqual(200);
           const expectedAuthorizationDetails = [
             {
-              credential_configuration_id:
-                'foundation.velocitynetwork.Employment.vc+jwt',
+              credential_configuration_id: expectedCredentialConfigurationId,
               credential_identifiers: [`${credential._id}`],
               type: 'openid_credential',
             },
@@ -402,15 +402,23 @@ describe('OAuth test suite', () => {
         });
       };
 
-      testCredentialConfigurationBinding('an explicit VCDM 2.0 configuration', [
+      testCredentialConfigurationBinding(
+        'an explicit legacy configuration',
+        ['foundation.velocitynetwork.Employment'],
+        'foundation.velocitynetwork.Employment',
+      );
+      testCredentialConfigurationBinding(
+        'an explicit VCDM 2.0 configuration',
+        ['foundation.velocitynetwork.Employment.vc+jwt'],
         'foundation.velocitynetwork.Employment.vc+jwt',
-      ]);
+      );
       testCredentialConfigurationBinding(
         'both configurations with VCDM 2.0 preferred',
         [
           'foundation.velocitynetwork.Employment',
           'foundation.velocitynetwork.Employment.vc+jwt',
         ],
+        'foundation.velocitynetwork.Employment.vc+jwt',
       );
     });
   });

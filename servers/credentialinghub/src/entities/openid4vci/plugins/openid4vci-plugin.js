@@ -44,7 +44,9 @@ const { ServiceCategories } = require('@verii/organizations-registry');
 const { KeyPurposes } = require('@verii/crypto');
 const { getJwkFromDidUri } = require('@verii/did-doc');
 const { jwtVerify, keyAlgorithmToJoseAlg } = require('@verii/jwt');
-const { resolveCredentialSigningAlgorithm } = require('../../tenants/domain');
+const {
+  getCredentialSigningAlgorithmsSupported,
+} = require('../../tenants/domain');
 const {
   isOpenid4vciCredentialFormat,
   Openid4vciCredentialProfiles,
@@ -195,14 +197,11 @@ const buildIssuer = async (context) => {
           {
             format: credentialProfile.format,
             cryptographic_binding_methods_supported: ['did:jwk'],
-            credential_signing_alg_values_supported: [
-              keyAlgorithmToJoseAlg(
-                resolveCredentialSigningAlgorithm({
-                  credentialTypeMetadata: credentialMetadata,
-                  tenant,
-                }),
-              ),
-            ],
+            credential_signing_alg_values_supported:
+              getCredentialSigningAlgorithmsSupported({
+                credentialTypeMetadata: credentialMetadata,
+                tenant,
+              }).map(keyAlgorithmToJoseAlg),
             credential_definition: {
               '@context': [
                 credentialProfile.context,

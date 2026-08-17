@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const { find, flatMap, isEmpty, map } = require('lodash/fp');
+const { find, flatMap, isEmpty, map, sortBy } = require('lodash/fp');
 const { calcSha384 } = require('@verii/crypto');
 const { CredentialEnvelopeFormats } = require('@verii/jwt');
 const {
@@ -101,10 +101,10 @@ const selectCredentialProfile = (
       requestedCredentialConfigurationIds.includes(
         toCredentialConfigurationId(credentialType, credentialFormat),
       ),
-    [
-      Openid4vciCredentialProfiles[CredentialEnvelopeFormats.VC_JWT],
-      Openid4vciCredentialProfiles[CredentialEnvelopeFormats.JWT_VC_JSON_LD],
-    ],
+    sortBy(
+      ({ selectionPriority }) => -selectionPriority,
+      Object.values(Openid4vciCredentialProfiles),
+    ),
   );
 };
 

@@ -28,12 +28,14 @@ const Openid4vciCredentialProfiles = Object.freeze({
     credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
     dataModelVersion: CredentialDataModelVersions.V1_1,
     format: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    selectionPriority: 0,
   }),
   [CredentialEnvelopeFormats.VC_JWT]: Object.freeze({
     context: 'https://www.w3.org/ns/credentials/v2',
     credentialFormat: CredentialEnvelopeFormats.VC_JWT,
     dataModelVersion: CredentialDataModelVersions.V2_0,
     format: 'application/vc+jwt',
+    selectionPriority: 1,
   }),
 });
 

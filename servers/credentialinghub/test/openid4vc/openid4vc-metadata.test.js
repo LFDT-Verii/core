@@ -33,7 +33,7 @@ const { constructTenant } = require('../helpers/construct-tenant');
 const issuerUrl = (tenant) => `https://localhost.test/r/${tenant._id}`;
 const credentialConfigurationExpectation = (
   credentialType,
-  signingAlgorithm,
+  signingAlgorithms,
   context,
   format,
 ) => ({
@@ -44,7 +44,7 @@ const credentialConfigurationExpectation = (
     ],
     type: ['VerifiableCredential', credentialType],
   },
-  credential_signing_alg_values_supported: [signingAlgorithm],
+  credential_signing_alg_values_supported: signingAlgorithms,
   cryptographic_binding_methods_supported: ['did:jwk'],
   format,
   proof_types_supported: {
@@ -56,19 +56,19 @@ const credentialConfigurationExpectation = (
 
 const dualCredentialConfigurationExpectations = (
   credentialType,
-  signingAlgorithm,
+  signingAlgorithms,
 ) => ({
   [`foundation.velocitynetwork.${credentialType}`]:
     credentialConfigurationExpectation(
       credentialType,
-      signingAlgorithm,
+      signingAlgorithms,
       'https://www.w3.org/2018/credentials/v1',
       'jwt_vc_json-ld',
     ),
   [`foundation.velocitynetwork.${credentialType}.vc+jwt`]:
     credentialConfigurationExpectation(
       credentialType,
-      signingAlgorithm,
+      signingAlgorithms,
       'https://www.w3.org/ns/credentials/v2',
       'application/vc+jwt',
     ),
@@ -143,12 +143,21 @@ describe('.well-known openid4vc metadata test suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(response.json.credential_configurations_supported).toEqual({
-        ...dualCredentialConfigurationExpectations('EmailV1.0', 'ES256'),
-        ...dualCredentialConfigurationExpectations('Employment', 'ES256K'),
-        ...dualCredentialConfigurationExpectations(
-          'OpenBadgeCredential',
+        ...dualCredentialConfigurationExpectations('EmailV1.0', [
+          'ES256',
+          'ES256K',
           'RS256',
-        ),
+        ]),
+        ...dualCredentialConfigurationExpectations('Employment', [
+          'ES256K',
+          'ES256',
+          'RS256',
+        ]),
+        ...dualCredentialConfigurationExpectations('OpenBadgeCredential', [
+          'RS256',
+          'ES256K',
+          'ES256',
+        ]),
       });
     });
 
@@ -186,11 +195,10 @@ describe('.well-known openid4vc metadata test suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(response.json.credential_configurations_supported).toEqual({
-        ...dualCredentialConfigurationExpectations('Employment', 'ES256'),
-        ...dualCredentialConfigurationExpectations(
-          'OpenBadgeCredential',
+        ...dualCredentialConfigurationExpectations('Employment', ['ES256']),
+        ...dualCredentialConfigurationExpectations('OpenBadgeCredential', [
           'ES256',
-        ),
+        ]),
       });
     });
 
@@ -228,7 +236,7 @@ describe('.well-known openid4vc metadata test suite', () => {
       expect(response.headers['access-control-allow-origin']).toEqual('foo');
     });
 
-    it('should advertise exactly the RS256 credential-type default when the tenant has no override', async () => {
+    it('should advertise every supported algorithm with the RS256 credential-type default first when the tenant has no override', async () => {
       const credentialTypeMetadatas = [
         {
           credentialType: 'OpenBadgeCredential',
@@ -255,10 +263,10 @@ describe('.well-known openid4vc metadata test suite', () => {
         response.json.credential_configurations_supported[
           'foundation.velocitynetwork.OpenBadgeCredential'
         ].credential_signing_alg_values_supported,
-      ).toEqual(['RS256']);
+      ).toEqual(['RS256', 'ES256K', 'ES256']);
     });
 
-    it('should advertise exactly the current credential-type default', async () => {
+    it('should keep algorithms used by pending credentials advertised after a type-default change', async () => {
       const credentialTypeMetadatas = [
         {
           credentialType: 'OpenBadgeCredential',
@@ -285,7 +293,7 @@ describe('.well-known openid4vc metadata test suite', () => {
         response.json.credential_configurations_supported[
           'foundation.velocitynetwork.OpenBadgeCredential'
         ].credential_signing_alg_values_supported,
-      ).toEqual(['ES256']);
+      ).toEqual(['ES256', 'ES256K', 'RS256']);
     });
 
     it('should advertise one ES256 tenant override for badge and non-badge credential types', async () => {
@@ -425,7 +433,11 @@ const expectedCredentialMetadata = (tenant) => ({
     },
   ],
   credential_configurations_supported: {
-    ...dualCredentialConfigurationExpectations('fooType', 'ES256K'),
+    ...dualCredentialConfigurationExpectations('fooType', [
+      'ES256K',
+      'ES256',
+      'RS256',
+    ]),
   },
   authorization_servers: [`https://localhost.test/r/${tenant._id}/oauth`],
 });
