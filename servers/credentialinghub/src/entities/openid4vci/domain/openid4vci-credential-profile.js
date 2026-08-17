@@ -21,18 +21,18 @@ const {
 
 const Openid4vciCredentialProfile = Object.freeze({
   context: 'https://www.w3.org/ns/credentials/v2',
+  credentialFormat: CredentialEnvelopeFormats.VC_JWT,
   dataModelVersion: CredentialDataModelVersions.V2_0,
-  envelopeFormat: CredentialEnvelopeFormats.VC_JWT,
   format: 'application/vc+jwt',
 });
 
-const assertOpenid4vciCredentialResult = ({
+const assertOpenid4vciIssuedCredential = ({
+  credentialFormat,
   dataModelVersion,
-  envelopeFormat,
 } = {}) => {
   if (
     dataModelVersion !== Openid4vciCredentialProfile.dataModelVersion ||
-    envelopeFormat !== Openid4vciCredentialProfile.envelopeFormat
+    credentialFormat !== Openid4vciCredentialProfile.credentialFormat
   ) {
     throw new Error('OpenID4VCI issuer returned an unsupported credential');
   }
@@ -42,7 +42,7 @@ const isOpenid4vciCredentialFormat = (format) =>
   format === undefined || format === Openid4vciCredentialProfile.format;
 
 module.exports = {
-  assertOpenid4vciCredentialResult,
+  assertOpenid4vciIssuedCredential,
   isOpenid4vciCredentialFormat,
   Openid4vciCredentialProfile,
 };

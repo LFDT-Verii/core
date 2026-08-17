@@ -17,7 +17,7 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const {
-  assertOpenid4vciCredentialResult,
+  assertOpenid4vciIssuedCredential,
   isOpenid4vciCredentialFormat,
   Openid4vciCredentialProfile,
 } = require('../../src/entities/openid4vci/domain');
@@ -26,8 +26,8 @@ describe('OpenID4VCI credential profile', () => {
   it('defines the one deployment credential profile', () => {
     expect(Openid4vciCredentialProfile).toEqual({
       context: 'https://www.w3.org/ns/credentials/v2',
+      credentialFormat: 'vc+jwt',
       dataModelVersion: '2.0',
-      envelopeFormat: 'vc+jwt',
       format: 'application/vc+jwt',
     });
     expect(Object.isFrozen(Openid4vciCredentialProfile)).toEqual(true);
@@ -46,18 +46,18 @@ describe('OpenID4VCI credential profile', () => {
 
   it('accepts only a neutral result matching the profile', () => {
     expect(() =>
-      assertOpenid4vciCredentialResult({
+      assertOpenid4vciIssuedCredential({
+        credentialFormat: 'vc+jwt',
         dataModelVersion: '2.0',
-        envelopeFormat: 'vc+jwt',
       }),
     ).not.toThrow();
     expect(() =>
-      assertOpenid4vciCredentialResult({
+      assertOpenid4vciIssuedCredential({
+        credentialFormat: 'jwt_vc_json-ld',
         dataModelVersion: '1.1',
-        envelopeFormat: 'jwt_vc_json-ld',
       }),
     ).toThrow('OpenID4VCI issuer returned an unsupported credential');
-    expect(() => assertOpenid4vciCredentialResult()).toThrow(
+    expect(() => assertOpenid4vciIssuedCredential()).toThrow(
       'OpenID4VCI issuer returned an unsupported credential',
     );
   });

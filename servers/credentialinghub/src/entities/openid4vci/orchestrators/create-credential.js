@@ -19,7 +19,7 @@ const { getCredentialTypeMetadata } = require('@verii/common-fetchers');
 const { jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
 const {
-  assertOpenid4vciCredentialResult,
+  assertOpenid4vciIssuedCredential,
   Oidc4vciErrors,
   Openid4vciCredentialProfile,
 } = require('../domain');
@@ -78,13 +78,13 @@ const createCredential = async (credentialRequestParameters, context) => {
       await secureVeriiCredentialsFacade({
         context,
         credentialContentList: [credential.content],
-        credentialFormat: Openid4vciCredentialProfile.envelopeFormat,
+        credentialFormat: Openid4vciCredentialProfile.credentialFormat,
         credentialSigningAlgorithms: [credentialSigningAlgorithm],
         credentialSubjectId,
         credentialTypeMetadatas: [credential.typeMetadata],
         issuerService: service,
       });
-    assertOpenid4vciCredentialResult(issuanceResult);
+    assertOpenid4vciIssuedCredential(issuedCredential);
 
     const newExchange = buildExchange(
       service,
