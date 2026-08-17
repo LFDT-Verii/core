@@ -40,7 +40,7 @@ const {
 } = require('../credential-signing-profile');
 
 // eslint-disable-next-line max-len
-/** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context, JsonLdCredential } from "../types/types" */
+/** @import { Issuer, AllocationListEntry, CredentialDataModelVersion, CredentialEnvelopeFormat, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context, JsonLdCredential, VcV2Credential } from "../types/types" */
 
 /**
  * Builds the VCs
@@ -189,7 +189,20 @@ const prepareVersionedCredentials = async ({
 /**
  * Builds the selected credential document.
  * @param {object} options representation dependencies
- * @returns {object} credential and neutral format metadata
+ * @param {string} options.contentHash offer content hash
+ * @param {Context} options.context application context
+ * @param {CredentialEnvelopeFormat} options.credentialFormat credential format
+ * @param {string} options.credentialId credential identifier
+ * @param {string} [options.credentialSubjectId] bound credential subject
+ * @param {CredentialTypeMetadata} options.credentialTypeMetadata type metadata
+ * @param {Issuer} options.issuer issuer
+ * @param {CredentialOffer} options.offer credential offer
+ * @param {string} options.revocationUrl credential status URL
+ * @returns {{
+ *   credential: JsonLdCredential | VcV2Credential,
+ *   dataModelVersion: CredentialDataModelVersion,
+ *   envelopeFormat: CredentialEnvelopeFormat
+ * }} credential and neutral format metadata
  */
 const buildCredentialRepresentation = ({
   contentHash,
@@ -239,7 +252,15 @@ const buildCredentialRepresentation = ({
  * Builds the selected unsigned envelope without changing shared credential
  * identity or key material.
  * @param {object} options envelope dependencies
- * @returns {{header: object, payload: object, sign: Function}} unsigned envelope
+ * @param {JsonLdCredential | VcV2Credential} options.credential credential
+ * @param {CredentialEnvelopeFormat} options.credentialFormat credential format
+ * @param {string} options.credentialId credential identifier
+ * @param {string} options.keyAlgorithm internal key algorithm
+ * @returns {{
+ *   header: object,
+ *   payload: object,
+ *   sign: (payload: object, keyOrSecret: object | string, header: object) => Promise<string>
+ * }} unsigned envelope
  */
 const buildUnsignedCredentialEnvelope = ({
   credential,
