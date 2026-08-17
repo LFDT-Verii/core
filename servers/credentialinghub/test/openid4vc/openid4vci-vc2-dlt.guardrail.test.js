@@ -18,7 +18,6 @@ const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const console = require('node:console');
 const { expect } = require('expect');
 const {
-  mockHttpClientJsonResponse,
   mockHttpClientModule,
   resetMockHttpClient,
 } = require('../helpers/mock-http-client');
@@ -264,8 +263,10 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
     });
   }
 
-  it('rejects the legacy OpenID credential profile with a stable client error', async () => {
-    const setup = await setupCredential({});
+  it('issues the legacy profile when the access token binds it', async () => {
+    const setup = await setupCredential({
+      credentialFormat: 'jwt_vc_json-ld',
+    });
     const proof = await buildProof(setup.holderDid, setup.holderKeyPair);
     const response = await fastify.injectJson({
       method: 'POST',
@@ -278,16 +279,26 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
       },
     });
 
-    expect(response.statusCode).toEqual(400);
-    expect(response.json).toEqual({
-      error: 'invalid_credential_request',
-      error_description: 'Unsupported credential format jwt_vc_json-ld',
-    });
+    expect(response.statusCode).toEqual(200);
+    const compactCredential = response.json.credentials[0].credential;
+    const { payload } = jwtDecode(compactCredential);
+    expect(payload.vc['@context'][0]).toEqual(
+      'https://www.w3.org/2018/credentials/v1',
+    );
+    await expect(
+      mongoDb()
+        .collection('credentials')
+        .findOne({ _id: new ObjectId(setup.credential._id) }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        dataModelVersion: '1.1',
+        envelopeFormat: 'jwt_vc_json-ld',
+      }),
+    );
   });
 
   const issueAndAcceptCredential = async (testCase) => {
     const setup = await setupCredential(testCase);
-    mockHttpClientJsonResponse('get', [setup.credential.typeMetadata]);
     const nonceResponse = await fastify.injectJson({
       method: 'POST',
       url: `/r/${tenant._id}/openid4vc/nonce`,
@@ -375,7 +386,11 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
     };
   };
 
-  const setupCredential = async ({ badge = false, tenantOverride } = {}) => {
+  const setupCredential = async ({
+    badge = false,
+    credentialFormat = 'vc+jwt',
+    tenantOverride,
+  } = {}) => {
     if (tenantOverride != null) {
       await mongoDb()
         .collection('tenants')
@@ -396,9 +411,22 @@ describe('OpenID4VCI VC 2.0 real-DLT guardrails', { timeout: 120000 }, () => {
     });
     const holderKeyPair = generateKeyPair({ format: 'jwk' });
     const holderDid = getDidUriFromJwk(holderKeyPair.publicKey);
-    const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-      subject: `https://localhost.test/r/${tenant._id}`,
-    });
+    const credentialConfigurationId = `foundation.velocitynetwork.${typeMetadata.credentialType}${
+      credentialFormat === 'vc+jwt' ? '.vc+jwt' : ''
+    }`;
+    const authToken = await jwtSign(
+      {
+        authorization_details: [
+          {
+            credential_configuration_id: credentialConfigurationId,
+            credential_identifiers: [`${credential._id}`],
+            type: 'openid_credential',
+          },
+        ],
+      },
+      issuerKeyPair.privateKey,
+      { subject: `https://localhost.test/r/${tenant._id}` },
+    );
 
     return { authToken, credential, holderDid, holderKeyPair };
   };

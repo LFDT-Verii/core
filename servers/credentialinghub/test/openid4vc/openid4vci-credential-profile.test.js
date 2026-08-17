@@ -18,44 +18,103 @@ const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const {
   assertOpenid4vciIssuedCredential,
+  getOpenid4vciCredentialProfileByConfigurationId,
+  getOpenid4vciCredentialProfileByFormat,
   isOpenid4vciCredentialFormat,
-  Openid4vciCredentialProfile,
+  Openid4vciCredentialProfiles,
 } = require('../../src/entities/openid4vci/domain');
 
 describe('OpenID4VCI credential profile', () => {
-  it('defines the one deployment credential profile', () => {
-    expect(Openid4vciCredentialProfile).toEqual({
-      context: 'https://www.w3.org/ns/credentials/v2',
-      credentialFormat: 'vc+jwt',
-      dataModelVersion: '2.0',
-      format: 'application/vc+jwt',
+  const legacyProfile = Openid4vciCredentialProfiles['jwt_vc_json-ld'];
+  const v2Profile = Openid4vciCredentialProfiles['vc+jwt'];
+
+  it('defines frozen legacy and VCDM 2.0 deployment profiles', () => {
+    expect(Openid4vciCredentialProfiles).toEqual({
+      'jwt_vc_json-ld': {
+        context: 'https://www.w3.org/2018/credentials/v1',
+        credentialFormat: 'jwt_vc_json-ld',
+        dataModelVersion: '1.1',
+        format: 'jwt_vc_json-ld',
+      },
+      'vc+jwt': {
+        context: 'https://www.w3.org/ns/credentials/v2',
+        credentialFormat: 'vc+jwt',
+        dataModelVersion: '2.0',
+        format: 'application/vc+jwt',
+      },
     });
-    expect(Object.isFrozen(Openid4vciCredentialProfile)).toEqual(true);
+    expect(Object.isFrozen(Openid4vciCredentialProfiles)).toEqual(true);
+    expect(
+      Object.values(Openid4vciCredentialProfiles).every(Object.isFrozen),
+    ).toEqual(true);
   });
 
-  it('accepts the explicit profile or an identifier-based request without a format', () => {
+  it('accepts either explicit profile or an identifier-based request without a format', () => {
     expect(isOpenid4vciCredentialFormat()).toEqual(true);
+    expect(isOpenid4vciCredentialFormat('jwt_vc_json-ld')).toEqual(true);
     expect(isOpenid4vciCredentialFormat('application/vc+jwt')).toEqual(true);
   });
 
   it('rejects explicit values outside the profile', () => {
     expect(isOpenid4vciCredentialFormat(null)).toEqual(false);
-    expect(isOpenid4vciCredentialFormat('jwt_vc_json-ld')).toEqual(false);
     expect(isOpenid4vciCredentialFormat('vc+jwt')).toEqual(false);
+    expect(isOpenid4vciCredentialFormat('unknown')).toEqual(false);
   });
 
-  it('accepts only a neutral result matching the profile', () => {
+  it('resolves profiles by public format and credential configuration id', () => {
+    expect(getOpenid4vciCredentialProfileByFormat('jwt_vc_json-ld')).toBe(
+      legacyProfile,
+    );
+    expect(getOpenid4vciCredentialProfileByFormat('application/vc+jwt')).toBe(
+      v2Profile,
+    );
+    expect(
+      getOpenid4vciCredentialProfileByConfigurationId(
+        'foundation.velocitynetwork.Employment',
+        'Employment',
+      ),
+    ).toBe(legacyProfile);
+    expect(
+      getOpenid4vciCredentialProfileByConfigurationId(
+        'foundation.velocitynetwork.Employment.vc+jwt',
+        'Employment',
+      ),
+    ).toBe(v2Profile);
+    expect(
+      getOpenid4vciCredentialProfileByConfigurationId(
+        'foundation.velocitynetwork.Employment.unknown',
+        'Employment',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('accepts neutral results only when they match the selected profile', () => {
     expect(() =>
-      assertOpenid4vciIssuedCredential({
-        credentialFormat: 'vc+jwt',
-        dataModelVersion: '2.0',
-      }),
+      assertOpenid4vciIssuedCredential(
+        {
+          credentialFormat: 'vc+jwt',
+          dataModelVersion: '2.0',
+        },
+        v2Profile,
+      ),
     ).not.toThrow();
     expect(() =>
-      assertOpenid4vciIssuedCredential({
-        credentialFormat: 'jwt_vc_json-ld',
-        dataModelVersion: '1.1',
-      }),
+      assertOpenid4vciIssuedCredential(
+        {
+          credentialFormat: 'jwt_vc_json-ld',
+          dataModelVersion: '1.1',
+        },
+        legacyProfile,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertOpenid4vciIssuedCredential(
+        {
+          credentialFormat: 'jwt_vc_json-ld',
+          dataModelVersion: '1.1',
+        },
+        v2Profile,
+      ),
     ).toThrow('OpenID4VCI issuer returned an unsupported credential');
     expect(() => assertOpenid4vciIssuedCredential()).toThrow(
       'OpenID4VCI issuer returned an unsupported credential',

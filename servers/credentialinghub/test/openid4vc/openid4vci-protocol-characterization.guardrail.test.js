@@ -39,6 +39,7 @@ const { constructTenant } = require('../helpers/construct-tenant');
 const createTestFastify = require('../helpers/create-test-fastify');
 
 const configurationId = 'foundation.velocitynetwork.Employment';
+const v2ConfigurationId = 'foundation.velocitynetwork.Employment.vc+jwt';
 
 describe('OpenID4VCI representation-independent protocol guardrails', () => {
   let fastify;
@@ -111,7 +112,7 @@ describe('OpenID4VCI representation-independent protocol guardrails', () => {
     const offerUri = new URL(response.json.openidCredentialOffer);
     expect(offerUri.protocol).toEqual('openid-credential-offer:');
     expect(JSON.parse(offerUri.searchParams.get('credential_offer'))).toEqual({
-      credential_configuration_ids: [configurationId],
+      credential_configuration_ids: [configurationId, v2ConfigurationId],
       credential_issuer: `https://localhost.test/r/${tenant._id}`,
       grants: {
         'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
@@ -156,6 +157,13 @@ describe('OpenID4VCI representation-independent protocol guardrails', () => {
         iss: `https://localhost.test/r/${tenant._id}/oauth/authorize`,
         jti: expect.any(String),
         sub: `https://localhost.test/r/${tenant._id}`,
+        authorization_details: [
+          {
+            credential_configuration_id: configurationId,
+            credential_identifiers: [`${credential._id}`],
+            type: 'openid_credential',
+          },
+        ],
       },
     });
     expect(depot.preauthCodeHash).toEqual(expect.any(String));

@@ -39,14 +39,18 @@ const { getDidUriFromJwk } = require('@verii/did-doc');
 const { ObjectId } = require('mongodb');
 const { applyOverrides } = require('@verii/common-functions');
 const {
-  mockHttpClientJsonResponse,
   mockHttpClientModule,
   resetMockHttpClient,
 } = require('../helpers/mock-http-client');
 
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
-const { jwtSign, tamperJwt, jwtDecode } = require('@verii/jwt');
+const {
+  decodeCredentialEnvelope,
+  jwtDecode,
+  jwtSign,
+  tamperJwt,
+} = require('@verii/jwt');
 const {
   DID_FORMAT,
   ISO_DATETIME_FORMAT,
@@ -84,6 +88,21 @@ describe('openid4vc credential test suite', () => {
   let holderDid;
   let holderKeyPair;
   let authToken;
+
+  const buildAccessToken = (credentialIdentifier, credentialConfigurationId) =>
+    jwtSign(
+      {
+        authorization_details: [
+          {
+            credential_configuration_id: credentialConfigurationId,
+            credential_identifiers: [`${credentialIdentifier}`],
+            type: 'openid_credential',
+          },
+        ],
+      },
+      issuerKeyPair.privateKey,
+      { subject: `https://localhost.test/r/${tenant._id}` },
+    );
 
   before(async () => {
     fastify = createTestFastify();
@@ -127,9 +146,6 @@ describe('openid4vc credential test suite', () => {
 
     holderKeyPair = generateKeyPair({ format: 'jwk' });
     holderDid = getDidUriFromJwk(holderKeyPair.publicKey);
-    authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-      subject: `https://localhost.test/r/${tenant._id}`,
-    });
     issuerService = await persistIssuerService({ tenant });
     depot = await persistDepot({
       tenant,
@@ -145,6 +161,10 @@ describe('openid4vc credential test suite', () => {
         schemaUrl: 'https://example.com/Employment.schema.json',
       },
     });
+    authToken = await buildAccessToken(
+      credential._id,
+      'foundation.velocitynetwork.Employment.vc+jwt',
+    );
   });
 
   after(async () => {
@@ -288,8 +308,11 @@ describe('openid4vc credential test suite', () => {
         });
       });
 
-      it('should 400 when current credential-type metadata is unavailable', async () => {
-        mockHttpClientJsonResponse('get', []);
+      it('should reject a credential identifier not bound by the access token', async () => {
+        authToken = await buildAccessToken(
+          new ObjectId().toString(),
+          'foundation.velocitynetwork.Employment.vc+jwt',
+        );
         const encryptedNonce = encrypt(
           `${Date.now()}`,
           hexFromJwk(issuerKeyPair.privateKey, true),
@@ -315,26 +338,50 @@ describe('openid4vc credential test suite', () => {
 
         expect(response.statusCode).toEqual(400);
         expect(response.json).toEqual({
-          error: 'server_error',
-          error_description: 'Credential type metadata Employment not found',
+          error: 'invalid_credential_request',
+          error_description: `Credential ${credential._id} is not authorized for a supported credential configuration`,
         });
         await expect(
           mongoDb()
             .collection('credentials')
             .findOne({ _id: new ObjectId(credential._id) }),
-        ).resolves.toEqual(
-          expect.objectContaining({
-            exchange: expectedDbExchange(
-              issuerService,
-              [ExchangeStates.NEW, ExchangeStates.UNEXPECTED_ERROR],
-              { err: 'Credential type metadata Employment not found' },
-            ),
-          }),
+        ).resolves.toEqual(mongoify(credential));
+      });
+
+      it('should reject a format contradicting the access-token binding', async () => {
+        const encryptedNonce = encrypt(
+          `${Date.now()}`,
+          hexFromJwk(issuerKeyPair.privateKey, true),
         );
+        const proof = await buildProof(
+          holderDid,
+          holderKeyPair,
+          encryptedNonce,
+          { typ: 'openid4vci-proof+jwt' },
+        );
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/credential`,
+          headers: {
+            authorization: `Bearer ${authToken}`,
+          },
+          payload: {
+            credential_identifier: credential._id,
+            format: 'jwt_vc_json-ld',
+            proofs: { jwt: [proof.jwt] },
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'invalid_credential_request',
+          error_description:
+            'Credential format jwt_vc_json-ld does not match the authorized credential configuration',
+        });
       });
 
       it('should 400 if server issue', async () => {
-        mockHttpClientJsonResponse('get', [credential.typeMetadata]);
         const encryptedNonce = encrypt(
           `${Date.now()}`,
           hexFromJwk(issuerKeyPair.privateKey, true),
@@ -386,7 +433,6 @@ describe('openid4vc credential test suite', () => {
     });
     describe('openid4vc credential endpoint success cases', () => {
       it('should 200 with a credential', async () => {
-        mockHttpClientJsonResponse('get', [credential.typeMetadata]);
         const encryptedNonce = encrypt(
           `${Date.now()}`,
           hexFromJwk(issuerKeyPair.privateKey, true),
@@ -500,8 +546,62 @@ describe('openid4vc credential test suite', () => {
         });
       });
 
+      it('should issue a legacy credential when bound to the legacy configuration', async () => {
+        authToken = await buildAccessToken(
+          credential._id,
+          'foundation.velocitynetwork.Employment',
+        );
+        const encryptedNonce = encrypt(
+          `${Date.now()}`,
+          hexFromJwk(issuerKeyPair.privateKey, true),
+        );
+        const proof = await buildProof(
+          holderDid,
+          holderKeyPair,
+          encryptedNonce,
+          { typ: 'openid4vci-proof+jwt' },
+        );
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/credential`,
+          headers: {
+            authorization: `Bearer ${authToken}`,
+          },
+          payload: {
+            credential_identifier: credential._id,
+            format: 'jwt_vc_json-ld',
+            proofs: { jwt: [proof.jwt] },
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        const [{ credential: compactCredential }] = response.json.credentials;
+        const decodedCredential = decodeCredentialEnvelope(compactCredential);
+        expect(decodedCredential).toEqual(
+          expect.objectContaining({
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+          }),
+        );
+        expect(decodedCredential.credential['@context'][0]).toEqual(
+          'https://www.w3.org/2018/credentials/v1',
+        );
+        expect(jwtDecode(compactCredential).payload).toHaveProperty('vc');
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(credential._id) }),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            jwtVc: compactCredential,
+          }),
+        );
+      });
+
       it('should sign with ES256 when the tenant policy overrides the type default', async () => {
-        mockHttpClientJsonResponse('get', [credential.typeMetadata]);
         await mongoDb()
           .collection('tenants')
           .updateOne(
@@ -553,15 +653,10 @@ describe('openid4vc credential test suite', () => {
         );
       });
 
-      it('should issue with the current credential-type algorithm advertised by metadata', async () => {
+      it('should issue from the persisted credential-type metadata snapshot', async () => {
         const persistedTypeMetadata = {
           ...credential.typeMetadata,
           defaultSignatureAlgorithm: 'RS256',
-        };
-        const currentTypeMetadata = {
-          ...persistedTypeMetadata,
-          defaultSignatureAlgorithm: 'ES256',
-          issuerCategory: 'RegularIssuer',
         };
         await mongoDb()
           .collection('credentials')
@@ -569,24 +664,6 @@ describe('openid4vc credential test suite', () => {
             { _id: new ObjectId(credential._id) },
             { $set: { typeMetadata: persistedTypeMetadata } },
           );
-        mockHttpClientJsonResponse('get', [currentTypeMetadata]);
-        mockHttpClientJsonResponse('get', {
-          credentialSubject: {
-            permittedVelocityServiceCategory: ['Issuer'],
-          },
-        });
-        mockHttpClientJsonResponse('get', [currentTypeMetadata]);
-
-        const metadataResponse = await fastify.injectJson({
-          method: 'GET',
-          url: `.well-known/openid-credential-issuer/r/${tenant._id}`,
-        });
-        expect(metadataResponse.statusCode).toEqual(200);
-        expect(
-          metadataResponse.json.credential_configurations_supported[
-            'foundation.velocitynetwork.Employment'
-          ].credential_signing_alg_values_supported,
-        ).toEqual(['ES256']);
 
         const encryptedNonce = encrypt(
           `${Date.now()}`,
@@ -614,13 +691,13 @@ describe('openid4vc credential test suite', () => {
         expect(
           jwtDecode(credentialResponse.json.credentials[0].credential).header
             .alg,
-        ).toEqual('ES256');
+        ).toEqual('RS256');
         await expect(
           mongoDb()
             .collection('credentials')
             .findOne({ _id: new ObjectId(credential._id) }),
         ).resolves.toEqual(
-          expect.objectContaining({ signingAlgorithm: 'ES256' }),
+          expect.objectContaining({ signingAlgorithm: 'RS256' }),
         );
       });
     });

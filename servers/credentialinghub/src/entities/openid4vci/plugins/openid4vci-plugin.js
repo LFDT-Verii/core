@@ -27,6 +27,7 @@ const { castArray, isEmpty } = require('lodash/fp');
 const {
   compact,
   filter,
+  flatMap,
   flow,
   includes,
   map,
@@ -46,10 +47,12 @@ const { jwtVerify, keyAlgorithmToJoseAlg } = require('@verii/jwt');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants/domain');
 const {
   isOpenid4vciCredentialFormat,
-  Openid4vciCredentialProfile,
+  Openid4vciCredentialProfiles,
+  toCredentialConfigurationId,
 } = require('../domain');
 
 const openid4vciPlugin = async (fastify) => {
+  fastify.decorateRequest('openid4vciAccessTokenPayload', null);
   fastify.decorateRequest(
     'getOpenId4VciIssuer',
     async function getOpenId4VciIssuer() {
@@ -94,11 +97,13 @@ const openid4vciPlugin = async (fastify) => {
     }
     try {
       const claims = { subject: getIssuerUri(req) };
-      await jwtVerify(
+      const { payload } = await jwtVerify(
         bearerValue,
         req.tenant.keysByPurpose.EXCHANGES.publicJwk,
         claims,
       );
+
+      req.openid4vciAccessTokenPayload = payload;
     } catch (e) {
       req.log.warn(e);
       throwInvalidToken();
@@ -181,33 +186,38 @@ const buildIssuer = async (context) => {
       filter((credentialMetadata) =>
         includes(credentialMetadata.issuerCategory, permittedIssuerCategories),
       ),
-      map((credentialMetadata) => [
-        toCredentialConfigurationId(credentialMetadata.credentialType),
-        {
-          format: Openid4vciCredentialProfile.format,
-          cryptographic_binding_methods_supported: ['did:jwk'],
-          credential_signing_alg_values_supported: [
-            keyAlgorithmToJoseAlg(
-              resolveCredentialSigningAlgorithm({
-                credentialTypeMetadata: credentialMetadata,
-                tenant,
-              }),
-            ),
-          ],
-          credential_definition: {
-            '@context': [
-              Openid4vciCredentialProfile.context,
-              credentialExtensionsContextUrl,
+      flatMap((credentialMetadata) =>
+        Object.values(Openid4vciCredentialProfiles).map((credentialProfile) => [
+          toCredentialConfigurationId(
+            credentialMetadata.credentialType,
+            credentialProfile.credentialFormat,
+          ),
+          {
+            format: credentialProfile.format,
+            cryptographic_binding_methods_supported: ['did:jwk'],
+            credential_signing_alg_values_supported: [
+              keyAlgorithmToJoseAlg(
+                resolveCredentialSigningAlgorithm({
+                  credentialTypeMetadata: credentialMetadata,
+                  tenant,
+                }),
+              ),
             ],
-            type: ['VerifiableCredential', credentialMetadata.credentialType],
-          },
-          proof_types_supported: {
-            jwt: {
-              proof_signing_alg_values_supported: ['ES256', 'ES256K'],
+            credential_definition: {
+              '@context': [
+                credentialProfile.context,
+                credentialExtensionsContextUrl,
+              ],
+              type: ['VerifiableCredential', credentialMetadata.credentialType],
+            },
+            proof_types_supported: {
+              jwt: {
+                proof_signing_alg_values_supported: ['ES256', 'ES256K'],
+              },
             },
           },
-        },
-      ]),
+        ]),
+      ),
       fromPairs,
     )(credentialMetadataList);
     const credentialIssuerMetadata = issuer.createCredentialIssuerMetadata({
@@ -246,8 +256,12 @@ const buildIssuer = async (context) => {
   });
 
   const createCredentialOffer = async (offerCredentialTypes, preauthCode) => {
-    const credentialConfigurationIds = map(
-      toCredentialConfigurationId,
+    const credentialConfigurationIds = flatMap(
+      (credentialType) =>
+        Object.values(Openid4vciCredentialProfiles).map(
+          ({ credentialFormat }) =>
+            toCredentialConfigurationId(credentialType, credentialFormat),
+        ),
       offerCredentialTypes,
     );
     const createdCredentialOffer = await issuer.createCredentialOffer({
@@ -305,7 +319,7 @@ const buildIssuer = async (context) => {
         credentialRequest.proofs.jwt,
       ),
     );
-    return credentialRequest;
+    return { ...credentialRequest, format: parameters.format };
   };
 
   const createNonce = async () =>
@@ -334,6 +348,9 @@ const buildIssuer = async (context) => {
         expiresInSeconds,
         audience: authorizationServerMetadata.issuer,
         subject: openIdIssuer,
+        additionalAccessTokenPayload: {
+          authorization_details: authorizationDetails,
+        },
         additionalAccessTokenResponsePayload: {
           authorization_details: authorizationDetails,
         },
@@ -412,9 +429,6 @@ const toIssuerCategories = (permittedVelocityServiceCategory) =>
     compact,
     uniq,
   )(permittedVelocityServiceCategory);
-
-const toCredentialConfigurationId = (credentialType) =>
-  `foundation.velocitynetwork.${credentialType}`;
 
 const fetchCredentialTypesAndProfile = async (context) => {
   const { tenant } = context;

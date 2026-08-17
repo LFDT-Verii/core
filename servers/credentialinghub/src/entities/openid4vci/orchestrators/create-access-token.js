@@ -14,9 +14,13 @@
  * limitations under the License.
  *
  */
-const { filter, flow, isEmpty, map } = require('lodash/fp');
+const { find, flatMap, isEmpty, map } = require('lodash/fp');
 const { calcSha384 } = require('@verii/crypto');
-const { toCredentialConfigurationId } = require('../domain');
+const { CredentialEnvelopeFormats } = require('@verii/jwt');
+const {
+  Openid4vciCredentialProfiles,
+  toCredentialConfigurationId,
+} = require('../domain');
 
 const createAccessToken = async (accessTokenParameters, context) => {
   const openid4VciIssuer = await context.getOpenId4VciIssuer();
@@ -56,30 +60,52 @@ const createAccessToken = async (accessTokenParameters, context) => {
 const buildAuthorizationDetails = (
   credentials,
   requestedAuthorizationDetails,
-) => {
-  const pipeline = [
-    map((credential) => ({
-      type: 'openid_credential',
-      credential_configuration_id: toCredentialConfigurationId(
-        credential.typeMetadata.credentialType,
-      ),
-      credential_identifiers: [`${credential._id}`],
-    })),
-  ];
-
-  if (!isEmpty(requestedAuthorizationDetails)) {
-    const requestedCredentialConfigurationIds = map(
-      'credential_configuration_id',
+) =>
+  flatMap((credential) => {
+    const profile = selectCredentialProfile(
+      credential.typeMetadata.credentialType,
       requestedAuthorizationDetails,
     );
-    pipeline.push(
-      filter(({ credential_configuration_id: credentialConfigurationId }) =>
-        requestedCredentialConfigurationIds.includes(credentialConfigurationId),
-      ),
-    );
+    if (profile == null) {
+      return [];
+    }
+
+    return [
+      {
+        type: 'openid_credential',
+        credential_configuration_id: toCredentialConfigurationId(
+          credential.typeMetadata.credentialType,
+          profile.credentialFormat,
+        ),
+        credential_identifiers: [`${credential._id}`],
+      },
+    ];
+  }, credentials);
+
+const selectCredentialProfile = (
+  credentialType,
+  requestedAuthorizationDetails,
+) => {
+  if (isEmpty(requestedAuthorizationDetails)) {
+    return Openid4vciCredentialProfiles[
+      CredentialEnvelopeFormats.JWT_VC_JSON_LD
+    ];
   }
 
-  return flow(pipeline)(credentials);
+  const requestedCredentialConfigurationIds = map(
+    'credential_configuration_id',
+    requestedAuthorizationDetails,
+  );
+  return find(
+    ({ credentialFormat }) =>
+      requestedCredentialConfigurationIds.includes(
+        toCredentialConfigurationId(credentialType, credentialFormat),
+      ),
+    [
+      Openid4vciCredentialProfiles[CredentialEnvelopeFormats.VC_JWT],
+      Openid4vciCredentialProfiles[CredentialEnvelopeFormats.JWT_VC_JSON_LD],
+    ],
+  );
 };
 
 module.exports = { createAccessToken };

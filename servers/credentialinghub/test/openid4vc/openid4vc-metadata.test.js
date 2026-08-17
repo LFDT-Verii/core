@@ -31,25 +31,47 @@ const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
 
 const issuerUrl = (tenant) => `https://localhost.test/r/${tenant._id}`;
-const vc2CredentialConfigurationExpectation = (
+const credentialConfigurationExpectation = (
   credentialType,
   signingAlgorithm,
+  context,
+  format,
 ) => ({
   credential_definition: {
     '@context': [
-      'https://www.w3.org/ns/credentials/v2',
+      context,
       'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
     ],
     type: ['VerifiableCredential', credentialType],
   },
   credential_signing_alg_values_supported: [signingAlgorithm],
   cryptographic_binding_methods_supported: ['did:jwk'],
-  format: 'application/vc+jwt',
+  format,
   proof_types_supported: {
     jwt: {
       proof_signing_alg_values_supported: ['ES256', 'ES256K'],
     },
   },
+});
+
+const dualCredentialConfigurationExpectations = (
+  credentialType,
+  signingAlgorithm,
+) => ({
+  [`foundation.velocitynetwork.${credentialType}`]:
+    credentialConfigurationExpectation(
+      credentialType,
+      signingAlgorithm,
+      'https://www.w3.org/2018/credentials/v1',
+      'jwt_vc_json-ld',
+    ),
+  [`foundation.velocitynetwork.${credentialType}.vc+jwt`]:
+    credentialConfigurationExpectation(
+      credentialType,
+      signingAlgorithm,
+      'https://www.w3.org/ns/credentials/v2',
+      'application/vc+jwt',
+    ),
 });
 
 describe('.well-known openid4vc metadata test suite', () => {
@@ -86,7 +108,7 @@ describe('.well-known openid4vc metadata test suite', () => {
   });
 
   describe('openid4vc credential metadata test suite', () => {
-    it('advertises one VC 2.0 JOSE profile per credential algorithm', async () => {
+    it('advertises legacy and VCDM 2.0 profiles per credential algorithm', async () => {
       const credentialTypeMetadatas = [
         {
           credentialType: 'Employment',
@@ -121,12 +143,12 @@ describe('.well-known openid4vc metadata test suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(response.json.credential_configurations_supported).toEqual({
-        'foundation.velocitynetwork.EmailV1.0':
-          vc2CredentialConfigurationExpectation('EmailV1.0', 'ES256'),
-        'foundation.velocitynetwork.Employment':
-          vc2CredentialConfigurationExpectation('Employment', 'ES256K'),
-        'foundation.velocitynetwork.OpenBadgeCredential':
-          vc2CredentialConfigurationExpectation('OpenBadgeCredential', 'RS256'),
+        ...dualCredentialConfigurationExpectations('EmailV1.0', 'ES256'),
+        ...dualCredentialConfigurationExpectations('Employment', 'ES256K'),
+        ...dualCredentialConfigurationExpectations(
+          'OpenBadgeCredential',
+          'RS256',
+        ),
       });
     });
 
@@ -164,10 +186,11 @@ describe('.well-known openid4vc metadata test suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(response.json.credential_configurations_supported).toEqual({
-        'foundation.velocitynetwork.Employment':
-          vc2CredentialConfigurationExpectation('Employment', 'ES256'),
-        'foundation.velocitynetwork.OpenBadgeCredential':
-          vc2CredentialConfigurationExpectation('OpenBadgeCredential', 'ES256'),
+        ...dualCredentialConfigurationExpectations('Employment', 'ES256'),
+        ...dualCredentialConfigurationExpectations(
+          'OpenBadgeCredential',
+          'ES256',
+        ),
       });
     });
 
@@ -302,7 +325,7 @@ describe('.well-known openid4vc metadata test suite', () => {
         Object.values(response.json.credential_configurations_supported).map(
           ({ credential_signing_alg_values_supported: values }) => values,
         ),
-      ).toEqual([['ES256'], ['ES256']]);
+      ).toEqual([['ES256'], ['ES256'], ['ES256'], ['ES256']]);
     });
 
     it('should 200 with jwt credential metadata', async () => {
@@ -402,23 +425,7 @@ const expectedCredentialMetadata = (tenant) => ({
     },
   ],
   credential_configurations_supported: {
-    'foundation.velocitynetwork.fooType': {
-      credential_definition: {
-        '@context': [
-          'https://www.w3.org/ns/credentials/v2',
-          'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
-        ],
-        type: ['VerifiableCredential', 'fooType'],
-      },
-      credential_signing_alg_values_supported: ['ES256K'],
-      cryptographic_binding_methods_supported: ['did:jwk'],
-      format: 'application/vc+jwt',
-      proof_types_supported: {
-        jwt: {
-          proof_signing_alg_values_supported: ['ES256', 'ES256K'],
-        },
-      },
-    },
+    ...dualCredentialConfigurationExpectations('fooType', 'ES256K'),
   },
   authorization_servers: [`https://localhost.test/r/${tenant._id}/oauth`],
 });
