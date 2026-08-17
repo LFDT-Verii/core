@@ -21,7 +21,7 @@ export interface CredentialIssuingOptions {
   offers: CredentialOffer[];
 }
 
-export interface CredentialSigningResult {
+export interface CredentialSecuringResult {
   issuedCredential: IssuedCredential;
   metadata: CredentialMetadata;
 }
@@ -39,17 +39,6 @@ export interface IssuedCredential {
 export interface JoseCredentialSecuringMechanism {
   algorithm: 'ES256K' | 'ES256' | 'RS256';
   type: 'jose';
-}
-
-export interface VcV2CredentialBuildOptions {
-  contentHash: string;
-  context: Context;
-  credentialId: string;
-  credentialSubjectId?: string;
-  credentialTypeMetadata: CredentialTypeMetadata;
-  issuer: Issuer;
-  offer: CredentialOffer;
-  revocationUrl: string;
 }
 
 export interface DbKey {
@@ -326,14 +315,10 @@ export interface VcV2SchemaDescriptor extends LinkedData {
   type: string;
 }
 
-export function buildVcV2Credential(
-  options: VcV2CredentialBuildOptions,
-): VcV2Credential;
-
 export function issueCredentials(
   options: CredentialIssuingOptions,
 ): Promise<IssuedCredential[]>;
 
-export function signCredentials(
+export function secureCredentials(
   options: CredentialIssuingOptions,
-): Promise<CredentialSigningResult[]>;
+): Promise<CredentialSecuringResult[]>;

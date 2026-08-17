@@ -33,21 +33,14 @@ const {
 const { extractCredentialType } = require('@verii/vc-checks');
 const { hashOffer } = require('./hash-offer');
 const { buildRevocationUrl } = require('../adapters/build-revocation-url');
-const { buildJsonLdCredential } = require('./build-jsonld-credential');
-const { buildVcV2Credential } = require('./build-vc-v2-credential');
+const { buildVcdmV1Credential } = require('./build-vcdm-v1-credential');
+const { buildVcdmV2Credential } = require('./build-vcdm-v2-credential');
 const {
   getCredentialSigningProfile,
 } = require('../credential-signing-profile');
 
 // eslint-disable-next-line max-len
-/** @import { Issuer, AllocationListEntry, CredentialFormat, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context, JsonLdCredential, VcV2Credential, VcV2CredentialBuildOptions } from "../types/types" */
-
-/**
- * @typedef {object} UnsignedCredential
- * @property {object} header protected header
- * @property {object} payload signing payload
- * @property {(payload: object, keyOrSecret: object | string, header: object) => Promise<string>} sign signing function
- */
+/** @import { Issuer, AllocationListEntry, CredentialFormat, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context, JsonLdCredential, VcV2Credential } from "../types/types" */
 
 /**
  * Builds secured credential representations from shared identity, key, status,
@@ -62,7 +55,7 @@ const {
  * @param {AllocationListEntry[]} options.metadataEntries metadata entries
  * @param {CredentialOffer[]} options.offers credential offers
  * @param {AllocationListEntry[]} options.revocationListEntries status entries
- * @returns {Promise<object[]>} signed neutral credentials and DLT metadata
+ * @returns {Promise<object[]>} secured credentials and DLT metadata
  */
 const prepareCredentials = async ({
   context,
@@ -75,7 +68,7 @@ const prepareCredentials = async ({
   offers,
   revocationListEntries,
 }) => {
-  const formatHandler = getCredentialFormatHandler(credentialFormat);
+  const formatProfile = getCredentialFormatProfile(credentialFormat);
 
   return Promise.all(
     mapWithIndex(async (offer, i) => {
@@ -120,7 +113,7 @@ const prepareCredentials = async ({
       );
       const credentialTypeMetadata =
         credentialTypesMap[metadata.credentialType];
-      const credential = formatHandler.buildCredential({
+      const credential = formatProfile.buildCredential({
         contentHash: metadata.contentHash,
         context,
         credentialId,
@@ -130,12 +123,12 @@ const prepareCredentials = async ({
         offer,
         revocationUrl,
       });
-      const { header, payload, sign } = formatHandler.buildUnsignedCredential({
+      const securedCredential = await formatProfile.secureCredential({
         credential,
         credentialId,
         keyAlgorithm: signingProfile.keyAlgorithm,
+        privateKey: keyPair.privateKey,
       });
-      const securedCredential = await sign(payload, keyPair.privateKey, header);
 
       return {
         issuedCredential: {
@@ -143,7 +136,7 @@ const prepareCredentials = async ({
           credentialFormat,
           credentialId,
           credentialStatus: credential.credentialStatus,
-          dataModelVersion: formatHandler.dataModelVersion,
+          dataModelVersion: formatProfile.dataModelVersion,
           securedCredential,
           securingMechanism: {
             algorithm: signingProfile.joseAlgorithm,
@@ -157,110 +150,76 @@ const prepareCredentials = async ({
 };
 
 /**
- * Returns the implementation registered for a credential format.
+ * Returns the model builder and securing implementation registered for a
+ * credential format.
  * @param {CredentialFormat} credentialFormat credential format
- * @returns {object} credential format handler
+ * @returns {object} credential format profile
  */
-const getCredentialFormatHandler = (credentialFormat) => {
-  const formatHandler = credentialFormatHandlers[credentialFormat];
-  if (formatHandler == null) {
+const getCredentialFormatProfile = (credentialFormat) => {
+  const formatProfile = credentialFormatProfiles[credentialFormat];
+  if (formatProfile == null) {
     throw new TypeError('A credential batch must use one supported format');
   }
-  return formatHandler;
+  return formatProfile;
 };
 
 /**
- * Builds a W3C VC 1.1 JSON-LD credential for a JWT envelope.
- * @param {object} options credential dependencies
- * @param {string} options.contentHash offer content hash
- * @param {Context} options.context application context
- * @param {string} options.credentialId credential identifier
- * @param {string} [options.credentialSubjectId] bound credential subject
- * @param {CredentialTypeMetadata} options.credentialTypeMetadata type metadata
- * @param {Issuer} options.issuer issuer
- * @param {CredentialOffer} options.offer credential offer
- * @param {string} options.revocationUrl credential status URL
- * @returns {JsonLdCredential} credential document
- */
-const buildJwtVcJsonLdCredential = ({
-  contentHash,
-  context,
-  credentialId,
-  credentialSubjectId,
-  credentialTypeMetadata,
-  issuer,
-  offer,
-  revocationUrl,
-}) =>
-  buildJsonLdCredential(
-    issuer,
-    credentialSubjectId,
-    offer,
-    credentialId,
-    contentHash,
-    credentialTypeMetadata,
-    revocationUrl,
-    context,
-  );
-
-/**
- * Builds a W3C VC 2.0 credential for a VC-JWT envelope.
- * @param {VcV2CredentialBuildOptions} options credential dependencies
- * @returns {VcV2Credential} credential document
- */
-const buildVcJwtCredential = (options) => buildVcV2Credential(options);
-
-/**
- * Builds an unsigned JWT-VC JSON-LD representation.
+ * Secures a VCDM 1.1 credential as a legacy JWT-VC JSON-LD representation.
  * @param {object} options envelope dependencies
  * @param {JsonLdCredential} options.credential credential document
  * @param {string} options.credentialId credential identifier
  * @param {string} options.keyAlgorithm internal key algorithm
- * @returns {UnsignedCredential} unsigned credential
+ * @param {object | string} options.privateKey signing key
+ * @returns {Promise<string>} secured credential
  */
-const buildUnsignedJwtVcJsonLdCredential = ({
+const secureJwtVcJsonLdCredential = ({
   credential,
   credentialId,
   keyAlgorithm,
+  privateKey,
 }) => {
   const kid = `${credentialId}#key-1`;
-  return {
-    ...jsonLdToUnsignedVcJwtContent(credential, keyAlgorithm, kid),
-    sign: jwtSign,
-  };
+  const { header, payload } = jsonLdToUnsignedVcJwtContent(
+    credential,
+    keyAlgorithm,
+    kid,
+  );
+  return jwtSign(payload, privateKey, header);
 };
 
 /**
- * Builds an unsigned VC-JWT representation.
+ * Secures a VCDM 2.0 credential as a VC-JWT compact JWS.
  * @param {object} options envelope dependencies
  * @param {VcV2Credential} options.credential credential document
  * @param {string} options.credentialId credential identifier
  * @param {string} options.keyAlgorithm internal key algorithm
- * @returns {UnsignedCredential} unsigned credential
+ * @param {object | string} options.privateKey signing key
+ * @returns {Promise<string>} secured credential
  */
-const buildUnsignedVcJwtCredential = ({
+const secureVcJwtCredential = ({
   credential,
   credentialId,
   keyAlgorithm,
-}) => ({
-  ...jsonLdToUnsignedVcV2JwsContent(
+  privateKey,
+}) => {
+  const { header, payload } = jsonLdToUnsignedVcV2JwsContent(
     credential,
     keyAlgorithm,
     `${credentialId}#key-1`,
-  ),
-  sign: jwsSign,
-});
+  );
+  return jwsSign(payload, privateKey, header);
+};
 
-const credentialFormatHandlers = Object.freeze({
+const credentialFormatProfiles = Object.freeze({
   [CredentialEnvelopeFormats.JWT_VC_JSON_LD]: Object.freeze({
-    buildCredential: buildJwtVcJsonLdCredential,
-    buildUnsignedCredential: buildUnsignedJwtVcJsonLdCredential,
+    buildCredential: buildVcdmV1Credential,
     dataModelVersion: CredentialDataModelVersions.V1_1,
+    secureCredential: secureJwtVcJsonLdCredential,
   }),
   [CredentialEnvelopeFormats.VC_JWT]: Object.freeze({
-    buildCredential: buildVcJwtCredential,
-    buildUnsignedCredential: buildUnsignedVcJwtCredential,
+    buildCredential: buildVcdmV2Credential,
     dataModelVersion: CredentialDataModelVersions.V2_0,
+    secureCredential: secureVcJwtCredential,
   }),
 });
 
@@ -287,4 +246,4 @@ const buildVelocityCredentialMetadataDID = (
   return id;
 };
 
-module.exports = { getCredentialFormatHandler, prepareCredentials };
+module.exports = { getCredentialFormatProfile, prepareCredentials };

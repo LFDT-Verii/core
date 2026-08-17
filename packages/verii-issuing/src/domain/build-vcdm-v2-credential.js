@@ -22,8 +22,19 @@ const {
 } = require('@verii/vc-checks');
 const { castArray, isEmpty, isObject, omit, uniq } = require('lodash/fp');
 
-/** @import { CredentialOffer, CredentialTypeMetadata, Issuer } from "../../types/types" */
-/** @import { VcV2Credential, VcV2CredentialBuildOptions, VcV2LinkedData } from "../../types/types" */
+/** @import { Context, CredentialOffer, CredentialTypeMetadata, Issuer, VcV2Credential, VcV2LinkedData } from "../../types/types" */
+
+/**
+ * @typedef {object} VcdmV2CredentialBuildOptions
+ * @property {string} contentHash offer content hash
+ * @property {Context} context application context
+ * @property {string} credentialId credential identifier
+ * @property {string} [credentialSubjectId] bound credential subject
+ * @property {CredentialTypeMetadata} credentialTypeMetadata type metadata
+ * @property {Issuer} issuer issuer
+ * @property {CredentialOffer} offer credential offer
+ * @property {string} revocationUrl credential status URL
+ */
 
 const VC_V1_CONTEXT = 'https://www.w3.org/2018/credentials/v1';
 const VC_V2_CONTEXT = 'https://www.w3.org/ns/credentials/v2';
@@ -31,10 +42,10 @@ const VC_V2_CONTEXT = 'https://www.w3.org/ns/credentials/v2';
 /**
  * Builds a conforming Velocity VC Data Model 2.0 document directly from
  * issuance inputs.
- * @param {VcV2CredentialBuildOptions} options credential build options
+ * @param {VcdmV2CredentialBuildOptions} options credential build options
  * @returns {VcV2Credential} VC Data Model 2.0 document
  */
-const buildVcV2Credential = (options) => {
+const buildVcdmV2Credential = (options) => {
   assertBuildOptions(options);
 
   const {
@@ -121,7 +132,7 @@ const assertBuiltCredential = (credential) => {
 
 /**
  * Validates credential builder dependencies.
- * @param {VcV2CredentialBuildOptions} options credential build options
+ * @param {VcdmV2CredentialBuildOptions} options credential build options
  * @returns {void}
  */
 const assertBuildOptions = (options) => {
@@ -339,4 +350,4 @@ const resolveHolder = (offer, credentialSubjectId) =>
     ? offer.credentialSubject.id
     : credentialSubjectId;
 
-module.exports = { buildVcV2Credential };
+module.exports = { buildVcdmV2Credential };

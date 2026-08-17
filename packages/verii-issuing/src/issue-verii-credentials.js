@@ -26,7 +26,7 @@ const {
 const { createRevocationList } = require('./adapters/create-revocation-list');
 const { getCredentialSigningProfile } = require('./credential-signing-profile');
 const {
-  getCredentialFormatHandler,
+  getCredentialFormatProfile,
   prepareCredentials,
 } = require('./domain/prepare-credentials');
 
@@ -35,7 +35,7 @@ const METADATA_LIST_SIZE = 10000;
 
 /** @import { AllocationListEntry, Context, CredentialIssuingOptions } from "../types/types" */
 /** @import { CredentialMetadata, CredentialOffer } from "../types/types" */
-/** @import { CredentialSigningResult, CredentialTypeMetadata } from "../types/types" */
+/** @import { CredentialSecuringResult, CredentialTypeMetadata } from "../types/types" */
 /** @import { IssuedCredential, Issuer } from "../types/types" */
 
 /**
@@ -44,23 +44,23 @@ const METADATA_LIST_SIZE = 10000;
  * @returns {Promise<IssuedCredential[]>} issued credentials in offer order
  */
 const issueCredentials = async (options) => {
-  const signedCredentials = await signCredentials(options);
+  const securedCredentials = await secureCredentials(options);
 
   await anchorVeriiCredentials(
-    map('metadata', signedCredentials),
+    map('metadata', securedCredentials),
     options.issuer,
     options.context,
   );
 
-  return map('issuedCredential', signedCredentials);
+  return map('issuedCredential', securedCredentials);
 };
 
 /**
  * Prepares and secures a credential batch without anchoring it.
- * @param {CredentialIssuingOptions} options credential signing options
- * @returns {Promise<CredentialSigningResult[]>} secured credentials and DLT metadata
+ * @param {CredentialIssuingOptions} options credential securing options
+ * @returns {Promise<CredentialSecuringResult[]>} secured credentials and DLT metadata
  */
-const signCredentials = async ({
+const secureCredentials = async ({
   context,
   credentialFormat,
   credentialSigningAlgorithms,
@@ -69,8 +69,8 @@ const signCredentials = async ({
   issuer,
   offers,
 }) => {
-  // Resolve the handler before allocating durable list entries.
-  getCredentialFormatHandler(credentialFormat);
+  // Resolve the profile before allocating durable list entries.
+  getCredentialFormatProfile(credentialFormat);
   const effectiveCredentialSigningAlgorithms =
     resolveEffectiveCredentialSigningAlgorithms(
       offers,
@@ -175,5 +175,5 @@ const getNewListEntries = (entries) =>
 module.exports = {
   anchorVeriiCredentials,
   issueCredentials,
-  signCredentials,
+  secureCredentials,
 };

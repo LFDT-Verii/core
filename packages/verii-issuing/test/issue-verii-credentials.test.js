@@ -62,7 +62,7 @@ const { MongoClient } = require('mongodb');
 const { first, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { hashOffer } = require('../src/domain/hash-offer');
-const { issueCredentials, signCredentials } = require('../src');
+const { issueCredentials, secureCredentials } = require('../src');
 const { collectionClient } = require('./helpers/collection-client');
 const { entityFactory } = require('./helpers/entity-factory');
 const { offerFactory } = require('./helpers/offer-factory');
@@ -327,9 +327,9 @@ describe('issuing velocity verifiable credentials', () => {
     });
   });
 
-  it('returns a neutral unanchored signing result', async () => {
+  it('returns a neutral unanchored securing result', async () => {
     const credentialSubjectId = createExampleDid();
-    const [signedCredential] = await signCredentials(
+    const [securedCredential] = await secureCredentials(
       buildCredentialOptions({
         credentialSigningAlgorithms: [KeyAlgorithms.SECP256K1],
         credentialSubjectId,
@@ -337,10 +337,10 @@ describe('issuing velocity verifiable credentials', () => {
       }),
     );
     const envelope = decodeCredentialEnvelope(
-      signedCredential.issuedCredential.securedCredential,
+      securedCredential.issuedCredential.securedCredential,
     );
 
-    expect(signedCredential).toEqual({
+    expect(securedCredential).toEqual({
       issuedCredential: expect.objectContaining({
         credential: envelope.credential,
         credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
@@ -360,8 +360,8 @@ describe('issuing velocity verifiable credentials', () => {
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
   });
 
-  it('signs an explicitly selected format without anchoring it', async () => {
-    const [{ issuedCredential, metadata }] = await signCredentials({
+  it('secures an explicitly selected format without anchoring it', async () => {
+    const [{ issuedCredential, metadata }] = await secureCredentials({
       ...buildCredentialOptions({
         credentialSigningAlgorithms: [KeyAlgorithms.ES256],
         credentialSubjectId: createExampleDid(),
@@ -555,9 +555,9 @@ describe('issuing velocity verifiable credentials', () => {
     );
   });
 
-  it('signs without anchoring when algorithms are omitted explicitly', async () => {
+  it('secures without anchoring when algorithms are omitted explicitly', async () => {
     const offer = offerFactory({ issuerId: issuerEntity.did });
-    const [{ issuedCredential }] = await signCredentials(
+    const [{ issuedCredential }] = await secureCredentials(
       buildCredentialOptions({
         credentialSubjectId: createExampleDid(),
         offers: [offer],

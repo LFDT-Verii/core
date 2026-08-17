@@ -24,7 +24,7 @@ const {
   ExchangeStates,
   ExchangeTypes,
 } = require('../../exchanges');
-const { signVeriiCredentialsFacade } = require('../../credentials');
+const { secureVeriiCredentialsFacade } = require('../../credentials');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 
 const createCredential = async (credentialRequestParameters, context) => {
@@ -57,7 +57,7 @@ const createCredential = async (credentialRequestParameters, context) => {
     });
 
     const { issuedCredential, credentialMetadata } =
-      await signVeriiCredentialsFacade({
+      await secureVeriiCredentialsFacade({
         context,
         credentialContentList: [credential.content],
         credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,

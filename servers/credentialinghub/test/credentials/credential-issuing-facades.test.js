@@ -22,13 +22,13 @@ const { CredentialEnvelopeFormats } = require('@verii/jwt');
 const mockIssueCredentials = mock.fn();
 const mockMongoAllocationListQueries = mock.fn(() => 'allocation-queries');
 const mockMongoDb = mock.fn(() => 'mongo-db');
-const mockSignCredentials = mock.fn();
+const mockSecureCredentials = mock.fn();
 
 mock.module('@verii/verii-issuing', {
   namedExports: {
     issueCredentials: mockIssueCredentials,
     mongoAllocationListQueries: mockMongoAllocationListQueries,
-    signCredentials: mockSignCredentials,
+    secureCredentials: mockSecureCredentials,
   },
 });
 
@@ -38,7 +38,7 @@ mock.module('@spencejs/spence-mongo-repos', {
 
 const {
   issueVeriiCredentialsFacade,
-  signVeriiCredentialsFacade,
+  secureVeriiCredentialsFacade,
 } = require('../../src/entities/credentials');
 
 describe('credential issuing facades', () => {
@@ -46,7 +46,7 @@ describe('credential issuing facades', () => {
     mockIssueCredentials.mock.resetCalls();
     mockMongoAllocationListQueries.mock.resetCalls();
     mockMongoDb.mock.resetCalls();
-    mockSignCredentials.mock.resetCalls();
+    mockSecureCredentials.mock.resetCalls();
   });
 
   it('passes an explicit format through the issue facade', async () => {
@@ -85,15 +85,15 @@ describe('credential issuing facades', () => {
     );
   });
 
-  it('passes an explicit format through the sign facade', async () => {
+  it('passes an explicit format through the secure facade', async () => {
     const fixture = buildFacadeFixture();
-    const issuedCredential = { securedCredential: 'signed-v2' };
-    mockSignCredentials.mock.mockImplementationOnce(() =>
+    const issuedCredential = { securedCredential: 'secured-v2' };
+    mockSecureCredentials.mock.mockImplementationOnce(() =>
       Promise.resolve([{ issuedCredential, metadata: { listId: 2 } }]),
     );
 
     await expect(
-      signVeriiCredentialsFacade({
+      secureVeriiCredentialsFacade({
         context: fixture.context,
         credentialContentList: fixture.credentialContentList,
         credentialFormat: CredentialEnvelopeFormats.VC_JWT,
@@ -107,7 +107,7 @@ describe('credential issuing facades', () => {
       issuedCredential,
     });
 
-    expect(mockSignCredentials.mock.calls[0].arguments[0]).toEqual(
+    expect(mockSecureCredentials.mock.calls[0].arguments[0]).toEqual(
       expect.objectContaining({
         credentialFormat: CredentialEnvelopeFormats.VC_JWT,
         offers: fixture.credentialContentList,

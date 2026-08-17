@@ -5,6 +5,7 @@ This package provides core utilities for issuing Verifiable Credentials (VCs) in
 ## Features
 
 - Issue credentials with `issueCredentials`
+- Secure credentials without anchoring with `secureCredentials`
 - Prepare credential offers
 - Finalize credential exchanges
 - Load and resolve credential references
@@ -19,6 +20,10 @@ npm install @velocitycareerlabs/verii-issuing
 ## TL;DR
 This package enables issuers to create W3C Verifiable Credentials using a Verii network (such as Velocity Network) data 
 model and schema. Call `issueCredentials()` with an explicit credential format and issuing context.
+
+Use `secureCredentials()` when the credential must be built and secured but
+anchoring is handled separately. Document builders are internal: each format
+profile selects a VCDM builder and a separate securing implementation.
 
 ## Usage
 

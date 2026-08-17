@@ -17,13 +17,13 @@
 
 const {
   mongoAllocationListQueries,
-  signCredentials,
+  secureCredentials,
 } = require('@verii/verii-issuing');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { keyBy } = require('lodash/fp');
 const { buildVeriiIssuer } = require('./build-verii-issuer');
 
-const signVeriiCredentialsFacade = async ({
+const secureVeriiCredentialsFacade = async ({
   context,
   credentialContentList,
   credentialFormat,
@@ -42,7 +42,7 @@ const signVeriiCredentialsFacade = async ({
   // eslint-disable-next-line better-mutation/no-mutation
   context.caoDid = context.tenant.caoDid;
 
-  const result = await signCredentials({
+  const result = await secureCredentials({
     context,
     credentialFormat,
     credentialSigningAlgorithms,
@@ -58,5 +58,5 @@ const signVeriiCredentialsFacade = async ({
 };
 
 module.exports = {
-  signVeriiCredentialsFacade,
+  secureVeriiCredentialsFacade,
 };
