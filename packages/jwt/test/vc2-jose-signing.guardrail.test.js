@@ -288,10 +288,41 @@ describe('VC JOSE signing guardrails', () => {
     ).toThrow('kid must identify the credential key');
   });
 
+  it('preserves permitted registered and additional JWT claims', () => {
+    const credential = {
+      ...v2Credential,
+      aud: 'did:example:verifier',
+      exp: 1798859045,
+      iat: 1767323045,
+      iss: 'did:example:issuer',
+      jti: v2Credential.id,
+      nbf: 1767323045,
+      sub: v2Credential.credentialSubject.id,
+      sub_jwk: { crv: 'P-256', kty: 'EC', x: 'x', y: 'y' },
+    };
+
+    expect(
+      jsonLdToUnsignedVcV2JwsContent(
+        credential,
+        KeyAlgorithms.ES256,
+        'did:velocity:v2:credential-123#key-1',
+      ).payload,
+    ).toBe(credential);
+  });
+
+  it('rejects an iss claim that conflicts with the credential issuer', () => {
+    expect(() =>
+      jsonLdToUnsignedVcV2JwsContent(
+        { ...v2Credential, iss: 'did:example:attacker' },
+        KeyAlgorithms.ES256,
+        'did:velocity:v2:credential-123#key-1',
+      ),
+    ).toThrow('iss claim must match the credential issuer');
+  });
+
   for (const [name, overrides, error] of [
-    ['an audience claim', { aud: 'did:example:verifier' }, 'compatibility'],
-    ['a compatibility claim', { iss: 'did:example:issuer' }, 'compatibility'],
-    ['a legacy subject key claim', { sub_jwk: { kty: 'EC' } }, 'compatibility'],
+    ['a vc claim', { vc: {} }, 'must not contain JWT claim vc'],
+    ['a vp claim', { vp: {} }, 'must not contain JWT claim vp'],
     ['a proof', { proof: {} }, 'must not contain proof'],
     [
       'issuanceDate',

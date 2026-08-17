@@ -35,18 +35,7 @@ const V2_FORBIDDEN_DOCUMENT_PROPERTIES = Object.freeze([
   'proof',
 ]);
 
-const V2_FORBIDDEN_COMPATIBILITY_CLAIMS = Object.freeze([
-  'aud',
-  'exp',
-  'iat',
-  'iss',
-  'jti',
-  'nbf',
-  'sub',
-  'sub_jwk',
-  'vc',
-  'vp',
-]);
+const V2_FORBIDDEN_JWT_CLAIMS = Object.freeze(['vc', 'vp']);
 
 /**
  * Builds the protected header and direct payload for the Velocity VC 2.0 JOSE
@@ -92,14 +81,16 @@ const assertSignatureAlgorithm = (signatureAlgorithm) => {
 };
 
 const assertV2Credential = (credential) => {
-  const forbiddenCompatibilityClaim = V2_FORBIDDEN_COMPATIBILITY_CLAIMS.find(
+  const forbiddenJwtClaim = V2_FORBIDDEN_JWT_CLAIMS.find(
     (property) => credential != null && Object.hasOwn(credential, property),
   );
-  if (forbiddenCompatibilityClaim != null) {
+  if (forbiddenJwtClaim != null) {
     throw new TypeError(
-      `VC 2.0 JOSE payload violates the compatibility profile: ${forbiddenCompatibilityClaim}`,
+      `VC 2.0 JOSE payload must not contain JWT claim ${forbiddenJwtClaim}`,
     );
   }
+
+  assertIssuerClaimConsistency(credential);
 
   const forbiddenProperty = V2_FORBIDDEN_DOCUMENT_PROPERTIES.find(
     (property) => credential != null && Object.hasOwn(credential, property),
@@ -120,6 +111,21 @@ const assertV2Credential = (credential) => {
         : `${violation.type} profile`;
     throw new TypeError(
       `VC 2.0 JOSE payload violates the ${profile}${property}`,
+    );
+  }
+};
+
+const assertIssuerClaimConsistency = (credential) => {
+  if (credential == null || !Object.hasOwn(credential, 'iss')) {
+    return;
+  }
+  const issuer =
+    typeof credential.issuer === 'string'
+      ? credential.issuer
+      : credential.issuer?.id;
+  if (credential.iss !== issuer) {
+    throw new TypeError(
+      'VC 2.0 JOSE iss claim must match the credential issuer',
     );
   }
 };

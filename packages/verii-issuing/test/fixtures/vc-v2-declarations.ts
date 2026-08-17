@@ -14,7 +14,16 @@
  * limitations under the License.
  */
 
-import type { VcV2LinkedData, VcV2SchemaDescriptor } from '../../types/types';
+import {
+  buildVcV2Credential,
+  type VcV2CredentialBuildOptions,
+  type VcV2LinkedData,
+  type VcV2SchemaDescriptor,
+} from '../../types/types';
+
+declare const validBuildOptions: VcV2CredentialBuildOptions;
+
+export const validCredential = buildVcV2Credential(validBuildOptions);
 
 export const validSchemaDescriptor: VcV2SchemaDescriptor = {
   id: 'https://example.com/schema.json',

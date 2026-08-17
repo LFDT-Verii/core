@@ -5,28 +5,7 @@ export interface CredentialMetadata extends AllocationListEntry {
   publicKey: string;
 }
 
-export interface CanonicalCredentialInput {
-  claims: Record<string, unknown>;
-  contentHash: string;
-  contexts: string[];
-  extensionContext: string;
-  holder?: string;
-  id: string;
-  issuer: JsonLdCredential['issuer'];
-  refreshService?: VcV2LinkedData | VcV2LinkedData[];
-  schema: VcV2SchemaDescriptor | VcV2SchemaDescriptor[];
-  status: VcV2LinkedData | VcV2LinkedData[];
-  types: string[];
-  validity: {
-    from: string;
-    until?: string;
-  };
-  vnfProtocol: {
-    version: 1 | 2;
-  };
-}
-
-export interface CredentialInputBuildOptions {
+export interface VcV2CredentialBuildOptions {
   contentHash: string;
   context: Context;
   credentialId: string;
@@ -311,10 +290,6 @@ export interface VcV2SchemaDescriptor extends LinkedData {
   type: string;
 }
 
-export function buildCredentialInput(
-  options: CredentialInputBuildOptions,
-): CanonicalCredentialInput;
-
 export function buildVcV2Credential(
-  credentialInput: CanonicalCredentialInput,
+  options: VcV2CredentialBuildOptions,
 ): VcV2Credential;

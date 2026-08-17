@@ -14,42 +14,85 @@
  * limitations under the License.
  */
 
+const { toRelativeServiceId } = require('@verii/did-doc');
 const { getV2CredentialModelViolation } = require('@verii/jwt');
-const { isObject, uniq } = require('lodash/fp');
+const {
+  VeriiProtocolVersions,
+  VelocityRevocationListType,
+} = require('@verii/vc-checks');
+const { castArray, isEmpty, isObject, omit, uniq } = require('lodash/fp');
 
+/** @import { CredentialOffer, CredentialTypeMetadata, Issuer } from "../../types/types" */
+/** @import { VcV2Credential, VcV2CredentialBuildOptions, VcV2LinkedData } from "../../types/types" */
+
+const VC_V1_CONTEXT = 'https://www.w3.org/2018/credentials/v1';
 const VC_V2_CONTEXT = 'https://www.w3.org/ns/credentials/v2';
 
 /**
- * Builds a conforming Velocity VC Data Model 2.0 document from canonical
- * credential input.
- * @param {object} credentialInput version-neutral credential input
- * @returns {object} VC Data Model 2.0 document
+ * Builds a conforming Velocity VC Data Model 2.0 document directly from
+ * issuance inputs.
+ * @param {VcV2CredentialBuildOptions} options credential build options
+ * @returns {VcV2Credential} VC Data Model 2.0 document
  */
-const buildVcV2Credential = (credentialInput) => {
-  assertCanonicalInput(credentialInput);
+const buildVcV2Credential = (options) => {
+  assertBuildOptions(options);
 
+  const {
+    contentHash,
+    context,
+    credentialId,
+    credentialSubjectId,
+    credentialTypeMetadata,
+    issuer,
+    offer,
+    revocationUrl,
+  } = options;
+  const extensionContext = context.config.credentialExtensionsContextUrl;
+  const validity = buildValidity(offer);
+  assertValidity(validity);
+
+  /** @type {VcV2Credential} */
   const credential = {
-    '@context': uniq([VC_V2_CONTEXT, ...credentialInput.contexts]),
-    id: credentialInput.id,
+    '@context': uniq([
+      VC_V2_CONTEXT,
+      ...buildAllowlistedContexts(
+        credentialTypeMetadata,
+        offer,
+        extensionContext,
+      ),
+    ]),
+    contentHash: {
+      type: 'VelocityContentHash2020',
+      value: contentHash,
+    },
+    credentialSchema: offer.credentialSchema ?? {
+      id: credentialTypeMetadata.schemaUrl,
+      type: 'JsonSchemaValidator2018',
+    },
+    credentialStatus: buildCredentialStatus(offer, revocationUrl),
+    credentialSubject: buildCredentialSubject(offer, credentialSubjectId),
+    id: credentialId,
+    issuer: buildIssuer(issuer, offer),
     type: uniq([
       'VerifiableCredential',
-      ...credentialInput.types.filter(
+      ...castArray(offer.type).filter(
         (type) => type !== 'VerifiableCredential',
       ),
     ]),
-    issuer: credentialInput.issuer,
-    validFrom: credentialInput.validity.from,
-    ...buildOptionalValidity(credentialInput.validity),
-    credentialSubject: buildCredentialSubject(credentialInput),
-    credentialSchema: credentialInput.schema,
-    credentialStatus: credentialInput.status,
-    contentHash: {
-      type: 'VelocityContentHash2020',
-      value: credentialInput.contentHash,
-    },
-    vnfProtocolVersion: credentialInput.vnfProtocol.version,
-    ...buildOptionalRefreshService(credentialInput.refreshService),
+    validFrom: validity.from,
+    vnfProtocolVersion: isEmpty(credentialSubjectId)
+      ? VeriiProtocolVersions.PROTOCOL_VERSION_1
+      : VeriiProtocolVersions.PROTOCOL_VERSION_2,
   };
+
+  if (validity.until != null) {
+    credential.validUntil = validity.until;
+  }
+
+  const refreshService = buildRefreshService(issuer, offer);
+  if (refreshService != null) {
+    credential.refreshService = refreshService;
+  }
 
   assertBuiltCredential(credential);
 
@@ -58,7 +101,7 @@ const buildVcV2Credential = (credentialInput) => {
 
 /**
  * Validates the emitted VC 2.0 profile.
- * @param {object} credential emitted credential
+ * @param {VcV2Credential} credential emitted credential
  * @returns {void}
  */
 const assertBuiltCredential = (credential) => {
@@ -77,68 +120,223 @@ const assertBuiltCredential = (credential) => {
 };
 
 /**
- * Validates the canonical input shape and extension context.
- * @param {object} credentialInput version-neutral credential input
+ * Validates credential builder dependencies.
+ * @param {VcV2CredentialBuildOptions} options credential build options
  * @returns {void}
  */
-const assertCanonicalInput = (credentialInput) => {
-  if (!hasCanonicalInputShape(credentialInput)) {
-    throw new TypeError('VC 2.0 builder requires canonical credential input');
+const assertBuildOptions = (options) => {
+  assertObject('credential build options', options);
+  assertNonEmptyString('contentHash', options.contentHash);
+  assertNonEmptyString('credentialId', options.credentialId);
+  assertObject('issuer', options.issuer);
+  assertNonEmptyString('issuer.did', options.issuer.did);
+  assertNonEmptyString('revocationUrl', options.revocationUrl);
+  assertObject('offer', options.offer);
+  assertObject('a credentialSubject object', options.offer.credentialSubject);
+  assertObject('credential type metadata', options.credentialTypeMetadata);
+  assertObject('context', options.context);
+  assertObject('context config', options.context.config);
+};
+
+/**
+ * Requires a configured HTTPS JSON-LD context URL.
+ * @param {unknown} value context candidate
+ * @returns {void}
+ */
+const assertHttpsContext = (value) => {
+  if (typeof value !== 'string') {
+    throw new TypeError('VC 2.0 credential contexts must be pinned URLs');
   }
-  if (!credentialInput.contexts.includes(credentialInput.extensionContext)) {
-    throw new TypeError(
-      'VC 2.0 builder requires the pinned Velocity extension context',
-    );
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new TypeError(`VC 2.0 credential context is invalid: ${value}`);
   }
+  if (parsed.protocol !== 'https:') {
+    throw new TypeError(`VC 2.0 credential context must use HTTPS: ${value}`);
+  }
+};
+
+/**
+ * Requires a named non-empty string.
+ * @param {string} name input name
+ * @param {unknown} value input value
+ * @returns {void}
+ */
+const assertNonEmptyString = (name, value) => {
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new TypeError(`VC 2.0 builder requires ${name}`);
+  }
+};
+
+/**
+ * Requires a named object.
+ * @param {string} name input name
+ * @param {unknown} value input value
+ * @returns {void}
+ */
+const assertObject = (name, value) => {
+  if (!isObject(value)) {
+    throw new TypeError(`VC 2.0 builder requires ${name}`);
+  }
+};
+
+/**
+ * Validates the credential validity interval.
+ * @param {{from: string, until?: string}} validity credential validity
+ * @returns {void}
+ */
+const assertValidity = (validity) => {
   if (
-    credentialInput.validity.until != null &&
-    Date.parse(credentialInput.validity.from) >
-      Date.parse(credentialInput.validity.until)
+    validity.until != null &&
+    Date.parse(validity.from) > Date.parse(validity.until)
   ) {
     throw new TypeError('VC 2.0 validity end must not precede its start');
   }
 };
 
 /**
- * Tests the required canonical input structure.
- * @param {unknown} credentialInput input candidate
- * @returns {boolean} true when the canonical structure is present
+ * Appends linked data without mutating caller-owned arrays.
+ * @param {VcV2LinkedData | VcV2LinkedData[] | undefined} existing existing linked data
+ * @param {VcV2LinkedData} value linked data to append
+ * @returns {VcV2LinkedData | VcV2LinkedData[]} combined linked data
  */
-const hasCanonicalInputShape = (credentialInput) =>
-  isObject(credentialInput) &&
-  Array.isArray(credentialInput.contexts) &&
-  Array.isArray(credentialInput.types) &&
-  isObject(credentialInput.claims) &&
-  isObject(credentialInput.validity) &&
-  isObject(credentialInput.vnfProtocol);
+const appendLinkedData = (existing, value) => {
+  if (existing == null) {
+    return value;
+  }
+  return [...castArray(existing), value];
+};
 
 /**
- * Builds a VC 2.0 credential subject.
- * @param {object} credentialInput canonical credential input
- * @param {object} credentialInput.claims credential claims
- * @param {string} [credentialInput.holder] holder identifier
- * @returns {object} credential subject
+ * Builds contexts from pinned type and deployment configuration.
+ * @param {CredentialTypeMetadata} credentialTypeMetadata type metadata
+ * @param {CredentialOffer} offer validated credential offer
+ * @param {string} extensionContext pinned Velocity extension context
+ * @returns {string[]} allowlisted extension contexts
  */
-const buildCredentialSubject = ({ claims, holder }) => ({
-  ...(holder == null ? {} : { id: holder }),
-  ...claims,
+const buildAllowlistedContexts = (
+  credentialTypeMetadata,
+  offer,
+  extensionContext,
+) => {
+  const configuredContexts = [
+    ...extractContexts(credentialTypeMetadata.jsonldContext),
+    extensionContext,
+  ].filter((value) => value !== VC_V1_CONTEXT && value !== VC_V2_CONTEXT);
+  configuredContexts.forEach(assertHttpsContext);
+
+  const allowlist = new Set(configuredContexts);
+  const offeredContexts = extractContexts(offer['@context']).filter(
+    (value) => value !== VC_V1_CONTEXT && value !== VC_V2_CONTEXT,
+  );
+  for (const offeredContext of offeredContexts) {
+    if (!allowlist.has(offeredContext)) {
+      throw new TypeError(
+        `VC 2.0 credential context is not allowlisted: ${String(
+          offeredContext,
+        )}`,
+      );
+    }
+  }
+
+  return uniq([...configuredContexts, ...offeredContexts]);
+};
+
+/**
+ * Builds the credential status value without mutating the offer.
+ * @param {CredentialOffer} offer validated credential offer
+ * @param {string} revocationUrl credential status URL
+ * @returns {VcV2Credential['credentialStatus']} credential status value
+ */
+const buildCredentialStatus = (offer, revocationUrl) =>
+  appendLinkedData(offer.credentialStatus, {
+    id: revocationUrl,
+    type: VelocityRevocationListType,
+  });
+
+/**
+ * Builds a VC 2.0 credential subject with authoritative holder binding.
+ * @param {CredentialOffer} offer validated credential offer
+ * @param {string | undefined} credentialSubjectId bound holder identifier
+ * @returns {VcV2Credential['credentialSubject']} credential subject
+ */
+const buildCredentialSubject = (offer, credentialSubjectId) => {
+  const credentialSubject = omit(
+    ['id', 'vendorUserId'],
+    offer.credentialSubject,
+  );
+  const holder = resolveHolder(offer, credentialSubjectId);
+  if (!isEmpty(holder)) {
+    // eslint-disable-next-line better-mutation/no-mutation
+    credentialSubject.id = holder;
+  }
+  return credentialSubject;
+};
+
+/**
+ * Builds issuer branding with the authoritative issuer DID.
+ * @param {Issuer} issuer issuer entity
+ * @param {CredentialOffer} offer validated credential offer
+ * @returns {VcV2Credential['issuer']} credential issuer
+ */
+const buildIssuer = (issuer, offer) =>
+  isObject(offer.issuer)
+    ? {
+        id: issuer.did,
+        ...omit(['id', 'vendorOrganizationId'], offer.issuer),
+      }
+    : { id: issuer.did };
+
+/**
+ * Builds the optional refresh-service value without mutating the offer.
+ * @param {Issuer} issuer issuer entity
+ * @param {CredentialOffer} offer validated credential offer
+ * @returns {VcV2Credential['refreshService']} refresh service value
+ */
+const buildRefreshService = (issuer, offer) => {
+  if (issuer.issuingRefreshServiceId == null) {
+    return offer.refreshService;
+  }
+
+  const velocityRefreshService = {
+    id: `${issuer.did}${toRelativeServiceId(issuer.issuingRefreshServiceId)}`,
+    type: 'VelocityNetworkRefreshService2024',
+  };
+  return appendLinkedData(offer.refreshService, velocityRefreshService);
+};
+
+/**
+ * Builds the credential validity interval.
+ * @param {CredentialOffer} offer validated credential offer
+ * @returns {{from: string, until?: string}} credential validity
+ */
+const buildValidity = (offer) => ({
+  from:
+    offer.validFrom ??
+    offer.issuanceDate ??
+    offer.issued ??
+    new Date().toISOString(),
+  until: offer.validUntil ?? offer.expirationDate,
 });
 
 /**
- * Builds the optional refresh-service property.
- * @param {object | object[] | undefined} refreshService refresh service value
- * @returns {object} optional property fragment
+ * Normalizes a polymorphic context value to an array.
+ * @param {unknown} value context value
+ * @returns {unknown[]} normalized context entries
  */
-const buildOptionalRefreshService = (refreshService) =>
-  refreshService == null ? {} : { refreshService };
+const extractContexts = (value) => (value == null ? [] : castArray(value));
 
 /**
- * Builds the optional validity-end property.
- * @param {object} validity validity interval
- * @param {string} [validity.until] interval end
- * @returns {object} optional property fragment
+ * Resolves the effective holder identifier.
+ * @param {CredentialOffer} offer validated credential offer
+ * @param {string | undefined} credentialSubjectId bound holder identifier
+ * @returns {string | undefined} effective holder identifier
  */
-const buildOptionalValidity = ({ until }) =>
-  until == null ? {} : { validUntil: until };
+const resolveHolder = (offer, credentialSubjectId) =>
+  isEmpty(credentialSubjectId)
+    ? offer.credentialSubject.id
+    : credentialSubjectId;
 
 module.exports = { buildVcV2Credential };

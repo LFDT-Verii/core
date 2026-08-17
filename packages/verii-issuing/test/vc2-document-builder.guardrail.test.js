@@ -16,7 +16,7 @@
 
 const { afterEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
-const { buildCredentialInput, buildVcV2Credential } = require('../src');
+const { buildVcV2Credential } = require('../src');
 const {
   buildJsonLdCredential,
 } = require('../src/domain/build-jsonld-credential');
@@ -105,20 +105,10 @@ describe('credential document builder guardrails', () => {
     );
   });
 
-  it('builds a conforming direct VC 2.0 document from canonical input', () => {
+  it('builds a conforming direct VC 2.0 document from issuance input', () => {
     mock.timers.enable({ apis: ['Date'], now: new Date(NOW) });
 
-    const credentialInput = buildCredentialInput({
-      contentHash: 'abc123',
-      context,
-      credentialId: 'did:velocity:v2:credential-123',
-      credentialSubjectId: 'did:example:holder',
-      credentialTypeMetadata,
-      issuer,
-      offer,
-      revocationUrl: 'https://example.com/status/1',
-    });
-    const credential = buildVcV2Credential(credentialInput);
+    const credential = buildVcV2Credential(buildOptions());
 
     expect(credential).toEqual({
       '@context': [
@@ -165,7 +155,7 @@ describe('credential document builder guardrails', () => {
     );
   });
 
-  it('creates version-neutral canonical input without mutating the offer', () => {
+  it('builds linked data without mutating the offer', () => {
     mock.timers.enable({ apis: ['Date'], now: new Date(NOW) });
     const mutableOffer = structuredClone({
       ...offer,
@@ -188,67 +178,108 @@ describe('credential document builder guardrails', () => {
     });
     const originalOffer = structuredClone(mutableOffer);
 
-    const credentialInput = buildInput({ offer: mutableOffer });
+    const credential = buildVcV2Credential(
+      buildOptions({ offer: mutableOffer }),
+    );
 
-    expect(credentialInput).toEqual({
-      claims: { role: 'Engineer' },
-      contentHash: 'abc123',
-      contexts: [
-        'https://example.com/contexts/employment-v2.jsonld',
-        'https://example.com/contexts/velocity-extensions.jsonld',
-      ],
-      extensionContext:
-        'https://example.com/contexts/velocity-extensions.jsonld',
-      holder: 'did:example:holder',
-      id: 'did:velocity:v2:credential-123',
-      issuer: { id: 'did:example:issuer', name: 'Example Issuer' },
-      refreshService: [
-        {
-          id: 'https://example.com/custom-refresh',
-          type: 'ExampleRefreshService',
-        },
-        {
-          id: 'did:example:issuer#refresh-1',
-          type: 'VelocityNetworkRefreshService2024',
-        },
-      ],
-      schema: {
-        id: 'https://example.com/schema.json',
-        type: 'JsonSchemaValidator2018',
-      },
-      status: [
-        {
-          id: 'https://example.com/custom-status',
-          type: 'ExampleCredentialStatus',
-        },
-        {
-          id: 'https://example.com/status/1',
-          type: 'VelocityRevocationListJan2021',
-        },
-      ],
-      types: ['EmploymentCredential', 'VerifiableCredential'],
-      validity: {
-        from: NOW,
-        until: '2027-01-02T03:04:05.000Z',
-      },
-      vnfProtocol: { version: 2 },
-    });
-    expect(credentialInput).not.toEqual(
+    expect(credential).toEqual(
       expect.objectContaining({
-        credentialSubject: expect.anything(),
-        expirationDate: expect.anything(),
-        issuanceDate: expect.anything(),
-        validFrom: expect.anything(),
-        validUntil: expect.anything(),
-        vnfProtocolVersion: expect.anything(),
+        credentialStatus: [
+          {
+            id: 'https://example.com/custom-status',
+            type: 'ExampleCredentialStatus',
+          },
+          {
+            id: 'https://example.com/status/1',
+            type: 'VelocityRevocationListJan2021',
+          },
+        ],
+        credentialSubject: {
+          id: 'did:example:holder',
+          role: 'Engineer',
+        },
+        issuer: { id: 'did:example:issuer', name: 'Example Issuer' },
+        refreshService: [
+          {
+            id: 'https://example.com/custom-refresh',
+            type: 'ExampleRefreshService',
+          },
+          {
+            id: 'did:example:issuer#refresh-1',
+            type: 'VelocityNetworkRefreshService2024',
+          },
+        ],
       }),
     );
     expect(mutableOffer).toEqual(originalOffer);
   });
 
+  it('prevents offer claims from overriding the authoritative holder', () => {
+    const credential = buildVcV2Credential(
+      buildOptions({
+        credentialSubjectId: 'did:example:authoritative-holder',
+        offer: {
+          ...offer,
+          credentialSubject: {
+            id: 'did:example:attacker-controlled-holder',
+            role: 'Engineer',
+          },
+        },
+      }),
+    );
+
+    expect(credential.credentialSubject).toEqual({
+      id: 'did:example:authoritative-holder',
+      role: 'Engineer',
+    });
+  });
+
+  it('preserves custom linked data alongside Velocity profile values', () => {
+    const credential = buildVcV2Credential(
+      buildOptions({
+        offer: {
+          ...offer,
+          credentialStatus: {
+            id: 'https://example.com/custom-status',
+            type: 'ExampleCredentialStatus',
+          },
+          refreshService: {
+            id: 'https://example.com/custom-refresh',
+            type: 'ExampleRefreshService',
+          },
+        },
+      }),
+    );
+
+    expect(credential).toEqual(
+      expect.objectContaining({
+        refreshService: [
+          {
+            id: 'https://example.com/custom-refresh',
+            type: 'ExampleRefreshService',
+          },
+          {
+            id: 'did:example:issuer#refresh-1',
+            type: 'VelocityNetworkRefreshService2024',
+          },
+        ],
+        credentialStatus: [
+          {
+            id: 'https://example.com/custom-status',
+            type: 'ExampleCredentialStatus',
+          },
+          {
+            id: 'https://example.com/status/1',
+            type: 'VelocityRevocationListJan2021',
+          },
+        ],
+      }),
+    );
+  });
+
   it('omits optional validUntil and holder id when they are absent', () => {
     mock.timers.enable({ apis: ['Date'], now: new Date(NOW) });
-    const input = buildInput({
+    const input = buildOptions({
       credentialSubjectId: undefined,
       offer: {
         ...offer,
@@ -268,7 +299,7 @@ describe('credential document builder guardrails', () => {
   });
 
   it('uses an explicit neutral validity interval', () => {
-    const input = buildInput({
+    const input = buildOptions({
       offer: {
         ...offer,
         validFrom: '2026-02-01T00:00:00.000Z',
@@ -285,7 +316,7 @@ describe('credential document builder guardrails', () => {
   });
 
   it('removes either W3C core context from configured extension contexts', () => {
-    const input = buildInput({
+    const input = buildOptions({
       credentialTypeMetadata: {
         ...credentialTypeMetadata,
         jsonldContext: [
@@ -350,12 +381,12 @@ describe('credential document builder guardrails', () => {
     ],
   ]) {
     it(`rejects ${name}`, () => {
-      expect(() => buildInput(values)).toThrow(error);
+      expect(() => buildVcV2Credential(buildOptions(values))).toThrow(error);
     });
   }
 
   it('rejects a malformed validity value in the built document', () => {
-    const input = buildInput({
+    const input = buildOptions({
       offer: { ...offer, validFrom: 'not-a-date' },
     });
 
@@ -365,7 +396,7 @@ describe('credential document builder guardrails', () => {
   });
 
   it('rejects a validity interval whose end precedes its start', () => {
-    const input = buildInput({
+    const input = buildOptions({
       offer: {
         ...offer,
         validFrom: '2027-01-02T03:04:05.000Z',
@@ -379,7 +410,7 @@ describe('credential document builder guardrails', () => {
   });
 
   it('preserves an offered refresh service when the issuer has no default', () => {
-    const input = buildInput({
+    const input = buildOptions({
       issuer: { ...issuer, issuingRefreshServiceId: undefined },
       offer: {
         ...offer,
@@ -396,45 +427,47 @@ describe('credential document builder guardrails', () => {
     });
   });
 
-  for (const [name, override] of [
-    ['an empty status array', { status: [] }],
+  for (const [name, values] of [
     [
       'a status without a type',
-      { status: { id: 'https://example.com/status/1' } },
+      {
+        offer: {
+          ...offer,
+          credentialStatus: { id: 'https://example.com/custom-status' },
+        },
+      },
     ],
-    ['an empty refresh-service array', { refreshService: [] }],
-    ['an empty refresh-service object', { refreshService: {} }],
-    ['a scalar refresh service', { refreshService: 'invalid' }],
-    ['an empty content hash', { contentHash: '' }],
-    ['an unsupported protocol version', { vnfProtocol: { version: 3 } }],
+    [
+      'an empty refresh-service array',
+      {
+        issuer: { ...issuer, issuingRefreshServiceId: undefined },
+        offer: { ...offer, refreshService: [] },
+      },
+    ],
+    [
+      'an empty refresh-service object',
+      {
+        issuer: { ...issuer, issuingRefreshServiceId: undefined },
+        offer: { ...offer, refreshService: {} },
+      },
+    ],
+    [
+      'a scalar refresh service',
+      {
+        issuer: { ...issuer, issuingRefreshServiceId: undefined },
+        offer: { ...offer, refreshService: 'invalid' },
+      },
+    ],
   ]) {
     it(`rejects ${name} in the emitted credential`, () => {
-      expect(() =>
-        buildVcV2Credential({
-          ...buildInput(),
-          ...override,
-        }),
-      ).toThrow('violates the Velocity profile');
+      expect(() => buildVcV2Credential(buildOptions(values))).toThrow(
+        'violates the Velocity profile',
+      );
     });
   }
 
-  it('rejects canonical input without the pinned extension context', () => {
-    const input = buildInput();
-
-    expect(() =>
-      buildVcV2Credential({
-        ...input,
-        contexts: input.contexts.filter(
-          (value) => value !== input.extensionContext,
-        ),
-      }),
-    ).toThrow('requires the pinned Velocity extension context');
-  });
-
-  it('rejects malformed canonical input', () => {
-    expect(() => buildVcV2Credential({})).toThrow(
-      'requires canonical credential input',
-    );
+  it('rejects malformed build options', () => {
+    expect(() => buildVcV2Credential({})).toThrow('requires contentHash');
   });
 
   for (const [name, values] of [
@@ -446,21 +479,22 @@ describe('credential document builder guardrails', () => {
     ['credential metadata', { credentialTypeMetadata: null }],
     ['context config', { context: null }],
   ]) {
-    it(`rejects canonical input without ${name}`, () => {
-      expect(() => buildInput(values)).toThrow('Canonical credential input');
+    it(`rejects build options without ${name}`, () => {
+      expect(() => buildVcV2Credential(buildOptions(values))).toThrow(
+        'VC 2.0 builder requires',
+      );
     });
   }
 });
 
-const buildInput = (overrides = {}) =>
-  buildCredentialInput({
-    contentHash: 'abc123',
-    context,
-    credentialId: 'did:velocity:v2:credential-123',
-    credentialSubjectId: 'did:example:holder',
-    credentialTypeMetadata,
-    issuer,
-    offer,
-    revocationUrl: 'https://example.com/status/1',
-    ...overrides,
-  });
+const buildOptions = (overrides = {}) => ({
+  contentHash: 'abc123',
+  context,
+  credentialId: 'did:velocity:v2:credential-123',
+  credentialSubjectId: 'did:example:holder',
+  credentialTypeMetadata,
+  issuer,
+  offer,
+  revocationUrl: 'https://example.com/status/1',
+  ...overrides,
+});
