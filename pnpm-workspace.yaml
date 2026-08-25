@@ -9,7 +9,7 @@ overrides:
   "mocha>serialize-javascript": "7.0.7"
   # Temporary: remove this override once auth0 no longer resolves uuid 9.x
   # through its auth0-legacy dependency path.
-  "auth0>uuid": "14.0.1"
+  "auth0>uuid": "14.0.2"
   # Temporary: remove this override once eslint-plugin-better-mutation stops
   # pinning lodash 4.17.x.
   "eslint-plugin-better-mutation>lodash": "4.18.1"
