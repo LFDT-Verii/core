@@ -124,7 +124,7 @@
     "globals": "17.9.0",
     "identity-obj-proxy": "3.0.0",
     "jsdom": "30.0.1",
-    "vite": "8.2.1",
+    "vite": "8.2.2",
     "vite-plugin-externalize-deps": "0.10.0",
     "vite-plugin-lib-inject-css": "2.2.2"
   },
