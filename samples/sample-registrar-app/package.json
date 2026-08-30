@@ -41,7 +41,7 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.9.0",
     "postcss-normalize": "13.0.1",
-    "vite": "8.2.1"
+    "vite": "8.2.2"
   },
   "scripts": {
     "start": "vite dev --mode dev.local",
