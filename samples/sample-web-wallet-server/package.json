@@ -33,11 +33,11 @@
   },
   "devDependencies": {
     "@types/node": "24.13.3",
-    "eslint": "9.39.5",
+    "eslint": "10.9.1",
     "eslint-config-airbnb-extended": "3.1.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.5",
-    "eslint-plugin-better-mutation": "2.1.0",
+    "eslint-plugin-better-mutation": "3.0.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-prefer-arrow-functions": "3.10.1",

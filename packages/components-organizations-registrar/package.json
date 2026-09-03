@@ -100,7 +100,7 @@
     "react-router": "7.18.2"
   },
   "devDependencies": {
-    "@eslint/js": "9.39.5",
+    "@eslint/js": "10.0.1",
     "@swc/core": "1.15.47",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
@@ -109,11 +109,11 @@
     "@types/react-dom": "19.2.5",
     "@verii/tests-helpers": "workspace:*",
     "@vitejs/plugin-react-swc": "4.3.3",
-    "eslint": "9.39.5",
+    "eslint": "10.9.1",
     "eslint-config-airbnb-extended": "3.1.1",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-alias": "1.1.2",
-    "eslint-plugin-better-mutation": "2.1.0",
+    "eslint-plugin-better-mutation": "3.0.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-prefer-arrow-functions": "3.10.1",
     "eslint-plugin-prettier": "5.5.6",
