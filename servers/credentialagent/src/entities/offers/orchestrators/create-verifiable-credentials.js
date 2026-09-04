@@ -23,10 +23,10 @@ const {
   hexFromJwk,
 } = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');
-const { jwtDecode } = require('@verii/jwt');
+const { CredentialEnvelopeFormats, jwtDecode } = require('@verii/jwt');
 const { extractCredentialType } = require('@verii/vc-checks');
 const {
-  issueVeriiCredentials,
+  issueCredentials,
   mongoAllocationListQueries,
 } = require('@verii/verii-issuing');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
@@ -56,11 +56,12 @@ const createVerifiableCredentials = async (
     return isEmpty(linkedCredentials) ? offer : { ...offer, linkedCredentials };
   }, offers);
 
-  const jwtVcs = await doIssueVerifiableCredentials(
+  const issuedCredentials = await doIssueVerifiableCredentials(
     issuableOffers,
     credentialSubjectId,
     context,
   );
+  const jwtVcs = map('securedCredential', issuedCredentials);
 
   const updatedOffers = await Promise.all(
     mapWithIndex(async (offer, i) => {
@@ -108,11 +109,13 @@ const doIssueVerifiableCredentials = async (
     'allocations',
   );
 
-  return issueVeriiCredentials(
-    offers,
+  return issueCredentials({
+    context,
+    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    credentialSigningAlgorithms,
     credentialSubjectId,
     credentialTypesMap,
-    {
+    issuer: {
       id: tenant._id,
       did: tenant.did,
       issuingRefreshServiceId: first(tenant.serviceIds),
@@ -128,9 +131,8 @@ const doIssueVerifiableCredentials = async (
       dltOperatorKMSKeyId: dltOperatorKey.keyId,
       dltPrimaryAddress: tenant.primaryAddress,
     },
-    credentialSigningAlgorithms,
-    context,
-  ).catch((e) => {
+    offers,
+  }).catch((e) => {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':
       case 'identity_issuing_not_permitted':

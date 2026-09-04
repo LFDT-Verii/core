@@ -16,10 +16,20 @@
 
 const { afterEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
-const { buildVcV2Credential } = require('../src');
 const {
-  buildJsonLdCredential,
-} = require('../src/domain/build-jsonld-credential');
+  CredentialDataModelVersions,
+  CredentialEnvelopeFormats,
+} = require('@verii/jwt');
+const {
+  buildVcdmV1Credential,
+} = require('../src/domain/build-vcdm-v1-credential');
+const {
+  buildVcdmV2Credential,
+} = require('../src/domain/build-vcdm-v2-credential');
+const {
+  getCredentialFormatProfile,
+} = require('../src/domain/prepare-credentials');
+const issuingApi = require('../src');
 
 const NOW = '2026-01-02T03:04:05.000Z';
 const context = Object.freeze({
@@ -86,19 +96,50 @@ const expectedV1Credential = Object.freeze({
 afterEach(() => mock.timers.reset());
 
 describe('credential document builder guardrails', () => {
+  it('keeps VCDM document builders internal to the issuing package', () => {
+    expect(issuingApi).not.toHaveProperty('buildVcdmV1Credential');
+    expect(issuingApi).not.toHaveProperty('buildVcdmV2Credential');
+  });
+
+  it('pairs each credential format with its VCDM builder and securer', () => {
+    const legacyProfile = getCredentialFormatProfile(
+      CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    );
+    const v2JoseProfile = getCredentialFormatProfile(
+      CredentialEnvelopeFormats.VC_JWT,
+    );
+
+    expect(legacyProfile).toEqual(
+      expect.objectContaining({
+        buildCredential: buildVcdmV1Credential,
+        dataModelVersion: CredentialDataModelVersions.V1_1,
+      }),
+    );
+    expect(legacyProfile.secureCredential.name).toBe(
+      'secureJwtVcJsonLdCredential',
+    );
+    expect(v2JoseProfile).toEqual(
+      expect.objectContaining({
+        buildCredential: buildVcdmV2Credential,
+        dataModelVersion: CredentialDataModelVersions.V2_0,
+      }),
+    );
+    expect(v2JoseProfile.secureCredential.name).toBe('secureVcJwtCredential');
+  });
+
   it('freezes the v1 document bytes and legacy property names', () => {
     mock.timers.enable({ apis: ['Date'], now: new Date(NOW) });
 
-    const credential = buildJsonLdCredential(
-      issuer,
-      'did:example:holder',
-      offer,
-      'did:velocity:v2:credential-123',
-      'abc123',
-      credentialTypeMetadata,
-      'https://example.com/status/1',
+    const credential = buildVcdmV1Credential({
+      contentHash: 'abc123',
       context,
-    );
+      credentialId: 'did:velocity:v2:credential-123',
+      credentialSubjectId: 'did:example:holder',
+      credentialTypeMetadata,
+      issuer,
+      offer,
+      revocationUrl: 'https://example.com/status/1',
+    });
 
     expect(JSON.stringify(credential)).toBe(
       JSON.stringify(expectedV1Credential),
@@ -108,7 +149,7 @@ describe('credential document builder guardrails', () => {
   it('builds a conforming direct VC 2.0 document from issuance input', () => {
     mock.timers.enable({ apis: ['Date'], now: new Date(NOW) });
 
-    const credential = buildVcV2Credential(buildOptions());
+    const credential = buildVcdmV2Credential(buildOptions());
 
     expect(credential).toEqual({
       '@context': [
@@ -178,7 +219,7 @@ describe('credential document builder guardrails', () => {
     });
     const originalOffer = structuredClone(mutableOffer);
 
-    const credential = buildVcV2Credential(
+    const credential = buildVcdmV2Credential(
       buildOptions({ offer: mutableOffer }),
     );
 
@@ -215,7 +256,7 @@ describe('credential document builder guardrails', () => {
   });
 
   it('prevents offer claims from overriding the authoritative holder', () => {
-    const credential = buildVcV2Credential(
+    const credential = buildVcdmV2Credential(
       buildOptions({
         credentialSubjectId: 'did:example:authoritative-holder',
         offer: {
@@ -235,7 +276,7 @@ describe('credential document builder guardrails', () => {
   });
 
   it('preserves custom linked data alongside Velocity profile values', () => {
-    const credential = buildVcV2Credential(
+    const credential = buildVcdmV2Credential(
       buildOptions({
         offer: {
           ...offer,
@@ -288,14 +329,14 @@ describe('credential document builder guardrails', () => {
       },
     });
 
-    expect(buildVcV2Credential(input)).toEqual(
+    expect(buildVcdmV2Credential(input)).toEqual(
       expect.objectContaining({
         credentialSubject: { role: 'Engineer' },
         validFrom: NOW,
         vnfProtocolVersion: 1,
       }),
     );
-    expect(buildVcV2Credential(input)).not.toHaveProperty('validUntil');
+    expect(buildVcdmV2Credential(input)).not.toHaveProperty('validUntil');
   });
 
   it('uses an explicit neutral validity interval', () => {
@@ -307,7 +348,7 @@ describe('credential document builder guardrails', () => {
       },
     });
 
-    expect(buildVcV2Credential(input)).toEqual(
+    expect(buildVcdmV2Credential(input)).toEqual(
       expect.objectContaining({
         validFrom: '2026-02-01T00:00:00.000Z',
         validUntil: '2026-12-01T00:00:00.000Z',
@@ -327,7 +368,7 @@ describe('credential document builder guardrails', () => {
       },
     });
 
-    expect(buildVcV2Credential(input)['@context']).toEqual([
+    expect(buildVcdmV2Credential(input)['@context']).toEqual([
       'https://www.w3.org/ns/credentials/v2',
       'https://example.com/contexts/employment-v2.jsonld',
       'https://example.com/contexts/velocity-extensions.jsonld',
@@ -381,7 +422,7 @@ describe('credential document builder guardrails', () => {
     ],
   ]) {
     it(`rejects ${name}`, () => {
-      expect(() => buildVcV2Credential(buildOptions(values))).toThrow(error);
+      expect(() => buildVcdmV2Credential(buildOptions(values))).toThrow(error);
     });
   }
 
@@ -390,7 +431,7 @@ describe('credential document builder guardrails', () => {
       offer: { ...offer, validFrom: 'not-a-date' },
     });
 
-    expect(() => buildVcV2Credential(input)).toThrow(
+    expect(() => buildVcdmV2Credential(input)).toThrow(
       'violates the date-time profile: validFrom',
     );
   });
@@ -404,7 +445,7 @@ describe('credential document builder guardrails', () => {
       },
     });
 
-    expect(() => buildVcV2Credential(input)).toThrow(
+    expect(() => buildVcdmV2Credential(input)).toThrow(
       'validity end must not precede its start',
     );
   });
@@ -421,7 +462,7 @@ describe('credential document builder guardrails', () => {
       },
     });
 
-    expect(buildVcV2Credential(input).refreshService).toEqual({
+    expect(buildVcdmV2Credential(input).refreshService).toEqual({
       id: 'https://example.com/custom-refresh',
       type: 'ExampleRefreshService',
     });
@@ -460,14 +501,14 @@ describe('credential document builder guardrails', () => {
     ],
   ]) {
     it(`rejects ${name} in the emitted credential`, () => {
-      expect(() => buildVcV2Credential(buildOptions(values))).toThrow(
+      expect(() => buildVcdmV2Credential(buildOptions(values))).toThrow(
         'violates the Velocity profile',
       );
     });
   }
 
   it('rejects malformed build options', () => {
-    expect(() => buildVcV2Credential({})).toThrow('requires contentHash');
+    expect(() => buildVcdmV2Credential({})).toThrow('requires contentHash');
   });
 
   for (const [name, values] of [
@@ -480,7 +521,7 @@ describe('credential document builder guardrails', () => {
     ['context config', { context: null }],
   ]) {
     it(`rejects build options without ${name}`, () => {
-      expect(() => buildVcV2Credential(buildOptions(values))).toThrow(
+      expect(() => buildVcdmV2Credential(buildOptions(values))).toThrow(
         'VC 2.0 builder requires',
       );
     });
