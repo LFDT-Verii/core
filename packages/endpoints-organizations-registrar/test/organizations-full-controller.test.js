@@ -3163,6 +3163,64 @@ describe('Organizations Full Test Suite', () => {
         expect(retriedOrgFromDb).not.toHaveProperty('deletedAt');
       });
 
+      it('Should keep the group of a first time user and allow a retry when provisioning fails', async () => {
+        mockCreateFineractClient.mock.mockImplementationOnce(async () => {
+          throw new Error('Fineract provisioning error');
+        });
+        const payload = { profile: orgProfile };
+        const headers = {
+          'x-auto-activate': '1',
+          'x-override-oauth-user': JSON.stringify(testNoGroupRegistrarUser),
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+
+        expect(response.statusCode).toEqual(500);
+
+        const failedOrgFromDb = await mongoDb()
+          .collection('organizations')
+          .findOne({
+            normalizedProfileName: normalizeProfileName(orgProfile.name),
+          });
+        expect(failedOrgFromDb).toMatchObject({
+          deletedAt: expect.any(Date),
+        });
+        const did = failedOrgFromDb.didDoc.id;
+
+        // the user's new group is kept because they administer it
+        await expect(
+          groupsRepo.find({ filter: { groupId: did } }),
+        ).resolves.toEqual([
+          expect.objectContaining({
+            dids: [],
+            clientAdminIds: [testNoGroupRegistrarUser.sub],
+          }),
+        ]);
+
+        // the retry joins the organization to that group again
+        const retryResponse = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+        expect(retryResponse.statusCode).toEqual(201);
+        expect(retryResponse.json.id).toEqual(did);
+        await expect(
+          groupsRepo.find({ filter: { groupId: did } }),
+        ).resolves.toEqual([
+          expect.objectContaining({
+            dids: [did],
+            clientAdminIds: [testNoGroupRegistrarUser.sub],
+          }),
+        ]);
+      });
+
       it('Should create organization even if auth client fails', async () => {
         await persistGroup({ skipOrganization: true });
 

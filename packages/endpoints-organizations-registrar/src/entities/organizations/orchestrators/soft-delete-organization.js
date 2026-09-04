@@ -16,9 +16,11 @@ const softDeleteOrganization = async (organization, { repos }) => {
       { $pull: { dids: did }, $set: { updatedAt: now } },
     );
 
-  // a group created for the organization alone has no other members left;
-  // removing it lets a retried registration create it again
+  // the group provisioned for the organization itself is keyed by its did;
+  // once it holds no other dids and no client admins, remove it so a retried
+  // registration can create it again instead of inserting a duplicate
   await repos.groups.collection().deleteMany({
+    groupId: did,
     dids: { $size: 0 },
     $or: [
       { clientAdminIds: { $exists: false } },
