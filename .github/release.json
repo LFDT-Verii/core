@@ -1,10 +1,7 @@
 {
   "kind": "verii-release",
-  "bump": "minor",
+  "bump": "patch",
   "groups": {
-    "platform": "1.2.0",
-    "credentialagent": "1.28.0",
-    "credentialinghub": "2.1.0",
-    "sdk-nodejs": "2.11.0"
+    "platform": "1.2.1"
   }
 }
