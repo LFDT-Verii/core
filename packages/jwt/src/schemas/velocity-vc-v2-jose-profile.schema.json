@@ -15,8 +15,73 @@
         },
         "validFrom": {
           "$ref": "https://velocitynetwork.foundation/schemas/w3c-vc-v2-core.schema.json#/$defs/dateTime"
+        },
+        "credentialStatus": {
+          "$ref": "#/$defs/linkedDataValue"
+        },
+        "refreshService": {
+          "$ref": "#/$defs/linkedDataValue"
+        },
+        "contentHash": {
+          "type": "object",
+          "required": ["type", "value"],
+          "properties": {
+            "type": {
+              "const": "VelocityContentHash2020"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "vnfProtocolVersion": {
+          "enum": [1, 2]
         }
       }
     }
-  ]
+  ],
+  "$defs": {
+    "linkedDataDescriptor": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "$ref": "https://velocitynetwork.foundation/schemas/w3c-vc-v2-core.schema.json#/$defs/uri"
+        },
+        "type": {
+          "oneOf": [
+            {
+              "$ref": "https://velocitynetwork.foundation/schemas/w3c-vc-v2-core.schema.json#/$defs/typeTerm"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 16,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "https://velocitynetwork.foundation/schemas/w3c-vc-v2-core.schema.json#/$defs/typeTerm"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "linkedDataValue": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/linkedDataDescriptor"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/linkedDataDescriptor"
+          }
+        }
+      ]
+    }
+  }
 }

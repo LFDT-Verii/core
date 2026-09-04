@@ -21,9 +21,11 @@ module.exports = {
   ...require('./src/credential-envelope-codec'),
   ...require('./src/credential-envelope-legacy'),
   ...require('./src/credential-envelope-verifier'),
+  ...require('./src/v2-credential-model-validator'),
   ...require('./src/verifiable-generators'),
   ...require('./src/verifiable-decoders'),
   ...require('./src/vc-mappers'),
+  ...require('./src/vc-v2-jose'),
   ...require('./src/key-transformer'),
   generateDocJwt,
 };
