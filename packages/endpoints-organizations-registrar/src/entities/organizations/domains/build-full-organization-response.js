@@ -6,6 +6,8 @@ const buildProfileResponse = (organization, includeTimestamps = false) => {
     ...organization.profile,
     description: organization.profile.description || '',
     id: organization.didDoc.id,
+    // Registrations interrupted before soft deletion of failed provisioning was
+    // introduced may still lack the derived profile fields
     permittedVelocityServiceCategory:
       organization.profile.permittedVelocityServiceCategory ?? [],
     verifiableCredentialJwt: organization.verifiableCredentialJwt,

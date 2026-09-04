@@ -3016,6 +3016,79 @@ describe('Organizations Full Test Suite', () => {
         ]);
       });
 
+      it('Should soft delete the organization and allow a retry when fineract provisioning fails', async () => {
+        mockCreateFineractClient.mock.mockImplementationOnce(async () => {
+          throw new Error('Fineract provisioning error');
+        });
+        const payload = { profile: orgProfile };
+        const headers = {
+          'x-auto-activate': '1',
+          'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+
+        expect(response.statusCode).toEqual(500);
+
+        // the partial organization is soft deleted
+        const partialOrgFromDb = await mongoDb()
+          .collection('organizations')
+          .findOne({
+            normalizedProfileName: normalizeProfileName(orgProfile.name),
+          });
+        expect(partialOrgFromDb).toMatchObject({
+          deletedAt: expect.any(Date),
+        });
+        expect(partialOrgFromDb.ids).toBeUndefined();
+        const did = partialOrgFromDb.didDoc.id;
+
+        // its did is removed from the group
+        await expect(
+          groupsRepo.find({ filter: { dids: did } }),
+        ).resolves.toEqual([]);
+
+        // it is hidden from retrieval
+        const listResponse = await fastify.injectJson({
+          method: 'GET',
+          url: fullUrl,
+        });
+        expect(listResponse.statusCode).toEqual(200);
+        expect(listResponse.json.result).toEqual([]);
+
+        // the same organization can be registered again
+        const retryResponse = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+        expect(retryResponse.statusCode).toEqual(201);
+        expect(retryResponse.json.id).toEqual(did);
+        expect(retryResponse.json.ids.fineractClientId).toEqual(
+          mockCreateFineractClientReturnValue.fineractClientId,
+        );
+        expect(
+          await mongoDb()
+            .collection('organizations')
+            .countDocuments({ 'didDoc.id': did }),
+        ).toEqual(2);
+        const retriedOrgFromDb = await organizationsRepo.findOne({
+          filter: { 'didDoc.id': did },
+        });
+        expect(retriedOrgFromDb).not.toHaveProperty('deletedAt');
+        expect(retriedOrgFromDb.ids.fineractClientId).toEqual(
+          mockCreateFineractClientReturnValue.fineractClientId,
+        );
+        await expect(
+          groupsRepo.find({ filter: { dids: did } }),
+        ).resolves.toEqual([expect.objectContaining({ dids: [did] })]);
+      });
+
       it('Should create organization even if auth client fails', async () => {
         await persistGroup({ skipOrganization: true });
 
@@ -4383,13 +4456,25 @@ describe('Organizations Full Test Suite', () => {
         );
       });
 
-      it('Should return a list containing a partially created organization', async () => {
+      it('Should return a list containing an organization left without derived fields by an interrupted registration', async () => {
         await clearDb();
-        const org = await newOrganization();
-        const partialOrganization = await persistOrganization({
-          ...org,
-          profile: omit(['permittedVelocityServiceCategory'], org.profile),
-        });
+        const interruptedOrganization = await persistOrganization();
+        const did = interruptedOrganization.didDoc.id;
+        await mongoDb()
+          .collection('organizations')
+          .updateOne(
+            { 'didDoc.id': did },
+            {
+              $unset: {
+                ids: '',
+                activatedServiceIds: '',
+                verifiableCredentialJwt: '',
+                signedProfileVcJwt: '',
+                authClients: '',
+                'profile.permittedVelocityServiceCategory': '',
+              },
+            },
+          );
 
         const response = await fastify.injectJson({
           method: 'GET',
@@ -4398,13 +4483,19 @@ describe('Organizations Full Test Suite', () => {
 
         expect(response.statusCode).toEqual(200);
         expect(response.json.result).toEqual([
-          buildFullOrganizationResponse({
-            organization: partialOrganization,
+          expect.objectContaining({
+            id: did,
+            didDoc: expect.objectContaining({ id: did }),
+            profile: expect.objectContaining({
+              id: did,
+              permittedVelocityServiceCategory: [],
+            }),
           }),
         ]);
-        expect(
-          response.json.result[0].profile.permittedVelocityServiceCategory,
-        ).toEqual([]);
+        expect(response.json.result[0]).not.toHaveProperty('ids');
+        expect(response.json.result[0]).not.toHaveProperty(
+          'activatedServiceIds',
+        );
       });
 
       it('Should return a list with items with correct format founded and closed fields in profile', async () => {

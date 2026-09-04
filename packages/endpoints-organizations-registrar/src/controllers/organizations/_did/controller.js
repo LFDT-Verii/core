@@ -33,6 +33,7 @@ const {
   initBuildOrganizationModificationsOnServiceChange,
   runAllOrgChecks,
   OrganizationErrorMessages,
+  softDeleteOrganization,
   OrganizationServiceErrorMessages,
   RegistrarScopes,
   initProvisionAuth0ClientGrants,
@@ -595,20 +596,7 @@ const organizationController = async (fastify) => {
           });
         }
 
-        const groupsToModify = await repos.groups.find({
-          filter: { dids: params.did },
-        });
-        const groupIds = map('_id', groupsToModify);
-        await repos.groups.collection().updateMany(
-          { _id: { $in: groupIds } },
-          {
-            $pull: { dids: orgToDelete.didDoc.id },
-            $set: { updatedAt: new Date() },
-          },
-        );
-
-        const modifiedProfile = { ...orgToDelete, deletedAt: new Date() };
-        await repos.organizations.update(orgToDelete._id, modifiedProfile);
+        await softDeleteOrganization(orgToDelete, req);
 
         return reply.status(204).send();
       },
