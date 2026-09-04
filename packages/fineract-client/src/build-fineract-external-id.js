@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-const FINERACT_EXTERNAL_ID_MAX_LENGTH = 100;
-
 // Fineract clients and accounts provisioned before the registrar switched to
 // Mongo organization IDs carry the organization DID as their external ID,
 // with the same "#escrow-account" / "#stakes-account" suffixes.
 const REGISTRAR_ORGANIZATION_PREFIX = 'registrar:org:';
+
+const FINERACT_EXTERNAL_ID_MAX_LENGTH = 100;
 
 const buildFineractExternalId = (organizationId, relativeId = '') => {
   if (organizationId == null || organizationId === '') {
