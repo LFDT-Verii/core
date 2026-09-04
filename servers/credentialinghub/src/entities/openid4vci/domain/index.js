@@ -15,6 +15,7 @@
  *
  */
 module.exports = {
+  ...require('./openid4vci-credential-profile'),
   ...require('./openid4vci-errors'),
   ...require('./to-credential-configuration-id'),
 };

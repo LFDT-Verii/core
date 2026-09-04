@@ -15,7 +15,16 @@
  *
  */
 
-const toCredentialConfigurationId = (credentialType) =>
-  `foundation.velocitynetwork.${credentialType}`;
+const { CredentialEnvelopeFormats } = require('@verii/jwt');
+
+const toCredentialConfigurationId = (
+  credentialType,
+  credentialFormat = CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+) => {
+  const baseId = `foundation.velocitynetwork.${credentialType}`;
+  return credentialFormat === CredentialEnvelopeFormats.JWT_VC_JSON_LD
+    ? baseId
+    : `${baseId}.${credentialFormat}`;
+};
 
 module.exports = { toCredentialConfigurationId };

@@ -14,10 +14,17 @@
  * limitations under the License.
  *
  */
-const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
-const { CredentialEnvelopeFormats, jwtDecode } = require('@verii/jwt');
+const {
+  Oauth2ErrorCodes,
+  Oauth2ServerErrorResponseError,
+} = require('@openid4vc/oauth2');
+const { jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
-const { Oidc4vciErrors } = require('../domain');
+const {
+  assertOpenid4vciIssuedCredential,
+  getOpenid4vciCredentialProfileByConfigurationId,
+  Oidc4vciErrors,
+} = require('../domain');
 const {
   buildExchangeEvent,
   ExchangeProtocols,
@@ -47,6 +54,12 @@ const createCredential = async (credentialRequestParameters, context) => {
 
   const depot = await repos.depots.findById(credential.depotId);
   const service = await repos.issuerServices.findById(depot.serviceId);
+  const credentialProfile = getAuthorizedCredentialProfile({
+    accessTokenPayload: context.openid4vciAccessTokenPayload,
+    credentialIdentifier: `${credential._id}`,
+    credentialType: credential.typeMetadata.credentialType,
+    requestedFormat: credentialRequest.format,
+  });
 
   try {
     const { payload } = jwtDecode(credentialRequest.proofs.jwt[0]);
@@ -60,12 +73,13 @@ const createCredential = async (credentialRequestParameters, context) => {
       await secureVeriiCredentialsFacade({
         context,
         credentialContentList: [credential.content],
-        credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+        credentialFormat: credentialProfile.credentialFormat,
         credentialSigningAlgorithms: [credentialSigningAlgorithm],
         credentialSubjectId,
         credentialTypeMetadatas: [credential.typeMetadata],
         issuerService: service,
       });
+    assertOpenid4vciIssuedCredential(issuedCredential, credentialProfile);
 
     const newExchange = buildExchange(
       service,
@@ -99,6 +113,43 @@ const createCredential = async (credentialRequestParameters, context) => {
       error_description: error.message,
     });
   }
+};
+
+const getAuthorizedCredentialProfile = ({
+  accessTokenPayload,
+  credentialIdentifier,
+  credentialType,
+  requestedFormat,
+}) => {
+  const matchingAuthorizationDetails = (
+    accessTokenPayload?.authorization_details ?? []
+  ).filter(({ credential_identifiers: credentialIdentifiers }) =>
+    credentialIdentifiers?.includes(credentialIdentifier),
+  );
+  const profiles = matchingAuthorizationDetails
+    .map(({ credential_configuration_id: credentialConfigurationId }) =>
+      getOpenid4vciCredentialProfileByConfigurationId(
+        credentialConfigurationId,
+        credentialType,
+      ),
+    )
+    .filter(Boolean);
+  if (profiles.length !== 1) {
+    throw new Oauth2ServerErrorResponseError({
+      error: Oauth2ErrorCodes.InvalidCredentialRequest,
+      error_description: `Credential ${credentialIdentifier} is not authorized for a supported credential configuration`,
+    });
+  }
+
+  const [profile] = profiles;
+  if (requestedFormat != null && requestedFormat !== profile.format) {
+    throw new Oauth2ServerErrorResponseError({
+      error: Oauth2ErrorCodes.InvalidCredentialRequest,
+      error_description: `Credential format ${requestedFormat} does not match the authorized credential configuration`,
+    });
+  }
+
+  return profile;
 };
 
 const buildExchange = (service, state, overrides) => ({
