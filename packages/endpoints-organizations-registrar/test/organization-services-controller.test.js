@@ -3182,7 +3182,7 @@ describe('Organization Services Test Suite', () => {
 
         expect(last(mockCreateStakesAccount.mock.calls).arguments).toEqual([
           organization.ids.fineractClientId,
-          dbOrg.didDoc.id,
+          dbOrg._id,
           expect.any(Object),
         ]);
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);
@@ -3309,7 +3309,7 @@ describe('Organization Services Test Suite', () => {
 
         expect(last(mockCreateStakesAccount.mock.calls).arguments).toEqual([
           organization.ids.fineractClientId,
-          dbOrg.didDoc.id,
+          dbOrg._id,
           expect.any(Object),
         ]);
         expect(mockAuth0ClientGrantCreate.mock.callCount()).toEqual(1);

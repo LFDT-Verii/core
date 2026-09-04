@@ -25,6 +25,7 @@ const testHost = 'https://localhost.test';
 
 describe('create clients', () => {
   const didDoc = { id: 'did:ion:1234' };
+  const organizationId = '66d8f4f2a1b2c3d4e5f60718';
   const profile = { name: 'ACME Corp' };
   let context;
 
@@ -83,6 +84,7 @@ describe('create clients', () => {
 
     const result = await createFineractClient(
       {
+        _id: organizationId,
         profile,
         didDoc,
       },
@@ -94,7 +96,7 @@ describe('create clients', () => {
       [expectedClientRequest],
       {
         ...expectedSavingsAccountRequest,
-        externalId: `${didDoc.id}#escrow-account`,
+        externalId: `registrar:org:${organizationId}#escrow-account`,
         productId: ProductIds.ESCROW,
       },
     ]);
@@ -138,6 +140,7 @@ describe('create clients', () => {
 
     const result = await createFineractClient(
       {
+        _id: organizationId,
         profile,
         didDoc,
       },
@@ -149,12 +152,12 @@ describe('create clients', () => {
       [expectedClientRequest],
       {
         ...expectedSavingsAccountRequest,
-        externalId: `${didDoc.id}#escrow-account`,
+        externalId: `registrar:org:${organizationId}#escrow-account`,
         productId: ProductIds.ESCROW,
       },
       {
         ...expectedSavingsAccountRequest,
-        externalId: `${didDoc.id}#stakes-account`,
+        externalId: `registrar:org:${organizationId}#stakes-account`,
         productId: ProductIds.STAKES,
       },
     ]);
@@ -168,7 +171,7 @@ describe('create clients', () => {
       legalFormId: 2,
       fullname: profile.name,
       mobileNo: '',
-      externalId: didDoc.id,
+      externalId: `registrar:org:${organizationId}`,
       active: true,
       locale: 'en',
       dateFormat: 'yyyy-MM-dd',

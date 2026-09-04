@@ -16,13 +16,14 @@
 
 const { createCreditsAccount } = require('./fetchers');
 const { ProductIds } = require('./constants');
+const { buildFineractExternalId } = require('./build-fineract-external-id');
 
 const initCreateFineractAccount =
-  (productId, relativeId) => async (clientId, did, context) => {
+  (productId, relativeId) => async (clientId, organizationId, context) => {
     const { tokenAccountId } = await createCreditsAccount(
       {
         clientId,
-        externalId: `${did}${relativeId}`,
+        externalId: buildFineractExternalId(organizationId, relativeId),
         submittedOnDate: new Date(),
         productId,
       },
