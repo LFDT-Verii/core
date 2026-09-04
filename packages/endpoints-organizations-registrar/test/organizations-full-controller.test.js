@@ -3047,10 +3047,10 @@ describe('Organizations Full Test Suite', () => {
         expect(partialOrgFromDb.ids).toBeUndefined();
         const did = partialOrgFromDb.didDoc.id;
 
-        // its did is removed from the group
-        await expect(
-          groupsRepo.find({ filter: { dids: did } }),
-        ).resolves.toEqual([]);
+        // the group created for it alone is removed
+        expect(
+          await mongoDb().collection('groups').countDocuments({ groupId: did }),
+        ).toEqual(0);
 
         // it is hidden from retrieval
         const listResponse = await fastify.injectJson({
@@ -3085,8 +3085,82 @@ describe('Organizations Full Test Suite', () => {
           mockCreateFineractClientReturnValue.fineractClientId,
         );
         await expect(
-          groupsRepo.find({ filter: { dids: did } }),
+          groupsRepo.find({ filter: { groupId: did } }),
         ).resolves.toEqual([expect.objectContaining({ dids: [did] })]);
+      });
+
+      it('Should soft delete the organization and allow a retry when a late provisioning step fails for a group member', async () => {
+        const groupId = testWriteOrganizationsUser[VNF_GROUP_ID_CLAIM];
+        await persistGroup({
+          skipOrganization: true,
+          groupId,
+          dids: [groupId],
+          clientAdminIds: [testWriteOrganizationsUser.sub],
+        });
+        mockAddPrimary.mock.mockImplementationOnce(async () => {
+          throw new Error('Blockchain permissions error');
+        });
+        const payload = { profile: orgProfile };
+        const headers = {
+          'x-auto-activate': '1',
+          'x-override-oauth-user': JSON.stringify(testWriteOrganizationsUser),
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+
+        expect(response.statusCode).toEqual(500);
+
+        // the organization is soft deleted even though ids were already written
+        const failedOrgFromDb = await mongoDb()
+          .collection('organizations')
+          .findOne({
+            normalizedProfileName: normalizeProfileName(orgProfile.name),
+          });
+        expect(failedOrgFromDb).toMatchObject({
+          deletedAt: expect.any(Date),
+          ids: expect.objectContaining({
+            fineractClientId:
+              mockCreateFineractClientReturnValue.fineractClientId,
+          }),
+        });
+        const did = failedOrgFromDb.didDoc.id;
+
+        // the member's group is kept but no longer references the did
+        await expect(groupsRepo.find({ filter: { groupId } })).resolves.toEqual(
+          [
+            expect.objectContaining({
+              dids: [groupId],
+              clientAdminIds: [testWriteOrganizationsUser.sub],
+            }),
+          ],
+        );
+
+        // the same organization can be registered again by the same member
+        const retryResponse = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+        expect(retryResponse.statusCode).toEqual(201);
+        expect(retryResponse.json.id).toEqual(did);
+        await expect(groupsRepo.find({ filter: { groupId } })).resolves.toEqual(
+          [
+            expect.objectContaining({
+              dids: [groupId, did],
+              clientAdminIds: [testWriteOrganizationsUser.sub],
+            }),
+          ],
+        );
+        const retriedOrgFromDb = await organizationsRepo.findOne({
+          filter: { 'didDoc.id': did },
+        });
+        expect(retriedOrgFromDb).not.toHaveProperty('deletedAt');
       });
 
       it('Should create organization even if auth client fails', async () => {
