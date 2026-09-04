@@ -32,6 +32,7 @@ const {
 } = require('./build-non-custodied-organization');
 const { initProvisionGroup } = require('./init-provision-group');
 const { addPrimaryPermissions } = require('./add-primary-permissions');
+const { softDeleteOrganization } = require('./soft-delete-organization');
 const {
   getServiceConsentType,
 } = require('../../organization-services/domains/get-service-consent-type');
@@ -44,30 +45,12 @@ const initCreateOrganization = async (fastify) => {
   const auth0Provisioner = await initAuth0Provisioner(fastify.config);
   const provisionAuth0Clients = initProvisionAuth0Clients(auth0Provisioner);
 
-  return async (
-    { byoDid, byoKeys, serviceEndpoints, profile, invitationCode },
+  const provisionOrganization = async (
+    { organization, invitation, newKeys, newKeyPairs, caoServiceRefs },
     context,
   ) => {
     const { repos, kms, user } = context;
 
-    const invitation = await acceptInvitation(invitationCode, context);
-    const buildOrganization =
-      byoDid == null
-        ? buildCustodiedOrganization
-        : buildNonCustodiedOrganization;
-    const { newOrganization, newKeys, newKeyPairs, caoServiceRefs } =
-      await buildOrganization(
-        {
-          byoDid,
-          byoKeys,
-          serviceEndpoints,
-          profile,
-          invitation,
-        },
-        context,
-      );
-
-    const organization = await repos.organizations.insert(newOrganization);
     await provisionGroup(organization, context);
 
     const activatedServiceIds = activateServices(
@@ -216,6 +199,65 @@ const initCreateOrganization = async (fastify) => {
       authClients,
     };
   };
+
+  return async (
+    { byoDid, byoKeys, serviceEndpoints, profile, invitationCode },
+    context,
+  ) => {
+    const { repos } = context;
+
+    const invitation = await acceptInvitation(invitationCode, context);
+    const buildOrganization =
+      byoDid == null
+        ? buildCustodiedOrganization
+        : buildNonCustodiedOrganization;
+    const { newOrganization, newKeys, newKeyPairs, caoServiceRefs } =
+      await buildOrganization(
+        {
+          byoDid,
+          byoKeys,
+          serviceEndpoints,
+          profile,
+          invitation,
+        },
+        context,
+      );
+
+    const organization = await repos.organizations.insert(newOrganization);
+
+    // Provisioning talks to external systems (Auth0, Fineract, KMS, blockchain).
+    // If any of them fails, the organization must not linger as a partial record:
+    // soft delete it so it is hidden from every finder and the registration can be retried.
+    try {
+      return await provisionOrganization(
+        { organization, invitation, newKeys, newKeyPairs, caoServiceRefs },
+        context,
+      );
+    } catch (error) {
+      await softDeleteFailedOrganization(organization, error, context);
+      throw error;
+    }
+  };
+};
+
+const softDeleteFailedOrganization = async (organization, error, context) => {
+  const { log } = context;
+  const logContext = {
+    organizationId: organization._id,
+    did: organization.didDoc.id,
+  };
+  log.error(
+    { err: error, ...logContext },
+    'Organization provisioning failed. Soft deleting the organization',
+  );
+  try {
+    await softDeleteOrganization(organization, context);
+  } catch (softDeleteError) {
+    log.error(
+      { err: softDeleteError, ...logContext },
+      'Failed to soft delete the organization after provisioning failure',
+    );
+  }
 };
 
 module.exports = { initCreateOrganization };

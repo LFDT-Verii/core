@@ -1119,7 +1119,10 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
 
     it('Should soft delete a partially created organization', async () => {
       const organization = await persistOrganization();
-      await persistGroup({ groupId: organization.didDoc.id });
+      await persistGroup({
+        groupId: organization.didDoc.id,
+        skipOrganization: true,
+      });
       await mongoDb()
         .collection('organizations')
         .updateOne(
@@ -1138,6 +1141,11 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
       expect(response.statusCode).toEqual(204);
       const orgFromDb = await getOrganizationFromDb(organization.didDoc.id);
       expect(orgFromDb.deletedAt).toEqual(expect.any(Date));
+      expect(
+        await mongoDb()
+          .collection('groups')
+          .countDocuments({ groupId: organization.didDoc.id }),
+      ).toEqual(0);
     });
 
     it('Should soft delete an organization with superuser role', async () => {
@@ -1191,6 +1199,14 @@ describe('Organization Registrar Test Suite', { timeout: 20000 }, () => {
         ids: expect.any(Object),
         authClients: expect.any(Array),
         signedProfileVcJwt: expect.any(Object),
+      });
+      expect(
+        await mongoDb()
+          .collection('groups')
+          .findOne({ groupId: DEFAULT_GROUP_ID }),
+      ).toMatchObject({
+        dids: [],
+        clientAdminIds: [testWriteOrganizationsUser.sub],
       });
     });
   });

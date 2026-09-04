@@ -28,7 +28,7 @@ const {
 const testHost = 'https://localhost.test';
 
 describe('create client accounts', () => {
-  const didDoc = { id: 'did:ion:1234' };
+  const organizationId = '66d8f4f2a1b2c3d4e5f60718';
   let context;
 
   before(async () => {
@@ -64,11 +64,15 @@ describe('create client accounts', () => {
         };
       });
 
-    const stakesAccountId = await createStakesAccount(30, didDoc.id, context);
+    const stakesAccountId = await createStakesAccount(
+      30,
+      organizationId,
+      context,
+    );
     expect(stakesAccountId).toEqual('9');
     expect(webhookPayload).toEqual({
       ...expectedSavingsAccountRequest,
-      externalId: `${didDoc.id}#stakes-account`,
+      externalId: `registrar:org:${organizationId}#stakes-account`,
       productId: ProductIds.STAKES,
     });
   });
@@ -87,11 +91,15 @@ describe('create client accounts', () => {
         };
       });
 
-    const stakesAccountId = await createEscrowAccount(30, didDoc.id, context);
+    const stakesAccountId = await createEscrowAccount(
+      30,
+      organizationId,
+      context,
+    );
     expect(stakesAccountId).toEqual('19');
     expect(webhookPayload).toEqual({
       ...expectedSavingsAccountRequest,
-      externalId: `${didDoc.id}#escrow-account`,
+      externalId: `registrar:org:${organizationId}#escrow-account`,
       productId: ProductIds.ESCROW,
     });
   });

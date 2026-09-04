@@ -19,9 +19,10 @@ const {
   createStakesAccount,
   createEscrowAccount,
 } = require('./create-fineract-account');
+const { buildFineractExternalId } = require('./build-fineract-external-id');
 
 const createFineractClient = async (
-  { profile, didDoc },
+  { _id: organizationId, profile },
   isStakingAccountRequired,
   context,
 ) => {
@@ -37,7 +38,7 @@ const createFineractClient = async (
         {
           fullName: profile.name,
           mobileNumber: '',
-          externalId: didDoc.id,
+          externalId: buildFineractExternalId(organizationId),
           activationDate: now,
           submittedOnDate: now,
         },
@@ -48,14 +49,14 @@ const createFineractClient = async (
 
   const escrowAccountId = await createEscrowAccount(
     clientId,
-    didDoc.id,
+    organizationId,
     context,
   );
 
   if (isStakingAccountRequired) {
     const stakesAccountId = await createStakesAccount(
       clientId,
-      didDoc.id,
+      organizationId,
       context,
     );
 

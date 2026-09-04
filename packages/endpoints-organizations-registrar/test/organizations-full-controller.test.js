@@ -3016,6 +3016,211 @@ describe('Organizations Full Test Suite', () => {
         ]);
       });
 
+      it('Should soft delete the organization and allow a retry when fineract provisioning fails', async () => {
+        mockCreateFineractClient.mock.mockImplementationOnce(async () => {
+          throw new Error('Fineract provisioning error');
+        });
+        const payload = { profile: orgProfile };
+        const headers = {
+          'x-auto-activate': '1',
+          'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+
+        expect(response.statusCode).toEqual(500);
+
+        // the partial organization is soft deleted
+        const partialOrgFromDb = await mongoDb()
+          .collection('organizations')
+          .findOne({
+            normalizedProfileName: normalizeProfileName(orgProfile.name),
+          });
+        expect(partialOrgFromDb).toMatchObject({
+          deletedAt: expect.any(Date),
+        });
+        expect(partialOrgFromDb.ids).toBeUndefined();
+        const did = partialOrgFromDb.didDoc.id;
+
+        // the group created for it alone is removed
+        expect(
+          await mongoDb().collection('groups').countDocuments({ groupId: did }),
+        ).toEqual(0);
+
+        // it is hidden from retrieval
+        const listResponse = await fastify.injectJson({
+          method: 'GET',
+          url: fullUrl,
+        });
+        expect(listResponse.statusCode).toEqual(200);
+        expect(listResponse.json.result).toEqual([]);
+
+        // the same organization can be registered again
+        const retryResponse = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+        expect(retryResponse.statusCode).toEqual(201);
+        expect(retryResponse.json.id).toEqual(did);
+        expect(retryResponse.json.ids.fineractClientId).toEqual(
+          mockCreateFineractClientReturnValue.fineractClientId,
+        );
+        expect(
+          await mongoDb()
+            .collection('organizations')
+            .countDocuments({ 'didDoc.id': did }),
+        ).toEqual(2);
+        const retriedOrgFromDb = await organizationsRepo.findOne({
+          filter: { 'didDoc.id': did },
+        });
+        expect(retriedOrgFromDb).not.toHaveProperty('deletedAt');
+        expect(retriedOrgFromDb.ids.fineractClientId).toEqual(
+          mockCreateFineractClientReturnValue.fineractClientId,
+        );
+        await expect(
+          groupsRepo.find({ filter: { groupId: did } }),
+        ).resolves.toEqual([expect.objectContaining({ dids: [did] })]);
+      });
+
+      it('Should soft delete the organization and allow a retry when a late provisioning step fails for a group member', async () => {
+        const groupId = testWriteOrganizationsUser[VNF_GROUP_ID_CLAIM];
+        await persistGroup({
+          skipOrganization: true,
+          groupId,
+          dids: [groupId],
+          clientAdminIds: [testWriteOrganizationsUser.sub],
+        });
+        mockAddPrimary.mock.mockImplementationOnce(async () => {
+          throw new Error('Blockchain permissions error');
+        });
+        const payload = { profile: orgProfile };
+        const headers = {
+          'x-auto-activate': '1',
+          'x-override-oauth-user': JSON.stringify(testWriteOrganizationsUser),
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+
+        expect(response.statusCode).toEqual(500);
+
+        // the organization is soft deleted even though ids were already written
+        const failedOrgFromDb = await mongoDb()
+          .collection('organizations')
+          .findOne({
+            normalizedProfileName: normalizeProfileName(orgProfile.name),
+          });
+        expect(failedOrgFromDb).toMatchObject({
+          deletedAt: expect.any(Date),
+          ids: expect.objectContaining({
+            fineractClientId:
+              mockCreateFineractClientReturnValue.fineractClientId,
+          }),
+        });
+        const did = failedOrgFromDb.didDoc.id;
+
+        // the member's group is kept but no longer references the did
+        await expect(groupsRepo.find({ filter: { groupId } })).resolves.toEqual(
+          [
+            expect.objectContaining({
+              dids: [groupId],
+              clientAdminIds: [testWriteOrganizationsUser.sub],
+            }),
+          ],
+        );
+
+        // the same organization can be registered again by the same member
+        const retryResponse = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+        expect(retryResponse.statusCode).toEqual(201);
+        expect(retryResponse.json.id).toEqual(did);
+        await expect(groupsRepo.find({ filter: { groupId } })).resolves.toEqual(
+          [
+            expect.objectContaining({
+              dids: [groupId, did],
+              clientAdminIds: [testWriteOrganizationsUser.sub],
+            }),
+          ],
+        );
+        const retriedOrgFromDb = await organizationsRepo.findOne({
+          filter: { 'didDoc.id': did },
+        });
+        expect(retriedOrgFromDb).not.toHaveProperty('deletedAt');
+      });
+
+      it('Should keep the group of a first time user and allow a retry when provisioning fails', async () => {
+        mockCreateFineractClient.mock.mockImplementationOnce(async () => {
+          throw new Error('Fineract provisioning error');
+        });
+        const payload = { profile: orgProfile };
+        const headers = {
+          'x-auto-activate': '1',
+          'x-override-oauth-user': JSON.stringify(testNoGroupRegistrarUser),
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+
+        expect(response.statusCode).toEqual(500);
+
+        const failedOrgFromDb = await mongoDb()
+          .collection('organizations')
+          .findOne({
+            normalizedProfileName: normalizeProfileName(orgProfile.name),
+          });
+        expect(failedOrgFromDb).toMatchObject({
+          deletedAt: expect.any(Date),
+        });
+        const did = failedOrgFromDb.didDoc.id;
+
+        // the user's new group is kept because they administer it
+        await expect(
+          groupsRepo.find({ filter: { groupId: did } }),
+        ).resolves.toEqual([
+          expect.objectContaining({
+            dids: [],
+            clientAdminIds: [testNoGroupRegistrarUser.sub],
+          }),
+        ]);
+
+        // the retry joins the organization to that group again
+        const retryResponse = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers,
+        });
+        expect(retryResponse.statusCode).toEqual(201);
+        expect(retryResponse.json.id).toEqual(did);
+        await expect(
+          groupsRepo.find({ filter: { groupId: did } }),
+        ).resolves.toEqual([
+          expect.objectContaining({
+            dids: [did],
+            clientAdminIds: [testNoGroupRegistrarUser.sub],
+          }),
+        ]);
+      });
+
       it('Should create organization even if auth client fails', async () => {
         await persistGroup({ skipOrganization: true });
 
@@ -4380,6 +4585,48 @@ describe('Organizations Full Test Suite', () => {
         );
         expect(response.json.result[0].profile).not.toHaveProperty(
           'contactEmail',
+        );
+      });
+
+      it('Should return a list containing an organization left without derived fields by an interrupted registration', async () => {
+        await clearDb();
+        const interruptedOrganization = await persistOrganization();
+        const did = interruptedOrganization.didDoc.id;
+        await mongoDb()
+          .collection('organizations')
+          .updateOne(
+            { 'didDoc.id': did },
+            {
+              $unset: {
+                ids: '',
+                activatedServiceIds: '',
+                verifiableCredentialJwt: '',
+                signedProfileVcJwt: '',
+                authClients: '',
+                'profile.permittedVelocityServiceCategory': '',
+              },
+            },
+          );
+
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: fullUrl,
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.result).toEqual([
+          expect.objectContaining({
+            id: did,
+            didDoc: expect.objectContaining({ id: did }),
+            profile: expect.objectContaining({
+              id: did,
+              permittedVelocityServiceCategory: [],
+            }),
+          }),
+        ]);
+        expect(response.json.result[0]).not.toHaveProperty('ids');
+        expect(response.json.result[0]).not.toHaveProperty(
+          'activatedServiceIds',
         );
       });
 
