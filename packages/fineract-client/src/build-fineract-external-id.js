@@ -22,7 +22,7 @@ const FINERACT_EXTERNAL_ID_MAX_LENGTH = 100;
 const REGISTRAR_ORGANIZATION_PREFIX = 'registrar:org:';
 
 const buildFineractExternalId = (organizationId, relativeId = '') => {
-  if (organizationId == null) {
+  if (organizationId == null || organizationId === '') {
     throw new Error(
       'organizationId is required to build a Fineract external ID',
     );

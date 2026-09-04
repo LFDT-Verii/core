@@ -52,6 +52,9 @@ describe('buildFineractExternalId', () => {
     expect(() => buildFineractExternalId(null, '#escrow-account')).toThrow(
       'organizationId is required',
     );
+    expect(() => buildFineractExternalId('')).toThrow(
+      'organizationId is required',
+    );
   });
 
   it('should throw when the external ID exceeds the Fineract limit', () => {
