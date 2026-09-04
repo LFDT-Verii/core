@@ -14,9 +14,26 @@
  * limitations under the License.
  */
 
+const FINERACT_EXTERNAL_ID_MAX_LENGTH = 100;
+
+// Fineract clients and accounts provisioned before the registrar switched to
+// Mongo organization IDs carry the organization DID as their external ID,
+// with the same "#escrow-account" / "#stakes-account" suffixes.
 const REGISTRAR_ORGANIZATION_PREFIX = 'registrar:org:';
 
-const buildFineractExternalId = (organizationId, relativeId = '') =>
-  `${REGISTRAR_ORGANIZATION_PREFIX}${organizationId}${relativeId}`;
+const buildFineractExternalId = (organizationId, relativeId = '') => {
+  if (organizationId == null) {
+    throw new Error(
+      'organizationId is required to build a Fineract external ID',
+    );
+  }
+  const externalId = `${REGISTRAR_ORGANIZATION_PREFIX}${organizationId}${relativeId}`;
+  if (externalId.length > FINERACT_EXTERNAL_ID_MAX_LENGTH) {
+    throw new Error(
+      `Fineract external ID exceeds ${FINERACT_EXTERNAL_ID_MAX_LENGTH} characters: ${externalId}`,
+    );
+  }
+  return externalId;
+};
 
-module.exports = { buildFineractExternalId };
+module.exports = { FINERACT_EXTERNAL_ID_MAX_LENGTH, buildFineractExternalId };

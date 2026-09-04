@@ -24,7 +24,6 @@ const { ProductIds, createFineractClient } = require('../src');
 const testHost = 'https://localhost.test';
 
 describe('create clients', () => {
-  const didDoc = { id: 'did:ion:1234' };
   const organizationId = '66d8f4f2a1b2c3d4e5f60718';
   const profile = { name: 'ACME Corp' };
   let context;
@@ -86,7 +85,6 @@ describe('create clients', () => {
       {
         _id: organizationId,
         profile,
-        didDoc,
       },
       false,
       context,
@@ -142,7 +140,6 @@ describe('create clients', () => {
       {
         _id: organizationId,
         profile,
-        didDoc,
       },
       true,
       context,
