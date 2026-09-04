@@ -6,6 +6,8 @@ const buildProfileResponse = (organization, includeTimestamps = false) => {
     ...organization.profile,
     description: organization.profile.description || '',
     id: organization.didDoc.id,
+    permittedVelocityServiceCategory:
+      organization.profile.permittedVelocityServiceCategory ?? [],
     verifiableCredentialJwt: organization.verifiableCredentialJwt,
   };
   if (includeTimestamps) {

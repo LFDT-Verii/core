@@ -4383,6 +4383,30 @@ describe('Organizations Full Test Suite', () => {
         );
       });
 
+      it('Should return a list containing a partially created organization', async () => {
+        await clearDb();
+        const org = await newOrganization();
+        const partialOrganization = await persistOrganization({
+          ...org,
+          profile: omit(['permittedVelocityServiceCategory'], org.profile),
+        });
+
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: fullUrl,
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.result).toEqual([
+          buildFullOrganizationResponse({
+            organization: partialOrganization,
+          }),
+        ]);
+        expect(
+          response.json.result[0].profile.permittedVelocityServiceCategory,
+        ).toEqual([]);
+      });
+
       it('Should return a list with items with correct format founded and closed fields in profile', async () => {
         const org = await newOrganization();
         const orgProfile = omit(['id', 'createdAt', 'updatedAt'], org.profile);
