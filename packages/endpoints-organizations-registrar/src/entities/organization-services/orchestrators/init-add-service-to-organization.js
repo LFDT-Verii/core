@@ -69,7 +69,7 @@ const initAddServiceToOrganization = async (fastify) => {
     if (isNewNodeOperatorService(organization, createdService)) {
       const stakesAccountId = await createStakesAccount(
         organization.ids.fineractClientId,
-        organization.didDoc.id,
+        organization._id,
         context,
       );
 
