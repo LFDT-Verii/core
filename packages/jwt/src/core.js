@@ -15,6 +15,7 @@
  */
 
 const {
+  CompactSign,
   SignJWT,
   jwtVerify: joseJwtVerify,
   importJWK,
@@ -152,6 +153,59 @@ const jwsVerify = async (jws, keyOrSecret, options = {}) => {
   return { header, payload: JSON.parse(new TextDecoder().decode(payload)) };
 };
 
+/**
+ * Signs caller-provided JSON or JSON bytes as a compact JWS without adding
+ * registered JWT claims or protected-header defaults.
+ * @param {object | Uint8Array} payload JSON value or already encoded JSON bytes
+ * @param {object | string} keyOrSecret signing JWK or symmetric secret
+ * @param {object} protectedHeader complete protected JWS header
+ * @returns {Promise<string>} compact JWS
+ */
+const jwsSign = async (payload, keyOrSecret, protectedHeader) => {
+  assertJwsProtectedHeader(protectedHeader);
+
+  const { key } = await prepAlgAndKey(keyOrSecret, protectedHeader.alg);
+  const encodedPayload = encodeJwsPayload(payload);
+
+  return new CompactSign(encodedPayload)
+    .setProtectedHeader(protectedHeader)
+    .sign(key);
+};
+
+const assertJwsProtectedHeader = (protectedHeader) => {
+  if (!isObjectHeader(protectedHeader) || !isSecureAlg(protectedHeader.alg)) {
+    throw new TypeError('Compact JWS protected header must contain alg');
+  }
+};
+
+const isObjectHeader = (protectedHeader) =>
+  protectedHeader != null &&
+  typeof protectedHeader === 'object' &&
+  !Array.isArray(protectedHeader);
+
+const isSecureAlg = (alg) =>
+  typeof alg === 'string' && alg.length > 0 && alg.toLowerCase() !== 'none';
+
+const encodeJwsPayload = (payload) => {
+  if (payload instanceof Uint8Array) {
+    assertJsonBytes(payload);
+    return payload;
+  }
+  const serializedPayload = JSON.stringify(payload);
+  if (serializedPayload == null) {
+    throw new TypeError('Compact JWS payload must be JSON or JSON bytes');
+  }
+  return new TextEncoder().encode(serializedPayload);
+};
+
+const assertJsonBytes = (payload) => {
+  try {
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(payload));
+  } catch {
+    throw new TypeError('Compact JWS payload bytes must contain valid JSON');
+  }
+};
+
 const base64UrlToJwk = (base64String) => {
   const buffer = base64url.decode(base64String);
   return JSON.parse(utf8Decoder.decode(buffer));
@@ -217,6 +271,7 @@ module.exports = {
   jwtSign,
   jwtSignSymmetric,
   jwkThumbprint,
+  jwsSign,
   jwsVerify,
   jwtVerify,
   publicKeyFromPrivateKey,
