@@ -31,6 +31,48 @@ const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
 
 const issuerUrl = (tenant) => `https://localhost.test/r/${tenant._id}`;
+const credentialConfigurationExpectation = (
+  credentialType,
+  signingAlgorithms,
+  context,
+  format,
+) => ({
+  credential_definition: {
+    '@context': [
+      context,
+      'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
+    ],
+    type: ['VerifiableCredential', credentialType],
+  },
+  credential_signing_alg_values_supported: signingAlgorithms,
+  cryptographic_binding_methods_supported: ['did:jwk'],
+  format,
+  proof_types_supported: {
+    jwt: {
+      proof_signing_alg_values_supported: ['ES256', 'ES256K'],
+    },
+  },
+});
+
+const dualCredentialConfigurationExpectations = (
+  credentialType,
+  signingAlgorithms,
+) => ({
+  [`foundation.velocitynetwork.${credentialType}`]:
+    credentialConfigurationExpectation(
+      credentialType,
+      signingAlgorithms,
+      'https://www.w3.org/2018/credentials/v1',
+      'jwt_vc_json-ld',
+    ),
+  [`foundation.velocitynetwork.${credentialType}.vc+jwt`]:
+    credentialConfigurationExpectation(
+      credentialType,
+      signingAlgorithms,
+      'https://www.w3.org/ns/credentials/v2',
+      'application/vc+jwt',
+    ),
+});
 
 describe('.well-known openid4vc metadata test suite', () => {
   let fastify;
@@ -66,6 +108,100 @@ describe('.well-known openid4vc metadata test suite', () => {
   });
 
   describe('openid4vc credential metadata test suite', () => {
+    it('advertises legacy and VCDM 2.0 profiles per credential algorithm', async () => {
+      const credentialTypeMetadatas = [
+        {
+          credentialType: 'Employment',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/employment.schema.json',
+        },
+        {
+          credentialType: 'EmailV1.0',
+          defaultSignatureAlgorithm: 'ES256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/email.schema.json',
+        },
+        {
+          credentialType: 'OpenBadgeCredential',
+          defaultSignatureAlgorithm: 'RS256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/open-badge.schema.json',
+        },
+      ];
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer'],
+        },
+      };
+      mockHttpClientJsonResponse('get', credentialTypeMetadatas);
+      mockHttpClientJsonResponse('get', profile);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `.well-known/openid-credential-issuer/r/${tenant._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.credential_configurations_supported).toEqual({
+        ...dualCredentialConfigurationExpectations('EmailV1.0', [
+          'ES256',
+          'ES256K',
+          'RS256',
+        ]),
+        ...dualCredentialConfigurationExpectations('Employment', [
+          'ES256K',
+          'ES256',
+          'RS256',
+        ]),
+        ...dualCredentialConfigurationExpectations('OpenBadgeCredential', [
+          'RS256',
+          'ES256K',
+          'ES256',
+        ]),
+      });
+    });
+
+    it('advertises an ES256 tenant override for Open Badge and non-badge credential configurations', async () => {
+      const { tenant: es256Tenant } = await constructTenant(
+        persistTenant,
+        persistKey,
+        { credentialSigningAlgorithm: 'ES256' },
+      );
+      const credentialTypeMetadatas = [
+        {
+          credentialType: 'Employment',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/employment.schema.json',
+        },
+        {
+          credentialType: 'OpenBadgeCredential',
+          defaultSignatureAlgorithm: 'RS256',
+          issuerCategory: 'RegularIssuer',
+          schemaUrl: 'https://example.com/open-badge.schema.json',
+        },
+      ];
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer'],
+        },
+      };
+      mockHttpClientJsonResponse('get', credentialTypeMetadatas);
+      mockHttpClientJsonResponse('get', profile);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `.well-known/openid-credential-issuer/r/${es256Tenant._id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.credential_configurations_supported).toEqual({
+        ...dualCredentialConfigurationExpectations('Employment', ['ES256']),
+        ...dualCredentialConfigurationExpectations('OpenBadgeCredential', [
+          'ES256',
+        ]),
+      });
+    });
+
     it('should 200 with json credential metadata', async () => {
       const credentialTypeMetadatas = [
         {
@@ -197,7 +333,7 @@ describe('.well-known openid4vc metadata test suite', () => {
         Object.values(response.json.credential_configurations_supported).map(
           ({ credential_signing_alg_values_supported: values }) => values,
         ),
-      ).toEqual([['ES256'], ['ES256']]);
+      ).toEqual([['ES256'], ['ES256'], ['ES256'], ['ES256']]);
     });
 
     it('should 200 with jwt credential metadata', async () => {
@@ -297,23 +433,11 @@ const expectedCredentialMetadata = (tenant) => ({
     },
   ],
   credential_configurations_supported: {
-    'foundation.velocitynetwork.fooType': {
-      credential_definition: {
-        '@context': [
-          'https://www.w3.org/2018/credentials/v1',
-          'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
-        ],
-        type: ['VerifiableCredential', 'fooType'],
-      },
-      credential_signing_alg_values_supported: ['ES256K', 'ES256', 'RS256'],
-      cryptographic_binding_methods_supported: ['did:jwk'],
-      format: 'jwt_vc_json-ld',
-      proof_types_supported: {
-        jwt: {
-          proof_signing_alg_values_supported: ['ES256', 'ES256K'],
-        },
-      },
-    },
+    ...dualCredentialConfigurationExpectations('fooType', [
+      'ES256K',
+      'ES256',
+      'RS256',
+    ]),
   },
   authorization_servers: [`https://localhost.test/r/${tenant._id}/oauth`],
 });

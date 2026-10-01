@@ -41,7 +41,7 @@ module.exports = (configOverrides = {}, serverOptions = {}) => {
     }),
   )({
     ...config,
-    ...configOverrides,
     mongoConnection,
+    ...configOverrides,
   });
 };
