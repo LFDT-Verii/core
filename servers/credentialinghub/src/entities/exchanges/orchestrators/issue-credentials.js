@@ -16,6 +16,7 @@
  */
 
 const newError = require('http-errors');
+const { CredentialEnvelopeFormats } = require('@verii/jwt');
 const { isEmpty, map, uniq } = require('lodash/fp');
 const { mapWithIndex } = require('@verii/common-functions');
 const { parseAccessToken } = require('../../tokens');
@@ -52,13 +53,14 @@ const issueCredentials = async (
     context,
   );
 
-  const [issuedCredentials, jwtVcs] = await issueApprovedCredentials(
-    approvedCredentialIds,
-    keyPossessionProof,
-    exchange,
-    issuerService,
-    context,
-  );
+  const [issuedCredentials, issuedCredentialResults] =
+    await issueApprovedCredentials(
+      approvedCredentialIds,
+      keyPossessionProof,
+      exchange,
+      issuerService,
+      context,
+    );
 
   await repos.exchanges.addState(exchange._id, ExchangeStates.COMPLETE, {
     finalizedCredentialIds: uniq([
@@ -91,7 +93,7 @@ const issueCredentials = async (
     context,
   );
 
-  return jwtVcs;
+  return map('securedCredential', issuedCredentialResults);
 };
 
 const rejectCredentials = (credentialIds, { repos }) => {
@@ -142,21 +144,22 @@ const issueApprovedCredentials = async (
       }),
     credentialTypeMetadatas,
   );
-  const jwtVcs = await issueVeriiCredentialsFacade(
-    credentialContents,
+  const issuedCredentialResults = await issueVeriiCredentialsFacade({
+    approvedCredentialsContent: credentialContents,
+    context,
+    credentialFormat: CredentialEnvelopeFormats.JWT_VC_JSON_LD,
+    credentialSigningAlgorithms,
     credentialSubjectId,
     credentialTypeMetadatas,
-    credentialSigningAlgorithms,
     issuerService,
-    context,
-  );
+  });
 
   const issuedCredentials = await Promise.all(
     mapWithIndex(
       async (credential, i) =>
         repos.credentials.updateIssuedCredential(
           credential._id,
-          jwtVcs[i],
+          issuedCredentialResults[i],
           credentialSubjectId,
           true,
         ),
@@ -164,7 +167,7 @@ const issueApprovedCredentials = async (
     ),
   );
 
-  return [issuedCredentials, jwtVcs];
+  return [issuedCredentials, issuedCredentialResults];
 };
 
 module.exports = { issueCredentials };

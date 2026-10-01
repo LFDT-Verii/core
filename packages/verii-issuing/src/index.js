@@ -16,7 +16,6 @@
  */
 module.exports = {
   ...require('./credential-signing-profile'),
-  ...require('./domain/build-vc-v2-credential'),
   ...require('./issue-verii-credentials'),
   ...require('./domain/hash-offer'),
   ...require('./adapters/mongo-allocation-list-queries'),

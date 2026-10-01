@@ -24,7 +24,7 @@ const {
 const updateExtensions = (parent, context) => ({
   updateIssuedCredential: async (
     credentialId,
-    jwtVc,
+    issuedCredential,
     credentialSubjectId,
     isAccepted,
     exchange,
@@ -34,8 +34,9 @@ const updateExtensions = (parent, context) => ({
       credentialStatus,
       dataModelVersion,
       envelopeFormat,
+      jwtVc,
       signingAlgorithm,
-    } = buildIssuedCredentialEnvelope(jwtVc);
+    } = buildIssuedCredentialEnvelope(issuedCredential);
     const digestSRI = `sha384-${calcSha384(jwtVc)}`;
     const $set = {
       dataModelVersion,
