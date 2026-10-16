@@ -693,8 +693,8 @@ importers:
   packages/country-data:
     dependencies:
       country-codes-list:
-        specifier: 2.1.0
-        version: 2.1.0
+        specifier: 3.2.0
+        version: 3.2.0
       i18n-iso-countries:
         specifier: 7.14.0
         version: 7.14.0
@@ -7725,8 +7725,9 @@ packages:
       typescript:
         optional: true
 
-  country-codes-list@2.1.0:
-    resolution: {integrity: sha512-YKZY8roDLQyG3VKcDRMRvtsO6/s/XUjEpEyAU/LkPEaioc65G4hrzwkmR6PpNY9dzbduw2i5LcHM9jwbA8zEng==}
+  country-codes-list@3.2.0:
+    resolution: {integrity: sha512-gR0IFGPRtqOSifQfFYlUodjJLCuRg36wBCYRpR81rZ2Z2swwVZF9v1If2z18bWuhXmOZhmIw9+L/Ikw1ojpkNw==}
+    engines: {node: '>=18'}
 
   create-error@0.3.1:
     resolution: {integrity: sha512-n/Q4aSCtYuuDneEW5Q+nd0IIZwbwmX/oF6wKcDUhXGJNwhmp2WHEoWKz7X+/H7rBtjimInW7f0ceouxU0SmuzQ==}
@@ -15745,7 +15746,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  country-codes-list@2.1.0: {}
+  country-codes-list@3.2.0: {}
 
   create-error@0.3.1: {}
 
