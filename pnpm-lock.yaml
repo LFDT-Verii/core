@@ -579,8 +579,8 @@ importers:
         specifier: 30.5.2
         version: 30.5.2
       global-jsdom:
-        specifier: 29.0.0
-        version: 29.0.0(jsdom@30.1.2(@noble/hashes@1.8.0))
+        specifier: 30.0.0
+        version: 30.0.0(jsdom@30.1.2(@noble/hashes@1.8.0))
       globals:
         specifier: 17.13.0
         version: 17.13.0
@@ -2923,8 +2923,8 @@ importers:
         specifier: 30.5.2
         version: 30.5.2
       global-jsdom:
-        specifier: 29.0.0
-        version: 29.0.0(jsdom@30.1.2(@noble/hashes@1.8.0))
+        specifier: 30.0.0
+        version: 30.0.0(jsdom@30.1.2(@noble/hashes@1.8.0))
       globals:
         specifier: 17.13.0
         version: 17.13.0
@@ -3011,8 +3011,8 @@ importers:
         specifier: 30.5.2
         version: 30.5.2
       global-jsdom:
-        specifier: 29.0.0
-        version: 29.0.0(jsdom@30.1.2(@noble/hashes@1.8.0))
+        specifier: 30.0.0
+        version: 30.0.0(jsdom@30.1.2(@noble/hashes@1.8.0))
       globals:
         specifier: 17.13.0
         version: 17.13.0
@@ -8798,11 +8798,11 @@ packages:
     resolution: {integrity: sha512-1pgFdhK3J2LeM+dVf2Pd424yHx2ou338lC0ErNP2hPx4j8eW1Sp0XqSjNxtk6Tc4Kr5wlWtSvz8cn2yb7/SG/w==}
     engines: {node: '>=20'}
 
-  global-jsdom@29.0.0:
-    resolution: {integrity: sha512-S9Wl+EHDfkO8DYleqMYzf14hKfwIysEN/FvoVRdPif3uUGUlmiHs/gj1PVKXhmJ20DwUVACtdxxhNYYvvn9K7A==}
-    engines: {node: '>=20'}
+  global-jsdom@30.0.0:
+    resolution: {integrity: sha512-X7oTdIs442ApUNvzHlDtoFfTyVVCFsO3wwKYNTziacCgxH+l+z9ZVeakLpK8SGOJKdCKR7xMPoZ848ZdEHc+RA==}
+    engines: {node: '>=22'}
     peerDependencies:
-      jsdom: '>=29 <30'
+      jsdom: '>=30 <31'
 
   globals@14.0.0:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
@@ -17296,7 +17296,7 @@ snapshots:
     dependencies:
       ini: 6.0.0
 
-  global-jsdom@29.0.0(jsdom@30.1.2(@noble/hashes@1.8.0)):
+  global-jsdom@30.0.0(jsdom@30.1.2(@noble/hashes@1.8.0)):
     dependencies:
       jsdom: 30.1.2(@noble/hashes@1.8.0)
 
