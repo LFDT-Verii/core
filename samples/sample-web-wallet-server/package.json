@@ -34,13 +34,13 @@
   "devDependencies": {
     "@types/node": "24.19.2",
     "eslint": "9.39.5",
-    "eslint-config-airbnb-extended": "3.1.1",
+    "eslint-config-airbnb-extended": "3.3.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-import-resolver-typescript": "4.4.5",
     "eslint-plugin-better-mutation": "2.1.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-jsx-a11y": "6.10.2",
-    "eslint-plugin-prefer-arrow-functions": "3.10.1",
+    "eslint-plugin-prefer-arrow-functions": "3.10.2",
     "eslint-plugin-prettier": "5.5.6",
     "eslint-plugin-unused-imports": "4.4.1",
     "expect": "30.4.1",
@@ -51,7 +51,7 @@
     "pino-pretty": "^13.2.0",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.65.0"
+    "typescript-eslint": "8.71.2"
   },
   "nx": {
     "targets": {
