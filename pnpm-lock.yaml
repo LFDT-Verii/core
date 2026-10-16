@@ -1833,8 +1833,8 @@ importers:
   packages/math:
     dependencies:
       bignumber.js:
-        specifier: 10.0.2
-        version: 10.0.2
+        specifier: 11.1.5
+        version: 11.1.5
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -7333,8 +7333,8 @@ packages:
     resolution: {integrity: sha512-jOTSb+drvEDxEq6OuUybOAv/xxoh3cuYRUIPyu8sSHQNKM303UQ2R1DAo45o1AkcIXw6fzbaFI1+xGGdaXs2lg==}
     engines: {node: '>=14.0.0'}
 
-  bignumber.js@10.0.2:
-    resolution: {integrity: sha512-E8Wp9O06QA6lneJ4aRUXKYf/1GIomqUEmUMwtIOMtDxf1U52ffJY+y7JBk/8wRafA8qOIqLnXQGqonYXZdBnFQ==}
+  bignumber.js@11.1.5:
+    resolution: {integrity: sha512-6WmzCNtUnfKpbozq+hOgWaZMMzORmYBwF1xZScyoIX3QRYWeKTtxxwDOW5tIz7C9BdjkIYHGTcelCLkXg0mndw==}
 
   bignumber.js@7.2.1:
     resolution: {integrity: sha512-S4XzBk5sMB+Rcb/LNcpzXr57VRTxgAvaAEDAl1AwRx27j00hT84O6OkteE7u8UB3NuaaygCRrEpqox4uDOrbdQ==}
@@ -15350,7 +15350,7 @@ snapshots:
 
   bigint-crypto-utils@3.3.0: {}
 
-  bignumber.js@10.0.2: {}
+  bignumber.js@11.1.5: {}
 
   bignumber.js@7.2.1: {}
 
