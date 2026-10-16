@@ -88,7 +88,7 @@
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
     "cheerio": "1.2.0",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.7",
     "eslint": "9.39.5",
     "eslint-config-airbnb-extended": "3.3.0",
     "eslint-config-prettier": "10.1.8",
