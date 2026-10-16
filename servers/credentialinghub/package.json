@@ -15,6 +15,7 @@
     "test:ci": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
     "test:e2e": "node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout ./e2e/org-registration-and-issuing.e2e.test.js",
     "lint": "eslint . --format json --output-file eslint.json",
+    "lint:ci": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint . --fix",
     "start": "node src/main.js",
     "start:dev": "nodemon src/standalone.js"
