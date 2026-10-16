@@ -30,7 +30,7 @@
     "@spencejs/spence-config": "1.1.0",
     "@verii/tests-helpers": "workspace:*",
     "date-fns": "^4.4.0",
-    "expect": "30.4.1",
+    "expect": "30.5.2",
     "nanoid": "^5.1.16"
   },
   "nx": {
