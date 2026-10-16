@@ -1,6 +1,6 @@
 const fs = require('fs');
 const csv = require('csv-parser');
-const stripBom = require('strip-bom-stream');
+const { default: stripBom } = require('strip-bom-stream');
 const { isString, indexOf } = require('lodash/fp');
 
 const loadCsv = (fileName) => {
