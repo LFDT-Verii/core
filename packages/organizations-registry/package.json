@@ -25,7 +25,7 @@
   "devDependencies": {
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
-    "expect": "30.4.1"
+    "expect": "30.5.2"
   },
   "nx": {
     "tags": [

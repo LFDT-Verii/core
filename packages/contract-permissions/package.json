@@ -22,7 +22,7 @@
     "@spencejs/spence-config": "1.1.0",
     "@verii/blockchain-functions": "workspace:*",
     "@verii/crypto": "workspace:*",
-    "expect": "30.4.1"
+    "expect": "30.5.2"
   },
   "dependencies": {
     "@verii/base-contract-io": "workspace:*"
