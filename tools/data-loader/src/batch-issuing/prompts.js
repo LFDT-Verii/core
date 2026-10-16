@@ -1,9 +1,9 @@
-const { prompt } = require('inquirer');
+const { prompt } = require('inquirer').default;
 const { format, parseISO } = require('date-fns');
 const { take, map, flow } = require('lodash/fp');
 
 const disclosureListQuestion = (disclosures) => ({
-  type: 'list',
+  type: 'select',
   name: 'disclosure',
   message: 'Please select a disclosure',
   choices: flow(
@@ -25,7 +25,7 @@ const askQuestion = async (question) => {
 
 const askDisclosureType = () =>
   askQuestion({
-    type: 'list',
+    type: 'select',
     name: 'disclosureType',
     message:
       'Would you like to use an existing disclosure or create a new one?',
