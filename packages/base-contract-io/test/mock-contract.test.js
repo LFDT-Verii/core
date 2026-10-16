@@ -22,6 +22,7 @@ const {
   after,
 } = require('node:test');
 const { expect } = require('expect');
+const ethers = require('ethers');
 
 const mockEncodeFilterTopics = mock.fn();
 const mockGetBlockNumber = mock.fn();
@@ -44,6 +45,7 @@ class Wallet {}
 
 mock.module('ethers', {
   defaultExport: {
+    ...ethers,
     Wallet,
     Contract,
   },
