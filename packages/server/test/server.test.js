@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 const { createHash } = require('node:crypto');
+const http = require('node:http');
+const { setImmediate } = require('node:timers/promises');
 const { afterEach, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 const pinoTest = require('pino-test');
 
 const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
+const { initHttpClient } = require('@verii/http-client');
 const { loggerProvider } = require('@verii/logger');
 
 loadTestEnv();
@@ -356,3 +359,248 @@ describe('Swagger documentation', () => {
     );
   });
 });
+
+describe('Server logging redaction', () => {
+  const CENSOR = '...shhh...';
+  let server;
+  let upstream;
+  let logEntries;
+
+  const createLoggedServer = (configOverrides) => {
+    const config = {
+      ...genericConfig,
+      logSeverity: 'info',
+      mongoConnection,
+      ...configOverrides,
+    };
+    logEntries = [];
+    const logSink = pinoTest.sink();
+    logSink.on('data', (entry) => logEntries.push(entry));
+    const log = loggerProvider({ ...config, destination: logSink });
+    return createServer(config, log);
+  };
+
+  const findLogEntries = async (msg) => {
+    await setImmediate();
+    return logEntries.filter((entry) => entry.msg === msg);
+  };
+
+  afterEach(async () => {
+    if (server) {
+      await server.close();
+      server = null;
+    }
+    if (upstream) {
+      await closeHttpServer(upstream.httpServer);
+      upstream = null;
+    }
+  });
+
+  it('logs the server config at startup without secret values', async () => {
+    const secretConfig = {
+      basicAuthPassword: 'fake-basic-auth-password',
+      clientCertificatePassword: 'fake-client-certificate-password',
+      holderAppServerAccessTokenSigningKey: 'fake-access-token-signing-key',
+      issuingChallengeSecret: 'fake-issuing-challenge-secret',
+      mediaPutAccessKey: 'fake-media-put-access-key',
+      monitoringApiToken: 'fake-monitoring-api-token',
+      mongoSecret: 'fake-mongo-secret',
+      secret: 'fake-server-secret',
+      twilioAuthToken: 'fake-twilio-auth-token',
+      vnfHeaderSignatureSigningKey: 'fake-vnf-header-signing-key',
+    };
+    const nonSecretConfig = {
+      appPort: 3999,
+      auth0Connection: 'example-database-connection',
+      defaultOAuthTokenExpiration: '10080m',
+      hostUrl: 'https://agent.example.com',
+      mediaPutAccessKeyId: 'FAKEACCESSKEYID',
+      rootKid: 'did:example:root#key-1',
+      rootPublicKey: 'fake-root-public-key',
+      traceIdHeader: 'x-trace-id',
+      vnfHeaderSignatureVerificationKey: 'fake-header-verification-key',
+      vnfOAuthTokensEndpoint: 'https://auth.example.com/oauth/token',
+    };
+    server = createLoggedServer({
+      ...secretConfig,
+      ...nonSecretConfig,
+      cacheUrl: 'redis://default:fake-cache-password@cache.example.com:6379',
+      notifications: {
+        enabled: true,
+        webhook: {
+          url: 'https://webhooks.example.com/events',
+          secret: 'fake-notification-webhook-secret',
+          signatureHeaderName: 'x-signature',
+        },
+      },
+      vendorIntegrations: [
+        { name: 'example-vendor', apiKey: 'fake-vendor-api-key' },
+      ],
+    });
+
+    const [configuredLog, ...otherConfiguredLogs] =
+      await findLogEntries('Server Configured');
+
+    expect(otherConfiguredLogs).toHaveLength(0);
+    const loggedConfig = JSON.stringify(configuredLog);
+    for (const secretValue of [
+      ...Object.values(secretConfig),
+      'fake-cache-password',
+      'fake-notification-webhook-secret',
+      'fake-vendor-api-key',
+    ]) {
+      expect(loggedConfig).not.toContain(secretValue);
+    }
+    expect(configuredLog).toMatchObject({
+      ...nonSecretConfig,
+      ...Object.fromEntries(
+        Object.keys(secretConfig).map((name) => [name, CENSOR]),
+      ),
+      cacheUrl: CENSOR,
+      notifications: {
+        enabled: true,
+        webhook: {
+          url: 'https://webhooks.example.com/events',
+          secret: CENSOR,
+          signatureHeaderName: 'x-signature',
+        },
+      },
+      vendorIntegrations: [{ name: 'example-vendor', apiKey: CENSOR }],
+    });
+    expect(server.config).toMatchObject(secretConfig);
+    expect(server.config.notifications.webhook.secret).toEqual(
+      'fake-notification-webhook-secret',
+    );
+  });
+
+  it('logs a server config that contains a circular reference', async () => {
+    const customSettings = { name: 'example-settings' };
+    customSettings.self = customSettings;
+    server = createLoggedServer({ customSettings });
+
+    const [configuredLog] = await findLogEntries('Server Configured');
+
+    expect(configuredLog.customSettings).toEqual({
+      name: 'example-settings',
+      self: '[Circular]',
+    });
+    expect(server.config.customSettings).toBe(customSettings);
+  });
+
+  it('logs outgoing http-client requests without credential headers', async () => {
+    upstream = await startUpstreamServer();
+    server = createLoggedServer({});
+    const clientOptions = {
+      prefixUrl: upstream.origin,
+      traceIdHeader: server.config.traceIdHeader,
+    };
+    server.get('/outgoing', async (req) => {
+      const bearerTokenClient = initHttpClient({
+        ...clientOptions,
+        bearerToken: 'fake-configured-bearer-token',
+      })(req);
+      const headersClient = initHttpClient(clientOptions)(req);
+      await (await bearerTokenClient.get('bearer-token')).json();
+      await (
+        await headersClient.get('request-headers', {
+          headers: {
+            authorization: 'Bearer fake-request-bearer-token',
+            cookie: 'session=fake-request-session',
+          },
+        })
+      ).json();
+      return { ok: true };
+    });
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/outgoing',
+      headers: { 'x-trace-id': 'trace-outgoing' },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(upstream.receivedHeaders).toEqual([
+      expect.objectContaining({
+        url: '/bearer-token',
+        authorization: 'Bearer fake-configured-bearer-token',
+      }),
+      expect.objectContaining({
+        url: '/request-headers',
+        authorization: 'Bearer fake-request-bearer-token',
+        cookie: 'session=fake-request-session',
+      }),
+    ]);
+
+    const requestLogs = await findLogEntries('HttpClient request');
+    const responseLogs = await findLogEntries('HttpClient response');
+    const logs = JSON.stringify(logEntries);
+    for (const secretValue of [
+      'fake-configured-bearer-token',
+      'fake-request-bearer-token',
+      'fake-request-session',
+      'fake-upstream-session',
+    ]) {
+      expect(logs).not.toContain(secretValue);
+    }
+    expect(requestLogs).toEqual([
+      expect.objectContaining({
+        origin: upstream.origin,
+        path: '/bearer-token',
+        reqHeaders: {
+          'user-agent': expect.stringMatching(/^@verii\/http-client\//),
+          Authorization: CENSOR,
+          'x-trace-id': 'trace-outgoing',
+        },
+      }),
+      expect.objectContaining({
+        origin: upstream.origin,
+        path: '/request-headers',
+        reqHeaders: {
+          'user-agent': expect.stringMatching(/^@verii\/http-client\//),
+          authorization: CENSOR,
+          cookie: CENSOR,
+          'x-trace-id': 'trace-outgoing',
+        },
+      }),
+    ]);
+    expect(responseLogs).toHaveLength(2);
+    for (const responseLog of responseLogs) {
+      expect(responseLog).toMatchObject({
+        statusCode: 200,
+        resHeaders: {
+          'content-type': 'application/json',
+          'set-cookie': CENSOR,
+        },
+        body: { ok: true },
+      });
+    }
+  });
+});
+
+const startUpstreamServer = () =>
+  new Promise((resolve, reject) => {
+    const receivedHeaders = [];
+    const httpServer = http.createServer((req, res) => {
+      receivedHeaders.push({ url: req.url, ...req.headers });
+      res.writeHead(200, {
+        'content-type': 'application/json',
+        'set-cookie': 'session=fake-upstream-session; HttpOnly',
+      });
+      res.end(JSON.stringify({ ok: true }));
+    });
+
+    httpServer.once('error', reject);
+    httpServer.listen(0, '127.0.0.1', () => {
+      const { port } = httpServer.address();
+      resolve({
+        httpServer,
+        origin: `http://127.0.0.1:${port}`,
+        receivedHeaders,
+      });
+    });
+  });
+
+const closeHttpServer = (httpServer) =>
+  new Promise((resolve, reject) => {
+    httpServer.close((error) => (error ? reject(error) : resolve()));
+  });
