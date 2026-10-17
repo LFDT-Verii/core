@@ -261,6 +261,9 @@ const buildIssuer = async (context) => {
 
   const getCredentialRequest = async (parameters) => {
     const credentialRequest = issuer.parseCredentialRequest({
+      issuerMetadata: {
+        credentialIssuer: { credential_issuer: openIdIssuer },
+      },
       credentialRequest: {
         credential_identifier: parameters.credential_identifier,
         proofs: {

@@ -3294,14 +3294,14 @@ importers:
         specifier: ~2.0.2
         version: 2.0.2
       '@openid4vc/oauth2':
-        specifier: 0.5.4
-        version: 0.5.4
+        specifier: 0.7.0
+        version: 0.7.0
       '@openid4vc/openid4vci':
-        specifier: 0.5.4
-        version: 0.5.4
+        specifier: 0.7.0
+        version: 0.7.0
       '@openid4vc/openid4vp':
-        specifier: 0.5.4
-        version: 0.5.4
+        specifier: 0.7.0
+        version: 0.7.0
       '@spencejs/spence-factories':
         specifier: ^1.1.0
         version: 1.1.0
@@ -5830,17 +5830,17 @@ packages:
   '@open-draft/until@3.0.1':
     resolution: {integrity: sha512-s7/9ELP4aP9YZtW7RJaa0Xf3RISaRH9+EFN18FtykJYRHGNrl8f9ymvoNXzjhrjmftFvkQudtuDU9RYhk0xs3A==}
 
-  '@openid4vc/oauth2@0.5.4':
-    resolution: {integrity: sha512-wEK7fDk/n+c0d2AbCTBIR8Tstf/+Yr4ckmOa0nlTv0V9cOd1WMiR3+OY5vXG9FVsV275q1DgLZr20EPqlWhtVg==}
+  '@openid4vc/oauth2@0.7.0':
+    resolution: {integrity: sha512-sd8FHCb71nLvoETBKX+zawPmf5xdFHKNbw2cpDbqFQvce174nfFq7aQtBwLVSXEFgJf40bEa+TytlXBtQpjjwQ==}
 
-  '@openid4vc/openid4vci@0.5.4':
-    resolution: {integrity: sha512-QN+Q3JLpsogIR6PlXePiLBsgkBCxhdfZ6cXtNWH39/TO/190FTBYHwzC5sJQh8HHoYyrZU/whdvpnC2324Gdkw==}
+  '@openid4vc/openid4vci@0.7.0':
+    resolution: {integrity: sha512-v2io0iTevgv/sThe2FfJ4RSmxtgqs5ABqovyUi/UMYbn0zl6ZJVk2bNQ6a6j7f2TndivCuEceZqSdboDS30p+Q==}
 
-  '@openid4vc/openid4vp@0.5.4':
-    resolution: {integrity: sha512-09bhaG7fI3zSdnx6pO5UKXWm4oH1RvotVWRfZ1rUnAgFCxF/QV6014oVwhgwRQcPHe/rHNXrlKjp2fGgrrO64A==}
+  '@openid4vc/openid4vp@0.7.0':
+    resolution: {integrity: sha512-lZ5V3m2BuqWVwEw/3PVGnYJDHmIJVCuClvMnMLvWgFYgoKQZxho8Ut+1l+urbkihdoaHyskLZrb8unLJpsnGZg==}
 
-  '@openid4vc/utils@0.5.4':
-    resolution: {integrity: sha512-Cxc/vWxvoS1F7jREgAm0oVaC3Qna/P0wJvvwtcdLDxGeDHjqNHrqjt4RiGY5b9k+I0vjIUBb1iivVuu3H9XtMA==}
+  '@openid4vc/utils@0.7.0':
+    resolution: {integrity: sha512-5OnwGrpcN1ISeFQIKF7fXZRqT9howo8vH7PSbPqP9CUovQ4+gPOdH5uboxErdUHAThyugR/vU/wdZPVnAhX3kw==}
 
   '@opentelemetry/api-logs@0.53.0':
     resolution: {integrity: sha512-8HArjKx+RaAI8uEIgcORbZIPklyh1YLjPSBus8hjRmvLi6DeFzgOcdZ7KwPabKj8mXF8dX0hyfAyGfycz0DbFw==}
@@ -13905,28 +13905,28 @@ snapshots:
 
   '@open-draft/until@3.0.1': {}
 
-  '@openid4vc/oauth2@0.5.4':
+  '@openid4vc/oauth2@0.7.0':
     dependencies:
-      '@openid4vc/utils': 0.5.4
-      zod: 4.4.3
+      '@openid4vc/utils': 0.7.0
+      zod: 4.6.7
 
-  '@openid4vc/openid4vci@0.5.4':
+  '@openid4vc/openid4vci@0.7.0':
     dependencies:
-      '@openid4vc/oauth2': 0.5.4
-      '@openid4vc/utils': 0.5.4
-      zod: 4.4.3
+      '@openid4vc/oauth2': 0.7.0
+      '@openid4vc/utils': 0.7.0
+      zod: 4.6.7
 
-  '@openid4vc/openid4vp@0.5.4':
+  '@openid4vc/openid4vp@0.7.0':
     dependencies:
-      '@openid4vc/oauth2': 0.5.4
-      '@openid4vc/utils': 0.5.4
-      zod: 4.4.3
+      '@openid4vc/oauth2': 0.7.0
+      '@openid4vc/utils': 0.7.0
+      zod: 4.6.7
 
-  '@openid4vc/utils@0.5.4':
+  '@openid4vc/utils@0.7.0':
     dependencies:
       buffer: 6.0.3
-      zod: 4.4.3
-      zod-validation-error: 5.0.0(zod@4.4.3)
+      zod: 4.6.7
+      zod-validation-error: 5.0.0(zod@4.6.7)
 
   '@opentelemetry/api-logs@0.53.0':
     dependencies:
@@ -20371,9 +20371,9 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
-  zod-validation-error@5.0.0(zod@4.4.3):
+  zod-validation-error@5.0.0(zod@4.6.7):
     dependencies:
-      zod: 4.4.3
+      zod: 4.6.7
 
   zod@4.4.3: {}
 
