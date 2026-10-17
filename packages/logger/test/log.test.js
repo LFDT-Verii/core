@@ -309,6 +309,39 @@ describe('Test pino logger provider with redaction', () => {
     );
   });
 
+  it('Redaction should shh credentials in http client request and response headers', () => {
+    const dataForLog = {
+      reqHeaders: {
+        Authorization: 'Bearer fake-configured-token',
+        authorization: 'Bearer fake-request-token',
+        Cookie: 'session=fake-configured-session',
+        cookie: 'session=fake-request-session',
+        'user-agent': '@verii/http-client/1.0.0',
+      },
+      resHeaders: {
+        'content-type': 'application/json',
+        'set-cookie': ['session=fake-response-session'],
+      },
+    };
+
+    log.info(dataForLog);
+
+    expect(logStream.toString()).not.toContain('fake-');
+    expect(JSON.parse(logStream.toString())).toMatchObject({
+      reqHeaders: {
+        Authorization: CENSOR,
+        authorization: CENSOR,
+        Cookie: CENSOR,
+        cookie: CENSOR,
+        'user-agent': '@verii/http-client/1.0.0',
+      },
+      resHeaders: {
+        'content-type': 'application/json',
+        'set-cookie': CENSOR,
+      },
+    });
+  });
+
   it('Redaction should shh App Check request security fields', () => {
     const dataForLog = {
       headers: {
