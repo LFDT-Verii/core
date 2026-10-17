@@ -31,7 +31,7 @@
     "@verii/tests-helpers": "workspace:*",
     "date-fns": "^4.4.0",
     "expect": "30.5.2",
-    "nanoid": "^5.1.16"
+    "nanoid": "^6.0.2"
   },
   "nx": {
     "tags": [
