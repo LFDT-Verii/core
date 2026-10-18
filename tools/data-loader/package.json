@@ -29,7 +29,7 @@
     "eslint-watch": "8.0.0",
     "expect": "30.5.2",
     "globals": "17.13.0",
-    "nock": "15.0.0-beta.14",
+    "nock": "15.0.1",
     "prettier": "3.9.10"
   },
   "dependencies": {
