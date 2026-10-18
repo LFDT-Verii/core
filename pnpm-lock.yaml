@@ -2201,7 +2201,7 @@ importers:
         specifier: workspace:*
         version: link:../test-regexes
       dotenv:
-        specifier: ^18.0.7
+        specifier: ^18.0.8
         version: 18.0.8
       env-var:
         specifier: ^7.5.0
@@ -2811,7 +2811,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tests-helpers
       dotenv:
-        specifier: ^18.0.7
+        specifier: ^18.0.8
         version: 18.0.8
       eslint:
         specifier: 9.39.5
@@ -2962,7 +2962,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vnf-wallet-sdk-nodejs
       dotenv:
-        specifier: ^18.0.7
+        specifier: ^18.0.8
         version: 18.0.8
       env-var:
         specifier: ^7.5.0
@@ -3207,7 +3207,7 @@ importers:
         specifier: 1.2.0
         version: 1.2.0
       dotenv:
-        specifier: ^18.0.7
+        specifier: ^18.0.8
         version: 18.0.8
       eslint:
         specifier: 9.39.5
@@ -3418,7 +3418,7 @@ importers:
         specifier: 1.2.0
         version: 1.2.0
       dotenv:
-        specifier: ^18.0.7
+        specifier: ^18.0.8
         version: 18.0.8
       expect:
         specifier: 30.5.2
@@ -3530,7 +3530,7 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       dotenv:
-        specifier: ^18.0.7
+        specifier: ^18.0.8
         version: 18.0.8
       eslint:
         specifier: 9.39.5
