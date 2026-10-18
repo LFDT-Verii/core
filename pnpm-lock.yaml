@@ -58,8 +58,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       globals:
         specifier: 17.13.0
         version: 17.13.0
@@ -199,8 +199,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -278,8 +278,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -361,8 +361,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -401,8 +401,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -444,8 +444,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -567,8 +567,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-plugin-react:
         specifier: 7.37.5
         version: 7.37.5(eslint@9.39.5(jiti@2.7.0))
@@ -675,8 +675,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -724,8 +724,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -785,8 +785,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -828,8 +828,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -901,8 +901,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1087,8 +1087,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1223,8 +1223,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1422,8 +1422,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1471,8 +1471,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1538,8 +1538,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1599,8 +1599,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1657,8 +1657,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1696,8 +1696,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1763,8 +1763,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1815,8 +1815,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1858,8 +1858,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -1969,8 +1969,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2065,8 +2065,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2129,8 +2129,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2171,8 +2171,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       expect:
         specifier: 30.5.2
         version: 30.5.2
@@ -2238,8 +2238,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2293,8 +2293,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2357,8 +2357,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2442,8 +2442,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2533,8 +2533,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2603,8 +2603,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-plugin-unused-imports:
         specifier: 4.4.1
         version: 4.4.1(@typescript-eslint/eslint-plugin@8.71.2(@typescript-eslint/parser@8.71.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))
@@ -2705,8 +2705,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-plugin-react:
         specifier: 7.37.5
         version: 7.37.5(eslint@9.39.5(jiti@2.7.0))
@@ -2832,8 +2832,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -2911,8 +2911,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-plugin-react:
         specifier: 7.37.5
         version: 7.37.5(eslint@9.39.5(jiti@2.7.0))
@@ -3002,8 +3002,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-plugin-unused-imports:
         specifier: 4.4.1
         version: 4.4.1(@typescript-eslint/eslint-plugin@8.71.2(@typescript-eslint/parser@8.71.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.5(jiti@2.7.0))
@@ -3228,8 +3228,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -3551,8 +3551,8 @@ importers:
         specifier: 3.10.2
         version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -3606,8 +3606,8 @@ importers:
         specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.71.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -3685,8 +3685,8 @@ importers:
         specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.71.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -3758,8 +3758,8 @@ importers:
         specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.71.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -3798,8 +3798,8 @@ importers:
         specifier: 2.32.0
         version: 2.32.0(@typescript-eslint/parser@8.71.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
       eslint-plugin-prettier:
-        specifier: 5.5.6
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
       eslint-watch:
         specifier: 8.0.0
         version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
@@ -4709,6 +4709,9 @@ packages:
 
   '@csstools/normalize.css@12.1.1':
     resolution: {integrity: sha512-YAYeJ+Xqh7fUou1d1j9XHl44BmsuThiTr4iNrgCQ3J27IbhXsxXDGZ1cXv8Qvs99d4rBbLiSKy3+WZiet32PcQ==}
+
+  '@dual-bundle/import-meta-resolve@4.2.1':
+    resolution: {integrity: sha512-id+7YRUgoUX6CgV0DtuhirQWodeeA7Lf4i2x71JS/vtA5pRb/hIGWlw+G6MeXvsM+MXrz0VAydTGElX1rAfgPg==}
 
   '@emnapi/core@1.10.0':
     resolution: {integrity: sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==}
@@ -8329,8 +8332,8 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
 
-  eslint-plugin-prettier@5.5.6:
-    resolution: {integrity: sha512-ifetmTcxWfz+4qRW3pH/ujdTq2jQIj59AxJMIN26K5avYgU8dxycUETQonWiW+wPrYXA0j3Try0l1CnwVQtDqQ==}
+  eslint-plugin-prettier@5.5.7:
+    resolution: {integrity: sha512-WjHyn3GrFd+ZR0rzsLiM4zJZ35PZMOE0SUIxzGmnWNG0126yNfJKJzObmmkYDwHJfGlkz3PSlzyG9ez/LJntwg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       '@types/eslint': '>=8.0.0'
@@ -10817,8 +10820,8 @@ packages:
     resolution: {integrity: sha512-bwLf38YmY+TDYHJw1Ex0Co8c4yeXuJAo8YnXGZrscxrvYoVVIvLeniEkV1Ks/54VteMnL4FtyN1+P+TZJdUPmQ==}
     engines: {node: '>=8'}
 
-  synckit@0.11.13:
-    resolution: {integrity: sha512-eNRKgb3z66Yp3D2CixVujOUvXLFUTij/zVnV8KRyvFdQwpz7I5DS8UfRkTeLzb64u+dkzDSdelE24izu+zSSUg==}
+  synckit@0.12.3:
+    resolution: {integrity: sha512-U+/AXT6LWsxnj2vz9HeUuPWBNgdWxjyIEjEPdbJARC9txmgPzo2VEdqnFo4hHaNyMPtycyVJrSaQYeQv/PoyyA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
   tapable@2.3.3:
@@ -12624,6 +12627,8 @@ snapshots:
   '@csstools/css-tokenizer@4.0.2': {}
 
   '@csstools/normalize.css@12.1.1': {}
+
+  '@dual-bundle/import-meta-resolve@4.2.1': {}
 
   '@emnapi/core@1.10.0':
     dependencies:
@@ -16582,12 +16587,12 @@ snapshots:
       - supports-color
       - typescript
 
-  eslint-plugin-prettier@5.5.6(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10):
+  eslint-plugin-prettier@5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10):
     dependencies:
       eslint: 9.39.5(jiti@2.7.0)
       prettier: 3.9.10
       prettier-linter-helpers: 1.0.1
-      synckit: 0.11.13
+      synckit: 0.12.3
     optionalDependencies:
       eslint-config-prettier: 10.1.8(eslint@9.39.5(jiti@2.7.0))
 
@@ -19611,8 +19616,9 @@ snapshots:
 
   svg-parser@2.1.0: {}
 
-  synckit@0.11.13:
+  synckit@0.12.3:
     dependencies:
+      '@dual-bundle/import-meta-resolve': 4.2.1
       '@pkgr/core': 0.3.6
 
   tapable@2.3.3: {}
