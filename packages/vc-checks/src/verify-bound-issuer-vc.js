@@ -14,8 +14,10 @@
  * limitations under the License.
  *
  */
-const { deriveJwk, jwtVerify, safeJwtDecode } = require('@verii/jwt');
-const { extractVerificationKey, isDidMatching } = require('@verii/did-doc');
+const { jwtVerify, safeJwtDecode } = require('@verii/jwt');
+const { extractVerificationJwk, isDidMatching } = require('@verii/did-doc');
+
+const BOUND_ISSUER_VC_ALGORITHMS = ['ES256', 'ES256K'];
 
 const verifyBoundIssuerVc = async (
   { issuerDidDocument, boundIssuerVc },
@@ -31,9 +33,10 @@ const verifyBoundIssuerVc = async (
   }
 
   try {
-    const verificationKey = extractVerificationKey(issuerDidDocument, kid);
-    const jwk = deriveJwk(boundIssuerVc, verificationKey);
-    await jwtVerify(boundIssuerVc, jwk);
+    const jwk = extractVerificationJwk(issuerDidDocument, kid);
+    await jwtVerify(boundIssuerVc, jwk, {
+      algorithms: BOUND_ISSUER_VC_ALGORITHMS,
+    });
   } catch {
     log.error(
       { decodedBoundIssuerVc },

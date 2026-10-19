@@ -16,8 +16,13 @@
 
 const newError = require('http-errors');
 const { default: bs58 } = require('bs58');
-const { find, isNil, reduce } = require('lodash/fp');
-const { signPayload, generateKeyPair, hexFromJwk } = require('@verii/crypto');
+const { find, isNil, isPlainObject, reduce } = require('lodash/fp');
+const {
+  signPayload,
+  generateKeyPair,
+  hexFromJwk,
+  jwkFromSecp256k1Key,
+} = require('@verii/crypto');
 
 const { toEthereumAddress } = require('@verii/blockchain-functions');
 
@@ -124,6 +129,22 @@ const initExtractKeyByMethod = (keyHolderProp) => (didDoc, kid) => {
   return publicKeyToHex(publicKey);
 };
 
+// publicKeyHex and publicKeyBase58 carry no curve, so they are read as legacy secp256k1 keys
+const extractVerificationJwk = (didDoc, kid) => {
+  const verificationMethod = extractVerificationMethod(didDoc, kid);
+  if (verificationMethod == null) {
+    return null;
+  }
+  return verificationMethodToJwk(verificationMethod);
+};
+
+const verificationMethodToJwk = (verificationMethod) => {
+  if (isPlainObject(verificationMethod.publicKeyJwk)) {
+    return verificationMethod.publicKeyJwk;
+  }
+  return jwkFromSecp256k1Key(publicKeyToHex(verificationMethod), false);
+};
+
 const extractVerificationMethod = (didDoc, kid) => {
   const extractors = [
     () => extractPublicKeyMethod(didDoc, kid, 'publicKey'),
@@ -154,6 +175,7 @@ module.exports = {
   generateDidInfo,
   generatePublicKeySection,
   generateProof,
+  extractVerificationJwk,
   extractVerificationKey,
   extractVerificationMethod,
 };
