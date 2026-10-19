@@ -750,9 +750,6 @@ importers:
       canonicalize:
         specifier: ^2.1.0
         version: 2.1.0
-      cborg:
-        specifier: 4.5.8
-        version: 4.5.8
       elliptic:
         specifier: ^6.6.1
         version: 6.6.1
