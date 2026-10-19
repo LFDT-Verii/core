@@ -15,12 +15,23 @@
  *
  */
 
-const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+  mock,
+} = require('node:test');
 const { expect } = require('expect');
 const {
+  mockHttpClient,
   mockHttpClientModule,
   mockHttpClientError,
+  mockHttpClientJsonRoute,
   resetMockHttpClient,
+  restMockHttpClient,
 } = require('../helpers/mock-http-client');
 
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
@@ -849,6 +860,105 @@ describe('vn-api > issue credentials', () => {
           message: 'proof_challenge_expired',
         }),
       );
+    });
+  });
+
+  describe('proof of key possession with a registrar resolved kid', () => {
+    const holderDidWeb = 'did:web:holder.localhost.test';
+    const resolveKidUrl = `api/v0.6/resolve-kid/${encodeURIComponent(
+      `${holderDidWeb}#0`,
+    )}?format=jwk`;
+
+    afterEach(() => {
+      restMockHttpClient();
+    });
+
+    const issueWithDidWebProof = async () =>
+      fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await testAccessToken(
+            tenant.did,
+            exchange._id,
+            depots[0]._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: {
+          approvedOfferIds: [credentials[0]._id, credentials[1]._id],
+          proof: await buildProof(
+            holderDidWeb,
+            holderKeyPair,
+            await loadChallenge(exchange._id),
+          ),
+        },
+      });
+
+    it('should issue credentials to a did:web holder whose kid resolves to the signing key', async () => {
+      mockHttpClientJsonRoute('get', resolveKidUrl, {
+        ...holderKeyPair.publicKey,
+        use: 'sig',
+      });
+
+      const response = await issueWithDidWebProof();
+
+      expect(response.statusCode).toEqual(200);
+      expect(
+        map((call) => call.arguments[0], mockHttpClient.get.mock.calls),
+      ).toContain(resolveKidUrl);
+      expect(map((vc) => jwtDecode(vc).payload.sub, response.json)).toEqual([
+        holderDidWeb,
+        holderDidWeb,
+      ]);
+      await expect(
+        findCredentials([credentials[0]._id, credentials[1]._id]),
+      ).resolves.toEqual([
+        expect.objectContaining({
+          acceptedAt: expect.any(Date),
+          credentialSubjectId: holderDidWeb,
+        }),
+        expect.objectContaining({
+          acceptedAt: expect.any(Date),
+          credentialSubjectId: holderDidWeb,
+        }),
+      ]);
+      await expect(findOneExchange(exchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          exchange,
+          [ExchangeStates.CLAIMING_IN_PROGRESS, ExchangeStates.COMPLETE],
+          {
+            finalizedCredentialIds: [
+              new ObjectId(credentials[1]._id),
+              new ObjectId(credentials[0]._id),
+            ],
+          },
+        ),
+      );
+    });
+
+    it('should 400 if a did:web kid resolves to a different key than the signing key', async () => {
+      mockHttpClientJsonRoute('get', resolveKidUrl, {
+        ...generateKeyPair({ format: 'jwk' }).publicKey,
+        use: 'sig',
+      });
+
+      const response = await issueWithDidWebProof();
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'proof_verify_failed',
+          message: 'proof_verify_failed',
+        }),
+      );
+      await expect(
+        findCredentials([credentials[0]._id, credentials[1]._id]),
+      ).resolves.toEqual([
+        expect.not.objectContaining({ acceptedAt: expect.anything() }),
+        expect.not.objectContaining({ acceptedAt: expect.anything() }),
+      ]);
     });
   });
 

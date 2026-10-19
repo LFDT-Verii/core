@@ -61,8 +61,7 @@ const resolveDidAndJwk = async (jwt, context) => {
       return getJwkFromDidUri(header.kid);
     }
 
-    const verificationMethod = await resolveKid(header, context);
-    return verificationMethod.publicKeyJwk;
+    return await resolveKid(header, context);
   } catch (error) {
     context.log.error(error);
     throw newError(400, 'proof_kid_invalid', {
