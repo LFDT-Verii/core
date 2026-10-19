@@ -18,7 +18,7 @@ const { beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const crypto = require('crypto');
-const canonicalize = require('canonicalize');
+const { default: canonicalize } = require('canonicalize');
 const {
   buildVnfSignature,
   verifyVnfSignature,

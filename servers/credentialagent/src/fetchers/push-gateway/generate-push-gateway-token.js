@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const canonicalize = require('canonicalize');
+const { default: canonicalize } = require('canonicalize');
 const { KeyPurposes, createCommitment } = require('@verii/crypto');
 const { toDidUrl } = require('@verii/did-doc');
 

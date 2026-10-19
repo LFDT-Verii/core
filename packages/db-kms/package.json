@@ -19,7 +19,7 @@
     "@verii/crypto": "workspace:*",
     "@verii/jwt": "workspace:*",
     "@verii/spencer-mongo-extensions": "workspace:*",
-    "fastify-plugin": "^5.1.0",
+    "fastify-plugin": "^6.0.1",
     "lodash": "^4.18.0"
   },
   "peerDependencies": {

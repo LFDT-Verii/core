@@ -24,7 +24,7 @@ const {
   compactVerify: joseJwsVerify,
   base64url,
 } = require('jose');
-const canonicalize = require('canonicalize');
+const { default: canonicalize } = require('canonicalize');
 
 const utf8Decoder = new TextDecoder('utf-8');
 const { flow, isString, split } = require('lodash/fp');
