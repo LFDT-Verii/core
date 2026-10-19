@@ -680,6 +680,7 @@ describe('Verify credentials', () => {
             ],
             openBadgeCredential,
           ),
+          issuer: { id: did },
           expirationDate: flow(
             setMilliseconds(0),
             addHours(10),
@@ -715,6 +716,61 @@ describe('Verify credentials', () => {
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
               TRUSTED_ISSUER: CheckResults.SELF_SIGNED,
+              TRUSTED_HOLDER: CheckResults.NOT_APPLICABLE,
+              UNREVOKED: CheckResults.NOT_APPLICABLE,
+              UNEXPIRED: CheckResults.PASS,
+            },
+          },
+        ]);
+      });
+      it('TRUSTED_ISSUER should return DATA_INTEGRITY_ERROR if a did:jwk kid does not control the claimed issuer', async () => {
+        const keyPair = generateKeyPair({ format: 'jwk' });
+        const did = getDidUriFromJwk(keyPair.publicKey);
+        const unsignedCredential = {
+          ...omit(
+            [
+              'id',
+              'credentialStatus',
+              'credentialSubject.id',
+              'vnfProtocolVersion',
+            ],
+            openBadgeCredential,
+          ),
+          expirationDate: flow(
+            setMilliseconds(0),
+            addHours(10),
+          )(new Date()).toISOString(),
+        };
+        const signedCredential = await jwtSign(
+          { vc: unsignedCredential },
+          keyPair.privateKey,
+          {
+            nbf: new Date(unsignedCredential.issuanceDate),
+            iat: new Date(unsignedCredential.issuanceDate),
+            exp: new Date(unsignedCredential.expirationDate),
+            kid: `${did}#0`,
+          },
+        );
+        const result = await verifyCredentials(
+          { credentials: [signedCredential] },
+          fetchers,
+          context,
+        );
+        const { header } = jwtDecode(signedCredential);
+        expect(header).toEqual({
+          kid: `${did}#0`,
+          alg: 'ES256K',
+          typ: 'JWT',
+        });
+        expect(result).toEqual([
+          {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
+            credential: unsignedCredential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.DATA_INTEGRITY_ERROR,
               TRUSTED_HOLDER: CheckResults.NOT_APPLICABLE,
               UNREVOKED: CheckResults.NOT_APPLICABLE,
               UNEXPIRED: CheckResults.PASS,
@@ -759,6 +815,7 @@ describe('Verify credentials', () => {
             openBadgeCredential,
           ),
           id: credentialId,
+          issuer: { id: getDidUriFromJwk(keyPair.publicKey) },
           credentialStatus: { type: 'WalletStatusList', id: '123' },
         };
         const signedCredential = await jwtSign(
@@ -791,6 +848,55 @@ describe('Verify credentials', () => {
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
               TRUSTED_ISSUER: CheckResults.SELF_SIGNED,
+              TRUSTED_HOLDER: CheckResults.NOT_APPLICABLE,
+              UNREVOKED: CheckResults.NOT_APPLICABLE,
+              UNEXPIRED: CheckResults.PASS,
+            },
+          },
+        ]);
+      });
+
+      it('TRUSTED_ISSUER should FAIL if an embedded jwk is not bound to the claimed issuer', async () => {
+        const keyPair = generateKeyPair({ format: 'jwk' });
+        const credentialId = nanoid();
+        const unsignedCredential = {
+          ...omit(
+            ['credentialSubject.id', 'vnfProtocolVersion'],
+            openBadgeCredential,
+          ),
+          id: credentialId,
+          credentialStatus: { type: 'WalletStatusList', id: '123' },
+        };
+        const signedCredential = await jwtSign(
+          { vc: unsignedCredential },
+          keyPair.privateKey,
+          {
+            nbf: new Date(openBadgeCredential.issuanceDate),
+            jti: credentialId,
+            iat: new Date(openBadgeCredential.issuanceDate),
+            jwk: keyPair.publicKey,
+          },
+        );
+        const result = await verifyCredentials(
+          { credentials: [signedCredential] },
+          fetchers,
+          context,
+        );
+        const { header } = jwtDecode(signedCredential);
+        expect(header).toEqual({
+          alg: 'ES256K',
+          typ: 'JWT',
+          jwk: keyPair.publicKey,
+        });
+        expect(result).toEqual([
+          {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
+            credential: unsignedCredential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.FAIL,
               TRUSTED_HOLDER: CheckResults.NOT_APPLICABLE,
               UNREVOKED: CheckResults.NOT_APPLICABLE,
               UNEXPIRED: CheckResults.PASS,

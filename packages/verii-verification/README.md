@@ -102,6 +102,47 @@ A successful VC 2.0 entry additionally contains:
 }
 ```
 
+#### Signature validity, self-signed status, and issuer authentication
+
+`credentialChecks.UNTAMPERED` reports whether the signature (and, for VC 2.0,
+the `@verii/jwt` proof, conformance, and policy assessments) verified with the
+discovered key. A valid signature proves possession of that key; it does not
+authenticate the claimed issuer. `credentialChecks.TRUSTED_ISSUER` reports how
+the claimed issuer (`issuer` or `issuer.id`; `iss` for VC 1.1) is bound to that
+key:
+
+- `PASS`: the issuer is authenticated and authorized. Only `did:velocity`
+  credentials can reach `PASS`, through the ledger-bound issuer credential and
+  registrar accreditation for the credential type.
+- `SELF_SIGNED`: the issuer is a self-certifying `did:jwk` derived from the
+  exact verification JWK. The issuer controls the key, but nothing vouches for
+  the issuer.
+- `DATA_INTEGRITY_ERROR`: the credential claims a `did:jwk` binding that does
+  not hold, for example a `did:jwk` `kid` whose DID is not the issuer, or a
+  `did:jwk` issuer that is not derived from the verification JWK.
+- `FAIL`: the issuer is not authenticated. This includes an embedded `jwk`
+  with any issuer other than its own `did:jwk`; Career Wallet self-reported
+  credentials, which use a UUID `iss`, fall into this case.
+
+Keys are discovered from the protected header:
+
+| Protected header | Verification key | Issuer binding |
+| --- | --- | --- |
+| `kid` is a `did:velocity` DID URL | Resolved from the credential metadata ledger | Ledger-bound issuer credential and registrar accreditation |
+| `kid` is a `did:jwk` DID URL | The JWK encoded in the DID | Issuer must be that `did:jwk` |
+| `kid` uses another DID method | Not resolved (`UNTAMPERED: DEPENDENCY_RESOLUTION_ERROR`) | Not checked |
+| `kid` does not resolve to a verification method | None (`UNTAMPERED: DATA_INTEGRITY_ERROR`) | Not checked |
+| No `kid`, embedded `jwk` | The embedded `jwk` | Issuer must be the `did:jwk` derived from that `jwk` |
+
+A supplied `kid` is authoritative: the verifier never falls back to an
+embedded `jwk` when the `kid` cannot be resolved or resolves to a different
+key. A `did:jwk` is derived from a JWK with `getDidUriFromJwk` from
+`@verii/did-doc`, which encodes the JCS-canonicalized JWK exactly as received,
+including any non-key members. For VC 2.0, a `did:jwk` `kid` whose DID is not
+the issuer fails earlier, in `@verii/jwt` conformance
+(`CREDENTIAL_SELF_SIGNED_ISSUER_INVALID`), and is reported as
+`UNTAMPERED: FAIL`.
+
 ### 2. `verifyVerifiablePresentationJwt`
 
 Verifies a Verifiable Presentation (VP) in JWT format, optionally using protocol-aware key resolution. Returns the
