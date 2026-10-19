@@ -245,7 +245,7 @@ describe('dual-version verification guardrails', () => {
         );
       });
 
-      it(`preserves legacy wrong-issuer ${joseAlgorithm} outcome`, async () => {
+      it(`reports a legacy ${joseAlgorithm} did:jwk key/issuer mismatch`, async () => {
         const signing = prepareAlgorithm(algorithmConfig);
         const credential = {
           ...baseCredential,
@@ -257,7 +257,7 @@ describe('dual-version verification guardrails', () => {
 
         expect(result[0].credentialChecks).toEqual(
           expect.objectContaining({
-            TRUSTED_ISSUER: CheckResults.SELF_SIGNED,
+            TRUSTED_ISSUER: CheckResults.DATA_INTEGRITY_ERROR,
             UNTAMPERED: CheckResults.PASS,
           }),
         );
