@@ -14,6 +14,24 @@
  * limitations under the License.
  */
 
+const restrictedKeys = {
+  deny: ['forwarded', '-ip', 'remote-', 'via', '-user'],
+};
+
+// Sentry v11 collects request bodies, cookies and user info by default.
+// Keep the v10 baseline so credentials and PII are not attached to error events.
+const dataCollection = {
+  userInfo: false,
+  cookies: false,
+  httpHeaders: { request: restrictedKeys, response: restrictedKeys },
+  httpBodies: [],
+  urlQueryParams: restrictedKeys,
+  genAI: { inputs: false, outputs: false },
+  databaseQueryData: false,
+  queues: false,
+  graphQL: { document: false, variables: false },
+};
+
 const initSentry = async ({ dsn, release, environment, debug }) => {
   const Sentry = await import('@sentry/node');
 
@@ -22,6 +40,7 @@ const initSentry = async ({ dsn, release, environment, debug }) => {
     release,
     environment,
     debug,
+    dataCollection,
   });
   return Sentry;
 };
