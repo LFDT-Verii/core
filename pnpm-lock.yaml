@@ -171,8 +171,8 @@ importers:
         specifier: ^4.1.4
         version: 4.1.4
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       http-errors:
         specifier: ^2.0.1
         version: 2.0.1
@@ -247,8 +247,8 @@ importers:
         specifier: 3.1150.0
         version: 3.1150.0
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -314,8 +314,8 @@ importers:
         specifier: ^6.17.0
         version: 6.17.0
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -855,8 +855,8 @@ importers:
         specifier: workspace:*
         version: link:../spencer-mongo-extensions
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       lodash:
         specifier: ^4.18.0
         version: 4.18.1
@@ -999,8 +999,8 @@ importers:
         specifier: ^9.9.2
         version: 9.9.2
       '@fastify/swagger-ui':
-        specifier: ^5.2.6
-        version: 5.2.6
+        specifier: ^6.1.2
+        version: 6.1.2
       '@verii/auth':
         specifier: workspace:*
         version: link:../auth
@@ -1032,8 +1032,8 @@ importers:
         specifier: ^5.12.7
         version: 5.12.7
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       http-errors:
         specifier: ^2.0.1
         version: 2.0.1
@@ -1129,8 +1129,8 @@ importers:
         specifier: ^9.9.2
         version: 9.9.2
       '@fastify/swagger-ui':
-        specifier: ^5.2.6
-        version: 5.2.6
+        specifier: ^6.1.2
+        version: 6.1.2
       '@verii/auth':
         specifier: workspace:*
         version: link:../auth
@@ -1183,8 +1183,8 @@ importers:
         specifier: ^5.12.7
         version: 5.12.7
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       lodash:
         specifier: ^4.18.0
         version: 4.18.1
@@ -1259,11 +1259,11 @@ importers:
         specifier: ^9.9.2
         version: 9.9.2
       '@fastify/swagger-ui':
-        specifier: ^5.2.6
-        version: 5.2.6
+        specifier: ^6.1.2
+        version: 6.1.2
       '@fastify/view':
-        specifier: ^11.1.1
-        version: 11.1.1
+        specifier: ^12.0.1
+        version: 12.0.1
       '@spencejs/spence-events':
         specifier: ^1.1.0
         version: 1.1.0
@@ -1361,8 +1361,8 @@ importers:
         specifier: ^5.12.7
         version: 5.12.7
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       handlebars:
         specifier: ^4.7.10
         version: 4.7.10
@@ -1501,8 +1501,8 @@ importers:
         specifier: workspace:*
         version: link:../http-client
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       http-errors:
         specifier: ^2.0.1
         version: 2.0.1
@@ -2262,8 +2262,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(ajv@8.20.0)
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -2741,8 +2741,8 @@ importers:
         specifier: ^9.9.2
         version: 9.9.2
       '@fastify/swagger-ui':
-        specifier: ^5.2.6
-        version: 5.2.6
+        specifier: ^6.1.2
+        version: 6.1.2
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
         version: 1.1.0(mongodb@7.7.0)
@@ -2789,8 +2789,8 @@ importers:
         specifier: ^5.12.7
         version: 5.12.7
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       http-errors:
         specifier: ^2.0.1
         version: 2.0.1
@@ -2971,8 +2971,8 @@ importers:
         specifier: ^5.12.7
         version: 5.12.7
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
     devDependencies:
       '@types/node':
         specifier: 24.19.2
@@ -3059,11 +3059,11 @@ importers:
         specifier: ^9.9.2
         version: 9.9.2
       '@fastify/swagger-ui':
-        specifier: ^5.2.6
-        version: 5.2.6
+        specifier: ^6.1.2
+        version: 6.1.2
       '@fastify/view':
-        specifier: ^11.1.1
-        version: 11.1.1
+        specifier: ^12.0.1
+        version: 12.0.1
       '@spencejs/spence-factories':
         specifier: ^1.1.0
         version: 1.1.0
@@ -3164,8 +3164,8 @@ importers:
         specifier: ^5.12.7
         version: 5.12.7
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       handlebars:
         specifier: ^4.7.10
         version: 4.7.10
@@ -3273,8 +3273,8 @@ importers:
         specifier: ^11.3.1
         version: 11.3.1
       '@fastify/formbody':
-        specifier: ^8.0.2
-        version: 8.0.2
+        specifier: ^9.0.1
+        version: 9.0.1
       '@fastify/helmet':
         specifier: ^13.2.0
         version: 13.2.0
@@ -3285,11 +3285,11 @@ importers:
         specifier: ^9.9.2
         version: 9.9.2
       '@fastify/swagger-ui':
-        specifier: ^5.2.6
-        version: 5.2.6
+        specifier: ^6.1.2
+        version: 6.1.2
       '@fastify/view':
-        specifier: ^11.1.1
-        version: 11.1.1
+        specifier: ^12.0.1
+        version: 12.0.1
       '@lukeed/ms':
         specifier: ~2.0.2
         version: 2.0.2
@@ -3384,8 +3384,8 @@ importers:
         specifier: ^5.12.7
         version: 5.12.7
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       handlebars:
         specifier: ^4.7.10
         version: 4.7.10
@@ -3457,8 +3457,8 @@ importers:
         specifier: ^9.9.2
         version: 9.9.2
       '@fastify/swagger-ui':
-        specifier: ^5.2.6
-        version: 5.2.6
+        specifier: ^6.1.2
+        version: 6.1.2
       '@spencejs/spence-mongo-repos':
         specifier: ^1.1.0
         version: 1.1.0(mongodb@7.7.0)
@@ -3502,8 +3502,8 @@ importers:
         specifier: ^5.12.7
         version: 5.12.7
       fastify-plugin:
-        specifier: ^5.1.0
-        version: 5.1.0
+        specifier: ^6.0.1
+        version: 6.0.1
       http-errors:
         specifier: ^2.0.1
         version: 2.0.1
@@ -5114,8 +5114,8 @@ packages:
   '@fastify/fast-json-stringify-compiler@5.1.1':
     resolution: {integrity: sha512-pyxRKk7UpUnnrztP9pF4+ZYxusEQ4LifTyzRdiXmyql1QezNHxO02D25MVU2o4kMeAMYWAjG6RKRlojgkbiDAw==}
 
-  '@fastify/formbody@8.0.2':
-    resolution: {integrity: sha512-84v5J2KrkXzjgBpYnaNRPqwgMsmY7ZDjuj0YVuMR3NXCJRCgKEZy/taSP1wUYGn0onfxJpLyRGDLa+NMaDJtnA==}
+  '@fastify/formbody@9.0.1':
+    resolution: {integrity: sha512-QaUet4NQavwnl6iPYMaf5hJC2N7kRPOmC58RhDiFThfg7Hcc8X2LdpcEfmaOEBimq5z7yZLy1e1q+PIv3o3tFQ==}
 
   '@fastify/forwarded@3.1.1':
     resolution: {integrity: sha512-XfDtW2Icvhqi6DP1YHFK4q/E8WpNd3+raBdzAyVZxmTInbFTtnEEKvEAMMOVdFuRyv+ynYipaA9D8FvjPqACkw==}
@@ -5150,11 +5150,14 @@ packages:
   '@fastify/swagger-ui@5.2.6':
     resolution: {integrity: sha512-OMnms0O5s9wb6wis/K5nlrAMLsgUbr1GA8uphM41IasWe3AFdgxz6r/3bA9HTxlDNUYc2FGGKeqMp3ntxmSiNA==}
 
+  '@fastify/swagger-ui@6.1.2':
+    resolution: {integrity: sha512-rG5EvbuzzH38XYULa9OVrSg3XngXlHmPFbuU4MKdrzx/lGHCvfPITIy7twnECBf7Ws4t2ZvwMa5UUe0T2+V49w==}
+
   '@fastify/swagger@9.9.2':
     resolution: {integrity: sha512-ayxItVgf/1axBvw33lqsA5ns02YMpT1r59G/HCJraRNWWBzvLgN+oiCBPhuzTiN67TvctlCYkG0+40WLKYuusQ==}
 
-  '@fastify/view@11.1.1':
-    resolution: {integrity: sha512-GiHqT3R2eKJgWmy0s45eELTC447a4+lTM2o+8fSWeKwBe9VToeePuHJcKtOEXPrKGSddGO0RsNayULiS3aeHeQ==}
+  '@fastify/view@12.0.1':
+    resolution: {integrity: sha512-f5iQVXSUVtWIJ+DfGzQ+hoD6390X2QRibmOfs4LxToxupmAMz4bnHnEQoE4VMqL+yqRlsKY17gOW0CEL5W0HKg==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -12931,10 +12934,10 @@ snapshots:
     dependencies:
       fast-json-stringify: 7.1.1
 
-  '@fastify/formbody@8.0.2':
+  '@fastify/formbody@9.0.1':
     dependencies:
       fast-querystring: 1.1.2
-      fastify-plugin: 5.1.0
+      fastify-plugin: 6.0.1
 
   '@fastify/forwarded@3.1.1': {}
 
@@ -13008,6 +13011,14 @@ snapshots:
       rfdc: 1.4.1
       yaml: 2.9.1
 
+  '@fastify/swagger-ui@6.1.2':
+    dependencies:
+      '@fastify/static': 10.1.6
+      fastify-plugin: 6.0.1
+      openapi-types: 12.1.3
+      rfdc: 1.4.1
+      yaml: 2.9.1
+
   '@fastify/swagger@9.9.2':
     dependencies:
       fastify-plugin: 6.0.1
@@ -13018,9 +13029,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@fastify/view@11.1.1':
+  '@fastify/view@12.0.1':
     dependencies:
-      fastify-plugin: 5.1.0
+      fastify-plugin: 6.0.1
       toad-cache: 3.7.4
 
   '@humanfs/core@0.19.2':
