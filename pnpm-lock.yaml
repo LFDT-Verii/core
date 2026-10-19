@@ -2502,6 +2502,12 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
     devDependencies:
+      '@verii/blockchain-functions':
+        specifier: workspace:*
+        version: link:../blockchain-functions
+      '@verii/contract-permissions':
+        specifier: workspace:*
+        version: link:../contract-permissions
       '@verii/sample-data':
         specifier: workspace:*
         version: link:../sample-data
