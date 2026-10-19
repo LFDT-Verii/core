@@ -227,10 +227,22 @@ jobs:
       with:
         fetch-depth: 0
     - name: Start MongoDB
-      uses: supercharge/mongodb-github-action@315db7fe45ac2880b7758f1933e6e5d59afd5e94 # 1.12.1
-      with:
-        mongodb-version: ${{ matrix.mongodb-version }}
-        mongodb-replica-set: insert-replica-set-name
+      timeout-minutes: 3
+      # mongod 8.0 refuses to start on the runners' Ubuntu 7.0.0-* HWE kernel (SERVER-121912, SERVER-136848).
+      # glibc.pthread.rseq=1 turns off TCMalloc per-CPU caches, which skips that check.
+      run: |
+        docker run --name mongodb -p 27017:27017 -e GLIBC_TUNABLES=glibc.pthread.rseq=1 -d mongo:${{ matrix.mongodb-version }} --replSet insert-replica-set-name
+        for i in $(seq 1 30); do
+          docker exec mongodb mongosh --quiet --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1 && break
+          if [ "$(docker inspect -f '{{.State.Running}}' mongodb)" != true ] || [ "$i" = 30 ]; then
+            docker inspect -f 'exit={{.State.ExitCode}} oom={{.State.OOMKilled}} error={{.State.Error}}' mongodb
+            docker logs mongodb
+            exit 1
+          fi
+          sleep 1
+        done
+        docker exec mongodb mongosh --quiet --eval 'rs.initiate({ _id: "insert-replica-set-name", members: [{ _id: 0, host: "localhost:27017" }] })'
+        until docker exec mongodb mongosh --quiet --eval 'quit(db.hello().isWritablePrimary ? 0 : 1)'; do sleep 1; done
     - name: Start Besu Blockchain Node
       run: >
         docker run
