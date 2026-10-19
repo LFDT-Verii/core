@@ -253,8 +253,8 @@ importers:
         specifier: ^4.18.1
         version: 4.18.1
       twilio:
-        specifier: ^5.13.1
-        version: 5.13.1
+        specifier: ^6.2.0
+        version: 6.2.0
     devDependencies:
       '@verii/crypto':
         specifier: workspace:*
@@ -647,8 +647,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       cborg:
-        specifier: 4.5.8
-        version: 4.5.8
+        specifier: 6.1.3
+        version: 6.1.3
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -751,8 +751,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
       cborg:
-        specifier: 4.5.8
-        version: 4.5.8
+        specifier: 6.1.3
+        version: 6.1.3
       elliptic:
         specifier: ^6.6.1
         version: 6.6.1
@@ -7482,8 +7482,8 @@ packages:
     resolution: {integrity: sha512-exQDevYd7ZQLP4moMQcZkKCVZsXLAtUSflObr3xTh4xzFIv/xBCdvCd6L259kQOUP2kcTC0jvC6PpZIf/WmRXA==}
     engines: {node: '>=20'}
 
-  cborg@4.5.8:
-    resolution: {integrity: sha512-6/viltD51JklRhq4L7jC3zgy6gryuG5xfZ3kzpE+PravtyeQLeQmCYLREhQH7pWENg5pY4Yu/XCd6a7dKScVlw==}
+  cborg@6.1.3:
+    resolution: {integrity: sha512-Kb/wD/AFuVcqvVjR+HYNOjNiuhVJ2C+RWxQE2Yqq2WVlVkRjdvVLkkM6QsL3NMsBRh+rgNc+aXmcraA+X0HObQ==}
     hasBin: true
 
   chalk@2.4.2:
@@ -10378,10 +10378,6 @@ packages:
   scheduler@0.25.0-rc-603e6108-20241029:
     resolution: {integrity: sha512-pFwF6H1XrSdYYNLfOcGlM28/j8CGLu8IvdrxqhjWULe2bPcKiKW4CV+OWqR/9fT52mywx65l7ysNkjLKBda7eA==}
 
-  scmp@2.1.0:
-    resolution: {integrity: sha512-o/mRQGk9Rcer/jEEw/yw4mwo3EU/NvYvp577/Btqrym9Qy5/MdWGBqipbALgd2lrdWTJ5/gqDusxfnQBxOxT2Q==}
-    deprecated: Just use Node.js's crypto.timingSafeEqual()
-
   scrypt-js@3.0.1:
     resolution: {integrity: sha512-cdwTTnqPu0Hyvf5in5asVdZocVDTNRmR7XEcJuIzMjJeSHybHl7vpB66AzwTaIg6CLSbtjcxc8fqcySfnTkccA==}
 
@@ -10819,9 +10815,9 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  twilio@5.13.1:
-    resolution: {integrity: sha512-sT+PkhptF4Mf7t8eXFFvPQx4w5VHnBIPXbltGPMFRe+R2GxfRdMuFbuNA/cEm0aQR6LFQOn33+fhClg+TjRVqQ==}
-    engines: {node: '>=14.0'}
+  twilio@6.2.0:
+    resolution: {integrity: sha512-zuwVhRa8gGIvaTjXIkRNcf7cPPQCeghMukMcG9WnhWmm7SLnregVpdIoYOSrOvlqMUYf6xP9A2ivsJNf6URoSg==}
+    engines: {node: '>=20.0.0'}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -15007,7 +15003,7 @@ snapshots:
 
   axios@1.15.0:
     dependencies:
-      follow-redirects: 1.15.11
+      follow-redirects: 1.16.1(debug@4.4.3)
       form-data: 4.0.6
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -15278,7 +15274,7 @@ snapshots:
     dependencies:
       nofilter: 3.1.0
 
-  cborg@4.5.8: {}
+  cborg@6.1.3: {}
 
   chalk@2.4.2:
     dependencies:
@@ -18864,8 +18860,6 @@ snapshots:
 
   scheduler@0.25.0-rc-603e6108-20241029: {}
 
-  scmp@2.1.0: {}
-
   scrypt-js@3.0.1: {}
 
   secp256k1@4.0.5:
@@ -19304,14 +19298,13 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  twilio@5.13.1:
+  twilio@6.2.0:
     dependencies:
       axios: 1.20.0(debug@4.4.3)
       dayjs: 1.11.23
       https-proxy-agent: 5.0.1
       jsonwebtoken: 9.0.3
       qs: 6.16.1
-      scmp: 2.1.0
       xmlbuilder: 13.0.2
     transitivePeerDependencies:
       - debug
