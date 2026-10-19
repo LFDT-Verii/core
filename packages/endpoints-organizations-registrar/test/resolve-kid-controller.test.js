@@ -257,7 +257,8 @@ describe('Public Key Resolution', () => {
         errorResponseMatcher({
           error: 'Not Found',
           errorCode: 'did_resolution_failed',
-          message: 'Could not resolve did:web:example.com',
+          message:
+            'Could not resolve did:web:example.com: DID must resolve to a valid https URL containing a JSON document',
           statusCode: 404,
         }),
       );

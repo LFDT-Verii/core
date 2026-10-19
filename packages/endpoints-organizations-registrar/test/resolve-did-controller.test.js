@@ -203,10 +203,10 @@ describe('Resolve did test suite', () => {
       const nockData = nock('https://nock.test:8000')
         .get('/test/did.json')
         .reply(200, {
-          id: 'did:web:nock.test:test',
+          id: 'did:web:nock.test%3A8000:test',
         });
       await persistOrganization({
-        didDocId: 'did:web:nock.test:test',
+        didDocId: 'did:web:nock.test%3A8000:test',
       });
 
       const response = await fastify.injectJson({
@@ -220,8 +220,36 @@ describe('Resolve did test suite', () => {
 
       expect(nockData.isDone()).toBe(true);
       expect(response.json).toEqual({
-        id: 'did:web:nock.test:test',
+        id: 'did:web:nock.test%3A8000:test',
       });
+    });
+
+    it('Should error with 404 when DID document id does not match the requested did', async () => {
+      const nockData = nock('https://nock.test:8000')
+        .get('/test/did.json')
+        .reply(200, {
+          ...expectedDidWebDoc,
+          id: 'did:web:nock.test:test',
+        });
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${baseUrl}/${encodeURIComponent(
+          'did:web:nock.test%3A8000:test',
+        )}`,
+      });
+
+      expect(response.statusCode).toEqual(404);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Not Found',
+          errorCode: 'did_resolution_failed',
+          message:
+            'Could not resolve did:web:nock.test%3A8000:test: DID document id does not match requested did',
+          statusCode: 404,
+        }),
+      );
+      expect(nockData.isDone()).toBe(true);
     });
 
     it('Should resolve did with aliases for encoded "did:web"', async () => {
@@ -281,7 +309,8 @@ describe('Resolve did test suite', () => {
         errorResponseMatcher({
           error: 'Not Found',
           errorCode: 'did_resolution_failed',
-          message: 'Could not resolve did:web:nock.test',
+          message:
+            'Could not resolve did:web:nock.test: DID must resolve to a valid https URL containing a JSON document',
           statusCode: 404,
         }),
       );
@@ -314,7 +343,8 @@ describe('Resolve did test suite', () => {
         errorResponseMatcher({
           error: 'Not Found',
           errorCode: 'did_resolution_failed',
-          message: 'Could not resolve did:web:nock.test',
+          message:
+            'Could not resolve did:web:nock.test: DID must resolve to a valid https URL containing a JSON document',
           statusCode: 404,
         }),
       );
