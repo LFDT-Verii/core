@@ -15,7 +15,7 @@
  *
  */
 
-const canonicalize = require('canonicalize');
+const { default: canonicalize } = require('canonicalize');
 const { split, last } = require('lodash/fp');
 const { signAndEncodeBase64, verifyBase64Signature } = require('./crypto');
 

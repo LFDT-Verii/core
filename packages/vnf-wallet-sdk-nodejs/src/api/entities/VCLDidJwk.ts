@@ -1,7 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import { base64url, exportJWK } from 'jose';
 import { KeyPairKeyObjectResult } from 'crypto';
-import canonicalize from 'canonicalize';
 import VCLPublicJwk from './VCLPublicJwk';
 import { Dictionary } from '../VCLTypes';
 
@@ -29,6 +28,8 @@ export default class VCLDidJwk {
 
     static Utils = class {
         static generateDidJwk = async (ecKey: KeyPairKeyObjectResult) => {
+            // canonicalize is ESM-only; a static import compiles to require() under module Node16
+            const { default: canonicalize } = await import('canonicalize');
             const publicJwk = await exportJWK(ecKey.publicKey);
             return `${VCLDidJwk.DidJwkPrefix}${base64url.encode(
                 canonicalize(publicJwk)!,

@@ -61,7 +61,7 @@
     "@verii/vc-checks": "workspace:*",
     "@verii/verii-issuing": "workspace:*",
     "@verii/verii-verification": "workspace:*",
-    "canonicalize": "^2.1.0",
+    "canonicalize": "^5.1.0",
     "date-fns": "^4.4.0",
     "env-var": "^7.5.0",
     "eth-url-parser": "^1.0.4",

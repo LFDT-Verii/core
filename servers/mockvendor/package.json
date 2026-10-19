@@ -52,7 +52,7 @@
     "@spencejs/spence-factories": "^1.1.0",
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
-    "canonicalize": "^2.1.0",
+    "canonicalize": "^5.1.0",
     "dotenv": "^18.0.8",
     "eslint": "9.39.5",
     "eslint-config-airbnb-extended": "3.3.0",

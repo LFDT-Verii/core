@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const canonicalize = require('canonicalize');
+const { default: canonicalize } = require('canonicalize');
 const ethUrlParser = require('eth-url-parser');
 const newError = require('http-errors');
 const { isEmpty, compact, castArray, find } = require('lodash/fp');
