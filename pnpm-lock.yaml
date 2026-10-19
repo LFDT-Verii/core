@@ -748,8 +748,8 @@ importers:
         specifier: 3.3.0
         version: 3.3.0
       canonicalize:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^5.1.0
+        version: 5.1.0
       cborg:
         specifier: 4.5.8
         version: 4.5.8
@@ -1726,8 +1726,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(ajv@8.20.0)
       canonicalize:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^5.1.0
+        version: 5.1.0
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -2396,8 +2396,8 @@ importers:
         specifier: workspace:*
         version: link:../vc-checks
       canonicalize:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^5.1.0
+        version: 5.1.0
       eth-url-parser:
         specifier: ^1.0.4
         version: 1.0.4
@@ -2566,8 +2566,8 @@ importers:
         specifier: workspace:*
         version: link:../vc-checks
       canonicalize:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^5.1.0
+        version: 5.1.0
       jose:
         specifier: ^5.10.0
         version: 5.10.0
@@ -3149,8 +3149,8 @@ importers:
         specifier: 8.20.0
         version: 8.20.0
       canonicalize:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^5.1.0
+        version: 5.1.0
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -3369,8 +3369,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/verii-verification
       canonicalize:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^5.1.0
+        version: 5.1.0
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -3527,8 +3527,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tests-helpers
       canonicalize:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^5.1.0
+        version: 5.1.0
       dotenv:
         specifier: ^18.0.8
         version: 18.0.8
@@ -7473,8 +7473,9 @@ packages:
   caniuse-lite@1.0.30001816:
     resolution: {integrity: sha512-+8Yx7BXCoqk6IF8yTicjfUR6D/ldJzdlsodlEOiOSPmhK844WIgk67/zIQaGAOxNkZyyvBlrRFnLvqKIoqbAFw==}
 
-  canonicalize@2.1.0:
-    resolution: {integrity: sha512-F705O3xrsUtgt98j7leetNhTWPe+5S72rlL5O4jA1pKqBVQ/dT1O1D6PFxmSXvc0SUOinWS57DKx0I3CHrXJHQ==}
+  canonicalize@5.1.0:
+    resolution: {integrity: sha512-bab9+WefZljqQ8jT0qRwVmTyzAUU63K97QIQD3agynIBrb6sa5M2eAy8Hv8K3p4V9+ONVYZKtGYl4Dg+/5Gumw==}
+    engines: {node: '>=22'}
     hasBin: true
 
   cbor@10.0.12:
@@ -15268,7 +15269,7 @@ snapshots:
 
   caniuse-lite@1.0.30001816: {}
 
-  canonicalize@2.1.0: {}
+  canonicalize@5.1.0: {}
 
   cbor@10.0.12:
     dependencies:
