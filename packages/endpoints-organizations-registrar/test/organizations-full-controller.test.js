@@ -250,9 +250,11 @@ const setServicePingNock = (
     );
 };
 
-const setMonitorEventsNock = (delay = 10) => {
+// monitorCount: monitors created per service, e.g. 2 for a node operator (liveness and readiness)
+const setMonitorEventsNock = ({ delay = 10, monitorCount = 1 } = {}) => {
   return nock('https://betteruptime.com', {})
     .post('/api/v2/monitors')
+    .times(monitorCount)
     .reply(200, {
       data: {
         id: '12345678',
@@ -304,6 +306,7 @@ const setMonitorEventsNock = (delay = 10) => {
       },
     })
     .post(/\/api\/v2\/status-pages\/\d{6}\/resources/)
+    .times(monitorCount)
     .delay(delay)
     .reply(200, {
       data: {
@@ -2678,7 +2681,7 @@ describe('Organizations Full Test Suite', () => {
           serviceEndpoints: services,
         };
 
-        const monitorNockScope = setMonitorEventsNock();
+        const monitorNockScope = setMonitorEventsNock({ monitorCount: 2 });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -2816,7 +2819,9 @@ describe('Organizations Full Test Suite', () => {
           serviceEndpoints: services,
         };
 
-        setMonitorEventsNock();
+        // one monitoring flow per node operator service
+        setMonitorEventsNock({ monitorCount: 2 });
+        setMonitorEventsNock({ monitorCount: 2 });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -3240,7 +3245,7 @@ describe('Organizations Full Test Suite', () => {
           serviceEndpoints: services,
         };
 
-        const monitorNockScope = setMonitorEventsNock();
+        const monitorNockScope = setMonitorEventsNock({ monitorCount: 2 });
         setServicePingNock(services[0].serviceEndpoint);
 
         const response = await fastify.injectJson({
@@ -3706,7 +3711,7 @@ describe('Organizations Full Test Suite', () => {
           };
 
           setServicePingNock(service[0].serviceEndpoint);
-          const monitorNockScope = setMonitorEventsNock(7000);
+          const monitorNockScope = setMonitorEventsNock({ delay: 7000 });
 
           const response = await fastify.injectJson({
             method: 'POST',

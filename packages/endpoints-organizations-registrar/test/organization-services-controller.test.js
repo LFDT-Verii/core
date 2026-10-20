@@ -212,9 +212,11 @@ const setServicePingNock = (
     );
 };
 
-const setMonitorEventsNock = (delay = 10) => {
+// monitorCount: monitors created per service, e.g. 2 for a node operator (liveness and readiness)
+const setMonitorEventsNock = ({ delay = 10, monitorCount = 1 } = {}) => {
   return nock('https://betteruptime.com', {})
     .post('/api/v2/monitors')
+    .times(monitorCount)
     .reply(200, {
       data: {
         id: '12345678',
@@ -266,6 +268,7 @@ const setMonitorEventsNock = (delay = 10) => {
       },
     })
     .post(/\/api\/v2\/status-pages\/\d{6}\/resources/)
+    .times(monitorCount)
     .delay(delay)
     .reply(200, {
       data: {
@@ -429,11 +432,6 @@ const nockExecuted = (pendingMockString) => (nockScope) => {
   return !some((element) => includes(pendingMockString, element), pendingMocks);
 };
 
-const getServiceVersionNockExecuted = (uri) => nockExecuted(`GET ${uri}`);
-
-const getSectionsNockExecuted = nockExecuted(
-  'POST https://betteruptime.com:443/api/v2/status-pages\\/\\d{6}\\/sections/',
-);
 const postMonitorNockExecuted = nockExecuted(
   'POST https://betteruptime.com:443/api/v2/monitors',
 );
@@ -3120,7 +3118,7 @@ describe('Organization Services Test Suite', () => {
           type: ServiceTypes.NodeOperatorType,
           serviceEndpoint: 'https://agent.samplevendor.com/acme',
         };
-        const monitorNockScope = setMonitorEventsNock();
+        const monitorNockScope = setMonitorEventsNock({ monitorCount: 2 });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -3244,7 +3242,7 @@ describe('Organization Services Test Suite', () => {
           type: ServiceTypes.NodeOperatorType,
           serviceEndpoint: 'https://agent.samplevendor.com/acme',
         };
-        const monitorNockScope = setMonitorEventsNock();
+        const monitorNockScope = setMonitorEventsNock({ monitorCount: 2 });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -3455,7 +3453,7 @@ describe('Organization Services Test Suite', () => {
           type: ServiceTypes.NodeOperatorType,
           serviceEndpoint: 'https://agent.samplevendor.com/acme',
         };
-        setMonitorEventsNock();
+        setMonitorEventsNock({ monitorCount: 2 });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -5648,7 +5646,6 @@ describe('Organization Services Test Suite', () => {
           undefined,
           500,
         );
-        const getSectionsNock = setGetMonitorsNock(dids, serviceIds);
         const monitorEventsNock = setMonitorEventsNock();
         const response = await fastify.injectJson({
           method: 'POST',
@@ -5657,12 +5654,7 @@ describe('Organization Services Test Suite', () => {
         });
 
         expect(response.statusCode).toEqual(201);
-        expect(
-          getServiceVersionNockExecuted('https://agent.samplevendor.com/acme')(
-            serviceVersionNock,
-          ),
-        ).toEqual(true);
-        expect(getSectionsNockExecuted(getSectionsNock)).toEqual(true);
+        expect(serviceVersionNock.isDone()).toEqual(true);
         expect(postMonitorNockExecuted(monitorEventsNock)).toEqual(true);
       });
 
@@ -5681,12 +5673,8 @@ describe('Organization Services Test Suite', () => {
         });
 
         expect(response.statusCode).toEqual(201);
-        expect(
-          getServiceVersionNockExecuted('https://agent.samplevendor.com/acme')(
-            serviceVersionNock,
-          ),
-        ).toEqual(true);
-        expect(getSectionsNockExecuted(failureNock)).toEqual(true);
+        expect(serviceVersionNock.isDone()).toEqual(true);
+        expect(failureNock.isDone()).toEqual(true);
       }, 20000);
     });
 
