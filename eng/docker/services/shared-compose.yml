@@ -45,6 +45,10 @@ services:
   velocity-mongo:
     image: mongo:8.0@sha256:7bd28e5eea1c5766a084d5818254046f3ebe3b8f20a65e3a274640189e296667
     restart: on-failure
+    environment:
+      # TCMalloc per-CPU caches are unsafe on Linux 6.19-7.0.13 (SERVER-121912), and the
+      # Ubuntu 7.0.0-* runner kernels can't be told apart; glibc.pthread.rseq=1 turns them off.
+      - GLIBC_TUNABLES=glibc.pthread.rseq=1
     ports:
       - 17017:27017
 
