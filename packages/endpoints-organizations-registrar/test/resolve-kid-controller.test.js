@@ -247,6 +247,10 @@ describe('Public Key Resolution', () => {
     };
 
     it('Should return 404 when DID document not found', async () => {
+      const nockData = nock('https://example.com')
+        .get('/.well-known/did.json')
+        .reply(404);
+
       const response = await fastify.inject({
         method: 'GET',
         url: '/api/v0.6/resolve-kid/did:web:example.com#key-0',
@@ -262,6 +266,7 @@ describe('Public Key Resolution', () => {
           statusCode: 404,
         }),
       );
+      expect(nockData.isDone()).toEqual(true);
     });
 
     it('Should return 404 when public key not found in document', async () => {
@@ -288,7 +293,7 @@ describe('Public Key Resolution', () => {
           statusCode: 404,
         }),
       );
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
     });
 
     it('Should return public key for "DID:WEB" did', async () => {
@@ -306,7 +311,7 @@ describe('Public Key Resolution', () => {
         url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}`,
       });
       expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
 
       expect(response.body).toBe(hexFromJwk(keyPair.publicKey, false));
     });
@@ -327,7 +332,7 @@ describe('Public Key Resolution', () => {
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
       expect(response.body).toEqual(hexFromJwk(keyPair.publicKey, false));
     });
 
@@ -346,7 +351,7 @@ describe('Public Key Resolution', () => {
         url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=base58`,
       });
       expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
 
       expect(response.body).toEqual(
         bs58.encode(Buffer.from(hexFromJwk(keyPair.publicKey, false), 'hex')),
@@ -368,7 +373,7 @@ describe('Public Key Resolution', () => {
         url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=jwk`,
       });
       expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
 
       expect(response.json()).toEqual({
         ...keyPair.publicKey,
