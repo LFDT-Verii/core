@@ -45,6 +45,11 @@ services:
   velocity-mongo:
     image: mongo:8.0@sha256:7bd28e5eea1c5766a084d5818254046f3ebe3b8f20a65e3a274640189e296667
     restart: on-failure
+    environment:
+      # mongod 8.0.0-8.0.20 crash after ~60s on Linux 6.19-7.0.13, and 8.0.21+ exits at startup on Ubuntu 7.0.0-*
+      # kernels because uname hides the upstream fix level (SERVER-121912, SERVER-125742, SERVER-136848).
+      # glibc.pthread.rseq=1 turns TCMalloc per-CPU caches off, so neither applies.
+      - GLIBC_TUNABLES=glibc.pthread.rseq=1
     ports:
       - 17017:27017
 
