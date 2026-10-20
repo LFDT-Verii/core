@@ -247,6 +247,10 @@ describe('Public Key Resolution', () => {
     };
 
     it('Should return 404 when DID document not found', async () => {
+      const nockData = nock('https://example.com')
+        .get('/.well-known/did.json')
+        .reply(404);
+
       const response = await fastify.inject({
         method: 'GET',
         url: '/api/v0.6/resolve-kid/did:web:example.com#key-0',
@@ -262,6 +266,7 @@ describe('Public Key Resolution', () => {
           statusCode: 404,
         }),
       );
+      expect(nockData.isDone()).toBeTruthy();
     });
 
     it('Should return 404 when public key not found in document', async () => {

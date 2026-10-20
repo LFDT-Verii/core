@@ -203,11 +203,7 @@ const setServicePingNock = (
   const uri = last(url.split('/'));
   const host = url.replace(`/${uri}`, '');
   const version = versionFlag ? `\nVersion: ${serviceAgentVersionMock}` : '';
-  return nock(host, {
-    reqheaders: {
-      'accept-encoding': 'gzip, deflate, br',
-    },
-  })
+  return nock(host)
     .get(`/${uri}`)
     .delay(delay)
     .reply(
@@ -3459,6 +3455,7 @@ describe('Organization Services Test Suite', () => {
           type: ServiceTypes.NodeOperatorType,
           serviceEndpoint: 'https://agent.samplevendor.com/acme',
         };
+        setMonitorEventsNock();
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -4672,6 +4669,8 @@ describe('Organization Services Test Suite', () => {
           },
           service: didDocumentServices,
         });
+        setMonitorEventsNock();
+        setGetMonitorsNock(organization.didDoc.id, serviceId);
 
         const response = await fastify.injectJson({
           method: 'DELETE',
@@ -5803,6 +5802,8 @@ describe('Organization Services Test Suite', () => {
           type: ServiceTypes.CredentialAgentOperatorType,
           serviceEndpoint: 'https://agent.samplevendor.com/acme',
         };
+        setServicePingNock(payload.serviceEndpoint);
+        setMonitorEventsNock();
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -6199,6 +6200,9 @@ describe('Organization Services Test Suite', () => {
       });
 
       it('Should error 400 if there is no DID Doc', async () => {
+        const nockData = nock(didWebUrl(expectedDidWebDoc))
+          .get('/.well-known/did.json')
+          .reply(404);
         const did = organization.didDoc.id;
         const payload = {
           id: '#credentialagent-1',
@@ -6223,6 +6227,7 @@ describe('Organization Services Test Suite', () => {
             statusCode: 400,
           }),
         );
+        expect(nockData.isDone()).toEqual(true);
       });
 
       it('Should throw error if no key for particular service type', async () => {
@@ -6648,10 +6653,14 @@ describe('Organization Services Test Suite', () => {
           type: ServiceTypes.IdDocumentIssuerType,
           serviceEndpoint: 'https://www.acme.com',
         };
+        const unresolvableDidWebDoc = generateDidWebDoc();
+        const nockData = nock(didWebUrl(unresolvableDidWebDoc))
+          .get('/.well-known/did.json')
+          .replyWithError('connect ECONNREFUSED');
         const organizationWithService = await persistOrganization({
           service: [service],
           name: 'Did web org',
-          didDocId: generateDidWebDoc().id,
+          didDocId: unresolvableDidWebDoc.id,
           didNotCustodied: true,
         });
 
@@ -6674,6 +6683,7 @@ describe('Organization Services Test Suite', () => {
             statusCode: 400,
           }),
         );
+        expect(nockData.isDone()).toEqual(true);
       });
       it('Should update organization service', async () => {
         const serviceIdFragment = 'service-1';

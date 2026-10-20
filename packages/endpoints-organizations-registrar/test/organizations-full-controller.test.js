@@ -241,11 +241,7 @@ const setServicePingNock = (
 ) => {
   const uri = new URL(serviceEndpoint);
   const version = versionFlag ? `\nVersion: ${serviceAgentVersionMock}` : '';
-  return nock(uri.origin, {
-    reqheaders: {
-      'accept-encoding': 'gzip, deflate, br',
-    },
-  })
+  return nock(uri.origin)
     .get(uri.pathname)
     .delay(delay)
     .reply(
@@ -2269,6 +2265,7 @@ describe('Organizations Full Test Suite', () => {
           },
         ];
 
+        setServicePingNock(services[0].serviceEndpoint);
         const monitorNockScope = setMonitorEventsNock();
 
         const payload = {
@@ -2818,6 +2815,8 @@ describe('Organizations Full Test Suite', () => {
           profile,
           serviceEndpoints: services,
         };
+
+        setMonitorEventsNock();
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -5388,6 +5387,7 @@ describe('Organizations Full Test Suite', () => {
             },
           ],
         };
+        setServicePingNock(services[0].serviceEndpoint);
         const monitorNockScope = setMonitorEventsNock();
 
         const response = await fastify.injectJson({
@@ -5637,6 +5637,7 @@ describe('Organizations Full Test Suite', () => {
             },
           ],
         };
+        setServicePingNock(services[0].serviceEndpoint);
         const monitorNockScope = setMonitorEventsNock();
 
         const response = await fastify.injectJson({
@@ -5861,6 +5862,10 @@ describe('Organizations Full Test Suite', () => {
       });
 
       it('Should throw error when did does not resolved', async () => {
+        const nockData = nock('https://example.com')
+          .get('/.well-known/did.json')
+          .reply(404);
+
         const payload = {
           profile: orgProfile,
           byoDid: expectedDidWebDoc.id,
@@ -5893,6 +5898,7 @@ describe('Organizations Full Test Suite', () => {
             statusCode: 400,
           }),
         );
+        expect(nockData.isDone()).toEqual(true);
       });
 
       it('Should throw error when the did document id does not match the byoDid', async () => {
