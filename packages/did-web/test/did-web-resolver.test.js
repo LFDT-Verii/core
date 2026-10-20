@@ -14,42 +14,104 @@
  * limitations under the License.
  */
 
-const { describe, it } = require('node:test');
+const { afterEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const nock = require('./helpers/nock');
-const newError = require('http-errors');
 const { resolveDidWeb, isWebDid } = require('../src/did-web-resolver');
 
-describe('Did web resolver test suite', () => {
-  describe('resolveDidWeb', () => {
-    it('should throw error if did is not resolved', async () => {
-      const did = 'did:web:unknown';
-      await expect(() => resolveDidWeb(did)).rejects.toThrow(
-        newError(400, `Could not resolve ${did}`, {
-          errorCode: 'did_resolution_failed',
-        }),
-      );
-    });
+const fetchFailureMessage =
+  'DID must resolve to a valid https URL containing a JSON document';
 
+describe('Did web resolver test suite', () => {
+  afterEach(() => {
+    nock.cleanAll();
+  });
+
+  describe('resolveDidWeb', () => {
     it('should resolve did web', async () => {
+      const did = 'did:web:nock.test';
       const nockData = nock('https://nock.test')
         .get('/.well-known/did.json')
-        .reply(200, {
-          '@context': [
-            'https://www.w3.org/ns/did/v1',
-            'https://w3id.org/security/suites/jws-2020/v1',
-          ],
-          id: 'did:web:nock.test',
-          verificationMethod: [],
-          authentication: ['did:web:nock.test#owner'],
-          assertionMethod: ['did:web:nock.test#owner'],
-        });
-      const did = 'did:web:nock.test';
+        .reply(200, buildDidDoc(did));
       const doc = await resolveDidWeb(did);
-      expect(doc).toBeDefined();
-      expect(doc.id).toBe(did);
+      expect(doc).toEqual(buildDidDoc(did));
       expect(nockData.isDone()).toEqual(true);
+    });
+
+    it('should resolve did web with an encoded port and a path', async () => {
+      const did = 'did:web:nock.test%3A3000:org:acme';
+      const nockData = nock('https://nock.test:3000')
+        .get('/org/acme/did.json')
+        .reply(200, buildDidDoc(did));
+      const doc = await resolveDidWeb(did);
+      expect(doc).toEqual(buildDidDoc(did));
+      expect(nockData.isDone()).toEqual(true);
+    });
+
+    it('should throw error if the did document id does not match the did', async () => {
+      const did = 'did:web:nock.test';
+      const nockData = nock('https://nock.test')
+        .get('/.well-known/did.json')
+        .reply(200, buildDidDoc('did:web:other.test'));
+      await expect(resolveDidWeb(did)).rejects.toMatchObject(
+        resolutionError(
+          `Could not resolve ${did}: DID document id does not match requested did`,
+        ),
+      );
+      expect(nockData.isDone()).toEqual(true);
+    });
+
+    it('should throw error if a did url with a query resolves to a document identified by the bare did', async () => {
+      const did = 'did:web:nock.test?version=1';
+      const nockData = nock('https://nock.test')
+        .get('/.well-known/did.json')
+        .reply(200, buildDidDoc('did:web:nock.test'));
+      await expect(resolveDidWeb(did)).rejects.toMatchObject(
+        resolutionError(
+          `Could not resolve ${did}: DID document id does not match requested did`,
+        ),
+      );
+      expect(nockData.isDone()).toEqual(true);
+    });
+
+    it('should throw error if the did document is not found', async () => {
+      const did = 'did:web:nock.test';
+      const nockData = nock('https://nock.test')
+        .get('/.well-known/did.json')
+        .reply(404);
+      await expect(resolveDidWeb(did)).rejects.toMatchObject(
+        resolutionError(`Could not resolve ${did}: ${fetchFailureMessage}`),
+      );
+      expect(nockData.isDone()).toEqual(true);
+    });
+
+    it('should throw error without network details if the did document host is unreachable', async () => {
+      const did = 'did:web:nock.test';
+      const nockData = nock('https://nock.test')
+        .get('/.well-known/did.json')
+        .replyWithError('connect ECONNREFUSED 10.0.0.1:443');
+      await expect(resolveDidWeb(did)).rejects.toMatchObject(
+        resolutionError(`Could not resolve ${did}: ${fetchFailureMessage}`),
+      );
+      expect(nockData.isDone()).toEqual(true);
+    });
+
+    it('should throw error without the response body if the did document is not json', async () => {
+      const did = 'did:web:nock.test';
+      const nockData = nock('https://nock.test')
+        .get('/.well-known/did.json')
+        .reply(200, '<html>internal page</html>');
+      await expect(resolveDidWeb(did)).rejects.toMatchObject(
+        resolutionError(`Could not resolve ${did}: ${fetchFailureMessage}`),
+      );
+      expect(nockData.isDone()).toEqual(true);
+    });
+
+    it('should throw error if the did is invalid', async () => {
+      await expect(resolveDidWeb('did:web:')).rejects.toMatchObject(
+        resolutionError('Could not resolve did:web:: invalidDid'),
+      );
     });
   });
 
@@ -64,4 +126,21 @@ describe('Did web resolver test suite', () => {
       expect(isWebDid(did)).toEqual(false);
     });
   });
+});
+
+const buildDidDoc = (id) => ({
+  '@context': [
+    'https://www.w3.org/ns/did/v1',
+    'https://w3id.org/security/suites/jws-2020/v1',
+  ],
+  id,
+  verificationMethod: [],
+  authentication: [`${id}#owner`],
+  assertionMethod: [`${id}#owner`],
+});
+
+const resolutionError = (message) => ({
+  status: 400,
+  errorCode: 'did_resolution_failed',
+  message,
 });

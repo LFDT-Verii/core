@@ -6219,7 +6219,7 @@ describe('Organization Services Test Suite', () => {
           errorResponseMatcher({
             error: 'Bad Request',
             errorCode: 'did_resolution_failed',
-            message: `Could not resolve ${expectedDidWebDoc.id}`,
+            message: `Could not resolve ${expectedDidWebDoc.id}: DID must resolve to a valid https URL containing a JSON document`,
             statusCode: 400,
           }),
         );
@@ -6670,7 +6670,7 @@ describe('Organization Services Test Suite', () => {
           errorResponseMatcher({
             error: 'Bad Request',
             errorCode: 'did_resolution_failed',
-            message: `Could not resolve ${organizationWithService.didDoc.id}`,
+            message: `Could not resolve ${organizationWithService.didDoc.id}: DID must resolve to a valid https URL containing a JSON document`,
             statusCode: 400,
           }),
         );

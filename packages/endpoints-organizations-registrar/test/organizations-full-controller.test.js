@@ -5563,59 +5563,59 @@ describe('Organizations Full Test Suite', () => {
             'https://www.w3.org/ns/did/v1',
             'https://w3id.org/security/suites/jws-2020/v1',
           ],
-          id: 'did:web:example.com/test:alias',
+          id: 'did:web:example.com%3A8443:test:alias',
           verificationMethod: [
             {
-              id: 'did:web:example.com/test:alias#key-0',
+              id: 'did:web:example.com%3A8443:test:alias#key-0',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
             {
-              id: 'did:web:example.com/test:alias#key-1',
+              id: 'did:web:example.com%3A8443:test:alias#key-1',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
             {
-              id: 'did:web:example.com/test:alias#key-2',
+              id: 'did:web:example.com%3A8443:test:alias#key-2',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
           ],
-          authentication: ['did:web:example.com/test:alias#key-0'],
-          assertionMethod: ['did:web:example.com/test:alias#key-0'],
+          authentication: ['did:web:example.com%3A8443:test:alias#key-0'],
+          assertionMethod: ['did:web:example.com%3A8443:test:alias#key-0'],
           publicKey: [
             {
-              id: 'did:web:example.com/test:alias#key-0',
+              id: 'did:web:example.com%3A8443:test:alias#key-0',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
             {
-              id: 'did:web:example.com/test:alias#key-1',
+              id: 'did:web:example.com%3A8443:test:alias#key-1',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
             {
-              id: 'did:web:example.com/test:alias#key-2',
+              id: 'did:web:example.com%3A8443:test:alias#key-2',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
           ],
           service: map(pick(didDocServiceFields), services),
         };
-        const nockData = nock('https://example.com/test')
-          .get('/alias/did.json')
+        const nockData = nock('https://example.com:8443')
+          .get('/test/alias/did.json')
           .reply(200, didWebDoc);
 
         const payload = {
           profile: orgProfile,
           serviceEndpoints: services,
-          byoDid: 'did:web:example.com%2Ftest:alias',
+          byoDid: didWebDoc.id,
           keys: [
             {
               kidFragment: toRelativeKeyId(
@@ -5654,7 +5654,7 @@ describe('Organizations Full Test Suite', () => {
         const did = response.json.id;
 
         // json response checks
-        expect(did).toMatch(expectedDidWebDoc.id);
+        expect(did).toEqual(didWebDoc.id);
         expect(response.json).toEqual(
           expectedCreateFullOrganizationResponse(did, orgProfile, services, {
             keys: payload.keys,
@@ -5888,10 +5888,60 @@ describe('Organizations Full Test Suite', () => {
           errorResponseMatcher({
             error: 'Bad Request',
             errorCode: 'did_resolution_failed',
-            message: 'Could not resolve did:web:example.com',
+            message:
+              'Could not resolve did:web:example.com: DID must resolve to a valid https URL containing a JSON document',
             statusCode: 400,
           }),
         );
+      });
+
+      it('Should throw error when the did document id does not match the byoDid', async () => {
+        const nockData = nock('https://example.com')
+          .get('/.well-known/did.json')
+          .reply(200, {
+            ...expectedDidWebDoc,
+            id: 'did:web:other.example.com',
+          });
+
+        const payload = {
+          profile: orgProfile,
+          byoDid: expectedDidWebDoc.id,
+          keys: [
+            {
+              kidFragment: toRelativeKeyId(
+                expectedDidWebDoc.verificationMethod[0].id,
+              ),
+              purposes: [KeyPurposes.DLT_TRANSACTIONS],
+            },
+          ],
+        };
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers: {
+            'x-auto-activate': '1',
+            'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toStrictEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'did_resolution_failed',
+            message:
+              'Could not resolve did:web:example.com: DID document id does not match requested did',
+            statusCode: 400,
+          }),
+        );
+        expect(nockData.isDone()).toEqual(true);
+        expect(
+          await mongoDb().collection('organizations').countDocuments(),
+        ).toEqual(0);
+        expect(
+          await mongoDb().collection('organizationKeys').countDocuments(),
+        ).toEqual(0);
       });
 
       it('Should throw error when no service in did document', async () => {
