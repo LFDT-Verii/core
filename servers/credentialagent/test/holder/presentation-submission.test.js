@@ -514,6 +514,85 @@ describe('presentation submission', () => {
       expect(dbMostRecentFeed.feedTimestamp).toEqual(expect.any(Date));
     });
 
+    it("should 200 and update feedTimestamp of user's most recently inserted feed if feeds tie on updatedAt", async () => {
+      const presentationDisclosure = await persistDisclosure({
+        tenant,
+        vendorEndpoint: VendorEndpoint.RECEIVE_UNCHECKED_CREDENTIALS,
+        feed: true,
+      });
+      const leastRecentFeed = await persistFeed({
+        tenant,
+        disclosure: presentationDisclosure,
+        vendorUserId: vendorUserIdMapping.vendorUserId,
+      });
+      const mostRecentFeed = await persistFeed({
+        tenant,
+        disclosure: presentationDisclosure,
+        vendorUserId: vendorUserIdMapping.vendorUserId,
+      });
+      const tiedUpdatedAt = new Date();
+      await mongoDb()
+        .collection('feeds')
+        .updateMany(
+          {
+            _id: {
+              $in: [
+                new ObjectId(leastRecentFeed._id),
+                new ObjectId(mostRecentFeed._id),
+              ],
+            },
+          },
+          { $set: { updatedAt: tiedUpdatedAt } },
+        );
+      const disclosurePresentationExchange = await persistDisclosureExchange({
+        disclosure: presentationDisclosure,
+        tenant,
+        protocolMetadata: {
+          protocol: ExchangeProtocols.VNF_API,
+        },
+      });
+      const presentationBuilder = await generatePresentation(
+        disclosurePresentationExchange,
+      );
+      nock(mockVendorUrl)
+        .post(sendCredentialsUncheckedEndpoint)
+        .reply(200, sendCredentialsPayload);
+      const signedJwt = await generateDocJwt({}, tenantKeyPair.privateKey, {
+        kid: '#exchanges-1',
+        subject: vendorUserIdMapping._id,
+        issuer: tenant.did,
+        audience: tenant.did,
+        expiresIn: '1h',
+      });
+
+      const response = await fastify.inject({
+        method: 'POST',
+        url: inspectUrl(tenant, '/submit-presentation'),
+        headers: {
+          Authorization: `Bearer ${signedJwt}`,
+        },
+        payload: {
+          exchange_id: disclosurePresentationExchange._id,
+          vp_jwt: await presentationBuilder.selfSign(),
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      const dbLeastRecentFeed = await mongoDb()
+        .collection('feeds')
+        .findOne({
+          _id: new ObjectId(leastRecentFeed._id),
+        });
+      const dbMostRecentFeed = await mongoDb()
+        .collection('feeds')
+        .findOne({
+          _id: new ObjectId(mostRecentFeed._id),
+        });
+      expect(dbLeastRecentFeed.feedTimestamp).toBeUndefined();
+      expect(dbLeastRecentFeed.updatedAt).toEqual(tiedUpdatedAt);
+      expect(dbMostRecentFeed.feedTimestamp).toEqual(expect.any(Date));
+    });
+
     it('should 200 and use custom webhook url from tenant for receive unchecked credential', async () => {
       const webhookUrl = 'https://webhook.com';
       const newTenant = await persistTenant({ webhookUrl });
