@@ -744,9 +744,6 @@ importers:
       argon2:
         specifier: 0.45.1
         version: 0.45.1
-      bigint-crypto-utils:
-        specifier: 3.3.0
-        version: 3.3.0
       canonicalize:
         specifier: ^5.1.0
         version: 5.1.0
