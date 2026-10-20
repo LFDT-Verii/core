@@ -243,6 +243,53 @@ describe('presentation submission', () => {
   const sendCredentialsUncheckedEndpoint = `/inspection/${VendorEndpoint.RECEIVE_UNCHECKED_CREDENTIALS}`;
   const sendCredentialsPayload = { body: { numProcessed: 3 } };
 
+  const setFeedsUpdatedAt = (feeds, updatedAt) =>
+    mongoDb()
+      .collection('feeds')
+      .updateMany(
+        { _id: { $in: feeds.map((feed) => new ObjectId(feed._id)) } },
+        { $set: { updatedAt } },
+      );
+
+  const findFeed = (feed) =>
+    mongoDb()
+      .collection('feeds')
+      .findOne({ _id: new ObjectId(feed._id) });
+
+  const submitUncheckedPresentationAsVendorUser = async (
+    presentationDisclosure,
+  ) => {
+    const exchange = await persistDisclosureExchange({
+      disclosure: presentationDisclosure,
+      tenant,
+      protocolMetadata: {
+        protocol: ExchangeProtocols.VNF_API,
+      },
+    });
+    const presentationBuilder = await generatePresentation(exchange);
+    nock(mockVendorUrl)
+      .post(sendCredentialsUncheckedEndpoint)
+      .reply(200, sendCredentialsPayload);
+    const signedJwt = await generateDocJwt({}, tenantKeyPair.privateKey, {
+      kid: '#exchanges-1',
+      subject: vendorUserIdMapping._id,
+      issuer: tenant.did,
+      audience: tenant.did,
+      expiresIn: '1h',
+    });
+    return fastify.inject({
+      method: 'POST',
+      url: inspectUrl(tenant, '/submit-presentation'),
+      headers: {
+        Authorization: `Bearer ${signedJwt}`,
+      },
+      payload: {
+        exchange_id: exchange._id,
+        vp_jwt: await presentationBuilder.selfSign(),
+      },
+    });
+  };
+
   describe('base presentation submission tests', () => {
     it('should 400 if the jwt is invalid', async () => {
       const response = await fastify.injectJson({
@@ -531,66 +578,53 @@ describe('presentation submission', () => {
         vendorUserId: vendorUserIdMapping.vendorUserId,
       });
       const tiedUpdatedAt = new Date();
-      await mongoDb()
-        .collection('feeds')
-        .updateMany(
-          {
-            _id: {
-              $in: [
-                new ObjectId(leastRecentFeed._id),
-                new ObjectId(mostRecentFeed._id),
-              ],
-            },
-          },
-          { $set: { updatedAt: tiedUpdatedAt } },
-        );
-      const disclosurePresentationExchange = await persistDisclosureExchange({
-        disclosure: presentationDisclosure,
-        tenant,
-        protocolMetadata: {
-          protocol: ExchangeProtocols.VNF_API,
-        },
-      });
-      const presentationBuilder = await generatePresentation(
-        disclosurePresentationExchange,
-      );
-      nock(mockVendorUrl)
-        .post(sendCredentialsUncheckedEndpoint)
-        .reply(200, sendCredentialsPayload);
-      const signedJwt = await generateDocJwt({}, tenantKeyPair.privateKey, {
-        kid: '#exchanges-1',
-        subject: vendorUserIdMapping._id,
-        issuer: tenant.did,
-        audience: tenant.did,
-        expiresIn: '1h',
-      });
+      await setFeedsUpdatedAt([leastRecentFeed, mostRecentFeed], tiedUpdatedAt);
 
-      const response = await fastify.inject({
-        method: 'POST',
-        url: inspectUrl(tenant, '/submit-presentation'),
-        headers: {
-          Authorization: `Bearer ${signedJwt}`,
-        },
-        payload: {
-          exchange_id: disclosurePresentationExchange._id,
-          vp_jwt: await presentationBuilder.selfSign(),
-        },
-      });
+      const response = await submitUncheckedPresentationAsVendorUser(
+        presentationDisclosure,
+      );
 
       expect(response.statusCode).toEqual(200);
-      const dbLeastRecentFeed = await mongoDb()
-        .collection('feeds')
-        .findOne({
-          _id: new ObjectId(leastRecentFeed._id),
-        });
-      const dbMostRecentFeed = await mongoDb()
-        .collection('feeds')
-        .findOne({
-          _id: new ObjectId(mostRecentFeed._id),
-        });
+      const dbLeastRecentFeed = await findFeed(leastRecentFeed);
+      const dbMostRecentFeed = await findFeed(mostRecentFeed);
       expect(dbLeastRecentFeed.feedTimestamp).toBeUndefined();
       expect(dbLeastRecentFeed.updatedAt).toEqual(tiedUpdatedAt);
       expect(dbMostRecentFeed.feedTimestamp).toEqual(expect.any(Date));
+    });
+
+    it("should 200 and update feedTimestamp of user's most recently updated feed even if another feed was inserted later", async () => {
+      const presentationDisclosure = await persistDisclosure({
+        tenant,
+        vendorEndpoint: VendorEndpoint.RECEIVE_UNCHECKED_CREDENTIALS,
+        feed: true,
+      });
+      const mostRecentlyUpdatedFeed = await persistFeed({
+        tenant,
+        disclosure: presentationDisclosure,
+        vendorUserId: vendorUserIdMapping.vendorUserId,
+      });
+      const mostRecentlyInsertedFeed = await persistFeed({
+        tenant,
+        disclosure: presentationDisclosure,
+        vendorUserId: vendorUserIdMapping.vendorUserId,
+      });
+      const now = Date.now();
+      const olderUpdatedAt = new Date(now - 1000);
+      await setFeedsUpdatedAt([mostRecentlyInsertedFeed], olderUpdatedAt);
+      await setFeedsUpdatedAt([mostRecentlyUpdatedFeed], new Date(now));
+
+      const response = await submitUncheckedPresentationAsVendorUser(
+        presentationDisclosure,
+      );
+
+      expect(response.statusCode).toEqual(200);
+      const dbMostRecentlyUpdatedFeed = await findFeed(mostRecentlyUpdatedFeed);
+      const dbMostRecentlyInsertedFeed = await findFeed(
+        mostRecentlyInsertedFeed,
+      );
+      expect(dbMostRecentlyUpdatedFeed.feedTimestamp).toEqual(expect.any(Date));
+      expect(dbMostRecentlyInsertedFeed.feedTimestamp).toBeUndefined();
+      expect(dbMostRecentlyInsertedFeed.updatedAt).toEqual(olderUpdatedAt);
     });
 
     it('should 200 and use custom webhook url from tenant for receive unchecked credential', async () => {
