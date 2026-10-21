@@ -22,10 +22,9 @@ const {
   createCommonLog,
   isSensitiveRoute,
 } = require('./common-create-server');
-const { redactConfigSecrets } = require('./redact-config-secrets');
 
 const createServer = (config, log = createCommonLog(config)) => {
-  log.info(redactConfigSecrets(config), 'Server Configured');
+  log.info(config, 'Server Configured');
 
   const server = commonCreateServer(config, log);
 
