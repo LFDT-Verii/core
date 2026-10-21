@@ -30,6 +30,7 @@ const BLOCKCHAIN_AUDIENCE = 'https://velocitynetwork.node';
 
 const createFastify = (config = {}) => {
   const hooks = new Map();
+  const requestDecorators = new Set();
   const fastify = {
     config: {
       vnfClientId: 'config-client',
@@ -45,15 +46,25 @@ const createFastify = (config = {}) => {
     hasDecorator(name) {
       return Object.hasOwn(this, name);
     },
-    decorateRequest() {
+    decorateRequest(name) {
+      if (requestDecorators.has(name)) {
+        throw new Error(`The decorator '${name}' has already been added!`);
+      }
+      requestDecorators.add(name);
       return this;
     },
+    hasRequestDecorator: (name) => requestDecorators.has(name),
     addHook(name, hook) {
-      hooks.set(name, hook);
+      hooks.set(name, [...(hooks.get(name) ?? []), hook]);
       return this;
     },
     runPreValidation: async (request) => {
-      await hooks.get('preValidation')(request);
+      await hooks
+        .get('preValidation')
+        .reduce(
+          (previousHook, hook) => previousHook.then(() => hook(request)),
+          Promise.resolve(),
+        );
     },
   };
 
@@ -480,6 +491,37 @@ describe('VNF Identity Provider Authentication', () => {
 
       expect(result).toEqual('CUSTOM_TOKEN');
       expect(fastify.resolveVnfClientOAuthCreds).toBe(customResolver);
+      expect(post.mock.calls[0].arguments[1]).toEqual({
+        grant_type: 'client_credentials',
+        client_id: 'custom-client',
+        client_secret: 'custom-secret',
+        audience: BLOCKCHAIN_AUDIENCE,
+      });
+    });
+
+    it('replaces a request authenticator declared by an earlier plugin', async () => {
+      tokenResponses.push({ access_token: 'CUSTOM_TOKEN', expires_in: 60 });
+      fastify = createFastify({
+        vnfClientId: undefined,
+        vnfClientSecret: undefined,
+      });
+      fastify.resolveVnfClientOAuthCreds = async () => ({
+        cacheKey: 'did:velocity:cao-a:3',
+        loadOAuthCreds: async () => ({
+          clientId: 'custom-client',
+          clientSecret: 'custom-secret',
+        }),
+      });
+      fastify
+        .decorateRequest('vnfBlockchainAuthenticate', null)
+        .addHook('preValidation', async (request) => {
+          request.vnfBlockchainAuthenticate = () => 'STUB_TOKEN';
+        });
+
+      await registerPlugin(fastify);
+      const result = await invokeRequestAuthentication(fastify);
+
+      expect(result).toEqual('CUSTOM_TOKEN');
       expect(post.mock.calls[0].arguments[1]).toEqual({
         grant_type: 'client_credentials',
         client_id: 'custom-client',

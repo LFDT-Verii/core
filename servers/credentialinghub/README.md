@@ -246,6 +246,15 @@ the loaded tenant, while authenticated Operator requests can resolve it from
 the Operator principal. A multi-CAO provider should reject requests when both
 sources exist but disagree, or when neither source supplies a CAO DID.
 
+Test mode (`NODE_ENV=test` or the `isTest` config value) does not change how
+blockchain calls are authenticated. A custom provider's blockchain client
+credentials are used in tests exactly as in production, so a wrapper's tests
+can call `createAppServer` without overriding `isTest` and fake the VNF OAuth
+token endpoint and the RPC node. Some test servers, such as
+`createTestServer` from `@verii/server-provider`, register a stub VNF
+authenticator. The built-in provider keeps that stub, while a custom
+provider's credentials replace it.
+
 Custom providers are trusted server setup code, so apart from the Operator
 principal's required `caoDid`, the Hub does not perform additional shape
 validation on their descriptors or principals. Fastify reports invalid plugin

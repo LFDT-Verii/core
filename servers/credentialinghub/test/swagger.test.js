@@ -526,7 +526,6 @@ describe('CAO security provider documentation', () => {
         },
       },
       configOverrides: {
-        isTest: false,
         mongoConnection: buildMongoConnection('test-credentialing-hub'),
       },
     });
