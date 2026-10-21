@@ -286,9 +286,16 @@ startNotificationWorker({
 ```
 
 The resolver returns `{ url, secret, signatureHeaderName? }` or `null`. The URL
-must pass the same checks as `NOTIFICATIONS_WEBHOOK_URL`. An event with no
-destination or an invalid URL is marked `dead` without a request; a resolver
-that throws is retried like a failed delivery.
+must pass the same checks as `NOTIFICATIONS_WEBHOOK_URL`, and the secret must
+be a non-empty string. Without `signatureHeaderName`, the signature header is
+`Verii-Signature`, not `NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME`. An event
+with no destination, an invalid URL or an invalid secret is marked `dead`
+without a request; a resolver that throws is retried like a failed delivery.
+The resolver runs inside the event's 30 s claim lease and has no timeout of its
+own, so it should return quickly.
+
+`NOTIFICATIONS_WEBHOOK_URL` and `NOTIFICATIONS_WEBHOOK_SECRET` are still
+required when notifications are enabled, even if the resolver doesn't use them.
 
 Run the module directly in `standalone` mode. In `embedded-child` mode, pass
 its absolute path to `startAppServer`, which forks it instead of the Hub's
