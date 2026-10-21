@@ -37,6 +37,7 @@ const {
 const {
   startEmbeddedNotificationWorker,
 } = require('../../src/start-embedded-notification-worker');
+const { startAppServer } = require('../../src');
 
 describe('embedded notification worker', () => {
   let fastify;
@@ -75,15 +76,15 @@ describe('embedded notification worker', () => {
   });
 
   it('should fail at startup when the worker module path is relative or missing', () => {
-    const server = createTestFastify();
-    fastify = server;
-
     for (const modulePath of [
       'notification-worker.js',
       path.join(__dirname, 'missing-notification-worker.js'),
     ]) {
       expect(() =>
-        startEmbeddedNotificationWorker(server, { modulePath }),
+        startAppServer({
+          configOverrides: { logSeverity: 'silent' },
+          notificationWorkerModulePath: modulePath,
+        }),
       ).toThrow(
         `notificationWorkerModulePath must be the absolute path of an existing file: ${modulePath}`,
       );

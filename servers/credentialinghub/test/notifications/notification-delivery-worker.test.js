@@ -386,6 +386,15 @@ describe('notification delivery worker', () => {
       'https://user:password@destination.localhost.test/events',
       'must not include credentials',
     );
+    await replaceFastify({
+      notifications: buildTestNotificationConfig({
+        allowInsecureWebhookUrl: false,
+      }),
+    });
+    await expectDead(
+      'http://destination.localhost.test/events',
+      'must use https',
+    );
   });
 
   it('should retry an event when the destination resolver throws', async () => {
