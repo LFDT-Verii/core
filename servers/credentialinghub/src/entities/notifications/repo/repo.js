@@ -52,6 +52,7 @@ module.exports = (app, options, next = () => {}) => {
         _id: 1,
         type: 1,
         version: 1,
+        caoDid: 1,
         payload: 1,
         status: 1,
         attempts: 1,

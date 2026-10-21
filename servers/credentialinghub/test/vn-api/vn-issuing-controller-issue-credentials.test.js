@@ -15,7 +15,15 @@
  *
  */
 
-const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+  mock,
+} = require('node:test');
 const { expect } = require('expect');
 const {
   mockHttpClientModule,
@@ -81,9 +89,12 @@ const {
 const { initDepotFactory } = require('../../src/entities/depots');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
+const { setTenantCaoDid } = require('../helpers/set-tenant-cao-did');
 const { NotificationEventTypes } = require('../../src/entities/notifications');
 
 const testUrl = (tenant2) => `/vn-api/r/${tenant2.did}/issue-credentials`;
+
+const TENANT_CAO_DID = 'did:ion:tenant-specific-cao';
 
 describe('vn-api > issue credentials', () => {
   let fastify;
@@ -1424,6 +1435,96 @@ describe('vn-api > issue credentials', () => {
     });
   });
 
+  describe('notification CAO DID', () => {
+    const approveAndRejectCredentials = async () => {
+      fastify.overrides.reqConfig = enableNotifications([
+        NotificationEventTypes.CREDENTIAL_ISSUED,
+        NotificationEventTypes.CREDENTIAL_REJECTED,
+      ]);
+      return fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await testAccessToken(
+            tenant.did,
+            exchange._id,
+            depots[0]._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: {
+          approvedOfferIds: [credentials[0]._id],
+          rejectedOfferIds: [credentials[1]._id],
+          proof: await buildProof(
+            holderDid,
+            holderKeyPair,
+            await loadChallenge(exchange._id),
+          ),
+        },
+      });
+    };
+
+    const findNotificationEvents = () =>
+      mongoDb().collection('notification_events').find({}).toArray();
+
+    afterEach(async () => {
+      await setTenantCaoDid(tenant, tenant.caoDid);
+    });
+
+    it("should use the tenant's own caoDid rather than the default CAO DID", async () => {
+      await setTenantCaoDid(tenant, TENANT_CAO_DID);
+
+      const response = await approveAndRejectCredentials();
+
+      expect(response.statusCode).toEqual(200);
+      expect(TENANT_CAO_DID).not.toEqual(fastify.config.defaultCaoDid);
+      const events = await findNotificationEvents();
+      expect(events).toHaveLength(2);
+      expect(events).toEqual(
+        expect.arrayContaining([
+          expectedCredentialNotificationEvent({
+            eventType: NotificationEventTypes.CREDENTIAL_ISSUED,
+            credential: credentials[0],
+            credentialType: 'EmailV1.0',
+            caoDid: TENANT_CAO_DID,
+          }),
+          expectedCredentialNotificationEvent({
+            eventType: NotificationEventTypes.CREDENTIAL_REJECTED,
+            credential: credentials[1],
+            credentialType: 'PhoneV1.0',
+            caoDid: TENANT_CAO_DID,
+          }),
+        ]),
+      );
+    });
+
+    it('should set caoDid to null when the tenant has no caoDid', async () => {
+      await setTenantCaoDid(tenant, null);
+
+      const response = await approveAndRejectCredentials();
+
+      expect(response.statusCode).toEqual(200);
+      const events = await findNotificationEvents();
+      expect(events).toHaveLength(2);
+      expect(events).toEqual(
+        expect.arrayContaining([
+          expectedCredentialNotificationEvent({
+            eventType: NotificationEventTypes.CREDENTIAL_ISSUED,
+            credential: credentials[0],
+            credentialType: 'EmailV1.0',
+            caoDid: null,
+          }),
+          expectedCredentialNotificationEvent({
+            eventType: NotificationEventTypes.CREDENTIAL_REJECTED,
+            credential: credentials[1],
+            credentialType: 'PhoneV1.0',
+            caoDid: null,
+          }),
+        ]),
+      );
+    });
+  });
+
   const findOneExchange = async (value) =>
     mongoDb()
       .collection('exchanges')
@@ -1440,11 +1541,13 @@ describe('vn-api > issue credentials', () => {
     credential,
     credentialType,
     data,
+    caoDid = tenant.caoDid,
   }) =>
     expect.objectContaining({
       _id: expect.stringMatching(/^evt_/),
       type: eventType,
       version: 1,
+      caoDid,
       status: 'pending',
       attempts: 0,
       nextAttemptAt: expect.any(Date),
@@ -1463,6 +1566,7 @@ describe('vn-api > issue credentials', () => {
         occurredAt: expect.any(String),
         tenantId: tenant._id,
         tenantDid: tenant.did,
+        caoDid,
         serviceId: preauthIssuerService._id,
         depotId: depots[0]._id,
         exchangeId: exchange._id,

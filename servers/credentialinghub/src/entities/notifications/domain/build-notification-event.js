@@ -141,6 +141,8 @@ const buildBaseEvent = ({
   occurredAt: toIsoString(occurredAt),
   tenantId: tenant._id.toString(),
   tenantDid: tenant.did,
+  // Legacy tenants may have no CAO DID. Send null rather than omitting the field.
+  caoDid: tenant.caoDid ?? null,
   serviceId: exchange.serviceId.toString(),
   depotId: exchange.depotId.toString(),
   exchangeId: exchange._id.toString(),

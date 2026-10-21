@@ -83,6 +83,38 @@ describe('notification events repo extension', () => {
     );
   });
 
+  it('should store the payload caoDid as a top-level field', async () => {
+    let insertedDocs;
+    const notificationEventsRepo = notificationEventsRepoExtension({
+      extensions: [],
+      collection: () => ({
+        insertMany: async (docs) => {
+          insertedDocs = docs;
+        },
+      }),
+    });
+
+    await notificationEventsRepo.insertEvents([
+      buildEvent({ id: 'evt_cao', caoDid: 'did:web:cao.example' }),
+      buildEvent({ id: 'evt_legacy_tenant', caoDid: null }),
+      buildEvent({ id: 'evt_without_cao_field' }),
+    ]);
+
+    expect(insertedDocs).toEqual([
+      expect.objectContaining({
+        _id: 'evt_cao',
+        caoDid: 'did:web:cao.example',
+        payload: expect.objectContaining({ caoDid: 'did:web:cao.example' }),
+      }),
+      expect.objectContaining({
+        _id: 'evt_legacy_tenant',
+        caoDid: null,
+        payload: expect.objectContaining({ caoDid: null }),
+      }),
+      expect.objectContaining({ _id: 'evt_without_cao_field', caoDid: null }),
+    ]);
+  });
+
   it('should skip empty event inserts', async () => {
     let insertManyCalled = false;
     const notificationEventsRepo = notificationEventsRepoExtension({
@@ -206,6 +238,29 @@ describe('notification events repo extension', () => {
       }
     });
 
+    it('should return the stored caoDid when claiming a due event', async () => {
+      const event = buildEvent({
+        id: 'evt_claim_cao',
+        caoDid: 'did:web:cao.example',
+      });
+      await repos.notification_events.insertEvents([event]);
+      const now = await buildClaimTimeAfterNextAttempt(event.id);
+
+      await expect(
+        repos.notification_events.claimDueEvent({
+          now,
+          workerId: 'worker-1',
+          lockDurationMs: 30000,
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          _id: event.id,
+          caoDid: 'did:web:cao.example',
+          payload: expect.objectContaining({ caoDid: 'did:web:cao.example' }),
+        }),
+      );
+    });
+
     it('should return the updated document when marking a locked event delivered', async () => {
       const event = buildEvent({ id: 'evt_mark_delivered' });
       await repos.notification_events.insertEvents([event]);
@@ -285,7 +340,7 @@ describe('notification events repo extension', () => {
   });
 });
 
-const buildEvent = ({ id = 'evt_test' } = {}) => ({
+const buildEvent = ({ id = 'evt_test', ...overrides } = {}) => ({
   id,
   type: 'credential.issued',
   version: 1,
@@ -293,6 +348,7 @@ const buildEvent = ({ id = 'evt_test' } = {}) => ({
   resource: { type: 'credential', id: 'credential-id' },
   data: {},
   links: {},
+  ...overrides,
 });
 
 const loadEvent = (eventId) =>
