@@ -353,6 +353,66 @@ describe('notification delivery worker', () => {
     );
   });
 
+  it('should mark an event without a destination dead without posting it', async () => {
+    const webhook = nockWebhook();
+
+    expect(await deliverWithResolver(() => null)).toEqual(
+      expect.objectContaining({
+        lastError: expect.objectContaining({ message: 'no_destination' }),
+        status: NotificationEventStatuses.DEAD,
+      }),
+    );
+    expect(webhook.scope.isDone()).toEqual(false);
+  });
+
+  it('should mark an event with an invalid destination URL dead', async () => {
+    const expectDead = async (url, urlError) =>
+      expect(
+        await deliverWithResolver(
+          () => ({ url, secret: 'destination-secret' }),
+          buildEvent({ id: url }),
+        ),
+      ).toEqual(
+        expect.objectContaining({
+          lastError: expect.objectContaining({
+            message: `invalid_destination: url ${urlError}`,
+          }),
+          status: NotificationEventStatuses.DEAD,
+        }),
+      );
+
+    await expectDead('not a url', 'must be a valid URL');
+    await expectDead(
+      'https://user:password@destination.localhost.test/events',
+      'must not include credentials',
+    );
+  });
+
+  it('should retry an event when the destination resolver throws', async () => {
+    const resolveDestination = () => {
+      throw new Error('lookup failed');
+    };
+
+    expect(await deliverWithResolver(resolveDestination)).toEqual(
+      expect.objectContaining({
+        lastError: expect.objectContaining({ message: 'lookup failed' }),
+        status: NotificationEventStatuses.RETRYING,
+      }),
+    );
+  });
+
+  const deliverWithResolver = async (
+    resolveDestination,
+    event = buildEvent(),
+  ) => {
+    await repos.notification_events.insertEvents([event]);
+    await deliverNextNotificationEvent(
+      { workerId: 'worker-1' },
+      { ...context, resolveDestination },
+    );
+    return loadEvent(event.id);
+  };
+
   const replaceFastify = async (configOverrides) => {
     await fastify.close();
 

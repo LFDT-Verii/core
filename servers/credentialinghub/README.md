@@ -105,7 +105,7 @@ contract calling code uses the configured client credentials directly, so the
 default provider does not install a blockchain credentials capability plugin.
 Startup fails when any of the four values is absent from both
 `configOverrides` and the environment. This applies to every entry point that
-uses the built-in provider, including the standalone notification worker.
+uses the built-in provider. The notification worker doesn't use a provider.
 Deployments upgrading from the earlier static-token setup must now supply
 `DEFAULT_CAO_DID`; it was previously optional because tenant creation could
 instead receive a `caoDid` in the request. The current Operator create endpoint
@@ -262,3 +262,41 @@ and missing decorator integrations through its normal startup and request
 behavior. Credential values are validated by the blockchain authentication
 layer when they are consumed. Provider errors are returned to the caller and
 never fall back to the built-in static credentials.
+
+## Notification Worker
+
+The notification worker needs only the Hub's config and MongoDB, so it starts
+without a CAO security provider or its environment variables. By default it
+posts every event to `NOTIFICATIONS_WEBHOOK_URL`. A wrapper can choose each
+event's destination by starting the worker from its own module:
+
+```js
+// notification-worker.js
+const { startNotificationWorker } = require('@verii/server-credentialing-hub');
+
+startNotificationWorker({
+  // event is the stored notification event; db is the Hub's MongoDB database.
+  resolveDestination: async (event, { db }) => {
+    const webhook = await db
+      .collection('webhooks')
+      .findOne({ tenantId: event.payload.tenantId });
+    return webhook && { url: webhook.url, secret: webhook.secret };
+  },
+});
+```
+
+The resolver returns `{ url, secret, signatureHeaderName? }` or `null`. The URL
+must pass the same checks as `NOTIFICATIONS_WEBHOOK_URL`. An event with no
+destination or an invalid URL is marked `dead` without a request; a resolver
+that throws is retried like a failed delivery.
+
+Run the module directly in `standalone` mode. In `embedded-child` mode, pass
+its absolute path to `startAppServer`, which forks it instead of the Hub's
+worker and fails at startup if the file doesn't exist:
+
+```js
+startAppServer({
+  caoSecurityProvider,
+  notificationWorkerModulePath: require.resolve('./notification-worker'),
+});
+```

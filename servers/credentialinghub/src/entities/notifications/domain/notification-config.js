@@ -62,6 +62,7 @@ const buildStaticNotificationConfig = (
     signatureHeaderName,
     webhookTimeoutMs,
     maxAttempts,
+    allowInsecureWebhookUrl,
   },
   eventTypes,
 ) => ({
@@ -78,8 +79,27 @@ const buildStaticNotificationConfig = (
     signatureHeaderName,
     timeoutMs: webhookTimeoutMs,
     maxAttempts,
+    allowInsecureUrl: allowInsecureWebhookUrl,
   },
 });
+
+// Checks the Hub-wide webhook URL and the URLs a destination resolver returns.
+const findWebhookUrlError = (webhookUrl, allowInsecureWebhookUrl) => {
+  const parsedUrl = URL.parse(webhookUrl);
+  if (parsedUrl == null) {
+    return 'must be a valid URL';
+  }
+
+  if (parsedUrl.username || parsedUrl.password) {
+    return 'must not include credentials';
+  }
+
+  if (parsedUrl.protocol !== 'https:' && !allowInsecureWebhookUrl) {
+    return 'must use https';
+  }
+
+  return undefined;
+};
 
 const parseNotificationEventTypes = (eventTypes) => {
   if (Array.isArray(eventTypes)) {
@@ -99,5 +119,6 @@ const parseNotificationEventTypes = (eventTypes) => {
 module.exports = {
   NotificationWorkerModes,
   buildNotificationConfig,
+  findWebhookUrlError,
   parseNotificationEventTypes,
 };
