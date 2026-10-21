@@ -1,8 +1,9 @@
 const { spawnSync } = require('node:child_process');
-const { afterEach, describe, it, mock } = require('node:test');
+const { after, afterEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const Fastify = require('fastify');
 const fp = require('fastify-plugin');
+const nock = require('nock').default;
 
 const { initHttpClient: realInitHttpClient } = require('@verii/http-client');
 const initHttpClient = mock.fn(realInitHttpClient);
@@ -43,6 +44,13 @@ const TEST_BLOCKCHAIN_CLIENT_CREDENTIALS_RESOLVER = async () => ({
     clientSecret: 'test-vnf-secret',
   }),
 });
+const VNF_AUTH_ORIGIN = 'http://vnf-auth.localhost.test';
+const RPC_NODE_URL = 'http://rpc.localhost.test';
+const BLOCKCHAIN_NETWORK_CONFIG = {
+  blockchainApiAudience: 'https://blockchain.example.test',
+  rpcUrl: RPC_NODE_URL,
+  vnfOAuthTokensEndpoint: `${VNF_AUTH_ORIGIN}/oauth/token`,
+};
 
 const createTestOperatorAuthPlugin = ({ principal = TEST_PRINCIPAL } = {}) =>
   fp(async (fastify) => {
@@ -81,7 +89,41 @@ afterEach(async () => {
   activeServers.clear();
   initHttpClient.mock.resetCalls();
   initHttpClient.mock.mockImplementation(realInitHttpClient);
+  nock.cleanAll();
 });
+
+after(() => {
+  nock.restore();
+});
+
+// Fakes the VNF OAuth token endpoint and the RPC node, recording the token
+// requests and the Authorization header of each RPC call.
+const nockBlockchainNetwork = () => {
+  const network = { tokenRequests: [], rpcAuthorizations: [] };
+  nock(VNF_AUTH_ORIGIN)
+    .post('/oauth/token')
+    .reply(200, async (request) => {
+      const tokenRequest = await request.json();
+      network.tokenRequests.push(tokenRequest);
+      return {
+        access_token: `vnf-access-token-for-${tokenRequest.client_id}`,
+        expires_in: 60,
+      };
+    });
+  nock(RPC_NODE_URL)
+    .post('/')
+    .reply(200, async (request) => {
+      network.rpcAuthorizations.push(request.headers.get('authorization'));
+      const { id } = await request.json();
+      return { jsonrpc: '2.0', id, result: '0x2a' };
+    });
+  return network;
+};
+
+const addBlockNumberRoute = (fastify) =>
+  fastify.get('/test/block-number', async (request) => ({
+    blockNumber: await request.rpcProvider.send('eth_blockNumber', []),
+  }));
 
 const createAuthenticationBoundary = (caoSecurityProvider, config = {}) => {
   const fastify = trackServer(Fastify());
@@ -104,12 +146,12 @@ const createAuthenticationBoundary = (caoSecurityProvider, config = {}) => {
   return fastify;
 };
 
+// Builds the Hub's production server, which runs here in test mode.
 const createProductionServer = (caoSecurityProvider, configOverrides = {}) =>
   trackServer(
     createAppServer({
       caoSecurityProvider,
       configOverrides: {
-        isTest: false,
         logSeverity: 'silent',
         mongoConnection: CAO_SECURITY_PROVIDER_MONGO_CONNECTION,
         ...DEFAULT_OPERATOR_CONFIG,
@@ -399,6 +441,49 @@ describe('default static CAO security', () => {
       );
     }
   });
+
+  it('keeps the test server blockchain authenticator', async () => {
+    const network = nockBlockchainNetwork();
+    const fastify = trackServer(buildFastify(BLOCKCHAIN_NETWORK_CONFIG));
+    addBlockNumberRoute(fastify);
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/test/block-number',
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(network.tokenRequests).toEqual([]);
+    expect(network.rpcAuthorizations).toEqual(['Bearer TOKEN']);
+  });
+
+  it('authenticates app server blockchain calls with the static credentials in test mode', async () => {
+    const network = nockBlockchainNetwork();
+    const fastify = createProductionServer(
+      undefined,
+      BLOCKCHAIN_NETWORK_CONFIG,
+    );
+    addBlockNumberRoute(fastify);
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/test/block-number',
+    });
+
+    expect(fastify.config.isTest).toEqual(true);
+    expect(response.statusCode).toEqual(200);
+    expect(network.tokenRequests).toEqual([
+      {
+        grant_type: 'client_credentials',
+        client_id: DEFAULT_OPERATOR_CONFIG.vnfClientId,
+        client_secret: DEFAULT_OPERATOR_CONFIG.vnfClientSecret,
+        audience: BLOCKCHAIN_NETWORK_CONFIG.blockchainApiAudience,
+      },
+    ]);
+    expect(network.rpcAuthorizations).toEqual([
+      `Bearer vnf-access-token-for-${DEFAULT_OPERATOR_CONFIG.vnfClientId}`,
+    ]);
+  });
 });
 
 describe('blockchain client credentials capability', () => {
@@ -457,7 +542,6 @@ describe('blockchain client credentials capability', () => {
             documentation: {},
           },
           configOverrides: {
-            isTest: false,
             logSeverity: 'silent',
             mongoConnection:
               'mongodb://localhost:27017/test-credentialing-hub-custom-auth',
@@ -602,5 +686,85 @@ describe('blockchain client credentials capability', () => {
         audience: 'https://blockchain.example.test',
       },
     ]);
+  });
+
+  describe('in test mode', () => {
+    const createCaoCredentialsResolver = () =>
+      mock.fn(async () => ({
+        cacheKey: 'did:example:cao',
+        loadCredentials: async () => ({
+          clientId: 'cao-client',
+          clientSecret: 'cao-secret',
+        }),
+      }));
+
+    const expectCaoCredentialsOnBlockchainCall = async (
+      fastify,
+      { network, resolveBlockchainClientCredentials },
+    ) => {
+      addBlockNumberRoute(fastify);
+
+      const response = await fastify.inject({
+        method: 'GET',
+        url: '/test/block-number',
+      });
+
+      expect(fastify.config.isTest).toEqual(true);
+      expect({
+        statusCode: response.statusCode,
+        body: response.json(),
+      }).toEqual({ statusCode: 200, body: { blockNumber: '0x2a' } });
+      expect(resolveBlockchainClientCredentials.mock.callCount()).toEqual(1);
+      expect(network.tokenRequests).toEqual([
+        {
+          grant_type: 'client_credentials',
+          client_id: 'cao-client',
+          client_secret: 'cao-secret',
+          audience: BLOCKCHAIN_NETWORK_CONFIG.blockchainApiAudience,
+        },
+      ]);
+      expect(network.rpcAuthorizations).toEqual([
+        'Bearer vnf-access-token-for-cao-client',
+      ]);
+    };
+
+    it('authenticates app server blockchain calls with the provider credentials', async () => {
+      const network = nockBlockchainNetwork();
+      const resolveBlockchainClientCredentials = createCaoCredentialsResolver();
+      const fastify = createProductionServer(
+        createCaoSecurityProvider({
+          blockchainClientCredentialsPlugin:
+            createTestBlockchainClientCredentialsPlugin({
+              resolver: resolveBlockchainClientCredentials,
+            }),
+        }),
+        BLOCKCHAIN_NETWORK_CONFIG,
+      );
+
+      await expectCaoCredentialsOnBlockchainCall(fastify, {
+        network,
+        resolveBlockchainClientCredentials,
+      });
+    });
+
+    it('replaces the test server blockchain authenticator with the provider credentials', async () => {
+      const network = nockBlockchainNetwork();
+      const resolveBlockchainClientCredentials = createCaoCredentialsResolver();
+      const fastify = trackServer(
+        buildFastify(BLOCKCHAIN_NETWORK_CONFIG, {
+          caoSecurityProvider: createCaoSecurityProvider({
+            blockchainClientCredentialsPlugin:
+              createTestBlockchainClientCredentialsPlugin({
+                resolver: resolveBlockchainClientCredentials,
+              }),
+          }),
+        }),
+      );
+
+      await expectCaoCredentialsOnBlockchainCall(fastify, {
+        network,
+        resolveBlockchainClientCredentials,
+      });
+    });
   });
 });

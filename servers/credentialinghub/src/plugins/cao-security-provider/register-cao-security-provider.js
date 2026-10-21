@@ -15,6 +15,7 @@
  */
 
 const fp = require('fastify-plugin');
+const { authenticateVnfClientPlugin } = require('@verii/base-contract-io');
 const {
   defaultCaoSecurityProvider,
 } = require('./default-cao-security-provider');
@@ -52,7 +53,29 @@ const installCaoSecurityProvider = fp(
   { name: 'credentialingHubCaoSecurityProvider' },
 );
 
+const installVnfClientAuthentication = fp(
+  async (fastify, { caoSecurityProvider }) => {
+    // A test server may already supply a stub VNF authenticator. Only the
+    // built-in provider keeps it; a custom provider's blockchain client
+    // credentials always authenticate blockchain calls.
+    if (
+      caoSecurityProvider === defaultCaoSecurityProvider &&
+      fastify.hasPlugin('velocityIdp')
+    ) {
+      return;
+    }
+    await fastify.register(authenticateVnfClientPlugin);
+  },
+  { name: 'credentialingHubVnfClientAuthentication' },
+);
+
 const registerCaoSecurityProvider = (server, caoSecurityProvider) =>
   server.register(installCaoSecurityProvider, { caoSecurityProvider });
 
-module.exports = { registerCaoSecurityProvider };
+const registerVnfClientAuthentication = (server, caoSecurityProvider) =>
+  server.register(installVnfClientAuthentication, { caoSecurityProvider });
+
+module.exports = {
+  registerCaoSecurityProvider,
+  registerVnfClientAuthentication,
+};
