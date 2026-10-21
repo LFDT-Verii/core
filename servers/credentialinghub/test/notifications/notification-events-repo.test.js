@@ -20,6 +20,7 @@ const { bindRepo, mongoDb } = require('@spencejs/spence-mongo-repos');
 const { expect } = require('expect');
 const createTestFastify = require('../helpers/create-test-fastify');
 const {
+  buildCredentialIssuedEvent,
   NotificationEventStatuses,
 } = require('../../src/entities/notifications');
 const {
@@ -112,6 +113,47 @@ describe('notification events repo extension', () => {
         payload: expect.objectContaining({ caoDid: null }),
       }),
       expect.objectContaining({ _id: 'evt_without_cao_field', caoDid: null }),
+    ]);
+  });
+
+  it('should store a null caoDid for events built for a tenant with a blank caoDid', async () => {
+    let insertedDocs;
+    const notificationEventsRepo = notificationEventsRepoExtension({
+      extensions: [],
+      collection: () => ({
+        insertMany: async (docs) => {
+          insertedDocs = docs;
+        },
+      }),
+    });
+    const buildEventForTenantCaoDid = (id, caoDid) =>
+      buildCredentialIssuedEvent({
+        id,
+        tenant: { _id: 'tenant-id', did: 'did:web:issuer.example', caoDid },
+        exchange: {
+          _id: 'exchange-id',
+          serviceId: 'service-id',
+          depotId: 'depot-id',
+        },
+        credential: { _id: 'credential-id' },
+      });
+
+    await notificationEventsRepo.insertEvents([
+      buildEventForTenantCaoDid('evt_empty_cao', ''),
+      buildEventForTenantCaoDid('evt_whitespace_cao', ' \t '),
+    ]);
+
+    expect(insertedDocs).toEqual([
+      expect.objectContaining({
+        _id: 'evt_empty_cao',
+        caoDid: null,
+        payload: expect.objectContaining({ caoDid: null }),
+      }),
+      expect.objectContaining({
+        _id: 'evt_whitespace_cao',
+        caoDid: null,
+        payload: expect.objectContaining({ caoDid: null }),
+      }),
     ]);
   });
 

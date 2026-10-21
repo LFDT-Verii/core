@@ -189,7 +189,7 @@ Field rules:
 - `occurredAt`: time the domain event occurred, not time delivered.
 - `tenantId`, `serviceId`, `depotId`, `exchangeId`: string ids when available.
 - `tenantDid`: useful for operator correlation.
-- `caoDid`: DID of the CAO that owns the tenant, copied from `tenant.caoDid`. A receiver serving several CAOs uses it to tell which CAO an event belongs to and which Operator client to use for `links`. It is `null` when the tenant has no CAO DID, which is possible for tenants created before a CAO DID was required. The Hub does not substitute the default CAO DID. Events created before this field was added don't include it.
+- `caoDid`: DID of the CAO that owns the tenant, copied from `tenant.caoDid`. A receiver serving several CAOs uses it to tell which CAO an event belongs to and which Operator client to use for `links`. It is `null` when the tenant's CAO DID is missing or blank, which is possible for tenants created before a CAO DID was required. `null` is the only value that means "no CAO": the Hub never sends an empty string, and it does not substitute the default CAO DID. Events created before this field was added don't include it.
 - `resource`: the primary resource this event is about.
 - `data`: event-specific safe summary fields.
 - `links`: optional operator API paths for fetching details.
@@ -371,7 +371,7 @@ Document shape:
 }
 ```
 
-`caoDid` copies `payload.caoDid` so that delivery can read the tenant's CAO without parsing the payload. It is `null` when the tenant has no CAO DID. Events stored before the field was added have no `caoDid`, top-level or in the payload, and should be treated as `null`.
+`caoDid` copies `payload.caoDid` so that delivery can read the tenant's CAO without parsing the payload. It is `null` when the tenant's CAO DID is missing or blank. Events stored before the field was added have no `caoDid`, top-level or in the payload, and should be treated as `null`.
 
 Statuses:
 

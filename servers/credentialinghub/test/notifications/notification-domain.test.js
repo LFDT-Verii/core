@@ -257,38 +257,46 @@ describe('notification domain', () => {
       });
     });
 
-    it('should set caoDid to null for every event type when the tenant has no caoDid', () => {
-      const tenant = { _id: 'tenant-id', did: 'did:web:issuer.example' };
-      const exchange = {
-        _id: 'exchange-id',
-        serviceId: 'service-id',
-        depotId: 'depot-id',
-      };
-      const events = [
-        buildPresentationReceivedEvent({
-          tenant,
-          exchange,
-          presentation: { _id: 'presentation-id', format: 'JWT_VP' },
-        }),
-        buildCredentialIssuedEvent({
-          tenant,
-          exchange,
-          credential: { _id: 'credential-id' },
-        }),
-        buildCredentialRejectedEvent({
-          tenant,
-          exchange,
-          credential: { _id: 'credential-id' },
-        }),
-      ];
+    [
+      ['no caoDid field', {}],
+      ['a null caoDid', { caoDid: null }],
+      ['an empty caoDid', { caoDid: '' }],
+      ['a whitespace-only caoDid', { caoDid: ' \t ' }],
+    ].forEach(([description, tenantCaoDid]) => {
+      it(`should set caoDid to null for every event type when the tenant has ${description}`, () => {
+        const events = buildEveryEventType({
+          _id: 'tenant-id',
+          did: 'did:web:issuer.example',
+          ...tenantCaoDid,
+        });
 
-      expect(events).toEqual([
-        expect.objectContaining({
-          type: 'presentation.received',
-          caoDid: null,
-        }),
-        expect.objectContaining({ type: 'credential.issued', caoDid: null }),
-        expect.objectContaining({ type: 'credential.rejected', caoDid: null }),
+        expect(events).toEqual([
+          expect.objectContaining({
+            type: 'presentation.received',
+            caoDid: null,
+          }),
+          expect.objectContaining({ type: 'credential.issued', caoDid: null }),
+          expect.objectContaining({
+            type: 'credential.rejected',
+            caoDid: null,
+          }),
+        ]);
+      });
+    });
+
+    it('should keep a non-blank caoDid exactly as stored on the tenant', () => {
+      const caoDid = ' did:web:cao.example ';
+
+      const events = buildEveryEventType({
+        _id: 'tenant-id',
+        did: 'did:web:issuer.example',
+        caoDid,
+      });
+
+      expect(events.map((event) => event.caoDid)).toEqual([
+        caoDid,
+        caoDid,
+        caoDid,
       ]);
     });
   });
@@ -321,3 +329,28 @@ describe('notification domain', () => {
     });
   });
 });
+
+const buildEveryEventType = (tenant) => {
+  const exchange = {
+    _id: 'exchange-id',
+    serviceId: 'service-id',
+    depotId: 'depot-id',
+  };
+  return [
+    buildPresentationReceivedEvent({
+      tenant,
+      exchange,
+      presentation: { _id: 'presentation-id', format: 'JWT_VP' },
+    }),
+    buildCredentialIssuedEvent({
+      tenant,
+      exchange,
+      credential: { _id: 'credential-id' },
+    }),
+    buildCredentialRejectedEvent({
+      tenant,
+      exchange,
+      credential: { _id: 'credential-id' },
+    }),
+  ];
+};

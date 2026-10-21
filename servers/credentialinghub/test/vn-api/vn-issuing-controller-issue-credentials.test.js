@@ -1498,30 +1498,35 @@ describe('vn-api > issue credentials', () => {
       );
     });
 
-    it('should set caoDid to null when the tenant has no caoDid', async () => {
-      await setTenantCaoDid(tenant, null);
+    [
+      ['no caoDid', null],
+      ['a blank caoDid', ''],
+    ].forEach(([description, tenantCaoDid]) => {
+      it(`should set caoDid to null when the tenant has ${description}`, async () => {
+        await setTenantCaoDid(tenant, tenantCaoDid);
 
-      const response = await approveAndRejectCredentials();
+        const response = await approveAndRejectCredentials();
 
-      expect(response.statusCode).toEqual(200);
-      const events = await findNotificationEvents();
-      expect(events).toHaveLength(2);
-      expect(events).toEqual(
-        expect.arrayContaining([
-          expectedCredentialNotificationEvent({
-            eventType: NotificationEventTypes.CREDENTIAL_ISSUED,
-            credential: credentials[0],
-            credentialType: 'EmailV1.0',
-            caoDid: null,
-          }),
-          expectedCredentialNotificationEvent({
-            eventType: NotificationEventTypes.CREDENTIAL_REJECTED,
-            credential: credentials[1],
-            credentialType: 'PhoneV1.0',
-            caoDid: null,
-          }),
-        ]),
-      );
+        expect(response.statusCode).toEqual(200);
+        const events = await findNotificationEvents();
+        expect(events).toHaveLength(2);
+        expect(events).toEqual(
+          expect.arrayContaining([
+            expectedCredentialNotificationEvent({
+              eventType: NotificationEventTypes.CREDENTIAL_ISSUED,
+              credential: credentials[0],
+              credentialType: 'EmailV1.0',
+              caoDid: null,
+            }),
+            expectedCredentialNotificationEvent({
+              eventType: NotificationEventTypes.CREDENTIAL_REJECTED,
+              credential: credentials[1],
+              credentialType: 'PhoneV1.0',
+              caoDid: null,
+            }),
+          ]),
+        );
+      });
     });
   });
 
