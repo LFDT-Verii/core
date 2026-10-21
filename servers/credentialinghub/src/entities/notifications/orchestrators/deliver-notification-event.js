@@ -99,6 +99,12 @@ const findDestinationError = (destination, config) => {
     return { message: 'no_destination' };
   }
 
+  if (typeof destination.secret !== 'string' || destination.secret === '') {
+    return {
+      message: 'invalid_destination: secret must be a non-empty string',
+    };
+  }
+
   const urlError = findWebhookUrlError(
     destination.url,
     config.notifications.webhook.allowInsecureUrl,

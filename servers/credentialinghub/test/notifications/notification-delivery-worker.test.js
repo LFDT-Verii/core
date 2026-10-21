@@ -397,6 +397,29 @@ describe('notification delivery worker', () => {
     );
   });
 
+  it('should mark an event with a missing or non-string destination secret dead', async () => {
+    const webhook = nockWebhook();
+    const expectDead = async (secret) =>
+      expect(
+        await deliverWithResolver(
+          () => ({ url: WEBHOOK_URL, secret }),
+          buildEvent({ id: `evt_secret_${typeof secret}_${secret}` }),
+        ),
+      ).toEqual(
+        expect.objectContaining({
+          lastError: expect.objectContaining({
+            message: 'invalid_destination: secret must be a non-empty string',
+          }),
+          status: NotificationEventStatuses.DEAD,
+        }),
+      );
+
+    await expectDead(undefined);
+    await expectDead('');
+    await expectDead(12345);
+    expect(webhook.scope.isDone()).toEqual(false);
+  });
+
   it('should retry an event when the destination resolver throws', async () => {
     const resolveDestination = () => {
       throw new Error('lookup failed');

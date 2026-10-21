@@ -531,7 +531,7 @@ other non-retryable 4xx
 
 Permanent failures should mark the event `dead`, not block later events.
 
-An event whose destination resolver returns `null`, or a destination with an invalid URL, is marked `dead` without a request, with the `lastError.message` `no_destination` or `invalid_destination: ...`. A resolver that throws is a retryable failure.
+An event whose destination resolver returns `null`, or a destination with an invalid URL or secret, is marked `dead` without a request, with the `lastError.message` `no_destination` or `invalid_destination: ...`. A resolver that throws is a retryable failure.
 
 Timeout:
 
