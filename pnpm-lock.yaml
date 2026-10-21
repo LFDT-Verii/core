@@ -3188,9 +3188,6 @@ importers:
       '@spencejs/spence-config':
         specifier: 1.1.0
         version: 1.1.0
-      '@verii/endpoints-organizations-registrar':
-        specifier: workspace:*
-        version: link:../../packages/endpoints-organizations-registrar
       '@verii/sample-data':
         specifier: workspace:*
         version: link:../../packages/sample-data

@@ -10,7 +10,6 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --test-timeout=1200000 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
     "test:ci": "cross-env NODE_ENV=test node --test --test-concurrency=1 --test-timeout=1200000 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
-    "test:e2e": "node --test --test-concurrency=1 --test-timeout=300000 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml 'e2e/*.test.js'",
     "start": "node src/main.js",
     "start:dev": "node --throw-deprecation src/standalone.js",
     "start-operator": "node src/main-operator.js",
@@ -83,7 +82,6 @@
   },
   "devDependencies": {
     "@spencejs/spence-config": "1.1.0",
-    "@verii/endpoints-organizations-registrar": "workspace:*",
     "@verii/sample-data": "workspace:*",
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
