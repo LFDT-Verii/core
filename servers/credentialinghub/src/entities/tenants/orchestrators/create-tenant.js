@@ -16,18 +16,20 @@
  */
 
 const { KeyPurposes, KeyEncodings } = require('@verii/crypto');
-const { flatMap, flow, fromPairs, map, pick } = require('lodash/fp');
+const { flatMap, flow, fromPairs, map, pick, toLower } = require('lodash/fp');
+const newError = require('http-errors');
 const { ObjectId } = require('mongodb');
 const { nanoid } = require('nanoid');
 const {
   loadPrimaryAccount,
   normalizeTenantKey,
   validateTenantKeys,
+  validateTenantKeysMatchDidDoc,
   getKeyWithPurpose,
   CihKeyPurposes,
 } = require('../../keys');
 const { loadTenantDidDoc, loadTenantProfile } = require('../adapters');
-const { validateNewTenant } = require('../domain');
+const { TenantErrors, validateNewTenant } = require('../domain');
 const { applyOperatorCaoDid } = require('../domain/operator-tenant-scope');
 
 const createTenant = async (newTenant, tenantKeys, context) => {
@@ -42,9 +44,11 @@ const createTenant = async (newTenant, tenantKeys, context) => {
   validateNewTenant(scopedNewTenant, orgProfile);
 
   validateTenantKeys(tenantKeys, didDoc);
+  const normalizedTenantKeys = map(normalizeTenantKey, tenantKeys);
+  validateTenantKeysMatchDidDoc(normalizedTenantKeys, didDoc);
   const normalizedKeys = [
     generateAccessTokenSecret(CihKeyPurposes.HOLDER_ACCESS_TOKENS),
-  ].concat(map(normalizeTenantKey, tenantKeys));
+  ].concat(normalizedTenantKeys);
   const primaryAccount = await resolvePrimaryAccount(
     scopedNewTenant,
     normalizedKeys,
@@ -72,11 +76,17 @@ const createTenant = async (newTenant, tenantKeys, context) => {
 };
 
 const resolvePrimaryAccount = async (newTenant, keys, context) => {
-  if (newTenant.primaryAccount != null) {
-    return newTenant.primaryAccount;
-  }
   const dltKey = getKeyWithPurpose(KeyPurposes.DLT_TRANSACTIONS, keys);
-  return loadPrimaryAccount(dltKey, context);
+  const primaryAccount = await loadPrimaryAccount(dltKey, context);
+  if (
+    newTenant.primaryAccount != null &&
+    toLower(newTenant.primaryAccount) !== toLower(primaryAccount)
+  ) {
+    throw newError(400, TenantErrors.PRIMARY_ACCOUNT_MUST_MATCH_CHAIN, {
+      errorCode: TenantErrors.PRIMARY_ACCOUNT_MUST_MATCH_CHAIN,
+    });
+  }
+  return primaryAccount;
 };
 
 /* eslint-disable better-mutation/no-mutation */
