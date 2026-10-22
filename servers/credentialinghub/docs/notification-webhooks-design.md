@@ -44,7 +44,7 @@ Flow:
 1. A hub request performs the normal domain write, such as storing a presentation or marking a credential issued.
 2. The request inserts one or more notification outbox events into Mongo.
 3. A notification worker claims due events using an atomic lease.
-4. The worker POSTs signed webhook requests to the configured endpoint.
+4. The worker POSTs signed webhook requests to each event's destination, which is the configured endpoint unless a wrapper supplies a destination resolver.
 5. The worker marks each event `delivered`, `retrying`, or `dead`.
 
 Webhook delivery must never happen directly inside wallet-facing request handlers.
@@ -114,7 +114,7 @@ Implementation notes:
 - Load the secret from env/config/KMS according to existing config conventions.
 - Do not expose the secret through operator APIs or logs.
 - Validate `url` at startup when notifications are enabled.
-- For MVP, support exactly one webhook destination.
+- For MVP, configure exactly one webhook destination. A wrapper can choose each event's destination instead; see [Standalone Mode](#standalone-mode).
 - Allow `eventTypes` to include `*`, exact event types, and wildcard suffixes like `credential.*`.
 - Retain terminal events for 30 days by default so operators can inspect recent product events and support future operational recovery features.
 - Apply retention to the `notification_events` collection, not to a specific receiver.
@@ -543,6 +543,8 @@ other non-retryable 4xx
 
 Permanent failures should mark the event `dead`, not block later events.
 
+An event whose destination resolver returns `null`, or a destination with an invalid URL or secret, is marked `dead` without a request, with the `lastError.message` `no_destination` or `invalid_destination: ...`. A resolver that throws is a retryable failure.
+
 Timeout:
 
 - Use the Credentialing Hub HTTP client request timeout.
@@ -632,6 +634,8 @@ When the URL is statically configured, validate at startup:
 - Host is not empty.
 - URL does not include username/password.
 
+The worker applies the same rules to each URL a destination resolver returns, before posting.
+
 For stored subscriptions later, use the stronger validation listed in [Stored Subscriptions](#stored-subscriptions).
 
 For the current LAN use case, private ranges may be expected, so make private-range allowance explicit in config.
@@ -644,6 +648,7 @@ API process:
 
 - Starts Fastify normally.
 - Forks notification worker child with `child_process.fork()` when `NOTIFICATIONS_WORKER_MODE=embedded-child`.
+- Forks `src/start-notification-worker.js`, or the wrapper module whose absolute path is passed to `startAppServer` as `notificationWorkerModulePath`.
 - Logs child lifecycle.
 - Restarts child with backoff on crash.
 - Does not mark API readiness failed just because the worker is down.
@@ -677,10 +682,13 @@ Suggested child state:
 
 Worker process:
 
-- Initializes the same config, Mongo connection, and logging stack as the API.
+- Initializes the same config, Mongo connection, and logging stack as the API, plus the `notification_events` repository.
+- Does not register the CAO security provider, controllers, RPC provider, or VNF client authentication, so it needs none of the built-in provider's configuration.
 - Does not start Fastify routes.
 - Starts the same delivery loop.
 - Exits non-zero only on unrecoverable startup errors.
+
+A wrapper starts the worker from its own module with `startNotificationWorker({ resolveDestination })`. For each claimed event, `resolveDestination(event, { config, db })` returns `{ url, secret, signatureHeaderName? }` or `null`, where `db` is the Hub's MongoDB database. The default returns the configured webhook. The same module serves standalone mode and, through `notificationWorkerModulePath`, embedded-child mode.
 
 ## Graceful Shutdown
 

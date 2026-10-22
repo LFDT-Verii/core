@@ -16,6 +16,7 @@
  */
 
 const { EventEmitter } = require('node:events');
+const path = require('node:path');
 const { afterEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const createTestFastify = require('../helpers/create-test-fastify');
@@ -36,6 +37,7 @@ const {
 const {
   startEmbeddedNotificationWorker,
 } = require('../../src/start-embedded-notification-worker');
+const { startAppServer } = require('../../src');
 
 describe('embedded notification worker', () => {
   let fastify;
@@ -71,6 +73,22 @@ describe('embedded notification worker', () => {
         NOTIFICATIONS_WORKER_MODE: NotificationWorkerModes.STANDALONE,
       }),
     );
+  });
+
+  it('should fail at startup when the worker module path is relative or missing', () => {
+    for (const modulePath of [
+      'notification-worker.js',
+      path.join(__dirname, 'missing-notification-worker.js'),
+    ]) {
+      expect(() =>
+        startAppServer({
+          configOverrides: { logSeverity: 'silent' },
+          notificationWorkerModulePath: modulePath,
+        }),
+      ).toThrow(
+        `notificationWorkerModulePath must be the absolute path of an existing file: ${modulePath}`,
+      );
+    }
   });
 
   it('should not fork when notifications are disabled', async () => {

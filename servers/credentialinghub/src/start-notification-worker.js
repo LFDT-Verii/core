@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-const { bindRepo } = require('@spencejs/spence-mongo-repos');
+const { bindRepo, mongoDb } = require('@spencejs/spence-mongo-repos');
 const { initHttpClient } = require('@verii/http-client');
-const {
-  createAppServer: createCredentialingHubServer,
-} = require('./start-app-server');
+const { createServer } = require('@verii/server-provider');
+const { buildConfig } = require('./config');
 const { startNotificationDeliveryWorker } = require('./entities/notifications');
+const {
+  notificationEventsRepoPlugin,
+} = require('./entities/notifications/repo');
 
-const createNotificationWorkerServer = () => createCredentialingHubServer();
+// Delivery needs only the config, MongoDB and the notification events repo, so
+// the worker has no CAO security provider, controllers, RPC provider or VNF
+// client authentication.
+const createNotificationWorkerServer = () =>
+  createServer(buildConfig()).register(notificationEventsRepoPlugin);
 
-const startNotificationWorker = async ({
-  createAppServer = createNotificationWorkerServer,
-} = {}) => {
-  const server = await createAppServer();
+const startNotificationWorker = async ({ resolveDestination } = {}) => {
+  const server = createNotificationWorkerServer();
   try {
     await server.ready();
 
@@ -34,9 +38,11 @@ const startNotificationWorker = async ({
       {},
       {
         config: server.config,
+        db: mongoDb(),
         fetch: buildNotificationDeliveryFetch(server.config, server.log),
         log: server.log,
         repos: bindRepo(server),
+        resolveDestination,
       },
     );
 

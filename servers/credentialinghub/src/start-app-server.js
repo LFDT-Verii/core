@@ -50,7 +50,9 @@ const createAppServer = ({
 
 const startAppServer = (options = {}) => {
   const server = createAppServer(options);
-  startEmbeddedNotificationWorker(server);
+  startEmbeddedNotificationWorker(server, {
+    modulePath: options.notificationWorkerModulePath,
+  });
   listenServer(server);
   return server;
 };
