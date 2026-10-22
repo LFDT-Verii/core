@@ -21,7 +21,7 @@ const { KeyAlgorithms } = require('@verii/crypto');
 const privateJwkMatcher = (dsa = KeyAlgorithms.SECP256K1) =>
   dsa.startsWith('RS')
     ? {
-        kty: 'RS',
+        kty: 'RSA',
         n: expect.stringMatching(URLSAFE_BASE64_FORMAT),
         e: expect.stringMatching(URLSAFE_BASE64_FORMAT),
         d: expect.stringMatching(URLSAFE_BASE64_FORMAT),
