@@ -43,6 +43,7 @@ const {
 const { errorResponseMatcher, mongoify } = require('@verii/tests-helpers');
 const {
   generateKeyPair,
+  hexFromJwk,
   KeyPurposes,
   KeyEncodings,
   publicKeyFromPrivateKey,
@@ -805,6 +806,120 @@ describe('Tenants management test suite', () => {
       await expect(
         mongoDb().collection('keys').countDocuments(),
       ).resolves.toEqual(0);
+    });
+
+    it("should 400 and not create tenant or keys when the DID document's key is relabelled to another curve", async () => {
+      const { didDoc, keys } = buildIssuerDidDoc();
+      const [verificationMethod] = didDoc.verificationMethod;
+      setupCreateTenantRegistrarMocks(didDoc.id, {
+        ...didDoc,
+        verificationMethod: [
+          {
+            ...verificationMethod,
+            publicKeyJwk: { ...verificationMethod.publicKeyJwk, crv: 'P-256' },
+          },
+        ],
+      });
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_does_not_match_did_doc',
+          message: 'key_does_not_match_did_doc',
+          statusCode: 400,
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+      await expect(
+        mongoDb().collection('keys').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
+    it('should 400 and not create tenant or keys when the DID document key has an unsupported encoding', async () => {
+      const { didDoc, keys } = buildIssuerDidDoc();
+      const [verificationMethod] = didDoc.verificationMethod;
+      setupCreateTenantRegistrarMocks(didDoc.id, {
+        ...didDoc,
+        verificationMethod: [
+          {
+            ...omit(['publicKeyJwk'], verificationMethod),
+            type: 'Multikey',
+            publicKeyMultibase:
+              'zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
+          },
+        ],
+      });
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_does_not_match_did_doc',
+          message: 'key_does_not_match_did_doc',
+          statusCode: 400,
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
+    it('should 200 when the DID document publishes the key as publicKeyHex', async () => {
+      mockLookupPrimary.mock.mockImplementation(() =>
+        Promise.resolve(
+          toEthereumAddress(generateKeyPair({ format: 'jwk' }).publicKey),
+        ),
+      );
+      const { didDoc, keys } = buildIssuerDidDoc();
+      const [verificationMethod] = didDoc.verificationMethod;
+      setupCreateTenantRegistrarMocks(didDoc.id, {
+        ...didDoc,
+        verificationMethod: [
+          {
+            ...omit(['publicKeyJwk'], verificationMethod),
+            type: 'EcdsaSecp256k1VerificationKey2019',
+            publicKeyHex: hexFromJwk(verificationMethod.publicKeyJwk, false),
+          },
+        ],
+      });
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(1);
     });
 
     it('should 400 and not create tenant or keys when primaryAccount does not match the chain', async () => {
