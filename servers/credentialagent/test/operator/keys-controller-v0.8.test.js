@@ -132,13 +132,40 @@ describe('Tenant keys test suite', () => {
             return {
               ...omit(['_id', 'tenantId', 'updatedAt'], key),
               id: key._id,
-              encoding: KeyEncodings.HEX,
+              encoding: KeyEncodings.JWK,
               createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
             };
           },
           [key1, key2],
         ),
       );
+    });
+
+    it('should return the stored encoding of each key', async () => {
+      const jwkKey = await persistKey({ tenant });
+      const hexKey = await persistKey({
+        tenant,
+        encoding: KeyEncodings.HEX,
+        kidFragment: '#velocity-key-2',
+        purposes: [KeyPurposes.ROTATION],
+      });
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: buildKeysUrl({ tenant }),
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual([
+        expect.objectContaining({
+          id: jwkKey._id,
+          encoding: KeyEncodings.JWK,
+        }),
+        expect.objectContaining({
+          id: hexKey._id,
+          encoding: KeyEncodings.HEX,
+        }),
+      ]);
     });
 
     it('should 404 for non-existing tenant', async () => {
@@ -445,7 +472,7 @@ describe('Tenant keys test suite', () => {
       expect(response.json).toEqual({
         ...omit(['tenantId', 'updatedAt', 'key', 'publicKey'], key1),
         id: expect.stringMatching(OBJECT_ID_FORMAT),
-        encoding: KeyEncodings.HEX,
+        encoding: KeyEncodings.JWK,
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       });
 
@@ -498,7 +525,7 @@ describe('Tenant keys test suite', () => {
       expect(response.json).toEqual({
         ...omit(['_id', 'tenantId', 'updatedAt', 'key', 'publicKey'], key1),
         id: expect.stringMatching(OBJECT_ID_FORMAT),
-        encoding: KeyEncodings.HEX,
+        encoding: KeyEncodings.JWK,
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       });
 
@@ -754,7 +781,7 @@ describe('Tenant keys test suite', () => {
         ...omit(['_id', 'tenantId', 'updatedAt', 'key', 'publicKey'], key1),
         kidFragment: '#key-0',
         id: expect.stringMatching(OBJECT_ID_FORMAT),
-        encoding: KeyEncodings.HEX,
+        encoding: KeyEncodings.JWK,
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       });
 
@@ -809,7 +836,7 @@ describe('Tenant keys test suite', () => {
         ...omit(['_id', 'tenantId', 'updatedAt', 'key', 'publicKey'], key1),
         kidFragment: '#key-0',
         id: expect.stringMatching(OBJECT_ID_FORMAT),
-        encoding: KeyEncodings.HEX,
+        encoding: KeyEncodings.JWK,
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       });
 
@@ -865,7 +892,7 @@ describe('Tenant keys test suite', () => {
         ...omit(['_id', 'tenantId', 'updatedAt', 'key', 'publicKey'], key1),
         kidFragment: '#key-0',
         id: expect.stringMatching(OBJECT_ID_FORMAT),
-        encoding: KeyEncodings.HEX,
+        encoding: KeyEncodings.JWK,
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       });
 
