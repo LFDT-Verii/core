@@ -9,7 +9,7 @@ services:
   credentialinghub:
     depends_on:
       certgen:
-        condition: service_started
+        condition: service_completed_successfully
       contracts-deployment:
         condition: service_completed_successfully
       registrar:
