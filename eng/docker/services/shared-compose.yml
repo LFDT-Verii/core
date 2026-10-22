@@ -53,16 +53,18 @@ services:
     ports:
       - 17017:27017
 
+  # certgen and certfix are one-shot. Without a restart policy, a failure fails
+  # `up` instead of waiting forever on service_completed_successfully.
   certgen:
     image: alpine/openssl@sha256:f4dead2cc05e01fb683f04ef5573da53ecf2004c8d7603e1c65f6994d8d38313
-    restart: on-failure
+    restart: "no"
     volumes:
       - httpscert:/certs
     command: req -x509 -keyout /certs/key.pem -out /certs/cert.crt -sha256 -days 365 -nodes -subj "/CN=e2e-registrar"
 
   certfix:
     image: alpine@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
-    restart: on-failure
+    restart: "no"
     volumes:
       - httpscert:/certs
     command: chown -R 1000:1000 /certs
