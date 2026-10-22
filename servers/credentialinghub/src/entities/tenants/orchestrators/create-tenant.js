@@ -44,7 +44,9 @@ const createTenant = async (newTenant, tenantKeys, context) => {
   validateNewTenant(scopedNewTenant, orgProfile);
 
   validateTenantKeys(tenantKeys, didDoc);
-  const normalizedTenantKeys = map(normalizeTenantKey, tenantKeys);
+  const normalizedTenantKeys = await Promise.all(
+    map(normalizeTenantKey, tenantKeys),
+  );
   validateTenantKeysMatchDidDoc(normalizedTenantKeys, didDoc);
   const normalizedKeys = [
     generateAccessTokenSecret(CihKeyPurposes.HOLDER_ACCESS_TOKENS),

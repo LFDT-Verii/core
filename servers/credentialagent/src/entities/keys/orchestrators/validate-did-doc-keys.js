@@ -1,19 +1,8 @@
-const {
-  each,
-  every,
-  map,
-  omit,
-  isEmpty,
-  isString,
-  some,
-} = require('lodash/fp');
+const { each, map, omit, isEmpty, isString, some } = require('lodash/fp');
 const newError = require('http-errors');
-const {
-  hexFromJwk,
-  jwkFromSecp256k1Key,
-  publicKeyFromPrivateKey,
-} = require('@verii/crypto');
+const { jwkFromSecp256k1Key } = require('@verii/crypto');
 const { extractVerificationMethod } = require('@verii/did-doc');
+const { isMatchingKeyPair } = require('@verii/jwt');
 const { validateKey, isMatchingPrivateKeyKid } = require('../domains');
 
 const validateDidDocKeys = async (didDoc, keys) => {
@@ -37,24 +26,20 @@ const validateDidDocKeys = async (didDoc, keys) => {
     throwErrorPrivateKeyNotMatched();
   }
 
-  if (!every(isMatchingPublicKey, keysTransformed)) {
+  const publicKeyValidations = await Promise.all(
+    map(isMatchingPublicKey, keysTransformed),
+  );
+
+  if (some((valid) => !valid, publicKeyValidations)) {
     throwErrorPublicKeyNotMatched();
   }
 
   return keysTransformed;
 };
 
-const isMatchingPublicKey = ({ key, publicKey }) => {
-  try {
-    const derivedPublicKey = publicKeyFromPrivateKey(key);
-    return (
-      publicKey == null ||
-      hexFromJwk(publicKey, false) === hexFromJwk(derivedPublicKey, false)
-    );
-  } catch {
-    return false;
-  }
-};
+const isMatchingPublicKey = async ({ key, publicKey }) =>
+  (await isMatchingKeyPair(key, omit(['d'], key))) &&
+  (publicKey == null || isMatchingKeyPair(key, publicKey));
 
 // eslint-disable-next-line complexity
 const transformKeys = map((key) => ({
