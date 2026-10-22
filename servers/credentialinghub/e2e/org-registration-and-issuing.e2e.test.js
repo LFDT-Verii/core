@@ -110,6 +110,17 @@ describe('org registration and issuing e2e', () => {
     });
     expect(clearWebhooksResponse.status).toEqual(204);
     client = await MongoClient.connect('mongodb://localhost:17017');
+    // The CAO's website and did are fixed, and the registrar and hub reject
+    // duplicates of them. Remove a previous run's org and tenant so the test
+    // can run again against the same stack.
+    await client
+      .db('oracle')
+      .collection('organizations')
+      .deleteMany({ 'profile.website': CAO_WEBSITE });
+    await client
+      .db('credentialing_hub')
+      .collection('tenants')
+      .deleteMany({ did: DEFAULT_CAO_DID });
 
     // Generate holder DID and key pair for fake wallet
     holderKeyPair = generateKeyPair({ format: 'jwk' });
