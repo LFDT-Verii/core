@@ -14,10 +14,13 @@
  * limitations under the License.
  *
  */
-const { flatMap, map, uniq, forEach } = require('lodash/fp');
+const { flatMap, map, uniq, forEach, toLower } = require('lodash/fp');
 const newError = require('http-errors');
-const { extractVerificationMethod } = require('@verii/did-doc');
-const { KeyPurposes } = require('@verii/crypto');
+const {
+  extractVerificationKey,
+  extractVerificationMethod,
+} = require('@verii/did-doc');
+const { KeyPurposes, hexFromJwk } = require('@verii/crypto');
 const { KeyErrors } = require('./key-errors');
 const { getKeyWithPurpose } = require('./get-key-with-purpose');
 
@@ -30,6 +33,18 @@ const validateTenantKeys = (tenantKeys, didDoc) => {
     (key) => validateKidFragmentResolves(key.kidFragment, didDoc),
     tenantKeys,
   );
+};
+
+const validateTenantKeysMatchDidDoc = (normalizedKeys, didDoc) =>
+  forEach((key) => validateKeyMatchesDidDoc(key, didDoc), normalizedKeys);
+
+const validateKeyMatchesDidDoc = ({ kidFragment, publicJwk }, didDoc) => {
+  const didDocKeyHex = extractVerificationKey(didDoc, kidFragment);
+  if (hexFromJwk(publicJwk, false) !== toLower(didDocKeyHex)) {
+    throw newError(400, KeyErrors.KEY_DOES_NOT_MATCH_DID_DOC, {
+      errorCode: KeyErrors.KEY_DOES_NOT_MATCH_DID_DOC,
+    });
+  }
 };
 
 const initValidateKeyPurposeExists = (purpose, errorCode) => (keys) => {
@@ -75,4 +90,4 @@ const validateAllPurposesUnique = (keys) => {
 
 const arrayContainsDuplicates = (array) => uniq(array).length !== array.length;
 
-module.exports = { validateTenantKeys };
+module.exports = { validateTenantKeys, validateTenantKeysMatchDidDoc };
