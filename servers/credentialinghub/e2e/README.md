@@ -34,6 +34,7 @@
 - Run docker compose using `docker compose up -d --build`
 - Rebuild any broken container using `docker compose up -d --build --force-recreate --no-deps <service>`
 - Stop the stack using `docker compose down -v --remove-orphans`
+- The `webhook-receiver` service records the hub's notification webhooks. The test reads them from `http://localhost:13019/received`.
 
 If startup fails because ports are already allocated, remove stale containers from older e2e stacks before starting again. The most common names are `e2e-besu`, `e2e-credentialinghub`, `e2e-registrar`, and `e2e-fineract-server-1`.
 

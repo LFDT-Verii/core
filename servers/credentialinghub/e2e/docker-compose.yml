@@ -16,6 +16,8 @@ services:
         condition: service_healthy
       velocity-mongo:
         condition: service_started
+      webhook-receiver:
+        condition: service_healthy
     image: lfdecentralizedtrust/verii-credentialing-hub:local
     build:
       context: ../../..
@@ -34,12 +36,10 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=0
       - NOTIFICATIONS_ENABLED=true
       - NOTIFICATIONS_WORKER_MODE=embedded-child
-      - NOTIFICATIONS_WEBHOOK_URL=http://host.docker.internal:13019/cih-notification-webhooks
+      - NOTIFICATIONS_WEBHOOK_URL=http://webhook-receiver:3000/cih-notification-webhooks
       - NOTIFICATIONS_WEBHOOK_SECRET=e2e-notification-secret
       - NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL=true
       - NOTIFICATIONS_WEBHOOK_TIMEOUT_MS=2000
-    extra_hosts:
-      - host.docker.internal:host-gateway
     healthcheck:
       test:
         [
@@ -52,3 +52,17 @@ services:
       start_period: 20s
     ports:
       - 13002:3000
+
+  webhook-receiver:
+    image: node:24.14.0-slim@sha256:e8e2e91b1378f83c5b2dd15f0247f34110e2fe895f6ca7719dbb780f929368eb
+    init: true
+    command: node /webhook-receiver/webhook-receiver.js
+    volumes:
+      - ./webhook-receiver:/webhook-receiver:ro
+    healthcheck:
+      test: ["CMD", "bash", "-c", ">/dev/tcp/localhost/3000"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    ports:
+      - 13019:3000
