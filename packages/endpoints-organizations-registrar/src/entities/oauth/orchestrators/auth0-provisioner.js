@@ -4,7 +4,7 @@ const {
   ServiceCategories,
   ServiceTypesOfServiceCategory,
 } = require('@verii/organizations-registry');
-const { AuthClientTypes, RoleNames } = require('../domain');
+const { AuthClientTypes, RoleNames, toManagementDomain } = require('../domain');
 
 const initRoleNameToRoleId = ({
   auth0SuperuserRoleId,
@@ -44,7 +44,7 @@ const initAuth0Provisioner = async ({
   const { ManagementClient } = await import('auth0');
 
   const auth0ManagementClient = new ManagementClient({
-    domain: auth0Domain,
+    domain: toManagementDomain(auth0Domain),
     audience: auth0ManagementApiAudience,
     clientId: auth0ClientId,
     clientSecret: auth0ClientSecret,

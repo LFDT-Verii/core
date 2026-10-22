@@ -22,5 +22,6 @@ const KeyErrors = {
   DLT_TRANSACTION_KEY_REQUIRED: 'dlt_transaction_key_required',
   EXCHANGES_KEY_REQUIRED: 'exchanges_key_required',
   KEY_INVALID: 'key_invalid',
+  KEY_DOES_NOT_MATCH_DID_DOC: 'key_does_not_match_did_doc',
 };
 module.exports = { KeyErrors };

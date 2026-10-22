@@ -1340,8 +1340,8 @@ importers:
         specifier: workspace:*
         version: link:../verii-verification
       auth0:
-        specifier: 5.14.1
-        version: 5.14.1
+        specifier: 7.6.0
+        version: 7.6.0
       bs58:
         specifier: ^6.0.0
         version: 6.0.0
@@ -7167,8 +7167,8 @@ packages:
     resolution: {integrity: sha512-o9ca0P+hHSUbiwOSFW+DS2GmCA5c6T6E1UJZhWcgKmjAI2Aid16wLzY4/y+XNFb7Im1rM+wQc5YkkNZuTy5FOw==}
     engines: {node: '>=18'}
 
-  auth0@5.14.1:
-    resolution: {integrity: sha512-yysfvwSP2kfbZwSAXnfPoXmjW3hHVyA3Iw/ICZKDs/E/kceI3+QyhBeejQAgAVHLUBS2KfFwviWzGg7896Tpfw==}
+  auth0@7.6.0:
+    resolution: {integrity: sha512-EBkk9LgFF1d5KlpL6Zy4J13g6DJcXJgw4FOOFwMeK/EFpFOiq1ALlbVKJSg/xHbTikaxDG+htzJzwCXbrkae4Q==}
     engines: {node: ^20.19.0 || ^22.12.0 || ^24.0.0 || ^26.0.0}
 
   autosuggest-highlight@3.3.4:
@@ -14833,7 +14833,7 @@ snapshots:
       undici-types: 6.29.1
       uuid: 14.0.3
 
-  auth0@5.14.1:
+  auth0@7.6.0:
     dependencies:
       auth0-legacy: auth0@4.37.1
       jose: 5.10.0
