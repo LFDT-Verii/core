@@ -854,7 +854,8 @@ const presentationDIDResolution = (
     )}`,
     publicKey: mapWithIndex(
       (credentialDid, i) => ({
-        id: `${credentialDid.toLowerCase()}#key-1`,
+        // The ledger resolver echoes the verifier-supplied credential id.
+        id: `${credentialDid}#key-1`,
         publicKeyJwk: credentialKeyPairs[i].publicKey,
       }),
       credentialDids,
@@ -864,7 +865,7 @@ const presentationDIDResolution = (
   didDocumentMetadata: {
     boundIssuerVcs: mapWithIndex(
       (credentialDid, i) => ({
-        id: credentialDid.toLowerCase(),
+        id: credentialDid,
         format: 'jwt_vc',
         vc: boundIssuerVcs[i],
       }),

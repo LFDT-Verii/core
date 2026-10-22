@@ -17,6 +17,7 @@ const {
   filter,
   find,
   first,
+  flatMap,
   flow,
   isArray,
   isEmpty,
@@ -25,11 +26,9 @@ const {
   map,
   omit,
   partition,
-  reduce,
   size,
   some,
   startsWith,
-  toLower,
   uniq,
 } = require('lodash/fp');
 const {
@@ -237,30 +236,34 @@ const resolveKeyRefs = async (credentialDataList, relyingParty, context) => {
     ),
   ]);
 
-  const keyMap = reduce(
-    (acc, { didDocument }) => {
-      const keys =
-        didDocument?.verificationMethod ?? didDocument?.publicKey ?? [];
-      for (const key of keys) {
-        acc[toLower(toDidUrl(didDocument.id, key.id))] = key;
-      }
-      return acc;
-    },
-    {},
-    resolutions,
-  );
-
-  const boundIssuerVcsMap = keyBy(
-    ({ id }) => toLower(id),
-    first(resolutions)?.didDocumentMetadata?.boundIssuerVcs,
-  );
-
   return {
-    keyMap,
-    boundIssuerVcsMap,
+    keyMap: indexVerificationMethods(resolutions),
+    boundIssuerVcsMap: indexBoundIssuerVcs(
+      first(resolutions)?.didDocumentMetadata?.boundIssuerVcs,
+    ),
     errors: flow(map('errors'), find(size))(resolutions),
   };
 };
+
+// Verification methods are indexed by their exact absolute DID URL. DID URL
+// paths, queries and fragments are case-sensitive, so no case folding is
+// applied. did:velocity needs no method-specific canonicalization here: the
+// resolver derives each verification method id from the credential id that the
+// verifier supplies, and issuers derive the kid from that same id.
+const indexVerificationMethods = flow(
+  flatMap(({ didDocument }) =>
+    map(
+      (key) => [toDidUrl(didDocument.id, key.id), key],
+      didDocument?.verificationMethod ?? didDocument?.publicKey ?? [],
+    ),
+  ),
+  (entries) => new Map(entries),
+);
+
+const indexBoundIssuerVcs = flow(
+  map((boundIssuerVc) => [boundIssuerVc.id, boundIssuerVc]),
+  (entries) => new Map(entries),
+);
 
 const resolveVelocityDidDocument = async (
   credentialData,
@@ -496,7 +499,7 @@ const resolutionFailureFrom = (errors) => {
 
 const getVerificationKey = ({ keyMetadata }, keyMap) => {
   if (keyMetadata.kid != null) {
-    return keyMap[toLower(keyMetadata.kid)]?.publicKeyJwk;
+    return keyMap.get(keyMetadata.kid)?.publicKeyJwk;
   }
   return isIssuerTheSubject(keyMetadata) ? keyMetadata.jwk : null;
 };
@@ -525,7 +528,7 @@ const runIssuerTrustCheck = (
   }
 
   const resolvedDeps = {
-    boundIssuerVc: boundIssuerVcsMap[toLower(id)]?.vc,
+    boundIssuerVc: boundIssuerVcsMap.get(id)?.vc,
     issuerAccreditation: accreditationVCMap[issuerId]?.credentialSubject,
     issuerDidDocument: issuerDidDocumentMap[issuerId],
     credentialTypeMetadata: credentialTypeMetadatasMap[credentialType],
