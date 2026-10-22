@@ -19,12 +19,12 @@ const newError = require('http-errors');
 const { ObjectId } = require('mongodb');
 
 const { KeyEncodings, jwkFromSecp256k1Key } = require('@verii/crypto');
-const { isMatchingKeyPair } = require('@verii/jwt');
+const { isMatchingKeyPair, publicJwkFromPrivateJwk } = require('@verii/jwt');
 const { KeyErrors } = require('./key-errors');
 
 const normalizeTenantKey = async (key) => {
   const privateJwk = key.jwk != null ? key.jwk : jwkFromSecp256k1Key(key.key);
-  const publicJwk = omit(['d'], privateJwk);
+  const publicJwk = publicJwkFromPrivateJwk(privateJwk);
   if (!(await isMatchingKeyPair(privateJwk, publicJwk))) {
     throw newError(400, KeyErrors.KEY_INVALID, {
       errorCode: KeyErrors.KEY_INVALID,

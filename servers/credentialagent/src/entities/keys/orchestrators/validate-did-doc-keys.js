@@ -2,7 +2,7 @@ const { each, map, omit, isEmpty, isString, some } = require('lodash/fp');
 const newError = require('http-errors');
 const { jwkFromSecp256k1Key } = require('@verii/crypto');
 const { extractVerificationMethod } = require('@verii/did-doc');
-const { isMatchingKeyPair } = require('@verii/jwt');
+const { isMatchingKeyPair, publicJwkFromPrivateJwk } = require('@verii/jwt');
 const { validateKey, isMatchingPrivateKeyKid } = require('../domains');
 
 const validateDidDocKeys = async (didDoc, keys) => {
@@ -38,7 +38,7 @@ const validateDidDocKeys = async (didDoc, keys) => {
 };
 
 const isMatchingPublicKey = async ({ key, publicKey }) =>
-  (await isMatchingKeyPair(key, omit(['d'], key))) &&
+  (await isMatchingKeyPair(key, publicJwkFromPrivateJwk(key))) &&
   (publicKey == null || isMatchingKeyPair(key, publicKey));
 
 // eslint-disable-next-line complexity

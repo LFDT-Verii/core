@@ -15,10 +15,16 @@
  */
 
 const { CompactSign, compactVerify, importJWK } = require('jose');
-const { findKey } = require('lodash/fp');
+const { findKey, omit } = require('lodash/fp');
 const { AlgorithmKeyProfiles } = require('./credential-envelope-verifier');
 
 const KEY_PAIR_PAYLOAD = new TextEncoder().encode('key-pair');
+
+// The private members of EC and RSA JWKs (RFC 7518 sections 6.2.2 and 6.3.2).
+const PRIVATE_JWK_MEMBERS = ['d', 'p', 'q', 'dp', 'dq', 'qi', 'oth'];
+
+const publicJwkFromPrivateJwk = (privateJwk) =>
+  omit(PRIVATE_JWK_MEMBERS, privateJwk);
 
 const algFromJwk = (jwk) =>
   findKey(
@@ -41,4 +47,4 @@ const isMatchingKeyPair = async (privateJwk, publicJwk) => {
   }
 };
 
-module.exports = { isMatchingKeyPair };
+module.exports = { isMatchingKeyPair, publicJwkFromPrivateJwk };

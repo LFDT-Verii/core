@@ -1,8 +1,10 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const { generateKeyPairSync } = require('node:crypto');
-const { omit } = require('lodash/fp');
-const { isMatchingKeyPair } = require('../src/key-pair');
+const {
+  isMatchingKeyPair,
+  publicJwkFromPrivateJwk,
+} = require('../src/key-pair');
 
 const generateJwks = (type, options) => {
   const { privateKey, publicKey } = generateKeyPairSync(type, options);
@@ -53,7 +55,7 @@ describe('isMatchingKeyPair', () => {
         expect(
           await isMatchingKeyPair(
             inconsistentJwk,
-            omit(['d'], inconsistentJwk),
+            publicJwkFromPrivateJwk(inconsistentJwk),
           ),
         ).toEqual(false);
       });
@@ -83,5 +85,17 @@ describe('isMatchingKeyPair', () => {
   it('should be false for a key type without a supported algorithm', async () => {
     const { privateJwk, publicJwk } = generateJwks('ed25519');
     expect(await isMatchingKeyPair(privateJwk, publicJwk)).toEqual(false);
+  });
+});
+
+describe('publicJwkFromPrivateJwk', () => {
+  keyTypes.forEach(({ name, generate }) => {
+    it(`should keep only the public members of ${name} JWKs`, () => {
+      const { privateJwk, publicJwk } = generate();
+      expect(publicJwkFromPrivateJwk({ ...privateJwk, kid: 'key-1' })).toEqual({
+        ...publicJwk,
+        kid: 'key-1',
+      });
+    });
   });
 });
