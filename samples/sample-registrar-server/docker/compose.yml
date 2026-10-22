@@ -30,7 +30,7 @@ services:
 
   registrar:
     depends_on:
-      certfix:
+      certgen:
         condition: service_completed_successfully
       contracts-deployment:
         condition: service_completed_successfully
@@ -80,7 +80,7 @@ services:
     depends_on:
       registrar:
         condition: service_healthy
-      certfix:
+      certgen:
         condition: service_completed_successfully
     ports:
       - "13003:80"
