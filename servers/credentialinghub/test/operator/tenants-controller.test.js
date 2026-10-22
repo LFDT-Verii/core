@@ -48,6 +48,7 @@ const {
   publicKeyFromPrivateKey,
 } = require('@verii/crypto');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
+const { jwtVerify } = require('@verii/jwt');
 
 const { applyOverrides } = require('@verii/common-functions');
 const createTestFastify = require('../helpers/create-test-fastify');
@@ -359,6 +360,97 @@ describe('Tenants management test suite', () => {
       );
       expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
       expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
+    it("should 400 and not create tenant or keys when a jwk has the DID document's x and y but no d", async () => {
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const orgKey = first(orgKeys);
+
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
+        keys: [{ ...orgKey, jwk: omit(['d'], orgKey.jwk) }],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_invalid',
+          message: 'Expected private JWK with d property',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
+    it("should 400 and not create tenant or keys when a jwk has the DID document's x and y but is not secp256k1", async () => {
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const orgKey = first(orgKeys);
+
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
+        keys: [{ ...orgKey, jwk: { ...orgKey.jwk, crv: 'P-256' } }],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_invalid',
+          message: 'Expected secp256k1 private JWK',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
+    it('should 200 and sign with the key when a jwk has d but no x or y', async () => {
+      mockLookupPrimary.mock.mockImplementation(() =>
+        Promise.resolve(
+          toEthereumAddress(generateKeyPair({ format: 'jwk' }).publicKey),
+        ),
+      );
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const orgKey = first(orgKeys);
+
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
+        keys: [{ ...orgKey, jwk: omit(['x', 'y'], orgKey.jwk) }],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      const metadataResponse = await fastify.injectJson({
+        method: 'GET',
+        url: `.well-known/oauth-authorization-server/r/${response.json.tenant.id}`,
+      });
+      expect(metadataResponse.statusCode).toEqual(200);
+      const { payload: signedPayload } = await jwtVerify(
+        metadataResponse.json.signed_metadata,
+        publicKeyFromPrivateKey(orgKey.jwk),
+      );
+      expect(signedPayload).toEqual(
+        expect.objectContaining({ iss: orgDoc.id }),
+      );
     });
 
     it('should 400 and if no keys set', async () => {

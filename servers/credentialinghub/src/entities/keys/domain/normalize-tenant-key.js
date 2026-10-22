@@ -27,12 +27,13 @@ const { KeyErrors } = require('./key-errors');
 
 const normalizeTenantKey = (key) => {
   const privateJwk = key.jwk != null ? key.jwk : jwkFromSecp256k1Key(key.key);
+  const publicJwk = derivePublicJwk(privateJwk);
   return {
     _id: new ObjectId(),
     ...omit(['key', 'jwk'], key),
     encoding: KeyEncodings.JWK,
-    publicJwk: derivePublicJwk(privateJwk),
-    jwk: privateJwk,
+    publicJwk,
+    jwk: { ...privateJwk, x: publicJwk.x, y: publicJwk.y },
   };
 };
 
