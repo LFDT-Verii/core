@@ -28,6 +28,7 @@ const {
   reduce,
   size,
   some,
+  split,
   startsWith,
   toLower,
   uniq,
@@ -58,10 +59,31 @@ const {
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { mapWithIndex } = require('@verii/common-functions');
-const { resolveDidJwkDocument, toDidUrl } = require('@verii/did-doc');
+const {
+  getDidUriFromJwk,
+  resolveDidJwkDocument,
+  toDidUrl,
+} = require('@verii/did-doc');
 
 const MAX_CREDENTIALS_PER_VERIFICATION = 100;
 const MAX_ROUTING_IDENTIFIER_CHARACTERS = 2048;
+
+// How the claimed issuer is bound to the key that verified the signature. A
+// valid signature only proves possession of that key; it authenticates the
+// issuer only through a did:velocity ledger binding or a self-certifying
+// did:jwk issuer derived from the exact verification JWK.
+const IssuerKeyBindings = Object.freeze({
+  DID_JWK: 'DID_JWK',
+  DID_JWK_MISMATCH: 'DID_JWK_MISMATCH',
+  LEDGER: 'LEDGER',
+  UNBOUND: 'UNBOUND',
+});
+
+const SelfCertifiedIssuerChecks = Object.freeze({
+  [IssuerKeyBindings.DID_JWK]: CheckResults.SELF_SIGNED,
+  [IssuerKeyBindings.DID_JWK_MISMATCH]: CheckResults.DATA_INTEGRITY_ERROR,
+  [IssuerKeyBindings.UNBOUND]: CheckResults.FAIL,
+});
 
 const verifyCredentials = async (
   { credentials: jwtVcs, expectedHolderDid, relyingParty },
@@ -216,7 +238,6 @@ const assertCredentialBatch = (jwtVcs) => {
   }
 };
 
-const isIssuerTheSubject = (header) => !isDidVelocityCredential(header);
 const isDidVelocityCredential = ({ kid }) => startsWith('did:velocity:', kid);
 
 const resolveKeyRefs = async (credentialDataList, relyingParty, context) => {
@@ -457,12 +478,18 @@ const verifyCredentialData = async (data, { keyMap, errors }, context) => {
         CheckResults.FAIL,
       );
     }
+    const issuerId = issuerIdFrom(verifiedEnvelope.credential.issuer);
     return {
       ...data,
       ...verifiedEnvelope,
       credentialType: extractCredentialType(verifiedEnvelope.credential),
       id: getCredentialId(verifiedEnvelope),
-      issuerId: issuerIdFrom(verifiedEnvelope.credential.issuer),
+      issuerId,
+      issuerKeyBinding: bindIssuerToKey(
+        issuerId,
+        data.keyMetadata,
+        verificationKey,
+      ),
       tamperingCheck: CheckResults.PASS,
     };
   } catch (error) {
@@ -494,17 +521,39 @@ const resolutionFailureFrom = (errors) => {
     : null;
 };
 
-const getVerificationKey = ({ keyMetadata }, keyMap) => {
-  if (keyMetadata.kid != null) {
-    return keyMap[toLower(keyMetadata.kid)]?.publicKeyJwk;
-  }
-  return isIssuerTheSubject(keyMetadata) ? keyMetadata.jwk : null;
-};
+// A supplied kid is authoritative: when it does not resolve, the embedded jwk
+// is never used instead. Without a kid, the embedded jwk can verify the
+// signature, but bindIssuerToKey decides whether it authenticates the issuer.
+const getVerificationKey = ({ keyMetadata }, keyMap) =>
+  keyMetadata.kid != null
+    ? keyMap[toLower(keyMetadata.kid)]?.publicKeyJwk
+    : keyMetadata.jwk;
 
 const issuerIdFrom = (issuer) => issuer?.id ?? issuer;
 
+const bindIssuerToKey = (issuerId, { kid }, verificationKey) => {
+  if (isDidVelocityCredential({ kid })) {
+    return IssuerKeyBindings.LEDGER;
+  }
+  if (isDidJwkOfKey(issuerId, kid, verificationKey)) {
+    return IssuerKeyBindings.DID_JWK;
+  }
+  // Only did:jwk kids resolve outside the ledger, so a kid or a did:jwk issuer
+  // here claims a did:jwk binding that does not hold for this key.
+  return kid != null || startsWith('did:jwk:', issuerId)
+    ? IssuerKeyBindings.DID_JWK_MISMATCH
+    : IssuerKeyBindings.UNBOUND;
+};
+
+const isDidJwkOfKey = (issuerId, kid, verificationKey) => {
+  const keyDid = getDidUriFromJwk(verificationKey);
+  return issuerId === keyDid && (kid == null || didFromDidUrl(kid) === keyDid);
+};
+
+const didFromDidUrl = flow(split('#'), first);
+
 const runIssuerTrustCheck = (
-  { id, keyMetadata, issuerId, credentialType, credential },
+  { id, issuerKeyBinding, issuerId, credentialType, credential },
   {
     boundIssuerVcsMap,
     accreditationVCMap,
@@ -520,8 +569,14 @@ const runIssuerTrustCheck = (
     return Promise.resolve(CheckResults.DEPENDENCY_RESOLUTION_ERROR);
   }
 
-  if (isIssuerTheSubject(keyMetadata)) {
-    return Promise.resolve(CheckResults.SELF_SIGNED);
+  if (issuerKeyBinding !== IssuerKeyBindings.LEDGER) {
+    if (issuerKeyBinding !== IssuerKeyBindings.DID_JWK) {
+      log.warn(
+        { id, issuerId, issuerKeyBinding },
+        'runIssuerTrustCheck: issuer is not bound to the verification key',
+      );
+    }
+    return Promise.resolve(SelfCertifiedIssuerChecks[issuerKeyBinding]);
   }
 
   const resolvedDeps = {
