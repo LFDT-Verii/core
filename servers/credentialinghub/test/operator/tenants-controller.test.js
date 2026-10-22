@@ -922,6 +922,52 @@ describe('Tenants management test suite', () => {
       ).resolves.toEqual(1);
     });
 
+    it('should 400 and not create tenant or keys when the DID document publishes the private key as publicKeyHex', async () => {
+      mockLookupPrimary.mock.mockImplementation(() =>
+        Promise.resolve(
+          toEthereumAddress(generateKeyPair({ format: 'jwk' }).publicKey),
+        ),
+      );
+      const { didDoc, keys } = buildIssuerDidDoc();
+      const [verificationMethod] = didDoc.verificationMethod;
+      setupCreateTenantRegistrarMocks(didDoc.id, {
+        ...didDoc,
+        verificationMethod: [
+          {
+            ...omit(['publicKeyJwk'], verificationMethod),
+            type: 'EcdsaSecp256k1VerificationKey2019',
+            publicKeyHex: hexFromJwk(keys[0].jwk),
+          },
+        ],
+      });
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_does_not_match_did_doc',
+          message: 'key_does_not_match_did_doc',
+          statusCode: 400,
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+      await expect(
+        mongoDb().collection('keys').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
     it('should 400 and not create tenant or keys when primaryAccount does not match the chain', async () => {
       mockLookupPrimary.mock.mockImplementation(() =>
         Promise.resolve(

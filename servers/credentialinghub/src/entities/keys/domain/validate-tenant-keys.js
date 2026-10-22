@@ -20,7 +20,7 @@ const {
   extractVerificationKey,
   extractVerificationMethod,
 } = require('@verii/did-doc');
-const { KeyPurposes, jwkFromSecp256k1Key } = require('@verii/crypto');
+const { KeyPurposes, publicJwkFromPublicHex } = require('@verii/crypto');
 const { isMatchingKeyPair } = require('@verii/jwt');
 const { KeyErrors } = require('./key-errors');
 const { getKeyWithPurpose } = require('./get-key-with-purpose');
@@ -51,18 +51,21 @@ const validateTenantKeysMatchDidDoc = async (normalizedKeys, didDoc) => {
   }
 };
 
-// publicKeyHex and publicKeyBase58 carry no curve, so they're read as
-// secp256k1. Any other encoding gives no key, which never matches.
+const UNCOMPRESSED_PUBLIC_KEY_HEX = /^04[0-9a-f]{128}$/i;
+
+// publicKeyHex and publicKeyBase58 carry no curve, so they're read as an
+// uncompressed secp256k1 public key. Any other encoding or length gives no
+// key, which never matches.
 const didDocPublicJwk = (didDoc, kidFragment) => {
   const { publicKeyJwk } = extractVerificationMethod(didDoc, kidFragment);
   if (publicKeyJwk != null) {
     return publicKeyJwk;
   }
   try {
-    return jwkFromSecp256k1Key(
-      extractVerificationKey(didDoc, kidFragment),
-      false,
-    );
+    const publicKeyHex = extractVerificationKey(didDoc, kidFragment);
+    return UNCOMPRESSED_PUBLIC_KEY_HEX.test(publicKeyHex)
+      ? publicJwkFromPublicHex(publicKeyHex)
+      : null;
   } catch {
     return null;
   }
