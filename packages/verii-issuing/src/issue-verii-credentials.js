@@ -25,71 +25,58 @@ const {
 } = require('./adapters/init-credential-metadata-contract');
 const { createRevocationList } = require('./adapters/create-revocation-list');
 const { getCredentialSigningProfile } = require('./credential-signing-profile');
-const { prepareJwtVcs } = require('./domain/prepare-jwt-vcs');
+const {
+  getCredentialFormatProfile,
+  prepareCredentials,
+} = require('./domain/prepare-credentials');
 
 const REVOCATION_LIST_SIZE = 10240;
 const METADATA_LIST_SIZE = 10000;
 
-/** @import { Issuer, AllocationListEntry, CredentialOffer, CredentialMetadata, CredentialTypeMetadata, Context } from "../types/types" */
+/** @import { AllocationListEntry, Context, CredentialIssuingOptions } from "../types/types" */
+/** @import { CredentialMetadata, CredentialOffer } from "../types/types" */
+/** @import { CredentialSecuringResult, CredentialTypeMetadata } from "../types/types" */
+/** @import { IssuedCredential, Issuer } from "../types/types" */
 
 /**
- * Prepares, signs and anchors a verifiable credential from a credential offer.
- * @param {CredentialOffer[]} offers  array of offers
- * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
- * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
- * @param {Issuer} issuer  the issuer
- * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
- * @param {Context} context the context
- * @returns {Promise<string[]>} Returns signed credentials for each offer in vc-jwt format
+ * Prepares, secures, and anchors a credential batch in one selected format.
+ * @param {CredentialIssuingOptions} options credential issuing options
+ * @returns {Promise<IssuedCredential[]>} issued credentials in offer order
  */
-const issueVeriiCredentials = async (
-  offers,
-  credentialSubjectId,
-  credentialTypesMap,
-  issuer,
-  credentialSigningAlgorithms,
-  context,
-) => {
-  const vcs = await signVeriiCredentials(
-    offers,
-    credentialSubjectId,
-    credentialTypesMap,
-    issuer,
-    credentialSigningAlgorithms,
-    context,
+const issueCredentials = async (options) => {
+  const securedCredentials = await secureCredentials(options);
+
+  await anchorVeriiCredentials(
+    map('metadata', securedCredentials),
+    options.issuer,
+    options.context,
   );
 
-  await anchorVeriiCredentials(map('metadata', vcs), issuer, context);
-
-  return map('vcJwt', vcs);
+  return map('issuedCredential', securedCredentials);
 };
 
 /**
- * Prepares and signs verifiable credentials from local offers without anchoring them to the blockchain.
- * Assumption is that credential offers contain all required fields including '@context', type, contentHash
- * @param {CredentialOffer[]} offers  array of offers
- * @param {string} credentialSubjectId  optional field if credential subject needs to be bound into the offer
- * @param {{[Name: string]: CredentialTypeMetadata}} credentialTypesMap the credential types metadata
- * @param {Issuer} issuer  the issuer
- * @param {string[]} [credentialSigningAlgorithms] explicitly resolved key algorithms
- * @param {Context} context the context
- * @returns {Promise<{vcJwt: string, metadata: CredentialMetadata}[]>} Returns array of signed vcs (in jwt format) and their metadata
+ * Prepares and secures a credential batch without anchoring it.
+ * @param {CredentialIssuingOptions} options credential securing options
+ * @returns {Promise<CredentialSecuringResult[]>} secured credentials and DLT metadata
  */
-const signVeriiCredentials = async (
-  offers,
+const secureCredentials = async ({
+  context,
+  credentialFormat,
+  credentialSigningAlgorithms,
   credentialSubjectId,
   credentialTypesMap,
   issuer,
-  credentialSigningAlgorithms,
-  context,
-) => {
+  offers,
+}) => {
+  // Resolve the profile before allocating durable list entries.
+  getCredentialFormatProfile(credentialFormat);
   const effectiveCredentialSigningAlgorithms =
     resolveEffectiveCredentialSigningAlgorithms(
       offers,
       credentialTypesMap,
       credentialSigningAlgorithms,
     );
-
   const metadataEntries = await allocateMetadataListEntries(
     offers,
     credentialTypesMap,
@@ -126,16 +113,17 @@ const signVeriiCredentials = async (
     await createRevocationList(newRevocationListEntry.listId, issuer, context);
   }
 
-  return prepareJwtVcs(
-    offers,
+  return prepareCredentials({
+    context,
+    credentialFormat,
+    credentialSigningAlgorithms: effectiveCredentialSigningAlgorithms,
     credentialSubjectId,
+    credentialTypesMap,
     issuer,
     metadataEntries,
+    offers,
     revocationListEntries,
-    credentialTypesMap,
-    effectiveCredentialSigningAlgorithms,
-    context,
-  );
+  });
 };
 
 /**
@@ -186,6 +174,6 @@ const getNewListEntries = (entries) =>
 
 module.exports = {
   anchorVeriiCredentials,
-  issueVeriiCredentials,
-  signVeriiCredentials,
+  issueCredentials,
+  secureCredentials,
 };
