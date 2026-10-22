@@ -420,6 +420,22 @@ describe('notification delivery worker', () => {
     expect(webhook.scope.isDone()).toEqual(false);
   });
 
+  it('should deliver to the normalized URL when the destination URL has an uppercase scheme and host', async () => {
+    const webhook = nockWebhook();
+
+    expect(
+      await deliverWithResolver(() => ({
+        url: 'HTTP://Operator.LOCALHOST.test/notifications',
+        secret: WEBHOOK_SECRET,
+      })),
+    ).toEqual(
+      expect.objectContaining({
+        status: NotificationEventStatuses.DELIVERED,
+      }),
+    );
+    expect(webhook.scope.isDone()).toEqual(true);
+  });
+
   it('should retry an event when the destination resolver throws', async () => {
     const resolveDestination = () => {
       throw new Error('lookup failed');

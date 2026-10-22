@@ -115,7 +115,8 @@ const findDestinationError = (destination, config) => {
 const postWebhook = async (event, destination, { fetch }) => {
   const rawBody = JSON.stringify(event.payload);
 
-  return fetch.post(destination.url, rawBody, {
+  // Post the normalized href: the http client only accepts a lowercase scheme.
+  return fetch.post(new URL(destination.url).href, rawBody, {
     headers: buildWebhookSignatureHeaders({
       event: event.payload,
       rawBody,
