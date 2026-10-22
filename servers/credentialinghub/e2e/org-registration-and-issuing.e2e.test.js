@@ -105,7 +105,10 @@ describe('org registration and issuing e2e', () => {
     await client?.close();
   });
   before(async () => {
-    await fetch(webhookReceiverUrl, { method: 'DELETE' });
+    const clearWebhooksResponse = await fetch(webhookReceiverUrl, {
+      method: 'DELETE',
+    });
+    expect(clearWebhooksResponse.status).toEqual(204);
     client = await MongoClient.connect('mongodb://localhost:17017');
 
     // Generate holder DID and key pair for fake wallet
