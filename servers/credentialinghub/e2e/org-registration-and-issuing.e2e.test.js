@@ -1093,6 +1093,7 @@ const expectedWebhookEvent = ({
     occurredAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     tenantId: tenant.id,
     tenantDid: tenant.did,
+    caoDid: DEFAULT_CAO_DID,
     serviceId: service.id,
     depotId,
     exchangeId: expect.stringMatching(OBJECT_ID_FORMAT),

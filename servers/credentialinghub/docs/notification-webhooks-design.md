@@ -168,6 +168,7 @@ Event naming rules:
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "65...",
   "tenantDid": "did:web:example.com",
+  "caoDid": "did:web:cao.example",
   "serviceId": "65...",
   "depotId": "65...",
   "exchangeId": "65...",
@@ -188,9 +189,12 @@ Field rules:
 - `occurredAt`: time the domain event occurred, not time delivered.
 - `tenantId`, `serviceId`, `depotId`, `exchangeId`: string ids when available.
 - `tenantDid`: useful for operator correlation.
+- `caoDid`: DID of the CAO that owns the tenant, copied from `tenant.caoDid`. A receiver serving several CAOs uses it to tell which CAO an event belongs to and which Operator client to use for `links`. It is `null` when the tenant's CAO DID is missing or blank, which is possible for tenants created before a CAO DID was required. `null` is the only value that means "no CAO": the Hub never sends an empty string, and it does not substitute the default CAO DID. Events created before this field was added don't include it.
 - `resource`: the primary resource this event is about.
 - `data`: event-specific safe summary fields.
 - `links`: optional operator API paths for fetching details.
+
+`caoDid` was added to `version` 1 without a version change because the change is additive. Receivers should ignore fields they don't recognize.
 
 Do not include:
 
@@ -221,6 +225,7 @@ Payload example:
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
   "tenantDid": "did:web:issuer.example",
+  "caoDid": "did:web:cao.example",
   "serviceId": "service-id",
   "depotId": "depot-id",
   "exchangeId": "exchange-id",
@@ -262,6 +267,7 @@ Payload example:
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
   "tenantDid": "did:web:issuer.example",
+  "caoDid": "did:web:cao.example",
   "serviceId": "service-id",
   "depotId": "depot-id",
   "exchangeId": "exchange-id",
@@ -305,6 +311,7 @@ Payload example:
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
   "tenantDid": "did:web:issuer.example",
+  "caoDid": "did:web:cao.example",
   "serviceId": "service-id",
   "depotId": "depot-id",
   "exchangeId": "exchange-id",
@@ -348,6 +355,7 @@ Document shape:
   "_id": "evt_01J...",
   "type": "credential.issued",
   "version": 1,
+  "caoDid": "did:web:cao.example",
   "payload": {},
   "status": "pending",
   "attempts": 0,
@@ -362,6 +370,8 @@ Document shape:
   "retentionExpiresAt": null
 }
 ```
+
+`caoDid` copies `payload.caoDid` so that delivery can read the tenant's CAO without parsing the payload. It is `null` when the tenant's CAO DID is missing or blank. Events stored before the field was added have no `caoDid`, top-level or in the payload, and should be treated as `null`.
 
 Statuses:
 
@@ -399,6 +409,8 @@ db.notification_events.createIndex(
   }
 );
 ```
+
+There is no index on `caoDid`. No query filters on it: delivery reads it from the claimed document. Add an index together with the first query that filters by CAO.
 
 Idempotency:
 

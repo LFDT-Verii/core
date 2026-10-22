@@ -180,6 +180,7 @@ const buildNotificationEventDocument = (event) => {
     _id: event.id,
     type: event.type,
     version: event.version,
+    caoDid: event.caoDid ?? null,
     payload: event,
     status: NotificationEventStatuses.PENDING,
     attempts: 0,
