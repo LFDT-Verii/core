@@ -332,6 +332,14 @@ describe('OAuth test suite', () => {
           },
           payload: {
             aud: `https://localhost.test/r/${tenant._id}`,
+            authorization_details: [
+              {
+                credential_configuration_id:
+                  'foundation.velocitynetwork.Employment',
+                credential_identifiers: [`${credential._id}`],
+                type: 'openid_credential',
+              },
+            ],
             exp: expect.any(Number),
             iat: expect.any(Number),
             iss: `https://localhost.test/r/${tenant._id}/oauth/authorize`,
@@ -340,6 +348,78 @@ describe('OAuth test suite', () => {
           },
         });
       });
+
+      const testCredentialConfigurationBinding = (
+        name,
+        requestedCredentialConfigurationIds,
+        expectedCredentialConfigurationId,
+      ) => {
+        it(`binds ${name} to the credential identifier`, async () => {
+          const issuerService = await persistIssuerService({ tenant });
+          const depot = await persistDepot({
+            tenant,
+            service: issuerService,
+            preauthCode: 'foo',
+          });
+          const credential = await persistCredential({ tenant, depot });
+          const authorizationDetails = requestedCredentialConfigurationIds.map(
+            (credentialConfigurationId) => ({
+              type: 'openid_credential',
+              credential_configuration_id: credentialConfigurationId,
+            }),
+          );
+          const response = await fastify.inject({
+            method: 'POST',
+            url: `/r/${tenant._id}/oauth/token`,
+            body: `grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code=foo&authorization_details=${encodeURIComponent(
+              JSON.stringify(authorizationDetails),
+            )}`,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          });
+
+          expect(response.statusCode).toEqual(200);
+          const expectedAuthorizationDetails = [
+            {
+              credential_configuration_id: expectedCredentialConfigurationId,
+              credential_identifiers: [`${credential._id}`],
+              type: 'openid_credential',
+            },
+          ];
+          expect(response.json().authorization_details).toEqual(
+            expectedAuthorizationDetails,
+          );
+          await expect(
+            jwtVerify(response.json().access_token, issuerKeyPair.publicKey),
+          ).resolves.toEqual(
+            expect.objectContaining({
+              payload: expect.objectContaining({
+                authorization_details: expectedAuthorizationDetails,
+              }),
+            }),
+          );
+        });
+      };
+
+      testCredentialConfigurationBinding(
+        'an explicit legacy configuration',
+        ['foundation.velocitynetwork.Employment'],
+        'foundation.velocitynetwork.Employment',
+      );
+      testCredentialConfigurationBinding(
+        'an explicit VCDM 2.0 configuration',
+        ['foundation.velocitynetwork.Employment.vc+jwt'],
+        'foundation.velocitynetwork.Employment.vc+jwt',
+      );
+      testCredentialConfigurationBinding(
+        'both configurations with VCDM 2.0 preferred',
+        [
+          'foundation.velocitynetwork.Employment',
+          'foundation.velocitynetwork.Employment.vc+jwt',
+        ],
+        'foundation.velocitynetwork.Employment.vc+jwt',
+      );
     });
   });
 });
