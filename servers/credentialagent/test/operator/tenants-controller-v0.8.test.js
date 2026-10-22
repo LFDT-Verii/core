@@ -589,6 +589,81 @@ describe('Tenants management Test suite', () => {
       expect(keyDocumentsCount).toEqual(0);
     });
 
+    it("should HTTP 400 and not create tenant or keys when a jwk's x and y do not match its d", async () => {
+      const otherPublicJwk = generateKeyPair({ format: 'jwk' }).publicKey;
+      const payload = {
+        did: orgDoc.id,
+        serviceIds: [`${orgDoc.id}#test-service`],
+        keys: [
+          {
+            purposes: ['DLT_TRANSACTIONS'],
+            algorithm: 'SECP256K1',
+            encoding: 'jwk',
+            kidFragment: first(orgDoc.assertionMethod),
+            jwk: {
+              ...jwkFromSecp256k1Key(orgKey),
+              x: otherPublicJwk.x,
+              y: otherPublicJwk.y,
+            },
+          },
+        ],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'public_key_not_matched',
+          message: 'Public key not matched to private key',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
+    it('should HTTP 400 and not create tenant or keys when a publicKey does not match the private key', async () => {
+      const otherPublicJwk = generateKeyPair({ format: 'jwk' }).publicKey;
+      const payload = {
+        did: orgDoc.id,
+        serviceIds: [`${orgDoc.id}#test-service`],
+        keys: [
+          {
+            purposes: ['DLT_TRANSACTIONS'],
+            algorithm: 'SECP256K1',
+            encoding: 'hex',
+            kidFragment: first(orgDoc.assertionMethod),
+            key: orgKey,
+            publicKey: hexFromJwk(otherPublicJwk, false),
+          },
+        ],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'public_key_not_matched',
+          message: 'Public key not matched to private key',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
     it('should 400 if webhookUrl is not uri', async () => {
       const payload = {
         did: orgDoc.id,

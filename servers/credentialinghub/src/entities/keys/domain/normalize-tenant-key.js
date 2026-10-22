@@ -15,21 +15,26 @@
  *
  */
 const { omit } = require('lodash/fp');
+const newError = require('http-errors');
 const { ObjectId } = require('mongodb');
 
-const {
-  KeyEncodings,
-  publicKeyFromPrivateKey,
-  jwkFromSecp256k1Key,
-} = require('@verii/crypto');
+const { KeyEncodings, jwkFromSecp256k1Key } = require('@verii/crypto');
+const { isMatchingKeyPair, publicJwkFromPrivateJwk } = require('@verii/jwt');
+const { KeyErrors } = require('./key-errors');
 
-const normalizeTenantKey = (key) => {
+const normalizeTenantKey = async (key) => {
   const privateJwk = key.jwk != null ? key.jwk : jwkFromSecp256k1Key(key.key);
+  const publicJwk = publicJwkFromPrivateJwk(privateJwk);
+  if (!(await isMatchingKeyPair(privateJwk, publicJwk))) {
+    throw newError(400, KeyErrors.KEY_INVALID, {
+      errorCode: KeyErrors.KEY_INVALID,
+    });
+  }
   return {
     _id: new ObjectId(),
     ...omit(['key', 'jwk'], key),
     encoding: KeyEncodings.JWK,
-    publicJwk: publicKeyFromPrivateKey(privateJwk),
+    publicJwk,
     jwk: privateJwk,
   };
 };

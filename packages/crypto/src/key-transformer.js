@@ -104,5 +104,6 @@ module.exports = {
   HEX_FORMAT,
   hexFromJwk,
   jwkFromSecp256k1Key,
+  publicJwkFromPublicHex,
   publicKeyFromPrivateKey,
 };
