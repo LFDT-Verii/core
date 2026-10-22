@@ -133,4 +133,25 @@ describe('Key Transformer Tests', () => {
       PUBLIC_JWK_WITH_PADDING,
     );
   });
+
+  it('should derive the public jwk coordinates from d', () => {
+    const { kty, crv, d, use } = PRIVATE_JWK;
+    expect(publicKeyFromPrivateKey({ kty, crv, d, use })).toEqual(PUBLIC_JWK);
+  });
+
+  it('should throw when the private jwk x and y do not match d', () => {
+    expect(() =>
+      publicKeyFromPrivateKey({
+        ...PRIVATE_JWK,
+        x: PRIVATE_JWK_WITH_PADDING.x,
+        y: PRIVATE_JWK_WITH_PADDING.y,
+      }),
+    ).toThrow('Private JWK x and y do not match d');
+  });
+
+  it('should throw when the private jwk curve is not secp256k1', () => {
+    expect(() =>
+      publicKeyFromPrivateKey({ ...PRIVATE_JWK, crv: 'P-256' }),
+    ).toThrow('Expected secp256k1 private JWK');
+  });
 });

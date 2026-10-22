@@ -332,6 +332,35 @@ describe('Tenants management test suite', () => {
       );
     });
 
+    it("should 400 and not create tenant or keys when a jwk's x and y do not match its d", async () => {
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const orgKey = first(orgKeys);
+      const otherPrivateJwk = generateKeyPair({ format: 'jwk' }).privateKey;
+
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
+        keys: [{ ...orgKey, jwk: { ...orgKey.jwk, d: otherPrivateJwk.d } }],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_invalid',
+          message: 'Private JWK x and y do not match d',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
     it('should 400 and if no keys set', async () => {
       const payload = {
         tenant: await newTenantMinimalPayload({ did: orgDoc.id }),

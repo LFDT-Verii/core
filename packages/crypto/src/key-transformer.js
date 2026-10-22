@@ -1,5 +1,5 @@
 const { createECDH } = require('crypto');
-const { omit } = require('lodash/fp');
+const { isString, omit } = require('lodash/fp');
 
 const normalizeHex = (hex) => hex.replace(/^0x/i, '');
 
@@ -93,11 +93,29 @@ const hexFromJwk = (jwk, priv = true) => {
   return `04${normalizeCoordinateHex(base64UrlToHex(jwk.x))}${normalizeCoordinateHex(base64UrlToHex(jwk.y))}`;
 };
 
+const isSameCoordinate = (coordinate, derivedCoordinate) =>
+  coordinate == null ||
+  normalizeCoordinateHex(base64UrlToHex(coordinate)) ===
+    normalizeCoordinateHex(base64UrlToHex(derivedCoordinate));
+
+const publicJwkFromPrivateJwk = (jwk) => {
+  if (jwk?.crv !== 'secp256k1') {
+    throw new Error('Expected secp256k1 private JWK');
+  }
+  const { x, y } = publicJwkFromPublicHex(
+    publicHexFromPrivateHex(hexFromJwk(jwk)),
+  );
+  if (!isSameCoordinate(jwk.x, x) || !isSameCoordinate(jwk.y, y)) {
+    throw new Error('Private JWK x and y do not match d');
+  }
+  return { ...omit(['d'], jwk), x, y };
+};
+
 const publicKeyFromPrivateKey = (key) => {
-  if (key.x == null) {
+  if (isString(key)) {
     return publicHexFromPrivateHex(key);
   }
-  return omit(['d'], key);
+  return publicJwkFromPrivateJwk(key);
 };
 
 module.exports = {

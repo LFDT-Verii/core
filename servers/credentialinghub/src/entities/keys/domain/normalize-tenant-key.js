@@ -15,6 +15,7 @@
  *
  */
 const { omit } = require('lodash/fp');
+const newError = require('http-errors');
 const { ObjectId } = require('mongodb');
 
 const {
@@ -22,6 +23,7 @@ const {
   publicKeyFromPrivateKey,
   jwkFromSecp256k1Key,
 } = require('@verii/crypto');
+const { KeyErrors } = require('./key-errors');
 
 const normalizeTenantKey = (key) => {
   const privateJwk = key.jwk != null ? key.jwk : jwkFromSecp256k1Key(key.key);
@@ -29,9 +31,17 @@ const normalizeTenantKey = (key) => {
     _id: new ObjectId(),
     ...omit(['key', 'jwk'], key),
     encoding: KeyEncodings.JWK,
-    publicJwk: publicKeyFromPrivateKey(privateJwk),
+    publicJwk: derivePublicJwk(privateJwk),
     jwk: privateJwk,
   };
+};
+
+const derivePublicJwk = (privateJwk) => {
+  try {
+    return publicKeyFromPrivateKey(privateJwk);
+  } catch (error) {
+    throw newError(400, error.message, { errorCode: KeyErrors.KEY_INVALID });
+  }
 };
 
 module.exports = { normalizeTenantKey };

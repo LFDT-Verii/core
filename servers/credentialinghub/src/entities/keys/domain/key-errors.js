@@ -21,5 +21,6 @@ const KeyErrors = {
   KEY_KID_FRAGMENT_NOT_UNIQUE: 'key_kidFragment_not_unique',
   DLT_TRANSACTION_KEY_REQUIRED: 'dlt_transaction_key_required',
   EXCHANGES_KEY_REQUIRED: 'exchanges_key_required',
+  KEY_INVALID: 'key_invalid',
 };
 module.exports = { KeyErrors };

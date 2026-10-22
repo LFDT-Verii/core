@@ -429,7 +429,10 @@ describe('Tenant keys test suite', () => {
     });
 
     it('should 201 adding a key with 3 purposes to the tenant', async () => {
-      const key1 = omit(['tenantId'], await newKey({ tenant }));
+      const key1 = omit(
+        ['tenantId'],
+        await newKey({ tenant, publicKey: jwkFromSecp256k1Key(orgKey, false) }),
+      );
 
       const response = await fastify.injectJson({
         method: 'POST',
@@ -481,7 +484,11 @@ describe('Tenant keys test suite', () => {
     it('should 201 adding a key with 1 purpose to the tenant', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: ['DLT_TRANSACTIONS'] }),
+        await newKey({
+          tenant,
+          purposes: ['DLT_TRANSACTIONS'],
+          publicKey: jwkFromSecp256k1Key(orgKey, false),
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -559,7 +566,11 @@ describe('Tenant keys test suite', () => {
       tenantRepo.update(tenant._id, { primaryAddress: '' });
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] }),
+        await newKey({
+          tenant,
+          purposes: [KeyPurposes.DLT_TRANSACTIONS],
+          publicKey: jwkFromSecp256k1Key(orgKey, false),
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -587,6 +598,7 @@ describe('Tenant keys test suite', () => {
         ['tenantId'],
         await newKey({
           tenant: tenant1,
+          publicKey: jwkFromSecp256k1Key(orgKey, false),
           purposes: [
             KeyPurposes.EXCHANGES,
             KeyPurposes.ISSUING_METADATA,
@@ -620,7 +632,11 @@ describe('Tenant keys test suite', () => {
       const prevPrimaryAddress = tenant1.primaryAddress;
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] }),
+        await newKey({
+          tenant,
+          purposes: [KeyPurposes.DLT_TRANSACTIONS],
+          publicKey: jwkFromSecp256k1Key(orgKey, false),
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -736,7 +752,10 @@ describe('Tenant keys test suite', () => {
     });
 
     it('should 201 adding a key with 3 purposes to the tenant', async () => {
-      const key1 = omit(['tenantId'], await newKey({ tenant }));
+      const key1 = omit(
+        ['tenantId'],
+        await newKey({ tenant, publicKey: keyPair.publicKey }),
+      );
 
       const response = await fastify.injectJson({
         method: 'POST',
@@ -791,7 +810,10 @@ describe('Tenant keys test suite', () => {
     });
 
     it('should 201 adding a jwk to the tenant', async () => {
-      const key1 = omit(['tenantId', 'key'], await newKey({ tenant }));
+      const key1 = omit(
+        ['tenantId', 'key'],
+        await newKey({ tenant, publicKey: keyPair.publicKey }),
+      );
 
       const response = await fastify.injectJson({
         method: 'POST',
