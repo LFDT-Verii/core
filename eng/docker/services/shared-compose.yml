@@ -67,7 +67,8 @@ services:
       - httpscert:/certs
     command: chown -R 1000:1000 /certs
     depends_on:
-      - certgen
+      certgen:
+        condition: service_completed_successfully
 
 volumes:
   httpscert:

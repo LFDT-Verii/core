@@ -8,8 +8,8 @@ include:
 services:
   credentialinghub:
     depends_on:
-      certgen:
-        condition: service_started
+      certfix:
+        condition: service_completed_successfully
       contracts-deployment:
         condition: service_completed_successfully
       registrar:
