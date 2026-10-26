@@ -21,6 +21,7 @@ const {
   getCountries,
   isLanguageCodeValid,
   isLanguageSupported,
+  alpha2ToAlpha3,
   alpha3ToAlpha2,
 } = require('..');
 
@@ -86,6 +87,19 @@ describe('Countries test suite', () => {
     it('should return undefined for unknown three letter country code', async () => {
       const twoLetterFoo = alpha3ToAlpha2('foo');
       expect(twoLetterFoo).toEqual(undefined);
+    });
+  });
+
+  describe('2 letter country code to 3 letter country code test suite', () => {
+    it('should convert 2 letter country code to 3 letter country code', async () => {
+      expect(alpha2ToAlpha3('IL')).toEqual('ISR');
+      expect(alpha2ToAlpha3('US')).toEqual('USA');
+      expect(alpha2ToAlpha3('CA')).toEqual('CAN');
+      expect(alpha2ToAlpha3('IN')).toEqual('IND');
+    });
+
+    it('should return undefined for unknown two letter country code', async () => {
+      expect(alpha2ToAlpha3('ZZ')).toEqual(undefined);
     });
   });
 
