@@ -31,6 +31,7 @@ const swaggerConfig = {
 module.exports = {
   ...genericConfig,
   version: packageJson.version,
+  serviceName: packageJson.name,
   adminUserName: env.get('ADMIN_USER_NAME').required(!isTest).asString(),
   agentUrl: env.get('AGENT_URL').required().asString(),
   secret: env.get('SECRET').required(!isTest).asString(),
