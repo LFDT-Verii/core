@@ -74,12 +74,13 @@ const updateExtensions = (parent, context) => ({
         $push: { 'exchange.events': buildExchangeEvent(state) },
       },
     ),
-  claimAcceptance: async (credentialId) => {
+  claimAcceptance: async (credentialId, exchangeId) => {
     const now = new Date();
     const { modifiedCount } = await parent.collection().updateOne(
       {
         _id: credentialId,
-        acceptedAt: { $exists: false },
+        'exchange.id': exchangeId,
+        'exchange.acceptedAt': null,
         $or: [
           { 'exchange.acceptingAt': null },
           {
@@ -91,13 +92,13 @@ const updateExtensions = (parent, context) => ({
       },
       { $set: { 'exchange.acceptingAt': now } },
     );
-    return modifiedCount === 1;
+    return modifiedCount === 1 ? now : null;
   },
-  releaseAcceptance: async (credentialId) =>
+  releaseAcceptance: async (credentialId, claimedAt) =>
     parent
       .collection()
       .updateOne(
-        { _id: credentialId },
+        { _id: credentialId, 'exchange.acceptingAt': claimedAt },
         { $unset: { 'exchange.acceptingAt': '' } },
       ),
 });

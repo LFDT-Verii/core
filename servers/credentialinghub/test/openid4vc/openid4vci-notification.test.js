@@ -102,7 +102,10 @@ describe('openid4vc notification test suite', () => {
     mock.reset();
   });
 
-  const persistSignedCredential = async (exchangeOverrides) => {
+  const persistSignedCredential = async (
+    exchangeOverrides,
+    credentialOverrides,
+  ) => {
     const issuerService = await persistIssuerService({ tenant });
     const depot = await persistDepot({ tenant, service: issuerService });
     const exchange = {
@@ -121,8 +124,24 @@ describe('openid4vc notification test suite', () => {
       ],
       ...exchangeOverrides,
     };
-    const credential = await persistCredential({ tenant, depot, exchange });
+    const credential = await persistCredential({
+      tenant,
+      depot,
+      exchange,
+      ...credentialOverrides,
+    });
     return { credential, exchange };
+  };
+
+  const acceptedExchangeFields = {
+    acceptingAt: expect.any(Date),
+    acceptedAt: expect.any(Date),
+  };
+
+  const stillAcceptingResponse = {
+    error: 'temporarily_unavailable',
+    error_description:
+      'The credential is still being accepted. Retry the notification later.',
   };
 
   const sendNotification = async (payload) => {
@@ -435,12 +454,17 @@ describe('openid4vc notification test suite', () => {
           .findOne({ _id: new ObjectId(credential._id) });
         expect(credentialFromDb).toEqual({
           ...mongoify(credential),
-          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
-            acceptingAt: expect.any(Date),
-          }),
+          exchange: expectedDbExchange(
+            exchange,
+            [ExchangeStates.COMPLETE],
+            acceptedExchangeFields,
+          ),
           acceptedAt: expect.any(Date),
           updatedAt: expect.any(Date),
         });
+        expect(credentialFromDb.exchange.acceptedAt).toEqual(
+          credentialFromDb.acceptedAt,
+        );
         expect(mockAddCredentialMetadataEntry.mock.calls[0].arguments).toEqual([
           exchange.credentialMetadata,
           exchange.credentialMetadata.contentHash,
@@ -466,14 +490,16 @@ describe('openid4vc notification test suite', () => {
         expect(credentialFromDb).toEqual(credentialAfterFirst);
         expect(credentialFromDb).toEqual({
           ...mongoify(credential),
-          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
-            acceptingAt: expect.any(Date),
-          }),
+          exchange: expectedDbExchange(
+            exchange,
+            [ExchangeStates.COMPLETE],
+            acceptedExchangeFields,
+          ),
           acceptedAt: expect.any(Date),
           updatedAt: expect.any(Date),
         });
       });
-      it('should 204 and anchor once when credential_accepted arrives concurrently', async () => {
+      it('should 503 a credential_accepted that arrives while another is anchoring, and 204 once that one is done', async () => {
         const { credential, exchange } = await persistSignedCredential();
         const payload = {
           notification_id: exchange.id,
@@ -491,15 +517,20 @@ describe('openid4vc notification test suite', () => {
         const secondResponse = await sendNotification(payload);
         anchorReleased.resolve();
         const firstResponse = await firstResponsePromise;
+        const thirdResponse = await sendNotification(payload);
 
         expect(firstResponse.statusCode).toEqual(204);
-        expect(secondResponse.statusCode).toEqual(204);
+        expect(secondResponse.statusCode).toEqual(503);
+        expect(secondResponse.json).toEqual(stillAcceptingResponse);
+        expect(thirdResponse.statusCode).toEqual(204);
         expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
         expect(await findCredentialInDb(credential)).toEqual({
           ...mongoify(credential),
-          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
-            acceptingAt: expect.any(Date),
-          }),
+          exchange: expectedDbExchange(
+            exchange,
+            [ExchangeStates.COMPLETE],
+            acceptedExchangeFields,
+          ),
           acceptedAt: expect.any(Date),
           updatedAt: expect.any(Date),
         });
@@ -526,13 +557,13 @@ describe('openid4vc notification test suite', () => {
           exchange: expectedDbExchange(
             exchange,
             [ExchangeStates.UNEXPECTED_ERROR, ExchangeStates.COMPLETE],
-            { err: errorMessage, acceptingAt: expect.any(Date) },
+            { err: errorMessage, ...acceptedExchangeFields },
           ),
           acceptedAt: expect.any(Date),
           updatedAt: expect.any(Date),
         });
       });
-      it('should 204 without anchoring while another credential_accepted holds the claim', async () => {
+      it('should 503 without anchoring or recording an error while another credential_accepted holds the claim', async () => {
         const acceptingAt = new Date();
         const { credential, exchange } = await persistSignedCredential({
           acceptingAt,
@@ -543,7 +574,8 @@ describe('openid4vc notification test suite', () => {
           event: 'credential_accepted',
         });
 
-        expect(response.statusCode).toEqual(204);
+        expect(response.statusCode).toEqual(503);
+        expect(response.json).toEqual(stillAcceptingResponse);
         expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
         expect(await findCredentialInDb(credential)).toEqual({
           ...mongoify(credential),
@@ -567,13 +599,93 @@ describe('openid4vc notification test suite', () => {
         const credentialFromDb = await findCredentialInDb(credential);
         expect(credentialFromDb).toEqual({
           ...mongoify(credential),
-          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
-            acceptingAt: expect.any(Date),
-          }),
+          exchange: expectedDbExchange(
+            exchange,
+            [ExchangeStates.COMPLETE],
+            acceptedExchangeFields,
+          ),
           acceptedAt: expect.any(Date),
           updatedAt: expect.any(Date),
         });
         expect(credentialFromDb.exchange.acceptingAt > acceptingAt).toBe(true);
+      });
+      it('should keep the claim of a request that took over a stale claim when the stale claimant fails', async () => {
+        const errorMessage = 'Mock Error';
+        const { credential, exchange } = await persistSignedCredential();
+        const payload = {
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        };
+        const staleAnchorStarted = Promise.withResolvers();
+        const staleAnchorReleased = Promise.withResolvers();
+        mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() => {
+          staleAnchorStarted.resolve();
+          return staleAnchorReleased.promise;
+        }, 0);
+        const takeoverAnchorStarted = Promise.withResolvers();
+        const takeoverAnchorReleased = Promise.withResolvers();
+        mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() => {
+          takeoverAnchorStarted.resolve();
+          return takeoverAnchorReleased.promise;
+        }, 1);
+
+        const staleResponsePromise = sendNotification(payload);
+        await staleAnchorStarted.promise;
+        await mongoDb()
+          .collection('credentials')
+          .updateOne(
+            { _id: new ObjectId(credential._id) },
+            { $set: { 'exchange.acceptingAt': subMinutes(new Date(), 10) } },
+          );
+        const takeoverResponsePromise = sendNotification(payload);
+        await takeoverAnchorStarted.promise;
+        staleAnchorReleased.reject(new Error(errorMessage));
+        const staleResponse = await staleResponsePromise;
+        const duringTakeoverResponse = await sendNotification(payload);
+        takeoverAnchorReleased.resolve();
+        const takeoverResponse = await takeoverResponsePromise;
+
+        expect(staleResponse.statusCode).toEqual(400);
+        expect(duringTakeoverResponse.statusCode).toEqual(503);
+        expect(takeoverResponse.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+        expect(await findCredentialInDb(credential)).toEqual({
+          ...mongoify(credential),
+          exchange: expectedDbExchange(
+            exchange,
+            [ExchangeStates.UNEXPECTED_ERROR, ExchangeStates.COMPLETE],
+            { err: errorMessage, ...acceptedExchangeFields },
+          ),
+          acceptedAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
+      });
+      it('should anchor a credential issued again after an earlier issuance was accepted', async () => {
+        const previouslyAcceptedAt = new Date('2026-01-01T00:00:00.000Z');
+        const { credential, exchange } = await persistSignedCredential(
+          {},
+          { acceptedAt: previouslyAcceptedAt },
+        );
+
+        const response = await sendNotification({
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        });
+
+        expect(response.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+        const credentialFromDb = await findCredentialInDb(credential);
+        expect(credentialFromDb).toEqual({
+          ...mongoify(credential),
+          exchange: expectedDbExchange(
+            exchange,
+            [ExchangeStates.COMPLETE],
+            acceptedExchangeFields,
+          ),
+          acceptedAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
+        expect(credentialFromDb.acceptedAt > previouslyAcceptedAt).toBe(true);
       });
       it('should 204 with credential_deleted', async () => {
         const issuerService = await persistIssuerService({ tenant });

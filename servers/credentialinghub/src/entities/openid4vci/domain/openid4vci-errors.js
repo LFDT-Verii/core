@@ -20,5 +20,6 @@ const Oidc4vciErrors = {
   UNKNOWN_CREDENTIAL_IDENTIFIER: 'unknown_credential_identifier',
   INVALID_NOTIFICATION_ID: 'invalid_notification_id',
   INVALID_NOTIFICATION_REQUEST: 'invalid_notification_request',
+  TEMPORARILY_UNAVAILABLE: 'temporarily_unavailable',
 };
 module.exports = { Oidc4vciErrors };

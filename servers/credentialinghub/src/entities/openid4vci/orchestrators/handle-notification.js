@@ -65,6 +65,9 @@ const handleNotification = async (notificationRequest, context) => {
         });
     }
   } catch (error) {
+    if (error instanceof Oauth2ServerErrorResponseError) {
+      throw error;
+    }
     context.log.error(error);
     await repos.credentials.addExchangeState(
       credential._id,
@@ -85,8 +88,12 @@ const handleNotification = async (notificationRequest, context) => {
 const acceptCredential = async (credential, context) => {
   const { repos } = context;
   // Repeated or concurrent notifications must not anchor the same index twice
-  const claimed = await repos.credentials.claimAcceptance(credential._id);
-  if (!claimed) {
+  const claimedAt = await repos.credentials.claimAcceptance(
+    credential._id,
+    credential.exchange.id,
+  );
+  if (claimedAt == null) {
+    await checkAccepted(credential._id, context);
     return;
   }
 
@@ -96,15 +103,34 @@ const acceptCredential = async (credential, context) => {
       context,
     );
   } catch (error) {
-    await repos.credentials.releaseAcceptance(credential._id);
+    await repos.credentials.releaseAcceptance(credential._id, claimedAt);
     throw error;
   }
 
+  const acceptedAt = new Date();
   await repos.credentials.addExchangeState(
     credential._id,
     ExchangeStates.COMPLETE,
-    { acceptedAt: new Date() },
+    { acceptedAt, 'exchange.acceptedAt': acceptedAt },
   );
+};
+
+// Without the claim, the exchange is either accepted or another request is still anchoring it
+const checkAccepted = async (credentialId, { repos }) => {
+  const credential = await repos.credentials.findOne(
+    { filter: { _id: credentialId } },
+    { exchange: 1 },
+  );
+  if (credential?.exchange?.acceptedAt == null) {
+    throw new Oauth2ServerErrorResponseError(
+      {
+        error: Oidc4vciErrors.TEMPORARILY_UNAVAILABLE,
+        error_description:
+          'The credential is still being accepted. Retry the notification later.',
+      },
+      { status: 503 },
+    );
+  }
 };
 
 module.exports = { handleNotification };

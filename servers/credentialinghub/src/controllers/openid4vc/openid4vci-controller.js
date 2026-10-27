@@ -124,6 +124,7 @@ const openid4vciController = async (fastify) => {
             400: oauthErrorResponseSchema,
             401: oauthErrorResponseSchema,
             500: oauthErrorResponseSchema,
+            503: oauthErrorResponseSchema,
           },
         }),
       },
