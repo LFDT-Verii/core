@@ -19,8 +19,18 @@ const fp = require('fastify-plugin');
 
 const sendErrorPlugin = async (fastify) => {
   const {
-    config: { sentryDsn, enableSentryDebug, nodeEnv, version, serviceName },
+    config: {
+      sentryDsn,
+      enableSentryDebug,
+      nodeEnv,
+      version,
+      serviceName,
+      isTest,
+    },
   } = fastify;
+  if (!sentryDsn && !isTest) {
+    fastify.log.info('Sentry reporting is off: SENTRY_DSN is not set');
+  }
   const { sendError } = await initSendError({
     dsn: sentryDsn,
     release: version,
