@@ -50,6 +50,8 @@ module.exports = {
     : fs.readFileSync(serverCertificateKeyFile),
   requestTimeout: env.get('REQUEST_TIMEOUT').default('30000').asInt(),
   traceIdHeader: env.get('TRACE_ID_HEADER').default('x-trace-id').asString(),
+  sentryDsn: env.get('SENTRY_DSN').default('').asString(),
+  enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   blockchainApiAudience: env
     .get('BLOCKCHAIN_API_AUDIENCE')
     .default('https://velocitynetwork.node')
