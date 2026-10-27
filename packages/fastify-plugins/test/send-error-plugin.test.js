@@ -41,6 +41,7 @@ describe('Capture Exception to Sentry plugin tests', () => {
       sentryDsn: 'testDsn',
       nodeEnv: 'testEnv',
       version: 'testVersion',
+      serviceName: 'testService',
     };
     const fakeServer = {
       config,
@@ -55,6 +56,7 @@ describe('Capture Exception to Sentry plugin tests', () => {
           dsn: 'testDsn',
           environment: 'testEnv',
           release: 'testVersion',
+          serviceName: 'testService',
         },
       ],
     ]);

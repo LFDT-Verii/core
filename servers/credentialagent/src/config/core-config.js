@@ -90,6 +90,7 @@ const coreConfig = {
     .default('https://dev.uniresolver.io/')
     .asString(),
   version: packageJson.version,
+  serviceName: packageJson.name,
   caoDid: env.get('CAO_DID').required(!isTest).asString(),
   validateCaoDid: env.get('VALIDATE_CAO_DID').default('true').asBool(),
   sentryDsn: env.get('SENTRY_DSN').default('').asString(),

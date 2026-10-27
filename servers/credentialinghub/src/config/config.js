@@ -85,6 +85,7 @@ const buildConfig = () => {
     ...swaggerConfig,
     ...openid4vcConfig,
     version: packageJson.version,
+    serviceName: packageJson.name,
     customFastifyOptions: {
       bodyLimit: 8388608,
     },
