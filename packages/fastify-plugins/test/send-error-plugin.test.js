@@ -15,6 +15,7 @@
  */
 const { beforeEach, describe, it, mock, after } = require('node:test');
 const { expect } = require('expect');
+const Fastify = require('fastify');
 
 const initSendError = mock.fn(() =>
   Promise.resolve({
@@ -69,5 +70,40 @@ describe('Capture Exception to Sentry plugin tests', () => {
     expect(fakeServer.addHook.mock.calls.map((call) => call.arguments)).toEqual(
       [['preHandler', expect.any(Function)]],
     );
+  });
+});
+
+describe('Sentry reporting is off log', () => {
+  const sentryOffMessage = 'Sentry reporting is off: SENTRY_DSN is not set';
+
+  // Registers the plugin on a real server and returns the log lines it wrote
+  const registerPlugin = async (config) => {
+    const lines = [];
+    const server = Fastify({
+      logger: {
+        level: 'info',
+        stream: { write: (line) => lines.push(JSON.parse(line)) },
+      },
+    });
+    server.decorate('config', config);
+    await server.register(sendErrorPlugin).ready();
+    await server.close();
+    return lines.filter(({ msg }) => msg === sentryOffMessage);
+  };
+
+  it('should log once when a server outside tests has no DSN', async () => {
+    const lines = await registerPlugin({ sentryDsn: '', isTest: false });
+
+    expect(lines).toEqual([expect.objectContaining({ level: 30 })]);
+  });
+
+  it('should not log when the server has a DSN', async () => {
+    expect(
+      await registerPlugin({ sentryDsn: 'testDsn', isTest: false }),
+    ).toEqual([]);
+  });
+
+  it('should not log in tests', async () => {
+    expect(await registerPlugin({ sentryDsn: '', isTest: true })).toEqual([]);
   });
 });

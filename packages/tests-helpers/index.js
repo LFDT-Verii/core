@@ -28,5 +28,6 @@ module.exports = {
   ...require('./src/generate-organization-key-matcher'),
   ...require('./src/test-oauth-user'),
   ...require('./src/s3-utils'),
+  ...require('./src/sentry-ingest'),
   ...require('./src/spence-mongo-repos'),
 };

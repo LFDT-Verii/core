@@ -15,50 +15,11 @@
  */
 
 const { after, before, describe, it } = require('node:test');
-const { EventEmitter, once } = require('node:events');
-const { createServer } = require('node:http');
-const { buffer } = require('node:stream/consumers');
-const { gunzipSync } = require('node:zlib');
 const { expect } = require('expect');
+const { startSentryIngest } = require('@verii/tests-helpers');
 
 const packageJson = require('../../package.json');
 const buildFastify = require('./helpers/credentialagent-operator-build-fastify');
-
-// Stands in for Sentry's ingest endpoint and emits each error event the SDK sends it, keyed by the error message
-const startSentryIngest = async () => {
-  const received = new EventEmitter();
-  const server = createServer(async (req, res) => {
-    const body = await buffer(req);
-    const envelope =
-      req.headers['content-encoding'] === 'gzip' ? gunzipSync(body) : body;
-    // An envelope is a header line, then a header line and a payload line for each item
-    const [, ...lines] = envelope.toString().split('\n').filter(Boolean);
-    for (let i = 0; i < lines.length; i += 2) {
-      if (JSON.parse(lines[i]).type === 'event') {
-        const event = JSON.parse(lines[i + 1]);
-        received.emit(event.exception.values[0].value, event);
-      }
-    }
-    res.end();
-  });
-  server.listen(0, '127.0.0.1');
-  await once(server, 'listening');
-
-  return {
-    dsn: `http://public@127.0.0.1:${server.address().port}/1`,
-    // Start waiting before raising the error, the SDK sends events asynchronously
-    waitForError: async (message) => {
-      const [event] = await once(received, message, {
-        signal: AbortSignal.timeout(5000),
-      });
-      return event;
-    },
-    close: () => {
-      server.close();
-      return once(server, 'close');
-    },
-  };
-};
 
 describe('Sentry service tag', () => {
   let sentryIngest;

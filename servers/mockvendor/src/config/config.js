@@ -40,8 +40,6 @@ module.exports = {
   customFastifyOptions: {
     http2: false,
   },
-  sentryDsn: env.get('SENTRY_DSN').default('').asString(),
-  enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   omitOfferId: env.get('OMIT_OFFER_ID').default('false').asBool(),
   noOffers200: env.get('NO_OFFERS_200').default('true').asBool(),
   vnfHeaderSignatureVerificationKey: env

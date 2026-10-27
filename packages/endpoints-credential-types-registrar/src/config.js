@@ -64,8 +64,6 @@ const createConfig = (packageJson) => {
     version: packageJson.version,
     serviceName: packageJson.name,
     allowedCorsOrigins: env.get('ALLOWED_CORS_ORIGINS').default('').asArray(),
-    sentryDsn: env.get('SENTRY_DSN').default('').asString(),
-    enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   };
 
   const registrarConfig = {
