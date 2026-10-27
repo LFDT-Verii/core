@@ -70,6 +70,15 @@ const updateExtensions = (parent, context) => ({
         $push: { 'exchange.events': buildExchangeEvent(state) },
       },
     ),
+  // Does nothing if the credential has been issued again since, which replaces its exchange
+  addExchangeStateIfCurrent: async (credentialId, exchangeId, state, props) =>
+    parent.collection().updateOne(
+      { _id: credentialId, 'exchange.id': exchangeId },
+      {
+        $set: props,
+        $push: { 'exchange.events': buildExchangeEvent(state) },
+      },
+    ),
 });
 
 module.exports = { updateExtensions };

@@ -169,6 +169,24 @@ const buildConfig = () => {
         .asIntPositive(),
       allowInsecureWebhookUrl: allowInsecureNotificationWebhookUrl,
     }),
+    anchoring: {
+      workerEnabled: env
+        .get('ANCHORING_WORKER_ENABLED')
+        .default('true')
+        .asBool(),
+      pollIntervalMs: env
+        .get('ANCHORING_WORKER_POLL_INTERVAL_MS')
+        .default('1000')
+        .asIntPositive(),
+      lockDurationMs: env
+        .get('ANCHORING_LOCK_DURATION_MS')
+        .default('300000')
+        .asIntPositive(),
+      maxAttempts: env
+        .get('ANCHORING_MAX_ATTEMPTS')
+        .default('10')
+        .asIntPositive(),
+    },
   };
 };
 

@@ -21,6 +21,7 @@ const { initServer } = require('./init-server');
 const {
   startEmbeddedNotificationWorker,
 } = require('./start-embedded-notification-worker');
+const { registerAnchoringWorker } = require('./register-anchoring-worker');
 const {
   resolveCaoSecurityProvider,
 } = require('./plugins/cao-security-provider');
@@ -53,6 +54,7 @@ const startAppServer = (options = {}) => {
   startEmbeddedNotificationWorker(server, {
     modulePath: options.notificationWorkerModulePath,
   });
+  registerAnchoringWorker(server);
   listenServer(server);
   return server;
 };

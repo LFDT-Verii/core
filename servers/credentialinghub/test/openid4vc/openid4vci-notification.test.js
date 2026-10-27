@@ -94,12 +94,55 @@ describe('openid4vc notification test suite', () => {
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
     await mongoDb().collection('notifications').deleteMany({});
+    await mongoDb().collection('anchoring_jobs').deleteMany({});
   });
 
   after(async () => {
     await fastify.close();
     mock.reset();
   });
+
+  const persistSignedCredential = async (credentialOverrides) => {
+    const issuerService = await persistIssuerService({ tenant });
+    const depot = await persistDepot({ tenant, service: issuerService });
+    const exchange = {
+      id: nanoid(),
+      serviceId: new ObjectId(issuerService._id),
+      credentialMetadata: {
+        isNewList: true,
+        listId: 1,
+        index: 2,
+        contentHash: 'foo',
+        algType: 'aes-256-gcm',
+      },
+      events: [
+        { state: ExchangeStates.NEW, timestamp: new Date() },
+        { state: ExchangeStates.CREDENTIALS_SIGNED, timestamp: new Date() },
+      ],
+    };
+    const credential = await persistCredential({
+      tenant,
+      depot,
+      exchange,
+      ...credentialOverrides,
+    });
+    return { credential, exchange };
+  };
+
+  const sendNotification = async (payload) => {
+    const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
+      subject: `https://localhost.test/r/${tenant._id}`,
+    });
+    return fastify.injectJson({
+      method: 'POST',
+      url: `/r/${tenant._id}/openid4vc/notification`,
+      headers: { authorization: `Bearer ${authToken}` },
+      payload,
+    });
+  };
+
+  const findAnchoringJobs = () =>
+    mongoDb().collection('anchoring_jobs').find({}).toArray();
 
   describe('openid4vc notification test suite', () => {
     describe('openid4vc notification endpoint error cases', () => {
@@ -192,150 +235,6 @@ describe('openid4vc notification test suite', () => {
           error_description: 'Error identifying notification foo',
         });
       });
-      it('should 400 with server_error due to anchoring error', async () => {
-        const errorMessage = 'Mock Error';
-        mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() =>
-          Promise.reject(new Error(errorMessage)),
-        );
-        const issuerService = await persistIssuerService({ tenant });
-        const depot = await persistDepot({
-          tenant,
-          service: issuerService,
-        });
-        const exchange = {
-          id: nanoid(),
-          serviceId: new ObjectId(issuerService._id),
-          credentialMetadata: {
-            isNewList: true,
-            listId: 1,
-            index: 2,
-            contentHash: 'foo',
-          },
-          events: [
-            {
-              state: ExchangeStates.NEW,
-              timestamp: new Date(),
-            },
-            {
-              state: ExchangeStates.CREDENTIALS_SIGNED,
-              timestamp: new Date(),
-            },
-          ],
-        };
-        const credential = await persistCredential({
-          tenant,
-          depot,
-          exchange,
-        });
-
-        const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-          subject: `https://localhost.test/r/${tenant._id}`,
-        });
-
-        const response = await fastify.injectJson({
-          method: 'POST',
-          url: `/r/${tenant._id}/openid4vc/notification`,
-          headers: {
-            authorization: `Bearer ${authToken}`,
-          },
-          payload: {
-            notification_id: exchange.id,
-            event: 'credential_accepted',
-          },
-        });
-
-        expect(response.statusCode).toEqual(400);
-        expect(response.json).toEqual({
-          error: 'server_error',
-          error_description: errorMessage,
-        });
-        const credentialFromDb = await mongoDb()
-          .collection('credentials')
-          .findOne({ _id: new ObjectId(credential._id) });
-        expect(credentialFromDb).toEqual({
-          ...mongoify(credential),
-          exchange: expectedDbExchange(
-            exchange,
-            [ExchangeStates.UNEXPECTED_ERROR],
-            { err: errorMessage },
-          ),
-          updatedAt: expect.any(Date),
-        });
-      });
-      it('should 400 if career_issuing_not_permitted is returned', async () => {
-        const error = new Error('errorMessage');
-        error.errorCode = 'career_issuing_not_permitted';
-        mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() =>
-          Promise.reject(error),
-        );
-        const issuerService = await persistIssuerService({ tenant });
-        const depot = await persistDepot({
-          tenant,
-          service: issuerService,
-        });
-
-        const exchange = {
-          id: nanoid(),
-          serviceId: new ObjectId(issuerService._id),
-          credentialMetadata: {
-            isNewList: true,
-            listId: 1,
-            index: 2,
-            contentHash: 'foo',
-          },
-          events: [
-            {
-              state: ExchangeStates.NEW,
-              timestamp: new Date(),
-            },
-            {
-              state: ExchangeStates.CREDENTIALS_SIGNED,
-              timestamp: new Date(),
-            },
-          ],
-        };
-        const credential = await persistCredential({
-          tenant,
-          depot,
-          exchange,
-        });
-        const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-          subject: `https://localhost.test/r/${tenant._id}`,
-        });
-
-        const response = await fastify.injectJson({
-          method: 'POST',
-          url: `/r/${tenant._id}/openid4vc/notification`,
-          headers: {
-            authorization: `Bearer ${authToken}`,
-          },
-          payload: {
-            notification_id: exchange.id,
-            event: 'credential_accepted',
-          },
-        });
-        expect(response.statusCode).toEqual(400);
-        expect(response.json).toEqual({
-          error: 'server_error',
-          error_description: 'errorMessage',
-        });
-
-        await expect(
-          mongoDb()
-            .collection('credentials')
-            .findOne({ _id: new ObjectId(credential._id) }),
-        ).resolves.toEqual({
-          ...mongoify(credential),
-          exchange: expectedDbExchange(
-            exchange,
-            [(ExchangeStates.NEW, ExchangeStates.UNEXPECTED_ERROR)],
-            {
-              errorCode: 'career_issuing_not_permitted',
-              err: 'errorMessage',
-            },
-          ),
-        });
-      });
     });
     describe('openid4vc notification endpoint success cases', () => {
       it('should 204 with credential_accepted', async () => {
@@ -389,20 +288,79 @@ describe('openid4vc notification test suite', () => {
         });
 
         expect(response.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
         const credentialFromDb = await mongoDb()
           .collection('credentials')
           .findOne({ _id: new ObjectId(credential._id) });
         expect(credentialFromDb).toEqual({
           ...mongoify(credential),
-          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE]),
-          acceptedAt: expect.any(Date),
+          exchange: expectedDbExchange(exchange),
           updatedAt: expect.any(Date),
         });
-        expect(mockAddCredentialMetadataEntry.mock.calls[0].arguments).toEqual([
-          exchange.credentialMetadata,
-          exchange.credentialMetadata.contentHash,
-          tenant.caoDid,
-          'aes-256-gcm',
+        expect(await findAnchoringJobs()).toEqual([
+          {
+            _id: exchange.id,
+            credentialId: new ObjectId(credential._id),
+            tenantId: new ObjectId(tenant._id),
+            credentialMetadata: exchange.credentialMetadata,
+            status: 'pending',
+            attempts: 0,
+            nextAttemptAt: expect.any(Date),
+            acceptedAt: expect.any(Date),
+            createdAt: expect.any(Date),
+            updatedAt: expect.any(Date),
+          },
+        ]);
+      });
+      it('should 204 and enqueue one anchoring job when credential_accepted is repeated', async () => {
+        const { exchange } = await persistSignedCredential();
+        const payload = {
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        };
+
+        const firstResponse = await sendNotification(payload);
+        const secondResponse = await sendNotification(payload);
+
+        expect(firstResponse.statusCode).toEqual(204);
+        expect(secondResponse.statusCode).toEqual(204);
+        expect(await findAnchoringJobs()).toEqual([
+          expect.objectContaining({ _id: exchange.id, status: 'pending' }),
+        ]);
+      });
+      it('should 204 and enqueue one anchoring job when credential_accepted arrives concurrently', async () => {
+        const { exchange } = await persistSignedCredential();
+        const payload = {
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        };
+
+        const responses = await Promise.all([
+          sendNotification(payload),
+          sendNotification(payload),
+          sendNotification(payload),
+        ]);
+
+        expect(responses.map(({ statusCode }) => statusCode)).toEqual([
+          204, 204, 204,
+        ]);
+        expect(await findAnchoringJobs()).toEqual([
+          expect.objectContaining({ _id: exchange.id, status: 'pending' }),
+        ]);
+      });
+      it('should enqueue anchoring for a credential issued again after an earlier issuance was accepted', async () => {
+        const { exchange } = await persistSignedCredential({
+          acceptedAt: new Date('2026-01-01T00:00:00.000Z'),
+        });
+
+        const response = await sendNotification({
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        });
+
+        expect(response.statusCode).toEqual(204);
+        expect(await findAnchoringJobs()).toEqual([
+          expect.objectContaining({ _id: exchange.id, status: 'pending' }),
         ]);
       });
       it('should 204 with credential_deleted', async () => {

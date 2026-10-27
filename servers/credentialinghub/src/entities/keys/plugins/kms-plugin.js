@@ -40,22 +40,25 @@ const kmsRepoOptions = {
   extensions: [multitenantExtension()],
 };
 
-const kmsPlugin = async (fastify) => {
-  fastify.register(dbKmsPlugin, {
-    ...kmsRepoOptions,
-    transformToKmsKey: (result) => {
-      /* eslint-disable better-mutation/no-mutation */
-      result.id = result._id.toString();
-      result._id = undefined;
+const kmsOptions = {
+  ...kmsRepoOptions,
+  transformToKmsKey: (result) => {
+    /* eslint-disable better-mutation/no-mutation */
+    result.id = result._id.toString();
+    result._id = undefined;
 
-      result.privateJwk = result.jwk;
-      result.jwk = undefined;
-      /* eslint-enable */
-      return result;
-    },
-  });
+    result.privateJwk = result.jwk;
+    result.jwk = undefined;
+    /* eslint-enable */
+    return result;
+  },
+};
+
+const kmsPlugin = async (fastify) => {
+  fastify.register(dbKmsPlugin, kmsOptions);
 };
 module.exports = {
   kmsPlugin: fp(kmsPlugin, { name: 'kms-plugin' }),
+  kmsOptions,
   kmsRepoOptions,
 };
