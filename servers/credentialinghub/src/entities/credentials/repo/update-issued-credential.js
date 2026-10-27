@@ -16,10 +16,14 @@
  */
 
 const { calcSha384 } = require('@verii/crypto');
+const { subMinutes } = require('date-fns');
 const { buildExchangeEvent } = require('../../exchanges/domain');
 const {
   buildIssuedCredentialEnvelope,
 } = require('../domain/credential-envelope');
+
+// A claim older than this is treated as abandoned, e.g. by a process that died while anchoring
+const ACCEPTANCE_CLAIM_LEASE_MINUTES = 5;
 
 const updateExtensions = (parent, context) => ({
   updateIssuedCredential: async (
@@ -70,6 +74,32 @@ const updateExtensions = (parent, context) => ({
         $push: { 'exchange.events': buildExchangeEvent(state) },
       },
     ),
+  claimAcceptance: async (credentialId) => {
+    const now = new Date();
+    const { modifiedCount } = await parent.collection().updateOne(
+      {
+        _id: credentialId,
+        acceptedAt: { $exists: false },
+        $or: [
+          { 'exchange.acceptingAt': null },
+          {
+            'exchange.acceptingAt': {
+              $lt: subMinutes(now, ACCEPTANCE_CLAIM_LEASE_MINUTES),
+            },
+          },
+        ],
+      },
+      { $set: { 'exchange.acceptingAt': now } },
+    );
+    return modifiedCount === 1;
+  },
+  releaseAcceptance: async (credentialId) =>
+    parent
+      .collection()
+      .updateOne(
+        { _id: credentialId },
+        { $unset: { 'exchange.acceptingAt': '' } },
+      ),
 });
 
 module.exports = { updateExtensions };

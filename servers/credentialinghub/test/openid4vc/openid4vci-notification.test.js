@@ -42,6 +42,7 @@ const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { applyOverrides } = require('@verii/common-functions');
 const { jwtSign } = require('@verii/jwt');
 const { mongoify } = require('@verii/tests-helpers');
+const { subMinutes } = require('date-fns');
 const { ObjectId } = require('mongodb');
 const { nanoid } = require('nanoid');
 const { initKeyFactory } = require('../../src/entities/keys');
@@ -100,6 +101,46 @@ describe('openid4vc notification test suite', () => {
     await fastify.close();
     mock.reset();
   });
+
+  const persistSignedCredential = async (exchangeOverrides) => {
+    const issuerService = await persistIssuerService({ tenant });
+    const depot = await persistDepot({ tenant, service: issuerService });
+    const exchange = {
+      id: nanoid(),
+      serviceId: new ObjectId(issuerService._id),
+      credentialMetadata: {
+        isNewList: true,
+        listId: 1,
+        index: 2,
+        contentHash: 'foo',
+        algType: 'aes-256-gcm',
+      },
+      events: [
+        { state: ExchangeStates.NEW, timestamp: new Date() },
+        { state: ExchangeStates.CREDENTIALS_SIGNED, timestamp: new Date() },
+      ],
+      ...exchangeOverrides,
+    };
+    const credential = await persistCredential({ tenant, depot, exchange });
+    return { credential, exchange };
+  };
+
+  const sendNotification = async (payload) => {
+    const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
+      subject: `https://localhost.test/r/${tenant._id}`,
+    });
+    return fastify.injectJson({
+      method: 'POST',
+      url: `/r/${tenant._id}/openid4vc/notification`,
+      headers: { authorization: `Bearer ${authToken}` },
+      payload,
+    });
+  };
+
+  const findCredentialInDb = (credential) =>
+    mongoDb()
+      .collection('credentials')
+      .findOne({ _id: new ObjectId(credential._id) });
 
   describe('openid4vc notification test suite', () => {
     describe('openid4vc notification endpoint error cases', () => {
@@ -394,7 +435,9 @@ describe('openid4vc notification test suite', () => {
           .findOne({ _id: new ObjectId(credential._id) });
         expect(credentialFromDb).toEqual({
           ...mongoify(credential),
-          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE]),
+          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
+            acceptingAt: expect.any(Date),
+          }),
           acceptedAt: expect.any(Date),
           updatedAt: expect.any(Date),
         });
@@ -404,6 +447,133 @@ describe('openid4vc notification test suite', () => {
           tenant.caoDid,
           'aes-256-gcm',
         ]);
+      });
+      it('should 204 and anchor once when credential_accepted is repeated', async () => {
+        const { credential, exchange } = await persistSignedCredential();
+        const payload = {
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        };
+
+        const firstResponse = await sendNotification(payload);
+        const credentialAfterFirst = await findCredentialInDb(credential);
+        const secondResponse = await sendNotification(payload);
+
+        expect(firstResponse.statusCode).toEqual(204);
+        expect(secondResponse.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+        const credentialFromDb = await findCredentialInDb(credential);
+        expect(credentialFromDb).toEqual(credentialAfterFirst);
+        expect(credentialFromDb).toEqual({
+          ...mongoify(credential),
+          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
+            acceptingAt: expect.any(Date),
+          }),
+          acceptedAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
+      });
+      it('should 204 and anchor once when credential_accepted arrives concurrently', async () => {
+        const { credential, exchange } = await persistSignedCredential();
+        const payload = {
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        };
+        const anchorStarted = Promise.withResolvers();
+        const anchorReleased = Promise.withResolvers();
+        mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() => {
+          anchorStarted.resolve();
+          return anchorReleased.promise;
+        });
+
+        const firstResponsePromise = sendNotification(payload);
+        await anchorStarted.promise;
+        const secondResponse = await sendNotification(payload);
+        anchorReleased.resolve();
+        const firstResponse = await firstResponsePromise;
+
+        expect(firstResponse.statusCode).toEqual(204);
+        expect(secondResponse.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+        expect(await findCredentialInDb(credential)).toEqual({
+          ...mongoify(credential),
+          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
+            acceptingAt: expect.any(Date),
+          }),
+          acceptedAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
+      });
+      it('should anchor on a credential_accepted retry after anchoring failed', async () => {
+        const errorMessage = 'Mock Error';
+        mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() =>
+          Promise.reject(new Error(errorMessage)),
+        );
+        const { credential, exchange } = await persistSignedCredential();
+        const payload = {
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        };
+
+        const firstResponse = await sendNotification(payload);
+        const secondResponse = await sendNotification(payload);
+
+        expect(firstResponse.statusCode).toEqual(400);
+        expect(secondResponse.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
+        expect(await findCredentialInDb(credential)).toEqual({
+          ...mongoify(credential),
+          exchange: expectedDbExchange(
+            exchange,
+            [ExchangeStates.UNEXPECTED_ERROR, ExchangeStates.COMPLETE],
+            { err: errorMessage, acceptingAt: expect.any(Date) },
+          ),
+          acceptedAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
+      });
+      it('should 204 without anchoring while another credential_accepted holds the claim', async () => {
+        const acceptingAt = new Date();
+        const { credential, exchange } = await persistSignedCredential({
+          acceptingAt,
+        });
+
+        const response = await sendNotification({
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        });
+
+        expect(response.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+        expect(await findCredentialInDb(credential)).toEqual({
+          ...mongoify(credential),
+          exchange: expectedDbExchange(exchange),
+          updatedAt: expect.any(Date),
+        });
+      });
+      it('should anchor when an earlier credential_accepted claim has gone stale', async () => {
+        const acceptingAt = subMinutes(new Date(), 10);
+        const { credential, exchange } = await persistSignedCredential({
+          acceptingAt,
+        });
+
+        const response = await sendNotification({
+          notification_id: exchange.id,
+          event: 'credential_accepted',
+        });
+
+        expect(response.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+        const credentialFromDb = await findCredentialInDb(credential);
+        expect(credentialFromDb).toEqual({
+          ...mongoify(credential),
+          exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
+            acceptingAt: expect.any(Date),
+          }),
+          acceptedAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
+        expect(credentialFromDb.exchange.acceptingAt > acceptingAt).toBe(true);
       });
       it('should 204 with credential_deleted', async () => {
         const issuerService = await persistIssuerService({ tenant });
