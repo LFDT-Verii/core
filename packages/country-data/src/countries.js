@@ -18,6 +18,7 @@ const {
   langs,
   getAlpha2Codes,
   getName,
+  alpha2ToAlpha3,
   alpha3ToAlpha2,
 } = require('i18n-iso-countries');
 const iso31662DB = require('iso3166-2-db');
@@ -106,5 +107,6 @@ module.exports = {
   getCountries,
   isLanguageSupported,
   isLanguageCodeValid,
+  alpha2ToAlpha3,
   alpha3ToAlpha2,
 };

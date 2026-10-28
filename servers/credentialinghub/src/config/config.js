@@ -19,6 +19,7 @@ const { accessors, from } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
 const {
   buildNotificationConfig,
+  findWebhookUrlError,
   NotificationWorkerModes,
 } = require('../entities/notifications/domain/notification-config');
 const {
@@ -39,14 +40,10 @@ const env = from(process.env, {
   asMs: (value) => parseDuration(value),
   asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
     const webhookUrl = accessors.asUrlString(value);
-    const parsedUrl = new URL(webhookUrl);
+    const error = findWebhookUrlError(webhookUrl, allowInsecureWebhookUrl);
 
-    if (parsedUrl.username || parsedUrl.password) {
-      throw new Error('must not include credentials');
-    }
-
-    if (parsedUrl.protocol !== 'https:' && !allowInsecureWebhookUrl) {
-      throw new Error('must use https');
+    if (error != null) {
+      throw new Error(error);
     }
 
     return webhookUrl;
@@ -88,6 +85,7 @@ const buildConfig = () => {
     ...swaggerConfig,
     ...openid4vcConfig,
     version: packageJson.version,
+    serviceName: packageJson.name,
     customFastifyOptions: {
       bodyLimit: 8388608,
     },

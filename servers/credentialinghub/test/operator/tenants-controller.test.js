@@ -35,7 +35,7 @@ mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
-const { first, map, omit, pick } = require('lodash/fp');
+const { first, map, omit, pick, toLower } = require('lodash/fp');
 const {
   ISO_DATETIME_FORMAT,
   OBJECT_ID_FORMAT,
@@ -43,6 +43,7 @@ const {
 const { errorResponseMatcher, mongoify } = require('@verii/tests-helpers');
 const {
   generateKeyPair,
+  hexFromJwk,
   KeyPurposes,
   KeyEncodings,
   publicKeyFromPrivateKey,
@@ -63,12 +64,13 @@ const { CihKeyPurposes, initKeyFactory } = require('../../src/entities/keys');
 const OPERATOR_CAO_DID = 'did:example:operator-cao';
 const OTHER_CAO_DID = 'did:example:other-cao';
 
-const caoSecurityProvider = createTestCaoSecurityProvider({
+const operatorPrincipal = {
   caoDid: OPERATOR_CAO_DID,
   subject: 'test-operator',
   subjectType: 'client',
   authenticationMethod: 'test',
-});
+};
+const caoSecurityProvider = createTestCaoSecurityProvider(operatorPrincipal);
 
 describe('Tenants management test suite', () => {
   let fastify;
@@ -332,6 +334,119 @@ describe('Tenants management test suite', () => {
       );
     });
 
+    it("should 400 and not create tenant or keys when a jwk's x and y do not match its d", async () => {
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const orgKey = first(orgKeys);
+      const otherPrivateJwk = generateKeyPair({ format: 'jwk' }).privateKey;
+
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
+        keys: [{ ...orgKey, jwk: { ...orgKey.jwk, d: otherPrivateJwk.d } }],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_invalid',
+          message: 'key_invalid',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
+    it("should 400 and not create tenant or keys when a jwk has the DID document's x and y but no d", async () => {
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const orgKey = first(orgKeys);
+
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
+        keys: [{ ...orgKey, jwk: omit(['d'], orgKey.jwk) }],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_invalid',
+          message: 'key_invalid',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
+    it("should 400 and not create tenant or keys when a jwk has the DID document's x and y but is not secp256k1", async () => {
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const orgKey = first(orgKeys);
+
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
+        keys: [{ ...orgKey, jwk: { ...orgKey.jwk, crv: 'P-256' } }],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_invalid',
+          message: 'key_invalid',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
+    it('should 400 and not create tenant or keys when a jwk has d but no x or y', async () => {
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const orgKey = first(orgKeys);
+
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
+        keys: [{ ...orgKey, jwk: omit(['x', 'y'], orgKey.jwk) }],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_invalid',
+          message: 'key_invalid',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
     it('should 400 and if no keys set', async () => {
       const payload = {
         tenant: await newTenantMinimalPayload({ did: orgDoc.id }),
@@ -470,14 +585,17 @@ describe('Tenants management test suite', () => {
 
     ['SECP256K1', 'ES256', 'RS256'].forEach((credentialSigningAlgorithm) => {
       it(`should create and read back a tenant configured for ${credentialSigningAlgorithm} credential signing`, async () => {
+        const primaryAccount = toEthereumAddress(
+          generateKeyPair({ format: 'jwk' }).publicKey,
+        );
+        mockLookupPrimary.mock.mockImplementation(() =>
+          Promise.resolve(primaryAccount),
+        );
         setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
         const payload = {
           tenant: {
             ...(await newTenantMinimalPayload({ did: orgDoc.id })),
             credentialSigningAlgorithm,
-            primaryAccount: toEthereumAddress(
-              generateKeyPair({ format: 'jwk' }).publicKey,
-            ),
           },
           keys: orgKeys,
         };
@@ -490,7 +608,7 @@ describe('Tenants management test suite', () => {
 
         expect(createResponse.statusCode).toEqual(200);
         expect(createResponse.json.tenant).toEqual(
-          expectedTenant(payload.tenant),
+          expectedTenant(payload.tenant, { primaryAccount }),
         );
         await expect(
           loadDbTenant(createResponse.json.tenant.id),
@@ -658,6 +776,238 @@ describe('Tenants management test suite', () => {
       expect(tenantDocumentsCount).toEqual(1);
     });
 
+    it('should 400 and not create tenant or keys when a key does not match the DID document', async () => {
+      const { didDoc, keys } = buildIssuerDidDoc({ keyPerPurpose: true });
+      const { keys: otherKeys } = buildIssuerDidDoc({ keyPerPurpose: true });
+      setupCreateTenantRegistrarMocks(didDoc.id, didDoc);
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys: [keys[0], otherKeys[1], keys[2]],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_does_not_match_did_doc',
+          message: 'key_does_not_match_did_doc',
+          statusCode: 400,
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+      await expect(
+        mongoDb().collection('keys').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
+    it("should 400 and not create tenant or keys when the DID document's key is relabelled to another curve", async () => {
+      const { didDoc, keys } = buildIssuerDidDoc();
+      const [verificationMethod] = didDoc.verificationMethod;
+      setupCreateTenantRegistrarMocks(didDoc.id, {
+        ...didDoc,
+        verificationMethod: [
+          {
+            ...verificationMethod,
+            publicKeyJwk: { ...verificationMethod.publicKeyJwk, crv: 'P-256' },
+          },
+        ],
+      });
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_does_not_match_did_doc',
+          message: 'key_does_not_match_did_doc',
+          statusCode: 400,
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+      await expect(
+        mongoDb().collection('keys').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
+    it('should 400 and not create tenant or keys when the DID document key has an unsupported encoding', async () => {
+      const { didDoc, keys } = buildIssuerDidDoc();
+      const [verificationMethod] = didDoc.verificationMethod;
+      setupCreateTenantRegistrarMocks(didDoc.id, {
+        ...didDoc,
+        verificationMethod: [
+          {
+            ...omit(['publicKeyJwk'], verificationMethod),
+            type: 'Multikey',
+            publicKeyMultibase:
+              'zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
+          },
+        ],
+      });
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_does_not_match_did_doc',
+          message: 'key_does_not_match_did_doc',
+          statusCode: 400,
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
+    it('should 200 when the DID document publishes the key as publicKeyHex', async () => {
+      mockLookupPrimary.mock.mockImplementation(() =>
+        Promise.resolve(
+          toEthereumAddress(generateKeyPair({ format: 'jwk' }).publicKey),
+        ),
+      );
+      const { didDoc, keys } = buildIssuerDidDoc();
+      const [verificationMethod] = didDoc.verificationMethod;
+      setupCreateTenantRegistrarMocks(didDoc.id, {
+        ...didDoc,
+        verificationMethod: [
+          {
+            ...omit(['publicKeyJwk'], verificationMethod),
+            type: 'EcdsaSecp256k1VerificationKey2019',
+            publicKeyHex: hexFromJwk(verificationMethod.publicKeyJwk, false),
+          },
+        ],
+      });
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(1);
+    });
+
+    it('should 400 and not create tenant or keys when the DID document publishes the private key as publicKeyHex', async () => {
+      mockLookupPrimary.mock.mockImplementation(() =>
+        Promise.resolve(
+          toEthereumAddress(generateKeyPair({ format: 'jwk' }).publicKey),
+        ),
+      );
+      const { didDoc, keys } = buildIssuerDidDoc();
+      const [verificationMethod] = didDoc.verificationMethod;
+      setupCreateTenantRegistrarMocks(didDoc.id, {
+        ...didDoc,
+        verificationMethod: [
+          {
+            ...omit(['publicKeyJwk'], verificationMethod),
+            type: 'EcdsaSecp256k1VerificationKey2019',
+            publicKeyHex: hexFromJwk(keys[0].jwk),
+          },
+        ],
+      });
+      const payload = {
+        tenant: await newTenantMinimalPayload({ did: didDoc.id }),
+        keys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_does_not_match_did_doc',
+          message: 'key_does_not_match_did_doc',
+          statusCode: 400,
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+      await expect(
+        mongoDb().collection('keys').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
+    it('should 400 and not create tenant or keys when primaryAccount does not match the chain', async () => {
+      mockLookupPrimary.mock.mockImplementation(() =>
+        Promise.resolve(
+          toEthereumAddress(generateKeyPair({ format: 'jwk' }).publicKey),
+        ),
+      );
+      setupCreateTenantRegistrarMocks(orgDoc.id, orgDoc);
+      const payload = {
+        tenant: {
+          ...(await newTenantMinimalPayload({ did: orgDoc.id })),
+          primaryAccount: toEthereumAddress(
+            generateKeyPair({ format: 'jwk' }).publicKey,
+          ),
+        },
+        keys: orgKeys,
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: createUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'primary_account_must_match_chain',
+          message: 'primary_account_must_match_chain',
+          statusCode: 400,
+        }),
+      );
+      await expect(
+        mongoDb().collection('tenants').countDocuments(),
+      ).resolves.toEqual(0);
+      await expect(
+        mongoDb().collection('keys').countDocuments(),
+      ).resolves.toEqual(0);
+    });
+
     it('should 200 and create tenant, key entities with 1 purpose & defaults, name and logo matching profile root', async () => {
       const primaryAccount = toEthereumAddress(
         generateKeyPair({ format: 'jwk' }).publicKey,
@@ -755,6 +1105,9 @@ describe('Tenants management test suite', () => {
       const primaryAccount = toEthereumAddress(
         generateKeyPair({ format: 'jwk' }).publicKey,
       );
+      mockLookupPrimary.mock.mockImplementation(() =>
+        Promise.resolve(primaryAccount),
+      );
       setupCreateTenantRegistrarMocks(orgDoc2.id, orgDoc2, {
         commercialEntities: [
           {
@@ -770,7 +1123,7 @@ describe('Tenants management test suite', () => {
           name: 'barName',
           logo: 'https://localhost.test/bar.png',
         })),
-        primaryAccount,
+        primaryAccount: toLower(primaryAccount),
         hostUrl: 'https://example.com',
       };
       const payload = {
@@ -786,7 +1139,7 @@ describe('Tenants management test suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
-        tenant: expectedTenant(payload.tenant),
+        tenant: expectedTenant(payload.tenant, { primaryAccount }),
         keyMetadatas: expectedKeyMetadatas(payload.keys),
         requestId: expect.any(String),
       });
@@ -795,10 +1148,10 @@ describe('Tenants management test suite', () => {
 
       expect(tenantFromDb).toEqual({
         _id: new ObjectId(response.json.tenant.id),
-        primaryAccount,
         caoDid: 'did:ion:e89fYWr0Lkfd_pa18fdk',
         hostUrl: 'https://localhost.test',
         ...payload.tenant,
+        primaryAccount,
         keysByPurpose: {
           [KeyPurposes.DLT_TRANSACTIONS]: expectedTenantKeyByPurpose(
             orgKeys2[0],
@@ -1380,6 +1733,7 @@ describe('CAO-isolated tenant management', () => {
 
   beforeEach(async () => {
     fastify.resetOverrides();
+    operatorPrincipal.caoDid = OPERATOR_CAO_DID;
     await Promise.all([
       mongoDb().collection('tenants').deleteMany({}),
       mongoDb().collection('keys').deleteMany({}),
@@ -1397,7 +1751,7 @@ describe('CAO-isolated tenant management', () => {
     const tenant = await newTenant({ did: didDoc.id });
     return {
       tenant: {
-        ...pick(['did', 'name', 'logo', 'primaryAccount'], tenant),
+        ...pick(['did', 'name', 'logo'], tenant),
         ...(caoDid == null ? {} : { caoDid }),
       },
       keys,
@@ -1434,6 +1788,41 @@ describe('CAO-isolated tenant management', () => {
     await expect(loadTenant(response.json.tenant.id)).resolves.toEqual(
       expect.objectContaining({ caoDid: OPERATOR_CAO_DID }),
     );
+  });
+
+  it("creates an organization's tenant only for the CAO holding its keys", async () => {
+    const payload = await buildCreatePayload();
+    const { keys: otherCaoKeys } = buildIssuerDidDoc();
+
+    operatorPrincipal.caoDid = OTHER_CAO_DID;
+    const otherCaoResponse = await fastify.injectJson({
+      method: 'POST',
+      url: '/operator/tenants/create',
+      payload: { ...payload, keys: otherCaoKeys },
+    });
+
+    expect(otherCaoResponse.statusCode).toEqual(400);
+    expect(otherCaoResponse.json).toEqual(
+      expect.objectContaining({
+        errorCode: 'key_does_not_match_did_doc',
+      }),
+    );
+    await expect(
+      mongoDb().collection('tenants').countDocuments(),
+    ).resolves.toEqual(0);
+    await expect(
+      mongoDb().collection('keys').countDocuments(),
+    ).resolves.toEqual(0);
+
+    operatorPrincipal.caoDid = OPERATOR_CAO_DID;
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: '/operator/tenants/create',
+      payload,
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json.tenant.caoDid).toEqual(OPERATOR_CAO_DID);
   });
 
   it('rejects create when the request supplies caoDid', async () => {

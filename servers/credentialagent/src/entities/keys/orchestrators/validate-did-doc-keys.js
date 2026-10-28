@@ -2,6 +2,7 @@ const { each, map, omit, isEmpty, isString, some } = require('lodash/fp');
 const newError = require('http-errors');
 const { jwkFromSecp256k1Key } = require('@verii/crypto');
 const { extractVerificationMethod } = require('@verii/did-doc');
+const { isMatchingKeyPair, publicJwkFromPrivateJwk } = require('@verii/jwt');
 const { validateKey, isMatchingPrivateKeyKid } = require('../domains');
 
 const validateDidDocKeys = async (didDoc, keys) => {
@@ -25,8 +26,20 @@ const validateDidDocKeys = async (didDoc, keys) => {
     throwErrorPrivateKeyNotMatched();
   }
 
+  const publicKeyValidations = await Promise.all(
+    map(isMatchingPublicKey, keysTransformed),
+  );
+
+  if (some((valid) => !valid, publicKeyValidations)) {
+    throwErrorPublicKeyNotMatched();
+  }
+
   return keysTransformed;
 };
+
+const isMatchingPublicKey = async ({ key, publicKey }) =>
+  (await isMatchingKeyPair(key, publicJwkFromPrivateJwk(key))) &&
+  (publicKey == null || isMatchingKeyPair(key, publicKey));
 
 // eslint-disable-next-line complexity
 const transformKeys = map((key) => ({
@@ -69,6 +82,12 @@ const throwErrorKidFragment = (kidFragment) => {
 
 const throwErrorPrivateKeyNotMatched = () => {
   throw newError(400, 'Private key not matched to document');
+};
+
+const throwErrorPublicKeyNotMatched = () => {
+  throw newError(400, 'Public key not matched to private key', {
+    errorCode: 'public_key_not_matched',
+  });
 };
 
 module.exports = {

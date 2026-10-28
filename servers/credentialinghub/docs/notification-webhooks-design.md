@@ -44,7 +44,7 @@ Flow:
 1. A hub request performs the normal domain write, such as storing a presentation or marking a credential issued.
 2. The request inserts one or more notification outbox events into Mongo.
 3. A notification worker claims due events using an atomic lease.
-4. The worker POSTs signed webhook requests to the configured endpoint.
+4. The worker POSTs signed webhook requests to each event's destination, which is the configured endpoint unless a wrapper supplies a destination resolver.
 5. The worker marks each event `delivered`, `retrying`, or `dead`.
 
 Webhook delivery must never happen directly inside wallet-facing request handlers.
@@ -114,7 +114,7 @@ Implementation notes:
 - Load the secret from env/config/KMS according to existing config conventions.
 - Do not expose the secret through operator APIs or logs.
 - Validate `url` at startup when notifications are enabled.
-- For MVP, support exactly one webhook destination.
+- For MVP, configure exactly one webhook destination. A wrapper can choose each event's destination instead; see [Standalone Mode](#standalone-mode).
 - Allow `eventTypes` to include `*`, exact event types, and wildcard suffixes like `credential.*`.
 - Retain terminal events for 30 days by default so operators can inspect recent product events and support future operational recovery features.
 - Apply retention to the `notification_events` collection, not to a specific receiver.
@@ -168,6 +168,7 @@ Event naming rules:
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "65...",
   "tenantDid": "did:web:example.com",
+  "caoDid": "did:web:cao.example",
   "serviceId": "65...",
   "depotId": "65...",
   "exchangeId": "65...",
@@ -188,9 +189,12 @@ Field rules:
 - `occurredAt`: time the domain event occurred, not time delivered.
 - `tenantId`, `serviceId`, `depotId`, `exchangeId`: string ids when available.
 - `tenantDid`: useful for operator correlation.
+- `caoDid`: DID of the CAO that owns the tenant, copied from `tenant.caoDid`. A receiver serving several CAOs uses it to tell which CAO an event belongs to and which Operator client to use for `links`. It is `null` when the tenant's CAO DID is missing or blank, which is possible for tenants created before a CAO DID was required. `null` is the only value that means "no CAO": the Hub never sends an empty string, and it does not substitute the default CAO DID. Events created before this field was added don't include it.
 - `resource`: the primary resource this event is about.
 - `data`: event-specific safe summary fields.
 - `links`: optional operator API paths for fetching details.
+
+`caoDid` was added to `version` 1 without a version change because the change is additive. Receivers should ignore fields they don't recognize.
 
 Do not include:
 
@@ -221,6 +225,7 @@ Payload example:
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
   "tenantDid": "did:web:issuer.example",
+  "caoDid": "did:web:cao.example",
   "serviceId": "service-id",
   "depotId": "depot-id",
   "exchangeId": "exchange-id",
@@ -262,6 +267,7 @@ Payload example:
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
   "tenantDid": "did:web:issuer.example",
+  "caoDid": "did:web:cao.example",
   "serviceId": "service-id",
   "depotId": "depot-id",
   "exchangeId": "exchange-id",
@@ -305,6 +311,7 @@ Payload example:
   "occurredAt": "2026-06-25T10:15:30.000Z",
   "tenantId": "tenant-id",
   "tenantDid": "did:web:issuer.example",
+  "caoDid": "did:web:cao.example",
   "serviceId": "service-id",
   "depotId": "depot-id",
   "exchangeId": "exchange-id",
@@ -348,6 +355,7 @@ Document shape:
   "_id": "evt_01J...",
   "type": "credential.issued",
   "version": 1,
+  "caoDid": "did:web:cao.example",
   "payload": {},
   "status": "pending",
   "attempts": 0,
@@ -362,6 +370,8 @@ Document shape:
   "retentionExpiresAt": null
 }
 ```
+
+`caoDid` copies `payload.caoDid` so that delivery can read the tenant's CAO without parsing the payload. It is `null` when the tenant's CAO DID is missing or blank. Events stored before the field was added have no `caoDid`, top-level or in the payload, and should be treated as `null`.
 
 Statuses:
 
@@ -399,6 +409,8 @@ db.notification_events.createIndex(
   }
 );
 ```
+
+There is no index on `caoDid`. No query filters on it: delivery reads it from the claimed document. Add an index together with the first query that filters by CAO.
 
 Idempotency:
 
@@ -531,6 +543,8 @@ other non-retryable 4xx
 
 Permanent failures should mark the event `dead`, not block later events.
 
+An event whose destination resolver returns `null`, or a destination with an invalid URL or secret, is marked `dead` without a request, with the `lastError.message` `no_destination` or `invalid_destination: ...`. A resolver that throws is a retryable failure.
+
 Timeout:
 
 - Use the Credentialing Hub HTTP client request timeout.
@@ -620,6 +634,8 @@ When the URL is statically configured, validate at startup:
 - Host is not empty.
 - URL does not include username/password.
 
+The worker applies the same rules to each URL a destination resolver returns, before posting.
+
 For stored subscriptions later, use the stronger validation listed in [Stored Subscriptions](#stored-subscriptions).
 
 For the current LAN use case, private ranges may be expected, so make private-range allowance explicit in config.
@@ -632,6 +648,7 @@ API process:
 
 - Starts Fastify normally.
 - Forks notification worker child with `child_process.fork()` when `NOTIFICATIONS_WORKER_MODE=embedded-child`.
+- Forks `src/start-notification-worker.js`, or the wrapper module whose absolute path is passed to `startAppServer` as `notificationWorkerModulePath`.
 - Logs child lifecycle.
 - Restarts child with backoff on crash.
 - Does not mark API readiness failed just because the worker is down.
@@ -665,10 +682,13 @@ Suggested child state:
 
 Worker process:
 
-- Initializes the same config, Mongo connection, and logging stack as the API.
+- Initializes the same config, Mongo connection, and logging stack as the API, plus the `notification_events` repository.
+- Does not register the CAO security provider, controllers, RPC provider, or VNF client authentication, so it needs none of the built-in provider's configuration.
 - Does not start Fastify routes.
 - Starts the same delivery loop.
 - Exits non-zero only on unrecoverable startup errors.
+
+A wrapper starts the worker from its own module with `startNotificationWorker({ resolveDestination })`. For each claimed event, `resolveDestination(event, { config, db })` returns `{ url, secret, signatureHeaderName? }` or `null`, where `db` is the Hub's MongoDB database. The default returns the configured webhook. The same module serves standalone mode and, through `notificationWorkerModulePath`, embedded-child mode.
 
 ## Graceful Shutdown
 

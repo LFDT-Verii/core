@@ -105,7 +105,7 @@ contract calling code uses the configured client credentials directly, so the
 default provider does not install a blockchain credentials capability plugin.
 Startup fails when any of the four values is absent from both
 `configOverrides` and the environment. This applies to every entry point that
-uses the built-in provider, including the standalone notification worker.
+uses the built-in provider. The notification worker doesn't use a provider.
 Deployments upgrading from the earlier static-token setup must now supply
 `DEFAULT_CAO_DID`; it was previously optional because tenant creation could
 instead receive a `caoDid` in the request. The current Operator create endpoint
@@ -246,6 +246,15 @@ the loaded tenant, while authenticated Operator requests can resolve it from
 the Operator principal. A multi-CAO provider should reject requests when both
 sources exist but disagree, or when neither source supplies a CAO DID.
 
+Test mode (`NODE_ENV=test` or the `isTest` config value) does not change how
+blockchain calls are authenticated. A custom provider's blockchain client
+credentials are used in tests exactly as in production, so a wrapper's tests
+can call `createAppServer` without overriding `isTest` and fake the VNF OAuth
+token endpoint and the RPC node. Some test servers, such as
+`createTestServer` from `@verii/server-provider`, register a stub VNF
+authenticator. The built-in provider keeps that stub, while a custom
+provider's credentials replace it.
+
 Custom providers are trusted server setup code, so apart from the Operator
 principal's required `caoDid`, the Hub does not perform additional shape
 validation on their descriptors or principals. Fastify reports invalid plugin
@@ -253,3 +262,48 @@ and missing decorator integrations through its normal startup and request
 behavior. Credential values are validated by the blockchain authentication
 layer when they are consumed. Provider errors are returned to the caller and
 never fall back to the built-in static credentials.
+
+## Notification Worker
+
+The notification worker needs only the Hub's config and MongoDB, so it starts
+without a CAO security provider or its environment variables. By default it
+posts every event to `NOTIFICATIONS_WEBHOOK_URL`. A wrapper can choose each
+event's destination by starting the worker from its own module:
+
+```js
+// notification-worker.js
+const { startNotificationWorker } = require('@verii/server-credentialing-hub');
+
+startNotificationWorker({
+  // event is the stored notification event; db is the Hub's MongoDB database.
+  resolveDestination: async (event, { db }) => {
+    const webhook = await db
+      .collection('webhooks')
+      .findOne({ tenantId: event.payload.tenantId });
+    return webhook && { url: webhook.url, secret: webhook.secret };
+  },
+});
+```
+
+The resolver returns `{ url, secret, signatureHeaderName? }` or `null`. The URL
+must pass the same checks as `NOTIFICATIONS_WEBHOOK_URL`, and the secret must
+be a non-empty string. Without `signatureHeaderName`, the signature header is
+`Verii-Signature`, not `NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME`. An event
+with no destination, an invalid URL or an invalid secret is marked `dead`
+without a request; a resolver that throws is retried like a failed delivery.
+The resolver runs inside the event's 30 s claim lease and has no timeout of its
+own, so it should return quickly.
+
+`NOTIFICATIONS_WEBHOOK_URL` and `NOTIFICATIONS_WEBHOOK_SECRET` are still
+required when notifications are enabled, even if the resolver doesn't use them.
+
+Run the module directly in `standalone` mode. In `embedded-child` mode, pass
+its absolute path to `startAppServer`, which forks it instead of the Hub's
+worker and fails at startup if the file doesn't exist:
+
+```js
+startAppServer({
+  caoSecurityProvider,
+  notificationWorkerModulePath: require.resolve('./notification-worker'),
+});
+```

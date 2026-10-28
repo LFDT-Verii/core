@@ -15,24 +15,67 @@
  *
  */
 
+const crypto = require('node:crypto');
+const { once } = require('node:events');
+const http = require('node:http');
 const path = require('node:path');
-const { afterEach, describe, it } = require('node:test');
-const { loadTestEnv } = require('@verii/tests-helpers');
+const { text } = require('node:stream/consumers');
+const { after, afterEach, before, describe, it, mock } = require('node:test');
+const { mongoDb } = require('@spencejs/spence-mongo-repos');
+const { buildMongoConnection, loadTestEnv } = require('@verii/tests-helpers');
 const { expect } = require('expect');
-const createTestFastify = require('../helpers/create-test-fastify');
-
-loadTestEnv(path.resolve(__dirname, '../helpers/.env.test'));
-
-const {
-  startNotificationWorker,
-} = require('../../src/start-notification-worker');
+const Fastify = require('fastify');
+const { MongoClient } = require('mongodb');
 
 const PROCESS_EVENTS = ['SIGINT', 'SIGTERM', 'message'];
+const WORKER_MODULE_PATH = path.join(
+  __dirname,
+  '../helpers/notification-worker-module.js',
+);
+
+loadTestEnv(path.resolve(__dirname, '../helpers/.env.test'));
+// The worker builds its config from the environment, as in production. The
+// environment has none of the built-in CAO security provider's variables.
+delete process.env.OPERATOR_API_TOKEN;
+delete process.env.DEFAULT_CAO_DID;
+delete process.env.VNF_OAUTH_CLIENT_ID;
+delete process.env.VNF_OAUTH_CLIENT_SECRET;
+Object.assign(process.env, {
+  LOG_SEVERITY: 'silent',
+  MONGO_URI: buildMongoConnection('test-credentialing-hub-notification-worker'),
+  NOTIFICATIONS_ALLOW_INSECURE_WEBHOOK_URL: 'true',
+  NOTIFICATIONS_ENABLED: 'true',
+  NOTIFICATIONS_WEBHOOK_SECRET: 'hub-secret',
+  NOTIFICATIONS_WEBHOOK_URL: 'https://hub.localhost.test/notifications',
+});
+
+const { startNotificationWorker } = require('../../src');
+const {
+  NotificationWorkerModes,
+  buildNotificationConfig,
+  newNotificationEventId,
+} = require('../../src/entities/notifications');
+const {
+  buildNotificationEventDocument,
+} = require('../../src/entities/notifications/repo/notification-events-repo-extension');
+const {
+  startEmbeddedNotificationWorker,
+} = require('../../src/start-embedded-notification-worker');
 
 describe('standalone notification worker', () => {
+  let event;
   let processListeners;
+  let receiver;
   let server;
   let worker;
+
+  before(async () => {
+    event = buildTestEvent();
+    receiver = await startWebhookReceiver(event.id);
+    process.env.NOTIFICATIONS_WEBHOOK_URL = receiver.url;
+  });
+
+  after(() => receiver.close());
 
   afterEach(async () => {
     if (worker != null) {
@@ -47,15 +90,16 @@ describe('standalone notification worker', () => {
     processListeners = undefined;
   });
 
-  it('should start the worker with the credentialing hub server context', async () => {
+  it('should start without the CAO security provider variables and deliver to the Hub-wide webhook', async () => {
     processListeners = snapshotProcessListeners();
 
-    const started = await startNotificationWorker({
-      createAppServer: () => createTestFastify(),
-    });
-    ({ server, worker } = started);
+    ({ server, worker } = await startNotificationWorker());
+    await mongoDb()
+      .collection('notification_events')
+      .insertOne(buildNotificationEventDocument(event));
+    const delivery = await receiver.received;
 
-    expect(server.config.notifications.enabled).toEqual(false);
+    expect(JSON.parse(delivery.rawBody)).toEqual(event);
     expect(worker.workerId).toMatch(/^notification-worker-/);
     expect(process.listeners('SIGINT').length).toEqual(
       processListeners.SIGINT.length + 1,
@@ -70,18 +114,12 @@ describe('standalone notification worker', () => {
 
   it('should stop the worker when the parent process sends a shutdown message', async () => {
     processListeners = snapshotProcessListeners();
-    let serverClosed;
 
-    const started = await startNotificationWorker({
-      createAppServer: () => {
-        const app = createTestFastify();
-        serverClosed = new Promise((resolve) => {
-          app.addHook('onClose', resolve);
-        });
-        return app;
-      },
+    ({ server, worker } = await startNotificationWorker());
+    const close = server.close.bind(server);
+    const serverClosed = new Promise((resolve) => {
+      mock.method(server, 'close', () => close().then(resolve));
     });
-    ({ server, worker } = started);
 
     process.emit('message', 'shutdown');
     await serverClosed;
@@ -93,38 +131,95 @@ describe('standalone notification worker', () => {
     server = undefined;
     worker = undefined;
   });
+});
 
-  it('should close the server when startup fails after server creation', async () => {
-    processListeners = snapshotProcessListeners();
-    const startupError = new Error('startup failed');
-    let serverClosed = false;
+describe('embedded notification worker module', () => {
+  it(
+    'should fork the configured module, whose resolver chooses the destination',
+    { timeout: 20000 },
+    async (t) => {
+      const event = buildTestEvent();
+      const receiver = await startWebhookReceiver(event.id);
+      const client = await MongoClient.connect(process.env.MONGO_URI);
+      const db = client.db();
+      await db.collection('test_destinations').insertOne({
+        _id: event.id,
+        url: receiver.url,
+      });
+      await db
+        .collection('notification_events')
+        .insertOne(buildNotificationEventDocument(event));
+      await client.close();
+      const server = Fastify().decorate('config', {
+        notifications: buildNotificationConfig({
+          enabled: true,
+          workerMode: NotificationWorkerModes.EMBEDDED_CHILD,
+        }),
+      });
+      startEmbeddedNotificationWorker(server, {
+        modulePath: WORKER_MODULE_PATH,
+      });
+      t.after(async () => {
+        await server.close();
+        receiver.close();
+      });
 
-    await expect(
-      startNotificationWorker({
-        createAppServer: () => {
-          const app = createTestFastify();
-          app.addHook('onReady', async () => {
-            throw startupError;
-          });
-          app.addHook('onClose', () => {
-            serverClosed = true;
-          });
-          return app;
-        },
-      }),
-    ).rejects.toThrow(startupError);
+      await server.ready();
+      const delivery = await receiver.received;
 
-    expect(serverClosed).toEqual(true);
-    expect(process.listeners('SIGINT').length).toEqual(
-      processListeners.SIGINT.length,
-    );
-    expect(process.listeners('SIGTERM').length).toEqual(
-      processListeners.SIGTERM.length,
-    );
-    expect(process.listeners('message').length).toEqual(
-      processListeners.message.length,
-    );
+      expect(JSON.parse(delivery.rawBody)).toEqual(event);
+      expect(
+        isSignedWith(
+          delivery.headers['module-signature'],
+          delivery.rawBody,
+          'module-secret',
+        ),
+      ).toEqual(true);
+    },
+  );
+});
+
+// A local webhook receiver, which the worker reaches even from a child
+// process. `received` resolves with the delivery of the given event.
+const startWebhookReceiver = async (eventId) => {
+  const { promise: received, resolve } = Promise.withResolvers();
+  const server = http.createServer(async (request, response) => {
+    const rawBody = await text(request);
+    response.writeHead(204).end();
+    if (request.headers['verii-event-id'] === eventId) {
+      resolve({ headers: request.headers, rawBody });
+    }
   });
+  await once(server.listen(0, '127.0.0.1'), 'listening');
+
+  return {
+    url: `http://127.0.0.1:${server.address().port}/notifications`,
+    received,
+    close: () => {
+      server.closeAllConnections();
+      server.close();
+    },
+  };
+};
+
+const isSignedWith = (signatureHeader, rawBody, secret) => {
+  const { t, v1 } = Object.fromEntries(
+    signatureHeader.split(',').map((part) => part.split('=')),
+  );
+  return (
+    v1 ===
+    crypto.createHmac('sha256', secret).update(`${t}.${rawBody}`).digest('hex')
+  );
+};
+
+const buildTestEvent = () => ({
+  id: newNotificationEventId(),
+  type: 'credential.issued',
+  version: 1,
+  occurredAt: '2026-06-25T10:15:29.000Z',
+  resource: { type: 'credential', id: 'credential-id' },
+  data: {},
+  links: {},
 });
 
 const snapshotProcessListeners = () =>

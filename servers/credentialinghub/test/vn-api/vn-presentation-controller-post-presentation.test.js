@@ -14,7 +14,15 @@
  * limitations under the License.
  *
  */
-const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+  mock,
+} = require('node:test');
 const { expect } = require('expect');
 const { ObjectId } = require('mongodb');
 const { mongoDb, tableRegistry } = require('@spencejs/spence-mongo-repos');
@@ -51,6 +59,7 @@ const {
 } = require('../../src/entities/exchanges');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
+const { setTenantCaoDid } = require('../helpers/set-tenant-cao-did');
 const {
   buildOpenBadgeCredential,
 } = require('../helpers/build-open-badge-credential');
@@ -60,6 +69,8 @@ const {
 const { NotificationEventTypes } = require('../../src/entities/notifications');
 
 const vnUrl = ({ did }) => `/vn-api/r/${did}`;
+
+const TENANT_CAO_DID = 'did:ion:tenant-specific-cao';
 
 const testUrl = (tenant, queryParams) => {
   const baseUrl = `${vnUrl(tenant)}/presentation`;
@@ -548,6 +559,7 @@ describe('vn-api > presentations', () => {
             _id: expect.stringMatching(/^evt_/),
             type: NotificationEventTypes.PRESENTATION_RECEIVED,
             version: 1,
+            caoDid: tenant.caoDid,
             status: 'pending',
             attempts: 0,
             nextAttemptAt: expect.any(Date),
@@ -566,6 +578,7 @@ describe('vn-api > presentations', () => {
               occurredAt: expect.any(String),
               tenantId: tenant._id,
               tenantDid: tenant.did,
+              caoDid: tenant.caoDid,
               serviceId: relyingPartyService._id,
               depotId: depot._id,
               exchangeId: exchange._id,
@@ -638,6 +651,64 @@ describe('vn-api > presentations', () => {
         } finally {
           tableRegistry.notification_events = originalRepoFactory;
         }
+      });
+      describe('notification CAO DID', () => {
+        const submitPresentation = async () => {
+          fastify.overrides.reqConfig = enableNotifications([
+            NotificationEventTypes.PRESENTATION_RECEIVED,
+          ]);
+          const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+          return fastify.injectJson({
+            method: 'POST',
+            url: testUrl(tenant),
+            payload: {
+              exchange_id: exchange._id,
+              jwt_vp: await vpWrapper.jwtVp(),
+            },
+          });
+        };
+
+        afterEach(async () => {
+          await setTenantCaoDid(tenant, tenant.caoDid);
+        });
+
+        it("should use the tenant's own caoDid rather than the default CAO DID", async () => {
+          await setTenantCaoDid(tenant, TENANT_CAO_DID);
+
+          const response = await submitPresentation();
+
+          expect(response.statusCode).toEqual(200);
+          expect(TENANT_CAO_DID).not.toEqual(fastify.config.defaultCaoDid);
+          await expect(
+            mongoDb().collection('notification_events').find({}).toArray(),
+          ).resolves.toEqual([
+            expect.objectContaining({
+              type: NotificationEventTypes.PRESENTATION_RECEIVED,
+              caoDid: TENANT_CAO_DID,
+              payload: expect.objectContaining({ caoDid: TENANT_CAO_DID }),
+            }),
+          ]);
+        });
+
+        it('should set caoDid to null when the tenant has no caoDid', async () => {
+          await setTenantCaoDid(tenant, null);
+
+          const response = await submitPresentation();
+
+          expect(response.statusCode).toEqual(200);
+          await expect(
+            mongoDb().collection('notification_events').find({}).toArray(),
+          ).resolves.toEqual([
+            expect.objectContaining({
+              type: NotificationEventTypes.PRESENTATION_RECEIVED,
+              caoDid: null,
+              payload: expect.objectContaining({
+                tenantId: tenant._id,
+                caoDid: null,
+              }),
+            }),
+          ]);
+        });
       });
       it('should 200 and set the accessToken expiration from authTokensExpireIn', async () => {
         const relyingPartyService2 = await persistRelyingPartyService({

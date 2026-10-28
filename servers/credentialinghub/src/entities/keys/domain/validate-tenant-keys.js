@@ -14,10 +14,14 @@
  * limitations under the License.
  *
  */
-const { flatMap, map, uniq, forEach } = require('lodash/fp');
+const { flatMap, map, uniq, forEach, some } = require('lodash/fp');
 const newError = require('http-errors');
-const { extractVerificationMethod } = require('@verii/did-doc');
-const { KeyPurposes } = require('@verii/crypto');
+const {
+  extractVerificationKey,
+  extractVerificationMethod,
+} = require('@verii/did-doc');
+const { KeyPurposes, publicJwkFromPublicHex } = require('@verii/crypto');
+const { isMatchingKeyPair } = require('@verii/jwt');
 const { KeyErrors } = require('./key-errors');
 const { getKeyWithPurpose } = require('./get-key-with-purpose');
 
@@ -30,6 +34,41 @@ const validateTenantKeys = (tenantKeys, didDoc) => {
     (key) => validateKidFragmentResolves(key.kidFragment, didDoc),
     tenantKeys,
   );
+};
+
+const validateTenantKeysMatchDidDoc = async (normalizedKeys, didDoc) => {
+  const matches = await Promise.all(
+    map(
+      ({ kidFragment, jwk }) =>
+        isMatchingKeyPair(jwk, didDocPublicJwk(didDoc, kidFragment)),
+      normalizedKeys,
+    ),
+  );
+  if (some((match) => !match, matches)) {
+    throw newError(400, KeyErrors.KEY_DOES_NOT_MATCH_DID_DOC, {
+      errorCode: KeyErrors.KEY_DOES_NOT_MATCH_DID_DOC,
+    });
+  }
+};
+
+const UNCOMPRESSED_PUBLIC_KEY_HEX = /^04[0-9a-f]{128}$/i;
+
+// publicKeyHex and publicKeyBase58 carry no curve, so they're read as an
+// uncompressed secp256k1 public key. Any other encoding or length gives no
+// key, which never matches.
+const didDocPublicJwk = (didDoc, kidFragment) => {
+  const { publicKeyJwk } = extractVerificationMethod(didDoc, kidFragment);
+  if (publicKeyJwk != null) {
+    return publicKeyJwk;
+  }
+  try {
+    const publicKeyHex = extractVerificationKey(didDoc, kidFragment);
+    return UNCOMPRESSED_PUBLIC_KEY_HEX.test(publicKeyHex)
+      ? publicJwkFromPublicHex(publicKeyHex)
+      : null;
+  } catch {
+    return null;
+  }
 };
 
 const initValidateKeyPurposeExists = (purpose, errorCode) => (keys) => {
@@ -75,4 +114,4 @@ const validateAllPurposesUnique = (keys) => {
 
 const arrayContainsDuplicates = (array) => uniq(array).length !== array.length;
 
-module.exports = { validateTenantKeys };
+module.exports = { validateTenantKeys, validateTenantKeysMatchDidDoc };

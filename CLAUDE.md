@@ -15,10 +15,10 @@ pnpm build:affected     # Build only packages affected by changes
 ```
 
 ### Setup test environment
+Starts the same Mongo replica set, Besu node and LocalStack as CI, then runs the migrations CI runs:
 ```bash
-docker run --name mongo -p 27017:27017 -d mongo:8
-docker run --name blockchain -p 8545:8545 -d velocitynetworkfoundation/blockchain-dev
-docker run --name localstack -p 4566:4566 -p 4571:4571 -d localstack/localstack:2.3.2
+docker compose -f eng/docker/services/test-compose.yml up -d --wait
+(cd servers/credentialagent && MONGO_URI=mongodb://localhost:27017/test-credential-agent pnpm run migrate:up)
 ```
 
 ### Run all tests

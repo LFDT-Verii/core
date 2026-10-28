@@ -1547,7 +1547,8 @@ describe('Organization Keys Test Suite', () => {
           json: {
             statusCode: 400,
             error: 'Bad Request',
-            message: 'Could not resolve did:web:example.com',
+            message:
+              'Could not resolve did:web:example.com: DID must resolve to a valid https URL containing a JSON document',
           },
         });
         expect(nockData.isDone()).toEqual(true);

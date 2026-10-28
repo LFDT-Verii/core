@@ -17,10 +17,7 @@
 const path = require('node:path');
 const fastifyAutoload = require('@fastify/autoload');
 const { httpClientPlugin } = require('@verii/fastify-plugins');
-const {
-  rpcProviderPlugin,
-  authenticateVnfClientPlugin,
-} = require('@verii/base-contract-io');
+const { rpcProviderPlugin } = require('@verii/base-contract-io');
 const { pick } = require('lodash/fp');
 const { openid4vciPlugin } = require('./entities/openid4vci');
 const { openid4vpPlugin } = require('./entities/openid4vp');
@@ -29,14 +26,12 @@ const {
 } = require('./entities/notifications');
 const {
   registerCaoSecurityProvider,
+  registerVnfClientAuthentication,
 } = require('./plugins/cao-security-provider');
 
 const initServer = (server, { caoSecurityProvider } = {}) => {
   registerCaoSecurityProvider(server, caoSecurityProvider);
-
-  if (!server.config.isTest) {
-    server.register(authenticateVnfClientPlugin);
-  }
+  registerVnfClientAuthentication(server, caoSecurityProvider);
 
   return server
     .register(rpcProviderPlugin)

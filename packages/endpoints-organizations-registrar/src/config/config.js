@@ -62,10 +62,9 @@ const createConfig = (packageJson) => {
       http2: false,
     },
     version: packageJson.version,
+    serviceName: packageJson.name,
     mongoSecret: env.get('MONGO_SECRET').required(!isTest).asString(),
     allowedCorsOrigins: env.get('ALLOWED_CORS_ORIGINS').default('').asArray(),
-    sentryDsn: env.get('SENTRY_DSN').required(!isTest).asString(),
-    enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   };
 
   const registrarConfig = {

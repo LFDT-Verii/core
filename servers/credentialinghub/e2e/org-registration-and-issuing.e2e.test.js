@@ -17,7 +17,6 @@
 const { after, before, describe, it } = require('node:test');
 const console = require('console');
 const crypto = require('node:crypto');
-const http = require('node:http');
 const path = require('path');
 const { expect } = require('expect');
 const { MongoClient } = require('mongodb');
@@ -68,8 +67,7 @@ const registrarUrl = 'https://localhost:13004';
 const fineractUrl = 'http://localhost:13008';
 const cihUrl = 'https://localhost:13002';
 const rpcUrl = 'http://localhost:18545';
-const WEBHOOK_RECEIVER_PORT = 13019;
-const WEBHOOK_RECEIVER_PATH = '/cih-notification-webhooks';
+const webhookReceiverUrl = 'http://localhost:13019/received';
 const WEBHOOK_SECRET = 'e2e-notification-secret';
 
 const authenticate = () => 'TOKEN';
@@ -99,24 +97,30 @@ const EDUCATION_DEGREE_CREDENTIAL_TYPE = 'EducationDegreeGraduationV1.1';
 
 describe('org registration and issuing e2e', () => {
   let client;
-  let webhookReceiver;
-  let receivedWebhooks;
 
   let holderKeyPair;
   let holderDid;
 
   after(async () => {
-    if (webhookReceiver != null) {
-      await new Promise((resolve, reject) => {
-        webhookReceiver.close((error) => (error ? reject(error) : resolve()));
-      });
-    }
     await client?.close();
   });
   before(async () => {
-    receivedWebhooks = [];
-    webhookReceiver = await startWebhookReceiver(receivedWebhooks);
+    const clearWebhooksResponse = await fetch(webhookReceiverUrl, {
+      method: 'DELETE',
+    });
+    expect(clearWebhooksResponse.status).toEqual(204);
     client = await MongoClient.connect('mongodb://localhost:17017');
+    // The CAO's website and did are fixed, and the registrar and hub reject
+    // duplicates of them. Remove a previous run's org and tenant so the test
+    // can run again against the same stack.
+    await client
+      .db('oracle')
+      .collection('organizations')
+      .deleteMany({ 'profile.website': CAO_WEBSITE });
+    await client
+      .db('credentialing_hub')
+      .collection('tenants')
+      .deleteMany({ did: DEFAULT_CAO_DID });
 
     // Generate holder DID and key pair for fake wallet
     holderKeyPair = generateKeyPair({ format: 'jwk' });
@@ -946,7 +950,7 @@ describe('org registration and issuing e2e', () => {
     });
     console.dir({ msg: 'Presentation submitted' });
 
-    const webhookEvents = await waitForWebhookEvents(receivedWebhooks, [
+    const webhookEvents = await waitForWebhookEvents([
       {
         type: NotificationEventTypes.CREDENTIAL_REJECTED,
         resourceId: rejectedBadgeCredential.id,
@@ -1018,45 +1022,18 @@ describe('org registration and issuing e2e', () => {
   }, 45000);
 });
 
-const startWebhookReceiver = (receivedWebhooks) =>
-  new Promise((resolve, reject) => {
-    const server = http.createServer((req, res) => {
-      if (req.method !== 'POST' || req.url !== WEBHOOK_RECEIVER_PATH) {
-        res.writeHead(404).end();
-        return;
-      }
-
-      const chunks = [];
-      req.on('data', (chunk) => chunks.push(chunk));
-      req.on('end', () => {
-        const rawBody = Buffer.concat(chunks).toString('utf8');
-        receivedWebhooks.push({
-          body: JSON.parse(rawBody),
-          headers: req.headers,
-          rawBody,
-        });
-        res.writeHead(204).end();
-      });
-    });
-
-    server.once('error', reject);
-    server.listen(WEBHOOK_RECEIVER_PORT, '0.0.0.0', () => {
-      server.off('error', reject);
-      resolve(server);
-    });
-  });
-
-const waitForWebhookEvents = async (receivedWebhooks, expectedTypes) => {
+const waitForWebhookEvents = async (expectedTypes) => {
   const deadline = Date.now() + 15000;
 
-  return pollForWebhookEvents({ deadline, expectedTypes, receivedWebhooks });
+  return pollForWebhookEvents({ deadline, expectedTypes });
 };
 
-const pollForWebhookEvents = async ({
-  deadline,
-  expectedTypes,
-  receivedWebhooks,
-}) => {
+const pollForWebhookEvents = async ({ deadline, expectedTypes }) => {
+  const response = await fetch(webhookReceiverUrl);
+  const receivedWebhooks = map(
+    (webhook) => ({ ...webhook, body: JSON.parse(webhook.rawBody) }),
+    await response.json(),
+  );
   const matchingEvents = expectedTypes.map((expectedEvent) =>
     receivedWebhooks.find((webhook) =>
       isExpectedWebhookEvent(webhook, expectedEvent),
@@ -1069,7 +1046,7 @@ const pollForWebhookEvents = async ({
 
   if (Date.now() < deadline) {
     await wait(250);
-    return pollForWebhookEvents({ deadline, expectedTypes, receivedWebhooks });
+    return pollForWebhookEvents({ deadline, expectedTypes });
   }
 
   throw new Error(
@@ -1127,6 +1104,7 @@ const expectedWebhookEvent = ({
     occurredAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     tenantId: tenant.id,
     tenantDid: tenant.did,
+    caoDid: DEFAULT_CAO_DID,
     serviceId: service.id,
     depotId,
     exchangeId: expect.stringMatching(OBJECT_ID_FORMAT),

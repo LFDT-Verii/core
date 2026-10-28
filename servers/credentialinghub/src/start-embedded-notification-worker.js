@@ -15,6 +15,7 @@
  */
 
 const { fork } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 const {
   NotificationWorkerModes,
@@ -24,8 +25,10 @@ const DEFAULT_SHUTDOWN_GRACE_MS = 5000;
 
 const startEmbeddedNotificationWorker = (
   server,
-  { shutdownGraceMs = DEFAULT_SHUTDOWN_GRACE_MS } = {},
+  { modulePath, shutdownGraceMs = DEFAULT_SHUTDOWN_GRACE_MS } = {},
 ) => {
+  const workerModulePath = resolveWorkerModulePath(modulePath);
+
   if (
     server.config.notifications?.enabled !== true ||
     server.config.notifications.workerMode !==
@@ -43,17 +46,13 @@ const startEmbeddedNotificationWorker = (
   };
 
   server.addHook('onReady', async () => {
-    const childProcess = fork(
-      path.join(__dirname, 'start-notification-worker.js'),
-      [],
-      {
-        env: {
-          ...process.env,
-          NOTIFICATIONS_WORKER_MODE: NotificationWorkerModes.STANDALONE,
-        },
-        stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+    const childProcess = fork(workerModulePath, [], {
+      env: {
+        ...process.env,
+        NOTIFICATIONS_WORKER_MODE: NotificationWorkerModes.STANDALONE,
       },
-    );
+      stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+    });
 
     child = childProcess;
 
@@ -103,6 +102,22 @@ const startEmbeddedNotificationWorker = (
   });
 
   return undefined;
+};
+
+// A module that can't be forked would only show up as a child exit while
+// notifications stop, so startup fails instead.
+const resolveWorkerModulePath = (modulePath) => {
+  if (modulePath == null) {
+    return path.join(__dirname, 'start-notification-worker.js');
+  }
+
+  if (!path.isAbsolute(modulePath) || !fs.existsSync(modulePath)) {
+    throw new Error(
+      `notificationWorkerModulePath must be the absolute path of an existing file: ${modulePath}`,
+    );
+  }
+
+  return modulePath;
 };
 
 const waitForChildExit = (child, timeoutMs) =>

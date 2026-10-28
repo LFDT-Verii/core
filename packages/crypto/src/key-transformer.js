@@ -128,5 +128,6 @@ module.exports = {
   hexFromJwk,
   jwkFromSecp256k1Key,
   jwkFromSecp256k1PublicKey,
+  publicJwkFromPublicHex,
   publicKeyFromPrivateKey,
 };

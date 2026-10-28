@@ -57,6 +57,7 @@ const createConfig = (packageJson) => {
       http2: false,
     },
     version: packageJson.version,
+    serviceName: packageJson.name,
   };
 
   const registrarConfig = {
