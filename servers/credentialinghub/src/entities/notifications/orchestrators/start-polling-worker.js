@@ -14,22 +14,23 @@
  * limitations under the License.
  *
  */
-
-const { nanoid } = require('nanoid');
 const { wait } = require('@verii/common-functions');
-const { anchorNextCredential } = require('./anchor-next-credential');
 
-const startAnchoringWorker = (options, workerContext) => {
-  const { workerId = `anchoring-worker-${process.pid}-${nanoid(6)}` } =
-    options ?? {};
-  const { config, log } = workerContext;
+// Calls processNext until it reports nothing to do, then waits pollIntervalMs
+// before trying again, until stopped. The webhook delivery and anchoring
+// workers both run on it.
+const startPollingWorker = (
+  { name, pollIntervalMs, processNext, workerId },
+  context,
+) => {
+  const { log } = context;
   const state = { running: true };
 
-  log.info({ workerId }, 'Anchoring worker started');
-  const completion = pollAnchoring(
-    { pollIntervalMs: config.anchoring.pollIntervalMs, state, workerId },
-    workerContext,
-  ).then(() => log.info({ workerId }, 'Anchoring worker stopped'));
+  log.info({ workerId }, `${name} started`);
+  const completion = poll(
+    { name, pollIntervalMs, processNext, state, workerId },
+    context,
+  ).then(() => log.info({ workerId }, `${name} stopped`));
 
   return {
     stop: async () => {
@@ -41,24 +42,27 @@ const startAnchoringWorker = (options, workerContext) => {
   };
 };
 
-const pollAnchoring = async ({ pollIntervalMs, state, workerId }, context) => {
+const poll = async ({ state, ...options }, context) => {
   while (state.running) {
-    // One job at a time, like the notification delivery worker.
+    // Processing one item at a time is intentional for the MVP.
     // eslint-disable-next-line no-await-in-loop
-    await anchorOrWait({ pollIntervalMs, workerId }, context);
+    await processOrWait(options, context);
   }
 };
 
-const anchorOrWait = async ({ pollIntervalMs, workerId }, context) => {
+const processOrWait = async (
+  { name, pollIntervalMs, processNext, workerId },
+  context,
+) => {
   try {
-    if (await anchorNextCredential({ workerId }, context)) {
+    if (await processNext({ workerId }, context)) {
       return;
     }
   } catch (error) {
-    context.log.error({ err: error, workerId }, 'Anchoring worker error');
+    context.log.error({ err: error, workerId }, `${name} error`);
   }
 
   await wait(pollIntervalMs);
 };
 
-module.exports = { startAnchoringWorker };
+module.exports = { startPollingWorker };

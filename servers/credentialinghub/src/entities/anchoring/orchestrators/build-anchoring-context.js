@@ -37,16 +37,16 @@ const buildAnchoringWorkerContext = (server) => {
 
 const buildAnchoringJobContext = async (job, workerContext) => {
   const { config, initKms, log, repos, server } = workerContext;
-  const tenant = await repos.tenants.findOne({
-    filter: { _id: job.tenantId },
-  });
+  const { tenantId } = job.payload;
+  const tenant = await repos.tenants.findOne({ filter: { _id: tenantId } });
   if (tenant == null) {
     throw newError(404, 'Tenant not found', { errorCode: 'tenant_not_found' });
   }
 
   const context = {
+    caoDid: tenant.caoDid,
     config,
-    log: log.child({ anchoringJobId: job._id, tenantId: job.tenantId }),
+    log: log.child({ anchoringJobId: job._id, tenantId }),
     server,
     tenant,
     traceId: job._id,

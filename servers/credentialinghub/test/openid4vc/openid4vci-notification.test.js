@@ -94,7 +94,7 @@ describe('openid4vc notification test suite', () => {
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
     await mongoDb().collection('notifications').deleteMany({});
-    await mongoDb().collection('anchoring_jobs').deleteMany({});
+    await mongoDb().collection('notification_events').deleteMany({});
   });
 
   after(async () => {
@@ -142,7 +142,10 @@ describe('openid4vc notification test suite', () => {
   };
 
   const findAnchoringJobs = () =>
-    mongoDb().collection('anchoring_jobs').find({}).toArray();
+    mongoDb()
+      .collection('notification_events')
+      .find({ type: 'credential.anchoring' })
+      .toArray();
 
   describe('openid4vc notification test suite', () => {
     describe('openid4vc notification endpoint error cases', () => {
@@ -297,18 +300,35 @@ describe('openid4vc notification test suite', () => {
           exchange: expectedDbExchange(exchange),
           updatedAt: expect.any(Date),
         });
+        const jobId = `anchoring-${exchange.id}`;
+        const caoDid = tenant.caoDid ?? null;
         expect(await findAnchoringJobs()).toEqual([
           {
-            _id: exchange.id,
-            credentialId: new ObjectId(credential._id),
-            tenantId: new ObjectId(tenant._id),
-            credentialMetadata: exchange.credentialMetadata,
+            _id: jobId,
+            type: 'credential.anchoring',
+            version: 1,
+            caoDid,
+            payload: {
+              id: jobId,
+              type: 'credential.anchoring',
+              version: 1,
+              caoDid,
+              credentialId: new ObjectId(credential._id),
+              exchangeId: exchange.id,
+              tenantId: new ObjectId(tenant._id),
+              credentialMetadata: exchange.credentialMetadata,
+            },
             status: 'pending',
             attempts: 0,
             nextAttemptAt: expect.any(Date),
-            acceptedAt: expect.any(Date),
+            lockedBy: null,
+            lockedUntil: null,
+            lastError: null,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
+            deliveredAt: null,
+            deadAt: null,
+            retentionExpiresAt: null,
           },
         ]);
       });
@@ -325,7 +345,10 @@ describe('openid4vc notification test suite', () => {
         expect(firstResponse.statusCode).toEqual(204);
         expect(secondResponse.statusCode).toEqual(204);
         expect(await findAnchoringJobs()).toEqual([
-          expect.objectContaining({ _id: exchange.id, status: 'pending' }),
+          expect.objectContaining({
+            _id: `anchoring-${exchange.id}`,
+            status: 'pending',
+          }),
         ]);
       });
       it('should 204 and enqueue one anchoring job when credential_accepted arrives concurrently', async () => {
@@ -345,7 +368,10 @@ describe('openid4vc notification test suite', () => {
           204, 204, 204,
         ]);
         expect(await findAnchoringJobs()).toEqual([
-          expect.objectContaining({ _id: exchange.id, status: 'pending' }),
+          expect.objectContaining({
+            _id: `anchoring-${exchange.id}`,
+            status: 'pending',
+          }),
         ]);
       });
       it('should enqueue anchoring for a credential issued again after an earlier issuance was accepted', async () => {
@@ -360,7 +386,10 @@ describe('openid4vc notification test suite', () => {
 
         expect(response.statusCode).toEqual(204);
         expect(await findAnchoringJobs()).toEqual([
-          expect.objectContaining({ _id: exchange.id, status: 'pending' }),
+          expect.objectContaining({
+            _id: `anchoring-${exchange.id}`,
+            status: 'pending',
+          }),
         ]);
       });
       it('should 204 with credential_deleted', async () => {

@@ -30,6 +30,7 @@ mock.module('@verii/metadata-registration', {
   },
 });
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
+const { omit } = require('lodash/fp');
 const { applyOverrides, wait } = require('@verii/common-functions');
 const { mongoify } = require('@verii/tests-helpers');
 const { ObjectId } = require('mongodb');
@@ -43,9 +44,16 @@ const { initDepotFactory } = require('../../src/entities/depots');
 const { initCredentialFactory } = require('../../src/entities/credentials');
 const { ExchangeStates } = require('../../src/entities/exchanges');
 const {
-  AnchoringJobStatuses,
+  NotificationEventStatuses,
+  NotificationEventTypes,
+} = require('../../src/entities/notifications');
+const {
+  buildNotificationEventDocument,
+} = require('../../src/entities/notifications/repo/notification-events-repo-extension');
+const {
   anchorNextCredential,
   buildAnchoringWorkerContext,
+  enqueueAnchoring,
   startAnchoringWorker,
 } = require('../../src/entities/anchoring');
 const createTestFastify = require('../helpers/create-test-fastify');
@@ -81,7 +89,7 @@ describe('anchoring worker', () => {
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
-    await mongoDb().collection('anchoring_jobs').deleteMany({});
+    await mongoDb().collection('notification_events').deleteMany({});
   });
 
   after(async () => {
@@ -89,9 +97,10 @@ describe('anchoring worker', () => {
     mock.reset();
   });
 
+  // Enqueues the job as the notification handler does, a second ago so it's due
   const persistAcceptedCredential = async ({
     jobOverrides,
-    credentialOverrides,
+    jobTenant = tenant,
   } = {}) => {
     const issuerService = await persistIssuerService({ tenant });
     const depot = await persistDepot({ tenant, service: issuerService });
@@ -110,27 +119,29 @@ describe('anchoring worker', () => {
         { state: ExchangeStates.CREDENTIALS_SIGNED, timestamp: new Date() },
       ],
     };
-    const credential = await persistCredential({
-      tenant,
-      depot,
-      exchange,
-      ...credentialOverrides,
-    });
+    const credential = await persistCredential({ tenant, depot, exchange });
+    await enqueueAnchoring(
+      {
+        credential: { _id: new ObjectId(credential._id), exchange },
+        tenant: { ...jobTenant, _id: new ObjectId(jobTenant._id) },
+      },
+      workerContext,
+    );
+    const jobId = `anchoring-${exchange.id}`;
     const acceptedAt = new Date(Date.now() - SECOND_MS);
-    const job = {
-      _id: exchange.id,
-      credentialId: new ObjectId(credential._id),
-      tenantId: new ObjectId(tenant._id),
-      credentialMetadata: exchange.credentialMetadata,
-      status: AnchoringJobStatuses.PENDING,
-      attempts: 0,
-      nextAttemptAt: acceptedAt,
-      acceptedAt,
-      createdAt: acceptedAt,
-      updatedAt: acceptedAt,
-      ...jobOverrides,
-    };
-    await mongoDb().collection('anchoring_jobs').insertOne(job);
+    await mongoDb()
+      .collection('notification_events')
+      .updateOne(
+        { _id: jobId },
+        {
+          $set: {
+            nextAttemptAt: acceptedAt,
+            createdAt: acceptedAt,
+            ...jobOverrides,
+          },
+        },
+      );
+    const job = await findJob({ _id: jobId });
     return { credential, exchange, job };
   };
 
@@ -138,7 +149,7 @@ describe('anchoring worker', () => {
     anchorNextCredential({ workerId: 'test-worker' }, workerContext);
 
   const findJob = (job) =>
-    mongoDb().collection('anchoring_jobs').findOne({ _id: job._id });
+    mongoDb().collection('notification_events').findOne({ _id: job._id });
 
   const findCredential = (credential) =>
     mongoDb()
@@ -176,16 +187,17 @@ describe('anchoring worker', () => {
     expect(await findCredential(credential)).toEqual({
       ...mongoify(credential),
       exchange: expectedDbExchange(exchange, [ExchangeStates.COMPLETE], {
-        acceptedAt: job.acceptedAt,
+        acceptedAt: job.createdAt,
       }),
-      acceptedAt: job.acceptedAt,
+      acceptedAt: job.createdAt,
       updatedAt: expect.any(Date),
     });
     expect(await findJob(job)).toEqual({
-      ...job,
-      status: AnchoringJobStatuses.ANCHORED,
+      ...omitLockFields(job),
+      status: NotificationEventStatuses.DELIVERED,
       attempts: 1,
-      anchoredAt: expect.any(Date),
+      deliveredAt: expect.any(Date),
+      retentionExpiresAt: expect.any(Date),
       updatedAt: expect.any(Date),
     });
   });
@@ -199,8 +211,8 @@ describe('anchoring worker', () => {
 
     const retryingJob = await findJob(job);
     expect(retryingJob).toEqual({
-      ...job,
-      status: AnchoringJobStatuses.RETRYING,
+      ...omitLockFields(job),
+      status: NotificationEventStatuses.RETRYING,
       attempts: 1,
       lastError: { message: 'RPC unavailable' },
       nextAttemptAt: expect.any(Date),
@@ -217,19 +229,19 @@ describe('anchoring worker', () => {
     expect(await runWorker()).toEqual(false);
 
     await mongoDb()
-      .collection('anchoring_jobs')
+      .collection('notification_events')
       .updateOne({ _id: job._id }, { $set: { nextAttemptAt: new Date() } });
     expect(await runWorker()).toEqual(true);
 
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(2);
     expect(await findJob(job)).toEqual(
       expect.objectContaining({
-        status: AnchoringJobStatuses.ANCHORED,
+        status: NotificationEventStatuses.DELIVERED,
         attempts: 2,
       }),
     );
     expect(await findCredential(credential)).toEqual(
-      expect.objectContaining({ acceptedAt: job.acceptedAt }),
+      expect.objectContaining({ acceptedAt: job.createdAt }),
     );
   });
 
@@ -242,14 +254,15 @@ describe('anchoring worker', () => {
     await runWorker();
 
     expect(await findJob(job)).toEqual({
-      ...job,
-      status: AnchoringJobStatuses.DEAD,
+      ...omitLockFields(job),
+      status: NotificationEventStatuses.DEAD,
       attempts: 1,
       lastError: {
         message: 'not permitted',
         errorCode: 'career_issuing_not_permitted',
       },
       deadAt: expect.any(Date),
+      retentionExpiresAt: expect.any(Date),
       updatedAt: expect.any(Date),
     });
     expect(await findCredential(credential)).toEqual({
@@ -274,7 +287,7 @@ describe('anchoring worker', () => {
 
     expect(await findJob(job)).toEqual(
       expect.objectContaining({
-        status: AnchoringJobStatuses.DEAD,
+        status: NotificationEventStatuses.DEAD,
         attempts: 1,
       }),
     );
@@ -282,7 +295,7 @@ describe('anchoring worker', () => {
 
   it('should give up when the tenant no longer exists', async () => {
     const { job } = await persistAcceptedCredential({
-      jobOverrides: { tenantId: new ObjectId() },
+      jobTenant: { ...tenant, _id: new ObjectId() },
     });
 
     await runWorker();
@@ -290,7 +303,7 @@ describe('anchoring worker', () => {
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
     expect(await findJob(job)).toEqual(
       expect.objectContaining({
-        status: AnchoringJobStatuses.DEAD,
+        status: NotificationEventStatuses.DEAD,
         lastError: {
           message: 'Tenant not found',
           errorCode: 'tenant_not_found',
@@ -303,7 +316,7 @@ describe('anchoring worker', () => {
     rejectNextAnchor(new Error('RPC unavailable'));
     const { credential, job } = await persistAcceptedCredential({
       jobOverrides: {
-        status: AnchoringJobStatuses.RETRYING,
+        status: NotificationEventStatuses.RETRYING,
         attempts: workerContext.config.anchoring.maxAttempts - 1,
       },
     });
@@ -312,7 +325,7 @@ describe('anchoring worker', () => {
 
     expect(await findJob(job)).toEqual(
       expect.objectContaining({
-        status: AnchoringJobStatuses.DEAD,
+        status: NotificationEventStatuses.DEAD,
         attempts: workerContext.config.anchoring.maxAttempts,
       }),
     );
@@ -326,7 +339,7 @@ describe('anchoring worker', () => {
   it('should leave a job another worker holds until its lock expires', async () => {
     const { job } = await persistAcceptedCredential({
       jobOverrides: {
-        status: AnchoringJobStatuses.ANCHORING,
+        status: NotificationEventStatuses.DELIVERING,
         attempts: 1,
         lockedBy: 'other-worker',
         lockedUntil: new Date(Date.now() + 60 * SECOND_MS),
@@ -336,7 +349,7 @@ describe('anchoring worker', () => {
     expect(await runWorker()).toEqual(false);
 
     await mongoDb()
-      .collection('anchoring_jobs')
+      .collection('notification_events')
       .updateOne(
         { _id: job._id },
         { $set: { lockedUntil: new Date(Date.now() - SECOND_MS) } },
@@ -344,7 +357,7 @@ describe('anchoring worker', () => {
     expect(await runWorker()).toEqual(true);
     expect(await findJob(job)).toEqual(
       expect.objectContaining({
-        status: AnchoringJobStatuses.ANCHORED,
+        status: NotificationEventStatuses.DELIVERED,
         attempts: 2,
       }),
     );
@@ -364,13 +377,39 @@ describe('anchoring worker', () => {
 
     expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
     expect(await findJob(job)).toEqual(
-      expect.objectContaining({ status: AnchoringJobStatuses.ANCHORED }),
+      expect.objectContaining({ status: NotificationEventStatuses.DELIVERED }),
     );
     expect(await findCredential(credential)).toEqual({
       ...mongoify(credential),
       exchange: expectedDbExchange(reissuedExchange),
       updatedAt: expect.any(Date),
     });
+  });
+
+  it('should leave webhook events to the webhook worker', async () => {
+    await mongoDb()
+      .collection('notification_events')
+      .insertOne(
+        buildNotificationEventDocument({
+          id: nanoid(),
+          type: NotificationEventTypes.CREDENTIAL_ISSUED,
+          version: 1,
+        }),
+      );
+
+    expect(await runWorker()).toEqual(false);
+  });
+
+  it("should keep anchoring jobs out of the webhook worker's claim", async () => {
+    await persistAcceptedCredential();
+
+    expect(
+      await workerContext.repos.notification_events.claimDueEvent({
+        workerId: 'webhook-worker',
+        lockDurationMs: SECOND_MS,
+        types: Object.values(NotificationEventTypes),
+      }),
+    ).toEqual(null);
   });
 
   it('should anchor due jobs in the background until stopped', async () => {
@@ -388,7 +427,7 @@ describe('anchoring worker', () => {
     );
 
     try {
-      await waitForJobStatus(job, AnchoringJobStatuses.ANCHORED);
+      await waitForJobStatus(job, NotificationEventStatuses.DELIVERED);
     } finally {
       await worker.stop();
     }
@@ -407,6 +446,9 @@ describe('anchoring worker', () => {
     await waitForJobStatus(job, status, attemptsLeft - 1);
   };
 });
+
+// Claiming and finishing a job unsets its lock and last error
+const omitLockFields = omit(['lockedBy', 'lockedUntil', 'lastError']);
 
 const expectedDbExchange = (exchange, newEvents, overrides) =>
   applyOverrides(

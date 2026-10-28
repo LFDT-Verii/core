@@ -17,6 +17,7 @@
 
 const { pick } = require('lodash/fp');
 const {
+  NotificationEventTypes,
   buildWebhookSignatureHeaders,
   findWebhookUrlError,
 } = require('../domain');
@@ -26,6 +27,7 @@ const DEFAULT_LOCK_DURATION_MS = 30000;
 const MAX_ERROR_BODY_LENGTH = 500;
 const OVERSIZED_ERROR_BODY_MESSAGE = `[omitted: response body exceeds ${MAX_ERROR_BODY_LENGTH} bytes]`;
 const RETRYABLE_STATUS_CODES = new Set([408, 425, 429]);
+const WEBHOOK_EVENT_TYPES = Object.values(NotificationEventTypes);
 
 const deliverNextNotificationEvent = async ({ workerId }, context) => {
   const { config, repos } = context;
@@ -39,6 +41,7 @@ const deliverNextNotificationEvent = async ({ workerId }, context) => {
     now,
     workerId,
     lockDurationMs: getLockDurationMs(config),
+    types: WEBHOOK_EVENT_TYPES,
   });
 
   if (event == null) {
@@ -237,4 +240,5 @@ const nextAttemptAt = (now, attempts) =>
 module.exports = {
   deliverClaimedNotificationEvent,
   deliverNextNotificationEvent,
+  retentionExpiresAt,
 };

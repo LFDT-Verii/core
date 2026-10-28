@@ -16,6 +16,6 @@
  */
 
 module.exports = {
-  ...require('./domain'),
-  ...require('./orchestrators'),
+  ...require('./orchestrators/anchoring-jobs'),
+  ...require('./orchestrators/build-anchoring-context'),
 };

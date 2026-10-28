@@ -19,4 +19,5 @@ module.exports = {
   ...require('./deliver-notification-event'),
   ...require('./enqueue-notification-events'),
   ...require('./start-notification-delivery-worker'),
+  ...require('./start-polling-worker'),
 };
