@@ -18,6 +18,7 @@
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
+const { ECDH, generateKeyPairSync } = require('node:crypto');
 const nock = require('./helpers/nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { extractVerificationKey } = require('@verii/did-doc');
@@ -359,6 +360,16 @@ describe('Public Key Resolution', () => {
     const legacyEncodings = [
       { name: 'publicKeyHex', publicKeyHex: legacyPublicKeyHex },
       { name: 'publicKeyBase58', publicKeyBase58: legacyPublicKeyBase58 },
+      {
+        name: 'compressedPublicKeyHex',
+        publicKeyHex: ECDH.convertKey(
+          legacyPublicKeyHex,
+          'secp256k1',
+          'hex',
+          'hex',
+          'compressed',
+        ),
+      },
     ];
 
     legacyEncodings.forEach(({ name, ...encodedKey }) => {
@@ -403,6 +414,53 @@ describe('Public Key Resolution', () => {
           use: 'sig',
         });
       });
+    });
+
+    it('Should return 400 in every format when a legacy key is not secp256k1', async () => {
+      const did = 'did:velocity:legacy-ed25519';
+      const kid = `${did}#key-1`;
+      const ed25519PublicKey = Buffer.from(
+        generateKeyPairSync('ed25519').publicKey.export({ format: 'jwk' }).x,
+        'base64url',
+      );
+      await persistOrganization({
+        didDoc: {
+          id: did,
+          publicKey: [
+            {
+              id: kid,
+              type: 'Ed25519VerificationKey2018',
+              controller: did,
+              publicKeyBase58: bs58.encode(ed25519PublicKey),
+            },
+          ],
+        },
+      });
+
+      const responses = await Promise.all(
+        ['hex', 'base58', 'jwk'].map((format) =>
+          fastify.inject({
+            method: 'GET',
+            url: `/api/v0.6/resolve-kid/${encodeURIComponent(
+              kid,
+            )}?format=${format}`,
+          }),
+        ),
+      );
+
+      expect(responses.map(({ statusCode }) => statusCode)).toEqual([
+        400, 400, 400,
+      ]);
+      responses.forEach((response) =>
+        expect(response.json()).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'unsupported_public_key',
+            message: `Verification method ${kid} does not contain a secp256k1 public key`,
+            statusCode: 400,
+          }),
+        ),
+      );
     });
   });
 

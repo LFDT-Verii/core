@@ -21,7 +21,7 @@ const {
   signPayload,
   generateKeyPair,
   hexFromJwk,
-  jwkFromSecp256k1Key,
+  jwkFromSecp256k1PublicKey,
 } = require('@verii/crypto');
 
 const { toEthereumAddress } = require('@verii/blockchain-functions');
@@ -129,7 +129,7 @@ const initExtractKeyByMethod = (keyHolderProp) => (didDoc, kid) => {
   return publicKeyToHex(publicKey);
 };
 
-// publicKeyHex and publicKeyBase58 carry no curve, so they are read as legacy secp256k1 keys
+// publicKeyHex and publicKeyBase58 carry no curve, so they must hold legacy secp256k1 public keys
 const extractVerificationJwk = (didDoc, kid) => {
   const verificationMethod = extractVerificationMethod(didDoc, kid);
   if (verificationMethod == null) {
@@ -142,7 +142,16 @@ const verificationMethodToJwk = (verificationMethod) => {
   if (isPlainObject(verificationMethod.publicKeyJwk)) {
     return verificationMethod.publicKeyJwk;
   }
-  return jwkFromSecp256k1Key(publicKeyToHex(verificationMethod), false);
+  const publicKeyHex = publicKeyToHex(verificationMethod);
+  try {
+    return jwkFromSecp256k1PublicKey(publicKeyHex);
+  } catch {
+    throw newError(
+      400,
+      `Verification method ${verificationMethod.id} does not contain a secp256k1 public key`,
+      { errorCode: 'unsupported_public_key' },
+    );
+  }
 };
 
 const extractVerificationMethod = (didDoc, kid) => {

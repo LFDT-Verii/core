@@ -17,6 +17,7 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 
+const { ECDH, generateKeyPairSync } = require('node:crypto');
 const { default: bs58 } = require('bs58');
 const { last } = require('lodash/fp');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
@@ -292,6 +293,55 @@ describe('DID Documents Common', () => {
         ...secp256k1Jwk,
         use: 'sig',
       });
+    });
+
+    it('should convert a compressed publicKeyHex to a secp256k1 jwk', () => {
+      const didDoc = {
+        id: did,
+        publicKey: [
+          {
+            id: kid,
+            type: verificationKeyType,
+            publicKeyHex: ECDH.convertKey(
+              secp256k1Hex,
+              'secp256k1',
+              'hex',
+              'hex',
+              'compressed',
+            ),
+          },
+        ],
+      };
+
+      expect(extractVerificationJwk(didDoc, kid)).toEqual({
+        ...secp256k1Jwk,
+        use: 'sig',
+      });
+    });
+
+    it('should throw a 400 when a legacy encoding does not hold a secp256k1 public key', () => {
+      const ed25519PublicKey = Buffer.from(
+        generateKeyPairSync('ed25519').publicKey.export({ format: 'jwk' }).x,
+        'base64url',
+      );
+      const didDoc = {
+        id: did,
+        verificationMethod: [
+          {
+            id: kid,
+            type: 'Ed25519VerificationKey2018',
+            publicKeyBase58: bs58.encode(ed25519PublicKey),
+          },
+        ],
+      };
+
+      expect(() => extractVerificationJwk(didDoc, kid)).toThrow(
+        expect.objectContaining({
+          message: `Verification method ${kid} does not contain a secp256k1 public key`,
+          status: 400,
+          errorCode: 'unsupported_public_key',
+        }),
+      );
     });
 
     it('should throw when publicKeyJwk is not an object', () => {
