@@ -868,15 +868,19 @@ describe('vn-api > issue credentials', () => {
 
   describe('proof of key possession with a registrar resolved kid', () => {
     const holderDidWeb = 'did:web:holder.localhost.test';
-    const resolveKidUrl = `api/v0.6/resolve-kid/${encodeURIComponent(
-      `${holderDidWeb}#0`,
-    )}?format=jwk`;
+    const buildResolveKidUrl = (did) =>
+      `api/v0.6/resolve-kid/${encodeURIComponent(`${did}#0`)}?format=jwk`;
+    const resolveKidUrl = buildResolveKidUrl(holderDidWeb);
 
     afterEach(() => {
       restMockHttpClient();
     });
 
-    const issueWithDidWebProof = async () =>
+    const issueWithDidWebProof = async ({
+      did = holderDidWeb,
+      keyPair = holderKeyPair,
+      ...payloadOverrides
+    } = {}) =>
       fastify.injectJson({
         method: 'POST',
         url: testUrl(tenant),
@@ -891,9 +895,10 @@ describe('vn-api > issue credentials', () => {
         payload: {
           approvedOfferIds: [credentials[0]._id, credentials[1]._id],
           proof: await buildProof(
-            holderDidWeb,
-            holderKeyPair,
+            did,
+            keyPair,
             await loadChallenge(exchange._id),
+            payloadOverrides,
           ),
         },
       });
@@ -954,6 +959,35 @@ describe('vn-api > issue credentials', () => {
         errorResponseMatcher({
           errorCode: 'proof_verify_failed',
           message: 'proof_verify_failed',
+        }),
+      );
+      await expect(
+        findCredentials([credentials[0]._id, credentials[1]._id]),
+      ).resolves.toEqual([
+        expect.not.objectContaining({ acceptedAt: expect.anything() }),
+        expect.not.objectContaining({ acceptedAt: expect.anything() }),
+      ]);
+    });
+
+    it('should 400 if the did:web kid only starts with the claimed iss', async () => {
+      const attackerDidWeb = `${holderDidWeb}.attacker.test`;
+      const attackerKeyPair = generateKeyPair({ format: 'jwk' });
+      mockHttpClientJsonRoute('get', buildResolveKidUrl(attackerDidWeb), {
+        ...attackerKeyPair.publicKey,
+        use: 'sig',
+      });
+
+      const response = await issueWithDidWebProof({
+        did: attackerDidWeb,
+        keyPair: attackerKeyPair,
+        iss: holderDidWeb,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'proof_iss_invalid',
+          message: 'proof_iss_invalid',
         }),
       );
       await expect(

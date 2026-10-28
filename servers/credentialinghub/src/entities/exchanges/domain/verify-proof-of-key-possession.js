@@ -15,7 +15,7 @@
  *
  */
 
-const { startsWith } = require('lodash/fp');
+const { first, split, startsWith } = require('lodash/fp');
 const newError = require('http-errors');
 const { resolveKid } = require('@verii/common-fetchers');
 const { getJwkFromDidUri } = require('@verii/did-doc');
@@ -81,7 +81,7 @@ const validateContent = async (payload, { kid }, exchange, context) => {
     });
   }
 
-  if (!startsWith('did', payload.iss) || !startsWith(payload.iss, kid)) {
+  if (!startsWith('did', payload.iss) || didFromKid(kid) !== payload.iss) {
     throw newError(400, 'proof_iss_invalid', {
       errorCode: 'proof_iss_invalid',
     });
@@ -95,6 +95,8 @@ const validateContent = async (payload, { kid }, exchange, context) => {
 
   await verifyChallenge(payload.nonce, exchange, context);
 };
+
+const didFromKid = (kid) => first(split('#', kid));
 
 const throwExpiredChallengeError = () => {
   throw newError(400, 'proof_challenge_expired', {
