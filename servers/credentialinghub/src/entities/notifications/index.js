@@ -45,7 +45,9 @@ const {
 } = require('./orchestrators/enqueue-notification-events');
 const {
   deliverNextNotificationEvent,
+  retentionExpiresAt,
   startNotificationDeliveryWorker,
+  startPollingWorker,
 } = require('./orchestrators');
 const {
   notificationEnqueueAdapterPlugin,
@@ -69,6 +71,8 @@ module.exports = {
   newNotificationEventId,
   notificationEnqueueAdapterPlugin,
   parseNotificationEventTypes,
+  retentionExpiresAt,
   shouldEmitNotificationEvent,
   startNotificationDeliveryWorker,
+  startPollingWorker,
 };

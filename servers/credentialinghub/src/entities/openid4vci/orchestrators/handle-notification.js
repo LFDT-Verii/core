@@ -17,8 +17,8 @@
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
 const { omitBy, isNil } = require('lodash/fp');
 const { Oidc4vciErrors } = require('../domain');
+const { enqueueAnchoring } = require('../../anchoring');
 const { ExchangeStates } = require('../../exchanges');
-const { anchorVeriiCredentialsFacade } = require('../../credentials');
 
 // eslint-disable-next-line complexity
 const handleNotification = async (notificationRequest, context) => {
@@ -37,18 +37,12 @@ const handleNotification = async (notificationRequest, context) => {
 
   try {
     switch (notificationRequest.event) {
-      case 'credential_accepted': {
-        await anchorVeriiCredentialsFacade(
-          [credential?.exchange.credentialMetadata],
-          context,
-        );
-        await repos.credentials.addExchangeState(
-          credential._id,
-          ExchangeStates.COMPLETE,
-          { acceptedAt: new Date() },
-        );
+      case 'credential_accepted':
+        // The anchoring worker anchors the credential and then records it as
+        // accepted. Enqueueing a repeat does nothing, and the wallet still gets
+        // success, as OpenID4VCI section 11 requires.
+        await enqueueAnchoring({ credential, tenant: context.tenant }, context);
         break;
-      }
       case 'credential_deleted':
         await repos.credentials.addExchangeState(
           credential._id,

@@ -28,10 +28,13 @@ const notificationEventsRepoExtension = (parent) => ({
     await parent.collection().insertMany(docs);
     return docs;
   },
+  // Webhook events and anchoring jobs share this queue, and each worker claims
+  // only its own types.
   claimDueEvent: async ({
     now = new Date(),
     workerId,
     lockDurationMs,
+    types,
     projection = parent.defaultColumnsSelection,
   }) => {
     validateLockDurationMs(lockDurationMs);
@@ -39,6 +42,7 @@ const notificationEventsRepoExtension = (parent) => ({
     const lockedUntil = new Date(now.getTime() + lockDurationMs);
     const result = await parent.collection().findOneAndUpdate(
       {
+        ...(types == null ? {} : { type: { $in: types } }),
         status: {
           $in: [
             NotificationEventStatuses.PENDING,

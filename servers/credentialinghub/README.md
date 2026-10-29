@@ -307,3 +307,39 @@ startAppServer({
   notificationWorkerModulePath: require.resolve('./notification-worker'),
 });
 ```
+
+## Anchoring Worker
+
+When a wallet sends `credential_accepted` to the OpenID4VCI notification
+endpoint, the Hub queues the credential's metadata for anchoring and returns
+204. The anchoring worker then anchors it on-chain, and only then sets the
+credential's `acceptedAt` and adds `COMPLETE` to its exchange. A repeated
+notification for the same `notification_id` doesn't queue a second job and
+still returns 204, as OpenID4VCI section 11 requires.
+
+Anchoring jobs share the notification worker's queue, the
+`notification_events` collection, with the type `credential.anchoring`. They
+are queued whether or not notifications are enabled, and like webhook events
+they're deleted `NOTIFICATIONS_RETENTION_DAYS` after they finish or are marked
+`dead`. Each worker claims only its own types.
+
+The anchoring worker runs in each app server's process, not in the
+notification worker's, because anchoring needs the server's KMS, RPC provider
+and blockchain authentication. App servers share the anchoring jobs: the worker
+that claims a job locks it. A custom CAO security provider's
+`resolveBlockchainClientCredentials` receives the job's context instead of a
+request. The context has `tenant`, `config` and `log`, but no
+`operatorPrincipal`.
+
+A failed anchor is retried, waiting 10 s after the first failure and doubling
+up to 15 min. The job is marked `dead`, and the credential's exchange gets
+`UNEXPECTED_ERROR`, after `ANCHORING_MAX_ATTEMPTS` attempts, or at once for an
+error a retry can't fix: the issuer lacks permission for the credential type,
+the tenant no longer exists, or the chain has already used the metadata index.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `ANCHORING_WORKER_ENABLED` | `true` | Set to `false` to run an app server without a worker. Its jobs wait for another app server's worker. |
+| `ANCHORING_WORKER_POLL_INTERVAL_MS` | `1000` | How often an idle worker checks for due jobs. |
+| `ANCHORING_LOCK_DURATION_MS` | `300000` | How long a claimed job stays locked. A job still anchoring after that can be claimed and anchored again, so keep it above the chain's worst-case confirmation time. |
+| `ANCHORING_MAX_ATTEMPTS` | `10` | Attempts before a job is marked `dead`. |
