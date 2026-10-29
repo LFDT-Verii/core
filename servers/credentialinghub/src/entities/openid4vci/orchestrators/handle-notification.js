@@ -37,18 +37,9 @@ const handleNotification = async (notificationRequest, context) => {
 
   try {
     switch (notificationRequest.event) {
-      case 'credential_accepted': {
-        await anchorVeriiCredentialsFacade(
-          [credential?.exchange.credentialMetadata],
-          context,
-        );
-        await repos.credentials.addExchangeState(
-          credential._id,
-          ExchangeStates.COMPLETE,
-          { acceptedAt: new Date() },
-        );
+      case 'credential_accepted':
+        await acceptCredential(credential, context);
         break;
-      }
       case 'credential_deleted':
         await repos.credentials.addExchangeState(
           credential._id,
@@ -89,6 +80,26 @@ const handleNotification = async (notificationRequest, context) => {
       error_description: error.message,
     });
   }
+};
+
+const acceptCredential = async (credential, context) => {
+  const { repos } = context;
+  // A repeated notification must not anchor the exchange's metadata index again.
+  // This doesn't stop a duplicate that arrives while the first is still anchoring (#1118).
+  if (credential.exchange.acceptedAt != null) {
+    return;
+  }
+
+  await anchorVeriiCredentialsFacade(
+    [credential.exchange.credentialMetadata],
+    context,
+  );
+  const acceptedAt = new Date();
+  await repos.credentials.addExchangeState(
+    credential._id,
+    ExchangeStates.COMPLETE,
+    { acceptedAt, 'exchange.acceptedAt': acceptedAt },
+  );
 };
 
 module.exports = { handleNotification };
