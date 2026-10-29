@@ -6,16 +6,16 @@
     "messageId": { "type": "string" },
     "keyTransfer": {
       "type": "object",
-      "description": "Declared in the ack to a test message. Narrows the keys the registrar sends in create_tenant messages. Unknown values are ignored.",
+      "description": "Declared in the ack to a test message. Tells the registrar which keys it can send in create_tenant messages. Unknown values are ignored, and a list of only unknown values counts as not declared.",
       "properties": {
         "algorithms": {
           "type": "array",
-          "description": "The key algorithms the receiver imports. Defaults to [\"SECP256K1\"].",
+          "description": "The key algorithms the receiver imports. Defaults to [\"SECP256K1\"]. Keys of other algorithms are sent only as JWKs.",
           "items": { "type": "string" }
         },
         "encodings": {
           "type": "array",
-          "description": "The key encodings the receiver reads. Keys are always sent as JWKs. Leaving out \"hex\" stops SECP256K1 keys being sent as hex too. Defaults to [\"hex\", \"jwk\"].",
+          "description": "The encodings the receiver reads SECP256K1 keys in: \"hex\", \"jwk\" or both. Defaults to [\"hex\"].",
           "items": { "type": "string" }
         }
       }

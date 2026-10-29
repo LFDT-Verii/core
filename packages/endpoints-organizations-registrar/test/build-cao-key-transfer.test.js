@@ -129,8 +129,10 @@ describe('buildCaoKeyTransfer', () => {
       validationResult(validateMessage, createTenantMessage(keys)).valid,
     ).toEqual(false);
 
+  const dualDeclaration = { encodings: ['hex', 'jwk'] };
+
   describe('without a declaration from the CAO', () => {
-    it('should send a secp256k1 key as hex and as JWKs', () => {
+    it('should send a secp256k1 key only as hex, as the registrar does today', () => {
       const kmsEntry = generateKmsEntry();
 
       const key = buildCaoKeyTransfer(dltKey, kmsEntry);
@@ -142,10 +144,7 @@ describe('buildCaoKeyTransfer', () => {
         encoding: 'hex',
         key: hexFromJwk(kmsEntry.privateJwk),
         publicKey: hexFromJwk(kmsEntry.privateJwk, false),
-        jwk: kmsEntry.privateJwk,
-        publicJwk: publicJwkOf(kmsEntry.privateJwk),
       });
-      expect(omit(['use'], jwkFromSecp256k1Key(key.key))).toEqual(key.jwk);
       expectValidMessage([key]);
     });
 
@@ -173,10 +172,39 @@ describe('buildCaoKeyTransfer', () => {
         }),
       ).toEqual(buildCaoKeyTransfer(dltKey, kmsEntry));
     });
+
+    it('should treat declarations of only unknown values as no declaration', () => {
+      const kmsEntry = generateKmsEntry();
+      expect(
+        buildCaoKeyTransfer(dltKey, kmsEntry, {
+          algorithms: ['ML-DSA-65'],
+          encodings: ['cbor'],
+        }),
+      ).toEqual(buildCaoKeyTransfer(dltKey, kmsEntry));
+    });
   });
 
   describe('with a declaration from the CAO', () => {
-    it('should send a secp256k1 key only as JWKs when the CAO leaves out hex', () => {
+    it('should send a secp256k1 key as hex and as JWKs when the CAO reads both', () => {
+      const kmsEntry = generateKmsEntry();
+
+      const key = buildCaoKeyTransfer(dltKey, kmsEntry, dualDeclaration);
+
+      expect(key).toEqual({
+        kidFragment: '#eth-account-key-1',
+        algorithm: 'SECP256K1',
+        purposes: [KeyPurposes.DLT_TRANSACTIONS],
+        encoding: 'hex',
+        key: hexFromJwk(kmsEntry.privateJwk),
+        publicKey: hexFromJwk(kmsEntry.privateJwk, false),
+        jwk: kmsEntry.privateJwk,
+        publicJwk: publicJwkOf(kmsEntry.privateJwk),
+      });
+      expect(omit(['use'], jwkFromSecp256k1Key(key.key))).toEqual(key.jwk);
+      expectValidMessage([key]);
+    });
+
+    it('should send a secp256k1 key only as JWKs when the CAO reads only JWKs', () => {
       const kmsEntry = generateKmsEntry();
 
       const key = buildCaoKeyTransfer(dltKey, kmsEntry, {
@@ -203,6 +231,7 @@ describe('buildCaoKeyTransfer', () => {
       const keys = es256OrganizationKeys.map((organizationKey, i) =>
         buildCaoKeyTransfer(organizationKey, kmsEntries[i], {
           algorithms: ['SECP256K1', 'ES256'],
+          encodings: ['hex', 'jwk'],
         }),
       );
 
@@ -237,6 +266,24 @@ describe('buildCaoKeyTransfer', () => {
       expectValidMessage(keys);
     });
 
+    it('should send P-256 keys as JWKs to a CAO that declared ES256 but no encodings', () => {
+      const kmsEntry = generateKmsEntry('P-256');
+
+      const key = buildCaoKeyTransfer(es256OrganizationKeys[0], kmsEntry, {
+        algorithms: ['SECP256K1', 'ES256'],
+      });
+
+      expect(key).toEqual({
+        kidFragment: '#vc-signing-key-1',
+        algorithm: 'ES256',
+        purposes: [KeyPurposes.ISSUING_METADATA],
+        encoding: 'jwk',
+        jwk: kmsEntry.privateJwk,
+        publicJwk: publicJwkOf(kmsEntry.privateJwk),
+      });
+      expectValidMessage([key]);
+    });
+
     it('should ignore declared values it does not know', () => {
       const kmsEntry = generateKmsEntry();
       expect(
@@ -244,7 +291,7 @@ describe('buildCaoKeyTransfer', () => {
           algorithms: ['SECP256K1', 'ML-DSA-65'],
           encodings: ['hex', 'jwk', 'cbor'],
         }),
-      ).toEqual(buildCaoKeyTransfer(dltKey, kmsEntry));
+      ).toEqual(buildCaoKeyTransfer(dltKey, kmsEntry, dualDeclaration));
     });
   });
 
@@ -258,7 +305,11 @@ describe('buildCaoKeyTransfer', () => {
         alg: 'ES256K',
       };
 
-      const key = buildCaoKeyTransfer(dltKey, { privateJwk: decoratedJwk });
+      const key = buildCaoKeyTransfer(
+        dltKey,
+        { privateJwk: decoratedJwk },
+        dualDeclaration,
+      );
 
       expect(key.jwk).toEqual(kmsEntry.privateJwk);
       expect(key.publicJwk).toEqual(publicJwkOf(kmsEntry.privateJwk));
@@ -292,9 +343,11 @@ describe('buildCaoKeyTransfer', () => {
 
     Object.entries(leadingZeroSecp256k1Keys).forEach(([member, vector]) => {
       it(`should keep every byte of a key whose ${member} starts with a zero byte`, () => {
-        const key = buildCaoKeyTransfer(dltKey, {
-          privateJwk: vector.privateJwk,
-        });
+        const key = buildCaoKeyTransfer(
+          dltKey,
+          { privateJwk: vector.privateJwk },
+          dualDeclaration,
+        );
 
         expect(key).toEqual(
           expect.objectContaining({
@@ -370,7 +423,7 @@ describe('buildCaoKeyTransfer', () => {
       const { privateJwk } = generateKmsEntry();
       expectInvalidMessage([
         {
-          ...buildCaoKeyTransfer(dltKey, { privateJwk }),
+          ...buildCaoKeyTransfer(dltKey, { privateJwk }, dualDeclaration),
           publicJwk: privateJwk,
         },
       ]);

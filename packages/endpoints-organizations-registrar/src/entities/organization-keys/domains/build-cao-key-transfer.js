@@ -1,13 +1,13 @@
-const { includes, isEmpty, pick } = require('lodash/fp');
+const { filter, includes, isEmpty, pick, values } = require('lodash/fp');
 const newError = require('http-errors');
 const { hexFromJwk, KeyAlgorithms, KeyEncodings } = require('@verii/crypto');
 
 /**
  * Builds a key for a create_tenant message to a CAO.
  *
- * Keys are always sent as JWKs. secp256k1 keys are also sent as hex unless the CAO
- * declared that it doesn't read hex. Hex carries no curve, so keys of other
- * algorithms are only sent as JWKs, and only to CAOs that declared the algorithm.
+ * secp256k1 keys are sent in the encodings the CAO declared, and as hex when it
+ * declared none. Hex carries no curve, so keys of other algorithms are only sent as
+ * JWKs, and only to CAOs that declared the algorithm.
  * @param {{id: string, algorithm?: string, purposes: string[]}} organizationKey the organization key
  * @param {{privateJwk: JsonWebKey}} kmsEntry the organization key's KMS export
  * @param {{algorithms?: string[], encodings?: string[]}} [keyTransfer] the CAO's declared capabilities
@@ -28,25 +28,15 @@ const buildCaoKeyTransfer = (
     );
   }
 
-  const key = {
-    kidFragment: id,
-    algorithm: keyAlgorithm,
-    purposes,
-    jwk: pick(PRIVATE_JWK_MEMBERS, privateJwk),
-    publicJwk: pick(PUBLIC_JWK_MEMBERS, privateJwk),
-  };
-  if (
-    keyAlgorithm !== KeyAlgorithms.SECP256K1 ||
-    !includes(KeyEncodings.HEX, encodings)
-  ) {
-    return { ...key, encoding: KeyEncodings.JWK };
+  const metadata = { kidFragment: id, algorithm: keyAlgorithm, purposes };
+  if (keyAlgorithm !== KeyAlgorithms.SECP256K1) {
+    return {
+      ...metadata,
+      encoding: KeyEncodings.JWK,
+      ...jwkMembers(privateJwk),
+    };
   }
-  return {
-    ...key,
-    encoding: KeyEncodings.HEX,
-    key: hexFromJwk(privateJwk),
-    publicKey: hexFromJwk(privateJwk, false),
-  };
+  return { ...metadata, ...secp256k1Members(privateJwk, encodings) };
 };
 
 const CURVE_ALGORITHMS = {
@@ -56,8 +46,10 @@ const CURVE_ALGORITHMS = {
 
 const DEFAULT_KEY_TRANSFER = {
   algorithms: [KeyAlgorithms.SECP256K1],
-  encodings: [KeyEncodings.HEX, KeyEncodings.JWK],
+  encodings: [KeyEncodings.HEX],
 };
+
+const KNOWN_ENCODINGS = [KeyEncodings.HEX, KeyEncodings.JWK];
 
 const PUBLIC_JWK_MEMBERS = ['kty', 'crv', 'x', 'y'];
 
@@ -76,13 +68,42 @@ const resolveKeyAlgorithm = (algorithm, privateJwk) => {
   return curveAlgorithm;
 };
 
+// A declaration that lists no values the registrar knows counts as not declared.
 const withDefaults = (keyTransfer) => ({
-  algorithms: isEmpty(keyTransfer?.algorithms)
-    ? DEFAULT_KEY_TRANSFER.algorithms
-    : keyTransfer.algorithms,
-  encodings: isEmpty(keyTransfer?.encodings)
-    ? DEFAULT_KEY_TRANSFER.encodings
-    : keyTransfer.encodings,
+  algorithms: knownOrDefault(
+    keyTransfer?.algorithms,
+    values(CURVE_ALGORITHMS),
+    DEFAULT_KEY_TRANSFER.algorithms,
+  ),
+  encodings: knownOrDefault(
+    keyTransfer?.encodings,
+    KNOWN_ENCODINGS,
+    DEFAULT_KEY_TRANSFER.encodings,
+  ),
+});
+
+const knownOrDefault = (declared, known, defaults) => {
+  const knownDeclared = filter((value) => includes(value, known), declared);
+  return isEmpty(knownDeclared) ? defaults : knownDeclared;
+};
+
+const secp256k1Members = (privateJwk, encodings) => {
+  const sendsHex = includes(KeyEncodings.HEX, encodings);
+  return {
+    encoding: sendsHex ? KeyEncodings.HEX : KeyEncodings.JWK,
+    ...(sendsHex ? hexMembers(privateJwk) : {}),
+    ...(includes(KeyEncodings.JWK, encodings) ? jwkMembers(privateJwk) : {}),
+  };
+};
+
+const hexMembers = (privateJwk) => ({
+  key: hexFromJwk(privateJwk),
+  publicKey: hexFromJwk(privateJwk, false),
+});
+
+const jwkMembers = (privateJwk) => ({
+  jwk: pick(PRIVATE_JWK_MEMBERS, privateJwk),
+  publicJwk: pick(PUBLIC_JWK_MEMBERS, privateJwk),
 });
 
 module.exports = { buildCaoKeyTransfer };
