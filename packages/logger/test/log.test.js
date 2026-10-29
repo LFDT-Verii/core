@@ -470,6 +470,24 @@ describe('Test pino logger provider with redaction', () => {
     );
   });
 
+  it('Redaction should shh the private part of a jwk key', () => {
+    const dataForLog = {
+      key: { jwk: { kty: 'EC', d: 'd' } },
+      keys: [{ jwk: { kty: 'EC', d: 'd' } }],
+      body: {
+        key: { jwk: { kty: 'EC', d: 'd' } },
+        keys: [{ jwk: { kty: 'EC', d: 'd' } }],
+      },
+    };
+
+    log.info(dataForLog);
+
+    const redactedJwk = '{"jwk":{"kty":"EC","d":"...shhh..."}}';
+    expect(logStream.toString()).toMatch(
+      `"key":${redactedJwk},"keys":[${redactedJwk}],"body":{"key":${redactedJwk},"keys":[${redactedJwk}]}`,
+    );
+  });
+
   it('Redact single relatedResource', () => {
     const dataForLog = {
       credentials: [
