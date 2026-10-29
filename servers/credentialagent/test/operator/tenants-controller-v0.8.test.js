@@ -1062,6 +1062,29 @@ describe('Tenants management Test suite', () => {
         expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
       });
 
+      it('should 400 and not create tenant or keys when the public key hex is a private key', async () => {
+        const key = omit(
+          ['jwk', 'publicJwk'],
+          dualKey(orgKey, { publicKey: orgKey }),
+        );
+
+        const response = await createTenant(orgDoc.id, [key]);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'public_key_not_matched',
+            message: 'Public key not matched to private key',
+            statusCode: 400,
+          }),
+        );
+        expect(await mongoDb().collection('tenants').countDocuments()).toEqual(
+          0,
+        );
+        expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+      });
+
       Object.entries(leadingZeroSecp256k1Keys).forEach(([member, vector]) => {
         const createVectorOrgDoc = async () => {
           const { orgDoc: vectorOrgDoc } = await createOrgDoc({
