@@ -33,6 +33,7 @@ describe('Registrar messages controller tests', () => {
   });
 
   beforeEach(async () => {
+    fastify.resetOverrides();
     await messagesCollection.deleteMany({});
   });
 
@@ -337,8 +338,79 @@ describe('Registrar messages controller tests', () => {
       ).toEqual(0);
     });
   });
+  describe('Registrar webhook key transfer declaration test suite', () => {
+    const declarations = [
+      { description: 'no declaration', keyTransfer: undefined },
+      {
+        description: 'hex and jwk encodings',
+        keyTransfer: { encodings: ['hex', 'jwk'] },
+      },
+      { description: 'the jwk encoding', keyTransfer: { encodings: ['jwk'] } },
+      {
+        description: 'the ES256 algorithm',
+        keyTransfer: {
+          algorithms: ['SECP256K1', 'ES256'],
+          encodings: ['hex', 'jwk'],
+        },
+      },
+    ];
+
+    declarations.forEach(({ description, keyTransfer }) => {
+      it(`should declare ${description} in the ack to a test message`, async () => {
+        fastify.overrides.reqConfig = (config) => ({
+          ...config,
+          registrarKeyTransfer: keyTransfer,
+        });
+
+        const response = await postMessage('/registrar/registrar-webhook/', {
+          messageType: 'test',
+          messageId: 'test-1',
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toStrictEqual({
+          messageId: 'test-1',
+          messageType: 'ack',
+          ...(keyTransfer == null ? {} : { keyTransfer }),
+        });
+        expect(
+          await messagesCollection.findOne({ messageId: 'test-1' }),
+        ).toEqual({
+          _id: expect.any(ObjectId),
+          createdAt: expect.any(Date),
+          messageId: 'test-1',
+          messageType: 'test',
+          updatedAt: expect.any(Date),
+          vnfSignatureVerified: false,
+        });
+      });
+    });
+
+    it('should not declare key transfer capabilities in the ack to a create_tenant message', async () => {
+      fastify.overrides.reqConfig = (config) => ({
+        ...config,
+        registrarKeyTransfer: { encodings: ['jwk'] },
+      });
+      const [vector] = acceptedVectors;
+
+      const response = await postMessage(
+        '/registrar/registrar-webhook/',
+        vector.message,
+      );
+
+      expect(response.json).toStrictEqual({
+        messageId: vector.message.messageId,
+        messageType: 'ack',
+      });
+    });
+  });
   describe('Registrar webhook delay test suite', () => {
     it('should receive secure messaging from api with 30 second delay', async () => {
+      const keyTransfer = { encodings: ['hex', 'jwk'] };
+      fastify.overrides.reqConfig = (config) => ({
+        ...config,
+        registrarKeyTransfer: keyTransfer,
+      });
       const payload = { messageType: 'test', messageId: '123' };
       const now = Date.now();
       const signature = signAndEncodeBase64(
@@ -353,6 +425,7 @@ describe('Registrar messages controller tests', () => {
       expect(response.json).toEqual({
         messageId: '123',
         messageType: 'ack',
+        keyTransfer,
       });
       const messageReceived = await messagesCollection.findOne({
         messageId: '123',

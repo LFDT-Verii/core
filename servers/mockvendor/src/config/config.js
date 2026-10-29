@@ -50,4 +50,7 @@ module.exports = {
     .get('GENERATE_OFFERS_DELAY_SEC')
     .default(0)
     .asInt(),
+  // The keyTransfer object declared in the ack to the registrar's test message,
+  // as JSON. For example {"algorithms":["SECP256K1","ES256"],"encodings":["jwk"]}
+  registrarKeyTransfer: env.get('REGISTRAR_KEY_TRANSFER').asJsonObject(),
 };

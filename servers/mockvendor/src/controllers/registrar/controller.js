@@ -1,4 +1,4 @@
-const { get } = require('lodash/fp');
+const { get, isNil, omitBy } = require('lodash/fp');
 const { wait } = require('@verii/common-functions');
 const { verifyVnfSignature } = require('@verii/crypto');
 const { VNF_SIGNATURE_HTTP_HEADER_NAME } = require('@verii/crypto');
@@ -82,7 +82,11 @@ const storeMessage = async (req, receipt) => {
   });
 };
 
-const buildAck = ({ body }) => ({
-  messageType: 'ack',
-  messageId: body.messageId,
-});
+// The ack to a test message declares the keys this receiver accepts.
+const buildAck = ({ body, config }) =>
+  omitBy(isNil, {
+    messageType: 'ack',
+    messageId: body.messageId,
+    keyTransfer:
+      body.messageType === 'test' ? config.registrarKeyTransfer : undefined,
+  });
