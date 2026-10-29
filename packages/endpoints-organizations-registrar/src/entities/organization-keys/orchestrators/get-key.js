@@ -18,7 +18,7 @@ const { toRelativeServiceId } = require('@verii/did-doc');
 const newError = require('http-errors');
 const { mapKeyResponse } = require('../domains');
 
-const getKey = async (did, kid, { repos }) => {
+const getKey = async (did, kid, keyEncoding, { repos }) => {
   const organization = await repos.organizations.findOneByDid(did);
 
   const keyId = toRelativeServiceId(kid);
@@ -33,7 +33,10 @@ const getKey = async (did, kid, { repos }) => {
     throw newError.NotFound('Key not found');
   }
 
-  return { key: mapKeyResponse(key), custodied: key.custodied };
+  return {
+    key: mapKeyResponse(key, undefined, keyEncoding),
+    custodied: key.custodied,
+  };
 };
 
 module.exports = { getKey };

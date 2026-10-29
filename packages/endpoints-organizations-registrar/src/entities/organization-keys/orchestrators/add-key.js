@@ -36,7 +36,7 @@ const {
 } = require('./resolve-verification-method-byo-did');
 
 // eslint-disable-next-line complexity
-const addKey = async (did, newKey, context) => {
+const addKey = async (did, newKey, keyEncoding, context) => {
   const { repos } = context;
   const organization = await repos.organizations.findOneByDid(did);
 
@@ -100,7 +100,7 @@ const addKey = async (did, newKey, context) => {
     );
   }
   return {
-    key: mapKeyResponse(newOrganizationKey, keyPair),
+    key: mapKeyResponse(newOrganizationKey, keyPair, keyEncoding),
   };
 };
 

@@ -85,7 +85,12 @@ const { find, includes, omit } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { KeyAlgorithms, KeyPurposes } = require('@verii/crypto');
-const { testRegistrarSuperUser } = require('@verii/tests-helpers');
+const { HEX_FORMAT } = require('@verii/test-regexes');
+const {
+  privateJwkMatcher,
+  publicJwkMatcher,
+  testRegistrarSuperUser,
+} = require('@verii/tests-helpers');
 const nock = require('./helpers/nock');
 const buildFastify = require('./helpers/build-fastify');
 const initOrganizationFactory = require('../src/entities/organizations/factories/organizations-factory');
@@ -239,6 +244,38 @@ describe('Custodied organizations with ES256 organization keys', () => {
         }),
       );
     }
+  });
+
+  it('should return P-256 keys as JWK and secp256k1 keys as hex by default', async () => {
+    const response = await createOrganization();
+
+    expect(response.statusCode).toEqual(201);
+    const responseKeyById = (kidFragment) =>
+      find({ kidFragment }, response.json.keys);
+    for (const kidFragment of ['#vc-signing-key-1', '#exchange-key-1']) {
+      const responseKey = responseKeyById(kidFragment);
+      expect(responseKey).toEqual(
+        expect.objectContaining({
+          encoding: 'jwk',
+          jwk: privateJwkMatcher(KeyAlgorithms.ES256),
+          didDocumentKey: expect.objectContaining({
+            publicKeyJwk: publicJwkMatcher(KeyAlgorithms.ES256),
+          }),
+        }),
+      );
+      expect(responseKey).not.toHaveProperty('key');
+    }
+    const dltKey = responseKeyById('#eth-account-key-1');
+    expect(dltKey).toEqual(
+      expect.objectContaining({
+        encoding: 'hex',
+        key: expect.stringMatching(HEX_FORMAT),
+        didDocumentKey: expect.objectContaining({
+          publicKeyMultibase: expect.stringMatching(HEX_FORMAT),
+        }),
+      }),
+    );
+    expect(dltKey).not.toHaveProperty('jwk');
   });
 
   it('should serve the P-256 verification methods from the hosted did:web document', async () => {

@@ -653,6 +653,41 @@ describe('Organization Keys Test Suite', () => {
         });
       });
 
+      it('Should return a new generated organization key as JWK when key_encoding is jwk', async () => {
+        const organization = await persistOrganization();
+        const did = organization.didDoc.id;
+        const kidFragment = '#fragment-1';
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${baseUrl}/${did}/keys?key_encoding=jwk`,
+          payload: {
+            kidFragment,
+            algorithm: 'SECP256K1',
+            purposes: [KeyPurposes.ISSUING_METADATA],
+          },
+        });
+
+        expect(response.statusCode).toEqual(201);
+        const orgFromDb = await getOrganizationFromDb(did);
+        const verificationMethod = orgFromDb.didDoc.verificationMethod.find(
+          ({ id }) => id === kidFragment,
+        );
+        expect(response.json.key).toEqual({
+          kidFragment,
+          purposes: [KeyPurposes.ISSUING_METADATA],
+          algorithm: 'SECP256K1',
+          custodied: false,
+          encoding: 'jwk',
+          jwk: { ...verificationMethod.publicKeyJwk, d: expect.any(String) },
+          didDocumentKey: {
+            id: kidFragment,
+            type: 'JsonWebKey2020',
+            controller: did,
+            publicKeyJwk: verificationMethod.publicKeyJwk,
+          },
+        });
+      });
+
       it('Should allow a new generated organization key with a purpose already associated with a key', async () => {
         const organization = await persistOrganization();
         const did = organization.didDoc.id;
@@ -1392,6 +1427,29 @@ describe('Organization Keys Test Suite', () => {
               publicKey: key.publicKey,
               type: 'EcdsaSecp256k1VerificationKey2019',
             }),
+          },
+        });
+      });
+
+      it('Should return the public key as JWK when key_encoding is jwk', async () => {
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${baseUrl}/${organization.didDoc.id}/keys/secret-key-id?key_encoding=jwk`,
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          key: {
+            kidFragment: '#secret-key-id',
+            purposes: [KeyPurposes.EXCHANGES],
+            algorithm: key.algorithm,
+            custodied: true,
+            didDocumentKey: {
+              id: '#secret-key-id',
+              type: 'EcdsaSecp256k1VerificationKey2019',
+              controller: organization.didDoc.id,
+              publicKeyJwk: key.publicKey,
+            },
           },
         });
       });

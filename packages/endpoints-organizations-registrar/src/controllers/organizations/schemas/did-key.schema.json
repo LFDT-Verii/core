@@ -37,13 +37,21 @@
     },
     "encoding": {
       "type": "string",
-      "deprecated": true,
-      "description": "the encoding of the `key` value. Always set to \"hex\". \nDeprecated"
+      "enum": [
+        "hex",
+        "jwk"
+      ],
+      "description": "the encoding of the returned private key: `hex` for `key`, `jwk` for `jwk`. Chosen with the `key_encoding` query parameter"
     },
     "key": {
       "type": "string",
       "pattern": "^#.+$",
-      "description": "hex representation of the private key"
+      "description": "hex representation of the private key, returned when `key_encoding` is `hex` (the default)"
+    },
+    "jwk": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "the private key as a JWK, returned when `key_encoding` is `jwk`, or for a key on any curve other than secp256k1"
     },
     "didDocumentKey": {
       "$ref": "#/definitions/PublicKey"
@@ -86,6 +94,12 @@
           "title": "Public Key Base58",
           "description": "https://w3c.github.io/did-core-registries/#publicKeyBase58",
           "type": "string"
+        },
+        "publicKeyJwk": {
+          "title": "Public Key JWK",
+          "description": "https://w3c.github.io/did-core-registries/#publicKeyJwk",
+          "type": "object",
+          "additionalProperties": true
         }
       },
       "required": [
