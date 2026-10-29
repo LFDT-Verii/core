@@ -5,6 +5,17 @@ export interface CredentialMetadata extends AllocationListEntry {
   publicKey: string;
 }
 
+export interface VcV2CredentialBuildOptions {
+  contentHash: string;
+  context: Context;
+  credentialId: string;
+  credentialSubjectId?: string;
+  credentialTypeMetadata: CredentialTypeMetadata;
+  issuer: Issuer;
+  offer: CredentialOffer;
+  revocationUrl: string;
+}
+
 export interface DbKey {
   privateKey: string;
   kidFragment: string;
@@ -186,6 +197,26 @@ export interface JsonLdCredential extends BaseCredential {
   [k: string]: unknown;
 }
 
+export interface VcV2Credential extends BaseCredential {
+  '@context': string[];
+  contentHash: {
+    type: 'VelocityContentHash2020';
+    value: string;
+  };
+  credentialSchema: VcV2SchemaDescriptor | VcV2SchemaDescriptor[];
+  credentialStatus: VcV2LinkedData | VcV2LinkedData[];
+  credentialSubject: {
+    id?: string;
+    [k: string]: unknown;
+  };
+  id: string;
+  issuer: JsonLdCredential['issuer'];
+  refreshService?: VcV2LinkedData | VcV2LinkedData[];
+  validFrom: string;
+  validUntil?: string;
+  vnfProtocolVersion: 1 | 2;
+}
+
 export interface CredentialSubject {
   /**
    * json-ld context
@@ -250,3 +281,15 @@ export interface LinkedData {
   id: string;
   type?: string | string[];
 }
+
+export interface VcV2LinkedData extends LinkedData {
+  type: string | string[];
+}
+
+export interface VcV2SchemaDescriptor extends LinkedData {
+  type: string;
+}
+
+export function buildVcV2Credential(
+  options: VcV2CredentialBuildOptions,
+): VcV2Credential;
