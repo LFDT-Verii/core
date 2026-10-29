@@ -137,6 +137,7 @@ const {
   castArray,
   compact,
   first,
+  find,
   flow,
   includes,
   last,
@@ -2150,6 +2151,65 @@ describe('Organizations Full Test Suite', () => {
           ],
           expect.any(Array),
         ]);
+      });
+
+      describe('key_encoding', () => {
+        const createOrganization = (keyEncoding) =>
+          fastify.injectJson({
+            method: 'POST',
+            url: `${fullUrl}?key_encoding=${keyEncoding}`,
+            payload: { profile: orgProfile },
+            headers: {
+              'x-auto-activate': '0',
+              'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+            },
+          });
+
+        it('Should return every key as JWK when key_encoding is jwk', async () => {
+          const response = await createOrganization('jwk');
+
+          expect(response.statusCode).toEqual(201);
+          const orgFromDb = await getOrganizationFromDb(response.json.id);
+          const dbKeys = await getKeysFromDb(orgFromDb);
+          expect(response.json.keys).toHaveLength(5);
+          for (const responseKey of response.json.keys) {
+            const dbKey = find({ id: responseKey.kidFragment }, dbKeys);
+            expect(responseKey).toEqual({
+              kidFragment: dbKey.id,
+              purposes: dbKey.purposes,
+              algorithm: 'SECP256K1',
+              custodied: true,
+              encoding: 'jwk',
+              jwk: { ...dbKey.publicKey, d: expect.any(String) },
+              didDocumentKey: {
+                id: dbKey.id,
+                type: 'EcdsaSecp256k1VerificationKey2019',
+                controller: orgFromDb.didDoc.id,
+                publicKeyJwk: dbKey.publicKey,
+              },
+            });
+          }
+        });
+
+        it('Should return every key as hex when key_encoding is hex', async () => {
+          const response = await createOrganization('hex');
+
+          expect(response.statusCode).toEqual(201);
+          expect(response.json.keys).toEqual(
+            expectedCreateFullOrganizationResponse(response.json.id, orgProfile)
+              .keys,
+          );
+        });
+
+        it('Should 400 and create nothing when key_encoding is not supported', async () => {
+          const response = await createOrganization('hex_jwk');
+
+          expect(response.statusCode).toEqual(400);
+          expect(response.json.message).toContain('key_encoding');
+          expect(
+            await mongoDb().collection('organizations').countDocuments(),
+          ).toEqual(0);
+        });
       });
 
       it('Should create org with a did service', async () => {
