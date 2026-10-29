@@ -1,8 +1,8 @@
 ## Changes
 
-### [#920](https://github.com/LFDT-Verii/core/pull/920) Verify VC 2.0 credentials
+### [#919](https://github.com/LFDT-Verii/core/pull/919) Decode credentials strictly
 
-The Credential Agent verifies W3C VC 2.0 `vc+jwt` credentials alongside VC 1.1 JWTs when it checks credentials and receives disclosures and identification presentations. Credentials are classified by a stricter shared decoder ([#919](https://github.com/LFDT-Verii/core/pull/919)) and must be signed with ES256K, ES256 or RS256.
+Credential checks, disclosures and identification presentations decode credentials with a stricter shared decoder, and credentials must be signed with ES256K, ES256 or RS256. Verification of W3C VC 2.0 `vc+jwt` credentials ([#920](https://github.com/LFDT-Verii/core/pull/920)) is included but not yet officially supported.
 
 ### [#1066](https://github.com/LFDT-Verii/core/pull/1066) Only trust self-signed issuers bound to their signing key
 

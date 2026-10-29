@@ -1,8 +1,8 @@
 ## Changes
 
-### [#920](https://github.com/LFDT-Verii/core/pull/920) Verify W3C VC 2.0 JOSE credentials
+### [#919](https://github.com/LFDT-Verii/core/pull/919) Decode credentials strictly
 
-`@verii/verii-verification` and `@verii/vc-checks` now verify W3C VC 2.0 `vc+jwt` credentials alongside VC 1.1 JWTs, and each result reports the credential's `dataModelVersion`, `envelopeFormat` and `signingAlgorithm`. `@verii/jwt` adds a strict, size-limited credential envelope decoder and verifier ([#919](https://github.com/LFDT-Verii/core/pull/919)) that reject malformed or contradictory credentials before any key is used.
+`@verii/jwt` adds a strict, size-limited credential envelope decoder and verifier that reject malformed or contradictory credentials before any key is used, and `@verii/verii-verification` and `@verii/vc-checks` use them for VC 1.1 JWTs. Each verification result reports the credential's `dataModelVersion`, `envelopeFormat` and `signingAlgorithm`. Verification of W3C VC 2.0 `vc+jwt` credentials ([#920](https://github.com/LFDT-Verii/core/pull/920)) is included but not yet officially supported.
 
 ### [#1066](https://github.com/LFDT-Verii/core/pull/1066) Bind self-signed issuers to their signing key
 

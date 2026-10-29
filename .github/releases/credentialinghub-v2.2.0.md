@@ -24,9 +24,9 @@ The notification worker starts from Hub configuration and MongoDB alone, so depl
 
 Issued credentials record their `dataModelVersion`, `envelopeFormat` and `signingAlgorithm`, which appear in Operator credential responses, `credential.issued` webhooks and revocation messages. Values for credentials issued before the upgrade are derived when read, so no migration is needed.
 
-### [#1066](https://github.com/LFDT-Verii/core/pull/1066) Tighten and extend presentation verification
+### [#1066](https://github.com/LFDT-Verii/core/pull/1066) Tighten presentation verification
 
-Presentation verification reports `SELF_SIGNED` only when the issuer is the `did:jwk` of the signing key and matches `kid`s exactly ([#1065](https://github.com/LFDT-Verii/core/pull/1065)). It also accepts P-256 issuer keys ([#1061](https://github.com/LFDT-Verii/core/pull/1061)) and VC 2.0 `vc+jwt` credentials ([#920](https://github.com/LFDT-Verii/core/pull/920)).
+Presentation verification reports `SELF_SIGNED` only when the issuer is the `did:jwk` of the signing key and matches `kid`s exactly ([#1065](https://github.com/LFDT-Verii/core/pull/1065)). It also accepts P-256 issuer keys ([#1061](https://github.com/LFDT-Verii/core/pull/1061)).
 
 ### [#1064](https://github.com/LFDT-Verii/core/pull/1064) Accept offer proofs from did:web holders
 
