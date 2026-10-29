@@ -29,7 +29,10 @@ const {
   generateDisposablePrivateKey,
   toEthereumAddress,
 } = require('@verii/blockchain-functions');
-const { rootPrivateKey } = require('@verii/sample-data');
+const {
+  leadingZeroSecp256k1Keys,
+  rootPrivateKey,
+} = require('@verii/sample-data');
 const {
   KeyPurposes,
   generateKeyPair,
@@ -929,6 +932,184 @@ describe('Tenants management Test suite', () => {
         dids: [orgDoc.id, ...orgDoc.alsoKnownAs],
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date),
+      });
+    });
+
+    describe('keys forwarded from a create_tenant message', () => {
+      // A secure key webhook receiver forwards create_tenant keys unchanged.
+      // jwkFromSecp256k1Key adds `use`, which a JWK from the registrar doesn't
+      // have, so the stored key shows whether the JWK or the hex was imported.
+      const dualKey = (privateKeyHex, overrides) => {
+        const jwk = omit(['use'], jwkFromSecp256k1Key(privateKeyHex));
+        return {
+          purposes: [KeyPurposes.ISSUING_METADATA],
+          algorithm: 'SECP256K1',
+          encoding: 'hex',
+          kidFragment: '#velocity-key-1',
+          key: privateKeyHex,
+          publicKey: hexFromJwk(jwk, false),
+          jwk,
+          publicJwk: omit(['d'], jwk),
+          ...overrides,
+        };
+      };
+
+      const createTenant = (did, keys) =>
+        fastify.injectJson({
+          method: 'POST',
+          url: testUrl,
+          payload: { did, serviceIds: [`${did}#test-service`], keys },
+        });
+
+      const findKeyDocument = (tenantId) =>
+        mongoDb()
+          .collection('keys')
+          .findOne({ tenantId: new ObjectId(tenantId) });
+
+      it('should 201 and import the JWK of a key sent as hex and as JWKs', async () => {
+        const key = dualKey(orgKey, { purposes: ['DLT_TRANSACTIONS'] });
+
+        const response = await createTenant(orgDoc.id, [key]);
+
+        expect(response.statusCode).toEqual(201);
+        expect(
+          await findKmsKey({ tenantId: new ObjectId(response.json.id) }),
+        ).toEqual({
+          _id: expect.any(ObjectId),
+          key: key.jwk,
+          kidFragment: '#velocity-key-1',
+        });
+        expect(await findKeyDocument(response.json.id)).toEqual({
+          _id: expect.any(ObjectId),
+          purposes: ['DLT_TRANSACTIONS'],
+          algorithm: 'SECP256K1',
+          encoding: 'jwk',
+          kidFragment: '#velocity-key-1',
+          tenantId: new ObjectId(response.json.id),
+          key: expect.any(String),
+          publicKey: key.publicJwk,
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
+        const tenantFromDb = await mongoDb()
+          .collection('tenants')
+          .findOne({ _id: new ObjectId(response.json.id) });
+        expect(tenantFromDb.primaryAddress).toEqual(primaryAddress);
+      });
+
+      it('should 201 and import a key sent only as JWKs', async () => {
+        const { jwk, publicJwk, ...metadata } = dualKey(orgKey);
+        const key = {
+          ...omit(['key', 'publicKey'], metadata),
+          encoding: 'jwk',
+          jwk,
+          publicJwk,
+        };
+
+        const response = await createTenant(orgDoc.id, [key]);
+
+        expect(response.statusCode).toEqual(201);
+        expect(
+          await findKmsKey({ tenantId: new ObjectId(response.json.id) }),
+        ).toEqual({
+          _id: expect.any(ObjectId),
+          key: jwk,
+          kidFragment: '#velocity-key-1',
+        });
+        expect(await findKeyDocument(response.json.id)).toEqual(
+          expect.objectContaining({ publicKey: publicJwk }),
+        );
+      });
+
+      it('should 400 and not create tenant or keys when the hex and the JWK are different keys', async () => {
+        const otherJwk = generateKeyPair({ format: 'jwk' }).privateKey;
+        const key = dualKey(orgKey, { jwk: otherJwk });
+
+        const response = await createTenant(orgDoc.id, [key]);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'key_formats_mismatch',
+            message: 'The JWK and legacy encodings of the key do not match',
+            statusCode: 400,
+          }),
+        );
+        expect(await mongoDb().collection('tenants').countDocuments()).toEqual(
+          0,
+        );
+        expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+      });
+
+      it('should 400 and not create tenant or keys when the public hex and the public JWK are different keys', async () => {
+        const otherPublicJwk = generateKeyPair({ format: 'jwk' }).publicKey;
+        const key = dualKey(orgKey, {
+          publicKey: hexFromJwk(otherPublicJwk, false),
+        });
+
+        const response = await createTenant(orgDoc.id, [key]);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'key_formats_mismatch',
+            message: 'The JWK and legacy encodings of the key do not match',
+            statusCode: 400,
+          }),
+        );
+        expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+      });
+
+      Object.entries(leadingZeroSecp256k1Keys).forEach(([member, vector]) => {
+        const createVectorOrgDoc = async () => {
+          const { orgDoc: vectorOrgDoc } = await createOrgDoc({
+            privateKey: vector.privateJwk,
+            publicKey: vector.publicJwk,
+          });
+          nockRegistrarGetOrganizationDidDoc(vectorOrgDoc.id, vectorOrgDoc);
+          return vectorOrgDoc;
+        };
+
+        it(`should 201 and import every byte of a dual key whose ${member} starts with a zero byte`, async () => {
+          const vectorOrgDoc = await createVectorOrgDoc();
+
+          const response = await createTenant(vectorOrgDoc.id, [
+            dualKey(vector.privateKeyHex),
+          ]);
+
+          expect(response.statusCode).toEqual(201);
+          expect(
+            await findKmsKey({ tenantId: new ObjectId(response.json.id) }),
+          ).toEqual({
+            _id: expect.any(ObjectId),
+            key: vector.privateJwk,
+            kidFragment: '#velocity-key-1',
+          });
+        });
+
+        it(`should 201 and import every byte of a hex key whose ${member} starts with a zero byte`, async () => {
+          const vectorOrgDoc = await createVectorOrgDoc();
+
+          const response = await createTenant(vectorOrgDoc.id, [
+            omit(
+              ['jwk', 'publicJwk'],
+              dualKey(vector.privateKeyHex, {
+                publicKey: vector.publicKeyHex,
+              }),
+            ),
+          ]);
+
+          expect(response.statusCode).toEqual(201);
+          expect(
+            await findKmsKey({ tenantId: new ObjectId(response.json.id) }),
+          ).toEqual({
+            _id: expect.any(ObjectId),
+            key: { ...vector.privateJwk, use: 'sig' },
+            kidFragment: '#velocity-key-1',
+          });
+        });
       });
     });
   });

@@ -1,8 +1,12 @@
-const { each, map, omit, isEmpty, isString, some } = require('lodash/fp');
+const { each, map, omit, some } = require('lodash/fp');
 const newError = require('http-errors');
-const { jwkFromSecp256k1Key } = require('@verii/crypto');
 const { extractVerificationMethod } = require('@verii/did-doc');
-const { isMatchingKeyPair, publicJwkFromPrivateJwk } = require('@verii/jwt');
+const {
+  isMatchingKeyPair,
+  publicJwkFromPrivateJwk,
+  resolveTransferredKey,
+  TransferredKeyErrorCodes,
+} = require('@verii/jwt');
 const { validateKey, isMatchingPrivateKeyKid } = require('../domains');
 
 const validateDidDocKeys = async (didDoc, keys) => {
@@ -43,39 +47,45 @@ const isMatchingPublicKey = async ({ key, publicKey }) =>
   (await isMatchingKeyPair(key, publicJwkFromPrivateJwk(key))) &&
   (publicKey == null || isMatchingKeyPair(key, publicKey));
 
-// eslint-disable-next-line complexity
-const transformKeys = map((key) => ({
-  ...omit(['key', 'hexKey', 'jwk'], key),
-  publicKey: transformPublicKeyToJwk(key?.publicKey),
-  key: transformKeyToJwk(key?.key ?? key?.hexKey ?? key?.jwk),
-}));
+// The transport members are replaced by `key` and `publicKey` JWKs, so they
+// never reach the key records.
+const transformKeys = map((key) => {
+  const { privateJwk, publicJwk } = resolveKey(key);
+  return {
+    ...omit(['key', 'hexKey', 'jwk', 'publicKey', 'publicJwk'], key),
+    publicKey: publicJwk,
+    key: privateJwk,
+  };
+});
 
-const transformPublicKeyToJwk = (publicKey) => {
-  if (isEmpty(publicKey)) {
-    return undefined;
+const resolveKey = (key) => {
+  try {
+    return resolveTransferredKey(key);
+  } catch (error) {
+    throw toHttpError(error);
   }
-
-  return isString(publicKey)
-    ? jwkFromSecp256k1Key(publicKey, false)
-    : publicKey;
 };
 
-const transformKeyToJwk = (privateKey) => {
-  if (isEmpty(privateKey)) {
-    throw newError(400, 'Private key not found', {
+const toHttpError = (error) => {
+  const buildHttpError = TransferredKeyHttpErrors[error.errorCode];
+  return buildHttpError == null ? error : buildHttpError(error);
+};
+
+const TransferredKeyHttpErrors = {
+  [TransferredKeyErrorCodes.PRIVATE_KEY_NOT_FOUND]: () =>
+    newError(400, 'Private key not found', {
       errorCode: 'private_key_not_found',
-    });
-  }
-
-  if (!isString(privateKey)) {
-    return privateKey;
-  }
-
-  try {
-    return jwkFromSecp256k1Key(privateKey, true);
-  } catch {
-    return throwErrorPrivateKeyNotMatched();
-  }
+    }),
+  [TransferredKeyErrorCodes.PRIVATE_KEY_INVALID]: () =>
+    newError(400, 'Private key not matched to document'),
+  [TransferredKeyErrorCodes.PUBLIC_KEY_INVALID]: () =>
+    newError(400, 'Public key not matched to private key', {
+      errorCode: 'public_key_not_matched',
+    }),
+  [TransferredKeyErrorCodes.KEY_FORMATS_MISMATCH]: (error) =>
+    newError(400, error.message, {
+      errorCode: TransferredKeyErrorCodes.KEY_FORMATS_MISMATCH,
+    }),
 };
 
 const throwErrorKidFragment = (kidFragment) => {

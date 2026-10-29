@@ -18,10 +18,9 @@ const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 
 const { nanoid } = require('nanoid/non-secure');
 
-const createOrgDoc = async () => {
-  const { privateKey, publicKey } = generateKeyPair({
-    format: 'jwk',
-  });
+const createOrgDoc = async (
+  { privateKey, publicKey } = generateKeyPair({ format: 'jwk' }),
+) => {
   const key = {
     id: '#velocity-key-1',
     publicKeyJwk: publicKey,
