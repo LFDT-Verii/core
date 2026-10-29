@@ -17,7 +17,12 @@
 
 const crypto = require('crypto');
 const { addMilliseconds, getUnixTime } = require('date-fns');
-const { jwtSign } = require('@verii/jwt');
+const { isEmpty } = require('lodash/fp');
+const {
+  Oauth2ErrorCodes,
+  Oauth2ServerErrorResponseError,
+} = require('@openid4vc/oauth2');
+const { jwtSign, jwtVerify } = require('@verii/jwt');
 
 const generateCNonce = (
   credentialIssuer,
@@ -34,6 +39,37 @@ const generateCNonce = (
   });
 };
 
+const verifyProofNonce = async (
+  { nonce },
+  credentialIssuer,
+  { config: { openid4vciNonceSecret } },
+) => {
+  if (isEmpty(nonce)) {
+    throw new Oauth2ServerErrorResponseError({
+      error: Oauth2ErrorCodes.InvalidProof,
+      error_description: "Credential request proof jwt is missing a 'nonce'.",
+    });
+  }
+  try {
+    await jwtVerify(nonce, openid4vciNonceSecret, {
+      algorithms: [C_NONCE_ALG],
+      audience: credentialIssuer,
+      clockTolerance: 0,
+      issuer: credentialIssuer,
+      requiredClaims: ['exp', 'iat', 'jti'],
+    });
+  } catch (error) {
+    throw new Oauth2ServerErrorResponseError(
+      {
+        error: Oauth2ErrorCodes.InvalidNonce,
+        error_description:
+          "Credential request proof jwt 'nonce' is invalid or expired.",
+      },
+      { cause: error },
+    );
+  }
+};
+
 const C_NONCE_ALG = 'HS256';
 
-module.exports = { generateCNonce };
+module.exports = { generateCNonce, verifyProofNonce };
