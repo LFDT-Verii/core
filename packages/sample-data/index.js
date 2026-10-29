@@ -19,6 +19,7 @@ module.exports = {
   ...require('./src/expiration'),
   ...require('./src/tampering'),
   ...require('./src/did-docs'),
+  ...require('./src/key-transfer-vectors'),
   ...require('./src/organization-profiles'),
   ...require('./src/sample-education-degree-graduation'),
   openBadgeCredentialExample: require('./src/open-badge-credential-example.json'),
