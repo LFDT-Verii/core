@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@spencejs/spence-factories": "^1.1.0",
+    "@verii/sample-data": "workspace:*",
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
     "canonicalize": "^5.1.0",

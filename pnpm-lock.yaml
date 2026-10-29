@@ -3517,6 +3517,9 @@ importers:
       '@spencejs/spence-factories':
         specifier: ^1.1.0
         version: 1.1.0
+      '@verii/sample-data':
+        specifier: workspace:*
+        version: link:../../packages/sample-data
       '@verii/test-regexes':
         specifier: workspace:*
         version: link:../../packages/test-regexes

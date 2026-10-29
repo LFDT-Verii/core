@@ -2,12 +2,13 @@ const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { omit } = require('lodash/fp');
+const { map, omit, partition, toPairs } = require('lodash/fp');
 const {
   generateKeyPair,
   hexFromJwk,
   signAndEncodeBase64,
 } = require('@verii/crypto');
+const { keyTransferConformanceVectors } = require('@verii/sample-data');
 const { ObjectId } = require('mongodb');
 const { default: canonicalize } = require('canonicalize');
 const buildFastify = require('./helpers/mockvendor-build-fastify');
@@ -15,6 +16,13 @@ const buildFastify = require('./helpers/mockvendor-build-fastify');
 describe('Registrar messages controller tests', () => {
   const vnfHeaderSignatureSigningKey =
     'fc48dafb3d36ef0b5bb7663fb7fd571c950e0578016ef4cccba4d5e34c2aa15b';
+  const [acceptedVectors, rejectedVectors] = partition(
+    'expected.accepted',
+    map(
+      ([name, vector]) => ({ name, ...vector }),
+      toPairs(keyTransferConformanceVectors),
+    ),
+  );
   let fastify;
   let messagesCollection;
 
@@ -31,47 +39,90 @@ describe('Registrar messages controller tests', () => {
   after(async () => {
     await fastify.close();
   });
+
+  const postMessage = (url, payload, headers) =>
+    fastify.injectJson({ method: 'POST', url, payload, headers });
+
+  const expectImported = async ({ message, expected }, response) => {
+    expect(response.statusCode).toEqual(200);
+    expect(response.json).toEqual({
+      messageId: message.messageId,
+      messageType: 'ack',
+    });
+    expect(
+      await messagesCollection.findOne({ messageId: message.messageId }),
+    ).toEqual({
+      ...message,
+      _id: expect.any(ObjectId),
+      createdAt: expect.any(Date),
+      importedKeys: expected.keys,
+      updatedAt: expect.any(Date),
+      vnfSignatureVerified: false,
+    });
+  };
+
+  const expectRejected = async ({ message, expected }, response) => {
+    expect(response.statusCode).toEqual(400);
+    expect(response.json).toEqual({
+      error: 'Bad Request',
+      errorCode: expected.errorCode,
+      kidFragment: expected.kidFragment,
+      message: expect.stringContaining(expected.kidFragment),
+      requestId: expect.any(String),
+      statusCode: 400,
+    });
+    expect(
+      await messagesCollection.countDocuments({ messageId: message.messageId }),
+    ).toEqual(0);
+  };
+
   describe('Registrar webhook test suite', () => {
-    it('should receive secure messaging from api', async () => {
-      const payload = {
-        messageType: 'create_tenant',
-        messageId: '123',
-        payload: {
-          caoDid: 'did:123',
-          caoService: {
-            id: 'did:velocity:12',
-            type: 'VlcIdDocumentIssuer_v1',
-            serviceEndpoint: 'https://devagent.velocitycareerlabs.io',
-          },
-          create_tenant: {
-            did: 'did:321',
-            serviceIds: ['1', '2'],
-            keys: [
-              {
-                kidFragment: '#-a-123',
-                purposes: ['DLT'],
-                key: '123',
-                publicKey: '345',
-                algorithm: 'SECP256K1',
-                encoding: 'hex',
-              },
-            ],
-          },
+    const { privateKey } = generateKeyPair({ format: 'jwk' });
+    const payload = {
+      messageType: 'create_tenant',
+      messageId: '123',
+      payload: {
+        caoDid: 'did:123',
+        caoService: {
+          id: 'did:velocity:12',
+          type: 'VlcIdDocumentIssuer_v1',
+          serviceEndpoint: 'https://devagent.velocitycareerlabs.io',
         },
-      };
+        create_tenant: {
+          did: 'did:321',
+          serviceIds: ['1', '2'],
+          keys: [
+            {
+              kidFragment: '#-a-123',
+              purposes: ['DLT'],
+              key: hexFromJwk(privateKey),
+              publicKey: hexFromJwk(privateKey, false),
+              algorithm: 'SECP256K1',
+              encoding: 'hex',
+            },
+          ],
+        },
+      },
+    };
+    const importedKeys = [
+      {
+        kidFragment: '#-a-123',
+        importedFrom: 'hex',
+        publicJwk: omit(['d'], privateKey),
+      },
+    ];
+
+    it('should receive secure messaging from api', async () => {
       const now = Date.now();
       const signature = signAndEncodeBase64(
         `${now}.${canonicalize(payload)}`,
         vnfHeaderSignatureSigningKey,
       );
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: '/registrar/registrar-webhook/',
+      const response = await postMessage(
+        '/registrar/registrar-webhook/',
         payload,
-        headers: {
-          'x-vnf-signature': `t=${now},v1=${signature}`,
-        },
-      });
+        { 'x-vnf-signature': `t=${now},v1=${signature}` },
+      );
       expect(response.json).toEqual({
         messageId: '123',
         messageType: 'ack',
@@ -80,80 +131,26 @@ describe('Registrar messages controller tests', () => {
         messageId: '123',
       });
       expect(messageReceived).toEqual({
+        ...payload,
         _id: expect.any(ObjectId),
         createdAt: expect.any(Date),
-        messageId: '123',
-        messageType: 'create_tenant',
-        payload: {
-          caoDid: 'did:123',
-          caoService: {
-            id: 'did:velocity:12',
-            type: 'VlcIdDocumentIssuer_v1',
-            serviceEndpoint: 'https://devagent.velocitycareerlabs.io',
-          },
-          create_tenant: {
-            did: 'did:321',
-            serviceIds: ['1', '2'],
-            keys: [
-              {
-                kidFragment: '#-a-123',
-                purposes: ['DLT'],
-                key: '123',
-                publicKey: '345',
-                algorithm: 'SECP256K1',
-                encoding: 'hex',
-              },
-            ],
-          },
-        },
+        importedKeys,
         updatedAt: expect.any(Date),
         vnfSignatureVerified: true,
       });
     });
     it('should receive secure messaging from api with bad signature', async () => {
-      const payload = {
-        messageType: 'create_tenant',
-        messageId: '123',
-        payload: {
-          caoDid: 'did:123',
-          caoService: {
-            id: 'did:velocity:12',
-            type: 'VlcIdDocumentIssuer_v1',
-            serviceEndpoint: 'https://devagent.velocitycareerlabs.io',
-          },
-          create_tenant: {
-            did: 'did:321',
-            serviceIds: ['1', '2'],
-            keys: [
-              {
-                kidFragment: '#-a-123',
-                purposes: ['DLT'],
-                key: '123',
-                publicKey: '345',
-                algorithm: 'SECP256K1',
-                encoding: 'hex',
-              },
-            ],
-          },
-        },
-      };
       const now = Date.now();
 
       const signature = signAndEncodeBase64(
         `${now}.${canonicalize(payload)}`,
         vnfHeaderSignatureSigningKey,
       );
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: '/registrar/registrar-webhook/',
-        payload: {
-          ...payload,
-          messageId: '456',
-        },
-        headers: {
-          'x-vnf-signature': `t=${now},v1=${signature}`,
-        },
-      });
+      const response = await postMessage(
+        '/registrar/registrar-webhook/',
+        { ...payload, messageId: '456' },
+        { 'x-vnf-signature': `t=${now},v1=${signature}` },
+      );
       expect(response.json).toEqual({
         messageId: '456',
         messageType: 'ack',
@@ -162,51 +159,69 @@ describe('Registrar messages controller tests', () => {
         messageId: '456',
       });
       expect(messageReceived).toEqual({
+        ...payload,
         _id: expect.any(ObjectId),
         createdAt: expect.any(Date),
+        importedKeys,
         messageId: '456',
-        messageType: 'create_tenant',
-        payload: {
-          caoDid: 'did:123',
-          caoService: {
-            id: 'did:velocity:12',
-            type: 'VlcIdDocumentIssuer_v1',
-            serviceEndpoint: 'https://devagent.velocitycareerlabs.io',
-          },
-          create_tenant: {
-            did: 'did:321',
-            serviceIds: ['1', '2'],
-            keys: [
-              {
-                kidFragment: '#-a-123',
-                purposes: ['DLT'],
-                key: '123',
-                publicKey: '345',
-                algorithm: 'SECP256K1',
-                encoding: 'hex',
-              },
-            ],
-          },
-        },
         updatedAt: expect.any(Date),
         vnfSignatureVerified: false,
       });
     });
     it('should return 400 with incorrect payload', async () => {
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: '/registrar/registrar-webhook/',
-        payload: { messageType: 'bla', messageId: '123' },
+      const response = await postMessage('/registrar/registrar-webhook/', {
+        messageType: 'bla',
+        messageId: '123',
       });
       expect(response.json).toEqual({
-        code: 'FST_ERR_VALIDATION',
         error: 'Bad Request',
+        errorCode: 'request_validation_failed',
         message: 'body/messageType must be equal to one of the allowed values',
+        requestId: expect.any(String),
         statusCode: 400,
       });
     });
   });
-  describe('Registrar webhook key formats test suite', () => {
+  describe('Registrar webhook conformance vectors test suite', () => {
+    acceptedVectors.forEach((vector) => {
+      it(`should import the keys of the ${vector.name} vector`, async () => {
+        const response = await postMessage(
+          '/registrar/registrar-webhook/',
+          vector.message,
+        );
+
+        await expectImported(vector, response);
+      });
+    });
+
+    rejectedVectors.forEach((vector) => {
+      it(`should reject the ${vector.name} vector and store nothing`, async () => {
+        const response = await postMessage(
+          '/registrar/registrar-webhook/',
+          vector.message,
+        );
+
+        await expectRejected(vector, response);
+      });
+    });
+  });
+  describe('Registrar webhook key import test suite', () => {
+    const { privateKey } = generateKeyPair({ format: 'jwk' });
+    const { privateKey: otherPrivateKey } = generateKeyPair({ format: 'jwk' });
+    const { privateKey: validPrivateKey } = generateKeyPair({ format: 'jwk' });
+    const dltKey = {
+      kidFragment: '#eth-account-key-1',
+      algorithm: 'SECP256K1',
+      purposes: ['DLT_TRANSACTIONS'],
+    };
+    const validKey = {
+      kidFragment: '#vc-signing-key-1',
+      algorithm: 'SECP256K1',
+      purposes: ['ISSUING_METADATA'],
+      encoding: 'jwk',
+      jwk: validPrivateKey,
+      publicJwk: omit(['d'], validPrivateKey),
+    };
     const createTenantMessage = (messageId, keys) => ({
       messageType: 'create_tenant',
       messageId,
@@ -216,75 +231,107 @@ describe('Registrar messages controller tests', () => {
       },
     });
 
-    const postMessage = (payload) =>
-      fastify.injectJson({
-        method: 'POST',
-        url: '/registrar/registrar-webhook/',
-        payload,
+    const invalidKeys = [
+      {
+        description: 'a private key that is not secp256k1 hex',
+        key: {
+          ...dltKey,
+          encoding: 'hex',
+          key: 'not-a-hex-key',
+          publicKey: hexFromJwk(privateKey, false),
+        },
+        errorCode: 'private_key_invalid',
+      },
+      {
+        description: 'a private key sent as the public key',
+        key: {
+          ...dltKey,
+          encoding: 'hex',
+          key: hexFromJwk(privateKey),
+          publicKey: hexFromJwk(privateKey),
+        },
+        errorCode: 'public_key_invalid',
+      },
+      {
+        description: 'no private key',
+        key: {
+          ...dltKey,
+          encoding: 'hex',
+          publicKey: hexFromJwk(privateKey, false),
+        },
+        errorCode: 'private_key_not_found',
+      },
+      {
+        description: 'a hex public key of another key',
+        key: {
+          ...dltKey,
+          encoding: 'hex',
+          key: hexFromJwk(privateKey),
+          publicKey: hexFromJwk(otherPrivateKey, false),
+        },
+        errorCode: 'public_key_not_matched',
+      },
+      {
+        description: 'a public JWK of another key',
+        key: {
+          ...dltKey,
+          encoding: 'jwk',
+          jwk: privateKey,
+          publicJwk: omit(['d'], otherPrivateKey),
+        },
+        errorCode: 'public_key_not_matched',
+      },
+      {
+        description: 'a JWK whose x and y belong to another key',
+        key: {
+          ...dltKey,
+          encoding: 'jwk',
+          jwk: { ...otherPrivateKey, d: privateKey.d },
+        },
+        errorCode: 'public_key_not_matched',
+      },
+    ];
+
+    invalidKeys.forEach(({ description, key, errorCode }) => {
+      it(`should return 400 ${errorCode} for ${description} and store nothing`, async () => {
+        const message = createTenantMessage('invalid-key', [validKey, key]);
+
+        const response = await postMessage(
+          '/registrar/registrar-webhook/',
+          message,
+        );
+
+        await expectRejected(
+          { message, expected: { errorCode, kidFragment: dltKey.kidFragment } },
+          response,
+        );
       });
-
-    it('should receive a key sent as hex and as JWKs and keep its JWKs', async () => {
-      const { privateKey } = generateKeyPair({ format: 'jwk' });
-      const key = {
-        kidFragment: '#eth-account-key-1',
-        purposes: ['DLT_TRANSACTIONS'],
-        algorithm: 'SECP256K1',
-        encoding: 'hex',
-        key: hexFromJwk(privateKey),
-        publicKey: hexFromJwk(privateKey, false),
-        jwk: privateKey,
-        publicJwk: omit(['d'], privateKey),
-      };
-
-      const response = await postMessage(createTenantMessage('dual', [key]));
-
-      expect(response.json).toEqual({ messageId: 'dual', messageType: 'ack' });
-      const messageReceived = await messagesCollection.findOne({
-        messageId: 'dual',
-      });
-      expect(messageReceived.payload.create_tenant.keys).toEqual([key]);
-    });
-
-    it('should receive a P-256 key sent only as JWKs', async () => {
-      const { privateKey } = generateKeyPair({ format: 'jwk', curve: 'P-256' });
-      const key = {
-        kidFragment: '#exchange-key-1',
-        purposes: ['EXCHANGES'],
-        algorithm: 'ES256',
-        encoding: 'jwk',
-        jwk: privateKey,
-        publicJwk: omit(['d'], privateKey),
-      };
-
-      const response = await postMessage(createTenantMessage('es256', [key]));
-
-      expect(response.json).toEqual({
-        messageId: 'es256',
-        messageType: 'ack',
-      });
-      const messageReceived = await messagesCollection.findOne({
-        messageId: 'es256',
-      });
-      expect(messageReceived.payload.create_tenant.keys).toEqual([key]);
     });
 
     it('should return 400 for a P-256 key sent as hex', async () => {
-      const { privateKey } = generateKeyPair({ format: 'jwk', curve: 'P-256' });
+      const { privateKey: p256PrivateKey } = generateKeyPair({
+        format: 'jwk',
+        curve: 'P-256',
+      });
 
       const response = await postMessage(
+        '/registrar/registrar-webhook/',
         createTenantMessage('es256-hex', [
           {
             kidFragment: '#exchange-key-1',
             purposes: ['EXCHANGES'],
             algorithm: 'ES256',
             encoding: 'hex',
-            key: hexFromJwk(privateKey),
-            publicKey: hexFromJwk(privateKey, false),
+            key: hexFromJwk(p256PrivateKey),
+            publicKey: hexFromJwk(p256PrivateKey, false),
           },
         ]),
       );
 
       expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        expect.objectContaining({ errorCode: 'request_validation_failed' }),
+      );
       expect(
         await messagesCollection.countDocuments({ messageId: 'es256-hex' }),
       ).toEqual(0);
@@ -298,15 +345,15 @@ describe('Registrar messages controller tests', () => {
         `${now}.${canonicalize(payload)}`,
         vnfHeaderSignatureSigningKey,
       );
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: '/registrar/registrar-webhook-delay/',
+      const response = await postMessage(
+        '/registrar/registrar-webhook-delay/',
         payload,
-        headers: {
-          'x-vnf-signature': `t=${now},v1=${signature}`,
-        },
+        { 'x-vnf-signature': `t=${now},v1=${signature}` },
+      );
+      expect(response.json).toEqual({
+        messageId: '123',
+        messageType: 'ack',
       });
-      expect(response.json).toEqual({ messageId: '123', messageType: 'ack' });
       const messageReceived = await messagesCollection.findOne({
         messageId: '123',
       });
@@ -318,21 +365,37 @@ describe('Registrar messages controller tests', () => {
         updatedAt: expect.any(Date),
         vnfSignatureVerified: true,
       });
-    }, 40000);
+    });
+
+    it('should import or reject every conformance vector after the delay', async () => {
+      const post = (vector) =>
+        postMessage('/registrar/registrar-webhook-delay/', vector.message);
+
+      await Promise.all([
+        ...map(
+          async (vector) => expectImported(vector, await post(vector)),
+          acceptedVectors,
+        ),
+        ...map(
+          async (vector) => expectRejected(vector, await post(vector)),
+          rejectedVectors,
+        ),
+      ]);
+    });
 
     it('should return 400 with incorrect payload delay', async () => {
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: '/registrar/registrar-webhook-delay/',
-        payload: { messageType: 'bla', messageId: '123' },
-      });
+      const response = await postMessage(
+        '/registrar/registrar-webhook-delay/',
+        { messageType: 'bla', messageId: '123' },
+      );
       expect(response.json).toEqual({
-        code: 'FST_ERR_VALIDATION',
         error: 'Bad Request',
+        errorCode: 'request_validation_failed',
         message: 'body/messageType must be equal to one of the allowed values',
+        requestId: expect.any(String),
         statusCode: 400,
       });
-    }, 40000);
+    });
   });
   describe('Registrar webhook bad protocal test suite', () => {
     it('should return foo with bad endpoint protocol', async () => {
