@@ -361,7 +361,7 @@ jobs:
     - name: Annotate Uncovered Diff Lines
       if: github.event_name == 'pull_request' && steps.coverage-files.outputs.has_reports == 'true'
       continue-on-error: true
-      uses: aki77/reviewdog-action-code-coverage@39b05c54b312b84854cc82026f56a815e3b44e93 # v2.6.0
+      uses: aki77/reviewdog-action-code-coverage@5c6e62eea3dc26b9cae4f44c45dd607b5067bba9 # v2.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         lcov_path: "coverage-reports/*/packages/*/lcov.info coverage-reports/*/servers/*/lcov.info coverage-reports/*/tools/*/lcov.info"
