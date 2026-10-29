@@ -2,7 +2,12 @@ const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { signAndEncodeBase64 } = require('@verii/crypto');
+const { omit } = require('lodash/fp');
+const {
+  generateKeyPair,
+  hexFromJwk,
+  signAndEncodeBase64,
+} = require('@verii/crypto');
 const { ObjectId } = require('mongodb');
 const { default: canonicalize } = require('canonicalize');
 const buildFastify = require('./helpers/mockvendor-build-fastify');
@@ -199,6 +204,90 @@ describe('Registrar messages controller tests', () => {
         message: 'body/messageType must be equal to one of the allowed values',
         statusCode: 400,
       });
+    });
+  });
+  describe('Registrar webhook key formats test suite', () => {
+    const createTenantMessage = (messageId, keys) => ({
+      messageType: 'create_tenant',
+      messageId,
+      payload: {
+        caoDid: 'did:123',
+        create_tenant: { did: 'did:321', serviceIds: ['1'], keys },
+      },
+    });
+
+    const postMessage = (payload) =>
+      fastify.injectJson({
+        method: 'POST',
+        url: '/registrar/registrar-webhook/',
+        payload,
+      });
+
+    it('should receive a key sent as hex and as JWKs and keep its JWKs', async () => {
+      const { privateKey } = generateKeyPair({ format: 'jwk' });
+      const key = {
+        kidFragment: '#eth-account-key-1',
+        purposes: ['DLT_TRANSACTIONS'],
+        algorithm: 'SECP256K1',
+        encoding: 'hex',
+        key: hexFromJwk(privateKey),
+        publicKey: hexFromJwk(privateKey, false),
+        jwk: privateKey,
+        publicJwk: omit(['d'], privateKey),
+      };
+
+      const response = await postMessage(createTenantMessage('dual', [key]));
+
+      expect(response.json).toEqual({ messageId: 'dual', messageType: 'ack' });
+      const messageReceived = await messagesCollection.findOne({
+        messageId: 'dual',
+      });
+      expect(messageReceived.payload.create_tenant.keys).toEqual([key]);
+    });
+
+    it('should receive a P-256 key sent only as JWKs', async () => {
+      const { privateKey } = generateKeyPair({ format: 'jwk', curve: 'P-256' });
+      const key = {
+        kidFragment: '#exchange-key-1',
+        purposes: ['EXCHANGES'],
+        algorithm: 'ES256',
+        encoding: 'jwk',
+        jwk: privateKey,
+        publicJwk: omit(['d'], privateKey),
+      };
+
+      const response = await postMessage(createTenantMessage('es256', [key]));
+
+      expect(response.json).toEqual({
+        messageId: 'es256',
+        messageType: 'ack',
+      });
+      const messageReceived = await messagesCollection.findOne({
+        messageId: 'es256',
+      });
+      expect(messageReceived.payload.create_tenant.keys).toEqual([key]);
+    });
+
+    it('should return 400 for a P-256 key sent as hex', async () => {
+      const { privateKey } = generateKeyPair({ format: 'jwk', curve: 'P-256' });
+
+      const response = await postMessage(
+        createTenantMessage('es256-hex', [
+          {
+            kidFragment: '#exchange-key-1',
+            purposes: ['EXCHANGES'],
+            algorithm: 'ES256',
+            encoding: 'hex',
+            key: hexFromJwk(privateKey),
+            publicKey: hexFromJwk(privateKey, false),
+          },
+        ]),
+      );
+
+      expect(response.statusCode).toEqual(400);
+      expect(
+        await messagesCollection.countDocuments({ messageId: 'es256-hex' }),
+      ).toEqual(0);
     });
   });
   describe('Registrar webhook delay test suite', () => {
