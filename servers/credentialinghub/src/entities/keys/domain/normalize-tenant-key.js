@@ -14,29 +14,57 @@
  * limitations under the License.
  *
  */
-const { omit } = require('lodash/fp');
+const { omit, pick } = require('lodash/fp');
 const newError = require('http-errors');
 const { ObjectId } = require('mongodb');
 
-const { KeyEncodings, jwkFromSecp256k1Key } = require('@verii/crypto');
-const { isMatchingKeyPair, publicJwkFromPrivateJwk } = require('@verii/jwt');
+const { KeyEncodings } = require('@verii/crypto');
+const {
+  isMatchingKeyPair,
+  publicJwkFromPrivateJwk,
+  resolveTransferredKey,
+  TransferredKeyErrorCodes,
+} = require('@verii/jwt');
 const { KeyErrors } = require('./key-errors');
 
+// Keys forwarded from a create_tenant message can carry the key as hex and as
+// JWKs. The JWKs are imported, and the transport members aren't stored. The hub
+// takes `key` or `jwk`, so the agent's `hexKey` alias is neither read nor stored.
 const normalizeTenantKey = async (key) => {
-  const privateJwk = key.jwk != null ? key.jwk : jwkFromSecp256k1Key(key.key);
+  const { privateJwk, publicJwk: transferredPublicJwk } = resolveKey(key);
   const publicJwk = publicJwkFromPrivateJwk(privateJwk);
-  if (!(await isMatchingKeyPair(privateJwk, publicJwk))) {
-    throw newError(400, KeyErrors.KEY_INVALID, {
-      errorCode: KeyErrors.KEY_INVALID,
-    });
+  if (
+    !(await isMatchingKeyPair(privateJwk, publicJwk)) ||
+    !(await isTransferredPublicKeyMatching(privateJwk, transferredPublicJwk))
+  ) {
+    throw keyError(KeyErrors.KEY_INVALID);
   }
   return {
     _id: new ObjectId(),
-    ...omit(['key', 'jwk'], key),
+    ...omit([...TRANSFERRED_KEY_MEMBERS, 'hexKey'], key),
     encoding: KeyEncodings.JWK,
     publicJwk,
     jwk: privateJwk,
   };
 };
+
+const TRANSFERRED_KEY_MEMBERS = ['key', 'jwk', 'publicKey', 'publicJwk'];
+
+const resolveKey = (key) => {
+  try {
+    return resolveTransferredKey(pick(TRANSFERRED_KEY_MEMBERS, key));
+  } catch (error) {
+    throw keyError(
+      error.errorCode === TransferredKeyErrorCodes.KEY_FORMATS_MISMATCH
+        ? KeyErrors.KEY_FORMATS_MISMATCH
+        : KeyErrors.KEY_INVALID,
+    );
+  }
+};
+
+const isTransferredPublicKeyMatching = async (privateJwk, publicJwk) =>
+  publicJwk == null || isMatchingKeyPair(privateJwk, publicJwk);
+
+const keyError = (errorCode) => newError(400, errorCode, { errorCode });
 
 module.exports = { normalizeTenantKey };

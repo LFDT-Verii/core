@@ -574,6 +574,75 @@ describe('Tenant keys test suite', () => {
       });
     });
 
+    it('should 201 and import the JWK of a key forwarded from a create_tenant message', async () => {
+      // jwkFromSecp256k1Key adds `use`, which a JWK from the registrar doesn't
+      // have, so the stored key shows whether the JWK or the hex was imported.
+      const jwk = omit(['use'], jwkFromSecp256k1Key(orgKey));
+      const publicJwk = omit(['d'], jwk);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: buildKeysUrl({ tenant }),
+        payload: {
+          kidFragment: '#velocity-key-1',
+          purposes: [KeyPurposes.ISSUING_METADATA],
+          algorithm: 'SECP256K1',
+          encoding: KeyEncodings.HEX,
+          key: orgKey,
+          publicKey: orgPublicKey,
+          jwk,
+          publicJwk,
+        },
+      });
+
+      expect(response.statusCode).toEqual(201);
+      const keyFromDb = await mongoDb().collection('keys').findOne();
+      expect(keyFromDb).toEqual({
+        _id: expect.any(ObjectId),
+        kidFragment: '#velocity-key-1',
+        purposes: [KeyPurposes.ISSUING_METADATA],
+        algorithm: 'SECP256K1',
+        encoding: KeyEncodings.JWK,
+        tenantId: new ObjectId(tenant._id),
+        key: expect.any(String),
+        publicKey: publicJwk,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
+      const decryptedKey = await kms.exportKeyOrSecret(response.json.id);
+      expect(decryptedKey.privateJwk).toEqual(jwk);
+    });
+
+    it('should 400 and not add a key whose hex and JWK are different keys', async () => {
+      const otherJwk = generateKeyPair({ format: 'jwk' }).privateKey;
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: buildKeysUrl({ tenant }),
+        payload: {
+          kidFragment: '#velocity-key-1',
+          purposes: [KeyPurposes.ISSUING_METADATA],
+          algorithm: 'SECP256K1',
+          encoding: KeyEncodings.HEX,
+          key: orgKey,
+          publicKey: orgPublicKey,
+          jwk: otherJwk,
+          publicJwk: omit(['d'], otherJwk),
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_formats_mismatch',
+          message: 'The JWK and legacy encodings of the key do not match',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
     it('should not change primaryAddress if DLT_TRANSACTION key already exist in db', async () => {
       await persistKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] });
 

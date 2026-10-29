@@ -48,6 +48,8 @@ module.exports = async (fastify) => {
     .post(
       '/create',
       {
+        // The body carries private keys
+        config: { sensitiveLogging: true },
         schema: fastify.autoSchema({
           summary: 'Create a tenant',
           operationId: 'createTenant',

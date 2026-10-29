@@ -49,27 +49,136 @@
                                         }
                                     },
                                     "key": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "description": "The private key in the legacy `encoding`. Sent only for SECP256K1 keys."
                                     },
                                     "publicKey": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "description": "The public key in the legacy `encoding`. Sent only for SECP256K1 keys."
+                                    },
+                                    "jwk": {
+                                        "type": "object",
+                                        "description": "The private key as a JWK. Receivers should import this in preference to `key`.",
+                                        "properties": {
+                                            "kty": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "EC"
+                                                ]
+                                            },
+                                            "crv": {
+                                                "type": "string"
+                                            },
+                                            "x": {
+                                                "type": "string"
+                                            },
+                                            "y": {
+                                                "type": "string"
+                                            },
+                                            "d": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "kty",
+                                            "crv",
+                                            "x",
+                                            "y",
+                                            "d"
+                                        ]
+                                    },
+                                    "publicJwk": {
+                                        "type": "object",
+                                        "description": "The public key as a JWK. Receivers should import this in preference to `publicKey`.",
+                                        "properties": {
+                                            "kty": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "EC"
+                                                ]
+                                            },
+                                            "crv": {
+                                                "type": "string"
+                                            },
+                                            "x": {
+                                                "type": "string"
+                                            },
+                                            "y": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "kty",
+                                            "crv",
+                                            "x",
+                                            "y"
+                                        ],
+                                        "not": {
+                                            "required": [
+                                                "d"
+                                            ]
+                                        }
                                     },
                                     "algorithm": {
                                         "type": "string",
                                         "enum": [
                                             "SECP256K1",
+                                            "ES256",
                                             "ED25519"
                                         ]
                                     },
                                     "encoding": {
                                         "type": "string",
+                                        "description": "The encoding of `key` and `publicKey`, or `jwk` when the key is sent only as `jwk` and `publicJwk`.",
                                         "enum": [
                                             "hex",
                                             "base58",
                                             "jwk"
                                         ]
                                     }
-                                }
+                                },
+                                "anyOf": [
+                                    {
+                                        "description": "An algorithm that hex or base58 can encode. The legacy members are allowed.",
+                                        "properties": {
+                                            "algorithm": {
+                                                "enum": [
+                                                    "SECP256K1",
+                                                    "ED25519"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "description": "Any algorithm, sent only as JWKs. Hex carries no curve, so keys of other algorithms are sent this way.",
+                                        "required": [
+                                            "encoding",
+                                            "jwk",
+                                            "publicJwk"
+                                        ],
+                                        "properties": {
+                                            "encoding": {
+                                                "enum": [
+                                                    "jwk"
+                                                ]
+                                            }
+                                        },
+                                        "not": {
+                                            "anyOf": [
+                                                {
+                                                    "required": [
+                                                        "key"
+                                                    ]
+                                                },
+                                                {
+                                                    "required": [
+                                                        "publicKey"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
                             }
                         }
                     }
