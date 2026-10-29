@@ -2195,8 +2195,8 @@ importers:
         specifier: workspace:*
         version: link:../test-regexes
       dotenv:
-        specifier: ^18.0.8
-        version: 18.0.8
+        specifier: ^18.0.9
+        version: 18.0.9
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -2811,8 +2811,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tests-helpers
       dotenv:
-        specifier: ^18.0.8
-        version: 18.0.8
+        specifier: ^18.0.9
+        version: 18.0.9
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)
@@ -2962,8 +2962,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vnf-wallet-sdk-nodejs
       dotenv:
-        specifier: ^18.0.8
-        version: 18.0.8
+        specifier: ^18.0.9
+        version: 18.0.9
       env-var:
         specifier: ^7.5.0
         version: 7.5.0
@@ -3204,8 +3204,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0
       dotenv:
-        specifier: ^18.0.8
-        version: 18.0.8
+        specifier: ^18.0.9
+        version: 18.0.9
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)
@@ -3415,8 +3415,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0
       dotenv:
-        specifier: ^18.0.8
-        version: 18.0.8
+        specifier: ^18.0.9
+        version: 18.0.9
       expect:
         specifier: 30.5.2
         version: 30.5.2
@@ -3527,8 +3527,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
       dotenv:
-        specifier: ^18.0.8
-        version: 18.0.8
+        specifier: ^18.0.9
+        version: 18.0.9
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)
@@ -7876,8 +7876,8 @@ packages:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
-  dotenv@18.0.8:
-    resolution: {integrity: sha512-2KDeoFoK/zRtcnbunCDlLG5VWVMcyqeQc6iK65o231nfNAcuGrKoqUQfJFUtBI+QlShk5HKIHxwebBtUl3rEfA==}
+  dotenv@18.0.9:
+    resolution: {integrity: sha512-3fVOW4cB02R066PUSwn8O4TJyz9NckQl7F81blIbaq9jKBm2tSmOKky7ZHIXzGvkVPXCSn6jkpziBPZdGFs8Tw==}
     engines: {node: '>=12'}
     hasBin: true
 
@@ -15576,7 +15576,7 @@ snapshots:
 
   dotenv@17.4.2: {}
 
-  dotenv@18.0.8: {}
+  dotenv@18.0.9: {}
 
   dpop@2.1.2: {}
 
