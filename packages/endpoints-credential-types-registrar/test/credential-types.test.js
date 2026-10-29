@@ -40,6 +40,7 @@ const initCredentialSchemaFactory = require('./factories/credential-schema-facto
 const convertToJson = ({ _id, ...x }) => ({
   id: _id,
   issuerCategory: 'RegularIssuer',
+  defaultSignatureAlgorithm: KeyAlgorithms.SECP256K1,
   ...omit(['title'], x),
 });
 
