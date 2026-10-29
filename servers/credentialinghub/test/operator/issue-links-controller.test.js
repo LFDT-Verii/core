@@ -25,7 +25,6 @@ const {
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { ObjectId } = require('mongodb');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
@@ -426,10 +425,10 @@ const expectedOidcCredentialOfferUri = (uri, tenant, credentialTypes) => {
   const credentialOffer = JSON.parse(credentialOfferValue);
   expect(credentialOffer).toEqual({
     credential_issuer: `https://localhost.test/r/${tenant._id}`,
-    credential_configuration_ids: map(
-      (cT) => `foundation.velocitynetwork.${cT}`,
-      credentialTypes,
-    ),
+    credential_configuration_ids: credentialTypes.flatMap((credentialType) => [
+      `foundation.velocitynetwork.${credentialType}`,
+      `foundation.velocitynetwork.${credentialType}.vc+jwt`,
+    ]),
     grants: {
       'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
         'pre-authorized_code': expect.any(String),
