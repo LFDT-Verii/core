@@ -1,4 +1,4 @@
-// eslint-disable-next-line max-classes-per-file
+/* eslint-disable max-classes-per-file */
 import { base64url, exportJWK } from 'jose';
 import { KeyPairKeyObjectResult } from 'crypto';
 import VCLPublicJwk from './VCLPublicJwk';
