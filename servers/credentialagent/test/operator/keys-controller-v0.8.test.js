@@ -226,6 +226,41 @@ describe('Tenant keys test suite', () => {
       expect(count).toEqual(0);
     });
 
+    it('should 400 with a jwk whose x and y do not match its d', async () => {
+      const key1 = omit(
+        ['tenantId', 'key', 'publicKey'],
+        await newKey({ tenant }),
+      );
+      const otherPublicJwk = generateKeyPair({ format: 'jwk' }).publicKey;
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: buildKeysUrl({ tenant }),
+        payload: {
+          ...key1,
+          encoding: KeyEncodings.JWK,
+          jwk: {
+            ...jwkFromSecp256k1Key(orgKey),
+            x: otherPublicJwk.x,
+            y: otherPublicJwk.y,
+          },
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'public_key_not_matched',
+          message: 'Public key not matched to private key',
+          statusCode: 400,
+        }),
+      );
+
+      const count = await mongoDb().collection('keys').countDocuments();
+      expect(count).toEqual(0);
+    });
+
     it('should 400 with an unrecognized purpose', async () => {
       const key1 = omit(
         ['tenantId'],

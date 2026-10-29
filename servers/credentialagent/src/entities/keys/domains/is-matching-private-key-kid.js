@@ -19,14 +19,13 @@ const { generateDocJwt, jwtVerify } = require('@verii/jwt');
 const { extractVerificationKey } = require('@verii/did-doc');
 
 const isMatchingPrivateKeyKid = async (doc, key, kid) => {
-  const signedValue = await generateDocJwt({ field: 'value' }, key, {
-    kid,
-    issuer: doc.id,
-  });
-
   const verificationKey = extractVerificationKey(doc, kid);
 
   try {
+    const signedValue = await generateDocJwt({ field: 'value' }, key, {
+      kid,
+      issuer: doc.id,
+    });
     await jwtVerify(signedValue, jwkFromSecp256k1Key(verificationKey, false));
     return true;
   } catch {

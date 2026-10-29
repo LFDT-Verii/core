@@ -15,6 +15,16 @@ const validateDidDocKeys = async (didDoc, keys) => {
     }
   }, keys);
 
+  // Runs before the DID document check so a JWK whose x/y don't belong to
+  // its d is reported as public_key_not_matched.
+  const publicKeyValidations = await Promise.all(
+    map(isMatchingPublicKey, keysTransformed),
+  );
+
+  if (some((valid) => !valid, publicKeyValidations)) {
+    throwErrorPublicKeyNotMatched();
+  }
+
   const validations = await Promise.all(
     map((key) => {
       const kid = `${didDoc.id}${key.kidFragment}`;
@@ -24,14 +34,6 @@ const validateDidDocKeys = async (didDoc, keys) => {
 
   if (some((valid) => !valid, validations)) {
     throwErrorPrivateKeyNotMatched();
-  }
-
-  const publicKeyValidations = await Promise.all(
-    map(isMatchingPublicKey, keysTransformed),
-  );
-
-  if (some((valid) => !valid, publicKeyValidations)) {
-    throwErrorPublicKeyNotMatched();
   }
 
   return keysTransformed;

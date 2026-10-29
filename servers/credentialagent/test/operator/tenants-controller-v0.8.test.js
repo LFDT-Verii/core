@@ -628,6 +628,40 @@ describe('Tenants management Test suite', () => {
       expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
     });
 
+    it('should HTTP 400 and not create tenant or keys when a jwk is a P-256 key', async () => {
+      const payload = {
+        did: orgDoc.id,
+        serviceIds: [`${orgDoc.id}#test-service`],
+        keys: [
+          {
+            purposes: ['DLT_TRANSACTIONS'],
+            algorithm: 'SECP256K1',
+            encoding: 'jwk',
+            kidFragment: first(orgDoc.assertionMethod),
+            jwk: generateKeyPair({ format: 'jwk', curve: 'P-256' }).privateKey,
+          },
+        ],
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'missing_error_code',
+          message: 'Private key not matched to document',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('tenants').countDocuments()).toEqual(0);
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
     it('should HTTP 400 and not create tenant or keys when a publicKey does not match the private key', async () => {
       const otherPublicJwk = generateKeyPair({ format: 'jwk' }).publicKey;
       const payload = {
