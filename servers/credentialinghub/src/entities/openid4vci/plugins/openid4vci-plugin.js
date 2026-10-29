@@ -45,6 +45,7 @@ const { jwtVerify, keyAlgorithmToJoseAlg } = require('@verii/jwt');
 const {
   getCredentialSigningAlgorithmsSupported,
 } = require('../../tenants/domain');
+const { generateCNonce, verifyProofNonce } = require('../domain');
 
 const openid4vciPlugin = async (fastify) => {
   fastify.decorateRequest(
@@ -127,11 +128,6 @@ const buildIssuer = async (context) => {
     } catch {
       return { verified: false };
     }
-  };
-
-  const encryptString = (data) => {
-    const exchangesKey = tenant.keysByPurpose[KeyPurposes.EXCHANGES];
-    return kms.encryptString(data, exchangesKey._id);
   };
 
   const hash = (data, alg) =>
@@ -284,24 +280,23 @@ const buildIssuer = async (context) => {
       });
     }
     await Promise.all(
-      map(
-        async (jwt) =>
-          issuer.verifyCredentialRequestJwtProof({
-            jwt,
-            issuerMetadata,
-            callbacks: {
-              verifyJwt,
-            },
-          }),
-        credentialRequest.proofs.jwt,
-      ),
+      map(async (jwt) => {
+        const { payload } = await issuer.verifyCredentialRequestJwtProof({
+          jwt,
+          issuerMetadata,
+          callbacks: {
+            verifyJwt,
+          },
+        });
+        await verifyProofNonce(payload, openIdIssuer, context);
+      }, credentialRequest.proofs.jwt),
     );
     return credentialRequest;
   };
 
   const createNonce = async () =>
     issuer.createNonceResponse({
-      cNonce: await encryptString(`${Date.now()}`),
+      cNonce: await generateCNonce(openIdIssuer, context),
     });
   const generateAccessToken = async (
     accessTokenParams,

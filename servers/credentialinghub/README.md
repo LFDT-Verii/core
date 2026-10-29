@@ -48,6 +48,7 @@ MONGO_URI=mongodb://mongo:27017/credentialinghub
 HOST_URL=https://hub.example.org
 SECRET=replace-with-session-secret
 KEY_ENCRYPTION_SECRET=replace-with-key-encryption-secret
+OPENID4VCI_NONCE_SECRET=replace-with-openid4vci-nonce-secret
 OPERATOR_API_TOKEN=replace-with-operator-api-token
 DEFAULT_CAO_DID=did:example:cao
 ```
@@ -89,6 +90,26 @@ wrappers, override the entrypoint instead:
 ```bash
 docker run --rm --entrypoint node lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
 ```
+
+## OpenID4VCI Nonces
+
+The nonce endpoint, `POST /r/:tenantId/openid4vc/nonce`, returns a stateless
+`c_nonce`: an HS256 JWT signed with `OPENID4VCI_NONCE_SECRET`. Its `iss` and
+`aud` are the tenant's credential issuer URL, and it carries `iat`, `exp` and a
+random `jti`. Every key proof sent to the credential endpoint must carry a
+nonce from this endpoint. A proof without a `nonce` is rejected with
+`invalid_proof`. An expired or altered nonce, or one issued for another tenant,
+is rejected with `invalid_nonce`, so the wallet fetches a new one.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OPENID4VCI_NONCE_SECRET` | none (required by the Hub server) | Secret that signs and verifies nonces. Use a long random value, for example the output of `openssl rand -hex 32`, and give every Hub instance the same value. |
+| `OPENID4VCI_NONCE_EXPIRES_IN` | `5m` | How long a nonce stays valid, as a duration such as `90s` or `5m`. |
+
+The Hub stores no nonces, so a nonce can be reused until it expires.
+Changing the secret invalidates every outstanding nonce. The standalone
+notification worker issues no nonces, so it starts without
+`OPENID4VCI_NONCE_SECRET`.
 
 ## Design Docs
 
