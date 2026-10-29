@@ -256,10 +256,11 @@ const buildIssuer = async (context) => {
   };
 
   const getCredentialRequest = async (parameters) => {
+    const issuerMetadata = {
+      credentialIssuer: { credential_issuer: openIdIssuer },
+    };
     const credentialRequest = issuer.parseCredentialRequest({
-      issuerMetadata: {
-        credentialIssuer: { credential_issuer: openIdIssuer },
-      },
+      issuerMetadata,
       credentialRequest: {
         credential_identifier: parameters.credential_identifier,
         proofs: {
@@ -267,9 +268,6 @@ const buildIssuer = async (context) => {
         },
       },
     });
-    const issuerMetadata = {
-      credentialIssuer: openIdIssuer,
-    };
     if (isEmpty(credentialRequest.proofs.jwt)) {
       await issuer.verifyCredentialRequestJwtProof({
         jwt: '',
