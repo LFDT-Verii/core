@@ -1223,7 +1223,10 @@ describe('Tenants management test suite', () => {
         );
         setupCreateTenantRegistrarMocks(didDoc.id, didDoc);
 
-        const response = await createTenant(didDoc.id, [dualKey(keys[0])]);
+        // hexKey is the agent's alias for key, so the hub must not store it either.
+        const response = await createTenant(didDoc.id, [
+          { ...dualKey(keys[0]), hexKey: hexFromJwk(keys[0].jwk) },
+        ]);
 
         expect(response.statusCode).toEqual(200);
         expect(response.json.keyMetadatas).toEqual(expectedKeyMetadatas(keys));
@@ -1271,6 +1274,54 @@ describe('Tenants management test suite', () => {
         );
         expect(await mongoDb().collection('tenants').countDocuments()).toEqual(
           0,
+        );
+        expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+      });
+
+      it('should 400 and not create tenant or keys when the private key is sent only as hexKey', async () => {
+        const { didDoc, keys } = buildIssuerDidDoc();
+        setupCreateTenantRegistrarMocks(didDoc.id, didDoc);
+
+        const response = await createTenant(didDoc.id, [
+          {
+            ...omit(['jwk'], keys[0]),
+            encoding: KeyEncodings.HEX,
+            key: '',
+            hexKey: hexFromJwk(keys[0].jwk),
+          },
+        ]);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'key_invalid',
+            message: 'key_invalid',
+            statusCode: 400,
+          }),
+        );
+        expect(await mongoDb().collection('tenants').countDocuments()).toEqual(
+          0,
+        );
+        expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+      });
+
+      it('should 400 and not create tenant or keys when the public key hex is a private key', async () => {
+        const { didDoc, keys } = buildIssuerDidDoc();
+        setupCreateTenantRegistrarMocks(didDoc.id, didDoc);
+
+        const response = await createTenant(didDoc.id, [
+          { ...keys[0], publicKey: hexFromJwk(keys[0].jwk) },
+        ]);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'key_invalid',
+            message: 'key_invalid',
+            statusCode: 400,
+          }),
         );
         expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
       });

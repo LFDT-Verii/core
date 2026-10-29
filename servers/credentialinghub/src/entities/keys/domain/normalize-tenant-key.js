@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const { omit } = require('lodash/fp');
+const { omit, pick } = require('lodash/fp');
 const newError = require('http-errors');
 const { ObjectId } = require('mongodb');
 
@@ -28,7 +28,8 @@ const {
 const { KeyErrors } = require('./key-errors');
 
 // Keys forwarded from a create_tenant message can carry the key as hex and as
-// JWKs. The JWKs are imported, and the transport members aren't stored.
+// JWKs. The JWKs are imported, and the transport members aren't stored. The hub
+// takes `key` or `jwk`, so the agent's `hexKey` alias is neither read nor stored.
 const normalizeTenantKey = async (key) => {
   const { privateJwk, publicJwk: transferredPublicJwk } = resolveKey(key);
   const publicJwk = publicJwkFromPrivateJwk(privateJwk);
@@ -40,24 +41,24 @@ const normalizeTenantKey = async (key) => {
   }
   return {
     _id: new ObjectId(),
-    ...omit(['key', 'jwk', 'publicKey', 'publicJwk'], key),
+    ...omit([...TRANSFERRED_KEY_MEMBERS, 'hexKey'], key),
     encoding: KeyEncodings.JWK,
     publicJwk,
     jwk: privateJwk,
   };
 };
 
+const TRANSFERRED_KEY_MEMBERS = ['key', 'jwk', 'publicKey', 'publicJwk'];
+
 const resolveKey = (key) => {
   try {
-    return resolveTransferredKey(key);
+    return resolveTransferredKey(pick(TRANSFERRED_KEY_MEMBERS, key));
   } catch (error) {
-    if (error.errorCode === TransferredKeyErrorCodes.KEY_FORMATS_MISMATCH) {
-      throw keyError(KeyErrors.KEY_FORMATS_MISMATCH);
-    }
-    if (error.errorCode != null) {
-      throw keyError(KeyErrors.KEY_INVALID);
-    }
-    throw error;
+    throw keyError(
+      error.errorCode === TransferredKeyErrorCodes.KEY_FORMATS_MISMATCH
+        ? KeyErrors.KEY_FORMATS_MISMATCH
+        : KeyErrors.KEY_INVALID,
+    );
   }
 };
 
