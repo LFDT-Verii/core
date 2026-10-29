@@ -17,7 +17,7 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
-    "@sentry/node": "^11.8.0"
+    "@sentry/node": "^11.9.0"
   },
   "devDependencies": {
     "eslint": "9.39.5",
