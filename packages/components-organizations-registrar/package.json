@@ -82,7 +82,7 @@
     "@mui/icons-material": "^7.3.11",
     "@mui/material": "^7.3.11",
     "@react-pdf/renderer": "^4.9.0",
-    "@tanstack/react-query": "^5.104.3",
+    "@tanstack/react-query": "^5.104.5",
     "autosuggest-highlight": "^3.3.4",
     "clsx": "^2.1.1",
     "lodash-es": "^4.18.1",
