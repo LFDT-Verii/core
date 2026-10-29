@@ -41,7 +41,7 @@
     "handlebars": "^4.7.10",
     "lodash": "^4.18.1",
     "nanoid": "^6.0.2",
-    "inquirer": "^14.2.3",
+    "inquirer": "^14.2.4",
     "strip-bom-stream": "^5.0.0"
   }
 }
