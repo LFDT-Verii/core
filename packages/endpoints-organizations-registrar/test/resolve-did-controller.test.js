@@ -174,6 +174,51 @@ describe('Resolve did test suite', () => {
       expect(nockData.isDone()).toBe(true);
     });
 
+    it('Should resolve did:web with P-256 verification methods of any type', async () => {
+      const p256Jwk = { kty: 'EC', crv: 'P-256', x: 'x', y: 'y' };
+      const didWebDoc = {
+        '@context': ['https://www.w3.org/ns/did/v1'],
+        id: 'did:web:nock.test',
+        verificationMethod: [
+          {
+            id: 'did:web:nock.test#key-1',
+            type: 'JsonWebKey',
+            controller: 'did:web:nock.test',
+            publicKeyJwk: p256Jwk,
+          },
+          {
+            id: 'did:web:nock.test#key-2',
+            type: 'EcdsaSecp256r1VerificationKey2019',
+            controller: 'did:web:nock.test',
+            publicKeyJwk: p256Jwk,
+          },
+          {
+            id: 'did:web:nock.test#key-3',
+            type: 'Multikey',
+            controller: 'did:web:nock.test',
+            publicKeyMultibase: 'zDnaeexample',
+          },
+        ],
+        assertionMethod: [
+          'did:web:nock.test#key-1',
+          'did:web:nock.test#key-2',
+          'did:web:nock.test#key-3',
+        ],
+      };
+      const nockData = nock('https://nock.test')
+        .get('/.well-known/did.json')
+        .reply(200, didWebDoc);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${baseUrl}/did:web:nock.test`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual(didWebDoc);
+      expect(nockData.isDone()).toBe(true);
+    });
+
     it('Should resolve did:web with path', async () => {
       const nockData = nock('https://localhost:8081')
         .get('/d/www.acmecorp.com/did.json')

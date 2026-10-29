@@ -18,15 +18,10 @@
         "type": {
           "title": "Public Key Type",
           "type": "string",
-          "enum": [
-            "JsonWebKey2020",
-            "EcdsaSecp256k1VerificationKey2019",
-            "X25519KeyAgreementKey2019",
-            "Ed25519VerificationKey2018"
-          ],
           "example": [
             "JsonWebKey2020"
-          ]
+          ],
+          "description": "Any verification method type. The resolver serves the DID document as published."
         },
         "controller": {
           "title": "Controller",
@@ -89,14 +84,10 @@
         "type": {
           "title": "Public Key Type",
           "type": "string",
-          "enum": [
-            "EcdsaSecp256k1VerificationKey2019",
-            "X25519KeyAgreementKey2019",
-            "Ed25519VerificationKey2018"
-          ],
           "example": [
             "EcdsaSecp256k1VerificationKey2019"
-          ]
+          ],
+          "description": "Any verification method type. The resolver serves the DID document as published."
         },
         "controller": {
           "title": "Controller",
@@ -136,14 +127,10 @@
         "type": {
           "title": "Public Key Type",
           "type": "string",
-          "enum": [
-            "EcdsaSecp256k1VerificationKey2019",
-            "X25519KeyAgreementKey2019",
-            "Ed25519VerificationKey2018"
-          ],
           "example": [
             "EcdsaSecp256k1VerificationKey2019"
-          ]
+          ],
+          "description": "Any verification method type. The resolver serves the DID document as published."
         },
         "controller": {
           "title": "Controller",

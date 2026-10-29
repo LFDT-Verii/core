@@ -18,14 +18,18 @@
         "enum": [
           "DLT_TRANSACTIONS",
           "ISSUING_METADATA",
-          "EXCHANGES"
+          "EXCHANGES",
+          "PERMISSIONING",
+          "ROTATION",
+          "REVOCATIONS_FALLBACK"
         ]
       }
     },
     "algorithm": {
       "type": "string",
       "enum": [
-        "SECP256K1"
+        "SECP256K1",
+        "ES256"
       ],
       "deprecated": true,
       "description": "the algorithm used",
