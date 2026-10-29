@@ -61,6 +61,15 @@ const buildCareerWalletSelfReportedCredential = ({ privateKey, publicKey }) => {
 };
 
 /**
+ * Encodes an arbitrary string as a `did:jwk`, so tests can build DIDs whose
+ * value is not a well-formed JWK.
+ * @param {string} value the string to encode, normally a serialized JWK
+ * @returns {string} the `did:jwk` DID
+ */
+const encodeDidJwk = (value) =>
+  `did:jwk:${Buffer.from(value).toString('base64url')}`;
+
+/**
  * Signs a credential in the requested envelope with caller-chosen `kid` and
  * `jwk` protected-header members.
  * @param {string} envelope one of Envelopes
@@ -117,5 +126,6 @@ const joseAlgorithmFor = ({ crv }) => JoseAlgorithms[crv];
 module.exports = {
   Envelopes,
   buildCareerWalletSelfReportedCredential,
+  encodeDidJwk,
   signCredential,
 };

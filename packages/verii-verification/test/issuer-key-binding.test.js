@@ -22,6 +22,7 @@
 const { randomUUID } = require('node:crypto');
 const { before, describe, it } = require('node:test');
 const { expect } = require('expect');
+const { omit } = require('lodash/fp');
 const { generateJWAKeyPair, KeyAlgorithms } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
 const { CredentialVerificationErrorCodes } = require('@verii/jwt');
@@ -35,11 +36,18 @@ const { verifyCredentials } = require('../index');
 const {
   Envelopes,
   buildCareerWalletSelfReportedCredential,
+  encodeDidJwk,
   signCredential,
 } = require('./helpers/self-signed-credentials');
 
 const credentialType = 'EmploymentPastV1.1';
 const holderDid = 'did:example:holder';
+const nonKeyMembers = {
+  alg: 'ES256',
+  key_ops: ['verify'],
+  kid: 'key-1',
+  use: 'sig',
+};
 const victimOrgDid = 'did:web:victim-org.example.com';
 const noop = () => {};
 const log = { debug: noop, error: noop, info: noop, warn: noop };
@@ -153,6 +161,103 @@ describe('issuer/key binding', { timeout: 120000 }, () => {
         );
       });
 
+      [
+        [
+          'only the embedded jwk carries non-key members',
+          { ...attacker.publicKey, ...nonKeyMembers },
+          attacker.publicKey,
+        ],
+        [
+          'only the did:jwk issuer carries non-key members',
+          attacker.publicKey,
+          { ...attacker.publicKey, ...nonKeyMembers },
+        ],
+      ].forEach(([membersDescription, headerJwk, issuerJwk]) => {
+        it(`reports SELF_SIGNED when the did:jwk issuer is the embedded jwk and ${membersDescription}`, async () => {
+          const [result] = await verify(
+            signCredential(
+              envelope,
+              buildCredential(getDidUriFromJwk(issuerJwk)),
+              attacker.privateKey,
+              { jwk: headerJwk },
+            ),
+            context,
+          );
+
+          expect(result.credentialChecks).toEqual(
+            signedChecks(CheckResults.SELF_SIGNED),
+          );
+        });
+      });
+
+      it('reports a key/issuer mismatch when a did:jwk issuer with the same non-key members is a different key', async () => {
+        const [result] = await verify(
+          signCredential(
+            envelope,
+            buildCredential(
+              getDidUriFromJwk({ ...victim.publicKey, ...nonKeyMembers }),
+            ),
+            attacker.privateKey,
+            { jwk: { ...attacker.publicKey, ...nonKeyMembers } },
+          ),
+          context,
+        );
+
+        expect(result.credentialChecks).toEqual(
+          signedChecks(CheckResults.DATA_INTEGRITY_ERROR),
+        );
+      });
+
+      it('reports a key/issuer mismatch when the did:jwk issuer key is for encryption only', async () => {
+        const encryptionJwk = { ...attacker.publicKey, use: 'enc' };
+        const [result] = await verify(
+          signCredential(
+            envelope,
+            buildCredential(getDidUriFromJwk(encryptionJwk)),
+            attacker.privateKey,
+            { jwk: encryptionJwk },
+          ),
+          context,
+        );
+
+        expect(result.credentialChecks).toEqual(
+          signedChecks(CheckResults.DATA_INTEGRITY_ERROR),
+        );
+      });
+
+      [
+        ['invalid base64url', 'did:jwk:not*base64url'],
+        ['non-base64url characters around the encoded key', `${attackerDid}=`],
+        ['a non-JSON value', encodeDidJwk('not json')],
+        ['a non-object JSON value', encodeDidJwk('null')],
+        [
+          'an unsupported kty',
+          encodeDidJwk(JSON.stringify({ ...attacker.publicKey, kty: 'XYZ' })),
+        ],
+        [
+          'a key without all its members',
+          encodeDidJwk(JSON.stringify(omit(['y'], attacker.publicKey))),
+        ],
+        ['a DID URL fragment', `${attackerDid}#0`],
+        ['an extra DID segment', `${attackerDid}:0`],
+      ].forEach(([malformation, issuer]) => {
+        it(`reports a key/issuer mismatch when the did:jwk issuer has ${malformation}`, async () => {
+          const [result] = await verify(
+            signCredential(
+              envelope,
+              buildCredential(issuer),
+              attacker.privateKey,
+              { jwk: attacker.publicKey },
+            ),
+            context,
+          );
+
+          expect(result.credentialChecks).toEqual(
+            signedChecks(CheckResults.DATA_INTEGRITY_ERROR),
+          );
+        });
+      });
+
       it('reports SELF_SIGNED only when the did:jwk kid is the issuer and verifies the signature', async () => {
         const [result] = await verify(
           signCredential(
@@ -167,6 +272,22 @@ describe('issuer/key binding', { timeout: 120000 }, () => {
         expect(result.credentialChecks).toEqual(
           signedChecks(CheckResults.SELF_SIGNED),
         );
+      });
+
+      it('binds a did:jwk kid to a did:jwk issuer that encodes the same key with non-key members', async () => {
+        const [result] = await verify(
+          signCredential(
+            envelope,
+            buildCredential(
+              getDidUriFromJwk({ ...victim.publicKey, ...nonKeyMembers }),
+            ),
+            victim.privateKey,
+            { kid: `${victimDid}#0` },
+          ),
+          context,
+        );
+
+        expectDidJwkKidBinding(envelope, result, signedChecks);
       });
 
       [
@@ -274,6 +395,18 @@ const verify = (credential, context) =>
     context,
   );
 
+const expectDidJwkKidBinding = (envelope, result, signedChecks) => {
+  if (envelope === Envelopes.V1_1) {
+    expect(result.credentialChecks).toEqual(
+      signedChecks(CheckResults.SELF_SIGNED),
+    );
+    return;
+  }
+  // VC 2.0 conformance in @verii/jwt still requires the issuer to be the kid's
+  // DID string.
+  expectSelfSignedIssuerConformanceFailure(result);
+};
+
 const expectDidJwkMismatch = (envelope, result, signedChecks) => {
   if (envelope === Envelopes.V1_1) {
     expect(result.credentialChecks).toEqual(
@@ -282,6 +415,10 @@ const expectDidJwkMismatch = (envelope, result, signedChecks) => {
     return;
   }
   // VC 2.0 enforces the did:jwk binding in @verii/jwt conformance.
+  expectSelfSignedIssuerConformanceFailure(result);
+};
+
+const expectSelfSignedIssuerConformanceFailure = (result) => {
   expect(result.credentialChecks).toEqual(unverifiedChecks(CheckResults.FAIL));
   expect(result.conformance.errors).toEqual([
     {

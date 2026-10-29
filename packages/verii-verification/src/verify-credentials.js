@@ -21,6 +21,7 @@ const {
   flow,
   isArray,
   isEmpty,
+  isString,
   join,
   keyBy,
   map,
@@ -28,7 +29,6 @@ const {
   partition,
   size,
   some,
-  split,
   startsWith,
   uniq,
 } = require('lodash/fp');
@@ -39,6 +39,7 @@ const {
   getCredentialId,
   getCredentialIssuer,
   isCredentialVerificationAccepted,
+  jwkThumbprint,
   verifyCredentialEnvelope,
 } = require('@verii/jwt');
 const {
@@ -59,18 +60,19 @@ const {
 } = require('@verii/vc-checks');
 const { mapWithIndex } = require('@verii/common-functions');
 const {
-  getDidUriFromJwk,
+  getJwkFromDidUri,
   resolveDidJwkDocument,
   toDidUrl,
 } = require('@verii/did-doc');
 
 const MAX_CREDENTIALS_PER_VERIFICATION = 100;
 const MAX_ROUTING_IDENTIFIER_CHARACTERS = 2048;
+const DID_JWK_PATTERN = /^did:jwk:[A-Za-z0-9_-]+$/;
 
 // How the claimed issuer is bound to the key that verified the signature. A
 // valid signature only proves possession of that key; it authenticates the
 // issuer only through a did:velocity ledger binding or a self-certifying
-// did:jwk issuer derived from the exact verification JWK.
+// did:jwk issuer whose JWK is the verification key.
 const IssuerKeyBindings = Object.freeze({
   DID_JWK: 'DID_JWK',
   DID_JWK_MISMATCH: 'DID_JWK_MISMATCH',
@@ -488,7 +490,7 @@ const verifyCredentialData = async (data, { keyMap, errors }, context) => {
       credentialType: extractCredentialType(verifiedEnvelope.credential),
       id: getCredentialId(verifiedEnvelope),
       issuerId,
-      issuerKeyBinding: bindIssuerToKey(
+      issuerKeyBinding: await bindIssuerToKey(
         issuerId,
         data.keyMetadata,
         verificationKey,
@@ -534,11 +536,11 @@ const getVerificationKey = ({ keyMetadata }, keyMap) =>
 
 const issuerIdFrom = (issuer) => issuer?.id ?? issuer;
 
-const bindIssuerToKey = (issuerId, { kid }, verificationKey) => {
+const bindIssuerToKey = async (issuerId, { kid }, verificationKey) => {
   if (isDidVelocityCredential({ kid })) {
     return IssuerKeyBindings.LEDGER;
   }
-  if (isDidJwkOfKey(issuerId, kid, verificationKey)) {
+  if (await isDidJwkOfKey(issuerId, verificationKey)) {
     return IssuerKeyBindings.DID_JWK;
   }
   // Only did:jwk kids resolve outside the ledger, so a kid or a did:jwk issuer
@@ -548,12 +550,34 @@ const bindIssuerToKey = (issuerId, { kid }, verificationKey) => {
     : IssuerKeyBindings.UNBOUND;
 };
 
-const isDidJwkOfKey = (issuerId, kid, verificationKey) => {
-  const keyDid = getDidUriFromJwk(verificationKey);
-  return issuerId === keyDid && (kid == null || didFromDidUrl(kid) === keyDid);
+// A did:jwk issuer controls the verification key when its JWK is the same key,
+// compared by RFC 7638 thumbprint so that non-key members such as alg, kid or
+// key_ops on either side do not matter. With a kid, the verification key is the
+// key the kid's did:jwk encodes, so the issuer and the kid name the same key.
+const isDidJwkOfKey = async (issuerId, verificationKey) => {
+  const issuerThumbprint = await signingKeyThumbprintOf(issuerId);
+  return (
+    issuerThumbprint != null &&
+    issuerThumbprint === (await jwkThumbprint(verificationKey))
+  );
 };
 
-const didFromDidUrl = flow(split('#'), first);
+// The did:jwk method gives a `use: "enc"` key only keyAgreement, never
+// assertionMethod, so such an issuer cannot sign credentials. An issuer that is
+// not a well-formed did:jwk of a supported key has no signing key.
+const signingKeyThumbprintOf = async (issuerId) => {
+  if (!isDidJwk(issuerId)) {
+    return null;
+  }
+  try {
+    const issuerJwk = getJwkFromDidUri(issuerId);
+    return issuerJwk?.use === 'enc' ? null : await jwkThumbprint(issuerJwk);
+  } catch {
+    return null;
+  }
+};
+
+const isDidJwk = (value) => isString(value) && DID_JWK_PATTERN.test(value);
 
 const runIssuerTrustCheck = (
   { id, issuerKeyBinding, issuerId, credentialType, credential },
