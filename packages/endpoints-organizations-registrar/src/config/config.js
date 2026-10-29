@@ -176,6 +176,12 @@ const createConfig = (packageJson) => {
     libS3Bucket: env.get('LIB_S3_BUCKET').required(!isTest).asString(),
     libUrl: env.get('LIB_URL').required(!isTest).asString(),
     custodiedDidWebHost: env.get('CUSTODIED_DID_WEB_HOST').asString(),
+    // New custodied organizations get P-256 ISSUING_METADATA and EXCHANGES keys.
+    // Leave off until agents in the wild verify ES256 and CAOs import JWK keys (#1028, #766).
+    es256OrganizationKeys: env
+      .get('ES256_ORGANIZATION_KEYS')
+      .default('false')
+      .asBool(),
     kmsPluginModule: env
       .get('KMS_PLUGIN_MODULE')
       .default('@verii/db-kms')
