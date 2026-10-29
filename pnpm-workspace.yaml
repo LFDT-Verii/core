@@ -6,7 +6,7 @@ overrides:
   "fast-json-stringify@7.0.1>fast-uri": "4.2.3"
   # Temporary: remove this override once the Hardhat dependency path no longer
   # resolves serialize-javascript 6.x (Dependabot alert #148 / GHSA-5c6j-r48x-rmvq).
-  "mocha>serialize-javascript": "7.1.2"
+  "mocha>serialize-javascript": "7.1.3"
   # Temporary: remove this override once auth0 no longer resolves uuid 9.x
   # through its auth0-legacy dependency path.
   "auth0>uuid": "14.0.3"
