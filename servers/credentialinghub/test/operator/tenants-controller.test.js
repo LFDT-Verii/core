@@ -1193,6 +1193,113 @@ describe('Tenants management test suite', () => {
       );
     });
 
+    describe('keys forwarded from a create_tenant message', () => {
+      // A secure key webhook receiver forwards create_tenant keys unchanged.
+      const dualKey = (key) => ({
+        ...key,
+        encoding: KeyEncodings.HEX,
+        key: hexFromJwk(key.jwk),
+        publicKey: hexFromJwk(key.jwk, false),
+        publicJwk: publicKeyFromPrivateKey(key.jwk),
+      });
+
+      const createTenant = async (did, keys) =>
+        fastify.injectJson({
+          method: 'POST',
+          url: createUrl,
+          payload: {
+            tenant: await newTenantMinimalPayload({ did }),
+            keys,
+          },
+        });
+
+      it('should 200 and import the JWK of a key sent as hex and as JWKs', async () => {
+        const { didDoc, keys } = buildIssuerDidDoc();
+        const primaryAccount = toEthereumAddress(
+          publicKeyFromPrivateKey(keys[0].jwk),
+        );
+        mockLookupPrimary.mock.mockImplementation(() =>
+          Promise.resolve(primaryAccount),
+        );
+        setupCreateTenantRegistrarMocks(didDoc.id, didDoc);
+
+        const response = await createTenant(didDoc.id, [dualKey(keys[0])]);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.keyMetadatas).toEqual(expectedKeyMetadatas(keys));
+        // A JWK made from the hex would carry `use`, which the sent JWK doesn't.
+        expect(
+          mockContractPermissionsModule.initPermissions.mock.calls.map(
+            (call) => call.arguments[0].privateKey,
+          ),
+        ).toContainEqual(keys[0].jwk);
+        expect(await loadDbKeys(response.json.tenant.id)).toEqual(
+          expect.arrayContaining([
+            {
+              _id: new ObjectId(response.json.keyMetadatas[0].id),
+              createdAt: expect.any(Date),
+              updatedAt: expect.any(Date),
+              tenantId: new ObjectId(response.json.tenant.id),
+              purposes: keys[0].purposes,
+              algorithm: keys[0].algorithm,
+              encoding: KeyEncodings.JWK,
+              kidFragment: keys[0].kidFragment,
+              publicJwk: publicKeyFromPrivateKey(keys[0].jwk),
+              encryptedJwk: expect.any(String),
+            },
+          ]),
+        );
+      });
+
+      it('should 400 and not create tenant or keys when the hex and the JWK are different keys', async () => {
+        const { didDoc, keys } = buildIssuerDidDoc();
+        setupCreateTenantRegistrarMocks(didDoc.id, didDoc);
+        const otherJwk = generateKeyPair({ format: 'jwk' }).privateKey;
+
+        const response = await createTenant(didDoc.id, [
+          { ...dualKey(keys[0]), key: hexFromJwk(otherJwk) },
+        ]);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'key_formats_mismatch',
+            message: 'key_formats_mismatch',
+            statusCode: 400,
+          }),
+        );
+        expect(await mongoDb().collection('tenants').countDocuments()).toEqual(
+          0,
+        );
+        expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+      });
+
+      it('should 400 and not create tenant or keys when the public JWK is another key', async () => {
+        const { didDoc, keys } = buildIssuerDidDoc();
+        setupCreateTenantRegistrarMocks(didDoc.id, didDoc);
+        const otherPublicJwk = generateKeyPair({ format: 'jwk' }).publicKey;
+
+        const response = await createTenant(didDoc.id, [
+          { ...keys[0], publicJwk: otherPublicJwk },
+        ]);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'key_invalid',
+            message: 'key_invalid',
+            statusCode: 400,
+          }),
+        );
+        expect(await mongoDb().collection('tenants').countDocuments()).toEqual(
+          0,
+        );
+        expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+      });
+    });
+
     it('should 200 if creating tenant with did:web', async () => {
       const primaryAccount = toEthereumAddress(
         generateKeyPair({ format: 'jwk' }).publicKey,
