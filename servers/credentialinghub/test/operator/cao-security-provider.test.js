@@ -543,8 +543,9 @@ describe('blockchain client credentials capability', () => {
           },
           configOverrides: {
             logSeverity: 'silent',
-            mongoConnection:
-              'mongodb://localhost:27017/test-credentialing-hub-custom-auth',
+            mongoConnection: ${JSON.stringify(
+              buildMongoConnection('test-credentialing-hub-custom-auth'),
+            )},
           },
         });
         fastify.ready()
