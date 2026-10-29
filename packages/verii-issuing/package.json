@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
-    "test:ci": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
+    "test:ci": "pnpm run test:types && cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
+    "test:types": "tsc --noEmit --strict --skipLibCheck --target ES2022 --moduleResolution node types/types.d.ts test/fixtures/vc-v2-declarations.ts",
     "lint": "eslint .",
     "lint:ci": "eslint . --format json >> eslint-results.json",
     "lint:fix": "eslint --fix ."
