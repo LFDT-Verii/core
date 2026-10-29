@@ -148,7 +148,6 @@ describe('openid4vc credential test suite', () => {
 
         const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
           typ: 'openid4vci-proof+jwt',
-          // aud: 'https://devcih.velocitycareerlabs.io',
         });
 
         const response = await fastify.injectJson({
@@ -244,6 +243,39 @@ describe('openid4vc credential test suite', () => {
           error: 'invalid_proof',
           error_description:
             "Credential request proof jwt is missing a 'nonce'.",
+        });
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with invalid_proof if the proof aud is another credential issuer', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+          aud: credentialIssuerOf(new ObjectId()),
+        });
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'invalid_proof',
+          error_description:
+            "Error verifying credential request proof jwt. jwt 'aud' does not match expected value.",
+        });
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with invalid_proof if the proof has no aud', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+          aud: undefined,
+        });
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'invalid_proof',
+          error_description: 'Invalid proof',
         });
         await expectCredentialNotIssued();
       });
@@ -604,6 +636,39 @@ describe('openid4vc credential test suite', () => {
       },
     });
 
+  const buildProof = async (
+    didJwk,
+    keyPair,
+    challenge,
+    { useKid = true, typ = 'openid4vci-proof+jwt', ...payloadOverrides } = {},
+  ) => {
+    const options = {
+      alg: keyPair.publicKey.crv === 'P-256' ? 'ES256' : 'ES256K',
+      typ,
+    };
+    if (useKid) {
+      options.kid = `${didJwk}#0`;
+    } else {
+      options.jwk = keyPair.publicKey;
+    }
+    const jwt = await jwtSign(
+      applyOverrides(
+        {
+          aud: credentialIssuerOf(tenant._id),
+          nonce: challenge,
+          iss: didJwk,
+        },
+        payloadOverrides,
+      ),
+      keyPair.privateKey,
+      options,
+    );
+    return {
+      proof_type: 'jwt',
+      jwt,
+    };
+  };
+
   const expectCredentialNotIssued = () =>
     expect(
       mongoDb()
@@ -618,38 +683,7 @@ const invalidNonceResponse = {
     "Credential request proof jwt 'nonce' is invalid or expired.",
 };
 
-const buildProof = async (
-  didJwk,
-  keyPair,
-  challenge,
-  { useKid = true, typ = 'openid4vci-proof+jwt', ...payloadOverrides } = {},
-) => {
-  const options = {
-    alg: keyPair.publicKey.crv === 'P-256' ? 'ES256' : 'ES256K',
-    typ,
-  };
-  if (useKid) {
-    options.kid = `${didJwk}#0`;
-  } else {
-    options.jwk = keyPair.publicKey;
-  }
-  const jwt = await jwtSign(
-    applyOverrides(
-      {
-        aud: 'https://localhost.test',
-        nonce: challenge,
-        iss: didJwk,
-      },
-      payloadOverrides,
-    ),
-    keyPair.privateKey,
-    options,
-  );
-  return {
-    proof_type: 'jwt',
-    jwt,
-  };
-};
+const credentialIssuerOf = (tenantId) => `https://localhost.test/r/${tenantId}`;
 
 const expectedDbExchange = (issuerService, events, overrides) => {
   const exchangeEvents = events ?? [ExchangeStates.NEW];
