@@ -270,6 +270,19 @@ jobs:
       env:
         IS_CI: true
         NODE_OPTIONS: "--max_old_space_size=4096"
+    # Reads the operators the tests sent from Mongo's serverStatus counters. The tool always exits 0, so check its output.
+    - name: Check Mongo Operators Against Amazon DocumentDB
+      if: matrix.package == '@verii/server-credentialing-hub'
+      env:
+        COMPAT_TOOL_URL: https://raw.githubusercontent.com/awslabs/amazon-documentdb-tools/076176b302ef0e678e8976d2611eee3c76abbafb/compat-tool/compat.py
+        DOCUMENTDB_VERSION: '4.0'
+      run: |
+        curl -fsSL -o "$RUNNER_TEMP/compat.py" "$COMPAT_TOOL_URL"
+        python3 -m venv "$RUNNER_TEMP/compat-venv"
+        "$RUNNER_TEMP/compat-venv/bin/pip" install --quiet pymongo==4.15.4
+        "$RUNNER_TEMP/compat-venv/bin/python" "$RUNNER_TEMP/compat.py" --version "$DOCUMENTDB_VERSION" \
+          --uri 'mongodb://localhost:27017/admin?directConnection=true' | tee "$RUNNER_TEMP/compat.txt"
+        if grep -q 'unsupported operators were found' "$RUNNER_TEMP/compat.txt"; then exit 1; fi
     - name: Create Artifact Name
       run: |
         echo "ARTIFACT_NAME=$(echo '${{ matrix.package }}' | sed -e 's+@+-+g; s+/+-+g')" >> "$GITHUB_ENV"
