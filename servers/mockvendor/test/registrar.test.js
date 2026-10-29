@@ -356,7 +356,7 @@ describe('Registrar messages controller tests', () => {
     ];
 
     declarations.forEach(({ description, keyTransfer }) => {
-      it(`should declare ${description} in the ack to a test message`, async () => {
+      it(`should ack a test message with ${description}`, async () => {
         fastify.overrides.reqConfig = (config) => ({
           ...config,
           registrarKeyTransfer: keyTransfer,
