@@ -103,13 +103,13 @@ is rejected with `invalid_nonce`, so the wallet fetches a new one.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `OPENID4VCI_NONCE_SECRET` | none (required) | Secret that signs and verifies nonces. Use a long random value, for example the output of `openssl rand -hex 32`, and give every Hub instance the same value. |
+| `OPENID4VCI_NONCE_SECRET` | none (required by the Hub server) | Secret that signs and verifies nonces. Use a long random value, for example the output of `openssl rand -hex 32`, and give every Hub instance the same value. |
 | `OPENID4VCI_NONCE_EXPIRES_IN` | `5m` | How long a nonce stays valid, as a duration such as `90s` or `5m`. |
 
 The Hub stores no nonces, so a nonce can be reused until it expires.
 Changing the secret invalidates every outstanding nonce. The standalone
-notification worker loads the same config, so it also needs
-`OPENID4VCI_NONCE_SECRET` to start.
+notification worker issues no nonces, so it starts without
+`OPENID4VCI_NONCE_SECRET`.
 
 ## Design Docs
 

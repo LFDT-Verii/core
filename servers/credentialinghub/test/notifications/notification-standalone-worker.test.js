@@ -35,7 +35,9 @@ const WORKER_MODULE_PATH = path.join(
 
 loadTestEnv(path.resolve(__dirname, '../helpers/.env.test'));
 // The worker builds its config from the environment, as in production. The
-// environment has none of the built-in CAO security provider's variables.
+// environment has none of the built-in CAO security provider's variables, and
+// no OpenID4VCI nonce secret, which only the HTTP server uses.
+delete process.env.OPENID4VCI_NONCE_SECRET;
 delete process.env.OPERATOR_API_TOKEN;
 delete process.env.DEFAULT_CAO_DID;
 delete process.env.VNF_OAUTH_CLIENT_ID;
@@ -90,7 +92,7 @@ describe('standalone notification worker', () => {
     processListeners = undefined;
   });
 
-  it('should start without the CAO security provider variables and deliver to the Hub-wide webhook', async () => {
+  it('should start without the CAO security provider variables or the nonce secret and deliver to the Hub-wide webhook', async () => {
     processListeners = snapshotProcessListeners();
 
     ({ server, worker } = await startNotificationWorker());

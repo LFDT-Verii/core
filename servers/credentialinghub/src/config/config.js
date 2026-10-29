@@ -63,7 +63,14 @@ const swaggerConfig = createSwaggerConfig(packageJson.version);
 
 const openid4vcConfig = {};
 
-const buildConfig = () => {
+/**
+ * Builds the Hub config from the environment.
+ * @param {{servesHttp?: boolean}} [options] `servesHttp: false` for processes that serve no
+ *   HTTP requests, such as the standalone notification worker, which then don't need the
+ *   settings that only the HTTP server uses
+ * @returns {Object} the config
+ */
+const buildConfig = ({ servesHttp = true } = {}) => {
   const notificationsEnabled = env
     .get('NOTIFICATIONS_ENABLED')
     .default('false')
@@ -102,7 +109,7 @@ const buildConfig = () => {
     challengesExpireIn: env.get('CHALLENGES_EXPIRE_IN').default('3d').asMs(),
     openid4vciNonceSecret: env
       .get('OPENID4VCI_NONCE_SECRET')
-      .required(!isTest)
+      .required(servesHttp)
       .asString(),
     openid4vciNonceExpiresIn: env
       .get('OPENID4VCI_NONCE_EXPIRES_IN')

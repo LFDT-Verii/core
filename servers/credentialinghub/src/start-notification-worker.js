@@ -27,7 +27,9 @@ const {
 // the worker has no CAO security provider, controllers, RPC provider or VNF
 // client authentication.
 const createNotificationWorkerServer = () =>
-  createServer(buildConfig()).register(notificationEventsRepoPlugin);
+  createServer(buildConfig({ servesHttp: false })).register(
+    notificationEventsRepoPlugin,
+  );
 
 const startNotificationWorker = async ({ resolveDestination } = {}) => {
   const server = createNotificationWorkerServer();
