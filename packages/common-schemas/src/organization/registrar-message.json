@@ -137,50 +137,48 @@
                                         ]
                                     }
                                 },
-                                "if": {
-                                    "required": [
-                                        "algorithm"
-                                    ],
-                                    "properties": {
-                                        "algorithm": {
-                                            "not": {
+                                "anyOf": [
+                                    {
+                                        "description": "An algorithm that hex or base58 can encode. The legacy members are allowed.",
+                                        "properties": {
+                                            "algorithm": {
                                                 "enum": [
                                                     "SECP256K1",
                                                     "ED25519"
                                                 ]
                                             }
                                         }
-                                    }
-                                },
-                                "then": {
-                                    "description": "Hex carries no curve, so keys of other algorithms are sent only as JWKs.",
-                                    "required": [
-                                        "encoding",
-                                        "jwk",
-                                        "publicJwk"
-                                    ],
-                                    "properties": {
-                                        "encoding": {
-                                            "enum": [
-                                                "jwk"
-                                            ]
-                                        }
                                     },
-                                    "not": {
-                                        "anyOf": [
-                                            {
-                                                "required": [
-                                                    "key"
-                                                ]
-                                            },
-                                            {
-                                                "required": [
-                                                    "publicKey"
+                                    {
+                                        "description": "Any algorithm, sent only as JWKs. Hex carries no curve, so keys of other algorithms are sent this way.",
+                                        "required": [
+                                            "encoding",
+                                            "jwk",
+                                            "publicJwk"
+                                        ],
+                                        "properties": {
+                                            "encoding": {
+                                                "enum": [
+                                                    "jwk"
                                                 ]
                                             }
-                                        ]
+                                        },
+                                        "not": {
+                                            "anyOf": [
+                                                {
+                                                    "required": [
+                                                        "key"
+                                                    ]
+                                                },
+                                                {
+                                                    "required": [
+                                                        "publicKey"
+                                                    ]
+                                                }
+                                            ]
+                                        }
                                     }
-                                }
+                                ]
                             }
                         }
                     }
