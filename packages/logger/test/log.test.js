@@ -18,6 +18,7 @@ const { beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { Writable } = require('node:stream');
+const { omit } = require('lodash/fp');
 const { loggerProvider } = require('../index');
 
 const store = {};
@@ -485,6 +486,72 @@ describe('Test pino logger provider with redaction', () => {
     const redactedJwk = '{"jwk":{"kty":"EC","d":"...shhh..."}}';
     expect(logStream.toString()).toMatch(
       `"key":${redactedJwk},"keys":[${redactedJwk}],"body":{"key":${redactedJwk},"keys":[${redactedJwk}]}`,
+    );
+  });
+
+  it('Redaction should shh the private members of transferred keys', () => {
+    const transferredKey = () => ({
+      kidFragment: '#key-1',
+      key: 'private-hex',
+      hexKey: 'private-hex',
+      jwk: { kty: 'EC', crv: 'secp256k1', x: 'x', y: 'y', d: 'private-d' },
+      publicJwk: { kty: 'EC', crv: 'secp256k1', x: 'x', y: 'y' },
+    });
+    const redactedJwk = {
+      kty: 'EC',
+      crv: 'secp256k1',
+      x: 'x',
+      y: 'y',
+      d: CENSOR,
+    };
+    const redactedKey = {
+      kidFragment: '#key-1',
+      key: CENSOR,
+      hexKey: CENSOR,
+      jwk: redactedJwk,
+      publicJwk: { kty: 'EC', crv: 'secp256k1', x: 'x', y: 'y' },
+    };
+
+    log.info({
+      msg: 'transferred keys',
+      jwk: transferredKey().jwk,
+      keys: [transferredKey()],
+      body: {
+        payload: {
+          create_tenant: { keys: [omit(['hexKey'], transferredKey())] },
+        },
+        keys: [transferredKey()],
+      },
+    });
+    log.info({
+      msg: 'added key',
+      body: {
+        hexKey: 'private-hex',
+        jwk: transferredKey().jwk,
+      },
+    });
+
+    const [transferredKeysEntry, addedKeyEntry] = logStream
+      .toString()
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+    expect(transferredKeysEntry).toEqual(
+      expect.objectContaining({
+        jwk: redactedJwk,
+        keys: [redactedKey],
+        body: {
+          payload: {
+            create_tenant: { keys: [omit(['hexKey'], redactedKey)] },
+          },
+          keys: [redactedKey],
+        },
+      }),
+    );
+    expect(addedKeyEntry).toEqual(
+      expect.objectContaining({
+        body: { hexKey: CENSOR, jwk: redactedJwk },
+      }),
     );
   });
 
