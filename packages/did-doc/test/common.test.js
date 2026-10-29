@@ -17,6 +17,7 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 
+const { ECDH, generateKeyPairSync } = require('node:crypto');
 const { default: bs58 } = require('bs58');
 const { last } = require('lodash/fp');
 const { toEthereumAddress } = require('@verii/blockchain-functions');
@@ -33,6 +34,7 @@ const {
   generateDidInfo,
   generatePublicKeySection,
   generateProof,
+  extractVerificationJwk,
   extractVerificationKey,
 } = require('../src/common');
 
@@ -198,6 +200,180 @@ describe('DID Documents Common', () => {
       };
 
       expect(() => extractVerificationKey(didDoc, kid)).toThrow(Error);
+    });
+  });
+
+  describe('extractVerificationJwk', () => {
+    const { publicKey: secp256k1Jwk } = generateKeyPair({ format: 'jwk' });
+    const secp256k1Hex = hexFromJwk(secp256k1Jwk, false);
+    const { publicKey: p256Jwk } = generateKeyPair({
+      format: 'jwk',
+      curve: 'P-256',
+    });
+    const did = 'did:web:example.com';
+    const kid = `${did}#key-1`;
+
+    it('should return null when no verification method matches the kid', () => {
+      const didDoc = {
+        id: did,
+        verificationMethod: [
+          { id: kid, type: signatureKeyType, publicKeyJwk: p256Jwk },
+        ],
+      };
+
+      expect(extractVerificationJwk(didDoc, `${did}#key-2`)).toEqual(null);
+    });
+
+    it('should return a P-256 publicKeyJwk unchanged', () => {
+      const didDoc = {
+        id: did,
+        verificationMethod: [
+          { id: '#key-1', type: signatureKeyType, publicKeyJwk: p256Jwk },
+        ],
+      };
+
+      const jwk = extractVerificationJwk(didDoc, kid);
+      expect(jwk).toBe(p256Jwk);
+      expect(jwk).toEqual({
+        kty: 'EC',
+        crv: 'P-256',
+        x: p256Jwk.x,
+        y: p256Jwk.y,
+      });
+    });
+
+    it('should return a secp256k1 publicKeyJwk unchanged', () => {
+      const didDoc = {
+        id: did,
+        assertionMethod: [
+          { id: kid, type: verificationKeyType, publicKeyJwk: secp256k1Jwk },
+        ],
+      };
+
+      expect(extractVerificationJwk(didDoc, kid)).toBe(secp256k1Jwk);
+    });
+
+    it('should prefer publicKeyJwk over legacy encodings', () => {
+      const didDoc = {
+        id: did,
+        publicKey: [
+          {
+            id: kid,
+            type: signatureKeyType,
+            publicKeyJwk: p256Jwk,
+            publicKeyHex: secp256k1Hex,
+          },
+        ],
+      };
+
+      expect(extractVerificationJwk(didDoc, kid)).toBe(p256Jwk);
+    });
+
+    it('should convert publicKeyHex to a secp256k1 jwk', () => {
+      const didDoc = {
+        id: did,
+        publicKey: [
+          { id: kid, type: verificationKeyType, publicKeyHex: secp256k1Hex },
+        ],
+      };
+
+      expect(extractVerificationJwk(didDoc, kid)).toEqual({
+        ...secp256k1Jwk,
+        use: 'sig',
+      });
+    });
+
+    it('should convert publicKeyBase58 to a secp256k1 jwk', () => {
+      const didDoc = {
+        id: did,
+        publicKey: [generatePublicKeySection(kid, did, secp256k1Hex)],
+      };
+
+      expect(extractVerificationJwk(didDoc, kid)).toEqual({
+        ...secp256k1Jwk,
+        use: 'sig',
+      });
+    });
+
+    it('should convert a compressed publicKeyHex to a secp256k1 jwk', () => {
+      const didDoc = {
+        id: did,
+        publicKey: [
+          {
+            id: kid,
+            type: verificationKeyType,
+            publicKeyHex: ECDH.convertKey(
+              secp256k1Hex,
+              'secp256k1',
+              'hex',
+              'hex',
+              'compressed',
+            ),
+          },
+        ],
+      };
+
+      expect(extractVerificationJwk(didDoc, kid)).toEqual({
+        ...secp256k1Jwk,
+        use: 'sig',
+      });
+    });
+
+    it('should throw a 400 when a legacy encoding does not hold a secp256k1 public key', () => {
+      const ed25519PublicKey = Buffer.from(
+        generateKeyPairSync('ed25519').publicKey.export({ format: 'jwk' }).x,
+        'base64url',
+      );
+      const didDoc = {
+        id: did,
+        verificationMethod: [
+          {
+            id: kid,
+            type: 'Ed25519VerificationKey2018',
+            publicKeyBase58: bs58.encode(ed25519PublicKey),
+          },
+        ],
+      };
+
+      expect(() => extractVerificationJwk(didDoc, kid)).toThrow(
+        expect.objectContaining({
+          message: `Verification method ${kid} does not contain a secp256k1 public key`,
+          status: 400,
+          errorCode: 'unsupported_public_key',
+        }),
+      );
+    });
+
+    it('should throw when publicKeyJwk is not an object', () => {
+      const didDoc = {
+        id: did,
+        verificationMethod: [
+          {
+            id: kid,
+            type: signatureKeyType,
+            publicKeyJwk: JSON.stringify(p256Jwk),
+          },
+        ],
+      };
+
+      expect(() => extractVerificationJwk(didDoc, kid)).toThrow(Error);
+    });
+
+    it('should throw for unrecognized encoding', () => {
+      const didDoc = {
+        id: did,
+        verificationMethod: [
+          {
+            id: kid,
+            type: signatureKeyType,
+            publicKeyMultibase: 'zUnsupportedEncoding',
+          },
+        ],
+      };
+
+      expect(() => extractVerificationJwk(didDoc, kid)).toThrow(
+        'unsupported public key encoding',
+      );
     });
   });
 

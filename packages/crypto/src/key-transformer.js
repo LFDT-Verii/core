@@ -1,9 +1,15 @@
-const { createECDH } = require('crypto');
+const { createECDH, ECDH } = require('crypto');
 const { omit } = require('lodash/fp');
 
 const normalizeHex = (hex) => hex.replace(/^0x/i, '');
 
 const HEX_FORMAT = /^[0-9a-fA-F]+$/;
+
+const SECP256K1_PUBLIC_KEY_FORMAT =
+  /^(0[23][0-9a-fA-F]{64}|(04)?[0-9a-fA-F]{128})$/;
+
+const INVALID_SECP256K1_PUBLIC_KEY_MESSAGE =
+  'Expected secp256k1 compressed public key (66 hex chars) or uncompressed public key (128/130 hex chars)';
 
 const normalizeCoordinateHex = (hex, byteLength = 32) => {
   const normalizedHex = normalizeHex(hex);
@@ -83,6 +89,23 @@ const jwkFromSecp256k1Key = (key, priv = true) => {
   };
 };
 
+// Unlike jwkFromSecp256k1Key, never reads the key as a private key, and rejects points off the curve
+const jwkFromSecp256k1PublicKey = (publicKey) => {
+  const normalizedKey = normalizeHex(publicKey);
+  if (!SECP256K1_PUBLIC_KEY_FORMAT.test(normalizedKey)) {
+    throw new Error(INVALID_SECP256K1_PUBLIC_KEY_MESSAGE);
+  }
+  const sec1Key =
+    normalizedKey.length === 128 ? `04${normalizedKey}` : normalizedKey;
+  try {
+    return publicJwkFromPublicHex(
+      ECDH.convertKey(sec1Key, 'secp256k1', 'hex', 'hex', 'uncompressed'),
+    );
+  } catch {
+    throw new Error(INVALID_SECP256K1_PUBLIC_KEY_MESSAGE);
+  }
+};
+
 const hexFromJwk = (jwk, priv = true) => {
   if (priv) {
     if (jwk?.d == null) {
@@ -104,6 +127,7 @@ module.exports = {
   HEX_FORMAT,
   hexFromJwk,
   jwkFromSecp256k1Key,
+  jwkFromSecp256k1PublicKey,
   publicJwkFromPublicHex,
   publicKeyFromPrivateKey,
 };

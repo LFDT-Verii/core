@@ -17,8 +17,9 @@ const { before, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const { omit, set, times, join } = require('lodash/fp');
-const { generateCredentialJwt } = require('@verii/jwt');
+const { generateCredentialJwt, jwtSign } = require('@verii/jwt');
 const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
+const { generatePublicKeySection } = require('@verii/did-doc');
 const { checkIssuerTrust } = require('../src/check-issuer-trust');
 const {
   verifyPrimarySourceIssuer,
@@ -304,6 +305,166 @@ describe('issuer checks', () => {
     );
 
     expect(result).toEqual(CheckResults.PASS);
+  });
+
+  describe('issuing metadata key formats', () => {
+    const p256KeyPair = generateKeyPair({ format: 'jwk', curve: 'P-256' });
+    let p256BoundIssuerVc;
+
+    before(async () => {
+      p256BoundIssuerVc = await generateCredentialJwt(
+        issuerCred,
+        p256KeyPair.privateKey,
+        issuerKid,
+        'ES256',
+      );
+    });
+
+    const checkWithIssuerKey = (verificationMethod, overrides = {}) =>
+      checkIssuerTrust(
+        identityCredential,
+        issuerDid,
+        {
+          ...defaultDependencies,
+          issuerDidDocument: {
+            id: issuerDid,
+            verificationMethod: [{ id: '#key-1', ...verificationMethod }],
+          },
+          ...overrides,
+        },
+        context,
+      );
+
+    it('Should PASS when the boundIssuerVC is signed by a P-256 JsonWebKey2020 key', async () => {
+      const result = await checkWithIssuerKey(
+        {
+          type: 'JsonWebKey2020',
+          controller: issuerDid,
+          publicKeyJwk: p256KeyPair.publicKey,
+        },
+        { boundIssuerVc: p256BoundIssuerVc },
+      );
+
+      expect(p256KeyPair.publicKey.crv).toEqual('P-256');
+      expect(result).toEqual(CheckResults.PASS);
+    });
+
+    it('Should FAIL when the boundIssuerVC is signed by a different P-256 key', async () => {
+      const { publicKey: otherP256Jwk } = generateKeyPair({
+        format: 'jwk',
+        curve: 'P-256',
+      });
+
+      const result = await checkWithIssuerKey(
+        { type: 'JsonWebKey2020', publicKeyJwk: otherP256Jwk },
+        { boundIssuerVc: p256BoundIssuerVc },
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should FAIL when a P-256 boundIssuerVC is checked against a secp256k1 key', async () => {
+      const result = await checkWithIssuerKey(
+        { type: 'JsonWebKey2020', publicKeyJwk: issuerKeyPair.publicKey },
+        { boundIssuerVc: p256BoundIssuerVc },
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should PASS when the issuer key is a legacy secp256k1 publicKeyHex', async () => {
+      const result = await checkWithIssuerKey({
+        type: 'EcdsaSecp256k1VerificationKey2019',
+        publicKeyHex: issuerPublicKey,
+      });
+
+      expect(result).toEqual(CheckResults.PASS);
+    });
+
+    it('Should PASS when the issuer key is a legacy secp256k1 publicKeyBase58', async () => {
+      const { publicKeyBase58 } = generatePublicKeySection(
+        '#key-1',
+        issuerDid,
+        issuerPublicKey,
+      );
+      expect(publicKeyBase58).toBeDefined();
+
+      const result = await checkWithIssuerKey({
+        type: 'EcdsaSecp256k1VerificationKey2019',
+        publicKeyBase58,
+      });
+
+      expect(result).toEqual(CheckResults.PASS);
+    });
+
+    it('Should FAIL when a legacy secp256k1 publicKeyHex does not match the signer', async () => {
+      const { publicKey: otherJwk } = generateKeyPair({ format: 'jwk' });
+
+      const result = await checkWithIssuerKey({
+        type: 'EcdsaSecp256k1VerificationKey2019',
+        publicKeyHex: hexFromJwk(otherJwk, false),
+      });
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should FAIL when the kid is not in the DID document even if the header embeds a jwk', async () => {
+      const attackerKeyPair = generateKeyPair({ format: 'jwk' });
+      const embeddedJwkVc = await jwtSign(
+        { iss: issuerDid, vc: issuerCred },
+        attackerKeyPair.privateKey,
+        {
+          kid: `${issuerDid}#key-2`,
+          jwk: attackerKeyPair.publicKey,
+        },
+      );
+
+      const result = await checkWithIssuerKey(
+        { publicKeyJwk: issuerKeyPair.publicKey },
+        { boundIssuerVc: embeddedJwkVc },
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should FAIL when the boundIssuerVC uses a symmetric algorithm', async () => {
+      const secret = 'issuer-did-document-secret';
+      const hs256Vc = await jwtSign(
+        { iss: issuerDid, vc: issuerCred },
+        secret,
+        {
+          kid: issuerKid,
+        },
+      );
+
+      const result = await checkWithIssuerKey(
+        {
+          publicKeyJwk: {
+            kty: 'oct',
+            k: Buffer.from(secret).toString('base64url'),
+          },
+        },
+        { boundIssuerVc: hs256Vc },
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should not emit the deriveJwk hex deprecation warning', async (t) => {
+      const emitWarning = t.mock.method(process, 'emitWarning', () => {});
+
+      const result = await checkWithIssuerKey({
+        type: 'EcdsaSecp256k1VerificationKey2019',
+        publicKeyHex: issuerPublicKey,
+      });
+
+      expect(result).toEqual(CheckResults.PASS);
+      expect(
+        emitWarning.mock.calls.filter(
+          ({ arguments: [, options] }) => options?.code === 'VERII_JWT_DEP001',
+        ),
+      ).toEqual([]);
+    });
   });
 
   describe('checkIdentityIssuer tests suite', () => {
