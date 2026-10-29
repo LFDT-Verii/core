@@ -1,19 +1,44 @@
+import type { JsonWebKey } from 'crypto';
+
 export interface CredentialMetadata extends AllocationListEntry {
   contentHash: string;
   credentialType: string;
   credentialTypeByteEncoding: string;
-  publicKey: string;
+  publicKey: JsonWebKey;
 }
 
-export interface VcV2CredentialBuildOptions {
-  contentHash: string;
+export type CredentialDataModelVersion = '1.1' | '2.0';
+
+export type CredentialFormat = 'jwt_vc_json-ld' | 'vc+jwt';
+
+export interface CredentialIssuingOptions {
   context: Context;
-  credentialId: string;
+  credentialFormat: CredentialFormat;
+  credentialSigningAlgorithms?: Array<'SECP256K1' | 'ES256' | 'RS256'>;
   credentialSubjectId?: string;
-  credentialTypeMetadata: CredentialTypeMetadata;
+  credentialTypesMap: Record<string, CredentialTypeMetadata>;
   issuer: Issuer;
-  offer: CredentialOffer;
-  revocationUrl: string;
+  offers: CredentialOffer[];
+}
+
+export interface CredentialSecuringResult {
+  issuedCredential: IssuedCredential;
+  metadata: CredentialMetadata;
+}
+
+export interface IssuedCredential {
+  credential: JsonLdCredential | VcV2Credential;
+  credentialFormat: CredentialFormat;
+  credentialId: string;
+  credentialStatus?: LinkedData | LinkedData[];
+  dataModelVersion?: CredentialDataModelVersion;
+  securedCredential: string | Record<string, unknown>;
+  securingMechanism: JoseCredentialSecuringMechanism;
+}
+
+export interface JoseCredentialSecuringMechanism {
+  algorithm: 'ES256K' | 'ES256' | 'RS256';
+  type: 'jose';
 }
 
 export interface DbKey {
@@ -290,6 +315,10 @@ export interface VcV2SchemaDescriptor extends LinkedData {
   type: string;
 }
 
-export function buildVcV2Credential(
-  options: VcV2CredentialBuildOptions,
-): VcV2Credential;
+export function issueCredentials(
+  options: CredentialIssuingOptions,
+): Promise<IssuedCredential[]>;
+
+export function secureCredentials(
+  options: CredentialIssuingOptions,
+): Promise<CredentialSecuringResult[]>;

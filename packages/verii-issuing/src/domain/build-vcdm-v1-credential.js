@@ -23,27 +23,28 @@ const { VelocityRevocationListType } = require('@verii/vc-checks');
 /** @import { Issuer, CredentialTypeMetadata, CredentialOffer, Context, JsonLdCredential, LinkedData, CredentialSubject } from "../types/types" */
 
 /**
- * Prepares a json-ld credential from an offer
- * @param {Issuer} issuer the issuer
- * @param {string | undefined} credentialSubjectId id of the credential subject to bind into the credential
- * @param {CredentialOffer} offer offer to generate from
- * @param {string} credentialId id of the credential
- * @param {string} contentHash hash of the raw credentialSubject and validity values
- * @param {CredentialTypeMetadata} credentialTypeMetadata credentialType metadata
- * @param {string} revocationUrl revocationUrl for this offer
- * @param {Context} context context
- * @returns {JsonLdCredential} a json-ld formatted unsigned credential
+ * Builds a W3C Verifiable Credentials Data Model 1.1 document from an offer.
+ * @param {object} options credential build options
+ * @param {string} options.contentHash offer content hash
+ * @param {Context} options.context application context
+ * @param {string} options.credentialId credential identifier
+ * @param {string} [options.credentialSubjectId] bound credential subject
+ * @param {CredentialTypeMetadata} options.credentialTypeMetadata type metadata
+ * @param {Issuer} options.issuer issuer
+ * @param {CredentialOffer} options.offer credential offer
+ * @param {string} options.revocationUrl credential status URL
+ * @returns {JsonLdCredential} VCDM 1.1 credential document
  */
-const buildJsonLdCredential = (
-  issuer,
-  credentialSubjectId,
-  offer,
-  credentialId,
+const buildVcdmV1Credential = ({
   contentHash,
-  credentialTypeMetadata,
-  revocationUrl,
   context,
-) => {
+  credentialId,
+  credentialSubjectId,
+  credentialTypeMetadata,
+  issuer,
+  offer,
+  revocationUrl,
+}) => {
   const {
     config: { credentialExtensionsContextUrl },
   } = context;
@@ -215,5 +216,5 @@ const buildCredentialTypeJsonLdContext = (credentialTypeMetadata) =>
     : [];
 
 module.exports = {
-  buildJsonLdCredential,
+  buildVcdmV1Credential,
 };

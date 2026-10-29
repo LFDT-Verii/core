@@ -17,20 +17,21 @@
 
 const {
   mongoAllocationListQueries,
-  signVeriiCredentials,
+  secureCredentials,
 } = require('@verii/verii-issuing');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { keyBy } = require('lodash/fp');
 const { buildVeriiIssuer } = require('./build-verii-issuer');
 
-const signVeriiCredentialsFacade = async (
+const secureVeriiCredentialsFacade = async ({
+  context,
   credentialContentList,
+  credentialFormat,
+  credentialSigningAlgorithms,
   credentialSubjectId,
   credentialTypeMetadatas,
-  credentialSigningAlgorithms,
   issuerService,
-  context,
-) => {
+}) => {
   const { tenant } = context;
 
   // eslint-disable-next-line better-mutation/no-mutation
@@ -41,18 +42,21 @@ const signVeriiCredentialsFacade = async (
   // eslint-disable-next-line better-mutation/no-mutation
   context.caoDid = context.tenant.caoDid;
 
-  const result = await signVeriiCredentials(
-    credentialContentList,
-    credentialSubjectId,
-    keyBy('credentialType', credentialTypeMetadatas),
-    buildVeriiIssuer(tenant, issuerService),
-    credentialSigningAlgorithms,
+  const result = await secureCredentials({
     context,
-  );
+    credentialFormat,
+    credentialSigningAlgorithms,
+    credentialSubjectId,
+    credentialTypesMap: keyBy('credentialType', credentialTypeMetadatas),
+    issuer: buildVeriiIssuer(tenant, issuerService),
+    offers: credentialContentList,
+  });
   return {
     credentialMetadata: result?.[0]?.metadata,
-    vcJwt: result?.[0]?.vcJwt,
+    issuedCredential: result?.[0]?.issuedCredential,
   };
 };
 
-module.exports = { signVeriiCredentialsFacade };
+module.exports = {
+  secureVeriiCredentialsFacade,
+};
