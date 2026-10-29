@@ -45,6 +45,7 @@ const { jwtVerify, keyAlgorithmToJoseAlg } = require('@verii/jwt');
 const {
   getCredentialSigningAlgorithmsSupported,
 } = require('../../tenants/domain');
+const { generateCNonce } = require('../domain');
 
 const openid4vciPlugin = async (fastify) => {
   fastify.decorateRequest(
@@ -127,11 +128,6 @@ const buildIssuer = async (context) => {
     } catch {
       return { verified: false };
     }
-  };
-
-  const encryptString = (data) => {
-    const exchangesKey = tenant.keysByPurpose[KeyPurposes.EXCHANGES];
-    return kms.encryptString(data, exchangesKey._id);
   };
 
   const hash = (data, alg) =>
@@ -301,7 +297,7 @@ const buildIssuer = async (context) => {
 
   const createNonce = async () =>
     issuer.createNonceResponse({
-      cNonce: await encryptString(`${Date.now()}`),
+      cNonce: await generateCNonce(openIdIssuer, context),
     });
   const generateAccessToken = async (
     accessTokenParams,

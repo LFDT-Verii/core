@@ -100,6 +100,14 @@ const buildConfig = () => {
       )
       .asString(),
     challengesExpireIn: env.get('CHALLENGES_EXPIRE_IN').default('3d').asMs(),
+    openid4vciNonceSecret: env
+      .get('OPENID4VCI_NONCE_SECRET')
+      .required(!isTest)
+      .asString(),
+    openid4vciNonceExpiresIn: env
+      .get('OPENID4VCI_NONCE_EXPIRES_IN')
+      .default('5m')
+      .asMs(),
     // blockchain setup
     rpcUrl: env
       .get('RPC_NODE_URL')
