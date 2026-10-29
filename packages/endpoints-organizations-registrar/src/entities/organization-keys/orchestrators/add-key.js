@@ -73,6 +73,7 @@ const addKey = async (did, newKey, keyEncoding, context) => {
     : await resolveVerificationMethodFromByoDID(
         organization.didDoc.id,
         kidFragment,
+        context,
       );
 
   const newOrganizationKey = buildOrganizationKey(
