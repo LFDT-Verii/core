@@ -1,6 +1,6 @@
 {
   "name": "@verii/db-kms",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "KMS plugin that uses a db",
   "main": "index.js",
   "license": "Apache-2.0",
