@@ -28,16 +28,10 @@ const resolveCustodiedDidWeb = async (did, { repos }) => {
   return organization.didDoc;
 };
 
+// findOneByDid throws organization_not_found when no organization has the DID.
 const resolveLocalDid = async (did, { repos }) => {
   const organization = await repos.organizations.findOneByDid(did);
-  const didDoc = organization?.didDoc;
-
-  if (isEmpty(didDoc)) {
-    throw newError(404, `Could not resolve ${did}`, {
-      errorCode: 'did_resolution_failed',
-    });
-  }
-  return buildDidDocWithAlternativeId(did, didDoc);
+  return buildDidDocWithAlternativeId(did, organization.didDoc);
 };
 
 module.exports = { resolveDid };
