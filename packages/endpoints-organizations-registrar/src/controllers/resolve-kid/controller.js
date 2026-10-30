@@ -4,7 +4,7 @@ const newError = require('http-errors');
 
 const { extractVerificationJwk } = require('@verii/did-doc');
 const { hexFromJwk, jwkFromSecp256k1Key } = require('@verii/crypto');
-const { resolveDid } = require('../resolve-did/resolve-did');
+const { resolveDidOrNotFound } = require('../resolve-did/resolve-did');
 const publicKeyFormats = require('./public-key-formats');
 
 const resolversController = async (fastify) => {
@@ -48,7 +48,7 @@ const resolversController = async (fastify) => {
         query: { format },
       } = req;
       const did = flow(split('#'), first)(kid);
-      const didDoc = await resolveDid(did, req);
+      const didDoc = await resolveDidOrNotFound(did, req);
 
       const publicJwk = extractVerificationJwk(didDoc, kid);
       if (!publicJwk) {

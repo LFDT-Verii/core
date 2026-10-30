@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  */
-const { resolveDidWeb } = require('@verii/did-web');
 const { omit } = require('lodash/fp');
 const { publish } = require('@spencejs/spence-events');
 const {
@@ -25,6 +24,7 @@ const {
 } = require('../domains');
 const { acceptInvitation } = require('../../invitations');
 const { loadCaoServiceRefs } = require('./load-cao-service-refs');
+const { resolveDid } = require('../../organizations/orchestrators/resolve-did');
 
 const {
   initAddServiceToOrganization,
@@ -47,7 +47,7 @@ const initAddService = async (fastify) => {
     });
 
     if (organization.didNotCustodied) {
-      const byoDidDocument = await resolveDidWeb(organization.didDoc.id);
+      const byoDidDocument = await resolveDid(organization.didDoc.id, context);
 
       const organizationKeys = await repos.organizationKeys.find({
         filter: { organizationId: organization._id },

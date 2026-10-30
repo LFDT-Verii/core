@@ -51,12 +51,20 @@ describe('Resolve did test suite', () => {
 
   describe('did:ion resolution', () => {
     it('Should return 404 when DID document not found', async () => {
-      const response = await fastify.inject({
+      const response = await fastify.injectJson({
         method: 'GET',
         url: `${baseUrl}/did:test:123`,
       });
 
       expect(response.statusCode).toEqual(404);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Not Found',
+          errorCode: 'organization_not_found',
+          message: 'Organization not found',
+          statusCode: 404,
+        }),
+      );
     });
 
     it('Should resolve did for "did:ion" did', async () => {
@@ -394,6 +402,49 @@ describe('Resolve did test suite', () => {
         }),
       );
       expect(nockData.isDone()).toBe(true);
+    });
+  });
+
+  describe('custodied did:web resolution', () => {
+    it('Should resolve a custodied did:web from the database without fetching it', async () => {
+      const organization = await persistOrganization({
+        did: 'did:web:members.localhost.test:d:www.example.com',
+      });
+      const didJson = nock('https://members.localhost.test')
+        .get('/d/www.example.com/did.json')
+        .reply(200, { id: organization.didDoc.id });
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${baseUrl}/${organization.didDoc.id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual(organization.didDoc);
+      expect(didJson.isDone()).toBe(false);
+    });
+
+    it('Should error with 404 for an unknown custodied did:web without fetching it', async () => {
+      const did = 'did:web:members.localhost.test:d:www.unknown.com';
+      const didJson = nock('https://members.localhost.test')
+        .get('/d/www.unknown.com/did.json')
+        .reply(200, { id: did });
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${baseUrl}/${did}`,
+      });
+
+      expect(response.statusCode).toEqual(404);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Not Found',
+          errorCode: 'did_resolution_failed',
+          message: `Could not resolve ${did}: DID document not found`,
+          statusCode: 404,
+        }),
+      );
+      expect(didJson.isDone()).toBe(false);
     });
   });
 

@@ -92,6 +92,27 @@ describe('Public Key Resolution', () => {
     expect(response.statusCode).toEqual(404);
   });
 
+  it('Should resolve kid public key for a custodied did:web without fetching its DID document', async () => {
+    const organization = await persistOrganization({
+      did: 'did:web:members.localhost.test:d:www.example.com',
+      keys: DEFAULT_KEYS,
+    });
+    const { didDoc } = organization;
+    const kid = `${didDoc.id}#vc-signing-key-1`;
+    const didJson = nock('https://members.localhost.test')
+      .get('/d/www.example.com/did.json')
+      .reply(200, { id: didDoc.id });
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}`,
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual(extractVerificationKey(didDoc, kid));
+    expect(didJson.isDone()).toBe(false);
+  });
+
   it('[Deprecated] Should resolve kid public key for "did:velocity" did with jwk publicKey', async () => {
     const organization = await persistOrganization({
       didDocId: 'did:velocity:123',
