@@ -41,10 +41,7 @@ const toJwk = (coseKey) => {
     };
   }
   if (kty === KeyTypes.EC2) {
-    const crv =
-      coseKey.getParam(EC2KeyParameters.Crv) === EllipticCurves.Secp256k1
-        ? 'secp256k1'
-        : 'P-256';
+    const crv = jwkCurveFrom(coseKey.getParam(EC2KeyParameters.Crv));
     const x = Buffer.from(coseKey.getParam(EC2KeyParameters.X));
     const y = deriveEcYValue(crv, x, coseKey.getParam(EC2KeyParameters.Y));
 
@@ -68,20 +65,44 @@ const fromJwk = (jwk) => {
       .setParam(RSAKeyParameters.E, Buffer.from(jwk.e, 'base64url'));
   }
   if (jwk.kty === 'EC') {
+    const crv = coseCurveFrom(jwk.crv);
     const y = isEcYValueEven(Buffer.from(jwk.y, 'base64url'));
     key.kty = KeyTypes.EC2;
     return key
-      .setParam(
-        EC2KeyParameters.Crv,
-        jwk.crv === 'secp256k1'
-          ? EllipticCurves.Secp256k1
-          : EllipticCurves.P_256,
-      )
+      .setParam(EC2KeyParameters.Crv, crv)
       .setParam(EC2KeyParameters.X, Buffer.from(jwk.x, 'base64url'))
       .setParam(EC2KeyParameters.Y, y);
   }
   throw new Error('Unsupported JWK Key Type (kty)');
 };
+
+const jwkCurveFrom = (coseCurve) => {
+  const jwkCurve = JwkCurvesByCoseCurve.get(coseCurve);
+  if (jwkCurve == null) {
+    throw new Error('Unsupported COSE EC2 Curve (crv)');
+  }
+  return jwkCurve;
+};
+
+const coseCurveFrom = (jwkCurve) => {
+  const coseCurve = CoseCurvesByJwkCurve.get(jwkCurve);
+  if (coseCurve == null) {
+    throw new Error('Unsupported JWK EC Curve (crv)');
+  }
+  return coseCurve;
+};
+
+const CoseCurvesByJwkCurve = new Map([
+  ['P-256', EllipticCurves.P_256],
+  ['secp256k1', EllipticCurves.Secp256k1],
+]);
+
+const JwkCurvesByCoseCurve = new Map(
+  [...CoseCurvesByJwkCurve].map(([jwkCurve, coseCurve]) => [
+    coseCurve,
+    jwkCurve,
+  ]),
+);
 
 module.exports = {
   toJwk,

@@ -14,8 +14,16 @@
  * limitations under the License.
  *
  */
+const { generateKeyPairSync } = require('node:crypto');
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
+const {
+  EC2KeyParameters,
+  EllipticCurves,
+  KeyParameters,
+  KeyTypes,
+} = require('../src/cose-iana');
+const { CoseKey } = require('../src/cose-key');
 const { fromJwk, toJwk } = require('../src/jwk-converters');
 
 const es256Jwk = {
@@ -54,4 +62,94 @@ describe('jwk converters', () => {
     const coseKey = fromJwk(rs256Jwk);
     expect(toJwk(coseKey)).toEqual(rs256Jwk);
   });
+
+  describe('fromJwk curve mapping', () => {
+    it('encodes P-256 as COSE curve 1', () => {
+      expect(fromJwk(es256Jwk).getParam(EC2KeyParameters.Crv)).toEqual(
+        EllipticCurves.P_256,
+      );
+    });
+
+    it('encodes secp256k1 as COSE curve 8', () => {
+      expect(fromJwk(es256kJwk).getParam(EC2KeyParameters.Crv)).toEqual(
+        EllipticCurves.Secp256k1,
+      );
+    });
+
+    ['P-384', 'P-521'].forEach((namedCurve) => {
+      it(`throws for a ${namedCurve} JWK`, () => {
+        const jwk = publicEcJwk(namedCurve);
+        expect(jwk.crv).toEqual(namedCurve);
+        expect(() => fromJwk(jwk)).toThrow('Unsupported JWK EC Curve (crv)');
+      });
+    });
+
+    [
+      ['an unknown crv', 'unknown'],
+      ['a crv with the wrong case', 'p-256'],
+      ['a crv inherited from Object.prototype', 'constructor'],
+      ['a numeric COSE crv', EllipticCurves.P_256],
+      ['a null crv', null],
+      ['a missing crv', undefined],
+    ].forEach(([description, crv]) => {
+      it(`throws for ${description}`, () => {
+        expect(() => fromJwk({ ...es256Jwk, crv })).toThrow(
+          'Unsupported JWK EC Curve (crv)',
+        );
+      });
+    });
+  });
+
+  describe('toJwk curve mapping', () => {
+    it('decodes COSE curve 1 as P-256', () => {
+      expect(toJwk(ec2CoseKey(EllipticCurves.P_256, es256Jwk))).toEqual(
+        es256Jwk,
+      );
+    });
+
+    it('decodes COSE curve 8 as secp256k1', () => {
+      expect(toJwk(ec2CoseKey(EllipticCurves.Secp256k1, es256kJwk))).toEqual(
+        es256kJwk,
+      );
+    });
+
+    [
+      ['P-384', EllipticCurves.P_384],
+      ['P-521', EllipticCurves.P_521],
+    ].forEach(([namedCurve, coseCurve]) => {
+      it(`throws for a ${namedCurve} COSE key`, () => {
+        expect(() =>
+          toJwk(ec2CoseKey(coseCurve, publicEcJwk(namedCurve))),
+        ).toThrow('Unsupported COSE EC2 Curve (crv)');
+      });
+    });
+
+    [
+      ['an unknown crv', 99],
+      ['the reserved crv', EllipticCurves.Reserved],
+      ['an OKP crv', EllipticCurves.Ed25519],
+      ['a text JWK crv', 'P-256'],
+      ['a text COSE crv id', String(EllipticCurves.P_256)],
+      ['a missing crv', undefined],
+    ].forEach(([description, crv]) => {
+      it(`throws for ${description}`, () => {
+        expect(() => toJwk(ec2CoseKey(crv, es256Jwk))).toThrow(
+          'Unsupported COSE EC2 Curve (crv)',
+        );
+      });
+    });
+  });
 });
+
+const publicEcJwk = (namedCurve) =>
+  generateKeyPairSync('ec', { namedCurve }).publicKey.export({ format: 'jwk' });
+
+const ec2CoseKey = (crv, jwk) =>
+  new CoseKey()
+    .setParam(KeyParameters.Kty, KeyTypes.EC2)
+    .setParam(EC2KeyParameters.Crv, crv)
+    .setParam(EC2KeyParameters.X, Buffer.from(jwk.x, 'base64url'))
+    .setParam(
+      EC2KeyParameters.Y,
+      Buffer.from(jwk.y, 'base64url').at(-1) % 2 === 0,
+    );
