@@ -18,7 +18,7 @@ The Registrar create-organization, add-key and get-key endpoints accept `key_enc
 
 ### [#1151](https://github.com/LFDT-Verii/core/pull/1151) Send tenant keys to CAOs as JWKs
 
-Registrar `create_tenant` messages can carry organization keys as JWKs, including ES256 keys, to CAOs that declare the algorithms and encodings they accept; CAOs that declare nothing still receive hex keys. `@verii/jwt` adds `resolveTransferredKey`, which imports the JWK in preference to hex, and `isMatchingKeyPair` and `publicJwkFromPrivateJwk` so key imports can prove a key pair belongs together ([#1110](https://github.com/LFDT-Verii/core/pull/1110)).
+The Registrar's `create_tenant` message schema can carry organization keys as JWKs, and a CAO's ack to the `test` message can declare the key algorithms and encodings it accepts as `keyTransfer`. `@verii/endpoints-organizations-registrar` exports `buildCaoKeyTransfer`, which builds each key for a CAO from that declaration. secp256k1 keys are sent in the declared encodings, or as hex to a CAO that declared none. Keys of other algorithms, such as ES256, are sent only as JWKs, and only to CAOs that declared the algorithm. The Registrar endpoints don't send `create_tenant` messages themselves: the service that does must record each CAO's declaration and call `buildCaoKeyTransfer`. `@verii/jwt` adds `resolveTransferredKey`, which imports the JWK in preference to hex, and `isMatchingKeyPair` and `publicJwkFromPrivateJwk` so key imports can prove a key pair belongs together ([#1110](https://github.com/LFDT-Verii/core/pull/1110)).
 
 ### [#1076](https://github.com/LFDT-Verii/core/pull/1076) Reject did:web documents that don't match the requested DID
 

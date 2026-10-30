@@ -68,3 +68,8 @@ Under `NODE_ENV=test`, a custom CAO security provider's blockchain credentials a
 - `startNotificationWorker` no longer accepts `createAppServer`, and `notificationWorkerModulePath` must be an absolute path to an existing file.
 - Hubs that already have `SENTRY_DSN` in their environment start sending events to Sentry.
 - The `Server Configured` startup log reports configuration names instead of values.
+
+## Known issues
+
+- Tenant creation still accepts only `SECP256K1` keys ([#746](https://github.com/LFDT-Verii/core/issues/746)), so organizations whose Registrar keys are P-256 (`ES256_ORGANIZATION_KEYS`) can't be onboarded yet. ES256 credential signing ([#926](https://github.com/LFDT-Verii/core/pull/926)) doesn't need ES256 tenant keys: each credential is signed with a new key of the chosen algorithm.
+- When two requests create the same tenant at once, the Hub imports both requests' keys before the duplicate insert fails, so the losing request's keys stay in the KMS with no tenant ([#1169](https://github.com/LFDT-Verii/core/issues/1169)).
