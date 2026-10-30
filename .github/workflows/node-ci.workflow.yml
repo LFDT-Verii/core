@@ -283,6 +283,31 @@ jobs:
         "$RUNNER_TEMP/compat-venv/bin/python" "$RUNNER_TEMP/compat.py" --version "$DOCUMENTDB_VERSION" \
           --uri 'mongodb://localhost:27017/admin?directConnection=true' | tee "$RUNNER_TEMP/compat.txt"
         if grep -q 'unsupported operators were found' "$RUNNER_TEMP/compat.txt"; then exit 1; fi
+    # Azure DocumentDB (formerly Cosmos DB for MongoDB vCore) runs the open-source DocumentDB engine, so run the Hub's tests on it too.
+    # The container serves TLS with a self-signed certificate, which the tests trust through CA_FILENAME.
+    - name: Start DocumentDB Local
+      if: matrix.package == '@verii/server-credentialing-hub'
+      env:
+        DOCUMENTDB_IMAGE: ghcr.io/documentdb/documentdb/documentdb-local:pg17-1.0.0@sha256:4a341daca29b02dabd0d64c357bc9231868b59ef08c8059058b1e5cedbe3899d
+      run: |
+        docker run -d --name documentdb-local -p 10260:10260 --health-interval 2s "$DOCUMENTDB_IMAGE" \
+          --username test --password test --disable-usage-telemetry
+        until [ "$(docker inspect -f '{{.State.Health.Status}}' documentdb-local)" = healthy ]; do
+          if [ "$SECONDS" -gt 120 ]; then docker logs documentdb-local; exit 1; fi
+          sleep 2
+        done
+        openssl s_client -connect localhost:10260 </dev/null 2>/dev/null | openssl x509 -out "$RUNNER_TEMP/documentdb-local.pem"
+    - name: Test Against DocumentDB Local
+      if: matrix.package == '@verii/server-credentialing-hub'
+      working-directory: ./servers/credentialinghub
+      timeout-minutes: 10
+      env:
+        IS_CI: true
+        NODE_OPTIONS: "--max_old_space_size=4096"
+        TLS_MONGO: true
+        TEST_MONGO_BASE_URI: mongodb://test:test@localhost:10260
+        CA_FILENAME: ${{ runner.temp }}/documentdb-local.pem
+      run: pnpm test
     - name: Create Artifact Name
       run: |
         echo "ARTIFACT_NAME=$(echo '${{ matrix.package }}' | sed -e 's+@+-+g; s+/+-+g')" >> "$GITHUB_ENV"
