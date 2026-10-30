@@ -16,9 +16,9 @@ A credential is reported as `SELF_SIGNED` only when its issuer is the `did:jwk` 
 
 The Registrar create-organization, add-key and get-key endpoints accept `key_encoding=hex|jwk`, with `hex` remaining the default. The Registrar can also generate P-256 issuing and exchange keys behind the `ES256_ORGANIZATION_KEYS` flag ([#1143](https://github.com/LFDT-Verii/core/pull/1143)), which is off by default and should stay off until agents and CAOs support ES256.
 
-### [#1151](https://github.com/LFDT-Verii/core/pull/1151) Send tenant keys to CAOs as JWKs
+### [#1151](https://github.com/LFDT-Verii/core/pull/1151) Let CAOs receive tenant keys as JWKs
 
-The Registrar's `create_tenant` message schema can carry organization keys as JWKs, and a CAO's ack to the `test` message can declare the key algorithms and encodings it accepts as `keyTransfer`. `@verii/endpoints-organizations-registrar` exports `buildCaoKeyTransfer`, which builds each key for a CAO from that declaration. secp256k1 keys are sent in the declared encodings, or as hex to a CAO that declared none. Keys of other algorithms, such as ES256, are sent only as JWKs, and only to CAOs that declared the algorithm. The Registrar endpoints don't send `create_tenant` messages themselves: the service that does must record each CAO's declaration and call `buildCaoKeyTransfer`. `@verii/jwt` adds `resolveTransferredKey`, which imports the JWK in preference to hex, and `isMatchingKeyPair` and `publicJwkFromPrivateJwk` so key imports can prove a key pair belongs together ([#1110](https://github.com/LFDT-Verii/core/pull/1110)).
+`create_tenant` messages can carry organization keys as JWKs, and CAOs can declare the key algorithms and encodings they accept in their ack to the `test` message. The service that sends `create_tenant` builds each key with the new `buildCaoKeyTransfer`, which sends keys other than secp256k1 only as JWKs, and only to CAOs that accept them. `@verii/jwt` adds `resolveTransferredKey`, `isMatchingKeyPair` and `publicJwkFromPrivateJwk` for importing transferred keys ([#1110](https://github.com/LFDT-Verii/core/pull/1110)).
 
 ### [#1076](https://github.com/LFDT-Verii/core/pull/1076) Reject did:web documents that don't match the requested DID
 

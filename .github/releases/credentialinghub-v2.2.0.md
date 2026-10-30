@@ -71,5 +71,5 @@ Under `NODE_ENV=test`, a custom CAO security provider's blockchain credentials a
 
 ## Known issues
 
-- Tenant creation still accepts only `SECP256K1` keys ([#746](https://github.com/LFDT-Verii/core/issues/746)), so organizations whose Registrar keys are P-256 (`ES256_ORGANIZATION_KEYS`) can't be onboarded yet. ES256 credential signing ([#926](https://github.com/LFDT-Verii/core/pull/926)) doesn't need ES256 tenant keys: each credential is signed with a new key of the chosen algorithm.
-- When two requests create the same tenant at once, the Hub imports both requests' keys before the duplicate insert fails, so the losing request's keys stay in the KMS with no tenant ([#1169](https://github.com/LFDT-Verii/core/issues/1169)).
+- Tenant keys must still be `SECP256K1` ([#746](https://github.com/LFDT-Verii/core/issues/746)), so organizations with P-256 Registrar keys can't be onboarded yet. ES256 credential signing doesn't need ES256 tenant keys.
+- A tenant creation that fails when saving the tenant, such as a repeated request for an existing tenant, leaves that request's keys in the KMS ([#1169](https://github.com/LFDT-Verii/core/issues/1169)).
