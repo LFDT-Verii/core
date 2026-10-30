@@ -24,6 +24,10 @@ Registrar `create_tenant` messages can carry organization keys as JWKs, includin
 
 `@verii/did-web` rejects a resolved document whose `id` differs from the requested DID, as DID Core requires. Resolution errors give a short reason without exposing network addresses or response contents.
 
+### [#1168](https://github.com/LFDT-Verii/core/pull/1168) Resolve the Registrar's custodied did:web DIDs from its database
+
+The Registrar's `resolve-did` and `resolve-kid` endpoints read `did:web` DIDs under `CUSTODIED_DID_WEB_HOST` from the organizations collection, the source of the Registrar's `did.json` route, instead of fetching the Registrar's own `did.json` over HTTPS. Resolving those DIDs no longer stalls or fails when that network path is slow.
+
 ### [#1095](https://github.com/LFDT-Verii/core/pull/1095) Keep secrets out of logs
 
 The `Server Configured` startup log lists only the names of configured settings, never their values. `@verii/logger` also redacts authorization and cookie headers logged by `@verii/http-client` ([#1021](https://github.com/LFDT-Verii/core/pull/1021)) and private key material in JWK and hex form ([#1146](https://github.com/LFDT-Verii/core/pull/1146), [#1151](https://github.com/LFDT-Verii/core/pull/1151)).
@@ -58,7 +62,7 @@ The VNF client authentication plugin in `@verii/base-contract-io` now replaces a
 - Credential verification rejects VC 1.1 credentials with a `typ` other than `JWT`, a `vc.@context` that is not an array starting with the VC 1.1 context, an `alg` other than ES256K, ES256 or RS256, or an `alg` that doesn't match the key. A rejected credential fails the whole `verifyCredentials` call, and calls with more than 100 credentials are rejected.
 - Credentials signed with an embedded key not bound to their issuer, including `verifgen credential --self-sign` output, now report `TRUSTED_ISSUER: FAIL` instead of `SELF_SIGNED`; a `did:jwk` key that doesn't match the issuer reports `DATA_INTEGRITY_ERROR`. A `kid` that matched only when ignoring case also reports `DATA_INTEGRITY_ERROR`.
 - Trusted-issuer checks no longer fall back to a JWK embedded in the issuer credential header. The bound issuer credential's `kid` must be in the issuer's DID document and use ES256 or ES256K.
-- `@verii/did-web` rejects documents whose `id` isn't exactly the requested DID, including percent-encoding case and query strings. Bring-your-own did:web organizations with a mismatched hosted document get 400 from Registrar registration, key and service operations and 404 from `resolve-did` and `resolve-kid`.
+- `@verii/did-web` rejects documents whose `id` isn't exactly the requested DID, including percent-encoding case and query strings. Bring-your-own did:web organizations with a mismatched hosted document get 400 from Registrar registration, key and service operations and 404 from `resolve-did` and `resolve-kid`. A custodied did:web that an organization holds only in `alsoKnownAs` no longer resolves: `resolve-did` and `resolve-kid` return 404 `did_resolution_failed` ([#1168](https://github.com/LFDT-Verii/core/pull/1168)), and `@verii/did-web` rejects the document the Registrar serves at its `did.json` URL.
 - Registrar `resolve-kid` with `format=hex` (the default) or `format=base58` returns 400 `public_key_format_not_supported` for keys that aren't secp256k1; use `format=jwk`. Stored compressed `publicKeyHex` values are returned as uncompressed `04…` hex.
 - `@verii/components-organizations-registrar` requires `react-router` exactly `7.18.4` as a peer.
 - `@verii/country-data` `getCountries` takes calling codes from country-codes-list 3, so North American Numbering Plan territories report `+1` instead of their area code (for example Jamaica changes from `+876` to `+1`).
