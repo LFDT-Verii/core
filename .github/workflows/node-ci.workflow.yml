@@ -283,10 +283,10 @@ jobs:
         "$RUNNER_TEMP/compat-venv/bin/python" "$RUNNER_TEMP/compat.py" --version "$DOCUMENTDB_VERSION" \
           --uri 'mongodb://localhost:27017/admin?directConnection=true' | tee "$RUNNER_TEMP/compat.txt"
         if grep -q 'unsupported operators were found' "$RUNNER_TEMP/compat.txt"; then exit 1; fi
-    # Azure DocumentDB (formerly Cosmos DB for MongoDB vCore) runs the open-source DocumentDB engine, so run the Hub's tests on it too.
+    # Azure DocumentDB (formerly Cosmos DB for MongoDB vCore) runs the open-source DocumentDB engine, so the nightly run also runs the Hub's tests on it.
     # The container serves TLS with a self-signed certificate, which the tests trust through CA_FILENAME.
     - name: Start DocumentDB Local
-      if: matrix.package == '@verii/server-credentialing-hub'
+      if: github.event_name == 'schedule' && matrix.package == '@verii/server-credentialing-hub'
       env:
         DOCUMENTDB_IMAGE: ghcr.io/documentdb/documentdb/documentdb-local:pg17-1.0.0@sha256:4a341daca29b02dabd0d64c357bc9231868b59ef08c8059058b1e5cedbe3899d
       run: |
@@ -298,7 +298,7 @@ jobs:
         done
         openssl s_client -connect localhost:10260 </dev/null 2>/dev/null | openssl x509 -out "$RUNNER_TEMP/documentdb-local.pem"
     - name: Test Against DocumentDB Local
-      if: matrix.package == '@verii/server-credentialing-hub'
+      if: github.event_name == 'schedule' && matrix.package == '@verii/server-credentialing-hub'
       working-directory: ./servers/credentialinghub
       timeout-minutes: 10
       env:
