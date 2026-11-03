@@ -184,6 +184,11 @@ const buildConfig = ({ servesHttp = true } = {}) => {
         .asIntPositive(),
       allowInsecureWebhookUrl: allowInsecureNotificationWebhookUrl,
     }),
+    // allows http push URLs for wallet messages, for local development
+    walletMessagesAllowInsecureUrl: env
+      .get('WALLET_MESSAGES_ALLOW_INSECURE_URL')
+      .default('false')
+      .asBool(),
   };
 };
 

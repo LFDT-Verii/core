@@ -542,6 +542,37 @@ describe('Credential Revocation Test Suite', () => {
     expect(dbCredential.notifiedOfRevocationAt).toBeUndefined();
   });
 
+  it('should revoke credential and fail the notification without posting to an http push url', async () => {
+    const messagingSettings = {
+      webhookUrl: 'http://wallet.example.com/push',
+      authToken: 'push-token-123',
+    };
+    const { tenant: revokingTenant, credential } = await setupRevocationTenant({
+      messagingSettings,
+    });
+    const { nockedWebhook } = nockWebhook(messagingSettings);
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: `${testUrl}/revoke`,
+      payload: {
+        tenantId: revokingTenant._id,
+        credentialId: credential._id,
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json.notification).toEqual({
+      status: 'failed',
+      error: 'push url must use https',
+    });
+    expect(response.json.credential.revokedAt).toEqual(
+      expect.stringMatching(ISO_DATETIME_FORMAT),
+    );
+    expect(response.json.credential.notifiedOfRevocationAt).toBeUndefined();
+    expect(nockedWebhook.isDone()).toEqual(false);
+  });
+
   it('should notify without revoking on chain when credential was already revoked but not notified', async () => {
     const revokedAt = new Date();
     const messagingSettings = {
