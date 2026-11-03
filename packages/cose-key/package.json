@@ -17,7 +17,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "bigint-crypto-utils": "3.3.0",
-    "cborg": "6.1.5",
+    "cborg": "6.2.1",
     "lodash": "^4.18.1"
   },
   "devDependencies": {
