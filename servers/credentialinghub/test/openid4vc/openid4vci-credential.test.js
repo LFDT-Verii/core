@@ -125,16 +125,23 @@ describe('openid4vc credential test suite', () => {
 
     holderKeyPair = generateKeyPair({ format: 'jwk' });
     holderDid = getDidUriFromJwk(holderKeyPair.publicKey);
-    authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-      subject: `https://localhost.test/r/${tenant._id}`,
-    });
     issuerService = await persistIssuerService({ tenant });
     depot = await persistDepot({
       tenant,
       service: issuerService,
     });
+    authToken = await buildAuthToken(depot);
     credential = await persistCredential({ tenant, depot });
   });
+
+  const buildAuthToken = (tokenDepot, payload) =>
+    jwtSign(
+      payload ?? { depot_id: `${tokenDepot._id}` },
+      issuerKeyPair.privateKey,
+      {
+        subject: `https://localhost.test/r/${tenant._id}`,
+      },
+    );
 
   after(async () => {
     await fastify.close();
@@ -381,6 +388,97 @@ describe('openid4vc credential test suite', () => {
         });
       });
 
+      it('should 401 with invalid_token if the token has no depot', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+        const tokenWithoutDepot = await buildAuthToken(undefined, {});
+
+        const response = await requestCredential(proof, credential._id, {
+          token: tokenWithoutDepot,
+        });
+
+        expect(response.statusCode).toEqual(401);
+        expect(response.json).toEqual({
+          error: 'invalid_token',
+          error_description: 'invalid_token',
+        });
+        await expectCredentialNotIssued();
+      });
+
+      it("should 400 with unknown_credential_identifier for another depot's credential", async () => {
+        const otherDepot = await persistDepot({
+          tenant,
+          service: issuerService,
+        });
+        const otherCredential = await persistCredential({
+          tenant,
+          depot: otherDepot,
+        });
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+
+        const response = await requestCredential(proof, otherCredential._id);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'unknown_credential_identifier',
+          error_description: `Error identifying credential ${otherCredential._id}`,
+        });
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(otherCredential._id) }),
+        ).resolves.toEqual(mongoify(otherCredential));
+      });
+
+      it('should 400 with credential_request_denied if the credential was already signed', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+        const firstResponse = await requestCredential(proof);
+        expect(firstResponse.statusCode).toEqual(200);
+        const signedCredential = await mongoDb()
+          .collection('credentials')
+          .findOne({ _id: new ObjectId(credential._id) });
+
+        const secondResponse = await requestCredential(proof);
+
+        expect(secondResponse.statusCode).toEqual(400);
+        expect(secondResponse.json).toEqual({
+          error: 'credential_request_denied',
+          error_description: `Credential ${credential._id} can't be issued again`,
+        });
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(credential._id) }),
+        ).resolves.toEqual(signedCredential);
+      });
+
+      ['acceptedAt', 'rejectedAt'].forEach((finalField) => {
+        it(`should 400 with credential_request_denied if the credential has ${finalField}`, async () => {
+          const finalCredential = await persistCredential({
+            tenant,
+            depot,
+            [finalField]: new Date(),
+          });
+          const cNonce = await requestNonce(tenant._id);
+          const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+
+          const response = await requestCredential(proof, finalCredential._id);
+
+          expect(response.statusCode).toEqual(400);
+          expect(response.json).toEqual({
+            error: 'credential_request_denied',
+            error_description: `Credential ${finalCredential._id} can't be issued again`,
+          });
+          await expect(
+            mongoDb()
+              .collection('credentials')
+              .findOne({ _id: new ObjectId(finalCredential._id) }),
+          ).resolves.toEqual(mongoify(finalCredential));
+        });
+      });
+
       it('should 400 if server issue', async () => {
         const cNonce = await requestNonce(tenant._id);
 
@@ -623,12 +721,16 @@ describe('openid4vc credential test suite', () => {
     return response.json.c_nonce;
   };
 
-  const requestCredential = (proof, credentialIdentifier = credential._id) =>
+  const requestCredential = (
+    proof,
+    credentialIdentifier = credential._id,
+    { token = authToken } = {},
+  ) =>
     fastify.injectJson({
       method: 'POST',
       url: `/r/${tenant._id}/openid4vc/credential`,
       headers: {
-        authorization: `Bearer ${authToken}`,
+        authorization: `Bearer ${token}`,
       },
       payload: {
         credential_identifier: credentialIdentifier,

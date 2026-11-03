@@ -16,6 +16,7 @@
  */
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
 const { jwtDecode } = require('@verii/jwt');
+const { ObjectId } = require('mongodb');
 const { nanoid } = require('nanoid');
 const { Oidc4vciErrors } = require('../domain');
 const {
@@ -24,7 +25,10 @@ const {
   ExchangeStates,
   ExchangeTypes,
 } = require('../../exchanges');
-const { signVeriiCredentialsFacade } = require('../../credentials');
+const {
+  isClaimableCredential,
+  signVeriiCredentialsFacade,
+} = require('../../credentials');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 
 const createCredential = async (credentialRequestParameters, context) => {
@@ -34,14 +38,24 @@ const createCredential = async (credentialRequestParameters, context) => {
     credentialRequestParameters,
   );
 
+  // Only the depot that the access token was issued for.
   const credential = await repos.credentials.findOne({
-    filter: { _id: credentialRequest.credentialIdentifier },
+    filter: {
+      _id: credentialRequest.credentialIdentifier,
+      depotId: new ObjectId(context.openid4vciDepotId),
+    },
   });
 
   if (credential == null) {
     throw new Oauth2ServerErrorResponseError({
       error: Oidc4vciErrors.UNKNOWN_CREDENTIAL_IDENTIFIER,
       error_description: `Error identifying credential ${credentialRequest.credentialIdentifier}`,
+    });
+  }
+  if (!isClaimableCredential(credential)) {
+    throw new Oauth2ServerErrorResponseError({
+      error: Oidc4vciErrors.CREDENTIAL_REQUEST_DENIED,
+      error_description: `Credential ${credentialRequest.credentialIdentifier} can't be issued again`,
     });
   }
 

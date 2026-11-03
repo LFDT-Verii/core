@@ -16,6 +16,7 @@
  */
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
 const { omitBy, isNil } = require('lodash/fp');
+const { ObjectId } = require('mongodb');
 const { Oidc4vciErrors } = require('../domain');
 const { ExchangeStates } = require('../../exchanges');
 const { anchorVeriiCredentialsFacade } = require('../../credentials');
@@ -24,7 +25,12 @@ const { anchorVeriiCredentialsFacade } = require('../../credentials');
 const handleNotification = async (notificationRequest, context) => {
   const { repos } = context;
   const credential = await repos.credentials.findOne(
-    { filter: { 'exchange.id': notificationRequest.notification_id } },
+    {
+      filter: {
+        'exchange.id': notificationRequest.notification_id,
+        depotId: new ObjectId(context.openid4vciDepotId),
+      },
+    },
     { exchange: 1 },
   );
 

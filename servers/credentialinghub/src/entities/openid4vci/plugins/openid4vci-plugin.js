@@ -90,18 +90,28 @@ const openid4vciPlugin = async (fastify) => {
     if (toLower(bearerType) !== 'bearer') {
       throwInvalidToken();
     }
-    try {
-      const claims = { subject: getIssuerUri(req) };
-      await jwtVerify(
-        bearerValue,
-        req.tenant.keysByPurpose.EXCHANGES.publicJwk,
-        claims,
-      );
-    } catch (e) {
+    const payload = await verifyBearerToken(bearerValue, req).catch((e) => {
       req.log.warn(e);
+      return throwInvalidToken();
+    });
+    // A token without a depot, such as one issued before tokens carried it,
+    // can't be scoped to a holder's credentials.
+    if (isEmpty(payload[DEPOT_ID_CLAIM])) {
       throwInvalidToken();
     }
+    req.openid4vciDepotId = payload[DEPOT_ID_CLAIM];
   });
+};
+
+const DEPOT_ID_CLAIM = 'depot_id';
+
+const verifyBearerToken = async (bearerValue, req) => {
+  const { payload } = await jwtVerify(
+    bearerValue,
+    req.tenant.keysByPurpose.EXCHANGES.publicJwk,
+    { subject: getIssuerUri(req) },
+  );
+  return payload;
 };
 
 const buildIssuer = async (context) => {
@@ -300,6 +310,7 @@ const buildIssuer = async (context) => {
     accessTokenParams,
     authorizationDetails,
     expiresInSeconds,
+    depotId,
   ) => {
     const authorizationServerMetadata = getAuthorizationServerMetadata();
     const accessTokenResponse =
@@ -318,6 +329,10 @@ const buildIssuer = async (context) => {
         expiresInSeconds,
         audience: authorizationServerMetadata.issuer,
         subject: openIdIssuer,
+        // The credential and notification endpoints only act on this depot.
+        additionalAccessTokenPayload: {
+          [DEPOT_ID_CLAIM]: `${depotId}`,
+        },
         additionalAccessTokenResponsePayload: {
           authorization_details: authorizationDetails,
         },

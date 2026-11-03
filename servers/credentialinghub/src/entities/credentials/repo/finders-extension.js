@@ -17,6 +17,7 @@
 
 const { flow, flatMapDeep, compact, map, uniq, isEmpty } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
+const { claimableCredentialFilter } = require('../domain/claimable-credential');
 
 const findersExtension = (parent) => ({
   search: async ({ credentialIds }) => {
@@ -44,8 +45,7 @@ const findersExtension = (parent) => ({
       filter['content.type'] = { $in: credentialTypes };
     }
     if (claimable === true) {
-      filter.rejectedAt = { $exists: false };
-      filter.acceptedAt = { $exists: false };
+      Object.assign(filter, claimableCredentialFilter);
     }
     return parent.find({ filter });
   },
@@ -78,12 +78,12 @@ const findersExtension = (parent) => ({
       },
     );
   },
-  findNonFinal: async (credentialIds) =>
+  findNonFinal: async (credentialIds, depotId) =>
     parent.find({
       filter: {
         _id: { $in: credentialIds },
-        rejectedAt: { $exists: false },
-        acceptedAt: { $exists: false },
+        depotId: new ObjectId(depotId),
+        ...claimableCredentialFilter,
       },
     }),
   extensions: parent.extensions.concat(['findersExtension']),

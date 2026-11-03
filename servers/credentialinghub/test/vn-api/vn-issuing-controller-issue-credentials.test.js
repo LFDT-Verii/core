@@ -1477,6 +1477,84 @@ describe('vn-api > issue credentials', () => {
         ),
       );
     });
+    it("should not issue another depot's credentials", async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await testAccessToken(
+            tenant.did,
+            exchange._id,
+            depots[0]._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: {
+          approvedOfferIds: [credentials[0]._id, credentials[2]._id],
+          proof: await buildProof(
+            holderDid,
+            holderKeyPair,
+            await loadChallenge(exchange._id),
+          ),
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toHaveLength(1);
+      const [issuedCredential] = await findCredentials([credentials[0]._id]);
+      expect(issuedCredential.acceptedAt).toEqual(expect.any(Date));
+      await expect(findCredentials([credentials[2]._id])).resolves.toEqual([
+        mongoify(credentials[2]),
+      ]);
+      await expect(findOneExchange(exchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          exchange,
+          [ExchangeStates.CLAIMING_IN_PROGRESS, ExchangeStates.COMPLETE],
+          {
+            finalizedCredentialIds: [new ObjectId(credentials[0]._id)],
+          },
+        ),
+      );
+    });
+    it("should not reject another depot's credentials", async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await testAccessToken(
+            tenant.did,
+            exchange._id,
+            depots[0]._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: {
+          rejectedOfferIds: [credentials[2]._id],
+          proof: await buildProof(
+            holderDid,
+            holderKeyPair,
+            await loadChallenge(exchange._id),
+          ),
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual([]);
+      await expect(findCredentials([credentials[2]._id])).resolves.toEqual([
+        mongoify(credentials[2]),
+      ]);
+      await expect(findOneExchange(exchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          exchange,
+          [ExchangeStates.CLAIMING_IN_PROGRESS, ExchangeStates.COMPLETE],
+          {
+            finalizedCredentialIds: [],
+          },
+        ),
+      );
+    });
     it('should enqueue rejected credential notification events when notifications are enabled', async () => {
       fastify.overrides.reqConfig = enableNotifications([
         NotificationEventTypes.CREDENTIAL_REJECTED,

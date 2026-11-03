@@ -49,6 +49,7 @@ const createAccessToken = async (accessTokenParameters, context) => {
       accessTokenParameters.authorization_details,
     ),
     issuerService.authTokensExpireIn,
+    depot._id,
   );
   return accessTokenResponse;
 };
