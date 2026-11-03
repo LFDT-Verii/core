@@ -19,7 +19,7 @@ const { isEmpty } = require('lodash/fp');
 const { isBefore } = require('date-fns/fp');
 const { DepotErrors } = require('./depot-errors');
 
-const validateDepot = (depot, service) => {
+const validateDepot = (depot, service, isIssuerService) => {
   if (isMissingOrDeactivated(service)) {
     throw newError(400, DepotErrors.REFERENCED_SERVICE_NOT_FOUND, {
       errorCode: DepotErrors.REFERENCED_SERVICE_NOT_FOUND,
@@ -32,6 +32,15 @@ const validateDepot = (depot, service) => {
   ) {
     throw newError(400, DepotErrors.INVALID_AUTH_VALUES, {
       errorCode: DepotErrors.INVALID_AUTH_VALUES,
+    });
+  }
+  validateCredentialsPending(depot, isIssuerService);
+};
+
+const validateCredentialsPending = (depot, isIssuerService) => {
+  if (depot.credentialsPending === true && !isIssuerService) {
+    throw newError(400, DepotErrors.CREDENTIALS_PENDING_NOT_SUPPORTED, {
+      errorCode: DepotErrors.CREDENTIALS_PENDING_NOT_SUPPORTED,
     });
   }
 };

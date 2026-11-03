@@ -221,6 +221,102 @@ describe('Depots Test suite', () => {
         }),
       );
     });
+    it('should 400 if expectedCredentialTypes is empty', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: issuerService._id,
+          depot: { userReference: 'ABC123', expectedCredentialTypes: [] },
+        },
+      });
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'request_validation_failed',
+          message:
+            'body/depot/expectedCredentialTypes must NOT have fewer than 1 items',
+        }),
+      );
+    });
+    it('should 400 if expectedCredentialTypes has duplicates', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: issuerService._id,
+          depot: {
+            userReference: 'ABC123',
+            expectedCredentialTypes: ['EmailV1.0', 'EmailV1.0'],
+          },
+        },
+      });
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'request_validation_failed',
+          message:
+            'body/depot/expectedCredentialTypes must NOT have duplicate items (items ## 1 and 0 are identical)',
+        }),
+      );
+    });
+    it('should 400 for a pending relying party service depot', async () => {
+      const relyingPartyService = await persistRelyingPartyService({ tenant });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: relyingPartyService._id,
+          depot: { userReference: 'RP-USER-123', credentialsPending: true },
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'credentials_pending_not_supported',
+          message: 'credentials_pending_not_supported',
+        }),
+      );
+      await expect(
+        mongoDb().collection('depots').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it('should 200 for a pending depot with expected credential types', async () => {
+      const payload = {
+        tenantId: tenant._id,
+        serviceId: issuerService._id,
+        depot: {
+          userReference: 'ABC123',
+          credentialsPending: true,
+          expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
+        },
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload,
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        depot: {
+          ...payload.depot,
+          serviceId: payload.serviceId,
+          id: expect.stringMatching(OBJECT_ID_FORMAT),
+          createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+          updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        },
+        requestId: expect.any(String),
+      });
+
+      await expect(
+        mongoDb().collection('depots').find({}).toArray(),
+      ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);
+    });
     it('should 200 for a correctly setup depot', async () => {
       const payload = {
         tenantId: tenant._id,
@@ -236,6 +332,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
+          credentialsPending: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -267,6 +364,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
+          credentialsPending: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -294,6 +392,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
+          credentialsPending: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -380,6 +479,31 @@ describe('Depots Test suite', () => {
         });
         expect(response.json).toEqual({
           depots: [],
+          requestId: expect.any(String),
+        });
+      });
+      it('should return the pending fields of a completed depot', async () => {
+        const completedDepot = await persistDepot({
+          tenant,
+          service: issuerService,
+          userReference: nanoid(),
+          credentialsPending: false,
+          expectedCredentialTypes: ['EmailV1.0'],
+          completedAt: new Date(),
+        });
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${completedDepot._id}`,
+        });
+        expect(response.json).toEqual({
+          depots: [
+            {
+              ...expectedDepot(completedDepot),
+              credentialsPending: false,
+              expectedCredentialTypes: ['EmailV1.0'],
+              completedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+            },
+          ],
           requestId: expect.any(String),
         });
       });
@@ -596,6 +720,7 @@ describe('Depots Test suite', () => {
 });
 
 const expectedDepot = (depot) => ({
+  credentialsPending: false,
   ...omit(['_id', 'tenantId'], depot),
   id: depot._id,
 });

@@ -58,6 +58,11 @@ const EXPECTED_OPERATION_METADATA = {
   'POST /operator/depots/create': ['Depots', 'createDepot', OPERATOR_SECURITY],
   'GET /operator/depots/get': ['Depots', 'getDepots', OPERATOR_SECURITY],
   'POST /operator/depots/delete': ['Depots', 'deleteDepot', OPERATOR_SECURITY],
+  'POST /operator/depots/complete': [
+    'Depots',
+    'completeDepot',
+    OPERATOR_SECURITY,
+  ],
   'GET /operator/exchanges/get': [
     'Exchanges',
     'getExchange',
@@ -224,6 +229,7 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/depots/create',
       'GET /operator/depots/get',
       'POST /operator/depots/delete',
+      'POST /operator/depots/complete',
       'GET /operator/exchanges/get',
       'POST /operator/issue-links/refresh',
       'POST /operator/issuer-services/create',

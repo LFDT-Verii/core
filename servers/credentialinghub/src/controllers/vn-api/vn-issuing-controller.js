@@ -225,6 +225,18 @@ const vnfIssuingController = async (fastify) => {
               },
               required: ['offers'],
             },
+            202: {
+              type: 'object',
+              description:
+                'The offers are not ready yet. The wallet waits for a NewOffersReady or NoOffersFound message',
+              properties: {
+                offers: {
+                  type: 'array',
+                  maxItems: 0,
+                },
+              },
+              required: ['offers'],
+            },
             502: {
               $ref: 'error#',
             },
@@ -234,8 +246,18 @@ const vnfIssuingController = async (fastify) => {
         onError: async (req, reply, err) =>
           exchangeErrorHook(req.body.exchange_id, err, req),
       },
-      async (req) =>
-        credentialOfferRequest(req.token, req.body.offerHashes, req),
+      async (req, reply) => {
+        const result = await credentialOfferRequest(
+          req.token,
+          req.body.offerHashes,
+          req,
+        );
+        // Offers come without a challenge only while the depot is pending
+        if (result.challenge == null) {
+          reply.code(202);
+        }
+        return result;
+      },
     )
     .post(
       '/r/:tenantId/issue-credentials',

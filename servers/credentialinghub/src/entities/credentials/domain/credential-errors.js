@@ -17,6 +17,7 @@
 const CredentialErrors = {
   REFERENCED_DEPOT_NOT_FOUND: 'referenced_depot_not_found',
   CREDENTIAL_TYPE_NOT_FOUND: 'credential_type_not_found',
+  CREDENTIAL_TYPE_NOT_EXPECTED: 'credential_type_not_expected',
   CREDENTIAL_TYPES_METADATA_UPSTREAM_ERROR:
     'credential_types_metadata_upstream_error',
   SCHEMA_UPSTREAM_ERROR: 'schema_upstream_error',

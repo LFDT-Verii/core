@@ -18,6 +18,8 @@ const DepotErrors = {
   REFERENCED_SERVICE_NOT_FOUND: 'referenced_service_not_found',
   RELATED_CREDENTIAL_UNDELETED: 'related_credential_undeleted',
   INVALID_AUTH_VALUES: 'invalid_auth_values',
+  CREDENTIALS_PENDING_NOT_SUPPORTED: 'credentials_pending_not_supported',
+  DEPOT_NOT_FOUND: 'depot_not_found',
 };
 
 module.exports = { DepotErrors };
