@@ -1671,11 +1671,17 @@ describe('vn-api > issue credentials', () => {
       .collection('exchanges')
       .findOne({ _id: new ObjectId(value) });
 
-  const findCredentials = async (ids) =>
-    mongoDb()
-      .collection('credentials')
-      .find({ _id: { $in: map((id) => new ObjectId(id), ids) } })
-      .toArray();
+  // $in doesn't guarantee an order, so return the credentials in the order of ids
+  const findCredentials = async (ids) => {
+    const credentialsById = keyBy(
+      (credential) => credential._id.toString(),
+      await mongoDb()
+        .collection('credentials')
+        .find({ _id: { $in: map((id) => new ObjectId(id), ids) } })
+        .toArray(),
+    );
+    return map((id) => credentialsById[id.toString()], ids);
+  };
 
   const expectedCredentialNotificationEvent = ({
     eventType,
