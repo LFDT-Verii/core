@@ -16,22 +16,23 @@
  */
 
 const {
+  issueCredentials,
   mongoAllocationListQueries,
-  issueVeriiCredentials,
 } = require('@verii/verii-issuing');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { keyBy } = require('lodash/fp');
 const newError = require('http-errors');
 const { buildVeriiIssuer } = require('./build-verii-issuer');
 
-const issueVeriiCredentialsFacade = async (
+const issueVeriiCredentialsFacade = async ({
   approvedCredentialsContent,
+  context,
+  credentialFormat,
+  credentialSigningAlgorithms,
   credentialSubjectId,
   credentialTypeMetadatas,
-  credentialSigningAlgorithms,
   issuerService,
-  context,
-) => {
+}) => {
   const { tenant } = context;
 
   // eslint-disable-next-line better-mutation/no-mutation
@@ -42,14 +43,15 @@ const issueVeriiCredentialsFacade = async (
   // eslint-disable-next-line better-mutation/no-mutation
   context.caoDid = context.tenant.caoDid;
 
-  return issueVeriiCredentials(
-    approvedCredentialsContent,
-    credentialSubjectId,
-    keyBy('credentialType', credentialTypeMetadatas),
-    buildVeriiIssuer(tenant, issuerService),
-    credentialSigningAlgorithms,
+  return issueCredentials({
     context,
-  ).catch((e) => {
+    credentialFormat,
+    credentialSigningAlgorithms,
+    credentialSubjectId,
+    credentialTypesMap: keyBy('credentialType', credentialTypeMetadatas),
+    issuer: buildVeriiIssuer(tenant, issuerService),
+    offers: approvedCredentialsContent,
+  }).catch((e) => {
     switch (e.errorCode) {
       case 'career_issuing_not_permitted':
       case 'identity_issuing_not_permitted':
@@ -61,4 +63,6 @@ const issueVeriiCredentialsFacade = async (
   });
 };
 
-module.exports = { issueVeriiCredentialsFacade };
+module.exports = {
+  issueVeriiCredentialsFacade,
+};

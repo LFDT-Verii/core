@@ -22,71 +22,68 @@ const {
 } = require('../../src/entities/credentials');
 
 describe('credential envelope persistence metadata', () => {
-  it('maps a legacy compact credential into neutral persistence fields', () => {
+  it('maps an issued credential without decoding its secured value', () => {
     const credentialStatus = { id: 'https://example.com/status/1' };
-    const jwtVc = buildCompact(
-      { alg: 'RS256', typ: 'JWT' },
-      {
-        jti: 'did:test:credential',
-        vc: buildCredential({
-          context: 'https://www.w3.org/2018/credentials/v1',
+
+    expect(
+      buildIssuedCredentialEnvelope({
+        credential: buildCredential({
+          context: 'https://www.w3.org/ns/credentials/v2',
           credentialStatus,
         }),
-      },
-    );
-
-    expect(buildIssuedCredentialEnvelope(jwtVc)).toEqual({
+        credentialFormat: 'vc+jwt',
+        credentialId: 'did:test:credential',
+        credentialStatus,
+        dataModelVersion: '2.0',
+        securedCredential: 'intentionally-not-decodable',
+        securingMechanism: { algorithm: 'ES256', type: 'jose' },
+      }),
+    ).toEqual({
       credentialDid: 'did:test:credential',
       credentialStatus,
-      dataModelVersion: '1.1',
-      envelopeFormat: 'jwt_vc_json-ld',
-      jwtVc,
-      signingAlgorithm: 'RS256',
-    });
-  });
-
-  it('maps a direct VC 2.0 compact credential without a payload.vc assumption', () => {
-    const jwtVc = buildCompact(
-      { alg: 'ES256', cty: 'vc', typ: 'vc+jwt' },
-      buildCredential({ context: 'https://www.w3.org/ns/credentials/v2' }),
-    );
-
-    expect(buildIssuedCredentialEnvelope(jwtVc)).toEqual({
-      credentialDid: 'did:test:credential',
-      credentialStatus: undefined,
       dataModelVersion: '2.0',
       envelopeFormat: 'vc+jwt',
-      jwtVc,
+      jwtVc: 'intentionally-not-decodable',
       signingAlgorithm: 'ES256',
     });
   });
 
-  it('rejects an issued compact credential without a credential id', () => {
-    const credential = buildCredential({
-      context: 'https://www.w3.org/2018/credentials/v1',
-    });
-    delete credential.id;
+  it('rejects incomplete or unsupported issued credentials', () => {
+    const completeResult = {
+      credentialFormat: 'vc+jwt',
+      credentialId: 'did:test:credential',
+      dataModelVersion: '2.0',
+      securedCredential: 'intentionally-not-decodable',
+      securingMechanism: { algorithm: 'ES256', type: 'jose' },
+    };
 
+    expect(() => buildIssuedCredentialEnvelope(null)).toThrow(
+      'Issued credential envelope is missing credential id',
+    );
     expect(() =>
-      buildIssuedCredentialEnvelope(
-        buildCompact({ alg: 'ES256K', typ: 'JWT' }, { vc: credential }),
-      ),
-    ).toThrow('Issued credential envelope is missing credential id');
-  });
-
-  it('rejects an issued compact credential without a signing algorithm', () => {
+      buildIssuedCredentialEnvelope({
+        ...completeResult,
+        securedCredential: undefined,
+      }),
+    ).toThrow('Issued credential envelope is missing secured credential');
     expect(() =>
-      buildIssuedCredentialEnvelope(
-        buildCompact(
-          { typ: 'JWT' },
-          {
-            vc: buildCredential({
-              context: 'https://www.w3.org/2018/credentials/v1',
-            }),
-          },
-        ),
-      ),
-    ).toThrow('Credential envelope protected header requires alg');
+      buildIssuedCredentialEnvelope({
+        ...completeResult,
+        credentialFormat: 'unknown',
+      }),
+    ).toThrow('Issued credential has an unsupported format');
+    expect(() =>
+      buildIssuedCredentialEnvelope({
+        ...completeResult,
+        dataModelVersion: '3.0',
+      }),
+    ).toThrow('Issued credential has an unsupported data model version');
+    expect(() =>
+      buildIssuedCredentialEnvelope({
+        ...completeResult,
+        securingMechanism: { algorithm: 'EdDSA', type: 'jose' },
+      }),
+    ).toThrow('Issued credential has an unsupported securing mechanism');
   });
 
   it('infers only missing metadata without persisting or replacing known values', () => {

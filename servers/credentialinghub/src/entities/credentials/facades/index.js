@@ -18,5 +18,5 @@ module.exports = {
   ...require('./build-verii-issuer'),
   ...require('./anchor-verii-credentials-facade'),
   ...require('./issue-verii-credentials-facade'),
-  ...require('./sign-verii-credentials-facade'),
+  ...require('./secure-verii-credentials-facade'),
 };
