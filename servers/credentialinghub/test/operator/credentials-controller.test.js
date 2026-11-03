@@ -272,6 +272,64 @@ describe('Credentials Test suite', () => {
         ),
       ]);
     });
+    it("should 400 if the credential type is not one of the depot's expected types", async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const pendingDepot = await persistDepot({
+        tenant,
+        service: issuerService,
+        credentialsPending: true,
+        expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          depotId: pendingDepot._id,
+          credential: {
+            credentialReference: 'cred1',
+            content: { type: ['fooType'], credentialSubject: { foo: 'bar' } },
+          },
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'credential_type_not_expected',
+          message: 'credential_type_not_expected',
+          error: 'Bad Request',
+        }),
+      );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it("should 200 and create a credential of one of the depot's expected types", async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const pendingDepot = await persistDepot({
+        tenant,
+        service: issuerService,
+        credentialsPending: true,
+        expectedCredentialTypes: ['fooType'],
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          depotId: pendingDepot._id,
+          credential: {
+            credentialReference: 'cred1',
+            content: { type: ['fooType'], credentialSubject: { foo: 'bar' } },
+          },
+        },
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.credential.depotId).toEqual(pendingDepot._id);
+    });
     it('should 400 if depot is not found', async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
       mockHttpClientJsonResponse('get', schemas[0]);

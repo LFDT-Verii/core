@@ -19,7 +19,11 @@ const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const { ALG_TYPE } = require('@verii/metadata-registration');
 
-const { mockHttpClientModule } = require('../helpers/mock-http-client');
+const {
+  mockHttpClient,
+  mockHttpClientModule,
+  resetMockHttpClient,
+} = require('../helpers/mock-http-client');
 
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 mock.module('@verii/metadata-registration', { namedExports: { ALG_TYPE } });
@@ -38,6 +42,7 @@ const {
 const { initCredentialFactory } = require('../../src/entities/credentials');
 const {
   initExchangeFactory,
+  ExchangeProtocols,
   ExchangeStates,
 } = require('../../src/entities/exchanges');
 const { initDepotFactory } = require('../../src/entities/depots');
@@ -744,6 +749,133 @@ describe('vn-api > credential offers', () => {
               new ObjectId(credentials[0]._id),
             ],
           },
+        ),
+      );
+    });
+  });
+
+  describe('pending depots', () => {
+    const messagingSettings = {
+      webhookUrl: 'https://wallet.example.com/push',
+      authToken: 'push-token-123',
+    };
+    let pendingDepot;
+    let pendingExchange;
+
+    beforeEach(async () => {
+      resetMockHttpClient();
+      pendingDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        credentialsPending: true,
+        expectedCredentialTypes: ['EmailV1.0'],
+      });
+      pendingExchange = await persistExchange({
+        tenant,
+        service: preauthIssuerService,
+        depotId: new ObjectId(pendingDepot._id),
+        protocolMetadata: { protocol: ExchangeProtocols.VN_API },
+        messagingSettings,
+        events: [
+          {
+            state: ExchangeStates.AUTHENTICATION_SUCCESS,
+            timestamp: new Date(),
+          },
+        ],
+      });
+    });
+
+    const requestOffers = async () =>
+      fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await buildTestAccessToken(
+            tenant.did,
+            pendingExchange._id,
+            pendingDepot._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: { offerHashes: [] },
+      });
+
+    const persistEmailCredential = () =>
+      persistCredential({
+        tenant,
+        depot: pendingDepot,
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'bob.foobar@example.com' },
+        },
+      });
+
+    it('should 202 with no offers and wait while the depot is pending', async () => {
+      const response = await requestOffers();
+
+      expect(response.statusCode).toEqual(202);
+      expect(response.json).toEqual({ offers: [] });
+      await expect(findOneExchange(pendingExchange._id)).resolves.toEqual(
+        expectedDbExchange(tenant, pendingExchange, [
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_WAITING,
+        ]),
+      );
+    });
+
+    it('should 202 with no offers while the depot is pending even if it has credentials', async () => {
+      await persistEmailCredential();
+
+      const response = await requestOffers();
+
+      expect(response.statusCode).toEqual(202);
+      expect(response.json).toEqual({ offers: [] });
+      await expect(findOneExchange(pendingExchange._id)).resolves.toEqual(
+        expectedDbExchange(tenant, pendingExchange, [
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_WAITING,
+        ]),
+      );
+    });
+
+    it('should return the offers and a challenge once the depot is completed', async () => {
+      const credential = await persistEmailCredential();
+      const waitingResponse = await requestOffers();
+      expect(waitingResponse.statusCode).toEqual(202);
+
+      const completeResponse = await fastify.injectJson({
+        method: 'POST',
+        url: '/operator/depots/complete',
+        payload: { tenantId: tenant._id, depotId: pendingDepot._id },
+      });
+      expect(completeResponse.statusCode).toEqual(200);
+      expect(completeResponse.json.notification).toEqual({
+        status: 'sent',
+        exchangeId: pendingExchange._id,
+      });
+      expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+      expect(
+        mockHttpClient.post.mock.calls[0].arguments[1].data.notificationType,
+      ).toEqual('NewOffersReady');
+
+      const response = await requestOffers();
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        challenge: expect.any(String),
+        offers: [expectedOffer(tenant, credential)],
+      });
+      await expect(findOneExchange(pendingExchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          pendingExchange,
+          [
+            ExchangeStates.OFFERS_REQUESTED,
+            ExchangeStates.OFFERS_WAITING,
+            ExchangeStates.OFFERS_REQUESTED,
+            ExchangeStates.OFFERS_SENT,
+          ],
+          { credentialIds: [new ObjectId(credential._id)] },
         ),
       );
     });

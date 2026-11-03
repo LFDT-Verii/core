@@ -17,6 +17,7 @@
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const {
+  mockHttpClient,
   mockHttpClientJsonResponse,
   mockHttpClientModule,
   resetMockHttpClient,
@@ -324,6 +325,86 @@ describe('Issue Links Test suite', () => {
           tenant,
           preauthIssuerService,
           refreshedDepot,
+          response.json.preauthCode,
+          [],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        preauthCode: expect.any(String),
+        requestId: expect.any(String),
+      });
+    });
+  });
+
+  describe('pending depots', () => {
+    let preauthIssuerService;
+
+    beforeEach(async () => {
+      preauthIssuerService = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth'],
+      });
+    });
+
+    const refreshLinks = (depot) =>
+      fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: preauthIssuerService._id,
+          depotId: depot._id,
+        },
+      });
+
+    it("should use the expected types in the VN API link and offer no OpenID4VCI credential, ignoring the depot's credentials", async () => {
+      const pendingDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        credentialsPending: true,
+        expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
+      });
+      await persistCredential({ tenant, depot: pendingDepot });
+
+      const response = await refreshLinks(pendingDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          pendingDepot,
+          response.json.preauthCode,
+          ['EmailV1.0', 'PhoneV1.0'],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        preauthCode: expect.any(String),
+        requestId: expect.any(String),
+      });
+      expect(mockHttpClient.get.mock.callCount()).toEqual(0);
+    });
+
+    it('should use no credential types in the VN API link when the pending depot expects none', async () => {
+      const pendingDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        credentialsPending: true,
+      });
+      await persistCredential({ tenant, depot: pendingDepot });
+
+      const response = await refreshLinks(pendingDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          pendingDepot,
           response.json.preauthCode,
           [],
         )}`,

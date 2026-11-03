@@ -16,6 +16,11 @@ const depotSchema = {
       type: 'string',
       description: 'the serviceId this depot is used for',
     },
+    completedAt: {
+      type: 'string',
+      format: 'date-time',
+      description: 'when a pending depot was completed',
+    },
   },
 };
 

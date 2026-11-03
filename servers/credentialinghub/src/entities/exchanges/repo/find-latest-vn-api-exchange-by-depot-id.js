@@ -18,9 +18,10 @@ const { ObjectId } = require('mongodb');
 const { ExchangeProtocols } = require('../domain');
 
 const findLatestVnApiExchangeByDepotIdExtension = (parent) => ({
-  findLatestVnApiExchangeByDepotId: (depotId, projection) =>
+  findLatestVnApiExchangeByDepotId: (depotId, projection, filter = {}) =>
     parent.collection().findOne(
       parent.prepFilter({
+        ...filter,
         depotId: new ObjectId(depotId),
         'protocolMetadata.protocol': ExchangeProtocols.VN_API,
       }),

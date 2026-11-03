@@ -26,6 +26,21 @@
           }
         ]
       }
+    },
+    "credentialsPending": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the depot's credentials are still being prepared. Wallets wait for them until the depot is completed. Only allowed for issuer service depots"
+    },
+    "expectedCredentialTypes": {
+      "type": "array",
+      "description": "The credential types the depot may receive",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
     }
   }
 }

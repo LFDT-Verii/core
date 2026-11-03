@@ -16,7 +16,12 @@
  */
 const { coerceArray } = require('@verii/common-functions');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
-const { createDepot, deleteDepot } = require('../../../entities/depots');
+const {
+  completeDepot,
+  createDepot,
+  deleteDepot,
+  DepotCompletionStatuses,
+} = require('../../../entities/depots');
 const { depotSchema, newDepotSchema } = require('./schemas');
 
 const depotsController = async (fastify) => {
@@ -155,6 +160,58 @@ const depotsController = async (fastify) => {
         }),
       },
       async (req) => deleteDepot(req.body.depotId, req.body.serviceId, req),
+    )
+    .post(
+      '/complete',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Complete a pending depot',
+          operationId: 'completeDepot',
+          body: {
+            type: 'object',
+            properties: {
+              tenantId: {
+                type: 'string',
+              },
+              depotId: {
+                type: 'string',
+                minLength: 1,
+              },
+            },
+            required: ['tenantId', 'depotId'],
+          },
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                depot: {
+                  $ref: 'depot#',
+                },
+                notification: {
+                  type: 'object',
+                  properties: {
+                    status: {
+                      type: 'string',
+                      enum: Object.values(DepotCompletionStatuses),
+                    },
+                    exchangeId: {
+                      type: 'string',
+                    },
+                    error: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['status'],
+                },
+                requestId: { type: 'string' },
+              },
+              required: ['depot', 'notification', 'requestId'],
+            },
+            ...fastify.NotFoundResponse,
+          },
+        }),
+      },
+      async (req) => completeDepot(req.body.depotId, req),
     );
 };
 
