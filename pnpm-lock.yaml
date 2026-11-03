@@ -479,7 +479,7 @@ importers:
         specifier: ^4.9.0
         version: 4.9.0(react@18.3.1)
       '@tanstack/react-query':
-        specifier: ^5.104.5
+        specifier: ^5.105.0
         version: 5.105.0(@types/react@19.3.0)(react@18.3.1)
       autosuggest-highlight:
         specifier: ^3.3.4
@@ -6439,6 +6439,7 @@ packages:
   '@smithy/core@3.37.0':
     resolution: {integrity: sha512-97imTcCyiPd8k0e9+ts/Sp0W65Dn9Ti357J7M09Ov4tI8Q1JDJVFSoAJtjEVKqfHEr3Pdo2jfolqKCaaiszH0g==}
     engines: {node: '>=18.0.0'}
+    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/credential-provider-imds@4.5.2':
     resolution: {integrity: sha512-A9uSdn72ozbRUSit0eib0TW7nXuNPlaeM0zcGkJ+nE6tFcSDbnmtwoxbTCFBukVQcszDAyvsd7+rTduPTXpygg==}
