@@ -153,12 +153,29 @@ const sendRevocationMessage = async (
     return { credential, notification };
   }
 
-  return {
-    credential: await context.repos.credentials.update(credential._id, {
-      notifiedOfRevocationAt: new Date(),
-    }),
-    notification,
-  };
+  return markNotifiedOfRevocation(credential, notification, context);
+};
+
+// The credential is already revoked, so a failed write reports the message as
+// failed instead of failing the request.
+const markNotifiedOfRevocation = async (credential, notification, context) => {
+  try {
+    return {
+      credential: await context.repos.credentials.update(credential._id, {
+        notifiedOfRevocationAt: new Date(),
+      }),
+      notification,
+    };
+  } catch (error) {
+    context.log.warn({ err: error }, 'revocation message failed');
+    return {
+      credential,
+      notification: {
+        status: NotificationStatuses.FAILED,
+        error: error.message,
+      },
+    };
+  }
 };
 
 // The latest VN API exchange carries the current wallet messaging settings,
