@@ -18,15 +18,10 @@
 // A credential can be claimed until it is signed (`did`), accepted or
 // rejected. Signing it again would give the holder a second copy, with its
 // own credential status, that revoking the record doesn't reach.
-const claimableCredentialFilter = {
-  did: null,
-  acceptedAt: { $exists: false },
-  rejectedAt: { $exists: false },
-};
-
+// repo/claimable-credential-filter.js has the same rule as a Mongo filter.
 const isClaimableCredential = (credential) =>
   credential.did == null &&
   credential.acceptedAt == null &&
   credential.rejectedAt == null;
 
-module.exports = { claimableCredentialFilter, isClaimableCredential };
+module.exports = { isClaimableCredential };

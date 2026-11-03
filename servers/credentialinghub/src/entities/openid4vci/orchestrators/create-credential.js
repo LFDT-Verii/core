@@ -16,7 +16,6 @@
  */
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
 const { jwtDecode } = require('@verii/jwt');
-const { ObjectId } = require('mongodb');
 const { nanoid } = require('nanoid');
 const { Oidc4vciErrors } = require('../domain');
 const {
@@ -39,12 +38,10 @@ const createCredential = async (credentialRequestParameters, context) => {
   );
 
   // Only the depot that the access token was issued for.
-  const credential = await repos.credentials.findOne({
-    filter: {
-      _id: credentialRequest.credentialIdentifier,
-      depotId: new ObjectId(context.openid4vciDepotId),
-    },
-  });
+  const credential = await repos.credentials.findByIdInDepot(
+    credentialRequest.credentialIdentifier,
+    context.openid4vciDepotId,
+  );
 
   if (credential == null) {
     throw new Oauth2ServerErrorResponseError({

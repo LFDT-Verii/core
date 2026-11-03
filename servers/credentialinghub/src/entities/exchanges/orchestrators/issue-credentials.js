@@ -21,10 +21,7 @@ const { mapWithIndex } = require('@verii/common-functions');
 const { parseAccessToken } = require('../../tokens');
 const { ExchangeStates, verifyProofOfKeyPossession } = require('../domain');
 const { authorizeExchange } = require('../domain/authorize-exchange');
-const {
-  claimableCredentialFilter,
-  issueVeriiCredentialsFacade,
-} = require('../../credentials');
+const { issueVeriiCredentialsFacade } = require('../../credentials');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 const {
   buildCredentialIssuedEvent,
@@ -102,15 +99,9 @@ const issueCredentials = async (
 // credentials that are still claimable.
 const rejectCredentials = (credentialIds, exchange, { repos }) => {
   if (!isEmpty(credentialIds)) {
-    return repos.credentials.updateUsingFilter(
-      {
-        filter: {
-          _id: { $in: credentialIds },
-          depotId: exchange.depotId,
-          ...claimableCredentialFilter,
-        },
-      },
-      { rejectedAt: new Date() },
+    return repos.credentials.rejectClaimableCredentials(
+      credentialIds,
+      exchange.depotId,
     );
   }
 
