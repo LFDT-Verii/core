@@ -23,9 +23,9 @@ const { anchorVeriiCredentialsFacade } = require('../../credentials');
 // eslint-disable-next-line complexity
 const handleNotification = async (notificationRequest, context) => {
   const { repos } = context;
-  const credential = await repos.credentials.findOne(
-    { filter: { 'exchange.id': notificationRequest.notification_id } },
-    { exchange: 1 },
+  const credential = await repos.credentials.findByNotificationId(
+    notificationRequest.notification_id,
+    context.openid4vciDepotId,
   );
 
   if (credential?.exchange == null) {

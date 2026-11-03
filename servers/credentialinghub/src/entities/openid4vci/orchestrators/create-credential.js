@@ -24,7 +24,10 @@ const {
   ExchangeStates,
   ExchangeTypes,
 } = require('../../exchanges');
-const { signVeriiCredentialsFacade } = require('../../credentials');
+const {
+  isClaimableCredential,
+  signVeriiCredentialsFacade,
+} = require('../../credentials');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants');
 
 const createCredential = async (credentialRequestParameters, context) => {
@@ -34,14 +37,22 @@ const createCredential = async (credentialRequestParameters, context) => {
     credentialRequestParameters,
   );
 
-  const credential = await repos.credentials.findOne({
-    filter: { _id: credentialRequest.credentialIdentifier },
-  });
+  // Only the depot that the access token was issued for.
+  const credential = await repos.credentials.findByIdInDepot(
+    credentialRequest.credentialIdentifier,
+    context.openid4vciDepotId,
+  );
 
   if (credential == null) {
     throw new Oauth2ServerErrorResponseError({
       error: Oidc4vciErrors.UNKNOWN_CREDENTIAL_IDENTIFIER,
       error_description: `Error identifying credential ${credentialRequest.credentialIdentifier}`,
+    });
+  }
+  if (!isClaimableCredential(credential)) {
+    throw new Oauth2ServerErrorResponseError({
+      error: Oidc4vciErrors.CREDENTIAL_REQUEST_DENIED,
+      error_description: `Credential ${credentialRequest.credentialIdentifier} can't be issued again`,
     });
   }
 

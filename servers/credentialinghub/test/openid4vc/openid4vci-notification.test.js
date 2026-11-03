@@ -125,13 +125,17 @@ describe('openid4vc notification test suite', () => {
       exchange,
       ...credentialOverrides,
     });
-    return { credential, exchange };
+    return { credential, depot, exchange };
   };
 
-  const sendNotification = async (payload) => {
-    const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-      subject: `https://localhost.test/r/${tenant._id}`,
-    });
+  const sendNotification = async (payload, depot) => {
+    const authToken = await jwtSign(
+      { depot_id: `${depot._id}` },
+      issuerKeyPair.privateKey,
+      {
+        subject: `https://localhost.test/r/${tenant._id}`,
+      },
+    );
     return fastify.injectJson({
       method: 'POST',
       url: `/r/${tenant._id}/openid4vc/notification`,
@@ -218,9 +222,13 @@ describe('openid4vc notification test suite', () => {
         });
       });
       it('should 400 with invalid_notification_id', async () => {
-        const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-          subject: `https://localhost.test/r/${tenant._id}`,
-        });
+        const authToken = await jwtSign(
+          { depot_id: `${new ObjectId()}` },
+          issuerKeyPair.privateKey,
+          {
+            subject: `https://localhost.test/r/${tenant._id}`,
+          },
+        );
         const response = await fastify.injectJson({
           method: 'POST',
           url: `/r/${tenant._id}/openid4vc/notification`,
@@ -235,6 +243,27 @@ describe('openid4vc notification test suite', () => {
           error: 'invalid_notification_id',
           error_description: 'Error identifying notification foo',
         });
+      });
+      it("should 400 with invalid_notification_id for another depot's credential", async () => {
+        const { credential, exchange } = await persistSignedCredential();
+        const otherDepot = await persistDepot({
+          tenant,
+          service: await persistIssuerService({ tenant }),
+        });
+        const credentialBefore = await findCredentialInDb(credential);
+
+        const response = await sendNotification(
+          { notification_id: exchange.id, event: 'credential_accepted' },
+          otherDepot,
+        );
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'invalid_notification_id',
+          error_description: `Error identifying notification ${exchange.id}`,
+        });
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+        expect(await findCredentialInDb(credential)).toEqual(credentialBefore);
       });
       it('should 400 with server_error due to anchoring error', async () => {
         const errorMessage = 'Mock Error';
@@ -272,9 +301,13 @@ describe('openid4vc notification test suite', () => {
           exchange,
         });
 
-        const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-          subject: `https://localhost.test/r/${tenant._id}`,
-        });
+        const authToken = await jwtSign(
+          { depot_id: `${depot._id}` },
+          issuerKeyPair.privateKey,
+          {
+            subject: `https://localhost.test/r/${tenant._id}`,
+          },
+        );
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -343,9 +376,13 @@ describe('openid4vc notification test suite', () => {
           depot,
           exchange,
         });
-        const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-          subject: `https://localhost.test/r/${tenant._id}`,
-        });
+        const authToken = await jwtSign(
+          { depot_id: `${depot._id}` },
+          issuerKeyPair.privateKey,
+          {
+            subject: `https://localhost.test/r/${tenant._id}`,
+          },
+        );
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -416,9 +453,13 @@ describe('openid4vc notification test suite', () => {
           exchange,
         });
 
-        const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-          subject: `https://localhost.test/r/${tenant._id}`,
-        });
+        const authToken = await jwtSign(
+          { depot_id: `${depot._id}` },
+          issuerKeyPair.privateKey,
+          {
+            subject: `https://localhost.test/r/${tenant._id}`,
+          },
+        );
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -452,15 +493,15 @@ describe('openid4vc notification test suite', () => {
         ]);
       });
       it('should 204 without anchoring again when credential_accepted is repeated', async () => {
-        const { credential, exchange } = await persistSignedCredential();
+        const { credential, depot, exchange } = await persistSignedCredential();
         const payload = {
           notification_id: exchange.id,
           event: 'credential_accepted',
         };
 
-        const firstResponse = await sendNotification(payload);
+        const firstResponse = await sendNotification(payload, depot);
         const credentialAfterFirst = await findCredentialInDb(credential);
-        const secondResponse = await sendNotification(payload);
+        const secondResponse = await sendNotification(payload, depot);
 
         expect(firstResponse.statusCode).toEqual(204);
         expect(secondResponse.statusCode).toEqual(204);
@@ -479,14 +520,17 @@ describe('openid4vc notification test suite', () => {
       });
       it('should anchor a credential issued again after an earlier issuance was accepted', async () => {
         const previouslyAcceptedAt = new Date('2026-01-01T00:00:00.000Z');
-        const { credential, exchange } = await persistSignedCredential({
+        const { credential, depot, exchange } = await persistSignedCredential({
           acceptedAt: previouslyAcceptedAt,
         });
 
-        const response = await sendNotification({
-          notification_id: exchange.id,
-          event: 'credential_accepted',
-        });
+        const response = await sendNotification(
+          {
+            notification_id: exchange.id,
+            event: 'credential_accepted',
+          },
+          depot,
+        );
 
         expect(response.statusCode).toEqual(204);
         expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
@@ -532,9 +576,13 @@ describe('openid4vc notification test suite', () => {
           depot,
           exchange,
         });
-        const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-          subject: `https://localhost.test/r/${tenant._id}`,
-        });
+        const authToken = await jwtSign(
+          { depot_id: `${depot._id}` },
+          issuerKeyPair.privateKey,
+          {
+            subject: `https://localhost.test/r/${tenant._id}`,
+          },
+        );
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -591,9 +639,13 @@ describe('openid4vc notification test suite', () => {
           exchange,
         });
 
-        const authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-          subject: `https://localhost.test/r/${tenant._id}`,
-        });
+        const authToken = await jwtSign(
+          { depot_id: `${depot._id}` },
+          issuerKeyPair.privateKey,
+          {
+            subject: `https://localhost.test/r/${tenant._id}`,
+          },
+        );
 
         const response = await fastify.injectJson({
           method: 'POST',

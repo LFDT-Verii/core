@@ -337,8 +337,41 @@ describe('OAuth test suite', () => {
             iss: `https://localhost.test/r/${tenant._id}/oauth/authorize`,
             jti: expect.any(String),
             sub: `https://localhost.test/r/${tenant._id}`,
+            depot_id: `${depot._id}`,
           },
         });
+      });
+
+      it('should leave signed, accepted and rejected credentials out of authorization_details', async () => {
+        const issuerService = await persistIssuerService({ tenant });
+        const depot = await persistDepot({
+          tenant,
+          service: issuerService,
+          preauthCode: 'foo',
+        });
+        const credential = await persistCredential({ tenant, depot });
+        await persistCredential({ tenant, depot, did: 'did:velocity:foo' });
+        await persistCredential({ tenant, depot, acceptedAt: new Date() });
+        await persistCredential({ tenant, depot, rejectedAt: new Date() });
+
+        const response = await fastify.inject({
+          method: 'POST',
+          url: `/r/${tenant._id}/oauth/token`,
+          body: 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code=foo',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json().authorization_details).toEqual([
+          {
+            credential_configuration_id:
+              'foundation.velocitynetwork.Employment',
+            credential_identifiers: [`${credential._id}`],
+            type: 'openid_credential',
+          },
+        ]);
       });
     });
   });

@@ -49,6 +49,7 @@ const issueCredentials = async (
 
   const rejectedCredentials = await rejectCredentials(
     rejectedCredentialIds,
+    exchange,
     context,
   );
 
@@ -94,11 +95,13 @@ const issueCredentials = async (
   return jwtVcs;
 };
 
-const rejectCredentials = (credentialIds, { repos }) => {
+// Approvals and rejections only reach the exchange's depot, and only
+// credentials that are still claimable.
+const rejectCredentials = (credentialIds, exchange, { repos }) => {
   if (!isEmpty(credentialIds)) {
-    return repos.credentials.updateUsingFilter(
-      { filter: { _id: { $in: credentialIds } } },
-      { rejectedAt: new Date() },
+    return repos.credentials.rejectClaimableCredentials(
+      credentialIds,
+      exchange.depotId,
     );
   }
 
@@ -118,8 +121,10 @@ const issueApprovedCredentials = async (
     return Promise.resolve([[], []]);
   }
 
-  const approvedCredentials =
-    await repos.credentials.findNonFinal(credentialIds);
+  const approvedCredentials = await repos.credentials.findNonFinal(
+    credentialIds,
+    exchange.depotId,
+  );
 
   if (isEmpty(approvedCredentials)) {
     log.info('approved credentials not found');

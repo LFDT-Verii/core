@@ -16,10 +16,12 @@
  */
 
 const { calcSha384 } = require('@verii/crypto');
+const { ObjectId } = require('mongodb');
 const { buildExchangeEvent } = require('../../exchanges/domain');
 const {
   buildIssuedCredentialEnvelope,
 } = require('../domain/credential-envelope');
+const { claimableCredentialFilter } = require('./claimable-credential-filter');
 
 const updateExtensions = (parent, context) => ({
   updateIssuedCredential: async (
@@ -62,6 +64,17 @@ const updateExtensions = (parent, context) => ({
 
     return parent.update(credentialId, $set);
   },
+  rejectClaimableCredentials: async (credentialIds, depotId) =>
+    parent.updateUsingFilter(
+      {
+        filter: {
+          _id: { $in: credentialIds },
+          depotId: new ObjectId(depotId),
+          ...claimableCredentialFilter,
+        },
+      },
+      { rejectedAt: new Date() },
+    ),
   addExchangeState: async (credentialId, state, props) =>
     parent.collection().updateOne(
       { _id: credentialId },
