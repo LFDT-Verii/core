@@ -24,18 +24,20 @@ const {
 } = require('../../wallet-messages');
 const { DepotErrors } = require('../domain');
 
-const DepotCompletionStatuses = {
+const ResolveDepotCredentialsStatuses = {
   ...WalletMessageStatuses,
-  NOT_PENDING: 'not_pending',
-  NO_WAITING_EXCHANGE: 'no_waiting_exchange',
+  ALREADY_RESOLVED: 'already_resolved',
+  SKIPPED_NO_WAITING_EXCHANGE: 'skipped_no_waiting_exchange',
 };
 
-const completeDepot = async (depotId, context) => {
-  const depot = await context.repos.depots.completeDepot(depotId);
+const resolveDepotCredentials = async (depotId, context) => {
+  const depot = await context.repos.depots.resolveDepotCredentials(depotId);
   if (depot == null) {
     return {
       depot: await loadDepot(depotId, context),
-      notification: { status: DepotCompletionStatuses.NOT_PENDING },
+      notification: {
+        status: ResolveDepotCredentialsStatuses.ALREADY_RESOLVED,
+      },
     };
   }
   return { depot, notification: await notifyWaitingExchange(depot, context) };
@@ -64,7 +66,9 @@ const notifyWaitingExchange = async (depot, context) => {
       },
     );
   if (exchange == null) {
-    return { status: DepotCompletionStatuses.NO_WAITING_EXCHANGE };
+    return {
+      status: ResolveDepotCredentialsStatuses.SKIPPED_NO_WAITING_EXCHANGE,
+    };
   }
 
   // The same credentials that credential-offers would offer
@@ -116,4 +120,4 @@ const buildMessageData = (notificationType, exchange, { tenant }) => ({
   serviceEndpoint: exchange.messagingSettings?.webhookUrl,
 });
 
-module.exports = { completeDepot, DepotCompletionStatuses };
+module.exports = { resolveDepotCredentials, ResolveDepotCredentialsStatuses };

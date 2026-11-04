@@ -16,10 +16,10 @@ const depotSchema = {
       type: 'string',
       description: 'the serviceId this depot is used for',
     },
-    completedAt: {
+    credentialsResolvedAt: {
       type: 'string',
       format: 'date-time',
-      description: 'when a pending depot was completed',
+      description: "when the depot's pending credentials were resolved",
     },
   },
 };

@@ -15,7 +15,7 @@
  *
  */
 module.exports = {
-  ...require('./complete-depot'),
   ...require('./create-depot'),
   ...require('./delete-depot'),
+  ...require('./resolve-depot-credentials'),
 };

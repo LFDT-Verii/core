@@ -35,10 +35,10 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
     });
   authorizeExchange(exchange, depotId);
 
-  // The wallet waits on this exchange for NewOffersReady or NoOffersFound, sent when the depot is completed.
+  // The wallet waits on this exchange for NewOffersReady or NoOffersFound, sent when the depot's credentials are resolved.
   if (await isDepotPending(depotId, context)) {
     await repos.exchanges.addState(exchangeId, ExchangeStates.OFFERS_WAITING);
-    // A completion that ran before OFFERS_WAITING was recorded found no waiting exchange,
+    // Credentials resolved before OFFERS_WAITING was recorded found no waiting exchange to message,
     // so the offers are returned now instead of in a message.
     if (await isDepotPending(depotId, context)) {
       return { offers: [] };

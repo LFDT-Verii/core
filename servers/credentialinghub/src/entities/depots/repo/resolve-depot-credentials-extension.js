@@ -15,15 +15,15 @@
  *
  */
 
-const completeDepotExtension = (parent) => ({
-  // Matches only a pending depot, so a repeated completion updates nothing and returns null.
-  completeDepot: async (depotId) => {
+const resolveDepotCredentialsExtension = (parent) => ({
+  // Matches only a depot whose credentials are pending, so resolving them again updates nothing and returns null.
+  resolveDepotCredentials: async (depotId) => {
     const result = await parent.collection().findOneAndUpdate(
       parent.prepFilter({ _id: depotId, credentialsPending: true }),
       {
         $set: parent.prepModification({
           credentialsPending: false,
-          completedAt: new Date(),
+          credentialsResolvedAt: new Date(),
         }),
       },
       {
@@ -34,7 +34,7 @@ const completeDepotExtension = (parent) => ({
     );
     return result.value;
   },
-  extensions: parent.extensions.concat(['completeDepotExtension']),
+  extensions: parent.extensions.concat(['resolveDepotCredentialsExtension']),
 });
 
-module.exports = { completeDepotExtension };
+module.exports = { resolveDepotCredentialsExtension };

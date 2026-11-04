@@ -482,26 +482,26 @@ describe('Depots Test suite', () => {
           requestId: expect.any(String),
         });
       });
-      it('should return the pending fields of a completed depot', async () => {
-        const completedDepot = await persistDepot({
+      it('should return the pending fields of a depot whose credentials are resolved', async () => {
+        const resolvedDepot = await persistDepot({
           tenant,
           service: issuerService,
           userReference: nanoid(),
           credentialsPending: false,
           expectedCredentialTypes: ['EmailV1.0'],
-          completedAt: new Date(),
+          credentialsResolvedAt: new Date(),
         });
         const response = await fastify.injectJson({
           method: 'GET',
-          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${completedDepot._id}`,
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${resolvedDepot._id}`,
         });
         expect(response.json).toEqual({
           depots: [
             {
-              ...expectedDepot(completedDepot),
+              ...expectedDepot(resolvedDepot),
               credentialsPending: false,
               expectedCredentialTypes: ['EmailV1.0'],
-              completedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+              credentialsResolvedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
             },
           ],
           requestId: expect.any(String),
