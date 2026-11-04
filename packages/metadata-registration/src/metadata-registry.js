@@ -32,11 +32,17 @@ const {
   last,
   map,
   partition,
+  pick,
 } = require('lodash/fp');
 
 const contractAbi = require('./contracts/metadata-registry.json');
 const { RESOLUTION_METADATA_ERROR, VERSION, ALG_TYPE } = require('./constants');
 const { encodeJwk, decodeJwk } = require('./code-jwk');
+
+// Credentials passed in for resolution are verifier credential data: they hold
+// the decoded credential and the raw credential JWT. Logs carry only these
+// identifiers.
+const credentialRefsForLog = map(pick(['id', 'credentialType']));
 
 const initMetadataRegistry = async (
   { privateKey, contractAddress, rpcProvider },
@@ -157,7 +163,7 @@ const initMetadataRegistry = async (
     version = VERSION,
   ) => {
     log.info(
-      { listId, issuerVC, caoDid, algType, version },
+      { listId, caoDid, algType, version },
       'createCredentialMetadataList',
     );
     const { transactingClient, signature } =
@@ -260,8 +266,8 @@ const initMetadataRegistry = async (
   };
 
   const resolvePublicKey = async ({ id, entry, secret }) => {
-    log.info({ id, entry, secret }, 'resolvePublicKey');
     const { algType, version } = entry;
+    log.info({ id, algType, version }, 'resolvePublicKey');
 
     if (version !== get2BytesHash(VERSION)) {
       throw new Error(`Unsupported version "${version}"`);
@@ -295,7 +301,7 @@ const initMetadataRegistry = async (
   };
 
   const resolveService = ({ id, entry, credentialType }) => {
-    log.info({ id, entry, credentialType }, 'resolveService');
+    log.info({ id, credentialType }, 'resolveService');
     if (
       !credentialType ||
       entry.credentialType !== get2BytesHash(credentialType) // TODO - looks like credential types are stored incorrectly
@@ -309,7 +315,7 @@ const initMetadataRegistry = async (
   };
 
   const resolveIssuerVc = ({ id, entry }) => {
-    log.info({ id, entry }, 'resolveIssuerVc');
+    log.info({ id }, 'resolveIssuerVc');
     return {
       id,
       format: 'jwt_vc',
@@ -325,7 +331,13 @@ const initMetadataRegistry = async (
     burnerDid,
   }) => {
     log.info(
-      { credentials, indexEntries, traceId, caoDid, burnerDid },
+      {
+        credentials: credentialRefsForLog(credentials),
+        indexEntries,
+        traceId,
+        caoDid,
+        burnerDid,
+      },
       'resolveContractEntries',
     );
     const isFree = await flow(
@@ -354,7 +366,15 @@ const initMetadataRegistry = async (
     burnerDid,
     caoDid,
   }) => {
-    log.info({ did, credentials, burnerDid, caoDid }, 'resolveDidDocument');
+    log.info(
+      {
+        did,
+        credentials: credentialRefsForLog(credentials),
+        burnerDid,
+        caoDid,
+      },
+      'resolveDidDocument',
+    );
     const { traceId } = context;
     const indexEntries = parseVelocityV2Did(did);
     const entries = await resolveContractEntries({
@@ -392,7 +412,10 @@ const initMetadataRegistry = async (
         };
       }, entries),
     );
-    log.info({ credentialEntries }, 'resolveDidDocument 1');
+    log.info(
+      { credentialEntries: credentialRefsForLog(credentialEntries) },
+      'resolveDidDocument 1',
+    );
 
     const publicKeys = await Promise.all(
       map(resolvePublicKey, credentialEntries),
@@ -416,7 +439,17 @@ const initMetadataRegistry = async (
     };
 
     log.info(
-      { didDocument, didDocumentMetadata, unresolvedPublicKeys },
+      {
+        didDocument: {
+          id: didDocument.id,
+          publicKey: map('id', didDocument.publicKey),
+          service: didDocument.service,
+        },
+        didDocumentMetadata: {
+          boundIssuerVcs: map('id', didDocumentMetadata.boundIssuerVcs),
+        },
+        unresolvedPublicKeys,
+      },
       'resolveDidDocument 3',
     );
 

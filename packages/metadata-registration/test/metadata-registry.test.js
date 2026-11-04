@@ -21,10 +21,12 @@ const {
   beforeEach,
   describe,
   it,
+  mock,
 } = require('node:test');
 const { expect } = require('expect');
 
 const {
+  deriveEncryptionSecretFromPassword,
   generateKeyPair,
   get2BytesHash,
   generateJWAKeyPair,
@@ -126,6 +128,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
   let deployerVerificationCouponClient;
   let primaryAddress;
   let operatorAddress;
+  let operatorPrivateKey;
   let context;
 
   const { publicKey: credentialKey } = generateKeyPair({ format: 'jwk' });
@@ -155,6 +158,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
 
     const operatorAccount = generateAccount();
     operatorAddress = operatorAccount.address;
+    operatorPrivateKey = operatorAccount.privateKey;
 
     deployerVerificationCouponClient = await initVerificationCoupon(
       {
@@ -845,6 +849,71 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             },
             didResolutionMetadata: {},
           });
+        });
+
+        it('Logs only identifiers of the credentials it resolves', async () => {
+          const email = 'holder@example.com';
+          const credentialJwt =
+            'eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJob2xkZXJAZXhhbXBsZS5jb20ifQ.c2lnbmF0dXJl';
+          const spyLog = {
+            info: mock.fn(),
+            warn: mock.fn(),
+            error: mock.fn(),
+            debug: mock.fn(),
+          };
+          const spyClient = await initMetadataRegistry(
+            {
+              privateKey: operatorPrivateKey,
+              contractAddress: metadataAddress,
+              rpcProvider,
+            },
+            { ...context, log: spyLog },
+          );
+
+          // shaped like verifyCredentials' credential data
+          await spyClient.resolveDidDocument({
+            did: buildDid(indexEntry),
+            credentials: [
+              {
+                ...credential,
+                credential: { id: credential.id, credentialSubject: { email } },
+                jwtVc: credentialJwt,
+                compact: credentialJwt,
+              },
+            ],
+            burnerDid,
+            caoDid: 'did:velocity:99',
+          });
+
+          const logged = JSON.stringify(
+            Object.values(spyLog).flatMap((fn) =>
+              fn.mock.calls.map((call) => call.arguments),
+            ),
+            (key, value) =>
+              typeof value === 'bigint' ? value.toString() : value,
+          );
+          expect(logged).not.toContain(email);
+          expect(logged).not.toContain(credentialJwt);
+          expect(logged).not.toContain(vc);
+          expect(logged).not.toContain(
+            await deriveEncryptionSecretFromPassword(password),
+          );
+          expect(
+            spyLog.info.mock.calls.map((call) => call.arguments),
+          ).toContainEqual([
+            {
+              did: buildDid(indexEntry),
+              credentials: [
+                {
+                  id: credential.id,
+                  credentialType: credential.credentialType,
+                },
+              ],
+              burnerDid,
+              caoDid: 'did:velocity:99',
+            },
+            'resolveDidDocument',
+          ]);
         });
 
         it('Create and resolve multi did', async () => {

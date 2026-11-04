@@ -28,7 +28,7 @@ const initRevocationRegistry = async (
   context,
 ) => {
   const { log } = context;
-  log.info({ privateKey, contractAddress }, 'initRevocationRegistry');
+  log.info({ contractAddress }, 'initRevocationRegistry');
 
   const { contractClient, pullEvents } = await initContractClient(
     {
