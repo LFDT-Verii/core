@@ -16,6 +16,7 @@
 
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
+const { times } = require('lodash/fp');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const {
@@ -94,6 +95,22 @@ describe('operator presentation deletion', () => {
         statusCode: 400,
         errorCode: 'request_validation_failed',
         message: 'body/presentationIds must NOT have fewer than 1 items',
+      }),
+    );
+  });
+
+  // The repo deletes at most 200 matches per call, so a longer list is refused rather than cut short
+  it('should 400 if presentationIds has more than 200 items', async () => {
+    const response = await deletePresentations({
+      tenantId: tenant._id,
+      presentationIds: times(() => new ObjectId().toString(), 201),
+    });
+
+    expect(response.json).toEqual(
+      errorResponseMatcher({
+        statusCode: 400,
+        errorCode: 'request_validation_failed',
+        message: 'body/presentationIds must NOT have more than 200 items',
       }),
     );
   });

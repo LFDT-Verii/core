@@ -192,6 +192,8 @@ module.exports = async (fastify) => {
                   type: 'string',
                 },
                 minItems: 1,
+                // delUsingFilter deletes at most 200 matches
+                maxItems: 200,
               },
             },
             required: ['tenantId', 'presentationIds'],
