@@ -54,34 +54,36 @@ const credentialVerificationSchema = {
         'DEPENDENCY_RESOLUTION_ERROR',
       ],
     },
+    // Each check lists every value verifyCredentials returns for it.
+    // NOT_CHECKED is reported for all four when the tamper check fails.
     trustedIssuerCheck: {
       type: 'string',
       enum: [
         'PASS',
         'FAIL',
-        'UNCHECKED',
         'SELF_SIGNED',
         'DATA_INTEGRITY_ERROR',
         'DEPENDENCY_RESOLUTION_ERROR',
+        'NOT_CHECKED',
       ],
     },
     trustedHolderCheck: {
       type: 'string',
-      enum: ['PASS', 'FAIL', 'UNCHECKED', 'NOT_APPLICABLE'],
+      enum: ['PASS', 'FAIL', 'NOT_APPLICABLE', 'NOT_CHECKED'],
     },
     revocationCheck: {
       type: 'string',
       enum: [
         'PASS',
         'FAIL',
-        'UNCHECKED',
-        'DEPENDENCY_RESOLUTION_ERROR',
         'NOT_APPLICABLE',
+        'DEPENDENCY_RESOLUTION_ERROR',
+        'NOT_CHECKED',
       ],
     },
     expiryCheck: {
       type: 'string',
-      enum: ['PASS', 'FAIL', 'UNCHECKED', 'NOT_APPLICABLE'],
+      enum: ['PASS', 'FAIL', 'NOT_APPLICABLE', 'NOT_CHECKED'],
     },
   },
 };

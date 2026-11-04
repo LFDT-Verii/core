@@ -684,6 +684,18 @@ describe('Presentations Test Suite', () => {
       });
       [
         {
+          title: 'the signature does not verify with the ledger key',
+          tamperCheck: CheckResults.FAIL,
+          resolveDidDocument: () =>
+            Promise.resolve(
+              presentationDIDResolution(
+                [credentialDid],
+                [generateKeyPair({ format: 'jwk' })],
+                [boundIssuerVc],
+              ),
+            ),
+        },
+        {
           title: 'the ledger cannot resolve the signing key',
           tamperCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
           resolveDidDocument: () =>
@@ -738,9 +750,7 @@ describe('Presentations Test Suite', () => {
               },
             ],
           });
-          expect(
-            credentialVerificationSchema.properties.tamperCheck.enum,
-          ).toContain(tamperCheck);
+          expectChecksInSchemaEnums(response.json.verification);
         });
       });
 
@@ -802,6 +812,7 @@ describe('Presentations Test Suite', () => {
           },
           requestId: expect.any(String),
         });
+        expectChecksInSchemaEnums(response.json.verification);
       });
     });
 
@@ -1324,6 +1335,24 @@ const expectedResponsePresentation = (presentation, overrides) =>
     },
     overrides,
   );
+
+// Every check value in a credential verification is one its response schema
+// lists.
+const expectChecksInSchemaEnums = ({ credentials }) => {
+  for (const credentialVerification of credentials) {
+    for (const check of [
+      'tamperCheck',
+      'trustedIssuerCheck',
+      'trustedHolderCheck',
+      'revocationCheck',
+      'expiryCheck',
+    ]) {
+      expect(credentialVerificationSchema.properties[check].enum).toContain(
+        credentialVerification[check],
+      );
+    }
+  }
+};
 
 const presentationDIDResolution = (
   credentialDids,
