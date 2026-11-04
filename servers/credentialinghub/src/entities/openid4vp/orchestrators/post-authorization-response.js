@@ -22,12 +22,19 @@ const {
 const {
   ExchangeProtocols,
   ExchangeStates,
+  cleanDeclineReason,
   validateReferencedService,
 } = require('../../exchanges');
 const {
   PresentationFormat,
   validatePresentation,
 } = require('../../presentations');
+const {
+  buildPresentationDeclinedEvent,
+  enqueueNotificationEvents,
+} = require('../../notifications');
+
+const ACCESS_DENIED = 'access_denied';
 
 const postAuthorizationResponse = async (authorizationResponse, context) => {
   const { repos, tenant } = context;
@@ -109,19 +116,37 @@ const postAuthorizationResponse = async (authorizationResponse, context) => {
 const handleErrorResponse = async (
   authorizationResponse,
   exchange,
-  { repos },
+  context,
 ) => {
-  const updatedExchange = await repos.exchanges.addState(
+  const isDecline = authorizationResponse.error === ACCESS_DENIED;
+  const updatedExchange = await context.repos.exchanges.addState(
     exchange._id,
     ExchangeStates.CLIENT_ERROR,
     omitBy(isNil, {
       err: authorizationResponse.error,
       errorDescription: authorizationResponse.error_description,
+      ...(isDecline ? buildDecline(authorizationResponse) : {}),
     }),
   );
 
+  if (isDecline) {
+    await enqueueNotificationEvents(
+      () =>
+        buildPresentationDeclinedEvent({
+          tenant: context.tenant,
+          exchange: updatedExchange,
+        }),
+      context,
+    );
+  }
+
   return { exchange: updatedExchange, presentations: [] };
 };
+
+const buildDecline = ({ error_description: errorDescription }) => ({
+  declinedAt: new Date(),
+  declineReason: cleanDeclineReason(errorDescription),
+});
 
 const validateOpenid4vpExchangeExists = (exchange) => {
   if (!exchange) {

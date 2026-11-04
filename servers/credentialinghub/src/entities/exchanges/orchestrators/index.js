@@ -17,6 +17,7 @@
 module.exports = {
   ...require('./authenticate'),
   ...require('./credential-offer-request'),
+  ...require('./decline-presentation'),
   ...require('./get-credential-manifest'),
   ...require('./get-presentation-request'),
   ...require('./post-presentation'),

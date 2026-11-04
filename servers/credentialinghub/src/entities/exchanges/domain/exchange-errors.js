@@ -16,6 +16,7 @@
  */
 const ExchangeErrors = {
   REFERENCED_EXCHANGE_NOT_FOUND: 'referenced_exchange_not_found',
+  EXCHANGE_NOT_DECLINABLE: 'exchange_not_declinable',
   REFERENCED_SERVICE_NOT_FOUND: 'referenced_service_not_found',
   REFERENCED_DEPOT_NOT_FOUND: 'referenced_depot_not_found',
   MESSAGING_SETTINGS_INVALID: 'messaging_settings_invalid',

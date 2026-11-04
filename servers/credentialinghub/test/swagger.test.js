@@ -179,6 +179,10 @@ const EXPECTED_OPERATION_METADATA = {
     'getVnApiCredentialOffers',
     VN_API_SECURITY,
   ],
+  'POST /vn-api/r/{tenantId}/decline-presentation': [
+    'Presentation',
+    'declineVnApiPresentation',
+  ],
   'GET /vn-api/r/{tenantId}/get-credential-manifest': [
     'Issuing',
     'getVnApiCredentialManifest',
@@ -265,6 +269,7 @@ const EXPECTED_DOCUMENTS = {
     operations: [
       'POST /vn-api/r/{tenantId}/authenticate',
       'POST /vn-api/r/{tenantId}/credential-offers',
+      'POST /vn-api/r/{tenantId}/decline-presentation',
       'GET /vn-api/r/{tenantId}/get-credential-manifest',
       'GET /vn-api/r/{tenantId}/get-presentation-request',
       'POST /vn-api/r/{tenantId}/issue-credentials',

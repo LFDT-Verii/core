@@ -148,6 +148,12 @@ credential.issued
 credential.rejected
 ```
 
+Opt-in event types, which aren't in the default `eventTypes`:
+
+```text
+presentation.declined
+```
+
 Future event types are tracked in [Future Extensions](#future-extensions).
 
 Event naming rules:
@@ -246,6 +252,63 @@ Payload example:
 Emission point:
 
 - `postPresentation()` after `repos.presentations.insert(...)` succeeds.
+
+### Presentation Declined
+
+Emit when a wallet declines a presentation request:
+
+- A VN API wallet calls `POST /vn-api/r/:did/decline-presentation`, the `decline_presentation_uri` in the presentation request's `metadata`. The first decline of an exchange adds the `PRESENTATION_DECLINED` state and emits the event. A repeat decline returns 204 and emits nothing.
+- An OpenID4VP wallet sends an authorization response with `error=access_denied`. The exchange keeps the `CLIENT_ERROR` state.
+
+Event type:
+
+```text
+presentation.declined
+```
+
+It isn't a default event type, so existing receivers don't start getting a type they don't expect. To receive it, add `presentation.declined` or `presentation.*` to `eventTypes`.
+
+Payload example:
+
+```json
+{
+  "id": "evt_01J...",
+  "type": "presentation.declined",
+  "version": 1,
+  "occurredAt": "2026-06-25T10:15:30.000Z",
+  "tenantId": "tenant-id",
+  "tenantDid": "did:web:issuer.example",
+  "caoDid": "did:web:cao.example",
+  "serviceId": "service-id",
+  "depotId": "depot-id",
+  "exchangeId": "exchange-id",
+  "resource": {
+    "type": "exchange",
+    "id": "exchange-id"
+  },
+  "data": {
+    "protocol": "vn_api",
+    "declinedAt": "2026-06-25T10:15:30.000Z",
+    "reason": "I don't want to share this credential"
+  },
+  "links": {
+    "exchange": "/operator/exchanges/get?tenantId=tenant-id&exchangeId=exchange-id"
+  }
+}
+```
+
+Data rules:
+
+- `data.protocol` is `vn_api` or `openid4vp`.
+- `data.reason` is the wallet's reason, or the OpenID4VP `error_description`, trimmed and at most 500 characters. It is left out when there is none.
+- `exchanges/get` returns the same decline as `decline: { declinedAt, reason? }`.
+
+A decline doesn't complete a VN API exchange. A holder who changes their mind can still submit, and the receiver then gets `presentation.received` after `presentation.declined`. Anyone who learns an exchange ID can send a decline, so treat the event as the wallet's statement, not as proof. OpenID4VP error responses are final, so the holder can't submit on that exchange afterwards.
+
+Emission points:
+
+- `declinePresentation()` after the decline is stored.
+- `postAuthorizationResponse()` after an `access_denied` error response is stored.
 
 ### Credential Issued
 

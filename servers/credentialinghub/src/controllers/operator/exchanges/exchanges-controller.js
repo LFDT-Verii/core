@@ -15,6 +15,7 @@
  */
 
 const newError = require('http-errors');
+const { isNil, omitBy } = require('lodash/fp');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const { ExchangeStates } = require('../../../entities/exchanges');
 const { exchangeSchema } = require('./schemas/exchange.schema');
@@ -43,6 +44,8 @@ const EXCHANGE_PROJECTION = {
   events: 1,
   credentialIds: 1,
   finalizedCredentialIds: 1,
+  declinedAt: 1,
+  declineReason: 1,
   createdAt: 1,
 };
 
@@ -60,6 +63,16 @@ const safeEvents = (events = []) =>
     state,
     timestamp: toTimestamp(timestamp),
   }));
+
+const buildDecline = ({ declinedAt, declineReason }) =>
+  declinedAt == null
+    ? {}
+    : {
+        decline: omitBy(isNil, {
+          declinedAt: toTimestamp(declinedAt),
+          reason: declineReason,
+        }),
+      };
 
 const findExchange = ({ exchangeId, depotId }, repos) => {
   if (exchangeId) {
@@ -92,6 +105,7 @@ const buildExchangeResponse = (exchange, presentations) => {
     state,
     events,
     ...(error ? { error } : {}),
+    ...buildDecline(exchange),
     credentialIds: uniqueIds(
       exchange.credentialIds ?? [],
       exchange.finalizedCredentialIds ?? [],
