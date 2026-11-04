@@ -22,7 +22,8 @@ shared link. PR 2 adds the authentication handler.
 - A person added after the link was handed out can claim with it.
 - Only a holder who presents a trusted, unrevoked, unexpired email credential
   bound to their own key gets a depot's credentials.
-- Email matching ignores case and works on MongoDB and Amazon DocumentDB.
+- Email matching ignores case and works on MongoDB, Amazon DocumentDB and
+  Azure DocumentDB.
 - An email-only check costs the issuer no verification vouchers.
 
 ## Non-goals
@@ -158,7 +159,8 @@ await mongoDb()
 ```
 
 `authMatchValues` is the only array in the index, so it's a plain multikey
-index with no collation, supported by MongoDB and Amazon DocumentDB. For a
+index with no collation, supported by MongoDB, Amazon DocumentDB and Azure
+DocumentDB. For a
 whole-array match, MongoDB uses the index to find the tuple's first element,
 then compares the whole array on the documents it fetches.
 

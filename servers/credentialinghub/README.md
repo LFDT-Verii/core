@@ -93,8 +93,8 @@ docker run --rm --entrypoint node lfdecentralizedtrust/verii-credentialing-hub:l
 
 ## Database
 
-The Hub supports only MongoDB and Amazon DocumentDB, at the address that
-`MONGO_URI` gives. CI tests against MongoDB 8.0.
+The Hub supports only MongoDB, Amazon DocumentDB and Azure DocumentDB, at
+the address that `MONGO_URI` gives. CI tests against MongoDB 8.0.
 
 ## OpenID4VCI Nonces
 
