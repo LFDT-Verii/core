@@ -704,9 +704,17 @@ Then:
   `{ exchangeId, serviceId, depotIds }`.
 
 Never log emails, candidate tuples, `authMatchValues` or credentials. Log
-depot IDs and counts only. Today `@verii/vc-checks` logs the whole credential
-when the issuer check fails (`check-issuer-trust.js`), and that can include
-the email. A separate packages change stops it logging credential contents.
+depot IDs and counts only. Today the verification packages log credential
+contents:
+
+- `@verii/metadata-registration` logs the decoded credentials and the raw
+  credential JWTs on every `did:velocity` resolution (`metadata-registry.js`).
+  The logger doesn't redact those paths, so the email reaches the logs on every
+  authentication.
+- `@verii/verii-verification` and `@verii/vc-checks` log the whole credential
+  when the issuer check fails. Only its `credentialSubject` is redacted.
+
+A separate packages change (#1205) stops them logging credential contents.
 
 **Why not `unauthorized`.** The issue proposes `unauthorized` for a holder
 who matches no depot. The holder app shows `unauthorized` as "Authorization is
@@ -890,8 +898,8 @@ network.
 `exchanges` already imports from `presentations` (`post-presentation.js`), so
 this adds no new dependency between entities.
 
-A separate change in the packages stops `@verii/vc-checks` logging credential
-contents.
+A separate change in the packages (#1205) stops `@verii/metadata-registration`,
+`@verii/verii-verification` and `@verii/vc-checks` logging credential contents.
 
 ## 7. Testing
 
@@ -1159,8 +1167,8 @@ Added by this design:
     reads only credentials of that type.
 21. Rule paths are evaluated with `eval: false` when a service is created or
     updated, and a path that throws is a 400.
-22. Credential contents aren't logged. A separate packages change stops
-    `@verii/vc-checks` logging them.
+22. Credential contents aren't logged. A separate packages change (#1205)
+    stops the verification packages logging them.
 
 ## Risks outside this work
 
