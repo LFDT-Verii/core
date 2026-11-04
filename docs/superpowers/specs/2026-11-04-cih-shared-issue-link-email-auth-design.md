@@ -172,9 +172,12 @@ Depots of `preauth`-only services and relying-party services skip the check.
 **Return `errorCode` and `depotId` in the 409 body.** The `depots/create`
 route declares no 409 response. When Fastify finds no schema for the status
 code, its fallback serializer emits only `statusCode`, `code`, `error` and
-`message`, so `errorCode` and `depotId` would be lost. The route adds
-`...fastify.ConflictResponse`. The shared `error` schema has
-`additionalProperties: true`, so both fields reach the client.
+`message`, so `errorCode` and `depotId` would be lost.
+`...fastify.ConflictResponse` isn't enough either: Fastify serializes the
+error through `Object.create(error, ...)`, so the shared `error` schema's
+`additionalProperties: true` sees no own properties, and only declared fields
+survive. The route declares 409 as `depot-conflict-error`, the `error` schema
+plus a `depotId` property, so both fields reach the client.
 
 **Concurrent creates can both get through.** Two concurrent creates of the
 same email can both pass the check. A unique index can't prevent that cheaply,
@@ -629,7 +632,8 @@ network.
 | `entities/depots/orchestrators/create-depot.js` | Store `authMatchValues`. Return 409 on reuse. |
 | `entities/depots/repo/repo.js` | Index, `defaultProjection`, new extension. |
 | `entities/depots/repo/find-depots-by-auth-match-values.js` | New. |
-| `controllers/operator/depots/depots-controller.js` | `...fastify.ConflictResponse` on `create`. |
+| `controllers/operator/depots/depots-controller.js` | 409 `depot-conflict-error` response on `create`. |
+| `controllers/operator/depots/schemas/depot-conflict-error.schema.js` | New. The `error` schema plus `depotId`. |
 | `entities/links/orchestrators/refresh-links.js` | Choose the link per the table. Skip loading a missing depot. |
 | `entities/links/domain/validate-issue-link.js` | Allow no depot when the service has VP auth. |
 
@@ -720,7 +724,7 @@ Added by this design:
   non-strings unchanged. Neither `create` nor `get` returns them.
 - A second depot with the same email in the same service returns 409
   `auth_values_already_used`, with the existing `depotId` in the body. This
-  also checks the `ConflictResponse` wiring. The same email differing only in
+  also checks the 409 response schema. The same email differing only in
   case or spaces also returns 409.
 - There's no 409 for another service, a `preauth` service or a relying-party
   service.
