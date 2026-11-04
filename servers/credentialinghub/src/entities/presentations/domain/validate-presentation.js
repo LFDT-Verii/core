@@ -15,7 +15,14 @@
  *
  */
 const newError = require('http-errors');
-const { first, includes, isEmpty, castArray, omit } = require('lodash/fp');
+const {
+  first,
+  includes,
+  isEmpty,
+  isString,
+  castArray,
+  omit,
+} = require('lodash/fp');
 const { JSONPath } = require('jsonpath-plus');
 
 const VALID_PRESENTATION_CONTEXTS = [
@@ -24,6 +31,8 @@ const VALID_PRESENTATION_CONTEXTS = [
 ];
 const SUPPORTED_DESCRIPTOR_FORMATS = ['jwt_vc', 'jwt_vp'];
 const SUPPORTED_NESTED_VP_TOKEN_PATHS = ['$', '$[0]'];
+const SUPPORTED_CREDENTIAL_PATH_PATTERN =
+  /^\$\.verifiableCredential\[(?:0|[1-9]\d{0,2})\]$/;
 const presentationSchema = {
   $ref: 'https://velocitycareerlabs.io/velocity-presentation-submission.schema.json#',
 };
@@ -161,7 +170,20 @@ const validateDescriptorPath = (descriptor) => {
       },
     );
   }
+  if (!isSupportedCredentialPath(getDescriptorPath(descriptor))) {
+    throw newError(
+      400,
+      'Presentation path descriptor uses an unsupported path',
+      {
+        descriptor,
+        errorCode: 'presentation_jsonpath_unsupported',
+      },
+    );
+  }
 };
+
+const isSupportedCredentialPath = (path) =>
+  isString(path) && SUPPORTED_CREDENTIAL_PATH_PATTERN.test(path);
 
 const getDescriptorPath = (descriptor) =>
   descriptor.path_nested?.path ?? descriptor.path;
@@ -170,7 +192,7 @@ const getJsonAtPath = (path, json) =>
   JSONPath({
     path,
     json,
-    preventEval: true,
+    eval: false,
   });
 
 module.exports = {

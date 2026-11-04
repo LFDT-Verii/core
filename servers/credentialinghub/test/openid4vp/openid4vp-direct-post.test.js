@@ -60,6 +60,21 @@ const {
 } = require('../../src/entities/openid4vp/orchestrators');
 const { NotificationEventTypes } = require('../../src/entities/notifications');
 
+const UNSUPPORTED_DESCRIPTOR_PATHS = [
+  '$..verifiableCredential',
+  '$.verifiableCredential[*]',
+  '$.verifiableCredential[?(@)]',
+  '$.verifiableCredential[(@.length-1)]',
+  '$.verifiableCredential[0,1]',
+  '$.verifiableCredential[0:2]',
+  "$['verifiableCredential'][0]",
+  '$.verifiableCredential[0].credentialSubject',
+  '$.other[0]',
+  '$.verifiableCredential[0]@other()',
+  '$.verifiableCredential[1000]',
+  '$',
+];
+
 describe('openid4vp > direct-post', () => {
   let fastify;
   let persistTenant;
@@ -804,6 +819,83 @@ describe('openid4vp > direct-post', () => {
     });
   });
 
+  UNSUPPORTED_DESCRIPTOR_PATHS.forEach((path) => {
+    it(`should reject an unsupported presentation submission path ${JSON.stringify(path)}`, async () => {
+      const baseVp = await buildVp(tenant, holder, exchange);
+      const vp = applyOverrides(baseVp, {
+        presentation_submission: {
+          ...baseVp.presentation_submission,
+          descriptor_map: [
+            {
+              id: 'OpenBadgeCredential',
+              path,
+              format: 'jwt_vc',
+            },
+          ],
+        },
+      });
+      const jwtVp = await generatePresentationJwt(
+        vp,
+        holder.keyPair.privateKey,
+        `${holder.did}#key`,
+      );
+
+      const response = await injectDirectPost({
+        fastify,
+        tenant,
+        payload: directPostPayload(exchange, jwtVp, vp),
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual({
+        error: 'invalid_request',
+        error_description:
+          'Presentation path descriptor uses an unsupported path',
+      });
+      await expectUnsupportedPathRecorded(exchange);
+    });
+
+    it(`should reject an unsupported nested presentation submission path ${JSON.stringify(path)}`, async () => {
+      const baseVp = await buildVp(tenant, holder, exchange);
+      const vp = applyOverrides(baseVp, {
+        presentation_submission: {
+          ...baseVp.presentation_submission,
+          descriptor_map: [
+            {
+              id: 'OpenBadgeCredential',
+              path: '$',
+              format: 'jwt_vp',
+              path_nested: {
+                id: 'OpenBadgeCredential',
+                path,
+                format: 'jwt_vc',
+              },
+            },
+          ],
+        },
+      });
+      const jwtVp = await generatePresentationJwt(
+        vp,
+        holder.keyPair.privateKey,
+        `${holder.did}#key`,
+      );
+
+      const response = await injectDirectPost({
+        fastify,
+        tenant,
+        payload: directPostPayload(exchange, jwtVp, vp),
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual({
+        error: 'invalid_request',
+        error_description:
+          'Presentation path descriptor uses an unsupported path',
+      });
+      await expectUnsupportedPathRecorded(exchange);
+    });
+  });
+
   it('should reject unsupported nested presentation submission formats', async () => {
     const baseVp = await buildVp(tenant, holder, exchange);
     const vp = applyOverrides(baseVp, {
@@ -1365,6 +1457,24 @@ const buildPostAuthorizationResponseContext = ({
     }),
   ),
 });
+
+const expectUnsupportedPathRecorded = async (exchange) => {
+  await expect(
+    mongoDb()
+      .collection('presentations')
+      .countDocuments({ exchangeId: new ObjectId(exchange._id) }),
+  ).resolves.toEqual(0);
+  await expect(
+    mongoDb()
+      .collection('exchanges')
+      .findOne({ _id: new ObjectId(exchange._id) }),
+  ).resolves.toEqual(
+    expect.objectContaining({
+      err: 'presentation_jsonpath_unsupported',
+      errorDescription: 'Presentation path descriptor uses an unsupported path',
+    }),
+  );
+};
 
 const directPostPayload = (exchange, jwtVp, vp) => ({
   state: (exchange._id ?? exchange).toString(),
