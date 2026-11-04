@@ -18,12 +18,12 @@ const { map } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
 const { ExchangeProtocols, ExchangeStates } = require('../domain');
 
-// A VN API exchange waits on its depot from OFFERS_WAITING until it's COMPLETE.
+// A VN API exchange waits on its depot from OFFERS_WAITING until it starts claiming or is COMPLETE.
 const waitingFilter = {
   'protocolMetadata.protocol': ExchangeProtocols.VN_API,
   'events.state': {
     $eq: ExchangeStates.OFFERS_WAITING,
-    $ne: ExchangeStates.COMPLETE,
+    $nin: [ExchangeStates.CLAIMING_IN_PROGRESS, ExchangeStates.COMPLETE],
   },
 };
 
@@ -42,13 +42,14 @@ const waitingVnApiExchangesExtension = (parent) => ({
       },
       projection,
     ),
-  // Latest wins: when an exchange starts waiting, the depot's other waiting exchanges are completed
-  completeOtherWaitingVnApiExchanges: ({ _id, depotId }) =>
+  // Latest wins: when an exchange starts waiting, the depot's older waiting exchanges are completed.
+  // Two exchanges that start waiting at once can't complete each other, so the newer one keeps waiting.
+  completeOlderWaitingVnApiExchanges: ({ _id, depotId }) =>
     parent.collection().updateMany(
       parent.prepFilter({
         ...waitingFilter,
         depotId: new ObjectId(depotId),
-        _id: { $ne: new ObjectId(_id) },
+        _id: { $lt: new ObjectId(_id) },
       }),
       {
         $push: {

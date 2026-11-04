@@ -52,7 +52,7 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
 
   // The wallet waits on this exchange for NewOffersReady or NoOffersFound from depots/resolve-deferred-credentials.
   await repos.exchanges.addState(exchangeId, ExchangeStates.OFFERS_WAITING);
-  await repos.exchanges.completeOtherWaitingVnApiExchanges(exchange);
+  await repos.exchanges.completeOlderWaitingVnApiExchanges(exchange);
   // A resolve-deferred-credentials call that ran before OFFERS_WAITING was recorded found no waiting exchange to message,
   // so credentials added before it are offered now instead of in a message.
   const addedCredentials = await findCredentials();

@@ -91,6 +91,10 @@ const sendNoOffersFound = async (exchange, context) => {
     { exchange, data: buildMessageData('NoOffersFound', exchange, context) },
     context,
   );
+  // The exchange keeps waiting after a failed message, so a later call sends it again
+  if (notification.status === WalletMessageStatuses.FAILED) {
+    return notification;
+  }
   await context.repos.exchanges.addState(
     exchange._id,
     ExchangeStates.NO_OFFERS_RECEIVED,

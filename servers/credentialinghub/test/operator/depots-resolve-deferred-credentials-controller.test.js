@@ -388,6 +388,40 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     });
   });
 
+  it('should keep the exchange waiting when NoOffersFound fails, and send it again on the next call', async () => {
+    const exchange = await persistWaitingExchange();
+    mockHttpClient.post.mock.mockImplementationOnce(() =>
+      Promise.reject(new Error('Response Error')),
+    );
+
+    const failedResponse = await resolveDeferredCredentials();
+
+    expect(failedResponse.json.notification).toEqual({
+      status: 'failed',
+      error: 'Response Error',
+      exchangeId: exchange._id,
+    });
+    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
+      map('state', exchange.events),
+    );
+
+    const response = await resolveDeferredCredentials();
+
+    expect(response.json.notification).toEqual({
+      status: 'sent',
+      exchangeId: exchange._id,
+    });
+    expect(map('body.data.notificationType', postedMessages())).toEqual([
+      'NoOffersFound',
+      'NoOffersFound',
+    ]);
+    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual([
+      ...map('state', exchange.events),
+      ExchangeStates.NO_OFFERS_RECEIVED,
+      ExchangeStates.COMPLETE,
+    ]);
+  });
+
   it('should leave the depot unchanged and message the waiting exchange again when called again', async () => {
     await persistTypedCredential('EmailV1.0');
     const exchange = await persistWaitingExchange();
@@ -452,6 +486,26 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     expect(mockHttpClient.post.mock.callCount()).toEqual(1);
     expect(postedMessages()[0].body.data.exchangeId).toEqual(
       waitingExchange._id,
+    );
+  });
+
+  it('should skip an exchange that waited and has started claiming its credentials', async () => {
+    const exchange = await persistVnApiExchange([
+      ExchangeStates.OFFERS_REQUESTED,
+      ExchangeStates.OFFERS_WAITING,
+      ExchangeStates.OFFERS_REQUESTED,
+      ExchangeStates.OFFERS_SENT,
+      ExchangeStates.CLAIMING_IN_PROGRESS,
+    ]);
+
+    const response = await resolveDeferredCredentials();
+
+    expect(response.json.notification).toEqual({
+      status: 'skipped_no_waiting_exchange',
+    });
+    expect(mockHttpClient.post.mock.callCount()).toEqual(0);
+    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
+      map('state', exchange.events),
     );
   });
 
