@@ -16,10 +16,9 @@ const depotSchema = {
       type: 'string',
       description: 'the serviceId this depot is used for',
     },
-    credentialsResolvedAt: {
+    waitingExchangeId: {
       type: 'string',
-      format: 'date-time',
-      description: "when the depot's pending credentials were resolved",
+      description: 'the VN API exchange waiting on the depot, if there is one',
     },
   },
 };

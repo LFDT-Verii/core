@@ -252,7 +252,7 @@ const vnfIssuingController = async (fastify) => {
           req.body.offerHashes,
           req,
         );
-        // Offers come without a challenge only while the depot is pending
+        // Offers come without a challenge only while the wallet waits for deferred credentials
         if (result.challenge == null) {
           reply.code(202);
         }

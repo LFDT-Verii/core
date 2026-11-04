@@ -34,13 +34,13 @@ const validateDepot = (depot, service, isIssuerService) => {
       errorCode: DepotErrors.INVALID_AUTH_VALUES,
     });
   }
-  validateCredentialsPending(depot, isIssuerService);
+  validateDeferredCredentials(depot, isIssuerService);
 };
 
-const validateCredentialsPending = (depot, isIssuerService) => {
-  if (depot.credentialsPending === true && !isIssuerService) {
-    throw newError(400, DepotErrors.CREDENTIALS_PENDING_NOT_SUPPORTED, {
-      errorCode: DepotErrors.CREDENTIALS_PENDING_NOT_SUPPORTED,
+const validateDeferredCredentials = (depot, isIssuerService) => {
+  if (depot.deferredCredentials === true && !isIssuerService) {
+    throw newError(400, DepotErrors.DEFERRED_CREDENTIALS_NOT_SUPPORTED, {
+      errorCode: DepotErrors.DEFERRED_CREDENTIALS_NOT_SUPPORTED,
     });
   }
 };

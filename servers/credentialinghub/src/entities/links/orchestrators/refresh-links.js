@@ -45,24 +45,23 @@ const refreshIssueLinks = async (serviceId, depotId, context) => {
     ? await repos.depots.refreshPreauthCode(depotId)
     : depot;
 
-  const credentialTypes = await loadLinkCredentialTypes(
+  // Credential types are extracted from the depot
+  const credentialTypes = await optional(loadCredentialTypeHints, [
     refreshedDepot,
     context,
-  );
+  ]);
 
+  // A depot's expected types take the place of its credentials' types
   const vnProtocolLinkUrl = buildIssuingDeepLink(
     tenant,
     service,
     refreshedDepot,
-    credentialTypes,
+    refreshedDepot?.expectedCredentialTypes ?? credentialTypes,
     config.deepLinkProtocol,
   );
 
-  // A pending depot gets no OpenID4VCI credential offer yet
   const openid4vciProtocolLinkUrl =
-    refreshedDepot?.credentialsPending !== true &&
-    refreshedDepot?.preauthCode != null &&
-    !isEmpty(credentialTypes)
+    refreshedDepot?.preauthCode != null && !isEmpty(credentialTypes)
       ? await buildCredentialOfferLink(refreshedDepot, credentialTypes, context)
       : undefined;
   const redirectUrl = buildRedirectUrl(
@@ -82,12 +81,6 @@ const refreshIssueLinks = async (serviceId, depotId, context) => {
   }
   return links;
 };
-
-// A pending depot's link takes its expected types. Otherwise the types come from the depot's credentials.
-const loadLinkCredentialTypes = (depot, context) =>
-  depot?.credentialsPending === true
-    ? depot.expectedCredentialTypes
-    : optional(loadCredentialTypeHints, [depot, context]);
 
 const loadCredentialTypeHints = async (depot, context) => {
   const credentials = await context.repos.credentials.find(

@@ -19,8 +19,9 @@ const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
   createDepot,
   deleteDepot,
-  resolveDepotCredentials,
-  ResolveDepotCredentialsStatuses,
+  getDepots,
+  resolveDeferredCredentials,
+  ResolveDeferredCredentialsStatuses,
 } = require('../../../entities/depots');
 const { depotSchema, newDepotSchema } = require('./schemas');
 
@@ -118,10 +119,7 @@ const depotsController = async (fastify) => {
       },
       async (req) => {
         const { serviceId, depotId: depotIds } = req.query;
-        const depots = await req.repos.depots.findDepots(
-          serviceId,
-          coerceArray(depotIds),
-        );
+        const depots = await getDepots(serviceId, coerceArray(depotIds), req);
         return { depots };
       },
     )
@@ -162,11 +160,11 @@ const depotsController = async (fastify) => {
       async (req) => deleteDepot(req.body.depotId, req.body.serviceId, req),
     )
     .post(
-      '/resolve-credentials',
+      '/resolve-deferred-credentials',
       {
         schema: fastify.autoSchema({
-          summary: "Resolve a depot's pending credentials",
-          operationId: 'resolveDepotCredentials',
+          summary: "Resolve a depot's deferred credentials",
+          operationId: 'resolveDeferredCredentials',
           body: {
             type: 'object',
             properties: {
@@ -192,7 +190,7 @@ const depotsController = async (fastify) => {
                   properties: {
                     status: {
                       type: 'string',
-                      enum: Object.values(ResolveDepotCredentialsStatuses),
+                      enum: Object.values(ResolveDeferredCredentialsStatuses),
                     },
                     exchangeId: {
                       type: 'string',
@@ -211,7 +209,7 @@ const depotsController = async (fastify) => {
           },
         }),
       },
-      async (req) => resolveDepotCredentials(req.body.depotId, req),
+      async (req) => resolveDeferredCredentials(req.body.depotId, req),
     );
 };
 

@@ -25,7 +25,7 @@ const {
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
 const { nanoid } = require('nanoid');
-const { omit } = require('lodash/fp');
+const { map, omit } = require('lodash/fp');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -36,6 +36,11 @@ const {
 } = require('../../src/entities/relying-party-services');
 const { initDepotFactory } = require('../../src/entities/depots');
 const { initCredentialFactory } = require('../../src/entities/credentials');
+const {
+  initExchangeFactory,
+  ExchangeProtocols,
+  ExchangeStates,
+} = require('../../src/entities/exchanges');
 
 const testUrl = '/operator/depots';
 describe('Depots Test suite', () => {
@@ -45,6 +50,7 @@ describe('Depots Test suite', () => {
   let persistRelyingPartyService;
   let persistDepot;
   let persistCredential;
+  let persistExchange;
 
   let tenant;
   let issuerService;
@@ -58,6 +64,7 @@ describe('Depots Test suite', () => {
     ({ persistRelyingPartyService } = initRelyingPartyServiceFactory(fastify));
     ({ persistDepot } = initDepotFactory(fastify));
     ({ persistCredential } = initCredentialFactory(fastify));
+    ({ persistExchange } = initExchangeFactory(fastify));
   });
 
   beforeEach(async () => {
@@ -66,6 +73,7 @@ describe('Depots Test suite', () => {
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('relyingPartyServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
+    await mongoDb().collection('exchanges').deleteMany({});
     tenant = await persistTenant();
     issuerService = await persistIssuerService({
       tenant,
@@ -262,7 +270,7 @@ describe('Depots Test suite', () => {
         }),
       );
     });
-    it('should 400 for a pending relying party service depot', async () => {
+    it('should 400 for a relying party service depot with deferred credentials', async () => {
       const relyingPartyService = await persistRelyingPartyService({ tenant });
       const response = await fastify.injectJson({
         method: 'POST',
@@ -270,28 +278,28 @@ describe('Depots Test suite', () => {
         payload: {
           tenantId: tenant._id,
           serviceId: relyingPartyService._id,
-          depot: { userReference: 'RP-USER-123', credentialsPending: true },
+          depot: { userReference: 'RP-USER-123', deferredCredentials: true },
         },
       });
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
           statusCode: 400,
-          errorCode: 'credentials_pending_not_supported',
-          message: 'credentials_pending_not_supported',
+          errorCode: 'deferred_credentials_not_supported',
+          message: 'deferred_credentials_not_supported',
         }),
       );
       await expect(
         mongoDb().collection('depots').countDocuments({}),
       ).resolves.toEqual(0);
     });
-    it('should 200 for a pending depot with expected credential types', async () => {
+    it('should 200 for a depot with deferred credentials and expected credential types', async () => {
       const payload = {
         tenantId: tenant._id,
         serviceId: issuerService._id,
         depot: {
           userReference: 'ABC123',
-          credentialsPending: true,
+          deferredCredentials: true,
           expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
         },
       };
@@ -332,7 +340,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
-          credentialsPending: false,
+          deferredCredentials: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -364,7 +372,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
-          credentialsPending: false,
+          deferredCredentials: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -392,7 +400,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
-          credentialsPending: false,
+          deferredCredentials: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -482,30 +490,52 @@ describe('Depots Test suite', () => {
           requestId: expect.any(String),
         });
       });
-      it('should return the pending fields of a depot whose credentials are resolved', async () => {
-        const resolvedDepot = await persistDepot({
+      it('should return the deferred credentials fields and the ID of the exchange waiting on the depot', async () => {
+        const deferredDepot = await persistDepot({
           tenant,
           service: issuerService,
           userReference: nanoid(),
-          credentialsPending: false,
+          deferredCredentials: true,
           expectedCredentialTypes: ['EmailV1.0'],
-          credentialsResolvedAt: new Date(),
         });
+        const persistVnApiExchange = (depot, states) =>
+          persistExchange({
+            tenant,
+            service: issuerService,
+            depotId: new ObjectId(depot._id),
+            protocolMetadata: { protocol: ExchangeProtocols.VN_API },
+            events: map(
+              (state) => ({ state, timestamp: new Date() }),
+              [ExchangeStates.NEW, ...states],
+            ),
+          });
+        const waitingExchange = await persistVnApiExchange(deferredDepot, [
+          ExchangeStates.OFFERS_WAITING,
+        ]);
+        await persistVnApiExchange(deferredDepot, [
+          ExchangeStates.OFFERS_WAITING,
+          ExchangeStates.COMPLETE,
+        ]);
+        await persistVnApiExchange(deferredDepot, [ExchangeStates.OFFERS_SENT]);
+        await persistVnApiExchange(depots[0], [ExchangeStates.OFFERS_WAITING]);
+
         const response = await fastify.injectJson({
           method: 'GET',
-          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${resolvedDepot._id}`,
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${deferredDepot._id}&depotId=${depots[1]._id}`,
         });
         expect(response.json).toEqual({
-          depots: [
+          depots: expect.arrayContaining([
             {
-              ...expectedDepot(resolvedDepot),
-              credentialsPending: false,
+              ...expectedDepot(deferredDepot),
+              deferredCredentials: true,
               expectedCredentialTypes: ['EmailV1.0'],
-              credentialsResolvedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+              waitingExchangeId: waitingExchange._id,
             },
-          ],
+            expectedDepot(depots[1]),
+          ]),
           requestId: expect.any(String),
         });
+        expect(response.json.depots).toHaveLength(2);
       });
       it('should return 2 if 2 depots match the depotIds', async () => {
         const response = await fastify.injectJson({
@@ -720,7 +750,7 @@ describe('Depots Test suite', () => {
 });
 
 const expectedDepot = (depot) => ({
-  credentialsPending: false,
+  deferredCredentials: false,
   ...omit(['_id', 'tenantId'], depot),
   id: depot._id,
 });

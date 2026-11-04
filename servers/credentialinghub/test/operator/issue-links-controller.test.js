@@ -17,7 +17,6 @@
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const {
-  mockHttpClient,
   mockHttpClientJsonResponse,
   mockHttpClientModule,
   resetMockHttpClient,
@@ -337,7 +336,7 @@ describe('Issue Links Test suite', () => {
     });
   });
 
-  describe('pending depots', () => {
+  describe('depots with deferred credentials', () => {
     let preauthIssuerService;
 
     beforeEach(async () => {
@@ -358,24 +357,23 @@ describe('Issue Links Test suite', () => {
         },
       });
 
-    it("should use the expected types in the VN API link and offer no OpenID4VCI credential, ignoring the depot's credentials", async () => {
-      const pendingDepot = await persistDepot({
+    it('should use the expected types in the VN API link before the depot has credentials', async () => {
+      const deferredDepot = await persistDepot({
         tenant,
         service: preauthIssuerService,
         userReference: nanoid(),
-        credentialsPending: true,
+        deferredCredentials: true,
         expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
       });
-      await persistCredential({ tenant, depot: pendingDepot });
 
-      const response = await refreshLinks(pendingDepot);
+      const response = await refreshLinks(deferredDepot);
 
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
         vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
           tenant,
           preauthIssuerService,
-          pendingDepot,
+          deferredDepot,
           response.json.preauthCode,
           ['EmailV1.0', 'PhoneV1.0'],
         )}`,
@@ -385,26 +383,78 @@ describe('Issue Links Test suite', () => {
         preauthCode: expect.any(String),
         requestId: expect.any(String),
       });
-      expect(mockHttpClient.get.mock.callCount()).toEqual(0);
     });
 
-    it('should use no credential types in the VN API link when the pending depot expects none', async () => {
-      const pendingDepot = await persistDepot({
+    it("should use the expected types in the VN API link and the credentials' types in the OpenID4VCI offer", async () => {
+      mockHttpClientJsonResponse('get', [
+        {
+          credentialType: 'Employment',
+          schemaUrl: 'https://example.com/employment.schema.json',
+          issuerCategory: 'RegularIssuer',
+        },
+        {
+          credentialType: 'PhoneV1.0',
+          schemaUrl: 'https://example.com/phone.schema.json',
+          issuerCategory: 'ContactIssuer',
+        },
+      ]);
+      mockHttpClientJsonResponse('get', {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Issuer', 'ContactIssuer'],
+        },
+      });
+      const deferredDepot = await persistDepot({
         tenant,
         service: preauthIssuerService,
         userReference: nanoid(),
-        credentialsPending: true,
+        deferredCredentials: true,
+        expectedCredentialTypes: ['Employment', 'PhoneV1.0'],
       });
-      await persistCredential({ tenant, depot: pendingDepot });
+      await persistCredential({ tenant, depot: deferredDepot });
 
-      const response = await refreshLinks(pendingDepot);
+      const response = await refreshLinks(deferredDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        openidCredentialOffer: expect.any(String),
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          deferredDepot,
+          response.json.preauthCode,
+          ['Employment', 'PhoneV1.0'],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}&openid4vc_uri=${encodeURIComponent(
+          response.json.openidCredentialOffer,
+        )}`,
+        preauthCode: expect.any(String),
+        requestId: expect.any(String),
+      });
+      expectedOidcCredentialOfferUri(
+        response.json.openidCredentialOffer,
+        tenant,
+        ['Employment'],
+      );
+    });
+
+    it('should use no credential types and offer no OpenID4VCI credential when the depot expects no types and has no credentials', async () => {
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        deferredCredentials: true,
+      });
+
+      const response = await refreshLinks(deferredDepot);
 
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
         vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
           tenant,
           preauthIssuerService,
-          pendingDepot,
+          deferredDepot,
           response.json.preauthCode,
           [],
         )}`,

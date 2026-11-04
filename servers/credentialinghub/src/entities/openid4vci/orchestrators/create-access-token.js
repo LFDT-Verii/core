@@ -35,13 +35,10 @@ const createAccessToken = async (accessTokenParameters, context) => {
   );
 
   const [credentials, issuerService] = await Promise.all([
-    // Credentials already in a pending depot aren't listed
-    depot.credentialsPending === true
-      ? []
-      : context.repos.credentials.findByDepotId({
-          depotId: depot._id,
-          claimable: true,
-        }),
+    context.repos.credentials.findByDepotId({
+      depotId: depot._id,
+      claimable: true,
+    }),
     context.repos.issuerServices.findById(depot.serviceId),
   ]);
 

@@ -49,13 +49,13 @@ const {
   ExchangeStates,
 } = require('../../src/entities/exchanges');
 
-const testUrl = '/operator/depots/resolve-credentials';
+const testUrl = '/operator/depots/resolve-deferred-credentials';
 const messagingSettings = {
   webhookUrl: 'https://wallet.example.com/push',
   authToken: 'push-token-123',
 };
 
-describe('Resolve Depot Credentials Test Suite', () => {
+describe('Resolve Deferred Credentials Test Suite', () => {
   let fastify;
   let persistTenant;
   let persistKey;
@@ -96,7 +96,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
       tenant,
       service: issuerService,
       userReference: nanoid(),
-      credentialsPending: true,
+      deferredCredentials: true,
       expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
     });
     resetMockHttpClient();
@@ -106,7 +106,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
     await fastify.close();
   });
 
-  const resolveDepotCredentials = (
+  const resolveDeferredCredentials = (
     depotId = depot._id,
     tenantId = tenant._id,
   ) =>
@@ -164,13 +164,12 @@ describe('Resolve Depot Credentials Test Suite', () => {
     return map('state', exchange.events);
   };
 
-  const expectedResolvedDepot = () => ({
+  const expectedDepot = () => ({
     id: depot._id,
     serviceId: depot.serviceId,
     userReference: depot.userReference,
-    credentialsPending: false,
+    deferredCredentials: true,
     expectedCredentialTypes: depot.expectedCredentialTypes,
-    credentialsResolvedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
   });
@@ -199,7 +198,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
 
   it('should 404 if the depot is unknown', async () => {
     const depotId = new ObjectId().toString();
-    const response = await resolveDepotCredentials(depotId);
+    const response = await resolveDeferredCredentials(depotId);
     expect(response.statusCode).toEqual(404);
     expect(response.json).toEqual(
       errorResponseMatcher({
@@ -211,59 +210,54 @@ describe('Resolve Depot Credentials Test Suite', () => {
     );
   });
 
-  it("should 404 for another tenant's depot and leave its credentials pending", async () => {
+  it("should 404 for another tenant's depot", async () => {
     const { tenant: tenant2 } = await constructTenant(
       persistTenant,
       persistKey,
     );
-    const response = await resolveDepotCredentials(depot._id, tenant2._id);
+    const response = await resolveDeferredCredentials(depot._id, tenant2._id);
     expect(response.statusCode).toEqual(404);
     expect(response.json.errorCode).toEqual('depot_not_found');
-    await expect(findDbDepot()).resolves.toMatchObject({
-      credentialsPending: true,
-    });
   });
 
-  it('should return already_resolved for a depot that was never pending', async () => {
-    const readyDepot = await persistDepot({
+  it('should return skipped_no_waiting_exchange for a depot without deferred credentials', async () => {
+    const otherDepot = await persistDepot({
       tenant,
       service: issuerService,
       userReference: nanoid(),
     });
-    const response = await resolveDepotCredentials(readyDepot._id);
+    const response = await resolveDeferredCredentials(otherDepot._id);
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual({
       depot: {
-        id: readyDepot._id,
-        serviceId: readyDepot.serviceId,
-        userReference: readyDepot.userReference,
-        credentialsPending: false,
+        id: otherDepot._id,
+        serviceId: otherDepot.serviceId,
+        userReference: otherDepot.userReference,
+        deferredCredentials: false,
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       },
-      notification: { status: 'already_resolved' },
+      notification: { status: 'skipped_no_waiting_exchange' },
       requestId: expect.any(String),
     });
     expect(mockHttpClient.post.mock.callCount()).toEqual(0);
   });
 
-  it('should resolve the credentials and return skipped_no_waiting_exchange when no wallet is waiting', async () => {
+  it('should return skipped_no_waiting_exchange and change nothing when no wallet is waiting', async () => {
     const exchange = await persistVnApiExchange([
       ExchangeStates.OFFERS_REQUESTED,
       ExchangeStates.OFFERS_SENT,
     ]);
-    const response = await resolveDepotCredentials();
+    const dbDepot = await findDbDepot();
+    const response = await resolveDeferredCredentials();
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual({
-      depot: expectedResolvedDepot(),
+      depot: expectedDepot(),
       notification: { status: 'skipped_no_waiting_exchange' },
       requestId: expect.any(String),
     });
     expect(mockHttpClient.post.mock.callCount()).toEqual(0);
-    await expect(findDbDepot()).resolves.toMatchObject({
-      credentialsPending: false,
-      credentialsResolvedAt: expect.any(Date),
-    });
+    await expect(findDbDepot()).resolves.toEqual(dbDepot);
     await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
       map('state', exchange.events),
     );
@@ -277,11 +271,11 @@ describe('Resolve Depot Credentials Test Suite', () => {
     await persistTypedCredential('EmailV1.0', { rejectedAt: new Date() });
     const exchange = await persistWaitingExchange();
 
-    const response = await resolveDepotCredentials();
+    const response = await resolveDeferredCredentials();
 
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual({
-      depot: expectedResolvedDepot(),
+      depot: expectedDepot(),
       notification: { status: 'sent', exchangeId: exchange._id },
       requestId: expect.any(String),
     });
@@ -312,7 +306,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
       credentialTypes: ['PhoneV1.0'],
     });
 
-    const response = await resolveDepotCredentials();
+    const response = await resolveDeferredCredentials();
 
     expect(response.json.notification).toEqual({
       status: 'sent',
@@ -331,11 +325,11 @@ describe('Resolve Depot Credentials Test Suite', () => {
     await persistTypedCredential('EmailV1.0', { acceptedAt: new Date() });
     const exchange = await persistWaitingExchange();
 
-    const response = await resolveDepotCredentials();
+    const response = await resolveDeferredCredentials();
 
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual({
-      depot: expectedResolvedDepot(),
+      depot: expectedDepot(),
       notification: { status: 'sent', exchangeId: exchange._id },
       requestId: expect.any(String),
     });
@@ -362,7 +356,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
       messagingSettings: undefined,
     });
 
-    const response = await resolveDepotCredentials();
+    const response = await resolveDeferredCredentials();
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.notification).toEqual({
@@ -377,14 +371,14 @@ describe('Resolve Depot Credentials Test Suite', () => {
     ]);
   });
 
-  it('should return a failed notification and keep the credentials resolved when the push url fails', async () => {
+  it('should return a failed notification when the push url fails', async () => {
     await persistTypedCredential('EmailV1.0');
     await persistWaitingExchange();
     mockHttpClient.post.mock.mockImplementationOnce(() =>
       Promise.reject(new Error('Response Error')),
     );
 
-    const response = await resolveDepotCredentials();
+    const response = await resolveDeferredCredentials();
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.notification).toEqual({
@@ -392,29 +386,30 @@ describe('Resolve Depot Credentials Test Suite', () => {
       error: 'Response Error',
       exchangeId: expect.stringMatching(OBJECT_ID_FORMAT),
     });
-    await expect(findDbDepot()).resolves.toMatchObject({
-      credentialsPending: false,
-    });
   });
 
-  it('should return already_resolved and send nothing when the credentials are resolved twice', async () => {
+  it('should leave the depot unchanged and message the waiting exchange again when called again', async () => {
     await persistTypedCredential('EmailV1.0');
-    await persistWaitingExchange();
+    const exchange = await persistWaitingExchange();
+    const dbDepot = await findDbDepot();
 
-    const firstResponse = await resolveDepotCredentials();
-    const secondResponse = await resolveDepotCredentials();
+    const firstResponse = await resolveDeferredCredentials();
+    const secondResponse = await resolveDeferredCredentials();
 
-    expect(firstResponse.json.notification.status).toEqual('sent');
-    expect(secondResponse.statusCode).toEqual(200);
+    expect(firstResponse.json.notification).toEqual({
+      status: 'sent',
+      exchangeId: exchange._id,
+    });
     expect(secondResponse.json).toEqual({
-      depot: {
-        ...expectedResolvedDepot(),
-        credentialsResolvedAt: firstResponse.json.depot.credentialsResolvedAt,
-      },
-      notification: { status: 'already_resolved' },
+      depot: expectedDepot(),
+      notification: { status: 'sent', exchangeId: exchange._id },
       requestId: expect.any(String),
     });
-    expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+    expect(map('body.data.notificationType', postedMessages())).toEqual([
+      'NewOffersReady',
+      'NewOffersReady',
+    ]);
+    await expect(findDbDepot()).resolves.toEqual(dbDepot);
   });
 
   it('should message the latest waiting exchange, not a newer one that never waited', async () => {
@@ -427,7 +422,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
     ]);
     await persistVnApiExchange([]);
 
-    const response = await resolveDepotCredentials();
+    const response = await resolveDeferredCredentials();
 
     expect(response.json.notification).toEqual({
       status: 'sent',
@@ -448,7 +443,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
       ExchangeStates.COMPLETE,
     ]);
 
-    const response = await resolveDepotCredentials();
+    const response = await resolveDeferredCredentials();
 
     expect(response.json.notification).toEqual({
       status: 'sent',
@@ -466,7 +461,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
       await persistTypedCredential('EmailV1.0');
       const exchange = await persistWaitingExchange();
 
-      await resolveDepotCredentials();
+      await resolveDeferredCredentials();
 
       const [url, body, { headers }] =
         mockHttpClient.post.mock.calls[0].arguments;
@@ -489,7 +484,7 @@ describe('Resolve Depot Credentials Test Suite', () => {
     it('should send a NoOffersFound body that matches the Credential Agent', async () => {
       const exchange = await persistWaitingExchange();
 
-      await resolveDepotCredentials();
+      await resolveDeferredCredentials();
 
       const [url, body, { headers }] =
         mockHttpClient.post.mock.calls[0].arguments;
