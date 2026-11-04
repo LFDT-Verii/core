@@ -128,9 +128,14 @@ PR 2 tightens the rules:
   `request_validation_failed`). A `type` that isn't requested returns 400
   `service_verifiablePresentationAuthRules_invalid`.
 - **Rule paths are checked.** On `create` and `update`, `validateIssuerService`
-  evaluates each path with `eval: false` against an empty object. A path that
-  throws returns 400 `service_verifiablePresentationAuthRules_invalid`, so a
-  bad path fails when it's configured, not when a holder authenticates.
+  parses each path and rejects filter (`?(…)`) and script (`(…)`) segments,
+  which can't run with `eval: false`. It also evaluates each path with
+  `eval: false` against an empty object, which catches paths that don't parse.
+  Either failure returns 400 `service_verifiablePresentationAuthRules_invalid`,
+  so a bad path fails when it's configured, not when a holder authenticates.
+  Evaluating alone isn't enough: a filter only runs once the path reaches an
+  existing field, so `$.credentialSubject[?(@.email)].email` returns nothing
+  against `{}` and throws only against a real credential.
 
 ### `authMatchValues`
 
@@ -892,7 +897,7 @@ network.
 | `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Each rule requires a `type`. |
 | `entities/exchanges/domain/exchange-errors.js` | `CREDENTIAL_CHECK_UNAVAILABLE`, `IDENTIFICATION_USER_NOT_FOUND`. |
 | `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_DISCLOSURE_REQUEST_REQUIRED`, `SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`. |
-| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, require `disclosureRequest.types`, reject `presentationDefinition`, require each rule's `type` to be requested, and evaluate each rule path with `eval: false`. |
+| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, require `disclosureRequest.types`, reject `presentationDefinition`, require each rule's `type` to be requested, and reject rule paths with filter or script segments or that fail to evaluate with `eval: false`. |
 | `controllers/vn-api/vn-issuing-controller.js` | Pass `jwtVp`. Remove the no-op `validateInput`. Add `PaymentRequiredResponse`. |
 
 `exchanges` already imports from `presentations` (`post-presentation.js`), so
@@ -1165,8 +1170,9 @@ Added by this design:
     `presentation_invalid`, not 500.
 20. Each rule has a required `type`, one of the `disclosureRequest` types, and
     reads only credentials of that type.
-21. Rule paths are evaluated with `eval: false` when a service is created or
-    updated, and a path that throws is a 400.
+21. Rule paths are checked when a service is created or updated. A path with
+    a filter or script segment, or one that fails to evaluate with
+    `eval: false`, is a 400.
 22. Credential contents aren't logged. A separate packages change (#1205)
     stops the verification packages logging them.
 
