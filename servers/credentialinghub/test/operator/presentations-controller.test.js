@@ -1030,8 +1030,9 @@ describe('Presentations Test Suite', () => {
       it('should return a failed notification when the push url redirects', async () => {
         const { presentation } = await persistExchangePresentation();
         mockDidResolution();
+        const dump = mock.fn(() => Promise.resolve(null));
         mockHttpClient.post.mock.mockImplementationOnce(() =>
-          Promise.resolve({ statusCode: 307 }),
+          Promise.resolve({ statusCode: 307, rawBody: { dump } }),
         );
 
         const response = await verifyAndNotify(presentation);
@@ -1042,6 +1043,40 @@ describe('Presentations Test Suite', () => {
           error: 'push url responded with 307',
         });
         expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+        expect(dump.mock.callCount()).toEqual(1);
+      });
+
+      it('should discard the push response body', async () => {
+        const { presentation } = await persistExchangePresentation();
+        mockDidResolution();
+        const dump = mock.fn(() => Promise.resolve(null));
+        mockHttpClient.post.mock.mockImplementationOnce(() =>
+          Promise.resolve({ statusCode: 200, rawBody: { dump } }),
+        );
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.notification).toEqual({ status: 'sent' });
+        expect(dump.mock.callCount()).toEqual(1);
+      });
+
+      it('should post to the normalized push url when its scheme is uppercase', async () => {
+        const { presentation } = await persistExchangePresentation({
+          messagingSettings: {
+            ...messagingSettings,
+            webhookUrl: 'HTTPS://wallet.example.com/push',
+          },
+        });
+        mockDidResolution();
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.notification).toEqual({ status: 'sent' });
+        expect(mockHttpClient.post.mock.calls[0].arguments[0]).toEqual(
+          'https://wallet.example.com/push',
+        );
       });
 
       it('should fail without posting to an http push url', async () => {

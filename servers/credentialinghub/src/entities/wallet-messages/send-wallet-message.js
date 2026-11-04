@@ -43,26 +43,20 @@ const sendWalletMessage = async ({ exchange, data, message }, context) => {
   }
 
   try {
-    validatePushUrl(messagingSettings.webhookUrl, context);
+    const pushUrl = parsePushUrl(messagingSettings.webhookUrl, context);
     const body = {
       id: nanoid(),
       pushToken: messagingSettings.authToken,
       message,
       data: { ...data, exchangeId: `${exchange._id}` },
     };
-    const response = await context.fetch.post(
-      messagingSettings.webhookUrl,
-      body,
-      {
-        headers: {
-          Authorization: await generateMessagingToken(
-            body,
-            messagingSettings.webhookUrl,
-            context,
-          ),
-        },
+    const response = await context.fetch.post(pushUrl, body, {
+      headers: {
+        Authorization: await generateMessagingToken(body, pushUrl, context),
       },
-    );
+    });
+    // The body isn't needed, but left unread it holds the connection open.
+    await response.rawBody?.dump();
     validatePushResponse(response);
     return { status: WalletMessageStatuses.SENT };
   } catch (error) {
@@ -87,7 +81,8 @@ const validatePushResponse = ({ statusCode }) => {
 };
 
 // Push URLs come from the wallet, so refuse ones that aren't https or that carry credentials.
-const validatePushUrl = (webhookUrl, { config }) => {
+// Returns the normalized href, because the HTTP client only accepts a lowercase scheme.
+const parsePushUrl = (webhookUrl, { config }) => {
   const urlError = findWebhookUrlError(
     webhookUrl,
     config.walletMessagesAllowInsecureUrl,
@@ -95,6 +90,7 @@ const validatePushUrl = (webhookUrl, { config }) => {
   if (urlError != null) {
     throw new Error(`push url ${urlError}`);
   }
+  return new URL(webhookUrl).href;
 };
 
 const generateMessagingToken = async (body, webhookUrl, context) => {
