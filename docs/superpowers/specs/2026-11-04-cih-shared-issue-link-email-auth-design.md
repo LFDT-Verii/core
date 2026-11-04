@@ -213,11 +213,40 @@ same tuple can both pass the check. Authentication fails closed: it finds two
 depots, returns 401 and logs both IDs. Operators who load a batch in parallel
 should dedupe it first. The operator docs say so.
 
-**Rule changes aren't handled.** If a service's rules change after depots
-exist, or a `preauth` service becomes a VP service, existing depots aren't
-revalidated or rebuilt. Their `authMatchValues` follow the old rules, so they
-stop matching, and the operator must re-create them. The operator docs say so.
-No code handles this.
+### Rules can't change while the service has depots
+
+A depot's `authMatchValues` follow the positions of the rules it was created
+under. If the rules changed, existing depots would be read by the new rules,
+and could match someone else. For example, take rules `employeeId → 0` and
+`departmentId → 1`, and Alice's depot `[123, 456]`. Swapping the two value
+indexes would make Bob (employee 456, department 123) produce `[123, 456]`
+too. `depots/create` would return 409 with Alice's `depotId`, and
+authentication would bind Bob to Alice's depot.
+
+So `issuer-services/update` returns 409
+`service_verifiablePresentationAuthRules_in_use`
+(`IssuerServicesErrors.SERVICE_VP_AUTH_RULES_IN_USE`) when the rules change
+and the service has at least one depot. The service is left unchanged.
+
+- **What counts as a change.** A different set of rules once both sides are
+  sorted by `valueIndex`, comparing `path` (as arrays), `rule` and
+  `valueIndex`. Reordering the same rules in the array isn't a change. Adding
+  or removing rules, or adding or removing the field, is. This holds whatever
+  the service's auth methods, so a `preauth` service with depots can't gain
+  rules either.
+- **Where.** `updateIssuerService`
+  (`entities/issuer-services/orchestrators/update-issuer-service.js`) runs the
+  check, then the shared `updateServiceConfiguration`. Relying-party services
+  share `updateServiceConfiguration` but not this check. Because the check
+  runs first, a request that changes rules in use gets the 409 even when it
+  would also fail validation.
+- **Response.** The route declares `...fastify.ConflictResponse`, so
+  `errorCode` reaches the client.
+- **Changing rules.** Delete the service's depots first, or set up a new
+  service.
+- **Not atomic.** The check and the update are separate steps, so a depot
+  created at the same moment as a rule change could slip through. Operators
+  shouldn't change a service's rules while loading its depots.
 
 ### No backfill
 
@@ -404,12 +433,21 @@ unchecked also keeps vouchers free (see
 verification, and verification recomputes it from the verified credential,
 so a tampered type fails the tamper check.
 
-If a VP service uses `presentationDefinition` without `disclosureRequest`,
-`requestedTypes` is empty and every VP fails. `validateIssuerService` makes an
-internal VP service require `disclosureRequest.types`. It returns 400
-`service_disclosureRequest_required`
-(`IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED`) otherwise, on
-`create` and `update`.
+VP auth uses `disclosureRequest` only. The manifest builds its presentation
+definition from `presentationDefinition` when a service has one, and from
+`disclosureRequest` otherwise, so a service with both would ask the wallet
+for one thing and check another. `validateIssuerService`, for an internal VP
+service, on `create` and `update`:
+
+- requires `disclosureRequest.types`, or returns 400
+  `service_disclosureRequest_required`
+  (`IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED`);
+- rejects a `presentationDefinition` with 400
+  `service_presentationDefinition_not_allowed`
+  (`IssuerServicesErrors.SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`).
+
+So the manifest's presentation definition is always the one the handler
+checks.
 
 **4. Check the credentials.** This uses a new helper,
 `entities/presentations/orchestrators/check-credentials.js`, that
@@ -436,17 +474,21 @@ const checkCredentials = (jwtVcs, expectedHolderDid, context) => {
 
 `verifyPresentation` is refactored to call it, with no change in behaviour.
 
+`verifyCredentials` checks its input and throws a `TypeError` on a malformed
+credential, for example one with `kid: []` in its protected header. The
+handler returns 400 `presentation_invalid` for a `TypeError`, not a 500.
+Other errors aren't converted.
+
 The handler then looks at each result in this order:
 
 1. **Vouchers run out.** If any check is `VOUCHER_RESERVE_EXHAUSTED`, return
    402 `verification_payment_required`, as `verifyPresentation` does.
 2. **A dependency fails.** If `UNTAMPERED`, `TRUSTED_ISSUER` or `UNREVOKED`
-   is `DEPENDENCY_RESOLUTION_ERROR`, the ledger, registrar or revocation
-   registry couldn't be reached. `UNREVOKED` gets it when the revocation
-   registry can't be initialized. Return 502 `credential_check_unavailable`.
+   is `DEPENDENCY_RESOLUTION_ERROR`, return 502 `credential_check_unavailable`.
    The hook records `UNEXPECTED_ERROR` rather than `AUTHENTICATION_FAILURE`,
    and the wallet can retry. Otherwise an outage would tell the holder that
-   their credential was tampered with or revoked.
+   their credential was tampered with or revoked. See
+   [Outages that still return 401](#outages-that-still-return-401).
 3. **Any other failure.** `buildFailedCheckResultError(result, context)` from
    `@verii/verii-verification`. It returns the first failure as a 401 with a
    specific code.
@@ -454,6 +496,11 @@ The handler then looks at each result in this order:
    `NOT_APPLICABLE` for `TRUSTED_HOLDER`. The Hub doesn't, so the handler
    also requires `TRUSTED_HOLDER === PASS`, and returns 401
    `presentation_credential_bad_holder` otherwise.
+5. **A requested type is missing.** Every `disclosureRequest` type needs at
+   least one verified credential, as the manifest's `all` submission
+   requirement asks. The type is the one `verifyCredentials` computes from
+   the verified credential. Otherwise return 401
+   `integrated_identification_user_not_found`.
 
 | Check | Accepted | Code on failure |
 | --- | --- | --- |
@@ -484,6 +531,22 @@ anyone holding a copy of such a credential could present it. The Hub rejects
 them. Email credentials issued to the holder app recently are bound, and
 older ones may not be (see
 [What Velocity wallets send](#what-velocity-wallets-send)).
+
+#### Outages that still return 401
+
+Today `verifyCredentials` reports some outages as failed checks:
+
+- a failed fetch of the issuer's verified profile is `TRUSTED_ISSUER: FAIL`;
+- a failed revocation lookup is `UNREVOKED: FAIL`.
+
+These return the `presentation_credential_*` 401s for now. Failures that
+`verifyCredentials` already reports as `DEPENDENCY_RESOLUTION_ERROR` give the
+502: an unresolvable issuer key on the ledger, a failed fetch of the
+credential type metadata, and a revocation registry that can't be
+initialized. A separate PR in
+`@verii/verii-verification` and `@verii/vc-checks` will report those outages
+as `DEPENDENCY_RESOLUTION_ERROR`. After that, the handler's 502 covers them
+with no change to the Hub.
 
 **5. Build the candidate tuples.** These go in
 `entities/exchanges/domain/vp-auth-rules.js`. Each rule runs over the decoded
@@ -582,24 +645,39 @@ The exchange state comes from the existing `exchangeErrorHook`. A 401 records
 | --- | --- | --- | --- |
 | Service has no auth method that fits the VP | 400 | `authentication_method_unsupported` | `UNEXPECTED_ERROR` |
 | Submission invalid or for another exchange | 400 | `request_validation_failed`, `presentation_invalid`, `presentation_jsonpath_empty`, `presentation_mismatch_exchange`, `presentation_mismatch_service` | `UNEXPECTED_ERROR` |
-| More than 100 credentials, or more than 100 candidate tuples | 400 | `presentation_invalid` | `UNEXPECTED_ERROR` |
+| More than 100 credentials, more than 100 candidate tuples, or a credential that fails `verifyCredentials`' input checks (`TypeError`) | 400 | `presentation_invalid` | `UNEXPECTED_ERROR` |
 | `iss` missing or isn't the signer | 401 | `unauthorized` | `AUTHENTICATION_FAILURE` |
-| No credential of a requested type | 401 | `integrated_identification_user_not_found` | `AUTHENTICATION_FAILURE` |
-| A credential check fails | 401 | `presentation_credential_*` (table above) | `AUTHENTICATION_FAILURE` |
-| Ledger, registrar or revocation registry unreachable | 502 | `credential_check_unavailable` | `UNEXPECTED_ERROR` |
+| No credential of a requested type, or a requested type without a verified credential | 401 | `integrated_identification_user_not_found` | `AUTHENTICATION_FAILURE` |
+| A credential check fails, including a failed verified-profile fetch or revocation lookup for now | 401 | `presentation_credential_*` (table above) | `AUTHENTICATION_FAILURE` |
+| A check is `DEPENDENCY_RESOLUTION_ERROR`: the ledger, the credential type metadata or the revocation registry can't be reached | 502 | `credential_check_unavailable` | `UNEXPECTED_ERROR` |
 | Vouchers exhausted | 402 | `verification_payment_required` | `UNEXPECTED_ERROR` |
 | No candidate tuples, no depot, or several | 401 | `integrated_identification_user_not_found` | `AUTHENTICATION_FAILURE` |
 
+The operator API adds these errors:
+
+| Endpoint | Case | Status | `errorCode` | PR |
+| --- | --- | --- | --- | --- |
+| `depots/create` | `authValues` don't hold one present value per rule | 400 | `invalid_auth_values` | 1 |
+| `depots/create` | A depot of the service has the same tuple | 409 | `auth_values_already_used`, with `depotId` | 1 |
+| `issuer-services/create`, `update` | Rules' `valueIndex` values aren't 0 to n−1 | 400 | `service_verifiablePresentationAuthRules_invalid` | 1 |
+| `issuer-services/update` | Rules change while the service has depots | 409 | `service_verifiablePresentationAuthRules_in_use` | 1 |
+| `issuer-services/create`, `update` | Internal VP service without `disclosureRequest.types` | 400 | `service_disclosureRequest_required` | 2 |
+| `issuer-services/create`, `update` | Internal VP service with a `presentationDefinition` | 400 | `service_presentationDefinition_not_allowed` | 2 |
+
 New codes in the Hub:
 
-- PR 1: `DepotErrors.AUTH_VALUES_ALREADY_USED` and
+- PR 1: `DepotErrors.AUTH_VALUES_ALREADY_USED`,
   `IssuerServicesErrors.SERVICE_VP_AUTH_RULES_INVALID`
-  (`service_verifiablePresentationAuthRules_invalid`).
+  (`service_verifiablePresentationAuthRules_invalid`) and
+  `IssuerServicesErrors.SERVICE_VP_AUTH_RULES_IN_USE`
+  (`service_verifiablePresentationAuthRules_in_use`).
 - PR 2: `ExchangeErrors.CREDENTIAL_CHECK_UNAVAILABLE`,
   `ExchangeErrors.IDENTIFICATION_USER_NOT_FOUND`
-  (`integrated_identification_user_not_found`, the agent's code) and
+  (`integrated_identification_user_not_found`, the agent's code),
   `IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED`
-  (`service_disclosureRequest_required`).
+  (`service_disclosureRequest_required`) and
+  `IssuerServicesErrors.SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`
+  (`service_presentationDefinition_not_allowed`).
 
 ### What Velocity wallets send
 
@@ -697,7 +775,10 @@ network.
 | --- | --- |
 | `entities/issuer-services/domain/is-internal-vp-auth.js` | New. Used by `validateDepot`, `validateIssuerService`, `createDepot`, links and `authenticate`. |
 | `entities/issuer-services/domain/validate-issuer-service.js` | Rules' `valueIndex` values must be 0 to n−1. |
-| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_VP_AUTH_RULES_INVALID`. |
+| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_VP_AUTH_RULES_INVALID`, `SERVICE_VP_AUTH_RULES_IN_USE`. |
+| `entities/issuer-services/domain/vp-auth-rules-changed.js` | New. Compares rules sorted by `valueIndex`. |
+| `entities/issuer-services/orchestrators/update-issuer-service.js` | New. 409 when rules change while the service has depots, then the shared update. |
+| `controllers/operator/issuer-services/issuer-services-controller.js` | `update` uses `updateIssuerService` and declares `ConflictResponse`. |
 | `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Describes `valueIndex` as the value's position in `authValues`. |
 | `entities/depots/domain/auth-match-values.js` | New. `toAuthMatchValue`, `buildAuthMatchValues`. |
 | `entities/depots/domain/validate-depot.js` | One present value per rule for internal VP services. |
@@ -718,8 +799,8 @@ network.
 | `entities/exchanges/domain/vp-auth-rules.js` | New. `ruleValues`, `buildCandidateTuples`. |
 | `entities/exchanges/orchestrators/authenticate.js` | Dispatch and `vpAuthHandler`. |
 | `entities/exchanges/domain/exchange-errors.js` | `CREDENTIAL_CHECK_UNAVAILABLE`, `IDENTIFICATION_USER_NOT_FOUND`. |
-| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_DISCLOSURE_REQUEST_REQUIRED`. |
-| `entities/issuer-services/domain/validate-issuer-service.js` | Require `disclosureRequest.types` for internal VP services. |
+| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_DISCLOSURE_REQUEST_REQUIRED`, `SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`. |
+| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, require `disclosureRequest.types` and reject `presentationDefinition`. |
 | `controllers/vn-api/vn-issuing-controller.js` | Pass `jwtVp`. Remove the no-op `validateInput`. Add `PaymentRequiredResponse`. |
 
 `exchanges` already imports from `presentations` (`post-presentation.js`), so
@@ -785,11 +866,19 @@ holder's `did:jwk`. The VP's `iss` and `kid` use that same DID.
   out of range return 400
   `service_verifiablePresentationAuthRules_invalid`. Rules in any order are
   accepted.
+- PR 1: `update` of a service with depots returns 409
+  `service_verifiablePresentationAuthRules_in_use`, and leaves the service
+  unchanged, when it swaps the value indexes, changes a path, adds a rule or
+  removes the rules. It returns 200 when the same rules are reordered, when
+  only other fields change, when the service has no depots, and when only
+  another service has depots.
 - PR 2: `create` and `update` of an internal VP service without
-  `disclosureRequest` return 400 `service_disclosureRequest_required`. Tests
-  of internal VP services that check something later (the DID document's
-  service, uniqueness, `presentationDefinition`, rule indexes) now include a
-  `disclosureRequest`.
+  `disclosureRequest` return 400 `service_disclosureRequest_required`, and
+  with a `presentationDefinition` return 400
+  `service_presentationDefinition_not_allowed`. Tests of internal VP services
+  that check something later (the DID document's service, uniqueness, rule
+  indexes, rules in use) now include a `disclosureRequest` and no
+  `presentationDefinition`.
 
 ### `vp-auth-rules.test.js` (PR 2)
 
@@ -853,8 +942,14 @@ Added by this design:
 - When the first `path` finds nothing, the rule uses the second.
 - `resolveDidDocument` throwing "No available tokens" returns 402.
   `resolveDidDocument` throwing anything else returns 502
-  `credential_check_unavailable` and records `UNEXPECTED_ERROR`. So does an
-  unreachable registrar or revocation registry.
+  `credential_check_unavailable` and records `UNEXPECTED_ERROR`. So does a
+  revocation registry that can't be initialized.
+- A failed verified-profile fetch or revocation lookup returns its
+  `presentation_credential_*` 401 until the `@verii/vc-checks` change.
+- A service asking for two types, given a VP with a verified credential of
+  only one, returns 401 `integrated_identification_user_not_found`.
+- A credential with `kid: []` in its protected header returns 400
+  `presentation_invalid`.
 - A service with both methods: a VP with `vendorOriginContext` uses
   `preauth`, and one without uses VP auth.
 - A VP service without `authMode: 'internal'` returns 400
@@ -886,9 +981,9 @@ Added by this design:
   claimed before the account had a `did:jwk`, and estimate how many accounts
   would need to re-verify their email. Document
   `verifiable_presentation` issuer services for operators: setup, one
-  `authValues` entry per rule, the 409 rule, deduping batches, re-creating
-  depots after a rule change, vouchers for non-free types, and withdrawing a
-  link.
+  `authValues` entry per rule, the 409 rule, deduping batches, setting the
+  rules before creating depots, vouchers for non-free types, and withdrawing
+  a link.
   About 1 day.
 
 ## Decisions beyond the issue
@@ -903,12 +998,16 @@ Added by this design:
 5. Only credentials of the `disclosureRequest` types are checked and matched.
 6. For each credential, a rule's `path` takes the first JSONPath that finds
    anything.
-7. A ledger, registrar or revocation registry outage returns 502, and running
-   out of vouchers returns 402. Neither records `AUTHENTICATION_FAILURE`.
+7. A check that couldn't reach its dependency returns 502, and running out of
+   vouchers returns 402. Neither records `AUTHENTICATION_FAILURE`. Failed
+   verified-profile fetches and revocation lookups return 401 until
+   `@verii/vc-checks` reports them as dependency errors.
 8. A VP-only service returns the shared link even when given a `depotId`. A
    service with both methods supports both kinds of link, because each Hub
    issuer service needs its own service entry in the issuer's DID document.
-9. Internal VP services must have `disclosureRequest.types`.
+9. Internal VP services must have `disclosureRequest.types`, can't have a
+   `presentationDefinition`, and need a verified credential of every
+   requested type.
 10. Output descriptors stay empty on a shared link, as on the agent's batch
     link.
 11. No backfill, because no deployment has used these fields.
@@ -924,10 +1023,12 @@ Added by this design:
     most 100. Nothing is matched in memory.
 16. The 409 covers the whole tuple. Concurrent duplicates are accepted, and
     authentication fails closed on them.
-17. Changing a service's rules leaves its existing depots unmatched until
-    they're re-created.
+17. A service's rules can't change while it has depots: `update` returns 409
+    `service_verifiablePresentationAuthRules_in_use`.
 18. Credentials with no expiry are accepted. Velocity email credentials carry
     no expiry, and revocation must pass.
+19. A `TypeError` from `verifyCredentials`' input checks returns 400
+    `presentation_invalid`, not 500.
 
 ## Risks outside this work
 
