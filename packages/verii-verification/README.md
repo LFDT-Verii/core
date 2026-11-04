@@ -134,10 +134,12 @@ key:
   403, 429 or a 5xx, a timeout, a connection error, or a body that is not
   JSON). The same credential may pass once the registrar answers.
 
-`credentialChecks.UNREVOKED` is `FAIL` for a revoked credential,
-`NOT_APPLICABLE` when the credential has no Velocity revocation list status,
-and `DEPENDENCY_RESOLUTION_ERROR` when the revocation registry could not be
-read.
+`credentialChecks.UNREVOKED` is `FAIL` for a revoked credential, and for a
+status entry that cannot be checked: a revocation URL that cannot be parsed,
+names another scheme, contract or function (for example another network's
+revocation contract), or lacks a parameter. It is `NOT_APPLICABLE` when the
+credential has no Velocity revocation list status, and
+`DEPENDENCY_RESOLUTION_ERROR` when the revocation registry could not be read.
 
 Keys are discovered from the protected header:
 

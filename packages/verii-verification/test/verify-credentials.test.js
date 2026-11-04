@@ -35,6 +35,9 @@ mock.module('@verii/metadata-registration', {
   },
 });
 
+// The real revocation registry, loaded by path so the module mock above does
+// not replace it. Its url checks throw before any contract call.
+const realInitRevocationRegistry = require('@verii/metadata-registration/src/revocation-registry');
 const console = require('console');
 const { compact, first, flow, join, omit, tail } = require('lodash/fp');
 const { jwtSign, jwtDecode, generateCredentialJwt } = require('@verii/jwt');
@@ -1711,6 +1714,105 @@ describe('Verify credentials', () => {
             },
           },
         ]);
+      });
+
+      describe('revocation status urls', () => {
+        const revocationContractAddress = `0x${'a'.repeat(40)}`;
+        const holderAddress = `0x${'b'.repeat(40)}`;
+        const query = `?address=${holderAddress}&listId=1&index=2`;
+
+        const verifyWithStatusUrl = async (url, rpcProvider) => {
+          initRevocationRegistry.mock.mockImplementationOnce(
+            realInitRevocationRegistry,
+          );
+          const credential = applyOverrides(idCredential, {
+            credentialStatus: { type: VelocityRevocationListType, id: url },
+          });
+          const vc = await generateCredentialJwt(
+            credential,
+            orgKeyPair.privateKey,
+            `${credentialDid}#key`,
+          );
+          const result = await verifyCredentials(
+            {
+              credentials: [vc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgPrivateKey },
+            },
+            fetchers,
+            {
+              ...context,
+              config: { ...config, revocationContractAddress },
+              rpcProvider,
+            },
+          );
+          return { credential, result };
+        };
+
+        const resultWithUnrevoked = (credential, unrevokedCheck) => [
+          {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
+            credential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.PASS,
+              TRUSTED_HOLDER: CheckResults.PASS,
+              UNEXPIRED: CheckResults.PASS,
+              UNREVOKED: unrevokedCheck,
+            },
+          },
+        ];
+
+        [
+          {
+            title: 'names another function',
+            url: `ethereum:${revocationContractAddress}/setRevokedStatus${query}`,
+          },
+          {
+            title: "names another network's revocation contract",
+            url: `ethereum:0x${'c'.repeat(40)}/getRevokedStatus${query}`,
+          },
+          {
+            title: 'uses another scheme',
+            url: `eth:${revocationContractAddress}/getRevokedStatus${query}`,
+          },
+          { title: 'cannot be parsed', url: 'ethereum:revoked' },
+          {
+            title: 'has no parameters',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus`,
+          },
+        ].forEach(({ title, url }) => {
+          it(`UNREVOKED should FAIL when the status url ${title}`, async () => {
+            const { credential, result } = await verifyWithStatusUrl(url);
+
+            expect(result).toEqual(
+              resultWithUnrevoked(credential, CheckResults.FAIL),
+            );
+          });
+        });
+
+        it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when the contract call for a valid status url is rejected', async () => {
+          const unreachableRpc = {
+            call: mock.fn(async () => {
+              throw new Error('connect ECONNREFUSED 127.0.0.1:8545');
+            }),
+          };
+
+          const { credential, result } = await verifyWithStatusUrl(
+            `ethereum:${revocationContractAddress}/getRevokedStatus${query}`,
+            unreachableRpc,
+          );
+
+          expect(unreachableRpc.call.mock.callCount()).toEqual(1);
+          expect(result).toEqual(
+            resultWithUnrevoked(
+              credential,
+              CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+            ),
+          );
+        });
       });
 
       it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when status request errors', async () => {
