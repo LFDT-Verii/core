@@ -22,7 +22,7 @@ shared link. PR 2 adds the authentication handler.
 - A person added after the link was handed out can claim with it.
 - Only a holder who presents a trusted, unrevoked, unexpired email credential
   bound to their own key gets a depot's credentials.
-- Email matching ignores case and works on MongoDB, DocumentDB and Cosmos.
+- Email matching ignores case and works on MongoDB and Amazon DocumentDB.
 - An email-only check costs the issuer no verification vouchers.
 
 ## Non-goals
@@ -158,7 +158,9 @@ await mongoDb()
 ```
 
 `authMatchValues` is the only array in the index, so it's a plain multikey
-index. It has no collation, so it works on DocumentDB and Cosmos. For a
+index. It has no collation, so it works on Amazon DocumentDB. Azure Cosmos
+DB for MongoDB (RU) isn't supported: it can't create compound indexes on
+arrays. For a
 whole-array match, MongoDB uses the index to find the tuple's first element,
 then compares the whole array on the documents it fetches.
 
