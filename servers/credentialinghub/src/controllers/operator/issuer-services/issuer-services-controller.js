@@ -16,12 +16,13 @@
  */
 const { coerceArray } = require('@verii/common-functions');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
-const { validateIssuerService } = require('../../../entities/issuer-services');
+const {
+  updateIssuerService,
+  validateIssuerService,
+} = require('../../../entities/issuer-services');
 const {
   createServiceConfiguration,
   deleteServiceConfiguration,
-  updateServiceConfiguration,
-  validateUpdateServiceConfiguration,
 } = require('../../../entities/service-configurations');
 const {
   issuerConfigurationSchema,
@@ -32,10 +33,6 @@ const REPO_NAME = 'issuerServices';
 const createIssuerServiceConfiguration = createServiceConfiguration(
   REPO_NAME,
   validateIssuerService,
-);
-const updateIssuerServiceConfiguration = updateServiceConfiguration(
-  REPO_NAME,
-  validateUpdateServiceConfiguration(validateIssuerService),
 );
 const deleteIssuerServiceConfiguration = deleteServiceConfiguration(REPO_NAME);
 
@@ -156,6 +153,7 @@ module.exports = async (fastify) => {
             required: ['tenantId', 'serviceId', 'service'],
           },
           response: {
+            ...fastify.ConflictResponse,
             200: {
               type: 'object',
               properties: {
@@ -168,7 +166,7 @@ module.exports = async (fastify) => {
         }),
       },
       async (req) => {
-        const service = await updateIssuerServiceConfiguration(
+        const service = await updateIssuerService(
           req.body.serviceId,
           req.body.service,
           req,

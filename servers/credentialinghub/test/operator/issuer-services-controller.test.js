@@ -1618,6 +1618,195 @@ describe('Issuer services management Test suite', () => {
         expectedDbIssuerService(response.json.service, tenant),
       );
     });
+
+    describe('rule changes while the service has depots', () => {
+      const rules = [
+        {
+          path: ['$.credentialSubject.employeeId'],
+          rule: 'pick',
+          valueIndex: 0,
+        },
+        {
+          path: ['$.credentialSubject.departmentId'],
+          rule: 'equal',
+          valueIndex: 1,
+        },
+      ];
+      let service;
+
+      const updateService = (overrides) =>
+        fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/update`,
+          payload: {
+            tenantId: tenant._id,
+            serviceId: service._id,
+            service: {
+              velocityNetworkServiceId: '#foo',
+              termsUrl: 'http://www.example.com',
+              authMethods: ['verifiable_presentation'],
+              authMode: 'internal',
+              verifiablePresentationAuthRules: rules,
+              ...overrides,
+            },
+          },
+        });
+
+      const expectRulesInUse = async (response) => {
+        expect(response.statusCode).toEqual(409);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 409,
+            error: 'Conflict',
+            message: 'service_verifiablePresentationAuthRules_in_use',
+            errorCode: 'service_verifiablePresentationAuthRules_in_use',
+          }),
+        );
+        const dbIssuerService = await issuerServicesRepo.findById(service._id);
+        expect(dbIssuerService).toEqual({
+          ...mongoify(omit(['_id'], service)),
+          _id: new ObjectId(service._id),
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
+      };
+
+      beforeEach(async () => {
+        mockHttpClientJsonResponse('get', {
+          id: 'did-doc-foo',
+          service: [{ id: '#foo' }],
+        });
+        service = await persistIssuerService({
+          tenant,
+          velocityNetworkServiceId: '#foo',
+          termsUrl: 'http://www.example.com',
+          verifiablePresentationAuthRules: rules,
+        });
+      });
+
+      it('should 409 and leave the service unchanged when swapping the value indexes', async () => {
+        await persistDepot({ tenant, service, userReference: 'alice' });
+
+        const response = await updateService({
+          verifiablePresentationAuthRules: [
+            { ...rules[0], valueIndex: 1 },
+            { ...rules[1], valueIndex: 0 },
+          ],
+        });
+
+        await expectRulesInUse(response);
+      });
+
+      it('should 409 when changing a path', async () => {
+        await persistDepot({ tenant, service, userReference: 'alice' });
+
+        const response = await updateService({
+          verifiablePresentationAuthRules: [
+            { ...rules[0], path: ['$.credentialSubject.email'] },
+            rules[1],
+          ],
+        });
+
+        await expectRulesInUse(response);
+      });
+
+      it('should 409 when adding a rule', async () => {
+        await persistDepot({ tenant, service, userReference: 'alice' });
+
+        const response = await updateService({
+          verifiablePresentationAuthRules: [
+            ...rules,
+            {
+              path: ['$.credentialSubject.email'],
+              rule: 'pick',
+              valueIndex: 2,
+            },
+          ],
+        });
+
+        await expectRulesInUse(response);
+      });
+
+      it('should 409 when removing the rules', async () => {
+        await persistDepot({ tenant, service, userReference: 'alice' });
+
+        const response = await updateService({
+          verifiablePresentationAuthRules: undefined,
+        });
+
+        await expectRulesInUse(response);
+      });
+
+      it('should 200 when the same rules are reordered', async () => {
+        await persistDepot({ tenant, service, userReference: 'alice' });
+
+        const response = await updateService({
+          verifiablePresentationAuthRules: [rules[1], rules[0]],
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.service.verifiablePresentationAuthRules).toEqual([
+          rules[1],
+          rules[0],
+        ]);
+      });
+
+      it('should 200 when other fields change', async () => {
+        await persistDepot({ tenant, service, userReference: 'alice' });
+
+        const response = await updateService({
+          description: 'updated',
+          termsUrl: 'http://www.example.com/terms',
+          authTokensExpireIn: 200,
+        });
+
+        expect(response.statusCode).toEqual(200);
+        const dbIssuerService = await issuerServicesRepo.findById(service._id);
+        expect(dbIssuerService).toEqual(
+          expect.objectContaining({
+            description: 'updated',
+            termsUrl: 'http://www.example.com/terms',
+            authTokensExpireIn: 200,
+            verifiablePresentationAuthRules: rules,
+          }),
+        );
+      });
+
+      it('should 200 when changing the rules of a service without depots', async () => {
+        const response = await updateService({
+          verifiablePresentationAuthRules: [
+            { ...rules[0], valueIndex: 1 },
+            { ...rules[1], valueIndex: 0 },
+          ],
+        });
+
+        expect(response.statusCode).toEqual(200);
+        const dbIssuerService = await issuerServicesRepo.findById(service._id);
+        expect(dbIssuerService.verifiablePresentationAuthRules).toEqual([
+          { ...rules[0], valueIndex: 1 },
+          { ...rules[1], valueIndex: 0 },
+        ]);
+      });
+
+      it('should 200 when changing the rules while another service has depots', async () => {
+        const otherService = await persistIssuerService({
+          tenant,
+          velocityNetworkServiceId: '#bar',
+          verifiablePresentationAuthRules: rules,
+        });
+        await persistDepot({
+          tenant,
+          service: otherService,
+          userReference: 'alice',
+        });
+
+        const response = await updateService({
+          verifiablePresentationAuthRules: [rules[0]],
+        });
+
+        expect(response.statusCode).toEqual(200);
+      });
+    });
   });
 
   describe('Issuer Service Deletion Test Suite', () => {
