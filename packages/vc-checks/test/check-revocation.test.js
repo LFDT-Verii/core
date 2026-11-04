@@ -38,6 +38,11 @@ describe('revocation checks', () => {
     expect(result).toEqual(CheckResults.DEPENDENCY_RESOLUTION_ERROR);
   });
 
+  it('Should return FAIL when the status entry is invalid', async () => {
+    const result = checkCredentialStatus(CredentialStatus.INVALID);
+    expect(result).toEqual(CheckResults.FAIL);
+  });
+
   it('Should return PASS when unrevoked', async () => {
     const result = checkCredentialStatus(CredentialStatus.UNREVOKED);
 
@@ -55,6 +60,7 @@ describe('revocation checks', () => {
     expect(results).toEqual({
       [CredentialStatus.NOT_SUPPORTED]: CheckResults.NOT_APPLICABLE,
       [CredentialStatus.REVOKED]: CheckResults.FAIL,
+      [CredentialStatus.INVALID]: CheckResults.FAIL,
       [CredentialStatus.UNREVOKED]: CheckResults.PASS,
       [CredentialStatus.DEPENDENCY_RESOLUTION_ERROR]:
         CheckResults.DEPENDENCY_RESOLUTION_ERROR,

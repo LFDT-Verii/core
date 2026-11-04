@@ -22,7 +22,11 @@ const checkCredentialStatus = (credentialStatus) => {
     return CheckResults.NOT_APPLICABLE;
   }
 
-  if (credentialStatus === CredentialStatus.REVOKED) {
+  if (
+    [CredentialStatus.REVOKED, CredentialStatus.INVALID].includes(
+      credentialStatus,
+    )
+  ) {
     return CheckResults.FAIL;
   }
 
