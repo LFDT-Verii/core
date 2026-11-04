@@ -20,12 +20,13 @@ const MAX_DECLINE_REASON_LENGTH = 500;
 
 // A blank reason counts as none. The VN API schema rejects longer reasons;
 // an OpenID4VP error_description has no limit, so it is cut to the same length.
+// The length counts code points, as the schema does, so emoji aren't split.
 const cleanDeclineReason = (reason) => {
   const trimmedReason = trim(reason);
 
   return trimmedReason === ''
     ? undefined
-    : trimmedReason.slice(0, MAX_DECLINE_REASON_LENGTH);
+    : Array.from(trimmedReason).slice(0, MAX_DECLINE_REASON_LENGTH).join('');
 };
 
 module.exports = { MAX_DECLINE_REASON_LENGTH, cleanDeclineReason };

@@ -189,6 +189,17 @@ describe('vn-api > decline-presentation', () => {
     });
   });
 
+  it('should store a 500-character reason that ends in an emoji intact', async () => {
+    const reason = `${'a'.repeat(499)}😀`;
+
+    const response = await decline({ exchange_id: exchange._id, reason });
+
+    expect(response.statusCode).toEqual(204);
+    await expect(findDbExchange()).resolves.toEqual(
+      expect.objectContaining({ declineReason: reason }),
+    );
+  });
+
   it('should 400 when the reason is longer than 500 characters', async () => {
     const response = await decline({
       exchange_id: exchange._id,
