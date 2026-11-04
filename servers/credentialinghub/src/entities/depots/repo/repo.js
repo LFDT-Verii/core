@@ -45,6 +45,7 @@ module.exports = (app, options, next = () => {}) => {
         preauthCodeHash: 1,
         deferredCredentials: 1,
         expectedCredentialTypes: 1,
+        deferredCredentialsResolvedAt: 1,
         tenantId: 1,
         createdAt: 1,
         updatedAt: 1,

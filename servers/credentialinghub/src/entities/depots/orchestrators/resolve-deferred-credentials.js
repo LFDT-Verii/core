@@ -28,9 +28,13 @@ const ResolveDeferredCredentialsStatuses = {
   SKIPPED_NO_WAITING_EXCHANGE: 'skipped_no_waiting_exchange',
 };
 
-// Settles whoever is waiting on the depot now. The depot doesn't change, so it can be called again later.
+// Settles whoever is waiting on the depot now. The depot keeps deferring, so it can be called again later.
 const resolveDeferredCredentials = async (depotId, context) => {
-  const depot = await loadDepot(depotId, context);
+  await loadDepot(depotId, context);
+  // Set before any message, so wallets that poll credential-offers learn the outcome too
+  const depot = await context.repos.depots.update(depotId, {
+    deferredCredentialsResolvedAt: new Date(),
+  });
   return { depot, notification: await notifyWaitingExchange(depot, context) };
 };
 

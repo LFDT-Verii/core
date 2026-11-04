@@ -773,7 +773,7 @@ describe('vn-api > credential offers', () => {
       deferredExchange = await persistVnApiExchange(deferredDepot);
     });
 
-    const persistVnApiExchange = (depot) =>
+    const persistVnApiExchange = (depot, overrides = {}) =>
       persistExchange({
         tenant,
         service: preauthIssuerService,
@@ -786,6 +786,7 @@ describe('vn-api > credential offers', () => {
             timestamp: new Date(),
           },
         ],
+        ...overrides,
       });
 
     const requestOffers = async (
@@ -937,6 +938,60 @@ describe('vn-api > credential offers', () => {
           ],
           { credentialIds: [new ObjectId(credential._id)] },
         ),
+      );
+    });
+
+    [
+      { settings: 'with', overrides: {}, status: 'sent' },
+      {
+        settings: 'without',
+        overrides: { messagingSettings: undefined },
+        status: 'skipped_no_messaging_settings',
+      },
+    ].forEach(({ settings, overrides, status }) => {
+      it(`should return a challenge and no offers after a resolve with nothing to claim, for exchanges ${settings} messaging settings`, async () => {
+        const waitedExchange = await persistVnApiExchange(
+          deferredDepot,
+          overrides,
+        );
+        expect((await requestOffers(waitedExchange)).statusCode).toEqual(202);
+        const resolveResponse = await resolveDeferredCredentials();
+        expect(resolveResponse.json.notification).toEqual({
+          status,
+          exchangeId: waitedExchange._id,
+        });
+
+        const response = await requestOffers(waitedExchange);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          challenge: expect.any(String),
+          offers: [],
+        });
+        const dbExchange = await findOneExchange(waitedExchange._id);
+        expect(map('state', dbExchange.events)).toEqual([
+          ExchangeStates.AUTHENTICATION_SUCCESS,
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_WAITING,
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_SENT,
+        ]);
+      });
+    });
+
+    it('should 202 and wait for an exchange created after the last resolve', async () => {
+      await resolveDeferredCredentials();
+      const newerExchange = await persistVnApiExchange(deferredDepot);
+
+      const response = await requestOffers(newerExchange);
+
+      expect(response.statusCode).toEqual(202);
+      expect(response.json).toEqual({ offers: [] });
+      await expect(findOneExchange(newerExchange._id)).resolves.toEqual(
+        expectedDbExchange(tenant, newerExchange, [
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_WAITING,
+        ]),
       );
     });
 

@@ -45,7 +45,7 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
   const credentials = await findCredentials();
   if (
     !isEmpty(credentials) ||
-    !(await hasDeferredCredentials(depotId, context))
+    !(await waitsForCredentials(depotId, exchange, context))
   ) {
     return sendOffers(exchangeId, credentials, context);
   }
@@ -60,12 +60,17 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
     : sendOffers(exchangeId, addedCredentials, context);
 };
 
-const hasDeferredCredentials = async (depotId, { repos }) => {
+// The wallet waits on a depot with deferred credentials, unless the issuer has resolved them since the exchange began.
+// Then nothing more is coming for the exchange, so it's answered as for a depot without deferred credentials.
+const waitsForCredentials = async (depotId, exchange, { repos }) => {
   const depot = await repos.depots.findOne(
     { filter: { _id: depotId } },
-    { _id: 1, deferredCredentials: 1 },
+    { _id: 1, deferredCredentials: 1, deferredCredentialsResolvedAt: 1 },
   );
-  return depot?.deferredCredentials === true;
+  return (
+    depot?.deferredCredentials === true &&
+    !(depot.deferredCredentialsResolvedAt > exchange.createdAt)
+  );
 };
 
 const sendOffers = async (exchangeId, credentials, context) => {

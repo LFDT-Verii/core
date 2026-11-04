@@ -170,6 +170,7 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     userReference: depot.userReference,
     deferredCredentials: true,
     expectedCredentialTypes: depot.expectedCredentialTypes,
+    deferredCredentialsResolvedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
   });
@@ -234,6 +235,8 @@ describe('Resolve Deferred Credentials Test Suite', () => {
         serviceId: otherDepot.serviceId,
         userReference: otherDepot.userReference,
         deferredCredentials: false,
+        deferredCredentialsResolvedAt:
+          expect.stringMatching(ISO_DATETIME_FORMAT),
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       },
@@ -243,7 +246,7 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     expect(mockHttpClient.post.mock.callCount()).toEqual(0);
   });
 
-  it('should return skipped_no_waiting_exchange and change nothing when no wallet is waiting', async () => {
+  it('should return skipped_no_waiting_exchange and change no exchange when no wallet is waiting', async () => {
     const exchange = await persistVnApiExchange([
       ExchangeStates.OFFERS_REQUESTED,
       ExchangeStates.OFFERS_SENT,
@@ -257,7 +260,13 @@ describe('Resolve Deferred Credentials Test Suite', () => {
       requestId: expect.any(String),
     });
     expect(mockHttpClient.post.mock.callCount()).toEqual(0);
-    await expect(findDbDepot()).resolves.toEqual(dbDepot);
+    await expect(findDbDepot()).resolves.toEqual({
+      ...dbDepot,
+      deferredCredentialsResolvedAt: new Date(
+        response.json.depot.deferredCredentialsResolvedAt,
+      ),
+      updatedAt: expect.any(Date),
+    });
     await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
       map('state', exchange.events),
     );
@@ -403,10 +412,9 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     );
   });
 
-  it('should leave the depot unchanged and message the waiting exchange again when called again', async () => {
+  it('should message the waiting exchange again when called again', async () => {
     await persistTypedCredential('EmailV1.0');
     const exchange = await persistWaitingExchange();
-    const dbDepot = await findDbDepot();
 
     const firstResponse = await resolveDeferredCredentials();
     const secondResponse = await resolveDeferredCredentials();
@@ -424,7 +432,30 @@ describe('Resolve Deferred Credentials Test Suite', () => {
       'NewOffersReady',
       'NewOffersReady',
     ]);
-    await expect(findDbDepot()).resolves.toEqual(dbDepot);
+  });
+
+  it('should set deferredCredentialsResolvedAt before messaging, and depots/get should return it', async () => {
+    await persistWaitingExchange();
+    let dbDepotAtMessage;
+    mockHttpClient.post.mock.mockImplementationOnce(async () => {
+      dbDepotAtMessage = await findDbDepot();
+      return { statusCode: 204 };
+    });
+
+    const response = await resolveDeferredCredentials();
+
+    const { deferredCredentialsResolvedAt } = response.json.depot;
+    expect(deferredCredentialsResolvedAt).toMatch(ISO_DATETIME_FORMAT);
+    expect(dbDepotAtMessage.deferredCredentialsResolvedAt).toEqual(
+      new Date(deferredCredentialsResolvedAt),
+    );
+    const getResponse = await fastify.injectJson({
+      method: 'GET',
+      url: `/operator/depots/get?tenantId=${tenant._id}&depotId=${depot._id}`,
+    });
+    expect(getResponse.json.depots).toEqual([
+      expect.objectContaining({ deferredCredentialsResolvedAt }),
+    ]);
   });
 
   it('should message only the latest waiting exchange, not a newer one that never waited, and leave the older one alone', async () => {
