@@ -82,16 +82,6 @@ const findersExtension = (parent) => ({
     parent.findOne({
       filter: { _id: credentialId, depotId: new ObjectId(depotId) },
     }),
-  findByNotificationId: async (notificationId, depotId) =>
-    parent.findOne(
-      {
-        filter: {
-          'exchange.id': notificationId,
-          depotId: new ObjectId(depotId),
-        },
-      },
-      { exchange: 1 },
-    ),
   findNonFinal: async (credentialIds, depotId) =>
     parent.find({
       filter: {

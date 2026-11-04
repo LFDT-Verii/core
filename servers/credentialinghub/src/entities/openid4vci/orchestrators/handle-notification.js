@@ -15,20 +15,18 @@
  *
  */
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
-const { omitBy, isNil } = require('lodash/fp');
-const { Oidc4vciErrors } = require('../domain');
-const { ExchangeStates } = require('../../exchanges');
+const { Oidc4vciErrors, Openid4vciTransactionStatuses } = require('../domain');
 const { anchorVeriiCredentialsFacade } = require('../../credentials');
 
-// eslint-disable-next-line complexity
 const handleNotification = async (notificationRequest, context) => {
   const { repos } = context;
-  const credential = await repos.credentials.findByNotificationId(
-    notificationRequest.notification_id,
-    context.openid4vciDepotId,
-  );
+  const transaction =
+    await repos.openid4vciTransactions.findByNotificationIdInDepot(
+      notificationRequest.notification_id,
+      context.openid4vciDepotId,
+    );
 
-  if (credential?.exchange == null) {
+  if (transaction == null) {
     throw new Oauth2ServerErrorResponseError({
       error: Oidc4vciErrors.INVALID_NOTIFICATION_ID,
       error_description: `Error identifying notification ${notificationRequest.notification_id}`,
@@ -38,25 +36,25 @@ const handleNotification = async (notificationRequest, context) => {
   try {
     switch (notificationRequest.event) {
       case 'credential_accepted':
-        await acceptCredential(credential, context);
+        await acceptCredential(transaction, context);
         break;
       case 'credential_deleted':
-        await repos.credentials.addExchangeState(
-          credential._id,
-          ExchangeStates.COMPLETE,
-          { deletedAt: new Date() },
-        );
+        await repos.openid4vciTransactions.update(transaction._id, {
+          status: Openid4vciTransactionStatuses.DELETED,
+        });
+        await repos.credentials.update(transaction.credentialId, {
+          deletedAt: new Date(),
+        });
         break;
       case 'credential_failure':
-        await repos.credentials.addExchangeState(
-          credential._id,
-          ExchangeStates.CLIENT_ERROR,
-          {
-            'exchange.err': 'client_credential_failure',
-            'exchange.errorDescription': notificationRequest.event_description,
-            failedAt: new Date(),
-          },
-        );
+        await repos.openid4vciTransactions.update(transaction._id, {
+          status: Openid4vciTransactionStatuses.FAILED,
+          err: 'client_credential_failure',
+          errorDescription: notificationRequest.event_description,
+        });
+        await repos.credentials.update(transaction.credentialId, {
+          failedAt: new Date(),
+        });
         break;
       default:
         throw new Oauth2ServerErrorResponseError({
@@ -66,15 +64,12 @@ const handleNotification = async (notificationRequest, context) => {
     }
   } catch (error) {
     context.log.error(error);
-    await repos.credentials.addExchangeState(
-      credential._id,
-      ExchangeStates.UNEXPECTED_ERROR,
-      omitBy(isNil, {
-        'exchange.err': error.message,
-        'exchange.errorCode': error.errorCode,
-        'exchange.errorDescription': error.error_description,
-      }),
-    );
+    // Leaves the status alone, so the wallet can retry the notification.
+    await repos.openid4vciTransactions.update(transaction._id, {
+      err: error.message,
+      errorCode: error.errorCode,
+      errorDescription: error.error_description,
+    });
     throw new Oauth2ServerErrorResponseError({
       error: 'server_error',
       error_description: error.message,
@@ -82,24 +77,21 @@ const handleNotification = async (notificationRequest, context) => {
   }
 };
 
-const acceptCredential = async (credential, context) => {
+const acceptCredential = async (transaction, context) => {
   const { repos } = context;
-  // A repeated notification must not anchor the exchange's metadata index again.
+  // A repeated notification must not anchor the transaction's metadata index again.
   // This doesn't stop a duplicate that arrives while the first is still anchoring (#1118).
-  if (credential.exchange.acceptedAt != null) {
+  if (transaction.status === Openid4vciTransactionStatuses.ACCEPTED) {
     return;
   }
 
-  await anchorVeriiCredentialsFacade(
-    [credential.exchange.credentialMetadata],
-    context,
-  );
+  await anchorVeriiCredentialsFacade([transaction.credentialMetadata], context);
   const acceptedAt = new Date();
-  await repos.credentials.addExchangeState(
-    credential._id,
-    ExchangeStates.COMPLETE,
-    { acceptedAt, 'exchange.acceptedAt': acceptedAt },
-  );
+  await repos.openid4vciTransactions.update(transaction._id, {
+    status: Openid4vciTransactionStatuses.ACCEPTED,
+    acceptedAt,
+  });
+  await repos.credentials.update(transaction.credentialId, { acceptedAt });
 };
 
 module.exports = { handleNotification };

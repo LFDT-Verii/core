@@ -51,7 +51,7 @@ const { NANO_ID_FORMAT, DID_FORMAT } = require('@verii/test-regexes');
 const crypto = require('crypto');
 const { mongoify } = require('@verii/tests-helpers');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { map, find, isEqual, omit, entries, set } = require('lodash/fp');
+const { map, find, isEqual, omit } = require('lodash/fp');
 const { initKeyFactory } = require('../../src/entities/keys');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -62,11 +62,6 @@ const { initCredentialFactory } = require('../../src/entities/credentials');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
 const { jwtVcExpectation } = require('../helpers/jwt-vc-expectation');
-const {
-  ExchangeStates,
-  ExchangeProtocols,
-  ExchangeTypes,
-} = require('../../src/entities/exchanges');
 
 describe('openid4vc credential test suite', () => {
   let fastify;
@@ -121,6 +116,7 @@ describe('openid4vc credential test suite', () => {
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
+    await mongoDb().collection('openid4vciTransactions').deleteMany({});
     await mongoDb().collection('notifications').deleteMany({});
 
     holderKeyPair = generateKeyPair({ format: 'jwk' });
@@ -452,6 +448,7 @@ describe('openid4vc credential test suite', () => {
             .collection('credentials')
             .findOne({ _id: new ObjectId(credential._id) }),
         ).resolves.toEqual(signedCredential);
+        await expect(findTransactionsInDb()).resolves.toHaveLength(1);
       });
 
       ['acceptedAt', 'rejectedAt'].forEach((finalField) => {
@@ -506,21 +503,14 @@ describe('openid4vc credential test suite', () => {
           error_description:
             'revocationRegistry.addWalletToRegistrySigned is not a function',
         });
-        await expect(
-          mongoDb()
-            .collection('credentials')
-            .findOne({ _id: new ObjectId(credential._id) }),
-        ).resolves.toEqual({
-          ...mongoify(credential),
-          exchange: expectedDbExchange(
-            issuerService,
-            [ExchangeStates.NEW, ExchangeStates.UNEXPECTED_ERROR],
-            {
-              err: 'revocationRegistry.addWalletToRegistrySigned is not a function',
-            },
-          ),
-          updatedAt: expect.any(Date),
-        });
+        await expectCredentialNotIssued();
+        await expect(findTransactionsInDb()).resolves.toEqual([
+          {
+            ...expectedDbTransaction(),
+            status: 'error',
+            err: 'revocationRegistry.addWalletToRegistrySigned is not a function',
+          },
+        ]);
       });
     });
     describe('openid4vc credential endpoint success cases', () => {
@@ -550,7 +540,7 @@ describe('openid4vc credential test suite', () => {
               credential: expect.any(String),
             },
           ],
-          notification_id: expect.any(String),
+          notification_id: expect.stringMatching(NANO_ID_FORMAT),
         });
         const decodedVcs = map(
           ({ credential: vcJwt }) => jwtDecode(vcJwt),
@@ -596,29 +586,31 @@ describe('openid4vc credential test suite', () => {
           envelopeFormat: 'jwt_vc_json-ld',
           jwtVc: response.json.credentials[0].credential,
           signingAlgorithm: 'ES256K',
-          exchange: expectedDbExchange(
-            issuerService,
-            [ExchangeStates.NEW, ExchangeStates.CREDENTIALS_SIGNED],
-            {
-              credentialMetadata: {
-                contentHash: expect.any(String),
-                credentialType: 'Employment',
-                credentialTypeEncoded: '0xfe3f',
-                index: expect.any(Number),
-                isNewList: true,
-                listId: expect.any(Number),
-                algType: 'aes-256-gcm',
-                publicKey: {
-                  crv: 'secp256k1',
-                  kty: 'EC',
-                  x: expect.any(String),
-                  y: expect.any(String),
-                },
-              },
-            },
-          ),
           updatedAt: expect.any(Date),
         });
+        await expect(findTransactionsInDb()).resolves.toEqual([
+          {
+            ...expectedDbTransaction(),
+            credentialSubjectId: holderDid,
+            notificationId: response.json.notification_id,
+            status: 'signed',
+            credentialMetadata: {
+              contentHash: expect.any(String),
+              credentialType: 'Employment',
+              credentialTypeEncoded: '0xfe3f',
+              index: expect.any(Number),
+              isNewList: true,
+              listId: expect.any(Number),
+              algType: 'aes-256-gcm',
+              publicKey: {
+                crv: 'secp256k1',
+                kty: 'EC',
+                x: expect.any(String),
+                y: expect.any(String),
+              },
+            },
+          },
+        ]);
       });
 
       it('should sign with ES256 when the tenant policy overrides the type default', async () => {
@@ -655,16 +647,18 @@ describe('openid4vc credential test suite', () => {
         ).resolves.toEqual(
           expect.objectContaining({
             signingAlgorithm: 'ES256',
-            exchange: expect.objectContaining({
-              credentialMetadata: expect.objectContaining({
-                publicKey: expect.objectContaining({
-                  crv: 'P-256',
-                  kty: 'EC',
-                }),
+          }),
+        );
+        await expect(findTransactionsInDb()).resolves.toEqual([
+          expect.objectContaining({
+            credentialMetadata: expect.objectContaining({
+              publicKey: expect.objectContaining({
+                crv: 'P-256',
+                kty: 'EC',
               }),
             }),
           }),
-        );
+        ]);
       });
 
       it('should 200 when a nonce is reused before it expires', async () => {
@@ -777,6 +771,19 @@ describe('openid4vc credential test suite', () => {
         .collection('credentials')
         .findOne({ _id: new ObjectId(credential._id) }),
     ).resolves.toEqual(mongoify(credential));
+
+  const findTransactionsInDb = () =>
+    mongoDb().collection('openid4vciTransactions').find({}).toArray();
+
+  const expectedDbTransaction = () => ({
+    _id: expect.any(ObjectId),
+    tenantId: new ObjectId(tenant._id),
+    depotId: new ObjectId(depot._id),
+    serviceId: new ObjectId(issuerService._id),
+    credentialId: new ObjectId(credential._id),
+    createdAt: expect.any(Date),
+    updatedAt: expect.any(Date),
+  });
 });
 
 const invalidNonceResponse = {
@@ -786,23 +793,3 @@ const invalidNonceResponse = {
 };
 
 const credentialIssuerOf = (tenantId) => `https://localhost.test/r/${tenantId}`;
-
-const expectedDbExchange = (issuerService, events, overrides) => {
-  const exchangeEvents = events ?? [ExchangeStates.NEW];
-  let expectation = {
-    id: expect.stringMatching(NANO_ID_FORMAT),
-    protocolMetadata: { protocol: ExchangeProtocols.OPENID4VCI },
-    events: exchangeEvents.map((state) => ({
-      state,
-      timestamp: expect.any(Date),
-    })),
-    serviceId: new ObjectId(issuerService._id),
-    type: ExchangeTypes.ISSUER,
-  };
-
-  for (const [issuerKey, value] of entries(overrides)) {
-    expectation = set(issuerKey, value, expectation);
-  }
-
-  return expectation;
-};
