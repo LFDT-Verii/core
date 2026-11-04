@@ -542,6 +542,37 @@ describe('Credential Revocation Test Suite', () => {
     expect(dbCredential.notifiedOfRevocationAt).toBeUndefined();
   });
 
+  it('should revoke credential and fail the notification when the push url returns an error', async () => {
+    const messagingSettings = {
+      webhookUrl: 'https://wallet.example.com/push',
+      authToken: 'push-token-123',
+    };
+    const { tenant: revokingTenant, credential } = await setupRevocationTenant({
+      messagingSettings,
+    });
+    const webhookUrl = new URL(messagingSettings.webhookUrl);
+    const nockedWebhook = nock(webhookUrl.origin)
+      .post(webhookUrl.pathname)
+      .reply(500, 'wallet error', { 'content-type': 'text/plain' });
+
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: `${testUrl}/revoke`,
+      payload: {
+        tenantId: revokingTenant._id,
+        credentialId: credential._id,
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json.notification).toEqual({
+      status: 'failed',
+      error: 'push url responded with 500',
+    });
+    expect(response.json.credential.notifiedOfRevocationAt).toBeUndefined();
+    expect(nockedWebhook.isDone()).toEqual(true);
+  });
+
   it('should revoke credential and fail the notification without posting to an http push url', async () => {
     const messagingSettings = {
       webhookUrl: 'http://wallet.example.com/push',

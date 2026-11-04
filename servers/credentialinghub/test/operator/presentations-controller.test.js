@@ -994,10 +994,6 @@ describe('Presentations Test Suite', () => {
 
       for (const [failure, error] of [
         [
-          'returns 500',
-          Object.assign(new Error('Response Error'), { statusCode: 500 }),
-        ],
-        [
           'times out',
           Object.assign(new Error('Headers Timeout Error'), {
             code: 'UND_ERR_HEADERS_TIMEOUT',
@@ -1027,24 +1023,27 @@ describe('Presentations Test Suite', () => {
         });
       }
 
-      it('should return a failed notification when the push url redirects', async () => {
-        const { presentation } = await persistExchangePresentation();
-        mockDidResolution();
-        const rawBody = { on: mock.fn(() => rawBody), destroy: mock.fn() };
-        mockHttpClient.post.mock.mockImplementationOnce(() =>
-          Promise.resolve({ statusCode: 307, rawBody }),
-        );
+      for (const statusCode of [307, 500]) {
+        it(`should return a failed notification and the verification when the push url responds with ${statusCode}`, async () => {
+          const { presentation } = await persistExchangePresentation();
+          mockDidResolution();
+          const rawBody = { on: mock.fn(() => rawBody), destroy: mock.fn() };
+          mockHttpClient.post.mock.mockImplementationOnce(() =>
+            Promise.resolve({ statusCode, rawBody }),
+          );
 
-        const response = await verifyAndNotify(presentation);
+          const response = await verifyAndNotify(presentation);
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.json.notification).toEqual({
-          status: 'failed',
-          error: 'push url responded with 307',
+          expect(response.statusCode).toEqual(200);
+          expect(response.json.verification.verified).toEqual(true);
+          expect(response.json.notification).toEqual({
+            status: 'failed',
+            error: `push url responded with ${statusCode}`,
+          });
+          expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+          expect(rawBody.destroy.mock.callCount()).toEqual(1);
         });
-        expect(mockHttpClient.post.mock.callCount()).toEqual(1);
-        expect(rawBody.destroy.mock.callCount()).toEqual(1);
-      });
+      }
 
       it('should discard the push response body', async () => {
         const { presentation } = await persistExchangePresentation();

@@ -83,6 +83,24 @@ const initServer = (server, { caoSecurityProvider } = {}) => {
         prefixUrl: server.config.registrarUrl,
       },
     })
+    .register(httpClientPlugin, {
+      name: 'walletMessageFetch',
+      options: {
+        ...pick(
+          [
+            'nodeEnv',
+            'requestTimeout',
+            'traceIdHeader',
+            'tlsRejectUnauthorized',
+            'isTest',
+          ],
+          server.config,
+        ),
+        // Push URLs come from the wallet, so error responses are returned rather than read into
+        // memory by the client, which would wait for however long the body takes to end.
+        responseErrorMode: 'return',
+      },
+    })
     .register(openid4vciPlugin)
     .register(openid4vpPlugin);
 };

@@ -50,14 +50,15 @@ const sendWalletMessage = async ({ exchange, data, message }, context) => {
       message,
       data: { ...data, exchangeId: `${exchange._id}` },
     };
-    const response = await context.fetch.post(pushUrl, body, {
+    // This client returns error responses too, so no body is read before this code sees it
+    const response = await context.walletMessageFetch.post(pushUrl, body, {
       headers: {
         Authorization: await generateMessagingToken(body, pushUrl, context),
       },
     });
-    // The body isn't needed. Destroying it closes the connection, whereas left unread it holds the
-    // connection open, and draining it would wait on however slowly the wallet's server sends it.
-    // Destroying an unfinished body emits an abort error, which needs a listener.
+    // The body isn't needed, whatever the status. Destroying it closes the connection, whereas left
+    // unread it holds the connection open, and draining it would wait on however slowly the wallet's
+    // server sends it. Destroying an unfinished body emits an abort error, which needs a listener.
     response.rawBody?.on('error', ignoreError).destroy();
     validatePushResponse(response);
     return { status: WalletMessageStatuses.SENT };
@@ -76,8 +77,7 @@ const hasMessagingSettings = (messagingSettings) =>
   !isEmpty(messagingSettings?.webhookUrl) &&
   !isEmpty(messagingSettings?.authToken);
 
-// The HTTP client only throws for 4xx and 5xx and doesn't follow redirects, so a 3xx means
-// the message wasn't delivered either.
+// The client doesn't follow redirects, so a 3xx means the message wasn't delivered either.
 const validatePushResponse = ({ statusCode }) => {
   if (statusCode < 200 || statusCode >= 300) {
     throw new Error(`push url responded with ${statusCode}`);
