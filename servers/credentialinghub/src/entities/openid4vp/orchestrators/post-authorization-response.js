@@ -129,6 +129,10 @@ const handleErrorResponse = async (
     }),
   );
 
+  // Known limitation: the exchange is checked before this write, not in it. So two access_denied
+  // posts for one exchange that arrive at the same time can each record the decline and emit
+  // presentation.declined, with different event IDs. Receivers should treat a repeat for the same
+  // exchange as a duplicate.
   if (isDecline) {
     await enqueueNotificationEvents(
       () =>
