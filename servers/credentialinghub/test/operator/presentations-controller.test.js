@@ -94,6 +94,9 @@ const {
   initExchangeFactory,
 } = require('../../src/entities/exchanges');
 const {
+  credentialVerificationSchema,
+} = require('../../src/controllers/operator/presentations/schemas');
+const {
   buildOpenBadgeCredential,
   openBadgeCredentialContent,
 } = require('../helpers/build-open-badge-credential');
@@ -679,6 +682,68 @@ describe('Presentations Test Suite', () => {
           requestId: expect.any(String),
         });
       });
+      [
+        {
+          title: 'the ledger cannot resolve the signing key',
+          tamperCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          resolveDidDocument: () =>
+            Promise.reject(new Error('rpc unavailable')),
+        },
+        {
+          title: 'the ledger has no key for the kid',
+          tamperCheck: CheckResults.DATA_INTEGRITY_ERROR,
+          resolveDidDocument: () =>
+            Promise.resolve(
+              presentationDIDResolution(
+                ['did:velocity:v2:B:1:1'],
+                [vcKeyPair],
+                [boundIssuerVc],
+              ),
+            ),
+        },
+      ].forEach(({ title, tamperCheck, resolveDidDocument }) => {
+        it(`should report tamperCheck ${tamperCheck} when ${title}`, async () => {
+          mockResolveDidDocument.mock.mockImplementationOnce(
+            resolveDidDocument,
+          );
+          const payload = {
+            tenantId: tenant._id,
+            format: PresentationFormat.JWT_VP,
+            presentation: vp,
+          };
+
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: `${testUrl}/verify`,
+            payload,
+          });
+          expect(response.statusCode).toEqual(200);
+          expect(response.json.verification).toEqual({
+            verified: false,
+            tamperCheck: CheckResults.PASS,
+            credentials: [
+              {
+                format: CredentialFormat.JWT_VC,
+                credential: vc,
+                w3cCredential: {
+                  ...openBadgeCredential,
+                  issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
+                },
+                verified: false,
+                tamperCheck,
+                trustedIssuerCheck: CheckResults.NOT_CHECKED,
+                trustedHolderCheck: CheckResults.NOT_CHECKED,
+                revocationCheck: CheckResults.NOT_CHECKED,
+                expiryCheck: CheckResults.NOT_CHECKED,
+              },
+            ],
+          });
+          expect(
+            credentialVerificationSchema.properties.tamperCheck.enum,
+          ).toContain(tamperCheck);
+        });
+      });
+
       it('should report registrar and ledger outages as dependency resolution errors', async () => {
         mockResolveDidDocument.mock.mockImplementationOnce(() =>
           Promise.resolve(

@@ -43,9 +43,16 @@ const credentialVerificationSchema = {
     verified: {
       type: 'boolean',
     },
+    // Every UNTAMPERED value verifyCredentials returns, except
+    // VOUCHER_RESERVE_EXHAUSTED, which fails the request with a 402 instead.
     tamperCheck: {
       type: 'string',
-      enum: ['PASS', 'FAIL', 'UNCHECKED'],
+      enum: [
+        'PASS',
+        'FAIL',
+        'DATA_INTEGRITY_ERROR',
+        'DEPENDENCY_RESOLUTION_ERROR',
+      ],
     },
     trustedIssuerCheck: {
       type: 'string',
