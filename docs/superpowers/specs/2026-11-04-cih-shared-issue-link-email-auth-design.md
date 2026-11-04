@@ -158,9 +158,7 @@ await mongoDb()
 ```
 
 `authMatchValues` is the only array in the index, so it's a plain multikey
-index. It has no collation, so it works on Amazon DocumentDB. Azure Cosmos
-DB for MongoDB (RU) isn't supported: it can't create compound indexes on
-arrays. For a
+index with no collation, supported by MongoDB and Amazon DocumentDB. For a
 whole-array match, MongoDB uses the index to find the tuple's first element,
 then compares the whole array on the documents it fetches.
 

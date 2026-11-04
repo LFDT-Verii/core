@@ -93,13 +93,8 @@ docker run --rm --entrypoint node lfdecentralizedtrust/verii-credentialing-hub:l
 
 ## Database
 
-The Hub stores its data in the database that `MONGO_URI` names. It is built
-for MongoDB and Amazon DocumentDB. CI tests against MongoDB 8.0.
-
-Azure Cosmos DB for MongoDB (RU) isn't supported. At startup the Hub creates
-a compound index that includes the depots' `authMatchValues` array, and Cosmos
-RU can't create compound indexes on arrays. The Hub exits when it can't create
-an index.
+The Hub supports only MongoDB and Amazon DocumentDB, at the address that
+`MONGO_URI` gives. CI tests against MongoDB 8.0.
 
 ## OpenID4VCI Nonces
 
