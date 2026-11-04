@@ -36,6 +36,7 @@ mock.module('@verii/metadata-registration', {
 
 const {
   mockHttpClient,
+  mockHttpClientErrorRoute,
   mockHttpClientJsonRoute,
   mockHttpClientModule,
   resetMockHttpClient,
@@ -63,6 +64,7 @@ const {
   jwtVerify,
 } = require('@verii/jwt');
 const { map, omit } = require('lodash/fp');
+const newError = require('http-errors');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes/src/regexes');
 const {
   errorResponseMatcher,
@@ -670,6 +672,65 @@ describe('Presentations Test Suite', () => {
                 trustedIssuerCheck: CheckResults.PASS,
                 trustedHolderCheck: CheckResults.PASS,
                 revocationCheck: CheckResults.PASS,
+                expiryCheck: CheckResults.PASS,
+              },
+            ],
+          },
+          requestId: expect.any(String),
+        });
+      });
+      it('should report registrar and ledger outages as dependency resolution errors', async () => {
+        mockResolveDidDocument.mock.mockImplementationOnce(() =>
+          Promise.resolve(
+            presentationDIDResolution(
+              [credentialDid],
+              [vcKeyPair],
+              [boundIssuerVc],
+            ),
+          ),
+        );
+        mockHttpClientErrorRoute(
+          'get',
+          `api/v0.6/organizations/${encodeURIComponent(
+            tenant.did,
+          )}/verified-profile`,
+          newError(503, 'Response Error'),
+        );
+        mockGetStatus.mock.mockImplementationOnce(() =>
+          Promise.reject(new Error('ledger unavailable')),
+        );
+        const payload = {
+          tenantId: tenant._id,
+          format: PresentationFormat.JWT_VP,
+          presentation: vp,
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/verify`,
+          payload,
+        });
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          format: PresentationFormat.JWT_VP,
+          presentation: vp,
+          w3cPresentation: jwtDecode(payload.presentation).payload.vp,
+          verification: {
+            verified: false,
+            tamperCheck: CheckResults.PASS,
+            credentials: [
+              {
+                format: CredentialFormat.JWT_VC,
+                credential: vc,
+                w3cCredential: {
+                  ...openBadgeCredential,
+                  issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
+                },
+                verified: false,
+                tamperCheck: CheckResults.PASS,
+                trustedIssuerCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+                trustedHolderCheck: CheckResults.PASS,
+                revocationCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
                 expiryCheck: CheckResults.PASS,
               },
             ],

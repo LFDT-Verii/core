@@ -31,16 +31,33 @@ describe('revocation checks', () => {
     expect(result).toEqual(CheckResults.FAIL);
   });
 
-  it('Should return FAIL when revocation status fails to resolve', async () => {
+  it('Should return DEPENDENCY_RESOLUTION_ERROR when revocation status fails to resolve', async () => {
     const result = checkCredentialStatus(
       CredentialStatus.DEPENDENCY_RESOLUTION_ERROR,
     );
-    expect(result).toEqual(CheckResults.FAIL);
+    expect(result).toEqual(CheckResults.DEPENDENCY_RESOLUTION_ERROR);
   });
 
   it('Should return PASS when unrevoked', async () => {
     const result = checkCredentialStatus(CredentialStatus.UNREVOKED);
 
     expect(result).toEqual(CheckResults.PASS);
+  });
+
+  it('Should map every credential status to a check result', async () => {
+    const results = Object.fromEntries(
+      Object.values(CredentialStatus).map((status) => [
+        status,
+        checkCredentialStatus(status),
+      ]),
+    );
+
+    expect(results).toEqual({
+      [CredentialStatus.NOT_SUPPORTED]: CheckResults.NOT_APPLICABLE,
+      [CredentialStatus.REVOKED]: CheckResults.FAIL,
+      [CredentialStatus.UNREVOKED]: CheckResults.PASS,
+      [CredentialStatus.DEPENDENCY_RESOLUTION_ERROR]:
+        CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+    });
   });
 });

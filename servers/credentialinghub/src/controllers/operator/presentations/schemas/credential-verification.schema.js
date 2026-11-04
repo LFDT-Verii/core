@@ -55,6 +55,7 @@ const credentialVerificationSchema = {
         'UNCHECKED',
         'SELF_SIGNED',
         'DATA_INTEGRITY_ERROR',
+        'DEPENDENCY_RESOLUTION_ERROR',
       ],
     },
     trustedHolderCheck: {

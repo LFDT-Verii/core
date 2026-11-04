@@ -625,43 +625,73 @@ describe('Verify verii credentials', () => {
         ]);
       });
 
-      it('TRUSTED_ISSUER should return FAIL if issuerDidDocument resolution fails', async () => {
-        nock.removeInterceptor({
-          hostname: registrarHost,
-          path: resolveDidPath,
-          method: 'GET',
-          proto: 'https',
-        });
-        nock(registrarUrl).get(resolveDidPath).reply(400);
+      const registrarFailures = [
+        {
+          title: 'a 400 response',
+          reply: (interceptor) => interceptor.reply(400),
+        },
+        {
+          title: 'a 500 response',
+          reply: (interceptor) => interceptor.reply(500),
+        },
+        {
+          title: 'a connection error',
+          reply: (interceptor) =>
+            interceptor.replyWithError('connect ECONNREFUSED'),
+        },
+        {
+          title: 'a response body that is not JSON',
+          reply: (interceptor) =>
+            interceptor.reply(200, '<html>Service Unavailable</html>', {
+              'content-type': 'text/html',
+            }),
+        },
+      ];
 
-        const result = await verifyVeriiCredentials(
-          {
-            credentials: [openBadgeVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: {
-              did: 'did:ion:123',
-              dltOperatorKMSKeyId: 'keyid-1',
-            },
-          },
-          context,
-        );
+      [
+        { lookup: 'DID', path: resolveDidPath },
+        { lookup: 'verified profile', path: verifiedProfilePath },
+      ].forEach(({ lookup, path }) =>
+        registrarFailures.forEach(({ title, reply }) => {
+          it(`TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR if the issuer ${lookup} lookup fails with ${title}`, async () => {
+            nock.removeInterceptor({
+              hostname: registrarHost,
+              path,
+              method: 'GET',
+              proto: 'https',
+            });
+            reply(nock(registrarUrl).get(path));
 
-        expect(result).toEqual([
-          {
-            dataModelVersion: '1.1',
-            envelopeFormat: 'jwt_vc_json-ld',
-            signingAlgorithm: 'ES256K',
-            credential: openBadgeCredential,
-            credentialChecks: {
-              UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.FAIL,
-              TRUSTED_HOLDER: CheckResults.PASS,
-              UNEXPIRED: CheckResults.PASS,
-              UNREVOKED: CheckResults.PASS,
-            },
-          },
-        ]);
-      });
+            const result = await verifyVeriiCredentials(
+              {
+                credentials: [openBadgeVc],
+                expectedHolderDid: issuerDidJwk,
+                relyingParty: {
+                  did: 'did:ion:123',
+                  dltOperatorKMSKeyId: 'keyid-1',
+                },
+              },
+              context,
+            );
+
+            expect(result).toEqual([
+              {
+                dataModelVersion: '1.1',
+                envelopeFormat: 'jwt_vc_json-ld',
+                signingAlgorithm: 'ES256K',
+                credential: openBadgeCredential,
+                credentialChecks: {
+                  UNTAMPERED: CheckResults.PASS,
+                  TRUSTED_ISSUER: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+                  TRUSTED_HOLDER: CheckResults.PASS,
+                  UNEXPIRED: CheckResults.PASS,
+                  UNREVOKED: CheckResults.PASS,
+                },
+              },
+            ]);
+          });
+        }),
+      );
 
       it('TRUSTED_ISSUER should FAIL when issuerDidDocument not found', async () => {
         nock.removeInterceptor({
@@ -834,7 +864,7 @@ describe('Verify verii credentials', () => {
           method: 'GET',
           proto: 'https',
         });
-        nock(registrarUrl).get(resolveDidPath).reply(404);
+        nock(registrarUrl).get(verifiedProfilePath).reply(404);
 
         const result = await verifyVeriiCredentials(
           {
@@ -971,7 +1001,7 @@ describe('Verify verii credentials', () => {
         ]);
       });
 
-      it('UNREVOKED should return FAIL when status request errors', async () => {
+      it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when status request errors', async () => {
         initRevocationRegistry.mock.mockImplementationOnce(() => ({
           getRevokedStatus: mock.fn(() => Promise.reject(new Error('boom'))),
         }));
@@ -998,7 +1028,7 @@ describe('Verify verii credentials', () => {
               UNTAMPERED: CheckResults.PASS,
               TRUSTED_ISSUER: CheckResults.PASS,
               TRUSTED_HOLDER: CheckResults.PASS,
-              UNREVOKED: CheckResults.FAIL,
+              UNREVOKED: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
               UNEXPIRED: CheckResults.PASS,
             },
           },

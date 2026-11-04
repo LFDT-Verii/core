@@ -123,7 +123,20 @@ key:
   key, or cannot be decoded.
 - `FAIL`: the issuer is not authenticated. This includes an embedded `jwk`
   with any issuer other than its own `did:jwk`; Career Wallet self-reported
-  credentials, which use a UUID `iss`, fall into this case.
+  credentials, which use a UUID `iss`, fall into this case. It also includes a
+  `did:velocity` credential whose issuer has no verified profile or DID
+  document on the registrar (a 404).
+- `DEPENDENCY_RESOLUTION_ERROR`: the issuer of a `did:velocity` credential could
+  not be checked because a registrar lookup failed: the credential type
+  metadata lookup, or the issuer's verified profile or DID document lookup
+  with anything other than a 404 (another error status, a timeout, a
+  connection error, or a body that is not JSON). The same credential may pass
+  once the registrar answers.
+
+`credentialChecks.UNREVOKED` is `FAIL` for a revoked credential,
+`NOT_APPLICABLE` when the credential has no Velocity revocation list status,
+and `DEPENDENCY_RESOLUTION_ERROR` when the revocation registry could not be
+read.
 
 Keys are discovered from the protected header:
 

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 const {
+  compact,
   filter,
   find,
   first,
@@ -226,6 +227,7 @@ const emptyIssuerRefs = () => ({
   accreditationVCMap: {},
   credentialTypeMetadatasMap: {},
   issuerDidDocumentMap: {},
+  unresolvedIssuerIds: new Set(),
 });
 
 const assertCredentialBatch = (jwtVcs) => {
@@ -369,21 +371,23 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
     const issuerIds = flow(map('issuerId'), uniq)(credentialData);
     const credentialTypes = flow(map('credentialType'), uniq)(credentialData);
 
-    const [accreditationVCs, issuerDidDocuments, credentialTypeMetadatas] =
+    const [accreditationLookups, didDocumentLookups, credentialTypeMetadatas] =
       await Promise.all([
         Promise.all(
           map(
             (issuerId) =>
-              fetchers
-                .getOrganizationVerifiedProfile(issuerId, context)
-                .catch(() => {}),
+              lookupIssuerDependency(
+                fetchers.getOrganizationVerifiedProfile,
+                issuerId,
+                context,
+              ),
             issuerIds,
           ),
         ),
         Promise.all(
           map(
             (issuerId) =>
-              fetchers.resolveDid(issuerId, context).catch(() => {}),
+              lookupIssuerDependency(fetchers.resolveDid, issuerId, context),
             issuerIds,
           ),
         ),
@@ -391,18 +395,61 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
       ]);
 
     return {
-      accreditationVCMap: keyBy('credentialSubject.id', accreditationVCs),
-      issuerDidDocumentMap: keyBy('id', issuerDidDocuments),
+      accreditationVCMap: keyBy(
+        'credentialSubject.id',
+        lookupValues(accreditationLookups),
+      ),
+      issuerDidDocumentMap: keyBy('id', lookupValues(didDocumentLookups)),
       credentialTypeMetadatasMap: keyBy(
         'credentialType',
         credentialTypeMetadatas,
       ),
+      unresolvedIssuerIds: failedLookupIssuerIds([
+        ...accreditationLookups,
+        ...didDocumentLookups,
+      ]),
     };
   } catch (error) {
     context.log.error(error);
     return { errors: { metadataRetrievalError: true } };
   }
 };
+
+// The registrar client (@verii/http-client) throws an undici ResponseError that
+// carries the HTTP statusCode for every 4xx and 5xx response. Only a 404 says
+// the registrar has no such record. Any other status, and a timeout or
+// connection error, which has no statusCode, means the registrar could not
+// answer.
+const isNotFoundError = (error) => error?.statusCode === 404;
+
+// A 404 leaves the dependency missing, so the issuer trust check fails as it
+// does for an unregistered issuer. @verii/http-client resolves a body it cannot
+// parse as JSON to {}, so an empty value is an unreadable response, and fails
+// the lookup like any other registrar error.
+const lookupIssuerDependency = async (fetcher, issuerId, context) => {
+  try {
+    const value = await fetcher(issuerId, context);
+    if (isEmpty(value)) {
+      context.log.error({ issuerId }, 'issuer lookup returned no data');
+      return { issuerId, failed: true };
+    }
+    return { issuerId, value };
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return { issuerId };
+    }
+    context.log.error({ err: error, issuerId }, 'issuer lookup failed');
+    return { issuerId, failed: true };
+  }
+};
+
+const lookupValues = flow(map('value'), compact);
+
+const failedLookupIssuerIds = flow(
+  filter('failed'),
+  map('issuerId'),
+  (issuerIds) => new Set(issuerIds),
+);
 
 const resolveCredentialStatuses = async (credentialData, context) => {
   try {
@@ -586,6 +633,7 @@ const runIssuerTrustCheck = (
     accreditationVCMap,
     issuerDidDocumentMap,
     credentialTypeMetadatasMap,
+    unresolvedIssuerIds,
     errors,
   },
   context,
@@ -604,6 +652,14 @@ const runIssuerTrustCheck = (
       );
     }
     return Promise.resolve(SelfCertifiedIssuerChecks[issuerKeyBinding]);
+  }
+
+  if (unresolvedIssuerIds.has(issuerId)) {
+    log.error(
+      { id, issuerId },
+      'runIssuerTrustCheck: issuer lookups could not be completed',
+    );
+    return Promise.resolve(CheckResults.DEPENDENCY_RESOLUTION_ERROR);
   }
 
   const resolvedDeps = {
