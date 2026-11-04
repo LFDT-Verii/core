@@ -18,6 +18,8 @@ const { tenantLoaderPlugin } = require('../../entities/tenants');
 const { kmsPlugin } = require('../../entities/keys');
 const {
   ExchangeTypes,
+  MAX_DECLINE_REASON_LENGTH,
+  declinePresentation,
   getPresentationRequest,
   postPresentation,
   signExchangeResponse,
@@ -156,6 +158,37 @@ const vnApiPresentationController = async (fastify) => {
             exchangeComplete: true,
           },
         };
+      },
+    )
+    .post(
+      '/r/:tenantId/decline-presentation',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Decline a VN-API presentation request',
+          operationId: 'declineVnApiPresentation',
+          body: {
+            type: 'object',
+            properties: {
+              exchange_id: { type: 'string', description: 'exchange id value' },
+              reason: {
+                type: 'string',
+                maxLength: MAX_DECLINE_REASON_LENGTH,
+                description: 'why the holder declined to share',
+              },
+            },
+            required: ['exchange_id'],
+          },
+          response: {
+            204: {
+              type: 'null',
+              description: 'The presentation request was declined',
+            },
+          },
+        }),
+      },
+      async (req, reply) => {
+        await declinePresentation(req.body.exchange_id, req.body.reason, req);
+        return reply.code(204).send();
       },
     );
 };

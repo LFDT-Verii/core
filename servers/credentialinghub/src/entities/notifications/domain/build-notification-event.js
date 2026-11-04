@@ -54,6 +54,38 @@ const buildPresentationReceivedEvent = ({
   });
 };
 
+const buildPresentationDeclinedEvent = ({
+  tenant,
+  exchange,
+  id = newNotificationEventId(),
+  occurredAt = exchange.declinedAt,
+}) => {
+  const tenantId = tenant._id.toString();
+  const exchangeId = exchange._id.toString();
+
+  return buildBaseEvent({
+    id,
+    type: NotificationEventTypes.PRESENTATION_DECLINED,
+    occurredAt,
+    tenant,
+    exchange,
+    resource: {
+      type: 'exchange',
+      id: exchangeId,
+    },
+    data: omitBy(isNil, {
+      protocol: exchange.protocolMetadata.protocol,
+      declinedAt: toIsoString(exchange.declinedAt),
+      reason: exchange.declineReason,
+    }),
+    links: {
+      exchange: `/operator/exchanges/get?tenantId=${encodeURIComponent(
+        tenantId,
+      )}&exchangeId=${encodeURIComponent(exchangeId)}`,
+    },
+  });
+};
+
 const buildCredentialIssuedEvent = ({
   tenant,
   exchange,
@@ -181,6 +213,7 @@ const toIsoString = (value) => {
 module.exports = {
   buildCredentialIssuedEvent,
   buildCredentialRejectedEvent,
+  buildPresentationDeclinedEvent,
   buildPresentationReceivedEvent,
   newNotificationEventId,
 };

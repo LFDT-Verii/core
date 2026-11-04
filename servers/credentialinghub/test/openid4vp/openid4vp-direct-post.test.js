@@ -58,6 +58,7 @@ const {
 const {
   postAuthorizationResponse,
 } = require('../../src/entities/openid4vp/orchestrators');
+const { NotificationEventTypes } = require('../../src/entities/notifications');
 
 describe('openid4vp > direct-post', () => {
   let fastify;
@@ -91,10 +92,12 @@ describe('openid4vp > direct-post', () => {
   });
 
   beforeEach(async () => {
+    fastify.resetOverrides();
     await mongoDb().collection('relyingPartyServices').deleteMany({});
     await mongoDb().collection('exchanges').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('presentations').deleteMany({});
+    await mongoDb().collection('notification_events').deleteMany({});
 
     relyingPartyService = await persistRelyingPartyService({
       tenant,
@@ -221,6 +224,8 @@ describe('openid4vp > direct-post', () => {
         disclosureConsentedAt: undefined,
         err: 'access_denied',
         errorDescription: 'Wallet holder declined presentation sharing',
+        declinedAt: expect.any(Date),
+        declineReason: 'Wallet holder declined presentation sharing',
         events: [
           {
             state: ExchangeStates.NEW,
@@ -237,6 +242,83 @@ describe('openid4vp > direct-post', () => {
         ],
       }),
     );
+  });
+
+  it('should emit presentation.declined with the error description for an access_denied response', async () => {
+    fastify.overrides.reqConfig = enableNotifications([
+      NotificationEventTypes.PRESENTATION_DECLINED,
+    ]);
+
+    const response = await injectDirectPost({
+      fastify,
+      tenant,
+      payload: {
+        state: exchange._id.toString(),
+        error: 'access_denied',
+        error_description: '  Holder declined  ',
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    const dbExchange = await mongoDb()
+      .collection('exchanges')
+      .findOne({ _id: new ObjectId(exchange._id) });
+    expect(dbExchange.declineReason).toEqual('Holder declined');
+    await expect(
+      mongoDb().collection('notification_events').find({}).toArray(),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        type: NotificationEventTypes.PRESENTATION_DECLINED,
+        payload: expect.objectContaining({
+          type: NotificationEventTypes.PRESENTATION_DECLINED,
+          exchangeId: exchange._id,
+          resource: { type: 'exchange', id: exchange._id },
+          data: {
+            protocol: ExchangeProtocols.OPENID4VP,
+            declinedAt: dbExchange.declinedAt.toISOString(),
+            reason: 'Holder declined',
+          },
+        }),
+      }),
+    ]);
+
+    const operatorResponse = await fastify.injectJson({
+      method: 'GET',
+      url: `/operator/exchanges/get?tenantId=${tenant._id}&exchangeId=${exchange._id}`,
+    });
+    expect(operatorResponse.json.exchange).toEqual(
+      expect.objectContaining({
+        state: ExchangeStates.CLIENT_ERROR,
+        decline: {
+          declinedAt: dbExchange.declinedAt.toISOString(),
+          reason: 'Holder declined',
+        },
+      }),
+    );
+  });
+
+  it('should not emit presentation.declined for other authorization error responses', async () => {
+    fastify.overrides.reqConfig = enableNotifications(['presentation.*']);
+
+    const response = await injectDirectPost({
+      fastify,
+      tenant,
+      payload: {
+        state: exchange._id.toString(),
+        error: 'invalid_request',
+        error_description: 'Wallet could not parse the request',
+      },
+    });
+
+    expect(response.statusCode).toEqual(200);
+    await expect(
+      mongoDb()
+        .collection('exchanges')
+        .findOne({ _id: new ObjectId(exchange._id) }),
+    ).resolves.not.toHaveProperty('declinedAt');
+    await expect(
+      mongoDb().collection('notification_events').countDocuments({}),
+    ).resolves.toEqual(0);
   });
 
   it('should reject a direct-post authorization error response after the request expires', async () => {
@@ -551,6 +633,7 @@ describe('openid4vp > direct-post', () => {
       expectedDbExchange(tenant, relyingPartyService, depot, exchange, {
         disclosureConsentedAt: undefined,
         err: 'access_denied',
+        declinedAt: expect.any(Date),
         events: [
           {
             state: ExchangeStates.NEW,
@@ -1424,4 +1507,18 @@ const expectedPresentationDefinition = (relyingPartyService, exchangeId) => ({
       min: 1,
     },
   ],
+});
+
+const enableNotifications = (eventTypes) => (config) => ({
+  ...config,
+  notifications: {
+    ...config.notifications,
+    enabled: true,
+    webhook: {
+      ...config.notifications.webhook,
+      url: 'https://operator.localhost.test/events',
+      eventTypes,
+      secret: 'test-secret',
+    },
+  },
 });

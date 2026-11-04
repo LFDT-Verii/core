@@ -42,6 +42,8 @@ module.exports = (app, options, next = () => {}) => {
         messagingSettings: 1,
         locale: 1,
         events: 1,
+        declinedAt: 1,
+        declineReason: 1,
         createdAt: 1,
       },
       extensions: [

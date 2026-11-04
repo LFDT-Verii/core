@@ -18,6 +18,7 @@ module.exports = {
   ...require('./authorize-exchange'),
   ...require('./build-presentation-request'),
   ...require('./build-exchange-event'),
+  ...require('./clean-decline-reason'),
   ...require('./exchange-errors'),
   ...require('./exchange-protocols'),
   ...require('./exchange-states'),

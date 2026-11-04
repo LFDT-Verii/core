@@ -599,6 +599,52 @@ describe('vn-api > presentations', () => {
           .toArray();
         expect(JSON.stringify(event.payload)).not.toContain(jwtVp);
       });
+      it('should 200 after the holder declined and emit presentation.received after presentation.declined', async () => {
+        fastify.overrides.reqConfig = enableNotifications(['presentation.*']);
+        const declineResponse = await fastify.injectJson({
+          method: 'POST',
+          url: `${vnUrl(tenant)}/decline-presentation`,
+          payload: { exchange_id: exchange._id, reason: 'not now' },
+        });
+        expect(declineResponse.statusCode).toEqual(204);
+        const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: await vpWrapper.jwtVp(),
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        await expect(
+          mongoDb()
+            .collection('exchanges')
+            .findOne({ _id: new ObjectId(exchange._id) }),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            events: [
+              { state: 'NEW', timestamp: expect.any(Date) },
+              { state: 'PRESENTATION_DECLINED', timestamp: expect.any(Date) },
+              {
+                state: 'PRESENTATION_SUBMISSION_RECEIVED',
+                timestamp: expect.any(Date),
+              },
+            ],
+          }),
+        );
+        const events = await mongoDb()
+          .collection('notification_events')
+          .find({})
+          .sort({ createdAt: 1 })
+          .toArray();
+        expect(map('type', events)).toEqual([
+          NotificationEventTypes.PRESENTATION_DECLINED,
+          NotificationEventTypes.PRESENTATION_RECEIVED,
+        ]);
+      });
       it('should skip presentation notifications filtered out by event type config', async () => {
         fastify.overrides.reqConfig = enableNotifications([
           NotificationEventTypes.CREDENTIAL_ISSUED,
