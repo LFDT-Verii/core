@@ -838,6 +838,58 @@ describe('vn-api > credential offers', () => {
       );
     });
 
+    it('should return the offers and a challenge when the depot completes just before the exchange starts waiting', async (t) => {
+      const credential = await persistEmailCredential();
+      // Completes the depot when the exchange is about to record OFFERS_WAITING,
+      // so the completion finds no waiting exchange to message.
+      const collectionPrototype = Object.getPrototypeOf(
+        mongoDb().collection('exchanges'),
+      );
+      const { findOneAndUpdate } = collectionPrototype;
+      let completeResponse;
+      t.mock.method(
+        collectionPrototype,
+        'findOneAndUpdate',
+        async function completeBeforeWaiting(filter, update, ...args) {
+          if (
+            completeResponse == null &&
+            update.$push?.events?.state === ExchangeStates.OFFERS_WAITING
+          ) {
+            completeResponse = await fastify.injectJson({
+              method: 'POST',
+              url: '/operator/depots/complete',
+              payload: { tenantId: tenant._id, depotId: pendingDepot._id },
+            });
+          }
+          return findOneAndUpdate.call(this, filter, update, ...args);
+        },
+      );
+
+      const response = await requestOffers();
+
+      expect(completeResponse.json.notification).toEqual({
+        status: 'no_waiting_exchange',
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        challenge: expect.any(String),
+        offers: [expectedOffer(tenant, credential)],
+      });
+      expect(mockHttpClient.post.mock.callCount()).toEqual(0);
+      await expect(findOneExchange(pendingExchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          pendingExchange,
+          [
+            ExchangeStates.OFFERS_REQUESTED,
+            ExchangeStates.OFFERS_WAITING,
+            ExchangeStates.OFFERS_SENT,
+          ],
+          { credentialIds: [new ObjectId(credential._id)] },
+        ),
+      );
+    });
+
     it('should return the offers and a challenge once the depot is completed', async () => {
       const credential = await persistEmailCredential();
       const waitingResponse = await requestOffers();
