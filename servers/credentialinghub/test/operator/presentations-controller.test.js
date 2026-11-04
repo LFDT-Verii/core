@@ -1027,6 +1027,23 @@ describe('Presentations Test Suite', () => {
         });
       }
 
+      it('should return a failed notification when the push url redirects', async () => {
+        const { presentation } = await persistExchangePresentation();
+        mockDidResolution();
+        mockHttpClient.post.mock.mockImplementationOnce(() =>
+          Promise.resolve({ statusCode: 307 }),
+        );
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.notification).toEqual({
+          status: 'failed',
+          error: 'push url responded with 307',
+        });
+        expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+      });
+
       it('should fail without posting to an http push url', async () => {
         const { presentation } = await persistExchangePresentation({
           messagingSettings: {

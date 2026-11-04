@@ -50,15 +50,20 @@ const sendWalletMessage = async ({ exchange, data, message }, context) => {
       message,
       data: { ...data, exchangeId: `${exchange._id}` },
     };
-    await context.fetch.post(messagingSettings.webhookUrl, body, {
-      headers: {
-        Authorization: await generateMessagingToken(
-          body,
-          messagingSettings.webhookUrl,
-          context,
-        ),
+    const response = await context.fetch.post(
+      messagingSettings.webhookUrl,
+      body,
+      {
+        headers: {
+          Authorization: await generateMessagingToken(
+            body,
+            messagingSettings.webhookUrl,
+            context,
+          ),
+        },
       },
-    });
+    );
+    validatePushResponse(response);
     return { status: WalletMessageStatuses.SENT };
   } catch (error) {
     context.log.warn(
@@ -72,6 +77,14 @@ const sendWalletMessage = async ({ exchange, data, message }, context) => {
 const hasMessagingSettings = (messagingSettings) =>
   !isEmpty(messagingSettings?.webhookUrl) &&
   !isEmpty(messagingSettings?.authToken);
+
+// The HTTP client only throws for 4xx and 5xx and doesn't follow redirects, so a 3xx means
+// the message wasn't delivered either.
+const validatePushResponse = ({ statusCode }) => {
+  if (statusCode < 200 || statusCode >= 300) {
+    throw new Error(`push url responded with ${statusCode}`);
+  }
+};
 
 // Push URLs come from the wallet, so refuse ones that aren't https or that carry credentials.
 const validatePushUrl = (webhookUrl, { config }) => {
