@@ -24,22 +24,14 @@ const {
 } = require('../../wallet-messages');
 const { DepotErrors } = require('../domain');
 
-const ResolveDepotCredentialsStatuses = {
+const ResolveDeferredCredentialsStatuses = {
   ...WalletMessageStatuses,
-  ALREADY_RESOLVED: 'already_resolved',
   SKIPPED_NO_WAITING_EXCHANGE: 'skipped_no_waiting_exchange',
 };
 
-const resolveDepotCredentials = async (depotId, context) => {
-  const depot = await context.repos.depots.resolveDepotCredentials(depotId);
-  if (depot == null) {
-    return {
-      depot: await loadDepot(depotId, context),
-      notification: {
-        status: ResolveDepotCredentialsStatuses.ALREADY_RESOLVED,
-      },
-    };
-  }
+// Settles whoever is waiting on the depot now. The depot doesn't change, so it can be called again later.
+const resolveDeferredCredentials = async (depotId, context) => {
+  const depot = await loadDepot(depotId, context);
   return { depot, notification: await notifyWaitingExchange(depot, context) };
 };
 
@@ -54,20 +46,13 @@ const loadDepot = async (depotId, { repos }) => {
 };
 
 const notifyWaitingExchange = async (depot, context) => {
-  const exchange =
-    await context.repos.exchanges.findLatestVnApiExchangeByDepotId(
-      depot._id,
-      { _id: 1, credentialTypes: 1, messagingSettings: 1 },
-      {
-        'events.state': {
-          $eq: ExchangeStates.OFFERS_WAITING,
-          $ne: ExchangeStates.COMPLETE,
-        },
-      },
-    );
+  const exchange = await context.repos.exchanges.findWaitingVnApiExchange(
+    depot._id,
+    { _id: 1, credentialTypes: 1, messagingSettings: 1 },
+  );
   if (exchange == null) {
     return {
-      status: ResolveDepotCredentialsStatuses.SKIPPED_NO_WAITING_EXCHANGE,
+      status: ResolveDeferredCredentialsStatuses.SKIPPED_NO_WAITING_EXCHANGE,
     };
   }
 
@@ -120,4 +105,7 @@ const buildMessageData = (notificationType, exchange, { tenant }) => ({
   serviceEndpoint: exchange.messagingSettings?.webhookUrl,
 });
 
-module.exports = { resolveDepotCredentials, ResolveDepotCredentialsStatuses };
+module.exports = {
+  resolveDeferredCredentials,
+  ResolveDeferredCredentialsStatuses,
+};

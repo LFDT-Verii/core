@@ -25,6 +25,9 @@ const {
 const {
   findLatestVnApiExchangeByDepotIdExtension,
 } = require('./find-latest-vn-api-exchange-by-depot-id');
+const {
+  waitingVnApiExchangesExtension,
+} = require('./waiting-vn-api-exchanges');
 
 module.exports = (app, options, next = () => {}) => {
   next();
@@ -49,6 +52,7 @@ module.exports = (app, options, next = () => {}) => {
         multitenantExtension(),
         exchangeStateRepoExtension,
         findLatestVnApiExchangeByDepotIdExtension,
+        waitingVnApiExchangesExtension,
       ],
     },
     app,

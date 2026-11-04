@@ -479,35 +479,6 @@ describe('openid4vc credential test suite', () => {
         });
       });
 
-      it('should 400 with credential_request_denied while the depot is pending', async () => {
-        const pendingDepot = await persistDepot({
-          tenant,
-          service: issuerService,
-          credentialsPending: true,
-        });
-        const pendingCredential = await persistCredential({
-          tenant,
-          depot: pendingDepot,
-        });
-        const cNonce = await requestNonce(tenant._id);
-        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
-
-        const response = await requestCredential(proof, pendingCredential._id, {
-          token: await buildAuthToken(pendingDepot),
-        });
-
-        expect(response.statusCode).toEqual(400);
-        expect(response.json).toEqual({
-          error: 'credential_request_denied',
-          error_description: `Credential ${pendingCredential._id} can't be issued while the depot's credentials are pending`,
-        });
-        await expect(
-          mongoDb()
-            .collection('credentials')
-            .findOne({ _id: new ObjectId(pendingCredential._id) }),
-        ).resolves.toEqual(mongoify(pendingCredential));
-      });
-
       it('should 400 if server issue', async () => {
         const cNonce = await requestNonce(tenant._id);
 

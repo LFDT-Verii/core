@@ -23,9 +23,6 @@ const { multitenantExtension } = require('@verii/spencer-mongo-extensions');
 const { findDepotsExtension } = require('./find-depots-extension');
 const { refreshPreauthCodeExtension } = require('./refresh-preauth-code');
 const {
-  resolveDepotCredentialsExtension,
-} = require('./resolve-depot-credentials-extension');
-const {
   findDepotByPreauthCodeExtension,
 } = require('./find-depot-by-preauth-code');
 
@@ -46,9 +43,8 @@ module.exports = (app, options, next = () => {}) => {
         authValues: 1,
         serviceId: 1,
         preauthCodeHash: 1,
-        credentialsPending: 1,
+        deferredCredentials: 1,
         expectedCredentialTypes: 1,
-        credentialsResolvedAt: 1,
         tenantId: 1,
         createdAt: 1,
         updatedAt: 1,
@@ -59,7 +55,6 @@ module.exports = (app, options, next = () => {}) => {
         findDepotsExtension,
         findDepotByPreauthCodeExtension,
         refreshPreauthCodeExtension,
-        resolveDepotCredentialsExtension,
       ],
     },
     app,

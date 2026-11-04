@@ -28,7 +28,7 @@ const createDepot = async (newDepot, serviceId, { repos }) => {
     }));
   validateDepot(newDepot, service, issuerService != null);
   return repos.depots.insert({
-    credentialsPending: false,
+    deferredCredentials: false,
     ...newDepot,
     serviceId: new ObjectId(serviceId),
   });

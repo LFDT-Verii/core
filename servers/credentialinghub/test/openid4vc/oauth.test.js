@@ -342,34 +342,6 @@ describe('OAuth test suite', () => {
         });
       });
 
-      it('should list none of the credentials already in a pending depot', async () => {
-        const issuerService = await persistIssuerService({ tenant });
-        const depot = await persistDepot({
-          tenant,
-          service: issuerService,
-          preauthCode: 'foo',
-          credentialsPending: true,
-        });
-        await persistCredential({ tenant, depot });
-
-        const response = await fastify.inject({
-          method: 'POST',
-          url: `/r/${tenant._id}/oauth/token`,
-          body: 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code=foo',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        });
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.json()).toEqual({
-          access_token: expect.any(String),
-          expires_in: issuerService.authTokensExpireIn,
-          token_type: 'Bearer',
-          authorization_details: [],
-        });
-      });
-
       it('should leave signed, accepted and rejected credentials out of authorization_details', async () => {
         const issuerService = await persistIssuerService({ tenant });
         const depot = await persistDepot({

@@ -19,11 +19,7 @@ const newError = require('http-errors');
 const { isEmpty, map, uniq } = require('lodash/fp');
 const { mapWithIndex } = require('@verii/common-functions');
 const { parseAccessToken } = require('../../tokens');
-const {
-  ExchangeErrors,
-  ExchangeStates,
-  verifyProofOfKeyPossession,
-} = require('../domain');
+const { ExchangeStates, verifyProofOfKeyPossession } = require('../domain');
 const { authorizeExchange } = require('../domain/authorize-exchange');
 const { issueVeriiCredentialsFacade } = require('../../credentials');
 const { resolveCredentialSigningAlgorithm } = require('../../tenants');
@@ -42,12 +38,6 @@ const issueCredentials = async (
 ) => {
   const { log, repos } = context;
   const { exchangeId, depotId } = parseAccessToken(token);
-  // A depot's pending credentials can't be approved or rejected until they're resolved
-  if (await isDepotPending(depotId, context)) {
-    throw newError(400, ExchangeErrors.CREDENTIALS_PENDING, {
-      errorCode: ExchangeErrors.CREDENTIALS_PENDING,
-    });
-  }
   const exchange = await repos.exchanges
     .addState(exchangeId, ExchangeStates.CLAIMING_IN_PROGRESS)
     .catch((error) => {
@@ -103,14 +93,6 @@ const issueCredentials = async (
   );
 
   return jwtVcs;
-};
-
-const isDepotPending = async (depotId, { repos }) => {
-  const depot = await repos.depots.findOne(
-    { filter: { _id: depotId } },
-    { _id: 1, credentialsPending: 1 },
-  );
-  return depot?.credentialsPending === true;
 };
 
 // Approvals and rejections only reach the exchange's depot, and only

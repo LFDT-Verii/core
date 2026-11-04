@@ -275,10 +275,10 @@ describe('Credentials Test suite', () => {
     it("should 400 if the credential type is not one of the depot's expected types", async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
       mockHttpClientJsonResponse('get', schemas[0]);
-      const pendingDepot = await persistDepot({
+      const deferredDepot = await persistDepot({
         tenant,
         service: issuerService,
-        credentialsPending: true,
+        deferredCredentials: true,
         expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
       });
       const response = await fastify.injectJson({
@@ -286,7 +286,7 @@ describe('Credentials Test suite', () => {
         url: `${testUrl}/create`,
         payload: {
           tenantId: tenant._id,
-          depotId: pendingDepot._id,
+          depotId: deferredDepot._id,
           credential: {
             credentialReference: 'cred1',
             content: { type: ['fooType'], credentialSubject: { foo: 'bar' } },
@@ -309,10 +309,10 @@ describe('Credentials Test suite', () => {
     it("should 200 and create a credential of one of the depot's expected types", async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
       mockHttpClientJsonResponse('get', schemas[0]);
-      const pendingDepot = await persistDepot({
+      const deferredDepot = await persistDepot({
         tenant,
         service: issuerService,
-        credentialsPending: true,
+        deferredCredentials: true,
         expectedCredentialTypes: ['fooType'],
       });
       const response = await fastify.injectJson({
@@ -320,7 +320,7 @@ describe('Credentials Test suite', () => {
         url: `${testUrl}/create`,
         payload: {
           tenantId: tenant._id,
-          depotId: pendingDepot._id,
+          depotId: deferredDepot._id,
           credential: {
             credentialReference: 'cred1',
             content: { type: ['fooType'], credentialSubject: { foo: 'bar' } },
@@ -328,7 +328,7 @@ describe('Credentials Test suite', () => {
         },
       });
       expect(response.statusCode).toEqual(200);
-      expect(response.json.credential.depotId).toEqual(pendingDepot._id);
+      expect(response.json.credential.depotId).toEqual(deferredDepot._id);
     });
     it('should 400 if depot is not found', async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);

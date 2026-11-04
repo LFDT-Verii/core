@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const { map, uniqBy } = require('lodash/fp');
+const { isEmpty, map, uniqBy } = require('lodash/fp');
 const newError = require('http-errors');
 const {
   ExchangeStates,
@@ -35,28 +35,48 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
     });
   authorizeExchange(exchange, depotId);
 
-  // The wallet waits on this exchange for NewOffersReady or NoOffersFound, sent when the depot's credentials are resolved.
-  if (await isDepotPending(depotId, context)) {
-    await repos.exchanges.addState(exchangeId, ExchangeStates.OFFERS_WAITING);
-    // Credentials resolved before OFFERS_WAITING was recorded found no waiting exchange to message,
-    // so the offers are returned now instead of in a message.
-    if (await isDepotPending(depotId, context)) {
-      return { offers: [] };
-    }
+  const findCredentials = () =>
+    repos.credentials.findByDepotId({
+      depotId,
+      credentialTypes: exchange.credentialTypes,
+      omitContentHashes: offerHashes,
+      claimable: true,
+    });
+  const credentials = await findCredentials();
+  if (
+    !isEmpty(credentials) ||
+    !(await hasDeferredCredentials(depotId, context))
+  ) {
+    return sendOffers(exchangeId, credentials, context);
   }
 
-  const credentials = await repos.credentials.findByDepotId({
-    depotId,
-    credentialTypes: exchange.credentialTypes,
-    omitContentHashes: offerHashes,
-    claimable: true,
-  });
+  // The wallet waits on this exchange for NewOffersReady or NoOffersFound from depots/resolve-deferred-credentials.
+  await repos.exchanges.addState(exchangeId, ExchangeStates.OFFERS_WAITING);
+  await repos.exchanges.completeOtherWaitingVnApiExchanges(exchange);
+  // A resolve-deferred-credentials call that ran before OFFERS_WAITING was recorded found no waiting exchange to message,
+  // so credentials added before it are offered now instead of in a message.
+  const addedCredentials = await findCredentials();
+  return isEmpty(addedCredentials)
+    ? { offers: [] }
+    : sendOffers(exchangeId, addedCredentials, context);
+};
 
+const hasDeferredCredentials = async (depotId, { repos }) => {
+  const depot = await repos.depots.findOne(
+    { filter: { _id: depotId } },
+    { _id: 1, deferredCredentials: 1 },
+  );
+  return depot?.deferredCredentials === true;
+};
+
+const sendOffers = async (exchangeId, credentials, context) => {
   const { challenge } = await generateIssuingChallenge(exchangeId, context);
 
-  await repos.exchanges.addState(exchangeId, ExchangeStates.OFFERS_SENT, {
-    credentialIds: map('_id', credentials),
-  });
+  await context.repos.exchanges.addState(
+    exchangeId,
+    ExchangeStates.OFFERS_SENT,
+    { credentialIds: map('_id', credentials) },
+  );
 
   return {
     challenge,
@@ -65,14 +85,6 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
       uniqBy('contentHash', credentials),
     ),
   };
-};
-
-const isDepotPending = async (depotId, { repos }) => {
-  const depot = await repos.depots.findOne(
-    { filter: { _id: depotId } },
-    { _id: 1, credentialsPending: 1 },
-  );
-  return depot?.credentialsPending === true;
 };
 
 const buildOffer = (credential, { tenant }) => ({
