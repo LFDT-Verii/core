@@ -91,6 +91,16 @@ wrappers, override the entrypoint instead:
 docker run --rm --entrypoint node lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
 ```
 
+## Database
+
+The Hub stores its data in the database that `MONGO_URI` names. It is built
+for MongoDB and Amazon DocumentDB. CI tests against MongoDB 8.0.
+
+Azure Cosmos DB for MongoDB (RU) isn't supported. At startup the Hub creates
+a compound index that includes the depots' `authMatchValues` array, and Cosmos
+RU can't create compound indexes on arrays. The Hub exits when it can't create
+an index.
+
 ## OpenID4VCI Nonces
 
 The nonce endpoint, `POST /r/:tenantId/openid4vc/nonce`, returns a stateless
@@ -140,6 +150,7 @@ the code.
 ## Design Docs
 
 - [Notification webhooks design](docs/notification-webhooks-design.md)
+- [Shared issue links with email authentication](../../docs/superpowers/specs/2026-11-04-cih-shared-issue-link-email-auth-design.md)
 
 ## CAO Security Provider
 
