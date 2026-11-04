@@ -34,9 +34,12 @@ module.exports = (app, options, next = () => {}) => {
     await mongoDb()
       .collection('depots')
       .createIndex({ tenantId: 1, preauthCodeHash: 1 });
-    await mongoDb()
-      .collection('depots')
-      .createIndex({ tenantId: 1, serviceId: 1, authMatchValues: 1 });
+    await mongoDb().collection('depots').createIndex({
+      tenantId: 1,
+      serviceId: 1,
+      authRulesFingerprint: 1,
+      authMatchValues: 1,
+    });
   });
   next();
   return repoFactory(
@@ -48,6 +51,7 @@ module.exports = (app, options, next = () => {}) => {
         userReference: 1,
         authValues: 1,
         authMatchValues: 1,
+        authRulesFingerprint: 1,
         serviceId: 1,
         preauthCodeHash: 1,
         tenantId: 1,

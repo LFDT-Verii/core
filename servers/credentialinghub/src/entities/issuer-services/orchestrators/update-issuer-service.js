@@ -15,16 +15,14 @@
  *
  */
 const { ObjectId } = require('mongodb');
-const newError = require('http-errors');
 const {
   updateServiceConfiguration,
   validateUpdateServiceConfiguration,
 } = require('../../service-configurations');
 const {
-  IssuerServicesErrors,
-  validateIssuerService,
-  vpAuthRulesChanged,
-} = require('../domain');
+  buildAuthRulesFingerprint,
+} = require('../../depots/domain/auth-rules-fingerprint');
+const { validateIssuerService } = require('../domain');
 
 const updateIssuerServiceConfiguration = updateServiceConfiguration(
   'issuerServices',
@@ -32,31 +30,48 @@ const updateIssuerServiceConfiguration = updateServiceConfiguration(
 );
 
 const updateIssuerService = async (serviceId, service, context) => {
-  await validateVpAuthRulesNotInUse(serviceId, service, context);
-  return updateIssuerServiceConfiguration(serviceId, service, context);
-};
-
-// A depot's authMatchValues follow the rules' positions. New rules would read
-// existing depots differently, and could match them to another holder, so
-// the rules can't change while the service has depots.
-const validateVpAuthRulesNotInUse = async (serviceId, service, { repos }) => {
-  const existingService = await repos.issuerServices.findOne({
+  const existingService = await context.repos.issuerServices.findOne({
     filter: { _id: serviceId },
   });
-  if (
-    existingService == null ||
-    !vpAuthRulesChanged(existingService, service)
-  ) {
+  const updatedService = await updateIssuerServiceConfiguration(
+    serviceId,
+    service,
+    context,
+  );
+  await logInvalidatedDepots(
+    { serviceId, existingService, updatedService },
+    context,
+  );
+  return updatedService;
+};
+
+// Depots created under another auth configuration no longer match. Log how
+// many depots an update invalidates, and never fail the update over it.
+const logInvalidatedDepots = async (
+  { serviceId, existingService, updatedService },
+  context,
+) => {
+  const authRulesFingerprint = buildAuthRulesFingerprint(updatedService);
+  if (buildAuthRulesFingerprint(existingService) === authRulesFingerprint) {
     return;
   }
-  const depot = await repos.depots.findOne({
-    filter: { serviceId: new ObjectId(serviceId) },
-  });
-  if (depot != null) {
-    throw newError(409, IssuerServicesErrors.SERVICE_VP_AUTH_RULES_IN_USE, {
-      errorCode: IssuerServicesErrors.SERVICE_VP_AUTH_RULES_IN_USE,
+  try {
+    const invalidatedDepotCount = await context.repos.depots.count({
+      filter: {
+        serviceId: new ObjectId(serviceId),
+        authRulesFingerprint: { $ne: authRulesFingerprint },
+      },
     });
+    context.log.info(
+      { serviceId, invalidatedDepotCount },
+      'Issuer service auth configuration changed. Depots created under the previous configuration no longer match',
+    );
+  } catch (err) {
+    context.log.warn(
+      { err, serviceId },
+      'Could not count the depots invalidated by an issuer service update',
+    );
   }
 };
 
-module.exports = { updateIssuerService };
+module.exports = { logInvalidatedDepots, updateIssuerService };

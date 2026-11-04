@@ -27,6 +27,7 @@ const {
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
+const { nanoid } = require('nanoid');
 const { addYears } = require('date-fns/fp');
 const { forEach, omit } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
@@ -38,7 +39,11 @@ const {
 const testPresentationDefinition = require('../helpers/presentation-definition.json');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { initTenantFactory } = require('../../src/entities/tenants');
-const { initDepotFactory } = require('../../src/entities/depots');
+const {
+  buildAuthRulesFingerprint,
+  depotRepoPlugin,
+  initDepotFactory,
+} = require('../../src/entities/depots');
 const {
   initIssuerServiceFactory,
   issuerServicesRepoPlugin,
@@ -1619,7 +1624,7 @@ describe('Issuer services management Test suite', () => {
       );
     });
 
-    describe('rule changes while the service has depots', () => {
+    describe('auth configuration changes', () => {
       const rules = [
         {
           path: ['$.credentialSubject.employeeId'],
@@ -1632,10 +1637,24 @@ describe('Issuer services management Test suite', () => {
           valueIndex: 1,
         },
       ];
+      const swappedRules = [
+        { ...rules[0], valueIndex: 1 },
+        { ...rules[1], valueIndex: 0 },
+      ];
+      const disclosureRequest = {
+        types: [{ type: 'EmployeeIdV1.0' }],
+        purpose: 'Identification',
+        retentionPeriod: 'P1D',
+      };
       let service;
+      let depotsRepo;
 
-      const updateService = (overrides) =>
-        fastify.injectJson({
+      const updateService = (overrides) => {
+        mockHttpClientJsonResponse('get', {
+          id: 'did-doc-foo',
+          service: [{ id: '#foo' }],
+        });
+        return fastify.injectJson({
           method: 'POST',
           url: `${testUrl}/update`,
           payload: {
@@ -1647,164 +1666,215 @@ describe('Issuer services management Test suite', () => {
               authMethods: ['verifiable_presentation'],
               authMode: 'internal',
               verifiablePresentationAuthRules: rules,
+              disclosureRequest,
               ...overrides,
             },
           },
         });
-
-      const expectRulesInUse = async (response) => {
-        expect(response.statusCode).toEqual(409);
-        expect(response.json).toEqual(
-          errorResponseMatcher({
-            statusCode: 409,
-            error: 'Conflict',
-            message: 'service_verifiablePresentationAuthRules_in_use',
-            errorCode: 'service_verifiablePresentationAuthRules_in_use',
-          }),
-        );
-        const dbIssuerService = await issuerServicesRepo.findById(service._id);
-        expect(dbIssuerService).toEqual({
-          ...mongoify(omit(['_id'], service)),
-          _id: new ObjectId(service._id),
-          createdAt: expect.any(Date),
-          updatedAt: expect.any(Date),
-        });
       };
 
-      beforeEach(async () => {
-        mockHttpClientJsonResponse('get', {
-          id: 'did-doc-foo',
-          service: [{ id: '#foo' }],
+      const createDepot = (authValues) =>
+        fastify.injectJson({
+          method: 'POST',
+          url: '/operator/depots/create',
+          payload: {
+            tenantId: tenant._id,
+            serviceId: service._id,
+            depot: { userReference: nanoid(), authValues },
+          },
         });
+
+      // What PR 2's authentication will query: the service's current auth
+      // configuration and a candidate tuple.
+      const findMatchingDepots = async (tuple) => {
+        const currentService = await issuerServicesRepo.findById(service._id);
+        return depotsRepo.findDepotsByAuthMatchTuples(
+          service._id,
+          buildAuthRulesFingerprint(currentService),
+          [tuple],
+        );
+      };
+
+      const captureInfoLogs = (t) => {
+        const infoLogs = [];
+        const { child } = fastify.log;
+        t.mock.method(fastify.log, 'child', (...args) => {
+          const childLogger = child.apply(fastify.log, args);
+          const { info } = childLogger;
+          childLogger.info = (...infoArgs) => {
+            infoLogs.push(infoArgs);
+            return info.apply(childLogger, infoArgs);
+          };
+          return childLogger;
+        });
+        return infoLogs;
+      };
+
+      const invalidationLogs = (infoLogs) =>
+        infoLogs.filter(([, message]) =>
+          `${message}`.startsWith('Issuer service auth configuration changed'),
+        );
+
+      beforeEach(async () => {
         service = await persistIssuerService({
           tenant,
           velocityNetworkServiceId: '#foo',
           termsUrl: 'http://www.example.com',
           verifiablePresentationAuthRules: rules,
+          disclosureRequest,
+        });
+        depotsRepo = depotRepoPlugin(fastify)({
+          tenant: { ...tenant, _id: new ObjectId(tenant._id) },
+          config: fastify.config,
         });
       });
 
-      it('should 409 and leave the service unchanged when swapping the value indexes', async () => {
-        await persistDepot({ tenant, service, userReference: 'alice' });
+      it("should never match a depot created under the old rules after they're swapped", async () => {
+        // Alice: employee 123, department 456. Created under the old rules,
+        // just before the update, as in a race with the update.
+        await persistDepot({
+          tenant,
+          service,
+          userReference: 'alice',
+          authMatchValues: [123, 456],
+          authRulesFingerprint: buildAuthRulesFingerprint(service),
+        });
+        await expect(findMatchingDepots([123, 456])).resolves.toHaveLength(1);
 
         const response = await updateService({
-          verifiablePresentationAuthRules: [
-            { ...rules[0], valueIndex: 1 },
-            { ...rules[1], valueIndex: 0 },
-          ],
+          verifiablePresentationAuthRules: swappedRules,
         });
-
-        await expectRulesInUse(response);
-      });
-
-      it('should 409 when changing a path', async () => {
-        await persistDepot({ tenant, service, userReference: 'alice' });
-
-        const response = await updateService({
-          verifiablePresentationAuthRules: [
-            { ...rules[0], path: ['$.credentialSubject.email'] },
-            rules[1],
-          ],
-        });
-
-        await expectRulesInUse(response);
-      });
-
-      it('should 409 when adding a rule', async () => {
-        await persistDepot({ tenant, service, userReference: 'alice' });
-
-        const response = await updateService({
-          verifiablePresentationAuthRules: [
-            ...rules,
-            {
-              path: ['$.credentialSubject.email'],
-              rule: 'pick',
-              valueIndex: 2,
-            },
-          ],
-        });
-
-        await expectRulesInUse(response);
-      });
-
-      it('should 409 when removing the rules', async () => {
-        await persistDepot({ tenant, service, userReference: 'alice' });
-
-        const response = await updateService({
-          verifiablePresentationAuthRules: undefined,
-        });
-
-        await expectRulesInUse(response);
-      });
-
-      it('should 200 when the same rules are reordered', async () => {
-        await persistDepot({ tenant, service, userReference: 'alice' });
-
-        const response = await updateService({
-          verifiablePresentationAuthRules: [rules[1], rules[0]],
-        });
-
         expect(response.statusCode).toEqual(200);
-        expect(response.json.service.verifiablePresentationAuthRules).toEqual([
-          rules[1],
-          rules[0],
+
+        // Bob: employee 456, department 123, so [123, 456] under the new rules.
+        await expect(findMatchingDepots([123, 456])).resolves.toEqual([]);
+        const bobResponse = await createDepot([123, 456]);
+        expect(bobResponse.statusCode).toEqual(200);
+        await expect(findMatchingDepots([123, 456])).resolves.toEqual([
+          expect.objectContaining({
+            _id: new ObjectId(bobResponse.json.depot.id),
+          }),
         ]);
       });
 
-      it('should 200 when other fields change', async () => {
-        await persistDepot({ tenant, service, userReference: 'alice' });
+      it('should not match a depot created while the service was preauth only', async () => {
+        const preauthResponse = await updateService({
+          authMethods: ['preauth'],
+        });
+        expect(preauthResponse.statusCode).toEqual(200);
+        const preauthDepotResponse = await createDepot([
+          'emp-1',
+          'jane.doe@example.com',
+        ]);
+        expect(preauthDepotResponse.statusCode).toEqual(200);
+
+        const vpResponse = await updateService({});
+        expect(vpResponse.statusCode).toEqual(200);
+
+        await expect(
+          findMatchingDepots(['emp-1', 'jane.doe@example.com']),
+        ).resolves.toEqual([]);
+        const response = await createDepot(['EMP-1', 'Jane.Doe@example.com']);
+        expect(response.statusCode).toEqual(200);
+        await expect(
+          findMatchingDepots(['emp-1', 'jane.doe@example.com']),
+        ).resolves.toEqual([
+          expect.objectContaining({
+            _id: new ObjectId(response.json.depot.id),
+          }),
+        ]);
+        const duplicateResponse = await createDepot([
+          'emp-1',
+          'jane.doe@example.com',
+        ]);
+        expect(duplicateResponse.statusCode).toEqual(409);
+      });
+
+      it('should invalidate depots when a rule changes, and accept the same tuple again', async () => {
+        const firstResponse = await createDepot(['EMP-1', 'SALES']);
+        expect(firstResponse.statusCode).toEqual(200);
+
+        const response = await updateService({
+          verifiablePresentationAuthRules: [
+            { ...rules[0], path: ['$.credentialSubject.staffId'] },
+            rules[1],
+          ],
+        });
+        expect(response.statusCode).toEqual(200);
+
+        await expect(findMatchingDepots(['emp-1', 'sales'])).resolves.toEqual(
+          [],
+        );
+        const secondResponse = await createDepot(['EMP-1', 'SALES']);
+        expect(secondResponse.statusCode).toEqual(200);
+      });
+
+      it('should invalidate depots when the requested types change', async () => {
+        const firstResponse = await createDepot(['EMP-1', 'SALES']);
+        expect(firstResponse.statusCode).toEqual(200);
+
+        const response = await updateService({
+          disclosureRequest: {
+            ...disclosureRequest,
+            types: [{ type: 'EmployeeIdV2.0' }],
+          },
+        });
+        expect(response.statusCode).toEqual(200);
+
+        await expect(findMatchingDepots(['emp-1', 'sales'])).resolves.toEqual(
+          [],
+        );
+      });
+
+      it('should keep depots valid when other fields change or the rules are reordered', async () => {
+        const firstResponse = await createDepot(['EMP-1', 'SALES']);
+        expect(firstResponse.statusCode).toEqual(200);
 
         const response = await updateService({
           description: 'updated',
           termsUrl: 'http://www.example.com/terms',
           authTokensExpireIn: 200,
+          verifiablePresentationAuthRules: [rules[1], rules[0]],
+          disclosureRequest: { ...disclosureRequest, purpose: 'Updated' },
         });
-
         expect(response.statusCode).toEqual(200);
-        const dbIssuerService = await issuerServicesRepo.findById(service._id);
-        expect(dbIssuerService).toEqual(
+
+        await expect(findMatchingDepots(['emp-1', 'sales'])).resolves.toEqual([
           expect.objectContaining({
-            description: 'updated',
-            termsUrl: 'http://www.example.com/terms',
-            authTokensExpireIn: 200,
-            verifiablePresentationAuthRules: rules,
+            _id: new ObjectId(firstResponse.json.depot.id),
           }),
-        );
+        ]);
+        const duplicateResponse = await createDepot(['emp-1', 'sales']);
+        expect(duplicateResponse.statusCode).toEqual(409);
       });
 
-      it('should 200 when changing the rules of a service without depots', async () => {
+      it('should log how many depots a change invalidates', async (t) => {
+        await createDepot(['EMP-1', 'SALES']);
+        await createDepot(['EMP-2', 'SALES']);
+        const infoLogs = captureInfoLogs(t);
+
         const response = await updateService({
-          verifiablePresentationAuthRules: [
-            { ...rules[0], valueIndex: 1 },
-            { ...rules[1], valueIndex: 0 },
-          ],
+          verifiablePresentationAuthRules: swappedRules,
         });
 
         expect(response.statusCode).toEqual(200);
-        const dbIssuerService = await issuerServicesRepo.findById(service._id);
-        expect(dbIssuerService.verifiablePresentationAuthRules).toEqual([
-          { ...rules[0], valueIndex: 1 },
-          { ...rules[1], valueIndex: 0 },
+        expect(invalidationLogs(infoLogs)).toEqual([
+          [
+            { serviceId: service._id, invalidatedDepotCount: 2 },
+            'Issuer service auth configuration changed. Depots created under the previous configuration no longer match',
+          ],
         ]);
       });
 
-      it('should 200 when changing the rules while another service has depots', async () => {
-        const otherService = await persistIssuerService({
-          tenant,
-          velocityNetworkServiceId: '#bar',
-          verifiablePresentationAuthRules: rules,
-        });
-        await persistDepot({
-          tenant,
-          service: otherService,
-          userReference: 'alice',
-        });
+      it('should not log an invalidation when the auth configuration is unchanged', async (t) => {
+        await createDepot(['EMP-1', 'SALES']);
+        const infoLogs = captureInfoLogs(t);
 
-        const response = await updateService({
-          verifiablePresentationAuthRules: [rules[0]],
-        });
+        const response = await updateService({ description: 'updated' });
 
         expect(response.statusCode).toEqual(200);
+        expect(infoLogs).not.toHaveLength(0);
+        expect(invalidationLogs(infoLogs)).toEqual([]);
       });
     });
   });

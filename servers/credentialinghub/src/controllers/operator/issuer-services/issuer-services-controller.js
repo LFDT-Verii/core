@@ -153,7 +153,6 @@ module.exports = async (fastify) => {
             required: ['tenantId', 'serviceId', 'service'],
           },
           response: {
-            ...fastify.ConflictResponse,
             200: {
               type: 'object',
               properties: {

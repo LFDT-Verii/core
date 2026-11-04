@@ -35,6 +35,7 @@ const {
   initRelyingPartyServiceFactory,
 } = require('../../src/entities/relying-party-services');
 const {
+  buildAuthRulesFingerprint,
   depotRepoPlugin,
   initDepotFactory,
 } = require('../../src/entities/depots');
@@ -313,19 +314,23 @@ describe('Depots Test suite', () => {
       ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);
     });
 
-    it('should index depots by service and authMatchValues', async () => {
+    it('should index depots by service, auth rules fingerprint and authMatchValues', async () => {
       const indexes = await mongoDb().collection('depots').indexes();
       expect(indexes).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            key: { tenantId: 1, serviceId: 1, authMatchValues: 1 },
+            key: {
+              tenantId: 1,
+              serviceId: 1,
+              authRulesFingerprint: 1,
+              authMatchValues: 1,
+            },
           }),
         ]),
       );
       expect(
         indexes.find(
-          ({ key }) =>
-            key.tenantId === 1 && key.serviceId === 1 && key.authMatchValues,
+          ({ key }) => key.authRulesFingerprint === 1 && key.authMatchValues,
         ).collation,
       ).toBeUndefined();
     });
@@ -397,8 +402,10 @@ describe('Depots Test suite', () => {
         {
           ...expectedDbDepot(response.json.depot, tenant),
           authMatchValues: ['jane.doe@example.com', 42],
+          authRulesFingerprint: buildAuthRulesFingerprint(vpService),
         },
       ]);
+      expect(buildAuthRulesFingerprint(vpService)).toEqual(expect.any(String));
 
       const getResponse = await fastify.injectJson({
         method: 'GET',
@@ -535,6 +542,24 @@ describe('Depots Test suite', () => {
         service: vpService,
         userReference: nanoid(),
         authMatchValues: ['jane.doe@example.com', 'emp-1', 'extra'],
+        authRulesFingerprint: buildAuthRulesFingerprint(vpService),
+      });
+
+      const response = await createDepot(vpService._id, {
+        userReference: 'DEF456',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+
+      expect(response.statusCode).toEqual(200);
+    });
+
+    it('should 200 when a depot has the same auth values under another auth configuration', async () => {
+      await persistDepot({
+        tenant,
+        service: vpService,
+        userReference: nanoid(),
+        authMatchValues: ['jane.doe@example.com', 'emp-1'],
+        authRulesFingerprint: 'previous-configuration',
       });
 
       const response = await createDepot(vpService._id, {
@@ -628,6 +653,7 @@ describe('Depots Test suite', () => {
           {
             ...expectedDbDepot(firstResponse.json.depot, tenant),
             authMatchValues: ['jane.doe@example.com', 'emp-1'],
+            authRulesFingerprint: buildAuthRulesFingerprint(dualService),
           },
         ]);
 
@@ -669,15 +695,27 @@ describe('Depots Test suite', () => {
       });
     });
 
-    const persistDepotWith = (authMatchValues, service = vpService) =>
+    const persistDepotWith = (
+      authMatchValues,
+      { service = vpService, authRulesFingerprint } = {},
+    ) =>
       persistDepot({
         tenant,
         service,
         userReference: nanoid(),
         authMatchValues,
+        authRulesFingerprint:
+          authRulesFingerprint ?? buildAuthRulesFingerprint(service),
       });
 
-    it('should only find depots whose authMatchValues equal a tuple, in order', async () => {
+    const findDepots = (tuples) =>
+      depotsRepo.findDepotsByAuthMatchTuples(
+        vpService._id,
+        buildAuthRulesFingerprint(vpService),
+        tuples,
+      );
+
+    it('should only find depots of the auth configuration whose authMatchValues equal a tuple, in order', async () => {
       const exactDepot = await persistDepotWith([
         'jane.doe@example.com',
         'emp-1',
@@ -685,22 +723,22 @@ describe('Depots Test suite', () => {
       await persistDepotWith(['emp-1', 'jane.doe@example.com']);
       await persistDepotWith(['jane.doe@example.com', 'emp-1', 'extra']);
       await persistDepotWith(['jane.doe@example.com']);
-      await persistDepotWith(
-        ['jane.doe@example.com', 'emp-1'],
-        await persistIssuerService({ tenant }),
-      );
+      await persistDepotWith(['jane.doe@example.com', 'emp-1'], {
+        service: await persistIssuerService({ tenant }),
+      });
+      await persistDepotWith(['jane.doe@example.com', 'emp-1'], {
+        authRulesFingerprint: 'previous-configuration',
+      });
       const otherTenant = await persistTenant();
       await persistDepot({
         tenant: otherTenant,
         service: vpService,
         userReference: nanoid(),
         authMatchValues: ['jane.doe@example.com', 'emp-1'],
+        authRulesFingerprint: buildAuthRulesFingerprint(vpService),
       });
 
-      const depots = await depotsRepo.findDepotsByAuthMatchTuples(
-        vpService._id,
-        [['jane.doe@example.com', 'emp-1']],
-      );
+      const depots = await findDepots([['jane.doe@example.com', 'emp-1']]);
 
       expect(depots).toEqual([
         expect.objectContaining({ _id: new ObjectId(exactDepot._id) }),
@@ -718,14 +756,11 @@ describe('Depots Test suite', () => {
       ]);
       await persistDepotWith(['jane.doe@example.com', 'emp-2']);
 
-      const depots = await depotsRepo.findDepotsByAuthMatchTuples(
-        vpService._id,
-        [
-          ['jane.doe@example.com', 'emp-1'],
-          ['john.doe@example.com', 'emp-2'],
-          ['nobody@example.com', 'emp-1'],
-        ],
-      );
+      const depots = await findDepots([
+        ['jane.doe@example.com', 'emp-1'],
+        ['john.doe@example.com', 'emp-2'],
+        ['nobody@example.com', 'emp-1'],
+      ]);
 
       expect(depots).toEqual(
         expect.arrayContaining([

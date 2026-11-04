@@ -17,12 +17,14 @@
 const { ObjectId } = require('mongodb');
 
 // $in with array elements compares whole arrays, so a depot matches only when
-// its authMatchValues equal one of the tuples exactly, in order.
+// its authMatchValues equal one of the tuples exactly, in order. Depots created
+// under another auth configuration have another fingerprint, and never match.
 const findDepotsByAuthMatchTuplesExtension = (parent) => ({
-  findDepotsByAuthMatchTuples: (serviceId, tuples) =>
+  findDepotsByAuthMatchTuples: (serviceId, authRulesFingerprint, tuples) =>
     parent.find({
       filter: {
         serviceId: new ObjectId(serviceId),
+        authRulesFingerprint,
         authMatchValues: { $in: tuples },
       },
     }),

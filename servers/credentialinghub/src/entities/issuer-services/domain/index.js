@@ -18,5 +18,4 @@ module.exports = {
   ...require('./is-internal-vp-auth'),
   ...require('./issuer-services-errors'),
   ...require('./validate-issuer-service'),
-  ...require('./vp-auth-rules-changed'),
 };

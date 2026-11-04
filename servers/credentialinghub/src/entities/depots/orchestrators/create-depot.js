@@ -21,6 +21,7 @@ const {
 } = require('../../issuer-services/domain/is-internal-vp-auth');
 const {
   buildAuthMatchValues,
+  buildAuthRulesFingerprint,
   DepotErrors,
   validateDepot,
 } = require('../domain');
@@ -41,18 +42,23 @@ const createDepot = async (newDepot, serviceId, context) => {
     return repos.depots.insert(depot);
   }
 
-  const authMatchValues = buildAuthMatchValues(newDepot.authValues);
-  await validateAuthMatchValuesUnused(serviceId, authMatchValues, context);
-  return repos.depots.insert({ ...depot, authMatchValues });
+  const authMatch = {
+    authMatchValues: buildAuthMatchValues(newDepot.authValues),
+    authRulesFingerprint: buildAuthRulesFingerprint(issuerService),
+  };
+  await validateAuthMatchValuesUnused(serviceId, authMatch, context);
+  return repos.depots.insert({ ...depot, ...authMatch });
 };
 
+// Only depots created under the same auth configuration count.
 const validateAuthMatchValuesUnused = async (
   serviceId,
-  authMatchValues,
+  { authMatchValues, authRulesFingerprint },
   { repos },
 ) => {
   const [existingDepot] = await repos.depots.findDepotsByAuthMatchTuples(
     serviceId,
+    authRulesFingerprint,
     [authMatchValues],
   );
   if (existingDepot != null) {
