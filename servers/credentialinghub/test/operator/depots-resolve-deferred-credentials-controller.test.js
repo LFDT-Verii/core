@@ -321,7 +321,7 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     );
   });
 
-  it('should send NoOffersFound and complete the exchange when the depot has no claimable credentials', async () => {
+  it('should send NoOffersFound and leave the exchange unchanged when the depot has no claimable credentials', async () => {
     await persistTypedCredential('EmailV1.0', { acceptedAt: new Date() });
     const exchange = await persistWaitingExchange();
 
@@ -344,14 +344,12 @@ describe('Resolve Deferred Credentials Test Suite', () => {
         }),
       },
     ]);
-    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual([
-      ...map('state', exchange.events),
-      ExchangeStates.NO_OFFERS_RECEIVED,
-      ExchangeStates.COMPLETE,
-    ]);
+    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
+      map('state', exchange.events),
+    );
   });
 
-  it('should complete the exchange when there are no offers even without messaging settings', async () => {
+  it('should return skipped_no_messaging_settings and leave the exchange unchanged without messaging settings', async () => {
     const exchange = await persistWaitingExchange({
       messagingSettings: undefined,
     });
@@ -364,11 +362,9 @@ describe('Resolve Deferred Credentials Test Suite', () => {
       exchangeId: exchange._id,
     });
     expect(mockHttpClient.post.mock.callCount()).toEqual(0);
-    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual([
-      ...map('state', exchange.events),
-      ExchangeStates.NO_OFFERS_RECEIVED,
-      ExchangeStates.COMPLETE,
-    ]);
+    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
+      map('state', exchange.events),
+    );
   });
 
   it('should return a failed notification when the push url fails', async () => {
@@ -388,38 +384,23 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     });
   });
 
-  it('should keep the exchange waiting when NoOffersFound fails, and send it again on the next call', async () => {
+  it('should send NoOffersFound again when called again, and leave the exchange unchanged', async () => {
     const exchange = await persistWaitingExchange();
-    mockHttpClient.post.mock.mockImplementationOnce(() =>
-      Promise.reject(new Error('Response Error')),
-    );
 
-    const failedResponse = await resolveDeferredCredentials();
+    const firstResponse = await resolveDeferredCredentials();
+    const secondResponse = await resolveDeferredCredentials();
 
-    expect(failedResponse.json.notification).toEqual({
-      status: 'failed',
-      error: 'Response Error',
-      exchangeId: exchange._id,
-    });
-    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
-      map('state', exchange.events),
-    );
-
-    const response = await resolveDeferredCredentials();
-
-    expect(response.json.notification).toEqual({
-      status: 'sent',
-      exchangeId: exchange._id,
-    });
+    expect(map('json.notification', [firstResponse, secondResponse])).toEqual([
+      { status: 'sent', exchangeId: exchange._id },
+      { status: 'sent', exchangeId: exchange._id },
+    ]);
     expect(map('body.data.notificationType', postedMessages())).toEqual([
       'NoOffersFound',
       'NoOffersFound',
     ]);
-    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual([
-      ...map('state', exchange.events),
-      ExchangeStates.NO_OFFERS_RECEIVED,
-      ExchangeStates.COMPLETE,
-    ]);
+    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
+      map('state', exchange.events),
+    );
   });
 
   it('should leave the depot unchanged and message the waiting exchange again when called again', async () => {
@@ -446,9 +427,9 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     await expect(findDbDepot()).resolves.toEqual(dbDepot);
   });
 
-  it('should message the latest waiting exchange, not a newer one that never waited', async () => {
+  it('should message only the latest waiting exchange, not a newer one that never waited, and leave the older one alone', async () => {
     await persistTypedCredential('EmailV1.0');
-    await persistWaitingExchange();
+    const olderWaitingExchange = await persistWaitingExchange();
     const latestWaitingExchange = await persistWaitingExchange();
     await persistVnApiExchange([
       ExchangeStates.OFFERS_REQUESTED,
@@ -466,6 +447,9 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     expect(postedMessages()[0].body.data.exchangeId).toEqual(
       latestWaitingExchange._id,
     );
+    await expect(
+      findDbExchangeStates(olderWaitingExchange._id),
+    ).resolves.toEqual(map('state', olderWaitingExchange.events));
   });
 
   it('should skip a waiting exchange that is already complete', async () => {

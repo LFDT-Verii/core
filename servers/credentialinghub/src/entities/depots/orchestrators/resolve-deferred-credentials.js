@@ -17,7 +17,6 @@
 const newError = require('http-errors');
 const { flow, isEmpty, map, uniq, uniqBy } = require('lodash/fp');
 const { extractCredentialType } = require('@verii/vc-checks');
-const { ExchangeStates } = require('../../exchanges/domain/exchange-states');
 const {
   sendWalletMessage,
   WalletMessageStatuses,
@@ -86,22 +85,12 @@ const sendNewOffersReady = (exchange, credentials, context) => {
   );
 };
 
-const sendNoOffersFound = async (exchange, context) => {
-  const notification = await sendWalletMessage(
+// Nothing is written to the exchange, which only the holder's requests change
+const sendNoOffersFound = (exchange, context) =>
+  sendWalletMessage(
     { exchange, data: buildMessageData('NoOffersFound', exchange, context) },
     context,
   );
-  // The exchange keeps waiting after a failed message, so a later call sends it again
-  if (notification.status === WalletMessageStatuses.FAILED) {
-    return notification;
-  }
-  await context.repos.exchanges.addState(
-    exchange._id,
-    ExchangeStates.NO_OFFERS_RECEIVED,
-  );
-  await context.repos.exchanges.addState(exchange._id, ExchangeStates.COMPLETE);
-  return notification;
-};
 
 const buildMessageData = (notificationType, exchange, { tenant }) => ({
   notificationType,

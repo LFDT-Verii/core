@@ -42,21 +42,6 @@ const waitingVnApiExchangesExtension = (parent) => ({
       },
       projection,
     ),
-  // Latest wins: when an exchange starts waiting, the depot's older waiting exchanges are completed.
-  // Two exchanges that start waiting at once can't complete each other, so the newer one keeps waiting.
-  completeOlderWaitingVnApiExchanges: ({ _id, depotId }) =>
-    parent.collection().updateMany(
-      parent.prepFilter({
-        ...waitingFilter,
-        depotId: new ObjectId(depotId),
-        _id: { $lt: new ObjectId(_id) },
-      }),
-      {
-        $push: {
-          events: { state: ExchangeStates.COMPLETE, timestamp: new Date() },
-        },
-      },
-    ),
   extensions: parent.extensions.concat(['waitingVnApiExchangesExtension']),
 });
 
