@@ -22,6 +22,55 @@ const {
 } = require('@verii/base-contract-io');
 
 const contractAbi = require('./contracts/revocation-registry.json');
+const { RevocationRegistryErrorCodes } = require('./constants');
+
+const invalidRevocationUrlError = (message, cause) => {
+  const error = new Error(message, cause == null ? undefined : { cause });
+  error.code = RevocationRegistryErrorCodes.INVALID_REVOCATION_URL;
+  return error;
+};
+
+const parseRevocationUrl = (url) => {
+  try {
+    return ethUrlParser.parse(url);
+  } catch (error) {
+    throw invalidRevocationUrlError(error.message, error);
+  }
+};
+
+const assertRevocationUrlTarget = (
+  { scheme, target_address, function_name },
+  contractAddress,
+) => {
+  if (
+    target_address !== contractAddress ||
+    function_name !== 'getRevokedStatus' ||
+    scheme !== 'ethereum'
+  ) {
+    throw invalidRevocationUrlError(
+      'Wrong url, please check the params: scheme, target_address, function_name',
+    );
+  }
+};
+
+const revocationUrlParameters = ({ parameters = {} }) => {
+  const { address, listId, index } = parameters;
+  if (address == null || listId == null || index == null) {
+    throw invalidRevocationUrlError(
+      'Wrong url, please check the params: address, listId, index',
+    );
+  }
+  return { address, listId, index };
+};
+
+// A URL that cannot be parsed, names another contract or function, or lacks
+// a parameter throws an error with code invalid_revocation_url before any
+// contract call, so callers can tell invalid status data from a failed call.
+const parseGetRevokedStatusUrl = (url, contractAddress) => {
+  const parsedUrl = parseRevocationUrl(url);
+  assertRevocationUrlTarget(parsedUrl, contractAddress);
+  return revocationUrlParameters(parsedUrl);
+};
 
 const initRevocationRegistry = async (
   { privateKey, contractAddress, rpcProvider },
@@ -134,22 +183,10 @@ const initRevocationRegistry = async (
   const getRevokedStatus = (url) => {
     log.info({ url }, 'getRevokedStatus');
 
-    const {
-      scheme,
-      target_address,
-      function_name,
-      parameters: { address, listId, index },
-    } = ethUrlParser.parse(url);
-
-    if (
-      target_address !== contractAddress ||
-      function_name !== 'getRevokedStatus' ||
-      scheme !== 'ethereum'
-    ) {
-      throw new Error(
-        'Wrong url, please check the params: scheme, target_address, function_name',
-      );
-    }
+    const { address, listId, index } = parseGetRevokedStatusUrl(
+      url,
+      contractAddress,
+    );
 
     return contractClient.getRevokedStatus(address, listId, index);
   };
