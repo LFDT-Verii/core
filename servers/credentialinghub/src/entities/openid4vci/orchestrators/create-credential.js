@@ -57,6 +57,12 @@ const createCredential = async (credentialRequestParameters, context) => {
   }
 
   const depot = await repos.depots.findById(credential.depotId);
+  if (depot.credentialsPending === true) {
+    throw new Oauth2ServerErrorResponseError({
+      error: Oidc4vciErrors.CREDENTIAL_REQUEST_DENIED,
+      error_description: `Credential ${credentialRequest.credentialIdentifier} can't be issued while its depot is pending`,
+    });
+  }
   const service = await repos.issuerServices.findById(depot.serviceId);
 
   try {
