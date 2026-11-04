@@ -38,16 +38,17 @@ const verifyBoundIssuerVc = async (
       algorithms: BOUND_ISSUER_VC_ALGORITHMS,
     });
   } catch {
-    log.error(
-      { decodedBoundIssuerVc },
-      'checkIssuerTrust: the boundIssuerVc does not verify',
-    );
+    log.error({ kid }, 'checkIssuerTrust: the boundIssuerVc does not verify');
     return false;
   }
 
   if (!isDidMatching(decodedBoundIssuerVc?.payload?.iss, issuerDidDocument)) {
     log.error(
-      { issuerDidDocument, decodedBoundIssuerVc },
+      {
+        kid,
+        boundIssuerVcIssuer: decodedBoundIssuerVc?.payload?.iss,
+        issuerDid: issuerDidDocument?.id,
+      },
       "checkIssuerTrust: the boundIssuerVc is not for the credential's issuer",
     );
     return false;

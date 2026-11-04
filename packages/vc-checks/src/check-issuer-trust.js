@@ -42,7 +42,7 @@ const checkIssuerTrust = async (
     return CheckResults.PASS;
   } catch (err) {
     log.error(
-      { err, credential, dependencies },
+      { err, ...credentialRefsForLog(credential, issuerId, dependencies) },
       'Check issuer credentials: the issuer chain failed for the issuer VC',
     );
     if (err.message === 'unresolved_credential_subject_context') {
@@ -52,5 +52,17 @@ const checkIssuerTrust = async (
     return CheckResults.FAIL;
   }
 };
+
+// The credential and its dependencies hold the holder's claims and issuer
+// JWTs, so only identifiers are logged.
+const credentialRefsForLog = (
+  credential,
+  issuerId,
+  { credentialTypeMetadata },
+) => ({
+  credentialId: credential?.id,
+  issuerId,
+  credentialType: credentialTypeMetadata?.credentialType,
+});
 
 module.exports = { checkIssuerTrust };
