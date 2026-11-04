@@ -339,6 +339,29 @@ describe('openid4vc notification test suite', () => {
           mongoify(credential),
         );
       });
+      it('should 400 with invalid_notification_id when the operator deleted the credential', async () => {
+        const { credential, depot, transaction } =
+          await persistSignedTransaction();
+        await mongoDb()
+          .collection('credentials')
+          .deleteOne({ _id: new ObjectId(credential._id) });
+
+        const response = await sendNotification(
+          {
+            notification_id: transaction.notificationId,
+            event: 'credential_accepted',
+          },
+          depot,
+        );
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'invalid_notification_id',
+          error_description: `Error identifying notification ${transaction.notificationId}`,
+        });
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+        expect(await findTransactionInDb(transaction)).toEqual(transaction);
+      });
     });
     describe('openid4vc notification endpoint success cases', () => {
       it('should 204 with credential_accepted', async () => {
@@ -396,6 +419,29 @@ describe('openid4vc notification test suite', () => {
         expect(await findCredentialInDb(credential)).toEqual(
           credentialAfterFirst,
         );
+      });
+      it('should 204 without anchoring again when credential_accepted follows credential_deleted', async () => {
+        const { depot, transaction } = await persistSignedTransaction();
+        const sendEvent = (event) =>
+          sendNotification(
+            { notification_id: transaction.notificationId, event },
+            depot,
+          );
+
+        const acceptedResponse = await sendEvent('credential_accepted');
+        const deletedResponse = await sendEvent('credential_deleted');
+        const reacceptedResponse = await sendEvent('credential_accepted');
+
+        expect(acceptedResponse.statusCode).toEqual(204);
+        expect(deletedResponse.statusCode).toEqual(204);
+        expect(reacceptedResponse.statusCode).toEqual(204);
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(1);
+        expect(await findTransactionInDb(transaction)).toEqual({
+          ...transaction,
+          status: 'deleted',
+          acceptedAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+        });
       });
       it('should 204 when credential_accepted is retried after an anchoring error', async () => {
         mockAddCredentialMetadataEntry.mock.mockImplementationOnce(() =>

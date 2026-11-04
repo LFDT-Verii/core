@@ -20,18 +20,10 @@ const { anchorVeriiCredentialsFacade } = require('../../credentials');
 
 const handleNotification = async (notificationRequest, context) => {
   const { repos } = context;
-  const transaction =
-    await repos.openid4vciTransactions.findByNotificationIdInDepot(
-      notificationRequest.notification_id,
-      context.openid4vciDepotId,
-    );
-
-  if (transaction == null) {
-    throw new Oauth2ServerErrorResponseError({
-      error: Oidc4vciErrors.INVALID_NOTIFICATION_ID,
-      error_description: `Error identifying notification ${notificationRequest.notification_id}`,
-    });
-  }
+  const transaction = await findNotifiedTransaction(
+    notificationRequest.notification_id,
+    context,
+  );
 
   try {
     switch (notificationRequest.event) {
@@ -77,11 +69,38 @@ const handleNotification = async (notificationRequest, context) => {
   }
 };
 
+// The transaction outlives its credential, which an operator may delete.
+const findNotifiedTransaction = async (notificationId, context) => {
+  const { repos, openid4vciDepotId } = context;
+  const transaction =
+    await repos.openid4vciTransactions.findByNotificationIdInDepot(
+      notificationId,
+      openid4vciDepotId,
+    );
+  const credential =
+    transaction == null
+      ? null
+      : await repos.credentials.findByIdInDepot(
+          transaction.credentialId,
+          openid4vciDepotId,
+        );
+
+  if (credential == null) {
+    throw new Oauth2ServerErrorResponseError({
+      error: Oidc4vciErrors.INVALID_NOTIFICATION_ID,
+      error_description: `Error identifying notification ${notificationId}`,
+    });
+  }
+
+  return transaction;
+};
+
 const acceptCredential = async (transaction, context) => {
   const { repos } = context;
-  // A repeated notification must not anchor the transaction's metadata index again.
+  // A repeated notification must not anchor the transaction's metadata index again,
+  // even after a later event has changed the status.
   // This doesn't stop a duplicate that arrives while the first is still anchoring (#1118).
-  if (transaction.status === Openid4vciTransactionStatuses.ACCEPTED) {
+  if (transaction.acceptedAt != null) {
     return;
   }
 
