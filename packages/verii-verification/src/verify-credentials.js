@@ -25,11 +25,12 @@ const {
   isString,
   join,
   keyBy,
+  keys,
   map,
   omit,
   partition,
+  pickBy,
   size,
-  some,
   startsWith,
   uniq,
 } = require('lodash/fp');
@@ -341,7 +342,10 @@ const resolveVelocityDidDocument = async (
       });
 
     log.info(
-      { didDocument, didDocumentMetadata, didResolutionMetadata },
+      {
+        ...didResolutionIdsForLog({ didDocument, didDocumentMetadata }),
+        didResolutionMetadata,
+      },
       'did:velocity doc resolved',
     );
 
@@ -355,6 +359,20 @@ const resolveVelocityDidDocument = async (
     return { errors: { keyResolutionError: true } };
   }
 };
+
+// The resolved document's bound issuer VCs are JWTs, so only ids are logged.
+const didResolutionIdsForLog = ({ didDocument, didDocumentMetadata }) => ({
+  didDocument: {
+    id: didDocument?.id,
+    verificationMethod: map(
+      'id',
+      didDocument?.verificationMethod ?? didDocument?.publicKey,
+    ),
+  },
+  didDocumentMetadata: {
+    boundIssuerVcs: map('id', didDocumentMetadata?.boundIssuerVcs),
+  },
+});
 
 const resolveOtherDidDocument = async ({ keyMetadata }, { log }) => {
   try {
@@ -679,9 +697,10 @@ const runIssuerTrustCheck = (
     credentialTypeMetadata: credentialTypeMetadatasMap[credentialType],
   };
 
-  if (some(isEmpty, Object.values(resolvedDeps))) {
+  const missingDeps = flow(pickBy(isEmpty), keys)(resolvedDeps);
+  if (!isEmpty(missingDeps)) {
     log.error(
-      { id, credential, issuerId, credentialType, resolvedDeps },
+      { id, issuerId, credentialType, missingDeps },
       'runIssuerTrustCheck: resolvedDeps failed',
     );
     return Promise.resolve(CheckResults.FAIL);

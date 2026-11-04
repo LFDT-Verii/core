@@ -1138,6 +1138,101 @@ describe('Verify credentials', () => {
         ]);
       });
 
+      describe('logging', () => {
+        const email = 'holder@example.com';
+        let spyLog;
+        let credentialWithEmail;
+        let vcWithEmail;
+
+        const loggedText = () =>
+          JSON.stringify(
+            Object.values(spyLog).flatMap((fn) =>
+              fn.mock.calls.map((call) => call.arguments),
+            ),
+          );
+
+        const verifyWithSpyLog = (fetcherOverrides = {}) =>
+          verifyCredentials(
+            {
+              credentials: [vcWithEmail],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgPrivateKey },
+            },
+            { ...fetchers, ...fetcherOverrides },
+            { ...context, log: spyLog },
+          );
+
+        beforeEach(async () => {
+          spyLog = {
+            info: mock.fn(),
+            warn: mock.fn(),
+            error: mock.fn(),
+            debug: mock.fn(),
+          };
+          credentialWithEmail = applyOverrides(idCredential, {
+            'credentialSubject.email': email,
+          });
+          vcWithEmail = await generateCredentialJwt(
+            credentialWithEmail,
+            orgKeyPair.privateKey,
+            `${credentialDid}#key`,
+          );
+        });
+
+        it('should log only identifiers of the resolved did:velocity document', async () => {
+          const result = await verifyWithSpyLog();
+
+          expect(result[0].credentialChecks.TRUSTED_ISSUER).toEqual(
+            CheckResults.PASS,
+          );
+          expect(loggedText()).not.toContain(email);
+          expect(loggedText()).not.toContain(vcWithEmail);
+          expect(loggedText()).not.toContain(issuerVc);
+          expect(
+            spyLog.info.mock.calls.map((call) => call.arguments),
+          ).toContainEqual([
+            {
+              didDocument: {
+                id: 'DID',
+                verificationMethod: [`${credentialDid.toLowerCase()}#key`],
+              },
+              didDocumentMetadata: {
+                boundIssuerVcs: [credentialDid.toLowerCase()],
+              },
+              didResolutionMetadata: {},
+            },
+            'did:velocity doc resolved',
+          ]);
+        });
+
+        it('should log the names of missing issuer dependencies, not their values', async () => {
+          const result = await verifyWithSpyLog({
+            getCredentialTypeMetadata: () => [
+              { credentialType: 'OtherType', issuerCategory: 'ContactIssuer' },
+            ],
+          });
+
+          expect(result[0].credentialChecks.TRUSTED_ISSUER).toEqual(
+            CheckResults.FAIL,
+          );
+          expect(loggedText()).not.toContain(email);
+          expect(loggedText()).not.toContain(vcWithEmail);
+          expect(loggedText()).not.toContain(issuerVc);
+          expect(loggedText()).not.toContain('IdentityIssuer');
+          expect(
+            spyLog.error.mock.calls.map((call) => call.arguments),
+          ).toContainEqual([
+            {
+              id: credentialWithEmail.id,
+              issuerId: issuerDid,
+              credentialType: 'Passport',
+              missingDeps: ['credentialTypeMetadata'],
+            },
+            'runIssuerTrustCheck: resolvedDeps failed',
+          ]);
+        });
+      });
+
       describe('registrar lookups for the issuer', () => {
         const verifyIdVc = (fetcherOverrides) =>
           verifyCredentials(
