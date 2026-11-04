@@ -15,7 +15,6 @@
  *
  */
 const { ObjectId } = require('mongodb');
-const { find } = require('lodash/fp');
 const newError = require('http-errors');
 const {
   isInternalVpAuth,
@@ -23,8 +22,6 @@ const {
 const {
   buildAuthMatchValues,
   DepotErrors,
-  lookupValueIndex,
-  toAuthMatchValue,
   validateDepot,
 } = require('../domain');
 
@@ -39,22 +36,24 @@ const createDepot = async (newDepot, serviceId, context) => {
       filter: { _id: serviceId },
     }));
   validateDepot(newDepot, service);
-  if (issuerService != null && isInternalVpAuth(issuerService)) {
-    await validateAuthValuesUnused(newDepot, issuerService, context);
+  const depot = { ...newDepot, serviceId: new ObjectId(serviceId) };
+  if (issuerService == null || !isInternalVpAuth(issuerService)) {
+    return repos.depots.insert(depot);
   }
-  return repos.depots.insert(buildDepot(newDepot, serviceId));
+
+  const authMatchValues = buildAuthMatchValues(newDepot.authValues);
+  await validateAuthMatchValuesUnused(serviceId, authMatchValues, context);
+  return repos.depots.insert({ ...depot, authMatchValues });
 };
 
-const validateAuthValuesUnused = async (newDepot, service, { repos }) => {
-  const index = lookupValueIndex(service);
-  const value = toAuthMatchValue(newDepot.authValues[index]);
-  const candidates = await repos.depots.findDepotsByAuthMatchValues(
-    service._id,
-    [value],
-  );
-  const existingDepot = find(
-    (depot) => depot.authMatchValues?.[index] === value,
-    candidates,
+const validateAuthMatchValuesUnused = async (
+  serviceId,
+  authMatchValues,
+  { repos },
+) => {
+  const [existingDepot] = await repos.depots.findDepotsByAuthMatchTuples(
+    serviceId,
+    [authMatchValues],
   );
   if (existingDepot != null) {
     throw newError(409, DepotErrors.AUTH_VALUES_ALREADY_USED, {
@@ -62,13 +61,6 @@ const validateAuthValuesUnused = async (newDepot, service, { repos }) => {
       depotId: existingDepot._id.toString(),
     });
   }
-};
-
-const buildDepot = (newDepot, serviceId) => {
-  const depot = { ...newDepot, serviceId: new ObjectId(serviceId) };
-  return newDepot.authValues == null
-    ? depot
-    : { ...depot, authMatchValues: buildAuthMatchValues(newDepot.authValues) };
 };
 
 module.exports = { createDepot };

@@ -14,17 +14,11 @@
  * limitations under the License.
  *
  */
-const { get, isString, map } = require('lodash/fp');
+const { isString, map } = require('lodash/fp');
 
 const toAuthMatchValue = (value) =>
   isString(value) ? value.trim().toLowerCase() : value;
 
 const buildAuthMatchValues = map(toAuthMatchValue);
 
-const lookupValueIndex = get([
-  'verifiablePresentationAuthRules',
-  0,
-  'valueIndex',
-]);
-
-module.exports = { toAuthMatchValue, buildAuthMatchValues, lookupValueIndex };
+module.exports = { toAuthMatchValue, buildAuthMatchValues };

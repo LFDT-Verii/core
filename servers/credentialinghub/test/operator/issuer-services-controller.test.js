@@ -28,7 +28,7 @@ mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { addYears } = require('date-fns/fp');
-const { omit } = require('lodash/fp');
+const { forEach, omit } = require('lodash/fp');
 const { ObjectId } = require('mongodb');
 const { errorResponseMatcher, mongoify } = require('@verii/tests-helpers');
 const {
@@ -45,6 +45,20 @@ const {
 } = require('../../src/entities/issuer-services');
 
 const testUrl = '/operator/issuer-services';
+
+const INVALID_VALUE_INDEXES = [
+  { name: 'a gap', valueIndexes: [0, 2] },
+  { name: 'a duplicate', valueIndexes: [0, 0] },
+  { name: 'an index out of range', valueIndexes: [1] },
+  { name: 'a negative index', valueIndexes: [-1, 0] },
+];
+
+const buildAuthRules = (valueIndexes) =>
+  valueIndexes.map((valueIndex) => ({
+    path: [`$.credentialSubject.value${valueIndex}`],
+    rule: 'pick',
+    valueIndex,
+  }));
 
 describe('Issuer services management Test suite', () => {
   let fastify;
@@ -473,6 +487,65 @@ describe('Issuer services management Test suite', () => {
             'body/service/verifiablePresentationAuthRules/0 must be object',
           errorCode: 'request_validation_failed',
         }),
+      );
+    });
+    forEach(({ name, valueIndexes }) => {
+      it(`should 400 when service.verifiablePresentationAuthRules value indexes have ${name}`, async () => {
+        mockHttpClientJsonResponse('get', {
+          id: 'did-doc-foo',
+          service: [{ id: '#foo' }],
+        });
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create`,
+          payload: {
+            tenantId: tenant._id,
+            service: {
+              velocityNetworkServiceId: '#foo',
+              termsUrl: 'http://www.example.com',
+              authMethods: ['verifiable_presentation'],
+              authMode: 'internal',
+              verifiablePresentationAuthRules: buildAuthRules(valueIndexes),
+            },
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            message: 'service_verifiablePresentationAuthRules_invalid',
+            errorCode: 'service_verifiablePresentationAuthRules_invalid',
+          }),
+        );
+        await expect(
+          mongoDb().collection('issuerServices').countDocuments({}),
+        ).resolves.toEqual(0);
+      });
+    }, INVALID_VALUE_INDEXES);
+    it('should 200 when service.verifiablePresentationAuthRules value indexes are out of order', async () => {
+      mockHttpClientJsonResponse('get', {
+        id: 'did-doc-foo',
+        service: [{ id: '#foo' }],
+      });
+      const verifiablePresentationAuthRules = buildAuthRules([1, 2, 0]);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          service: {
+            velocityNetworkServiceId: '#foo',
+            termsUrl: 'http://www.example.com',
+            authMethods: ['verifiable_presentation'],
+            authMode: 'internal',
+            verifiablePresentationAuthRules,
+          },
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.service.verifiablePresentationAuthRules).toEqual(
+        verifiablePresentationAuthRules,
       );
     });
     it('should 400 when additional property is present on service', async () => {
@@ -1278,6 +1351,46 @@ describe('Issuer services management Test suite', () => {
         }),
       );
     });
+    forEach(({ name, valueIndexes }) => {
+      it(`should 400 when service.verifiablePresentationAuthRules value indexes have ${name}`, async () => {
+        mockHttpClientJsonResponse('get', {
+          id: 'did-doc-foo',
+          service: [{ id: '#foo' }],
+        });
+        const service = await persistIssuerService({
+          tenant,
+          velocityNetworkServiceId: '#foo',
+          verifiablePresentationAuthRules: buildAuthRules([0]),
+        });
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/update`,
+          payload: {
+            tenantId: tenant._id,
+            serviceId: service._id,
+            service: {
+              velocityNetworkServiceId: '#foo',
+              termsUrl: 'http://www.example.com',
+              authMethods: ['verifiable_presentation'],
+              authMode: 'internal',
+              verifiablePresentationAuthRules: buildAuthRules(valueIndexes),
+            },
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            message: 'service_verifiablePresentationAuthRules_invalid',
+            errorCode: 'service_verifiablePresentationAuthRules_invalid',
+          }),
+        );
+        const dbIssuerService = await issuerServicesRepo.findById(service._id);
+        expect(dbIssuerService.verifiablePresentationAuthRules).toEqual(
+          buildAuthRules([0]),
+        );
+      });
+    }, INVALID_VALUE_INDEXES);
     it('should 400 when additional property is present on service', async () => {
       const response = await fastify.injectJson({
         method: 'POST',

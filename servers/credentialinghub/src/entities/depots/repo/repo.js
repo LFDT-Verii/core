@@ -26,8 +26,8 @@ const {
   findDepotByPreauthCodeExtension,
 } = require('./find-depot-by-preauth-code');
 const {
-  findDepotsByAuthMatchValuesExtension,
-} = require('./find-depots-by-auth-match-values');
+  findDepotsByAuthMatchTuplesExtension,
+} = require('./find-depots-by-auth-match-tuples');
 
 module.exports = (app, options, next = () => {}) => {
   app.ready(async () => {
@@ -59,7 +59,7 @@ module.exports = (app, options, next = () => {}) => {
         multitenantExtension(),
         findDepotsExtension,
         findDepotByPreauthCodeExtension,
-        findDepotsByAuthMatchValuesExtension,
+        findDepotsByAuthMatchTuplesExtension,
         refreshPreauthCodeExtension,
       ],
     },

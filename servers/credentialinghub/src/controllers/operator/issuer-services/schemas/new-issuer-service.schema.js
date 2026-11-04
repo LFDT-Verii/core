@@ -110,7 +110,7 @@ const newIssuerServiceSchema = {
           valueIndex: {
             type: 'integer',
             description:
-              'the index to use with in a data row in values. Value must return true when compared using ===',
+              "the position of this rule's value in a depot's `authValues`. The rules' value indexes must be exactly 0 to n-1, each used once",
           },
         },
       },

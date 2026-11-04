@@ -16,17 +16,19 @@
  */
 const { ObjectId } = require('mongodb');
 
-const findDepotsByAuthMatchValuesExtension = (parent) => ({
-  findDepotsByAuthMatchValues: (serviceId, values) =>
+// $in with array elements compares whole arrays, so a depot matches only when
+// its authMatchValues equal one of the tuples exactly, in order.
+const findDepotsByAuthMatchTuplesExtension = (parent) => ({
+  findDepotsByAuthMatchTuples: (serviceId, tuples) =>
     parent.find({
       filter: {
         serviceId: new ObjectId(serviceId),
-        authMatchValues: { $in: values },
+        authMatchValues: { $in: tuples },
       },
     }),
   extensions: parent.extensions.concat([
-    'findDepotsByAuthMatchValuesExtension',
+    'findDepotsByAuthMatchTuplesExtension',
   ]),
 });
 
-module.exports = { findDepotsByAuthMatchValuesExtension };
+module.exports = { findDepotsByAuthMatchTuplesExtension };
