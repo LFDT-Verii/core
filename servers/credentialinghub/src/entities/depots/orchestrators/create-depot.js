@@ -15,21 +15,60 @@
  *
  */
 const { ObjectId } = require('mongodb');
-const { validateDepot } = require('../domain');
+const { find } = require('lodash/fp');
+const newError = require('http-errors');
+const {
+  isInternalVpAuth,
+} = require('../../issuer-services/domain/is-internal-vp-auth');
+const {
+  buildAuthMatchValues,
+  DepotErrors,
+  lookupValueIndex,
+  toAuthMatchValue,
+  validateDepot,
+} = require('../domain');
 
-const createDepot = async (newDepot, serviceId, { repos }) => {
+const createDepot = async (newDepot, serviceId, context) => {
+  const { repos } = context;
+  const issuerService = await repos.issuerServices.findOne({
+    filter: { _id: serviceId },
+  });
   const service =
-    (await repos.issuerServices.findOne({
-      filter: { _id: serviceId },
-    })) ??
+    issuerService ??
     (await repos.relyingPartyServices.findOne({
       filter: { _id: serviceId },
     }));
   validateDepot(newDepot, service);
-  return repos.depots.insert({
-    ...newDepot,
-    serviceId: new ObjectId(serviceId),
-  });
+  if (issuerService != null && isInternalVpAuth(issuerService)) {
+    await validateAuthValuesUnused(newDepot, issuerService, context);
+  }
+  return repos.depots.insert(buildDepot(newDepot, serviceId));
+};
+
+const validateAuthValuesUnused = async (newDepot, service, { repos }) => {
+  const index = lookupValueIndex(service);
+  const value = toAuthMatchValue(newDepot.authValues[index]);
+  const candidates = await repos.depots.findDepotsByAuthMatchValues(
+    service._id,
+    [value],
+  );
+  const existingDepot = find(
+    (depot) => depot.authMatchValues?.[index] === value,
+    candidates,
+  );
+  if (existingDepot != null) {
+    throw newError(409, DepotErrors.AUTH_VALUES_ALREADY_USED, {
+      errorCode: DepotErrors.AUTH_VALUES_ALREADY_USED,
+      depotId: existingDepot._id.toString(),
+    });
+  }
+};
+
+const buildDepot = (newDepot, serviceId) => {
+  const depot = { ...newDepot, serviceId: new ObjectId(serviceId) };
+  return newDepot.authValues == null
+    ? depot
+    : { ...depot, authMatchValues: buildAuthMatchValues(newDepot.authValues) };
 };
 
 module.exports = { createDepot };

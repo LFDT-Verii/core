@@ -17,12 +17,17 @@
 const { coerceArray } = require('@verii/common-functions');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const { createDepot, deleteDepot } = require('../../../entities/depots');
-const { depotSchema, newDepotSchema } = require('./schemas');
+const {
+  depotConflictErrorSchema,
+  depotSchema,
+  newDepotSchema,
+} = require('./schemas');
 
 const depotsController = async (fastify) => {
   fastify
     .addSchema(newDepotSchema)
     .addSchema(depotSchema)
+    .addSchema(depotConflictErrorSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .autoSchemaPreset({ tags: ['Depots'] })
     .post(
@@ -45,6 +50,7 @@ const depotsController = async (fastify) => {
             required: ['tenantId', 'serviceId', 'depot'],
           },
           response: {
+            409: { $ref: 'depot-conflict-error#' },
             200: {
               type: 'object',
               properties: {

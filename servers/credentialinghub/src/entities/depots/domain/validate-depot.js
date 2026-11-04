@@ -15,9 +15,13 @@
  *
  */
 const newError = require('http-errors');
-const { isEmpty } = require('lodash/fp');
+const { isEmpty, isString } = require('lodash/fp');
 const { isBefore } = require('date-fns/fp');
+const {
+  isInternalVpAuth,
+} = require('../../issuer-services/domain/is-internal-vp-auth');
 const { DepotErrors } = require('./depot-errors');
+const { lookupValueIndex, toAuthMatchValue } = require('./auth-match-values');
 
 const validateDepot = (depot, service) => {
   if (isMissingOrDeactivated(service)) {
@@ -25,15 +29,16 @@ const validateDepot = (depot, service) => {
       errorCode: DepotErrors.REFERENCED_SERVICE_NOT_FOUND,
     });
   }
-  if (
-    service.authMode === 'internal' &&
-    service.authMethods.includes('verifiable_presentation') &&
-    isEmpty(depot.authValues)
-  ) {
+  if (isInternalVpAuth(service) && !hasLookupValue(depot, service)) {
     throw newError(400, DepotErrors.INVALID_AUTH_VALUES, {
       errorCode: DepotErrors.INVALID_AUTH_VALUES,
     });
   }
+};
+
+const hasLookupValue = (depot, service) => {
+  const value = toAuthMatchValue(depot.authValues?.[lookupValueIndex(service)]);
+  return isString(value) && !isEmpty(value);
 };
 
 const isMissingOrDeactivated = (service) =>

@@ -4,11 +4,11 @@ const {
   validateServiceConfiguration,
 } = require('../../service-configurations');
 const { IssuerServicesErrors } = require('./issuer-services-errors');
+const { isInternalVpAuth } = require('./is-internal-vp-auth');
 
 const validateIssuerService = ({ service, didDoc, otherServices }) => {
   if (
-    service.authMode === 'internal' &&
-    service.authMethods.includes('verifiable_presentation') &&
+    isInternalVpAuth(service) &&
     isEmpty(service.verifiablePresentationAuthRules)
   ) {
     throw newError(400, IssuerServicesErrors.SERVICE_VP_AUTH_RULES_REQUIRED, {

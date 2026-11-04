@@ -15,6 +15,7 @@
  *
  */
 module.exports = {
+  ...require('./auth-match-values'),
   ...require('./depot-errors'),
   ...require('./validate-depot'),
 };
