@@ -103,6 +103,11 @@ const EXPECTED_OPERATION_METADATA = {
     'verifyPresentation',
     OPERATOR_SECURITY,
   ],
+  'POST /operator/presentations/delete': [
+    'Presentations',
+    'deletePresentations',
+    OPERATOR_SECURITY,
+  ],
   'POST /operator/relying-party-services/create': [
     'Relying Party Services',
     'createRelyingPartyService',
@@ -233,6 +238,7 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/presentation-links/refresh',
       'GET /operator/presentations/get',
       'POST /operator/presentations/verify',
+      'POST /operator/presentations/delete',
       'POST /operator/relying-party-services/create',
       'GET /operator/relying-party-services/get',
       'POST /operator/relying-party-services/update',

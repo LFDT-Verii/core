@@ -173,5 +173,48 @@ module.exports = async (fastify) => {
           errorCode: 'presentation_verify_request_invalid',
         });
       },
+    )
+    .post(
+      '/delete',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Delete presentations',
+          operationId: 'deletePresentations',
+          body: {
+            type: 'object',
+            properties: {
+              tenantId: {
+                type: 'string',
+              },
+              presentationIds: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                minItems: 1,
+                // delUsingFilter deletes at most 200 matches
+                maxItems: 200,
+              },
+            },
+            required: ['tenantId', 'presentationIds'],
+          },
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                requestId: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        }),
+      },
+      async (req) => {
+        await req.repos.presentations.delUsingFilter({
+          filter: { _id: { $in: req.body.presentationIds } },
+        });
+        return {};
+      },
     );
 };
