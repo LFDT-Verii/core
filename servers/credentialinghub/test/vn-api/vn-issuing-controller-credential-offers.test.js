@@ -838,26 +838,26 @@ describe('vn-api > credential offers', () => {
       );
     });
 
-    it('should return the offers and a challenge when the depot completes just before the exchange starts waiting', async (t) => {
+    it('should return the offers and a challenge when the credentials are resolved just before the exchange starts waiting', async (t) => {
       const credential = await persistEmailCredential();
-      // Completes the depot when the exchange is about to record OFFERS_WAITING,
-      // so the completion finds no waiting exchange to message.
+      // Resolves the depot's credentials when the exchange is about to record OFFERS_WAITING,
+      // so resolving them finds no waiting exchange to message.
       const collectionPrototype = Object.getPrototypeOf(
         mongoDb().collection('exchanges'),
       );
       const { findOneAndUpdate } = collectionPrototype;
-      let completeResponse;
+      let resolveResponse;
       t.mock.method(
         collectionPrototype,
         'findOneAndUpdate',
-        async function completeBeforeWaiting(filter, update, ...args) {
+        async function resolveBeforeWaiting(filter, update, ...args) {
           if (
-            completeResponse == null &&
+            resolveResponse == null &&
             update.$push?.events?.state === ExchangeStates.OFFERS_WAITING
           ) {
-            completeResponse = await fastify.injectJson({
+            resolveResponse = await fastify.injectJson({
               method: 'POST',
-              url: '/operator/depots/complete',
+              url: '/operator/depots/resolve-credentials',
               payload: { tenantId: tenant._id, depotId: pendingDepot._id },
             });
           }
@@ -867,8 +867,8 @@ describe('vn-api > credential offers', () => {
 
       const response = await requestOffers();
 
-      expect(completeResponse.json.notification).toEqual({
-        status: 'no_waiting_exchange',
+      expect(resolveResponse.json.notification).toEqual({
+        status: 'skipped_no_waiting_exchange',
       });
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
@@ -890,18 +890,18 @@ describe('vn-api > credential offers', () => {
       );
     });
 
-    it('should return the offers and a challenge once the depot is completed', async () => {
+    it('should return the offers and a challenge once the credentials are resolved', async () => {
       const credential = await persistEmailCredential();
       const waitingResponse = await requestOffers();
       expect(waitingResponse.statusCode).toEqual(202);
 
-      const completeResponse = await fastify.injectJson({
+      const resolveResponse = await fastify.injectJson({
         method: 'POST',
-        url: '/operator/depots/complete',
+        url: '/operator/depots/resolve-credentials',
         payload: { tenantId: tenant._id, depotId: pendingDepot._id },
       });
-      expect(completeResponse.statusCode).toEqual(200);
-      expect(completeResponse.json.notification).toEqual({
+      expect(resolveResponse.statusCode).toEqual(200);
+      expect(resolveResponse.json.notification).toEqual({
         status: 'sent',
         exchangeId: pendingExchange._id,
       });

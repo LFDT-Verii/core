@@ -499,7 +499,7 @@ describe('openid4vc credential test suite', () => {
         expect(response.statusCode).toEqual(400);
         expect(response.json).toEqual({
           error: 'credential_request_denied',
-          error_description: `Credential ${pendingCredential._id} can't be issued while its depot is pending`,
+          error_description: `Credential ${pendingCredential._id} can't be issued while the depot's credentials are pending`,
         });
         await expect(
           mongoDb()

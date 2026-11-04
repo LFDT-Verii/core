@@ -42,7 +42,7 @@ const issueCredentials = async (
 ) => {
   const { log, repos } = context;
   const { exchangeId, depotId } = parseAccessToken(token);
-  // A pending depot's credentials can't be approved or rejected until it's completed
+  // A depot's pending credentials can't be approved or rejected until they're resolved
   if (await isDepotPending(depotId, context)) {
     throw newError(400, ExchangeErrors.CREDENTIALS_PENDING, {
       errorCode: ExchangeErrors.CREDENTIALS_PENDING,

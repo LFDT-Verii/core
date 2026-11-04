@@ -17,10 +17,10 @@
 const { coerceArray } = require('@verii/common-functions');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
-  completeDepot,
   createDepot,
   deleteDepot,
-  DepotCompletionStatuses,
+  resolveDepotCredentials,
+  ResolveDepotCredentialsStatuses,
 } = require('../../../entities/depots');
 const { depotSchema, newDepotSchema } = require('./schemas');
 
@@ -162,11 +162,11 @@ const depotsController = async (fastify) => {
       async (req) => deleteDepot(req.body.depotId, req.body.serviceId, req),
     )
     .post(
-      '/complete',
+      '/resolve-credentials',
       {
         schema: fastify.autoSchema({
-          summary: 'Complete a pending depot',
-          operationId: 'completeDepot',
+          summary: "Resolve a depot's pending credentials",
+          operationId: 'resolveDepotCredentials',
           body: {
             type: 'object',
             properties: {
@@ -192,7 +192,7 @@ const depotsController = async (fastify) => {
                   properties: {
                     status: {
                       type: 'string',
-                      enum: Object.values(DepotCompletionStatuses),
+                      enum: Object.values(ResolveDepotCredentialsStatuses),
                     },
                     exchangeId: {
                       type: 'string',
@@ -211,7 +211,7 @@ const depotsController = async (fastify) => {
           },
         }),
       },
-      async (req) => completeDepot(req.body.depotId, req),
+      async (req) => resolveDepotCredentials(req.body.depotId, req),
     );
 };
 

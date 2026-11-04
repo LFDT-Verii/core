@@ -49,13 +49,13 @@ const {
   ExchangeStates,
 } = require('../../src/entities/exchanges');
 
-const testUrl = '/operator/depots/complete';
+const testUrl = '/operator/depots/resolve-credentials';
 const messagingSettings = {
   webhookUrl: 'https://wallet.example.com/push',
   authToken: 'push-token-123',
 };
 
-describe('Depot Completion Test Suite', () => {
+describe('Resolve Depot Credentials Test Suite', () => {
   let fastify;
   let persistTenant;
   let persistKey;
@@ -106,7 +106,10 @@ describe('Depot Completion Test Suite', () => {
     await fastify.close();
   });
 
-  const completeDepot = (depotId = depot._id, tenantId = tenant._id) =>
+  const resolveDepotCredentials = (
+    depotId = depot._id,
+    tenantId = tenant._id,
+  ) =>
     fastify.injectJson({
       method: 'POST',
       url: testUrl,
@@ -161,13 +164,13 @@ describe('Depot Completion Test Suite', () => {
     return map('state', exchange.events);
   };
 
-  const expectedCompletedDepot = () => ({
+  const expectedResolvedDepot = () => ({
     id: depot._id,
     serviceId: depot.serviceId,
     userReference: depot.userReference,
     credentialsPending: false,
     expectedCredentialTypes: depot.expectedCredentialTypes,
-    completedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+    credentialsResolvedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
   });
@@ -196,7 +199,7 @@ describe('Depot Completion Test Suite', () => {
 
   it('should 404 if the depot is unknown', async () => {
     const depotId = new ObjectId().toString();
-    const response = await completeDepot(depotId);
+    const response = await resolveDepotCredentials(depotId);
     expect(response.statusCode).toEqual(404);
     expect(response.json).toEqual(
       errorResponseMatcher({
@@ -208,12 +211,12 @@ describe('Depot Completion Test Suite', () => {
     );
   });
 
-  it("should 404 for another tenant's depot and leave it pending", async () => {
+  it("should 404 for another tenant's depot and leave its credentials pending", async () => {
     const { tenant: tenant2 } = await constructTenant(
       persistTenant,
       persistKey,
     );
-    const response = await completeDepot(depot._id, tenant2._id);
+    const response = await resolveDepotCredentials(depot._id, tenant2._id);
     expect(response.statusCode).toEqual(404);
     expect(response.json.errorCode).toEqual('depot_not_found');
     await expect(findDbDepot()).resolves.toMatchObject({
@@ -221,13 +224,13 @@ describe('Depot Completion Test Suite', () => {
     });
   });
 
-  it('should return not_pending for a depot that was never pending', async () => {
+  it('should return already_resolved for a depot that was never pending', async () => {
     const readyDepot = await persistDepot({
       tenant,
       service: issuerService,
       userReference: nanoid(),
     });
-    const response = await completeDepot(readyDepot._id);
+    const response = await resolveDepotCredentials(readyDepot._id);
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual({
       depot: {
@@ -238,28 +241,28 @@ describe('Depot Completion Test Suite', () => {
         createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
       },
-      notification: { status: 'not_pending' },
+      notification: { status: 'already_resolved' },
       requestId: expect.any(String),
     });
     expect(mockHttpClient.post.mock.callCount()).toEqual(0);
   });
 
-  it('should complete the depot and return no_waiting_exchange when no wallet is waiting', async () => {
+  it('should resolve the credentials and return skipped_no_waiting_exchange when no wallet is waiting', async () => {
     const exchange = await persistVnApiExchange([
       ExchangeStates.OFFERS_REQUESTED,
       ExchangeStates.OFFERS_SENT,
     ]);
-    const response = await completeDepot();
+    const response = await resolveDepotCredentials();
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual({
-      depot: expectedCompletedDepot(),
-      notification: { status: 'no_waiting_exchange' },
+      depot: expectedResolvedDepot(),
+      notification: { status: 'skipped_no_waiting_exchange' },
       requestId: expect.any(String),
     });
     expect(mockHttpClient.post.mock.callCount()).toEqual(0);
     await expect(findDbDepot()).resolves.toMatchObject({
       credentialsPending: false,
-      completedAt: expect.any(Date),
+      credentialsResolvedAt: expect.any(Date),
     });
     await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
       map('state', exchange.events),
@@ -274,11 +277,11 @@ describe('Depot Completion Test Suite', () => {
     await persistTypedCredential('EmailV1.0', { rejectedAt: new Date() });
     const exchange = await persistWaitingExchange();
 
-    const response = await completeDepot();
+    const response = await resolveDepotCredentials();
 
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual({
-      depot: expectedCompletedDepot(),
+      depot: expectedResolvedDepot(),
       notification: { status: 'sent', exchangeId: exchange._id },
       requestId: expect.any(String),
     });
@@ -309,7 +312,7 @@ describe('Depot Completion Test Suite', () => {
       credentialTypes: ['PhoneV1.0'],
     });
 
-    const response = await completeDepot();
+    const response = await resolveDepotCredentials();
 
     expect(response.json.notification).toEqual({
       status: 'sent',
@@ -328,11 +331,11 @@ describe('Depot Completion Test Suite', () => {
     await persistTypedCredential('EmailV1.0', { acceptedAt: new Date() });
     const exchange = await persistWaitingExchange();
 
-    const response = await completeDepot();
+    const response = await resolveDepotCredentials();
 
     expect(response.statusCode).toEqual(200);
     expect(response.json).toEqual({
-      depot: expectedCompletedDepot(),
+      depot: expectedResolvedDepot(),
       notification: { status: 'sent', exchangeId: exchange._id },
       requestId: expect.any(String),
     });
@@ -359,7 +362,7 @@ describe('Depot Completion Test Suite', () => {
       messagingSettings: undefined,
     });
 
-    const response = await completeDepot();
+    const response = await resolveDepotCredentials();
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.notification).toEqual({
@@ -374,14 +377,14 @@ describe('Depot Completion Test Suite', () => {
     ]);
   });
 
-  it('should return a failed notification and keep the depot completed when the push url fails', async () => {
+  it('should return a failed notification and keep the credentials resolved when the push url fails', async () => {
     await persistTypedCredential('EmailV1.0');
     await persistWaitingExchange();
     mockHttpClient.post.mock.mockImplementationOnce(() =>
       Promise.reject(new Error('Response Error')),
     );
 
-    const response = await completeDepot();
+    const response = await resolveDepotCredentials();
 
     expect(response.statusCode).toEqual(200);
     expect(response.json.notification).toEqual({
@@ -394,21 +397,21 @@ describe('Depot Completion Test Suite', () => {
     });
   });
 
-  it('should return not_pending and send nothing when the depot is completed twice', async () => {
+  it('should return already_resolved and send nothing when the credentials are resolved twice', async () => {
     await persistTypedCredential('EmailV1.0');
     await persistWaitingExchange();
 
-    const firstResponse = await completeDepot();
-    const secondResponse = await completeDepot();
+    const firstResponse = await resolveDepotCredentials();
+    const secondResponse = await resolveDepotCredentials();
 
     expect(firstResponse.json.notification.status).toEqual('sent');
     expect(secondResponse.statusCode).toEqual(200);
     expect(secondResponse.json).toEqual({
       depot: {
-        ...expectedCompletedDepot(),
-        completedAt: firstResponse.json.depot.completedAt,
+        ...expectedResolvedDepot(),
+        credentialsResolvedAt: firstResponse.json.depot.credentialsResolvedAt,
       },
-      notification: { status: 'not_pending' },
+      notification: { status: 'already_resolved' },
       requestId: expect.any(String),
     });
     expect(mockHttpClient.post.mock.callCount()).toEqual(1);
@@ -424,7 +427,7 @@ describe('Depot Completion Test Suite', () => {
     ]);
     await persistVnApiExchange([]);
 
-    const response = await completeDepot();
+    const response = await resolveDepotCredentials();
 
     expect(response.json.notification).toEqual({
       status: 'sent',
@@ -445,7 +448,7 @@ describe('Depot Completion Test Suite', () => {
       ExchangeStates.COMPLETE,
     ]);
 
-    const response = await completeDepot();
+    const response = await resolveDepotCredentials();
 
     expect(response.json.notification).toEqual({
       status: 'sent',
@@ -463,7 +466,7 @@ describe('Depot Completion Test Suite', () => {
       await persistTypedCredential('EmailV1.0');
       const exchange = await persistWaitingExchange();
 
-      await completeDepot();
+      await resolveDepotCredentials();
 
       const [url, body, { headers }] =
         mockHttpClient.post.mock.calls[0].arguments;
@@ -486,7 +489,7 @@ describe('Depot Completion Test Suite', () => {
     it('should send a NoOffersFound body that matches the Credential Agent', async () => {
       const exchange = await persistWaitingExchange();
 
-      await completeDepot();
+      await resolveDepotCredentials();
 
       const [url, body, { headers }] =
         mockHttpClient.post.mock.calls[0].arguments;
