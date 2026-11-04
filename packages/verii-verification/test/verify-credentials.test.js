@@ -60,6 +60,9 @@ const registrarResponseError = (statusCode) =>
   });
 
 const registrarOutages = [
+  { title: 'a 401 response', buildError: () => registrarResponseError(401) },
+  { title: 'a 403 response', buildError: () => registrarResponseError(403) },
+  { title: 'a 429 response', buildError: () => registrarResponseError(429) },
   { title: 'a 500 response', buildError: () => registrarResponseError(500) },
   { title: 'a 503 response', buildError: () => registrarResponseError(503) },
   {
@@ -1190,21 +1193,25 @@ describe('Verify credentials', () => {
           expect(result).toEqual(idVcResult(CheckResults.PASS));
         });
 
-        it('TRUSTED_ISSUER should FAIL when the verified profile lookup is a 404', async () => {
-          const result = await verifyIdVc({
-            getOrganizationVerifiedProfile: () =>
-              Promise.reject(registrarResponseError(404)),
+        // 404: no such record. 400: the registrar rejected the issuer DID.
+        [400, 404].forEach((statusCode) => {
+          it(`TRUSTED_ISSUER should FAIL when the verified profile lookup is a ${statusCode}`, async () => {
+            const result = await verifyIdVc({
+              getOrganizationVerifiedProfile: () =>
+                Promise.reject(registrarResponseError(statusCode)),
+            });
+
+            expect(result).toEqual(idVcResult(CheckResults.FAIL));
           });
 
-          expect(result).toEqual(idVcResult(CheckResults.FAIL));
-        });
+          it(`TRUSTED_ISSUER should FAIL when the DID lookup is a ${statusCode}`, async () => {
+            const result = await verifyIdVc({
+              resolveDid: () =>
+                Promise.reject(registrarResponseError(statusCode)),
+            });
 
-        it('TRUSTED_ISSUER should FAIL when the DID lookup is a 404', async () => {
-          const result = await verifyIdVc({
-            resolveDid: () => Promise.reject(registrarResponseError(404)),
+            expect(result).toEqual(idVcResult(CheckResults.FAIL));
           });
-
-          expect(result).toEqual(idVcResult(CheckResults.FAIL));
         });
 
         registrarOutages.forEach(({ title, buildError }) => {

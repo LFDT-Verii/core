@@ -421,17 +421,21 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
 };
 
 // The registrar client (@verii/http-client) throws an undici ResponseError that
-// carries the HTTP statusCode for every 4xx and 5xx response. Only a 404 says
-// the registrar has no such record. Any other status, and a timeout or
-// connection error, which has no statusCode, means the registrar could not
-// answer.
-const isNotFoundError = (error) => error?.statusCode === 404;
+// carries the HTTP statusCode for every 4xx and 5xx response. A 404 says the
+// registrar has no such record, and a 400 says it rejected the issuer DID as
+// malformed. Both are problems with the credential. Any other status
+// (including 401, 403 and 429), and a timeout or connection error, which has
+// no statusCode, means the registrar could not answer.
+const IssuerRejectedStatusCodes = [400, 404];
+const isIssuerRejectedError = (error) =>
+  IssuerRejectedStatusCodes.includes(error?.statusCode);
 
-// A 404 leaves the dependency missing, so the issuer trust check fails as it
-// does for an unregistered issuer. @verii/http-client resolves a body it cannot
-// parse as JSON to {}, so an empty value is an unreadable response, and fails
-// the lookup like any other registrar error. The lookup calls the fetcher as a
-// method of the fetchers object, so fetchers that use `this` keep working.
+// A 400 or 404 leaves the dependency missing, so the issuer trust check fails
+// as it does for an unregistered issuer. @verii/http-client resolves a body it
+// cannot parse as JSON to {}, so an empty value is an unreadable response, and
+// fails the lookup like any other registrar error. The lookup calls the
+// fetcher as a method of the fetchers object, so fetchers that use `this` keep
+// working.
 const lookupIssuerDependency = async (lookup, issuerId, context) => {
   try {
     const value = await lookup();
@@ -441,7 +445,7 @@ const lookupIssuerDependency = async (lookup, issuerId, context) => {
     }
     return { issuerId, value };
   } catch (error) {
-    if (isNotFoundError(error)) {
+    if (isIssuerRejectedError(error)) {
       return { issuerId };
     }
     context.log.error({ err: error, issuerId }, 'issuer lookup failed');

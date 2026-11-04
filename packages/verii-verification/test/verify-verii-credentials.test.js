@@ -625,10 +625,53 @@ describe('Verify verii credentials', () => {
         ]);
       });
 
+      [
+        { lookup: 'DID', path: resolveDidPath },
+        { lookup: 'verified profile', path: verifiedProfilePath },
+      ].forEach(({ lookup, path }) => {
+        it(`TRUSTED_ISSUER should FAIL if the registrar rejects the issuer DID in the ${lookup} lookup with a 400`, async () => {
+          nock.removeInterceptor({
+            hostname: registrarHost,
+            path,
+            method: 'GET',
+            proto: 'https',
+          });
+          nock(registrarUrl).get(path).reply(400);
+
+          const result = await verifyVeriiCredentials(
+            {
+              credentials: [openBadgeVc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: {
+                did: 'did:ion:123',
+                dltOperatorKMSKeyId: 'keyid-1',
+              },
+            },
+            context,
+          );
+
+          expect(result).toEqual([
+            {
+              dataModelVersion: '1.1',
+              envelopeFormat: 'jwt_vc_json-ld',
+              signingAlgorithm: 'ES256K',
+              credential: openBadgeCredential,
+              credentialChecks: {
+                UNTAMPERED: CheckResults.PASS,
+                TRUSTED_ISSUER: CheckResults.FAIL,
+                TRUSTED_HOLDER: CheckResults.PASS,
+                UNEXPIRED: CheckResults.PASS,
+                UNREVOKED: CheckResults.PASS,
+              },
+            },
+          ]);
+        });
+      });
+
       const registrarFailures = [
         {
-          title: 'a 400 response',
-          reply: (interceptor) => interceptor.reply(400),
+          title: 'a 429 response',
+          reply: (interceptor) => interceptor.reply(429),
         },
         {
           title: 'a 500 response',
