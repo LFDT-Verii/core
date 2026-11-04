@@ -1030,9 +1030,9 @@ describe('Presentations Test Suite', () => {
       it('should return a failed notification when the push url redirects', async () => {
         const { presentation } = await persistExchangePresentation();
         mockDidResolution();
-        const dump = mock.fn(() => Promise.resolve(null));
+        const rawBody = { on: mock.fn(() => rawBody), destroy: mock.fn() };
         mockHttpClient.post.mock.mockImplementationOnce(() =>
-          Promise.resolve({ statusCode: 307, rawBody: { dump } }),
+          Promise.resolve({ statusCode: 307, rawBody }),
         );
 
         const response = await verifyAndNotify(presentation);
@@ -1043,22 +1043,22 @@ describe('Presentations Test Suite', () => {
           error: 'push url responded with 307',
         });
         expect(mockHttpClient.post.mock.callCount()).toEqual(1);
-        expect(dump.mock.callCount()).toEqual(1);
+        expect(rawBody.destroy.mock.callCount()).toEqual(1);
       });
 
       it('should discard the push response body', async () => {
         const { presentation } = await persistExchangePresentation();
         mockDidResolution();
-        const dump = mock.fn(() => Promise.resolve(null));
+        const rawBody = { on: mock.fn(() => rawBody), destroy: mock.fn() };
         mockHttpClient.post.mock.mockImplementationOnce(() =>
-          Promise.resolve({ statusCode: 200, rawBody: { dump } }),
+          Promise.resolve({ statusCode: 200, rawBody }),
         );
 
         const response = await verifyAndNotify(presentation);
 
         expect(response.statusCode).toEqual(200);
         expect(response.json.notification).toEqual({ status: 'sent' });
-        expect(dump.mock.callCount()).toEqual(1);
+        expect(rawBody.destroy.mock.callCount()).toEqual(1);
       });
 
       it('should post to the normalized push url when its scheme is uppercase', async () => {

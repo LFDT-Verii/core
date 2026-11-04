@@ -55,8 +55,10 @@ const sendWalletMessage = async ({ exchange, data, message }, context) => {
         Authorization: await generateMessagingToken(body, pushUrl, context),
       },
     });
-    // The body isn't needed, but left unread it holds the connection open.
-    await response.rawBody?.dump();
+    // The body isn't needed. Destroying it closes the connection, whereas left unread it holds the
+    // connection open, and draining it would wait on however slowly the wallet's server sends it.
+    // Destroying an unfinished body emits an abort error, which needs a listener.
+    response.rawBody?.on('error', ignoreError).destroy();
     validatePushResponse(response);
     return { status: WalletMessageStatuses.SENT };
   } catch (error) {
@@ -67,6 +69,8 @@ const sendWalletMessage = async ({ exchange, data, message }, context) => {
     return { status: WalletMessageStatuses.FAILED, error: error.message };
   }
 };
+
+const ignoreError = () => {};
 
 const hasMessagingSettings = (messagingSettings) =>
   !isEmpty(messagingSettings?.webhookUrl) &&
