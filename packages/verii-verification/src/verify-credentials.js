@@ -377,7 +377,8 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
           map(
             (issuerId) =>
               lookupIssuerDependency(
-                fetchers.getOrganizationVerifiedProfile,
+                () =>
+                  fetchers.getOrganizationVerifiedProfile(issuerId, context),
                 issuerId,
                 context,
               ),
@@ -387,7 +388,11 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
         Promise.all(
           map(
             (issuerId) =>
-              lookupIssuerDependency(fetchers.resolveDid, issuerId, context),
+              lookupIssuerDependency(
+                () => fetchers.resolveDid(issuerId, context),
+                issuerId,
+                context,
+              ),
             issuerIds,
           ),
         ),
@@ -425,10 +430,11 @@ const isNotFoundError = (error) => error?.statusCode === 404;
 // A 404 leaves the dependency missing, so the issuer trust check fails as it
 // does for an unregistered issuer. @verii/http-client resolves a body it cannot
 // parse as JSON to {}, so an empty value is an unreadable response, and fails
-// the lookup like any other registrar error.
-const lookupIssuerDependency = async (fetcher, issuerId, context) => {
+// the lookup like any other registrar error. The lookup calls the fetcher as a
+// method of the fetchers object, so fetchers that use `this` keep working.
+const lookupIssuerDependency = async (lookup, issuerId, context) => {
   try {
-    const value = await fetcher(issuerId, context);
+    const value = await lookup();
     if (isEmpty(value)) {
       context.log.error({ issuerId }, 'issuer lookup returned no data');
       return { issuerId, failed: true };

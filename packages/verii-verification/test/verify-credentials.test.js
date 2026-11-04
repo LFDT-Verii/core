@@ -1163,6 +1163,33 @@ describe('Verify credentials', () => {
           },
         ];
 
+        it('TRUSTED_ISSUER should PASS when the fetchers are methods that use this', async () => {
+          const delegatingFetchers = {
+            delegate: fetchers,
+            resolveDid(id, ctx) {
+              return this.delegate.resolveDid(id, ctx);
+            },
+            getOrganizationVerifiedProfile(id, ctx) {
+              return this.delegate.getOrganizationVerifiedProfile(id, ctx);
+            },
+            getCredentialTypeMetadata(types, ctx) {
+              return this.delegate.getCredentialTypeMetadata(types, ctx);
+            },
+          };
+
+          const result = await verifyCredentials(
+            {
+              credentials: [idVc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgPrivateKey },
+            },
+            delegatingFetchers,
+            context,
+          );
+
+          expect(result).toEqual(idVcResult(CheckResults.PASS));
+        });
+
         it('TRUSTED_ISSUER should FAIL when the verified profile lookup is a 404', async () => {
           const result = await verifyIdVc({
             getOrganizationVerifiedProfile: () =>
