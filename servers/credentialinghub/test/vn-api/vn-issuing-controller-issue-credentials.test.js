@@ -87,6 +87,7 @@ const {
 const { initCredentialFactory } = require('../../src/entities/credentials');
 const {
   initExchangeFactory,
+  ExchangeProtocols,
   ExchangeStates,
 } = require('../../src/entities/exchanges');
 const { initDepotFactory } = require('../../src/entities/depots');
@@ -1741,6 +1742,103 @@ describe('vn-api > issue credentials', () => {
           ]),
         );
       });
+    });
+  });
+
+  describe('depots with deferred credentials', () => {
+    it('should finish a claim and return its credentials when depots/resolve-deferred-credentials runs during it', async (t) => {
+      const webhookUrl = 'https://wallet.example.com/push';
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        deferredCredentials: true,
+      });
+      const waitedExchange = await persistExchange({
+        tenant,
+        service: preauthIssuerService,
+        depotId: new ObjectId(deferredDepot._id),
+        protocolMetadata: { protocol: ExchangeProtocols.VN_API },
+        messagingSettings: { webhookUrl, authToken: 'push-token-123' },
+        events: map(
+          (state) => ({ state, timestamp: new Date() }),
+          [
+            ExchangeStates.AUTHENTICATION_SUCCESS,
+            ExchangeStates.OFFERS_REQUESTED,
+            ExchangeStates.OFFERS_WAITING,
+            ExchangeStates.OFFERS_REQUESTED,
+            ExchangeStates.OFFERS_SENT,
+          ],
+        ),
+      });
+      const credential = await persistCredential({
+        tenant,
+        depot: deferredDepot,
+        typeMetadata: credentialTypeMetadata['EmailV1.0'],
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'bob.foobar@example.com' },
+        },
+      });
+      // Resolves the depot's deferred credentials after the credential is accepted and before the claim completes
+      const collectionPrototype = Object.getPrototypeOf(
+        mongoDb().collection('exchanges'),
+      );
+      const { findOneAndUpdate } = collectionPrototype;
+      let resolveResponse;
+      t.mock.method(
+        collectionPrototype,
+        'findOneAndUpdate',
+        async function resolveBeforeComplete(filter, update, ...args) {
+          if (
+            resolveResponse == null &&
+            update.$push?.events?.state === ExchangeStates.COMPLETE
+          ) {
+            resolveResponse = await fastify.injectJson({
+              method: 'POST',
+              url: '/operator/depots/resolve-deferred-credentials',
+              payload: { tenantId: tenant._id, depotId: deferredDepot._id },
+            });
+          }
+          return findOneAndUpdate.call(this, filter, update, ...args);
+        },
+      );
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await testAccessToken(
+            tenant.did,
+            waitedExchange._id,
+            deferredDepot._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: {
+          approvedOfferIds: [credential._id],
+          proof: await buildProof(
+            holderDid,
+            holderKeyPair,
+            await loadChallenge(waitedExchange._id),
+          ),
+        },
+      });
+
+      expect(resolveResponse.json.notification).toEqual({
+        status: 'skipped_no_waiting_exchange',
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toHaveLength(1);
+      expect(jwtDecode(response.json[0]).payload.sub).toEqual(holderDid);
+      expect(
+        map(({ arguments: [url] }) => url, mockHttpClient.post.mock.calls),
+      ).not.toContain(webhookUrl);
+      const dbExchange = await findOneExchange(waitedExchange._id);
+      expect(map('state', dbExchange.events)).toEqual([
+        ...map('state', waitedExchange.events),
+        ExchangeStates.CLAIMING_IN_PROGRESS,
+        ExchangeStates.COMPLETE,
+      ]);
     });
   });
 
