@@ -16,16 +16,19 @@
  */
 
 const createError = require('http-errors');
-const { reduce, isEmpty, first, includes } = require('lodash/fp');
+const { JSONPath } = require('jsonpath-plus');
+const { reduce, isEmpty, isString, first, includes } = require('lodash/fp');
 const { jwtDecode } = require('@verii/jwt');
 const { validatePresentationContext } = require('@verii/verii-verification');
-const { getJsonAtPath } = require('../../common');
 const {
   ExchangeErrorCodeState,
   ensureExchangeStateValid,
 } = require('../../exchanges');
 const { IdentificationMethods } = require('../../disclosures');
 const { PresentationErrors } = require('./errors');
+
+const SUPPORTED_DESCRIPTOR_PATH_PATTERN =
+  /^\$\.verifiableCredential\[(?:0|[1-9]\d{0,2})\]$/;
 
 const validatePresentation = async (presentation, disclosure, context) => {
   validatePresentationContext(presentation, context);
@@ -89,7 +92,14 @@ const buildCanonicalVp = ({
           { errorCode: 'presentation_missing_jwtvc_or_jwtvp' },
         );
       }
-      const result = getJsonAtPath(descriptor.path, json);
+      if (!isSupportedDescriptorPath(descriptor.path)) {
+        throw createError(
+          400,
+          'Velocity Presentation contains path descriptor that is unsupported',
+          { descriptor, errorCode: 'presentation_jsonpath_unsupported' },
+        );
+      }
+      const result = getJsonAtDescriptorPath(descriptor.path, json);
       if (isEmpty(result)) {
         throw createError(
           400,
@@ -122,5 +132,15 @@ const buildCanonicalVp = ({
     },
     presentationSubmission.descriptor_map,
   );
+
+const isSupportedDescriptorPath = (path) =>
+  isString(path) && SUPPORTED_DESCRIPTOR_PATH_PATTERN.test(path);
+
+const getJsonAtDescriptorPath = (path, json) =>
+  JSONPath({
+    path,
+    json,
+    eval: false,
+  });
 
 module.exports = { validatePresentation };
