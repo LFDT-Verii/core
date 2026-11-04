@@ -94,8 +94,8 @@ entry in the issuer's DID document. An issuer that wants personal links and a
 batch link would otherwise need a second service on the registrar.
 
 A service with both methods counts as an internal VP service for depots. Its
-depots get the `authValues` validation, `authMatchValues` and the 409 check,
-like any VP service's.
+depots get the `authValues` validation, `authMatchValues`, the auth rules
+fingerprint and the 409 check, like any VP service's.
 
 ### Rules and `authValues`
 
@@ -119,6 +119,19 @@ A depot's `authValues` holds exactly one value per rule, at the rule's
   `invalid_auth_values`. Empty or missing `authValues` also fail, which covers
   a service stored without rules.
 
+PR 2 tightens the rules:
+
+- **Each rule has a `type`.** It's required, and must be one of the
+  `disclosureRequest.types` types. A rule reads only credentials of its type,
+  so an email rule never reads an email address found in another requested
+  credential. A rule without a `type` fails the request schema (400
+  `request_validation_failed`). A `type` that isn't requested returns 400
+  `service_verifiablePresentationAuthRules_invalid`.
+- **Rule paths are checked.** On `create` and `update`, `validateIssuerService`
+  evaluates each path with `eval: false` against an empty object. A path that
+  throws returns 400 `service_verifiablePresentationAuthRules_invalid`, so a
+  bad path fails when it's configured, not when a holder authenticates.
+
 ### `authMatchValues`
 
 `depots/create` stores a normalized copy of `authValues` as
@@ -140,12 +153,61 @@ const buildAuthMatchValues = map(toAuthMatchValue);
   Trimming also stops a space pasted from a spreadsheet from silently breaking
   one person's claim. Credential values go through the same function, so the
   two sides always agree.
-- **Never returned.** `authMatchValues` goes into the repo's
-  `defaultProjection`, because the authentication handler needs it. The
-  `depot` response schema doesn't declare it, so the serializer drops it from
-  `depots/create` and `depots/get` responses.
+- **Stored with a fingerprint.** `authRulesFingerprint` records the auth
+  configuration the values were built for. See
+  [Auth rules fingerprint](#auth-rules-fingerprint).
+- **Never returned.** `authMatchValues` and `authRulesFingerprint` go into the
+  repo's `defaultProjection`. The `depot` response schema doesn't declare
+  them, so the serializer drops them from `depots/create` and `depots/get`
+  responses.
 
 There is no depot update endpoint, so `depots/create` is the only writer.
+
+### Auth rules fingerprint
+
+A depot's `authMatchValues` only mean something under the rules and requested
+types they were built for. Each internal VP depot stores a fingerprint of that
+configuration, and a depot only matches, and only counts for the 409, under
+the configuration it was created with.
+
+```js
+// entities/depots/domain/auth-rules-fingerprint.js
+const canonicalRules = flow(
+  map(({ path, rule, valueIndex, type }) => ({
+    path: castArray(path),
+    rule,
+    valueIndex,
+    type,
+  })),
+  sortBy('valueIndex'),
+);
+
+const canonicalTypes = flow(map('type'), sortBy(identity));
+
+const buildAuthRulesFingerprint = (service) =>
+  isInternalVpAuth(service)
+    ? calcSha384(
+        JSON.stringify({
+          rules: canonicalRules(service.verifiablePresentationAuthRules),
+          types: canonicalTypes(service.disclosureRequest?.types),
+        }),
+      )
+    : null;
+```
+
+- **What goes in.** The rules sorted by `valueIndex`, each reduced to `path`
+  (as an array, in order), `rule`, `valueIndex` and `type` (absent until
+  PR 2 adds it), and the `disclosureRequest.types` type names, sorted.
+- **What doesn't.** The order of the rules in the array, the order of the
+  requested types, `disclosureRequest.purpose` and the rest of the service.
+  The auth methods only count through `isInternalVpAuth`: a service with both
+  methods has the same fingerprint as a VP-only one with the same rules.
+- **Not a VP service.** Any other service's fingerprint is `null`, and its
+  depots store none.
+
+`createDepot` computes the fingerprint from the service it validated the depot
+against, and stores it beside `authMatchValues`. PR 2's handler computes it
+from the exchange's service with the same function.
 
 ### Index
 
@@ -153,12 +215,17 @@ There is no depot update endpoint, so `depots/create` is the only writer.
 existing `preauthCodeHash` index:
 
 ```js
-await mongoDb()
-  .collection('depots')
-  .createIndex({ tenantId: 1, serviceId: 1, authMatchValues: 1 });
+await mongoDb().collection('depots').createIndex({
+  tenantId: 1,
+  serviceId: 1,
+  authRulesFingerprint: 1,
+  authMatchValues: 1,
+});
 ```
 
-`authMatchValues` is the only array in the index, so it's a plain multikey
+This replaces the earlier `{ tenantId, serviceId, authMatchValues }`
+definition. `authMatchValues` is still the only array in the index, so it's a
+plain multikey
 index with no collation, supported by MongoDB, Amazon DocumentDB and Azure
 DocumentDB. For a
 whole-array match, MongoDB uses the index to find the tuple's first element,
@@ -168,10 +235,11 @@ then compares the whole array on the documents it fetches.
 
 ```js
 // entities/depots/repo/find-depots-by-auth-match-tuples.js
-findDepotsByAuthMatchTuples: (serviceId, tuples) =>
+findDepotsByAuthMatchTuples: (serviceId, authRulesFingerprint, tuples) =>
   parent.find({
     filter: {
       serviceId: new ObjectId(serviceId),
+      authRulesFingerprint,
       authMatchValues: { $in: tuples },
     },
   }),
@@ -180,7 +248,8 @@ findDepotsByAuthMatchTuples: (serviceId, tuples) =>
 Each tuple is an array, so `$in` compares whole arrays. A depot matches only
 if its `authMatchValues` equals one of the tuples exactly, in order. A depot
 with the same value at another position, or with an extra element, doesn't
-match. Nothing is matched in memory.
+match. Nor does a depot created under another auth configuration. Nothing is
+matched in memory.
 
 `multitenantExtension` adds `tenantId`. Both `depots/create` and the
 authentication handler use this function.
@@ -189,8 +258,10 @@ authentication handler use this function.
 
 `createDepot`, for an internal VP issuer service only:
 
-1. `authMatchValues = buildAuthMatchValues(authValues)`.
-2. `findDepotsByAuthMatchTuples(serviceId, [authMatchValues])`.
+1. `authMatchValues = buildAuthMatchValues(authValues)` and
+   `authRulesFingerprint = buildAuthRulesFingerprint(service)`.
+2. `findDepotsByAuthMatchTuples(serviceId, authRulesFingerprint, [authMatchValues])`.
+   Only depots created under the same auth configuration count.
 3. If it finds a depot, throw 409 `auth_values_already_used` with
    `depotId: <existing depot id>` on the error.
 
@@ -213,40 +284,41 @@ same tuple can both pass the check. Authentication fails closed: it finds two
 depots, returns 401 and logs both IDs. Operators who load a batch in parallel
 should dedupe it first. The operator docs say so.
 
-### Rules can't change while the service has depots
+### Changing the auth configuration
 
-A depot's `authMatchValues` follow the positions of the rules it was created
-under. If the rules changed, existing depots would be read by the new rules,
-and could match someone else. For example, take rules `employeeId → 0` and
+A change to the rules, to the requested types, or to VP auth itself changes
+the service's fingerprint. The service's existing depots are then implicitly
+invalid: they no longer match, and the 409 ignores them. The operator must
+reload them. Nothing is deleted or rewritten.
+
+This is why the fingerprint is needed. Take rules `employeeId → 0` and
 `departmentId → 1`, and Alice's depot `[123, 456]`. Swapping the two value
-indexes would make Bob (employee 456, department 123) produce `[123, 456]`
-too. `depots/create` would return 409 with Alice's `depotId`, and
-authentication would bind Bob to Alice's depot.
+indexes makes Bob (employee 456, department 123) produce `[123, 456]` too.
+Without the fingerprint, `depots/create` would return 409 with Alice's
+`depotId`, and authentication would bind Bob to Alice's depot. With it,
+Alice's depot carries the old fingerprint, Bob matches nothing, and Bob's own
+depot is accepted.
 
-So `issuer-services/update` returns 409
-`service_verifiablePresentationAuthRules_in_use`
-(`IssuerServicesErrors.SERVICE_VP_AUTH_RULES_IN_USE`) when the rules change
-and the service has at least one depot. The service is left unchanged.
-
-- **What counts as a change.** A different set of rules once both sides are
-  sorted by `valueIndex`, comparing `path` (as arrays), `rule` and
-  `valueIndex`. Reordering the same rules in the array isn't a change. Adding
-  or removing rules, or adding or removing the field, is. This holds whatever
-  the service's auth methods, so a `preauth` service with depots can't gain
-  rules either.
-- **Where.** `updateIssuerService`
-  (`entities/issuer-services/orchestrators/update-issuer-service.js`) runs the
-  check, then the shared `updateServiceConfiguration`. Relying-party services
-  share `updateServiceConfiguration` but not this check. Because the check
-  runs first, a request that changes rules in use gets the 409 even when it
-  would also fail validation.
-- **Response.** The route declares `...fastify.ConflictResponse`, so
-  `errorCode` reaches the client.
-- **Changing rules.** Delete the service's depots first, or set up a new
-  service.
-- **Not atomic.** The check and the update are separate steps, so a depot
-  created at the same moment as a rule change could slip through. Operators
-  shouldn't change a service's rules while loading its depots.
+- **Reordering isn't a change.** The same rules listed in another order, or
+  the same requested types in another order, keep the fingerprint. So do edits
+  to the description, terms, `disclosureRequest.purpose` and other fields.
+- **Switching methods.** A VP service switched to `preauth` has a `null`
+  fingerprint, and depots created while it's `preauth` store neither
+  `authMatchValues` nor a fingerprint. If the service switches back to VP,
+  those depots never match, and a new depot with the same values is accepted.
+  Depots created before the switch match again, because the configuration is
+  the same as when they were created.
+- **The race fails safe.** There's no lock between `issuer-services/update`
+  and `depots/create`. A depot created while the rules change carries the
+  fingerprint of the configuration `createDepot` read. If that was the old
+  one, the depot never matches under the new one. The worst case is a depot
+  that must be reloaded, never one that matches the wrong person.
+- **The update logs it.** When `issuer-services/update` changes a service's
+  fingerprint, `updateIssuerService`
+  (`entities/issuer-services/orchestrators/update-issuer-service.js`) logs at
+  info level the `serviceId` and `invalidatedDepotCount`, the number of the
+  service's depots whose fingerprint differs from the new one. If counting
+  fails, it logs a warning instead. It never fails the update.
 
 ### No backfill
 
@@ -425,9 +497,10 @@ against another exchange.
   that can't be decoded.
 - If nothing is left, return 401 `integrated_identification_user_not_found`.
 
-Only these credentials are checked and matched. A credential of another type
-that happens to have `credentialSubject.email` (an employment credential, say)
-doesn't prove the holder controls that email. Leaving the extra credentials
+Only these credentials are checked and matched, and each rule reads only the
+credentials of its own `type`. A credential of another type that happens to
+have `credentialSubject.email` (an employment credential, say) doesn't prove
+the holder controls that email. Leaving the extra credentials
 unchecked also keeps vouchers free (see
 [Verification vouchers](#5-verification-vouchers)). The type is read before
 verification, and verification recomputes it from the verified credential,
@@ -554,10 +627,14 @@ credentials that passed. `w3cCredential` is the `credential` field of each
 `verifyCredentials` result.
 
 ```js
+// credentials are { type, credential } for each verified credential, with the
+// type verifyCredentials computed. A rule reads only credentials of its type.
 // For each credential, the first of rule.path that finds anything supplies
 // the values. JSONPath runs with eval: false.
 const ruleValues = (rule, credentials) =>
   flow(
+    filter({ type: rule.type }),
+    map('credential'),
     flatMap((credential) => firstNonEmpty(rule.path, credential)),
     flatten,
     filter(isScalar),
@@ -606,10 +683,12 @@ Then:
    The handler computes it before building them. More than 100 returns 400
    `presentation_invalid`.
 2. No candidate tuples returns 401 `integrated_identification_user_not_found`.
-3. `depots = findDepotsByAuthMatchTuples(exchange.serviceId, tuples)`. This is
-   one query, scoped to the exchange's service and, through the repo, the
-   tenant. There is no rule matching in memory: a depot is found only when
-   its `authMatchValues` equals a candidate tuple exactly.
+3. `depots = findDepotsByAuthMatchTuples(exchange.serviceId, buildAuthRulesFingerprint(service), tuples)`.
+   This is one query, scoped to the exchange's service, the service's current
+   auth configuration and, through the repo, the tenant. There is no rule
+   matching in memory: a depot is found only when its `authMatchValues`
+   equals a candidate tuple exactly and it was created under the current
+   configuration.
 
 **6. Bind the depot.**
 
@@ -624,8 +703,10 @@ Then:
   `integrated_identification_user_not_found`, without choosing one. Log
   `{ exchangeId, serviceId, depotIds }`.
 
-Never log emails, candidate tuples or `authMatchValues`. Log depot IDs and
-counts only.
+Never log emails, candidate tuples, `authMatchValues` or credentials. Log
+depot IDs and counts only. Today `@verii/vc-checks` logs the whole credential
+when the issuer check fails (`check-issuer-trust.js`), and that can include
+the email. A separate packages change stops it logging credential contents.
 
 **Why not `unauthorized`.** The issue proposes `unauthorized` for a holder
 who matches no depot. The holder app shows `unauthorized` as "Authorization is
@@ -660,17 +741,16 @@ The operator API adds these errors:
 | `depots/create` | `authValues` don't hold one present value per rule | 400 | `invalid_auth_values` | 1 |
 | `depots/create` | A depot of the service has the same tuple | 409 | `auth_values_already_used`, with `depotId` | 1 |
 | `issuer-services/create`, `update` | Rules' `valueIndex` values aren't 0 to n−1 | 400 | `service_verifiablePresentationAuthRules_invalid` | 1 |
-| `issuer-services/update` | Rules change while the service has depots | 409 | `service_verifiablePresentationAuthRules_in_use` | 1 |
+| `issuer-services/create`, `update` | A rule's `type` isn't one of the `disclosureRequest` types, or a rule path throws when evaluated | 400 | `service_verifiablePresentationAuthRules_invalid` | 2 |
+| `issuer-services/create`, `update` | A rule has no `type` | 400 | `request_validation_failed` | 2 |
 | `issuer-services/create`, `update` | Internal VP service without `disclosureRequest.types` | 400 | `service_disclosureRequest_required` | 2 |
 | `issuer-services/create`, `update` | Internal VP service with a `presentationDefinition` | 400 | `service_presentationDefinition_not_allowed` | 2 |
 
 New codes in the Hub:
 
-- PR 1: `DepotErrors.AUTH_VALUES_ALREADY_USED`,
+- PR 1: `DepotErrors.AUTH_VALUES_ALREADY_USED` and
   `IssuerServicesErrors.SERVICE_VP_AUTH_RULES_INVALID`
-  (`service_verifiablePresentationAuthRules_invalid`) and
-  `IssuerServicesErrors.SERVICE_VP_AUTH_RULES_IN_USE`
-  (`service_verifiablePresentationAuthRules_in_use`).
+  (`service_verifiablePresentationAuthRules_invalid`).
 - PR 2: `ExchangeErrors.CREDENTIAL_CHECK_UNAVAILABLE`,
   `ExchangeErrors.IDENTIFICATION_USER_NOT_FOUND`
   (`integrated_identification_user_not_found`, the agent's code),
@@ -739,6 +819,9 @@ app's `main`, which uses VCL 2.10.1 through `vcl-react-native`.
 - **Matching is exact.** The database compares the whole tuple of normalized
   values for equality, in order, with no substring, prefix or pattern
   matching. A test pins this: `a@x.com` doesn't match `ma@x.com`.
+- **Matching stays in its configuration.** A depot only matches under the
+  rules and requested types it was created with, so changing them can't make
+  an existing depot match someone else.
 - **Matching stays in its service.** Depot lookup is scoped by tenant (in the
   repo) and by the exchange's service (in the query).
 - **There's no enumeration.** A holder can only test emails they hold trusted
@@ -775,17 +858,17 @@ network.
 | --- | --- |
 | `entities/issuer-services/domain/is-internal-vp-auth.js` | New. Used by `validateDepot`, `validateIssuerService`, `createDepot`, links and `authenticate`. |
 | `entities/issuer-services/domain/validate-issuer-service.js` | Rules' `valueIndex` values must be 0 to n−1. |
-| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_VP_AUTH_RULES_INVALID`, `SERVICE_VP_AUTH_RULES_IN_USE`. |
-| `entities/issuer-services/domain/vp-auth-rules-changed.js` | New. Compares rules sorted by `valueIndex`. |
-| `entities/issuer-services/orchestrators/update-issuer-service.js` | New. 409 when rules change while the service has depots, then the shared update. |
-| `controllers/operator/issuer-services/issuer-services-controller.js` | `update` uses `updateIssuerService` and declares `ConflictResponse`. |
+| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_VP_AUTH_RULES_INVALID`. |
+| `entities/issuer-services/orchestrators/update-issuer-service.js` | New. The shared update, then an info log of the depots a fingerprint change invalidated. |
+| `controllers/operator/issuer-services/issuer-services-controller.js` | `update` uses `updateIssuerService`. |
 | `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Describes `valueIndex` as the value's position in `authValues`. |
 | `entities/depots/domain/auth-match-values.js` | New. `toAuthMatchValue`, `buildAuthMatchValues`. |
+| `entities/depots/domain/auth-rules-fingerprint.js` | New. `buildAuthRulesFingerprint`. |
 | `entities/depots/domain/validate-depot.js` | One present value per rule for internal VP services. |
 | `entities/depots/domain/depot-errors.js` | `AUTH_VALUES_ALREADY_USED`. |
-| `entities/depots/orchestrators/create-depot.js` | Store `authMatchValues` for internal VP services. Return 409 on an identical tuple. |
-| `entities/depots/repo/repo.js` | Index, `defaultProjection`, new extension. |
-| `entities/depots/repo/find-depots-by-auth-match-tuples.js` | New. |
+| `entities/depots/orchestrators/create-depot.js` | Store `authMatchValues` and `authRulesFingerprint` for internal VP services. Return 409 on an identical tuple under the same fingerprint. |
+| `entities/depots/repo/repo.js` | Index with the fingerprint, `defaultProjection`, new extension. |
+| `entities/depots/repo/find-depots-by-auth-match-tuples.js` | New. Filters on the fingerprint and whole tuples. |
 | `controllers/operator/depots/depots-controller.js` | 409 `depot-conflict-error` response on `create`. |
 | `controllers/operator/depots/schemas/depot-conflict-error.schema.js` | New. The `error` schema plus `depotId`. |
 | `entities/links/orchestrators/refresh-links.js` | Choose the link per the table. Skip loading a missing depot. |
@@ -796,15 +879,19 @@ network.
 | File | Change |
 | --- | --- |
 | `entities/presentations/orchestrators/check-credentials.js` | New helper. `verifyPresentation` calls it. |
-| `entities/exchanges/domain/vp-auth-rules.js` | New. `ruleValues`, `buildCandidateTuples`. |
-| `entities/exchanges/orchestrators/authenticate.js` | Dispatch and `vpAuthHandler`. |
+| `entities/exchanges/domain/vp-auth-rules.js` | New. `ruleValues`, which reads only the rule's `type`, and `buildCandidateTuples`. |
+| `entities/exchanges/orchestrators/authenticate.js` | Dispatch and `vpAuthHandler`. Looks depots up with `buildAuthRulesFingerprint(service)`. |
+| `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Each rule requires a `type`. |
 | `entities/exchanges/domain/exchange-errors.js` | `CREDENTIAL_CHECK_UNAVAILABLE`, `IDENTIFICATION_USER_NOT_FOUND`. |
 | `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_DISCLOSURE_REQUEST_REQUIRED`, `SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`. |
-| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, require `disclosureRequest.types` and reject `presentationDefinition`. |
+| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, require `disclosureRequest.types`, reject `presentationDefinition`, require each rule's `type` to be requested, and evaluate each rule path with `eval: false`. |
 | `controllers/vn-api/vn-issuing-controller.js` | Pass `jwtVp`. Remove the no-op `validateInput`. Add `PaymentRequiredResponse`. |
 
 `exchanges` already imports from `presentations` (`post-presentation.js`), so
 this adds no new dependency between entities.
+
+A separate change in the packages stops `@verii/vc-checks` logging credential
+contents.
 
 ## 7. Testing
 
@@ -838,14 +925,35 @@ holder's `did:jwk`. The VP's `iss` and `kid` use that same DID.
 - There's no 409 when only some values are shared, for the same values in
   other positions, for a depot with an extra value, for another service, or
   for a `preauth` or relying-party service.
-- A service with both methods gets `authMatchValues`, the 409 and the
-  `authValues` validation.
-- `findDepotsByAuthMatchTuples` finds only depots whose `authMatchValues`
-  equal a tuple exactly, in order: not the same values at other positions,
-  with an extra element or as a prefix, nor in another service or tenant. It
-  finds the depots of every tuple given.
-- The `{ tenantId, serviceId, authMatchValues }` index exists, with no
-  collation.
+- A VP depot stores `authRulesFingerprint`, which no response returns.
+- There's no 409 for a depot with the same tuple under another fingerprint.
+- A service with both methods gets `authMatchValues`, the fingerprint, the
+  409 and the `authValues` validation.
+- `findDepotsByAuthMatchTuples` finds only depots of the given fingerprint
+  whose `authMatchValues` equal a tuple exactly, in order: not the same values
+  at other positions, with an extra element or as a prefix, nor under another
+  fingerprint, in another service or in another tenant. It finds the depots of
+  every tuple given.
+- The `{ tenantId, serviceId, authRulesFingerprint, authMatchValues }` index
+  exists, with no collation.
+
+### `auth-rules-fingerprint.test.js` (PR 1)
+
+- It's a string for an internal VP service, the same for a dual-method
+  service, and `null` for a `preauth`-only service or a VP service without
+  internal auth.
+- It's unchanged when the rules or the requested types are listed in another
+  order, when other fields change, and for a single path given as a string.
+- It changes with swapped value indexes, a changed or reordered path, a
+  changed rule, a rule `type`, an added or removed rule, and changed
+  requested types.
+
+### `log-invalidated-depots.test.js` (PR 1)
+
+- A fingerprint change counts the service's depots with another fingerprint
+  and logs the count. Removing VP auth counts the depots that have one.
+- An unchanged fingerprint neither counts nor logs.
+- A failed count logs a warning and doesn't throw.
 
 ### `issue-links-controller.test.js` (PR 1)
 
@@ -866,25 +974,37 @@ holder's `did:jwk`. The VP's `iss` and `kid` use that same DID.
   out of range return 400
   `service_verifiablePresentationAuthRules_invalid`. Rules in any order are
   accepted.
-- PR 1: `update` of a service with depots returns 409
-  `service_verifiablePresentationAuthRules_in_use`, and leaves the service
-  unchanged, when it swaps the value indexes, changes a path, adds a rule or
-  removes the rules. It returns 200 when the same rules are reordered, when
-  only other fields change, when the service has no depots, and when only
-  another service has depots.
+- PR 1, auth configuration changes, all through `update`:
+  - The review's race case: a depot created under the old rules (inserted
+    directly) still matches before the update. After the value indexes are
+    swapped it never matches. Bob gets no match, and his own depot is
+    accepted.
+  - A service switched to `preauth`, given a depot, then switched back to VP:
+    that depot doesn't match, and a new depot with the same values is
+    accepted. A second one then gets the 409.
+  - A changed rule path or changed requested types make old depots
+    unmatchable, and the same tuple is accepted again.
+  - Reordered rules and changes to other fields keep depots valid, and the
+    same tuple still gets the 409.
+  - A rule change logs `invalidatedDepotCount` with the service's depot count.
+    An unchanged configuration logs no invalidation.
 - PR 2: `create` and `update` of an internal VP service without
   `disclosureRequest` return 400 `service_disclosureRequest_required`, and
   with a `presentationDefinition` return 400
-  `service_presentationDefinition_not_allowed`. Tests of internal VP services
-  that check something later (the DID document's service, uniqueness, rule
-  indexes, rules in use) now include a `disclosureRequest` and no
-  `presentationDefinition`.
+  `service_presentationDefinition_not_allowed`. A rule without a `type`
+  returns 400 `request_validation_failed`. A rule whose `type` isn't
+  requested, or whose path throws when evaluated, returns 400
+  `service_verifiablePresentationAuthRules_invalid`. Tests of internal VP
+  services that check something later (the DID document's service,
+  uniqueness, rule indexes, auth configuration changes) now include a
+  `disclosureRequest`, rule types and no `presentationDefinition`.
 
 ### `vp-auth-rules.test.js` (PR 2)
 
 Unit tests for building candidate tuples:
 
 - Values are normalized and distinct, and only scalars are kept.
+- A rule reads only credentials of its `type`.
 - For each credential, the first `path` that finds anything supplies the
   values. JSONPath scripts aren't evaluated.
 - `pick` keeps every value. `equal` yields its value when there's exactly
@@ -950,6 +1070,9 @@ Added by this design:
   only one, returns 401 `integrated_identification_user_not_found`.
 - A credential with `kid: []` in its protected header returns 400
   `presentation_invalid`.
+- A depot created under a previous auth configuration isn't matched.
+- An email in a credential of another requested type isn't read by the email
+  rule.
 - A service with both methods: a VP with `vendorOriginContext` uses
   `preauth`, and one without uses VP auth.
 - A VP service without `authMode: 'internal'` returns 400
@@ -981,9 +1104,9 @@ Added by this design:
   claimed before the account had a `did:jwk`, and estimate how many accounts
   would need to re-verify their email. Document
   `verifiable_presentation` issuer services for operators: setup, one
-  `authValues` entry per rule, the 409 rule, deduping batches, setting the
-  rules before creating depots, vouchers for non-free types, and withdrawing
-  a link.
+  `authValues` entry per rule, the 409 rule, deduping batches, reloading
+  depots after changing the auth configuration, vouchers for non-free types,
+  and withdrawing a link.
   About 1 day.
 
 ## Decisions beyond the issue
@@ -1023,12 +1146,21 @@ Added by this design:
     most 100. Nothing is matched in memory.
 16. The 409 covers the whole tuple. Concurrent duplicates are accepted, and
     authentication fails closed on them.
-17. A service's rules can't change while it has depots: `update` returns 409
-    `service_verifiablePresentationAuthRules_in_use`.
+17. Each internal VP depot stores a fingerprint of the auth configuration it
+    was created under. A change to the rules, the requested types or VP auth
+    itself invalidates the service's existing depots, which must be
+    reloaded. The update logs how many. A depot created during a change fails
+    safe.
 18. Credentials with no expiry are accepted. Velocity email credentials carry
     no expiry, and revocation must pass.
 19. A `TypeError` from `verifyCredentials`' input checks returns 400
     `presentation_invalid`, not 500.
+20. Each rule has a required `type`, one of the `disclosureRequest` types, and
+    reads only credentials of that type.
+21. Rule paths are evaluated with `eval: false` when a service is created or
+    updated, and a path that throws is a 400.
+22. Credential contents aren't logged. A separate packages change stops
+    `@verii/vc-checks` logging them.
 
 ## Risks outside this work
 
