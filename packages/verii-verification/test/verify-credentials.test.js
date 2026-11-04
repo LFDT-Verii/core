@@ -59,12 +59,28 @@ const registrarResponseError = (statusCode) =>
     body: '',
   });
 
+// got-style clients put the status on error.response
+const gotStyleResponseError = (statusCode) =>
+  Object.assign(new Error(`Response code ${statusCode}`), {
+    name: 'HTTPError',
+    response: { statusCode },
+  });
+
+const registrarErrorShapes = [
+  { shape: 'http-client', buildError: registrarResponseError },
+  { shape: 'got-style', buildError: gotStyleResponseError },
+];
+
 const registrarOutages = [
   { title: 'a 401 response', buildError: () => registrarResponseError(401) },
   { title: 'a 403 response', buildError: () => registrarResponseError(403) },
   { title: 'a 429 response', buildError: () => registrarResponseError(429) },
   { title: 'a 500 response', buildError: () => registrarResponseError(500) },
   { title: 'a 503 response', buildError: () => registrarResponseError(503) },
+  {
+    title: 'a got-style 503 response',
+    buildError: () => gotStyleResponseError(503),
+  },
   {
     title: 'a connection error',
     buildError: () =>
@@ -1289,25 +1305,26 @@ describe('Verify credentials', () => {
         });
 
         // 404: no such record. 400: the registrar rejected the issuer DID.
-        [400, 404].forEach((statusCode) => {
-          it(`TRUSTED_ISSUER should FAIL when the verified profile lookup is a ${statusCode}`, async () => {
-            const result = await verifyIdVc({
-              getOrganizationVerifiedProfile: () =>
-                Promise.reject(registrarResponseError(statusCode)),
+        [400, 404].forEach((statusCode) =>
+          registrarErrorShapes.forEach(({ shape, buildError }) => {
+            it(`TRUSTED_ISSUER should FAIL when the verified profile lookup is a ${shape} ${statusCode}`, async () => {
+              const result = await verifyIdVc({
+                getOrganizationVerifiedProfile: () =>
+                  Promise.reject(buildError(statusCode)),
+              });
+
+              expect(result).toEqual(idVcResult(CheckResults.FAIL));
             });
 
-            expect(result).toEqual(idVcResult(CheckResults.FAIL));
-          });
+            it(`TRUSTED_ISSUER should FAIL when the DID lookup is a ${shape} ${statusCode}`, async () => {
+              const result = await verifyIdVc({
+                resolveDid: () => Promise.reject(buildError(statusCode)),
+              });
 
-          it(`TRUSTED_ISSUER should FAIL when the DID lookup is a ${statusCode}`, async () => {
-            const result = await verifyIdVc({
-              resolveDid: () =>
-                Promise.reject(registrarResponseError(statusCode)),
+              expect(result).toEqual(idVcResult(CheckResults.FAIL));
             });
-
-            expect(result).toEqual(idVcResult(CheckResults.FAIL));
-          });
-        });
+          }),
+        );
 
         registrarOutages.forEach(({ title, buildError }) => {
           it(`TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR when the verified profile lookup fails with ${title}`, async () => {

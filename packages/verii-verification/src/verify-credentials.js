@@ -439,14 +439,18 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
 };
 
 // The registrar client (@verii/http-client) throws an undici ResponseError that
-// carries the HTTP statusCode for every 4xx and 5xx response. A 404 says the
-// registrar has no such record, and a 400 says it rejected the issuer DID as
-// malformed. Both are problems with the credential. Any other status
-// (including 401, 403 and 429), and a timeout or connection error, which has
-// no statusCode, means the registrar could not answer.
+// carries the HTTP statusCode for every 4xx and 5xx response. The got-style
+// clients that @verii/common-fetchers also supports carry it on
+// error.response.statusCode. A 404 says the registrar has no such record, and
+// a 400 says it rejected the issuer DID as malformed. Both are problems with
+// the credential. Any other status (including 401, 403 and 429), and a timeout
+// or connection error, which has no status, means the registrar could not
+// answer.
 const IssuerRejectedStatusCodes = [400, 404];
 const isIssuerRejectedError = (error) =>
-  IssuerRejectedStatusCodes.includes(error?.statusCode);
+  IssuerRejectedStatusCodes.includes(
+    error?.response?.statusCode ?? error?.statusCode,
+  );
 
 // A 400 or 404 leaves the dependency missing, so the issuer trust check fails
 // as it does for an unregistered issuer. @verii/http-client resolves a body it
