@@ -1744,6 +1744,88 @@ describe('vn-api > issue credentials', () => {
     });
   });
 
+  describe('pending depots', () => {
+    let pendingExchange;
+    let pendingCredential;
+
+    beforeEach(async () => {
+      const pendingDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        credentialsPending: true,
+      });
+      pendingExchange = await persistExchange({
+        tenant,
+        service: preauthIssuerService,
+        depotId: new ObjectId(pendingDepot._id),
+        events: [
+          {
+            state: ExchangeStates.AUTHENTICATION_SUCCESS,
+            timestamp: new Date(),
+          },
+        ],
+      });
+      pendingCredential = await persistCredential({
+        tenant,
+        depot: pendingDepot,
+        typeMetadata: credentialTypeMetadata['EmailV1.0'],
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'bob.foobar@example.com' },
+        },
+      });
+    });
+
+    ['approvedOfferIds', 'rejectedOfferIds'].forEach((offerIdsField) => {
+      it(`should 400 with credentials_pending for ${offerIdsField} and change nothing`, async () => {
+        const dbExchange = await findOneExchange(pendingExchange._id);
+        const dbCredential = await mongoDb()
+          .collection('credentials')
+          .findOne({ _id: new ObjectId(pendingCredential._id) });
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          headers: {
+            authorization: `Bearer ${await testAccessToken(
+              tenant.did,
+              pendingExchange._id,
+              pendingExchange.depotId,
+              holderAccessTokensSecret,
+            )}`,
+          },
+          payload: {
+            [offerIdsField]: [pendingCredential._id],
+            proof: await buildProof(
+              holderDid,
+              holderKeyPair,
+              await loadChallenge(pendingExchange._id),
+            ),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 400,
+            error: 'Bad Request',
+            errorCode: 'credentials_pending',
+            message: 'credentials_pending',
+          }),
+        );
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(pendingCredential._id) }),
+        ).resolves.toEqual(dbCredential);
+        await expect(findOneExchange(pendingExchange._id)).resolves.toEqual(
+          dbExchange,
+        );
+        expect(mockAddCredentialMetadataEntry.mock.callCount()).toEqual(0);
+      });
+    });
+  });
+
   const findOneExchange = async (value) =>
     mongoDb()
       .collection('exchanges')

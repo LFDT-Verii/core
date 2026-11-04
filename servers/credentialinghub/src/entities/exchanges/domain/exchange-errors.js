@@ -23,6 +23,7 @@ const ExchangeErrors = {
   UNAUTHORIZED: 'unauthorized',
   PRESENTATION_SUBMISSION_INVALID: 'presentation_submission_invalid',
   AUTHENTICATION_METHOD_UNSUPPORTED: 'authentication_method_unsupported',
+  CREDENTIALS_PENDING: 'credentials_pending',
 };
 
 module.exports = { ExchangeErrors };
