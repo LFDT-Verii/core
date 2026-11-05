@@ -111,6 +111,32 @@ Changing the secret invalidates every outstanding nonce. The standalone
 notification worker issues no nonces, so it starts without
 `OPENID4VCI_NONCE_SECRET`.
 
+## Presentation Submission Descriptor Paths
+
+Wallets submit presentations to `POST /vn-api/r/:tenantId/presentation` and
+`POST /r/:tenantId/openid4vp/direct-post`. Each entry in the submission's
+`presentation_submission.descriptor_map` names one credential in the
+presentation's `verifiableCredential` array. Its `path` takes one of these
+forms:
+
+| Descriptor | `path` | `path_nested.path` |
+| --- | --- | --- |
+| Direct | `$.verifiableCredential[<n>]` | not sent |
+| Nested | `$` or `$[0]` | `$.verifiableCredential[<n>]` |
+
+`<n>` is an index from `0` to `999`, written without leading zeros. The whole
+path must match one of these forms, with no other characters or segments. A
+nested descriptor can't contain another `path_nested`.
+
+| Submission | Error |
+| --- | --- |
+| A `path` in any other form | 400 `presentation_jsonpath_unsupported` |
+| An index with no credential in `verifiableCredential` | 400 `presentation_jsonpath_empty` |
+
+The VN-API endpoint returns these as the response's `errorCode`. The OpenID4VP
+direct post returns an OAuth `invalid_request` error, and the exchange records
+the code.
+
 ## Design Docs
 
 - [Notification webhooks design](docs/notification-webhooks-design.md)
