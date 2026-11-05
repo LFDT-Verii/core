@@ -132,7 +132,9 @@ key:
   metadata lookup, or the issuer's verified profile or DID document lookup
   with anything other than a 400 or 404 (another error status such as 401,
   403, 429 or a 5xx, a timeout, a connection error, or a body that is not
-  JSON). The same credential may pass once the registrar answers.
+  JSON). The same credential may pass once the registrar answers. A 400 or
+  404 from one of the issuer's lookups still gives `FAIL` when the other
+  lookup failed.
 
 `credentialChecks.UNREVOKED` is `FAIL` for a revoked credential, and for a
 status entry that cannot be checked: a revocation URL that cannot be parsed,

@@ -228,6 +228,7 @@ const emptyIssuerRefs = () => ({
   accreditationVCMap: {},
   credentialTypeMetadatasMap: {},
   issuerDidDocumentMap: {},
+  rejectedIssuerIds: new Set(),
   unresolvedIssuerIds: new Set(),
 });
 
@@ -427,7 +428,11 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
         'credentialType',
         credentialTypeMetadatas,
       ),
-      unresolvedIssuerIds: failedLookupIssuerIds([
+      rejectedIssuerIds: lookupIssuerIdsWith('rejected', [
+        ...accreditationLookups,
+        ...didDocumentLookups,
+      ]),
+      unresolvedIssuerIds: lookupIssuerIdsWith('failed', [
         ...accreditationLookups,
         ...didDocumentLookups,
       ]),
@@ -452,8 +457,8 @@ const isIssuerRejectedError = (error) =>
     error?.response?.statusCode ?? error?.statusCode,
   );
 
-// A 400 or 404 leaves the dependency missing, so the issuer trust check fails
-// as it does for an unregistered issuer. @verii/http-client resolves a body it
+// A 400 or 404 rejects the issuer, so the issuer trust check fails as it does
+// for an unregistered issuer. @verii/http-client resolves a body it
 // cannot parse as JSON to {}, so an empty value is an unreadable response, and
 // fails the lookup like any other registrar error. The lookup calls the
 // fetcher as a method of the fetchers object, so fetchers that use `this` keep
@@ -468,7 +473,7 @@ const lookupIssuerDependency = async (lookup, issuerId, context) => {
     return { issuerId, value };
   } catch (error) {
     if (isIssuerRejectedError(error)) {
-      return { issuerId };
+      return { issuerId, rejected: true };
     }
     context.log.error({ err: error, issuerId }, 'issuer lookup failed');
     return { issuerId, failed: true };
@@ -477,11 +482,12 @@ const lookupIssuerDependency = async (lookup, issuerId, context) => {
 
 const lookupValues = flow(map('value'), compact);
 
-const failedLookupIssuerIds = flow(
-  filter('failed'),
-  map('issuerId'),
-  (issuerIds) => new Set(issuerIds),
-);
+const lookupIssuerIdsWith = (outcome, lookups) =>
+  flow(
+    filter(outcome),
+    map('issuerId'),
+    (issuerIds) => new Set(issuerIds),
+  )(lookups);
 
 const resolveCredentialStatuses = async (credentialData, context) => {
   try {
@@ -680,6 +686,7 @@ const runIssuerTrustCheck = (
     accreditationVCMap,
     issuerDidDocumentMap,
     credentialTypeMetadatasMap,
+    rejectedIssuerIds,
     unresolvedIssuerIds,
     errors,
   },
@@ -699,6 +706,16 @@ const runIssuerTrustCheck = (
       );
     }
     return Promise.resolve(SelfCertifiedIssuerChecks[issuerKeyBinding]);
+  }
+
+  // A 400 or 404 from either registrar lookup settles the check, even when
+  // the other lookup failed: the credential fails once the registrar answers.
+  if (rejectedIssuerIds.has(issuerId)) {
+    log.error(
+      { id, issuerId },
+      'runIssuerTrustCheck: the registrar rejected the issuer',
+    );
+    return Promise.resolve(CheckResults.FAIL);
   }
 
   if (unresolvedIssuerIds.has(issuerId)) {

@@ -1329,6 +1329,72 @@ describe('Verify credentials', () => {
           }),
         );
 
+        // A 400 or 404 from either lookup settles the check as FAIL, even
+        // when the other lookup could not be completed.
+        const connectionError = () =>
+          Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:443'), {
+            code: 'ECONNREFUSED',
+          });
+        [
+          {
+            profile: () => registrarResponseError(404),
+            did: () => registrarResponseError(503),
+            title: 'profile 404 and DID 503',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => registrarResponseError(503),
+            did: () => registrarResponseError(404),
+            title: 'profile 503 and DID 404',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => registrarResponseError(400),
+            did: () => registrarResponseError(503),
+            title: 'profile 400 and DID 503',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => registrarResponseError(503),
+            did: () => registrarResponseError(400),
+            title: 'profile 503 and DID 400',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => gotStyleResponseError(404),
+            did: connectionError,
+            title: 'a got-style profile 404 and a DID connection error',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => registrarResponseError(503),
+            did: connectionError,
+            title: 'profile 503 and a DID connection error',
+            expected: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          },
+          {
+            profile: () => registrarResponseError(503),
+            did: () => registrarResponseError(503),
+            title: 'profile 503 and DID 503',
+            expected: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          },
+          {
+            profile: () => registrarResponseError(404),
+            did: () => registrarResponseError(404),
+            title: 'profile 404 and DID 404',
+            expected: CheckResults.FAIL,
+          },
+        ].forEach(({ profile, did, title, expected }) => {
+          it(`TRUSTED_ISSUER should be ${expected} when the lookups give ${title}`, async () => {
+            const result = await verifyIdVc({
+              getOrganizationVerifiedProfile: () => Promise.reject(profile()),
+              resolveDid: () => Promise.reject(did()),
+            });
+
+            expect(result).toEqual(idVcResult(expected));
+          });
+        });
+
         registrarOutages.forEach(({ title, buildError }) => {
           it(`TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR when the verified profile lookup fails with ${title}`, async () => {
             const result = await verifyIdVc({
