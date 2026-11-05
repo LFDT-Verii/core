@@ -25,12 +25,13 @@ const {
   isString,
   join,
   keyBy,
-  keys,
   map,
+  mapValues,
   omit,
   partition,
-  pickBy,
+  pick,
   size,
+  some,
   startsWith,
   uniq,
 } = require('lodash/fp');
@@ -57,7 +58,10 @@ const {
   checkCredentialStatus,
   checkIssuerTrust,
   checkHolder,
+  credentialForLog,
+  didDocumentForLog,
   extractCredentialType,
+  issuerDependenciesForLog,
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { mapWithIndex } = require('@verii/common-functions');
@@ -344,7 +348,8 @@ const resolveVelocityDidDocument = async (
 
     log.info(
       {
-        ...didResolutionIdsForLog({ didDocument, didDocumentMetadata }),
+        didDocument: didDocumentForLog(didDocument),
+        didDocumentMetadata: didDocumentMetadataForLog(didDocumentMetadata),
         didResolutionMetadata,
       },
       'did:velocity doc resolved',
@@ -361,19 +366,12 @@ const resolveVelocityDidDocument = async (
   }
 };
 
-// The resolved document's bound issuer VCs are JWTs, so only ids are logged.
-const didResolutionIdsForLog = ({ didDocument, didDocumentMetadata }) => ({
-  didDocument: {
-    id: didDocument?.id,
-    verificationMethod: map(
-      'id',
-      didDocument?.verificationMethod ?? didDocument?.publicKey,
-    ),
-  },
-  didDocumentMetadata: {
-    boundIssuerVcs: map('id', didDocumentMetadata?.boundIssuerVcs),
-  },
-});
+// The resolved document's bound issuer VCs are JWTs, so each is logged as an
+// object with its id.
+const didDocumentMetadataForLog = flow(
+  pick(['boundIssuerVcs']),
+  mapValues(map(pick(['id']))),
+);
 
 const resolveOtherDidDocument = async ({ keyMetadata }, { log }) => {
   try {
@@ -733,10 +731,15 @@ const runIssuerTrustCheck = (
     credentialTypeMetadata: credentialTypeMetadatasMap[credentialType],
   };
 
-  const missingDeps = flow(pickBy(isEmpty), keys)(resolvedDeps);
-  if (!isEmpty(missingDeps)) {
+  if (some(isEmpty, Object.values(resolvedDeps))) {
     log.error(
-      { id, issuerId, credentialType, missingDeps },
+      {
+        id,
+        credential: credentialForLog(credential),
+        issuerId,
+        credentialType,
+        resolvedDeps: issuerDependenciesForLog(resolvedDeps),
+      },
       'runIssuerTrustCheck: resolvedDeps failed',
     );
     return Promise.resolve(CheckResults.FAIL);

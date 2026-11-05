@@ -1198,7 +1198,44 @@ describe('Verify credentials', () => {
           );
         });
 
+        const boundIssuerVcForLog = {
+          header: {
+            alg: 'ES256K',
+            kid: `${issuerDid}#key-1`,
+            typ: 'JWT',
+          },
+          payload: { iss: issuerDid },
+        };
+
         it('should log only identifiers of the resolved did:velocity document', async () => {
+          resolveDidDocument.mock.mockImplementationOnce(() => ({
+            didDocument: {
+              id: 'DID',
+              publicKey: [
+                {
+                  id: `${credentialDid.toLowerCase()}#key`,
+                  publicKeyJwk: orgKeyPair.publicKey,
+                },
+              ],
+              service: [
+                {
+                  id: `${credentialDid.toLowerCase()}#service`,
+                  credentialType: 'Passport',
+                },
+              ],
+            },
+            didDocumentMetadata: {
+              boundIssuerVcs: [
+                {
+                  id: credentialDid.toLowerCase(),
+                  format: 'jwt_vc',
+                  vc: issuerVc,
+                },
+              ],
+            },
+            didResolutionMetadata: {},
+          }));
+
           const result = await verifyWithSpyLog();
 
           expect(result[0].credentialChecks.TRUSTED_ISSUER).toEqual(
@@ -1213,10 +1250,16 @@ describe('Verify credentials', () => {
             {
               didDocument: {
                 id: 'DID',
-                verificationMethod: [`${credentialDid.toLowerCase()}#key`],
+                publicKey: [{ id: `${credentialDid.toLowerCase()}#key` }],
+                service: [
+                  {
+                    id: `${credentialDid.toLowerCase()}#service`,
+                    credentialType: 'Passport',
+                  },
+                ],
               },
               didDocumentMetadata: {
-                boundIssuerVcs: [credentialDid.toLowerCase()],
+                boundIssuerVcs: [{ id: credentialDid.toLowerCase() }],
               },
               didResolutionMetadata: {},
             },
@@ -1224,7 +1267,7 @@ describe('Verify credentials', () => {
           ]);
         });
 
-        it('should log the names of missing issuer dependencies, not their values', async () => {
+        it('should log the issuer dependencies by their identifiers, with a missing one as null', async () => {
           const result = await verifyWithSpyLog({
             getCredentialTypeMetadata: () => [
               { credentialType: 'OtherType', issuerCategory: 'ContactIssuer' },
@@ -1238,14 +1281,28 @@ describe('Verify credentials', () => {
           expect(loggedText()).not.toContain(vcWithEmail);
           expect(loggedText()).not.toContain(issuerVc);
           expect(loggedText()).not.toContain('IdentityIssuer');
+          expect(loggedText()).not.toContain('publicKeyJwk');
           expect(
             spyLog.error.mock.calls.map((call) => call.arguments),
           ).toContainEqual([
             {
               id: credentialWithEmail.id,
+              credential: {
+                id: credentialWithEmail.id,
+                type: ['Passport'],
+                issuer: { id: issuerDid },
+              },
               issuerId: issuerDid,
               credentialType: 'Passport',
-              missingDeps: ['credentialTypeMetadata'],
+              resolvedDeps: {
+                boundIssuerVc: boundIssuerVcForLog,
+                issuerAccreditation: { id: issuerDid },
+                issuerDidDocument: {
+                  id: issuerDid,
+                  publicKey: [{ id: '#key-1' }],
+                },
+                credentialTypeMetadata: null,
+              },
             },
             'runIssuerTrustCheck: resolvedDeps failed',
           ]);
