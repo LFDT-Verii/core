@@ -40,7 +40,7 @@ shared link. PR 2 adds the authentication handler.
 
 | Piece | Where | State |
 | --- | --- | --- |
-| Service fields `authMethods`, `authMode`, `disclosureRequest`, `verifiablePresentationAuthRules` | `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Done. `rule` is `pick` or `equal`. `path` is an array of JSONPaths. |
+| Service fields `authMethods`, `authMode`, `disclosureRequest`, `verifiablePresentationAuthRules` | `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Done. `rule` is `pick` or `equal`. `path` is an array of JSONPaths, which PR 2 replaces with claims path pointers. |
 | Rules required for VP services | `entities/issuer-services/domain/validate-issuer-service.js:9` | Done, when `authMode === 'internal'` |
 | `authValues` required for VP depots | `entities/depots/domain/validate-depot.js:28` | Done, same condition |
 | Manifest asks for `disclosureRequest` types, `submit_presentation_uri` is `/authenticate` | `entities/exchanges/domain/build-presentation-request.js:22` | Done |
@@ -127,15 +127,44 @@ PR 2 tightens the rules:
   credential. A rule without a `type` fails the request schema (400
   `request_validation_failed`). A `type` that isn't requested returns 400
   `service_verifiablePresentationAuthRules_invalid`.
-- **Rule paths are checked.** On `create` and `update`, `validateIssuerService`
-  parses each path and rejects filter (`?(…)`) and script (`(…)`) segments,
-  which can't run with `eval: false`. It also evaluates each path with
-  `eval: false` against an empty object, which catches paths that don't parse.
-  Either failure returns 400 `service_verifiablePresentationAuthRules_invalid`,
-  so a bad path fails when it's configured, not when a holder authenticates.
-  Evaluating alone isn't enough: a filter only runs once the path reaches an
-  existing field, so `$.credentialSubject[?(@.email)].email` returns nothing
-  against `{}` and throws only against a real credential.
+- **Rule paths are claims path pointers.** See
+  [Rule paths](#rule-paths-pr-2).
+
+### Rule paths (PR 2)
+
+A rule's `path` is a list of claims path pointers (OpenID4VP 1.0, section 7),
+tried in order. For each credential, the first pointer that finds a value
+supplies it:
+
+```json
+{
+  "type": "EmailV1.0",
+  "rule": "pick",
+  "valueIndex": 0,
+  "path": [["credentialSubject", "email"], ["credentialSubject", "emailAddress"]]
+}
+```
+
+- **Segments.** A string selects a key in an object. A non-negative integer
+  selects an array index. `null` selects every element of an array.
+- **No match.** A missing key or index, or a type mismatch (a key on an
+  array, an index on an object), means that pointer finds nothing. Evaluation
+  never throws.
+- **Schema.** `path` holds 1 to 10 pointers. Each pointer holds 1 to 32
+  segments, each a non-empty string, a non-negative integer or `null`.
+  Anything else fails request validation with 400
+  `request_validation_failed`.
+- **No JSONPath.** Rules no longer use JSONPath, so there are no filter,
+  script or `@other()` expressions to guard against, and `validateIssuerService`
+  has no custom path validation. Evaluation is a small pure function, bounded
+  by the credential's own data.
+
+Why pointers:
+
+- Nothing in a rule can run code or recurse.
+- Validation is plain JSON schema.
+- A rule's `{ type, path }` lines up with a DCQL credential query's type and
+  claims path.
 
 ### `authMatchValues`
 
@@ -201,8 +230,10 @@ const buildAuthRulesFingerprint = (service) =>
 ```
 
 - **What goes in.** The rules sorted by `valueIndex`, each reduced to `path`
-  (as an array, in order), `rule`, `valueIndex` and `type` (absent until
-  PR 2 adds it), and the `disclosureRequest.types` type names, sorted.
+  (the array of pointers, in order), `rule`, `valueIndex` and `type` (absent
+  until PR 2 adds it), and the `disclosureRequest.types` type names, sorted.
+  The change to claims path pointers doesn't change the fingerprint function:
+  it hashes `path` as an array of pointers.
 - **What doesn't.** The order of the rules in the array, the order of the
   requested types, `disclosureRequest.purpose` and the rest of the service.
   The auth methods only count through `isInternalVpAuth`: a service with both
@@ -491,6 +522,12 @@ paths. It also checks that `definition_id` is `<exchangeId>.<serviceId>`.
 The holder signed the `definition_id`, so a captured VP can't be replayed
 against another exchange.
 
+Descriptor paths in the presentation submission must be
+`$.verifiableCredential[n]`, or, for a nested descriptor, an outer `path` of
+`$` or `$[0]` with a `path_nested` whose `path` is
+`$.verifiableCredential[n]`. They're read by index. Anything else returns 400
+`presentation_jsonpath_unsupported`.
+
 **3. Pick the credentials.** Let `requestedTypes` be the
 `disclosureRequest.types` types.
 
@@ -632,15 +669,37 @@ credentials that passed. `w3cCredential` is the `credential` field of each
 `verifyCredentials` result.
 
 ```js
+// A claims path pointer: a string selects a key in an object, a non-negative
+// integer an array index, and null every element of an array. A missing key or
+// index, or a type mismatch, selects nothing. It never throws.
+const selectSegment = (nodes, segment) =>
+  flatMap((node) => {
+    if (segment === null) return isArray(node) ? node : [];
+    if (isString(segment)) {
+      return isPlainObject(node) && Object.hasOwn(node, segment)
+        ? [node[segment]]
+        : [];
+    }
+    return isArray(node) && segment < node.length ? [node[segment]] : [];
+  }, nodes);
+
+const selectByPointer = (pointer, json) =>
+  reduce(selectSegment, [json], pointer);
+
+// The first pointer that finds a value supplies the values.
+const firstPointerValues = (pointers, json) =>
+  find(
+    negate(isEmpty),
+    map((pointer) => selectByPointer(pointer, json), pointers),
+  ) ?? [];
+
 // credentials are { type, credential } for each verified credential, with the
 // type verifyCredentials computed. A rule reads only credentials of its type.
-// For each credential, the first of rule.path that finds anything supplies
-// the values. JSONPath runs with eval: false.
 const ruleValues = (rule, credentials) =>
   flow(
     filter({ type: rule.type }),
     map('credential'),
-    flatMap((credential) => firstNonEmpty(rule.path, credential)),
+    flatMap((credential) => firstPointerValues(rule.path, credential)),
     flatten,
     filter(isScalar),
     map(toAuthMatchValue),
@@ -677,10 +736,10 @@ const buildCandidateTuples = (rules, credentials) =>
 - **Combinations.** The candidate tuples are every combination of the rules'
   values, each value at its rule's `valueIndex`. A rule that yields nothing
   leaves no candidates.
-- **JSONPath runs with `eval: false`.** Rule paths are field selectors, and
-  the JSON comes from the wallet. `jsonpath-plus` 11 ignores `preventEval`,
-  which `getJsonAtPath` in `validate-presentation.js` still passes; its
-  default there is `eval: 'safe'`.
+- **Pointers only select.** The credential comes from the wallet, but a
+  pointer can only walk its data one segment at a time. Nothing is evaluated
+  as code, and the work is bounded by the pointer's length and the
+  credential's own data.
 
 Then:
 
@@ -738,7 +797,7 @@ The exchange state comes from the existing `exchangeErrorHook`. A 401 records
 | Case | Status | `errorCode` | Exchange state |
 | --- | --- | --- | --- |
 | Service has no auth method that fits the VP | 400 | `authentication_method_unsupported` | `UNEXPECTED_ERROR` |
-| Submission invalid or for another exchange | 400 | `request_validation_failed`, `presentation_invalid`, `presentation_jsonpath_empty`, `presentation_mismatch_exchange`, `presentation_mismatch_service` | `UNEXPECTED_ERROR` |
+| Submission invalid or for another exchange | 400 | `request_validation_failed`, `presentation_invalid`, `presentation_jsonpath_empty`, `presentation_jsonpath_unsupported`, `presentation_mismatch_exchange`, `presentation_mismatch_service` | `UNEXPECTED_ERROR` |
 | More than 100 credentials, more than 100 candidate tuples, or a credential that fails `verifyCredentials`' input checks (`TypeError`) | 400 | `presentation_invalid` | `UNEXPECTED_ERROR` |
 | `iss` missing or isn't the signer | 401 | `unauthorized` | `AUTHENTICATION_FAILURE` |
 | No credential of a requested type, or a requested type without a verified credential | 401 | `integrated_identification_user_not_found` | `AUTHENTICATION_FAILURE` |
@@ -754,8 +813,8 @@ The operator API adds these errors:
 | `depots/create` | `authValues` don't hold one present value per rule | 400 | `invalid_auth_values` | 1 |
 | `depots/create` | A depot of the service has the same tuple | 409 | `auth_values_already_used`, with `depotId` | 1 |
 | `issuer-services/create`, `update` | Rules' `valueIndex` values aren't 0 to n−1 | 400 | `service_verifiablePresentationAuthRules_invalid` | 1 |
-| `issuer-services/create`, `update` | A rule's `type` isn't one of the `disclosureRequest` types, or a rule path throws when evaluated | 400 | `service_verifiablePresentationAuthRules_invalid` | 2 |
-| `issuer-services/create`, `update` | A rule has no `type` | 400 | `request_validation_failed` | 2 |
+| `issuer-services/create`, `update` | A rule's `type` isn't one of the `disclosureRequest` types | 400 | `service_verifiablePresentationAuthRules_invalid` | 2 |
+| `issuer-services/create`, `update` | A rule has no `type`, or its `path` isn't 1 to 10 claims path pointers of 1 to 32 valid segments | 400 | `request_validation_failed` | 2 |
 | `issuer-services/create`, `update` | Internal VP service without `disclosureRequest.types` | 400 | `service_disclosureRequest_required` | 2 |
 | `issuer-services/create`, `update` | Internal VP service with a `presentationDefinition` | 400 | `service_presentationDefinition_not_allowed` | 2 |
 
@@ -892,12 +951,12 @@ network.
 | File | Change |
 | --- | --- |
 | `entities/presentations/orchestrators/check-credentials.js` | New helper. `verifyPresentation` calls it. |
-| `entities/exchanges/domain/vp-auth-rules.js` | New. `ruleValues`, which reads only the rule's `type`, and `buildCandidateTuples`. |
+| `entities/exchanges/domain/vp-auth-rules.js` | New. `ruleValues`, which reads only the rule's `type` and evaluates its claims path pointers, and `buildCandidateTuples`. |
 | `entities/exchanges/orchestrators/authenticate.js` | Dispatch and `vpAuthHandler`. Looks depots up with `buildAuthRulesFingerprint(service)`. |
-| `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Each rule requires a `type`. |
+| `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Each rule requires a `type`, and its `path` is 1 to 10 claims path pointers of 1 to 32 segments. |
 | `entities/exchanges/domain/exchange-errors.js` | `CREDENTIAL_CHECK_UNAVAILABLE`, `IDENTIFICATION_USER_NOT_FOUND`. |
 | `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_DISCLOSURE_REQUEST_REQUIRED`, `SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`. |
-| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, require `disclosureRequest.types`, reject `presentationDefinition`, require each rule's `type` to be requested, and reject rule paths with filter or script segments or that fail to evaluate with `eval: false`. |
+| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, require `disclosureRequest.types`, reject `presentationDefinition`, and require each rule's `type` to be requested. |
 | `controllers/vn-api/vn-issuing-controller.js` | Pass `jwtVp`. Remove the no-op `validateInput`. Add `PaymentRequiredResponse`. |
 
 `exchanges` already imports from `presentations` (`post-presentation.js`), so
@@ -1006,7 +1065,7 @@ holder's `did:jwk`. The VP's `iss` and `kid` use that same DID.
   with a `presentationDefinition` return 400
   `service_presentationDefinition_not_allowed`. A rule without a `type`
   returns 400 `request_validation_failed`. A rule whose `type` isn't
-  requested, or whose path throws when evaluated, returns 400
+  requested returns 400
   `service_verifiablePresentationAuthRules_invalid`. Tests of internal VP
   services that check something later (the DID document's service,
   uniqueness, rule indexes, auth configuration changes) now include a
@@ -1018,8 +1077,11 @@ Unit tests for building candidate tuples:
 
 - Values are normalized and distinct, and only scalars are kept.
 - A rule reads only credentials of its `type`.
-- For each credential, the first `path` that finds anything supplies the
-  values. JSONPath scripts aren't evaluated.
+- Claims path pointers: a key, an index and `null` over an array select as
+  specified. A missing key or index, or a type mismatch, finds nothing and
+  doesn't throw.
+- For each credential, the first pointer that finds a value supplies the
+  values.
 - `pick` keeps every value. `equal` yields its value when there's exactly
   one, and nothing otherwise.
 - Each value lands at its rule's `valueIndex`, whatever the order of the
@@ -1045,7 +1107,7 @@ issue:
 - An untrusted issuer, an expired credential, a revoked credential and a
   credential whose subject isn't the VP's holder each return 401 with their
   `presentation_credential_*` code.
-- A JSONPath that finds nothing returns 401.
+- A rule whose pointers find nothing returns 401.
 - A submission for another exchange returns 400
   `presentation_mismatch_exchange`.
 - `equal` with two different values returns 401. `equal` with the same value
@@ -1072,7 +1134,9 @@ Added by this design:
 - A VP with an extra non-requested credential still authenticates.
   `resolveDidDocument` receives only the email credential.
 - The email credential is found when it isn't the first credential in the VP.
-- When the first `path` finds nothing, the rule uses the second.
+- When the first pointer finds nothing, the rule uses the second.
+- A descriptor path other than `$.verifiableCredential[n]` (or the nested `$`
+  or `$[0]` form) returns 400 `presentation_jsonpath_unsupported`.
 - `resolveDidDocument` throwing "No available tokens" returns 402.
   `resolveDidDocument` throwing anything else returns 502
   `credential_check_unavailable` and records `UNEXPECTED_ERROR`. So does a
@@ -1121,6 +1185,8 @@ Added by this design:
   depots after changing the auth configuration, vouchers for non-free types,
   and withdrawing a link.
   About 1 day.
+- **The issue's example.** Issue #1202's own example still uses the JSONPath
+  form of `path`.
 
 ## Decisions beyond the issue
 
@@ -1132,8 +1198,8 @@ Added by this design:
 4. `TRUSTED_HOLDER` must be `PASS`. Unbound credentials are refused, which is
    stricter than the agent.
 5. Only credentials of the `disclosureRequest` types are checked and matched.
-6. For each credential, a rule's `path` takes the first JSONPath that finds
-   anything.
+6. A rule's `path` is a list of OpenID4VP claims path pointers. For each
+   credential, the first pointer that finds a value supplies it.
 7. A check that couldn't reach its dependency returns 502, and running out of
    vouchers returns 402. Neither records `AUTHENTICATION_FAILURE`. Failed
    verified-profile fetches and revocation lookups return 401 until
@@ -1170,9 +1236,8 @@ Added by this design:
     `presentation_invalid`, not 500.
 20. Each rule has a required `type`, one of the `disclosureRequest` types, and
     reads only credentials of that type.
-21. Rule paths are checked when a service is created or updated. A path with
-    a filter or script segment, or one that fails to evaluate with
-    `eval: false`, is a 400.
+21. Rule paths are claims path pointers, not JSONPath, validated by JSON
+    schema alone. Evaluating them never throws and can't run code.
 22. Credential contents aren't logged. A separate packages change (#1205)
     stops the verification packages logging them.
 
