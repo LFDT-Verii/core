@@ -2399,8 +2399,8 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       fast-shuffle:
-        specifier: 6.2.1
-        version: 6.2.1
+        specifier: 7.0.0
+        version: 7.0.0
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -8376,8 +8376,8 @@ packages:
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
-  fast-shuffle@6.2.1:
-    resolution: {integrity: sha512-a5xCB8x4LI0VhqRf6nFYO4H4tdalIywqzVU8xc3CoZ0xF8exohNIz12ugArWF2Zm9juXHWTbwt7t4fZgRk/TkQ==}
+  fast-shuffle@7.0.0:
+    resolution: {integrity: sha512-4Zfaru7bGlb23CMOLwl7Dg8F2fyhUz3KBWKn8xZ/7p/AmCUytVnB7bVk1+x1LEdpVQtqU9djyAnaF4bkgcWs6Q==}
     engines: {node: '>=14'}
 
   fast-string-truncated-width@3.0.3:
@@ -9866,9 +9866,9 @@ packages:
     resolution: {integrity: sha512-nS4mvFgVwUrecPTRdpdseM2fwpdfnX0/HibA8DgBRQtihUAzHQYJFU2l+OlEtiXtpqkrMvCPDwyXMUnASDt6Qw==}
     engines: {node: '>= 0.10'}
 
-  pcg@3.0.0:
-    resolution: {integrity: sha512-lHETDr3c//q4xs0iZk9+LRFgmvjLtaUDIE3ztE2KN4IhwyHLcJ3H5VBv93SGop1XHZalC1UFSwoJepoZSMSVLQ==}
-    engines: {node: '>=18'}
+  pcg@4.1.0:
+    resolution: {integrity: sha512-otU3S14VRDk9fLLgMlfjzhDlCBv2TaQ+sCoZGuI29mXZHcvw7oypFUS/GeIbTIY7gZVykTWTZdVIduaNdt2MMw==}
+    engines: {node: '>=14'}
 
   pdfkit@0.20.1:
     resolution: {integrity: sha512-1rRXK6x5o8I/3dBrBzXfxibpHpkfCnIA7EBAES7pEpGFc/65inMLlA8SalGWpJfal7BGekxeLf6A30IOpQpc5Q==}
@@ -16374,9 +16374,9 @@ snapshots:
 
   fast-safe-stringify@2.1.1: {}
 
-  fast-shuffle@6.2.1:
+  fast-shuffle@7.0.0:
     dependencies:
-      pcg: 3.0.0
+      pcg: 4.1.0
 
   fast-string-truncated-width@3.0.3: {}
 
@@ -18095,7 +18095,7 @@ snapshots:
       sha.js: 2.4.12
       to-buffer: 1.2.2
 
-  pcg@3.0.0: {}
+  pcg@4.1.0: {}
 
   pdfkit@0.20.1:
     dependencies:
