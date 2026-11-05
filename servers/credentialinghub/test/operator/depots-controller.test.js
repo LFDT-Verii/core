@@ -34,7 +34,11 @@ const {
 const {
   initRelyingPartyServiceFactory,
 } = require('../../src/entities/relying-party-services');
-const { initDepotFactory } = require('../../src/entities/depots');
+const {
+  buildAuthRulesFingerprint,
+  depotRepoPlugin,
+  initDepotFactory,
+} = require('../../src/entities/depots');
 const { initCredentialFactory } = require('../../src/entities/credentials');
 
 const testUrl = '/operator/depots';
@@ -283,7 +287,10 @@ describe('Depots Test suite', () => {
       const payload = {
         tenantId: tenant._id,
         serviceId: issuerService._id,
-        depot: { userReference: 'ABC123', authValues: [nanoid(), 1] },
+        depot: {
+          userReference: 'ABC123',
+          authValues: [' Jane.Doe@Example.COM ', 1, true],
+        },
       };
 
       const response = await fastify.injectJson({
@@ -305,6 +312,474 @@ describe('Depots Test suite', () => {
       await expect(
         mongoDb().collection('depots').find({}).toArray(),
       ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);
+    });
+
+    it('should index depots by service, auth rules fingerprint and authMatchValues', async () => {
+      const indexes = await mongoDb().collection('depots').indexes();
+      expect(indexes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            key: {
+              tenantId: 1,
+              serviceId: 1,
+              authRulesFingerprint: 1,
+              authMatchValues: 1,
+            },
+          }),
+        ]),
+      );
+      expect(
+        indexes.find(
+          ({ key }) => key.authRulesFingerprint === 1 && key.authMatchValues,
+        ).collation,
+      ).toBeUndefined();
+    });
+  });
+
+  describe('Depot Creation for Verifiable Presentation Services Test Suite', () => {
+    let vpService;
+
+    const createDepot = (serviceId, depot) =>
+      fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: { tenantId: tenant._id, serviceId, depot },
+      });
+
+    const persistVpService = (overrides = {}) =>
+      persistIssuerService({
+        tenant,
+        authMethods: ['verifiable_presentation'],
+        authMode: 'internal',
+        disclosureRequest: {
+          types: [{ type: 'EmailV1.0' }, { type: 'EmploymentPastV1.1' }],
+          purpose: 'Identification',
+          retentionPeriod: 'P1D',
+        },
+        verifiablePresentationAuthRules: [
+          {
+            path: [['credentialSubject', 'email']],
+            rule: 'pick',
+            valueIndex: 0,
+            type: 'EmailV1.0',
+          },
+          {
+            path: [['credentialSubject', 'employeeId']],
+            rule: 'equal',
+            valueIndex: 1,
+            type: 'EmploymentPastV1.1',
+          },
+        ],
+        ...overrides,
+      });
+
+    const expectInvalidAuthValues = (response) => {
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'invalid_auth_values',
+          message: 'invalid_auth_values',
+        }),
+      );
+    };
+
+    beforeEach(async () => {
+      vpService = await persistVpService();
+    });
+
+    it('should store normalized authMatchValues in order, and never return them', async () => {
+      const authValues = ['  Jane.Doe@Example.COM\t', 42];
+      const response = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        depot: {
+          userReference: 'ABC123',
+          authValues,
+          serviceId: vpService._id,
+          id: expect.stringMatching(OBJECT_ID_FORMAT),
+          createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+          updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        },
+        requestId: expect.any(String),
+      });
+      await expect(
+        mongoDb().collection('depots').find({}).toArray(),
+      ).resolves.toEqual([
+        {
+          ...expectedDbDepot(response.json.depot, tenant),
+          authMatchValues: ['jane.doe@example.com', 42],
+          authRulesFingerprint: buildAuthRulesFingerprint(vpService),
+        },
+      ]);
+      expect(buildAuthRulesFingerprint(vpService)).toEqual(expect.any(String));
+
+      const getResponse = await fastify.injectJson({
+        method: 'GET',
+        url: `${testUrl}/get?tenantId=${tenant._id}&serviceId=${vpService._id}`,
+      });
+      expect(getResponse.statusCode).toEqual(200);
+      expect(getResponse.json).toEqual({
+        depots: [response.json.depot],
+        requestId: expect.any(String),
+      });
+    });
+
+    it('should 400 when there are fewer authValues than rules', async () => {
+      const response = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues: ['jane.doe@example.com'],
+      });
+
+      expectInvalidAuthValues(response);
+    });
+
+    it('should 400 when there are more authValues than rules', async () => {
+      const response = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues: ['jane.doe@example.com', 'EMP-1', 'extra'],
+      });
+
+      expectInvalidAuthValues(response);
+    });
+
+    it('should 400 when an auth value is empty', async () => {
+      const response = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues: ['jane.doe@example.com', ''],
+      });
+
+      expectInvalidAuthValues(response);
+    });
+
+    it('should 400 when an auth value is blank', async () => {
+      const response = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues: ['   ', 'EMP-1'],
+      });
+
+      expectInvalidAuthValues(response);
+      await expect(
+        mongoDb().collection('depots').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+
+    it('should 409 when the same auth values are used by a depot of the service', async () => {
+      const firstResponse = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+      expect(firstResponse.statusCode).toEqual(200);
+
+      const response = await createDepot(vpService._id, {
+        userReference: 'DEF456',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+
+      expect(response.statusCode).toEqual(409);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 409,
+          error: 'Conflict',
+          errorCode: 'auth_values_already_used',
+          message: 'auth_values_already_used',
+          depotId: firstResponse.json.depot.id,
+        }),
+      );
+      await expect(
+        mongoDb().collection('depots').countDocuments({}),
+      ).resolves.toEqual(1);
+    });
+
+    it('should 409 when the auth values differ only in case or surrounding spaces', async () => {
+      const firstResponse = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues: ['Jane.Doe@Example.com', 'EMP-1'],
+      });
+      expect(firstResponse.statusCode).toEqual(200);
+
+      const response = await createDepot(vpService._id, {
+        userReference: 'DEF456',
+        authValues: [' JANE.DOE@EXAMPLE.COM  ', 'emp-1'],
+      });
+
+      expect(response.statusCode).toEqual(409);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 409,
+          errorCode: 'auth_values_already_used',
+          depotId: firstResponse.json.depot.id,
+        }),
+      );
+    });
+
+    it('should 200 when only some of the auth values are used by a depot of the service', async () => {
+      const firstResponse = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+      expect(firstResponse.statusCode).toEqual(200);
+
+      const response = await createDepot(vpService._id, {
+        userReference: 'DEF456',
+        authValues: ['jane.doe@example.com', 'EMP-2'],
+      });
+
+      expect(response.statusCode).toEqual(200);
+    });
+
+    it('should 200 when the auth values are used by a depot in other positions', async () => {
+      const firstResponse = await createDepot(vpService._id, {
+        userReference: 'ABC123',
+        authValues: ['emp-1', 'jane.doe@example.com'],
+      });
+      expect(firstResponse.statusCode).toEqual(200);
+
+      const response = await createDepot(vpService._id, {
+        userReference: 'DEF456',
+        authValues: ['jane.doe@example.com', 'emp-1'],
+      });
+
+      expect(response.statusCode).toEqual(200);
+    });
+
+    it('should 200 when a depot of the service has the auth values and an extra one', async () => {
+      await persistDepot({
+        tenant,
+        service: vpService,
+        userReference: nanoid(),
+        authMatchValues: ['jane.doe@example.com', 'emp-1', 'extra'],
+        authRulesFingerprint: buildAuthRulesFingerprint(vpService),
+      });
+
+      const response = await createDepot(vpService._id, {
+        userReference: 'DEF456',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+
+      expect(response.statusCode).toEqual(200);
+    });
+
+    it('should 200 when a depot has the same auth values under another auth configuration', async () => {
+      await persistDepot({
+        tenant,
+        service: vpService,
+        userReference: nanoid(),
+        authMatchValues: ['jane.doe@example.com', 'emp-1'],
+        authRulesFingerprint: 'previous-configuration',
+      });
+
+      const response = await createDepot(vpService._id, {
+        userReference: 'DEF456',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+
+      expect(response.statusCode).toEqual(200);
+    });
+
+    it('should 200 when the auth values are used by a depot of another service', async () => {
+      const otherVpService = await persistVpService();
+      const firstResponse = await createDepot(otherVpService._id, {
+        userReference: 'ABC123',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+      expect(firstResponse.statusCode).toEqual(200);
+
+      const response = await createDepot(vpService._id, {
+        userReference: 'DEF456',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+
+      expect(response.statusCode).toEqual(200);
+      await expect(
+        mongoDb().collection('depots').countDocuments({}),
+      ).resolves.toEqual(2);
+    });
+
+    it('should 200 without authMatchValues when the auth values are reused for a preauth service', async () => {
+      const authValues = ['jane.doe@example.com', 'EMP-1'];
+      const firstResponse = await createDepot(issuerService._id, {
+        userReference: 'ABC123',
+        authValues,
+      });
+      expect(firstResponse.statusCode).toEqual(200);
+
+      const response = await createDepot(issuerService._id, {
+        userReference: 'DEF456',
+        authValues,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      const dbDepots = await mongoDb().collection('depots').find({}).toArray();
+      expect(dbDepots).toEqual([
+        expectedDbDepot(firstResponse.json.depot, tenant),
+        expectedDbDepot(response.json.depot, tenant),
+      ]);
+    });
+
+    it('should 200 without authMatchValues when the auth values are reused for a relying party service', async () => {
+      const relyingPartyService = await persistRelyingPartyService({ tenant });
+      const authValues = ['jane.doe@example.com', 'EMP-1'];
+      const firstResponse = await createDepot(relyingPartyService._id, {
+        userReference: 'ABC123',
+        authValues,
+      });
+      expect(firstResponse.statusCode).toEqual(200);
+
+      const response = await createDepot(relyingPartyService._id, {
+        userReference: 'DEF456',
+        authValues,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      const dbDepots = await mongoDb().collection('depots').find({}).toArray();
+      expect(dbDepots).toEqual([
+        expectedDbDepot(firstResponse.json.depot, tenant),
+        expectedDbDepot(response.json.depot, tenant),
+      ]);
+    });
+
+    describe('services with both auth methods', () => {
+      let dualService;
+
+      beforeEach(async () => {
+        dualService = await persistVpService({
+          authMethods: ['preauth', 'verifiable_presentation'],
+        });
+      });
+
+      it('should store authMatchValues and 409 when the auth values are reused', async () => {
+        const firstResponse = await createDepot(dualService._id, {
+          userReference: 'ABC123',
+          authValues: ['Jane.Doe@Example.com', 'EMP-1'],
+        });
+        expect(firstResponse.statusCode).toEqual(200);
+        await expect(
+          mongoDb().collection('depots').find({}).toArray(),
+        ).resolves.toEqual([
+          {
+            ...expectedDbDepot(firstResponse.json.depot, tenant),
+            authMatchValues: ['jane.doe@example.com', 'emp-1'],
+            authRulesFingerprint: buildAuthRulesFingerprint(dualService),
+          },
+        ]);
+
+        const response = await createDepot(dualService._id, {
+          userReference: 'DEF456',
+          authValues: ['jane.doe@example.com', 'emp-1'],
+        });
+
+        expect(response.statusCode).toEqual(409);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 409,
+            errorCode: 'auth_values_already_used',
+            depotId: firstResponse.json.depot.id,
+          }),
+        );
+      });
+
+      it('should 400 when there are fewer authValues than rules', async () => {
+        const response = await createDepot(dualService._id, {
+          userReference: 'ABC123',
+          authValues: ['jane.doe@example.com'],
+        });
+
+        expectInvalidAuthValues(response);
+      });
+    });
+  });
+
+  describe('Find Depots by Auth Match Tuples Test Suite', () => {
+    let vpService;
+    let depotsRepo;
+
+    beforeEach(async () => {
+      vpService = await persistIssuerService({ tenant });
+      depotsRepo = depotRepoPlugin(fastify)({
+        tenant: { ...tenant, _id: new ObjectId(tenant._id) },
+        config: fastify.config,
+      });
+    });
+
+    const persistDepotWith = (
+      authMatchValues,
+      { service = vpService, authRulesFingerprint } = {},
+    ) =>
+      persistDepot({
+        tenant,
+        service,
+        userReference: nanoid(),
+        authMatchValues,
+        authRulesFingerprint:
+          authRulesFingerprint ?? buildAuthRulesFingerprint(service),
+      });
+
+    const findDepots = (tuples) =>
+      depotsRepo.findDepotsByAuthMatchTuples(
+        vpService._id,
+        buildAuthRulesFingerprint(vpService),
+        tuples,
+      );
+
+    it('should only find depots of the auth configuration whose authMatchValues equal a tuple, in order', async () => {
+      const exactDepot = await persistDepotWith([
+        'jane.doe@example.com',
+        'emp-1',
+      ]);
+      await persistDepotWith(['emp-1', 'jane.doe@example.com']);
+      await persistDepotWith(['jane.doe@example.com', 'emp-1', 'extra']);
+      await persistDepotWith(['jane.doe@example.com']);
+      await persistDepotWith(['jane.doe@example.com', 'emp-1'], {
+        service: await persistIssuerService({ tenant }),
+      });
+      await persistDepotWith(['jane.doe@example.com', 'emp-1'], {
+        authRulesFingerprint: 'previous-configuration',
+      });
+      const otherTenant = await persistTenant();
+      await persistDepot({
+        tenant: otherTenant,
+        service: vpService,
+        userReference: nanoid(),
+        authMatchValues: ['jane.doe@example.com', 'emp-1'],
+        authRulesFingerprint: buildAuthRulesFingerprint(vpService),
+      });
+
+      const depots = await findDepots([['jane.doe@example.com', 'emp-1']]);
+
+      expect(depots).toEqual([
+        expect.objectContaining({ _id: new ObjectId(exactDepot._id) }),
+      ]);
+    });
+
+    it('should find the depots matching any of the tuples', async () => {
+      const janeDepot = await persistDepotWith([
+        'jane.doe@example.com',
+        'emp-1',
+      ]);
+      const johnDepot = await persistDepotWith([
+        'john.doe@example.com',
+        'emp-2',
+      ]);
+      await persistDepotWith(['jane.doe@example.com', 'emp-2']);
+
+      const depots = await findDepots([
+        ['jane.doe@example.com', 'emp-1'],
+        ['john.doe@example.com', 'emp-2'],
+        ['nobody@example.com', 'emp-1'],
+      ]);
+
+      expect(depots).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ _id: new ObjectId(janeDepot._id) }),
+          expect.objectContaining({ _id: new ObjectId(johnDepot._id) }),
+        ]),
+      );
+      expect(depots).toHaveLength(2);
     });
   });
 

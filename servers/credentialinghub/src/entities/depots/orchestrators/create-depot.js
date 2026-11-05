@@ -15,21 +15,58 @@
  *
  */
 const { ObjectId } = require('mongodb');
-const { validateDepot } = require('../domain');
+const newError = require('http-errors');
+const {
+  isInternalVpAuth,
+} = require('../../issuer-services/domain/is-internal-vp-auth');
+const {
+  buildAuthMatchValues,
+  buildAuthRulesFingerprint,
+  DepotErrors,
+  validateDepot,
+} = require('../domain');
 
-const createDepot = async (newDepot, serviceId, { repos }) => {
+const createDepot = async (newDepot, serviceId, context) => {
+  const { repos } = context;
+  const issuerService = await repos.issuerServices.findOne({
+    filter: { _id: serviceId },
+  });
   const service =
-    (await repos.issuerServices.findOne({
-      filter: { _id: serviceId },
-    })) ??
+    issuerService ??
     (await repos.relyingPartyServices.findOne({
       filter: { _id: serviceId },
     }));
   validateDepot(newDepot, service);
-  return repos.depots.insert({
-    ...newDepot,
-    serviceId: new ObjectId(serviceId),
-  });
+  const depot = { ...newDepot, serviceId: new ObjectId(serviceId) };
+  if (issuerService == null || !isInternalVpAuth(issuerService)) {
+    return repos.depots.insert(depot);
+  }
+
+  const authMatch = {
+    authMatchValues: buildAuthMatchValues(newDepot.authValues),
+    authRulesFingerprint: buildAuthRulesFingerprint(issuerService),
+  };
+  await validateAuthMatchValuesUnused(serviceId, authMatch, context);
+  return repos.depots.insert({ ...depot, ...authMatch });
+};
+
+// Only depots created under the same auth configuration count.
+const validateAuthMatchValuesUnused = async (
+  serviceId,
+  { authMatchValues, authRulesFingerprint },
+  { repos },
+) => {
+  const [existingDepot] = await repos.depots.findDepotsByAuthMatchTuples(
+    serviceId,
+    authRulesFingerprint,
+    [authMatchValues],
+  );
+  if (existingDepot != null) {
+    throw newError(409, DepotErrors.AUTH_VALUES_ALREADY_USED, {
+      errorCode: DepotErrors.AUTH_VALUES_ALREADY_USED,
+      depotId: existingDepot._id.toString(),
+    });
+  }
 };
 
 module.exports = { createDepot };

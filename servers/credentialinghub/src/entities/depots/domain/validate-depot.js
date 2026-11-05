@@ -15,9 +15,13 @@
  *
  */
 const newError = require('http-errors');
-const { isEmpty } = require('lodash/fp');
+const { every, isEmpty, size } = require('lodash/fp');
 const { isBefore } = require('date-fns/fp');
+const {
+  isInternalVpAuth,
+} = require('../../issuer-services/domain/is-internal-vp-auth');
 const { DepotErrors } = require('./depot-errors');
+const { buildAuthMatchValues } = require('./auth-match-values');
 
 const validateDepot = (depot, service) => {
   if (isMissingOrDeactivated(service)) {
@@ -25,16 +29,20 @@ const validateDepot = (depot, service) => {
       errorCode: DepotErrors.REFERENCED_SERVICE_NOT_FOUND,
     });
   }
-  if (
-    service.authMode === 'internal' &&
-    service.authMethods.includes('verifiable_presentation') &&
-    isEmpty(depot.authValues)
-  ) {
+  if (isInternalVpAuth(service) && !hasValidAuthValues(depot, service)) {
     throw newError(400, DepotErrors.INVALID_AUTH_VALUES, {
       errorCode: DepotErrors.INVALID_AUTH_VALUES,
     });
   }
 };
+
+// authValues hold exactly one value per rule, at the rule's valueIndex.
+const hasValidAuthValues = ({ authValues }, service) =>
+  !isEmpty(authValues) &&
+  size(authValues) === size(service.verifiablePresentationAuthRules) &&
+  every(isPresent, buildAuthMatchValues(authValues));
+
+const isPresent = (value) => value != null && value !== '';
 
 const isMissingOrDeactivated = (service) =>
   service == null ||
