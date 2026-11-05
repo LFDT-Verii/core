@@ -330,6 +330,36 @@ describe('vn-api > presentations', () => {
           statusCode: 400,
         });
       });
+      it('should 400 if the input descriptor path index is beyond the submitted credentials', async () => {
+        const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+        const modifiedVp = set(
+          'presentation_submission.descriptor_map[0]',
+          {
+            id: nanoid(),
+            path: '$.verifiableCredential[999]',
+            format: 'jwt_vc',
+          },
+          vpWrapper.vp,
+        );
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: await vpWrapper.jwtVp(modifiedVp),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'Bad Request',
+          errorCode: 'presentation_jsonpath_empty',
+          message:
+            'Presentation path descriptor does not reference any valid data: JSONPath expression returned no results',
+          requestId: expect.any(String),
+          statusCode: 400,
+        });
+      });
       it('should 400 if the input descriptor path only dereferences submission metadata', async () => {
         const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
         const modifiedVp = set(

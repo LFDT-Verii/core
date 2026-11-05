@@ -896,6 +896,52 @@ describe('openid4vp > direct-post', () => {
     });
   });
 
+  it('should reject a nested presentation submission path whose index is beyond the submitted credentials', async () => {
+    const baseVp = await buildVp(tenant, holder, exchange);
+    const vp = applyOverrides(baseVp, {
+      presentation_submission: {
+        ...baseVp.presentation_submission,
+        descriptor_map: [
+          {
+            id: 'OpenBadgeCredential',
+            path: '$',
+            format: 'jwt_vp',
+            path_nested: {
+              id: 'OpenBadgeCredential',
+              path: '$.verifiableCredential[1]',
+              format: 'jwt_vc',
+            },
+          },
+        ],
+      },
+    });
+    const jwtVp = await generatePresentationJwt(
+      vp,
+      holder.keyPair.privateKey,
+      `${holder.did}#key`,
+    );
+
+    const response = await injectDirectPost({
+      fastify,
+      tenant,
+      payload: directPostPayload(exchange, jwtVp, vp),
+    });
+
+    expect(response.statusCode).toEqual(400);
+    expect(response.json()).toEqual({
+      error: 'invalid_request',
+      error_description:
+        'Presentation path descriptor does not reference any valid data: JSONPath expression returned no results',
+    });
+    await expect(
+      mongoDb()
+        .collection('exchanges')
+        .findOne({ _id: new ObjectId(exchange._id) }),
+    ).resolves.toEqual(
+      expect.objectContaining({ err: 'presentation_jsonpath_empty' }),
+    );
+  });
+
   it('should reject unsupported nested presentation submission formats', async () => {
     const baseVp = await buildVp(tenant, holder, exchange);
     const vp = applyOverrides(baseVp, {

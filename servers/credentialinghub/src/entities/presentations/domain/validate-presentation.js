@@ -17,13 +17,13 @@
 const newError = require('http-errors');
 const {
   first,
+  has,
   includes,
-  isEmpty,
   isString,
   castArray,
+  nth,
   omit,
 } = require('lodash/fp');
-const { JSONPath } = require('jsonpath-plus');
 
 const VALID_PRESENTATION_CONTEXTS = [
   'https://www.w3.org/2018/credentials/v1',
@@ -32,7 +32,7 @@ const VALID_PRESENTATION_CONTEXTS = [
 const SUPPORTED_DESCRIPTOR_FORMATS = ['jwt_vc', 'jwt_vp'];
 const SUPPORTED_NESTED_VP_TOKEN_PATHS = ['$', '$[0]'];
 const SUPPORTED_CREDENTIAL_PATH_PATTERN =
-  /^\$\.verifiableCredential\[(?:0|[1-9]\d{0,2})\]$/;
+  /^\$\.verifiableCredential\[(0|[1-9]\d{0,2})\]$/;
 const presentationSchema = {
   $ref: 'https://velocitycareerlabs.io/velocity-presentation-submission.schema.json#',
 };
@@ -114,12 +114,8 @@ const verifyPresentationSubmissionAgainstDefinition = (
   const presentationContent = omit(['presentation_submission'], presentation);
   for (const descriptor of presentationSubmission.descriptor_map) {
     validateDescriptorFormat(descriptor);
-    validateDescriptorPath(descriptor);
-    const result = getJsonAtPath(
-      getDescriptorPath(descriptor),
-      presentationContent,
-    );
-    if (isEmpty(result)) {
+    const credentialIndex = validateDescriptorPath(descriptor);
+    if (!has(['verifiableCredential', credentialIndex], presentationContent)) {
       throw newError(
         400,
         'Presentation path descriptor does not reference any valid data: JSONPath expression returned no results',
@@ -170,7 +166,8 @@ const validateDescriptorPath = (descriptor) => {
       },
     );
   }
-  if (!isSupportedCredentialPath(getDescriptorPath(descriptor))) {
+  const credentialIndex = getCredentialIndex(getDescriptorPath(descriptor));
+  if (credentialIndex == null) {
     throw newError(
       400,
       'Presentation path descriptor uses an unsupported path',
@@ -180,20 +177,16 @@ const validateDescriptorPath = (descriptor) => {
       },
     );
   }
+  return credentialIndex;
 };
 
-const isSupportedCredentialPath = (path) =>
-  isString(path) && SUPPORTED_CREDENTIAL_PATH_PATTERN.test(path);
+const getCredentialIndex = (path) =>
+  isString(path)
+    ? nth(1, SUPPORTED_CREDENTIAL_PATH_PATTERN.exec(path))
+    : undefined;
 
 const getDescriptorPath = (descriptor) =>
   descriptor.path_nested?.path ?? descriptor.path;
-
-const getJsonAtPath = (path, json) =>
-  JSONPath({
-    path,
-    json,
-    eval: false,
-  });
 
 module.exports = {
   validatePresentation,
