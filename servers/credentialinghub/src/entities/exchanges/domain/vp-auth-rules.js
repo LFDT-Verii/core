@@ -29,6 +29,7 @@ const {
   overSome,
   reduce,
   size,
+  some,
   sortBy,
   uniq,
 } = require('lodash/fp');
@@ -113,10 +114,14 @@ const ruleCandidateValues = (rule, credentials) =>
     ? RuleCandidateValues[rule.rule](ruleValues(rule, credentials))
     : [];
 
-const countCandidateTuples = (valuesByPosition) =>
-  isEmpty(valuesByPosition)
-    ? 0
-    : reduce((count, values) => count * size(values), 1, valuesByPosition);
+// Multiplies the positions' value counts, holding the product just past the
+// limit, so it never overflows to Infinity, and Infinity * 0 never gives NaN.
+const exceedsCandidateLimit = (valuesByPosition) =>
+  reduce(
+    (count, values) => Math.min(count * size(values), MAX_CANDIDATE_TUPLES + 1),
+    1,
+    valuesByPosition,
+  ) > MAX_CANDIDATE_TUPLES;
 
 const appendPosition = (tuples, values) =>
   flatMap((tuple) => map((value) => [...tuple, value], values), tuples);
@@ -124,21 +129,24 @@ const appendPosition = (tuples, values) =>
 // The tuples that a depot's authMatchValues must equal exactly: every
 // combination of the rules' values, each value at its rule's valueIndex. The
 // value indexes are 0 to n-1, so ordering the rules by them gives the
-// positions. The count is checked before the tuples are built.
+// positions. A position without values leaves no tuples, and the count is
+// checked before any tuple is built.
 const buildCandidateTuples = (rules, credentials) => {
   const valuesByPosition = flow(
     sortBy('valueIndex'),
     map((rule) => ruleCandidateValues(rule, credentials)),
   )(rules);
-  const count = countCandidateTuples(valuesByPosition);
-  if (count > MAX_CANDIDATE_TUPLES) {
+  if (isEmpty(valuesByPosition) || some(isEmpty, valuesByPosition)) {
+    return [];
+  }
+  if (exceedsCandidateLimit(valuesByPosition)) {
     throw newError(
       400,
       `The presented credentials give more than ${MAX_CANDIDATE_TUPLES} combinations of auth values`,
       { errorCode: 'presentation_invalid' },
     );
   }
-  return count === 0 ? [] : reduce(appendPosition, [[]], valuesByPosition);
+  return reduce(appendPosition, [[]], valuesByPosition);
 };
 
 module.exports = { buildCandidateTuples, ruleValues, selectClaims };

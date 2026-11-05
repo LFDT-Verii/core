@@ -806,6 +806,47 @@ describe('Issuer services management Test suite', () => {
         }),
       );
     });
+    it('should 400 when service.verifiablePresentationAuthRules has more than 10 rules', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          service: emailAuthService(buildAuthRules(times((i) => i, 11))),
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          message:
+            'body/service/verifiablePresentationAuthRules must NOT have more than 10 items',
+          errorCode: 'request_validation_failed',
+        }),
+      );
+    });
+    it('should 200 when service.verifiablePresentationAuthRules has 10 rules', async () => {
+      mockHttpClientJsonResponse('get', {
+        id: 'did-doc-foo',
+        service: [{ id: '#foo' }],
+      });
+      const verifiablePresentationAuthRules = buildAuthRules(
+        times((i) => i, 10),
+      );
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          service: emailAuthService(verifiablePresentationAuthRules),
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.service.verifiablePresentationAuthRules).toEqual(
+        verifiablePresentationAuthRules,
+      );
+    });
     it('should 200 when service.verifiablePresentationAuthRules paths are claims path pointers with alternatives', async () => {
       mockHttpClientJsonResponse('get', {
         id: 'did-doc-foo',
@@ -1851,6 +1892,27 @@ describe('Issuer services management Test suite', () => {
         errorResponseMatcher({
           message:
             "body/service/verifiablePresentationAuthRules/0 must have required property 'type'",
+          errorCode: 'request_validation_failed',
+        }),
+      );
+    });
+    it('should 400 when service.verifiablePresentationAuthRules has more than 10 rules', async () => {
+      const service = await persistIssuerService({ tenant });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/update`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: service._id,
+          service: emailAuthService(buildAuthRules(times((i) => i, 11))),
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          message:
+            'body/service/verifiablePresentationAuthRules must NOT have more than 10 items',
           errorCode: 'request_validation_failed',
         }),
       );

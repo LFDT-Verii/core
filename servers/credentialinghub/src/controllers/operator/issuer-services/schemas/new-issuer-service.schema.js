@@ -89,8 +89,9 @@ const newIssuerServiceSchema = {
     verifiablePresentationAuthRules: {
       description:
         // eslint-disable-next-line max-len
-        'verifiablePresentationAuthRules are the matcher rules that can be used to match an exchange with submitted presentation used for authentication. Required when the authMethods include `verifiable_presentation` and the authMode is `internal`',
+        'verifiablePresentationAuthRules are the matcher rules that can be used to match an exchange with submitted presentation used for authentication. Required when the authMethods include `verifiable_presentation` and the authMode is `internal`. At most 10 rules',
       type: 'array',
+      maxItems: 10,
       items: {
         type: 'object',
         required: ['path', 'rule', 'valueIndex', 'type'],

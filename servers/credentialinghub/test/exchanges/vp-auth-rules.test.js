@@ -461,5 +461,38 @@ describe('vp auth rules', () => {
         }),
       );
     });
+
+    describe('with many rules', () => {
+      const credentials = map(
+        emailCredential,
+        times((i) => `user${i}@x.com`, 100),
+      );
+      // Rules at value indexes 0 to count-1, each finding the 100 emails
+      const emailRules = (count) =>
+        times((valueIndex) => emailRule({ valueIndex }), count);
+
+      it('should build no tuples when an empty position follows many large ones', () => {
+        const rules = [
+          ...emailRules(155),
+          emailRule({
+            valueIndex: 155,
+            path: [['credentialSubject', 'missing']],
+          }),
+        ];
+
+        expect(buildCandidateTuples(rules, credentials)).toEqual([]);
+      });
+
+      it('should 400 presentation_invalid for many large positions', () => {
+        expect(() =>
+          buildCandidateTuples(emailRules(156), credentials),
+        ).toThrow(
+          expect.objectContaining({
+            statusCode: 400,
+            errorCode: 'presentation_invalid',
+          }),
+        );
+      });
+    });
   });
 });
