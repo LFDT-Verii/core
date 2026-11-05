@@ -144,8 +144,11 @@ the code.
 
 ## Design Docs
 
-- [Notification webhooks design](docs/notification-webhooks-design.md)
-- [Shared issue links with email authentication](../../docs/superpowers/specs/2026-11-04-cih-shared-issue-link-email-auth-design.md)
+Design docs live on GitHub, next to the issue or pull request they belong to:
+
+- [Notification webhooks](https://github.com/LFDT-Verii/core/pull/814#issuecomment-6646467974)
+- [Swagger documents split by audience](https://github.com/LFDT-Verii/core/pull/840#issuecomment-6646467124) and its [implementation plan](https://github.com/LFDT-Verii/core/pull/840#issuecomment-6646467554)
+- [Shared issue links with email authentication](https://github.com/LFDT-Verii/core/issues/1202#issuecomment-6646466326)
 
 ## CAO Security Provider
 
