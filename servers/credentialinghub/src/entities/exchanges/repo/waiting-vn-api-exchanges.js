@@ -30,18 +30,23 @@ const waitingFilter = {
 const waitingVnApiExchangesExtension = (parent) => ({
   findWaitingVnApiExchange: (depotId, projection) =>
     parent.findLatestVnApiExchangeByDepotId(depotId, projection, waitingFilter),
-  // Oldest first, so the latest of a depot's waiting exchanges comes last
-  findWaitingVnApiExchanges: (depotIds, projection) =>
-    parent.find(
-      {
-        filter: {
-          ...waitingFilter,
-          depotId: { $in: map((depotId) => new ObjectId(depotId), depotIds) },
+  // The latest waiting exchange of each depot, as { depotId, exchangeId }. Grouping returns one row per depot, so no
+  // result limit can cut off a depot's latest exchange.
+  findLatestWaitingVnApiExchangeIds: (depotIds) =>
+    parent
+      .collection()
+      .aggregate([
+        {
+          $match: parent.prepFilter({
+            ...waitingFilter,
+            depotId: { $in: map((depotId) => new ObjectId(depotId), depotIds) },
+          }),
         },
-        sort: { createdAt: 1, _id: 1 },
-      },
-      projection,
-    ),
+        { $sort: { createdAt: -1, _id: -1 } },
+        { $group: { _id: '$depotId', exchangeId: { $first: '$_id' } } },
+        { $project: { _id: 0, depotId: '$_id', exchangeId: 1 } },
+      ])
+      .toArray(),
   extensions: parent.extensions.concat(['waitingVnApiExchangesExtension']),
 });
 

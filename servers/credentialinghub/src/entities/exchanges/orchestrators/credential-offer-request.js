@@ -43,6 +43,8 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
       claimable: true,
     });
   const credentials = await findCredentials();
+  // A credential added and resolved between this query and the depot read in waitsForCredentials is missed: the wallet
+  // gets no offers, and the holder gets the credential by opening the link again. Concurrent requests are left to queueing.
   if (
     !isEmpty(credentials) ||
     !(await waitsForCredentials(depotId, exchange, context))
@@ -53,7 +55,8 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
   // The wallet waits on this exchange for NewOffersReady or NoOffersFound from depots/resolve-deferred-credentials.
   await repos.exchanges.addState(exchangeId, ExchangeStates.OFFERS_WAITING);
   // A resolve-deferred-credentials call that ran before OFFERS_WAITING was recorded found no waiting exchange to message,
-  // so credentials added before it are offered now instead of in a message.
+  // so credentials added before it are offered now instead of in a message. If it found nothing to offer, the wallet
+  // still gets 202 here and learns of the resolution at its next poll, through deferredCredentialsResolvedAt.
   const addedCredentials = await findCredentials();
   return isEmpty(addedCredentials)
     ? { offers: [] }

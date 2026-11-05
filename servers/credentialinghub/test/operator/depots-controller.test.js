@@ -537,6 +537,62 @@ describe('Depots Test suite', () => {
         });
         expect(response.json.depots).toHaveLength(2);
       });
+      it('should return the latest waiting exchange of each depot when they have more than 200 between them', async () => {
+        const deferredDepots = [
+          await persistDepot({
+            tenant,
+            service: issuerService,
+            userReference: nanoid(),
+            deferredCredentials: true,
+          }),
+          await persistDepot({
+            tenant,
+            service: issuerService,
+            userReference: nanoid(),
+            deferredCredentials: true,
+          }),
+        ];
+        const createdAt = Date.now();
+        const waitingExchange = (depot, index) => ({
+          _id: new ObjectId(),
+          tenantId: new ObjectId(tenant._id),
+          serviceId: new ObjectId(issuerService._id),
+          depotId: new ObjectId(depot._id),
+          protocolMetadata: { protocol: ExchangeProtocols.VN_API },
+          events: [
+            { state: ExchangeStates.NEW, timestamp: new Date() },
+            { state: ExchangeStates.OFFERS_WAITING, timestamp: new Date() },
+          ],
+          createdAt: new Date(createdAt + index),
+        });
+        // The first depot's 201 come before the second depot's one, so a limit of 200 would cut both depots' latest
+        const firstDepotExchanges = Array.from({ length: 201 }, (_, index) =>
+          waitingExchange(deferredDepots[0], index),
+        );
+        const secondDepotExchange = waitingExchange(deferredDepots[1], 201);
+        await mongoDb()
+          .collection('exchanges')
+          .insertMany([...firstDepotExchanges, secondDepotExchange]);
+
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${deferredDepots[0]._id}&depotId=${deferredDepots[1]._id}`,
+        });
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.depots).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: deferredDepots[0]._id,
+              waitingExchangeId: `${firstDepotExchanges[200]._id}`,
+            }),
+            expect.objectContaining({
+              id: deferredDepots[1]._id,
+              waitingExchangeId: `${secondDepotExchange._id}`,
+            }),
+          ]),
+        );
+        expect(response.json.depots).toHaveLength(2);
+      });
       it('should return 2 if 2 depots match the depotIds', async () => {
         const response = await fastify.injectJson({
           method: 'GET',

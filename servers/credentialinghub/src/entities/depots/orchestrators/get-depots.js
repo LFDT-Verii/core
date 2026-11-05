@@ -19,13 +19,11 @@ const { flow, keyBy, map, mapValues } = require('lodash/fp');
 // Each depot carries the ID of the VN API exchange waiting on it, if there is one.
 const getDepots = async (serviceId, depotIds, { repos }) => {
   const depots = await repos.depots.findDepots(serviceId, depotIds);
-  const waitingExchanges = await repos.exchanges.findWaitingVnApiExchanges(
-    map('_id', depots),
-    { _id: 1, depotId: 1 },
-  );
+  const waitingExchanges =
+    await repos.exchanges.findLatestWaitingVnApiExchangeIds(map('_id', depots));
   const waitingExchangeIds = flow(
     keyBy(({ depotId }) => `${depotId}`),
-    mapValues(({ _id }) => `${_id}`),
+    mapValues(({ exchangeId }) => `${exchangeId}`),
   )(waitingExchanges);
   return map(
     (depot) => ({
