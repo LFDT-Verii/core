@@ -1154,6 +1154,42 @@ describe('presentation submission', () => {
       });
     });
 
+    it('should 400 if the input descriptor path index is beyond the submitted credentials', async () => {
+      const builder = await generatePresentation(disclosureExchange);
+
+      // eslint-disable-next-line camelcase
+      const jwt_vp = await builder
+        .override({
+          presentation_submission: {
+            descriptor_map: [
+              {
+                id: nanoid(),
+                path: '$.verifiableCredential[999]',
+                format: 'jwt_vc',
+              },
+            ],
+          },
+        })
+        .selfSign();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: inspectUrl(tenant, '/submit-presentation'),
+        // eslint-disable-next-line camelcase
+        payload: { exchange_id: disclosureExchange._id, jwt_vp },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'presentation_jsonpath_empty',
+          message:
+            'Velocity Presentation contains path descriptor that is empty',
+          statusCode: 400,
+        }),
+      );
+    });
+
     it('should 400 if a later input descriptor path is unsupported', async () => {
       const builder = await generatePresentation(disclosureExchange);
 
