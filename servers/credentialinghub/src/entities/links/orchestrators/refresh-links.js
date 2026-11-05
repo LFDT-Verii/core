@@ -55,11 +55,12 @@ const buildDepotIssueLinks = async (service, depot, context) => {
     context,
   );
 
+  // A depot's expected types take the place of its credentials' types
   const vnProtocolLinkUrl = buildIssuingDeepLink(
     tenant,
     service,
     refreshedDepot,
-    credentialTypes,
+    refreshedDepot?.expectedCredentialTypes ?? credentialTypes,
     config.deepLinkProtocol,
   );
 

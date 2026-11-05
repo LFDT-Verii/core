@@ -23,7 +23,7 @@ const {
 const { DepotErrors } = require('./depot-errors');
 const { buildAuthMatchValues } = require('./auth-match-values');
 
-const validateDepot = (depot, service) => {
+const validateDepot = (depot, service, isIssuerService) => {
   if (isMissingOrDeactivated(service)) {
     throw newError(400, DepotErrors.REFERENCED_SERVICE_NOT_FOUND, {
       errorCode: DepotErrors.REFERENCED_SERVICE_NOT_FOUND,
@@ -32,6 +32,15 @@ const validateDepot = (depot, service) => {
   if (isInternalVpAuth(service) && !hasValidAuthValues(depot, service)) {
     throw newError(400, DepotErrors.INVALID_AUTH_VALUES, {
       errorCode: DepotErrors.INVALID_AUTH_VALUES,
+    });
+  }
+  validateDeferredCredentials(depot, isIssuerService);
+};
+
+const validateDeferredCredentials = (depot, isIssuerService) => {
+  if (depot.deferredCredentials === true && !isIssuerService) {
+    throw newError(400, DepotErrors.DEFERRED_CREDENTIALS_NOT_SUPPORTED, {
+      errorCode: DepotErrors.DEFERRED_CREDENTIALS_NOT_SUPPORTED,
     });
   }
 };

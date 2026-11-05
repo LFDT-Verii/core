@@ -225,6 +225,102 @@ describe('Depots Test suite', () => {
         }),
       );
     });
+    it('should 400 if expectedCredentialTypes is empty', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: issuerService._id,
+          depot: { userReference: 'ABC123', expectedCredentialTypes: [] },
+        },
+      });
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'request_validation_failed',
+          message:
+            'body/depot/expectedCredentialTypes must NOT have fewer than 1 items',
+        }),
+      );
+    });
+    it('should 400 if expectedCredentialTypes has duplicates', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: issuerService._id,
+          depot: {
+            userReference: 'ABC123',
+            expectedCredentialTypes: ['EmailV1.0', 'EmailV1.0'],
+          },
+        },
+      });
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'request_validation_failed',
+          message:
+            'body/depot/expectedCredentialTypes must NOT have duplicate items (items ## 1 and 0 are identical)',
+        }),
+      );
+    });
+    it('should 400 for a relying party service depot with deferred credentials', async () => {
+      const relyingPartyService = await persistRelyingPartyService({ tenant });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: relyingPartyService._id,
+          depot: { userReference: 'RP-USER-123', deferredCredentials: true },
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'deferred_credentials_not_supported',
+          message: 'deferred_credentials_not_supported',
+        }),
+      );
+      await expect(
+        mongoDb().collection('depots').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it('should 200 for a depot with deferred credentials and expected credential types', async () => {
+      const payload = {
+        tenantId: tenant._id,
+        serviceId: issuerService._id,
+        depot: {
+          userReference: 'ABC123',
+          deferredCredentials: true,
+          expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
+        },
+      };
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload,
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        depot: {
+          ...payload.depot,
+          serviceId: payload.serviceId,
+          id: expect.stringMatching(OBJECT_ID_FORMAT),
+          createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+          updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        },
+        requestId: expect.any(String),
+      });
+
+      await expect(
+        mongoDb().collection('depots').find({}).toArray(),
+      ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);
+    });
     it('should 200 for a correctly setup depot', async () => {
       const payload = {
         tenantId: tenant._id,
@@ -240,6 +336,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
+          deferredCredentials: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -271,6 +368,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
+          deferredCredentials: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -301,6 +399,7 @@ describe('Depots Test suite', () => {
       expect(response.json).toEqual({
         depot: {
           ...payload.depot,
+          deferredCredentials: false,
           serviceId: payload.serviceId,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -400,6 +499,7 @@ describe('Depots Test suite', () => {
         depot: {
           userReference: 'ABC123',
           authValues,
+          deferredCredentials: false,
           serviceId: vpService._id,
           id: expect.stringMatching(OBJECT_ID_FORMAT),
           createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
@@ -858,6 +958,32 @@ describe('Depots Test suite', () => {
           requestId: expect.any(String),
         });
       });
+      it('should return the deferred credentials fields', async () => {
+        const deferredDepot = await persistDepot({
+          tenant,
+          service: issuerService,
+          userReference: nanoid(),
+          deferredCredentials: true,
+          expectedCredentialTypes: ['EmailV1.0'],
+        });
+
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${deferredDepot._id}&depotId=${depots[1]._id}`,
+        });
+        expect(response.json).toEqual({
+          depots: expect.arrayContaining([
+            {
+              ...expectedDepot(deferredDepot),
+              deferredCredentials: true,
+              expectedCredentialTypes: ['EmailV1.0'],
+            },
+            expectedDepot(depots[1]),
+          ]),
+          requestId: expect.any(String),
+        });
+        expect(response.json.depots).toHaveLength(2);
+      });
       it('should return 2 if 2 depots match the depotIds', async () => {
         const response = await fastify.injectJson({
           method: 'GET',
@@ -1071,6 +1197,7 @@ describe('Depots Test suite', () => {
 });
 
 const expectedDepot = (depot) => ({
+  deferredCredentials: false,
   ...omit(['_id', 'tenantId'], depot),
   id: depot._id,
 });

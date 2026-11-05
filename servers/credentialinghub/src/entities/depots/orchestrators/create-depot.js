@@ -36,8 +36,12 @@ const createDepot = async (newDepot, serviceId, context) => {
     (await repos.relyingPartyServices.findOne({
       filter: { _id: serviceId },
     }));
-  validateDepot(newDepot, service);
-  const depot = { ...newDepot, serviceId: new ObjectId(serviceId) };
+  validateDepot(newDepot, service, issuerService != null);
+  const depot = {
+    deferredCredentials: false,
+    ...newDepot,
+    serviceId: new ObjectId(serviceId),
+  };
   if (issuerService == null || !isInternalVpAuth(issuerService)) {
     return repos.depots.insert(depot);
   }

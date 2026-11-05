@@ -337,6 +337,137 @@ describe('Issue Links Test suite', () => {
     });
   });
 
+  describe('depots with deferred credentials', () => {
+    let preauthIssuerService;
+
+    beforeEach(async () => {
+      preauthIssuerService = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth'],
+      });
+    });
+
+    const refreshLinks = (depot) =>
+      fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: preauthIssuerService._id,
+          depotId: depot._id,
+        },
+      });
+
+    it('should use the expected types in the VN API link before the depot has credentials', async () => {
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        deferredCredentials: true,
+        expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
+      });
+
+      const response = await refreshLinks(deferredDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          deferredDepot,
+          response.json.preauthCode,
+          ['EmailV1.0', 'PhoneV1.0'],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        preauthCode: expect.any(String),
+        requestId: expect.any(String),
+      });
+    });
+
+    it("should use the expected types in the VN API link and the credentials' types in the OpenID4VCI offer", async () => {
+      mockHttpClientJsonResponse('get', [
+        {
+          credentialType: 'Employment',
+          schemaUrl: 'https://example.com/employment.schema.json',
+          issuerCategory: 'RegularIssuer',
+        },
+        {
+          credentialType: 'PhoneV1.0',
+          schemaUrl: 'https://example.com/phone.schema.json',
+          issuerCategory: 'ContactIssuer',
+        },
+      ]);
+      mockHttpClientJsonResponse('get', {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Issuer', 'ContactIssuer'],
+        },
+      });
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        deferredCredentials: true,
+        expectedCredentialTypes: ['Employment', 'PhoneV1.0'],
+      });
+      await persistCredential({ tenant, depot: deferredDepot });
+
+      const response = await refreshLinks(deferredDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        openidCredentialOffer: expect.any(String),
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          deferredDepot,
+          response.json.preauthCode,
+          ['Employment', 'PhoneV1.0'],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}&openid4vc_uri=${encodeURIComponent(
+          response.json.openidCredentialOffer,
+        )}`,
+        preauthCode: expect.any(String),
+        requestId: expect.any(String),
+      });
+      expectedOidcCredentialOfferUri(
+        response.json.openidCredentialOffer,
+        tenant,
+        ['Employment'],
+      );
+    });
+
+    it('should use no credential types and offer no OpenID4VCI credential when the depot expects no types and has no credentials', async () => {
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        deferredCredentials: true,
+      });
+
+      const response = await refreshLinks(deferredDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          deferredDepot,
+          response.json.preauthCode,
+          [],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        preauthCode: expect.any(String),
+        requestId: expect.any(String),
+      });
+    });
+  });
+
   describe('vp service', () => {
     beforeEach(async () => {
       vpIssuerService = await persistIssuerService({

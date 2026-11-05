@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const { map, uniqBy } = require('lodash/fp');
+const { isEmpty, map, uniqBy } = require('lodash/fp');
 const newError = require('http-errors');
 const {
   ExchangeStates,
@@ -35,18 +35,55 @@ const credentialOfferRequest = async (token, offerHashes = [], context) => {
     });
   authorizeExchange(exchange, depotId);
 
-  const credentials = await repos.credentials.findByDepotId({
-    depotId,
-    credentialTypes: exchange.credentialTypes,
-    omitContentHashes: offerHashes,
-    claimable: true,
-  });
+  const findCredentials = () =>
+    repos.credentials.findByDepotId({
+      depotId,
+      credentialTypes: exchange.credentialTypes,
+      omitContentHashes: offerHashes,
+      claimable: true,
+    });
+  const credentials = await findCredentials();
+  // A credential added and resolved between this query and the depot read in waitsForCredentials is missed: the wallet
+  // gets no offers, and the holder gets the credential by opening the link again. Concurrent requests are left to queueing.
+  if (
+    !isEmpty(credentials) ||
+    !(await waitsForCredentials(depotId, exchange, context))
+  ) {
+    return sendOffers(exchangeId, credentials, context);
+  }
 
+  // The wallet waits on this exchange for NewOffersReady or NoOffersFound from depots/resolve-deferred-credentials.
+  await repos.exchanges.addState(exchangeId, ExchangeStates.OFFERS_WAITING);
+  // A resolve-deferred-credentials call that ran before OFFERS_WAITING was recorded found no waiting exchange to message,
+  // so credentials added before it are offered now instead of in a message. If it found nothing to offer, the wallet
+  // still gets 202 here and learns of the resolution at its next poll, through deferredCredentialsResolvedAt.
+  const addedCredentials = await findCredentials();
+  return isEmpty(addedCredentials)
+    ? { offers: [] }
+    : sendOffers(exchangeId, addedCredentials, context);
+};
+
+// The wallet waits on a depot with deferred credentials, unless the issuer has resolved them since the exchange began.
+// Then nothing more is coming for the exchange, so it's answered as for a depot without deferred credentials.
+const waitsForCredentials = async (depotId, exchange, { repos }) => {
+  const depot = await repos.depots.findOne(
+    { filter: { _id: depotId } },
+    { _id: 1, deferredCredentials: 1, deferredCredentialsResolvedAt: 1 },
+  );
+  return (
+    depot?.deferredCredentials === true &&
+    !(depot.deferredCredentialsResolvedAt > exchange.createdAt)
+  );
+};
+
+const sendOffers = async (exchangeId, credentials, context) => {
   const { challenge } = await generateIssuingChallenge(exchangeId, context);
 
-  await repos.exchanges.addState(exchangeId, ExchangeStates.OFFERS_SENT, {
-    credentialIds: map('_id', credentials),
-  });
+  await context.repos.exchanges.addState(
+    exchangeId,
+    ExchangeStates.OFFERS_SENT,
+    { credentialIds: map('_id', credentials) },
+  );
 
   return {
     challenge,

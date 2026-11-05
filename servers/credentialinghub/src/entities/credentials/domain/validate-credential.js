@@ -16,7 +16,8 @@
  */
 const { wrapValidationError } = require('@verii/validation');
 const newError = require('http-errors');
-const { keyBy, map, forEach } = require('lodash/fp');
+const { includes, isEmpty, keyBy, map, forEach } = require('lodash/fp');
+const { extractCredentialType } = require('@verii/vc-checks');
 const { CredentialErrors } = require('./credential-errors');
 
 const initValidateCredential = (
@@ -56,6 +57,11 @@ const validateCredential = (
       errorCode: CredentialErrors.REFERENCED_DEPOT_NOT_FOUND,
     });
   }
+  if (isUnexpectedCredentialType(credential, depot)) {
+    throw newError(400, CredentialErrors.CREDENTIAL_TYPE_NOT_EXPECTED, {
+      errorCode: CredentialErrors.CREDENTIAL_TYPE_NOT_EXPECTED,
+    });
+  }
   if (credentialTypeMetadata == null) {
     throw newError(400, CredentialErrors.CREDENTIAL_TYPE_NOT_FOUND, {
       errorCode: CredentialErrors.CREDENTIAL_TYPE_NOT_FOUND,
@@ -70,5 +76,9 @@ const validateCredential = (
     );
   }
 };
+
+const isUnexpectedCredentialType = (credential, { expectedCredentialTypes }) =>
+  !isEmpty(expectedCredentialTypes) &&
+  !includes(extractCredentialType(credential.content), expectedCredentialTypes);
 
 module.exports = { initValidateCredential };

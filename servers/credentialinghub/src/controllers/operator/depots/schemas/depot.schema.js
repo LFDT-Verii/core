@@ -16,6 +16,12 @@ const depotSchema = {
       type: 'string',
       description: 'the serviceId this depot is used for',
     },
+    deferredCredentialsResolvedAt: {
+      type: 'string',
+      format: 'date-time',
+      description:
+        "the last time the issuer resolved the depot's deferred credentials",
+    },
   },
 };
 
