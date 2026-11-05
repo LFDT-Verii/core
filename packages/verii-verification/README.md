@@ -123,7 +123,28 @@ key:
   key, or cannot be decoded.
 - `FAIL`: the issuer is not authenticated. This includes an embedded `jwk`
   with any issuer other than its own `did:jwk`; Career Wallet self-reported
-  credentials, which use a UUID `iss`, fall into this case.
+  credentials, which use a UUID `iss`, fall into this case. It also includes a
+  `did:velocity` credential whose issuer has no verified profile or DID
+  document on the registrar (a 404), or whose issuer DID the registrar rejects
+  as malformed (a 400).
+- `DEPENDENCY_RESOLUTION_ERROR`: the issuer of a `did:velocity` credential could
+  not be checked because a registrar lookup failed: the credential type
+  metadata lookup, or the issuer's verified profile or DID document lookup
+  with anything other than a 400 or 404 (another error status such as 401,
+  403, 429 or a 5xx, a timeout, a connection error, or a body that is not
+  JSON). The same credential may pass once the registrar answers. A 400 or
+  404 from one of the issuer's lookups still gives `FAIL` when the other
+  lookup failed.
+
+`credentialChecks.UNREVOKED` is `FAIL` for a revoked credential, and for a
+status entry that cannot be checked: a revocation URL that cannot be parsed,
+names another scheme, contract or function (for example another network's
+revocation contract), lacks a parameter or has one the contract cannot take,
+or names a wallet, list or index the revocation registry does not have, so
+the registry call reverts. It is `NOT_APPLICABLE` when the credential has no
+Velocity revocation list status, and `DEPENDENCY_RESOLUTION_ERROR` when the
+revocation registry could not be read, for example after a network failure or
+a call that returned no revert data.
 
 Keys are discovered from the protected header:
 

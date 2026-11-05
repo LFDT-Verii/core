@@ -35,6 +35,9 @@ mock.module('@verii/metadata-registration', {
   },
 });
 
+// The real revocation registry, loaded by path so the module mock above does
+// not replace it. Its url checks throw before any contract call.
+const realInitRevocationRegistry = require('@verii/metadata-registration/src/revocation-registry');
 const console = require('console');
 const { compact, first, flow, join, omit, tail } = require('lodash/fp');
 const { jwtSign, jwtDecode, generateCredentialJwt } = require('@verii/jwt');
@@ -49,7 +52,50 @@ const {
 const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
 const { nanoid } = require('nanoid');
 const { applyOverrides } = require('@verii/common-functions');
+const { errors: undiciErrors } = require('undici');
 const { verifyCredentials } = require('../src/verify-credentials');
+
+// @verii/http-client throws undici's ResponseError for 4xx and 5xx responses
+const registrarResponseError = (statusCode) =>
+  new undiciErrors.ResponseError('Response Error', statusCode, {
+    headers: {},
+    body: '',
+  });
+
+// got-style clients put the status on error.response
+const gotStyleResponseError = (statusCode) =>
+  Object.assign(new Error(`Response code ${statusCode}`), {
+    name: 'HTTPError',
+    response: { statusCode },
+  });
+
+const registrarErrorShapes = [
+  { shape: 'http-client', buildError: registrarResponseError },
+  { shape: 'got-style', buildError: gotStyleResponseError },
+];
+
+const registrarOutages = [
+  { title: 'a 401 response', buildError: () => registrarResponseError(401) },
+  { title: 'a 403 response', buildError: () => registrarResponseError(403) },
+  { title: 'a 429 response', buildError: () => registrarResponseError(429) },
+  { title: 'a 500 response', buildError: () => registrarResponseError(500) },
+  { title: 'a 503 response', buildError: () => registrarResponseError(503) },
+  {
+    title: 'a got-style 503 response',
+    buildError: () => gotStyleResponseError(503),
+  },
+  {
+    title: 'a connection error',
+    buildError: () =>
+      Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:443'), {
+        code: 'ECONNREFUSED',
+      }),
+  },
+  {
+    title: 'a timeout',
+    buildError: () => new undiciErrors.HeadersTimeoutError(),
+  },
+];
 
 describe('Verify credentials', () => {
   const orgKeyPair = generateKeyPair({ format: 'jwk' });
@@ -1111,18 +1157,171 @@ describe('Verify credentials', () => {
         ]);
       });
 
-      it('TRUSTED_ISSUER should return FAIL if issuer lookups fail', async () => {
-        const result = await verifyCredentials(
-          {
-            credentials: [idVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: { dltPrivateKey: orgPrivateKey },
-          },
-          { ...fetchers, resolveDid: () => Promise.reject(new Error()) },
-          context,
-        );
+      describe('logging', () => {
+        const email = 'holder@example.com';
+        let spyLog;
+        let credentialWithEmail;
+        let vcWithEmail;
 
-        expect(result).toEqual([
+        const loggedText = () =>
+          JSON.stringify(
+            Object.values(spyLog).flatMap((fn) =>
+              fn.mock.calls.map((call) => call.arguments),
+            ),
+          );
+
+        const verifyWithSpyLog = (fetcherOverrides = {}) =>
+          verifyCredentials(
+            {
+              credentials: [vcWithEmail],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgPrivateKey },
+            },
+            { ...fetchers, ...fetcherOverrides },
+            { ...context, log: spyLog },
+          );
+
+        beforeEach(async () => {
+          spyLog = {
+            info: mock.fn(),
+            warn: mock.fn(),
+            error: mock.fn(),
+            debug: mock.fn(),
+          };
+          credentialWithEmail = applyOverrides(idCredential, {
+            'credentialSubject.email': email,
+          });
+          vcWithEmail = await generateCredentialJwt(
+            credentialWithEmail,
+            orgKeyPair.privateKey,
+            `${credentialDid}#key`,
+          );
+        });
+
+        const boundIssuerVcForLog = {
+          header: {
+            alg: 'ES256K',
+            kid: `${issuerDid}#key-1`,
+            typ: 'JWT',
+          },
+          payload: { iss: issuerDid },
+        };
+
+        it('should log only identifiers of the resolved did:velocity document', async () => {
+          resolveDidDocument.mock.mockImplementationOnce(() => ({
+            didDocument: {
+              id: 'DID',
+              publicKey: [
+                {
+                  id: `${credentialDid.toLowerCase()}#key`,
+                  publicKeyJwk: orgKeyPair.publicKey,
+                },
+              ],
+              service: [
+                {
+                  id: `${credentialDid.toLowerCase()}#service`,
+                  credentialType: 'Passport',
+                },
+              ],
+            },
+            didDocumentMetadata: {
+              boundIssuerVcs: [
+                {
+                  id: credentialDid.toLowerCase(),
+                  format: 'jwt_vc',
+                  vc: issuerVc,
+                },
+              ],
+            },
+            didResolutionMetadata: {},
+          }));
+
+          const result = await verifyWithSpyLog();
+
+          expect(result[0].credentialChecks.TRUSTED_ISSUER).toEqual(
+            CheckResults.PASS,
+          );
+          expect(loggedText()).not.toContain(email);
+          expect(loggedText()).not.toContain(vcWithEmail);
+          expect(loggedText()).not.toContain(issuerVc);
+          expect(
+            spyLog.info.mock.calls.map((call) => call.arguments),
+          ).toContainEqual([
+            {
+              didDocument: {
+                id: 'DID',
+                publicKey: [{ id: `${credentialDid.toLowerCase()}#key` }],
+                service: [
+                  {
+                    id: `${credentialDid.toLowerCase()}#service`,
+                    credentialType: 'Passport',
+                  },
+                ],
+              },
+              didDocumentMetadata: {
+                boundIssuerVcs: [{ id: credentialDid.toLowerCase() }],
+              },
+              didResolutionMetadata: {},
+            },
+            'did:velocity doc resolved',
+          ]);
+        });
+
+        it('should log the issuer dependencies by their identifiers, with a missing one as null', async () => {
+          const result = await verifyWithSpyLog({
+            getCredentialTypeMetadata: () => [
+              { credentialType: 'OtherType', issuerCategory: 'ContactIssuer' },
+            ],
+          });
+
+          expect(result[0].credentialChecks.TRUSTED_ISSUER).toEqual(
+            CheckResults.FAIL,
+          );
+          expect(loggedText()).not.toContain(email);
+          expect(loggedText()).not.toContain(vcWithEmail);
+          expect(loggedText()).not.toContain(issuerVc);
+          expect(loggedText()).not.toContain('IdentityIssuer');
+          expect(loggedText()).not.toContain('publicKeyJwk');
+          expect(
+            spyLog.error.mock.calls.map((call) => call.arguments),
+          ).toContainEqual([
+            {
+              id: credentialWithEmail.id,
+              credential: {
+                id: credentialWithEmail.id,
+                type: ['Passport'],
+                issuer: { id: issuerDid },
+              },
+              issuerId: issuerDid,
+              credentialType: 'Passport',
+              resolvedDeps: {
+                boundIssuerVc: boundIssuerVcForLog,
+                issuerAccreditation: { id: issuerDid },
+                issuerDidDocument: {
+                  id: issuerDid,
+                  publicKey: [{ id: '#key-1' }],
+                },
+                credentialTypeMetadata: null,
+              },
+            },
+            'runIssuerTrustCheck: resolvedDeps failed',
+          ]);
+        });
+      });
+
+      describe('registrar lookups for the issuer', () => {
+        const verifyIdVc = (fetcherOverrides) =>
+          verifyCredentials(
+            {
+              credentials: [idVc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgPrivateKey },
+            },
+            { ...fetchers, ...fetcherOverrides },
+            context,
+          );
+
+        const idVcResult = (trustedIssuerCheck) => [
           {
             dataModelVersion: '1.1',
             envelopeFormat: 'jwt_vc_json-ld',
@@ -1130,13 +1329,245 @@ describe('Verify credentials', () => {
             credential: idCredential,
             credentialChecks: {
               UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.FAIL,
+              TRUSTED_ISSUER: trustedIssuerCheck,
               TRUSTED_HOLDER: CheckResults.PASS,
               UNEXPIRED: CheckResults.PASS,
               UNREVOKED: CheckResults.PASS,
             },
           },
-        ]);
+        ];
+
+        it('TRUSTED_ISSUER should PASS when the fetchers are methods that use this', async () => {
+          const delegatingFetchers = {
+            delegate: fetchers,
+            resolveDid(id, ctx) {
+              return this.delegate.resolveDid(id, ctx);
+            },
+            getOrganizationVerifiedProfile(id, ctx) {
+              return this.delegate.getOrganizationVerifiedProfile(id, ctx);
+            },
+            getCredentialTypeMetadata(types, ctx) {
+              return this.delegate.getCredentialTypeMetadata(types, ctx);
+            },
+          };
+
+          const result = await verifyCredentials(
+            {
+              credentials: [idVc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgPrivateKey },
+            },
+            delegatingFetchers,
+            context,
+          );
+
+          expect(result).toEqual(idVcResult(CheckResults.PASS));
+        });
+
+        // 404: no such record. 400: the registrar rejected the issuer DID.
+        [400, 404].forEach((statusCode) =>
+          registrarErrorShapes.forEach(({ shape, buildError }) => {
+            it(`TRUSTED_ISSUER should FAIL when the verified profile lookup is a ${shape} ${statusCode}`, async () => {
+              const result = await verifyIdVc({
+                getOrganizationVerifiedProfile: () =>
+                  Promise.reject(buildError(statusCode)),
+              });
+
+              expect(result).toEqual(idVcResult(CheckResults.FAIL));
+            });
+
+            it(`TRUSTED_ISSUER should FAIL when the DID lookup is a ${shape} ${statusCode}`, async () => {
+              const result = await verifyIdVc({
+                resolveDid: () => Promise.reject(buildError(statusCode)),
+              });
+
+              expect(result).toEqual(idVcResult(CheckResults.FAIL));
+            });
+          }),
+        );
+
+        // A 400 or 404 from either lookup settles the check as FAIL, even
+        // when the other lookup could not be completed.
+        const connectionError = () =>
+          Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:443'), {
+            code: 'ECONNREFUSED',
+          });
+        [
+          {
+            profile: () => registrarResponseError(404),
+            did: () => registrarResponseError(503),
+            title: 'profile 404 and DID 503',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => registrarResponseError(503),
+            did: () => registrarResponseError(404),
+            title: 'profile 503 and DID 404',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => registrarResponseError(400),
+            did: () => registrarResponseError(503),
+            title: 'profile 400 and DID 503',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => registrarResponseError(503),
+            did: () => registrarResponseError(400),
+            title: 'profile 503 and DID 400',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => gotStyleResponseError(404),
+            did: connectionError,
+            title: 'a got-style profile 404 and a DID connection error',
+            expected: CheckResults.FAIL,
+          },
+          {
+            profile: () => registrarResponseError(503),
+            did: connectionError,
+            title: 'profile 503 and a DID connection error',
+            expected: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          },
+          {
+            profile: () => registrarResponseError(503),
+            did: () => registrarResponseError(503),
+            title: 'profile 503 and DID 503',
+            expected: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          },
+          {
+            profile: () => registrarResponseError(404),
+            did: () => registrarResponseError(404),
+            title: 'profile 404 and DID 404',
+            expected: CheckResults.FAIL,
+          },
+        ].forEach(({ profile, did, title, expected }) => {
+          it(`TRUSTED_ISSUER should be ${expected} when the lookups give ${title}`, async () => {
+            const result = await verifyIdVc({
+              getOrganizationVerifiedProfile: () => Promise.reject(profile()),
+              resolveDid: () => Promise.reject(did()),
+            });
+
+            expect(result).toEqual(idVcResult(expected));
+          });
+        });
+
+        registrarOutages.forEach(({ title, buildError }) => {
+          it(`TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR when the verified profile lookup fails with ${title}`, async () => {
+            const result = await verifyIdVc({
+              getOrganizationVerifiedProfile: () =>
+                Promise.reject(buildError()),
+            });
+
+            expect(result).toEqual(
+              idVcResult(CheckResults.DEPENDENCY_RESOLUTION_ERROR),
+            );
+          });
+
+          it(`TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR when the DID lookup fails with ${title}`, async () => {
+            const result = await verifyIdVc({
+              resolveDid: () => Promise.reject(buildError()),
+            });
+
+            expect(result).toEqual(
+              idVcResult(CheckResults.DEPENDENCY_RESOLUTION_ERROR),
+            );
+          });
+        });
+
+        it('TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR when the verified profile response cannot be parsed', async () => {
+          // @verii/http-client resolves an unparseable JSON body to {}
+          const result = await verifyIdVc({
+            getOrganizationVerifiedProfile: async () => ({}),
+          });
+
+          expect(result).toEqual(
+            idVcResult(CheckResults.DEPENDENCY_RESOLUTION_ERROR),
+          );
+        });
+
+        it('TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR when the DID response cannot be parsed', async () => {
+          const result = await verifyIdVc({ resolveDid: async () => ({}) });
+
+          expect(result).toEqual(
+            idVcResult(CheckResults.DEPENDENCY_RESOLUTION_ERROR),
+          );
+        });
+
+        it('TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR only for credentials from the issuer whose lookup failed', async () => {
+          const otherIssuerDid = 'did:ion:other-issuer';
+          const otherCredentialDid = buildDid(
+            ['0xf124', 1, 43, didSuffix],
+            'did:velocity:v2:',
+          );
+          const otherCredential = applyOverrides(idCredential, {
+            id: otherCredentialDid,
+            issuer: { id: otherIssuerDid },
+          });
+          const otherVc = await generateCredentialJwt(
+            otherCredential,
+            orgKeyPair.privateKey,
+            `${otherCredentialDid}#key`,
+          );
+          resolveDidDocument.mock.mockImplementationOnce(() => ({
+            didDocument: {
+              id: 'DID',
+              publicKey: [
+                {
+                  id: `${credentialDid.toLowerCase()}#key`,
+                  publicKeyJwk: orgKeyPair.publicKey,
+                },
+                {
+                  id: `${otherCredentialDid.toLowerCase()}#key`,
+                  publicKeyJwk: orgKeyPair.publicKey,
+                },
+              ],
+            },
+            didDocumentMetadata: {
+              boundIssuerVcs: [
+                {
+                  id: credentialDid.toLowerCase(),
+                  format: 'jwt_vc',
+                  vc: issuerVc,
+                },
+              ],
+            },
+            didResolutionMetadata: {},
+          }));
+
+          const result = await verifyCredentials(
+            {
+              credentials: [idVc, otherVc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgPrivateKey },
+            },
+            {
+              ...fetchers,
+              getOrganizationVerifiedProfile: (did) =>
+                did === otherIssuerDid
+                  ? Promise.reject(registrarResponseError(502))
+                  : Promise.resolve(mockGetOrganizationVerifiedProfile),
+            },
+            context,
+          );
+
+          expect(result).toEqual([
+            ...idVcResult(CheckResults.PASS),
+            {
+              dataModelVersion: '1.1',
+              envelopeFormat: 'jwt_vc_json-ld',
+              signingAlgorithm: 'ES256K',
+              credential: otherCredential,
+              credentialChecks: {
+                UNTAMPERED: CheckResults.PASS,
+                TRUSTED_ISSUER: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+                TRUSTED_HOLDER: CheckResults.PASS,
+                UNEXPIRED: CheckResults.PASS,
+                UNREVOKED: CheckResults.PASS,
+              },
+            },
+          ]);
+        });
       });
 
       it('TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR if credential type metadata lookups fail', async () => {
@@ -1212,7 +1643,8 @@ describe('Verify credentials', () => {
           },
           {
             ...fetchers,
-            getOrganizationVerifiedProfile: async () => ({}),
+            getOrganizationVerifiedProfile: () =>
+              Promise.reject(registrarResponseError(404)),
           },
           context,
         );
@@ -1407,7 +1839,183 @@ describe('Verify credentials', () => {
         ]);
       });
 
-      it('UNREVOKED should return FAIL when status request errors', async () => {
+      describe('revocation status urls', () => {
+        const revocationContractAddress = `0x${'a'.repeat(40)}`;
+        const holderAddress = `0x${'b'.repeat(40)}`;
+        const query = `?address=${holderAddress}&listId=1&index=2`;
+
+        const verifyWithStatusUrl = async (url, rpcProvider) => {
+          initRevocationRegistry.mock.mockImplementationOnce(
+            realInitRevocationRegistry,
+          );
+          const credential = applyOverrides(idCredential, {
+            credentialStatus: { type: VelocityRevocationListType, id: url },
+          });
+          const vc = await generateCredentialJwt(
+            credential,
+            orgKeyPair.privateKey,
+            `${credentialDid}#key`,
+          );
+          const result = await verifyCredentials(
+            {
+              credentials: [vc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: { dltPrivateKey: orgPrivateKey },
+            },
+            fetchers,
+            {
+              ...context,
+              config: { ...config, revocationContractAddress },
+              rpcProvider,
+            },
+          );
+          return { credential, result };
+        };
+
+        const resultWithUnrevoked = (credential, unrevokedCheck) => [
+          {
+            dataModelVersion: '1.1',
+            envelopeFormat: 'jwt_vc_json-ld',
+            signingAlgorithm: 'ES256K',
+            credential,
+            credentialChecks: {
+              UNTAMPERED: CheckResults.PASS,
+              TRUSTED_ISSUER: CheckResults.PASS,
+              TRUSTED_HOLDER: CheckResults.PASS,
+              UNEXPIRED: CheckResults.PASS,
+              UNREVOKED: unrevokedCheck,
+            },
+          },
+        ];
+
+        [
+          {
+            title: 'names another function',
+            url: `ethereum:${revocationContractAddress}/setRevokedStatus${query}`,
+          },
+          {
+            title: "names another network's revocation contract",
+            url: `ethereum:0x${'c'.repeat(40)}/getRevokedStatus${query}`,
+          },
+          {
+            title: 'uses another scheme',
+            url: `eth:${revocationContractAddress}/getRevokedStatus${query}`,
+          },
+          { title: 'cannot be parsed', url: 'ethereum:revoked' },
+          {
+            title: 'has no parameters',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus`,
+          },
+          {
+            title: 'has a listId that is not a number',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=not-a-number&index=2`,
+          },
+          {
+            title: 'has an empty listId',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=&index=2`,
+          },
+          {
+            title: 'has a negative index',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=1&index=-1`,
+          },
+          {
+            title: 'has an index of 2^256',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=1&index=${2n ** 256n}`,
+          },
+          {
+            title: 'has an invalid address',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=0x${'aB'.repeat(20)}&listId=1&index=2`,
+          },
+        ].forEach(({ title, url }) => {
+          it(`UNREVOKED should FAIL when the status url ${title}`, async () => {
+            const { credential, result } = await verifyWithStatusUrl(url);
+
+            expect(result).toEqual(
+              resultWithUnrevoked(credential, CheckResults.FAIL),
+            );
+          });
+        });
+
+        // revert data for Error("list index out of bound"): the Error(string)
+        // selector, then the ABI-encoded string's offset, length and bytes
+        const listIndexOutOfBoundRevertData = [
+          '0x08c379a0',
+          '20'.padStart(64, '0'),
+          '17'.padStart(64, '0'),
+          Buffer.from('list index out of bound')
+            .toString('hex')
+            .padEnd(64, '0'),
+        ].join('');
+
+        it('UNREVOKED should FAIL when the revocation registry reverts for the status url', async () => {
+          const revertingRpc = {
+            call: mock.fn(async () => {
+              throw Object.assign(new Error('execution reverted'), {
+                code: 'CALL_EXCEPTION',
+                data: listIndexOutOfBoundRevertData,
+              });
+            }),
+          };
+
+          const { credential, result } = await verifyWithStatusUrl(
+            `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=1&index=10240`,
+            revertingRpc,
+          );
+
+          expect(revertingRpc.call.mock.callCount()).toEqual(1);
+          expect(result).toEqual(
+            resultWithUnrevoked(credential, CheckResults.FAIL),
+          );
+        });
+
+        it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when the contract call returns no revert data', async () => {
+          const rpcWithoutRevertData = {
+            call: mock.fn(async () => {
+              throw Object.assign(new Error('missing revert data'), {
+                code: 'CALL_EXCEPTION',
+                data: null,
+                revert: null,
+              });
+            }),
+          };
+
+          const { credential, result } = await verifyWithStatusUrl(
+            `ethereum:${revocationContractAddress}/getRevokedStatus${query}`,
+            rpcWithoutRevertData,
+          );
+
+          expect(rpcWithoutRevertData.call.mock.callCount()).toEqual(1);
+          expect(result).toEqual(
+            resultWithUnrevoked(
+              credential,
+              CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+            ),
+          );
+        });
+
+        it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when the contract call for a valid status url is rejected', async () => {
+          const unreachableRpc = {
+            call: mock.fn(async () => {
+              throw new Error('connect ECONNREFUSED 127.0.0.1:8545');
+            }),
+          };
+
+          const { credential, result } = await verifyWithStatusUrl(
+            `ethereum:${revocationContractAddress}/getRevokedStatus${query}`,
+            unreachableRpc,
+          );
+
+          expect(unreachableRpc.call.mock.callCount()).toEqual(1);
+          expect(result).toEqual(
+            resultWithUnrevoked(
+              credential,
+              CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+            ),
+          );
+        });
+      });
+
+      it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when status request errors', async () => {
         initRevocationRegistry.mock.mockImplementationOnce(() => ({
           getRevokedStatus: mock.fn(() => Promise.reject(new Error('boom'))),
         }));
@@ -1432,7 +2040,7 @@ describe('Verify credentials', () => {
               UNTAMPERED: CheckResults.PASS,
               TRUSTED_ISSUER: CheckResults.PASS,
               TRUSTED_HOLDER: CheckResults.PASS,
-              UNREVOKED: CheckResults.FAIL,
+              UNREVOKED: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
               UNEXPIRED: CheckResults.PASS,
             },
           },

@@ -32,11 +32,34 @@ const {
   last,
   map,
   partition,
+  pick,
 } = require('lodash/fp');
 
 const contractAbi = require('./contracts/metadata-registry.json');
 const { RESOLUTION_METADATA_ERROR, VERSION, ALG_TYPE } = require('./constants');
 const { encodeJwk, decodeJwk } = require('./code-jwk');
+
+// Logs keep the shape of what they describe, with only identifying fields.
+// Credentials passed in for resolution are verifier credential data: they hold
+// the decoded credential, the raw credential JWT and the content hash.
+const credentialRefsForLog = map(pick(['id', 'credentialType']));
+
+// An on-chain entry, without its encrypted public key and issuer VC.
+const entryForLog = (entry) =>
+  entry == null
+    ? entry
+    : {
+        version: entry.version,
+        credentialType: entry.credentialType,
+        algType: entry.algType,
+      };
+
+// Credential entries, without the derived decryption secret.
+const credentialEntriesForLog = map(({ entry, id, credentialType }) => ({
+  entry: entryForLog(entry),
+  id,
+  credentialType,
+}));
 
 const initMetadataRegistry = async (
   { privateKey, contractAddress, rpcProvider },
@@ -157,7 +180,7 @@ const initMetadataRegistry = async (
     version = VERSION,
   ) => {
     log.info(
-      { listId, issuerVC, caoDid, algType, version },
+      { listId, caoDid, algType, version },
       'createCredentialMetadataList',
     );
     const { transactingClient, signature } =
@@ -260,7 +283,7 @@ const initMetadataRegistry = async (
   };
 
   const resolvePublicKey = async ({ id, entry, secret }) => {
-    log.info({ id, entry, secret }, 'resolvePublicKey');
+    log.info({ id, entry: entryForLog(entry) }, 'resolvePublicKey');
     const { algType, version } = entry;
 
     if (version !== get2BytesHash(VERSION)) {
@@ -295,7 +318,10 @@ const initMetadataRegistry = async (
   };
 
   const resolveService = ({ id, entry, credentialType }) => {
-    log.info({ id, entry, credentialType }, 'resolveService');
+    log.info(
+      { id, entry: entryForLog(entry), credentialType },
+      'resolveService',
+    );
     if (
       !credentialType ||
       entry.credentialType !== get2BytesHash(credentialType) // TODO - looks like credential types are stored incorrectly
@@ -309,7 +335,7 @@ const initMetadataRegistry = async (
   };
 
   const resolveIssuerVc = ({ id, entry }) => {
-    log.info({ id, entry }, 'resolveIssuerVc');
+    log.info({ id, entry: entryForLog(entry) }, 'resolveIssuerVc');
     return {
       id,
       format: 'jwt_vc',
@@ -325,7 +351,13 @@ const initMetadataRegistry = async (
     burnerDid,
   }) => {
     log.info(
-      { credentials, indexEntries, traceId, caoDid, burnerDid },
+      {
+        credentials: credentialRefsForLog(credentials),
+        indexEntries,
+        traceId,
+        caoDid,
+        burnerDid,
+      },
       'resolveContractEntries',
     );
     const isFree = await flow(
@@ -354,7 +386,15 @@ const initMetadataRegistry = async (
     burnerDid,
     caoDid,
   }) => {
-    log.info({ did, credentials, burnerDid, caoDid }, 'resolveDidDocument');
+    log.info(
+      {
+        did,
+        credentials: credentialRefsForLog(credentials),
+        burnerDid,
+        caoDid,
+      },
+      'resolveDidDocument',
+    );
     const { traceId } = context;
     const indexEntries = parseVelocityV2Did(did);
     const entries = await resolveContractEntries({
@@ -392,7 +432,10 @@ const initMetadataRegistry = async (
         };
       }, entries),
     );
-    log.info({ credentialEntries }, 'resolveDidDocument 1');
+    log.info(
+      { credentialEntries: credentialEntriesForLog(credentialEntries) },
+      'resolveDidDocument 1',
+    );
 
     const publicKeys = await Promise.all(
       map(resolvePublicKey, credentialEntries),
@@ -416,7 +459,17 @@ const initMetadataRegistry = async (
     };
 
     log.info(
-      { didDocument, didDocumentMetadata, unresolvedPublicKeys },
+      {
+        didDocument: {
+          id: didDocument.id,
+          publicKey: map(pick(['id']), didDocument.publicKey),
+          service: map(pick(['id', 'credentialType']), didDocument.service),
+        },
+        didDocumentMetadata: {
+          boundIssuerVcs: map(pick(['id']), didDocumentMetadata.boundIssuerVcs),
+        },
+        unresolvedPublicKeys: map(pick(['id']), unresolvedPublicKeys),
+      },
       'resolveDidDocument 3',
     );
 

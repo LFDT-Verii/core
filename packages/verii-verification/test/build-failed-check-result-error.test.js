@@ -17,6 +17,7 @@
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const { nanoid } = require('nanoid');
+const { CheckResults } = require('@verii/vc-checks');
 const {
   buildFailedCheckResultError,
 } = require('../src/build-failed-check-result-error');
@@ -91,6 +92,46 @@ describe('throw error on failed check result', () => {
         { log: console },
       ),
     ).toEqual(new Error('presentation_credential_revoked'));
+  });
+  it('should throw bad issuer if the issuer could not be checked', () => {
+    const error = buildFailedCheckResultError(
+      {
+        credential: { id: didVelocity },
+        credentialChecks: {
+          UNTAMPERED: CredentialCheckResultValue.PASS,
+          TRUSTED_ISSUER: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          TRUSTED_HOLDER: CredentialCheckResultValue.PASS,
+          UNREVOKED: CredentialCheckResultValue.PASS,
+          UNEXPIRED: CredentialCheckResultValue.PASS,
+        },
+      },
+      { log: console },
+    );
+    expect(error).toEqual(new Error('presentation_credential_bad_issuer'));
+    expect(error).toMatchObject({
+      statusCode: 401,
+      errorCode: 'presentation_credential_bad_issuer',
+    });
+  });
+  it('should throw revoked if the revocation status could not be checked', () => {
+    const error = buildFailedCheckResultError(
+      {
+        credential: { id: didVelocity },
+        credentialChecks: {
+          UNTAMPERED: CredentialCheckResultValue.PASS,
+          TRUSTED_ISSUER: CredentialCheckResultValue.PASS,
+          TRUSTED_HOLDER: CredentialCheckResultValue.PASS,
+          UNREVOKED: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          UNEXPIRED: CredentialCheckResultValue.PASS,
+        },
+      },
+      { log: console },
+    );
+    expect(error).toEqual(new Error('presentation_credential_revoked'));
+    expect(error).toMatchObject({
+      statusCode: 401,
+      errorCode: 'presentation_credential_revoked',
+    });
   });
   it('should throw if credential expired', () => {
     expect(

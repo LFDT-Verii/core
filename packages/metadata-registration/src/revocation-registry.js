@@ -16,19 +16,121 @@
 
 /* eslint-disable camelcase */
 const ethUrlParser = require('eth-url-parser');
+const { AbiCoder, isAddress, isHexString } = require('ethers');
+const { isNil } = require('lodash/fp');
 const {
   initContractClient,
   initContractWithTransactingClient,
 } = require('@verii/base-contract-io');
 
 const contractAbi = require('./contracts/revocation-registry.json');
+const { RevocationRegistryErrorCodes } = require('./constants');
+
+// address, uint256 listId, uint32 index
+const getRevokedStatusInputTypes = contractAbi.abi
+  .find(({ name }) => name === 'getRevokedStatus')
+  .inputs.map(({ type }) => type);
+
+const invalidRevocationUrlError = (message, cause) => {
+  const error = new Error(message, cause == null ? undefined : { cause });
+  error.code = RevocationRegistryErrorCodes.INVALID_REVOCATION_URL;
+  return error;
+};
+
+const parseRevocationUrl = (url) => {
+  try {
+    return ethUrlParser.parse(url);
+  } catch (error) {
+    throw invalidRevocationUrlError(error.message, error);
+  }
+};
+
+const assertRevocationUrlTarget = (
+  { scheme, target_address, function_name },
+  contractAddress,
+) => {
+  if (
+    target_address !== contractAddress ||
+    function_name !== 'getRevokedStatus' ||
+    scheme !== 'ethereum'
+  ) {
+    throw invalidRevocationUrlError(
+      'Wrong url, please check the params: scheme, target_address, function_name',
+    );
+  }
+};
+
+// The contract call only treats a 0x-prefixed 20-byte hex string as an
+// address, and looks anything else up as an ENS name over RPC.
+const isWalletAddress = (address) =>
+  isHexString(address, 20) && isAddress(address);
+
+// Encoding with the contract's own input types accepts exactly the listId and
+// index values the contract call accepts: non-negative integers that fit
+// uint256 and uint32, in the forms ethers reads, such as decimal.
+const isEncodable = (values) => {
+  try {
+    AbiCoder.defaultAbiCoder().encode(getRevokedStatusInputTypes, values);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const assertRevocationUrlParameterValues = ({ address, listId, index }) => {
+  if (!isWalletAddress(address) || !isEncodable([address, listId, index])) {
+    throw invalidRevocationUrlError(
+      'Wrong url, please check the values of the params: address, listId, index',
+    );
+  }
+};
+
+const revocationUrlParameters = ({ parameters = {} }) => {
+  const { address, listId, index } = parameters;
+  if (address == null || listId == null || index == null) {
+    throw invalidRevocationUrlError(
+      'Wrong url, please check the params: address, listId, index',
+    );
+  }
+  assertRevocationUrlParameterValues({ address, listId, index });
+  return { address, listId, index };
+};
+
+// The registry reverts for a wallet, list or index it does not have. A revert
+// returns revert data: an Error(string), a custom error or a Panic. Ethers also
+// reports a call that returned no revert data as a CALL_EXCEPTION, which a
+// misbehaving node or a wrong contract address can cause, so only a
+// CALL_EXCEPTION with revert data is a revert.
+const hasRevertData = ({ revert, data }) =>
+  !isNil(revert) || (isHexString(data) && data !== '0x');
+
+const isContractRevert = (error) =>
+  error?.code === 'CALL_EXCEPTION' && hasRevertData(error);
+
+// A revert means the URL names status data the registry does not have, so it
+// gets the invalid_revocation_url code, with the revert as its cause. Any
+// other error, such as a network failure, is rethrown unchanged.
+const getRevokedStatusCallError = (error) =>
+  isContractRevert(error)
+    ? invalidRevocationUrlError(error.shortMessage ?? error.message, error)
+    : error;
+
+// A URL that cannot be parsed, names another contract or function, or lacks a
+// parameter or has one the contract cannot take throws an error with code
+// invalid_revocation_url before any contract call, so callers can tell invalid
+// status data from a failed call.
+const parseGetRevokedStatusUrl = (url, contractAddress) => {
+  const parsedUrl = parseRevocationUrl(url);
+  assertRevocationUrlTarget(parsedUrl, contractAddress);
+  return revocationUrlParameters(parsedUrl);
+};
 
 const initRevocationRegistry = async (
   { privateKey, contractAddress, rpcProvider },
   context,
 ) => {
   const { log } = context;
-  log.info({ privateKey, contractAddress }, 'initRevocationRegistry');
+  log.info({ contractAddress }, 'initRevocationRegistry');
 
   const { contractClient, pullEvents } = await initContractClient(
     {
@@ -134,24 +236,16 @@ const initRevocationRegistry = async (
   const getRevokedStatus = (url) => {
     log.info({ url }, 'getRevokedStatus');
 
-    const {
-      scheme,
-      target_address,
-      function_name,
-      parameters: { address, listId, index },
-    } = ethUrlParser.parse(url);
+    const { address, listId, index } = parseGetRevokedStatusUrl(
+      url,
+      contractAddress,
+    );
 
-    if (
-      target_address !== contractAddress ||
-      function_name !== 'getRevokedStatus' ||
-      scheme !== 'ethereum'
-    ) {
-      throw new Error(
-        'Wrong url, please check the params: scheme, target_address, function_name',
-      );
-    }
-
-    return contractClient.getRevokedStatus(address, listId, index);
+    return contractClient
+      .getRevokedStatus(address, listId, index)
+      .catch((error) => {
+        throw getRevokedStatusCallError(error);
+      });
   };
 
   const setPermissionsAddress = async (permissionsContractAddress) => {

@@ -36,6 +36,7 @@ mock.module('@verii/metadata-registration', {
 
 const {
   mockHttpClient,
+  mockHttpClientErrorRoute,
   mockHttpClientJsonRoute,
   mockHttpClientModule,
   resetMockHttpClient,
@@ -63,6 +64,7 @@ const {
   jwtVerify,
 } = require('@verii/jwt');
 const { map, omit } = require('lodash/fp');
+const newError = require('http-errors');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes/src/regexes');
 const {
   errorResponseMatcher,
@@ -91,6 +93,9 @@ const {
   ExchangeTypes,
   initExchangeFactory,
 } = require('../../src/entities/exchanges');
+const {
+  credentialVerificationSchema,
+} = require('../../src/controllers/operator/presentations/schemas');
 const {
   buildOpenBadgeCredential,
   openBadgeCredentialContent,
@@ -677,6 +682,138 @@ describe('Presentations Test Suite', () => {
           requestId: expect.any(String),
         });
       });
+      [
+        {
+          title: 'the signature does not verify with the ledger key',
+          tamperCheck: CheckResults.FAIL,
+          resolveDidDocument: () =>
+            Promise.resolve(
+              presentationDIDResolution(
+                [credentialDid],
+                [generateKeyPair({ format: 'jwk' })],
+                [boundIssuerVc],
+              ),
+            ),
+        },
+        {
+          title: 'the ledger cannot resolve the signing key',
+          tamperCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          resolveDidDocument: () =>
+            Promise.reject(new Error('rpc unavailable')),
+        },
+        {
+          title: 'the ledger has no key for the kid',
+          tamperCheck: CheckResults.DATA_INTEGRITY_ERROR,
+          resolveDidDocument: () =>
+            Promise.resolve(
+              presentationDIDResolution(
+                ['did:velocity:v2:B:1:1'],
+                [vcKeyPair],
+                [boundIssuerVc],
+              ),
+            ),
+        },
+      ].forEach(({ title, tamperCheck, resolveDidDocument }) => {
+        it(`should report tamperCheck ${tamperCheck} when ${title}`, async () => {
+          mockResolveDidDocument.mock.mockImplementationOnce(
+            resolveDidDocument,
+          );
+          const payload = {
+            tenantId: tenant._id,
+            format: PresentationFormat.JWT_VP,
+            presentation: vp,
+          };
+
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: `${testUrl}/verify`,
+            payload,
+          });
+          expect(response.statusCode).toEqual(200);
+          expect(response.json.verification).toEqual({
+            verified: false,
+            tamperCheck: CheckResults.PASS,
+            credentials: [
+              {
+                format: CredentialFormat.JWT_VC,
+                credential: vc,
+                w3cCredential: {
+                  ...openBadgeCredential,
+                  issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
+                },
+                verified: false,
+                tamperCheck,
+                trustedIssuerCheck: CheckResults.NOT_CHECKED,
+                trustedHolderCheck: CheckResults.NOT_CHECKED,
+                revocationCheck: CheckResults.NOT_CHECKED,
+                expiryCheck: CheckResults.NOT_CHECKED,
+              },
+            ],
+          });
+          expectChecksInSchemaEnums(response.json.verification);
+        });
+      });
+
+      it('should report registrar and ledger outages as dependency resolution errors', async () => {
+        mockResolveDidDocument.mock.mockImplementationOnce(() =>
+          Promise.resolve(
+            presentationDIDResolution(
+              [credentialDid],
+              [vcKeyPair],
+              [boundIssuerVc],
+            ),
+          ),
+        );
+        mockHttpClientErrorRoute(
+          'get',
+          `api/v0.6/organizations/${encodeURIComponent(
+            tenant.did,
+          )}/verified-profile`,
+          newError(503, 'Response Error'),
+        );
+        mockGetStatus.mock.mockImplementationOnce(() =>
+          Promise.reject(new Error('ledger unavailable')),
+        );
+        const payload = {
+          tenantId: tenant._id,
+          format: PresentationFormat.JWT_VP,
+          presentation: vp,
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/verify`,
+          payload,
+        });
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          format: PresentationFormat.JWT_VP,
+          presentation: vp,
+          w3cPresentation: jwtDecode(payload.presentation).payload.vp,
+          verification: {
+            verified: false,
+            tamperCheck: CheckResults.PASS,
+            credentials: [
+              {
+                format: CredentialFormat.JWT_VC,
+                credential: vc,
+                w3cCredential: {
+                  ...openBadgeCredential,
+                  issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
+                },
+                verified: false,
+                tamperCheck: CheckResults.PASS,
+                trustedIssuerCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+                trustedHolderCheck: CheckResults.PASS,
+                revocationCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+                expiryCheck: CheckResults.PASS,
+              },
+            ],
+          },
+          requestId: expect.any(String),
+        });
+        expectChecksInSchemaEnums(response.json.verification);
+      });
     });
 
     describe('run checks on a stored presentation', () => {
@@ -1198,6 +1335,24 @@ const expectedResponsePresentation = (presentation, overrides) =>
     },
     overrides,
   );
+
+// Every check value in a credential verification is one its response schema
+// lists.
+const expectChecksInSchemaEnums = ({ credentials }) => {
+  for (const credentialVerification of credentials) {
+    for (const check of [
+      'tamperCheck',
+      'trustedIssuerCheck',
+      'trustedHolderCheck',
+      'revocationCheck',
+      'expiryCheck',
+    ]) {
+      expect(credentialVerificationSchema.properties[check].enum).toContain(
+        credentialVerification[check],
+      );
+    }
+  }
+};
 
 const presentationDIDResolution = (
   credentialDids,

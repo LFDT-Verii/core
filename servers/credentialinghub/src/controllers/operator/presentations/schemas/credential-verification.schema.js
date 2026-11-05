@@ -43,37 +43,47 @@ const credentialVerificationSchema = {
     verified: {
       type: 'boolean',
     },
+    // Every UNTAMPERED value verifyCredentials returns, except
+    // VOUCHER_RESERVE_EXHAUSTED, which fails the request with a 402 instead.
     tamperCheck: {
       type: 'string',
-      enum: ['PASS', 'FAIL', 'UNCHECKED'],
+      enum: [
+        'PASS',
+        'FAIL',
+        'DATA_INTEGRITY_ERROR',
+        'DEPENDENCY_RESOLUTION_ERROR',
+      ],
     },
+    // Each check lists every value verifyCredentials returns for it.
+    // NOT_CHECKED is reported for all four when the tamper check fails.
     trustedIssuerCheck: {
       type: 'string',
       enum: [
         'PASS',
         'FAIL',
-        'UNCHECKED',
         'SELF_SIGNED',
         'DATA_INTEGRITY_ERROR',
+        'DEPENDENCY_RESOLUTION_ERROR',
+        'NOT_CHECKED',
       ],
     },
     trustedHolderCheck: {
       type: 'string',
-      enum: ['PASS', 'FAIL', 'UNCHECKED', 'NOT_APPLICABLE'],
+      enum: ['PASS', 'FAIL', 'NOT_APPLICABLE', 'NOT_CHECKED'],
     },
     revocationCheck: {
       type: 'string',
       enum: [
         'PASS',
         'FAIL',
-        'UNCHECKED',
-        'DEPENDENCY_RESOLUTION_ERROR',
         'NOT_APPLICABLE',
+        'DEPENDENCY_RESOLUTION_ERROR',
+        'NOT_CHECKED',
       ],
     },
     expiryCheck: {
       type: 'string',
-      enum: ['PASS', 'FAIL', 'UNCHECKED', 'NOT_APPLICABLE'],
+      enum: ['PASS', 'FAIL', 'NOT_APPLICABLE', 'NOT_CHECKED'],
     },
   },
 };

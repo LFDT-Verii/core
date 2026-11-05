@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const { before, describe, it, mock } = require('node:test');
+const { before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const { omit, set, times, join } = require('lodash/fp');
@@ -464,6 +464,143 @@ describe('issuer checks', () => {
           ({ arguments: [, options] }) => options?.code === 'VERII_JWT_DEP001',
         ),
       ).toEqual([]);
+    });
+  });
+
+  describe('logging', () => {
+    const email = 'holder@example.com';
+    let spyContext;
+    let credentialWithEmail;
+
+    const loggedCalls = () =>
+      Object.values(spyContext.log).flatMap((fn) =>
+        fn.mock.calls.map((call) => call.arguments),
+      );
+
+    before(() => {
+      credentialWithEmail = {
+        ...identityCredential,
+        id: 'did:velocity:v2:0x1:1:1',
+        credentialSubject: { ...identityCredential.credentialSubject, email },
+      };
+    });
+
+    beforeEach(() => {
+      spyContext = {
+        config,
+        log: { info: mock.fn(), warn: mock.fn(), error: mock.fn() },
+      };
+    });
+
+    it('should log only identifiers when the issuer chain fails', async () => {
+      const result = await checkIssuerTrust(
+        credentialWithEmail,
+        issuerDid,
+        {
+          ...defaultDependencies,
+          issuerAccreditation: {
+            id: issuerDid,
+            permittedVelocityServiceCategory: [],
+          },
+        },
+        spyContext,
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+      const logged = JSON.stringify(loggedCalls());
+      expect(logged).not.toContain(email);
+      expect(logged).not.toContain(boundIssuerVc);
+      expect(logged).not.toContain('accountId');
+      expect(spyContext.log.error.mock.calls[0].arguments).toEqual([
+        {
+          err: expect.any(Error),
+          credential: {
+            id: credentialWithEmail.id,
+            type: ['Passport'],
+            issuer: { id: issuerDid },
+          },
+          dependencies: {
+            boundIssuerVc: {
+              header: { alg: 'ES256K', kid: issuerKid, typ: 'JWT' },
+              payload: { iss: issuerDid },
+            },
+            issuerAccreditation: { id: issuerDid },
+            issuerDidDocument: {
+              id: issuerDid,
+              verificationMethod: [{ id: '#key-1' }],
+            },
+            credentialTypeMetadata: { credentialType: 'Passport' },
+          },
+        },
+        'Check issuer credentials: the issuer chain failed for the issuer VC',
+      ]);
+    });
+
+    it('should log only identifiers when the boundIssuerVc does not verify', async () => {
+      const { privateKey } = generateKeyPair({ format: 'jwk' });
+      const wrongSigVc = await generateCredentialJwt(
+        issuerCred,
+        privateKey,
+        issuerKid,
+      );
+
+      const result = await checkIssuerTrust(
+        credentialWithEmail,
+        issuerDid,
+        { ...defaultDependencies, boundIssuerVc: wrongSigVc },
+        spyContext,
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+      expect(JSON.stringify(loggedCalls())).not.toContain(wrongSigVc);
+      expect(JSON.stringify(loggedCalls())).not.toContain('accountId');
+      expect(loggedCalls()).toEqual([
+        [
+          {
+            decodedBoundIssuerVc: {
+              header: { alg: 'ES256K', kid: issuerKid, typ: 'JWT' },
+              payload: { iss: issuerDid },
+            },
+          },
+          'checkIssuerTrust: the boundIssuerVc does not verify',
+        ],
+      ]);
+    });
+
+    it('should log only identifiers when the boundIssuerVc is for another issuer', async () => {
+      const otherIssuerDid = 'did:ion:other-issuer';
+      const otherIssuerVc = await generateCredentialJwt(
+        { ...issuerCred, issuer: otherIssuerDid },
+        issuerKeyPair.privateKey,
+        issuerKid,
+      );
+
+      const result = await checkIssuerTrust(
+        credentialWithEmail,
+        issuerDid,
+        { ...defaultDependencies, boundIssuerVc: otherIssuerVc },
+        spyContext,
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+      expect(JSON.stringify(loggedCalls())).not.toContain(otherIssuerVc);
+      expect(JSON.stringify(loggedCalls())).not.toContain('accountId');
+      expect(JSON.stringify(loggedCalls())).not.toContain('publicKeyJwk');
+      expect(loggedCalls()).toEqual([
+        [
+          {
+            issuerDidDocument: {
+              id: issuerDid,
+              verificationMethod: [{ id: '#key-1' }],
+            },
+            decodedBoundIssuerVc: {
+              header: { alg: 'ES256K', kid: issuerKid, typ: 'JWT' },
+              payload: { iss: otherIssuerDid },
+            },
+          },
+          "checkIssuerTrust: the boundIssuerVc is not for the credential's issuer",
+        ],
+      ]);
     });
   });
 

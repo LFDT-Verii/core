@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-const { after, afterEach, before, describe, it } = require('node:test');
+const { after, afterEach, before, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const { last } = require('lodash/fp');
+const { getAddress } = require('ethers');
 const { generateAccount, toNumber } = require('@verii/blockchain-functions');
 const {
   mongoFactoryWrapper,
@@ -28,6 +29,7 @@ const console = require('console');
 const { initPermissions } = require('@verii/contract-permissions');
 const { wait } = require('@verii/common-functions');
 const initRevocationRegistry = require('../src/revocation-registry');
+const { RevocationRegistryErrorCodes } = require('../src/constants');
 const {
   deployPermissionContract,
   deployRevocationContract,
@@ -235,6 +237,49 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
       ).rejects.toThrow(/execution reverted: "list index out of bound"/);
     });
 
+    it('Throw an invalid_revocation_url error when the registry reverts for the url', async () => {
+      const listId = 4291;
+      await revocationRegistry.addRevocationListSigned(
+        listId,
+        'did:velocity:99',
+      );
+      const statusUrl = ({ address = defaultPrimaryAddress, list, index }) =>
+        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${address}&listId=${list}&index=${index}`;
+
+      for (const { url, reason } of [
+        {
+          url: statusUrl({ list: listId, index: 10240 }),
+          reason: 'list index out of bound',
+        },
+        {
+          url: statusUrl({ list: listId + 1, index: 24 }),
+          reason: 'revocation list with given id does not exist',
+        },
+        {
+          url: statusUrl({
+            address: generateAccount().address,
+            list: listId,
+            index: 24,
+          }),
+          reason: 'wallet not in registry',
+        },
+      ]) {
+        // eslint-disable-next-line no-await-in-loop
+        const error = await revocationRegistry
+          .getRevokedStatus(url)
+          .catch((e) => e);
+
+        expect(error).toMatchObject({
+          code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+          message: `execution reverted: "${reason}"`,
+          cause: expect.objectContaining({
+            code: 'CALL_EXCEPTION',
+            reason,
+          }),
+        });
+      }
+    });
+
     it('Throw an error: invalid url params', async () => {
       const listId = 4290;
       const index = 24;
@@ -249,20 +294,33 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
           `ethereum:${revocationRegistryContractAddress}/invalidMethod?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
         );
       }).toThrow(
-        'Wrong url, please check the params: scheme, target_address, function_name',
+        expect.objectContaining({
+          message:
+            'Wrong url, please check the params: scheme, target_address, function_name',
+          code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+        }),
       );
       expect(() => {
         revocationRegistry.getRevokedStatus(
           `ethereum:${defaultPrimaryAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
         );
       }).toThrow(
-        'Wrong url, please check the params: scheme, target_address, function_name',
+        expect.objectContaining({
+          message:
+            'Wrong url, please check the params: scheme, target_address, function_name',
+          code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+        }),
       );
       expect(() => {
         revocationRegistry.getRevokedStatus(
           `eth:${revocationRegistryContractAddress}/getRevokedStatus?address=${defaultPrimaryAddress}&listId=${listId}&index=${index}`,
         );
-      }).toThrow('Not an Ethereum URI');
+      }).toThrow(
+        expect.objectContaining({
+          message: 'Not an Ethereum URI',
+          code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+        }),
+      );
     });
   });
 
@@ -393,4 +451,166 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
     });
     return { primaryAddress, operatorAddress, operatorAccount };
   };
+});
+
+describe('getRevokedStatus url validation', () => {
+  const contractAddress = `0x${'a'.repeat(40)}`;
+  const holderAddress = `0x${'b'.repeat(40)}`;
+  const query = `?address=${holderAddress}&listId=1&index=2`;
+  const statusUrl = (params) =>
+    `ethereum:${contractAddress}/getRevokedStatus?${new URLSearchParams({
+      address: holderAddress,
+      listId: '1',
+      index: '2',
+      ...params,
+    })}`;
+  const valuesMessage =
+    'Wrong url, please check the values of the params: address, listId, index';
+  const context = {
+    log: { info: () => {}, warn: () => {}, error: () => {} },
+  };
+
+  let revocationRegistry;
+
+  before(async () => {
+    // no rpcProvider: any contract call fails, so these checks happen first
+    revocationRegistry = await initRevocationRegistry(
+      { contractAddress },
+      context,
+    );
+  });
+
+  [
+    {
+      title: 'names another function',
+      url: `ethereum:${contractAddress}/setRevokedStatus${query}`,
+      message:
+        'Wrong url, please check the params: scheme, target_address, function_name',
+    },
+    {
+      title: 'names another revocation contract',
+      url: `ethereum:0x${'c'.repeat(40)}/getRevokedStatus${query}`,
+      message:
+        'Wrong url, please check the params: scheme, target_address, function_name',
+    },
+    {
+      title: 'uses another scheme',
+      url: `eth:${contractAddress}/getRevokedStatus${query}`,
+      message: 'Not an Ethereum URI',
+    },
+    {
+      title: 'cannot be parsed',
+      url: 'ethereum:revoked',
+      message: 'Missing prefix',
+    },
+    {
+      title: 'is not a string',
+      url: undefined,
+      message: 'uri must be a string',
+    },
+    {
+      title: 'has no parameters',
+      url: `ethereum:${contractAddress}/getRevokedStatus`,
+      message: 'Wrong url, please check the params: address, listId, index',
+    },
+    {
+      title: 'lacks a parameter',
+      url: `ethereum:${contractAddress}/getRevokedStatus?address=${holderAddress}&listId=1`,
+      message: 'Wrong url, please check the params: address, listId, index',
+    },
+    {
+      title: 'has a listId that is not a number',
+      url: statusUrl({ listId: 'not-a-number' }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an empty listId',
+      url: statusUrl({ listId: '' }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has a negative index',
+      url: statusUrl({ index: '-1' }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an index of 2^256',
+      url: statusUrl({ index: String(2n ** 256n) }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an index that does not fit uint32',
+      url: statusUrl({ index: String(2n ** 32n) }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has a listId that does not fit uint256',
+      url: statusUrl({ listId: String(2n ** 256n) }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an address with a bad checksum',
+      url: statusUrl({ address: `0x${'aB'.repeat(20)}` }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an address that is too short',
+      url: statusUrl({ address: '0x1234' }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an ICAP address',
+      url: statusUrl({ address: 'XE7338O073KYGTWWZN0F2WZ0R8PX5ZPPZS' }),
+      message: valuesMessage,
+    },
+  ].forEach(({ title, url, message }) => {
+    it(`should throw an invalid_revocation_url error when the url ${title}`, () => {
+      expect(() => revocationRegistry.getRevokedStatus(url)).toThrow(
+        expect.objectContaining({
+          message,
+          code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+        }),
+      );
+    });
+  });
+
+  [
+    { title: 'decimal values', params: {} },
+    {
+      title: 'a checksummed address',
+      params: { address: getAddress(`0x${'1a'.repeat(20)}`) },
+    },
+    { title: 'a hex listId', params: { listId: '0x0c' } },
+    { title: 'leading zeros', params: { listId: '007', index: '0002' } },
+    {
+      title: 'the largest uint32 index',
+      params: { index: String(2n ** 32n - 1n) },
+    },
+    {
+      title: 'the largest uint256 listId',
+      params: { listId: String(2n ** 256n - 1n) },
+    },
+  ].forEach(({ title, params }) => {
+    it(`should make the contract call for a url with ${title}, and not set the code when it fails`, async () => {
+      const rpc = {
+        call: mock.fn(async () => {
+          throw new Error('connect ECONNREFUSED 127.0.0.1:8545');
+        }),
+      };
+      const registryWithRpc = await initRevocationRegistry(
+        { contractAddress, rpcProvider: rpc },
+        context,
+      );
+
+      const result = Promise.resolve().then(() =>
+        registryWithRpc.getRevokedStatus(statusUrl(params)),
+      );
+
+      await expect(result).rejects.toThrow('ECONNREFUSED');
+      await expect(result).rejects.not.toMatchObject({
+        code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+      });
+      expect(rpc.call.mock.callCount()).toEqual(1);
+    });
+  });
 });

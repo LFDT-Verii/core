@@ -21,10 +21,12 @@ const {
   beforeEach,
   describe,
   it,
+  mock,
 } = require('node:test');
 const { expect } = require('expect');
 
 const {
+  deriveEncryptionSecretFromPassword,
   generateKeyPair,
   get2BytesHash,
   generateJWAKeyPair,
@@ -49,7 +51,7 @@ const {
   deployerPrivateKey,
 } = require('./helpers/deploy-contracts');
 const { initMetadataRegistry, initVerificationCoupon } = require('../index');
-const { ALG_TYPE } = require('../src/constants');
+const { ALG_TYPE, VERSION } = require('../src/constants');
 
 const testListAlgType = '0x6b86';
 const testListVersion = '0xa38d';
@@ -126,6 +128,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
   let deployerVerificationCouponClient;
   let primaryAddress;
   let operatorAddress;
+  let operatorPrivateKey;
   let context;
 
   const { publicKey: credentialKey } = generateKeyPair({ format: 'jwk' });
@@ -155,6 +158,7 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
 
     const operatorAccount = generateAccount();
     operatorAddress = operatorAccount.address;
+    operatorPrivateKey = operatorAccount.privateKey;
 
     deployerVerificationCouponClient = await initVerificationCoupon(
       {
@@ -845,6 +849,126 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
             },
             didResolutionMetadata: {},
           });
+        });
+
+        it('Logs only identifiers of the credentials it resolves', async () => {
+          const email = 'holder@example.com';
+          const credentialJwt =
+            'eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJob2xkZXJAZXhhbXBsZS5jb20ifQ.c2lnbmF0dXJl';
+          const spyLog = {
+            info: mock.fn(),
+            warn: mock.fn(),
+            error: mock.fn(),
+            debug: mock.fn(),
+          };
+          const spyClient = await initMetadataRegistry(
+            {
+              privateKey: operatorPrivateKey,
+              contractAddress: metadataAddress,
+              rpcProvider,
+            },
+            { ...context, log: spyLog },
+          );
+
+          // shaped like verifyCredentials' credential data
+          await spyClient.resolveDidDocument({
+            did: buildDid(indexEntry),
+            credentials: [
+              {
+                ...credential,
+                credential: { id: credential.id, credentialSubject: { email } },
+                jwtVc: credentialJwt,
+                compact: credentialJwt,
+              },
+            ],
+            burnerDid,
+            caoDid: 'did:velocity:99',
+          });
+
+          const logged = JSON.stringify(
+            Object.values(spyLog).flatMap((fn) =>
+              fn.mock.calls.map((call) => call.arguments),
+            ),
+            (key, value) =>
+              typeof value === 'bigint' ? value.toString() : value,
+          );
+          expect(logged).not.toContain(email);
+          expect(logged).not.toContain(credentialJwt);
+          expect(logged).not.toContain(vc);
+          expect(logged).not.toContain(
+            await deriveEncryptionSecretFromPassword(password),
+          );
+          expect(
+            spyLog.info.mock.calls.map((call) => call.arguments),
+          ).toContainEqual([
+            {
+              did: buildDid(indexEntry),
+              credentials: [
+                {
+                  id: credential.id,
+                  credentialType: credential.credentialType,
+                },
+              ],
+              burnerDid,
+              caoDid: 'did:velocity:99',
+            },
+            'resolveDidDocument',
+          ]);
+
+          // the on-chain entry without its encrypted public key and issuer VC
+          const entryForLog = {
+            version: get2BytesHash(VERSION),
+            credentialType: get2BytesHash(defaultCredentialType),
+            algType: get2BytesHash(ALG_TYPE.HEX_AES_256),
+          };
+          const infoCalls = spyLog.info.mock.calls.map(
+            (call) => call.arguments,
+          );
+          expect(infoCalls).toContainEqual([
+            {
+              credentialEntries: [
+                {
+                  entry: entryForLog,
+                  id: credential.id,
+                  credentialType: defaultCredentialType,
+                },
+              ],
+            },
+            'resolveDidDocument 1',
+          ]);
+          expect(infoCalls).toContainEqual([
+            { id: credential.id, entry: entryForLog },
+            'resolvePublicKey',
+          ]);
+          expect(infoCalls).toContainEqual([
+            {
+              id: credential.id,
+              entry: entryForLog,
+              credentialType: defaultCredentialType,
+            },
+            'resolveService',
+          ]);
+          expect(infoCalls).toContainEqual([
+            { id: credential.id, entry: entryForLog },
+            'resolveIssuerVc',
+          ]);
+          expect(infoCalls).toContainEqual([
+            {
+              didDocument: {
+                id: buildDid(indexEntry),
+                publicKey: [{ id: `${credential.id}#key-1` }],
+                service: [
+                  {
+                    id: `${credential.id}#service`,
+                    credentialType: defaultCredentialType,
+                  },
+                ],
+              },
+              didDocumentMetadata: { boundIssuerVcs: [{ id: credential.id }] },
+              unresolvedPublicKeys: [],
+            },
+            'resolveDidDocument 3',
+          ]);
         });
 
         it('Create and resolve multi did', async () => {

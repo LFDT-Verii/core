@@ -50,6 +50,18 @@ const JSON_VC_PATHS = flatMap(
   ],
 );
 
+// Credential data objects, as built by @verii/verii-verification, hold the
+// decoded credential, the raw credential JWT (twice) and its content hash.
+const CREDENTIAL_DATA_PATHS = flatMap(
+  (root) => [
+    `${root}.credential.credentialSubject`,
+    `${root}.jwtVc`,
+    `${root}.compact`,
+    `${root}.contentHash`,
+  ],
+  ['credential', 'credentials[*]'],
+);
+
 const SECURITY_PATHS = [
   'Authorization',
   'access_token',
@@ -174,7 +186,12 @@ const loggerProvider = ({
     }),
   };
   const redact = {};
-  redact.paths = [...SPAM_PATHS, ...SECURITY_PATHS, ...JSON_VC_PATHS];
+  redact.paths = [
+    ...SPAM_PATHS,
+    ...SECURITY_PATHS,
+    ...JSON_VC_PATHS,
+    ...CREDENTIAL_DATA_PATHS,
+  ];
   redact.censor = (value, path) => {
     if (last(path) === 'file') {
       return '...large file...';

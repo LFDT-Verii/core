@@ -256,6 +256,44 @@ describe('Test pino logger provider with redaction', () => {
     );
   });
 
+  it('Redaction should shh credential data from verifyCredentials', () => {
+    const email = 'holder@example.com';
+    const jwtVc =
+      'eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJob2xkZXJAZXhhbXBsZS5jb20ifQ.c2lnbmF0dXJl';
+    const contentHash = 'f0e1d2c3b4a5968778695a4b3c2d1e0f';
+    const id = 'did:velocity:v2:0x1:1:1';
+    const credentialData = () => ({
+      id,
+      credentialType: 'EmailV1.0',
+      contentHash,
+      credential: { id, credentialSubject: { email } },
+      jwtVc,
+      compact: jwtVc,
+    });
+
+    log.info({
+      credentials: [credentialData(), credentialData()],
+      credential: credentialData(),
+    });
+
+    const output = logStream.toString();
+    expect(output).not.toContain(email);
+    expect(output).not.toContain(jwtVc);
+    expect(output).not.toContain(contentHash);
+    const redactedCredentialData = {
+      id,
+      credentialType: 'EmailV1.0',
+      contentHash: CENSOR,
+      credential: { id, credentialSubject: CENSOR },
+      jwtVc: CENSOR,
+      compact: CENSOR,
+    };
+    expect(JSON.parse(output)).toMatchObject({
+      credentials: [redactedCredentialData, redactedCredentialData],
+      credential: redactedCredentialData,
+    });
+  });
+
   it('Redaction should shh key', () => {
     const dataForLog = {
       keys: [

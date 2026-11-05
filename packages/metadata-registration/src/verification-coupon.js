@@ -23,7 +23,7 @@ const initVerificationCoupon = async (
   context,
 ) => {
   const { log } = context;
-  log.info({ privateKey, contractAddress }, 'initVerificationCoupon');
+  log.info({ contractAddress }, 'initVerificationCoupon');
 
   const { contractClient, pullEvents } = await initContractClient(
     {

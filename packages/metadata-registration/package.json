@@ -24,6 +24,7 @@
     "@verii/crypto": "workspace:*",
     "@verii/contract-permissions": "workspace:*",
     "eth-url-parser": "^1.0.4",
+    "ethers": "^6.17.0",
     "lodash": "^4.18.1"
   },
   "devDependencies": {

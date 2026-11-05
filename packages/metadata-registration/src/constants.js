@@ -26,8 +26,14 @@ const ALG_TYPE = {
   COSEKEY_AES_256: 'cosekey:aes-256-gcm',
 };
 
+// Error codes set on errors the registries throw before any contract call.
+const RevocationRegistryErrorCodes = Object.freeze({
+  INVALID_REVOCATION_URL: 'invalid_revocation_url',
+});
+
 module.exports = {
   RESOLUTION_METADATA_ERROR,
+  RevocationRegistryErrorCodes,
   VERSION,
   ALG_TYPE,
 };

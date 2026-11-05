@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 const {
+  compact,
   filter,
   find,
   first,
@@ -25,8 +26,10 @@ const {
   join,
   keyBy,
   map,
+  mapValues,
   omit,
   partition,
+  pick,
   size,
   some,
   startsWith,
@@ -55,7 +58,10 @@ const {
   checkCredentialStatus,
   checkIssuerTrust,
   checkHolder,
+  credentialForLog,
+  didDocumentForLog,
   extractCredentialType,
+  issuerDependenciesForLog,
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { mapWithIndex } = require('@verii/common-functions');
@@ -226,6 +232,8 @@ const emptyIssuerRefs = () => ({
   accreditationVCMap: {},
   credentialTypeMetadatasMap: {},
   issuerDidDocumentMap: {},
+  rejectedIssuerIds: new Set(),
+  unresolvedIssuerIds: new Set(),
 });
 
 const assertCredentialBatch = (jwtVcs) => {
@@ -339,7 +347,11 @@ const resolveVelocityDidDocument = async (
       });
 
     log.info(
-      { didDocument, didDocumentMetadata, didResolutionMetadata },
+      {
+        didDocument: didDocumentForLog(didDocument),
+        didDocumentMetadata: didDocumentMetadataForLog(didDocumentMetadata),
+        didResolutionMetadata,
+      },
       'did:velocity doc resolved',
     );
 
@@ -353,6 +365,13 @@ const resolveVelocityDidDocument = async (
     return { errors: { keyResolutionError: true } };
   }
 };
+
+// The resolved document's bound issuer VCs are JWTs, so each is logged as an
+// object with its id.
+const didDocumentMetadataForLog = flow(
+  pick(['boundIssuerVcs']),
+  mapValues(map(pick(['id']))),
+);
 
 const resolveOtherDidDocument = async ({ keyMetadata }, { log }) => {
   try {
@@ -369,21 +388,28 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
     const issuerIds = flow(map('issuerId'), uniq)(credentialData);
     const credentialTypes = flow(map('credentialType'), uniq)(credentialData);
 
-    const [accreditationVCs, issuerDidDocuments, credentialTypeMetadatas] =
+    const [accreditationLookups, didDocumentLookups, credentialTypeMetadatas] =
       await Promise.all([
         Promise.all(
           map(
             (issuerId) =>
-              fetchers
-                .getOrganizationVerifiedProfile(issuerId, context)
-                .catch(() => {}),
+              lookupIssuerDependency(
+                () =>
+                  fetchers.getOrganizationVerifiedProfile(issuerId, context),
+                issuerId,
+                context,
+              ),
             issuerIds,
           ),
         ),
         Promise.all(
           map(
             (issuerId) =>
-              fetchers.resolveDid(issuerId, context).catch(() => {}),
+              lookupIssuerDependency(
+                () => fetchers.resolveDid(issuerId, context),
+                issuerId,
+                context,
+              ),
             issuerIds,
           ),
         ),
@@ -391,18 +417,75 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
       ]);
 
     return {
-      accreditationVCMap: keyBy('credentialSubject.id', accreditationVCs),
-      issuerDidDocumentMap: keyBy('id', issuerDidDocuments),
+      accreditationVCMap: keyBy(
+        'credentialSubject.id',
+        lookupValues(accreditationLookups),
+      ),
+      issuerDidDocumentMap: keyBy('id', lookupValues(didDocumentLookups)),
       credentialTypeMetadatasMap: keyBy(
         'credentialType',
         credentialTypeMetadatas,
       ),
+      rejectedIssuerIds: lookupIssuerIdsWith('rejected', [
+        ...accreditationLookups,
+        ...didDocumentLookups,
+      ]),
+      unresolvedIssuerIds: lookupIssuerIdsWith('failed', [
+        ...accreditationLookups,
+        ...didDocumentLookups,
+      ]),
     };
   } catch (error) {
     context.log.error(error);
     return { errors: { metadataRetrievalError: true } };
   }
 };
+
+// The registrar client (@verii/http-client) throws an undici ResponseError that
+// carries the HTTP statusCode for every 4xx and 5xx response. The got-style
+// clients that @verii/common-fetchers also supports carry it on
+// error.response.statusCode. A 404 says the registrar has no such record, and
+// a 400 says it rejected the issuer DID as malformed. Both are problems with
+// the credential. Any other status (including 401, 403 and 429), and a timeout
+// or connection error, which has no status, means the registrar could not
+// answer.
+const IssuerRejectedStatusCodes = [400, 404];
+const isIssuerRejectedError = (error) =>
+  IssuerRejectedStatusCodes.includes(
+    error?.response?.statusCode ?? error?.statusCode,
+  );
+
+// A 400 or 404 rejects the issuer, so the issuer trust check fails as it does
+// for an unregistered issuer. @verii/http-client resolves a body it
+// cannot parse as JSON to {}, so an empty value is an unreadable response, and
+// fails the lookup like any other registrar error. The lookup calls the
+// fetcher as a method of the fetchers object, so fetchers that use `this` keep
+// working.
+const lookupIssuerDependency = async (lookup, issuerId, context) => {
+  try {
+    const value = await lookup();
+    if (isEmpty(value)) {
+      context.log.error({ issuerId }, 'issuer lookup returned no data');
+      return { issuerId, failed: true };
+    }
+    return { issuerId, value };
+  } catch (error) {
+    if (isIssuerRejectedError(error)) {
+      return { issuerId, rejected: true };
+    }
+    context.log.error({ err: error, issuerId }, 'issuer lookup failed');
+    return { issuerId, failed: true };
+  }
+};
+
+const lookupValues = flow(map('value'), compact);
+
+const lookupIssuerIdsWith = (outcome, lookups) =>
+  flow(
+    filter(outcome),
+    map('issuerId'),
+    (issuerIds) => new Set(issuerIds),
+  )(lookups);
 
 const resolveCredentialStatuses = async (credentialData, context) => {
   try {
@@ -421,6 +504,24 @@ const resolveCredentialStatuses = async (credentialData, context) => {
     return { errors: { credentialStatusRetrievalError: true } };
   }
 };
+
+// The code @verii/metadata-registration's getRevokedStatus sets when a status
+// URL cannot be parsed, names another scheme, contract or function, lacks a
+// parameter or has one the contract cannot take, and when the registry
+// rejects the URL's wallet, list or index by reverting
+// (RevocationRegistryErrorCodes.INVALID_REVOCATION_URL). It is repeated here
+// rather than imported: a stub of @verii/metadata-registration without the
+// export would make it undefined, and every error without a code would then
+// count as invalid status data.
+const INVALID_REVOCATION_URL = 'invalid_revocation_url';
+
+// Invalid status data fails the check. Any other error, such as a network
+// failure or a call that returned no revert data, means the revocation
+// registry could not be read.
+const credentialStatusFromError = (error) =>
+  error?.code === INVALID_REVOCATION_URL
+    ? CredentialStatus.INVALID
+    : CredentialStatus.DEPENDENCY_RESOLUTION_ERROR;
 
 const initResolveCredentialStatus = async (context) => {
   const {
@@ -447,7 +548,7 @@ const initResolveCredentialStatus = async (context) => {
         : CredentialStatus.UNREVOKED;
     } catch (err) {
       log.error(err);
-      return CredentialStatus.DEPENDENCY_RESOLUTION_ERROR;
+      return credentialStatusFromError(err);
     }
   };
 };
@@ -586,6 +687,8 @@ const runIssuerTrustCheck = (
     accreditationVCMap,
     issuerDidDocumentMap,
     credentialTypeMetadatasMap,
+    rejectedIssuerIds,
+    unresolvedIssuerIds,
     errors,
   },
   context,
@@ -606,6 +709,24 @@ const runIssuerTrustCheck = (
     return Promise.resolve(SelfCertifiedIssuerChecks[issuerKeyBinding]);
   }
 
+  // A 400 or 404 from either registrar lookup settles the check, even when
+  // the other lookup failed: the credential fails once the registrar answers.
+  if (rejectedIssuerIds.has(issuerId)) {
+    log.error(
+      { id, issuerId },
+      'runIssuerTrustCheck: the registrar rejected the issuer',
+    );
+    return Promise.resolve(CheckResults.FAIL);
+  }
+
+  if (unresolvedIssuerIds.has(issuerId)) {
+    log.error(
+      { id, issuerId },
+      'runIssuerTrustCheck: issuer lookups could not be completed',
+    );
+    return Promise.resolve(CheckResults.DEPENDENCY_RESOLUTION_ERROR);
+  }
+
   const resolvedDeps = {
     boundIssuerVc: boundIssuerVcsMap.get(id)?.vc,
     issuerAccreditation: accreditationVCMap[issuerId]?.credentialSubject,
@@ -615,7 +736,13 @@ const runIssuerTrustCheck = (
 
   if (some(isEmpty, Object.values(resolvedDeps))) {
     log.error(
-      { id, credential, issuerId, credentialType, resolvedDeps },
+      {
+        id,
+        credential: credentialForLog(credential),
+        issuerId,
+        credentialType,
+        resolvedDeps: issuerDependenciesForLog(resolvedDeps),
+      },
       'runIssuerTrustCheck: resolvedDeps failed',
     );
     return Promise.resolve(CheckResults.FAIL);
