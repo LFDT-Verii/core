@@ -1936,6 +1936,63 @@ describe('Verify credentials', () => {
           });
         });
 
+        // revert data for Error("list index out of bound"): the Error(string)
+        // selector, then the ABI-encoded string's offset, length and bytes
+        const listIndexOutOfBoundRevertData = [
+          '0x08c379a0',
+          '20'.padStart(64, '0'),
+          '17'.padStart(64, '0'),
+          Buffer.from('list index out of bound')
+            .toString('hex')
+            .padEnd(64, '0'),
+        ].join('');
+
+        it('UNREVOKED should FAIL when the revocation registry reverts for the status url', async () => {
+          const revertingRpc = {
+            call: mock.fn(async () => {
+              throw Object.assign(new Error('execution reverted'), {
+                code: 'CALL_EXCEPTION',
+                data: listIndexOutOfBoundRevertData,
+              });
+            }),
+          };
+
+          const { credential, result } = await verifyWithStatusUrl(
+            `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=1&index=10240`,
+            revertingRpc,
+          );
+
+          expect(revertingRpc.call.mock.callCount()).toEqual(1);
+          expect(result).toEqual(
+            resultWithUnrevoked(credential, CheckResults.FAIL),
+          );
+        });
+
+        it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when the contract call returns no revert data', async () => {
+          const rpcWithoutRevertData = {
+            call: mock.fn(async () => {
+              throw Object.assign(new Error('missing revert data'), {
+                code: 'CALL_EXCEPTION',
+                data: null,
+                revert: null,
+              });
+            }),
+          };
+
+          const { credential, result } = await verifyWithStatusUrl(
+            `ethereum:${revocationContractAddress}/getRevokedStatus${query}`,
+            rpcWithoutRevertData,
+          );
+
+          expect(rpcWithoutRevertData.call.mock.callCount()).toEqual(1);
+          expect(result).toEqual(
+            resultWithUnrevoked(
+              credential,
+              CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+            ),
+          );
+        });
+
         it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when the contract call for a valid status url is rejected', async () => {
           const unreachableRpc = {
             call: mock.fn(async () => {

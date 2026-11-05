@@ -506,15 +506,18 @@ const resolveCredentialStatuses = async (credentialData, context) => {
 };
 
 // The code @verii/metadata-registration's getRevokedStatus sets when a status
-// URL cannot be parsed, names another scheme, contract or function, or lacks
-// a parameter (RevocationRegistryErrorCodes.INVALID_REVOCATION_URL). It is
-// repeated here rather than imported: a stub of @verii/metadata-registration
-// without the export would make it undefined, and every error without a code
-// would then count as invalid status data.
+// URL cannot be parsed, names another scheme, contract or function, lacks a
+// parameter or has one the contract cannot take, and when the registry
+// rejects the URL's wallet, list or index by reverting
+// (RevocationRegistryErrorCodes.INVALID_REVOCATION_URL). It is repeated here
+// rather than imported: a stub of @verii/metadata-registration without the
+// export would make it undefined, and every error without a code would then
+// count as invalid status data.
 const INVALID_REVOCATION_URL = 'invalid_revocation_url';
 
-// Invalid status data fails the check. Any other error, such as a rejected
-// contract call, means the revocation registry could not be read.
+// Invalid status data fails the check. Any other error, such as a network
+// failure or a call that returned no revert data, means the revocation
+// registry could not be read.
 const credentialStatusFromError = (error) =>
   error?.code === INVALID_REVOCATION_URL
     ? CredentialStatus.INVALID

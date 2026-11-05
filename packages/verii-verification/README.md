@@ -139,9 +139,12 @@ key:
 `credentialChecks.UNREVOKED` is `FAIL` for a revoked credential, and for a
 status entry that cannot be checked: a revocation URL that cannot be parsed,
 names another scheme, contract or function (for example another network's
-revocation contract), or lacks a parameter. It is `NOT_APPLICABLE` when the
-credential has no Velocity revocation list status, and
-`DEPENDENCY_RESOLUTION_ERROR` when the revocation registry could not be read.
+revocation contract), lacks a parameter or has one the contract cannot take,
+or names a wallet, list or index the revocation registry does not have, so
+the registry call reverts. It is `NOT_APPLICABLE` when the credential has no
+Velocity revocation list status, and `DEPENDENCY_RESOLUTION_ERROR` when the
+revocation registry could not be read, for example after a network failure or
+a call that returned no revert data.
 
 Keys are discovered from the protected header:
 
