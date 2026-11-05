@@ -476,6 +476,30 @@ describe('openid4vc credential test suite', () => {
         });
       });
 
+      it('should 400 with credential_request_denied if a deferred transaction has claimed the credential', async () => {
+        const claimedCredential = await persistCredential({
+          tenant,
+          depot,
+          deferredTransactionId: new ObjectId(),
+        });
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+
+        const response = await requestCredential(proof, claimedCredential._id);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'credential_request_denied',
+          error_description: `Credential ${claimedCredential._id} can't be issued again`,
+        });
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(claimedCredential._id) }),
+        ).resolves.toEqual(mongoify(claimedCredential));
+        await expect(findTransactionsInDb()).resolves.toEqual([]);
+      });
+
       it('should 400 if server issue', async () => {
         const cNonce = await requestNonce(tenant._id);
 

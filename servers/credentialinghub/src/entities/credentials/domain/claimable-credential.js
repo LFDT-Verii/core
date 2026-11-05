@@ -15,13 +15,15 @@
  *
  */
 
-// A credential can be claimed until it is signed (`did`), accepted or
-// rejected. Signing it again would give the holder a second copy, with its
-// own credential status, that revoking the record doesn't reach.
+// A credential can be claimed until it is signed (`did`), accepted, rejected
+// or claimed by an OpenID4VCI deferred transaction. Signing it again would give
+// the holder a second copy, with its own credential status, that revoking the
+// record doesn't reach.
 // repo/claimable-credential-filter.js has the same rule as a Mongo filter.
 const isClaimableCredential = (credential) =>
   credential.did == null &&
   credential.acceptedAt == null &&
-  credential.rejectedAt == null;
+  credential.rejectedAt == null &&
+  credential.deferredTransactionId == null;
 
 module.exports = { isClaimableCredential };

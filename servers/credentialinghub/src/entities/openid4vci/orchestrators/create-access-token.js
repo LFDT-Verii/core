@@ -14,9 +14,19 @@
  * limitations under the License.
  *
  */
-const { filter, flow, isEmpty, map } = require('lodash/fp');
+const {
+  difference,
+  filter,
+  flatMap,
+  flow,
+  isEmpty,
+  map,
+} = require('lodash/fp');
 const { calcSha384 } = require('@verii/crypto');
-const { toCredentialConfigurationId } = require('../domain');
+const {
+  DEFERRED_CREDENTIAL_IDENTIFIER_PREFIX,
+  toCredentialConfigurationId,
+} = require('../domain');
 
 const createAccessToken = async (accessTokenParameters, context) => {
   const openid4VciIssuer = await context.getOpenId4VciIssuer();
@@ -34,18 +44,15 @@ const createAccessToken = async (accessTokenParameters, context) => {
     context,
   );
 
-  const [credentials, issuerService] = await Promise.all([
-    context.repos.credentials.findByDepotId({
-      depotId: depot._id,
-      claimable: true,
-    }),
+  const [credentialIdentifiers, issuerService] = await Promise.all([
+    loadCredentialIdentifiers(depot, context),
     context.repos.issuerServices.findById(depot.serviceId),
   ]);
 
   const accessTokenResponse = await openid4VciIssuer.generateAccessToken(
     accessTokenParameters,
     buildAuthorizationDetails(
-      credentials,
+      credentialIdentifiers,
       accessTokenParameters.authorization_details,
     ),
     issuerService.authTokensExpireIn,
@@ -54,17 +61,46 @@ const createAccessToken = async (accessTokenParameters, context) => {
   return accessTokenResponse;
 };
 
+// The claimable credentials' identifiers. A depot with deferred credentials also lists a deferred identifier
+// for each expected type that has nothing to claim.
+const loadCredentialIdentifiers = async (depot, { repos }) => {
+  const credentials = await repos.credentials.findByDepotId({
+    depotId: depot._id,
+    claimable: true,
+  });
+  // The types a deferred transaction's claim matches
+  const claimableTypes = flatMap('content.type', credentials);
+  const deferredTypes =
+    depot.deferredCredentials === true
+      ? difference(depot.expectedCredentialTypes, claimableTypes)
+      : [];
+  return [
+    ...map(
+      (credential) => ({
+        credentialType: credential.typeMetadata.credentialType,
+        credentialIdentifier: `${credential._id}`,
+      }),
+      credentials,
+    ),
+    ...map(
+      (credentialType) => ({
+        credentialType,
+        credentialIdentifier: `${DEFERRED_CREDENTIAL_IDENTIFIER_PREFIX}${credentialType}`,
+      }),
+      deferredTypes,
+    ),
+  ];
+};
+
 const buildAuthorizationDetails = (
-  credentials,
+  credentialIdentifiers,
   requestedAuthorizationDetails,
 ) => {
   const pipeline = [
-    map((credential) => ({
+    map(({ credentialType, credentialIdentifier }) => ({
       type: 'openid_credential',
-      credential_configuration_id: toCredentialConfigurationId(
-        credential.typeMetadata.credentialType,
-      ),
-      credential_identifiers: [`${credential._id}`],
+      credential_configuration_id: toCredentialConfigurationId(credentialType),
+      credential_identifiers: [credentialIdentifier],
     })),
   ];
 
@@ -80,7 +116,7 @@ const buildAuthorizationDetails = (
     );
   }
 
-  return flow(pipeline)(credentials);
+  return flow(pipeline)(credentialIdentifiers);
 };
 
 module.exports = { createAccessToken };

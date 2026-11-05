@@ -20,5 +20,6 @@ module.exports = {
   ...require('./get-authorization-server-metadata'),
   ...require('./get-credential-issuer-metadata'),
   ...require('./create-credential'),
+  ...require('./create-deferred-credential'),
   ...require('./handle-notification'),
 };

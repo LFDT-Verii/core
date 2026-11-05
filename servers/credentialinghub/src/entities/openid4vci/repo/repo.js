@@ -32,6 +32,9 @@ module.exports = (app, options, next = () => {}) => {
     await mongoDb()
       .collection('openid4vciTransactions')
       .createIndex({ tenantId: 1, credentialId: 1 });
+    await mongoDb()
+      .collection('openid4vciTransactions')
+      .createIndex({ tenantId: 1, transactionIdHash: 1 });
   });
   next();
   return repoFactory(
@@ -46,6 +49,8 @@ module.exports = (app, options, next = () => {}) => {
         credentialId: 1,
         credentialSubjectId: 1,
         notificationId: 1,
+        transactionIdHash: 1,
+        credentialType: 1,
         status: 1,
         credentialMetadata: 1,
         acceptedAt: 1,

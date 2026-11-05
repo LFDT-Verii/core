@@ -116,6 +116,22 @@ Changing the secret invalidates every outstanding nonce. The standalone
 notification worker issues no nonces, so it starts without
 `OPENID4VCI_NONCE_SECRET`.
 
+## OpenID4VCI Deferred Issuance
+
+For a depot with `deferredCredentials`, the access token also lists a
+`deferred:<credential type>` credential identifier for each of the depot's
+`expectedCredentialTypes` that has no credential to claim. A credential request
+for one returns the credential at once if one of that type has been added, and
+HTTP 202 with a `transaction_id` otherwise. The wallet then polls
+`POST /r/:tenantId/openid4vc/deferred_credential` with it until a credential of
+that type is added. Once the issuer has called
+`depots/resolve-deferred-credentials` after the transaction was created, a poll
+that finds nothing to claim denies the transaction.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OPENID4VCI_DEFERRED_INTERVAL_SECONDS` | `30` | The `interval`, in seconds, that tells a wallet how long to wait before it polls again. Must be at least 1. |
+
 ## Presentation Submission Descriptor Paths
 
 Wallets submit presentations to `POST /vn-api/r/:tenantId/presentation` and

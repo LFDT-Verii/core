@@ -38,6 +38,15 @@ const { isTest } = genericConfig;
 
 const env = from(process.env, {
   asMs: (value) => parseDuration(value),
+  asIntAboveZero: (value) => {
+    const int = accessors.asInt(value);
+
+    if (int < 1) {
+      throw new Error('should be an integer greater than 0');
+    }
+
+    return int;
+  },
   asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
     const webhookUrl = accessors.asUrlString(value);
     const error = findWebhookUrlError(webhookUrl, allowInsecureWebhookUrl);
@@ -115,6 +124,10 @@ const buildConfig = ({ servesHttp = true } = {}) => {
       .get('OPENID4VCI_NONCE_EXPIRES_IN')
       .default('5m')
       .asMs(),
+    openid4vciDeferredIntervalSeconds: env
+      .get('OPENID4VCI_DEFERRED_INTERVAL_SECONDS')
+      .default('30')
+      .asIntAboveZero(),
     // blockchain setup
     rpcUrl: env
       .get('RPC_NODE_URL')

@@ -70,6 +70,30 @@ const updateExtensions = (parent, context) => ({
       },
       { rejectedAt: new Date() },
     ),
+  // Atomically claims one claimable credential of the deferred transaction's type in its depot, so no other
+  // transaction, token or VN API exchange can claim it. Returns null if there is none.
+  claimDeferredCredential: async ({
+    _id: transactionId,
+    depotId,
+    credentialType,
+  }) =>
+    parent.collection().findOneAndUpdate(
+      parent.prepFilter({
+        depotId,
+        'content.type': credentialType,
+        ...claimableCredentialFilter,
+      }),
+      { $set: { deferredTransactionId: transactionId } },
+      { returnDocument: 'after', projection: parent.defaultColumnsSelection },
+    ),
+  releaseDeferredCredential: async (credentialId, transactionId) =>
+    parent.collection().updateOne(
+      parent.prepFilter({
+        _id: credentialId,
+        deferredTransactionId: transactionId,
+      }),
+      { $unset: { deferredTransactionId: '' } },
+    ),
 });
 
 module.exports = { updateExtensions };

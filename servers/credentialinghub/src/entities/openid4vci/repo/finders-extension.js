@@ -15,11 +15,19 @@
  *
  */
 const { ObjectId } = require('mongodb');
+const { calcSha384 } = require('@verii/crypto');
 
 const findersExtension = (parent) => ({
   findByNotificationIdInDepot: async (notificationId, depotId) =>
     parent.findOne({
       filter: { notificationId, depotId: new ObjectId(depotId) },
+    }),
+  findByTransactionIdInDepot: async (transactionId, depotId) =>
+    parent.findOne({
+      filter: {
+        transactionIdHash: calcSha384(transactionId),
+        depotId: new ObjectId(depotId),
+      },
     }),
   extensions: parent.extensions.concat(['findersExtension']),
 });

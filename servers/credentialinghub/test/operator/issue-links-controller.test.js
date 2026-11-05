@@ -358,7 +358,24 @@ describe('Issue Links Test suite', () => {
         },
       });
 
-    it('should use the expected types in the VN API link before the depot has credentials', async () => {
+    it('should use the expected types in the VN API link and the OpenID4VCI offer before the depot has credentials', async () => {
+      mockHttpClientJsonResponse('get', [
+        {
+          credentialType: 'EmailV1.0',
+          schemaUrl: 'https://example.com/email.schema.json',
+          issuerCategory: 'ContactIssuer',
+        },
+        {
+          credentialType: 'PhoneV1.0',
+          schemaUrl: 'https://example.com/phone.schema.json',
+          issuerCategory: 'ContactIssuer',
+        },
+      ]);
+      mockHttpClientJsonResponse('get', {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['ContactIssuer'],
+        },
+      });
       const deferredDepot = await persistDepot({
         tenant,
         service: preauthIssuerService,
@@ -371,6 +388,7 @@ describe('Issue Links Test suite', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual({
+        openidCredentialOffer: expect.any(String),
         vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
           tenant,
           preauthIssuerService,
@@ -380,13 +398,20 @@ describe('Issue Links Test suite', () => {
         )}`,
         redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
           response.json.vnProtocolLink,
+        )}&openid4vc_uri=${encodeURIComponent(
+          response.json.openidCredentialOffer,
         )}`,
         preauthCode: expect.any(String),
         requestId: expect.any(String),
       });
+      expectedOidcCredentialOfferUri(
+        response.json.openidCredentialOffer,
+        tenant,
+        ['EmailV1.0', 'PhoneV1.0'],
+      );
     });
 
-    it("should use the expected types in the VN API link and the credentials' types in the OpenID4VCI offer", async () => {
+    it("should use the expected types, not the credentials' types, in the VN API link and the OpenID4VCI offer", async () => {
       mockHttpClientJsonResponse('get', [
         {
           credentialType: 'Employment',
@@ -436,7 +461,7 @@ describe('Issue Links Test suite', () => {
       expectedOidcCredentialOfferUri(
         response.json.openidCredentialOffer,
         tenant,
-        ['Employment'],
+        ['Employment', 'PhoneV1.0'],
       );
     });
 
