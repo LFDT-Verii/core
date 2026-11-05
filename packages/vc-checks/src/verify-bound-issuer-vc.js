@@ -16,6 +16,7 @@
  */
 const { jwtVerify, safeJwtDecode } = require('@verii/jwt');
 const { extractVerificationJwk, isDidMatching } = require('@verii/did-doc');
+const { decodedJwtForLog, didDocumentForLog } = require('./log-refs');
 
 const BOUND_ISSUER_VC_ALGORITHMS = ['ES256', 'ES256K'];
 
@@ -38,16 +39,18 @@ const verifyBoundIssuerVc = async (
       algorithms: BOUND_ISSUER_VC_ALGORITHMS,
     });
   } catch {
-    log.error({ kid }, 'checkIssuerTrust: the boundIssuerVc does not verify');
+    log.error(
+      { decodedBoundIssuerVc: decodedJwtForLog(decodedBoundIssuerVc) },
+      'checkIssuerTrust: the boundIssuerVc does not verify',
+    );
     return false;
   }
 
   if (!isDidMatching(decodedBoundIssuerVc?.payload?.iss, issuerDidDocument)) {
     log.error(
       {
-        kid,
-        boundIssuerVcIssuer: decodedBoundIssuerVc?.payload?.iss,
-        issuerDid: issuerDidDocument?.id,
+        issuerDidDocument: didDocumentForLog(issuerDidDocument),
+        decodedBoundIssuerVc: decodedJwtForLog(decodedBoundIssuerVc),
       },
       "checkIssuerTrust: the boundIssuerVc is not for the credential's issuer",
     );

@@ -19,6 +19,7 @@ const {
 } = require('./verify-issuer-for-credential-type');
 const { CheckResults } = require('./check-results');
 const { verifyBoundIssuerVc } = require('./verify-bound-issuer-vc');
+const { credentialForLog, issuerDependenciesForLog } = require('./log-refs');
 
 const checkIssuerTrust = async (
   credential,
@@ -42,7 +43,11 @@ const checkIssuerTrust = async (
     return CheckResults.PASS;
   } catch (err) {
     log.error(
-      { err, ...credentialRefsForLog(credential, issuerId, dependencies) },
+      {
+        err,
+        credential: credentialForLog(credential),
+        dependencies: issuerDependenciesForLog(dependencies),
+      },
       'Check issuer credentials: the issuer chain failed for the issuer VC',
     );
     if (err.message === 'unresolved_credential_subject_context') {
@@ -52,17 +57,5 @@ const checkIssuerTrust = async (
     return CheckResults.FAIL;
   }
 };
-
-// The credential and its dependencies hold the holder's claims and issuer
-// JWTs, so only identifiers are logged.
-const credentialRefsForLog = (
-  credential,
-  issuerId,
-  { credentialTypeMetadata },
-) => ({
-  credentialId: credential?.id,
-  issuerId,
-  credentialType: credentialTypeMetadata?.credentialType,
-});
 
 module.exports = { checkIssuerTrust };

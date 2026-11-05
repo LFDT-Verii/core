@@ -28,5 +28,6 @@ module.exports = {
   ...require('./src/verii-protocol-versions'),
   ...require('./src/extract-credential-type'),
   ...require('./src/credential-status'),
+  ...require('./src/log-refs'),
   ...require('./src/velocity-revocation-list-type'),
 };
