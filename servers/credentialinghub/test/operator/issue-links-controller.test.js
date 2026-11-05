@@ -25,7 +25,7 @@ const {
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { map } = require('lodash/fp');
+const { forEach, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { ObjectId } = require('mongodb');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
@@ -69,6 +69,7 @@ describe('Issue Links Test suite', () => {
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
+    fastify.resetOverrides();
     ({ tenant } = await constructTenant(
       () =>
         persistTenant({
@@ -478,28 +479,51 @@ describe('Issue Links Test suite', () => {
         userReference: nanoid(),
       });
     });
-    it('should 200 for vp service if missing depotId property', async () => {
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: testUrl,
-        payload: {
-          tenantId: tenant._id,
-          serviceId: vpIssuerService._id,
-        },
+
+    forEach(
+      (deepLinkProtocol) => {
+        it(`should 200 with the shared link if missing depotId property for ${deepLinkProtocol}`, async () => {
+          fastify.overrides.reqConfig = (config) => ({
+            ...config,
+            deepLinkProtocol,
+          });
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: testUrl,
+            payload: {
+              tenantId: tenant._id,
+              serviceId: vpIssuerService._id,
+            },
+          });
+          expect(response.statusCode).toEqual(200);
+          const expectedLink =
+            `${deepLinkProtocol}issue` +
+            '?request_uri=https%3A%2F%2Flocalhost.test%2Fvn-api%2Fr%2Fdid%3Aweb%3Alocalhost%25253A3000' +
+            `%2Fget-credential-manifest%3Fid%3D${vpIssuerService._id}` +
+            '&issuerDid=did%3Aweb%3Alocalhost%253A3000';
+          expect(response.json).toEqual({
+            vnProtocolLink: expectedLink,
+            redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+              expectedLink,
+            )}`,
+            requestId: expect.any(String),
+          });
+          expectSharedLink(
+            response.json.vnProtocolLink,
+            deepLinkProtocol,
+            tenant,
+            vpIssuerService,
+          );
+        });
+      },
+      ['velocity-network://', 'velocity-network-testnet://'],
+    );
+
+    it('should 200 with the shared link for a vp only service given a depotId', async () => {
+      await persistCredential({
+        tenant,
+        depot: vpDepot,
       });
-      expect(response.statusCode).toEqual(200);
-      expect(response.json).toEqual({
-        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
-          tenant,
-          vpIssuerService,
-        )}`,
-        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
-          response.json.vnProtocolLink,
-        )}`,
-        requestId: expect.any(String),
-      });
-    });
-    it('should 200 for vp service', async () => {
       const response = await fastify.injectJson({
         method: 'POST',
         url: testUrl,
@@ -514,16 +538,150 @@ describe('Issue Links Test suite', () => {
         vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
           tenant,
           vpIssuerService,
-          vpDepot,
         )}`,
         redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
           response.json.vnProtocolLink,
         )}`,
         requestId: expect.any(String),
       });
+      expectSharedLink(
+        response.json.vnProtocolLink,
+        'velocity-network-devnet://',
+        tenant,
+        vpIssuerService,
+      );
+      const dbDepot = await mongoDb()
+        .collection('depots')
+        .findOne({ _id: new ObjectId(vpDepot._id) });
+      expect(dbDepot.preauthCodeHash).toBeUndefined();
+    });
+
+    it('should 400 for a vp only service given a depotId that cannot be found', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: vpIssuerService._id,
+          depotId: new ObjectId().toString(),
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'referenced_depot_not_found',
+          message: 'referenced_depot_not_found',
+          statusCode: 400,
+        }),
+      );
+    });
+  });
+
+  describe('preauth and vp service', () => {
+    let service;
+    let depot;
+
+    beforeEach(async () => {
+      service = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth', 'verifiable_presentation'],
+        authMode: 'internal',
+      });
+      depot = await persistDepot({
+        tenant,
+        service,
+        userReference: nanoid(),
+      });
+    });
+
+    it('should 200 with a preauth link given a depotId', async () => {
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer', 'Foo'],
+        },
+      };
+      mockHttpClientJsonResponse('get', profile);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: service._id,
+          depotId: depot._id,
+        },
+      });
+      expect(response.statusCode).toEqual(200);
+      const refreshedDepot = await mongoDb()
+        .collection('depots')
+        .findOne({ _id: new ObjectId(depot._id) });
+      expect(refreshedDepot.preauthCodeHash).toEqual(expect.any(String));
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          service,
+          refreshedDepot,
+          response.json.preauthCode,
+          [],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        preauthCode: expect.any(String),
+        requestId: expect.any(String),
+      });
+    });
+
+    it('should 200 with the shared link if missing depotId property', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: service._id,
+        },
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          service,
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        requestId: expect.any(String),
+      });
+      expectSharedLink(
+        response.json.vnProtocolLink,
+        'velocity-network-devnet://',
+        tenant,
+        service,
+      );
+      const dbDepot = await mongoDb()
+        .collection('depots')
+        .findOne({ _id: new ObjectId(depot._id) });
+      expect(dbDepot.preauthCodeHash).toBeUndefined();
     });
   });
 });
+
+const expectSharedLink = (link, deepLinkProtocol, tenant, service) => {
+  const url = new URL(link);
+  expect(`${url.protocol}//${url.host}${url.pathname}`).toEqual(
+    `${deepLinkProtocol}issue`,
+  );
+  expect([...url.searchParams.keys()]).toEqual(['request_uri', 'issuerDid']);
+  expect(url.searchParams.get('issuerDid')).toEqual(tenant.did);
+
+  const requestUri = new URL(url.searchParams.get('request_uri'));
+  expect(`${requestUri.origin}${requestUri.pathname}`).toEqual(
+    `https://localhost.test/vn-api/r/${encodeURI(
+      tenant.did,
+    )}/get-credential-manifest`,
+  );
+  expect([...requestUri.searchParams.keys()]).toEqual(['id']);
+  expect(requestUri.searchParams.get('id')).toEqual(service._id);
+};
 
 const expectedSearchParams = (
   tenant,

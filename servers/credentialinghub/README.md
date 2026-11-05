@@ -91,6 +91,11 @@ wrappers, override the entrypoint instead:
 docker run --rm --entrypoint node lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
 ```
 
+## Database
+
+The Hub supports only MongoDB, Amazon DocumentDB and Azure DocumentDB, at
+the address that `MONGO_URI` gives. CI tests against MongoDB 8.0.
+
 ## OpenID4VCI Nonces
 
 The nonce endpoint, `POST /r/:tenantId/openid4vc/nonce`, returns a stateless
@@ -140,6 +145,7 @@ the code.
 ## Design Docs
 
 - [Notification webhooks design](docs/notification-webhooks-design.md)
+- [Shared issue links with email authentication](../../docs/superpowers/specs/2026-11-04-cih-shared-issue-link-email-auth-design.md)
 
 ## CAO Security Provider
 

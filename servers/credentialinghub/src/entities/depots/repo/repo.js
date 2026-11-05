@@ -25,12 +25,21 @@ const { refreshPreauthCodeExtension } = require('./refresh-preauth-code');
 const {
   findDepotByPreauthCodeExtension,
 } = require('./find-depot-by-preauth-code');
+const {
+  findDepotsByAuthMatchTuplesExtension,
+} = require('./find-depots-by-auth-match-tuples');
 
 module.exports = (app, options, next = () => {}) => {
   app.ready(async () => {
     await mongoDb()
       .collection('depots')
       .createIndex({ tenantId: 1, preauthCodeHash: 1 });
+    await mongoDb().collection('depots').createIndex({
+      tenantId: 1,
+      serviceId: 1,
+      authRulesFingerprint: 1,
+      authMatchValues: 1,
+    });
   });
   next();
   return repoFactory(
@@ -41,6 +50,8 @@ module.exports = (app, options, next = () => {}) => {
         _id: 1,
         userReference: 1,
         authValues: 1,
+        authMatchValues: 1,
+        authRulesFingerprint: 1,
         serviceId: 1,
         preauthCodeHash: 1,
         deferredCredentials: 1,
@@ -55,6 +66,7 @@ module.exports = (app, options, next = () => {}) => {
         multitenantExtension(),
         findDepotsExtension,
         findDepotByPreauthCodeExtension,
+        findDepotsByAuthMatchTuplesExtension,
         refreshPreauthCodeExtension,
       ],
     },

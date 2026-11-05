@@ -16,9 +16,11 @@
  */
 
 const depotSchema = require('./depot.schema');
+const depotConflictErrorSchema = require('./depot-conflict-error.schema');
 const newDepotSchema = require('./new-depot.schema.json');
 
 module.exports = {
   newDepotSchema,
   depotSchema,
+  depotConflictErrorSchema,
 };

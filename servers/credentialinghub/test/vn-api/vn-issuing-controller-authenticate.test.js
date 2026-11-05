@@ -391,10 +391,17 @@ describe('vn-api > authenticate', () => {
       emailVcKeyPair = generateKeyPair({ format: 'jwk' });
       vpIssuerService = await persistIssuerService({
         tenant,
+        disclosureRequest: {
+          types: [{ type: 'EmailV1.0' }],
+          purpose: 'Identification',
+          retentionPeriod: 'P1D',
+        },
         verifiablePresentationAuthRules: [
           {
-            path: '$.credentialSubject.email',
+            type: 'EmailV1.0',
+            path: [['credentialSubject', 'email']],
             rule: 'equal',
+            valueIndex: 0,
           },
         ],
       });

@@ -18,6 +18,7 @@ const DepotErrors = {
   REFERENCED_SERVICE_NOT_FOUND: 'referenced_service_not_found',
   RELATED_CREDENTIAL_UNDELETED: 'related_credential_undeleted',
   INVALID_AUTH_VALUES: 'invalid_auth_values',
+  AUTH_VALUES_ALREADY_USED: 'auth_values_already_used',
   DEFERRED_CREDENTIALS_NOT_SUPPORTED: 'deferred_credentials_not_supported',
   DEPOT_NOT_FOUND: 'depot_not_found',
 };
