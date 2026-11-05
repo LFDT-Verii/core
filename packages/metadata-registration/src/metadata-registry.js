@@ -39,10 +39,27 @@ const contractAbi = require('./contracts/metadata-registry.json');
 const { RESOLUTION_METADATA_ERROR, VERSION, ALG_TYPE } = require('./constants');
 const { encodeJwk, decodeJwk } = require('./code-jwk');
 
+// Logs keep the shape of what they describe, with only identifying fields.
 // Credentials passed in for resolution are verifier credential data: they hold
-// the decoded credential and the raw credential JWT. Logs carry only these
-// identifiers.
+// the decoded credential, the raw credential JWT and the content hash.
 const credentialRefsForLog = map(pick(['id', 'credentialType']));
+
+// An on-chain entry, without its encrypted public key and issuer VC.
+const entryForLog = (entry) =>
+  entry == null
+    ? entry
+    : {
+        version: entry.version,
+        credentialType: entry.credentialType,
+        algType: entry.algType,
+      };
+
+// Credential entries, without the derived decryption secret.
+const credentialEntriesForLog = map(({ entry, id, credentialType }) => ({
+  entry: entryForLog(entry),
+  id,
+  credentialType,
+}));
 
 const initMetadataRegistry = async (
   { privateKey, contractAddress, rpcProvider },
@@ -266,8 +283,8 @@ const initMetadataRegistry = async (
   };
 
   const resolvePublicKey = async ({ id, entry, secret }) => {
+    log.info({ id, entry: entryForLog(entry) }, 'resolvePublicKey');
     const { algType, version } = entry;
-    log.info({ id, algType, version }, 'resolvePublicKey');
 
     if (version !== get2BytesHash(VERSION)) {
       throw new Error(`Unsupported version "${version}"`);
@@ -301,7 +318,10 @@ const initMetadataRegistry = async (
   };
 
   const resolveService = ({ id, entry, credentialType }) => {
-    log.info({ id, credentialType }, 'resolveService');
+    log.info(
+      { id, entry: entryForLog(entry), credentialType },
+      'resolveService',
+    );
     if (
       !credentialType ||
       entry.credentialType !== get2BytesHash(credentialType) // TODO - looks like credential types are stored incorrectly
@@ -315,7 +335,7 @@ const initMetadataRegistry = async (
   };
 
   const resolveIssuerVc = ({ id, entry }) => {
-    log.info({ id }, 'resolveIssuerVc');
+    log.info({ id, entry: entryForLog(entry) }, 'resolveIssuerVc');
     return {
       id,
       format: 'jwt_vc',
@@ -413,7 +433,7 @@ const initMetadataRegistry = async (
       }, entries),
     );
     log.info(
-      { credentialEntries: credentialRefsForLog(credentialEntries) },
+      { credentialEntries: credentialEntriesForLog(credentialEntries) },
       'resolveDidDocument 1',
     );
 
@@ -442,13 +462,13 @@ const initMetadataRegistry = async (
       {
         didDocument: {
           id: didDocument.id,
-          publicKey: map('id', didDocument.publicKey),
-          service: didDocument.service,
+          publicKey: map(pick(['id']), didDocument.publicKey),
+          service: map(pick(['id', 'credentialType']), didDocument.service),
         },
         didDocumentMetadata: {
-          boundIssuerVcs: map('id', didDocumentMetadata.boundIssuerVcs),
+          boundIssuerVcs: map(pick(['id']), didDocumentMetadata.boundIssuerVcs),
         },
-        unresolvedPublicKeys,
+        unresolvedPublicKeys: map(pick(['id']), unresolvedPublicKeys),
       },
       'resolveDidDocument 3',
     );

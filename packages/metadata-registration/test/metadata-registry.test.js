@@ -51,7 +51,7 @@ const {
   deployerPrivateKey,
 } = require('./helpers/deploy-contracts');
 const { initMetadataRegistry, initVerificationCoupon } = require('../index');
-const { ALG_TYPE } = require('../src/constants');
+const { ALG_TYPE, VERSION } = require('../src/constants');
 
 const testListAlgType = '0x6b86';
 const testListVersion = '0xa38d';
@@ -913,6 +913,61 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
               caoDid: 'did:velocity:99',
             },
             'resolveDidDocument',
+          ]);
+
+          // the on-chain entry without its encrypted public key and issuer VC
+          const entryForLog = {
+            version: get2BytesHash(VERSION),
+            credentialType: get2BytesHash(defaultCredentialType),
+            algType: get2BytesHash(ALG_TYPE.HEX_AES_256),
+          };
+          const infoCalls = spyLog.info.mock.calls.map(
+            (call) => call.arguments,
+          );
+          expect(infoCalls).toContainEqual([
+            {
+              credentialEntries: [
+                {
+                  entry: entryForLog,
+                  id: credential.id,
+                  credentialType: defaultCredentialType,
+                },
+              ],
+            },
+            'resolveDidDocument 1',
+          ]);
+          expect(infoCalls).toContainEqual([
+            { id: credential.id, entry: entryForLog },
+            'resolvePublicKey',
+          ]);
+          expect(infoCalls).toContainEqual([
+            {
+              id: credential.id,
+              entry: entryForLog,
+              credentialType: defaultCredentialType,
+            },
+            'resolveService',
+          ]);
+          expect(infoCalls).toContainEqual([
+            { id: credential.id, entry: entryForLog },
+            'resolveIssuerVc',
+          ]);
+          expect(infoCalls).toContainEqual([
+            {
+              didDocument: {
+                id: buildDid(indexEntry),
+                publicKey: [{ id: `${credential.id}#key-1` }],
+                service: [
+                  {
+                    id: `${credential.id}#service`,
+                    credentialType: defaultCredentialType,
+                  },
+                ],
+              },
+              didDocumentMetadata: { boundIssuerVcs: [{ id: credential.id }] },
+              unresolvedPublicKeys: [],
+            },
+            'resolveDidDocument 3',
           ]);
         });
 
