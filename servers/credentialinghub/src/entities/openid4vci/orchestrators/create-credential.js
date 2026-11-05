@@ -17,13 +17,7 @@
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
 const { jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
-const { Oidc4vciErrors } = require('../domain');
-const {
-  buildExchangeEvent,
-  ExchangeProtocols,
-  ExchangeStates,
-  ExchangeTypes,
-} = require('../../exchanges');
+const { Oidc4vciErrors, Openid4vciTransactionStatuses } = require('../domain');
 const {
   isClaimableCredential,
   signVeriiCredentialsFacade,
@@ -58,6 +52,11 @@ const createCredential = async (credentialRequestParameters, context) => {
 
   const depot = await repos.depots.findById(credential.depotId);
   const service = await repos.issuerServices.findById(depot.serviceId);
+  const transaction = {
+    depotId: credential.depotId,
+    serviceId: service._id,
+    credentialId: credential._id,
+  };
 
   try {
     const { payload } = jwtDecode(credentialRequest.proofs.jwt[0]);
@@ -76,31 +75,33 @@ const createCredential = async (credentialRequestParameters, context) => {
       context,
     );
 
-    const newExchange = buildExchange(
-      service,
-      ExchangeStates.CREDENTIALS_SIGNED,
-      { credentialMetadata },
-    );
+    const notificationId = nanoid(12);
+    await repos.openid4vciTransactions.insert({
+      ...transaction,
+      credentialSubjectId,
+      notificationId,
+      status: Openid4vciTransactionStatuses.SIGNED,
+      credentialMetadata,
+    });
     await repos.credentials.updateIssuedCredential(
       credential._id,
       vcJwt,
       credentialSubjectId,
       false,
-      newExchange,
     );
 
     return {
       credentials: [{ credential: vcJwt }],
-      notification_id: newExchange.id,
+      notification_id: notificationId,
     };
   } catch (error) {
     context.log.error(error);
-    await repos.credentials.update(credential._id, {
-      exchange: buildExchange(service, ExchangeStates.UNEXPECTED_ERROR, {
-        err: error.message,
-        errorCode: error.errorCode,
-        errorDescription: error.error_description,
-      }),
+    await repos.openid4vciTransactions.insert({
+      ...transaction,
+      status: Openid4vciTransactionStatuses.ERROR,
+      err: error.message,
+      errorCode: error.errorCode,
+      errorDescription: error.error_description,
     });
 
     throw new Oauth2ServerErrorResponseError({
@@ -109,16 +110,5 @@ const createCredential = async (credentialRequestParameters, context) => {
     });
   }
 };
-
-const buildExchange = (service, state, overrides) => ({
-  id: nanoid(12),
-  type: ExchangeTypes.ISSUER,
-  serviceId: service._id,
-  protocolMetadata: {
-    protocol: ExchangeProtocols.OPENID4VCI,
-  },
-  events: [buildExchangeEvent(ExchangeStates.NEW), buildExchangeEvent(state)],
-  ...overrides,
-});
 
 module.exports = { createCredential };

@@ -17,7 +17,6 @@
 
 const { calcSha384 } = require('@verii/crypto');
 const { ObjectId } = require('mongodb');
-const { buildExchangeEvent } = require('../../exchanges/domain');
 const {
   buildIssuedCredentialEnvelope,
 } = require('../domain/credential-envelope');
@@ -29,7 +28,6 @@ const updateExtensions = (parent, context) => ({
     jwtVc,
     credentialSubjectId,
     isAccepted,
-    exchange,
   ) => {
     const {
       credentialDid,
@@ -53,9 +51,6 @@ const updateExtensions = (parent, context) => ({
     if (isAccepted) {
       $set.acceptedAt = new Date();
     }
-    if (exchange) {
-      $set.exchange = exchange;
-    }
     if (context.config.autocleanFinalizedOfferPii) {
       $set.content = {};
     } else {
@@ -74,14 +69,6 @@ const updateExtensions = (parent, context) => ({
         },
       },
       { rejectedAt: new Date() },
-    ),
-  addExchangeState: async (credentialId, state, props) =>
-    parent.collection().updateOne(
-      { _id: credentialId },
-      {
-        $set: props,
-        $push: { 'exchange.events': buildExchangeEvent(state) },
-      },
     ),
 });
 

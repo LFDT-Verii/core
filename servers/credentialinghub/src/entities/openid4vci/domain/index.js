@@ -17,5 +17,6 @@
 module.exports = {
   ...require('./c-nonce'),
   ...require('./openid4vci-errors'),
+  ...require('./openid4vci-transaction-statuses'),
   ...require('./to-credential-configuration-id'),
 };
