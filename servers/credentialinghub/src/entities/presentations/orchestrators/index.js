@@ -16,4 +16,5 @@
  */
 module.exports = {
   ...require('./verify-presentation'),
+  ...require('./verify-stored-presentation'),
 };

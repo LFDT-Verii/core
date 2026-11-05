@@ -32,8 +32,11 @@ const buildDefaultImplementation =
     });
   };
 
+const defaultPostImplementation = () => Promise.resolve({ statusCode: 204 });
+
 const mockHttpClient = {
   get: mock.fn(buildDefaultImplementation('get')),
+  post: mock.fn(defaultPostImplementation),
   responseType: 'promise',
 };
 const mockCache = mock.fn();
@@ -86,6 +89,8 @@ const resetMockHttpClient = () => {
   mockHttpClientModule.initHttpClient.mock.resetCalls();
   mockHttpClient.get.mock.resetCalls();
   mockHttpClient.get.mock.mockImplementation(buildDefaultImplementation('get'));
+  mockHttpClient.post.mock.resetCalls();
+  mockHttpClient.post.mock.mockImplementation(defaultPostImplementation);
 };
 resetMockHttpClient();
 

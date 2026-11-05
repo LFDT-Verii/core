@@ -17,7 +17,11 @@
 const newError = require('http-errors');
 const { newOfferRelatedResourceSchema } = require('@verii/common-schemas');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
-const { verifyPresentation } = require('../../../entities/presentations');
+const {
+  verifyPresentation,
+  verifyStoredPresentation,
+} = require('../../../entities/presentations');
+const { WalletMessageStatuses } = require('../../../entities/wallet-messages');
 const {
   basePresentationSchema,
   credentialVerificationSchema,
@@ -109,6 +113,12 @@ module.exports = async (fastify) => {
                   presentationId: {
                     type: 'string',
                   },
+                  notifyHolder: {
+                    type: 'boolean',
+                    default: false,
+                    description:
+                      "sends PresentationVerified to the holder's wallet after verifying",
+                  },
                 },
                 required: ['tenantId', 'presentationId'],
               },
@@ -138,6 +148,20 @@ module.exports = async (fastify) => {
                 verification: {
                   $ref: 'presentation-verification#',
                 },
+                notification: {
+                  type: 'object',
+                  description: 'present when notifyHolder is true',
+                  properties: {
+                    status: {
+                      type: 'string',
+                      enum: Object.values(WalletMessageStatuses),
+                    },
+                    error: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['status'],
+                },
                 requestId: {
                   type: 'string',
                 },
@@ -147,29 +171,30 @@ module.exports = async (fastify) => {
             402: {
               $ref: 'error#',
             },
+            404: {
+              $ref: 'error#',
+            },
           },
         }),
       },
       async (req) => {
-        if (req.body.presentation) {
-          return verifyPresentation(req.body.presentation, req);
+        const { presentation, presentationId, notifyHolder } = req.body;
+        if (presentation) {
+          // An inline presentation has no exchange, so there is no wallet to message
+          if (notifyHolder) {
+            throw newError(400, 'notifyHolder requires a presentationId', {
+              errorCode: 'presentation_verify_request_invalid',
+            });
+          }
+          return verifyPresentation(presentation, req);
         }
-        if (req.body.presentationId) {
-          const presentationEntity = await req.repos.presentations.findById(
-            req.body.presentationId,
-          );
-
-          const verification = await verifyPresentation(
-            presentationEntity.presentation,
+        if (presentationId) {
+          return verifyStoredPresentation(
+            { presentationId, notifyHolder },
             req,
           );
-          await req.repos.presentations.addVerification(
-            presentationEntity._id,
-            verification.verification,
-          );
-          return verification;
         }
-        throw newError.BadRequest('presentation verify request invalid', {
+        throw newError(400, 'presentation verify request invalid', {
           errorCode: 'presentation_verify_request_invalid',
         });
       },

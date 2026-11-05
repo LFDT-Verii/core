@@ -14,19 +14,18 @@
  * limitations under the License.
  *
  */
-const { default: canonicalize } = require('canonicalize');
 const ethUrlParser = require('eth-url-parser');
 const newError = require('http-errors');
 const { isEmpty, compact, castArray, find } = require('lodash/fp');
-const { nanoid } = require('nanoid');
-const { createCommitment, KeyPurposes } = require('@verii/crypto');
-const { toDidUrl } = require('@verii/did-doc');
+const { KeyPurposes } = require('@verii/crypto');
 const { getRevocationRegistry } = require('@verii/verii-issuing');
+const {
+  sendWalletMessage,
+  WalletMessageStatuses,
+} = require('../../wallet-messages');
 
 const NotificationStatuses = {
-  SENT: 'sent',
-  SKIPPED_NO_MESSAGING_SETTINGS: 'skipped_no_messaging_settings',
-  FAILED: 'failed',
+  ...WalletMessageStatuses,
   ALREADY_SENT: 'already_sent',
 };
 
@@ -142,36 +141,30 @@ const sendRevocationMessage = async (
   }
 
   const exchange = await resolveCredentialExchange(credential, context);
-  const { messagingSettings } = exchange ?? {};
-  if (!hasMessagingSettings(messagingSettings)) {
-    return {
-      credential,
-      notification: {
-        status: NotificationStatuses.SKIPPED_NO_MESSAGING_SETTINGS,
-      },
-    };
-  }
-
-  const body = buildRevocationMessage(
-    credential,
-    { message, linkedCredential, messagingSettings, exchange },
+  const notification = await sendWalletMessage(
+    {
+      exchange,
+      message,
+      data: buildRevocationMessageData(credential, linkedCredential, context),
+    },
     context,
   );
+  if (notification.status !== NotificationStatuses.SENT) {
+    return { credential, notification };
+  }
+
+  return markNotifiedOfRevocation(credential, notification, context);
+};
+
+// The credential is already revoked, so a failed write reports the message as
+// failed instead of failing the request.
+const markNotifiedOfRevocation = async (credential, notification, context) => {
   try {
-    await context.fetch.post(messagingSettings.webhookUrl, body, {
-      headers: {
-        Authorization: await generateMessagingToken(
-          body,
-          messagingSettings.webhookUrl,
-          context,
-        ),
-      },
-    });
     return {
       credential: await context.repos.credentials.update(credential._id, {
         notifiedOfRevocationAt: new Date(),
       }),
-      notification: { status: NotificationStatuses.SENT },
+      notification,
     };
   } catch (error) {
     context.log.warn({ err: error }, 'revocation message failed');
@@ -193,31 +186,20 @@ const resolveCredentialExchange = (credential, { repos }) =>
     messagingSettings: 1,
   });
 
-const hasMessagingSettings = (messagingSettings) =>
-  !isEmpty(messagingSettings?.webhookUrl) &&
-  !isEmpty(messagingSettings?.authToken);
-
-const buildRevocationMessage = (
+const buildRevocationMessageData = (
   credential,
-  { message, linkedCredential, messagingSettings, exchange },
+  linkedCredential,
   { tenant },
 ) => ({
-  id: nanoid(),
-  pushToken: messagingSettings.authToken,
-  message,
-  data: {
-    exchangeId: `${exchange._id}`,
-    notificationType: resolveNotificationType(linkedCredential),
-    replacementCredentialType:
-      resolveReplacementCredentialType(linkedCredential),
-    issuer: tenant.did,
-    credentialId: credential.did,
-    credentialTypes: resolveCredentialTypes(credential),
-    dataModelVersion: credential.dataModelVersion,
-    envelopeFormat: credential.envelopeFormat,
-    signingAlgorithm: credential.signingAlgorithm,
-    count: 1,
-  },
+  notificationType: resolveNotificationType(linkedCredential),
+  replacementCredentialType: resolveReplacementCredentialType(linkedCredential),
+  issuer: tenant.did,
+  credentialId: credential.did,
+  credentialTypes: resolveCredentialTypes(credential),
+  dataModelVersion: credential.dataModelVersion,
+  envelopeFormat: credential.envelopeFormat,
+  signingAlgorithm: credential.signingAlgorithm,
+  count: 1,
 });
 
 const resolveNotificationType = (linkedCredential) =>
@@ -233,26 +215,5 @@ const resolveCredentialTypes = (credential) =>
         'VerifiableCredential',
         credential.typeMetadata?.credentialType,
       ]);
-
-const generateMessagingToken = async (body, webhookUrl, context) => {
-  const {
-    kms,
-    tenant,
-    traceId,
-    tenant: { keysByPurpose },
-  } = context;
-  const exchangesKey = keysByPurpose[KeyPurposes.EXCHANGES];
-  const hash = createCommitment(canonicalize(body));
-  const jwt = await kms.signJwt({ hash }, exchangesKey._id, {
-    subject: body.data.exchangeId,
-    audience: new URL(webhookUrl).origin,
-    jti: traceId,
-    issuer: tenant.did,
-    kid: toDidUrl(tenant.did, exchangesKey.kidFragment),
-    nbf: new Date(),
-    expiresIn: '1w',
-  });
-  return `Bearer ${jwt}`;
-};
 
 module.exports = { revokeCredential, NotificationStatuses };
