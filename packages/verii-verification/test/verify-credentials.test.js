@@ -1783,6 +1783,26 @@ describe('Verify credentials', () => {
             title: 'has no parameters',
             url: `ethereum:${revocationContractAddress}/getRevokedStatus`,
           },
+          {
+            title: 'has a listId that is not a number',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=not-a-number&index=2`,
+          },
+          {
+            title: 'has an empty listId',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=&index=2`,
+          },
+          {
+            title: 'has a negative index',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=1&index=-1`,
+          },
+          {
+            title: 'has an index of 2^256',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=${holderAddress}&listId=1&index=${2n ** 256n}`,
+          },
+          {
+            title: 'has an invalid address',
+            url: `ethereum:${revocationContractAddress}/getRevokedStatus?address=0x${'aB'.repeat(20)}&listId=1&index=2`,
+          },
         ].forEach(({ title, url }) => {
           it(`UNREVOKED should FAIL when the status url ${title}`, async () => {
             const { credential, result } = await verifyWithStatusUrl(url);
