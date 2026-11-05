@@ -32,6 +32,10 @@ const algorithmConfigs = [
   { algorithm: KeyAlgorithms.RS256, joseAlgorithm: 'RS256' },
 ];
 
+const v2AlgorithmConfigs = algorithmConfigs.filter(
+  ({ joseAlgorithm }) => joseAlgorithm !== 'ES256K',
+);
+
 const compactSign = (payload, privateJwk, protectedHeader) => {
   const encodedHeader = Buffer.from(JSON.stringify(protectedHeader)).toString(
     'base64url',
@@ -108,7 +112,7 @@ const expectFailure = async (promise, assessment, code) => {
 
 // eslint-disable-next-line complexity
 describe('credential envelope verifier', () => {
-  for (const algorithmConfig of algorithmConfigs) {
+  for (const algorithmConfig of v2AlgorithmConfigs) {
     const { joseAlgorithm } = algorithmConfig;
 
     it(`verifies VC 2.0 with ${joseAlgorithm}`, async () => {
@@ -164,6 +168,65 @@ describe('credential envelope verifier', () => {
     });
   });
 
+  it('reports VC 2.0 ES256K as an unsupported algorithm with a matching secp256k1 key', async () => {
+    const signing = prepareSigning(algorithmConfigs[0]);
+    const compact = signV2(signing);
+
+    await expect(
+      verifyCredentialEnvelope(compact, signing.keyPair.publicKey),
+    ).resolves.toEqual({
+      compact,
+      conformance: {
+        errors: [],
+        status: CredentialVerificationStatuses.NOT_CHECKED,
+        warnings: [],
+      },
+      dataModelVersion: '2.0',
+      envelopeFormat: 'vc+jwt',
+      policy: {
+        errors: [],
+        status: CredentialVerificationStatuses.NOT_CHECKED,
+        warnings: [],
+      },
+      proof: {
+        errors: [
+          { code: CredentialVerificationErrorCodes.UNSUPPORTED_ALGORITHM },
+        ],
+        status: CredentialVerificationStatuses.FAIL,
+      },
+      protectedHeader: {
+        alg: 'ES256K',
+        cty: 'vc',
+        kid: signing.kid,
+        typ: 'vc+jwt',
+      },
+      signingAlgorithm: 'ES256K',
+    });
+  });
+
+  it('reports VC 1.1 ES256K with a P-256 key as a proof failure', async () => {
+    const signing = prepareSigning(algorithmConfigs[0]);
+    const wrongKey = prepareSigning(algorithmConfigs[1]).keyPair.publicKey;
+    const compact = compactSign(
+      {
+        iss: 'did:example:issuer',
+        vc: {
+          '@context': ['https://www.w3.org/2018/credentials/v1'],
+          type: ['VerifiableCredential'],
+          credentialSubject: { id: 'did:example:holder' },
+        },
+      },
+      signing.keyPair.privateKey,
+      { alg: 'ES256K', typ: 'JWT' },
+    );
+
+    await expectFailure(
+      verifyCredentialEnvelope(compact, wrongKey),
+      'proof',
+      CredentialVerificationErrorCodes.ALGORITHM_KEY_MISMATCH,
+    );
+  });
+
   it('reports an algorithm outside the version allowlist as a proof failure', async () => {
     const signing = prepareSigning(algorithmConfigs[1]);
 
@@ -193,7 +256,6 @@ describe('credential envelope verifier', () => {
 
   for (const [name, signingConfig, keyConfig] of [
     ['ES256 with secp256k1', algorithmConfigs[1], algorithmConfigs[0]],
-    ['ES256K with P-256', algorithmConfigs[0], algorithmConfigs[1]],
     ['RS256 with EC', algorithmConfigs[2], algorithmConfigs[1]],
   ]) {
     it(`reports ${name} as a proof failure`, async () => {

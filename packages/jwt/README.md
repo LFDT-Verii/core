@@ -38,8 +38,10 @@ policy can also contain warnings. The `credential` property is present only
 when all required assessments pass. VC 1.1 retains its legacy proof behavior
 and reports conformance and policy as `NOT_APPLICABLE`.
 
-Proof verification allows `ES256K`, `ES256`, and `RS256`, checks that the
-resolved JWK type and curve match the protected `alg`, and verifies the
+Proof verification allows `ES256K`, `ES256`, and `RS256` for VC 1.1 and only
+`ES256` and `RS256` for VC 2.0. Any other protected `alg` fails proof
+verification with `CREDENTIAL_UNSUPPORTED_ALGORITHM`. Verification checks that
+the resolved JWK type and curve match the protected `alg`, and verifies the
 compact signature. Legacy JWT mode also evaluates registered JWT validity
 claims. Deprecated legacy hex-key normalization occurs only after bounded
 envelope decoding.

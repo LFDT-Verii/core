@@ -58,6 +58,10 @@ const algorithms = [
   },
 ];
 
+const v2Algorithms = algorithms.filter(
+  ({ joseAlgorithm }) => joseAlgorithm !== 'ES256K',
+);
+
 const baseCredential = {
   '@context': ['https://www.w3.org/2018/credentials/v1'],
   id: 'urn:uuid:credential-1',
@@ -373,7 +377,7 @@ describe('dual-version verification guardrails', () => {
   });
 
   describe('VC 2.0 desired behavior', () => {
-    for (const algorithmConfig of algorithms) {
+    for (const algorithmConfig of v2Algorithms) {
       const { joseAlgorithm } = algorithmConfig;
 
       it(`verifies an independently signed ${joseAlgorithm} direct credential`, async () => {
@@ -433,6 +437,51 @@ describe('dual-version verification guardrails', () => {
         ]);
       });
     }
+
+    it('rejects an independently signed ES256K direct credential as an unsupported algorithm', async () => {
+      const signing = prepareAlgorithm(algorithms[0]);
+      const credential = {
+        '@context': ['https://www.w3.org/ns/credentials/v2'],
+        id: signing.did,
+        type: ['VerifiableCredential', 'EmploymentCredential'],
+        issuer: signing.did,
+        validFrom: '2026-01-01T00:00:00.000Z',
+        validUntil: '2099-01-01T00:00:00.000Z',
+        credentialSubject: { id: 'did:example:holder' },
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      };
+      const [result] = await verify(issueV2Credential(credential, signing));
+
+      expect(result).toMatchObject({
+        conformance: {
+          errors: [],
+          status: CredentialVerificationStatuses.NOT_CHECKED,
+          warnings: [],
+        },
+        credentialChecks: {
+          TRUSTED_HOLDER: CheckResults.NOT_CHECKED,
+          TRUSTED_ISSUER: CheckResults.NOT_CHECKED,
+          UNEXPIRED: CheckResults.NOT_CHECKED,
+          UNREVOKED: CheckResults.NOT_CHECKED,
+          UNTAMPERED: CheckResults.FAIL,
+        },
+        dataModelVersion: '2.0',
+        envelopeFormat: 'vc+jwt',
+        policy: {
+          errors: [],
+          status: CredentialVerificationStatuses.NOT_CHECKED,
+          warnings: [],
+        },
+        proof: {
+          errors: [
+            { code: CredentialVerificationErrorCodes.UNSUPPORTED_ALGORITHM },
+          ],
+          status: CredentialVerificationStatuses.FAIL,
+        },
+        signingAlgorithm: 'ES256K',
+      });
+      expect(result).not.toHaveProperty('credential');
+    });
 
     it('reports an invalid credential id without aborting the batch', async () => {
       const signing = prepareAlgorithm(algorithms[1]);
