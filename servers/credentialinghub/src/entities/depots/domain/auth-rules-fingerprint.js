@@ -15,14 +15,14 @@
  *
  */
 const { calcSha384 } = require('@verii/crypto');
-const { castArray, flow, identity, map, sortBy } = require('lodash/fp');
+const { flow, identity, map, sortBy } = require('lodash/fp');
 const {
   isInternalVpAuth,
 } = require('../../issuer-services/domain/is-internal-vp-auth');
 
 const canonicalRules = flow(
   map(({ path, rule, valueIndex, type }) => ({
-    path: castArray(path),
+    path,
     rule,
     valueIndex,
     type,

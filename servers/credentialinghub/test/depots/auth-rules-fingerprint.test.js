@@ -22,14 +22,19 @@ const {
 } = require('../../src/entities/depots/domain/auth-rules-fingerprint');
 
 const emailRule = {
-  path: ['$.credentialSubject.email'],
+  path: [['credentialSubject', 'email']],
   rule: 'pick',
   valueIndex: 0,
+  type: 'EmailV1.0',
 };
 const employeeIdRule = {
-  path: ['$.credentialSubject.employeeId', '$.credentialSubject.id'],
+  path: [
+    ['credentialSubject', 'employeeId'],
+    ['credentialSubject', 'id'],
+  ],
   rule: 'equal',
   valueIndex: 1,
+  type: 'EmploymentPastV1.1',
 };
 
 const buildService = (overrides = {}) => ({
@@ -96,19 +101,6 @@ describe('buildAuthRulesFingerprint', () => {
     ).toEqual(fingerprint);
   });
 
-  it('should treat a single path the same as a one-element path array', () => {
-    expect(
-      buildAuthRulesFingerprint(
-        buildService({
-          verifiablePresentationAuthRules: [
-            { ...emailRule, path: '$.credentialSubject.email' },
-            employeeIdRule,
-          ],
-        }),
-      ),
-    ).toEqual(fingerprint);
-  });
-
   const changes = {
     'swapped value indexes': {
       verifiablePresentationAuthRules: [
@@ -118,7 +110,7 @@ describe('buildAuthRulesFingerprint', () => {
     },
     'a changed path': {
       verifiablePresentationAuthRules: [
-        { ...emailRule, path: ['$.credentialSubject.emailAddress'] },
+        { ...emailRule, path: [['credentialSubject', 'emailAddress']] },
         employeeIdRule,
       ],
     },
@@ -134,9 +126,9 @@ describe('buildAuthRulesFingerprint', () => {
         employeeIdRule,
       ],
     },
-    'a rule type': {
+    'a changed rule type': {
       verifiablePresentationAuthRules: [
-        { ...emailRule, type: 'EmailV1.0' },
+        { ...emailRule, type: 'EmploymentPastV1.1' },
         employeeIdRule,
       ],
     },
@@ -144,7 +136,12 @@ describe('buildAuthRulesFingerprint', () => {
       verifiablePresentationAuthRules: [
         emailRule,
         employeeIdRule,
-        { path: ['$.credentialSubject.phone'], rule: 'pick', valueIndex: 2 },
+        {
+          path: [['credentialSubject', 'phone']],
+          rule: 'pick',
+          valueIndex: 2,
+          type: 'EmailV1.0',
+        },
       ],
     },
     'a removed rule': { verifiablePresentationAuthRules: [emailRule] },

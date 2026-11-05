@@ -93,13 +93,26 @@ const newIssuerServiceSchema = {
       type: 'array',
       items: {
         type: 'object',
-        required: ['path', 'rule', 'valueIndex'],
+        required: ['path', 'rule', 'valueIndex', 'type'],
         properties: {
           path: {
             type: 'array',
-            description: 'json path(s) to resolve in order',
+            minItems: 1,
+            maxItems: 10,
+            description:
+              // eslint-disable-next-line max-len
+              'Claims path pointers (OpenID4VP 1.0, section 7), tried in order on each credential of the rule\'s `type`. The first pointer that selects anything supplies the values. A pointer is an array of segments: a string selects that key of an object, a non-negative integer selects that index of an array, and null selects every element of an array. Only string, number and boolean values are used. For example `[["credentialSubject", "email"], ["credentialSubject", "emails", null]]`',
             items: {
-              type: 'string',
+              type: 'array',
+              minItems: 1,
+              maxItems: 32,
+              items: {
+                anyOf: [
+                  { type: 'string', minLength: 1 },
+                  { type: 'integer', minimum: 0 },
+                  { type: 'null' },
+                ],
+              },
             },
           },
           rule: {
@@ -111,6 +124,12 @@ const newIssuerServiceSchema = {
             type: 'integer',
             description:
               "the position of this rule's value in a depot's `authValues`. The rules' value indexes must be exactly 0 to n-1, each used once",
+          },
+          type: {
+            type: 'string',
+            minLength: 1,
+            description:
+              'the credential type that the rule reads. It must be one of the `disclosureRequest` types',
           },
         },
       },

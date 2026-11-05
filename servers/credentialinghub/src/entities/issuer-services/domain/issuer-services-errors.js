@@ -20,6 +20,7 @@ const IssuerServicesErrors = {
     'service_verifiablePresentationAuthRules_required',
   SERVICE_VP_AUTH_RULES_INVALID:
     'service_verifiablePresentationAuthRules_invalid',
+  SERVICE_DISCLOSURE_REQUEST_REQUIRED: 'service_disclosureRequest_required',
 };
 
 module.exports = { IssuerServicesErrors };

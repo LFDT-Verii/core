@@ -351,12 +351,23 @@ describe('Depots Test suite', () => {
         tenant,
         authMethods: ['verifiable_presentation'],
         authMode: 'internal',
+        disclosureRequest: {
+          types: [{ type: 'EmailV1.0' }, { type: 'EmploymentPastV1.1' }],
+          purpose: 'Identification',
+          retentionPeriod: 'P1D',
+        },
         verifiablePresentationAuthRules: [
-          { path: ['$.credentialSubject.email'], rule: 'pick', valueIndex: 0 },
           {
-            path: ['$.credentialSubject.employeeId'],
+            path: [['credentialSubject', 'email']],
+            rule: 'pick',
+            valueIndex: 0,
+            type: 'EmailV1.0',
+          },
+          {
+            path: [['credentialSubject', 'employeeId']],
             rule: 'equal',
             valueIndex: 1,
+            type: 'EmploymentPastV1.1',
           },
         ],
         ...overrides,

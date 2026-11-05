@@ -23,8 +23,18 @@ const {
 } = require('../../src/entities/issuer-services/orchestrators/update-issuer-service');
 
 const rules = [
-  { path: ['$.credentialSubject.employeeId'], rule: 'pick', valueIndex: 0 },
-  { path: ['$.credentialSubject.departmentId'], rule: 'equal', valueIndex: 1 },
+  {
+    path: [['credentialSubject', 'employeeId']],
+    rule: 'pick',
+    valueIndex: 0,
+    type: 'EmployeeIdV1.0',
+  },
+  {
+    path: [['credentialSubject', 'departmentId']],
+    rule: 'equal',
+    valueIndex: 1,
+    type: 'EmployeeIdV1.0',
+  },
 ];
 const service = {
   authMethods: ['verifiable_presentation'],
