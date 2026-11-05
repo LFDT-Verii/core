@@ -48,4 +48,20 @@ describe('Hub config env validation', () => {
       require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
     ).toEqual(expect.objectContaining({ openid4vciNonceSecret: undefined }));
   });
+
+  it('should reject a deferred polling interval of 0', () => {
+    process.env.OPENID4VCI_DEFERRED_INTERVAL_SECONDS = '0';
+    expect(() =>
+      require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+    ).toThrow('OPENID4VCI_DEFERRED_INTERVAL_SECONDS');
+  });
+
+  it('should accept a deferred polling interval of 1', () => {
+    process.env.OPENID4VCI_DEFERRED_INTERVAL_SECONDS = '1';
+    expect(
+      require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+    ).toEqual(
+      expect.objectContaining({ openid4vciDeferredIntervalSeconds: 1 }),
+    );
+  });
 });

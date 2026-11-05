@@ -130,7 +130,7 @@ that finds nothing to claim denies the transaction.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `OPENID4VCI_DEFERRED_INTERVAL_SECONDS` | `30` | The `interval`, in seconds, that tells a wallet how long to wait before it polls again. |
+| `OPENID4VCI_DEFERRED_INTERVAL_SECONDS` | `30` | The `interval`, in seconds, that tells a wallet how long to wait before it polls again. Must be at least 1. |
 
 ## Presentation Submission Descriptor Paths
 
