@@ -17,13 +17,6 @@
 const { jwtDecode, verifyPresentationJwt } = require('@verii/jwt');
 const { getJwkFromDidUri } = require('@verii/did-doc');
 const { CheckResults } = require('@verii/vc-checks');
-const { verifyCredentials } = require('@verii/verii-verification');
-const { KeyPurposes } = require('@verii/crypto');
-const {
-  resolveDid,
-  getOrganizationVerifiedProfile,
-  getCredentialTypeMetadata,
-} = require('@verii/common-fetchers');
 const { flow, every, includes, map } = require('lodash/fp');
 const { mapWithIndex } = require('@verii/common-functions');
 const newError = require('http-errors');
@@ -31,9 +24,9 @@ const { PresentationFormat } = require('../domain/presentation-format');
 const {
   CredentialFormat,
 } = require('../../credentials/domain/credential-format');
+const { checkCredentials } = require('./check-credentials');
 
 const verifyPresentation = async (presentation, context) => {
-  const { tenant } = context;
   const { header, payload } = jwtDecode(presentation);
 
   try {
@@ -51,23 +44,9 @@ const verifyPresentation = async (presentation, context) => {
     };
   }
 
-  // eslint-disable-next-line better-mutation/no-mutation
-  context.caoDid = tenant.caoDid;
-
-  const credentialCheckResults = await verifyCredentials(
-    {
-      credentials: payload.vp.verifiableCredential,
-      expectedHolderDid: payload.iss,
-      relyingParty: {
-        dltOperatorKMSKeyId:
-          tenant.keysByPurpose[KeyPurposes.DLT_TRANSACTIONS]._id,
-      },
-    },
-    {
-      resolveDid,
-      getOrganizationVerifiedProfile,
-      getCredentialTypeMetadata,
-    },
+  const credentialCheckResults = await checkCredentials(
+    payload.vp.verifiableCredential,
+    payload.iss,
     context,
   );
 

@@ -609,6 +609,49 @@ describe('Issuer services management Test suite', () => {
         }),
       );
     });
+    it('should 400 when an internal vp service has a presentationDefinition', async () => {
+      mockHttpClientJsonResponse('get', {
+        id: 'did-doc-foo',
+        service: [{ id: '#foo' }],
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          service: {
+            velocityNetworkServiceId: '#foo',
+            termsUrl: 'http://www.example.com',
+            disclosureRequest: {
+              types: [{ type: 'EmailV1.0' }],
+              purpose: 'foo',
+              retentionPeriod: 'P12D',
+            },
+            presentationDefinition: testPresentationDefinition,
+            authTokensExpireIn: 100000,
+            authMethods: ['verifiable_presentation'],
+            authMode: 'internal',
+            verifiablePresentationAuthRules: [
+              {
+                path: [['foo']],
+                rule: 'pick',
+                valueIndex: 0,
+                type: 'EmailV1.0',
+              },
+            ],
+            challengesExpireIn: 10000,
+          },
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          message: 'service_presentationDefinition_not_allowed',
+          errorCode: 'service_presentationDefinition_not_allowed',
+        }),
+      );
+    });
     it('should 400 when service.verifiablePresentationAuthRules[*] is invalid', async () => {
       const response = await fastify.injectJson({
         method: 'POST',
@@ -977,69 +1020,6 @@ describe('Issuer services management Test suite', () => {
             ],
             challengesExpireIn: 10000,
             credentialTypesAvailable: ['foo'],
-            autoCleanPII: true,
-          },
-        };
-        const response = await fastify.injectJson({
-          method: 'POST',
-          url: `${testUrl}/create`,
-          payload,
-        });
-
-        expect(response.statusCode).toEqual(200);
-        expect(response.json).toEqual({
-          service: {
-            ...payload.service,
-            id: expect.stringMatching(OBJECT_ID_FORMAT),
-            createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
-            updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
-          },
-          requestId: expect.any(String),
-        });
-        expect(mockHttpClient.get.mock.calls[0].arguments).toEqual([
-          `api/v0.6/resolve-did/${encodeURIComponent(tenant.did)}`,
-        ]);
-        const dbIssuerService = await issuerServicesRepo.findById(
-          response.json.service.id,
-        );
-        expect(dbIssuerService).toEqual({
-          ...mongoify(payload.service),
-          _id: new ObjectId(response.json.service.id),
-          updatedAt: expect.any(Date),
-          createdAt: expect.any(Date),
-          tenantId: new ObjectId(tenant._id),
-        });
-      });
-
-      it('should 200 and create vp issuer service with presentationDefinition', async () => {
-        mockHttpClientJsonResponse('get', {
-          id: 'did-doc-foo',
-          service: [{ id: '#foo' }],
-        });
-        const payload = {
-          tenantId: tenant._id,
-          service: {
-            velocityNetworkServiceId: '#foo',
-            description: 'foo',
-            termsUrl: 'http://www.example.com',
-            disclosureRequest: {
-              types: [{ type: 'EmailV1.0' }],
-              purpose: 'foo',
-              retentionPeriod: 'P12D',
-            },
-            presentationDefinition: testPresentationDefinition,
-            authTokensExpireIn: 100000,
-            authMethods: ['verifiable_presentation'],
-            authMode: 'internal',
-            verifiablePresentationAuthRules: [
-              {
-                path: [['foo']],
-                rule: 'pick',
-                valueIndex: 0,
-                type: 'EmailV1.0',
-              },
-            ],
-            challengesExpireIn: 10000,
             autoCleanPII: true,
           },
         };
@@ -1688,6 +1668,53 @@ describe('Issuer services management Test suite', () => {
         errorResponseMatcher({
           message: 'service_disclosureRequest_required',
           errorCode: 'service_disclosureRequest_required',
+        }),
+      );
+    });
+    it('should 400 when an internal vp service has a presentationDefinition', async () => {
+      mockHttpClientJsonResponse('get', {
+        id: 'did-doc-foo',
+        service: [{ id: '#foo' }],
+      });
+      const service = await persistIssuerService({
+        tenant,
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/update`,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: service._id,
+          service: {
+            velocityNetworkServiceId: '#foo',
+            termsUrl: 'http://www.example.com',
+            disclosureRequest: {
+              types: [{ type: 'EmailV1.0' }],
+              purpose: 'foo',
+              retentionPeriod: 'P12D',
+            },
+            presentationDefinition: testPresentationDefinition,
+            authTokensExpireIn: 100000,
+            authMethods: ['preauth', 'verifiable_presentation'],
+            authMode: 'internal',
+            verifiablePresentationAuthRules: [
+              {
+                path: [['foo']],
+                rule: 'pick',
+                valueIndex: 0,
+                type: 'EmailV1.0',
+              },
+            ],
+            challengesExpireIn: 10000,
+          },
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          message: 'service_presentationDefinition_not_allowed',
+          errorCode: 'service_presentationDefinition_not_allowed',
         }),
       );
     });

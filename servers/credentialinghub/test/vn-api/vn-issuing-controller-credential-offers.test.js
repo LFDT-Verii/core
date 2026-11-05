@@ -17,20 +17,33 @@
 
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
-const { ALG_TYPE } = require('@verii/metadata-registration');
+
+const mockResolveDidDocument = mock.fn();
+
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    ...require('@verii/metadata-registration'),
+    initVerificationCoupon: mock.fn(() => {}),
+    initMetadataRegistry: mock.fn(() => ({
+      resolveDidDocument: mockResolveDidDocument,
+    })),
+    initRevocationRegistry: mock.fn(() => ({
+      getRevokedStatus: () => Promise.resolve(0),
+    })),
+  },
+});
 
 const {
   mockHttpClient,
   mockHttpClientModule,
   resetMockHttpClient,
+  restMockHttpClient,
 } = require('../helpers/mock-http-client');
 
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
-mock.module('@verii/metadata-registration', { namedExports: { ALG_TYPE } });
-mock.module('@verii/common-fetchers', { namedExports: {} });
 
 const { ObjectId } = require('mongodb');
-const { entries, map, set } = require('lodash/fp');
+const { entries, map, set, sortBy } = require('lodash/fp');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { mongoify } = require('@verii/tests-helpers');
 const { jwtSign, jwtVerify } = require('@verii/jwt');
@@ -45,9 +58,22 @@ const {
   ExchangeProtocols,
   ExchangeStates,
 } = require('../../src/entities/exchanges');
-const { initDepotFactory } = require('../../src/entities/depots');
+const {
+  buildAuthMatchValues,
+  buildAuthRulesFingerprint,
+  initDepotFactory,
+} = require('../../src/entities/depots');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
+const {
+  didVelocityResolution,
+  emailIssuerService,
+  generateAuthVp,
+  generateEmailCredential,
+  generateEmailIssuer,
+  generateHolder,
+  mockEmailIssuerRoutes,
+} = require('../helpers/email-credential-auth');
 
 const testUrl = (tenant2) => `/vn-api/r/${tenant2.did}/credential-offers`;
 
@@ -1031,6 +1057,152 @@ describe('vn-api > credential offers', () => {
           { credentialIds: [new ObjectId(credential._id)] },
         ),
       );
+    });
+  });
+
+  describe('shared issue link', () => {
+    let emailIssuer;
+
+    before(async () => {
+      emailIssuer = await generateEmailIssuer();
+    });
+
+    beforeEach(() => {
+      resetMockHttpClient();
+      restMockHttpClient();
+      mockEmailIssuerRoutes(emailIssuer);
+    });
+
+    it('should offer every claimable credential in the depot, whatever its type, after authenticating', async () => {
+      const vpIssuerService = await persistIssuerService({
+        tenant,
+        ...emailIssuerService(),
+      });
+      const authValues = ['adam.smith@example.com'];
+      const depot = await persistDepot({
+        tenant,
+        service: vpIssuerService,
+        authValues,
+        authMatchValues: buildAuthMatchValues(authValues),
+        authRulesFingerprint: buildAuthRulesFingerprint(vpIssuerService),
+      });
+      const claimableCredentials = [
+        await persistCredential({
+          tenant,
+          depot,
+          content: {
+            type: ['EmailV1.0'],
+            credentialSubject: { email: 'adam.smith@example.com' },
+          },
+        }),
+        await persistCredential({
+          tenant,
+          depot,
+          content: {
+            type: ['PhoneV1.0'],
+            credentialSubject: { phone: '+15558094151' },
+          },
+        }),
+        await persistCredential({
+          tenant,
+          depot,
+          content: {
+            type: ['PastEmploymentPosition'],
+            credentialSubject: { company: 'did:example:employer' },
+          },
+        }),
+      ];
+      await persistCredential({
+        tenant,
+        depot,
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'adam@example.com' },
+        },
+        acceptedAt: new Date(),
+      });
+      await persistCredential({
+        tenant,
+        depot: depots[0],
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'jane.jar@example.com' },
+        },
+      });
+
+      const manifestResponse = await fastify.injectJson({
+        method: 'GET',
+        url: `/vn-api/r/${tenant.did}/get-credential-manifest?id=${vpIssuerService._id}&format=json`,
+      });
+      expect(manifestResponse.statusCode).toEqual(200);
+      const sharedLinkExchange = {
+        _id: manifestResponse.json.issuing_request.exchange_id,
+        serviceId: vpIssuerService._id,
+      };
+
+      const holder = generateHolder();
+      const emailCredential = await generateEmailCredential({
+        issuer: emailIssuer,
+        holderDid: holder.did,
+        email: 'adam.smith@example.com',
+      });
+      mockResolveDidDocument.mock.mockImplementation(() =>
+        Promise.resolve(didVelocityResolution([emailCredential])),
+      );
+      const authenticateResponse = await fastify.injectJson({
+        method: 'POST',
+        url: `/vn-api/r/${tenant.did}/authenticate`,
+        payload: {
+          exchange_id: sharedLinkExchange._id,
+          jwt_vp: await generateAuthVp({
+            exchange: sharedLinkExchange,
+            holder,
+            jwtVcs: [emailCredential.jwt],
+          }),
+        },
+      });
+      expect(authenticateResponse.statusCode).toEqual(200);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${authenticateResponse.json.token}`,
+        },
+        payload: {
+          offerHashes: [],
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        challenge: expect.any(String),
+        offers: expect.any(Array),
+      });
+      expect(sortBy('id', response.json.offers)).toEqual(
+        sortBy(
+          'id',
+          map(
+            (credential) => expectedOffer(tenant, credential),
+            claimableCredentials,
+          ),
+        ),
+      );
+      const dbExchange = await findOneExchange(sharedLinkExchange._id);
+      expect(dbExchange).toEqual(
+        expect.objectContaining({
+          depotId: new ObjectId(depot._id),
+          credentialIds: expect.arrayContaining(
+            map(
+              (credential) => new ObjectId(credential._id),
+              claimableCredentials,
+            ),
+          ),
+        }),
+      );
+      expect(dbExchange.credentialIds).toHaveLength(3);
+      // The shared link has no credential_types, so the offers aren't filtered.
+      expect(dbExchange.credentialTypes).toBeUndefined();
     });
   });
 

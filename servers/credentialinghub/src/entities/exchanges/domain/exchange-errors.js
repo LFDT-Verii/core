@@ -24,6 +24,8 @@ const ExchangeErrors = {
   UNAUTHORIZED: 'unauthorized',
   PRESENTATION_SUBMISSION_INVALID: 'presentation_submission_invalid',
   AUTHENTICATION_METHOD_UNSUPPORTED: 'authentication_method_unsupported',
+  CREDENTIAL_CHECK_UNAVAILABLE: 'credential_check_unavailable',
+  IDENTIFICATION_USER_NOT_FOUND: 'integrated_identification_user_not_found',
 };
 
 module.exports = { ExchangeErrors };
