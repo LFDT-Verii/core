@@ -237,6 +237,49 @@ describe('Revocation Registry', { timeout: 240000 }, () => {
       ).rejects.toThrow(/execution reverted: "list index out of bound"/);
     });
 
+    it('Throw an invalid_revocation_url error when the registry reverts for the url', async () => {
+      const listId = 4291;
+      await revocationRegistry.addRevocationListSigned(
+        listId,
+        'did:velocity:99',
+      );
+      const statusUrl = ({ address = defaultPrimaryAddress, list, index }) =>
+        `ethereum:${revocationRegistryContractAddress}/getRevokedStatus?address=${address}&listId=${list}&index=${index}`;
+
+      for (const { url, reason } of [
+        {
+          url: statusUrl({ list: listId, index: 10240 }),
+          reason: 'list index out of bound',
+        },
+        {
+          url: statusUrl({ list: listId + 1, index: 24 }),
+          reason: 'revocation list with given id does not exist',
+        },
+        {
+          url: statusUrl({
+            address: generateAccount().address,
+            list: listId,
+            index: 24,
+          }),
+          reason: 'wallet not in registry',
+        },
+      ]) {
+        // eslint-disable-next-line no-await-in-loop
+        const error = await revocationRegistry
+          .getRevokedStatus(url)
+          .catch((e) => e);
+
+        expect(error).toMatchObject({
+          code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+          message: `execution reverted: "${reason}"`,
+          cause: expect.objectContaining({
+            code: 'CALL_EXCEPTION',
+            reason,
+          }),
+        });
+      }
+    });
+
     it('Throw an error: invalid url params', async () => {
       const listId = 4290;
       const index = 24;

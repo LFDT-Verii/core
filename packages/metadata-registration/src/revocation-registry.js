@@ -17,6 +17,7 @@
 /* eslint-disable camelcase */
 const ethUrlParser = require('eth-url-parser');
 const { AbiCoder, isAddress, isHexString } = require('ethers');
+const { isNil } = require('lodash/fp');
 const {
   initContractClient,
   initContractWithTransactingClient,
@@ -94,6 +95,25 @@ const revocationUrlParameters = ({ parameters = {} }) => {
   assertRevocationUrlParameterValues({ address, listId, index });
   return { address, listId, index };
 };
+
+// The registry reverts for a wallet, list or index it does not have. A revert
+// returns revert data: an Error(string), a custom error or a Panic. Ethers also
+// reports a call that returned no revert data as a CALL_EXCEPTION, which a
+// misbehaving node or a wrong contract address can cause, so only a
+// CALL_EXCEPTION with revert data is a revert.
+const hasRevertData = ({ revert, data }) =>
+  !isNil(revert) || (isHexString(data) && data !== '0x');
+
+const isContractRevert = (error) =>
+  error?.code === 'CALL_EXCEPTION' && hasRevertData(error);
+
+// A revert means the URL names status data the registry does not have, so it
+// gets the invalid_revocation_url code, with the revert as its cause. Any
+// other error, such as a network failure, is rethrown unchanged.
+const getRevokedStatusCallError = (error) =>
+  isContractRevert(error)
+    ? invalidRevocationUrlError(error.shortMessage ?? error.message, error)
+    : error;
 
 // A URL that cannot be parsed, names another contract or function, or lacks a
 // parameter or has one the contract cannot take throws an error with code
@@ -221,7 +241,11 @@ const initRevocationRegistry = async (
       contractAddress,
     );
 
-    return contractClient.getRevokedStatus(address, listId, index);
+    return contractClient
+      .getRevokedStatus(address, listId, index)
+      .catch((error) => {
+        throw getRevokedStatusCallError(error);
+      });
   };
 
   const setPermissionsAddress = async (permissionsContractAddress) => {
