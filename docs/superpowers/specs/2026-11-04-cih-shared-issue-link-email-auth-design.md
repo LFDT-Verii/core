@@ -40,7 +40,7 @@ shared link. PR 2 adds the authentication handler.
 
 | Piece | Where | State |
 | --- | --- | --- |
-| Service fields `authMethods`, `authMode`, `disclosureRequest`, `verifiablePresentationAuthRules` | `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Done. `rule` is `pick` or `equal`. `path` is an array of JSONPaths, which PR 2 replaces with claims path pointers. |
+| Service fields `authMethods`, `authMode`, `disclosureRequest`, `verifiablePresentationAuthRules` | `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Done. `rule` is `pick` or `equal`. `path` is an array of JSONPaths, which PR 1 replaces with claims path pointers. |
 | Rules required for VP services | `entities/issuer-services/domain/validate-issuer-service.js:9` | Done, when `authMode === 'internal'` |
 | `authValues` required for VP depots | `entities/depots/domain/validate-depot.js:28` | Done, same condition |
 | Manifest asks for `disclosureRequest` types, `submit_presentation_uri` is `/authenticate` | `entities/exchanges/domain/build-presentation-request.js:22` | Done |
@@ -119,18 +119,21 @@ A depot's `authValues` holds exactly one value per rule, at the rule's
   `invalid_auth_values`. Empty or missing `authValues` also fail, which covers
   a service stored without rules.
 
-PR 2 tightens the rules:
+Rules are typed, and the service must say which credentials it asks for:
 
+- **Requested types are required.** An internal VP service needs
+  `disclosureRequest.types`. Otherwise `create` and `update` return 400
+  `service_disclosureRequest_required`
+  (`IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED`).
 - **Each rule has a `type`.** It's required, and must be one of the
   `disclosureRequest.types` types. A rule reads only credentials of its type,
   so an email rule never reads an email address found in another requested
   credential. A rule without a `type` fails the request schema (400
   `request_validation_failed`). A `type` that isn't requested returns 400
   `service_verifiablePresentationAuthRules_invalid`.
-- **Rule paths are claims path pointers.** See
-  [Rule paths](#rule-paths-pr-2).
+- **Rule paths are claims path pointers.** See [Rule paths](#rule-paths).
 
-### Rule paths (PR 2)
+### Rule paths
 
 A rule's `path` is a list of claims path pointers (OpenID4VP 1.0, section 7),
 tried in order. For each credential, the first pointer that finds a value
@@ -147,6 +150,11 @@ supplies it:
 
 - **Segments.** A string selects a key in an object. A non-negative integer
   selects an array index. `null` selects every element of an array.
+- **Arrays.** A pointer that selects an array doesn't use its elements unless
+  it ends with a `null` segment, as in OpenID4VP. To read every address in an
+  `emails` array, the pointer is `["credentialSubject", "emails", null]`. A
+  pointer that stops at `["credentialSubject", "emails"]` selects the array
+  itself, which isn't a usable value.
 - **No match.** A missing key or index, or a type mismatch (a key on an
   array, an index on an object), means that pointer finds nothing. Evaluation
   never throws.
@@ -208,7 +216,7 @@ the configuration it was created with.
 // entities/depots/domain/auth-rules-fingerprint.js
 const canonicalRules = flow(
   map(({ path, rule, valueIndex, type }) => ({
-    path: castArray(path),
+    path,
     rule,
     valueIndex,
     type,
@@ -230,10 +238,8 @@ const buildAuthRulesFingerprint = (service) =>
 ```
 
 - **What goes in.** The rules sorted by `valueIndex`, each reduced to `path`
-  (the array of pointers, in order), `rule`, `valueIndex` and `type` (absent
-  until PR 2 adds it), and the `disclosureRequest.types` type names, sorted.
-  The change to claims path pointers doesn't change the fingerprint function:
-  it hashes `path` as an array of pointers.
+  (the array of pointers, in order), `rule`, `valueIndex` and `type`, and the
+  `disclosureRequest.types` type names, sorted.
 - **What doesn't.** The order of the rules in the array, the order of the
   requested types, `disclosureRequest.purpose` and the rest of the service.
   The auth methods only count through `isInternalVpAuth`: a service with both
@@ -556,10 +562,12 @@ service, on `create` and `update`:
 
 - requires `disclosureRequest.types`, or returns 400
   `service_disclosureRequest_required`
-  (`IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED`);
+  (`IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED`). PR 1 adds
+  this check;
 - rejects a `presentationDefinition` with 400
   `service_presentationDefinition_not_allowed`
-  (`IssuerServicesErrors.SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`).
+  (`IssuerServicesErrors.SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`). PR 2
+  adds this one.
 
 So the manifest's presentation definition is always the one the handler
 checks.
@@ -700,7 +708,7 @@ const ruleValues = (rule, credentials) =>
     filter({ type: rule.type }),
     map('credential'),
     flatMap((credential) => firstPointerValues(rule.path, credential)),
-    flatten,
+    // A selected array isn't a scalar, so it's dropped, not spread.
     filter(isScalar),
     map(toAuthMatchValue),
     uniq,
@@ -813,21 +821,21 @@ The operator API adds these errors:
 | `depots/create` | `authValues` don't hold one present value per rule | 400 | `invalid_auth_values` | 1 |
 | `depots/create` | A depot of the service has the same tuple | 409 | `auth_values_already_used`, with `depotId` | 1 |
 | `issuer-services/create`, `update` | Rules' `valueIndex` values aren't 0 to n−1 | 400 | `service_verifiablePresentationAuthRules_invalid` | 1 |
-| `issuer-services/create`, `update` | A rule's `type` isn't one of the `disclosureRequest` types | 400 | `service_verifiablePresentationAuthRules_invalid` | 2 |
-| `issuer-services/create`, `update` | A rule has no `type`, or its `path` isn't 1 to 10 claims path pointers of 1 to 32 valid segments | 400 | `request_validation_failed` | 2 |
-| `issuer-services/create`, `update` | Internal VP service without `disclosureRequest.types` | 400 | `service_disclosureRequest_required` | 2 |
+| `issuer-services/create`, `update` | A rule's `type` isn't one of the `disclosureRequest` types | 400 | `service_verifiablePresentationAuthRules_invalid` | 1 |
+| `issuer-services/create`, `update` | A rule has no `type`, or its `path` isn't 1 to 10 claims path pointers of 1 to 32 valid segments | 400 | `request_validation_failed` | 1 |
+| `issuer-services/create`, `update` | Internal VP service without `disclosureRequest.types` | 400 | `service_disclosureRequest_required` | 1 |
 | `issuer-services/create`, `update` | Internal VP service with a `presentationDefinition` | 400 | `service_presentationDefinition_not_allowed` | 2 |
 
 New codes in the Hub:
 
-- PR 1: `DepotErrors.AUTH_VALUES_ALREADY_USED` and
+- PR 1: `DepotErrors.AUTH_VALUES_ALREADY_USED`,
   `IssuerServicesErrors.SERVICE_VP_AUTH_RULES_INVALID`
-  (`service_verifiablePresentationAuthRules_invalid`).
+  (`service_verifiablePresentationAuthRules_invalid`) and
+  `IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED`
+  (`service_disclosureRequest_required`).
 - PR 2: `ExchangeErrors.CREDENTIAL_CHECK_UNAVAILABLE`,
   `ExchangeErrors.IDENTIFICATION_USER_NOT_FOUND`
-  (`integrated_identification_user_not_found`, the agent's code),
-  `IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED`
-  (`service_disclosureRequest_required`) and
+  (`integrated_identification_user_not_found`, the agent's code) and
   `IssuerServicesErrors.SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`
   (`service_presentationDefinition_not_allowed`).
 
@@ -929,11 +937,11 @@ network.
 | File | Change |
 | --- | --- |
 | `entities/issuer-services/domain/is-internal-vp-auth.js` | New. Used by `validateDepot`, `validateIssuerService`, `createDepot`, links and `authenticate`. |
-| `entities/issuer-services/domain/validate-issuer-service.js` | Rules' `valueIndex` values must be 0 to n−1. |
-| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_VP_AUTH_RULES_INVALID`. |
+| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services: rules' `valueIndex` values must be 0 to n−1, `disclosureRequest.types` is required, and each rule's `type` must be one of them. |
+| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_VP_AUTH_RULES_INVALID`, `SERVICE_DISCLOSURE_REQUEST_REQUIRED`. |
 | `entities/issuer-services/orchestrators/update-issuer-service.js` | New. The shared update, then an info log of the depots a fingerprint change invalidated. |
 | `controllers/operator/issuer-services/issuer-services-controller.js` | `update` uses `updateIssuerService`. |
-| `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Describes `valueIndex` as the value's position in `authValues`. |
+| `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Each rule requires a `type`, and its `path` is 1 to 10 claims path pointers of 1 to 32 segments. Describes `valueIndex` as the value's position in `authValues`. |
 | `entities/depots/domain/auth-match-values.js` | New. `toAuthMatchValue`, `buildAuthMatchValues`. |
 | `entities/depots/domain/auth-rules-fingerprint.js` | New. `buildAuthRulesFingerprint`. |
 | `entities/depots/domain/validate-depot.js` | One present value per rule for internal VP services. |
@@ -953,10 +961,9 @@ network.
 | `entities/presentations/orchestrators/check-credentials.js` | New helper. `verifyPresentation` calls it. |
 | `entities/exchanges/domain/vp-auth-rules.js` | New. `ruleValues`, which reads only the rule's `type` and evaluates its claims path pointers, and `buildCandidateTuples`. |
 | `entities/exchanges/orchestrators/authenticate.js` | Dispatch and `vpAuthHandler`. Looks depots up with `buildAuthRulesFingerprint(service)`. |
-| `controllers/operator/issuer-services/schemas/new-issuer-service.schema.js` | Each rule requires a `type`, and its `path` is 1 to 10 claims path pointers of 1 to 32 segments. |
 | `entities/exchanges/domain/exchange-errors.js` | `CREDENTIAL_CHECK_UNAVAILABLE`, `IDENTIFICATION_USER_NOT_FOUND`. |
-| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_DISCLOSURE_REQUEST_REQUIRED`, `SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`. |
-| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, require `disclosureRequest.types`, reject `presentationDefinition`, and require each rule's `type` to be requested. |
+| `entities/issuer-services/domain/issuer-services-errors.js` | `SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED`. |
+| `entities/issuer-services/domain/validate-issuer-service.js` | For internal VP services, reject `presentationDefinition`. |
 | `controllers/vn-api/vn-issuing-controller.js` | Pass `jwtVp`. Remove the no-op `validateInput`. Add `PaymentRequiredResponse`. |
 
 `exchanges` already imports from `presentations` (`post-presentation.js`), so
@@ -1015,9 +1022,9 @@ holder's `did:jwk`. The VP's `iss` and `kid` use that same DID.
   service, and `null` for a `preauth`-only service or a VP service without
   internal auth.
 - It's unchanged when the rules or the requested types are listed in another
-  order, when other fields change, and for a single path given as a string.
+  order, and when other fields change.
 - It changes with swapped value indexes, a changed or reordered path, a
-  changed rule, a rule `type`, an added or removed rule, and changed
+  changed rule, a changed rule `type`, an added or removed rule, and changed
   requested types.
 
 ### `log-invalidated-depots.test.js` (PR 1)
@@ -1046,6 +1053,19 @@ holder's `did:jwk`. The VP's `iss` and `kid` use that same DID.
   out of range return 400
   `service_verifiablePresentationAuthRules_invalid`. Rules in any order are
   accepted.
+- PR 1, the rule schema, on `create` and `update`: a JSONPath string as a
+  pointer, an empty pointer, a negative or fractional index, an object
+  segment, an empty string segment, no pointers, more than 10 pointers and a
+  pointer of more than 32 segments each return 400
+  `request_validation_failed`. So does a rule without a `type`. Pointers with
+  alternatives, `null` and index segments are accepted.
+- PR 1, on `create` and `update`: an internal VP service without
+  `disclosureRequest` returns 400 `service_disclosureRequest_required`, and a
+  rule whose `type` isn't requested returns 400
+  `service_verifiablePresentationAuthRules_invalid`. Every internal VP service
+  in these tests has a `disclosureRequest` and typed rules with claims path
+  pointers. A VP service with a `presentationDefinition` and a
+  `disclosureRequest` is still accepted until PR 2.
 - PR 1, auth configuration changes, all through `update`:
   - The review's race case: a depot created under the old rules (inserted
     directly) still matches before the update. After the value indexes are
@@ -1060,16 +1080,10 @@ holder's `did:jwk`. The VP's `iss` and `kid` use that same DID.
     same tuple still gets the 409.
   - A rule change logs `invalidatedDepotCount` with the service's depot count.
     An unchanged configuration logs no invalidation.
-- PR 2: `create` and `update` of an internal VP service without
-  `disclosureRequest` return 400 `service_disclosureRequest_required`, and
-  with a `presentationDefinition` return 400
-  `service_presentationDefinition_not_allowed`. A rule without a `type`
-  returns 400 `request_validation_failed`. A rule whose `type` isn't
-  requested returns 400
-  `service_verifiablePresentationAuthRules_invalid`. Tests of internal VP
-  services that check something later (the DID document's service,
-  uniqueness, rule indexes, auth configuration changes) now include a
-  `disclosureRequest`, rule types and no `presentationDefinition`.
+- PR 2: `create` and `update` of an internal VP service with a
+  `presentationDefinition` return 400
+  `service_presentationDefinition_not_allowed`, and the test that creates one
+  is removed.
 
 ### `vp-auth-rules.test.js` (PR 2)
 
@@ -1080,6 +1094,8 @@ Unit tests for building candidate tuples:
 - Claims path pointers: a key, an index and `null` over an array select as
   specified. A missing key or index, or a type mismatch, finds nothing and
   doesn't throw.
+- A pointer that stops at an array yields no values. One that ends with
+  `null` yields the array's elements.
 - For each credential, the first pointer that finds a value supplies the
   values.
 - `pick` keeps every value. `equal` yields its value when there's exactly
