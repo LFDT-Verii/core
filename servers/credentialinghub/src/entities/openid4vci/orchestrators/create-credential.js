@@ -15,14 +15,17 @@
  *
  */
 const { Oauth2ServerErrorResponseError } = require('@openid4vc/oauth2');
+const { startsWith } = require('lodash/fp');
 const { jwtDecode } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
-const { Oidc4vciErrors, Openid4vciTransactionStatuses } = require('../domain');
 const {
-  isClaimableCredential,
-  signVeriiCredentialsFacade,
-} = require('../../credentials');
-const { resolveCredentialSigningAlgorithm } = require('../../tenants');
+  DEFERRED_CREDENTIAL_IDENTIFIER_PREFIX,
+  Oidc4vciErrors,
+  Openid4vciTransactionStatuses,
+} = require('../domain');
+const { isClaimableCredential } = require('../../credentials');
+const { createDeferredTransaction } = require('./create-deferred-credential');
+const { signCredential } = require('./sign-credential');
 
 const createCredential = async (credentialRequestParameters, context) => {
   const { repos } = context;
@@ -30,6 +33,22 @@ const createCredential = async (credentialRequestParameters, context) => {
   const credentialRequest = await openid4VciIssuer.getCredentialRequest(
     credentialRequestParameters,
   );
+  const { payload } = jwtDecode(credentialRequest.proofs.jwt[0]);
+  const credentialSubjectId = payload.iss;
+
+  if (
+    startsWith(
+      DEFERRED_CREDENTIAL_IDENTIFIER_PREFIX,
+      credentialRequest.credentialIdentifier,
+    )
+  ) {
+    return createDeferredTransaction(
+      credentialRequest.credentialIdentifier,
+      credentialSubjectId,
+      openid4VciIssuer,
+      context,
+    );
+  }
 
   // Only the depot that the access token was issued for.
   const credential = await repos.credentials.findByIdInDepot(
@@ -59,18 +78,9 @@ const createCredential = async (credentialRequestParameters, context) => {
   };
 
   try {
-    const { payload } = jwtDecode(credentialRequest.proofs.jwt[0]);
-    const credentialSubjectId = payload.iss;
-    const credentialSigningAlgorithm = resolveCredentialSigningAlgorithm({
-      credentialTypeMetadata: credential.typeMetadata,
-      tenant: context.tenant,
-    });
-
-    const { vcJwt, credentialMetadata } = await signVeriiCredentialsFacade(
-      [credential.content],
+    const { vcJwt, credentialMetadata } = await signCredential(
+      credential,
       credentialSubjectId,
-      [credential.typeMetadata],
-      [credentialSigningAlgorithm],
       service,
       context,
     );

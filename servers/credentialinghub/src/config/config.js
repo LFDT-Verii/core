@@ -115,6 +115,10 @@ const buildConfig = ({ servesHttp = true } = {}) => {
       .get('OPENID4VCI_NONCE_EXPIRES_IN')
       .default('5m')
       .asMs(),
+    openid4vciDeferredIntervalSeconds: env
+      .get('OPENID4VCI_DEFERRED_INTERVAL_SECONDS')
+      .default('30')
+      .asIntPositive(),
     // blockchain setup
     rpcUrl: env
       .get('RPC_NODE_URL')

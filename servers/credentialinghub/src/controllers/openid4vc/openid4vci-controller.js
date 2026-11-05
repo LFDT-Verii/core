@@ -18,12 +18,29 @@
 const { Oauth2ErrorCodes } = require('@openid4vc/oauth2');
 const {
   createCredential,
+  createDeferredCredential,
   handleNotification,
   Oidc4vciErrors,
 } = require('../../entities/openid4vci');
 const { oauthErrorResponseSchema } = require('../../schemas');
 
+// A response with a transaction_id tells the wallet that issuance is pending.
+const replyCredentialResponse = (reply, credentialResponse) => {
+  if (credentialResponse.transaction_id != null) {
+    reply.status(202);
+  }
+  return credentialResponse;
+};
+
 const openid4vciController = async (fastify) => {
+  const credentialErrorHandler = (e, request, reply) => {
+    const error = fastify.openid4vcErrorHandler(e, request, reply);
+    if (error.error === Oauth2ErrorCodes.InvalidRequest) {
+      // eslint-disable-next-line better-mutation/no-mutation
+      error.error = Oauth2ErrorCodes.InvalidCredentialRequest;
+    }
+    return error;
+  };
   fastify
     .autoSchemaPreset({ tags: ['OpenID4VCI'] })
     .post(
@@ -52,14 +69,7 @@ const openid4vciController = async (fastify) => {
         config: {
           documentationSecurity: [{ openid4vciAccessToken: [] }],
         },
-        errorHandler: (e, request, reply) => {
-          const error = fastify.openid4vcErrorHandler(e, request, reply);
-          if (error.error === Oauth2ErrorCodes.InvalidRequest) {
-            // eslint-disable-next-line better-mutation/no-mutation
-            error.error = Oauth2ErrorCodes.InvalidCredentialRequest;
-          }
-          return error;
-        },
+        errorHandler: credentialErrorHandler,
         preHandler: (req, reply) => fastify.openid4vcBearerAuth(req, reply),
         schema: fastify.autoSchema({
           summary: 'Create an OpenID4VCI credential',
@@ -77,7 +87,38 @@ const openid4vciController = async (fastify) => {
           },
         }),
       },
-      async (req) => createCredential(req.body, req),
+      async (req, reply) =>
+        replyCredentialResponse(reply, await createCredential(req.body, req)),
+    )
+    .post(
+      '/r/:tenantId/openid4vc/deferred_credential',
+      {
+        config: {
+          documentationSecurity: [{ openid4vciAccessToken: [] }],
+        },
+        errorHandler: credentialErrorHandler,
+        preHandler: (req, reply) => fastify.openid4vcBearerAuth(req, reply),
+        schema: fastify.autoSchema({
+          summary: 'Create an OpenID4VCI deferred credential',
+          operationId: 'createOpenid4vciDeferredCredential',
+          params: {
+            type: 'object',
+            properties: {
+              tenantId: { type: 'string' },
+            },
+          },
+          response: {
+            400: oauthErrorResponseSchema,
+            401: oauthErrorResponseSchema,
+            500: oauthErrorResponseSchema,
+          },
+        }),
+      },
+      async (req, reply) =>
+        replyCredentialResponse(
+          reply,
+          await createDeferredCredential(req.body, req),
+        ),
     )
     .post(
       '/r/:tenantId/openid4vc/notification',

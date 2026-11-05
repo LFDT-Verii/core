@@ -87,6 +87,7 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
     await mongoDb().collection('exchanges').deleteMany({});
+    await mongoDb().collection('openid4vciTransactions').deleteMany({});
     ({ tenant } = await constructTenant(persistTenant, persistKey));
     issuerService = await persistIssuerService({
       tenant,
@@ -174,6 +175,24 @@ describe('Resolve Deferred Credentials Test Suite', () => {
     createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
     updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
   });
+
+  const insertTransaction = async (credentialType, overrides = {}) => {
+    const transaction = {
+      _id: new ObjectId(),
+      tenantId: new ObjectId(tenant._id),
+      depotId: new ObjectId(depot._id),
+      serviceId: new ObjectId(issuerService._id),
+      transactionIdHash: nanoid(),
+      credentialType,
+      credentialSubjectId: 'did:jwk:foo',
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    };
+    await mongoDb().collection('openid4vciTransactions').insertOne(transaction);
+    return transaction;
+  };
 
   const postedMessages = () =>
     map(
@@ -519,6 +538,33 @@ describe('Resolve Deferred Credentials Test Suite', () => {
       status: 'skipped_no_waiting_exchange',
     });
     expect(mockHttpClient.post.mock.callCount()).toEqual(0);
+    await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
+      map('state', exchange.events),
+    );
+  });
+
+  it("should leave the depot's OpenID4VCI transactions and waiting exchange unchanged", async () => {
+    const exchange = await persistWaitingExchange();
+    const pendingTransaction = await insertTransaction('EmailV1.0');
+    const signedTransaction = await insertTransaction('PhoneV1.0', {
+      status: 'signed',
+      credentialId: new ObjectId(),
+      notificationId: nanoid(12),
+    });
+
+    const response = await resolveDeferredCredentials();
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json.notification).toEqual({
+      status: 'sent',
+      exchangeId: exchange._id,
+    });
+    await expect(
+      mongoDb()
+        .collection('openid4vciTransactions')
+        .find({}, { sort: { _id: 1 } })
+        .toArray(),
+    ).resolves.toEqual([pendingTransaction, signedTransaction]);
     await expect(findDbExchangeStates(exchange._id)).resolves.toEqual(
       map('state', exchange.events),
     );

@@ -23,6 +23,8 @@ const EXPECTED_OPENID4VCI_SUMMARIES = {
     'Get OpenID4VCI credential issuer metadata',
   'POST /r/{tenantId}/oauth/token': 'Create an OpenID4VCI access token',
   'POST /r/{tenantId}/openid4vc/credential': 'Create an OpenID4VCI credential',
+  'POST /r/{tenantId}/openid4vc/deferred_credential':
+    'Create an OpenID4VCI deferred credential',
   'POST /r/{tenantId}/openid4vc/nonce': 'Create an OpenID4VCI nonce',
   'POST /r/{tenantId}/openid4vc/notification':
     'Submit an OpenID4VCI notification',
@@ -166,6 +168,11 @@ const EXPECTED_OPERATION_METADATA = {
     'createOpenid4vciCredential',
     OPENID4VCI_SECURITY,
   ],
+  'POST /r/{tenantId}/openid4vc/deferred_credential': [
+    'OpenID4VCI',
+    'createOpenid4vciDeferredCredential',
+    OPENID4VCI_SECURITY,
+  ],
   'POST /r/{tenantId}/openid4vc/nonce': ['OpenID4VCI', 'createOpenid4vciNonce'],
   'POST /r/{tenantId}/openid4vc/notification': [
     'OpenID4VCI',
@@ -268,6 +275,7 @@ const EXPECTED_DOCUMENTS = {
       'GET /.well-known/openid-credential-issuer/r/{tenantId}',
       'POST /r/{tenantId}/oauth/token',
       'POST /r/{tenantId}/openid4vc/credential',
+      'POST /r/{tenantId}/openid4vc/deferred_credential',
       'POST /r/{tenantId}/openid4vc/nonce',
       'POST /r/{tenantId}/openid4vc/notification',
       'POST /r/{tenantId}/openid4vp/authorization-request/{requestId}',

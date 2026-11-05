@@ -16,11 +16,12 @@
  */
 
 // The Mongo form of `isClaimableCredential` (domain/claimable-credential.js):
-// not signed (`did`), accepted or rejected.
+// not signed (`did`), accepted, rejected or claimed by a deferred transaction.
 const claimableCredentialFilter = {
   did: null,
   acceptedAt: { $exists: false },
   rejectedAt: { $exists: false },
+  deferredTransactionId: { $exists: false },
 };
 
 module.exports = { claimableCredentialFilter };

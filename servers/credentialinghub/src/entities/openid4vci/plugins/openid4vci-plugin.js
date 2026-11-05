@@ -302,6 +302,20 @@ const buildIssuer = async (context) => {
     return credentialRequest;
   };
 
+  // Response encryption isn't supported, so a request for it is rejected
+  const getDeferredCredentialRequest = (parameters) =>
+    issuer.parseDeferredCredentialRequest({
+      issuerMetadata: {
+        credentialIssuer: { credential_issuer: openIdIssuer },
+      },
+      deferredCredentialRequest: parameters,
+    }).deferredCredentialRequest;
+  const createDeferredCredentialResponse = async (options) => {
+    const { deferredCredentialResponse } =
+      await issuer.createDeferredCredentialResponse(options);
+    return deferredCredentialResponse;
+  };
+
   const createNonce = async () =>
     issuer.createNonceResponse({
       cNonce: await generateCNonce(openIdIssuer, context),
@@ -382,6 +396,8 @@ const buildIssuer = async (context) => {
     getAuthorizationServerMetadata,
     getCredentialIssuerMetadata,
     getCredentialRequest,
+    getDeferredCredentialRequest,
+    createDeferredCredentialResponse,
   };
 };
 

@@ -14,7 +14,10 @@
  * limitations under the License.
  *
  */
+// A deferred transaction starts pending, then is signed or denied.
 const Openid4vciTransactionStatuses = {
+  PENDING: 'pending',
+  DENIED: 'denied',
   SIGNED: 'signed',
   ACCEPTED: 'accepted',
   DELETED: 'deleted',

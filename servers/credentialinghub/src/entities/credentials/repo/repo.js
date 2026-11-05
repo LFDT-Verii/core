@@ -46,6 +46,7 @@ module.exports = (app, options, next = () => {}) => {
         acceptedAt: 1,
         jwtVc: 1,
         rejectedAt: 1,
+        deferredTransactionId: 1,
         revokedAt: 1,
         notifiedOfRevocationAt: 1,
         failedAt: 1,

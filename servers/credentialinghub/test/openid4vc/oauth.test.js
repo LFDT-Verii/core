@@ -23,6 +23,7 @@ const { mockHttpClientModule } = require('../helpers/mock-http-client');
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
+const { ObjectId } = require('mongodb');
 const { jwtVerify } = require('@verii/jwt');
 const { initKeyFactory } = require('../../src/entities/keys');
 const { initTenantFactory } = require('../../src/entities/tenants');
@@ -342,7 +343,7 @@ describe('OAuth test suite', () => {
         });
       });
 
-      it('should leave signed, accepted and rejected credentials out of authorization_details', async () => {
+      it('should leave signed, accepted, rejected and claimed credentials out of authorization_details', async () => {
         const issuerService = await persistIssuerService({ tenant });
         const depot = await persistDepot({
           tenant,
@@ -353,6 +354,11 @@ describe('OAuth test suite', () => {
         await persistCredential({ tenant, depot, did: 'did:velocity:foo' });
         await persistCredential({ tenant, depot, acceptedAt: new Date() });
         await persistCredential({ tenant, depot, rejectedAt: new Date() });
+        await persistCredential({
+          tenant,
+          depot,
+          deferredTransactionId: new ObjectId(),
+        });
 
         const response = await fastify.inject({
           method: 'POST',
@@ -372,6 +378,120 @@ describe('OAuth test suite', () => {
             type: 'openid_credential',
           },
         ]);
+      });
+
+      describe('depots with deferred credentials', () => {
+        const requestToken = (query = '') =>
+          fastify.inject({
+            method: 'POST',
+            url: `/r/${tenant._id}/oauth/token`,
+            body: `grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code=foo${query}`,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          });
+
+        it('should list the claimable credentials and a deferred identifier for each expected type with nothing to claim', async () => {
+          const issuerService = await persistIssuerService({ tenant });
+          const depot = await persistDepot({
+            tenant,
+            service: issuerService,
+            preauthCode: 'foo',
+            deferredCredentials: true,
+            expectedCredentialTypes: ['Employment', 'EmailV1.0', 'PhoneV1.0'],
+          });
+          const credential = await persistCredential({ tenant, depot });
+          await persistCredential({
+            tenant,
+            depot,
+            content: { type: ['EmailV1.0'], credentialSubject: {} },
+            typeMetadata: { credentialType: 'EmailV1.0' },
+            acceptedAt: new Date(),
+          });
+
+          const response = await requestToken();
+
+          expect(response.statusCode).toEqual(200);
+          expect(response.json().authorization_details).toEqual([
+            {
+              credential_configuration_id:
+                'foundation.velocitynetwork.Employment',
+              credential_identifiers: [`${credential._id}`],
+              type: 'openid_credential',
+            },
+            {
+              credential_configuration_id:
+                'foundation.velocitynetwork.EmailV1.0',
+              credential_identifiers: ['deferred:EmailV1.0'],
+              type: 'openid_credential',
+            },
+            {
+              credential_configuration_id:
+                'foundation.velocitynetwork.PhoneV1.0',
+              credential_identifiers: ['deferred:PhoneV1.0'],
+              type: 'openid_credential',
+            },
+          ]);
+        });
+
+        it('should filter the per-credential and deferred identifiers by the requested authorization_details', async () => {
+          const issuerService = await persistIssuerService({ tenant });
+          const depot = await persistDepot({
+            tenant,
+            service: issuerService,
+            preauthCode: 'foo',
+            deferredCredentials: true,
+            expectedCredentialTypes: ['Employment', 'EmailV1.0', 'PhoneV1.0'],
+          });
+          const credential = await persistCredential({ tenant, depot });
+          const authorizationDetailsQuery = `&authorization_details=${encodeURIComponent(
+            JSON.stringify([
+              {
+                type: 'openid_credential',
+                credential_configuration_id:
+                  'foundation.velocitynetwork.Employment',
+              },
+              {
+                type: 'openid_credential',
+                credential_configuration_id:
+                  'foundation.velocitynetwork.PhoneV1.0',
+              },
+            ]),
+          )}`;
+
+          const response = await requestToken(authorizationDetailsQuery);
+
+          expect(response.statusCode).toEqual(200);
+          expect(response.json().authorization_details).toEqual([
+            {
+              credential_configuration_id:
+                'foundation.velocitynetwork.Employment',
+              credential_identifiers: [`${credential._id}`],
+              type: 'openid_credential',
+            },
+            {
+              credential_configuration_id:
+                'foundation.velocitynetwork.PhoneV1.0',
+              credential_identifiers: ['deferred:PhoneV1.0'],
+              type: 'openid_credential',
+            },
+          ]);
+        });
+
+        it('should list no deferred identifiers for a depot without deferred credentials', async () => {
+          const issuerService = await persistIssuerService({ tenant });
+          await persistDepot({
+            tenant,
+            service: issuerService,
+            preauthCode: 'foo',
+            expectedCredentialTypes: ['EmailV1.0'],
+          });
+
+          const response = await requestToken();
+
+          expect(response.statusCode).toEqual(200);
+          expect(response.json().authorization_details).toEqual([]);
+        });
       });
     });
   });

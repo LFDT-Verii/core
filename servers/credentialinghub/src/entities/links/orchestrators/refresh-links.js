@@ -49,18 +49,16 @@ const buildDepotIssueLinks = async (service, depot, context) => {
   const { config, repos, tenant } = context;
   const refreshedDepot = await repos.depots.refreshPreauthCode(depot._id);
 
-  // Credential types are extracted from the depot
-  const credentialTypes = await loadCredentialTypeHints(
-    refreshedDepot,
-    context,
-  );
+  // Credential types are the depot's expected types, or else are extracted from its credentials
+  const credentialTypes =
+    refreshedDepot.expectedCredentialTypes ??
+    (await loadCredentialTypeHints(refreshedDepot, context));
 
-  // A depot's expected types take the place of its credentials' types
   const vnProtocolLinkUrl = buildIssuingDeepLink(
     tenant,
     service,
     refreshedDepot,
-    refreshedDepot?.expectedCredentialTypes ?? credentialTypes,
+    credentialTypes,
     config.deepLinkProtocol,
   );
 
