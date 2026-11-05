@@ -529,10 +529,14 @@ The holder signed the `definition_id`, so a captured VP can't be replayed
 against another exchange.
 
 Descriptor paths in the presentation submission must be
-`$.verifiableCredential[n]`, or, for a nested descriptor, an outer `path` of
-`$` or `$[0]` with a `path_nested` whose `path` is
-`$.verifiableCredential[n]`. They're read by index. Anything else returns 400
-`presentation_jsonpath_unsupported`.
+`$.verifiableCredential[<n>]`, or, for a nested descriptor, an outer `path`
+of `$` or `$[0]` with a `path_nested` whose `path` is
+`$.verifiableCredential[<n>]`. `<n>` is an index from 0 to 999, written
+without leading zeros, and a nested descriptor can't contain another
+`path_nested`. They're read by index. Anything else returns 400
+`presentation_jsonpath_unsupported`, and an index with no credential returns
+400 `presentation_jsonpath_empty`. The Hub's README lists the accepted forms
+under "Presentation Submission Descriptor Paths".
 
 **3. Pick the credentials.** Let `requestedTypes` be the
 `disclosureRequest.types` types.
@@ -1151,8 +1155,8 @@ Added by this design:
   `resolveDidDocument` receives only the email credential.
 - The email credential is found when it isn't the first credential in the VP.
 - When the first pointer finds nothing, the rule uses the second.
-- A descriptor path other than `$.verifiableCredential[n]` (or the nested `$`
-  or `$[0]` form) returns 400 `presentation_jsonpath_unsupported`.
+- A descriptor path other than `$.verifiableCredential[<n>]` (or the nested
+  `$` or `$[0]` form) returns 400 `presentation_jsonpath_unsupported`.
 - `resolveDidDocument` throwing "No available tokens" returns 402.
   `resolveDidDocument` throwing anything else returns 502
   `credential_check_unavailable` and records `UNEXPECTED_ERROR`. So does a
