@@ -16,6 +16,7 @@
 
 /* eslint-disable camelcase */
 const ethUrlParser = require('eth-url-parser');
+const { AbiCoder, isAddress, isHexString } = require('ethers');
 const {
   initContractClient,
   initContractWithTransactingClient,
@@ -23,6 +24,11 @@ const {
 
 const contractAbi = require('./contracts/revocation-registry.json');
 const { RevocationRegistryErrorCodes } = require('./constants');
+
+// address, uint256 listId, uint32 index
+const getRevokedStatusInputTypes = contractAbi.abi
+  .find(({ name }) => name === 'getRevokedStatus')
+  .inputs.map(({ type }) => type);
 
 const invalidRevocationUrlError = (message, cause) => {
   const error = new Error(message, cause == null ? undefined : { cause });
@@ -53,6 +59,31 @@ const assertRevocationUrlTarget = (
   }
 };
 
+// The contract call only treats a 0x-prefixed 20-byte hex string as an
+// address, and looks anything else up as an ENS name over RPC.
+const isWalletAddress = (address) =>
+  isHexString(address, 20) && isAddress(address);
+
+// Encoding with the contract's own input types accepts exactly the listId and
+// index values the contract call accepts: non-negative integers that fit
+// uint256 and uint32, in the forms ethers reads, such as decimal.
+const isEncodable = (values) => {
+  try {
+    AbiCoder.defaultAbiCoder().encode(getRevokedStatusInputTypes, values);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const assertRevocationUrlParameterValues = ({ address, listId, index }) => {
+  if (!isWalletAddress(address) || !isEncodable([address, listId, index])) {
+    throw invalidRevocationUrlError(
+      'Wrong url, please check the values of the params: address, listId, index',
+    );
+  }
+};
+
 const revocationUrlParameters = ({ parameters = {} }) => {
   const { address, listId, index } = parameters;
   if (address == null || listId == null || index == null) {
@@ -60,12 +91,14 @@ const revocationUrlParameters = ({ parameters = {} }) => {
       'Wrong url, please check the params: address, listId, index',
     );
   }
+  assertRevocationUrlParameterValues({ address, listId, index });
   return { address, listId, index };
 };
 
-// A URL that cannot be parsed, names another contract or function, or lacks
-// a parameter throws an error with code invalid_revocation_url before any
-// contract call, so callers can tell invalid status data from a failed call.
+// A URL that cannot be parsed, names another contract or function, or lacks a
+// parameter or has one the contract cannot take throws an error with code
+// invalid_revocation_url before any contract call, so callers can tell invalid
+// status data from a failed call.
 const parseGetRevokedStatusUrl = (url, contractAddress) => {
   const parsedUrl = parseRevocationUrl(url);
   assertRevocationUrlTarget(parsedUrl, contractAddress);

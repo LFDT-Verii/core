@@ -1890,6 +1890,9 @@ importers:
       eth-url-parser:
         specifier: ^1.0.4
         version: 1.0.4
+      ethers:
+        specifier: ^6.17.0
+        version: 6.17.0
       lodash:
         specifier: ^4.18.1
         version: 4.18.1

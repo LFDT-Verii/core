@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-const { after, afterEach, before, describe, it } = require('node:test');
+const { after, afterEach, before, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const { last } = require('lodash/fp');
+const { getAddress } = require('ethers');
 const { generateAccount, toNumber } = require('@verii/blockchain-functions');
 const {
   mongoFactoryWrapper,
@@ -413,6 +414,15 @@ describe('getRevokedStatus url validation', () => {
   const contractAddress = `0x${'a'.repeat(40)}`;
   const holderAddress = `0x${'b'.repeat(40)}`;
   const query = `?address=${holderAddress}&listId=1&index=2`;
+  const statusUrl = (params) =>
+    `ethereum:${contractAddress}/getRevokedStatus?${new URLSearchParams({
+      address: holderAddress,
+      listId: '1',
+      index: '2',
+      ...params,
+    })}`;
+  const valuesMessage =
+    'Wrong url, please check the values of the params: address, listId, index';
   const context = {
     log: { info: () => {}, warn: () => {}, error: () => {} },
   };
@@ -465,6 +475,51 @@ describe('getRevokedStatus url validation', () => {
       url: `ethereum:${contractAddress}/getRevokedStatus?address=${holderAddress}&listId=1`,
       message: 'Wrong url, please check the params: address, listId, index',
     },
+    {
+      title: 'has a listId that is not a number',
+      url: statusUrl({ listId: 'not-a-number' }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an empty listId',
+      url: statusUrl({ listId: '' }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has a negative index',
+      url: statusUrl({ index: '-1' }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an index of 2^256',
+      url: statusUrl({ index: String(2n ** 256n) }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an index that does not fit uint32',
+      url: statusUrl({ index: String(2n ** 32n) }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has a listId that does not fit uint256',
+      url: statusUrl({ listId: String(2n ** 256n) }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an address with a bad checksum',
+      url: statusUrl({ address: `0x${'aB'.repeat(20)}` }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an address that is too short',
+      url: statusUrl({ address: '0x1234' }),
+      message: valuesMessage,
+    },
+    {
+      title: 'has an ICAP address',
+      url: statusUrl({ address: 'XE7338O073KYGTWWZN0F2WZ0R8PX5ZPPZS' }),
+      message: valuesMessage,
+    },
   ].forEach(({ title, url, message }) => {
     it(`should throw an invalid_revocation_url error when the url ${title}`, () => {
       expect(() => revocationRegistry.getRevokedStatus(url)).toThrow(
@@ -476,16 +531,43 @@ describe('getRevokedStatus url validation', () => {
     });
   });
 
-  it('should not set the code when a valid url reaches the contract call', async () => {
-    const result = Promise.resolve().then(() =>
-      revocationRegistry.getRevokedStatus(
-        `ethereum:${contractAddress}/getRevokedStatus${query}`,
-      ),
-    );
+  [
+    { title: 'decimal values', params: {} },
+    {
+      title: 'a checksummed address',
+      params: { address: getAddress(`0x${'1a'.repeat(20)}`) },
+    },
+    { title: 'a hex listId', params: { listId: '0x0c' } },
+    { title: 'leading zeros', params: { listId: '007', index: '0002' } },
+    {
+      title: 'the largest uint32 index',
+      params: { index: String(2n ** 32n - 1n) },
+    },
+    {
+      title: 'the largest uint256 listId',
+      params: { listId: String(2n ** 256n - 1n) },
+    },
+  ].forEach(({ title, params }) => {
+    it(`should make the contract call for a url with ${title}, and not set the code when it fails`, async () => {
+      const rpc = {
+        call: mock.fn(async () => {
+          throw new Error('connect ECONNREFUSED 127.0.0.1:8545');
+        }),
+      };
+      const registryWithRpc = await initRevocationRegistry(
+        { contractAddress, rpcProvider: rpc },
+        context,
+      );
 
-    await expect(result).rejects.toThrow();
-    await expect(result).rejects.not.toMatchObject({
-      code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+      const result = Promise.resolve().then(() =>
+        registryWithRpc.getRevokedStatus(statusUrl(params)),
+      );
+
+      await expect(result).rejects.toThrow('ECONNREFUSED');
+      await expect(result).rejects.not.toMatchObject({
+        code: RevocationRegistryErrorCodes.INVALID_REVOCATION_URL,
+      });
+      expect(rpc.call.mock.callCount()).toEqual(1);
     });
   });
 });
