@@ -38,14 +38,29 @@ const validateVpAuthRules = (rules) => {
 };
 
 // The VP handler checks and matches only credentials of the disclosureRequest
-// types, so internal VP services must request some.
-const validateVpDisclosure = ({ disclosureRequest }) => {
+// types, so internal VP services must request some. The manifest would ask for
+// a presentationDefinition in their place, and its constraints aren't
+// enforced, so internal VP services can't have one.
+const validateVpDisclosure = ({
+  disclosureRequest,
+  presentationDefinition,
+}) => {
   if (isEmpty(disclosureRequest?.types)) {
     throw newError(
       400,
       IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED,
       {
         errorCode: IssuerServicesErrors.SERVICE_DISCLOSURE_REQUEST_REQUIRED,
+      },
+    );
+  }
+  if (presentationDefinition != null) {
+    throw newError(
+      400,
+      IssuerServicesErrors.SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED,
+      {
+        errorCode:
+          IssuerServicesErrors.SERVICE_PRESENTATION_DEFINITION_NOT_ALLOWED,
       },
     );
   }

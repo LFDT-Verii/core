@@ -70,7 +70,7 @@ const {
 } = require('lodash/fp');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { mongoify } = require('@verii/tests-helpers');
-const { jwtDecode, jwtSign } = require('@verii/jwt');
+const { generateDocJwt, jwtDecode, jwtSign } = require('@verii/jwt');
 const { nanoid } = require('nanoid');
 const { generateKeyPair } = require('@verii/crypto');
 const { getDidUriFromJwk } = require('@verii/did-doc');
@@ -1839,6 +1839,115 @@ describe('vn-api > issue credentials', () => {
         ExchangeStates.CLAIMING_IN_PROGRESS,
         ExchangeStates.COMPLETE,
       ]);
+    });
+  });
+
+  describe('re-authentication after deferred credentials are resolved', () => {
+    it('should let the wallet authenticate the exchange again with a new VP and claim the credentials', async () => {
+      const preauthCode = nanoid();
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        preauthCode,
+        deferredCredentials: true,
+        expectedCredentialTypes: ['EmailV1.0'],
+      });
+      const vnApiExchange = await persistExchange({
+        tenant,
+        service: preauthIssuerService,
+        protocolMetadata: { protocol: ExchangeProtocols.VN_API },
+        messagingSettings: {
+          webhookUrl: 'https://wallet.example.com/push',
+          authToken: 'push-token',
+        },
+      });
+      // Each call is a new VP, with a new jti, as the wallet's SDK submits
+      const authenticate = async () =>
+        fastify.injectJson({
+          method: 'POST',
+          url: `/vn-api/r/${tenant.did}/authenticate`,
+          payload: {
+            exchange_id: vnApiExchange._id,
+            jwt_vp: await generateDocJwt(
+              {
+                vp: {
+                  presentation_submission: {
+                    id: nanoid(),
+                    definition_id: nanoid(),
+                  },
+                  vendorOriginContext: `depot:${depot._id}:${preauthCode}`,
+                },
+              },
+              holderKeyPair.privateKey,
+              { issuer: holderDid, jti: nanoid(), kid: `${holderDid}#0` },
+            ),
+          },
+        });
+      const requestOffers = (token) =>
+        fastify.injectJson({
+          method: 'POST',
+          url: `/vn-api/r/${tenant.did}/credential-offers`,
+          headers: { authorization: `Bearer ${token}` },
+          payload: { offerHashes: [] },
+        });
+
+      const firstAuthentication = await authenticate();
+      expect(firstAuthentication.statusCode).toEqual(200);
+      const waitingResponse = await requestOffers(
+        firstAuthentication.json.token,
+      );
+      expect(waitingResponse.statusCode).toEqual(202);
+      expect(waitingResponse.json).toEqual({ offers: [] });
+
+      const credential = await persistCredential({
+        tenant,
+        depot,
+        typeMetadata: credentialTypeMetadata['EmailV1.0'],
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'adam.smith@example.com' },
+        },
+      });
+      const resolveResponse = await fastify.injectJson({
+        method: 'POST',
+        url: '/operator/depots/resolve-deferred-credentials',
+        payload: { tenantId: tenant._id, depotId: depot._id },
+      });
+      expect(resolveResponse.statusCode).toEqual(200);
+      expect(resolveResponse.json.notification).toEqual(
+        expect.objectContaining({ exchangeId: `${vnApiExchange._id}` }),
+      );
+      expect(
+        mockHttpClient.post.mock.calls[0].arguments[1].data.notificationType,
+      ).toEqual('NewOffersReady');
+
+      // The holder app answers NewOffersReady with a new identification VP on the same exchange
+      const secondAuthentication = await authenticate();
+      expect(secondAuthentication.statusCode).toEqual(200);
+      const offersResponse = await requestOffers(
+        secondAuthentication.json.token,
+      );
+      expect(offersResponse.statusCode).toEqual(200);
+      expect(map('id', offersResponse.json.offers)).toEqual([credential._id]);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${secondAuthentication.json.token}`,
+        },
+        payload: {
+          approvedOfferIds: [credential._id],
+          proof: await buildProof(
+            holderDid,
+            holderKeyPair,
+            offersResponse.json.challenge,
+          ),
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toHaveLength(1);
+      expect(jwtDecode(response.json[0]).payload.sub).toEqual(holderDid);
     });
   });
 

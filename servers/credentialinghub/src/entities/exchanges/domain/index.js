@@ -30,4 +30,5 @@ module.exports = {
   ...require('./validate-referenced-service'),
   ...require('./verify-issuing-challenge'),
   ...require('./verify-proof-of-key-possession'),
+  ...require('./vp-auth-rules'),
 };

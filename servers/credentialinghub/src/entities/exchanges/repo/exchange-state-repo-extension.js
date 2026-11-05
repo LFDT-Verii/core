@@ -72,18 +72,21 @@ const exchangeStateRepoExtension = (parent) => ({
 
     return result.value;
   },
-  // Adds the state only if the exchange matches the filter. Returns null otherwise.
+  // Adds the state only if the exchange matches the filter. Returns null otherwise. $addToSet, if given, is applied in
+  // the same update.
   addStateUsingFilter: (
     filter,
     state,
     $set,
     projection = parent.defaultColumnsSelection,
+    $addToSet = undefined,
   ) =>
     parent.collection().findOneAndUpdate(
       parent.prepFilter(filter),
       {
         $push: { events: { state, timestamp: new Date() } },
         $set: parent.prepModification($set),
+        ...($addToSet == null ? {} : { $addToSet }),
       },
       { returnDocument: 'after', projection },
     ),

@@ -15,6 +15,7 @@
  *
  */
 module.exports = {
+  ...require('./check-credentials'),
   ...require('./verify-presentation'),
   ...require('./verify-stored-presentation'),
 };
