@@ -14,8 +14,6 @@
  * limitations under the License.
  *
  */
-const { map } = require('lodash/fp');
-const { ObjectId } = require('mongodb');
 const { ExchangeProtocols, ExchangeStates } = require('../domain');
 
 // A VN API exchange waits on its depot from OFFERS_WAITING until it starts claiming or is COMPLETE.
@@ -30,23 +28,6 @@ const waitingFilter = {
 const waitingVnApiExchangesExtension = (parent) => ({
   findWaitingVnApiExchange: (depotId, projection) =>
     parent.findLatestVnApiExchangeByDepotId(depotId, projection, waitingFilter),
-  // The latest waiting exchange of each depot, as { depotId, exchangeId }. Grouping returns one row per depot, so no
-  // result limit can cut off a depot's latest exchange.
-  findLatestWaitingVnApiExchangeIds: (depotIds) =>
-    parent
-      .collection()
-      .aggregate([
-        {
-          $match: parent.prepFilter({
-            ...waitingFilter,
-            depotId: { $in: map((depotId) => new ObjectId(depotId), depotIds) },
-          }),
-        },
-        { $sort: { createdAt: -1, _id: -1 } },
-        { $group: { _id: '$depotId', exchangeId: { $first: '$_id' } } },
-        { $project: { _id: 0, depotId: '$_id', exchangeId: 1 } },
-      ])
-      .toArray(),
   extensions: parent.extensions.concat(['waitingVnApiExchangesExtension']),
 });
 

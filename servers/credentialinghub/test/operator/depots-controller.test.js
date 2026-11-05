@@ -25,7 +25,7 @@ const {
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
 const { nanoid } = require('nanoid');
-const { map, omit } = require('lodash/fp');
+const { omit } = require('lodash/fp');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -40,11 +40,6 @@ const {
   initDepotFactory,
 } = require('../../src/entities/depots');
 const { initCredentialFactory } = require('../../src/entities/credentials');
-const {
-  initExchangeFactory,
-  ExchangeProtocols,
-  ExchangeStates,
-} = require('../../src/entities/exchanges');
 
 const testUrl = '/operator/depots';
 describe('Depots Test suite', () => {
@@ -54,7 +49,6 @@ describe('Depots Test suite', () => {
   let persistRelyingPartyService;
   let persistDepot;
   let persistCredential;
-  let persistExchange;
 
   let tenant;
   let issuerService;
@@ -68,7 +62,6 @@ describe('Depots Test suite', () => {
     ({ persistRelyingPartyService } = initRelyingPartyServiceFactory(fastify));
     ({ persistDepot } = initDepotFactory(fastify));
     ({ persistCredential } = initCredentialFactory(fastify));
-    ({ persistExchange } = initExchangeFactory(fastify));
   });
 
   beforeEach(async () => {
@@ -77,7 +70,6 @@ describe('Depots Test suite', () => {
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('relyingPartyServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
-    await mongoDb().collection('exchanges').deleteMany({});
     tenant = await persistTenant();
     issuerService = await persistIssuerService({
       tenant,
@@ -966,7 +958,7 @@ describe('Depots Test suite', () => {
           requestId: expect.any(String),
         });
       });
-      it('should return the deferred credentials fields and the ID of the exchange waiting on the depot', async () => {
+      it('should return the deferred credentials fields', async () => {
         const deferredDepot = await persistDepot({
           tenant,
           service: issuerService,
@@ -974,26 +966,6 @@ describe('Depots Test suite', () => {
           deferredCredentials: true,
           expectedCredentialTypes: ['EmailV1.0'],
         });
-        const persistVnApiExchange = (depot, states) =>
-          persistExchange({
-            tenant,
-            service: issuerService,
-            depotId: new ObjectId(depot._id),
-            protocolMetadata: { protocol: ExchangeProtocols.VN_API },
-            events: map(
-              (state) => ({ state, timestamp: new Date() }),
-              [ExchangeStates.NEW, ...states],
-            ),
-          });
-        const waitingExchange = await persistVnApiExchange(deferredDepot, [
-          ExchangeStates.OFFERS_WAITING,
-        ]);
-        await persistVnApiExchange(deferredDepot, [
-          ExchangeStates.OFFERS_WAITING,
-          ExchangeStates.COMPLETE,
-        ]);
-        await persistVnApiExchange(deferredDepot, [ExchangeStates.OFFERS_SENT]);
-        await persistVnApiExchange(depots[0], [ExchangeStates.OFFERS_WAITING]);
 
         const response = await fastify.injectJson({
           method: 'GET',
@@ -1005,68 +977,11 @@ describe('Depots Test suite', () => {
               ...expectedDepot(deferredDepot),
               deferredCredentials: true,
               expectedCredentialTypes: ['EmailV1.0'],
-              waitingExchangeId: waitingExchange._id,
             },
             expectedDepot(depots[1]),
           ]),
           requestId: expect.any(String),
         });
-        expect(response.json.depots).toHaveLength(2);
-      });
-      it('should return the latest waiting exchange of each depot when they have more than 200 between them', async () => {
-        const deferredDepots = [
-          await persistDepot({
-            tenant,
-            service: issuerService,
-            userReference: nanoid(),
-            deferredCredentials: true,
-          }),
-          await persistDepot({
-            tenant,
-            service: issuerService,
-            userReference: nanoid(),
-            deferredCredentials: true,
-          }),
-        ];
-        const createdAt = Date.now();
-        const waitingExchange = (depot, index) => ({
-          _id: new ObjectId(),
-          tenantId: new ObjectId(tenant._id),
-          serviceId: new ObjectId(issuerService._id),
-          depotId: new ObjectId(depot._id),
-          protocolMetadata: { protocol: ExchangeProtocols.VN_API },
-          events: [
-            { state: ExchangeStates.NEW, timestamp: new Date() },
-            { state: ExchangeStates.OFFERS_WAITING, timestamp: new Date() },
-          ],
-          createdAt: new Date(createdAt + index),
-        });
-        // The first depot's 201 come before the second depot's one, so a limit of 200 would cut both depots' latest
-        const firstDepotExchanges = Array.from({ length: 201 }, (_, index) =>
-          waitingExchange(deferredDepots[0], index),
-        );
-        const secondDepotExchange = waitingExchange(deferredDepots[1], 201);
-        await mongoDb()
-          .collection('exchanges')
-          .insertMany([...firstDepotExchanges, secondDepotExchange]);
-
-        const response = await fastify.injectJson({
-          method: 'GET',
-          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${deferredDepots[0]._id}&depotId=${deferredDepots[1]._id}`,
-        });
-        expect(response.statusCode).toEqual(200);
-        expect(response.json.depots).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              id: deferredDepots[0]._id,
-              waitingExchangeId: `${firstDepotExchanges[200]._id}`,
-            }),
-            expect.objectContaining({
-              id: deferredDepots[1]._id,
-              waitingExchangeId: `${secondDepotExchange._id}`,
-            }),
-          ]),
-        );
         expect(response.json.depots).toHaveLength(2);
       });
       it('should return 2 if 2 depots match the depotIds', async () => {

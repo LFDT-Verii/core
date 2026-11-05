@@ -19,7 +19,6 @@ const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
   createDepot,
   deleteDepot,
-  getDepots,
   resolveDeferredCredentials,
   ResolveDeferredCredentialsStatuses,
 } = require('../../../entities/depots');
@@ -125,7 +124,10 @@ const depotsController = async (fastify) => {
       },
       async (req) => {
         const { serviceId, depotId: depotIds } = req.query;
-        const depots = await getDepots(serviceId, coerceArray(depotIds), req);
+        const depots = await req.repos.depots.findDepots(
+          serviceId,
+          coerceArray(depotIds),
+        );
         return { depots };
       },
     )

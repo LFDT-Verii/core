@@ -22,10 +22,6 @@ const depotSchema = {
       description:
         "the last time the issuer resolved the depot's deferred credentials",
     },
-    waitingExchangeId: {
-      type: 'string',
-      description: 'the VN API exchange waiting on the depot, if there is one',
-    },
   },
 };
 
