@@ -16,16 +16,26 @@
  */
 
 const createError = require('http-errors');
-const { reduce, isEmpty, first, includes } = require('lodash/fp');
+const {
+  get,
+  has,
+  includes,
+  isEmpty,
+  isString,
+  nth,
+  reduce,
+} = require('lodash/fp');
 const { jwtDecode } = require('@verii/jwt');
 const { validatePresentationContext } = require('@verii/verii-verification');
-const { getJsonAtPath } = require('../../common');
 const {
   ExchangeErrorCodeState,
   ensureExchangeStateValid,
 } = require('../../exchanges');
 const { IdentificationMethods } = require('../../disclosures');
 const { PresentationErrors } = require('./errors');
+
+const SUPPORTED_DESCRIPTOR_PATH_PATTERN =
+  /^\$\.verifiableCredential\[(0|[1-9]\d{0,2})\]$/;
 
 const validatePresentation = async (presentation, disclosure, context) => {
   validatePresentationContext(presentation, context);
@@ -89,15 +99,23 @@ const buildCanonicalVp = ({
           { errorCode: 'presentation_missing_jwtvc_or_jwtvp' },
         );
       }
-      const result = getJsonAtPath(descriptor.path, json);
-      if (isEmpty(result)) {
+      const credentialIndex = getCredentialIndex(descriptor.path);
+      if (credentialIndex == null) {
+        throw createError(
+          400,
+          'Velocity Presentation contains path descriptor that is unsupported',
+          { descriptor, errorCode: 'presentation_jsonpath_unsupported' },
+        );
+      }
+      const credentialPath = ['verifiableCredential', credentialIndex];
+      if (!has(credentialPath, json)) {
         throw createError(
           400,
           'Velocity Presentation contains path descriptor that is empty',
           { descriptor, json, errorCode: 'presentation_jsonpath_empty' },
         );
       }
-      const jwtString = first(result);
+      const jwtString = get(credentialPath, json);
 
       if (isEmpty(jwtString)) {
         return acc;
@@ -122,5 +140,10 @@ const buildCanonicalVp = ({
     },
     presentationSubmission.descriptor_map,
   );
+
+const getCredentialIndex = (path) =>
+  isString(path)
+    ? nth(1, SUPPORTED_DESCRIPTOR_PATH_PATTERN.exec(path))
+    : undefined;
 
 module.exports = { validatePresentation };

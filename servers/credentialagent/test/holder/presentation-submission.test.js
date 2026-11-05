@@ -82,6 +82,25 @@ const {
   NotificationTypes,
 } = require('../../src/entities');
 
+const UNSUPPORTED_DESCRIPTOR_PATHS = [
+  '$..verifiableCredential',
+  '$.verifiableCredential[*]',
+  '$.verifiableCredential[?(@)]',
+  '$.verifiableCredential[(@.length-1)]',
+  '$.verifiableCredential[0,1]',
+  '$.verifiableCredential[0:2]',
+  "$['verifiableCredential'][0]",
+  '$.verifiableCredential[0].credentialSubject',
+  '$.other[0]',
+  '$.verifiableCredential[0]@other()',
+  '$.verifiableCredential[1000]',
+  '$.verifiableCredential[01]',
+  '$.verifiableCredential[-1]',
+  ' $.verifiableCredential[0]',
+  '$.verifiableCredential[0]\n',
+  '$',
+];
+
 describe('presentation submission', () => {
   let fastify;
   let persistDisclosure;
@@ -1095,6 +1114,175 @@ describe('presentation submission', () => {
       });
 
       expect(response.statusCode).toEqual(400);
+    });
+
+    UNSUPPORTED_DESCRIPTOR_PATHS.forEach((path) => {
+      it(`should 400 if the input descriptor path is ${JSON.stringify(path)}`, async () => {
+        const builder = await generatePresentation(disclosureExchange);
+
+        // eslint-disable-next-line camelcase
+        const jwt_vp = await builder
+          .override({
+            presentation_submission: {
+              descriptor_map: [
+                {
+                  id: nanoid(),
+                  path,
+                  format: 'jwt_vc',
+                },
+              ],
+            },
+          })
+          .selfSign();
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: inspectUrl(tenant, '/submit-presentation'),
+          // eslint-disable-next-line camelcase
+          payload: { exchange_id: disclosureExchange._id, jwt_vp },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'presentation_jsonpath_unsupported',
+            message:
+              'Velocity Presentation contains path descriptor that is unsupported',
+            statusCode: 400,
+          }),
+        );
+      });
+    });
+
+    it('should 400 if the input descriptor path index is beyond the submitted credentials', async () => {
+      const builder = await generatePresentation(disclosureExchange);
+
+      // eslint-disable-next-line camelcase
+      const jwt_vp = await builder
+        .override({
+          presentation_submission: {
+            descriptor_map: [
+              {
+                id: nanoid(),
+                path: '$.verifiableCredential[999]',
+                format: 'jwt_vc',
+              },
+            ],
+          },
+        })
+        .selfSign();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: inspectUrl(tenant, '/submit-presentation'),
+        // eslint-disable-next-line camelcase
+        payload: { exchange_id: disclosureExchange._id, jwt_vp },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'presentation_jsonpath_empty',
+          message:
+            'Velocity Presentation contains path descriptor that is empty',
+          statusCode: 400,
+        }),
+      );
+    });
+
+    it('should 400 if a later input descriptor path is unsupported', async () => {
+      const builder = await generatePresentation(disclosureExchange);
+
+      // eslint-disable-next-line camelcase
+      const jwt_vp = await builder
+        .override({
+          presentation_submission: {
+            descriptor_map: [
+              {
+                id: nanoid(),
+                path: '$.verifiableCredential[0]',
+                format: 'jwt_vc',
+              },
+              {
+                id: nanoid(),
+                path: '$.verifiableCredential[*]',
+                format: 'jwt_vc',
+              },
+            ],
+          },
+        })
+        .selfSign();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: inspectUrl(tenant, '/submit-presentation'),
+        // eslint-disable-next-line camelcase
+        payload: { exchange_id: disclosureExchange._id, jwt_vp },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'presentation_jsonpath_unsupported',
+          message:
+            'Velocity Presentation contains path descriptor that is unsupported',
+          statusCode: 400,
+        }),
+      );
+    });
+
+    it('should 200 when input descriptor paths reference credentials at later indexes', async () => {
+      const builder = await generatePresentation(disclosureExchange);
+      const [vc1, vc2, vc3, vc4] = builder.presentation.verifiableCredential;
+      let webhookPayload;
+
+      nock(mockVendorUrl)
+        .post(sendCredentialsCheckedEndpoint)
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
+          return sendCredentialsPayload;
+        });
+
+      // eslint-disable-next-line camelcase
+      const jwt_vp = await builder
+        .override({
+          verifiableCredential: [vc1, vc2, ...Array(10).fill(vc3), vc4],
+          presentation_submission: {
+            descriptor_map: map(
+              (path) => ({ id: nanoid(), path, format: 'jwt_vc' }),
+              [
+                '$.verifiableCredential[0]',
+                '$.verifiableCredential[1]',
+                '$.verifiableCredential[2]',
+                '$.verifiableCredential[12]',
+              ],
+            ),
+          },
+        })
+        .selfSign();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: inspectUrl(tenant, '/submit-presentation'),
+        // eslint-disable-next-line camelcase
+        payload: { exchange_id: disclosureExchange._id, jwt_vp },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        exchange: {
+          id: disclosureExchange._id,
+          type: ExchangeTypes.DISCLOSURE,
+          disclosureComplete: true,
+          exchangeComplete: true,
+        },
+        token: expect.any(String),
+      });
+      expect(map('rawCredential', webhookPayload.rawCredentials)).toEqual([
+        vc1,
+        vc2,
+        vc3,
+        vc4,
+      ]);
     });
 
     it('should 400 id disclosure deactivated', async () => {

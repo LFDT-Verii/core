@@ -61,7 +61,11 @@ const controller = async (fastify) => {
               },
               jwt_vp: {
                 type: 'string',
-                description: 'vp encoded as a jwt signed by the holder',
+                description:
+                  'vp encoded as a jwt signed by the holder. ' +
+                  'Each `presentation_submission.descriptor_map[].path` in the vp must be `$.verifiableCredential[<n>]`, ' +
+                  'where `<n>` is an index from 0 to 999 with no leading zeros. ' +
+                  'Any other path is rejected with 400 `presentation_jsonpath_unsupported`.',
               },
               vp: {
                 $ref: 'https://velocitycareerlabs.io/velocity-presentation-submission.schema.json#',
