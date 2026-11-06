@@ -15,43 +15,39 @@
  *
  */
 import { useLocation, useSearchParams } from 'react-router';
-import { useStore } from 'react-admin';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { initTrace } from '../tracing.js';
 
 const trace = initTrace('useSignupRedirect');
 const REDIRECT_KEY = 'afterSignupRedirectUrl';
 
+// An invitation to someone without an account carries an Auth0 password link in `signup_url`.
+// Read it from the URL, not react-admin's store: this hook runs outside <Admin>, where that store
+// isn't set up and drops writes.
 const useSignupRedirect = ({ auth }) => {
   const [searchParams] = useSearchParams();
-  const signupUrlParam = searchParams.get('signup_url');
-
-  const [signupUrl, setSignupUrl] = useStore('signupUrl', null);
-  const isSignupProcess = signupUrlParam != null || signupUrl != null;
+  const signupUrl = searchParams.get('signup_url');
+  const isSignupProcess = signupUrl != null;
 
   const location = useLocation();
+  const hasStartedRedirect = useRef(false);
 
   useEffect(() => {
     trace({
       event: 'signup-redirect-state-changed',
-      hasSignupUrlParam: signupUrlParam != null,
-      hasStoredSignupUrl: signupUrl != null,
       isLoading: auth.isLoading,
       isAuthenticated: auth.isAuthenticated,
       isSignupProcess,
     });
-  }, [auth.isAuthenticated, auth.isLoading, isSignupProcess, signupUrl, signupUrlParam]);
+  }, [auth.isAuthenticated, auth.isLoading, isSignupProcess]);
 
+  // Logging out changes `auth`, which runs this effect again, so start the redirect only once.
   useEffect(() => {
-    if (signupUrlParam !== signupUrl) {
-      setSignupUrl(signupUrlParam);
-    }
-  }, [signupUrlParam, signupUrl, setSignupUrl]);
-  // If a new signup URL is detected → start signup flow
-  useEffect(() => {
-    if (!signupUrl || signupUrlParam !== signupUrl) {
+    if (!signupUrl || hasStartedRedirect.current) {
       return;
     }
+    // eslint-disable-next-line better-mutation/no-mutation
+    hasStartedRedirect.current = true;
 
     trace({ event: 'signup-url-redirect-requested', pathname: location.pathname });
     localStorage.setItem(REDIRECT_KEY, location.pathname);
@@ -59,7 +55,7 @@ const useSignupRedirect = ({ auth }) => {
     auth.logout({ source: 'signup-redirect' }).then(() => {
       window.location.replace(decodeURIComponent(signupUrl));
     });
-  }, [signupUrl, signupUrlParam, location.pathname, auth]);
+  }, [signupUrl, location.pathname, auth]);
 
   return { isSignupProcess };
 };
