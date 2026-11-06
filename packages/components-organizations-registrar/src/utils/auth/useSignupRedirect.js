@@ -21,12 +21,26 @@ import { initTrace } from '../tracing.js';
 const trace = initTrace('useSignupRedirect');
 const REDIRECT_KEY = 'afterSignupRedirectUrl';
 
+// The registrar API sets `signup_url` to an Auth0 password link. Follow only https links on the
+// configured Auth0 domain, so a crafted link can't send the browser elsewhere or run script.
+const toAuth0PasswordUrl = (signupUrl, authDomain) => {
+  if (!signupUrl || !authDomain) {
+    return null;
+  }
+  try {
+    const url = new URL(decodeURIComponent(signupUrl));
+    return url.protocol === 'https:' && url.host === authDomain ? url.href : null;
+  } catch {
+    return null;
+  }
+};
+
 // An invitation to someone without an account carries an Auth0 password link in `signup_url`.
 // Read it from the URL, not react-admin's store: this hook runs outside <Admin>, where that store
-// isn't set up and drops writes.
-const useSignupRedirect = ({ auth }) => {
+// isn't set up and drops writes. Any other `signup_url` is ignored, and the invitee signs in as usual.
+const useSignupRedirect = ({ auth, authDomain }) => {
   const [searchParams] = useSearchParams();
-  const signupUrl = searchParams.get('signup_url');
+  const signupUrl = toAuth0PasswordUrl(searchParams.get('signup_url'), authDomain);
   const isSignupProcess = signupUrl != null;
 
   const location = useLocation();
@@ -53,7 +67,7 @@ const useSignupRedirect = ({ auth }) => {
     localStorage.setItem(REDIRECT_KEY, location.pathname);
 
     auth.logout({ source: 'signup-redirect' }).then(() => {
-      window.location.replace(decodeURIComponent(signupUrl));
+      window.location.replace(signupUrl);
     });
   }, [signupUrl, location.pathname, auth]);
 

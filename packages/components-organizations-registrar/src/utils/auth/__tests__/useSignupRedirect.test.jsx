@@ -6,7 +6,16 @@ import { MemoryRouter } from 'react-router';
 import PropTypes from 'prop-types';
 import useSignupRedirect from '../useSignupRedirect.js';
 
-const signupPath = '/invitations/abc?signup_url=https%3A%2F%2Fauth.example';
+const authDomain = 'auth.example';
+const signupPath =
+  '/invitations/abc?signup_url=https%3A%2F%2Fauth.example%2Flo%2Freset%3Fticket%3Dt';
+
+// Builds the invitation path the way the registrar API does, which double-encodes signup_url.
+const buildSignupPath = (signupUrl) => {
+  const params = new URLSearchParams();
+  params.append('signup_url', encodeURI(signupUrl));
+  return `/invitations/abc?${params}`;
+};
 
 // Gives effects time to run when asserting that something did not happen.
 const settle = () =>
@@ -22,8 +31,8 @@ const buildAuth = (overrides = {}) => ({
   ...overrides,
 });
 
-const TestComponent = ({ auth }) => {
-  const { isSignupProcess } = useSignupRedirect({ auth });
+const TestComponent = ({ auth, domain }) => {
+  const { isSignupProcess } = useSignupRedirect({ auth, authDomain: domain });
   return <div data-testid="signup-process">{String(isSignupProcess)}</div>;
 };
 
@@ -33,12 +42,13 @@ TestComponent.propTypes = {
     isLoading: PropTypes.bool.isRequired,
     logout: PropTypes.func.isRequired,
   }).isRequired,
+  domain: PropTypes.string,
 };
 
-const renderAt = (path, auth) => {
+const renderAt = (path, auth, domain = authDomain) => {
   const result = render(
     <MemoryRouter initialEntries={[path]}>
-      <TestComponent auth={auth} />
+      <TestComponent auth={auth} domain={domain} />
     </MemoryRouter>,
   );
   return {
@@ -46,10 +56,17 @@ const renderAt = (path, auth) => {
     rerenderWith: (nextAuth) =>
       result.rerender(
         <MemoryRouter initialEntries={[path]}>
-          <TestComponent auth={nextAuth} />
+          <TestComponent auth={nextAuth} domain={domain} />
         </MemoryRouter>,
       ),
   };
+};
+
+const expectIgnored = async (auth) => {
+  await settle();
+  expect(screen.getByTestId('signup-process').textContent).toEqual('false');
+  expect(auth.logout.mock.calls.length).toEqual(0);
+  expect(localStorage.getItem('afterSignupRedirectUrl')).toEqual(null);
 };
 
 describe('useSignupRedirect', () => {
@@ -88,9 +105,38 @@ describe('useSignupRedirect', () => {
 
     renderAt('/invitations/abc', auth);
 
-    await settle();
-    expect(screen.getByTestId('signup-process').textContent).toEqual('false');
-    expect(auth.logout.mock.calls.length).toEqual(0);
-    expect(localStorage.getItem('afterSignupRedirectUrl')).toEqual(null);
+    await expectIgnored(auth);
+  });
+
+  [
+    // eslint-disable-next-line no-script-url -- the hook must ignore this value
+    ['a javascript: URL', 'javascript:void 0'],
+    ['a link on another origin', 'https://elsewhere.example/lo/reset?ticket=t'],
+    ['a plain http link on the Auth0 domain', 'http://auth.example/lo/reset?ticket=t'],
+    ['a relative path', '/lo/reset?ticket=t'],
+  ].forEach(([name, signupUrl]) => {
+    it(`ignores ${name}`, async () => {
+      const auth = buildAuth();
+
+      renderAt(buildSignupPath(signupUrl), auth);
+
+      await expectIgnored(auth);
+    });
+  });
+
+  it('ignores a signup URL that cannot be decoded', async () => {
+    const auth = buildAuth();
+
+    renderAt('/invitations/abc?signup_url=https%3A%2F%2Fauth.example%2F%25E0%25A4%25A', auth);
+
+    await expectIgnored(auth);
+  });
+
+  it('ignores every signup URL when no Auth0 domain is configured', async () => {
+    const auth = buildAuth();
+
+    renderAt(signupPath, auth, null);
+
+    await expectIgnored(auth);
   });
 });
