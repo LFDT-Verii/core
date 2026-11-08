@@ -395,6 +395,7 @@ describe('org registration and issuing e2e', () => {
     expect(createDepotJson).toEqual({
       depot: expectedEntity(createDepotPayload.depot, {
         serviceId: createDepotPayload.serviceId,
+        deferredCredentials: false,
       }),
       requestId: expect.any(String),
     });
