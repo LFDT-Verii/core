@@ -89,7 +89,7 @@ export const PrivateAppRoot = ({ extendedRemoteDataProvider, children }) => {
         },
       }),
   );
-  const { isSignupProcess } = useSignupRedirect({ auth });
+  const { isSignupProcess } = useSignupRedirect({ auth, authDomain: config?.authConfig?.domain });
   const authState = getAuthState({
     isSignupProcess,
     isAuthenticated,
