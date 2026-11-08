@@ -87,6 +87,21 @@ describe('useSignupRedirect', () => {
     expect(auth.login.mock.calls.length).toEqual(0);
   });
 
+  [
+    ['with a scheme', 'https://auth.example'],
+    ['in mixed case', 'Auth.Example'],
+    ['with the default port', 'auth.example:443'],
+  ].forEach(([name, domain]) => {
+    it(`follows the signup URL when the Auth0 domain is configured ${name}`, async () => {
+      const auth = buildAuth();
+
+      renderAt(signupPath, auth, domain);
+
+      await waitFor(() => expect(auth.logout.mock.calls.length).toEqual(1));
+      expect(screen.getByTestId('signup-process').textContent).toEqual('true');
+    });
+  });
+
   it('starts the redirect once when logging out changes the auth state', async () => {
     const auth = buildAuth();
     const { rerenderWith } = renderAt(signupPath, auth);

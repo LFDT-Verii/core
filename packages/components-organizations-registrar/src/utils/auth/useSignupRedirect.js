@@ -21,6 +21,11 @@ import { initTrace } from '../tracing.js';
 const trace = initTrace('useSignupRedirect');
 const REDIRECT_KEY = 'afterSignupRedirectUrl';
 
+// Reads the configured Auth0 domain the way the Auth0 SDK does, with or without a scheme. The host
+// comes back lowercase and without the default port, the same form as a parsed link's host.
+const toAuth0Host = (authDomain) =>
+  new URL(/^https?:\/\//i.test(authDomain) ? authDomain : `https://${authDomain}`).host;
+
 // The registrar API sets `signup_url` to an Auth0 password link. Follow only https links on the
 // configured Auth0 domain, so a crafted link can't send the browser elsewhere or run script.
 const toAuth0PasswordUrl = (signupUrl, authDomain) => {
@@ -29,7 +34,7 @@ const toAuth0PasswordUrl = (signupUrl, authDomain) => {
   }
   try {
     const url = new URL(decodeURIComponent(signupUrl));
-    return url.protocol === 'https:' && url.host === authDomain ? url.href : null;
+    return url.protocol === 'https:' && url.host === toAuth0Host(authDomain) ? url.href : null;
   } catch {
     return null;
   }
