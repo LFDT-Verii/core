@@ -40,6 +40,42 @@ process.stdout.write(JSON.stringify({ sentryDsn, enableSentryDebug }));`;
   return JSON.parse(execFileSync(process.execPath, ['-e', script], { env }));
 };
 
+const loadEnableDocumentation = (env) => {
+  const script = `const { enableDocumentation } = require(${JSON.stringify(configPath)});
+process.stdout.write(JSON.stringify(enableDocumentation));`;
+  return JSON.parse(execFileSync(process.execPath, ['-e', script], { env }));
+};
+
+describe('genericConfig documentation setting', () => {
+  it('should turn documentation off in production', () => {
+    expect(loadEnableDocumentation(productionEnv)).toEqual(false);
+  });
+
+  it('should turn documentation on outside production', () => {
+    for (const nodeEnv of ['staging', 'dev', 'development']) {
+      expect(
+        loadEnableDocumentation({ ...productionEnv, NODE_ENV: nodeEnv }),
+      ).toEqual(true);
+    }
+  });
+
+  it('should read ENABLE_DOCUMENTATION', () => {
+    expect(
+      loadEnableDocumentation({
+        ...productionEnv,
+        ENABLE_DOCUMENTATION: 'true',
+      }),
+    ).toEqual(true);
+    expect(
+      loadEnableDocumentation({
+        ...productionEnv,
+        NODE_ENV: 'staging',
+        ENABLE_DOCUMENTATION: 'false',
+      }),
+    ).toEqual(false);
+  });
+});
+
 describe('genericConfig Sentry settings', () => {
   it('should load outside tests without SENTRY_DSN, with Sentry off', () => {
     expect(loadSentrySettings(productionEnv)).toEqual({

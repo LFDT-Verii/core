@@ -411,4 +411,52 @@ describe('Swagger documentation', () => {
       '"urls.primaryName":"Public API"',
     );
   });
+
+  it('serves no documentation when enableDocumentation is false', async () => {
+    server = createServer({
+      ...genericConfig,
+      enableDocumentation: false,
+      mongoConnection,
+      swaggerInfo: {
+        info: { title: 'Public API', version: '1.0.0' },
+      },
+      swaggerDocuments: {
+        primaryName: 'Public API',
+        documents: [
+          {
+            name: 'Internal API',
+            url: '/documentation/internal.json',
+            decorator: 'internalSwagger',
+            openapi: {
+              info: { title: 'Internal API', version: '1.0.0' },
+            },
+          },
+        ],
+      },
+    });
+    server.get('/public', () => ({ public: true }));
+
+    const documentationResponses = await Promise.all(
+      [
+        '/documentation',
+        '/documentation/',
+        '/documentation/json',
+        '/documentation/yaml',
+        '/documentation/static/swagger-initializer.js',
+        '/documentation/internal.json',
+      ].map((url) => server.inject({ method: 'get', url })),
+    );
+    const publicResponse = await server.inject({
+      method: 'get',
+      url: '/public',
+    });
+
+    expect(documentationResponses.map(({ statusCode }) => statusCode)).toEqual([
+      404, 404, 404, 404, 404, 404,
+    ]);
+    expect(publicResponse.statusCode).toEqual(200);
+    expect(publicResponse.headers['content-security-policy']).toMatch(
+      /script-src 'self'(;|$)/,
+    );
+  });
 });

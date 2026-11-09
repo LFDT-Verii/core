@@ -19,6 +19,7 @@ const fs = require('fs');
 const { isEmpty } = require('lodash/fp');
 
 const nodeEnv = env.get('NODE_ENV').required().asString();
+const isProd = nodeEnv === 'production';
 const isTest = nodeEnv === 'test';
 const isDev = nodeEnv === 'development';
 
@@ -32,7 +33,7 @@ module.exports = {
   appHost: env.get('HOST').required(!isTest).asString(),
   logSeverity: env.get('LOG_SEVERITY').default('info').asString(),
   nodeEnv,
-  isProd: nodeEnv === 'production',
+  isProd,
   isDev,
   isTest,
   hostUrl: env.get('HOST_URL').required(!isTest).asString(),
@@ -52,6 +53,11 @@ module.exports = {
   traceIdHeader: env.get('TRACE_ID_HEADER').default('x-trace-id').asString(),
   sentryDsn: env.get('SENTRY_DSN').default('').asString(),
   enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
+  // Swagger UI and the OpenAPI documents under /documentation
+  enableDocumentation: env
+    .get('ENABLE_DOCUMENTATION')
+    .default(String(!isProd))
+    .asBool(),
   blockchainApiAudience: env
     .get('BLOCKCHAIN_API_AUDIENCE')
     .default('https://velocitynetwork.node')

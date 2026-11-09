@@ -83,8 +83,11 @@ const createServer = (config, log = createCommonLog(config)) => {
             ...fastifyHelmet.contentSecurityPolicy.getDefaultDirectives(),
             'form-action': ["'self'"],
             'img-src': ["'self'", 'data:', 'validator.swagger.io'],
-            'script-src': ["'self'"].concat(instance.swaggerCSP.script),
-            'style-src': ["'self'", 'https:'].concat(instance.swaggerCSP.style),
+            // Swagger UI's hashes, when the server serves documentation
+            'script-src': ["'self'"].concat(instance.swaggerCSP?.script ?? []),
+            'style-src': ["'self'", 'https:'].concat(
+              instance.swaggerCSP?.style ?? [],
+            ),
           },
         },
       }))

@@ -143,7 +143,9 @@ const commonCreateServer = (config, log) => {
       req.repos = bindRepo(req);
     });
 
-  registerSwaggerDocumentation(server, config);
+  if (config.enableDocumentation) {
+    registerSwaggerDocumentation(server, config);
+  }
 
   return server;
 };
