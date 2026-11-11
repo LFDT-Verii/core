@@ -48,10 +48,8 @@ describe('issuer checks', () => {
     },
   };
   const config = {
-    rootPublicKey: issuerPublicKey,
     revocationContractAddress: 'any',
     rpcUrl: 'any',
-    trustedIssuerCheckMinDate: '2024-02-28T00:00:00Z',
   };
 
   let boundIssuerVc;

@@ -43,7 +43,6 @@ async function authenticator () {
 }
 
 const config = {
-    rootPublicKey: "0x899ef1cc48d17ee2701b25b14203d45e15bb01d07767450e9191ea71760d558a", // TRUST Root Private key
     revocationContractAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e", // DLT address for revocation address
     metadataRegistryContractAddress: "0x3f5CE5FBFe3E9af3971dD833D26BA9b5C936f0bE", // DLT address for VC metadata
     rpcProvider: initProvider("http://localhost:8545", authenticator),

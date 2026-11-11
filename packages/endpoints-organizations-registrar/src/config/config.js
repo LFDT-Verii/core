@@ -69,21 +69,17 @@ const createConfig = (packageJson) => {
 
   const registrarConfig = {
     contractAbi,
+    hostUrl: env.get('HOST_URL').required(!isTest).asString(),
     rpcUrl: env
       .get('RPC_NODE_URL')
       .default('http://34.244.131.79:8547')
       .asString(),
     chainId: env.get('CHAIN_ID').default(2020).asInt(),
     rootDid: env.get('ROOT_DID').required(!isTest).asString(),
-    rootAddress: env.get('ROOT_ADDRESS').required(!isTest).asString(),
     rootKid: env.get('ROOT_KID').required(!isTest).asString(),
     rootPrivateKey: env.get('ROOT_PRIVATE_KEY').required(!isTest).asString(),
     awsRegion: env.get('AWS_REGION').default('us-east-1').required().asString(),
     awsEndpoint: env.get('AWS_ENDPOINT').default('').asString(),
-    accountRulesContractAddress: env
-      .get('ACCOUNT_RULES_CONTRACT_ADDRESS')
-      .default('')
-      .asString(),
     couponContractAddress: env
       .get('COUPON_CONTRACT_ADDRESS')
       .required()
@@ -191,6 +187,25 @@ const createConfig = (packageJson) => {
       .default('1')
       .asIntPositive(),
     kmsPlugin: env.get('KMS_PLUGIN').default('dbKmsPlugin').asString(),
+    idCredentialTypes: env
+      .get('IDENTITY_CREDENTIAL_TYPES')
+      .default(
+        [
+          'IdDocument',
+          'Phone',
+          'Email',
+          'IdDocumentV1.0',
+          'DriversLicenseV1.0',
+          'NationalIdCardV1.0',
+          'PassportV1.0',
+          'ResidentPermitV1.0',
+          'EmailV1.0',
+          'PhoneV1.0',
+          'ProofOfAgeV1.0',
+          'VerificationIdentifier',
+        ].join(','),
+      )
+      .asArray(),
   };
 
   const monitoringEnvConfig = {

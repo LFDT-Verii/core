@@ -15,11 +15,10 @@
  */
 
 const env = require('env-var');
-const { genericConfig, abi } = require('@verii/config');
+const { genericConfig } = require('@verii/config');
 const packageJson = require('../../package.json');
 
-const { isTest } = genericConfig;
-const secret = env.get('SECRET').required(!isTest).asString();
+const { isTest, secret } = genericConfig;
 
 const swaggerConfig = {
   swaggerInfo: {
@@ -43,8 +42,8 @@ const coreConfig = {
   customFastifyOptions: {
     bodyLimit: 8388608,
   },
-  contractAbi: abi,
   enableHttp2: env.get('ENABLE_HTTP2').default('false').asBoolStrict(),
+  hostUrl: env.get('HOST_URL').required(!isTest).asString(),
   mongoSecret: env.get('MONGO_SECRET').required(!isTest).asString(),
   oracleUrl: env.get('REGISTRAR_URL').required(!isTest).asString(),
   libUrl: env.get('LIB_URL').required(!isTest).asString(),
@@ -71,7 +70,6 @@ const coreConfig = {
     .default('http://34.244.131.79:8547')
     .asString(),
   chainId: env.get('CHAIN_ID').default(2020).asInt(),
-  secret,
   issuingChallengeSecret: env
     .get('ISSUING_CHALLENGE_SECRET')
     .default(secret)
@@ -120,27 +118,11 @@ const coreConfig = {
     .get('ENABLE_PRESENTATION_CONTEXT_VALIDATION')
     .default('false')
     .asBool(),
-  trustedIssuerCheckMinDate: env
-    .get('TRUSTED_ISSUER_CHECK_MIN_DATE')
-    .default('2024-02-28T00:00:00Z')
-    .asString(),
   enableDeactivatedDisclosure: env
     .get('ENABLE_DEACTIVATED_DISCLOSURE')
     .default('true')
     .asBool(),
   vnfDid: env.get('VNF_DID').required().asString(),
-  defaultWalletMobile: env
-    .get('DEFAULT_WALLET_MOBILE')
-    .required(!isTest)
-    .asString(),
-  defaultWalletDesktop: env
-    .get('DEFAULT_WALLET_DESKTOP')
-    .required(!isTest)
-    .asString(),
-  defaultCaWalletConfig: env
-    .get('DEFAULT_CA_WALLET_CONFIG')
-    .required(!isTest)
-    .asJsonObject(),
   disclosureCredentialTypeRequired: env
     .get('DISCLOSURE_CREDENTIAL_TYPE_REQUIRED')
     .default('true')

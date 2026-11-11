@@ -35,7 +35,7 @@ if (JSON.stringify(config.Entrypoint) !== JSON.stringify(['node', 'docker/entryp
   throw new Error(`Unexpected image entrypoint: ${JSON.stringify(config.Entrypoint)}`);
 }
 
-const forbiddenEnvironment = /^(?:RPC_NODE_URL|CHAIN_ID|REGISTRAR_URL|ROOT_PUBLIC_KEY|[A-Z0-9_]*CONTRACT_ADDRESS|VNF_OAUTH_[A-Z0-9_]*|BLOCKCHAIN_OAUTH_[A-Z0-9_]*)=/;
+const forbiddenEnvironment = /^(?:RPC_NODE_URL|CHAIN_ID|REGISTRAR_URL|[A-Z0-9_]*CONTRACT_ADDRESS|VNF_OAUTH_[A-Z0-9_]*|BLOCKCHAIN_OAUTH_[A-Z0-9_]*)=/;
 const exposed = (config.Env || []).filter((entry) => forbiddenEnvironment.test(entry));
 
 if (exposed.length > 0) {

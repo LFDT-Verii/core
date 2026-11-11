@@ -113,7 +113,6 @@ describe('Verify credentials', () => {
   };
 
   const config = {
-    rootPublicKey: orgPublicKey,
     revocationContractAddress: 'any',
   };
   let issuerVc;
