@@ -53,8 +53,6 @@ const NETWORK_PRESETS = Object.freeze({
     CREDENTIAL_EXTENSIONS_CONTEXT_URL:
       'https://devlib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
     VNF_DID: 'did:ion:EiCoJtiS6RsIcYsHskgChOdlfNa0RrUG5qGeF3PpMX8nXA',
-    VNF_HEADER_SIGNATURE_VERIFICATION_KEY:
-      '04df8e36afbcedfb33b86f136bfeb6ea440c6343d7ba9d02bfb23fe63b33617c6ab46dfdc1047012767e70ff5cc640bee268f2e874e128f5772cc882ba67404af9',
   }),
   [Networks.TESTNET]: Object.freeze({
     RPC_NODE_URL: 'https://stagingmember.velocitycareerlabs.io',
@@ -76,8 +74,6 @@ const NETWORK_PRESETS = Object.freeze({
     CREDENTIAL_EXTENSIONS_CONTEXT_URL:
       'https://staginglib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
     VNF_DID: 'did:ion:EiDk-Cci8B4AQoO5fJc8twjpD1aAZPnOQo0OE5bPY2gZlQ',
-    VNF_HEADER_SIGNATURE_VERIFICATION_KEY:
-      '04ee91645a8ee95e09597eefbb71641e77813a4ee9e9d26a89ce6dd601ef5280f66694dfe26f55bafe672c401a2f42681206b2cbb36cd4d4f52b0b83f52f80162b',
   }),
   [Networks.MAINNET]: Object.freeze({
     RPC_NODE_URL: 'https://member.velocitycareerlabs.io',
@@ -99,8 +95,6 @@ const NETWORK_PRESETS = Object.freeze({
     CREDENTIAL_EXTENSIONS_CONTEXT_URL:
       'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
     VNF_DID: 'did:ion:EiCJ0oiRRZBwD43BKRGFEXtyNhzflOSNZqG0CGUI2OZb4g',
-    VNF_HEADER_SIGNATURE_VERIFICATION_KEY:
-      '04998d8f2ce744129803925e117d499e58e78c162bf457a34ff1a4988143ffee69e2d032b1d62538c7adc6eeff30ba5eba138ce774571c1dacf67936a16d9c19cb',
   }),
 });
 
