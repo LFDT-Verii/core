@@ -68,7 +68,6 @@ const createConfig = (packageJson) => {
 
   const registrarConfig = {
     rootDid: env.get('ROOT_DID').required(!isTest).asString(),
-    rootAddress: env.get('ROOT_ADDRESS').required(!isTest).asString(),
     rootKid: env.get('ROOT_KID').required(!isTest).asString(),
     rootPrivateKey: env.get('ROOT_PRIVATE_KEY').required(!isTest).asString(),
     awsRegion: env.get('AWS_REGION').default('us-east-1').required().asString(),

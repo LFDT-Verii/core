@@ -25,24 +25,51 @@ const configPath = path.resolve(__dirname, '../src/config.js');
 const productionEnv = {
   PATH: process.env.PATH,
   NODE_ENV: 'production',
-  PORT: '3000',
-  HOST: '0.0.0.0',
-  HOST_URL: 'https://server.example.com',
   MONGO_URI: 'mongodb://localhost:27017/example',
   SECRET: 'example-secret',
-  ROOT_PUBLIC_KEY: 'example-root-public-key',
 };
 
 // genericConfig reads the environment when it's first required, so load it in a fresh process
-const loadSentrySettings = (env) => {
-  const script = `const { sentryDsn, enableSentryDebug } = require(${JSON.stringify(configPath)});
-process.stdout.write(JSON.stringify({ sentryDsn, enableSentryDebug }));`;
-  return JSON.parse(execFileSync(process.execPath, ['-e', script], { env }));
+const loadConfig = (env, keys) => {
+  const script = `const { pick } = require('lodash/fp');
+const config = require(${JSON.stringify(configPath)});
+process.stdout.write(JSON.stringify(pick(${JSON.stringify(keys)}, config)));`;
+  return JSON.parse(
+    execFileSync(process.execPath, ['-e', script], {
+      env,
+      cwd: path.resolve(__dirname, '..'),
+    }),
+  );
 };
 
+describe('genericConfig server settings', () => {
+  const serverKeys = ['appPort', 'appHost'];
+
+  it('should default PORT and HOST', () => {
+    expect(loadConfig(productionEnv, serverKeys)).toEqual({
+      appPort: 3000,
+      appHost: '0.0.0.0',
+    });
+  });
+
+  it('should read PORT and HOST', () => {
+    expect(
+      loadConfig(
+        { ...productionEnv, PORT: '3005', HOST: '127.0.0.1' },
+        serverKeys,
+      ),
+    ).toEqual({
+      appPort: 3005,
+      appHost: '127.0.0.1',
+    });
+  });
+});
+
 describe('genericConfig Sentry settings', () => {
+  const sentryKeys = ['sentryDsn', 'enableSentryDebug'];
+
   it('should load outside tests without SENTRY_DSN, with Sentry off', () => {
-    expect(loadSentrySettings(productionEnv)).toEqual({
+    expect(loadConfig(productionEnv, sentryKeys)).toEqual({
       sentryDsn: '',
       enableSentryDebug: false,
     });
@@ -50,11 +77,14 @@ describe('genericConfig Sentry settings', () => {
 
   it('should read SENTRY_DSN and ENABLE_SENTRY_DEBUG', () => {
     expect(
-      loadSentrySettings({
-        ...productionEnv,
-        SENTRY_DSN: 'https://public@sentry.example.com/1',
-        ENABLE_SENTRY_DEBUG: 'true',
-      }),
+      loadConfig(
+        {
+          ...productionEnv,
+          SENTRY_DSN: 'https://public@sentry.example.com/1',
+          ENABLE_SENTRY_DEBUG: 'true',
+        },
+        sentryKeys,
+      ),
     ).toEqual({
       sentryDsn: 'https://public@sentry.example.com/1',
       enableSentryDebug: true,

@@ -28,14 +28,13 @@ const serverCertificateKeyFile = env
   .asString();
 
 module.exports = {
-  appPort: env.get('PORT').required(!isTest).asPortNumber(),
-  appHost: env.get('HOST').required(!isTest).asString(),
+  appPort: env.get('PORT').default('3000').asPortNumber(),
+  appHost: env.get('HOST').default('0.0.0.0').asString(),
   logSeverity: env.get('LOG_SEVERITY').default('info').asString(),
   nodeEnv,
   isProd: nodeEnv === 'production',
   isDev,
   isTest,
-  hostUrl: env.get('HOST_URL').required(!isTest).asString(),
   mongoConnection: env.get('MONGO_URI').required(!isTest).asString(),
   tlsRejectUnauthorized: env
     .get('NODE_TLS_REJECT_UNAUTHORIZED')
@@ -56,26 +55,6 @@ module.exports = {
     .get('BLOCKCHAIN_API_AUDIENCE')
     .default('https://velocitynetwork.node')
     .asString(),
-  rootPublicKey: env.get('ROOT_PUBLIC_KEY').required(!isTest).asString(),
-  idCredentialTypes: env
-    .get('IDENTITY_CREDENTIAL_TYPES')
-    .default(
-      [
-        'IdDocument',
-        'Phone',
-        'Email',
-        'IdDocumentV1.0',
-        'DriversLicenseV1.0',
-        'NationalIdCardV1.0',
-        'PassportV1.0',
-        'ResidentPermitV1.0',
-        'EmailV1.0',
-        'PhoneV1.0',
-        'ProofOfAgeV1.0',
-        'VerificationIdentifier',
-      ].join(','),
-    )
-    .asArray(),
   ajvOptions: {
     removeAdditional: true,
     useDefaults: true,

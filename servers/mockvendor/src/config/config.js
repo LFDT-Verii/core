@@ -2,8 +2,6 @@ const { genericConfig } = require('@verii/config');
 const env = require('env-var');
 const packageJson = require('../../package.json');
 
-const { isTest } = genericConfig;
-
 const swaggerConfig = {
   swaggerInfo: {
     info: {
@@ -32,9 +30,7 @@ module.exports = {
   ...genericConfig,
   version: packageJson.version,
   serviceName: packageJson.name,
-  adminUserName: env.get('ADMIN_USER_NAME').required(!isTest).asString(),
   agentUrl: env.get('AGENT_URL').required().asString(),
-  secret: env.get('SECRET').required(!isTest).asString(),
   bearerToken: env.get('BEARER_TOKEN').asString(),
   ...swaggerConfig,
   customFastifyOptions: {

@@ -105,6 +105,7 @@ const buildConfig = ({ servesHttp = true } = {}) => {
     customFastifyOptions: {
       bodyLimit: 8388608,
     },
+    hostUrl: env.get('HOST_URL').required(servesHttp).asString(),
     deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
     keyEncryptionSecret: env.get('KEY_ENCRYPTION_SECRET').required().asString(),
     registrarUrl: env.get('REGISTRAR_URL').required().asString(),

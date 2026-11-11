@@ -56,7 +56,6 @@ const registrarUrl = `https://${registrarHost}`;
 
 describe('Verify verii credentials', () => {
   const orgKeyPair = generateKeyPair({ format: 'jwk' });
-  const orgPublicKey = hexFromJwk(orgKeyPair.publicKey, false);
   const orgPrivateKey = hexFromJwk(orgKeyPair.privateKey);
   const issuerDid = 'did:ion:1234567890';
   const issuerKeyPair = generateKeyPair({ format: 'jwk' });
@@ -78,7 +77,6 @@ describe('Verify verii credentials', () => {
   const credentialTypePath = '/api/v0.6/credential-types';
 
   const config = {
-    rootPublicKey: orgPublicKey,
     revocationContractAddress: 'any',
     registrarUrl,
     isTest: true,

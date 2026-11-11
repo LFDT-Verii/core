@@ -15,9 +15,7 @@
  */
 
 const config = require('./src/config');
-const abi = require('./src/abi.json');
 
 module.exports = {
   genericConfig: config,
-  abi,
 };
