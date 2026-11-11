@@ -8,11 +8,12 @@ const { flow } = require('lodash/fp');
 const config = require('../../src/config/config');
 const { initServer } = require('../../src/init-server');
 
-module.exports = () =>
+module.exports = (overrides) =>
   flow(
     createTestServer,
     initServer,
   )({
     ...config,
     mongoConnection,
+    ...overrides,
   });

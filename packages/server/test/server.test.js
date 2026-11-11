@@ -280,6 +280,35 @@ describe('Server Configured log', () => {
       configuredSettings.filter((name) => name.startsWith('unset')),
     ).toEqual([]);
   });
+
+  it('logs the network, its chain ID and the names of the preset values overridden', async () => {
+    const config = {
+      ...genericConfig,
+      mongoConnection,
+      network: 'testnet',
+      chainId: 1481,
+      networkOverrides: ['RPC_NODE_URL'],
+      rpcUrl: 'https://user:rpc-secret-marker@rpc.example.com',
+    };
+    const logEntries = [];
+    const logSink = pinoTest.sink();
+    logSink.on('data', (entry) => logEntries.push(entry));
+    const log = loggerProvider({ ...config, destination: logSink });
+
+    server = createServer(config, log);
+    await server.ready();
+
+    expect(
+      logEntries.find((entry) => entry.msg === 'Server Configured'),
+    ).toEqual(
+      expect.objectContaining({
+        network: 'testnet',
+        chainId: 1481,
+        networkOverrides: ['RPC_NODE_URL'],
+      }),
+    );
+    expect(JSON.stringify(logEntries)).not.toContain('rpc-secret-marker');
+  });
 });
 
 describe('Swagger documentation', () => {

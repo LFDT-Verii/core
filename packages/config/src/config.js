@@ -17,10 +17,23 @@
 const env = require('env-var');
 const fs = require('fs');
 const { isEmpty } = require('lodash/fp');
+const {
+  Networks,
+  assertNetworkOverridesAllowed,
+  findNetworkOverrides,
+} = require('./networks');
 
 const nodeEnv = env.get('NODE_ENV').required().asString();
 const isTest = nodeEnv === 'test';
 const isDev = nodeEnv === 'development';
+
+// Tests set their own network values, so they default to no preset
+const network = env
+  .get('NETWORK')
+  .default(isTest ? Networks.NO_PRESET : Networks.MAINNET)
+  .asEnum(Object.values(Networks));
+const networkOverrides = findNetworkOverrides(network, process.env);
+assertNetworkOverridesAllowed(network, networkOverrides);
 
 const serverCertificateFile = env.get('SERVER_CERTIFICATE_FILE').asString();
 const serverCertificateKeyFile = env
@@ -35,6 +48,9 @@ module.exports = {
   isProd: nodeEnv === 'production',
   isDev,
   isTest,
+  network,
+  isMainnet: network === Networks.MAINNET,
+  networkOverrides,
   mongoConnection: env.get('MONGO_URI').required(!isTest).asString(),
   tlsRejectUnauthorized: env
     .get('NODE_TLS_REJECT_UNAUTHORIZED')
@@ -51,10 +67,6 @@ module.exports = {
   traceIdHeader: env.get('TRACE_ID_HEADER').default('x-trace-id').asString(),
   sentryDsn: env.get('SENTRY_DSN').default('').asString(),
   enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
-  blockchainApiAudience: env
-    .get('BLOCKCHAIN_API_AUDIENCE')
-    .default('https://velocitynetwork.node')
-    .asString(),
   ajvOptions: {
     removeAdditional: true,
     useDefaults: true,

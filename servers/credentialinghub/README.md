@@ -25,8 +25,51 @@ Hub configuration names:
 Supply one name from each alias pair, never both: the image rejects a
 configuration that provides both names in a pair.
 
-For a generic authenticated Besu/JSON-RPC deployment, put the configuration in
-an environment file such as `hub.env`:
+### Choosing the network
+
+The image runs on Velocity Network's mainnet unless told otherwise. Choose the
+network with an image argument or with `NETWORK`:
+
+| Image argument | `NETWORK` | Network values |
+| --- | --- | --- |
+| `--mainnet` (the default) | `mainnet` | mainnet's preset |
+| `--testnet` | `testnet` | testnet's preset |
+| `--devnet` | `devnet` | devnet's preset |
+| `--no-preset` | `no-preset` | none: set every network value yourself |
+
+`--velocity-mainnet`, `--velocity-testnet` and `--velocity-devnet` still work
+as the earlier names of the first three. Supply at most one argument. If you
+also set `NETWORK`, it must name the same network.
+
+A preset supplies `RPC_NODE_URL`, `CHAIN_ID`, `REVOCATION_CONTRACT_ADDRESS`,
+`METADATA_REGISTRY_CONTRACT_ADDRESS`, `COUPON_CONTRACT_ADDRESS`,
+`PERMISSIONS_CONTRACT_ADDRESS`, `VNF_OAUTH_TOKENS_ENDPOINT`,
+`BLOCKCHAIN_API_AUDIENCE`, `REGISTRAR_URL`, `LIB_URL`, `DEEP_LINK_PROTOCOL` and
+`CREDENTIAL_EXTENSIONS_CONTEXT_URL`. `RPC_NODE_URL` is Velocity Career Labs'
+member node for the network. The OAuth client ID and secret are never preset:
+supply your own.
+
+What you can change depends on the network:
+- **Mainnet:** only how the Hub connects, `RPC_NODE_URL` and
+  `VNF_OAUTH_TOKENS_ENDPOINT` (or `BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT`). Setting
+  any other preset variable to a different value stops the Hub at startup,
+  naming the variable but not its value.
+- **Testnet and devnet:** any preset variable. The Hub logs the names of the
+  ones you changed at startup.
+- **No preset:** you set them all.
+
+The Hub logs its network and chain ID at startup.
+
+For example, on testnet with your own RPC node:
+
+```bash
+docker run --rm --env-file hub-secrets.env -e RPC_NODE_URL=https://rpc.example.org \
+  -p 3000:3000 lfdecentralizedtrust/verii-credentialing-hub:latest --testnet
+```
+
+For a network that isn't one of Velocity Network's, such as a generic
+authenticated Besu/JSON-RPC deployment, use `--no-preset` and put the
+configuration in an environment file such as `hub.env`:
 
 ```dotenv
 RPC_NODE_URL=https://besu.example.org
@@ -55,39 +98,20 @@ DEFAULT_CAO_DID=did:example:cao
 Run the image with that file:
 
 ```bash
-docker run --rm --env-file hub.env -p 3000:3000 lfdecentralizedtrust/verii-credentialing-hub:latest
+docker run --rm --env-file hub.env -p 3000:3000 \
+  lfdecentralizedtrust/verii-credentialing-hub:latest --no-preset
 ```
 
 The Hub blockchain client still requires OAuth, even when the RPC endpoint
 itself has no HTTP authentication. Supporting unauthenticated RPC separately
 is tracked in issue #890.
 
-For Velocity Network environments, use exactly one shortcut argument:
+Image arguments are reserved for choosing the network. For advanced wrappers,
+override the entrypoint instead, and set `NETWORK`:
 
 ```bash
-docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-devnet
-docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-testnet
-docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-mainnet
-```
-
-Each shortcut owns `RPC_NODE_URL`, `CHAIN_ID`, `REGISTRAR_URL`,
-`REVOCATION_CONTRACT_ADDRESS`, `METADATA_REGISTRY_CONTRACT_ADDRESS`,
-`COUPON_CONTRACT_ADDRESS`, `PERMISSIONS_CONTRACT_ADDRESS`,
-`VNF_OAUTH_TOKENS_ENDPOINT`, `BLOCKCHAIN_API_AUDIENCE`, `DEEP_LINK_PROTOCOL`,
-`LIB_URL`, and `CREDENTIAL_EXTENSIONS_CONTEXT_URL`. The associated generic
-aliases `BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT` and `BLOCKCHAIN_OAUTH_AUDIENCE` are
-also shortcut-owned. Supplying any shortcut-owned value with a shortcut
-hard-fails. OAuth client ID and secret settings, plus operational and built-in
-CAO settings, remain allowed.
-
-Image arguments are reserved for a Velocity Network shortcut. For advanced
-wrappers, override the entrypoint instead:
-
-```bash
-docker run --rm --entrypoint node lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
+docker run --rm --env-file hub.env -e NETWORK=no-preset --entrypoint node \
+  lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
 ```
 
 ## Database

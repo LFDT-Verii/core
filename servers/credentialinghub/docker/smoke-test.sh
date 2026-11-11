@@ -53,19 +53,19 @@ if ! grep -Fq 'Unsupported Credentialing Hub image argument' "$output_directory/
   exit 1
 fi
 
-readonly supplied_rpc_url='https://example.invalid'
-if docker run --rm -e "RPC_NODE_URL=$supplied_rpc_url" "$image" --velocity-devnet >"$output_directory/preset-conflict.log" 2>&1; then
-  echo 'Expected preset conflict to fail' >&2
+readonly supplied_chain_id='424242'
+if docker run --rm -e "CHAIN_ID=$supplied_chain_id" "$image" --mainnet >"$output_directory/preset-conflict.log" 2>&1; then
+  echo 'Expected a changed mainnet CHAIN_ID to fail' >&2
   exit 1
 fi
 
-if ! grep -Fq 'RPC_NODE_URL' "$output_directory/preset-conflict.log"; then
-  echo 'Preset conflict did not name RPC_NODE_URL' >&2
+if ! grep -Fq "CHAIN_ID can't be changed on mainnet" "$output_directory/preset-conflict.log"; then
+  echo 'Mainnet preset conflict did not name CHAIN_ID' >&2
   exit 1
 fi
 
-if grep -Fq "$supplied_rpc_url" "$output_directory/preset-conflict.log"; then
-  echo 'Preset conflict leaked the supplied RPC_NODE_URL value' >&2
+if grep -Fq "$supplied_chain_id" "$output_directory/preset-conflict.log"; then
+  echo 'Mainnet preset conflict leaked the supplied CHAIN_ID value' >&2
   exit 1
 fi
 

@@ -38,9 +38,9 @@ module.exports = {
   },
   omitOfferId: env.get('OMIT_OFFER_ID').default('false').asBool(),
   noOffers200: env.get('NO_OFFERS_200').default('true').asBool(),
+  // Optional: the registrar webhook only records whether the x-vnf-signature header verified
   vnfHeaderSignatureVerificationKey: env
     .get('VNF_HEADER_SIGNATURE_VERIFICATION_KEY')
-    .required()
     .asString(),
   generateOffersDelaySec: env
     .get('GENERATE_OFFERS_DELAY_SEC')
