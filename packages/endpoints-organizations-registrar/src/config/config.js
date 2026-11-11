@@ -1,10 +1,14 @@
-const env = require('env-var');
 const { createOauthConfig } = require('@verii/auth');
 const contractAbi = require('./abi.json');
 
 const createConfig = (packageJson) => {
-  const { genericConfig } = require('@verii/config');
+  const {
+    createBlockchainConfig,
+    genericConfig,
+    networkEnv,
+  } = require('@verii/config');
   const { isTest } = genericConfig;
+  const env = networkEnv();
   const oauthConfig = createOauthConfig(env, genericConfig);
   const swaggerInfo = {
     info: {
@@ -68,30 +72,14 @@ const createConfig = (packageJson) => {
   };
 
   const registrarConfig = {
+    ...createBlockchainConfig(),
     contractAbi,
     hostUrl: env.get('HOST_URL').required(!isTest).asString(),
-    rpcUrl: env
-      .get('RPC_NODE_URL')
-      .default('http://34.244.131.79:8547')
-      .asString(),
-    chainId: env.get('CHAIN_ID').default(2020).asInt(),
     rootDid: env.get('ROOT_DID').required(!isTest).asString(),
     rootKid: env.get('ROOT_KID').required(!isTest).asString(),
     rootPrivateKey: env.get('ROOT_PRIVATE_KEY').required(!isTest).asString(),
     awsRegion: env.get('AWS_REGION').default('us-east-1').required().asString(),
     awsEndpoint: env.get('AWS_ENDPOINT').default('').asString(),
-    couponContractAddress: env
-      .get('COUPON_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
-    permissionsContractAddress: env
-      .get('PERMISSIONS_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
-    metadataRegistryContractAddress: env
-      .get('METADATA_REGISTRY_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
     auth0Domain: env.get('OAUTH0_DOMAIN').required(!isTest).asString(),
     auth0ManagementApiAudience: env
       .get('AUTH0_MANAGEMENT_API_AUDIENCE')
@@ -132,12 +120,6 @@ const createConfig = (packageJson) => {
       .get('REGISTRAR_API_AUDIENCE')
       .default('https://registrar.velocitynetwork.foundation')
       .asString(),
-    vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').required(!isTest).asString(),
-    vnfClientSecret: env
-      .get('VNF_OAUTH_CLIENT_SECRET')
-      .required(!isTest)
-      .asString(),
-    vnfOAuthTokensEndpoint: oauthConfig.refreshUrl,
     registrarInvitationTtl: env
       .get('REGISTRAR_INVITATION_TTL')
       .default(2419200)

@@ -38,9 +38,6 @@ COPY --chown=node:node --from=builder \
 COPY --chown=node:node --from=builder \
   /app/servers/credentialinghub/docker/resolve-runtime-environment.js \
   ./docker/resolve-runtime-environment.js
-COPY --chown=node:node --from=builder \
-  /app/servers/credentialinghub/docker/velocity-network-presets.js \
-  ./docker/velocity-network-presets.js
 USER node
 EXPOSE 3000
 ENTRYPOINT ["node", "docker/entrypoint.js"]

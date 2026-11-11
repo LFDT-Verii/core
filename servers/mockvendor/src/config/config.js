@@ -1,6 +1,7 @@
-const { genericConfig } = require('@verii/config');
-const env = require('env-var');
+const { genericConfig, networkEnv } = require('@verii/config');
 const packageJson = require('../../package.json');
+
+const env = networkEnv();
 
 const swaggerConfig = {
   swaggerInfo: {

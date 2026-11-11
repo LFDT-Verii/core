@@ -2,25 +2,23 @@ const assert = require('node:assert/strict');
 const { describe, it } = require('node:test');
 const {
   GENERIC_OAUTH_ALIASES,
+  NETWORK_FLAGS,
   resolveRuntimeEnvironment,
 } = require('../../docker/resolve-runtime-environment');
-const {
-  VELOCITY_NETWORK_PRESETS,
-} = require('../../docker/velocity-network-presets');
 
 describe('resolveRuntimeEnvironment', () => {
-  for (const [shortcut, preset] of Object.entries(VELOCITY_NETWORK_PRESETS)) {
-    it(`applies ${shortcut} without mutating the environment`, () => {
+  for (const [flag, network] of Object.entries(NETWORK_FLAGS)) {
+    it(`selects ${network} with ${flag} without mutating the environment`, () => {
       const env = {
         MONGO_URI: 'mongodb://mongo/hub',
         VNF_OAUTH_CLIENT_ID: 'client-id',
         VNF_OAUTH_CLIENT_SECRET: 'client-secret',
       };
       const original = { ...env };
-      const result = resolveRuntimeEnvironment({ args: [shortcut], env });
+      const result = resolveRuntimeEnvironment({ args: [flag], env });
 
       assert.deepEqual(env, original);
-      assert.deepEqual(result, { ...env, ...preset });
+      assert.deepEqual(result, { ...env, NETWORK: network });
     });
   }
 
@@ -36,6 +34,28 @@ describe('resolveRuntimeEnvironment', () => {
     assert.notEqual(result, env);
   });
 
+  it('leaves NETWORK to the environment without a flag', () => {
+    const result = resolveRuntimeEnvironment({
+      args: [],
+      env: { NETWORK: 'testnet' },
+    });
+
+    assert.equal(result.NETWORK, 'testnet');
+  });
+
+  it('passes network values through with a flag, for @verii/config to check', () => {
+    const result = resolveRuntimeEnvironment({
+      args: ['--testnet'],
+      env: { RPC_NODE_URL: 'https://custom.example', CHAIN_ID: '2020' },
+    });
+
+    assert.deepEqual(result, {
+      RPC_NODE_URL: 'https://custom.example',
+      CHAIN_ID: '2020',
+      NETWORK: 'testnet',
+    });
+  });
+
   it('maps generic OAuth settings', () => {
     const env = Object.fromEntries(
       Object.keys(GENERIC_OAUTH_ALIASES).map((name) => [name, `${name}-value`]),
@@ -49,9 +69,9 @@ describe('resolveRuntimeEnvironment', () => {
     }
   });
 
-  it('accepts generic OAuth client credentials with a network shortcut', () => {
+  it('accepts generic OAuth client credentials with a network flag', () => {
     const result = resolveRuntimeEnvironment({
-      args: ['--velocity-devnet'],
+      args: ['--devnet'],
       env: {
         BLOCKCHAIN_OAUTH_CLIENT_ID: 'client-id',
         BLOCKCHAIN_OAUTH_CLIENT_SECRET: 'client-secret',
@@ -60,6 +80,7 @@ describe('resolveRuntimeEnvironment', () => {
 
     assert.equal(result.VNF_OAUTH_CLIENT_ID, 'client-id');
     assert.equal(result.VNF_OAUTH_CLIENT_SECRET, 'client-secret');
+    assert.equal(result.NETWORK, 'devnet');
   });
 
   for (const [genericName, hubName] of Object.entries(GENERIC_OAUTH_ALIASES)) {
@@ -74,51 +95,33 @@ describe('resolveRuntimeEnvironment', () => {
     });
   }
 
-  it('rejects a shortcut with an owned Hub setting', () => {
-    assert.throws(
-      () =>
-        resolveRuntimeEnvironment({
-          args: ['--velocity-testnet'],
-          env: { RPC_NODE_URL: 'https://custom.example' },
-        }),
-      /--velocity-testnet cannot be combined with: RPC_NODE_URL/,
-    );
-  });
-
-  for (const genericName of [
-    'BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT',
-    'BLOCKCHAIN_OAUTH_AUDIENCE',
-  ]) {
-    it(`rejects a shortcut with ${genericName}`, () => {
-      assert.throws(
-        () =>
-          resolveRuntimeEnvironment({
-            args: ['--velocity-mainnet'],
-            env: { [genericName]: 'configured' },
-          }),
-        new RegExp(genericName),
-      );
+  it('accepts NETWORK when it matches the flag', () => {
+    const result = resolveRuntimeEnvironment({
+      args: ['--velocity-testnet'],
+      env: { NETWORK: 'testnet' },
     });
-  }
 
-  it('treats an explicitly empty owned setting as a shortcut conflict', () => {
+    assert.equal(result.NETWORK, 'testnet');
+  });
+
+  it('rejects a flag that disagrees with NETWORK', () => {
     assert.throws(
       () =>
         resolveRuntimeEnvironment({
-          args: ['--velocity-devnet'],
-          env: { RPC_NODE_URL: '' },
+          args: ['--mainnet'],
+          env: { NETWORK: 'devnet' },
         }),
-      /RPC_NODE_URL/,
+      /--mainnet can't be combined with NETWORK=devnet/,
     );
   });
 
-  it('rejects multiple network shortcuts', () => {
+  it('rejects multiple network flags', () => {
     assert.throws(
       () =>
         resolveRuntimeEnvironment({
-          args: ['--velocity-devnet', '--velocity-testnet'],
+          args: ['--devnet', '--testnet'],
         }),
-      /Only one Velocity network shortcut may be supplied/,
+      /Only one network flag may be supplied/,
     );
   });
 
@@ -140,21 +143,6 @@ describe('resolveRuntimeEnvironment', () => {
     assert.throws(
       () => resolveRuntimeEnvironment({ args: ['run'] }),
       /Unsupported Credentialing Hub image argument/,
-    );
-  });
-
-  it('names conflicting variables without exposing their values', () => {
-    const sentinel = 'do-not-print-this-value';
-
-    assert.throws(
-      () =>
-        resolveRuntimeEnvironment({
-          args: ['--velocity-devnet'],
-          env: { RPC_NODE_URL: sentinel },
-        }),
-      (error) =>
-        error.message.includes('RPC_NODE_URL') &&
-        !error.message.includes(sentinel),
     );
   });
 });

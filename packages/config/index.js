@@ -15,7 +15,14 @@
  */
 
 const config = require('./src/config');
+const { createBlockchainConfig } = require('./src/blockchain-config');
+const { networkEnv } = require('./src/network-env');
+const { Networks, NETWORK_PRESETS } = require('./src/networks');
 
 module.exports = {
   genericConfig: config,
+  createBlockchainConfig,
+  networkEnv,
+  Networks,
+  NETWORK_PRESETS,
 };

@@ -14,8 +14,12 @@
  * limitations under the License.
  *
  */
-const { genericConfig } = require('@verii/config');
-const { accessors, from } = require('env-var');
+const {
+  createBlockchainConfig,
+  genericConfig,
+  networkEnv,
+} = require('@verii/config');
+const { accessors } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
 const {
   buildNotificationConfig,
@@ -34,30 +38,30 @@ const {
 const packageJson = require('../../package.json');
 const { createSwaggerConfig } = require('./swagger-config');
 
-const { isTest } = genericConfig;
+// Built for each config, so it reads the environment as it is then
+const createEnv = () =>
+  networkEnv({
+    asMs: (value) => parseDuration(value),
+    asIntAboveZero: (value) => {
+      const int = accessors.asInt(value);
 
-const env = from(process.env, {
-  asMs: (value) => parseDuration(value),
-  asIntAboveZero: (value) => {
-    const int = accessors.asInt(value);
+      if (int < 1) {
+        throw new Error('should be an integer greater than 0');
+      }
 
-    if (int < 1) {
-      throw new Error('should be an integer greater than 0');
-    }
+      return int;
+    },
+    asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
+      const webhookUrl = accessors.asUrlString(value);
+      const error = findWebhookUrlError(webhookUrl, allowInsecureWebhookUrl);
 
-    return int;
-  },
-  asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
-    const webhookUrl = accessors.asUrlString(value);
-    const error = findWebhookUrlError(webhookUrl, allowInsecureWebhookUrl);
+      if (error != null) {
+        throw new Error(error);
+      }
 
-    if (error != null) {
-      throw new Error(error);
-    }
-
-    return webhookUrl;
-  },
-});
+      return webhookUrl;
+    },
+  });
 
 const ajvConfig = {
   ajvOptions: {
@@ -80,6 +84,7 @@ const openid4vcConfig = {};
  * @returns {Object} the config
  */
 const buildConfig = ({ servesHttp = true } = {}) => {
+  const env = createEnv();
   const notificationsEnabled = env
     .get('NOTIFICATIONS_ENABLED')
     .default('false')
@@ -97,6 +102,7 @@ const buildConfig = ({ servesHttp = true } = {}) => {
 
   return {
     ...genericConfig,
+    ...createBlockchainConfig(),
     ...ajvConfig,
     ...swaggerConfig,
     ...openid4vcConfig,
@@ -112,9 +118,7 @@ const buildConfig = ({ servesHttp = true } = {}) => {
     libUrl: env.get('LIB_URL').required().asString(),
     credentialExtensionsContextUrl: env
       .get('CREDENTIAL_EXTENSIONS_CONTEXT_URL')
-      .default(
-        'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
-      )
+      .required()
       .asString(),
     challengesExpireIn: env.get('CHALLENGES_EXPIRE_IN').default('3d').asMs(),
     openid4vciNonceSecret: env
@@ -129,34 +133,6 @@ const buildConfig = ({ servesHttp = true } = {}) => {
       .get('OPENID4VCI_DEFERRED_INTERVAL_SECONDS')
       .default('30')
       .asIntAboveZero(),
-    // blockchain setup
-    rpcUrl: env
-      .get('RPC_NODE_URL')
-      .required()
-      .default('http://34.244.131.79:8547')
-      .asString(),
-    chainId: env.get('CHAIN_ID').default(2020).asInt(),
-    metadataRegistryContractAddress: env
-      .get('METADATA_REGISTRY_CONTRACT_ADDRESS')
-      .required(!isTest)
-      .asString(),
-    permissionsContractAddress: env
-      .get('PERMISSIONS_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
-    couponContractAddress: env
-      .get('COUPON_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
-    revocationContractAddress: env
-      .get('REVOCATION_CONTRACT_ADDRESS')
-      .required()
-      .default('0xf755E1Ca66bE12F177178E7Ea696969E0A55Bb64')
-      .asString(),
-    vnfOAuthTokensEndpoint: env
-      .get('VNF_OAUTH_TOKENS_ENDPOINT')
-      .required()
-      .asString(),
     credentialSubjectContext: env
       .get('CREDENTIAL_SUBJECT_CONTEXT')
       .default('false')

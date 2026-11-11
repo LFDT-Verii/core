@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-const env = require('env-var');
-const { genericConfig } = require('@verii/config');
+const {
+  createBlockchainConfig,
+  genericConfig,
+  networkEnv,
+} = require('@verii/config');
 const packageJson = require('../../package.json');
 
 const { isTest, secret } = genericConfig;
+const env = networkEnv();
 
 const swaggerConfig = {
   swaggerInfo: {
@@ -38,6 +42,7 @@ const swaggerConfig = {
 };
 const coreConfig = {
   ...genericConfig,
+  ...createBlockchainConfig(),
   ...swaggerConfig,
   customFastifyOptions: {
     bodyLimit: 8388608,
@@ -47,41 +52,9 @@ const coreConfig = {
   mongoSecret: env.get('MONGO_SECRET').required(!isTest).asString(),
   oracleUrl: env.get('REGISTRAR_URL').required(!isTest).asString(),
   libUrl: env.get('LIB_URL').required(!isTest).asString(),
-  metadataRegistryContractAddress: env
-    .get('METADATA_REGISTRY_CONTRACT_ADDRESS')
-    .required(!isTest)
-    .asString(),
-  permissionsContractAddress: env
-    .get('PERMISSIONS_CONTRACT_ADDRESS')
-    .required()
-    .asString(),
-  couponContractAddress: env
-    .get('COUPON_CONTRACT_ADDRESS')
-    .required(!isTest)
-    .asString(),
-  revocationContractAddress: env
-    .get('REVOCATION_CONTRACT_ADDRESS')
-    .required(!isTest)
-    .default('0xf755E1Ca66bE12F177178E7Ea696969E0A55Bb64')
-    .asString(),
-  rpcUrl: env
-    .get('RPC_NODE_URL')
-    .required()
-    .default('http://34.244.131.79:8547')
-    .asString(),
-  chainId: env.get('CHAIN_ID').default(2020).asInt(),
   issuingChallengeSecret: env
     .get('ISSUING_CHALLENGE_SECRET')
     .default(secret)
-    .asString(),
-  vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').required(!isTest).asString(),
-  vnfClientSecret: env
-    .get('VNF_OAUTH_CLIENT_SECRET')
-    .required(!isTest)
-    .asString(),
-  vnfOAuthTokensEndpoint: env
-    .get('VNF_OAUTH_TOKENS_ENDPOINT')
-    .required(!isTest)
     .asString(),
   universalResolverUrl: env
     .get('UNIVERSAL_RESOLVER_URL')
