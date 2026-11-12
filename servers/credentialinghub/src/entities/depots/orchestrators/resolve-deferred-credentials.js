@@ -21,7 +21,7 @@ const {
   sendWalletMessage,
   WalletMessageStatuses,
 } = require('../../wallet-messages');
-const { DepotErrors } = require('../domain');
+const { DepotErrors } = require('@verii/credentialing-hub-operator-api');
 
 const ResolveDeferredCredentialsStatuses = {
   ...WalletMessageStatuses,

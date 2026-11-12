@@ -17,7 +17,9 @@
 
 const { isEmpty, map } = require('lodash/fp');
 const newError = require('http-errors');
-const { ServiceConfigurationErrors } = require('../domain');
+const {
+  ServiceConfigurationErrors,
+} = require('@verii/credentialing-hub-operator-api');
 
 const deleteServiceConfiguration = (repoName) => async (serviceId, context) => {
   const { repos } = context;

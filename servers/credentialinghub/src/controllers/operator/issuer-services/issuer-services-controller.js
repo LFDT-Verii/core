@@ -15,6 +15,10 @@
  *
  */
 const { coerceArray } = require('@verii/common-functions');
+const {
+  issuerServiceSchema,
+  newIssuerServiceSchema,
+} = require('@verii/credentialing-hub-operator-api');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
   updateIssuerService,
@@ -24,10 +28,6 @@ const {
   createServiceConfiguration,
   deleteServiceConfiguration,
 } = require('../../../entities/service-configurations');
-const {
-  issuerConfigurationSchema,
-  newIssuerConfigurationSchema,
-} = require('./schemas');
 
 const REPO_NAME = 'issuerServices';
 const createIssuerServiceConfiguration = createServiceConfiguration(
@@ -38,8 +38,8 @@ const deleteIssuerServiceConfiguration = deleteServiceConfiguration(REPO_NAME);
 
 module.exports = async (fastify) => {
   fastify
-    .addSchema(issuerConfigurationSchema)
-    .addSchema(newIssuerConfigurationSchema)
+    .addSchema(issuerServiceSchema)
+    .addSchema(newIssuerServiceSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .autoSchemaPreset({ tags: ['Issuer Services'] })
     .post(

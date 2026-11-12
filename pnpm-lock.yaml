@@ -3381,6 +3381,9 @@ importers:
       '@verii/contract-permissions':
         specifier: workspace:*
         version: link:../../packages/contract-permissions
+      '@verii/credentialing-hub-operator-api':
+        specifier: workspace:*
+        version: link:../../packages/credentialing-hub-operator-api
       '@verii/crypto':
         specifier: workspace:*
         version: link:../../packages/crypto

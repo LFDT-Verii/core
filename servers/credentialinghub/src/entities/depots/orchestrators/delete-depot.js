@@ -17,7 +17,7 @@
 const { ObjectId } = require('mongodb');
 const { isEmpty, map } = require('lodash/fp');
 const newError = require('http-errors');
-const { DepotErrors } = require('../domain');
+const { DepotErrors } = require('@verii/credentialing-hub-operator-api');
 
 const deleteDepot = async (depotId, serviceId, { repos }) => {
   const credentials = await repos.credentials.findByDepotId({ depotId });

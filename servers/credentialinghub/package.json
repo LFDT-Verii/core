@@ -48,6 +48,7 @@
     "@verii/common-functions": "workspace:*",
     "@verii/contract-permissions": "workspace:*",
     "@verii/common-schemas": "workspace:*",
+    "@verii/credentialing-hub-operator-api": "workspace:*",
     "@verii/crypto": "workspace:*",
     "@verii/db-kms": "workspace:*",
     "@verii/did-doc": "workspace:*",

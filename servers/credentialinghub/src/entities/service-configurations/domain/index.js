@@ -16,7 +16,6 @@
  */
 module.exports = {
   ...require('./canonicalize-service-configuration'),
-  ...require('./service-configuration-errors'),
   ...require('./validate-service-configuration'),
   ...require('./validate-update-service-configuration'),
 };

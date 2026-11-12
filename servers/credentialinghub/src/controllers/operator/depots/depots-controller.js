@@ -15,6 +15,11 @@
  *
  */
 const { coerceArray } = require('@verii/common-functions');
+const {
+  depotConflictErrorSchema,
+  depotSchema,
+  newDepotSchema,
+} = require('@verii/credentialing-hub-operator-api');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
   createDepot,
@@ -22,11 +27,6 @@ const {
   resolveDeferredCredentials,
   ResolveDeferredCredentialsStatuses,
 } = require('../../../entities/depots');
-const {
-  depotConflictErrorSchema,
-  depotSchema,
-  newDepotSchema,
-} = require('./schemas');
 
 const depotsController = async (fastify) => {
   fastify
