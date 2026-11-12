@@ -23,6 +23,7 @@ const {
   get,
   getOr,
   groupBy,
+  has,
   isEmpty,
   join,
   map,
@@ -48,18 +49,35 @@ const unexpectedTypes = (row, depot) => {
   return difference(rowTypes, depot.expectedCredentialTypes);
 };
 
-const checkReturningHolder = (row, depot) => {
+const unexpectedTypeErrors = (row, depot) => {
   const types = unexpectedTypes(row, depot);
   return isEmpty(types)
-    ? { existingDepot: depot, errors: [] }
-    : {
-        errors: [
-          `belong to depot ${depot.id}, which doesn't expect credentials of type ${join(', ', types)}`,
-        ],
-      };
+    ? []
+    : [
+        `belong to depot ${depot.id}, which doesn't expect credentials of type ${join(', ', types)}`,
+      ];
 };
 
-const checkMatch = (row, depots, { reuse }) => {
+// A depot-only load adds no credentials, so a returning holder's depot must
+// wait for them, as the load's new depots do. A depot's deferredCredentials
+// can't be changed, and a depot that doesn't defer would give the holder an
+// empty offer.
+const undeferredErrors = (depot, { depotOnly }) =>
+  depotOnly && depot.deferredCredentials !== true
+    ? [
+        `belong to depot ${depot.id}, which doesn't defer credentials, so a depot-only load can't reuse it`,
+      ]
+    : [];
+
+const checkReturningHolder = (row, depot, context) => {
+  const errors = [
+    ...unexpectedTypeErrors(row, depot),
+    ...undeferredErrors(depot, context),
+  ];
+  return isEmpty(errors) ? { existingDepot: depot, errors } : { errors };
+};
+
+const checkMatch = (row, depots, context) => {
   if (isEmpty(depots)) {
     return { errors: [] };
   }
@@ -78,21 +96,22 @@ const checkMatch = (row, depots, { reuse }) => {
       ],
     };
   }
-  if (!reuse) {
+  if (!context.reuse) {
     return { errors: [`belong to depot ${depot.id}, and --no-reuse is set`] };
   }
-  return checkReturningHolder(row, depot);
+  return checkReturningHolder(row, depot, context);
 };
 
 /**
  * Step 4: finds the depots that already hold the rows' auth values, with
  * POST depots/get, and matches them to the rows by their normalized auth
  * values. A depot whose userReference is the row's is a returning holder's,
- * which the row reuses unless --no-reuse is set. A depot whose userReference
- * differs is always an error.
+ * which the row reuses unless --no-reuse is set. In a depot-only load, the
+ * reused depot must defer credentials. A depot whose userReference differs is
+ * always an error.
  * @param {Array<object>} rows the checked rows, from step 2. Only rows with valid auth values and a rendered depot are looked up
  * @param {object} context
- * @param {object} context.spec the spec, for its tenantId and serviceId
+ * @param {object} context.spec the spec, for its tenantId and serviceId, and whether it has credentials
  * @param {Array<{ column: string }>} [context.authColumns] the auth value columns, from step 1
  * @param {{ findDepotsByAuthValues: Function }} context.hub the Hub client
  * @param {boolean} context.reuse whether rows may reuse returning holders' depots
@@ -106,9 +125,10 @@ const matchExistingDepots = async (rows, { spec, authColumns, hub, reuse }) => {
   const tuples = flow(map('authValues'), uniqBy(authValuesKey))(lookedUpRows);
   const depots = await hub.findDepotsByAuthValues(spec, tuples);
   const depotsByKey = groupBy(depotAuthValuesKey, depots);
+  const matchContext = { reuse, depotOnly: !has('credentials', spec) };
   const matchRow = (row) => {
     const rowDepots = getOr([], [authValuesKey(row.authValues)], depotsByKey);
-    return { row: row.row, ...checkMatch(row, rowDepots, { reuse }) };
+    return { row: row.row, ...checkMatch(row, rowDepots, matchContext) };
   };
   const matches = map(matchRow, lookedUpRows);
   const existingDepots = flow(

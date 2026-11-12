@@ -3702,9 +3702,9 @@ importers:
       commander:
         specifier: ~15.0.0
         version: 15.0.0
-      csv-parser:
-        specifier: ~3.2.1
-        version: 3.2.1
+      csv-parse:
+        specifier: ^7.0.3
+        version: 7.0.3
       handlebars:
         specifier: ^4.7.10
         version: 4.7.10
@@ -3714,9 +3714,6 @@ importers:
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
-      strip-bom-stream:
-        specifier: ^5.0.0
-        version: 5.0.0
       yaml:
         specifier: ^2.9.1
         version: 2.9.1
@@ -7842,6 +7839,9 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  csv-parse@7.0.3:
+    resolution: {integrity: sha512-YFd3QM/yo17vH91L1IOZuvl09zM0zEEtdfTcOCKWcMdM++MNaQSyp09slXyFCLaPXvHstQFx/xC8myiFHSMUvw==}
 
   csv-parser@3.2.1:
     resolution: {integrity: sha512-v8RPMSglouR9od735SnwSxLBbCJqEPSbgm1R5qfr8yIiMUCEFjox56kRZid0SvgHJEkxeIEu3+a9QS3YRh7CuA==}
@@ -15548,6 +15548,8 @@ snapshots:
   css.escape@1.5.1: {}
 
   csstype@3.2.3: {}
+
+  csv-parse@7.0.3: {}
 
   csv-parser@3.2.1: {}
 

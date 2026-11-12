@@ -72,6 +72,7 @@ describe('loadCsv', () => {
           cellCount: 5,
         },
       ],
+      errors: [],
     });
   });
 
@@ -86,7 +87,19 @@ describe('loadCsv', () => {
           cellCount: 2,
         },
       ],
+      errors: [],
     });
+  });
+
+  it('reads Windows line endings', async () => {
+    const file = writeCsv(
+      'email,name\r\na@example.com,A\r\nb@example.com,B\r\n',
+    );
+    const { rows } = await loadCsv(file);
+    expect(rows).toEqual([
+      { row: 2, data: { email: 'a@example.com', name: 'A' }, cellCount: 2 },
+      { row: 3, data: { email: 'b@example.com', name: 'B' }, cellCount: 2 },
+    ]);
   });
 
   it('skips blank lines but keeps the row numbers', async () => {
@@ -132,7 +145,63 @@ describe('loadCsv', () => {
   });
 
   it('loads an empty file', async () => {
-    expect(await loadCsv(writeCsv(''))).toEqual({ headers: [], rows: [] });
+    expect(await loadCsv(writeCsv(''))).toEqual({
+      headers: [],
+      rows: [],
+      errors: [],
+    });
+  });
+
+  describe('parse errors', () => {
+    it('refuses a quote that is never closed, at the row where it opened', async () => {
+      const file = writeCsv(
+        'id,email,name\nE1,a@example.com,"Adam\nE2,b@example.com,Beth\n',
+      );
+      expect(await loadCsv(file)).toEqual({
+        errors: [
+          { row: 2, reason: 'opens a quoted cell that is never closed' },
+        ],
+      });
+    });
+
+    it('numbers the row after multi-line cells and blank lines', async () => {
+      const file = writeCsv(
+        'id,note\nE1,"two\nlines"\n\nE2,x\nE3,"open\nE4,y\n',
+      );
+      expect(await loadCsv(file)).toEqual({
+        errors: [
+          { row: 5, reason: 'opens a quoted cell that is never closed' },
+        ],
+      });
+    });
+
+    it('refuses a quote inside an unquoted cell', async () => {
+      const file = writeCsv('id,name\nE1,Adam\nE2,Beth "BJ" Jones\n');
+      expect(await loadCsv(file)).toEqual({
+        errors: [
+          {
+            row: 3,
+            reason: expect.stringMatching(
+              /^can't be parsed: Invalid Opening Quote: /,
+            ),
+          },
+        ],
+      });
+    });
+
+    it('refuses text after a closing quote', async () => {
+      const file = writeCsv('id,name\nE1,"Adam" Smith\n');
+      expect(await loadCsv(file)).toEqual({
+        errors: [
+          {
+            row: 2,
+            reason: expect.stringMatching(
+              /^can't be parsed: Invalid Closing Quote: /,
+            ),
+          },
+        ],
+      });
+    });
   });
 
   it('rejects when the file cannot be read', async () => {

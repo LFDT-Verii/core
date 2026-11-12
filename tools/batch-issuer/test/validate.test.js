@@ -208,6 +208,25 @@ describe('batch-issuer validate', () => {
     });
   });
 
+  it('refuses a CSV with a quote that is never closed, without calling the Hub', async () => {
+    const spec = {
+      ...depotOnlySpec,
+      depot: { ...depotOnlySpec.depot, userReference: '{{id}}' },
+    };
+    const files = writeBatch({
+      spec,
+      csvText: 'id,email,name\nE1,a@example.com,"Adam\nE2,b@example.com,Beth\n',
+    });
+
+    const { exitCode, report } = await validateJson(files);
+
+    expect(exitCode).toEqual(1);
+    expect(report).toEqual({
+      valid: false,
+      errors: [{ row: 2, reason: 'opens a quoted cell that is never closed' }],
+    });
+  });
+
   it('reports a spec that does not fit the service', async () => {
     mockGetService([
       buildService({ verifiablePresentationAuthRules: [emailRule, phoneRule] }),
@@ -525,6 +544,64 @@ describe('batch-issuer validate', () => {
       });
     });
 
+    describe('in a depot-only load', () => {
+      const depotOnlyFiles = () =>
+        writeBatch({ spec: depotOnlySpec, csvLines: [ADAM, BETH] });
+
+      it("reports a returning holder's depot that doesn't defer credentials", async () => {
+        mockGetService();
+        mockFindDepots(() => [buildDepot({ deferredCredentials: false })]);
+
+        const { exitCode, report } = await validateJson(depotOnlyFiles());
+
+        expect(exitCode).toEqual(1);
+        expect(report.errors).toEqual([
+          {
+            row: 2,
+            column: 'email',
+            reason:
+              "the auth values belong to depot 6512a1b2c3d4e5f6a7b8c9e0, which doesn't defer credentials, so a depot-only load can't reuse it",
+          },
+        ]);
+      });
+
+      it("reports a returning holder's depot without deferredCredentials", async () => {
+        const { deferredCredentials, ...depot } = buildDepot();
+        mockGetService();
+        mockFindDepots(() => [depot]);
+
+        const { exitCode } = await validateJson(depotOnlyFiles());
+
+        expect(deferredCredentials).toEqual(false);
+        expect(exitCode).toEqual(1);
+      });
+
+      it("reuses a returning holder's depot that defers credentials", async () => {
+        mockGetService();
+        mockFindDepots(() => [buildDepot({ deferredCredentials: true })]);
+
+        const { exitCode, report } = await validateJson(depotOnlyFiles());
+
+        expect(exitCode).toEqual(0);
+        expect(report.summary).toEqual({
+          rows: 2,
+          newDepots: 1,
+          existingDepots: 1,
+          credentials: 0,
+        });
+      });
+    });
+
+    it("does not need a returning holder's depot to defer credentials when the load adds credentials", async () => {
+      mockGetService();
+      mockFindDepots(() => [buildDepot({ deferredCredentials: false })]);
+      mockRegistrar();
+
+      const { exitCode } = await validateJson(files());
+
+      expect(exitCode).toEqual(0);
+    });
+
     it('reports auth values that belong to more than one depot', async () => {
       mockGetService();
       mockFindDepots(() => [
@@ -605,6 +682,7 @@ describe('batch-issuer validate', () => {
       const returning = buildDepot({
         userReference: 'E2400',
         authValues: ['holder-2400@example.com'],
+        deferredCredentials: true,
       });
       mockFindDepots(depotsMatching([returning]), requests);
       const csvLines = Array.from(

@@ -46,7 +46,8 @@ const toBatchRow = (existingDepots) => (row) => ({
  * the service (step 1), each row against the spec (step 2), each credential
  * against its type's schema (step 3), and the batch against the Hub's
  * depots (step 4). It collects every error. A spec with errors stops it before
- * the CSV is read.
+ * the CSV is read, and a CSV that doesn't parse stops it before the Hub is
+ * called.
  * @param {object} input
  * @param {string} input.specFile the YAML spec file
  * @param {string} input.csvFile the CSV file
@@ -63,6 +64,9 @@ const validateBatch = async ({ specFile, csvFile, vars, options }, clients) => {
     return { errors: specErrors };
   }
   const csv = await loadCsv(csvFile);
+  if (!isEmpty(csv.errors)) {
+    return { errors: csv.errors };
+  }
   const service = await clients.hub.getIssuerService(spec);
   const { authColumns, errors: serviceErrors } = checkService({
     spec,

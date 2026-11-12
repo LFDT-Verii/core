@@ -93,6 +93,8 @@ The spec is checked against a JSON schema first, and nothing else is checked unt
 
 The first line is the header. A byte order mark is stripped, header names are trimmed, and blank lines are skipped. Errors give rows as a spreadsheet numbers them, so the first row after the header is row 2.
 
+Quoting is strict. A cell with a comma, a quote or a line break must be quoted, with each quote inside it doubled: `"Ng ""CJ"""`. A quote that is never closed would take the rest of the file into one cell, so it's an error at the row where the quote opens. A quote inside an unquoted cell is an error too. A CSV that doesn't parse stops validation before the Hub is called.
+
 ## Templates
 
 A template is a credential's JSON `content`, with `type` and `credentialSubject`, whose strings are Handlebars templates:
@@ -141,7 +143,7 @@ Every error is collected, and the command fails when there's any.
    - each depot and credential passes the operator API's validator (`initOperatorApiValidator`), as the Hub validates `depots/create` and `credentials/create`.
 3. **Each credential against its type:** the `credentialSubject` is checked against the type's JSON schema from the registrar, which `credentials/create` loads the same way. Every schema error is reported, not only the first.
 4. **The batch against the Hub:** one `POST depots/get` with the rows' auth values, at most 1000 tuples per request. The depots it returns are matched to rows by normalizing their `authValues` with `buildAuthMatchValues`. For a match:
-   - the same `userReference` is a returning holder, whose depot gets the row's credentials. The row's credential types must be in the depot's `expectedCredentialTypes`, when it has any. With `--no-reuse`, it's an error;
+   - the same `userReference` is a returning holder, whose depot gets the row's credentials. The row's credential types must be in the depot's `expectedCredentialTypes`, when it has any. In a depot-only load, the depot must have `deferredCredentials: true`, as the load's new depots do: the setting can't be changed, and the holder would otherwise get an empty offer. With `--no-reuse`, it's an error;
    - a different `userReference` is always an error: two people share an email, or an email was reassigned;
    - auth values that belong to more than one depot are an error.
 
