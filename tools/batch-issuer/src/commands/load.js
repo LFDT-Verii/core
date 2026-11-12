@@ -46,7 +46,7 @@ const initClients = ({ endpoint, authToken, registrar }) => ({
   registrar: registrar == null ? undefined : initRegistrarClient({ registrar }),
 });
 
-// holders.csv gives holders.state.json, in the same directory.
+// holders.csv gives holders.state.jsonl, in the same directory.
 const besideCsv = (csvFile, extension) => {
   const { dir, name } = path.parse(csvFile);
   return path.join(dir, `${name}${extension}`);
@@ -55,8 +55,8 @@ const besideCsv = (csvFile, extension) => {
 // Validates the batch, with the depots its state file records as its own,
 // and opens the state, which must belong to the batch.
 const validate = async (input, clients, stateFile) => {
-  const savedState = await readState(stateFile);
-  const createdDepotIds = new Set(map('id', savedState?.depots));
+  const saved = await readState(stateFile);
+  const createdDepotIds = new Set(map('id', saved?.state.depots));
   const { errors, batch } = await validateBatch(
     { ...input, options: { ...input.options, createdDepotIds } },
     clients,
@@ -65,8 +65,8 @@ const validate = async (input, clients, stateFile) => {
     return { errors };
   }
   const batchId = await identifyBatch(input, batch.spec);
-  const state = openState(savedState, batchId, stateFile);
-  return { errors, batch, state, summary: summarizeBatch(batch) };
+  const state = openState(saved, batchId, stateFile);
+  return { errors, batch, saved, state, summary: summarizeBatch(batch) };
 };
 
 const reportValidation = ({ errors, summary }, options, io) => {
@@ -76,10 +76,10 @@ const reportValidation = ({ errors, summary }, options, io) => {
 };
 
 // A load that stops reports what the state file holds then.
-const load = async ({ batch, summary, state, files, hub, options }, io) => {
-  if (!options.json) {
-    io.stdout(`The batch is valid: ${formatSummary(summary)}.\n`);
-  }
+const load = async (
+  { batch, summary, saved, state, files, hub, options },
+  io,
+) => {
   const report = (final, extras) => ({
     summary,
     load: {
@@ -92,6 +92,7 @@ const load = async ({ batch, summary, state, files, hub, options }, io) => {
     const loaded = await loadBatch(batch, {
       hub,
       state,
+      saved,
       stateFile: files.state,
       resolveDeferred: options.resolveDeferred,
     });
@@ -109,7 +110,7 @@ const load = async ({ batch, summary, state, files, hub, options }, io) => {
     );
     return ExitCodes.OK;
   } catch (error) {
-    const final = (await readState(files.state)) ?? state;
+    const final = (await readState(files.state))?.state ?? state;
     const stopped = { ...report(final), error };
     if (options.json) {
       io.stdout(formatJsonLoadReport(stopped));
@@ -130,7 +131,7 @@ const load = async ({ batch, summary, state, files, hub, options }, io) => {
  */
 const runLoad = async ({ specFile, csvFile, options }, io) => {
   const files = {
-    state: options.state ?? besideCsv(csvFile, '.state.json'),
+    state: options.state ?? besideCsv(csvFile, '.state.jsonl'),
     output: options.output ?? besideCsv(csvFile, '.links.csv'),
   };
   const clients = initClients(options);
@@ -143,6 +144,9 @@ const runLoad = async ({ specFile, csvFile, options }, io) => {
   const validation = await validate(input, clients, files.state);
   if (!isEmpty(validation.errors) || options.dryrun) {
     return reportValidation(validation, options, io);
+  }
+  if (!options.json) {
+    io.stdout(`The batch is valid: ${formatSummary(validation.summary)}.\n`);
   }
   return load({ ...validation, files, hub: clients.hub, options }, io);
 };

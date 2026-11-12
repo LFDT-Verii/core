@@ -20,7 +20,7 @@ Validates the batch against its spec, the registrar and the Hub, and prints ever
 | `--default-country <code>` | The country of phone numbers written without a country code, such as `US` |
 | `--var <name=value>` | A value that overrides the CSV column of the same name, in every row. Repeatable |
 | `--no-reuse` | Treat rows whose auth values already belong to a depot as errors. A depot that the state file records, because an earlier load of the batch created it, isn't a reuse |
-| `--state <file>` | The batch's state file. Defaults to the CSV's name with `.state.json` in the CSV's directory, such as `holders.state.json` for `holders.csv`. See [Reruns and the state file](#reruns-and-the-state-file) |
+| `--state <file>` | The batch's state file. Defaults to the CSV's name with `.state.jsonl` in the CSV's directory, such as `holders.state.jsonl` for `holders.csv`. See [Reruns and the state file](#reruns-and-the-state-file) |
 | `--json` | Print the report as JSON |
 
 ### `load`
@@ -194,13 +194,23 @@ row,userReference,redirectUrl
 
 A load can fail partway after validation passes, for example on a network error. The Hub has no all-or-nothing endpoint, so the load records what it creates in a state file, and a rerun of the same command skips what's done.
 
-`--state`, by default `holders.state.json` beside `holders.csv`, records:
+`--state`, by default `holders.state.jsonl` beside `holders.csv`, records:
 - the batch: its `tenantId`, `serviceId`, and a hash of the spec file, its templates, the CSV, and the `--var` and `--default-country` values;
 - each depot the batch created, with its row;
 - each credential it created, with its row, `credentialReference`, id and depot;
 - each depot whose deferred credentials it resolved, and each `preauth` link, with its row.
 
-It's written when the load starts, and again as soon as the Hub confirms each depot, each `create-many` request, each resolved depot and each link. Each write goes to a temporary file that is then renamed, so the file is never half written. It's JSON on one line. Rewriting it after every depot adds a few minutes in all to a 50,000-row batch, on top of the Hub's requests.
+It's [JSON Lines](https://jsonlines.org). The load creates it with the batch's line, and appends a line as soon as the Hub confirms each depot, each `create-many` request, each resolved depot and each link:
+
+```
+{"batch":{"tenantId":"6512a1b2c3d4e5f6a7b8c9d0","serviceId":"6512a1b2c3d4e5f6a7b8c9d1","hash":"9f2c…"}}
+{"depots":[{"row":3,"id":"6512a1b2c3d4e5f6a7b8c9e1"}]}
+{"credentials":[{"row":2,"credentialReference":"E1001-ivie-2026","id":"…","depotId":"…"},…]}
+{"resolvedDepots":["6512a1b2c3d4e5f6a7b8c9e0"]}
+{"links":[{"row":3,"redirectUrl":"https://…"}]}
+```
+
+A crash while a line is written can leave the last line unfinished. A last line that isn't JSON is ignored, so its record counts as not done, and the next load cuts it off before it appends. Any other line that isn't JSON is an error that names the file and the line.
 
 A rerun:
 - finds the depots again: by their auth values for a `verifiable_presentation` service, through validation's step 4, and from the state file, by row, for a `preauth` service, whose depots have no auth values. A depot the state file records counts as skipped, not reused, and `--no-reuse` accepts it;
@@ -246,7 +256,7 @@ Depots: 2 created, 1 reused, 0 skipped.
 Credentials: 3 created, 0 skipped.
 Issue link: https://hub.example.com/app-redirect?...
 Links: holders.links.csv
-State: holders.state.json
+State: holders.state.jsonl
 ```
 
 Created is what this run created, reused the depots that already existed, and skipped what an earlier run of the batch created. With `--resolve-deferred`, a line counts the depots whose deferred credentials it resolved. The issue link is the shared link of a `verifiable_presentation` service.
@@ -258,7 +268,7 @@ Row 3:
   - email: the auth values belong to depot 6512a1b2c3d4e5f6a7b8c9ff, which another client created after validation
 
 Error: depots/create refused a depot
-The load stopped after creating 1 of 3 depots and 0 of 3 credentials. holders.state.json records what was created. Rerun the same command to continue.
+The load stopped after creating 1 of 3 depots and 0 of 3 credentials. holders.state.jsonl records what was created. Rerun the same command to continue.
 ```
 
 With `--json`, `load` prints `{ valid, errors, summary, load }`, where `load` has the counts `depots: { created, reused, skipped }` and `credentials: { created, skipped }`, `resolvedDepots` with `--resolve-deferred`, the shared `link`, and the `output` and `state` files. When the load stops, `load` has an `error` with its `message` and the refused rows' `errors`, and no `link` or `output`.

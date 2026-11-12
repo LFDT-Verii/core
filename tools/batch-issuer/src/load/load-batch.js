@@ -20,6 +20,7 @@ const {
   chunk,
   filter,
   flatMap,
+  flatten,
   flow,
   get,
   has,
@@ -29,27 +30,29 @@ const {
   map,
   mapValues,
   pick,
-  reduce,
   reject,
   size,
   uniqBy,
   zipWith,
 } = require('lodash/fp');
+const { runSequentially } = require('@verii/common-functions');
 const {
   CREDENTIALS_CREATE_MANY_MAX_ITEMS,
 } = require('@verii/credentialing-hub-operator-api');
 const { isInternalVpAuth, isPreauth } = require('../validation/check-service');
-const { addRecords, writeState } = require('../state/state-file');
+const { appendRecords, startState } = require('../state/state-file');
 const { count } = require('../report/count');
 
-// Runs a step for each item, one at a time, passing the state from each step
-// to the next.
-const inSequence = (step) => (state, items) =>
-  reduce(
-    async (previous, item) => step(await previous, item),
-    Promise.resolve(state),
-    items,
+// Runs a step for each item, one at a time. The records that a step gives
+// are appended to the state file as soon as it ends, and the records of
+// every step are added to one of the state's lists.
+const inSequence = (append, key, step) => async (state, items) => {
+  const recordStep = async (item) => append(key, await step(item));
+  const records = await runSequentially(
+    map((item) => () => recordStep(item), items),
   );
+  return { ...state, [key]: [...state[key], ...flatten(records)] };
+};
 
 // Each row's depot id, by row: the existing depot that validation matched it
 // to, or else the depot that this batch created for it, in this run or an
@@ -90,12 +93,12 @@ const refuseDepot = (spec, row) => (error) => {
   throw new AggregateError([rowError], 'depots/create refused a depot');
 };
 
-const createDepots = ({ spec, hub, save }) =>
-  inSequence(async (state, row) => {
+const createDepots = ({ spec, hub, append }) =>
+  inSequence(append, 'depots', async (row) => {
     const depot = await hub
       .createDepot(spec, row.depot)
       .catch(refuseDepot(spec, row));
-    return save(state, 'depots', [{ row: row.row, id: depot.id }]);
+    return [{ row: row.row, id: depot.id }];
   });
 
 const toItems =
@@ -152,13 +155,12 @@ const toCredentialRecord = ({ row, depotId, credential }, { id }) => ({
   depotId,
 });
 
-const createCredentials = ({ spec, hub, save }) =>
-  inSequence(async (state, items) => {
+const createCredentials = ({ spec, hub, append }) =>
+  inSequence(append, 'credentials', async (items) => {
     const credentials = await hub
       .createCredentials(spec, map(pick(['depotId', 'credential']), items))
       .catch(refuseItems(items));
-    const records = zipWith(toCredentialRecord, items, credentials);
-    return save(state, 'credentials', records);
+    return zipWith(toCredentialRecord, items, credentials);
   });
 
 // Reused depots that defer credentials and received some from this batch, in
@@ -177,10 +179,10 @@ const depotsToResolve = (rows, state) => {
   )(reusedRows(rows, state));
 };
 
-const resolveDepots = ({ spec, hub, save }) =>
-  inSequence(async (state, depotId) => {
+const resolveDepots = ({ spec, hub, append }) =>
+  inSequence(append, 'resolvedDepots', async (depotId) => {
     await hub.resolveDeferredCredentials(spec, depotId);
-    return save(state, 'resolvedDepots', [depotId]);
+    return [depotId];
   });
 
 // The depots this batch created that have no link yet. Reused depots are
@@ -191,10 +193,10 @@ const depotsToLink = (state) => {
   return reject(({ row }) => linkedRows.has(row), state.depots);
 };
 
-const linkDepots = ({ spec, hub, save }) =>
-  inSequence(async (state, { row, id }) => {
+const linkDepots = ({ spec, hub, append }) =>
+  inSequence(append, 'links', async ({ row, id }) => {
     const redirectUrl = await hub.refreshIssueLink(spec, id);
-    return save(state, 'links', [{ row, redirectUrl }]);
+    return [{ row, redirectUrl }];
   });
 
 /**
@@ -202,7 +204,8 @@ const linkDepots = ({ spec, hub, save }) =>
  * describes. The state file records each depot, credential, resolved depot
  * and link as soon as the Hub confirms it, and what it records is skipped.
  * @param {{ spec: object, service: object, rows: Array<object> }} batch the validated batch
- * @param {{ hub: object, state: object, stateFile: string, resolveDeferred?: boolean }} context
+ * @param {{ hub: object, state: object, saved?: object, stateFile: string, resolveDeferred?: boolean }} context
+ *   saved is what readState read from the state file, if it was there
  * @returns {Promise<{ state: object, sharedLink?: string }>} the final state, and the service's shared link
  *   when it uses verifiable_presentation auth
  * @throws an AggregateError of row errors when the Hub refuses a depot or credentials, or the error of a
@@ -210,10 +213,10 @@ const linkDepots = ({ spec, hub, save }) =>
  */
 const loadBatch = async (
   { spec, service, rows },
-  { hub, state, stateFile, resolveDeferred },
+  { hub, state, saved, stateFile, resolveDeferred },
 ) => {
-  const context = { spec, hub, save: addRecords(stateFile) };
-  await writeState(stateFile, state);
+  const context = { spec, hub, append: appendRecords(stateFile) };
+  await startState(stateFile, saved, state.batch);
   const withDepots = await createDepots(context)(
     state,
     rowsWithoutDepots(rows, state),

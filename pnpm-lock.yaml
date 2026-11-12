@@ -3678,6 +3678,9 @@ importers:
       '@verii/common-fetchers':
         specifier: workspace:*
         version: link:../../packages/common-fetchers
+      '@verii/common-functions':
+        specifier: workspace:*
+        version: link:../../packages/common-functions
       '@verii/credentialing-hub-operator-api':
         specifier: workspace:*
         version: link:../../packages/credentialing-hub-operator-api

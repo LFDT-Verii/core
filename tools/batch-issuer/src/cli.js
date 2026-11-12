@@ -96,7 +96,7 @@ const addBatchOptions = (command) =>
     )
     .option(
       '--state <file>',
-      "the batch's state file, which records what loading it created (default: the CSV's name with .state.json)",
+      "the batch's state file, which records what loading it created (default: the CSV's name with .state.jsonl)",
     );
 
 const addValidateCommand = (program, io, resolve) =>

@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@verii/common-fetchers": "workspace:*",
+    "@verii/common-functions": "workspace:*",
     "@verii/credentialing-hub-operator-api": "workspace:*",
     "@verii/http-client": "workspace:*",
     "@verii/jwt": "workspace:*",

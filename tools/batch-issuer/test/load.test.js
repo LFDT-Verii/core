@@ -110,12 +110,21 @@ const newDepotId = (number) => objectId('de90', number);
 const credentialId = (number) => objectId('c4ed', number);
 
 const filesOf = ({ dir }) => ({
-  state: path.join(dir, 'holders.state.json'),
+  state: path.join(dir, 'holders.state.jsonl'),
   links: path.join(dir, 'holders.links.csv'),
 });
 
-const readState = (batch) =>
-  JSON.parse(fs.readFileSync(filesOf(batch).state, 'utf8'));
+// The state file's lines, which must all be JSON.
+const readStateLines = (file) =>
+  fs
+    .readFileSync(file, 'utf8')
+    .split('\n')
+    .filter((line) => line !== '')
+    .map((line) => JSON.parse(line));
+
+// The records of one of the state's lists, from every line that adds to it.
+const stateList = (file, key) =>
+  readStateLines(file).flatMap((line) => line[key] ?? []);
 
 const readLinks = (batch) => fs.readFileSync(filesOf(batch).links, 'utf8');
 
@@ -229,35 +238,35 @@ describe('batch-issuer load', () => {
           `4,E1003,${SHARED_LINK}`,
         ]),
       );
-      expect(readState(batch)).toEqual({
-        batch: { ...ids, hash: expect.stringMatching(/^[0-9a-f]{64}$/) },
-        depots: [
-          { row: 3, id: newDepotId(2) },
-          { row: 4, id: newDepotId(3) },
-        ],
-        credentials: [
-          {
-            row: 2,
-            credentialReference: 'E1001-ivie-2026',
-            id: credentialId(1),
-            depotId: DEPOT_ID,
-          },
-          {
-            row: 3,
-            credentialReference: 'E1002-ivie-2026',
-            id: credentialId(2),
-            depotId: newDepotId(2),
-          },
-          {
-            row: 4,
-            credentialReference: 'E1003-ivie-2026',
-            id: credentialId(3),
-            depotId: newDepotId(3),
-          },
-        ],
-        resolvedDepots: [],
-        links: [],
-      });
+      expect(readStateLines(filesOf(batch).state)).toEqual([
+        {
+          batch: { ...ids, hash: expect.stringMatching(/^[0-9a-f]{64}$/) },
+        },
+        { depots: [{ row: 3, id: newDepotId(2) }] },
+        { depots: [{ row: 4, id: newDepotId(3) }] },
+        {
+          credentials: [
+            {
+              row: 2,
+              credentialReference: 'E1001-ivie-2026',
+              id: credentialId(1),
+              depotId: DEPOT_ID,
+            },
+            {
+              row: 3,
+              credentialReference: 'E1002-ivie-2026',
+              id: credentialId(2),
+              depotId: newDepotId(2),
+            },
+            {
+              row: 4,
+              credentialReference: 'E1003-ivie-2026',
+              id: credentialId(3),
+              depotId: newDepotId(3),
+            },
+          ],
+        },
+      ]);
     });
 
     it('prints a JSON summary with --json', async () => {
@@ -284,7 +293,7 @@ describe('batch-issuer load', () => {
     it('writes the links and the state where --output and --state say', async () => {
       const batch = writeBatch({ csvLines: [BETH] });
       const output = path.join(batch.dir, 'mail-merge.csv');
-      const state = path.join(batch.dir, 'november.json');
+      const state = path.join(batch.dir, 'november.jsonl');
       mockRun(initHub());
 
       const result = await load(batch, '--output', output, '--state', state);
@@ -294,7 +303,7 @@ describe('batch-issuer load', () => {
       expect(fs.readFileSync(output, 'utf8')).toEqual(
         linksCsv([`2,E1002,${SHARED_LINK}`]),
       );
-      expect(JSON.parse(fs.readFileSync(state, 'utf8')).depots).toEqual([
+      expect(stateList(state, 'depots')).toEqual([
         { row: 2, id: newDepotId(2) },
       ]);
       expect(fs.existsSync(filesOf(batch).state)).toEqual(false);
@@ -407,7 +416,7 @@ describe('batch-issuer load', () => {
           issueLink,
         );
         expect(writeRequests(hub)).toEqual(requests);
-        expect(readState(batch).links).toEqual(stateLinks);
+        expect(stateList(filesOf(batch).state, 'links')).toEqual(stateLinks);
         expect(readLinks(batch)).toEqual(linksCsv(links));
       });
     }
@@ -479,7 +488,9 @@ describe('batch-issuer load', () => {
             requestPath === 'depots/resolve-deferred-credentials',
         );
         expect(resolves).toEqual(resolveRequests);
-        expect(readState(batch).resolvedDepots).toEqual(resolvedDepots);
+        expect(stateList(filesOf(batch).state, 'resolvedDepots')).toEqual(
+          resolvedDepots,
+        );
       });
     }
   });
@@ -583,7 +594,9 @@ describe('batch-issuer load', () => {
         createDepotRequest(newDepot('E1001', 'adam.smith@example.com')),
         createDepotRequest(newDepot('E1002', 'beth.jones@example.com')),
       ]);
-      expect(readState(batch).depots).toEqual([{ row: 2, id: newDepotId(1) }]);
+      expect(stateList(filesOf(batch).state, 'depots')).toEqual([
+        { row: 2, id: newDepotId(1) },
+      ]);
       expect(fs.existsSync(filesOf(batch).links)).toEqual(false);
     });
 
@@ -676,7 +689,7 @@ describe('batch-issuer load', () => {
       'E1002-ivie-2026-copy',
     ]);
     expect(hub.credentials).toEqual([]);
-    expect(readState(batch).credentials).toEqual([]);
+    expect(stateList(filesOf(batch).state, 'credentials')).toEqual([]);
   });
 
   it('creates more than 1,000 credentials in requests of at most 1,000', async () => {
@@ -811,6 +824,127 @@ describe('batch-issuer load', () => {
     }
   });
 
+  describe('a last line that a crash left unfinished', () => {
+    const cases = [
+      {
+        name: 'is ignored when it was torn, so the rerun finds the depot again by its auth values',
+        finish: (line) => line.slice(0, 20),
+        depots: 'Depots: 1 created, 1 reused, 1 skipped.',
+        depotLines: [
+          { depots: [{ row: 2, id: newDepotId(1) }] },
+          { depots: [{ row: 4, id: newDepotId(3) }] },
+        ],
+      },
+      {
+        name: 'is kept when only its newline is missing',
+        finish: (line) => line,
+        depots: 'Depots: 1 created, 0 reused, 2 skipped.',
+        depotLines: [
+          { depots: [{ row: 2, id: newDepotId(1) }] },
+          { depots: [{ row: 3, id: newDepotId(2) }] },
+          { depots: [{ row: 4, id: newDepotId(3) }] },
+        ],
+      },
+    ];
+
+    for (const { name, finish, depots, depotLines } of cases) {
+      it(`${name}, and the rerun finishes without duplicates`, async () => {
+        const hub = initFakeHub();
+        const batch = writeBatch({ csvLines: [ADAM, BETH, CARL] });
+        const { state } = filesOf(batch);
+        mockRun(hub, { 'depots/create': { at: 3 } });
+        await load(batch);
+        // The crash came as the line of Beth's depot was written.
+        const [batchLine, adamLine, bethLine] = fs
+          .readFileSync(state, 'utf8')
+          .split('\n');
+        fs.writeFileSync(
+          state,
+          `${batchLine}\n${adamLine}\n${finish(bethLine)}`,
+        );
+
+        mockRun(hub);
+        const result = await load(batch);
+
+        expect(result.exitCode).toEqual(0);
+        expect(result.stdout).toContain(
+          `\n${depots}\nCredentials: 3 created, 0 skipped.\n`,
+        );
+        expect(hub.depots).toHaveLength(3);
+        expect(hub.credentials).toHaveLength(3);
+        expect(
+          hasDuplicates(map('credentialReference', hub.credentials)),
+        ).toEqual(false);
+        expect(readStateLines(state)).toEqual([
+          JSON.parse(batchLine),
+          ...depotLines,
+          { credentials: expect.any(Array) },
+        ]);
+      });
+    }
+  });
+
+  it("starts the state file again when the crash tore the batch's line", async () => {
+    const hub = initFakeHub();
+    const batch = writeBatch({ csvLines: [ADAM] });
+    const { state } = filesOf(batch);
+    fs.writeFileSync(state, '{"batch":{"tenantId":"65');
+    mockRun(hub);
+
+    const result = await load(batch);
+
+    expect(result.exitCode).toEqual(0);
+    expect(readStateLines(state)).toEqual([
+      { batch: { ...ids, hash: expect.any(String) } },
+      { depots: [{ row: 2, id: newDepotId(1) }] },
+      { credentials: [expect.objectContaining({ row: 2 })] },
+    ]);
+  });
+
+  describe('a state file that cannot be read', () => {
+    const cases = [
+      {
+        name: 'a line other than the last is not JSON',
+        stateFile: ({ dir }) => {
+          const file = path.join(dir, 'holders.state.jsonl');
+          fs.writeFileSync(
+            file,
+            `${JSON.stringify({ batch: ids })}\n{"depots":[{"row":2\n{"depots":[]}\n`,
+          );
+          return file;
+        },
+        stderr: (file) =>
+          `Error: the state file ${file} has a line that isn't JSON: line 2\n`,
+      },
+      {
+        name: 'it is a directory',
+        stateFile: ({ dir }) => dir,
+        stderr: (file) =>
+          expect.stringMatching(
+            new RegExp(`^Error: the state file ${file} can't be read: EISDIR`),
+          ),
+      },
+    ];
+
+    for (const { name, stateFile, stderr } of cases) {
+      it(`stops the load when ${name}`, async () => {
+        const hub = initFakeHub();
+        const batch = writeBatch({ csvLines: [ADAM] });
+        const file = stateFile(batch);
+        mockRun(hub);
+
+        const result = await load(batch, '--state', file);
+
+        expect(result).toEqual({
+          exitCode: 2,
+          stdout: '',
+          stderr: stderr(file),
+        });
+        expect(writeRequests(hub)).toEqual([]);
+      });
+    }
+  });
+
   describe('a rerun of a finished load', () => {
     const cases = [
       {
@@ -938,26 +1072,6 @@ describe('batch-issuer load', () => {
         expect(writeRequests(hub)).toHaveLength(firstRunWrites);
       });
     }
-
-    it('stops the load when the state file is not JSON', async () => {
-      const hub = initFakeHub();
-      const batch = writeBatch({ csvLines: [ADAM] });
-      fs.writeFileSync(filesOf(batch).state, '{"batch":');
-      mockRun(hub);
-
-      const result = await load(batch);
-
-      expect(result).toEqual({
-        exitCode: 2,
-        stdout: '',
-        stderr: expect.stringMatching(
-          new RegExp(
-            `^Error: the state file ${filesOf(batch).state} can't be read: .*JSON`,
-          ),
-        ),
-      });
-      expect(writeRequests(hub)).toEqual([]);
-    });
 
     it('is refused by validate too', async () => {
       const hub = initFakeHub();
