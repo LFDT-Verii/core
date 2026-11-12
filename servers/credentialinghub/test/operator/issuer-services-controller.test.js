@@ -99,11 +99,20 @@ const anyOfErrorMessage = (vpBranchError, authMethodIndex = 0) => {
   return `${preauthBranchError}, ${vpBranchError}, body/service must match a schema in anyOf`;
 };
 
+// AJV checks a rule's anyOf, whose branches each require an object, before
+// the rule's own type.
+const NOT_AN_OBJECT_RULE_MESSAGE = [
+  'body/service/verifiablePresentationAuthRules/0 must be object',
+  'body/service/verifiablePresentationAuthRules/0 must be object',
+  'body/service/verifiablePresentationAuthRules/0 must match a schema in anyOf',
+].join(', ');
+
 const emailAuthRule = (overrides) => ({
   path: [['credentialSubject', 'email']],
   rule: 'pick',
   valueIndex: 0,
   type: 'EmailV1.0',
+  valueType: 'string',
   ...overrides,
 });
 
@@ -161,6 +170,7 @@ const buildAuthRules = (valueIndexes) =>
     rule: 'pick',
     valueIndex,
     type: 'EmailV1.0',
+    valueType: 'string',
   }));
 
 describe('Issuer services management Test suite', () => {
@@ -246,6 +256,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -279,6 +290,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -314,6 +326,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -347,6 +360,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -381,6 +395,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -413,6 +428,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -446,6 +462,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -479,6 +496,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -514,6 +532,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -548,6 +567,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -640,6 +660,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -682,6 +703,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -719,8 +741,7 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message:
-            'body/service/verifiablePresentationAuthRules/0 must be object',
+          message: NOT_AN_OBJECT_RULE_MESSAGE,
           errorCode: 'request_validation_failed',
         }),
       );
@@ -979,6 +1000,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1014,6 +1036,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1059,6 +1082,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1108,6 +1132,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1149,7 +1174,13 @@ describe('Issuer services management Test suite', () => {
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
-              { path: [['foo']], rule: 'pick', valueIndex: 0, type: 'foo' },
+              {
+                path: [['foo']],
+                rule: 'pick',
+                valueIndex: 0,
+                type: 'foo',
+                valueType: 'string',
+              },
             ],
             challengesExpireIn: 10000,
             credentialTypesAvailable: ['foo'],
@@ -1396,6 +1427,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1430,6 +1462,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1466,6 +1499,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1500,6 +1534,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1535,6 +1570,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1568,6 +1604,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1602,6 +1639,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1636,6 +1674,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1672,6 +1711,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1707,6 +1747,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1811,6 +1852,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1856,6 +1898,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -1894,8 +1937,7 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message:
-            'body/service/verifiablePresentationAuthRules/0 must be object',
+          message: NOT_AN_OBJECT_RULE_MESSAGE,
           errorCode: 'request_validation_failed',
         }),
       );
@@ -2121,6 +2163,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -2157,6 +2200,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -2206,6 +2250,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -2259,6 +2304,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -2304,6 +2350,7 @@ describe('Issuer services management Test suite', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
             challengesExpireIn: 10000,
@@ -2373,12 +2420,14 @@ describe('Issuer services management Test suite', () => {
           rule: 'pick',
           valueIndex: 0,
           type: 'EmployeeIdV1.0',
+          valueType: 'string',
         },
         {
           path: [['credentialSubject', 'departmentId']],
           rule: 'equal',
           valueIndex: 1,
           type: 'EmployeeIdV1.0',
+          valueType: 'string',
         },
       ];
       const swappedRules = [
@@ -2480,10 +2529,12 @@ describe('Issuer services management Test suite', () => {
           tenant,
           service,
           userReference: 'alice',
-          authMatchValues: [123, 456],
+          authMatchValues: ['123', '456'],
           authRulesFingerprint: buildAuthRulesFingerprint(service),
         });
-        await expect(findMatchingDepots([123, 456])).resolves.toHaveLength(1);
+        await expect(findMatchingDepots(['123', '456'])).resolves.toHaveLength(
+          1,
+        );
 
         const response = await updateService({
           verifiablePresentationAuthRules: swappedRules,
@@ -2491,10 +2542,10 @@ describe('Issuer services management Test suite', () => {
         expect(response.statusCode).toEqual(200);
 
         // Bob: employee 456, department 123, so [123, 456] under the new rules.
-        await expect(findMatchingDepots([123, 456])).resolves.toEqual([]);
-        const bobResponse = await createDepot([123, 456]);
+        await expect(findMatchingDepots(['123', '456'])).resolves.toEqual([]);
+        const bobResponse = await createDepot(['123', '456']);
         expect(bobResponse.statusCode).toEqual(200);
-        await expect(findMatchingDepots([123, 456])).resolves.toEqual([
+        await expect(findMatchingDepots(['123', '456'])).resolves.toEqual([
           expect.objectContaining({
             _id: new ObjectId(bobResponse.json.depot.id),
           }),
@@ -2551,6 +2602,43 @@ describe('Issuer services management Test suite', () => {
         );
         const secondResponse = await createDepot(['EMP-1', 'SALES']);
         expect(secondResponse.statusCode).toEqual(200);
+      });
+
+      it("should invalidate depots when a rule's valueType changes, and not when its valueFormat does", async () => {
+        const firstResponse = await createDepot(['123', 'SALES']);
+        expect(firstResponse.statusCode).toEqual(200);
+
+        // valueFormat only checks the values of new depots
+        const formatResponse = await updateService({
+          verifiablePresentationAuthRules: [
+            rules[0],
+            { ...rules[1], valueFormat: 'email' },
+          ],
+        });
+        expect(formatResponse.statusCode).toEqual(200);
+        await expect(findMatchingDepots(['123', 'sales'])).resolves.toEqual([
+          expect.objectContaining({
+            _id: new ObjectId(firstResponse.json.depot.id),
+          }),
+        ]);
+
+        const typeResponse = await updateService({
+          verifiablePresentationAuthRules: [
+            { ...rules[0], valueType: 'number' },
+            rules[1],
+          ],
+        });
+        expect(typeResponse.statusCode).toEqual(200);
+        await expect(findMatchingDepots(['123', 'sales'])).resolves.toEqual([]);
+        const stringResponse = await createDepot(['123', 'SALES']);
+        expect(stringResponse.statusCode).toEqual(400);
+        const numberResponse = await createDepot([123, 'SALES']);
+        expect(numberResponse.statusCode).toEqual(200);
+        await expect(findMatchingDepots([123, 'sales'])).resolves.toEqual([
+          expect.objectContaining({
+            _id: new ObjectId(numberResponse.json.depot.id),
+          }),
+        ]);
       });
 
       it('should invalidate depots when the requested types change', async () => {

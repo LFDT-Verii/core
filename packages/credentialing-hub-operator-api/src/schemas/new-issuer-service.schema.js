@@ -92,12 +92,22 @@ const newIssuerServiceSchema = {
     verifiablePresentationAuthRules: {
       description:
         // eslint-disable-next-line max-len
-        'verifiablePresentationAuthRules are the matcher rules that can be used to match an exchange with submitted presentation used for authentication. Required when the authMethods include `verifiable_presentation` and the authMode is `internal`. At most 10 rules',
+        'verifiablePresentationAuthRules are the matcher rules that can be used to match an exchange with submitted presentation used for authentication. Required when the authMethods include `verifiable_presentation` and the authMode is `internal`. At most 10 rules.\n\nEach rule reads values of its `valueType` from the presented credentials of its `type`, and ignores values of any other type rather than converting them. Strings are trimmed and lower-cased, and numbers and booleans are used as they are. A depot matches when its `authValues`, normalized the same way, equal the values the rules read, each at its rule\'s `valueIndex`. Values of different types never match, so `"12345"` never matches `12345`.',
       type: 'array',
       maxItems: 10,
       items: {
         type: 'object',
-        required: ['path', 'rule', 'valueIndex', 'type'],
+        required: ['path', 'rule', 'valueIndex', 'type', 'valueType'],
+        // valueFormat is only allowed on string rules. Each branch has its own
+        // type because fast-json-stringify compiles them on their own for the
+        // issuer-service response, and AJV's strictTypes logs untyped ones.
+        anyOf: [
+          { type: 'object', properties: { valueType: { enum: ['string'] } } },
+          {
+            type: 'object',
+            not: { type: 'object', required: ['valueFormat'] },
+          },
+        ],
         properties: {
           path: {
             type: 'array',
@@ -137,6 +147,20 @@ const newIssuerServiceSchema = {
             minLength: 1,
             description:
               'the credential type that the rule reads. It must be one of the `disclosureRequest` types',
+          },
+          valueType: {
+            type: 'string',
+            enum: ['string', 'number', 'boolean'],
+            description:
+              // eslint-disable-next-line max-len
+              "the JSON type of the rule's values. A depot's auth value at the rule's `valueIndex` must have this type. Values of another type that the rule reads from a credential are ignored, never converted",
+          },
+          valueFormat: {
+            type: 'string',
+            enum: ['email', 'e164'],
+            description:
+              // eslint-disable-next-line max-len
+              "the format of a `string` rule's values, which depots/create checks after trimming the value: `email` is an email address, checked as AJV's `email` format, and `e164` is a phone number in E.164 format, such as `+15556192191`. It doesn't change how values are read or matched. Only allowed when `valueType` is `string`",
           },
         },
       },

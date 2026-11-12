@@ -87,15 +87,37 @@ describe('Find Depots Test Suite', () => {
           rule: 'pick',
           valueIndex: 0,
           type: 'EmailV1.0',
+          valueType: 'string',
         },
         {
           path: [['credentialSubject', 'employeeId']],
           rule: 'equal',
           valueIndex: 1,
           type: 'EmploymentPastV1.1',
+          valueType: 'string',
         },
       ],
       ...overrides,
+    });
+
+  const persistNumberAndBooleanService = () =>
+    persistVpService({
+      verifiablePresentationAuthRules: [
+        {
+          path: [['credentialSubject', 'employeeId']],
+          rule: 'pick',
+          valueIndex: 0,
+          type: 'EmploymentPastV1.1',
+          valueType: 'number',
+        },
+        {
+          path: [['credentialSubject', 'active']],
+          rule: 'pick',
+          valueIndex: 1,
+          type: 'EmploymentPastV1.1',
+          valueType: 'boolean',
+        },
+      ],
     });
 
   beforeEach(async () => {
@@ -263,35 +285,11 @@ describe('Find Depots Test Suite', () => {
     });
 
     it('should match numbers and booleans by type and value', async () => {
-      const service = await persistVpService({
-        verifiablePresentationAuthRules: [
-          {
-            path: [['credentialSubject', 'employeeId']],
-            rule: 'pick',
-            valueIndex: 0,
-            type: 'EmploymentPastV1.1',
-          },
-          {
-            path: [['credentialSubject', 'active']],
-            rule: 'pick',
-            valueIndex: 1,
-            type: 'EmploymentPastV1.1',
-          },
-        ],
-      });
+      const service = await persistNumberAndBooleanService();
       const depot = await createDepot(
         { userReference: 'ABC123', authValues: [42, true] },
         { serviceId: service._id },
       );
-
-      const typeMismatchResponse = await findByAuthValues(
-        [
-          ['42', true],
-          [42, 'true'],
-        ],
-        { serviceId: service._id },
-      );
-      expectDepots(typeMismatchResponse, []);
 
       const response = await findByAuthValues([[42, true]], {
         serviceId: service._id,
@@ -610,6 +608,42 @@ describe('Find Depots Test Suite', () => {
       expectInvalidAuthValues(response, 1);
       expect(response.body).not.toContain('example.com');
       expect(response.body).not.toContain('EMP-');
+    });
+
+    it("should 400 when an auth value doesn't have its rule's valueType, naming its tuple", async () => {
+      const service = await persistNumberAndBooleanService();
+      const findInService = (authValues) =>
+        findByAuthValues(authValues, { serviceId: service._id });
+
+      expectInvalidAuthValues(
+        await findInService([
+          [42, true],
+          ['42', true],
+        ]),
+        1,
+      );
+      expectInvalidAuthValues(await findInService([[42, 'true']]), 0);
+    });
+
+    it("should 400 when an auth value doesn't have its rule's valueFormat", async () => {
+      const service = await persistVpService({
+        verifiablePresentationAuthRules: [
+          {
+            path: [['credentialSubject', 'email']],
+            rule: 'pick',
+            valueIndex: 0,
+            type: 'EmailV1.0',
+            valueType: 'string',
+            valueFormat: 'email',
+          },
+        ],
+      });
+
+      const response = await findByAuthValues([['jane.doe']], {
+        serviceId: service._id,
+      });
+
+      expectInvalidAuthValues(response, 0);
     });
 
     it('should 400 when there are more than 1000 tuples', async () => {

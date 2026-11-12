@@ -20,12 +20,15 @@ const {
   isInternalVpAuth,
 } = require('../../issuer-services/domain/is-internal-vp-auth');
 
+// valueType changes what a rule reads, so it's part of the hash. valueFormat
+// doesn't change matching, so it isn't.
 const canonicalRules = flow(
-  map(({ path, rule, valueIndex, type }) => ({
+  map(({ path, rule, valueIndex, type, valueType }) => ({
     path,
     rule,
     valueIndex,
     type,
+    valueType,
   })),
   sortBy('valueIndex'),
 );

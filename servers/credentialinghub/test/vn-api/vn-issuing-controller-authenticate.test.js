@@ -865,6 +865,7 @@ describe('vn-api > authenticate', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
             ],
           }),
@@ -895,6 +896,7 @@ describe('vn-api > authenticate', () => {
             rule: 'pick',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
         ]);
         await persistVpDepot(['adam.smith@example.com']);
@@ -914,6 +916,7 @@ describe('vn-api > authenticate', () => {
             rule: 'pick',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
         ]);
         const depot = await persistVpDepot(['adam.smith@example.com']);
@@ -933,6 +936,7 @@ describe('vn-api > authenticate', () => {
             rule: 'pick',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
         ]);
         const depot = await persistVpDepot(['adam.smith@example.com']);
@@ -979,6 +983,7 @@ describe('vn-api > authenticate', () => {
             rule: 'equal',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
         ]);
         await persistVpDepot(['adam.smith@example.com']);
@@ -998,6 +1003,7 @@ describe('vn-api > authenticate', () => {
             rule: 'equal',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
         ]);
         const depot = await persistVpDepot(['adam.smith@example.com']);
@@ -1008,6 +1014,79 @@ describe('vn-api > authenticate', () => {
         ]);
 
         await expectAuthenticated(response, depot);
+      });
+
+      describe('value types', () => {
+        const employeeIdRule = (valueType, path) => ({
+          path: path ?? [['credentialSubject', 'employeeId']],
+          rule: 'pick',
+          valueIndex: 0,
+          type: 'EmailV1.0',
+          valueType,
+        });
+
+        const presentEmployee = async (credentialSubject) =>
+          present([
+            await generateCredential({
+              issuer: emailIssuer,
+              holderDid: holder.did,
+              credentialSubject,
+            }),
+          ]);
+
+        it('should match a number rule with the depot that holds the number, not the string', async () => {
+          await persistIssuerServiceRules([employeeIdRule('number')]);
+          await persistVpDepot(['12345']);
+          const depot = await persistVpDepot([12345]);
+
+          const response = await presentEmployee({ employeeId: 12345 });
+
+          await expectAuthenticated(response, depot);
+        });
+
+        it('should 401 for a number rule when only a depot with the string has the value', async () => {
+          await persistIssuerServiceRules([employeeIdRule('number')]);
+          await persistVpDepot(['12345']);
+
+          const response = await presentEmployee({ employeeId: 12345 });
+
+          await expectUserNotFound(response);
+        });
+
+        it('should 401 when the credential holds a string for a number rule', async () => {
+          await persistIssuerServiceRules([employeeIdRule('number')]);
+          await persistVpDepot([12345]);
+
+          const response = await presentEmployee({ employeeId: '12345' });
+
+          await expectUserNotFound(response);
+        });
+
+        it('should 401 when the credential holds a number for a string rule', async () => {
+          await persistIssuerServiceRules([employeeIdRule('string')]);
+          await persistVpDepot(['12345']);
+
+          const response = await presentEmployee({ employeeId: 12345 });
+
+          await expectUserNotFound(response);
+        });
+
+        it('should use the next pointer when the first reads a value of another type', async () => {
+          await persistIssuerServiceRules([
+            employeeIdRule('number', [
+              ['credentialSubject', 'employeeId'],
+              ['credentialSubject', 'employeeNumber'],
+            ]),
+          ]);
+          const depot = await persistVpDepot([12345]);
+
+          const response = await presentEmployee({
+            employeeId: 'E-12345',
+            employeeNumber: 12345,
+          });
+
+          await expectAuthenticated(response, depot);
+        });
       });
 
       describe('email and phone rules', () => {
@@ -1021,12 +1100,14 @@ describe('vn-api > authenticate', () => {
                 rule: 'pick',
                 valueIndex: 0,
                 type: 'EmailV1.0',
+                valueType: 'string',
               },
               {
                 path: [['credentialSubject', 'phone']],
                 rule: 'pick',
                 valueIndex: 1,
                 type: 'PhoneV1.0',
+                valueType: 'string',
               },
             ],
             {
@@ -1079,6 +1160,7 @@ describe('vn-api > authenticate', () => {
             rule: 'pick',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
         ]);
         await persistVpDepot(['user0@example.com']);
@@ -1456,6 +1538,7 @@ describe('vn-api > authenticate', () => {
             rule: 'pick',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
         ]);
       });
@@ -1516,6 +1599,7 @@ describe('vn-api > authenticate', () => {
             rule: 'pick',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
         ]);
       });

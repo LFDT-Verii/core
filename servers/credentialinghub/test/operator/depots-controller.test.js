@@ -527,34 +527,42 @@ describe('Depots Test suite', () => {
             rule: 'pick',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
           {
             path: [['credentialSubject', 'employeeId']],
             rule: 'equal',
             valueIndex: 1,
             type: 'EmploymentPastV1.1',
+            valueType: 'string',
           },
         ],
         ...overrides,
       });
 
-    const expectInvalidAuthValues = (response) => {
+    const expectInvalidAuthValues = (
+      response,
+      message = 'invalid_auth_values',
+    ) => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
           statusCode: 400,
           errorCode: 'invalid_auth_values',
-          message: 'invalid_auth_values',
+          message,
         }),
       );
     };
+
+    const invalidAuthValueMessage = (index) =>
+      `authValues[${index}] must be a non-blank value of its auth rule's valueType and valueFormat`;
 
     beforeEach(async () => {
       vpService = await persistVpService();
     });
 
     it('should store normalized authMatchValues in order, and never return them', async () => {
-      const authValues = ['  Jane.Doe@Example.COM\t', 42];
+      const authValues = ['  Jane.Doe@Example.COM\t', ' EMP-42 '];
       const response = await createDepot(vpService._id, {
         userReference: 'ABC123',
         authValues,
@@ -578,7 +586,7 @@ describe('Depots Test suite', () => {
       ).resolves.toEqual([
         {
           ...expectedDbDepot(response.json.depot, tenant),
-          authMatchValues: ['jane.doe@example.com', 42],
+          authMatchValues: ['jane.doe@example.com', 'emp-42'],
           authRulesFingerprint: buildAuthRulesFingerprint(vpService),
         },
       ]);
@@ -647,6 +655,181 @@ describe('Depots Test suite', () => {
       await expect(
         mongoDb().collection('depots').countDocuments({}),
       ).resolves.toEqual(0);
+    });
+
+    describe('auth value types and formats', () => {
+      // Listed out of valueIndex order: each value is checked against the
+      // rule at its valueIndex.
+      const typedRules = [
+        {
+          path: [['credentialSubject', 'phone']],
+          rule: 'pick',
+          valueIndex: 3,
+          type: 'PhoneV1.0',
+          valueType: 'string',
+          valueFormat: 'e164',
+        },
+        {
+          path: [['credentialSubject', 'email']],
+          rule: 'pick',
+          valueIndex: 0,
+          type: 'EmailV1.0',
+          valueType: 'string',
+          valueFormat: 'email',
+        },
+        {
+          path: [['credentialSubject', 'employeeId']],
+          rule: 'equal',
+          valueIndex: 1,
+          type: 'EmploymentPastV1.1',
+          valueType: 'number',
+        },
+        {
+          path: [['credentialSubject', 'current']],
+          rule: 'equal',
+          valueIndex: 2,
+          type: 'EmploymentPastV1.1',
+          valueType: 'boolean',
+        },
+        {
+          path: [['credentialSubject', 'department']],
+          rule: 'equal',
+          valueIndex: 4,
+          type: 'EmploymentPastV1.1',
+          valueType: 'string',
+        },
+      ];
+      const validAuthValues = [
+        ' Jane.Doe@Example.com ',
+        12345,
+        true,
+        '+15556192191',
+        'Sales',
+      ];
+      const withValue = (index, value) =>
+        validAuthValues.map((validValue, i) =>
+          i === index ? value : validValue,
+        );
+      let typedService;
+
+      beforeEach(async () => {
+        typedService = await persistVpService({
+          disclosureRequest: {
+            types: [
+              { type: 'EmailV1.0' },
+              { type: 'EmploymentPastV1.1' },
+              { type: 'PhoneV1.0' },
+            ],
+            purpose: 'Identification',
+            retentionPeriod: 'P1D',
+          },
+          verifiablePresentationAuthRules: typedRules,
+        });
+      });
+
+      it("should 200 for values of each rule's valueType and valueFormat", async () => {
+        const response = await createDepot(typedService._id, {
+          userReference: 'ABC123',
+          authValues: validAuthValues,
+        });
+
+        expect(response.statusCode).toEqual(200);
+        await expect(
+          mongoDb().collection('depots').findOne({}),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            authValues: validAuthValues,
+            authMatchValues: [
+              'jane.doe@example.com',
+              12345,
+              true,
+              '+15556192191',
+              'sales',
+            ],
+            authRulesFingerprint: buildAuthRulesFingerprint(typedService),
+          }),
+        );
+      });
+
+      it('should 200 for other values of each type and format', async () => {
+        const response = await createDepot(typedService._id, {
+          userReference: 'ABC123',
+          authValues: [
+            'adam+hub@mail.example.co.uk',
+            0,
+            false,
+            '+442071838750',
+            '12345',
+          ],
+        });
+
+        expect(response.statusCode).toEqual(200);
+      });
+
+      const invalidValues = [
+        { name: 'a number for an email rule', index: 0, value: 12345 },
+        { name: 'a value that is not an email', index: 0, value: 'jane.doe' },
+        {
+          name: 'an email with a space',
+          index: 0,
+          value: 'jane doe@example.com',
+        },
+        { name: 'a string for a number rule', index: 1, value: '12345' },
+        { name: 'a boolean for a number rule', index: 1, value: true },
+        { name: 'a string for a boolean rule', index: 2, value: 'true' },
+        { name: 'a number for a boolean rule', index: 2, value: 1 },
+        { name: 'a number for an e164 rule', index: 3, value: 15556192191 },
+        { name: 'a phone number without a +', index: 3, value: '15556192191' },
+        {
+          name: 'a phone number with spaces',
+          index: 3,
+          value: '+1 555 619 2191',
+        },
+        {
+          name: 'a phone number of more than 15 digits',
+          index: 3,
+          value: '+1234567890123456',
+        },
+        { name: 'a number for a string rule', index: 4, value: 12345 },
+        { name: 'a boolean for a string rule', index: 4, value: false },
+      ];
+      forEach(({ name, index, value }) => {
+        it(`should 400 for ${name}, naming its index`, async () => {
+          const response = await createDepot(typedService._id, {
+            userReference: 'ABC123',
+            authValues: withValue(index, value),
+          });
+
+          expectInvalidAuthValues(response, invalidAuthValueMessage(index));
+          await expect(
+            mongoDb().collection('depots').countDocuments({}),
+          ).resolves.toEqual(0);
+        });
+      }, invalidValues);
+
+      it('should name the first invalid value', async () => {
+        const response = await createDepot(typedService._id, {
+          userReference: 'ABC123',
+          authValues: [
+            'jane.doe@example.com',
+            '12345',
+            'true',
+            '+15556192191',
+            'Sales',
+          ],
+        });
+
+        expectInvalidAuthValues(response, invalidAuthValueMessage(1));
+      });
+
+      it('should 400 without naming an index when there is a value too few', async () => {
+        const response = await createDepot(typedService._id, {
+          userReference: 'ABC123',
+          authValues: validAuthValues.slice(0, 4),
+        });
+
+        expectInvalidAuthValues(response);
+      });
     });
 
     it('should 409 when the same auth values are used by a depot of the service', async () => {

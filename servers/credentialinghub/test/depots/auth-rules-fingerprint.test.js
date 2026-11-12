@@ -26,6 +26,7 @@ const emailRule = {
   rule: 'pick',
   valueIndex: 0,
   type: 'EmailV1.0',
+  valueType: 'string',
 };
 const employeeIdRule = {
   path: [
@@ -35,6 +36,7 @@ const employeeIdRule = {
   rule: 'equal',
   valueIndex: 1,
   type: 'EmploymentPastV1.1',
+  valueType: 'string',
 };
 
 const buildService = (overrides = {}) => ({
@@ -93,6 +95,19 @@ describe('buildAuthRulesFingerprint', () => {
     ).toEqual(fingerprint);
   });
 
+  it('should be the same when a rule gets a valueFormat', () => {
+    expect(
+      buildAuthRulesFingerprint(
+        buildService({
+          verifiablePresentationAuthRules: [
+            { ...emailRule, valueFormat: 'email' },
+            employeeIdRule,
+          ],
+        }),
+      ),
+    ).toEqual(fingerprint);
+  });
+
   it('should be the same for a service with both auth methods', () => {
     expect(
       buildAuthRulesFingerprint(
@@ -126,6 +141,12 @@ describe('buildAuthRulesFingerprint', () => {
         employeeIdRule,
       ],
     },
+    'a changed valueType': {
+      verifiablePresentationAuthRules: [
+        { ...emailRule, valueType: 'number' },
+        employeeIdRule,
+      ],
+    },
     'a changed rule type': {
       verifiablePresentationAuthRules: [
         { ...emailRule, type: 'EmploymentPastV1.1' },
@@ -141,6 +162,7 @@ describe('buildAuthRulesFingerprint', () => {
           rule: 'pick',
           valueIndex: 2,
           type: 'EmailV1.0',
+          valueType: 'string',
         },
       ],
     },

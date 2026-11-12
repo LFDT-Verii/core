@@ -27,6 +27,7 @@ const emailRule = (overrides) => ({
   rule: 'pick',
   valueIndex: 0,
   type: 'EmailV1.0',
+  valueType: 'string',
   ...overrides,
 });
 
@@ -35,6 +36,7 @@ const phoneRule = (overrides) => ({
   rule: 'pick',
   valueIndex: 1,
   type: 'PhoneV1.0',
+  valueType: 'string',
   ...overrides,
 });
 

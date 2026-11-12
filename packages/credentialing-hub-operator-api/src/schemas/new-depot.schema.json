@@ -14,7 +14,7 @@
     },
     "authValues": {
       "type": "array",
-      "description": "auth values to use for authenticating the user or session",
+      "description": "auth values to use for authenticating the user or session. For an issuer service with internal `verifiable_presentation` auth, one value per rule of its `verifiablePresentationAuthRules`, at the rule's `valueIndex`. Each value must have its rule's `valueType`, and its `valueFormat` if the rule has one, and a string must not be blank. Strings are trimmed and lower-cased before they are checked and matched, and numbers and booleans are used as they are. Values of different types never match, so `\"12345\"` never matches `12345`.",
       "minItems": 1,
       "maxItems": 10,
       "items": {

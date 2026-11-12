@@ -49,6 +49,7 @@ const emailIssuerService = (overrides = {}) => ({
       rule: 'pick',
       valueIndex: 0,
       type: EMAIL_CREDENTIAL_TYPE,
+      valueType: 'string',
     },
   ],
   ...overrides,

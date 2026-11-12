@@ -26,22 +26,18 @@ const {
   get,
   has,
   isArray,
-  isBoolean,
   isEmpty,
   isInteger,
   isNull,
-  isNumber,
   isPlainObject,
   isString,
   map,
-  overSome,
   size,
   stubTrue,
   uniq,
 } = require('lodash/fp');
 const { toAuthMatchValue } = require('./auth-match-values');
-
-const isScalar = overSome([isString, isNumber, isBoolean]);
+const { isOfValueType } = require('./auth-value-types');
 
 const isArrayIndex = (component) => isInteger(component) && component >= 0;
 
@@ -90,25 +86,29 @@ const selectClaims = (pointer, credential) => {
 };
 
 // A rule's pointers are tried in order, and the first one that selects a
-// usable value supplies the values. A selection of only nulls, objects or
-// arrays falls through to the next pointer. A rule has at most 10 pointers, so
-// every pointer is evaluated. A path that isn't an array reads nothing: map
-// would walk an object's values as if they were pointers.
-const firstUsableValues = (pointers, credential) => {
+// usable value supplies the values. A selection of only nulls, objects, arrays
+// or values of another type than the rule's falls through to the next pointer.
+// A rule has at most 10 pointers, so every pointer is evaluated. A path that
+// isn't an array reads nothing: map would walk an object's values as if they
+// were pointers.
+const firstUsableValues = (pointers, isUsable, credential) => {
   if (!isArray(pointers)) {
     return [];
   }
   const selectFromCredential = (pointer) => selectClaims(pointer, credential);
-  const usableValues = flow(selectFromCredential, filter(isScalar));
+  const usableValues = flow(selectFromCredential, filter(isUsable));
   return flow(map(usableValues), find(size), defaultTo([]))(pointers);
 };
 
-// The distinct normalized scalar values that a rule finds in the credentials of
-// its type. credentials are { type, credential } for each verified credential.
+// The distinct normalized values of the rule's valueType that a rule finds in
+// the credentials of its type. Values of another type are ignored, never
+// converted. credentials are { type, credential } for each verified
+// credential.
 const ruleValues = (rule, credentials) => {
   const isOfRuleType = ({ type }) => type === rule.type;
+  const isUsable = isOfValueType(rule.valueType);
   const valuesInCredential = (credential) =>
-    firstUsableValues(rule.path, credential);
+    firstUsableValues(rule.path, isUsable, credential);
   return flow(
     filter(isOfRuleType),
     map('credential'),
