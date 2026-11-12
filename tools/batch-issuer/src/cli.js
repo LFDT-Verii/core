@@ -16,25 +16,14 @@
 
 const { Command, InvalidArgumentError, Option } = require('commander');
 const { isSupportedCountry } = require('libphonenumber-js');
-const { get, isEmpty, join, split, toUpper } = require('lodash/fp');
+const { isEmpty, join, split, toUpper } = require('lodash/fp');
 const packageJson = require('../package.json');
 const { ExitCodes } = require('./commands/exit-codes');
-const { runValidate } = require('./commands/validate');
+const { runLoad } = require('./commands/load');
 const { runCheckRules } = require('./commands/check-rules');
+const { describeError } = require('./report/describe-error');
 
 const AUTH_TOKEN_ENV = 'BATCH_ISSUER_AUTH_TOKEN';
-
-// An HTTP error carries the response's status code and body. Its request
-// headers, which hold the operator token, are never printed.
-const describeResponse = (error) => {
-  const message = get(['body', 'message'], error) ?? error.message;
-  return error.statusCode == null ? message : `${error.statusCode} ${message}`;
-};
-
-const formatFatalError = (error) =>
-  error.url == null
-    ? `Error: ${error.message}\n`
-    : `Error: ${error.url} failed: ${describeResponse(error)}\n`;
 
 // Runs a command. An error that stops it, such as an unreadable file or a Hub
 // or registrar failure, is printed, and exits with ERROR.
@@ -42,7 +31,7 @@ const runCommand = async (command, io) => {
   try {
     return await command();
   } catch (error) {
-    io.stderr(formatFatalError(error));
+    io.stderr(`Error: ${describeError(error)}\n`);
     return ExitCodes.ERROR;
   }
 };
@@ -79,13 +68,10 @@ const addHubOptions = (command) =>
     )
     .option('--json', 'print the report as JSON');
 
-const addValidateCommand = (program, io, resolve) =>
+// The arguments and options of validate and load.
+const addBatchOptions = (command) =>
   addHubOptions(
-    program
-      .command('validate')
-      .description(
-        'Validate a batch against its spec, the registrar and the Hub. Nothing is written to the Hub.',
-      )
+    command
       .argument('<spec>', 'the YAML spec file')
       .argument('<csv>', 'the CSV file, with a header line'),
   )
@@ -108,9 +94,44 @@ const addValidateCommand = (program, io, resolve) =>
       '--no-reuse',
       'treat rows whose auth values already belong to a depot as errors',
     )
+    .option(
+      '--state <file>',
+      "the batch's state file, which records what loading it created (default: the CSV's name with .state.json)",
+    );
+
+const addValidateCommand = (program, io, resolve) =>
+  addBatchOptions(
+    program
+      .command('validate')
+      .description(
+        'Validate a batch against its spec, the registrar and the Hub. Nothing is written to the Hub. The same as load --dryrun.',
+      ),
+  ).action(async (specFile, csvFile, options) => {
+    const validate = () =>
+      runLoad({ specFile, csvFile, options: { ...options, dryrun: true } }, io);
+    resolve(await runCommand(validate, io));
+  });
+
+const addLoadCommand = (program, io, resolve) =>
+  addBatchOptions(
+    program
+      .command('load')
+      .description(
+        'Validate a batch, then load its depots and credentials into the Hub, and write their links.',
+      ),
+  )
+    .option('--dryrun', 'stop after validating, as validate does')
+    .option(
+      '--resolve-deferred',
+      'resolve the deferred credentials of reused depots that receive credentials',
+    )
+    .option(
+      '-o, --output <file>',
+      "the CSV of each row's link (default: the CSV's name with .links.csv)",
+    )
     .action(async (specFile, csvFile, options) => {
-      const validate = () => runValidate({ specFile, csvFile, options }, io);
-      resolve(await runCommand(validate, io));
+      const load = () => runLoad({ specFile, csvFile, options }, io);
+      resolve(await runCommand(load, io));
     });
 
 const addCheckRulesCommand = (program, io, resolve) =>
@@ -151,6 +172,7 @@ const runCli = (argv, io) =>
       .exitOverride()
       .configureOutput({ writeOut: io.stdout, writeErr: io.stderr });
     addValidateCommand(program, io, resolve);
+    addLoadCommand(program, io, resolve);
     addCheckRulesCommand(program, io, resolve);
     // A command resolves with its exit code before parseAsync settles, so the
     // then only applies to a parse that runs no command.

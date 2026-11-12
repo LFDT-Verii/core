@@ -1,8 +1,6 @@
 # @verii/batch-issuer
 
-`batch-issuer` loads Credentialing Hub depots and credentials from a CSV file, a YAML spec and JSON Handlebars templates, for batch issuing through an issuer service's shared issue link. It validates the whole batch before anything is written, and reports every error.
-
-This version validates. `load`, which writes the batch to the Hub, comes next.
+`batch-issuer` loads Credentialing Hub depots and credentials from a CSV file, a YAML spec and JSON Handlebars templates, for batch issuing through an issuer service's shared issue link. It validates the whole batch before anything is written, and reports every error. A load records what it creates in a state file, so a load that stops partway can be run again.
 
 ## Commands
 
@@ -12,7 +10,7 @@ This version validates. `load`, which writes the batch to the Hub, comes next.
 batch-issuer validate <spec> <csv> --endpoint <hub url> --registrar <registrar url> [options]
 ```
 
-Validates the batch against its spec, the registrar and the Hub, and prints every error with its row, column and reason. Nothing is written to the Hub.
+Validates the batch against its spec, the registrar and the Hub, and prints every error with its row, column and reason. Nothing is written to the Hub. It's the same as `load --dryrun`.
 
 | Option | |
 | --- | --- |
@@ -21,8 +19,25 @@ Validates the batch against its spec, the registrar and the Hub, and prints ever
 | `-r, --registrar <url>` | The registrar's base URL, for credential type schemas. Required when the spec has credentials |
 | `--default-country <code>` | The country of phone numbers written without a country code, such as `US` |
 | `--var <name=value>` | A value that overrides the CSV column of the same name, in every row. Repeatable |
-| `--no-reuse` | Treat rows whose auth values already belong to a depot as errors |
+| `--no-reuse` | Treat rows whose auth values already belong to a depot as errors. A depot that the state file records, because an earlier load of the batch created it, isn't a reuse |
+| `--state <file>` | The batch's state file. Defaults to the CSV's name with `.state.json` in the CSV's directory, such as `holders.state.json` for `holders.csv`. See [Reruns and the state file](#reruns-and-the-state-file) |
 | `--json` | Print the report as JSON |
+
+### `load`
+
+```sh
+batch-issuer load <spec> <csv> --endpoint <hub url> --registrar <registrar url> [options]
+```
+
+Validates the batch as `validate` does, then creates its depots and credentials in the Hub, and writes each row's issue link to a CSV file for mail merge. See [What `load` does](#what-load-does).
+
+It takes the same arguments and options as `validate`, and these:
+
+| Option | |
+| --- | --- |
+| `--dryrun` | Stop after validating. `load --dryrun` is `validate` |
+| `--resolve-deferred` | Resolve the deferred credentials of each reused depot that receives credentials, so a wallet waiting for them is told |
+| `-o, --output <file>` | The links file. Defaults to the CSV's name with `.links.csv` in the CSV's directory, such as `holders.links.csv` for `holders.csv`. See [The links file](#the-links-file) |
 
 ### `check-rules`
 
@@ -45,15 +60,15 @@ export BATCH_ISSUER_AUTH_TOKEN=...
 batch-issuer validate spec.yaml holders.csv --endpoint https://hub.example.com --registrar https://registrar.example.com
 ```
 
-The token is never printed, including in error messages.
+The token is never printed or written, including in error messages, the links file and the state file.
 
 ### Exit codes
 
-| Code | `validate` | `check-rules` |
-| --- | --- | --- |
-| 0 | The batch is valid | Every rule reads a value from the samples |
-| 1 | The batch has errors | A rule reads nothing from the samples |
-| 2 | It couldn't validate: bad options, a spec or CSV file that can't be read, or a Hub or registrar error. A Hub response without the list it should hold, such as a proxy's HTML page, is an error | It couldn't check: bad options or spec, a sample that can't be read, or a Hub error |
+| Code | `validate` | `load` | `check-rules` |
+| --- | --- | --- | --- |
+| 0 | The batch is valid | The batch is loaded | Every rule reads a value from the samples |
+| 1 | The batch has errors | The batch has errors, and nothing was written | A rule reads nothing from the samples |
+| 2 | It couldn't validate: bad options, a spec or CSV file that can't be read, a state file of another batch, or a Hub or registrar error. A Hub response without what it should hold, such as a proxy's HTML page, is an error | It couldn't validate, as for `validate`, or a write failed partway. The state file records what was written before it, and rerunning the same command continues the load | It couldn't check: bad options or spec, a sample that can't be read, or a Hub error |
 
 ## The spec
 
@@ -126,7 +141,7 @@ Numbers are decimal, such as `12`, `-1.5` or `1e3`. Booleans are `true` or `fals
 
 ## What `validate` checks
 
-Every error is collected, and the command fails when there's any.
+Every error is collected, and the command fails when there's any. `load` checks the same before it writes anything.
 
 1. **The spec against the service,** from `issuer-services/get`:
    - the service is an internal `verifiable_presentation` service, or `preauth`, and isn't deactivated;
@@ -143,11 +158,65 @@ Every error is collected, and the command fails when there's any.
    - each depot and credential passes the operator API's validator (`initOperatorApiValidator`), as the Hub validates `depots/create` and `credentials/create`.
 3. **Each credential against its type:** the `credentialSubject` is checked against the type's JSON schema from the registrar, which `credentials/create` loads the same way. Every schema error is reported, not only the first.
 4. **The batch against the Hub:** one `POST depots/get` with the rows' auth values, at most 1000 tuples per request. The depots it returns are matched to rows by normalizing their `authValues` with `buildAuthMatchValues`. For a match:
-   - the same `userReference` is a returning holder, whose depot gets the row's credentials. The row's credential types must be in the depot's `expectedCredentialTypes`, when it has any. A depot-only row has no credentials, so the spec's `depot.expectedCredentialTypes`, which a later load adds, must be in them instead. In a depot-only load, the depot must also have `deferredCredentials: true`, as the load's new depots do: the setting can't be changed, and the holder would otherwise get an empty offer. With `--no-reuse`, it's an error;
+   - the same `userReference` is a returning holder, whose depot gets the row's credentials. The row's credential types must be in the depot's `expectedCredentialTypes`, when it has any. A depot-only row has no credentials, so the spec's `depot.expectedCredentialTypes`, which a later load adds, must be in them instead. In a depot-only load, the depot must also have `deferredCredentials: true`, as the load's new depots do: the setting can't be changed, and the holder would otherwise get an empty offer. With `--no-reuse`, it's an error, unless the state file records the depot because an earlier load of the batch created it;
    - a different `userReference` is always an error: two people share an email, or an email was reassigned;
    - auth values that belong to more than one depot are an error.
 
    A `preauth` service's depots can't be found by auth values, so every row gets a new depot.
+
+Then the state file must belong to the batch, as [Reruns and the state file](#reruns-and-the-state-file) says.
+
+## What `load` does
+
+1. **Validates** the batch, as `validate` does. Any error stops the load before anything is written, with the same report, and exits with 1. `--dryrun` stops here.
+2. **Depots:** `depots/create` for each row without a depot, one at a time, so two creates for the same holder can't race. A row that validation matched to an existing depot uses it. A 409 means that another client created a depot with the row's auth values after validation: the load stops and reports the row.
+3. **Credentials:** `credentials/create-many`, in requests of at most 1000 credentials (`CREDENTIALS_CREATE_MANY_MAX_ITEMS`), each to its row's depot, new or reused. When the Hub refuses a request with a 400, the load reports each invalid credential with its row and template, and stops. The Hub checks every credential of a request before it creates any, so a refused request creates nothing, but the requests before it did.
+4. **Deferred credentials:** with `--resolve-deferred`, `depots/resolve-deferred-credentials` for each reused depot that has `deferredCredentials: true` and received credentials from the batch. A wallet that's waiting on the depot is told its credentials are ready. The depots the batch creates aren't resolved: their holders haven't had a link yet.
+5. **Links,** written to [the links file](#the-links-file):
+   - a service with internal `verifiable_presentation` auth: the shared link, from `issue-links/refresh` without a `depotId`. It's printed, and every row gets it;
+   - a `preauth` service: each depot the batch created gets its own link, from `issue-links/refresh` with its `depotId`. Reused depots are never refreshed, because a refresh replaces the depot's pre-authorized code (`refreshPreauthCode`) and breaks the links already sent. A service with both kinds of auth gives a reused depot's row the shared link instead.
+
+The state file records each depot, credential, resolved depot and `preauth` link as soon as the Hub confirms it.
+
+## The links file
+
+`--output`, by default `holders.links.csv` beside `holders.csv`, has a line for each row that has a link, for mail merge:
+
+```
+row,userReference,redirectUrl
+2,E1001,https://hub.example.com/app-redirect?...
+3,E1002,https://hub.example.com/app-redirect?...
+```
+
+`row` is the row's number in the CSV. Each run writes the whole file again. A `preauth` link is enough to claim the holder's credentials, so keep the file as private as the CSV.
+
+## Reruns and the state file
+
+A load can fail partway after validation passes, for example on a network error. The Hub has no all-or-nothing endpoint, so the load records what it creates in a state file, and a rerun of the same command skips what's done.
+
+`--state`, by default `holders.state.json` beside `holders.csv`, records:
+- the batch: its `tenantId`, `serviceId`, and a hash of the spec file, its templates, the CSV, and the `--var` and `--default-country` values;
+- each depot the batch created, with its row;
+- each credential it created, with its row, `credentialReference`, id and depot;
+- each depot whose deferred credentials it resolved, and each `preauth` link, with its row.
+
+It's written when the load starts, and again as soon as the Hub confirms each depot, each `create-many` request, each resolved depot and each link. Each write goes to a temporary file that is then renamed, so the file is never half written. It's JSON on one line. Rewriting it after every depot adds a few minutes in all to a 50,000-row batch, on top of the Hub's requests.
+
+A rerun:
+- finds the depots again: by their auth values for a `verifiable_presentation` service, through validation's step 4, and from the state file, by row, for a `preauth` service, whose depots have no auth values. A depot the state file records counts as skipped, not reused, and `--no-reuse` accepts it;
+- skips the credentials the state file records, by `credentialReference`;
+- doesn't resolve a depot or refresh a link again.
+
+A rerun of a finished load creates nothing, and writes the same links file.
+
+A state file belongs to one batch, and any change to the spec, its templates, the CSV, `--var` or `--default-country` makes a different batch. `validate`, `load --dryrun` and `load` refuse the state file of another batch, and exit with 2. To load a new batch whose CSV has the same name, pass another `--state`, or move the old state file away.
+
+### What a rerun can't tell
+
+The Hub doesn't require a `credentialReference` to be unique (#1244), so the state file is the only guard against creating a credential twice:
+- **A request that fails without a response,** such as a timeout or a dropped connection, may still have been carried out. A `create-many` request's credentials are then missing from the state file, and a rerun creates them again. A depot created that way is found again by its auth values for a `verifiable_presentation` service, as a reused depot, which `--no-reuse` refuses, but a `preauth` service's depot is created again.
+- **A refused `create-many` request** created nothing. A rerun sends it again, which only helps once the cause is fixed in the Hub or the registrar, for example a credential type that the Hub's registrar doesn't know yet. A fix in the spec, a template or the CSV makes it a different batch, which the state file refuses.
+- **A lost or deleted state file** makes a rerun create every credential again. The depots of a `verifiable_presentation` service are found again by their auth values, and reused.
 
 ## Output
 
@@ -168,6 +237,31 @@ The batch is valid: 3 rows, 2 new depots, 1 existing depot, 3 credentials. Nothi
 ```
 
 With `--json`, the report is `{ valid, errors, summary }`. Each error has a `reason`, and a `row`, `column` and `template` when they apply. `summary` is missing when the spec has errors.
+
+`load` prints the summary when the batch is valid, and what it did when it's done:
+
+```
+The batch is valid: 3 rows, 2 new depots, 1 existing depot, 3 credentials.
+Depots: 2 created, 1 reused, 0 skipped.
+Credentials: 3 created, 0 skipped.
+Issue link: https://hub.example.com/app-redirect?...
+Links: holders.links.csv
+State: holders.state.json
+```
+
+Created is what this run created, reused the depots that already existed, and skipped what an earlier run of the batch created. With `--resolve-deferred`, a line counts the depots whose deferred credentials it resolved. The issue link is the shared link of a `verifiable_presentation` service.
+
+A load that stops prints, on stderr, the rows the Hub refused, if any, the error, and how far the batch got:
+
+```
+Row 3:
+  - email: the auth values belong to depot 6512a1b2c3d4e5f6a7b8c9ff, which another client created after validation
+
+Error: depots/create refused a depot
+The load stopped after creating 1 of 3 depots and 0 of 3 credentials. holders.state.json records what was created. Rerun the same command to continue.
+```
+
+With `--json`, `load` prints `{ valid, errors, summary, load }`, where `load` has the counts `depots: { created, reused, skipped }` and `credentials: { created, skipped }`, `resolvedDepots` with `--resolve-deferred`, the shared `link`, and the `output` and `state` files. When the load stops, `load` has an `error` with its `message` and the refused rows' `errors`, and no `link` or `output`.
 
 ## Example
 

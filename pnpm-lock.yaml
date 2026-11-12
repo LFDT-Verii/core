@@ -3705,6 +3705,9 @@ importers:
       csv-parse:
         specifier: ^7.0.3
         version: 7.0.3
+      csv-stringify:
+        specifier: ^6.9.0
+        version: 6.9.0
       handlebars:
         specifier: ^4.7.10
         version: 4.7.10
@@ -7847,6 +7850,9 @@ packages:
     resolution: {integrity: sha512-v8RPMSglouR9od735SnwSxLBbCJqEPSbgm1R5qfr8yIiMUCEFjox56kRZid0SvgHJEkxeIEu3+a9QS3YRh7CuA==}
     engines: {node: '>= 10'}
     hasBin: true
+
+  csv-stringify@6.9.0:
+    resolution: {integrity: sha512-6b3e29CILFfSQ2nDRuZMRROzQOpPuJ+s8zPB5H7eK5ncXBbFOyVuRLU5Sx/zAUmVri3Ly49GyC8NEme4SVSAbA==}
 
   damerau-levenshtein@1.0.8:
     resolution: {integrity: sha512-sdQSFB7+llfUcQHUQO3+B8ERRj0Oa4w9POWMI/puGtuf7gFywGmkaLCElnudfTiKZV+NvHqL0ifzdrI8Ro7ESA==}
@@ -15552,6 +15558,8 @@ snapshots:
   csv-parse@7.0.3: {}
 
   csv-parser@3.2.1: {}
+
+  csv-stringify@6.9.0: {}
 
   damerau-levenshtein@1.0.8: {}
 

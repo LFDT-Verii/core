@@ -51,4 +51,28 @@ const validateJson = async (files, ...args) => {
   return { ...result, report: JSON.parse(result.stdout) };
 };
 
-module.exports = { HUB_ARGS, runCapture, validate, validateJson };
+// batch-issuer load with the Hub and the registrar.
+const load = ({ specFile, csvFile }, ...args) =>
+  runCapture([
+    'load',
+    specFile,
+    csvFile,
+    ...HUB_ARGS,
+    '--registrar',
+    REGISTRAR_URL,
+    ...args,
+  ]);
+
+const loadJson = async (files, ...args) => {
+  const result = await load(files, '--json', ...args);
+  return { ...result, report: JSON.parse(result.stdout) };
+};
+
+module.exports = {
+  HUB_ARGS,
+  load,
+  loadJson,
+  runCapture,
+  validate,
+  validateJson,
+};
