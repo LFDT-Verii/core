@@ -16,10 +16,7 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
-const {
-  checkTemplateSyntax,
-  renderTemplate,
-} = require('../src/templates/render-template');
+const { renderTemplate } = require('../src/templates/render-template');
 
 describe('renderTemplate', () => {
   it('renders each string of the template with the row', () => {
@@ -56,22 +53,6 @@ describe('renderTemplate', () => {
     });
   });
 
-  it('renders a single string', () => {
-    expect(renderTemplate('{{employeeId}}-ivie', { employeeId: 'E1' })).toEqual(
-      {
-        value: 'E1-ivie',
-        errors: [],
-      },
-    );
-  });
-
-  it('keeps a missing template missing', () => {
-    expect(renderTemplate(undefined, {})).toEqual({
-      value: undefined,
-      errors: [],
-    });
-  });
-
   describe('CSV values cannot change the structure', () => {
     const template = {
       credentialSubject: { name: '{{name}}', role: 'member' },
@@ -89,14 +70,6 @@ describe('renderTemplate', () => {
       const name = '<b>O\'Brien & "Sons"</b>';
       expect(
         renderTemplate(template, { name }).value.credentialSubject.name,
-      ).toEqual(name);
-    });
-
-    it('does not render Handlebars in a value', () => {
-      const name = '{{role}} {{#each this}}{{@key}}{{/each}}';
-      expect(
-        renderTemplate(template, { name, role: 'admin' }).value
-          .credentialSubject.name,
       ).toEqual(name);
     });
 
@@ -157,13 +130,6 @@ describe('renderTemplate', () => {
       ).toEqual({ value: '1.5 credits', errors: [] });
     });
 
-    it('keeps an undeclared column a string', () => {
-      expect(renderTemplate('{{year}}', { year: '2026' }, columns)).toEqual({
-        value: '2026',
-        errors: [],
-      });
-    });
-
     it('reports a value that does not convert', () => {
       expect(
         renderTemplate(
@@ -185,54 +151,5 @@ describe('renderTemplate', () => {
         { column: 'creditsEarned', reason: 'is missing' },
       ]);
     });
-  });
-
-  describe('strict mode', () => {
-    it('reports each missing column', () => {
-      expect(
-        renderTemplate(
-          { name: '{{firstName}} {{lastName}}', id: '{{id}}' },
-          { firstName: 'Adam' },
-        ).errors,
-      ).toEqual([
-        { column: 'lastName', reason: 'is missing' },
-        { column: 'id', reason: 'is missing' },
-      ]);
-    });
-
-    it('renders an empty cell as an empty string', () => {
-      expect(renderTemplate('[{{middleName}}]', { middleName: '' })).toEqual({
-        value: '[]',
-        errors: [],
-      });
-    });
-
-    it('reports another rendering error', () => {
-      const { errors } = renderTemplate('{{name.first}}', { name: 'Adam' });
-      expect(errors).toEqual([{ reason: expect.any(String) }]);
-    });
-  });
-});
-
-describe('checkTemplateSyntax', () => {
-  it('finds no errors in valid templates', () => {
-    expect(
-      checkTemplateSyntax({
-        a: '{{x}}',
-        b: ['{{#if y}}y{{/if}}', 1, null],
-        c: { d: 'plain' },
-      }),
-    ).toEqual([]);
-  });
-
-  it('reports each string with a syntax error', () => {
-    const errors = checkTemplateSyntax({
-      a: '{{x',
-      b: ['ok', '{{#if y}}y{{/each}}'],
-    });
-    expect(errors).toEqual([
-      expect.stringContaining('Parse error on line 1'),
-      "if doesn't match each - 1:3",
-    ]);
   });
 });

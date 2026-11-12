@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-const fs = require('node:fs');
-const path = require('node:path');
-const { after, before, beforeEach, describe, it } = require('node:test');
+const { describe, it } = require('node:test');
 const { expect } = require('expect');
 const nock = require('./helpers/nock');
-const { runCapture } = require('./helpers/run-cli');
-const { mockGetService } = require('./helpers/mock-services');
+const { HUB_ARGS, runCapture } = require('./helpers/run-cli');
+const { mockGetService, useNock } = require('./helpers/mock-services');
 const {
   AUTH_TOKEN,
   HUB_URL,
   SERVICE_ID,
   TENANT_ID,
+  baseSpec,
   buildService,
   emailRule,
   fixturePath,
-  makeTempDir,
   phoneRule,
+  useTempFiles,
 } = require('./helpers/fixtures');
 
 const b64url = (value) =>
@@ -60,39 +59,17 @@ const phoneCredential = {
   credentialSubject: { phones: ['+15556192191', '+61412345678'] },
 };
 
-const writeSample = (name, content) => {
-  const file = path.join(makeTempDir(), name);
-  fs.writeFileSync(
-    file,
-    typeof content === 'string' ? `${content}\n` : JSON.stringify(content),
-  );
-  return file;
-};
+const checkRulesWithSpec = (specFile, ...args) =>
+  runCapture(['check-rules', specFile, ...HUB_ARGS, ...args]);
 
 const checkRules = (...args) =>
-  runCapture([
-    'check-rules',
-    fixturePath('spec.yaml'),
-    '--endpoint',
-    HUB_URL,
-    '--auth-token',
-    AUTH_TOKEN,
-    ...args,
-  ]);
+  checkRulesWithSpec(fixturePath('spec.yaml'), ...args);
 
 describe('batch-issuer check-rules', () => {
-  before(() => {
-    nock.disableNetConnect();
-  });
-
-  beforeEach(() => {
-    nock.cleanAll();
-  });
-
-  after(() => {
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
+  useNock();
+  const { writeBatch, writeFile } = useTempFiles();
+  const writeSample = (name, content) =>
+    writeFile(name, typeof content === 'string' ? `${content}\n` : content);
 
   it('shows what each rule reads from a JSON credential', async () => {
     const serviceRequest = mockGetService();
@@ -232,6 +209,26 @@ describe('batch-issuer check-rules', () => {
     );
   });
 
+  it("doesn't need the spec's template files", async () => {
+    mockGetService();
+    const spec = {
+      ...baseSpec,
+      credentials: [{ template: './missing.json', credentialReference: 'x' }],
+    };
+    const { specFile } = writeBatch({ spec });
+
+    const result = await checkRulesWithSpec(
+      specFile,
+      '--sample',
+      writeSample('email.json', emailCredential),
+    );
+
+    expect(result.exitCode).toEqual(0);
+    expect(result.stdout).toContain(
+      '1 of 1 rule read a value from the samples.',
+    );
+  });
+
   describe('exit code 2', () => {
     it('when the sample is neither JSON nor a JWT', async () => {
       mockGetService();
@@ -282,19 +279,13 @@ describe('batch-issuer check-rules', () => {
     });
 
     it('when the spec has errors', async () => {
-      const specFile = path.join(makeTempDir(), 'spec.yaml');
-      fs.writeFileSync(specFile, 'tenantId: t1\n');
+      const { specFile } = writeBatch({ spec: 'tenantId: t1\n' });
 
-      const result = await runCapture([
-        'check-rules',
+      const result = await checkRulesWithSpec(
         specFile,
-        '--endpoint',
-        HUB_URL,
-        '--auth-token',
-        AUTH_TOKEN,
         '--sample',
         'sample.json',
-      ]);
+      );
 
       expect(result).toEqual({
         exitCode: 2,
@@ -302,6 +293,25 @@ describe('batch-issuer check-rules', () => {
         stderr:
           "Error: spec must have required property 'serviceId'; spec must have required property 'depot'\n",
       });
+    });
+
+    it('when the Hub refuses the token, which is never printed', async () => {
+      nock(HUB_URL)
+        .get('/operator/issuer-services/get')
+        .query(true)
+        .reply(401, { message: 'Unauthorized' });
+
+      const result = await checkRules(
+        '--sample',
+        writeSample('email.json', emailCredential),
+      );
+
+      expect(result).toEqual({
+        exitCode: 2,
+        stdout: '',
+        stderr: `Error: ${HUB_URL}/operator/issuer-services/get?tenantId=${TENANT_ID}&serviceId=${SERVICE_ID} failed: 401 Unauthorized\n`,
+      });
+      expect(result.stderr).not.toContain(AUTH_TOKEN);
     });
 
     it('without --sample', async () => {

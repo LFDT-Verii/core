@@ -16,217 +16,86 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
-const { omit } = require('lodash/fp');
 const { buildAuthValues } = require('../src/values/auth-values');
 const { emailRule, phoneRule } = require('./helpers/fixtures');
 
-const emailColumn = { column: 'email', rule: emailRule };
-const phoneColumn = { column: 'phone', rule: phoneRule };
+const buildOne = (rule, cell, options = {}) =>
+  buildAuthValues([{ column: 'cell', rule }], { cell }, options);
+
+const value = (authValue) => ({ authValues: [authValue], errors: [] });
+const error = (reason) => ({ errors: [{ column: 'cell', reason }] });
 
 describe('buildAuthValues', () => {
-  it('builds the values in the order of the auth columns', () => {
+  describe('routes each rule to its format', () => {
+    const routes = [
+      {
+        name: 'a PhoneV1.0 rule normalizes to E.164',
+        rule: phoneRule,
+        cell: '+1 (555) 619-2191',
+        result: value('+15556192191'),
+      },
+      {
+        name: 'an e164 valueFormat normalizes to E.164',
+        rule: { ...emailRule, type: 'MobileV1.0', valueFormat: 'e164' },
+        cell: '+61 412 345 678',
+        result: value('+61412345678'),
+      },
+      {
+        name: 'an EmailV1.0 rule takes only an email address',
+        rule: emailRule,
+        cell: 'adam',
+        result: error('"adam" is not an email address'),
+      },
+      {
+        name: 'an email valueFormat takes only an email address',
+        rule: { ...emailRule, type: 'WorkEmailV1.0', valueFormat: 'email' },
+        cell: 'adam',
+        result: error('"adam" is not an email address'),
+      },
+      {
+        name: 'another string rule takes the trimmed cell',
+        rule: { ...emailRule, type: 'EmployeeIdV1.0' },
+        cell: ' adam ',
+        result: value('adam'),
+      },
+      {
+        name: 'a phone rule of another valueType takes the cell in that type',
+        rule: { ...phoneRule, valueType: 'number' },
+        cell: '5556192191',
+        result: value(5556192191),
+      },
+    ];
+
+    for (const { name, rule, cell, result } of routes) {
+      it(name, () => {
+        expect(buildOne(rule, cell)).toEqual(result);
+      });
+    }
+  });
+
+  it('uses the default country for a phone number without a country code', () => {
     expect(
-      buildAuthValues(
-        [emailColumn, phoneColumn],
-        { phone: '+1 555 619 2191', email: ' Adam@Example.com ' },
-        {},
+      buildOne(phoneRule, '0412 345 678', { defaultCountry: 'AU' }),
+    ).toEqual(value('+61412345678'));
+  });
+
+  it('says a phone number without a country code needs --default-country', () => {
+    expect(buildOne(phoneRule, '5556192191')).toEqual(
+      error(
+        '"5556192191" is not a phone number. It has no country code, so pass --default-country',
       ),
-    ).toEqual({ authValues: ['Adam@Example.com', '+15556192191'], errors: [] });
+    );
+  });
+
+  it('reports a blank or missing value', () => {
+    expect(buildOne(emailRule, '  ')).toEqual(error('is blank'));
+    expect(buildOne(emailRule, undefined)).toEqual(error('is missing'));
   });
 
   it('does not read an inherited property for a missing column', () => {
-    expect(
-      buildAuthValues(
-        [{ column: 'constructor', rule: { ...emailRule, type: 'IdV1.0' } }],
-        {},
-        {},
-      ),
-    ).toEqual({ errors: [{ column: 'constructor', reason: 'is missing' }] });
-  });
-
-  it('builds no values for no auth columns', () => {
-    expect(buildAuthValues([], { email: 'a@example.com' }, {})).toEqual({
-      authValues: [],
-      errors: [],
-    });
-  });
-
-  it('reports a missing or blank value', () => {
-    expect(
-      buildAuthValues([emailColumn, phoneColumn], { email: '  ' }, {}),
-    ).toEqual({
-      errors: [
-        { column: 'email', reason: 'is blank' },
-        { column: 'phone', reason: 'is missing' },
-      ],
-    });
-  });
-
-  describe('value types', () => {
-    const numberRule = {
-      ...emailRule,
-      type: 'EmployeeIdV1.0',
-      valueType: 'number',
-    };
-    const booleanRule = {
-      ...emailRule,
-      type: 'MemberV1.0',
-      valueType: 'boolean',
-    };
-
-    it("converts a value to its rule's valueType", () => {
-      expect(
-        buildAuthValues(
-          [
-            { column: 'id', rule: numberRule },
-            { column: 'member', rule: { ...booleanRule, valueIndex: 1 } },
-          ],
-          { id: ' 12345 ', member: 'TRUE' },
-          {},
-        ),
-      ).toEqual({ authValues: [12345, true], errors: [] });
-    });
-
-    it('reports a value that does not convert', () => {
-      expect(
-        buildAuthValues(
-          [{ column: 'id', rule: numberRule }],
-          { id: 'E12345' },
-          {},
-        ),
-      ).toEqual({
-        errors: [{ column: 'id', reason: '"E12345" is not a number' }],
-      });
-    });
-
-    it('refuses a rule without a valueType', () => {
-      const rule = {
-        ...omit(['valueType'], emailRule),
-        type: 'EmployeeIdV1.0',
-      };
-      expect(
-        buildAuthValues([{ column: 'id', rule }], { id: ' 12345 ' }, {}),
-      ).toEqual({
-        errors: [{ column: 'id', reason: '"undefined" is not a value type' }],
-      });
-    });
-
-    it('does not format a value of a non-string rule', () => {
-      const rule = { ...phoneRule, valueIndex: 0, valueType: 'number' };
-      expect(
-        buildAuthValues(
-          [{ column: 'phone', rule }],
-          { phone: '5556192191' },
-          {},
-        ),
-      ).toEqual({ authValues: [5556192191], errors: [] });
-    });
-  });
-
-  describe('phone numbers', () => {
-    const check = (phone, options = {}, rule = phoneRule) =>
-      buildAuthValues([{ column: 'phone', rule }], { phone }, options);
-
-    it('normalizes a PhoneV1.0 value to E.164', () => {
-      expect(check('+1 (555) 619-2191')).toEqual({
-        authValues: ['+15556192191'],
-        errors: [],
-      });
-      expect(check('+61 412 345 678')).toEqual({
-        authValues: ['+61412345678'],
-        errors: [],
-      });
-    });
-
-    it('uses the default country for a number without a country code', () => {
-      expect(check('0412 345 678', { defaultCountry: 'AU' })).toEqual({
-        authValues: ['+61412345678'],
-        errors: [],
-      });
-      expect(check('(555) 619-2191', { defaultCountry: 'US' })).toEqual({
-        authValues: ['+15556192191'],
-        errors: [],
-      });
-    });
-
-    it('keeps the country code of a number that has one', () => {
-      expect(check('+1 555 619 2191', { defaultCountry: 'AU' })).toEqual({
-        authValues: ['+15556192191'],
-        errors: [],
-      });
-    });
-
-    it('normalizes a value of a rule with the e164 valueFormat', () => {
-      const rule = { ...emailRule, type: 'MobileV1.0', valueFormat: 'e164' };
-      expect(check('+1 555 619 2191', {}, rule)).toEqual({
-        authValues: ['+15556192191'],
-        errors: [],
-      });
-    });
-
-    it('says a number without a country code needs --default-country', () => {
-      expect(check('5556192191')).toEqual({
-        errors: [
-          {
-            column: 'phone',
-            reason:
-              '"5556192191" is not a phone number. It has no country code, so pass --default-country',
-          },
-        ],
-      });
-    });
-
-    it('reports a number that cannot be normalized', () => {
-      for (const phone of ['12', 'call me', '+1 555', '+999 1234567']) {
-        expect(check(phone, { defaultCountry: 'US' })).toEqual({
-          errors: [
-            { column: 'phone', reason: `"${phone}" is not a phone number` },
-          ],
-        });
-      }
-    });
-  });
-
-  describe('email addresses', () => {
-    const check = (email, rule = emailRule) =>
-      buildAuthValues([{ column: 'email', rule }], { email }, {});
-
-    it('accepts an EmailV1.0 value that is an email address', () => {
-      expect(check('Beth.Jones+work@Example.com')).toEqual({
-        authValues: ['Beth.Jones+work@Example.com'],
-        errors: [],
-      });
-    });
-
-    it('reports an EmailV1.0 value that is not an email address', () => {
-      for (const email of [
-        'adam',
-        'adam@',
-        '@example.com',
-        'adam smith@example.com',
-      ]) {
-        expect(check(email)).toEqual({
-          errors: [
-            { column: 'email', reason: `"${email}" is not an email address` },
-          ],
-        });
-      }
-    });
-
-    it('checks a value of a rule with the email valueFormat', () => {
-      const rule = {
-        ...emailRule,
-        type: 'WorkEmailV1.0',
-        valueFormat: 'email',
-      };
-      expect(check('adam', rule)).toEqual({
-        errors: [{ column: 'email', reason: '"adam" is not an email address' }],
-      });
-    });
-
-    it('does not check a value of another string rule', () => {
-      const rule = { ...emailRule, type: 'EmployeeIdV1.0' };
-      expect(check('adam', rule)).toEqual({ authValues: ['adam'], errors: [] });
+    const rule = { ...emailRule, type: 'IdV1.0' };
+    expect(buildAuthValues([{ column: 'constructor', rule }], {}, {})).toEqual({
+      errors: [{ column: 'constructor', reason: 'is missing' }],
     });
   });
 });

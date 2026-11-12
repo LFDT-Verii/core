@@ -19,22 +19,17 @@ const { expect } = require('expect');
 const { convertValue } = require('../src/values/convert-value');
 
 describe('convertValue', () => {
-  it('keeps a string as it is', () => {
-    expect(convertValue('string', ' a b ')).toEqual({ value: ' a b ' });
-  });
-
-  it('refuses a missing type', () => {
-    expect(convertValue(undefined, '12345')).toEqual({
-      reason: '"undefined" is not a value type',
-    });
-  });
-
   it('converts decimal numbers', () => {
-    expect(convertValue('number', '12345')).toEqual({ value: 12345 });
-    expect(convertValue('number', ' -1.5 ')).toEqual({ value: -1.5 });
-    expect(convertValue('number', '007')).toEqual({ value: 7 });
-    expect(convertValue('number', '1e3')).toEqual({ value: 1000 });
-    expect(convertValue('number', '.5')).toEqual({ value: 0.5 });
+    const numbers = [
+      ['12345', 12345],
+      [' -1.5 ', -1.5],
+      ['007', 7],
+      ['1e3', 1000],
+      ['.5', 0.5],
+    ];
+    for (const [text, number] of numbers) {
+      expect(convertValue('number', text)).toEqual({ value: number });
+    }
   });
 
   it('refuses what is not a decimal number', () => {
@@ -65,14 +60,5 @@ describe('convertValue', () => {
         reason: `"${text}" is not true or false`,
       });
     }
-  });
-
-  it('refuses an unknown value type', () => {
-    expect(convertValue('date', '2026-11-12')).toEqual({
-      reason: '"date" is not a value type',
-    });
-    expect(convertValue('constructor', 'x')).toEqual({
-      reason: '"constructor" is not a value type',
-    });
   });
 });

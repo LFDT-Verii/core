@@ -15,6 +15,9 @@
  */
 
 const { runCli } = require('../../src/cli');
+const { AUTH_TOKEN, HUB_URL, REGISTRAR_URL } = require('./fixtures');
+
+const HUB_ARGS = ['--endpoint', HUB_URL, '--auth-token', AUTH_TOKEN];
 
 // Runs the command line in this process, so nock sees its requests.
 const runCapture = async (args) => {
@@ -31,4 +34,21 @@ const runCapture = async (args) => {
   return { exitCode, ...output };
 };
 
-module.exports = { runCapture };
+// batch-issuer validate with the Hub and the registrar.
+const validate = ({ specFile, csvFile }, ...args) =>
+  runCapture([
+    'validate',
+    specFile,
+    csvFile,
+    ...HUB_ARGS,
+    '--registrar',
+    REGISTRAR_URL,
+    ...args,
+  ]);
+
+const validateJson = async (files, ...args) => {
+  const result = await validate(files, '--json', ...args);
+  return { ...result, report: JSON.parse(result.stdout) };
+};
+
+module.exports = { HUB_ARGS, runCapture, validate, validateJson };
