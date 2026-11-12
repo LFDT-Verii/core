@@ -50,12 +50,12 @@ const mapWithIndex = map.convert({ cap: false });
 const toLine = (record) => `${JSON.stringify(record)}\n`;
 
 /**
- * Identifies a batch: its tenant and service, and a hash of everything that
- * decides what a load writes, which is the spec, its templates, the CSV, and
- * the --var and --default-country values.
- * @param {{ specFile: string, csvFile: string, vars: object, options: { defaultCountry?: string } }} input
+ * Identifies a batch: its network, tenant and service, and a hash of
+ * everything that decides what a load writes, which is the spec, its
+ * templates, the CSV, and the --var and --default-country values.
+ * @param {{ specFile: string, csvFile: string, vars: object, options: { network: string, defaultCountry?: string } }} input
  * @param {object} spec the batch's spec
- * @returns {Promise<{ tenantId: string, serviceId: string, hash: string }>}
+ * @returns {Promise<{ network: string, tenantId: string, serviceId: string, hash: string }>}
  */
 const identifyBatch = async ({ specFile, csvFile, vars, options }, spec) => {
   const templateFiles = map(
@@ -73,7 +73,12 @@ const identifyBatch = async ({ specFile, csvFile, vars, options }, spec) => {
       JSON.stringify({ files, vars, defaultCountry: options.defaultCountry }),
     )
     .digest('hex');
-  return { tenantId: spec.tenantId, serviceId: spec.serviceId, hash };
+  return {
+    network: options.network,
+    tenantId: spec.tenantId,
+    serviceId: spec.serviceId,
+    hash,
+  };
 };
 
 const readText = async (file) => {
@@ -142,7 +147,7 @@ const readState = async (file) => {
  * Gives the state of a batch: the one read from its state file, or an empty
  * one when there was none.
  * @param {{ state: object }} [saved] what readState read from the state file
- * @param {{ tenantId: string, serviceId: string, hash: string }} batch the batch's identity
+ * @param {{ network: string, tenantId: string, serviceId: string, hash: string }} batch the batch's identity
  * @param {string} file the state file
  * @returns {object} the state
  * @throws when the state file belongs to another batch
@@ -159,7 +164,7 @@ const openState = (saved, batch, file) => {
   }
   if (!isEqual(saved.state.batch, batch)) {
     throw new Error(
-      `the state file ${file} belongs to a different batch: the spec, its templates, the CSV, --var or --default-country ` +
+      `the state file ${file} belongs to a different batch: the spec, its templates, the CSV, --network, --var or --default-country ` +
         'have changed since it was written. Rerun the batch it belongs to, or pass another --state',
     );
   }

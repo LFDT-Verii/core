@@ -7,7 +7,7 @@
 ### `validate`
 
 ```sh
-batch-issuer validate <spec> <csv> --endpoint <hub url> --registrar <registrar url> [options]
+batch-issuer validate <spec> <csv> --endpoint <hub url> --network <network> --registrar <registrar url> [options]
 ```
 
 Validates the batch against its spec, the registrar and the Hub, and prints every error with its row, column and reason. Nothing is written to the Hub. It's the same as `load --dryrun`.
@@ -16,6 +16,7 @@ Validates the batch against its spec, the registrar and the Hub, and prints ever
 | --- | --- |
 | `-e, --endpoint <url>` | The Credentialing Hub's base URL. Required |
 | `-a, --auth-token <token>` | An operator API token. Required, unless `BATCH_ISSUER_AUTH_TOKEN` is set |
+| `--network <name>` | The Velocity network of the Hub, such as `devnet`, `testnet` or `mainnet`. Required. The state file is tied to it, so a state file from a load into another network is refused. It's compared in lower case, and any name is accepted |
 | `-r, --registrar <url>` | The registrar's base URL, for credential type schemas. Required when the spec has credentials |
 | `--default-country <code>` | The country of phone numbers written without a country code, such as `US` |
 | `--var <name=value>` | A value that overrides the CSV column of the same name, in every row. Repeatable |
@@ -26,7 +27,7 @@ Validates the batch against its spec, the registrar and the Hub, and prints ever
 ### `load`
 
 ```sh
-batch-issuer load <spec> <csv> --endpoint <hub url> --registrar <registrar url> [options]
+batch-issuer load <spec> <csv> --endpoint <hub url> --network <network> --registrar <registrar url> [options]
 ```
 
 Validates the batch as `validate` does, then creates its depots and credentials in the Hub, and writes each row's issue link to a CSV file for mail merge. See [What `load` does](#what-load-does).
@@ -57,7 +58,7 @@ Pass the token in `BATCH_ISSUER_AUTH_TOKEN` rather than with `--auth-token`, whi
 
 ```sh
 export BATCH_ISSUER_AUTH_TOKEN=...
-batch-issuer validate spec.yaml holders.csv --endpoint https://hub.example.com --registrar https://registrar.example.com
+batch-issuer validate spec.yaml holders.csv --endpoint https://hub.example.com --network testnet --registrar https://registrar.example.com
 ```
 
 The token is never printed or written, including in error messages, the links file and the state file.
@@ -195,7 +196,7 @@ row,userReference,redirectUrl
 A load can fail partway after validation passes, for example on a network error. The Hub has no all-or-nothing endpoint, so the load records what it creates in a state file, and a rerun of the same command skips what's done.
 
 `--state`, by default `holders.state.jsonl` beside `holders.csv`, records:
-- the batch: its `tenantId`, `serviceId`, and a hash of the spec file, its templates, the CSV, and the `--var` and `--default-country` values;
+- the batch: its `--network`, `tenantId` and `serviceId`, and a hash of the spec file, its templates, the CSV, and the `--var` and `--default-country` values. The network tells apart loads into Hubs on different networks that hold the same tenant and service ids, such as a testnet Hub restored from a mainnet snapshot;
 - each depot the batch created, with its row;
 - each credential it created, with its row, `credentialReference`, id and depot;
 - each depot whose deferred credentials it resolved, and each `preauth` link, with its row.
@@ -203,7 +204,7 @@ A load can fail partway after validation passes, for example on a network error.
 It's [JSON Lines](https://jsonlines.org). The load creates it with the batch's line, and appends a line as soon as the Hub confirms each depot, each `create-many` request, each resolved depot and each link:
 
 ```
-{"batch":{"tenantId":"6512a1b2c3d4e5f6a7b8c9d0","serviceId":"6512a1b2c3d4e5f6a7b8c9d1","hash":"9f2c…"}}
+{"batch":{"network":"testnet","tenantId":"6512a1b2c3d4e5f6a7b8c9d0","serviceId":"6512a1b2c3d4e5f6a7b8c9d1","hash":"9f2c…"}}
 {"depots":[{"row":3,"id":"6512a1b2c3d4e5f6a7b8c9e1"}]}
 {"credentials":[{"row":2,"credentialReference":"E1001-ivie-2026","id":"…","depotId":"…"},…]}
 {"resolvedDepots":["6512a1b2c3d4e5f6a7b8c9e0"]}
@@ -219,7 +220,7 @@ A rerun:
 
 A rerun of a finished load creates nothing, and writes the same links file.
 
-A state file belongs to one batch, and any change to the spec, its templates, the CSV, `--var` or `--default-country` makes a different batch. `validate`, `load --dryrun` and `load` refuse the state file of another batch, and exit with 2. To load a new batch whose CSV has the same name, pass another `--state`, or move the old state file away.
+A state file belongs to one batch, and any change to the spec, its templates, the CSV, `--network`, `--var` or `--default-country` makes a different batch. `validate`, `load --dryrun` and `load` refuse the state file of another batch, and exit with 2. To load a new batch whose CSV has the same name, pass another `--state`, or move the old state file away.
 
 ### Keep the files private
 
@@ -283,5 +284,5 @@ With `--json`, `load` prints `{ valid, errors, summary, load }`, where `load` ha
 
 ```sh
 batch-issuer validate test/fixtures/spec.yaml test/fixtures/holders.csv \
-  --endpoint https://hub.example.com --registrar https://registrar.example.com
+  --endpoint https://hub.example.com --network testnet --registrar https://registrar.example.com
 ```

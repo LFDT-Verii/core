@@ -18,6 +18,10 @@ const { runCli } = require('../../src/cli');
 const { AUTH_TOKEN, HUB_URL, REGISTRAR_URL } = require('./fixtures');
 
 const HUB_ARGS = ['--endpoint', HUB_URL, '--auth-token', AUTH_TOKEN];
+const NETWORK = 'devnet';
+
+// The Hub and the network, for validate and load.
+const BATCH_ARGS = [...HUB_ARGS, '--network', NETWORK];
 
 // Runs the command line in this process, so nock sees its requests.
 const runCapture = async (args) => {
@@ -40,7 +44,7 @@ const validate = ({ specFile, csvFile }, ...args) =>
     'validate',
     specFile,
     csvFile,
-    ...HUB_ARGS,
+    ...BATCH_ARGS,
     '--registrar',
     REGISTRAR_URL,
     ...args,
@@ -57,7 +61,7 @@ const load = ({ specFile, csvFile }, ...args) =>
     'load',
     specFile,
     csvFile,
-    ...HUB_ARGS,
+    ...BATCH_ARGS,
     '--registrar',
     REGISTRAR_URL,
     ...args,
@@ -69,7 +73,9 @@ const loadJson = async (files, ...args) => {
 };
 
 module.exports = {
+  BATCH_ARGS,
   HUB_ARGS,
+  NETWORK,
   load,
   loadJson,
   runCapture,

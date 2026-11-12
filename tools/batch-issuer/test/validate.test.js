@@ -27,7 +27,8 @@ const {
   useNock,
 } = require('./helpers/mock-services');
 const {
-  HUB_ARGS,
+  BATCH_ARGS,
+  NETWORK,
   runCapture,
   validate,
   validateJson,
@@ -203,6 +204,8 @@ describe('batch-issuer validate', () => {
       batch.csvFile,
       '--endpoint',
       HUB_URL,
+      '--network',
+      NETWORK,
     ]);
 
     expect(result.exitCode).toEqual(0);
@@ -224,7 +227,14 @@ describe('batch-issuer validate', () => {
       },
       {
         name: 'a --var without a name',
-        args: ['validate', 'spec.yaml', 'rows.csv', ...HUB_ARGS, '--var', '=3'],
+        args: [
+          'validate',
+          'spec.yaml',
+          'rows.csv',
+          ...BATCH_ARGS,
+          '--var',
+          '=3',
+        ],
         message:
           "error: option '--var <name=value>' argument '=3' is invalid. Use name=value.",
       },
@@ -234,7 +244,7 @@ describe('batch-issuer validate', () => {
           'validate',
           'spec.yaml',
           'rows.csv',
-          ...HUB_ARGS,
+          ...BATCH_ARGS,
           '--default-country',
           'XX',
         ],
@@ -396,7 +406,7 @@ describe('batch-issuer validate', () => {
         'validate',
         '/does/not/exist.yaml',
         'rows.csv',
-        ...HUB_ARGS,
+        ...BATCH_ARGS,
       ]);
 
       expect({ status, stdout, stderr }).toEqual({

@@ -16,7 +16,7 @@
 
 const { Command, InvalidArgumentError, Option } = require('commander');
 const { isSupportedCountry } = require('libphonenumber-js');
-const { isEmpty, join, split, toUpper } = require('lodash/fp');
+const { isEmpty, join, split, toLower, toUpper } = require('lodash/fp');
 const packageJson = require('../package.json');
 const { ExitCodes } = require('./commands/exit-codes');
 const { runLoad } = require('./commands/load');
@@ -75,6 +75,11 @@ const addBatchOptions = (command) =>
       .argument('<spec>', 'the YAML spec file')
       .argument('<csv>', 'the CSV file, with a header line'),
   )
+    .requiredOption(
+      '--network <name>',
+      "the Hub's Velocity network, such as devnet, testnet or mainnet, which the state file is tied to",
+      toLower,
+    )
     .option(
       '-r, --registrar <url>',
       "the registrar's base URL, to check credentials against their types' schemas",

@@ -29,7 +29,14 @@ const {
   objectId,
   writeRequests,
 } = require('./helpers/fake-hub');
-const { HUB_ARGS, load, loadJson, runCapture } = require('./helpers/run-cli');
+const {
+  BATCH_ARGS,
+  HUB_ARGS,
+  NETWORK,
+  load,
+  loadJson,
+  runCapture,
+} = require('./helpers/run-cli');
 const {
   ADAM,
   AUTH_TOKEN,
@@ -240,7 +247,11 @@ describe('batch-issuer load', () => {
       );
       expect(readStateLines(filesOf(batch).state)).toEqual([
         {
-          batch: { ...ids, hash: expect.stringMatching(/^[0-9a-f]{64}$/) },
+          batch: {
+            network: NETWORK,
+            ...ids,
+            hash: expect.stringMatching(/^[0-9a-f]{64}$/),
+          },
         },
         { depots: [{ row: 3, id: newDepotId(2) }] },
         { depots: [{ row: 4, id: newDepotId(3) }] },
@@ -522,7 +533,7 @@ describe('batch-issuer load', () => {
       it(`validates ${name} as validate does, and writes nothing`, async () => {
         const hub = initFakeHub({ depots: [buildDepot()] });
         const batch = writeBatch({ csvLines });
-        const args = [batch.specFile, batch.csvFile, ...HUB_ARGS];
+        const args = [batch.specFile, batch.csvFile, ...BATCH_ARGS];
         const registrar = ['--registrar', REGISTRAR_URL];
 
         mockRun(hub);
@@ -540,6 +551,25 @@ describe('batch-issuer load', () => {
         expect(writeRequests(hub)).toEqual([]);
         expect(fs.existsSync(filesOf(batch).state)).toEqual(false);
         expect(fs.existsSync(filesOf(batch).links)).toEqual(false);
+      });
+    }
+  });
+
+  describe('without --network', () => {
+    for (const command of ['validate', 'load']) {
+      it(`${command} is a usage error`, async () => {
+        const result = await runCapture([
+          command,
+          'spec.yaml',
+          'holders.csv',
+          ...HUB_ARGS,
+        ]);
+
+        expect(result).toEqual({
+          exitCode: 2,
+          stdout: '',
+          stderr: "error: required option '--network <name>' not specified\n",
+        });
       });
     }
   });
@@ -895,7 +925,7 @@ describe('batch-issuer load', () => {
 
     expect(result.exitCode).toEqual(0);
     expect(readStateLines(state)).toEqual([
-      { batch: { ...ids, hash: expect.any(String) } },
+      { batch: { network: NETWORK, ...ids, hash: expect.any(String) } },
       { depots: [{ row: 2, id: newDepotId(1) }] },
       { credentials: [expect.objectContaining({ row: 2 })] },
     ]);
@@ -1063,6 +1093,7 @@ describe('batch-issuer load', () => {
       },
       { name: 'another --var', args: ['--var', 'lastName=Doe'] },
       { name: 'a --default-country', args: ['--default-country', 'US'] },
+      { name: 'another --network', args: ['--network', 'testnet'] },
     ];
 
     for (const { name, change, args = [] } of changes) {
@@ -1082,11 +1113,26 @@ describe('batch-issuer load', () => {
           stdout: '',
           stderr:
             `Error: the state file ${filesOf(batch).state} belongs to a different batch: the spec, its templates, the CSV, ` +
-            '--var or --default-country have changed since it was written. Rerun the batch it belongs to, or pass another --state\n',
+            '--network, --var or --default-country have changed since it was written. Rerun the batch it belongs to, or pass another --state\n',
         });
         expect(writeRequests(hub)).toHaveLength(firstRunWrites);
       });
     }
+
+    it('is not another batch for the same --network in another case', async () => {
+      const hub = initFakeHub();
+      const batch = writeBatch({ csvLines: [ADAM, BETH] });
+      mockRun(hub);
+      await load(batch);
+
+      mockRun(hub);
+      const result = await load(batch, '--network', 'DevNet');
+
+      expect(result.exitCode).toEqual(0);
+      expect(result.stdout).toContain(
+        '\nDepots: 0 created, 0 reused, 2 skipped.\nCredentials: 0 created, 2 skipped.\n',
+      );
+    });
 
     it('is refused by validate too', async () => {
       const hub = initFakeHub();
@@ -1100,7 +1146,7 @@ describe('batch-issuer load', () => {
         'validate',
         batch.specFile,
         batch.csvFile,
-        ...HUB_ARGS,
+        ...BATCH_ARGS,
         '--registrar',
         REGISTRAR_URL,
       ]);
