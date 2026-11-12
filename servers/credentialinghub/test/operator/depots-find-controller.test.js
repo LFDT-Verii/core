@@ -767,6 +767,73 @@ describe('Find Depots Test Suite', () => {
     });
   });
 
+  describe('malformed ids', () => {
+    const authValues = [['jane.doe@example.com', 'EMP-1']];
+
+    // Both with and without authValues, so both paths refuse the id
+    const expectMalformedId = async (body, message) => {
+      const responses = await Promise.all([
+        findDepots(body),
+        findDepots({ serviceId: vpService._id, authValues, ...body }),
+      ]);
+      expect(map('statusCode', responses)).toEqual([400, 400]);
+      expect(map('json', responses)).toEqual(
+        times(
+          () =>
+            errorResponseMatcher({
+              statusCode: 400,
+              errorCode: 'request_validation_failed',
+              message,
+            }),
+          2,
+        ),
+      );
+    };
+
+    it('should 400 for a malformed serviceId', async () => {
+      await expectMalformedId(
+        { serviceId: 'not-an-object-id' },
+        'body/serviceId must match pattern "^[0-9a-fA-F]{24}$"',
+      );
+    });
+
+    it('should 400 for a malformed depotId', async () => {
+      await expectMalformedId(
+        { depotId: 'not-an-object-id' },
+        [
+          'body/depotId must match pattern "^[0-9a-fA-F]{24}$"',
+          'body/depotId must be array',
+          'body/depotId must match a schema in anyOf',
+        ].join(', '),
+      );
+    });
+
+    it('should 400 for a malformed id among the depotIds', async () => {
+      await expectMalformedId(
+        { depotId: [new ObjectId().toString(), 'not-an-object-id'] },
+        [
+          'body/depotId must be string',
+          'body/depotId/1 must match pattern "^[0-9a-fA-F]{24}$"',
+          'body/depotId must match a schema in anyOf',
+        ].join(', '),
+      );
+    });
+
+    it('should accept ids in upper case', async () => {
+      const depot = await createDepot({
+        userReference: 'ABC123',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+      const ids = {
+        serviceId: vpService._id.toUpperCase(),
+        depotId: [depot.id.toUpperCase()],
+      };
+
+      expectDepots(await findDepots(ids), [depot]);
+      expectDepots(await findDepots({ ...ids, authValues }), [depot]);
+    });
+  });
+
   describe('logging', () => {
     it('should keep the request body out of the request logs', () => {
       expect(findRoute.config).toEqual(

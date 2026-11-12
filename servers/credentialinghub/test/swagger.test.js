@@ -1,6 +1,7 @@
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 const fp = require('fastify-plugin');
+const { flow, get: getPath, keyBy, mapValues } = require('lodash/fp');
 const { buildMongoConnection } = require('@verii/tests-helpers');
 const packageJson = require('../package.json');
 const buildFastify = require('./helpers/create-test-fastify');
@@ -483,6 +484,28 @@ describe('swagger documents', () => {
     const { get, post } = documents.operator.paths['/operator/depots/get'];
 
     expect(post.responses['200']).toEqual(get.responses['200']);
+  });
+
+  it('documents the serviceId and depotId of depots/get as ObjectIds', () => {
+    const { get, post } = documents.operator.paths['/operator/depots/get'];
+    const objectId = { type: 'string', pattern: '^[0-9a-fA-F]{24}$' };
+    const idFilters = {
+      serviceId: objectId,
+      depotId: { anyOf: [objectId, { type: 'array', items: objectId }] },
+    };
+
+    expect(
+      flow(keyBy('name'), mapValues('schema'))(get.parameters),
+    ).toMatchObject(idFilters);
+    expect(
+      resolveLocalReference(
+        documents.operator,
+        getPath(
+          ['requestBody', 'content', 'application/json', 'schema', '$ref'],
+          post,
+        ),
+      ).properties,
+    ).toMatchObject(idFilters);
   });
 
   it('emits only reachable schemas and no dangling component refs', () => {

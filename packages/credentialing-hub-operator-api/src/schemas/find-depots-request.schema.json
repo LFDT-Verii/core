@@ -9,17 +9,20 @@
       "type": "string"
     },
     "serviceId": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{24}$"
     },
     "depotId": {
       "anyOf": [
         {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{24}$"
         },
         {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{24}$"
           }
         }
       ]

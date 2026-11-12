@@ -30,6 +30,9 @@ const {
   ResolveDeferredCredentialsStatuses,
 } = require('../../../entities/depots');
 
+// findDepots turns serviceId and depotId into ObjectIds
+const OBJECT_ID_PATTERN = '^[0-9a-fA-F]{24}$';
+
 const depotsController = async (fastify) => {
   fastify
     .addSchema(newDepotSchema)
@@ -93,14 +96,16 @@ const depotsController = async (fastify) => {
               },
               serviceId: {
                 type: 'string',
+                pattern: OBJECT_ID_PATTERN,
               },
               depotId: {
                 anyOf: [
-                  { type: 'string' },
+                  { type: 'string', pattern: OBJECT_ID_PATTERN },
                   {
                     type: 'array',
                     items: {
                       type: 'string',
+                      pattern: OBJECT_ID_PATTERN,
                     },
                   },
                 ],
