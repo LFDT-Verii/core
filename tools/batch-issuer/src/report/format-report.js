@@ -28,14 +28,13 @@ const {
   sortBy,
   toPairs,
 } = require('lodash/fp');
+const { count } = require('./count');
 
 const NOTHING_WRITTEN = 'Nothing was written to the Hub.';
 
 // Errors without a row first, then by row. The sort is stable, so each row's
 // errors keep their order.
 const orderErrors = sortBy(({ row }) => row ?? 0);
-
-const count = (number, noun) => `${number} ${noun}${number === 1 ? '' : 's'}`;
 
 // A multi-line reason, such as a Handlebars parse error, stays indented.
 const indentLines = replace(/\n/g, '\n      ');
@@ -109,4 +108,4 @@ const formatJsonReport = ({ errors, summary }) => {
   return `${JSON.stringify(report, null, 2)}\n`;
 };
 
-module.exports = { count, formatJsonReport, formatTextReport };
+module.exports = { formatJsonReport, formatTextReport };

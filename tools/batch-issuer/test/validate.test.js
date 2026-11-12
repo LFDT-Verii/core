@@ -174,14 +174,14 @@ describe('batch-issuer validate', () => {
     expect(result.stdout).toEqual(
       [
         'Row 2:',
-        '  - email: has the same auth values as row 4',
+        '  - email: has the same auth values as 1 other row: 4',
         '',
         'Row 3:',
         '  - email: "adam" is not an email address',
         '  - creditsEarned: "two" is not a number (template ./open-badge.template.json)',
         '',
         'Row 4:',
-        '  - email: has the same auth values as row 2',
+        '  - email: has the same auth values as 1 other row: 2',
         '',
         'Row 5:',
         '  - creditsEarned: is missing (template ./open-badge.template.json)',

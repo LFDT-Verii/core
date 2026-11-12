@@ -413,17 +413,17 @@ describe('checkRows', () => {
         {
           row: 2,
           column: 'email',
-          reason: 'has the same auth values as rows 3, 5',
+          reason: 'has the same auth values as 2 other rows: 3, 5',
         },
         {
           row: 3,
           column: 'email',
-          reason: 'has the same auth values as rows 2, 5',
+          reason: 'has the same auth values as 2 other rows: 2, 5',
         },
         {
           row: 5,
           column: 'email',
-          reason: 'has the same auth values as rows 2, 3',
+          reason: 'has the same auth values as 2 other rows: 2, 3',
         },
       ]);
     });
@@ -447,12 +447,12 @@ describe('checkRows', () => {
         {
           row: 2,
           column: 'mobile',
-          reason: 'has the same auth values as row 3',
+          reason: 'has the same auth values as 1 other row: 3',
         },
         {
           row: 3,
           column: 'mobile',
-          reason: 'has the same auth values as row 2',
+          reason: 'has the same auth values as 1 other row: 2',
         },
       ]);
     });
@@ -480,12 +480,12 @@ describe('checkRows', () => {
         {
           row: 2,
           column: 'employeeId',
-          reason: 'has the same auth values as row 3',
+          reason: 'has the same auth values as 1 other row: 3',
         },
         {
           row: 3,
           column: 'employeeId',
-          reason: 'has the same auth values as row 2',
+          reason: 'has the same auth values as 1 other row: 2',
         },
       ]);
     });
@@ -518,12 +518,61 @@ describe('checkRows', () => {
         holder({ employeeId: 'E2', email: 'b@example.com', lastName: 'Jones' }),
       ];
       const reason =
-        'credentialReference "Jones" is used 3 times in the batch, in rows 2, 3';
+        'credentialReference "Jones" is used 3 times in the batch, in 2 rows: 2, 3';
       expect(check({ templates, rows }).errors).toEqual([
         { row: 2, template: './second.json', reason },
         { row: 3, template: './badge.json', reason },
         { row: 3, template: './second.json', reason },
       ]);
+    });
+
+    describe('in a large group', () => {
+      const MAX_REASON_LENGTH = 120;
+      const GROUP_SIZE = 5000;
+      const holders = (overrides) =>
+        Array.from({ length: GROUP_SIZE }, (value, index) =>
+          holder({ employeeId: `E${index}`, ...overrides(index) }),
+        );
+
+      it('counts the other rows and lists at most 10 of them', () => {
+        const rows = holders(() => ({ email: 'same@example.com' }));
+        const { errors } = check({ rows, templates: [] });
+
+        expect(errors).toHaveLength(GROUP_SIZE);
+        expect(errors[0]).toEqual({
+          row: 2,
+          column: 'email',
+          reason:
+            'has the same auth values as 4,999 other rows: 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 and 4,989 more',
+        });
+        expect(errors[5].reason).toEqual(
+          'has the same auth values as 4,999 other rows: 2, 3, 4, 5, 6, 8, 9, 10, 11, 12 and 4,989 more',
+        );
+        expect(errors[GROUP_SIZE - 1]).toEqual({
+          row: GROUP_SIZE + 1,
+          column: 'email',
+          reason:
+            'has the same auth values as 4,999 other rows: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 4,989 more',
+        });
+        for (const { reason } of errors) {
+          expect(reason.length).toBeLessThanOrEqual(MAX_REASON_LENGTH);
+        }
+      });
+
+      it('lists at most 10 rows of a credentialReference', () => {
+        const rows = holders((index) => ({
+          email: `holder-${index}@example.com`,
+        }));
+        const templates = [{ ...badgeTemplate, credentialReference: 'same' }];
+        const { errors } = check({ rows, templates });
+
+        expect(errors).toHaveLength(GROUP_SIZE);
+        const reason =
+          'credentialReference "same" is used 5,000 times in the batch, in 5,000 rows: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 and 4,990 more';
+        for (const error of errors) {
+          expect(error.reason).toEqual(reason);
+        }
+      });
     });
 
     it('compares credentialReferences exactly', () => {

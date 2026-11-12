@@ -37,7 +37,7 @@ const { decodeCredentialEnvelope } = require('@verii/jwt');
 const { extractCredentialType } = require('@verii/vc-checks');
 const { initHubClient } = require('../clients/hub-client');
 const { readSpec } = require('../spec/load-spec');
-const { count } = require('../report/format-report');
+const { count } = require('../report/count');
 const { ExitCodes } = require('./exit-codes');
 const { formatFatalError } = require('./format-fatal-error');
 

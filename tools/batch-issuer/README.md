@@ -137,9 +137,9 @@ Every error is collected, and the command fails when there's any.
    - auth values are non-blank once trimmed, and convert to their rule's `valueType`. A rule without a `valueType` takes strings;
    - phone values, for a rule of type `PhoneV1.0` or with `valueFormat: e164`, are normalized to E.164 (`+15556192191`) with `libphonenumber-js`, using `--default-country` for numbers without a country code. A number that can't be normalized is an error;
    - email values, for a rule of type `EmailV1.0` or with `valueFormat: email`, are email addresses, by the same check as the Hub's `email` format;
-   - no two rows have the same auth values, compared as the Hub matches them: normalized with `buildAuthMatchValues`, and by type, so `"12345"` and `12345` differ;
+   - no two rows have the same auth values, compared as the Hub matches them: normalized with `buildAuthMatchValues`, and by type, so `"12345"` and `12345` differ. Each duplicate row gets an error that counts the other rows and lists at most 10 of them, such as `has the same auth values as 49,999 other rows: 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 and 49,989 more`;
    - the templates render;
-   - each `credentialReference` is unique in the batch;
+   - each `credentialReference` is unique in the batch. Each duplicate credential's error counts the uses and rows and lists at most 10 rows;
    - each depot and credential passes the operator API's validator (`initOperatorApiValidator`), as the Hub validates `depots/create` and `credentials/create`.
 3. **Each credential against its type:** the `credentialSubject` is checked against the type's JSON schema from the registrar, which `credentials/create` loads the same way. Every schema error is reported, not only the first.
 4. **The batch against the Hub:** one `POST depots/get` with the rows' auth values, at most 1000 tuples per request. The depots it returns are matched to rows by normalizing their `authValues` with `buildAuthMatchValues`. For a match:
