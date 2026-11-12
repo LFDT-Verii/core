@@ -6,7 +6,6 @@ module.exports = {
   ...require('./build-profile-verifiable-credential'),
   ...require('./build-public-profile'),
   ...require('./constants'),
-  ...require('./get-subject-net-prefix'),
   ...require('./organization-vc-checks'),
   ...require('./parse-profile-to-csv'),
   ...require('./prepare-profile-vc'),
@@ -15,4 +14,5 @@ module.exports = {
   ...require('./validate-profile-name'),
   ...require('./validate-profile-website'),
   ...require('./validate-update-profile'),
+  ...require('./which-net'),
 };

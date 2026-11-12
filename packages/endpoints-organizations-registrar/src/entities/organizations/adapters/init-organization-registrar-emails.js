@@ -16,6 +16,7 @@
  */
 
 const { map } = require('lodash/fp');
+const { whichNet } = require('../domains/which-net');
 const { buildPublicServices } = require('../../organization-services/domains');
 
 const initOrganizationRegistrarEmails = (config) => {
@@ -26,28 +27,34 @@ const initOrganizationRegistrarEmails = (config) => {
       emails,
     }) => {
       return {
-        subject: `Velocity Services Activated on ${config.networkName}`,
+        subject: `Velocity Services Activated on ${whichNet(config)}`,
         message: `Congratulations!
 <br>
 <br>
 You are being contacted because you are the admin of ${
           organization.profile.name
-        } on Velocity Network ${config.networkName} and your services were just activated!
+        } on Velocity Network ${whichNet(
+          config,
+        )} and your services were just activated!
 <br>
 <br>
-You can now access your organization’s Payments and Rewards Hub account on ${config.networkName}. 
+You can now access your organization’s Payments and Rewards Hub account on ${whichNet(
+          config,
+        )}. 
 To do so, please go <a href="${config.tokenWalletBaseUrl}/o/${
           organization.didDoc.id
         }">here</a> and log in with your Velocity Network Registrar admin credentials.  
 Please confirm that you were able to successfully log in.
 <br>
 <br>
-Your DID is registered on the Velocity Network ${config.networkName} as ${
+Your DID is registered on the Velocity Network ${whichNet(config)} as ${
           organization.didDoc.id
         }.
 <br>
 <br>
-The following services have been activated for you on Velocity Network ${config.networkName}:
+The following services have been activated for you on Velocity Network ${whichNet(
+          config,
+        )}:
 <br>
 <br>
 ${JSON.stringify(activatedServiceIds, null, 2)}
@@ -72,15 +79,19 @@ The Velocity Network Registrar
       activatedServiceIds = [],
       emails,
     }) => ({
-      subject: `Velocity Services Activated on ${config.networkName}`,
+      subject: `Velocity Services Activated on ${whichNet(config)}`,
       message: `
 Hello,
 
 You are being contacted because you are the admin of ${
         organization.profile.name
-      } on Velocity Network ${config.networkName} and a new service has just been added to your organization. 
+      } on Velocity Network ${whichNet(
+        config,
+      )} and a new service has just been added to your organization. 
 
-The following services have been activated for you on Velocity Network ${config.networkName}:
+The following services have been activated for you on Velocity Network ${whichNet(
+        config,
+      )}:
 
 ${JSON.stringify(activatedServiceIds, null, 2)}
 

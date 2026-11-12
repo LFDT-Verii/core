@@ -15,22 +15,21 @@
  *
  */
 
-const { getOr } = require('lodash/fp');
+const { getOr, includes } = require('lodash/fp');
 
-// The network name each NODE_ENV gave the registrar's emails before REGISTRAR_NETWORK_NAME (#1234)
+// How the registrar's emails name each Velocity network. Any other NETWORK shows as it is.
 const networkNames = {
-  development: 'LocalDevNet',
-  test: 'LocalDevNet',
-  dev: 'DevNet',
-  staging: 'TestNet',
-  production: 'MainNet',
+  devnet: 'DevNet',
+  testnet: 'TestNet',
+  mainnet: 'MainNet',
 };
 
-/**
- * The default for REGISTRAR_NETWORK_NAME. Nothing else should read it.
- * @param {string} nodeEnv the value of NODE_ENV
- * @returns {string} the network name, or '' for any other NODE_ENV
- */
-const whichNet = (nodeEnv) => getOr('', nodeEnv, networkNames);
+// Emails from these networks start their subject with the network's name
+const prefixedNetworks = ['devnet', 'testnet'];
 
-module.exports = { whichNet };
+const whichNet = ({ network }) => getOr(network, network, networkNames);
+
+const getSubjectNetPrefix = (config) =>
+  includes(config.network, prefixedNetworks) ? `${whichNet(config)}: ` : '';
+
+module.exports = { whichNet, getSubjectNetPrefix };

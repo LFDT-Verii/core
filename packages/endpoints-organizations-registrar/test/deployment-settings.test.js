@@ -20,33 +20,21 @@ const { afterEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const { loadTestEnv } = require('@verii/tests-helpers');
 
-loadTestEnv(path.resolve(__dirname, 'helpers/.env.test'));
+const testEnvFile = path.resolve(__dirname, 'helpers/.env.test');
+loadTestEnv(testEnvFile);
 
 const { forEach, pick } = require('lodash/fp');
 const veriiConfig = require('@verii/config');
 const { createConfig } = require('../src/config/config');
-const { whichNet } = require('../src/config/which-net');
 const {
   activateServices,
   getSubjectNetPrefix,
   initOrganizationRegistrarEmails,
+  whichNet,
 } = require('../src/entities');
 const packageJson = require('../package.json');
 
-const settingKeys = [
-  'environmentLabel',
-  'networkName',
-  'networkNameInEmailSubjects',
-  'validateKybProfile',
-  'autoActivateServices',
-];
-
-const registrarSettingKeys = [
-  'networkName',
-  'networkNameInEmailSubjects',
-  'validateKybProfile',
-  'autoActivateServices',
-];
+const settingKeys = ['network', 'validateKybProfile', 'autoActivateServices'];
 
 // Builds the registrar config as a server with this NODE_ENV would
 const createConfigUnder = (nodeEnv) => {
@@ -61,15 +49,13 @@ const createConfigUnder = (nodeEnv) => {
     },
   });
   try {
-    return pick(registrarSettingKeys, createConfig(packageJson));
+    return pick(settingKeys, createConfig(packageJson));
   } finally {
     configMock.restore();
   }
 };
 
 const settingVariables = [
-  'REGISTRAR_NETWORK_NAME',
-  'REGISTRAR_NETWORK_NAME_IN_EMAIL_SUBJECTS',
   'REGISTRAR_VALIDATE_KYB_PROFILE',
   'REGISTRAR_AUTO_ACTIVATE_SERVICES',
 ];
@@ -80,76 +66,64 @@ describe('Registrar settings that differ between deployments', () => {
       forEach((variable) => {
         delete process.env[variable];
       }, settingVariables);
+      loadTestEnv(testEnvFile);
     });
 
-    it('should default each setting to what NODE_ENV=test gave it', () => {
-      expect(pick(settingKeys, createConfig(packageJson))).toEqual({
-        environmentLabel: 'test',
-        networkName: 'LocalDevNet',
-        networkNameInEmailSubjects: true,
+    it('should read NETWORK and default the other settings to what NODE_ENV=test gave them', () => {
+      expect(createConfigUnder('test')).toEqual({
+        network: 'devnet',
         validateKybProfile: false,
         autoActivateServices: true,
       });
     });
 
-    it('should default each setting to what NODE_ENV=production gave it', () => {
+    it('should default the other settings to what NODE_ENV=production gave them', () => {
       expect(createConfigUnder('production')).toEqual({
-        networkName: 'MainNet',
-        networkNameInEmailSubjects: false,
+        network: 'devnet',
         validateKybProfile: true,
         autoActivateServices: false,
       });
-    });
-
-    it('should default each setting to what NODE_ENV=dev and staging gave it', () => {
-      const nonProductionSettings = (networkName) => ({
-        networkName,
-        networkNameInEmailSubjects: true,
-        validateKybProfile: false,
-        autoActivateServices: true,
-      });
-      expect(createConfigUnder('dev')).toEqual(nonProductionSettings('DevNet'));
-      expect(createConfigUnder('staging')).toEqual(
-        nonProductionSettings('TestNet'),
-      );
     });
 
     it('should prefer each setting to its NODE_ENV default', () => {
-      process.env.REGISTRAR_NETWORK_NAME = 'DevNet';
-      process.env.REGISTRAR_NETWORK_NAME_IN_EMAIL_SUBJECTS = 'true';
       process.env.REGISTRAR_VALIDATE_KYB_PROFILE = 'false';
       process.env.REGISTRAR_AUTO_ACTIVATE_SERVICES = 'true';
       expect(createConfigUnder('production')).toEqual({
-        networkName: 'DevNet',
-        networkNameInEmailSubjects: true,
+        network: 'devnet',
         validateKybProfile: false,
         autoActivateServices: true,
       });
     });
 
-    it('should read each setting', () => {
-      process.env.REGISTRAR_NETWORK_NAME = 'MainNet';
-      process.env.REGISTRAR_NETWORK_NAME_IN_EMAIL_SUBJECTS = 'false';
-      process.env.REGISTRAR_VALIDATE_KYB_PROFILE = 'true';
-      process.env.REGISTRAR_AUTO_ACTIVATE_SERVICES = 'false';
-      expect(pick(settingKeys, createConfig(packageJson))).toEqual({
-        environmentLabel: 'test',
-        networkName: 'MainNet',
-        networkNameInEmailSubjects: false,
-        validateKybProfile: true,
-        autoActivateServices: false,
-      });
+    it('should fail without NETWORK', () => {
+      delete process.env.NETWORK;
+      expect(() => createConfig(packageJson)).toThrow(/"NETWORK"/);
     });
   });
 
   describe('whichNet', () => {
-    it('should give the network name each NODE_ENV gave the emails', () => {
-      expect(whichNet('development')).toEqual('LocalDevNet');
-      expect(whichNet('test')).toEqual('LocalDevNet');
-      expect(whichNet('dev')).toEqual('DevNet');
-      expect(whichNet('staging')).toEqual('TestNet');
-      expect(whichNet('production')).toEqual('MainNet');
-      expect(whichNet('localdev')).toEqual('');
+    it('should give each Velocity network the name members see in emails', () => {
+      expect(whichNet({ network: 'devnet' })).toEqual('DevNet');
+      expect(whichNet({ network: 'testnet' })).toEqual('TestNet');
+      expect(whichNet({ network: 'mainnet' })).toEqual('MainNet');
+    });
+
+    it('should show any other network as it is', () => {
+      expect(whichNet({ network: 'no-preset' })).toEqual('no-preset');
+      expect(whichNet({ network: 'ExampleNet' })).toEqual('ExampleNet');
+    });
+  });
+
+  describe('getSubjectNetPrefix', () => {
+    it('should start subjects with the network name on devnet and testnet', () => {
+      expect(getSubjectNetPrefix({ network: 'devnet' })).toEqual('DevNet: ');
+      expect(getSubjectNetPrefix({ network: 'testnet' })).toEqual('TestNet: ');
+    });
+
+    it('should leave subjects alone on any other network', () => {
+      expect(getSubjectNetPrefix({ network: 'mainnet' })).toEqual('');
+      expect(getSubjectNetPrefix({ network: 'no-preset' })).toEqual('');
+      expect(getSubjectNetPrefix({ network: 'ExampleNet' })).toEqual('');
     });
   });
 
@@ -179,30 +153,10 @@ describe('Registrar settings that differ between deployments', () => {
     });
   });
 
-  describe('getSubjectNetPrefix', () => {
-    it('should start subjects with the network name when networkNameInEmailSubjects is on', () => {
-      expect(
-        getSubjectNetPrefix({
-          networkName: 'DevNet',
-          networkNameInEmailSubjects: true,
-        }),
-      ).toEqual('DevNet: ');
-    });
-
-    it('should leave subjects alone when networkNameInEmailSubjects is off', () => {
-      expect(
-        getSubjectNetPrefix({
-          networkName: 'MainNet',
-          networkNameInEmailSubjects: false,
-        }),
-      ).toEqual('');
-    });
-  });
-
   describe('registrar emails', () => {
     const emails = initOrganizationRegistrarEmails({
       environmentLabel: 'testnet',
-      networkName: 'ExampleNet',
+      network: 'testnet',
       registrarSupportEmail: 'support@localhost.test',
       noReplyEmail: 'no-reply@localhost.test',
       tokenWalletBaseUrl: 'https://wallet.localhost.test',
@@ -212,17 +166,15 @@ describe('Registrar settings that differ between deployments', () => {
       didDoc: { id: 'did:ion:1' },
     };
 
-    it('should name the network from networkName', () => {
+    it('should name the network from NETWORK', () => {
       const email = emails.emailToRegisteredOrgForServicesActivated({
         organization,
         activatedServiceIds: ['#service-1'],
         emails: ['admin@localhost.test'],
       });
-      expect(email.subject).toEqual(
-        'Velocity Services Activated on ExampleNet',
-      );
+      expect(email.subject).toEqual('Velocity Services Activated on TestNet');
       expect(email.message).toContain(
-        'admin of Example Org on Velocity Network ExampleNet',
+        'admin of Example Org on Velocity Network TestNet',
       );
     });
 

@@ -1,11 +1,10 @@
 const env = require('env-var');
 const { createOauthConfig } = require('@verii/auth');
 const contractAbi = require('./abi.json');
-const { whichNet } = require('./which-net');
 
 const createConfig = (packageJson) => {
   const { createBlockchainConfig, genericConfig } = require('@verii/config');
-  const { isProd, isTest, nodeEnv } = genericConfig;
+  const { isProd, isTest } = genericConfig;
   const oauthConfig = createOauthConfig(env, genericConfig);
   const swaggerInfo = {
     info: {
@@ -148,17 +147,9 @@ const createConfig = (packageJson) => {
       .get('ORGANIZATION_CREATION_EMAIL_CC_LIST')
       .required()
       .asArray(','),
-    // These four used to follow NODE_ENV, and default to what it gave them (#1234)
-    // The network's name in emails, such as "Velocity Services Activated on <name>"
-    networkName: env
-      .get('REGISTRAR_NETWORK_NAME')
-      .default(whichNet(nodeEnv))
-      .asString(),
-    // Starts the subject of invitation and support emails with "<network name>: "
-    networkNameInEmailSubjects: env
-      .get('REGISTRAR_NETWORK_NAME_IN_EMAIL_SUBJECTS')
-      .default(String(!isProd))
-      .asBool(),
+    // The Velocity network the registrar runs on, such as devnet, testnet or mainnet. Its emails name it.
+    network: env.get('NETWORK').required().asString(),
+    // These two used to follow NODE_ENV, and default to what it gave them (#1234)
     // Validates new organizations' profiles against the KYB schema. The x-validate-kyb-profile: 1 header also turns it on.
     validateKybProfile: env
       .get('REGISTRAR_VALIDATE_KYB_PROFILE')
