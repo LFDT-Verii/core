@@ -33,7 +33,7 @@ const {
   ISO_DATETIME_FORMAT,
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
-const { map, omit, times } = require('lodash/fp');
+const { constant, forEach, map, omit, repeat, times } = require('lodash/fp');
 const { generateKeyPair } = require('@verii/crypto');
 const { jwtSign } = require('@verii/jwt');
 const { hashOffer } = require('@verii/verii-issuing');
@@ -51,6 +51,41 @@ const {
 } = require('../helpers/sample-education-degree-graduation');
 
 const testUrl = '/operator/credentials';
+
+// The request schema limits the credentialReference's length and the tags
+const INVALID_CREDENTIALS = [
+  {
+    name: 'credentialReference is empty',
+    overrides: { credentialReference: '' },
+    error: 'credentialReference must NOT have fewer than 1 characters',
+  },
+  {
+    name: 'credentialReference is longer than 64 characters',
+    overrides: { credentialReference: repeat(65, 'c') },
+    error: 'credentialReference must NOT have more than 64 characters',
+  },
+  {
+    name: 'there are more than 10 tags',
+    overrides: { tags: times(constant('tag'), 11) },
+    error: 'tags must NOT have more than 10 items',
+  },
+  {
+    name: 'a tag is empty',
+    overrides: { tags: [''] },
+    error: 'tags/0 must NOT have fewer than 1 characters',
+  },
+  {
+    name: 'a tag is longer than 32 characters',
+    overrides: { tags: [repeat(33, 't')] },
+    error: 'tags/0 must NOT have more than 32 characters',
+  },
+];
+
+const buildCredential = (overrides) => ({
+  credentialReference: 'cred1',
+  content: { type: ['fooType'], credentialSubject: { foo: 'bar' } },
+  ...overrides,
+});
 describe('Credentials Test suite', () => {
   let fastify;
   let persistTenant;
@@ -271,6 +306,43 @@ describe('Credentials Test suite', () => {
           tenant,
         ),
       ]);
+    });
+    forEach(({ name, overrides, error }) => {
+      it(`should 400 if ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create`,
+          payload: {
+            tenantId: tenant._id,
+            depotId: depot._id,
+            credential: buildCredential(overrides),
+          },
+        });
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 400,
+            errorCode: 'request_validation_failed',
+            message: `body/credential/${error}`,
+          }),
+        );
+      });
+    }, INVALID_CREDENTIALS);
+    it('should 200 and create a credential with a 64 character credentialReference and 10 tags of 32 characters', async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const credential = buildCredential({
+        credentialReference: repeat(64, 'c'),
+        tags: times(constant(repeat(32, 't')), 10),
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: { tenantId: tenant._id, depotId: depot._id, credential },
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.credential).toEqual(
+        expect.objectContaining(omit(['content'], credential)),
+      );
     });
     it("should 400 if the credential type is not one of the depot's expected types", async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
@@ -532,6 +604,31 @@ describe('Credentials Test suite', () => {
         }),
       );
     });
+    forEach(({ name, overrides, error }) => {
+      it(`should 400 if ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create-many`,
+          payload: {
+            tenantId: tenant._id,
+            items: [
+              { depotId: depot._id, credential: buildCredential() },
+              { depotId: depot._id, credential: buildCredential(overrides) },
+            ],
+          },
+        });
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 400,
+            errorCode: 'request_validation_failed',
+            message: `body/items/1/credential/${error}`,
+          }),
+        );
+        await expect(
+          mongoDb().collection('credentials').countDocuments({}),
+        ).resolves.toEqual(0);
+      });
+    }, INVALID_CREDENTIALS);
     it('should 400 if credential type is not found', async () => {
       mockHttpClientJsonResponse('get', []);
       const credentialItems = [

@@ -25,7 +25,7 @@ const {
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
 const { nanoid } = require('nanoid');
-const { omit } = require('lodash/fp');
+const { constant, forEach, omit, repeat, times } = require('lodash/fp');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -42,6 +42,38 @@ const {
 const { initCredentialFactory } = require('../../src/entities/credentials');
 
 const testUrl = '/operator/depots';
+
+// The request schema limits the number of authValues and the userReference's
+// length
+const INVALID_DEPOTS = [
+  {
+    name: 'authValues is empty',
+    depot: { userReference: 'ABC123', authValues: [] },
+    message: 'body/depot/authValues must NOT have fewer than 1 items',
+  },
+  {
+    name: 'there are more than 10 authValues',
+    depot: { userReference: 'ABC123', authValues: times(constant('a'), 11) },
+    message: 'body/depot/authValues must NOT have more than 10 items',
+  },
+  {
+    name: 'userReference is empty',
+    depot: { userReference: '' },
+    message: 'body/depot/userReference must NOT have fewer than 1 characters',
+  },
+  {
+    name: 'userReference is longer than 64 characters',
+    depot: { userReference: repeat(65, 'u') },
+    message: 'body/depot/userReference must NOT have more than 64 characters',
+  },
+];
+
+// An auth value is a number, a non-blank string or a boolean, so a string that
+// fails fails every branch of the anyOf
+const authValueErrorMessage = (index, stringError) => {
+  const path = `body/depot/authValues/${index}`;
+  return `${path} must be number, ${path} ${stringError}, ${path} must be boolean, ${path} must match a schema in anyOf`;
+};
 describe('Depots Test suite', () => {
   let fastify;
   let persistTenant;
@@ -179,6 +211,26 @@ describe('Depots Test suite', () => {
         }),
       );
     });
+    forEach(({ name, depot, message }) => {
+      it(`should 400 if ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create`,
+          payload: {
+            tenantId: tenant._id,
+            serviceId: issuerService._id,
+            depot,
+          },
+        });
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 400,
+            errorCode: 'request_validation_failed',
+            message,
+          }),
+        );
+      });
+    }, INVALID_DEPOTS);
     it('should 400 for a depot without authValues for a VP rulesEngine service', async () => {
       const vpService = await persistIssuerService({ tenant });
       const payload = {
@@ -413,6 +465,20 @@ describe('Depots Test suite', () => {
       ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);
     });
 
+    it('should 200 for a depot with 10 authValues and a 64 character userReference', async () => {
+      const depot = {
+        userReference: repeat(64, 'u'),
+        authValues: times(constant('a'), 10),
+      };
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: { tenantId: tenant._id, serviceId: issuerService._id, depot },
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.depot).toEqual(expect.objectContaining(depot));
+    });
+
     it('should index depots by service, auth rules fingerprint and authMatchValues', async () => {
       const indexes = await mongoDb().collection('depots').indexes();
       expect(indexes).toEqual(
@@ -553,16 +619,31 @@ describe('Depots Test suite', () => {
         authValues: ['jane.doe@example.com', ''],
       });
 
-      expectInvalidAuthValues(response);
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'request_validation_failed',
+          message: authValueErrorMessage(
+            1,
+            'must NOT have fewer than 1 characters',
+          ),
+        }),
+      );
     });
 
     it('should 400 when an auth value is blank', async () => {
       const response = await createDepot(vpService._id, {
         userReference: 'ABC123',
-        authValues: ['   ', 'EMP-1'],
+        authValues: [' \t\n', 'EMP-1'],
       });
 
-      expectInvalidAuthValues(response);
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'request_validation_failed',
+          message: authValueErrorMessage(0, 'must match pattern "\\S"'),
+        }),
+      );
       await expect(
         mongoDb().collection('depots').countDocuments({}),
       ).resolves.toEqual(0);

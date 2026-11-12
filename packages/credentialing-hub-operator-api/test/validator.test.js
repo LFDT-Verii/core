@@ -17,7 +17,7 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
-const { times } = require('lodash/fp');
+const { constant, repeat, times } = require('lodash/fp');
 const {
   initOperatorApiValidator,
   operatorApiAjvFormats,
@@ -70,8 +70,23 @@ const credential = (overrides) => ({
   ...overrides,
 });
 
+const authRule = (overrides) => ({
+  path: [['credentialSubject', 'email']],
+  rule: 'pick',
+  valueIndex: 0,
+  type: 'EmailV1.0',
+  ...overrides,
+});
+
 const error = (keyword, instancePath) =>
   expect.objectContaining({ keyword, instancePath });
+
+const missing = (missingProperty) =>
+  expect.objectContaining({
+    keyword: 'required',
+    instancePath: '',
+    params: { missingProperty },
+  });
 
 // AJV also reports the error of each anyOf or oneOf branch
 const errorsWith = (keyword, instancePath) =>
@@ -116,6 +131,172 @@ describe('operator API validator', () => {
       ).toEqual([error('required', '')]);
     });
 
+    describe('auth methods', () => {
+      const vpRules = vpService().verifiablePresentationAuthRules;
+
+      it('should accept a preauth service with or without auth rules', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            preauthService({ verifiablePresentationAuthRules: vpRules }),
+          ),
+        ).toEqual([]);
+        expect(
+          validate(
+            'new-issuer-service',
+            preauthService({ verifiablePresentationAuthRules: [] }),
+          ),
+        ).toEqual([]);
+      });
+
+      it('should accept a preauth service with a presentationDefinition', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            preauthService({ presentationDefinition: { id: 'pd-1' } }),
+          ),
+        ).toEqual([]);
+      });
+
+      it('should accept a service with both auth methods', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            vpService({ authMethods: ['preauth', 'verifiable_presentation'] }),
+          ),
+        ).toEqual([]);
+      });
+
+      it('should refuse a verifiable presentation service without a disclosureRequest', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            vpService({ disclosureRequest: undefined }),
+          ),
+        ).toEqual(
+          expect.arrayContaining([
+            missing('disclosureRequest'),
+            error('anyOf', ''),
+          ]),
+        );
+      });
+
+      it('should refuse a verifiable presentation service without auth rules', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            vpService({ verifiablePresentationAuthRules: undefined }),
+          ),
+        ).toEqual(
+          expect.arrayContaining([
+            missing('verifiablePresentationAuthRules'),
+            error('anyOf', ''),
+          ]),
+        );
+      });
+
+      it('should refuse a verifiable presentation service with empty auth rules', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            vpService({ verifiablePresentationAuthRules: [] }),
+          ),
+        ).toEqual(
+          expect.arrayContaining([
+            error('minItems', '/verifiablePresentationAuthRules'),
+            error('anyOf', ''),
+          ]),
+        );
+      });
+
+      it('should refuse a verifiable presentation service with a presentationDefinition', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            vpService({ presentationDefinition: { id: 'pd-1' } }),
+          ),
+        ).toEqual(
+          expect.arrayContaining([error('not', ''), error('anyOf', '')]),
+        );
+      });
+
+      it('should refuse a service with both auth methods and no disclosureRequest', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            vpService({
+              authMethods: ['preauth', 'verifiable_presentation'],
+              disclosureRequest: undefined,
+            }),
+          ),
+        ).toEqual(
+          expect.arrayContaining([
+            missing('disclosureRequest'),
+            error('anyOf', ''),
+          ]),
+        );
+      });
+    });
+
+    describe('disclosureRequest types', () => {
+      const withTypes = (types) =>
+        vpService({
+          disclosureRequest: {
+            types,
+            purpose: 'Identification',
+            retentionPeriod: 'P30D',
+          },
+        });
+
+      it('should refuse a type without a type property', () => {
+        expect(validate('new-issuer-service', withTypes([{}]))).toEqual([
+          error('required', '/disclosureRequest/types/0'),
+        ]);
+      });
+
+      it('should refuse a type with an unknown property', () => {
+        expect(
+          validate(
+            'new-issuer-service',
+            withTypes([{ type: 'EmailV1.0', issuer: 'did:web:example.com' }]),
+          ),
+        ).toEqual([
+          error('additionalProperties', '/disclosureRequest/types/0'),
+        ]);
+      });
+    });
+
+    describe('auth rules', () => {
+      const withRule = (overrides) =>
+        vpService({ verifiablePresentationAuthRules: [authRule(overrides)] });
+
+      it('should accept the pick and equal rules', () => {
+        expect(validate('new-issuer-service', withRule())).toEqual([]);
+        expect(
+          validate('new-issuer-service', withRule({ rule: 'equal' })),
+        ).toEqual([]);
+      });
+
+      it('should accept a valueIndex from 0 to 9', () => {
+        expect(
+          validate('new-issuer-service', withRule({ valueIndex: 9 })),
+        ).toEqual([]);
+      });
+
+      it('should refuse a valueIndex below 0 or above 9', () => {
+        expect(
+          validate('new-issuer-service', withRule({ valueIndex: -1 })),
+        ).toEqual([
+          error('minimum', '/verifiablePresentationAuthRules/0/valueIndex'),
+        ]);
+        expect(
+          validate('new-issuer-service', withRule({ valueIndex: 10 })),
+        ).toEqual([
+          error('maximum', '/verifiablePresentationAuthRules/0/valueIndex'),
+        ]);
+      });
+    });
+
     it('should refuse an unknown property', () => {
       expect(
         validate('new-issuer-service', preauthService({ unknown: true })),
@@ -123,12 +304,14 @@ describe('operator API validator', () => {
     });
 
     it('should refuse an unknown auth method or mode', () => {
+      // AJV checks the anyOf before the properties, so an unknown auth method
+      // fails both of its branches
       expect(
         validate(
           'new-issuer-service',
           preauthService({ authMethods: ['password'] }),
         ),
-      ).toEqual([error('enum', '/authMethods/0')]);
+      ).toEqual(errorsWith('enum', '/authMethods/0'));
       expect(
         validate(
           'new-issuer-service',
@@ -155,13 +338,22 @@ describe('operator API validator', () => {
       ).toEqual([error('format', '/disclosureRequest/retentionPeriod')]);
     });
 
-    it('should refuse a claims path pointer with an empty key or a negative index', () => {
+    it('should accept null, a key and an index as claims path pointer segments', () => {
+      expect(
+        validate(
+          'new-issuer-service',
+          vpService({
+            verifiablePresentationAuthRules: [
+              authRule({ path: [[null], ['credentialSubject', 0, null]] }),
+            ],
+          }),
+        ),
+      ).toEqual([]);
+    });
+
+    it('should refuse a claims path pointer with an empty key, a negative index or a fraction', () => {
       const withPath = (path) =>
-        vpService({
-          verifiablePresentationAuthRules: [
-            { path, rule: 'pick', valueIndex: 0, type: 'EmailV1.0' },
-          ],
-        });
+        vpService({ verifiablePresentationAuthRules: [authRule({ path })] });
       expect(
         validate('new-issuer-service', withPath([['credentialSubject', '']])),
       ).toEqual(
@@ -169,6 +361,11 @@ describe('operator API validator', () => {
       );
       expect(
         validate('new-issuer-service', withPath([['credentialSubject', -1]])),
+      ).toEqual(
+        errorsWith('anyOf', '/verifiablePresentationAuthRules/0/path/0/1'),
+      );
+      expect(
+        validate('new-issuer-service', withPath([['credentialSubject', 1.5]])),
       ).toEqual(
         errorsWith('anyOf', '/verifiablePresentationAuthRules/0/path/0/1'),
       );
@@ -220,6 +417,52 @@ describe('operator API validator', () => {
       expect(validate('new-depot', depot({ serviceId: 'service-1' }))).toEqual([
         error('additionalProperties', ''),
       ]);
+    });
+
+    it('should accept from 1 to 10 auth values', () => {
+      expect(validate('new-depot', depot({ authValues: [12345] }))).toEqual([]);
+      expect(
+        validate('new-depot', depot({ authValues: times(constant('a'), 10) })),
+      ).toEqual([]);
+    });
+
+    it('should refuse no auth values or more than 10', () => {
+      expect(validate('new-depot', depot({ authValues: [] }))).toEqual([
+        error('minItems', '/authValues'),
+      ]);
+      expect(
+        validate('new-depot', depot({ authValues: times(constant('a'), 11) })),
+      ).toEqual([error('maxItems', '/authValues')]);
+    });
+
+    it('should accept an auth value with spaces around it', () => {
+      expect(validate('new-depot', depot({ authValues: [' a ', 0] }))).toEqual(
+        [],
+      );
+    });
+
+    it('should refuse an empty or blank auth value', () => {
+      expect(validate('new-depot', depot({ authValues: [''] }))).toEqual(
+        errorsWith('minLength', '/authValues/0'),
+      );
+      expect(validate('new-depot', depot({ authValues: [' \t\n'] }))).toEqual(
+        errorsWith('pattern', '/authValues/0'),
+      );
+    });
+
+    it('should accept a userReference of up to 64 characters', () => {
+      expect(
+        validate('new-depot', depot({ userReference: repeat(64, 'u') })),
+      ).toEqual([]);
+    });
+
+    it('should refuse an empty userReference or one over 64 characters', () => {
+      expect(validate('new-depot', depot({ userReference: '' }))).toEqual([
+        error('minLength', '/userReference'),
+      ]);
+      expect(
+        validate('new-depot', depot({ userReference: repeat(65, 'u') })),
+      ).toEqual([error('maxLength', '/userReference')]);
     });
 
     it('should refuse empty or repeated expected credential types', () => {
@@ -286,6 +529,54 @@ describe('operator API validator', () => {
       expect(validate('new-credential', credential({ tags: [1] }))).toEqual([
         error('type', '/tags/0'),
       ]);
+    });
+
+    it('should accept a credentialReference of up to 64 characters', () => {
+      expect(
+        validate(
+          'new-credential',
+          credential({ credentialReference: repeat(64, 'c') }),
+        ),
+      ).toEqual([]);
+    });
+
+    it('should refuse an empty credentialReference or one over 64 characters', () => {
+      expect(
+        validate('new-credential', credential({ credentialReference: '' })),
+      ).toEqual([error('minLength', '/credentialReference')]);
+      expect(
+        validate(
+          'new-credential',
+          credential({ credentialReference: repeat(65, 'c') }),
+        ),
+      ).toEqual([error('maxLength', '/credentialReference')]);
+    });
+
+    it('should accept up to 10 tags of up to 32 characters', () => {
+      expect(
+        validate(
+          'new-credential',
+          credential({ tags: times(constant(repeat(32, 't')), 10) }),
+        ),
+      ).toEqual([]);
+    });
+
+    it('should refuse more than 10 tags', () => {
+      expect(
+        validate(
+          'new-credential',
+          credential({ tags: times(constant('tag'), 11) }),
+        ),
+      ).toEqual([error('maxItems', '/tags')]);
+    });
+
+    it('should refuse an empty tag or one over 32 characters', () => {
+      expect(validate('new-credential', credential({ tags: [''] }))).toEqual([
+        error('minLength', '/tags/0'),
+      ]);
+      expect(
+        validate('new-credential', credential({ tags: [repeat(33, 't')] })),
+      ).toEqual([error('maxLength', '/tags/0')]);
     });
   });
 
