@@ -16,14 +16,16 @@
  */
 
 const path = require('path');
-const { afterEach, describe, it } = require('node:test');
+const { afterEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const { loadTestEnv } = require('@verii/tests-helpers');
 
 loadTestEnv(path.resolve(__dirname, 'helpers/.env.test'));
 
 const { forEach, pick } = require('lodash/fp');
+const veriiConfig = require('@verii/config');
 const { createConfig } = require('../src/config/config');
+const { whichNet } = require('../src/config/which-net');
 const {
   activateServices,
   getSubjectNetPrefix,
@@ -38,6 +40,32 @@ const settingKeys = [
   'validateKybProfile',
   'autoActivateServices',
 ];
+
+const registrarSettingKeys = [
+  'networkName',
+  'networkNameInEmailSubjects',
+  'validateKybProfile',
+  'autoActivateServices',
+];
+
+// Builds the registrar config as a server with this NODE_ENV would
+const createConfigUnder = (nodeEnv) => {
+  const configMock = mock.module('@verii/config', {
+    namedExports: {
+      ...veriiConfig,
+      genericConfig: {
+        ...veriiConfig.genericConfig,
+        nodeEnv,
+        isProd: nodeEnv === 'production',
+      },
+    },
+  });
+  try {
+    return pick(registrarSettingKeys, createConfig(packageJson));
+  } finally {
+    configMock.restore();
+  }
+};
 
 const settingVariables = [
   'REGISTRAR_NETWORK_NAME',
@@ -64,6 +92,41 @@ describe('Registrar settings that differ between deployments', () => {
       });
     });
 
+    it('should default each setting to what NODE_ENV=production gave it', () => {
+      expect(createConfigUnder('production')).toEqual({
+        networkName: 'MainNet',
+        networkNameInEmailSubjects: false,
+        validateKybProfile: true,
+        autoActivateServices: false,
+      });
+    });
+
+    it('should default each setting to what NODE_ENV=dev and staging gave it', () => {
+      const nonProductionSettings = (networkName) => ({
+        networkName,
+        networkNameInEmailSubjects: true,
+        validateKybProfile: false,
+        autoActivateServices: true,
+      });
+      expect(createConfigUnder('dev')).toEqual(nonProductionSettings('DevNet'));
+      expect(createConfigUnder('staging')).toEqual(
+        nonProductionSettings('TestNet'),
+      );
+    });
+
+    it('should prefer each setting to its NODE_ENV default', () => {
+      process.env.REGISTRAR_NETWORK_NAME = 'DevNet';
+      process.env.REGISTRAR_NETWORK_NAME_IN_EMAIL_SUBJECTS = 'true';
+      process.env.REGISTRAR_VALIDATE_KYB_PROFILE = 'false';
+      process.env.REGISTRAR_AUTO_ACTIVATE_SERVICES = 'true';
+      expect(createConfigUnder('production')).toEqual({
+        networkName: 'DevNet',
+        networkNameInEmailSubjects: true,
+        validateKybProfile: false,
+        autoActivateServices: true,
+      });
+    });
+
     it('should read each setting', () => {
       process.env.REGISTRAR_NETWORK_NAME = 'MainNet';
       process.env.REGISTRAR_NETWORK_NAME_IN_EMAIL_SUBJECTS = 'false';
@@ -76,6 +139,17 @@ describe('Registrar settings that differ between deployments', () => {
         validateKybProfile: true,
         autoActivateServices: false,
       });
+    });
+  });
+
+  describe('whichNet', () => {
+    it('should give the network name each NODE_ENV gave the emails', () => {
+      expect(whichNet('development')).toEqual('LocalDevNet');
+      expect(whichNet('test')).toEqual('LocalDevNet');
+      expect(whichNet('dev')).toEqual('DevNet');
+      expect(whichNet('staging')).toEqual('TestNet');
+      expect(whichNet('production')).toEqual('MainNet');
+      expect(whichNet('localdev')).toEqual('');
     });
   });
 

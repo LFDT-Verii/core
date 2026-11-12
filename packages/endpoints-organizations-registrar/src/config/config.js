@@ -1,14 +1,11 @@
 const env = require('env-var');
 const { createOauthConfig } = require('@verii/auth');
 const contractAbi = require('./abi.json');
+const { whichNet } = require('./which-net');
 
 const createConfig = (packageJson) => {
-  const {
-    createBlockchainConfig,
-    genericConfig,
-    nodeEnvDefaults,
-  } = require('@verii/config');
-  const { isTest } = genericConfig;
+  const { createBlockchainConfig, genericConfig } = require('@verii/config');
+  const { isProd, isTest, nodeEnv } = genericConfig;
   const oauthConfig = createOauthConfig(env, genericConfig);
   const swaggerInfo = {
     info: {
@@ -151,25 +148,26 @@ const createConfig = (packageJson) => {
       .get('ORGANIZATION_CREATION_EMAIL_CC_LIST')
       .required()
       .asArray(','),
+    // These four used to follow NODE_ENV, and default to what it gave them (#1234)
     // The network's name in emails, such as "Velocity Services Activated on <name>"
     networkName: env
       .get('REGISTRAR_NETWORK_NAME')
-      .default(nodeEnvDefaults.REGISTRAR_NETWORK_NAME)
+      .default(whichNet(nodeEnv))
       .asString(),
     // Starts the subject of invitation and support emails with "<network name>: "
     networkNameInEmailSubjects: env
       .get('REGISTRAR_NETWORK_NAME_IN_EMAIL_SUBJECTS')
-      .default(nodeEnvDefaults.REGISTRAR_NETWORK_NAME_IN_EMAIL_SUBJECTS)
+      .default(String(!isProd))
       .asBool(),
     // Validates new organizations' profiles against the KYB schema. The x-validate-kyb-profile: 1 header also turns it on.
     validateKybProfile: env
       .get('REGISTRAR_VALIDATE_KYB_PROFILE')
-      .default(nodeEnvDefaults.REGISTRAR_VALIDATE_KYB_PROFILE)
+      .default(String(isProd))
       .asBool(),
     // Activates services as organizations add them. The x-auto-activate: 0 header turns it off.
     autoActivateServices: env
       .get('REGISTRAR_AUTO_ACTIVATE_SERVICES')
-      .default(nodeEnvDefaults.REGISTRAR_AUTO_ACTIVATE_SERVICES)
+      .default(String(!isProd))
       .asBool(),
     libS3Bucket: env.get('LIB_S3_BUCKET').required(!isTest).asString(),
     libUrl: env.get('LIB_URL').required(!isTest).asString(),
