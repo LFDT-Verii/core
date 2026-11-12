@@ -104,7 +104,7 @@ const expectedInvitationAcceptanceEmail = {
       Text: { Data: expect.any(String) },
     },
     Subject: {
-      Data: 'TEST: Test Organization has accepted your invitation',
+      Data: 'test: Test Organization has accepted your invitation',
     },
   },
 };
@@ -211,7 +211,7 @@ const expectedServiceActivationRequiredEmail = {
       Text: { Data: expect.any(String) },
     },
     Subject: {
-      Data: 'TEST: Velocity Services Activation Required',
+      Data: 'test: Velocity Services Activation Required',
     },
   },
 };

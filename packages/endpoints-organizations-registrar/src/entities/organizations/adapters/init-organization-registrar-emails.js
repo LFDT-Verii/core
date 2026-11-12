@@ -108,7 +108,7 @@ The Velocity Network Registrar`,
       { organization, addedServices = [] },
       context,
     ) => ({
-      subject: `${config.environmentLabel.toUpperCase()}: Velocity Services Activation Required`,
+      subject: `${config.environmentLabel}: Velocity Services Activation Required`,
       message: `Hello,
 The organization: "${organization.profile.name}" with did "${
         organization.didDoc.id
@@ -134,7 +134,7 @@ BYTER-9000!
       { organization, addedServices = [] },
       context,
     ) => ({
-      subject: `${config.environmentLabel.toUpperCase()}: Velocity Services Activation Required`,
+      subject: `${config.environmentLabel}: Velocity Services Activation Required`,
       message: `Hello,
 The following service(s) have been added to "${
         organization.profile.name
@@ -173,7 +173,7 @@ The service is now able to be used on the Velocity Network™.
       services,
       emails,
     }) => ({
-      subject: `${config.environmentLabel.toUpperCase()}: ${
+      subject: `${config.environmentLabel}: ${
         organization.profile.name
       } has accepted your invitation`,
       /* eslint-disable max-len */

@@ -155,7 +155,7 @@ describe('Registrar settings that differ between deployments', () => {
 
   describe('registrar emails', () => {
     const emails = initOrganizationRegistrarEmails({
-      environmentLabel: 'testnet',
+      environmentLabel: 'TestNet',
       network: 'testnet',
       registrarSupportEmail: 'support@localhost.test',
       noReplyEmail: 'no-reply@localhost.test',
@@ -184,7 +184,7 @@ describe('Registrar settings that differ between deployments', () => {
         { headers: { 'user-agent': 'test' } },
       );
       expect(email.subject).toEqual(
-        'TESTNET: Velocity Services Activation Required',
+        'TestNet: Velocity Services Activation Required',
       );
     });
   });
