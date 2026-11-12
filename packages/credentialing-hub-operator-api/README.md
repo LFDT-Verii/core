@@ -18,6 +18,7 @@ The operator API's JSON schemas, with the `$id`s the Hub publishes in its OpenAP
 | `findDepotsRequestSchema` | `find-depots-request` | the body of `POST depots/get`, which can find depots by their auth values |
 | `newCredentialSchema` | `new-credential` | the `credential` of `credentials/create` and of each `credentials/create-many` item |
 | `credentialSchema` | `Credential` | a credential in responses |
+| `credentialItemsErrorSchema` | `credential-items-error` | the 400 response of `credentials/create-many` |
 
 `OBJECT_ID_PATTERN` is the pattern of the id filters, such as the `serviceId` and `depotId` of `depots/get`: 24 hex digits, in either case.
 
@@ -72,7 +73,7 @@ The `errorCode`s that the issuer service, depot and credential operator endpoint
 
 - `IssuerServicesErrors` and `ServiceConfigurationErrors`, from `issuer-services/*`
 - `DepotErrors`, from `depots/*`
-- `CredentialErrors`, from `credentials/*`
+- `CredentialErrors`, from `credentials/*`. `REQUEST_VALIDATION_FAILED` is the code of a `credentialSubject` that fails its credential type's schema
 
 ```js
 const { DepotErrors } = require('@verii/credentialing-hub-operator-api');
@@ -80,4 +81,42 @@ const { DepotErrors } = require('@verii/credentialing-hub-operator-api');
 if (response.errorCode === DepotErrors.AUTH_VALUES_ALREADY_USED) {
   // reuse response.depotId
 }
+```
+
+## `credentials/create-many`
+
+### Item limit
+
+`CREDENTIALS_CREATE_MANY_MAX_ITEMS` (1000) is the most items `credentials/create-many` takes in one request. The Hub's schema for the route uses it, so a request with more items gets a 400. Split a larger load into requests of at most that many items:
+
+```js
+const { chunk, map } = require('lodash/fp');
+const {
+  CREDENTIALS_CREATE_MANY_MAX_ITEMS,
+} = require('@verii/credentialing-hub-operator-api');
+
+const batches = chunk(CREDENTIALS_CREATE_MANY_MAX_ITEMS, items);
+const requestBodies = map((batch) => ({ tenantId, items: batch }), batches);
+```
+
+### Errors
+
+`credentials/create-many` checks every item before it creates any. When items are invalid, it creates nothing and returns 400 with `errors`, one entry per problem in item order. `credentialItemsErrorSchema` describes the response:
+
+- `index` is the item's position in `items`.
+- `path` is a JSON pointer to the invalid field in the request body, such as `/items/3/depotId` or `/items/3/credential/content/credentialSubject/name`.
+- `errorCode` is one of `CredentialErrors`, and `message` describes the problem.
+
+The top-level `errorCode` and `message` are those of the first invalid item. A request body that fails the route's own schema, such as one with more than `CREDENTIALS_CREATE_MANY_MAX_ITEMS` items, gets a 400 without `errors`.
+
+```js
+const { filter, groupBy } = require('lodash/fp');
+const { CredentialErrors } = require('@verii/credentialing-hub-operator-api');
+
+// response is the body of a 400 from credentials/create-many
+const errorsByItemIndex = groupBy('index', response.errors);
+const unknownDepotErrors = filter(
+  { errorCode: CredentialErrors.REFERENCED_DEPOT_NOT_FOUND },
+  response.errors,
+);
 ```

@@ -29,9 +29,11 @@ const {
   flow,
   includes,
   map,
+  getOr,
   split,
   toLower,
   fromPairs,
+  noop,
   uniq,
 } = require('lodash/fp');
 const {
@@ -54,6 +56,27 @@ const openid4vciPlugin = async (fastify) => {
       return buildIssuer(this);
     },
   );
+  // The routes declare the OAuth error as their 400 and 500 responses, so any
+  // other error, such as a body that isn't JSON or an unexpected failure, has
+  // to be answered in that shape too. Fastify can't serialize anything else.
+  const toOauthErrorResponse = (error, request, reply) => {
+    // Reported as the global error handler would have
+    const { sendError = noop } = fastify;
+    sendError(error);
+    const statusCode = getOr(500, 'statusCode', error);
+    reply.status(statusCode);
+    if (statusCode < 500) {
+      return {
+        error: Oauth2ErrorCodes.InvalidRequest,
+        error_description: error.message,
+      };
+    }
+    request.log.error(error);
+    return {
+      error: Oauth2ErrorCodes.ServerError,
+      error_description: 'Unexpected server error',
+    };
+  };
   fastify.decorate('openid4vcErrorHandler', (error, request, reply) => {
     if (error.statusCode === 401) {
       reply.status(error.statusCode);
@@ -70,7 +93,7 @@ const openid4vciPlugin = async (fastify) => {
       };
     }
     if (error.errorResponse == null) {
-      throw error;
+      return toOauthErrorResponse(error, request, reply);
     }
     reply.status(error.status);
     return error.errorResponse;

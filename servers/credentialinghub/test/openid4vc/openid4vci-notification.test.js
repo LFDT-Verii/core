@@ -39,6 +39,7 @@ mock.module('@verii/metadata-registration', {
   },
 });
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
+const { map } = require('lodash/fp');
 const { jwtSign } = require('@verii/jwt');
 const { mongoify } = require('@verii/tests-helpers');
 const { ObjectId } = require('mongodb');
@@ -212,6 +213,56 @@ describe('openid4vc notification test suite', () => {
           error_description:
             'body/event must be equal to one of the allowed values',
         });
+      });
+      it('should 400 with invalid_notification_request when the body is not valid JSON', async () => {
+        const response = await fastify.inject({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/notification`,
+          headers: { 'content-type': 'application/json' },
+          body: '{',
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json()).toEqual({
+          error: 'invalid_notification_request',
+          error_description:
+            "Body is not valid JSON but content-type is set to 'application/json'",
+        });
+      });
+      it('should 400 with invalid_notification_request when the JSON body is empty', async () => {
+        const response = await fastify.inject({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/notification`,
+          headers: { 'content-type': 'application/json' },
+          body: '',
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json()).toEqual({
+          error: 'invalid_notification_request',
+          error_description:
+            "Body cannot be empty when content-type is set to 'application/json'",
+        });
+      });
+      it('should 500 with server_error and report the error when it is unexpected', async (t) => {
+        const error = new Error('unexpected');
+        t.mock.method(fastify, 'openid4vcBearerAuth', async () => {
+          throw error;
+        });
+        const sendError = t.mock.method(fastify, 'sendError');
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/notification`,
+          payload: { notification_id: 'foo', event: 'credential_accepted' },
+        });
+
+        expect(response.statusCode).toEqual(500);
+        expect(response.json).toEqual({
+          error: 'server_error',
+          error_description: 'Unexpected server error',
+        });
+        expect(map('arguments', sendError.mock.calls)).toEqual([[error]]);
       });
       it('should 401 with invalid_token', async () => {
         const response = await fastify.injectJson({

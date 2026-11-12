@@ -24,9 +24,11 @@ const findDepotsRequestSchema = require('./find-depots-request.schema');
 const { OBJECT_ID_PATTERN } = require('./object-id-pattern');
 const newCredentialSchema = require('./new-credential.schema.json');
 const credentialSchema = require('./credential.schema');
+const credentialItemsErrorSchema = require('./credential-items-error.schema');
 
 module.exports = {
   OBJECT_ID_PATTERN,
+  credentialItemsErrorSchema,
   credentialSchema,
   depotConflictErrorSchema,
   depotSchema,

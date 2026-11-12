@@ -21,6 +21,8 @@ const {
 } = require('@verii/common-schemas');
 const { validationPlugin } = require('@verii/validation');
 const {
+  CREDENTIALS_CREATE_MANY_MAX_ITEMS,
+  credentialItemsErrorSchema,
   credentialSchema,
   newCredentialSchema,
 } = require('@verii/credentialing-hub-operator-api');
@@ -38,6 +40,7 @@ const credentialsController = async (fastify) => {
     .addSchema(w3cVcSchema)
     .addSchema(newCredentialSchema)
     .addSchema(credentialSchema)
+    .addSchema(credentialItemsErrorSchema)
     .addSchema(revokeCredentialSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .register(validationPlugin, {
@@ -110,11 +113,13 @@ const credentialsController = async (fastify) => {
                   required: ['depotId', 'credential'],
                 },
                 minItems: 1,
+                maxItems: CREDENTIALS_CREATE_MANY_MAX_ITEMS,
               },
             },
             required: ['tenantId', 'items'],
           },
           response: {
+            400: { $ref: 'credential-items-error#' },
             200: {
               type: 'object',
               properties: {

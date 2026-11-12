@@ -21,6 +21,8 @@ const CredentialErrors = {
   CREDENTIAL_TYPES_METADATA_UPSTREAM_ERROR:
     'credential_types_metadata_upstream_error',
   SCHEMA_UPSTREAM_ERROR: 'schema_upstream_error',
+  // A credentialSubject that fails its credential type's schema
+  REQUEST_VALIDATION_FAILED: 'request_validation_failed',
 };
 
 module.exports = { CredentialErrors };

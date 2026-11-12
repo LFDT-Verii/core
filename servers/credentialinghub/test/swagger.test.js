@@ -508,6 +508,45 @@ describe('swagger documents', () => {
     ).toMatchObject(idFilters);
   });
 
+  it('documents the item errors in the credentials/create-many 400 response only', () => {
+    const getBadRequestSchema = (path) => {
+      const { schema } =
+        documents.operator.paths[path].post.responses['400'].content[
+          'application/json'
+        ];
+      return schema.$ref == null
+        ? schema
+        : resolveLocalReference(documents.operator, schema.$ref);
+    };
+
+    expect(
+      getBadRequestSchema('/operator/credentials/create-many').properties,
+    ).toEqual({
+      error: { type: 'string' },
+      message: { type: 'string' },
+      statusCode: { type: 'integer' },
+      errorCode: { type: 'string' },
+      requestId: { type: 'string' },
+      errors: {
+        type: 'array',
+        description: expect.any(String),
+        items: {
+          type: 'object',
+          properties: {
+            index: { type: 'integer', description: expect.any(String) },
+            path: { type: 'string', description: expect.any(String) },
+            errorCode: { type: 'string' },
+            message: { type: 'string' },
+          },
+          required: ['index', 'path', 'errorCode', 'message'],
+        },
+      },
+    });
+    expect(
+      getBadRequestSchema('/operator/credentials/create').properties,
+    ).not.toHaveProperty('errors');
+  });
+
   it('emits only reachable schemas and no dangling component refs', () => {
     for (const document of Object.values(documents)) {
       expect(new Set(Object.keys(document.components?.schemas ?? {}))).toEqual(
