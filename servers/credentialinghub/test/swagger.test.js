@@ -1,7 +1,26 @@
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 const fp = require('fastify-plugin');
-const { flow, get: getPath, keyBy, mapValues } = require('lodash/fp');
+const {
+  compact,
+  defaultTo,
+  filter,
+  find,
+  flatMap,
+  flow,
+  get: getPath,
+  includes,
+  isPlainObject,
+  keyBy,
+  keys,
+  map,
+  mapValues,
+  overSome,
+  reject,
+  startsWith,
+  uniq,
+  values,
+} = require('lodash/fp');
 const { buildMongoConnection } = require('@verii/tests-helpers');
 const packageJson = require('../package.json');
 const buildFastify = require('./helpers/create-test-fastify');
@@ -393,6 +412,92 @@ const getLocalComponentReferences = (value, seen = new WeakSet()) => {
   return references;
 };
 
+// The keywords of an OpenAPI 3.0 Schema Object. Extensions start with x-.
+const OPENAPI_30_SCHEMA_KEYWORDS = [
+  '$ref',
+  'additionalProperties',
+  'allOf',
+  'anyOf',
+  'default',
+  'deprecated',
+  'description',
+  'discriminator',
+  'enum',
+  'example',
+  'exclusiveMaximum',
+  'exclusiveMinimum',
+  'externalDocs',
+  'format',
+  'items',
+  'maxItems',
+  'maxLength',
+  'maxProperties',
+  'maximum',
+  'minItems',
+  'minLength',
+  'minProperties',
+  'minimum',
+  'multipleOf',
+  'not',
+  'nullable',
+  'oneOf',
+  'pattern',
+  'properties',
+  'readOnly',
+  'required',
+  'title',
+  'type',
+  'uniqueItems',
+  'writeOnly',
+  'xml',
+];
+
+// OpenAPI 3.0 has no null type: a schema is nullable instead
+const OPENAPI_30_TYPES = [
+  'array',
+  'boolean',
+  'integer',
+  'number',
+  'object',
+  'string',
+];
+
+const isOpenApi30Keyword = overSome([
+  (keyword) => includes(keyword, OPENAPI_30_SCHEMA_KEYWORDS),
+  startsWith('x-'),
+]);
+
+const isOpenApi30Type = (type) => includes(type, OPENAPI_30_TYPES);
+
+// The schemas nested in a schema. additionalProperties can be a boolean.
+const subschemas = (schema) =>
+  filter(isPlainObject, [
+    ...values(schema.properties),
+    schema.items,
+    schema.not,
+    schema.additionalProperties,
+    ...flatMap(defaultTo([]), [schema.allOf, schema.anyOf, schema.oneOf]),
+  ]);
+
+// A schema and every schema nested in it
+const withSubschemas = (schema) => [
+  schema,
+  ...flatMap(withSubschemas, subschemas(schema)),
+];
+
+const componentSchema = (document, title) =>
+  find({ title }, values(document.components.schemas));
+
+const CLAIMS_PATH_POINTER_SEGMENT_PATH = [
+  'properties',
+  'verifiablePresentationAuthRules',
+  'items',
+  'properties',
+  'path',
+  'items',
+  'items',
+];
+
 const resolveLocalReference = (document, reference) =>
   reference
     .slice(2)
@@ -556,6 +661,103 @@ describe('swagger documents', () => {
         expect(resolveLocalReference(document, reference)).toBeDefined();
       }
     }
+  });
+
+  it('uses only the schema keywords and types that OpenAPI 3.0 has', () => {
+    for (const document of Object.values(documents)) {
+      const schemas = flatMap(
+        withSubschemas,
+        values(document.components?.schemas),
+      );
+      const usedKeywords = flow(flatMap(keys), uniq)(schemas);
+      const usedTypes = flow(map('type'), compact, uniq)(schemas);
+
+      expect(reject(isOpenApi30Keyword, usedKeywords)).toEqual([]);
+      expect(reject(isOpenApi30Type, usedTypes)).toEqual([]);
+    }
+  });
+
+  it('documents a null claims path pointer segment as nullable', () => {
+    for (const title of ['new-issuer-service', 'issuer-service']) {
+      const issuerService = componentSchema(documents.operator, title);
+
+      expect(getPath(CLAIMS_PATH_POINTER_SEGMENT_PATH, issuerService)).toEqual({
+        anyOf: [
+          { type: 'string', minLength: 1, nullable: true },
+          { type: 'integer', minimum: 0 },
+        ],
+      });
+    }
+  });
+
+  it("documents the issuer service's auth method rules", () => {
+    const newIssuerService = componentSchema(
+      documents.operator,
+      'new-issuer-service',
+    );
+    const authRuleProperties =
+      newIssuerService.properties.verifiablePresentationAuthRules.items
+        .properties;
+
+    expect(newIssuerService.anyOf).toEqual([
+      {
+        description: 'preauth only',
+        properties: {
+          authMethods: { type: 'array', items: { enum: ['preauth'] } },
+        },
+      },
+      {
+        description: 'internal verifiable_presentation, alone or with preauth',
+        required: ['disclosureRequest', 'verifiablePresentationAuthRules'],
+        properties: {
+          authMode: { enum: ['internal'] },
+          verifiablePresentationAuthRules: { type: 'array', minItems: 1 },
+        },
+        not: { required: ['presentationDefinition'] },
+      },
+    ]);
+    expect(authRuleProperties.valueIndex).toEqual(
+      expect.objectContaining({ type: 'integer', minimum: 0, maximum: 9 }),
+    );
+    expect(authRuleProperties.rule).toEqual(
+      expect.objectContaining({
+        enum: ['pick', 'equal'],
+        description: expect.stringMatching(/`pick` .*`equal` /),
+      }),
+    );
+    expect(
+      newIssuerService.properties.disclosureRequest.properties.types.items,
+    ).toEqual(
+      expect.objectContaining({
+        required: ['type'],
+        additionalProperties: false,
+      }),
+    );
+  });
+
+  it('documents the limits of a new depot and a new credential', () => {
+    const newDepot = componentSchema(documents.operator, 'new-depot');
+    const newCredential = componentSchema(documents.operator, 'new-credential');
+
+    expect(newDepot.properties.authValues).toEqual(
+      expect.objectContaining({ minItems: 1, maxItems: 10 }),
+    );
+    expect(newDepot.properties.authValues.items.anyOf).toContainEqual({
+      type: 'string',
+      minLength: 1,
+      pattern: '\\S',
+    });
+    expect(newDepot.properties.userReference).toEqual(
+      expect.objectContaining({ minLength: 1, maxLength: 64 }),
+    );
+    expect(newCredential.properties.credentialReference).toEqual(
+      expect.objectContaining({ minLength: 1, maxLength: 64 }),
+    );
+    expect(newCredential.properties.tags).toEqual({
+      type: 'array',
+      maxItems: 10,
+      items: { type: 'string', minLength: 1, maxLength: 32 },
+    });
   });
 
   it('offers all documents in Swagger UI without preconfigured OAuth credentials', async () => {

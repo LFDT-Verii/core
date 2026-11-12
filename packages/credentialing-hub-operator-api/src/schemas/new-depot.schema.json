@@ -8,18 +8,24 @@
   "properties": {
     "userReference": {
       "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
       "description": "The internal user reference for this depot. Typically a employee or student id of the system"
     },
     "authValues": {
       "type": "array",
       "description": "auth values to use for authenticating the user or session",
+      "minItems": 1,
+      "maxItems": 10,
       "items": {
         "anyOf": [
           {
             "type": "number"
           },
           {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
           },
           {
             "type": "boolean"

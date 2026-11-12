@@ -51,12 +51,53 @@ const {
 
 const testUrl = '/operator/issuer-services';
 
+// The rules' value indexes must be exactly 0 to n-1, which only the Hub's code
+// checks
 const INVALID_VALUE_INDEXES = [
   { name: 'a gap', valueIndexes: [0, 2] },
   { name: 'a duplicate', valueIndexes: [0, 0] },
   { name: 'an index out of range', valueIndexes: [1] },
-  { name: 'a negative index', valueIndexes: [-1, 0] },
 ];
+
+// The request schema keeps each value index from 0 to 9
+const OUT_OF_BOUNDS_VALUE_INDEXES = [
+  {
+    name: 'a negative index',
+    valueIndexes: [-1, 0],
+    message:
+      'body/service/verifiablePresentationAuthRules/0/valueIndex must be >= 0',
+  },
+  {
+    name: 'an index above 9',
+    valueIndexes: [10],
+    message:
+      'body/service/verifiablePresentationAuthRules/0/valueIndex must be <= 9',
+  },
+];
+
+// The request schema needs a type, and only a type, for each requested type
+const INVALID_DISCLOSURE_TYPES = [
+  {
+    name: 'no type',
+    types: [{}],
+    message:
+      "body/service/disclosureRequest/types/0 must have required property 'type'",
+  },
+  {
+    name: 'an unknown property',
+    types: [{ type: 'EmailV1.0', issuer: 'did:web:example.com' }],
+    message:
+      'body/service/disclosureRequest/types/0 must NOT have additional properties',
+  },
+];
+
+// A service that fails both branches of the new-issuer-service anyOf: the
+// preauth-only branch on the auth method at authMethodIndex, then the internal
+// verifiable_presentation branch on vpBranchError
+const anyOfErrorMessage = (vpBranchError, authMethodIndex = 0) => {
+  const preauthBranchError = `body/service/authMethods/${authMethodIndex} must be equal to one of the allowed values`;
+  return `${preauthBranchError}, ${vpBranchError}, body/service must match a schema in anyOf`;
+};
 
 const emailAuthRule = (overrides) => ({
   path: [['credentialSubject', 'email']],
@@ -66,14 +107,16 @@ const emailAuthRule = (overrides) => ({
   ...overrides,
 });
 
+const testDisclosureRequest = {
+  types: [{ type: 'EmailV1.0' }],
+  purpose: 'foo',
+  retentionPeriod: 'P12D',
+};
+
 const emailAuthService = (verifiablePresentationAuthRules) => ({
   velocityNetworkServiceId: '#foo',
   termsUrl: 'http://www.example.com',
-  disclosureRequest: {
-    types: [{ type: 'EmailV1.0' }],
-    purpose: 'foo',
-    retentionPeriod: 'P12D',
-  },
+  disclosureRequest: testDisclosureRequest,
   authMethods: ['verifiable_presentation'],
   authMode: 'internal',
   verifiablePresentationAuthRules,
@@ -194,6 +237,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -226,6 +270,7 @@ describe('Issuer services management Test suite', () => {
           service: {
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -260,6 +305,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: [],
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -292,6 +338,7 @@ describe('Issuer services management Test suite', () => {
           service: {
             velocityNetworkServiceId: '#foo',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -325,6 +372,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: '#foo',
             termsUrl: 'foo',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -441,8 +489,9 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message:
-            'body/service/authMethods/0 must be equal to one of the allowed values',
+          message: anyOfErrorMessage(
+            "body/service must have required property 'disclosureRequest'",
+          ),
           errorCode: 'request_validation_failed',
         }),
       );
@@ -457,6 +506,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             verifiablePresentationAuthRules: [
               {
@@ -489,6 +539,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'foo',
             verifiablePresentationAuthRules: [
@@ -507,17 +558,14 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message:
+          message: anyOfErrorMessage(
             'body/service/authMode must be equal to one of the allowed values',
+          ),
           errorCode: 'request_validation_failed',
         }),
       );
     });
     it('should 400 when service.verifiablePresentationAuthRules is missing with authMode of "internal"', async () => {
-      mockHttpClientJsonResponse('get', {
-        id: 'did-doc-foo',
-        service: [{ id: '#foo' }],
-      });
       const response = await fastify.injectJson({
         method: 'POST',
         url: `${testUrl}/create`,
@@ -527,6 +575,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             challengesExpireIn: 10000,
@@ -537,16 +586,14 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message: 'service_verifiablePresentationAuthRules_required',
-          errorCode: 'service_verifiablePresentationAuthRules_required',
+          message: anyOfErrorMessage(
+            "body/service must have required property 'verifiablePresentationAuthRules'",
+          ),
+          errorCode: 'request_validation_failed',
         }),
       );
     });
     it('should 400 when service.verifiablePresentationAuthRules is empty with authMode of "internal"', async () => {
-      mockHttpClientJsonResponse('get', {
-        id: 'did-doc-foo',
-        service: [{ id: '#foo' }],
-      });
       const response = await fastify.injectJson({
         method: 'POST',
         url: `${testUrl}/create`,
@@ -556,6 +603,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [],
@@ -567,16 +615,14 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message: 'service_verifiablePresentationAuthRules_required',
-          errorCode: 'service_verifiablePresentationAuthRules_required',
+          message: anyOfErrorMessage(
+            'body/service/verifiablePresentationAuthRules must NOT have fewer than 1 items',
+          ),
+          errorCode: 'request_validation_failed',
         }),
       );
     });
     it('should 400 when an internal vp service has no disclosureRequest', async () => {
-      mockHttpClientJsonResponse('get', {
-        id: 'did-doc-foo',
-        service: [{ id: '#foo' }],
-      });
       const response = await fastify.injectJson({
         method: 'POST',
         url: `${testUrl}/create`,
@@ -604,16 +650,15 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message: 'service_disclosureRequest_required',
-          errorCode: 'service_disclosureRequest_required',
+          message: anyOfErrorMessage(
+            "body/service must have required property 'disclosureRequest'",
+            1,
+          ),
+          errorCode: 'request_validation_failed',
         }),
       );
     });
     it('should 400 when an internal vp service has a presentationDefinition', async () => {
-      mockHttpClientJsonResponse('get', {
-        id: 'did-doc-foo',
-        service: [{ id: '#foo' }],
-      });
       const response = await fastify.injectJson({
         method: 'POST',
         url: `${testUrl}/create`,
@@ -647,8 +692,8 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message: 'service_presentationDefinition_not_allowed',
-          errorCode: 'service_presentationDefinition_not_allowed',
+          message: anyOfErrorMessage('body/service must NOT be valid'),
+          errorCode: 'request_validation_failed',
         }),
       );
     });
@@ -662,6 +707,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: ['foo'],
@@ -693,6 +739,7 @@ describe('Issuer services management Test suite', () => {
             service: {
               velocityNetworkServiceId: '#foo',
               termsUrl: 'http://www.example.com',
+              disclosureRequest: testDisclosureRequest,
               authMethods: ['verifiable_presentation'],
               authMode: 'internal',
               verifiablePresentationAuthRules: buildAuthRules(valueIndexes),
@@ -712,6 +759,49 @@ describe('Issuer services management Test suite', () => {
         ).resolves.toEqual(0);
       });
     }, INVALID_VALUE_INDEXES);
+    forEach(({ name, valueIndexes, message }) => {
+      it(`should 400 when service.verifiablePresentationAuthRules value indexes have ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create`,
+          payload: {
+            tenantId: tenant._id,
+            service: emailAuthService(buildAuthRules(valueIndexes)),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            message,
+            errorCode: 'request_validation_failed',
+          }),
+        );
+      });
+    }, OUT_OF_BOUNDS_VALUE_INDEXES);
+    forEach(({ name, types, message }) => {
+      it(`should 400 when a service.disclosureRequest type has ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create`,
+          payload: {
+            tenantId: tenant._id,
+            service: {
+              ...emailAuthService([emailAuthRule()]),
+              disclosureRequest: { ...testDisclosureRequest, types },
+            },
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            message,
+            errorCode: 'request_validation_failed',
+          }),
+        );
+      });
+    }, INVALID_DISCLOSURE_TYPES);
     it('should 200 when service.verifiablePresentationAuthRules value indexes are out of order', async () => {
       mockHttpClientJsonResponse('get', {
         id: 'did-doc-foo',
@@ -880,6 +970,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -914,6 +1005,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: '#foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -1093,6 +1185,25 @@ describe('Issuer services management Test suite', () => {
           createdAt: expect.any(Date),
           tenantId: new ObjectId(tenant._id),
         });
+      });
+
+      it('should 200 and create a preauth issuer service that has auth rules', async () => {
+        mockHttpClientJsonResponse('get', {
+          id: 'did-doc-foo',
+          service: [{ id: '#foo' }],
+        });
+        const service = {
+          ...omit(['disclosureRequest'], emailAuthService([emailAuthRule()])),
+          authMethods: ['preauth'],
+        };
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create`,
+          payload: { tenantId: tenant._id, service },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.service).toEqual(expect.objectContaining(service));
       });
 
       it('should 200 and create preauth issuer service', async () => {
@@ -1276,6 +1387,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -1309,6 +1421,7 @@ describe('Issuer services management Test suite', () => {
           service: {
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -1344,6 +1457,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: [],
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -1377,6 +1491,7 @@ describe('Issuer services management Test suite', () => {
           service: {
             velocityNetworkServiceId: '#foo',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -1411,6 +1526,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: '#foo',
             termsUrl: 'foo',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -1530,8 +1646,9 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message:
-            'body/service/authMethods/0 must be equal to one of the allowed values',
+          message: anyOfErrorMessage(
+            "body/service must have required property 'disclosureRequest'",
+          ),
           errorCode: 'request_validation_failed',
         }),
       );
@@ -1547,6 +1664,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             verifiablePresentationAuthRules: [
               {
@@ -1580,6 +1698,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'foo',
             verifiablePresentationAuthRules: [
@@ -1598,17 +1717,14 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message:
+          message: anyOfErrorMessage(
             'body/service/authMode must be equal to one of the allowed values',
+          ),
           errorCode: 'request_validation_failed',
         }),
       );
     });
     it('should 400 when service.verifiablePresentationAuthRules is missing with authMode of "internal"', async () => {
-      mockHttpClientJsonResponse('get', {
-        id: 'did-doc-foo',
-        service: [{ id: '#foo' }],
-      });
       const service = await persistIssuerService({
         tenant,
       });
@@ -1622,6 +1738,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             challengesExpireIn: 10000,
@@ -1632,16 +1749,14 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message: 'service_verifiablePresentationAuthRules_required',
-          errorCode: 'service_verifiablePresentationAuthRules_required',
+          message: anyOfErrorMessage(
+            "body/service must have required property 'verifiablePresentationAuthRules'",
+          ),
+          errorCode: 'request_validation_failed',
         }),
       );
     });
     it('should 400 when service.verifiablePresentationAuthRules is empty with authMode of "internal"', async () => {
-      mockHttpClientJsonResponse('get', {
-        id: 'did-doc-foo',
-        service: [{ id: '#foo' }],
-      });
       const service = await persistIssuerService({
         tenant,
       });
@@ -1655,6 +1770,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [],
@@ -1666,16 +1782,14 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message: 'service_verifiablePresentationAuthRules_required',
-          errorCode: 'service_verifiablePresentationAuthRules_required',
+          message: anyOfErrorMessage(
+            'body/service/verifiablePresentationAuthRules must NOT have fewer than 1 items',
+          ),
+          errorCode: 'request_validation_failed',
         }),
       );
     });
     it('should 400 when an internal vp service has no disclosureRequest', async () => {
-      mockHttpClientJsonResponse('get', {
-        id: 'did-doc-foo',
-        service: [{ id: '#foo' }],
-      });
       const service = await persistIssuerService({
         tenant,
       });
@@ -1707,16 +1821,14 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message: 'service_disclosureRequest_required',
-          errorCode: 'service_disclosureRequest_required',
+          message: anyOfErrorMessage(
+            "body/service must have required property 'disclosureRequest'",
+          ),
+          errorCode: 'request_validation_failed',
         }),
       );
     });
     it('should 400 when an internal vp service has a presentationDefinition', async () => {
-      mockHttpClientJsonResponse('get', {
-        id: 'did-doc-foo',
-        service: [{ id: '#foo' }],
-      });
       const service = await persistIssuerService({
         tenant,
       });
@@ -1754,8 +1866,8 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message: 'service_presentationDefinition_not_allowed',
-          errorCode: 'service_presentationDefinition_not_allowed',
+          message: anyOfErrorMessage('body/service must NOT be valid', 1),
+          errorCode: 'request_validation_failed',
         }),
       );
     });
@@ -1770,6 +1882,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: ['foo'],
@@ -1807,6 +1920,7 @@ describe('Issuer services management Test suite', () => {
             service: {
               velocityNetworkServiceId: '#foo',
               termsUrl: 'http://www.example.com',
+              disclosureRequest: testDisclosureRequest,
               authMethods: ['verifiable_presentation'],
               authMode: 'internal',
               verifiablePresentationAuthRules: buildAuthRules(valueIndexes),
@@ -1827,6 +1941,51 @@ describe('Issuer services management Test suite', () => {
         );
       });
     }, INVALID_VALUE_INDEXES);
+    forEach(({ name, valueIndexes, message }) => {
+      it(`should 400 when service.verifiablePresentationAuthRules value indexes have ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/update`,
+          payload: {
+            tenantId: tenant._id,
+            serviceId: new ObjectId().toString(),
+            service: emailAuthService(buildAuthRules(valueIndexes)),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            message,
+            errorCode: 'request_validation_failed',
+          }),
+        );
+      });
+    }, OUT_OF_BOUNDS_VALUE_INDEXES);
+    forEach(({ name, types, message }) => {
+      it(`should 400 when a service.disclosureRequest type has ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/update`,
+          payload: {
+            tenantId: tenant._id,
+            serviceId: new ObjectId().toString(),
+            service: {
+              ...emailAuthService([emailAuthRule()]),
+              disclosureRequest: { ...testDisclosureRequest, types },
+            },
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            message,
+            errorCode: 'request_validation_failed',
+          }),
+        );
+      });
+    }, INVALID_DISCLOSURE_TYPES);
     it('should 400 when a service.verifiablePresentationAuthRules rule reads a type that is not requested', async () => {
       mockHttpClientJsonResponse('get', {
         id: 'did-doc-foo',
@@ -1953,6 +2112,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: 'foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -1988,6 +2148,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: '#foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [
@@ -2134,6 +2295,7 @@ describe('Issuer services management Test suite', () => {
             velocityNetworkServiceId: '#foo',
             termsUrl: 'http://www.example.com',
             authTokensExpireIn: 100000,
+            disclosureRequest: testDisclosureRequest,
             authMethods: ['verifiable_presentation'],
             authMode: 'internal',
             verifiablePresentationAuthRules: [

@@ -23,7 +23,7 @@ const newIssuerServiceSchema = {
     disclosureRequest: {
       type: 'object',
       description:
-        'Required if `identificationMethod` contains `verifiable_presentation`',
+        'Required when `authMethods` include `verifiable_presentation`',
       required: ['types', 'purpose', 'retentionPeriod'],
       properties: {
         types: {
@@ -32,6 +32,8 @@ const newIssuerServiceSchema = {
           minItems: 1,
           items: {
             type: 'object',
+            additionalProperties: false,
+            required: ['type'],
             properties: {
               type: {
                 type: 'string',
@@ -58,7 +60,8 @@ const newIssuerServiceSchema = {
     presentationDefinition: {
       type: 'object',
       description:
-        'A spec compliant presentation definition. https://identity.foundation/presentation-exchange/#presentation-definition',
+        // eslint-disable-next-line max-len
+        'A spec compliant presentation definition. https://identity.foundation/presentation-exchange/#presentation-definition. Not allowed when `authMethods` include `verifiable_presentation`',
       additionalProperties: true,
     },
     deactivationDate: {
@@ -76,7 +79,7 @@ const newIssuerServiceSchema = {
       minItems: 1,
       description:
         // eslint-disable-next-line max-len
-        'the auth method indicates what authentication method(s) are supported for issuer. To use `preauth` requires the issuer to include a `vendorOriginContext` in the deep link. `verifiable_presentation` requires a `disclosureRequest` or `presentationDefinition` to be specified.\nIn the future an issuer will be able to use both methods in one disclosure\n`authMethods` is required with at least one entry ',
+        'the auth method indicates what authentication method(s) are supported for issuer. To use `preauth` requires the issuer to include a `vendorOriginContext` in the deep link. `verifiable_presentation` requires a `disclosureRequest` and at least one of `verifiablePresentationAuthRules`, and forbids a `presentationDefinition`.\nIn the future an issuer will be able to use both methods in one disclosure\n`authMethods` is required with at least one entry ',
       items: {
         type: 'string',
         enum: ['preauth', 'verifiable_presentation'],
@@ -109,20 +112,23 @@ const newIssuerServiceSchema = {
               maxItems: 32,
               items: {
                 anyOf: [
-                  { type: 'string', minLength: 1 },
+                  { type: 'string', minLength: 1, nullable: true },
                   { type: 'integer', minimum: 0 },
-                  { type: 'null' },
                 ],
               },
             },
           },
           rule: {
             type: 'string',
-            description: 'the rule to run. ONly pick is supported right ow',
+            description:
+              // eslint-disable-next-line max-len
+              'how the rule uses the values its path finds. `pick` uses every value found. `equal` uses a value only when exactly one distinct value is found',
             enum: ['pick', 'equal'],
           },
           valueIndex: {
             type: 'integer',
+            minimum: 0,
+            maximum: 9,
             description:
               "the position of this rule's value in a depot's `authValues`. The rules' value indexes must be exactly 0 to n-1, each used once",
           },
@@ -152,6 +158,23 @@ const newIssuerServiceSchema = {
       type: 'boolean',
     },
   },
+  anyOf: [
+    {
+      description: 'preauth only',
+      properties: {
+        authMethods: { type: 'array', items: { enum: ['preauth'] } },
+      },
+    },
+    {
+      description: 'internal verifiable_presentation, alone or with preauth',
+      required: ['disclosureRequest', 'verifiablePresentationAuthRules'],
+      properties: {
+        authMode: { enum: ['internal'] },
+        verifiablePresentationAuthRules: { type: 'array', minItems: 1 },
+      },
+      not: { required: ['presentationDefinition'] },
+    },
+  ],
 };
 
 module.exports = newIssuerServiceSchema;
