@@ -188,7 +188,7 @@ row,userReference,redirectUrl
 3,E1002,https://hub.example.com/app-redirect?...
 ```
 
-`row` is the row's number in the CSV. Each run writes the whole file again. A `preauth` link is enough to claim the holder's credentials, so keep the file as private as the CSV.
+`row` is the row's number in the CSV. Each run writes the whole file again. It can hold links that claim credentials, as [Keep the files private](#keep-the-files-private) says.
 
 ## Reruns and the state file
 
@@ -220,6 +220,10 @@ A rerun:
 A rerun of a finished load creates nothing, and writes the same links file.
 
 A state file belongs to one batch, and any change to the spec, its templates, the CSV, `--var` or `--default-country` makes a different batch. `validate`, `load --dryrun` and `load` refuse the state file of another batch, and exit with 2. To load a new batch whose CSV has the same name, pass another `--state`, or move the old state file away.
+
+### Keep the files private
+
+The state file and the links file can hold links that claim credentials: a `preauth` link carries the depot's pre-authorized code, so anyone who has it can claim that holder's credentials. The load creates both files readable and writable by their owner only (mode `0600`). Keep them private, and delete them when the batch is done. A `verifiable_presentation` service's shared link is the same for every holder, and isn't a secret in the same way, but the files are still private.
 
 ### What a rerun can't tell
 

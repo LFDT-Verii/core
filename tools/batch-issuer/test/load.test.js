@@ -945,6 +945,21 @@ describe('batch-issuer load', () => {
     }
   });
 
+  it(
+    'creates the state file and the links file for their owner only',
+    { skip: process.platform === 'win32' },
+    async () => {
+      const batch = writeBatch({ spec: preauthSpec, csvLines: [ADAM] });
+      mockRun(initFakeHub({ service: preauthService }));
+
+      await load(batch);
+
+      // The permission bits are the mode's last three octal digits.
+      const modeOf = (file) => fs.statSync(file).mode.toString(8).slice(-3);
+      expect(map(modeOf, filesOf(batch))).toEqual(['600', '600']);
+    },
+  );
+
   describe('a rerun of a finished load', () => {
     const cases = [
       {

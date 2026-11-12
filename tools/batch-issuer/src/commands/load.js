@@ -24,7 +24,12 @@ const {
   summarizeBatch,
   validateBatch,
 } = require('../validation/validate-batch');
-const { identifyBatch, openState, readState } = require('../state/state-file');
+const {
+  PRIVATE_FILE_MODE,
+  identifyBatch,
+  openState,
+  readState,
+} = require('../state/state-file');
 const { listLinks, loadBatch, summarizeLoad } = require('../load/load-batch');
 const {
   formatJsonReport,
@@ -100,6 +105,7 @@ const load = async (
     await writeFile(
       files.output,
       stringify(links, { header: true, columns: LINK_COLUMNS }),
+      { mode: PRIVATE_FILE_MODE },
     );
     const done = report(loaded.state, {
       link: loaded.sharedLink,

@@ -38,6 +38,10 @@ const {
   zipObject,
 } = require('lodash/fp');
 
+// Only its owner can read or write a file that can hold links that claim a
+// holder's credentials: the state file and the links file.
+const PRIVATE_FILE_MODE = 0o600;
+
 // The lists of a state. Each line after the batch's adds records to one.
 const STATE_LISTS = ['depots', 'credentials', 'resolvedDepots', 'links'];
 
@@ -173,7 +177,7 @@ const openState = (saved, batch, file) => {
  */
 const startState = async (file, saved, batch) => {
   if (saved == null) {
-    await writeFile(file, toLine({ batch }));
+    await writeFile(file, toLine({ batch }), { mode: PRIVATE_FILE_MODE });
     return;
   }
   await truncate(file, saved.length);
@@ -187,11 +191,14 @@ const startState = async (file, saved, batch) => {
  *   records to add to it, and gives the records
  */
 const appendRecords = (file) => async (key, records) => {
-  await appendFile(file, toLine({ [key]: records }));
+  await appendFile(file, toLine({ [key]: records }), {
+    mode: PRIVATE_FILE_MODE,
+  });
   return records;
 };
 
 module.exports = {
+  PRIVATE_FILE_MODE,
   appendRecords,
   identifyBatch,
   openState,
