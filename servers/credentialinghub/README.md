@@ -25,51 +25,33 @@ Hub configuration names:
 Supply one name from each alias pair, never both: the image rejects a
 configuration that provides both names in a pair.
 
-### Choosing the network
+### Network settings
 
-The image runs on Velocity Network's mainnet unless told otherwise. Choose the
-network with an image argument or with `NETWORK`:
+The image presets no network. It runs on any network, and you set the network
+values as environment variables:
 
-| Image argument | `NETWORK` | Network values |
-| --- | --- | --- |
-| `--mainnet` (the default) | `mainnet` | mainnet's preset |
-| `--testnet` | `testnet` | testnet's preset |
-| `--devnet` | `devnet` | devnet's preset |
-| `--no-preset` | `no-preset` | none: set every network value yourself |
+| Variable | Value |
+| --- | --- |
+| `RPC_NODE_URL` | The URL of the blockchain node the Hub calls |
+| `CHAIN_ID` | The network's chain ID |
+| `REVOCATION_CONTRACT_ADDRESS` | The address of the revocation list contract |
+| `METADATA_REGISTRY_CONTRACT_ADDRESS` | The address of the metadata registry contract |
+| `COUPON_CONTRACT_ADDRESS` | The address of the verification coupon contract |
+| `PERMISSIONS_CONTRACT_ADDRESS` | The address of the permissions contract |
+| `VNF_OAUTH_TOKENS_ENDPOINT` or `BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT` | The token endpoint of the OAuth server that authenticates calls to the node |
+| `BLOCKCHAIN_API_AUDIENCE` or `BLOCKCHAIN_OAUTH_AUDIENCE` | The audience of those tokens |
+| `VNF_OAUTH_CLIENT_ID` or `BLOCKCHAIN_OAUTH_CLIENT_ID` | The Hub's OAuth client ID |
+| `VNF_OAUTH_CLIENT_SECRET` or `BLOCKCHAIN_OAUTH_CLIENT_SECRET` | The Hub's OAuth client secret |
+| `REGISTRAR_URL` | The URL of the network's registrar |
+| `LIB_URL` | The URL of the network's library server |
+| `CREDENTIAL_EXTENSIONS_CONTEXT_URL` | The URL of the JSON-LD context for credential extensions |
+| `DEEP_LINK_PROTOCOL` | The deep link protocol of the network's wallets, such as `example-network://` |
 
-`--velocity-mainnet`, `--velocity-testnet` and `--velocity-devnet` still work
-as the earlier names of the first three. Supply at most one argument. If you
-also set `NETWORK`, it must name the same network.
+The Hub needs all of them, and stops at startup when one is missing. It logs
+its chain ID at startup.
 
-A preset supplies `RPC_NODE_URL`, `CHAIN_ID`, `REVOCATION_CONTRACT_ADDRESS`,
-`METADATA_REGISTRY_CONTRACT_ADDRESS`, `COUPON_CONTRACT_ADDRESS`,
-`PERMISSIONS_CONTRACT_ADDRESS`, `VNF_OAUTH_TOKENS_ENDPOINT`,
-`BLOCKCHAIN_API_AUDIENCE`, `REGISTRAR_URL`, `LIB_URL`, `DEEP_LINK_PROTOCOL` and
-`CREDENTIAL_EXTENSIONS_CONTEXT_URL`. `RPC_NODE_URL` is Velocity Career Labs'
-member node for the network. The OAuth client ID and secret are never preset:
-supply your own.
-
-What you can change depends on the network:
-- **Mainnet:** only how the Hub connects, `RPC_NODE_URL` and
-  `VNF_OAUTH_TOKENS_ENDPOINT` (or `BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT`). Setting
-  any other preset variable to a different value stops the Hub at startup,
-  naming the variable but not its value.
-- **Testnet and devnet:** any preset variable. The Hub logs the names of the
-  ones you changed at startup.
-- **No preset:** you set them all.
-
-The Hub logs its network and chain ID at startup.
-
-For example, on testnet with your own RPC node:
-
-```bash
-docker run --rm --env-file hub-secrets.env -e RPC_NODE_URL=https://rpc.example.org \
-  -p 3000:3000 lfdecentralizedtrust/verii-credentialing-hub:latest --testnet
-```
-
-For a network that isn't one of Velocity Network's, such as a generic
-authenticated Besu/JSON-RPC deployment, use `--no-preset` and put the
-configuration in an environment file such as `hub.env`:
+For example, put the configuration for an authenticated Besu/JSON-RPC network
+in an environment file such as `hub.env`:
 
 ```dotenv
 RPC_NODE_URL=https://besu.example.org
@@ -98,19 +80,22 @@ DEFAULT_CAO_DID=did:example:cao
 Run the image with that file:
 
 ```bash
-docker run --rm --env-file hub.env -p 3000:3000 \
-  lfdecentralizedtrust/verii-credentialing-hub:latest --no-preset
+docker run --rm --env-file hub.env -p 3000:3000 lfdecentralizedtrust/verii-credentialing-hub:latest
 ```
 
 The Hub blockchain client still requires OAuth, even when the RPC endpoint
 itself has no HTTP authentication. Supporting unauthenticated RPC separately
 is tracked in issue #890.
 
-Image arguments are reserved for choosing the network. For advanced wrappers,
-override the entrypoint instead, and set `NETWORK`:
+The image takes no arguments. Earlier versions took a network flag, such as
+`--velocity-mainnet` or `--mainnet`, that preset the network values. The image
+now stops at startup when given any argument, with exit code 64. Set the
+network values as environment variables instead.
+
+For advanced wrappers, override the entrypoint:
 
 ```bash
-docker run --rm --env-file hub.env -e NETWORK=no-preset --entrypoint node \
+docker run --rm --env-file hub.env --entrypoint node \
   lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
 ```
 

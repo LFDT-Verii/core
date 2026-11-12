@@ -23,7 +23,11 @@ it('runs the production Credentialing Hub image in E2E', () => {
   );
   // Compose serializes omitted fields as either absent or null by version.
   assert.ok(service.build.target == null);
+  // The image takes no arguments and presets no network, so E2E sets the network values
   assert.ok(service.command == null);
+  assert.ok(service.environment.NETWORK == null);
+  assert.ok(service.environment.RPC_NODE_URL != null);
+  assert.ok(service.environment.CHAIN_ID != null);
   assert.ok(
     service.volumes.every(
       ({ target }) =>
