@@ -16,6 +16,7 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
+const { omit } = require('lodash/fp');
 const { buildAuthValues } = require('../src/values/auth-values');
 const { emailRule, phoneRule } = require('./helpers/fixtures');
 
@@ -98,11 +99,16 @@ describe('buildAuthValues', () => {
       });
     });
 
-    it('treats a rule without a valueType as a string rule', () => {
-      const rule = { ...emailRule, type: 'EmployeeIdV1.0' };
+    it('refuses a rule without a valueType', () => {
+      const rule = {
+        ...omit(['valueType'], emailRule),
+        type: 'EmployeeIdV1.0',
+      };
       expect(
         buildAuthValues([{ column: 'id', rule }], { id: ' 12345 ' }, {}),
-      ).toEqual({ authValues: ['12345'], errors: [] });
+      ).toEqual({
+        errors: [{ column: 'id', reason: '"undefined" is not a value type' }],
+      });
     });
 
     it('does not format a value of a non-string rule', () => {

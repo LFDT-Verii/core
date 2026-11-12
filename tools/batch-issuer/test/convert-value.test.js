@@ -23,8 +23,10 @@ describe('convertValue', () => {
     expect(convertValue('string', ' a b ')).toEqual({ value: ' a b ' });
   });
 
-  it('treats a missing type as a string', () => {
-    expect(convertValue(undefined, '12345')).toEqual({ value: '12345' });
+  it('refuses a missing type', () => {
+    expect(convertValue(undefined, '12345')).toEqual({
+      reason: '"undefined" is not a value type',
+    });
   });
 
   it('converts decimal numbers', () => {

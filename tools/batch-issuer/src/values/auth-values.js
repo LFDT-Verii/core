@@ -81,9 +81,9 @@ const formatAuthValue = (rule, text, { defaultCountry }) => {
 
 /**
  * Converts a CSV cell to the value a depot's `authValues` holds for a rule.
- * The cell is trimmed and converted to the rule's `valueType`, a string when
- * the rule has none. A phone rule's value is normalized to E.164, and an email
- * rule's value must be an email address.
+ * The cell is trimmed and converted to the rule's `valueType`. A phone rule's
+ * value is normalized to E.164, and an email rule's value must be an email
+ * address.
  * @param {object} rule the auth rule
  * @param {string} [text] the cell, missing when the row has no such cell
  * @param {{ defaultCountry?: string }} options

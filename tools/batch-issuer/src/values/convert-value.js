@@ -54,16 +54,15 @@ const converters = {
 
 /**
  * Converts a CSV cell to a value type.
- * @param {string} [valueType] `string`, `number` or `boolean`. A missing type is `string`
+ * @param {string} valueType `string`, `number` or `boolean`
  * @param {string} text the cell
  * @returns {{ value: string|number|boolean } | { reason: string }} the value, or why the cell doesn't convert
  */
 const convertValue = (valueType, text) => {
-  const type = valueType ?? ValueTypes.STRING;
-  if (!has([type], converters)) {
-    return { reason: `"${type}" is not a value type` };
+  if (!has([valueType], converters)) {
+    return { reason: `"${valueType}" is not a value type` };
   }
-  const convert = get([type], converters);
+  const convert = get([valueType], converters);
   return convert(text);
 };
 

@@ -106,7 +106,7 @@ describe('batch-issuer check-rules', () => {
       stdout: [
         `Samples: ${sample} (EmailV1.0)`,
         '',
-        'Rule 0: EmailV1.0, pick',
+        'Rule 0: EmailV1.0, pick, string',
         `  ${sample}`,
         '    ["credentialSubject","email"] selects [" Adam.Smith@Example.com"]',
         '  values: "adam.smith@example.com"',
@@ -196,7 +196,7 @@ describe('batch-issuer check-rules', () => {
       stdout: [
         `Samples: ${emailSample} (EmailV1.0), ${phoneSample} (PhoneV1.0)`,
         '',
-        'Rule 0: EmailV1.0, pick',
+        'Rule 0: EmailV1.0, pick, string',
         `  ${emailSample}`,
         '    ["credentialSubject","email"] selects [" Adam.Smith@Example.com"]',
         '  values: "adam.smith@example.com"',
@@ -225,7 +225,7 @@ describe('batch-issuer check-rules', () => {
     expect(result.exitCode).toEqual(1);
     expect(result.stdout).toContain(
       [
-        'Rule 1: PhoneV1.0, pick',
+        'Rule 1: PhoneV1.0, pick, string',
         '  no sample is a PhoneV1.0',
         '  values: none',
       ].join('\n'),
