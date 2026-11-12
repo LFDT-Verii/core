@@ -1,6 +1,7 @@
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 const fp = require('fastify-plugin');
+const { flow, get: getPath, keyBy, mapValues } = require('lodash/fp');
 const { buildMongoConnection } = require('@verii/tests-helpers');
 const packageJson = require('../package.json');
 const buildFastify = require('./helpers/create-test-fastify');
@@ -59,6 +60,7 @@ const EXPECTED_OPERATION_METADATA = {
   ],
   'POST /operator/depots/create': ['Depots', 'createDepot', OPERATOR_SECURITY],
   'GET /operator/depots/get': ['Depots', 'getDepots', OPERATOR_SECURITY],
+  'POST /operator/depots/get': ['Depots', 'findDepots', OPERATOR_SECURITY],
   'POST /operator/depots/delete': ['Depots', 'deleteDepot', OPERATOR_SECURITY],
   'POST /operator/depots/resolve-deferred-credentials': [
     'Depots',
@@ -244,6 +246,7 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/credentials/delete',
       'POST /operator/depots/create',
       'GET /operator/depots/get',
+      'POST /operator/depots/get',
       'POST /operator/depots/delete',
       'POST /operator/depots/resolve-deferred-credentials',
       'GET /operator/exchanges/get',
@@ -475,6 +478,34 @@ describe('swagger documents', () => {
     )) {
       expect(operations[operationKey].summary).toEqual(summary);
     }
+  });
+
+  it('returns the same depots response from GET and POST depots/get', () => {
+    const { get, post } = documents.operator.paths['/operator/depots/get'];
+
+    expect(post.responses['200']).toEqual(get.responses['200']);
+  });
+
+  it('documents the serviceId and depotId of depots/get as ObjectIds', () => {
+    const { get, post } = documents.operator.paths['/operator/depots/get'];
+    const objectId = { type: 'string', pattern: '^[0-9a-fA-F]{24}$' };
+    const idFilters = {
+      serviceId: objectId,
+      depotId: { anyOf: [objectId, { type: 'array', items: objectId }] },
+    };
+
+    expect(
+      flow(keyBy('name'), mapValues('schema'))(get.parameters),
+    ).toMatchObject(idFilters);
+    expect(
+      resolveLocalReference(
+        documents.operator,
+        getPath(
+          ['requestBody', 'content', 'application/json', 'schema', '$ref'],
+          post,
+        ),
+      ).properties,
+    ).toMatchObject(idFilters);
   });
 
   it('emits only reachable schemas and no dangling component refs', () => {

@@ -994,6 +994,68 @@ describe('Depots Test suite', () => {
           requestId: expect.any(String),
         });
       });
+      it('should return the depot of a depotId in upper case', async () => {
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${depots[1]._id.toUpperCase()}`,
+        });
+        expect(response.json).toEqual({
+          depots: [expectedDepot(depots[1])],
+          requestId: expect.any(String),
+        });
+      });
+    });
+
+    describe('Find Depots by malformed ids', () => {
+      const expectMalformedId = (response, message) => {
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 400,
+            errorCode: 'request_validation_failed',
+            message,
+          }),
+        );
+      };
+
+      it('should 400 for a malformed serviceId', async () => {
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${testUrl}/get?tenantId=${tenant._id}&serviceId=not-an-object-id`,
+        });
+        expectMalformedId(
+          response,
+          'querystring/serviceId must match pattern "^[0-9a-fA-F]{24}$"',
+        );
+      });
+      it('should 400 for a malformed depotId', async () => {
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=not-an-object-id`,
+        });
+        expectMalformedId(
+          response,
+          [
+            'querystring/depotId must match pattern "^[0-9a-fA-F]{24}$"',
+            'querystring/depotId must be array',
+            'querystring/depotId must match a schema in anyOf',
+          ].join(', '),
+        );
+      });
+      it('should 400 for a malformed id among the depotIds', async () => {
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${depots[0]._id}&depotId=not-an-object-id`,
+        });
+        expectMalformedId(
+          response,
+          [
+            'querystring/depotId must be string',
+            'querystring/depotId/1 must match pattern "^[0-9a-fA-F]{24}$"',
+            'querystring/depotId must match a schema in anyOf',
+          ].join(', '),
+        );
+      });
     });
   });
 

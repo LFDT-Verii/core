@@ -27,6 +27,7 @@ describe('credentialing hub operator api', () => {
       newDepotSchema: api.newDepotSchema.$id,
       depotSchema: api.depotSchema.$id,
       depotConflictErrorSchema: api.depotConflictErrorSchema.$id,
+      findDepotsRequestSchema: api.findDepotsRequestSchema.$id,
       newCredentialSchema: api.newCredentialSchema.$id,
       credentialSchema: api.credentialSchema.$id,
     }).toEqual({
@@ -35,6 +36,7 @@ describe('credentialing hub operator api', () => {
       newDepotSchema: 'new-depot',
       depotSchema: 'depot',
       depotConflictErrorSchema: 'depot-conflict-error',
+      findDepotsRequestSchema: 'find-depots-request',
       newCredentialSchema: 'new-credential',
       credentialSchema: 'Credential',
     });
@@ -64,6 +66,7 @@ describe('credentialing hub operator api', () => {
       AUTH_VALUES_ALREADY_USED: 'auth_values_already_used',
       DEFERRED_CREDENTIALS_NOT_SUPPORTED: 'deferred_credentials_not_supported',
       DEPOT_NOT_FOUND: 'depot_not_found',
+      AUTH_VALUES_FILTER_NOT_SUPPORTED: 'auth_values_filter_not_supported',
     });
     expect(api.CredentialErrors).toEqual({
       REFERENCED_DEPOT_NOT_FOUND: 'referenced_depot_not_found',
@@ -73,6 +76,10 @@ describe('credentialing hub operator api', () => {
         'credential_types_metadata_upstream_error',
       SCHEMA_UPSTREAM_ERROR: 'schema_upstream_error',
     });
+  });
+
+  it('should export the ObjectId pattern of the id filters', () => {
+    expect(api.OBJECT_ID_PATTERN).toEqual('^[0-9a-fA-F]{24}$');
   });
 
   it('should export the helpers', () => {

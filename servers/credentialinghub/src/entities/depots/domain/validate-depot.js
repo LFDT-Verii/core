@@ -31,7 +31,10 @@ const validateDepot = (depot, service, isIssuerService) => {
       errorCode: DepotErrors.REFERENCED_SERVICE_NOT_FOUND,
     });
   }
-  if (isInternalVpAuth(service) && !hasValidAuthValues(depot, service)) {
+  if (
+    isInternalVpAuth(service) &&
+    !hasValidAuthValues(depot.authValues, service)
+  ) {
     throw newError(400, DepotErrors.INVALID_AUTH_VALUES, {
       errorCode: DepotErrors.INVALID_AUTH_VALUES,
     });
@@ -48,7 +51,7 @@ const validateDeferredCredentials = (depot, isIssuerService) => {
 };
 
 // authValues hold exactly one value per rule, at the rule's valueIndex.
-const hasValidAuthValues = ({ authValues }, service) =>
+const hasValidAuthValues = (authValues, service) =>
   !isEmpty(authValues) &&
   size(authValues) === size(service.verifiablePresentationAuthRules) &&
   every(isPresent, buildAuthMatchValues(authValues));
@@ -60,4 +63,4 @@ const isMissingOrDeactivated = (service) =>
   (service.deactivationDate != null &&
     isBefore(new Date(), service.deactivationDate));
 
-module.exports = { validateDepot };
+module.exports = { hasValidAuthValues, validateDepot };

@@ -14,16 +14,20 @@
  * limitations under the License.
  *
  */
+const { isNil } = require('lodash/fp');
 const { coerceArray } = require('@verii/common-functions');
 const {
   depotConflictErrorSchema,
   depotSchema,
+  findDepotsRequestSchema,
   newDepotSchema,
+  OBJECT_ID_PATTERN,
 } = require('@verii/credentialing-hub-operator-api');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
   createDepot,
   deleteDepot,
+  findDepotsByAuthValues,
   resolveDeferredCredentials,
   ResolveDeferredCredentialsStatuses,
 } = require('../../../entities/depots');
@@ -33,6 +37,7 @@ const depotsController = async (fastify) => {
     .addSchema(newDepotSchema)
     .addSchema(depotSchema)
     .addSchema(depotConflictErrorSchema)
+    .addSchema(findDepotsRequestSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .autoSchemaPreset({ tags: ['Depots'] })
     .post(
@@ -90,14 +95,16 @@ const depotsController = async (fastify) => {
               },
               serviceId: {
                 type: 'string',
+                pattern: OBJECT_ID_PATTERN,
               },
               depotId: {
                 anyOf: [
-                  { type: 'string' },
+                  { type: 'string', pattern: OBJECT_ID_PATTERN },
                   {
                     type: 'array',
                     items: {
                       type: 'string',
+                      pattern: OBJECT_ID_PATTERN,
                     },
                   },
                 ],
@@ -128,6 +135,46 @@ const depotsController = async (fastify) => {
           serviceId,
           coerceArray(depotIds),
         );
+        return { depots };
+      },
+    )
+    .post(
+      '/get',
+      {
+        // The body can carry holders' auth values, such as their emails
+        config: { sensitiveLogging: true },
+        schema: fastify.autoSchema({
+          summary: 'Find depots',
+          operationId: 'findDepots',
+          body: { $ref: 'find-depots-request#' },
+          // The same response as GET depots/get
+          response: {
+            200: {
+              type: 'object',
+              properties: {
+                depots: {
+                  type: 'array',
+                  items: {
+                    $ref: 'depot',
+                  },
+                },
+                requestId: { type: 'string' },
+              },
+              required: ['depots', 'requestId'],
+            },
+            ...fastify.NotFoundResponse,
+          },
+        }),
+      },
+      async (req) => {
+        const { serviceId, depotId, authValues } = req.body;
+        const depotIds = coerceArray(depotId);
+        const depots = isNil(authValues)
+          ? await req.repos.depots.findDepots(serviceId, depotIds)
+          : await findDepotsByAuthValues(
+              { serviceId, depotIds, authValues },
+              req,
+            );
         return { depots };
       },
     )

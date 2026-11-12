@@ -17,6 +17,7 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
+const { times } = require('lodash/fp');
 const {
   initOperatorApiValidator,
   operatorApiAjvFormats,
@@ -284,6 +285,95 @@ describe('operator API validator', () => {
     it('should refuse a tag that is not a string', () => {
       expect(validate('new-credential', credential({ tags: [1] }))).toEqual([
         error('type', '/tags/0'),
+      ]);
+    });
+  });
+
+  describe('find-depots-request', () => {
+    const serviceId = '6af54a010df57797ab6c3ec9';
+    const depotId = '6AF54A010DF57797AB6C3ECA';
+    const authValues = [['adam@example.com', 12345, true]];
+    const findDepots = (overrides) => ({ tenantId: 'tenant-1', ...overrides });
+    const validateFindDepots = (overrides) =>
+      validate('find-depots-request', findDepots(overrides));
+
+    it('should accept the depots/get filters, with or without authValues', () => {
+      expect(validateFindDepots()).toEqual([]);
+      expect(validateFindDepots({ serviceId, depotId })).toEqual([]);
+      expect(validateFindDepots({ depotId: [depotId, serviceId] })).toEqual([]);
+      expect(validateFindDepots({ serviceId, authValues })).toEqual([]);
+      expect(
+        validateFindDepots({ serviceId, depotId: [depotId], authValues }),
+      ).toEqual([]);
+    });
+
+    it('should refuse authValues without a serviceId', () => {
+      expect(validateFindDepots({ authValues })).toEqual(
+        errorsWith('anyOf', ''),
+      );
+      expect(validateFindDepots({ depotId, authValues })).toEqual(
+        errorsWith('anyOf', ''),
+      );
+    });
+
+    it('should refuse a serviceId or depotId that is not an ObjectId', () => {
+      expect(validateFindDepots({ serviceId: 'service-1' })).toEqual([
+        error('pattern', '/serviceId'),
+      ]);
+      expect(validateFindDepots({ depotId: 'depot-1' })).toEqual(
+        errorsWith('pattern', '/depotId'),
+      );
+      expect(validateFindDepots({ depotId: [depotId, 'depot-1'] })).toEqual(
+        errorsWith('pattern', '/depotId/1'),
+      );
+    });
+
+    it('should refuse more than 1000 tuples, or more than 10 values in a tuple', () => {
+      expect(
+        validateFindDepots({
+          serviceId,
+          authValues: times(() => ['adam@example.com'], 1001),
+        }),
+      ).toEqual([error('maxItems', '/authValues')]);
+      expect(
+        validateFindDepots({
+          serviceId,
+          authValues: [times((i) => `value-${i}`, 11)],
+        }),
+      ).toEqual([error('maxItems', '/authValues/0')]);
+    });
+
+    it('should refuse no tuples, or an empty tuple', () => {
+      expect(validateFindDepots({ serviceId, authValues: [] })).toEqual([
+        error('minItems', '/authValues'),
+      ]);
+      expect(validateFindDepots({ serviceId, authValues: [[]] })).toEqual([
+        error('minItems', '/authValues/0'),
+      ]);
+    });
+
+    it('should refuse an auth value that is not a string, number or boolean', () => {
+      expect(
+        validateFindDepots({
+          serviceId,
+          authValues: [['adam@example.com', { id: 12345 }]],
+        }),
+      ).toEqual(errorsWith('anyOf', '/authValues/0/1'));
+    });
+
+    // The Hub checks the values against the service's auth rules
+    it('should accept a blank value, or a tuple of any length up to 10', () => {
+      expect(
+        validateFindDepots({ serviceId, authValues: [['  ', ''], ['a']] }),
+      ).toEqual([]);
+    });
+
+    it('should refuse an unknown property, or no tenantId', () => {
+      expect(validateFindDepots({ userReference: 'employee-1' })).toEqual([
+        error('additionalProperties', ''),
+      ]);
+      expect(validate('find-depots-request', { serviceId })).toEqual([
+        error('required', ''),
       ]);
     });
   });
