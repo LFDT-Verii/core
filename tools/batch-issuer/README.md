@@ -69,7 +69,7 @@ The token is never printed or written, including in error messages, the links fi
 | --- | --- | --- | --- |
 | 0 | The batch is valid | The batch is loaded | Every rule reads a value from the samples |
 | 1 | The batch has errors | The batch has errors, and nothing was written | A rule reads nothing from the samples |
-| 2 | It couldn't validate: bad options, a spec or CSV file that can't be read, a state file of another batch, or a Hub or registrar error. A Hub response without what it should hold, such as a proxy's HTML page, is an error | It couldn't validate, as for `validate`, or a write failed partway. The state file records what was written before it, and rerunning the same command continues the load | It couldn't check: bad options or spec, a sample that can't be read, or a Hub error |
+| 2 | It couldn't validate: bad options, a spec or CSV file that can't be read, a state file of another batch, or a Hub or registrar error. A Hub response without what it should hold, such as a proxy's HTML page, is an error | It couldn't validate, as for `validate`, or a write failed partway, or a wallet message failed when it resolved deferred credentials. The state file records what was written, and rerunning the same command continues the load and retries the messages | It couldn't check: bad options or spec, a sample that can't be read, or a Hub error |
 
 ## The spec
 
@@ -172,12 +172,12 @@ Then the state file must belong to the batch, as [Reruns and the state file](#re
 1. **Validates** the batch, as `validate` does. Any error stops the load before anything is written, with the same report, and exits with 1. `--dryrun` stops here.
 2. **Depots:** `depots/create` for each row without a depot, one at a time, so two creates for the same holder can't race. A row that validation matched to an existing depot uses it. A 409 means that another client created a depot with the row's auth values after validation: the load stops and reports the row.
 3. **Credentials:** `credentials/create-many`, in requests of at most 1000 credentials (`CREDENTIALS_CREATE_MANY_MAX_ITEMS`), each to its row's depot, new or reused. When the Hub refuses a request with a 400, the load reports each invalid credential with its row and template, and stops. The Hub checks every credential of a request before it creates any, so a refused request creates nothing, but the requests before it did.
-4. **Deferred credentials:** with `--resolve-deferred`, `depots/resolve-deferred-credentials` for each reused depot that has `deferredCredentials: true` and received credentials from the batch. A wallet that's waiting on the depot is told its credentials are ready. The depots the batch creates aren't resolved: their holders haven't had a link yet.
+4. **Deferred credentials:** with `--resolve-deferred`, `depots/resolve-deferred-credentials` for each reused depot that has `deferredCredentials: true` and received credentials from the batch. A wallet that's waiting on the depot is told its credentials are ready. The depots the batch creates aren't resolved: their holders haven't had a link yet. The Hub answers with the wallet message's status: `sent`, `skipped_no_messaging_settings`, `skipped_no_waiting_exchange` or `failed`. A depot whose message `failed` isn't recorded as resolved: the load goes on, then reports each one with its row, its depot and the Hub's error, and exits with 2. A rerun resolves it again.
 5. **Links,** written to [the links file](#the-links-file):
    - a service with internal `verifiable_presentation` auth: the shared link, from `issue-links/refresh` without a `depotId`. It's printed, and every row gets it;
    - a `preauth` service: each depot the batch created gets its own link, from `issue-links/refresh` with its `depotId`. Reused depots are never refreshed, because a refresh replaces the depot's pre-authorized code (`refreshPreauthCode`) and breaks the links already sent. A service with both kinds of auth gives a reused depot's row the shared link instead.
 
-The state file records each depot, credential, resolved depot and `preauth` link as soon as the Hub confirms it.
+The state file records each depot, credential, resolved depot and `preauth` link as soon as the Hub confirms it. A depot whose wallet message failed isn't recorded as resolved.
 
 ## The links file
 
@@ -216,7 +216,7 @@ A crash while a line is written can leave the last line unfinished. A last line 
 A rerun:
 - finds the depots again: by their auth values for a `verifiable_presentation` service, through validation's step 4, and from the state file, by row, for a `preauth` service, whose depots have no auth values. A depot the state file records counts as skipped, not reused, and `--no-reuse` accepts it;
 - skips the credentials the state file records, by `credentialReference`;
-- doesn't resolve a depot or refresh a link again.
+- doesn't refresh a link again, or resolve a depot again unless its wallet message failed.
 
 A rerun of a finished load creates nothing, and writes the same links file.
 
@@ -266,6 +266,15 @@ State: holders.state.jsonl
 
 Created is what this run created, reused the depots that already existed, and skipped what an earlier run of the batch created. With `--resolve-deferred`, a line counts the depots whose deferred credentials it resolved. The issue link is the shared link of a `verifiable_presentation` service.
 
+When a wallet message fails, the load finishes, prints that report, then prints the failed messages on stderr, and exits with 2:
+
+```
+Row 2:
+  - the wallet message about depot 6512a1b2c3d4e5f6a7b8c9e0 failed: connect ECONNREFUSED 203.0.113.7:443
+
+Error: the waiting wallets of 1 depot weren't told that their deferred credentials are ready. Rerun the same command to retry.
+```
+
 A load that stops prints, on stderr, the rows the Hub refused, if any, the error, and how far the batch got:
 
 ```
@@ -276,7 +285,7 @@ Error: depots/create refused a depot
 The load stopped after creating 1 of 3 depots and 0 of 3 credentials. holders.state.jsonl records what was created. Rerun the same command to continue.
 ```
 
-With `--json`, `load` prints `{ valid, errors, summary, load }`, where `load` has the counts `depots: { created, reused, skipped }` and `credentials: { created, skipped }`, `resolvedDepots` with `--resolve-deferred`, the shared `link`, and the `output` and `state` files. When the load stops, `load` has an `error` with its `message` and the refused rows' `errors`, and no `link` or `output`.
+With `--json`, `load` prints `{ valid, errors, summary, load }`, where `load` has the counts `depots: { created, reused, skipped }` and `credentials: { created, skipped }`, `resolvedDepots` with `--resolve-deferred`, the shared `link`, the `output` and `state` files, and `failedNotifications`: the wallet messages that failed, each with its `row`, `depotId` and the Hub's `error`. When the load stops, `load` has an `error` with its `message` and the refused rows' `errors`, and no `link`, `output` or `failedNotifications`.
 
 ## Example
 

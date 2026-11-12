@@ -47,14 +47,20 @@ const WRITE_PATHS = [
  * A fake Credentialing Hub: its service, depots and credentials, and the
  * requests it received. It keeps them across runs of the command line, so a
  * rerun sees what an earlier run created.
- * @param {{ service?: object, depots?: Array<object> }} [options]
+ * @param {{ service?: object, depots?: Array<object>, notification?: object }} [options] notification is
+ *   what resolving a depot's deferred credentials answers about the wallet message
  */
-const initFakeHub = ({ service = buildService(), depots = [] } = {}) => ({
+const initFakeHub = ({
+  service = buildService(),
+  depots = [],
+  notification = { status: 'skipped_no_waiting_exchange' },
+} = {}) => ({
   service,
   depots: [...depots],
   credentials: [],
   requests: [],
   refreshes: 0,
+  notification,
 });
 
 const writeRequests = (hub) =>
@@ -87,7 +93,7 @@ const createCredentials = (hub, { items }) => {
 
 const resolveDeferred = (hub, { depotId }) => ({
   depot: hub.depots.find(({ id }) => id === depotId),
-  notification: { status: 'skipped_no_waiting_exchange' },
+  notification: hub.notification,
 });
 
 // Each refresh of a depot's link gives it a new pre-authorized code.

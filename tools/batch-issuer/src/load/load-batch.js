@@ -43,6 +43,14 @@ const { isInternalVpAuth, isPreauth } = require('../validation/check-service');
 const { appendRecords, startState } = require('../state/state-file');
 const { count } = require('../report/count');
 
+// The status of a wallet message that the Hub couldn't send.
+const FAILED_NOTIFICATION = 'failed';
+
+const addToList = (state, key, records) => ({
+  ...state,
+  [key]: [...state[key], ...records],
+});
+
 // Runs a step for each item, one at a time. The records that a step gives
 // are appended to the state file as soon as it ends, and the records of
 // every step are added to one of the state's lists.
@@ -51,7 +59,7 @@ const inSequence = (append, key, step) => async (state, items) => {
   const records = await runSequentially(
     map((item) => () => recordStep(item), items),
   );
-  return { ...state, [key]: [...state[key], ...flatten(records)] };
+  return addToList(state, key, flatten(records));
 };
 
 // Each row's depot id, by row: the existing depot that validation matched it
@@ -164,26 +172,40 @@ const createCredentials = ({ spec, hub, append }) =>
   });
 
 // Reused depots that defer credentials and received some from this batch, in
-// this run or an earlier one, and that no run has resolved yet.
+// this run or an earlier one, and that no run has resolved yet, with their
+// rows.
 const depotsToResolve = (rows, state) => {
   const receivingIds = new Set(map('depotId', state.credentials));
   const resolvedIds = new Set(state.resolvedDepots);
-  const isWaiting = ({ id, deferredCredentials }) =>
+  const isWaiting = ({ existingDepot: { id, deferredCredentials } }) =>
     deferredCredentials === true &&
     receivingIds.has(id) &&
     !resolvedIds.has(id);
   return flow(
-    map('existingDepot'),
     filter(isWaiting),
-    map('id'),
+    map(({ row, existingDepot }) => ({ row, id: existingDepot.id })),
   )(reusedRows(rows, state));
 };
 
-const resolveDepots = ({ spec, hub, append }) =>
-  inSequence(append, 'resolvedDepots', async (depotId) => {
-    await hub.resolveDeferredCredentials(spec, depotId);
-    return [depotId];
-  });
+// Resolves each depot, one at a time. A depot whose wallet message failed
+// isn't recorded as resolved, so that a rerun resolves it again.
+const resolveDepots =
+  ({ spec, hub, append }) =>
+  async (state, depots) => {
+    const resolveDepot = async ({ row, id }) => {
+      const { status, error } = await hub.resolveDeferredCredentials(spec, id);
+      return status === FAILED_NOTIFICATION
+        ? { resolved: [], failed: [{ row, depotId: id, error }] }
+        : { resolved: await append('resolvedDepots', [id]), failed: [] };
+    };
+    const results = await runSequentially(
+      map((depot) => () => resolveDepot(depot), depots),
+    );
+    return {
+      state: addToList(state, 'resolvedDepots', flatMap('resolved', results)),
+      failedNotifications: flatMap('failed', results),
+    };
+  };
 
 // The depots this batch created that have no link yet. Reused depots are
 // never refreshed: a refresh replaces the depot's pre-authorized code, which
@@ -206,8 +228,9 @@ const linkDepots = ({ spec, hub, append }) =>
  * @param {{ spec: object, service: object, rows: Array<object> }} batch the validated batch
  * @param {{ hub: object, state: object, saved?: object, stateFile: string, resolveDeferred?: boolean }} context
  *   saved is what readState read from the state file, if it was there
- * @returns {Promise<{ state: object, sharedLink?: string }>} the final state, and the service's shared link
- *   when it uses verifiable_presentation auth
+ * @returns {Promise<{ state: object, sharedLink?: string, failedNotifications: Array<object> }>} the final
+ *   state, the service's shared link when it uses verifiable_presentation auth, and the depots whose
+ *   wallet message failed when their deferred credentials were resolved, with their rows and the Hub's error
  * @throws an AggregateError of row errors when the Hub refuses a depot or credentials, or the error of a
  *   request that failed. The state file then holds what was created before it
  */
@@ -225,18 +248,22 @@ const loadBatch = async (
     withDepots,
     pendingRequests(rows, withDepots),
   );
-  const withResolved = await resolveDepots(context)(
+  const resolution = await resolveDepots(context)(
     withCredentials,
     resolveDeferred ? depotsToResolve(rows, withCredentials) : [],
   );
   const final = await linkDepots(context)(
-    withResolved,
-    isPreauth(service) ? depotsToLink(withResolved) : [],
+    resolution.state,
+    isPreauth(service) ? depotsToLink(resolution.state) : [],
   );
   const sharedLink = isInternalVpAuth(service)
     ? await hub.refreshIssueLink(spec)
     : undefined;
-  return { state: final, sharedLink };
+  return {
+    state: final,
+    sharedLink,
+    failedNotifications: resolution.failedNotifications,
+  };
 };
 
 /**

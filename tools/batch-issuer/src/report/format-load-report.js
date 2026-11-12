@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
-const { compact, flow, join, map, toPairs } = require('lodash/fp');
+const {
+  compact,
+  flow,
+  isEmpty,
+  join,
+  map,
+  size,
+  toPairs,
+} = require('lodash/fp');
 const { count, formatNumber } = require('./count');
 const { describeError } = require('./describe-error');
 const { formatErrors } = require('./format-report');
@@ -91,7 +99,35 @@ const formatJsonLoadReport = ({ summary, load, error }) => {
   return `${JSON.stringify(report, null, 2)}\n`;
 };
 
+const toNotificationError = ({ row, depotId, error }) => ({
+  row,
+  reason: join(
+    ': ',
+    compact([`the wallet message about depot ${depotId} failed`, error]),
+  ),
+});
+
+/**
+ * Formats the wallet messages that failed when a finished load resolved
+ * deferred credentials, by row.
+ * @param {{ load: { failedNotifications: Array<{ row: number, depotId: string, error?: string }> } }} report
+ * @returns {string} the report, or nothing when none failed
+ */
+const formatFailedNotifications = ({ load }) => {
+  const failed = load.failedNotifications;
+  if (isEmpty(failed)) {
+    return '';
+  }
+  const lines = [
+    ...formatErrors(map(toNotificationError, failed)),
+    `Error: the waiting wallets of ${count(size(failed), 'depot')} weren't told that their deferred credentials are ready. ` +
+      'Rerun the same command to retry.',
+  ];
+  return `${join('\n', lines)}\n`;
+};
+
 module.exports = {
+  formatFailedNotifications,
   formatJsonLoadReport,
   formatLoadFailure,
   formatLoadReport,

@@ -296,6 +296,7 @@ describe('batch-issuer load', () => {
           credentials: { created: 3, skipped: 0 },
           link: SHARED_LINK,
           output: filesOf(batch).links,
+          failedNotifications: [],
           state: filesOf(batch).state,
         },
       });
@@ -435,7 +436,7 @@ describe('batch-issuer load', () => {
 
   describe('--resolve-deferred', () => {
     // Adam's depot waits for credentials, and Carl's doesn't.
-    const initHub = () =>
+    const initHub = (notification) =>
       initFakeHub({
         depots: [
           buildDepot({ deferredCredentials: true }),
@@ -445,7 +446,21 @@ describe('batch-issuer load', () => {
             authValues: ['carl.ng@example.com'],
           }),
         ],
+        notification,
       });
+    const resolveRequestsOf = (hub) =>
+      writeRequests(hub).filter(
+        ({ path: requestPath }) =>
+          requestPath === 'depots/resolve-deferred-credentials',
+      );
+    const walletError = 'connect ECONNREFUSED 203.0.113.7:443';
+    const failedReport = [
+      'Row 2:',
+      `  - the wallet message about depot ${DEPOT_ID} failed: ${walletError}`,
+      '',
+      "Error: the waiting wallets of 1 depot weren't told that their deferred credentials are ready. Rerun the same command to retry.",
+      '',
+    ].join('\n');
 
     const cases = [
       {
@@ -494,16 +509,129 @@ describe('batch-issuer load', () => {
           ]),
           stderr: '',
         });
-        const resolves = writeRequests(hub).filter(
-          ({ path: requestPath }) =>
-            requestPath === 'depots/resolve-deferred-credentials',
-        );
-        expect(resolves).toEqual(resolveRequests);
+        expect(resolveRequestsOf(hub)).toEqual(resolveRequests);
         expect(stateList(filesOf(batch).state, 'resolvedDepots')).toEqual(
           resolvedDepots,
         );
       });
     }
+
+    const statuses = [
+      {
+        notification: { status: 'sent', exchangeId: 'exchange-1' },
+        exitCode: 0,
+        resolved: 'Deferred credentials resolved: 1 depot.',
+        stderr: '',
+        resolvedDepots: [DEPOT_ID],
+      },
+      {
+        notification: { status: 'skipped_no_messaging_settings' },
+        exitCode: 0,
+        resolved: 'Deferred credentials resolved: 1 depot.',
+        stderr: '',
+        resolvedDepots: [DEPOT_ID],
+      },
+      {
+        notification: { status: 'skipped_no_waiting_exchange' },
+        exitCode: 0,
+        resolved: 'Deferred credentials resolved: 1 depot.',
+        stderr: '',
+        resolvedDepots: [DEPOT_ID],
+      },
+      {
+        notification: { status: 'failed', error: walletError },
+        exitCode: 2,
+        resolved: 'Deferred credentials resolved: 0 depots.',
+        stderr: failedReport,
+        resolvedDepots: [],
+      },
+    ];
+
+    for (const {
+      notification,
+      exitCode,
+      resolved,
+      stderr,
+      resolvedDepots,
+    } of statuses) {
+      it(`records the depot as resolved only when the message isn't failed: ${notification.status}`, async () => {
+        const batch = writeBatch({ csvLines: [ADAM, BETH, CARL] });
+        mockRun(initHub(notification));
+
+        const result = await load(batch, '--resolve-deferred');
+
+        expect(result).toEqual({
+          exitCode,
+          stdout: loadReport(batch, [
+            'The batch is valid: 3 rows, 1 new depot, 2 existing depots, 3 credentials.',
+            'Depots: 1 created, 2 reused, 0 skipped.',
+            'Credentials: 3 created, 0 skipped.',
+            resolved,
+            `Issue link: ${SHARED_LINK}`,
+          ]),
+          stderr,
+        });
+        expect(stateList(filesOf(batch).state, 'resolvedDepots')).toEqual(
+          resolvedDepots,
+        );
+      });
+    }
+
+    it('lists the failed messages in the JSON summary with --json', async () => {
+      const batch = writeBatch({ csvLines: [ADAM, BETH, CARL] });
+      mockRun(initHub({ status: 'failed', error: walletError }));
+
+      const { exitCode, stderr, report } = await loadJson(
+        batch,
+        '--resolve-deferred',
+      );
+
+      expect({ exitCode, stderr }).toEqual({ exitCode: 2, stderr: '' });
+      expect(report.load).toEqual({
+        depots: { created: 1, reused: 2, skipped: 0 },
+        credentials: { created: 3, skipped: 0 },
+        resolvedDepots: 0,
+        link: SHARED_LINK,
+        output: filesOf(batch).links,
+        failedNotifications: [
+          { row: 2, depotId: DEPOT_ID, error: walletError },
+        ],
+        state: filesOf(batch).state,
+      });
+    });
+
+    it('resolves the depot again on a rerun after a failed message', async () => {
+      const hub = initHub({ status: 'failed', error: walletError });
+      const batch = writeBatch({ csvLines: [ADAM, BETH, CARL] });
+      mockRun(hub);
+      const failed = await load(batch, '--resolve-deferred');
+      hub.notification = { status: 'sent', exchangeId: 'exchange-1' };
+
+      mockRun(hub);
+      const result = await load(batch, '--resolve-deferred');
+
+      expect(failed.exitCode).toEqual(2);
+      expect(result).toEqual({
+        exitCode: 0,
+        stdout: loadReport(batch, [
+          'The batch is valid: 3 rows, 0 new depots, 3 existing depots, 3 credentials.',
+          'Depots: 0 created, 2 reused, 1 skipped.',
+          'Credentials: 0 created, 3 skipped.',
+          'Deferred credentials resolved: 1 depot.',
+          `Issue link: ${SHARED_LINK}`,
+        ]),
+        stderr: '',
+      });
+      const resolveRequest = {
+        path: 'depots/resolve-deferred-credentials',
+        body: { tenantId: TENANT_ID, depotId: DEPOT_ID },
+      };
+      expect(resolveRequestsOf(hub)).toEqual([resolveRequest, resolveRequest]);
+      expect(hub.credentials).toHaveLength(3);
+      expect(stateList(filesOf(batch).state, 'resolvedDepots')).toEqual([
+        DEPOT_ID,
+      ]);
+    });
   });
 
   describe('--dryrun', () => {

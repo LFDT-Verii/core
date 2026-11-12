@@ -148,7 +148,8 @@ const initHubClient = ({ endpoint, authToken }) => {
    * depots/resolve-deferred-credentials.
    * @param {{ tenantId: string }} ids
    * @param {string} depotId
-   * @returns {Promise<{ status: string }>} the notification of a waiting wallet
+   * @returns {Promise<{ status: string, error?: string }>} the notification of a waiting wallet, whose status
+   *   is sent, failed, skipped_no_messaging_settings or skipped_no_waiting_exchange
    */
   const resolveDeferredCredentials = ({ tenantId }, depotId) =>
     post(RESOLVE_DEFERRED_PATH, { tenantId, depotId }, readNotification);

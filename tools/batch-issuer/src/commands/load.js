@@ -37,6 +37,7 @@ const {
   formatTextReport,
 } = require('../report/format-report');
 const {
+  formatFailedNotifications,
   formatJsonLoadReport,
   formatLoadFailure,
   formatLoadReport,
@@ -80,6 +81,28 @@ const reportValidation = ({ errors, summary }, options, io) => {
   return isEmpty(errors) ? ExitCodes.OK : ExitCodes.FAILED;
 };
 
+// A finished load whose wallet messages failed exits with ERROR, so that a
+// rerun retries them.
+const reportLoaded = (report, options, io) => {
+  const { failedNotifications } = report.load;
+  if (options.json) {
+    io.stdout(formatJsonLoadReport(report));
+  } else {
+    io.stdout(formatLoadReport(report));
+    io.stderr(formatFailedNotifications(report));
+  }
+  return isEmpty(failedNotifications) ? ExitCodes.OK : ExitCodes.ERROR;
+};
+
+const reportStopped = (report, options, io) => {
+  if (options.json) {
+    io.stdout(formatJsonLoadReport(report));
+  } else {
+    io.stderr(formatLoadFailure(report));
+  }
+  return ExitCodes.ERROR;
+};
+
 // A load that stops reports what the state file holds then.
 const load = async (
   { batch, summary, saved, state, files, hub, options },
@@ -110,20 +133,12 @@ const load = async (
     const done = report(loaded.state, {
       link: loaded.sharedLink,
       output: files.output,
+      failedNotifications: loaded.failedNotifications,
     });
-    io.stdout(
-      options.json ? formatJsonLoadReport(done) : formatLoadReport(done),
-    );
-    return ExitCodes.OK;
+    return reportLoaded(done, options, io);
   } catch (error) {
     const final = (await readState(files.state))?.state ?? state;
-    const stopped = { ...report(final), error };
-    if (options.json) {
-      io.stdout(formatJsonLoadReport(stopped));
-    } else {
-      io.stderr(formatLoadFailure(stopped));
-    }
-    return ExitCodes.ERROR;
+    return reportStopped({ ...report(final), error }, options, io);
   }
 };
 
