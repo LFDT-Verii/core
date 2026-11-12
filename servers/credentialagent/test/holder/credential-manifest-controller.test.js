@@ -29,7 +29,7 @@ const {
   sampleOrganizationVerifiedProfile1,
   samplePresentationDefinition,
 } = require('@verii/sample-data');
-const { OBJECT_ID_FORMAT, JWT_FORMAT } = require('@verii/test-regexes');
+const { OBJECT_ID_FORMAT } = require('@verii/test-regexes');
 const { mongoify, errorResponseMatcher } = require('@verii/tests-helpers');
 const buildFastify = require('./helpers/credentialagent-holder-build-fastify');
 const {
@@ -2875,11 +2875,12 @@ describe('get credential manifests', () => {
       });
     });
 
-    it('should 200 & return `jwt` when json format query param and unsigned json format disabled', async () => {
+    it('should 200 & return unsigned json when json format query param under NODE_ENV=production', async () => {
       await fastify.close();
       fastify = await buildFastify({
         ...holderConfig,
-        enableUnsignedJsonFormat: false,
+        nodeEnv: 'production',
+        isProd: true,
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
@@ -2947,7 +2948,14 @@ describe('get credential manifests', () => {
       });
       expect(response.statusCode).toEqual(200);
       expect(response.json.issuing_request).toEqual(
-        expect.stringMatching(JWT_FORMAT),
+        expect.objectContaining({
+          exchange_id: expect.stringMatching(OBJECT_ID_FORMAT),
+          issuer: { id: tenant.did },
+          output_descriptors: [
+            expect.objectContaining({ id: 'PastEmploymentPosition' }),
+            expect.objectContaining({ id: 'CurrentEmploymentPosition' }),
+          ],
+        }),
       );
       await fastify.close();
       fastify = await buildFastify();

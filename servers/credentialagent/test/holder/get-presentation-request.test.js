@@ -27,7 +27,6 @@ const {
 } = require('@verii/sample-data');
 const { jwtVerify } = require('@verii/jwt');
 const { omit } = require('lodash/fp');
-const { JWT_FORMAT } = require('@verii/test-regexes');
 const { generateKeyPair, KeyPurposes } = require('@verii/crypto');
 const { matchersWithOptions } = require('jest-json-schema');
 const {
@@ -689,11 +688,12 @@ describe('presentation request', () => {
         },
       });
     });
-    it('should return 200 and ignore query parameter format `json` when unsigned json format disabled', async () => {
+    it('should return 200 with unsigned json if query parameter format is `json` under NODE_ENV=production', async () => {
       await fastify.close();
       fastify = await buildFastify({
         ...holderConfig,
-        enableUnsignedJsonFormat: false,
+        nodeEnv: 'production',
+        isProd: true,
       });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
@@ -710,7 +710,12 @@ describe('presentation request', () => {
       });
       expect(response.statusCode).toEqual(200);
       expect(response.json.presentation_request).toEqual(
-        expect.stringMatching(JWT_FORMAT),
+        expect.objectContaining({
+          exchange_id: expect.any(String),
+          presentation_definition: expect.objectContaining({
+            id: expect.stringContaining(`${disclosure._id}`),
+          }),
+        }),
       );
       await fastify.close();
       fastify = await buildFastify();

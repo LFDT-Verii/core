@@ -20,13 +20,10 @@ docker run --name credentialagent-migrations -e MONGO_URI=****  ghcr.io/velocity
 
 ## Settings that differ between deployments
 
-This setting used to follow `NODE_ENV`. When it's unset, it keeps the
-behaviour `NODE_ENV` gave it, so under `NODE_ENV=production` it behaves as in
-production.
-
-| Variable | What it does | Default when unset |
-| --- | --- | --- |
-| `ENABLE_UNSIGNED_JSON_FORMAT` | Lets holders fetch presentation and issuing requests as unsigned JSON, with `?format=json`, instead of as a signed JWT. It's for development and testing. | `false` under `NODE_ENV=production`, otherwise `true` |
-
 `ENVIRONMENT_LABEL` names the deployment, and Sentry events carry it as their
-environment. It defaults to the value of `NODE_ENV`.
+environment. It defaults to `NETWORK`, the network the deployment runs on, and
+then to the value of `NODE_ENV`.
+
+The holder endpoints that return presentation and issuing requests return them
+as unsigned JSON, instead of as a signed JWT, when called with `?format=json`.
+They do that in every environment.

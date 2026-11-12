@@ -71,12 +71,6 @@ const holderConfig = {
     .get('CREDENTIAL_SUBJECT_CONTEXT')
     .default('false')
     .asBool(),
-  // Lets holders fetch presentation and issuing requests as unsigned JSON with ?format=json.
-  // Used to follow NODE_ENV, and defaults to what it gave it (#1234).
-  enableUnsignedJsonFormat: env
-    .get('ENABLE_UNSIGNED_JSON_FORMAT')
-    .default(String(!coreConfig.isProd))
-    .asBool(),
 
   // vendor webhooks bearer (api) token auth
   bearerToken: env.get('BEARER_TOKEN').asString(),

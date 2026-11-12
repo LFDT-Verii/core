@@ -20,20 +20,8 @@ const { expect } = require('expect');
 const { buildRequestResponseSchema } = require('../../src/entities');
 
 describe('build request response schema test suite', () => {
-  it('should build the signed schema if enableUnsignedJsonFormat is false', async () => {
-    const schemaObject = buildRequestResponseSchema('presentation', {
-      enableUnsignedJsonFormat: false,
-    });
-    expect(schemaObject).toEqual({
-      type: 'object',
-      properties: { presentation_request: { type: 'string' } },
-      required: ['presentation_request'],
-    });
-  });
-  it('should also allow the unsigned schema if enableUnsignedJsonFormat is true', async () => {
-    const schemaObject = buildRequestResponseSchema('presentation', {
-      enableUnsignedJsonFormat: true,
-    });
+  it('should allow the request signed or as unsigned json', async () => {
+    const schemaObject = buildRequestResponseSchema('presentation');
     expect(schemaObject).toEqual({
       oneOf: [
         {
