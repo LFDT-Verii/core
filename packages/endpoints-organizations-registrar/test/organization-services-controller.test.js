@@ -374,7 +374,7 @@ const setGetMonitorsNock = (dids, serviceIds) => {
           type: 'monitor',
           attributes: {
             url: 'https://devagent.velocitycareerlabs.io/',
-            pronounceable_name: `TEST, Test Organization, ${did} : ${serviceIdArray[i]}, version-0.9.0-build.abc12345`,
+            pronounceable_name: `test, Test Organization, ${did} : ${serviceIdArray[i]}, version-0.9.0-build.abc12345`,
             monitor_type: 'expected_status_code',
             monitor_group_id: null,
             last_checked_at: '2021-10-10T14:42:44.000Z',
