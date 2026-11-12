@@ -18,13 +18,15 @@ const { flow, includes } = require('lodash/fp');
 const {
   appendSearchParamArray,
   appendSearchParam,
+  buildAgentHolderUrl,
+  buildDeepLink,
 } = require('@verii/common-functions');
 const { VendorEndpointCategory } = require('../../disclosures');
 
 const createPresentationRequestUrl = (
   suffix,
   { tenant, config: { hostUrl } },
-) => new URL(`${hostUrl}/api/holder/v0.6/org/${tenant.did}/${suffix}`);
+) => buildAgentHolderUrl(hostUrl, tenant.did, suffix);
 
 const createDeepLinkUrl = (suffix, { config: { deepLinkProtocol } }) =>
   new URL(`${deepLinkProtocol}${suffix}`);
@@ -99,17 +101,8 @@ const buildIssuingDeepLink = (
   return deepLink.toString();
 };
 
-const generateDeepLink = (
-  { requestUri, vendorOriginContext, inspectorDid, issuerDid },
-  type,
-  context,
-) =>
-  flow(
-    appendSearchParam('request_uri', requestUri),
-    appendSearchParam('inspectorDid', inspectorDid),
-    appendSearchParam('issuerDid', issuerDid),
-    appendSearchParam('vendorOriginContext', vendorOriginContext),
-  )(createDeepLinkUrl(type, context));
+const generateDeepLink = (link, type, { config: { deepLinkProtocol } }) =>
+  buildDeepLink(deepLinkProtocol, type, link);
 
 module.exports = {
   buildIssuingDeepLink,
