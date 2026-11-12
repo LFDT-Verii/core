@@ -1,9 +1,9 @@
+const env = require('env-var');
 const { createOauthConfig } = require('@verii/auth');
 
 const createConfig = (packageJson) => {
-  const { genericConfig, networkEnv } = require('@verii/config');
+  const { genericConfig } = require('@verii/config');
   const { isTest } = genericConfig;
-  const env = networkEnv();
 
   const oauthConfig = createOauthConfig(env, genericConfig);
   const swaggerInfo = {

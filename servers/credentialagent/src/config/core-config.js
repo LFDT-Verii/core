@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-const {
-  createBlockchainConfig,
-  genericConfig,
-  networkEnv,
-} = require('@verii/config');
+const env = require('env-var');
+const { createBlockchainConfig, genericConfig } = require('@verii/config');
 const packageJson = require('../../package.json');
 
 const { isTest, secret } = genericConfig;
-const env = networkEnv();
 
 const swaggerConfig = {
   swaggerInfo: {

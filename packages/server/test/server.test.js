@@ -281,13 +281,11 @@ describe('Server Configured log', () => {
     ).toEqual([]);
   });
 
-  it('logs the network, its chain ID and the names of the preset values overridden', async () => {
+  it('logs the chain ID but not the RPC node URL', async () => {
     const config = {
       ...genericConfig,
       mongoConnection,
-      network: 'testnet',
       chainId: 1481,
-      networkOverrides: ['RPC_NODE_URL'],
       rpcUrl: 'https://user:rpc-secret-marker@rpc.example.com',
     };
     const logEntries = [];
@@ -300,13 +298,7 @@ describe('Server Configured log', () => {
 
     expect(
       logEntries.find((entry) => entry.msg === 'Server Configured'),
-    ).toEqual(
-      expect.objectContaining({
-        network: 'testnet',
-        chainId: 1481,
-        networkOverrides: ['RPC_NODE_URL'],
-      }),
-    );
+    ).toEqual(expect.objectContaining({ chainId: 1481 }));
     expect(JSON.stringify(logEntries)).not.toContain('rpc-secret-marker');
   });
 });

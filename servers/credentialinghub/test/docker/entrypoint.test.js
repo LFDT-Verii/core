@@ -31,24 +31,6 @@ describe('Credentialing Hub Docker entrypoint', () => {
     );
   });
 
-  it('refuses to start when a mainnet network value is changed, without printing it', () => {
-    const result = spawnSync(process.execPath, [entrypointPath, '--mainnet'], {
-      encoding: 'utf8',
-      env: {
-        PATH: process.env.PATH,
-        NODE_ENV: 'production',
-        CHAIN_ID: '424242',
-      },
-    });
-
-    assert.equal(result.status, 1);
-    assert.match(
-      result.stderr,
-      /CHAIN_ID can't be changed on mainnet\..*NETWORK=no-preset \(--no-preset\)/,
-    );
-    assert.doesNotMatch(result.stderr, /424242/);
-  });
-
   it('reports invalid image arguments as configuration errors', () => {
     const result = spawnSync(
       process.execPath,

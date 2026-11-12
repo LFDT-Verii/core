@@ -50,12 +50,10 @@ const listSetConfigNames = (config, prefix = '') =>
 
 const createServer = (config, log = createCommonLog(config)) => {
   // log only the names of set config values, never the values themselves.
-  // The network and chain ID are public, and name the network the server runs on.
+  // The chain ID is public, and names the network the server runs on.
   log.info(
     {
-      network: config.network,
       chainId: config.chainId,
-      networkOverrides: config.networkOverrides,
       configuredSettings: sortBy(identity, listSetConfigNames(config)),
     },
     'Server Configured',
