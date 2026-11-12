@@ -30,8 +30,6 @@ const { mapWithIndex } = require('@verii/common-functions');
 const { extractCredentialType } = require('@verii/vc-checks');
 const { CredentialErrors } = require('@verii/credentialing-hub-operator-api');
 
-// The errorCode @verii/fastify-plugins gives a request that fails validation
-const REQUEST_VALIDATION_FAILED = 'request_validation_failed';
 const CREDENTIAL_TYPE_PATH = '/credential/content/type';
 const CREDENTIAL_SUBJECT_PATH = '/credential/content/credentialSubject';
 
@@ -131,7 +129,7 @@ const problem = (path, errorCode) => ({ path, errorCode, message: errorCode });
 // One problem per AJV error, with the message wrapValidationError gives it
 const toSchemaProblem = ({ instancePath, message }) => ({
   path: `${CREDENTIAL_SUBJECT_PATH}${instancePath}`,
-  errorCode: REQUEST_VALIDATION_FAILED,
+  errorCode: CredentialErrors.REQUEST_VALIDATION_FAILED,
   message: `credential.content.credentialSubject${instancePath} ${message}`,
 });
 

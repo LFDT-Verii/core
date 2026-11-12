@@ -30,6 +30,7 @@ describe('credentialing hub operator api', () => {
       findDepotsRequestSchema: api.findDepotsRequestSchema.$id,
       newCredentialSchema: api.newCredentialSchema.$id,
       credentialSchema: api.credentialSchema.$id,
+      credentialItemsErrorSchema: api.credentialItemsErrorSchema.$id,
     }).toEqual({
       newIssuerServiceSchema: 'new-issuer-service',
       issuerServiceSchema: 'issuer-service',
@@ -39,6 +40,7 @@ describe('credentialing hub operator api', () => {
       findDepotsRequestSchema: 'find-depots-request',
       newCredentialSchema: 'new-credential',
       credentialSchema: 'Credential',
+      credentialItemsErrorSchema: 'credential-items-error',
     });
   });
 
@@ -75,6 +77,7 @@ describe('credentialing hub operator api', () => {
       CREDENTIAL_TYPES_METADATA_UPSTREAM_ERROR:
         'credential_types_metadata_upstream_error',
       SCHEMA_UPSTREAM_ERROR: 'schema_upstream_error',
+      REQUEST_VALIDATION_FAILED: 'request_validation_failed',
     });
   });
 

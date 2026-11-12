@@ -21,6 +21,7 @@ const {
 } = require('@verii/common-schemas');
 const { validationPlugin } = require('@verii/validation');
 const {
+  credentialItemsErrorSchema,
   credentialSchema,
   newCredentialSchema,
 } = require('@verii/credentialing-hub-operator-api');
@@ -30,10 +31,7 @@ const {
   NotificationStatuses,
   revokeCredential,
 } = require('../../../entities/credentials');
-const {
-  credentialItemsErrorSchema,
-  revokeCredentialSchema,
-} = require('./schemas');
+const { revokeCredentialSchema } = require('./schemas');
 
 const credentialsController = async (fastify) => {
   fastify
