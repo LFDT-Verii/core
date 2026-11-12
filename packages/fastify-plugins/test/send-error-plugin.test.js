@@ -40,7 +40,7 @@ describe('Capture Exception to Sentry plugin tests', () => {
   it('sendErrorPlugin', async () => {
     const config = {
       sentryDsn: 'testDsn',
-      nodeEnv: 'testEnv',
+      environmentLabel: 'testEnv',
       version: 'testVersion',
       serviceName: 'testService',
     };

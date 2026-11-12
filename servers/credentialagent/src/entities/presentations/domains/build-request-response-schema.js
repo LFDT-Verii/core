@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const buildRequestResponseSchema = (prefix, { isProd }) => {
+const buildRequestResponseSchema = (prefix, { enableUnsignedJsonFormat }) => {
   const requestName = `${prefix}_request`;
   const defaultResponse = {
     type: 'object',
@@ -22,7 +22,7 @@ const buildRequestResponseSchema = (prefix, { isProd }) => {
     required: [requestName],
   };
 
-  if (isProd) {
+  if (!enableUnsignedJsonFormat) {
     return defaultResponse;
   }
 

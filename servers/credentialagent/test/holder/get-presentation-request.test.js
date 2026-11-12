@@ -689,9 +689,12 @@ describe('presentation request', () => {
         },
       });
     });
-    it('should return 200 and ignore query parameter format `json` for production', async () => {
+    it('should return 200 and ignore query parameter format `json` when unsigned json format disabled', async () => {
       await fastify.close();
-      fastify = await buildFastify({ ...holderConfig, isProd: true });
+      fastify = await buildFastify({
+        ...holderConfig,
+        enableUnsignedJsonFormat: false,
+      });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
         sampleOrganizationVerifiedProfile1,

@@ -1749,6 +1749,31 @@ describe('Organizations Full Test Suite', () => {
         );
       });
 
+      it('Should 400 if linkedInProfile is empty and validateKybProfile is on, without x-validate-kyb-profile', async (t) => {
+        fastify.config.validateKybProfile = true;
+        t.after(() => {
+          fastify.config.validateKybProfile = false;
+        });
+        const payload = {
+          profile: omit(['linkedInProfile'], orgProfile),
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers: {
+            'x-auto-activate': '1',
+            'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json.message).toEqual(
+          "body/profile must have required property 'linkedInProfile'",
+        );
+      });
+
       it('Should 400 if profile.logo already active', async () => {
         await persistImage({
           url: 'https://example.com/logo.png',

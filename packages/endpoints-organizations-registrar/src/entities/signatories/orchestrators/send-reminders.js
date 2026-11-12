@@ -4,7 +4,7 @@ const { subMinutes } = require('date-fns/fp');
 const { SignatoryEventStatus } = require('../domain');
 const {
   getSubjectNetPrefix,
-} = require('../../organizations/domains/which-net');
+} = require('../../organizations/domains/get-subject-net-prefix');
 
 const task = 'send-reminders';
 const sendReminders = async (

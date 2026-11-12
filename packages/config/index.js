@@ -16,8 +16,10 @@
 
 const config = require('./src/config');
 const { createBlockchainConfig } = require('./src/blockchain-config');
+const { nodeEnvDefaults } = require('./src/node-env-defaults');
 
 module.exports = {
   genericConfig: config,
   createBlockchainConfig,
+  nodeEnvDefaults,
 };

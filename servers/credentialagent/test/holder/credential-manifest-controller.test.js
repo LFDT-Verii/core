@@ -2875,9 +2875,12 @@ describe('get credential manifests', () => {
       });
     });
 
-    it('should 200 & return `jwt` when json format query param in production environment', async () => {
+    it('should 200 & return `jwt` when json format query param and unsigned json format disabled', async () => {
       await fastify.close();
-      fastify = await buildFastify({ ...holderConfig, isProd: true });
+      fastify = await buildFastify({
+        ...holderConfig,
+        enableUnsignedJsonFormat: false,
+      });
       nockRegistrarGetOrganizationVerifiedProfile(
         tenant.did,
         sampleOrganizationVerifiedProfile1,

@@ -91,3 +91,25 @@ describe('genericConfig Sentry settings', () => {
     });
   });
 });
+
+describe('genericConfig environment label', () => {
+  const labelKeys = ['environmentLabel', 'nodeEnv'];
+
+  it('should default ENVIRONMENT_LABEL to NODE_ENV', () => {
+    expect(
+      loadConfig({ ...productionEnv, NODE_ENV: 'staging' }, labelKeys),
+    ).toEqual({
+      environmentLabel: 'staging',
+      nodeEnv: 'staging',
+    });
+  });
+
+  it('should read ENVIRONMENT_LABEL', () => {
+    expect(
+      loadConfig({ ...productionEnv, ENVIRONMENT_LABEL: 'testnet' }, labelKeys),
+    ).toEqual({
+      environmentLabel: 'testnet',
+      nodeEnv: 'production',
+    });
+  });
+});

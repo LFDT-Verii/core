@@ -74,7 +74,7 @@ const credentialManifestController = async (fastify) => {
           repos,
           query: { credential_types, exchange_id, push_delegate, id, locale },
           tenant,
-          config: { isProd },
+          config: { enableUnsignedJsonFormat },
         } = req;
 
         const pushDelegate = getPushDelegate(push_delegate, req);
@@ -123,7 +123,7 @@ const credentialManifestController = async (fastify) => {
 
         return {
           issuing_request:
-            !isProd && req.query.format === 'json'
+            enableUnsignedJsonFormat && req.query.format === 'json'
               ? credentialManifest
               : await signExchangeResponse(credentialManifest, {}, req),
         };

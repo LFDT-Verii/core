@@ -15,27 +15,7 @@
  *
  */
 
-const whichNet = ({ nodeEnv }) => {
-  switch (nodeEnv) {
-    case 'development':
-    case 'test':
-      return 'LocalDevNet';
-    case 'dev':
-      return 'DevNet';
-    case 'staging':
-      return 'TestNet';
-    case 'production':
-      return 'MainNet';
-    default:
-      return '';
-  }
-};
+const getSubjectNetPrefix = ({ networkName, networkNameInEmailSubjects }) =>
+  networkNameInEmailSubjects ? `${networkName}: ` : '';
 
-const getSubjectNetPrefix = (config) => {
-  if (config.nodeEnv === 'production') {
-    return '';
-  }
-  return `${whichNet(config)}: `;
-};
-
-module.exports = { whichNet, getSubjectNetPrefix };
+module.exports = { getSubjectNetPrefix };

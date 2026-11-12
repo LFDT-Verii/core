@@ -1,6 +1,6 @@
 const {
   getSubjectNetPrefix,
-} = require('../../organizations/domains/which-net');
+} = require('../../organizations/domains/get-subject-net-prefix');
 
 const inviteeInvitationEmail = async (
   { inviterOrganization, inviteeEmail, uri },

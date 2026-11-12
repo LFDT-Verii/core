@@ -20,9 +20,9 @@ const { expect } = require('expect');
 const { buildRequestResponseSchema } = require('../../src/entities');
 
 describe('build request response schema test suite', () => {
-  it('should build default schema if isProd true', async () => {
+  it('should build the signed schema if enableUnsignedJsonFormat is false', async () => {
     const schemaObject = buildRequestResponseSchema('presentation', {
-      isProd: true,
+      enableUnsignedJsonFormat: false,
     });
     expect(schemaObject).toEqual({
       type: 'object',
@@ -30,9 +30,9 @@ describe('build request response schema test suite', () => {
       required: ['presentation_request'],
     });
   });
-  it('should build for dev env schemas if isProd false', async () => {
+  it('should also allow the unsigned schema if enableUnsignedJsonFormat is true', async () => {
     const schemaObject = buildRequestResponseSchema('presentation', {
-      isProd: false,
+      enableUnsignedJsonFormat: true,
     });
     expect(schemaObject).toEqual({
       oneOf: [

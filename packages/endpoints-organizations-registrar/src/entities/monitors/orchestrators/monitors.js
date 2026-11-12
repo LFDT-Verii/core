@@ -224,8 +224,8 @@ const removeMonitor = async ({ orgId, serviceId }, context) => {
   );
 };
 
-const getMonitorPrefix = ({ nodeEnv }) => {
-  return nodeEnv.toUpperCase();
+const getMonitorPrefix = ({ environmentLabel }) => {
+  return environmentLabel.toUpperCase();
 };
 
 module.exports = {

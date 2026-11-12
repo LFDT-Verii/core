@@ -61,7 +61,7 @@ const controller = async (fastify) => {
       const {
         repos,
         query,
-        config: { isProd },
+        config: { enableUnsignedJsonFormat },
       } = req;
       const disclosure = await repos.disclosures.findById(query.id);
 
@@ -88,7 +88,7 @@ const controller = async (fastify) => {
 
       return {
         presentation_request:
-          !isProd && req.query.format === 'json'
+          enableUnsignedJsonFormat && req.query.format === 'json'
             ? presentationRequest
             : await signExchangeResponse(presentationRequest, {}, req),
       };

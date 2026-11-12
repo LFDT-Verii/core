@@ -16,7 +16,6 @@
  */
 
 const { map } = require('lodash/fp');
-const { whichNet } = require('../domains/which-net');
 const { buildPublicServices } = require('../../organization-services/domains');
 
 const initOrganizationRegistrarEmails = (config) => {
@@ -27,34 +26,28 @@ const initOrganizationRegistrarEmails = (config) => {
       emails,
     }) => {
       return {
-        subject: `Velocity Services Activated on ${whichNet(config)}`,
+        subject: `Velocity Services Activated on ${config.networkName}`,
         message: `Congratulations!
 <br>
 <br>
 You are being contacted because you are the admin of ${
           organization.profile.name
-        } on Velocity Network ${whichNet(
-          config,
-        )} and your services were just activated!
+        } on Velocity Network ${config.networkName} and your services were just activated!
 <br>
 <br>
-You can now access your organization’s Payments and Rewards Hub account on ${whichNet(
-          config,
-        )}. 
+You can now access your organization’s Payments and Rewards Hub account on ${config.networkName}. 
 To do so, please go <a href="${config.tokenWalletBaseUrl}/o/${
           organization.didDoc.id
         }">here</a> and log in with your Velocity Network Registrar admin credentials.  
 Please confirm that you were able to successfully log in.
 <br>
 <br>
-Your DID is registered on the Velocity Network ${whichNet(config)} as ${
+Your DID is registered on the Velocity Network ${config.networkName} as ${
           organization.didDoc.id
         }.
 <br>
 <br>
-The following services have been activated for you on Velocity Network ${whichNet(
-          config,
-        )}:
+The following services have been activated for you on Velocity Network ${config.networkName}:
 <br>
 <br>
 ${JSON.stringify(activatedServiceIds, null, 2)}
@@ -79,19 +72,15 @@ The Velocity Network Registrar
       activatedServiceIds = [],
       emails,
     }) => ({
-      subject: `Velocity Services Activated on ${whichNet(config)}`,
+      subject: `Velocity Services Activated on ${config.networkName}`,
       message: `
 Hello,
 
 You are being contacted because you are the admin of ${
         organization.profile.name
-      } on Velocity Network ${whichNet(
-        config,
-      )} and a new service has just been added to your organization. 
+      } on Velocity Network ${config.networkName} and a new service has just been added to your organization. 
 
-The following services have been activated for you on Velocity Network ${whichNet(
-        config,
-      )}:
+The following services have been activated for you on Velocity Network ${config.networkName}:
 
 ${JSON.stringify(activatedServiceIds, null, 2)}
 
@@ -108,7 +97,7 @@ The Velocity Network Registrar`,
       { organization, addedServices = [] },
       context,
     ) => ({
-      subject: `${config.nodeEnv.toUpperCase()}: Velocity Services Activation Required`,
+      subject: `${config.environmentLabel.toUpperCase()}: Velocity Services Activation Required`,
       message: `Hello,
 The organization: "${organization.profile.name}" with did "${
         organization.didDoc.id
@@ -134,7 +123,7 @@ BYTER-9000!
       { organization, addedServices = [] },
       context,
     ) => ({
-      subject: `${config.nodeEnv.toUpperCase()}: Velocity Services Activation Required`,
+      subject: `${config.environmentLabel.toUpperCase()}: Velocity Services Activation Required`,
       message: `Hello,
 The following service(s) have been added to "${
         organization.profile.name
@@ -173,7 +162,7 @@ The service is now able to be used on the Velocity Network™.
       services,
       emails,
     }) => ({
-      subject: `${config.nodeEnv.toUpperCase()}: ${
+      subject: `${config.environmentLabel.toUpperCase()}: ${
         organization.profile.name
       } has accepted your invitation`,
       /* eslint-disable max-len */
