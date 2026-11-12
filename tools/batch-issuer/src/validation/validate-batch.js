@@ -41,23 +41,7 @@ const toBatchRow = (existingDepots) => (row) => ({
   credentials: map(pick(['template', 'type', 'credential']), row.credentials),
 });
 
-/**
- * Validates a batch before anything is written: the spec, the spec against
- * the service (step 1), each row against the spec (step 2), each credential
- * against its type's schema (step 3), and the batch against the Hub's
- * depots (step 4). It collects every error. A spec with errors stops it before
- * the CSV is read, and a CSV that doesn't parse stops it before the Hub is
- * called.
- * @param {object} input
- * @param {string} input.specFile the YAML spec file
- * @param {string} input.csvFile the CSV file
- * @param {object} [input.vars] the --var values, which override CSV values of the same name
- * @param {{ defaultCountry?: string, reuse: boolean }} input.options
- * @param {{ hub: object, registrar?: object }} clients the Hub and registrar clients
- * @returns {Promise<{ errors: Array<{ row?: number, column?: string, template?: string, reason: string }>, batch?: object }>}
- *   the errors, and the validated batch. The batch is ready to load only when there are no errors
- * @throws when a file can't be read, or the Hub or the registrar fails
- */
+// Validates a batch as the README's steps describe, collecting every error.
 const validateBatch = async ({ specFile, csvFile, vars, options }, clients) => {
   const { spec, templates, errors: specErrors } = await loadSpec(specFile);
   if (!isEmpty(specErrors)) {

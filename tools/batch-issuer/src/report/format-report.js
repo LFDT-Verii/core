@@ -16,17 +16,12 @@
 
 const {
   flatMap,
-  flow,
-  groupBy,
-  has,
   isEmpty,
   join,
   map,
-  partition,
   replace,
   size,
   sortBy,
-  toPairs,
 } = require('lodash/fp');
 const { count } = require('./count');
 
@@ -45,29 +40,18 @@ const formatError = ({ column, template, reason }) => {
   return `  - ${columnPrefix}${indentLines(reason)}${templateSuffix}`;
 };
 
-const formatSection = (heading, errors) => [
-  heading,
-  ...map(formatError, errors),
+// Errors without a row are about the spec, the service or the whole CSV.
+const formatSection = ([row, rowErrors]) => [
+  row == null ? 'Batch:' : `Row ${row}:`,
+  ...map(formatError, rowErrors),
   '',
 ];
 
-const formatRowSection = ([row, errors]) =>
-  formatSection(`Row ${row}:`, errors);
-
-// Errors without a row, about the spec, the service or the whole CSV, come
-// first, then each row's errors in row order.
+// Map.groupBy keeps the order of the ordered errors, so the sections follow
+// the JSON report's order.
 const formatErrors = (errors) => {
-  const [rowErrors, batchErrors] = partition(has('row'), errors);
-  const batchSection = isEmpty(batchErrors)
-    ? []
-    : formatSection('Batch:', batchErrors);
-  const rowSections = flow(
-    groupBy('row'),
-    toPairs,
-    sortBy(([row]) => Number(row)),
-    flatMap(formatRowSection),
-  )(rowErrors);
-  return [...batchSection, ...rowSections];
+  const sections = Map.groupBy(orderErrors(errors), ({ row }) => row);
+  return flatMap(formatSection, [...sections]);
 };
 
 const formatSummary = (summary) =>

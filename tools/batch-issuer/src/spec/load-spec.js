@@ -41,8 +41,6 @@ const { checkTemplateSyntax } = require('../templates/render-template');
 const specAjv = new Ajv({ allErrors: true });
 const validateSpecSchema = specAjv.compile(specSchema);
 
-const specError = (reason) => ({ reason });
-
 // AJV's messages don't name an unknown property or the allowed values.
 const errorDetail = cond([
   [
@@ -62,20 +60,9 @@ const specPath = flow(
   (instancePath) => `spec${instancePath}`,
 );
 
-const toSchemaError = (error) =>
-  specError(
-    `${specPath(error.instancePath)} ${error.message}${errorDetail(error)}`,
-  );
-
-const parseYaml = (text) => {
-  try {
-    return { spec: YAML.parse(text) };
-  } catch (error) {
-    return {
-      errors: [specError(`the spec is not valid YAML: ${error.message}`)],
-    };
-  }
-};
+const toSchemaError = (error) => ({
+  reason: `${specPath(error.instancePath)} ${error.message}${errorDetail(error)}`,
+});
 
 const checkSchema = (spec) =>
   validateSpecSchema(spec) ? [] : map(toSchemaError, validateSpecSchema.errors);
@@ -87,9 +74,10 @@ const checkDepotOnly = (spec) =>
   get(['depot', 'deferredCredentials'], spec) === true
     ? []
     : [
-        specError(
-          'a spec without credentials loads depots only, so it needs depot.deferredCredentials: true',
-        ),
+        {
+          reason:
+            'a spec without credentials loads depots only, so it needs depot.deferredCredentials: true',
+        },
       ];
 
 const checkSpecTemplates = (spec) => {
@@ -102,72 +90,49 @@ const checkSpecTemplates = (spec) => {
     ...credentialStrings,
   ]);
   return map(
-    (reason) => specError(`the spec has a template error: ${reason}`),
+    (reason) => ({ reason: `the spec has a template error: ${reason}` }),
     syntaxErrors,
   );
 };
 
-const parseTemplate = (text, name) => {
-  try {
-    const content = JSON.parse(text);
-    return isPlainObject(content)
-      ? { content }
-      : { errors: [specError(`template ${name} is not a JSON object`)] };
-  } catch (error) {
-    return {
-      errors: [
-        specError(`template ${name} is not valid JSON: ${error.message}`),
-      ],
-    };
-  }
-};
-
-const checkTemplateType = (type, name) => {
+const checkTemplateType = ({ template: name, type }) => {
   if (!isString(type) || isEmpty(type)) {
-    return [specError(`template ${name} has no credential type`)];
+    return [{ reason: `template ${name} has no credential type` }];
   }
   return includes('{{', type)
-    ? [specError(`template ${name}'s type must not be a Handlebars template`)]
+    ? [{ reason: `template ${name}'s type must not be a Handlebars template` }]
     : [];
 };
 
-const checkTemplateContent = (content, name) => {
+const checkTemplateContent = (template) => {
   const syntaxErrors = map(
-    (reason) => specError(`template ${name} has a template error: ${reason}`),
-    checkTemplateSyntax(content),
+    (reason) => ({
+      reason: `template ${template.template} has a template error: ${reason}`,
+    }),
+    checkTemplateSyntax(template.content),
   );
-  return [
-    ...checkTemplateType(extractCredentialType(content), name),
-    ...syntaxErrors,
-  ];
+  return [...checkTemplateType(template), ...syntaxErrors];
 };
 
-const readTemplate = async (specDir, name) => {
-  try {
-    return { text: await readFile(path.resolve(specDir, name), 'utf8') };
-  } catch (error) {
-    return {
-      errors: [specError(`template ${name} can't be read: ${error.message}`)],
-    };
-  }
-};
-
+// JSON.parse throws a SyntaxError. Any other error is from reading the file.
 const loadTemplate = (specDir) => async (credential) => {
   const name = credential.template;
-  const { text, errors: readErrors } = await readTemplate(specDir, name);
-  if (readErrors != null) {
-    return { errors: readErrors };
+  try {
+    const text = await readFile(path.resolve(specDir, name), 'utf8');
+    const content = JSON.parse(text);
+    if (!isPlainObject(content)) {
+      return { errors: [{ reason: `template ${name} is not a JSON object` }] };
+    }
+    const type = extractCredentialType(content);
+    const template = { ...credential, content, type };
+    return { template, errors: checkTemplateContent(template) };
+  } catch (error) {
+    const problem =
+      error instanceof SyntaxError ? 'is not valid JSON' : "can't be read";
+    return {
+      errors: [{ reason: `template ${name} ${problem}: ${error.message}` }],
+    };
   }
-  const { content, errors: parseErrors } = parseTemplate(text, name);
-  if (parseErrors != null) {
-    return { errors: parseErrors };
-  }
-  const template = {
-    ...credential,
-    content,
-    type: extractCredentialType(content),
-  };
-  return { template, errors: checkTemplateContent(content, name) };
 };
 
 const loadTemplates = async (spec, specDir) => {
@@ -188,18 +153,21 @@ const loadTemplates = async (spec, specDir) => {
  */
 const readSpec = async (specFile) => {
   const text = await readFile(specFile, 'utf8');
-  const { spec, errors: yamlErrors } = parseYaml(text);
-  if (yamlErrors != null) {
-    return { errors: yamlErrors };
+  try {
+    const spec = YAML.parse(text);
+    return { spec, errors: checkSchema(spec) };
+  } catch (error) {
+    if (!(error instanceof YAML.YAMLParseError)) {
+      throw error;
+    }
+    return {
+      errors: [{ reason: `the spec is not valid YAML: ${error.message}` }],
+    };
   }
-  return { spec, errors: checkSchema(spec) };
 };
 
 /**
- * Reads a spec file and loads the templates it names, and checks them: the
- * spec against its JSON schema, that a depot-only spec defers credentials,
- * that each template is a JSON object with a credential type, and the
- * Handlebars syntax of every template.
+ * Reads a spec file and loads its templates, and checks them all.
  * @param {string} specFile the YAML spec file
  * @returns {Promise<{ spec?: object, templates?: Array<object>, errors: Array<{ reason: string }> }>}
  *   the spec and its templates, which are only complete when there are no errors

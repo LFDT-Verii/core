@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-const Ajv = require('ajv');
-const addFormats = require('ajv-formats');
 const { parsePhoneNumberFromString } = require('libphonenumber-js');
 const {
   flow,
@@ -31,6 +29,7 @@ const {
   startsWith,
   trim,
 } = require('lodash/fp');
+const { isValidAuthValue } = require('@verii/credentialing-hub-operator-api');
 const { convertValue } = require('./convert-value');
 const { MISSING } = require('../validation/reasons');
 
@@ -43,11 +42,6 @@ const isEmailRule = overSome([
   matches({ type: 'EmailV1.0' }),
   matches({ valueFormat: 'email' }),
 ]);
-
-// The Hub checks an `email` valueFormat with AJV's email format, so this does too.
-const emailAjv = new Ajv();
-addFormats(emailAjv, ['email']);
-const isEmailAddress = emailAjv.compile({ type: 'string', format: 'email' });
 
 // Phone credentials hold E.164 numbers, such as +15556192191. A number written
 // without a country code takes the default country. Only the number's length
@@ -64,8 +58,9 @@ const normalizePhone = (text, defaultCountry) => {
   return { reason: `"${text}" is not a phone number${hint}` };
 };
 
-const checkEmail = (text) =>
-  isEmailAddress(text)
+// An email rule's value gets the Hub's check of an email valueFormat.
+const checkEmail = (rule, text) =>
+  isValidAuthValue({ ...rule, valueFormat: 'email' }, text)
     ? { value: text }
     : { reason: `"${text}" is not an email address` };
 
@@ -74,7 +69,7 @@ const formatAuthValue = (rule, text, { defaultCountry }) => {
     return normalizePhone(text, defaultCountry);
   }
   if (isEmailRule(rule)) {
-    return checkEmail(text);
+    return checkEmail(rule, text);
   }
   return { value: text };
 };

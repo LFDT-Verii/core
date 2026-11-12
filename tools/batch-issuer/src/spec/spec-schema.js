@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const { ValueTypes } = require('../values/convert-value');
+const { get } = require('lodash/fp');
+const { newDepotSchema } = require('@verii/credentialing-hub-operator-api');
+const { VALUE_TYPES } = require('../values/convert-value');
 
 const nonEmptyString = { type: 'string', minLength: 1 };
 
@@ -43,15 +45,13 @@ const depotSchema = {
       type: 'array',
       description:
         "one entry for each of the service's auth rules, in valueIndex order",
-      maxItems: 10,
+      maxItems: get(['properties', 'authValues', 'maxItems'], newDepotSchema),
       items: authValueSchema,
     },
-    expectedCredentialTypes: {
-      type: 'array',
-      minItems: 1,
-      uniqueItems: true,
-      items: nonEmptyString,
-    },
+    expectedCredentialTypes: get(
+      ['properties', 'expectedCredentialTypes'],
+      newDepotSchema,
+    ),
     deferredCredentials: { type: 'boolean' },
   },
 };
@@ -94,9 +94,7 @@ const specSchema = {
     columns: {
       type: 'object',
       description: 'the type of each typed column. Other columns are strings',
-      additionalProperties: {
-        enum: [ValueTypes.STRING, ValueTypes.NUMBER, ValueTypes.BOOLEAN],
-      },
+      additionalProperties: { enum: VALUE_TYPES },
     },
     credentials: {
       type: 'array',

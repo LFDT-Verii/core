@@ -46,19 +46,13 @@ const incomingTypes = (row, { depotOnly, specExpectedTypes }) =>
   depotOnly ? specExpectedTypes : flow(map('type'), uniq)(row.credentials);
 
 // The depot must expect each of them, when it expects any.
-const unexpectedTypes = (row, depot, context) => {
-  if (isEmpty(depot.expectedCredentialTypes)) {
-    return [];
-  }
-  return difference(incomingTypes(row, context), depot.expectedCredentialTypes);
-};
-
 const unexpectedTypeErrors = (row, depot, context) => {
-  const types = unexpectedTypes(row, depot, context);
-  return isEmpty(types)
+  const expectedTypes = depot.expectedCredentialTypes;
+  const types = difference(incomingTypes(row, context), expectedTypes);
+  return isEmpty(expectedTypes) || isEmpty(types)
     ? []
     : [
-        `belong to depot ${depot.id}, which doesn't expect credentials of type ${join(', ', types)}`,
+        `the auth values belong to depot ${depot.id}, which doesn't expect credentials of type ${join(', ', types)}`,
       ];
 };
 
@@ -69,7 +63,7 @@ const unexpectedTypeErrors = (row, depot, context) => {
 const undeferredErrors = (depot, { depotOnly }) =>
   depotOnly && depot.deferredCredentials !== true
     ? [
-        `belong to depot ${depot.id}, which doesn't defer credentials, so a depot-only load can't reuse it`,
+        `the auth values belong to depot ${depot.id}, which doesn't defer credentials, so a depot-only load can't reuse it`,
       ]
     : [];
 
@@ -86,42 +80,30 @@ const checkMatch = (row, depots, context) => {
     return { errors: [] };
   }
   if (size(depots) > 1) {
+    const ids = join(', ', map('id', depots));
     return {
-      errors: [
-        `belong to ${size(depots)} depots: ${join(', ', map('id', depots))}`,
-      ],
+      errors: [`the auth values belong to ${size(depots)} depots: ${ids}`],
     };
   }
   const [depot] = depots;
   if (depot.userReference !== row.depot.userReference) {
     return {
       errors: [
-        `belong to depot ${depot.id}, whose userReference is "${depot.userReference}"`,
+        `the auth values belong to depot ${depot.id}, whose userReference is "${depot.userReference}"`,
       ],
     };
   }
   if (!context.reuse) {
-    return { errors: [`belong to depot ${depot.id}, and --no-reuse is set`] };
+    return {
+      errors: [
+        `the auth values belong to depot ${depot.id}, and --no-reuse is set`,
+      ],
+    };
   }
   return checkReturningHolder(row, depot, context);
 };
 
-/**
- * Step 4: finds the depots that already hold the rows' auth values, with
- * POST depots/get, and matches them to the rows by their normalized auth
- * values. A depot whose userReference is the row's is a returning holder's,
- * which the row reuses unless --no-reuse is set. The reused depot must expect
- * the row's credential types or, in a depot-only load, the spec's
- * expectedCredentialTypes, and in a depot-only load it must defer
- * credentials. A depot whose userReference differs is always an error.
- * @param {Array<object>} rows the checked rows, from step 2. Only rows with valid auth values and a rendered depot are looked up
- * @param {object} context
- * @param {object} context.spec the spec, for its tenantId and serviceId, and whether it has credentials
- * @param {Array<{ column: string }>} [context.authColumns] the auth value columns, from step 1
- * @param {{ findDepotsByAuthValues: Function }} context.hub the Hub client
- * @param {boolean} context.reuse whether rows may reuse returning holders' depots
- * @returns {Promise<{ existingDepots: object, errors: Array<object> }>} each reused depot by row number, and the errors
- */
+// Step 4: the rows against the depots that already hold their auth values.
 const matchExistingDepots = async (rows, { spec, authColumns, hub, reuse }) => {
   const lookedUpRows = filter(isLookedUp, rows);
   if (isEmpty(lookedUpRows)) {
@@ -147,10 +129,7 @@ const matchExistingDepots = async (rows, { spec, authColumns, hub, reuse }) => {
   )(matches);
   const column = join(', ', map('column', authColumns));
   const toErrors = ({ row, errors: reasons }) =>
-    map(
-      (reason) => ({ row, column, reason: `the auth values ${reason}` }),
-      reasons,
-    );
+    map((reason) => ({ row, column, reason }), reasons);
   return { existingDepots, errors: flatMap(toErrors, matches) };
 };
 

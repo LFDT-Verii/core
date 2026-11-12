@@ -27,29 +27,28 @@ const {
   reject,
   size,
   sortBy,
+  startsWith,
   trim,
 } = require('lodash/fp');
 const {
   ruleValues,
   selectClaims,
 } = require('@verii/credentialing-hub-operator-api');
-const { decodeCredentialEnvelope } = require('@verii/jwt');
+const { decodeCredentialJwt } = require('@verii/jwt');
 const { extractCredentialType } = require('@verii/vc-checks');
 const { initHubClient } = require('../clients/hub-client');
 const { readSpec } = require('../spec/load-spec');
 const { count } = require('../report/count');
 const { ExitCodes } = require('./exit-codes');
-const { formatFatalError } = require('./format-fatal-error');
 
-const COMPACT_JWS = /^[\w-]+\.[\w-]+\.[\w-]*$/;
-
-// A JWT is decoded as the Hub decodes a presented credential, so a VC 1.1
-// JWT's claims are read from the credential it carries.
+// A JSON credential is an object. Anything else is a JWT, decoded as the Hub
+// decodes a presented credential, so a VC 1.1 JWT's claims are read from the
+// credential it carries.
 const parseSample = (text) => {
   const trimmed = trim(text);
-  return COMPACT_JWS.test(trimmed)
-    ? decodeCredentialEnvelope(trimmed).credential
-    : JSON.parse(trimmed);
+  return startsWith('{', trimmed)
+    ? JSON.parse(trimmed)
+    : decodeCredentialJwt(trimmed);
 };
 
 const readSample = async (file) => {
@@ -173,21 +172,16 @@ const loadRules = async (specFile, options) => {
  * the service's auth rules reads from sample credentials, with the rule
  * evaluation the Hub uses.
  * @param {{ specFile: string, options: object }} input the spec file and the command's options
- * @param {{ stdout: Function, stderr: Function }} io where the report and errors go
+ * @param {{ stdout: Function }} io where the report goes
  * @returns {Promise<number>} the exit code: OK when every rule reads a value
  */
 const runCheckRules = async ({ specFile, options }, io) => {
-  try {
-    const rules = await loadRules(specFile, options);
-    const samples = await Promise.all(map(readSample, options.sample));
-    const results = map(checkRule(samples), rules);
-    const report = { samples, results };
-    io.stdout(options.json ? formatJson(report) : formatText(report));
-    return every(readsValue, results) ? ExitCodes.OK : ExitCodes.FAILED;
-  } catch (error) {
-    io.stderr(formatFatalError(error));
-    return ExitCodes.ERROR;
-  }
+  const rules = await loadRules(specFile, options);
+  const samples = await Promise.all(map(readSample, options.sample));
+  const results = map(checkRule(samples), rules);
+  const report = { samples, results };
+  io.stdout(options.json ? formatJson(report) : formatText(report));
+  return every(readsValue, results) ? ExitCodes.OK : ExitCodes.FAILED;
 };
 
 module.exports = { runCheckRules };

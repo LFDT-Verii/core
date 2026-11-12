@@ -17,19 +17,16 @@
 const Handlebars = require('handlebars');
 const {
   cond,
-  constant,
   flatMap,
   flow,
   get,
   has,
   isArray,
-  isNil,
   isPlainObject,
   isString,
   map,
   mapValues,
   memoize,
-  reject,
   stubTrue,
   values,
 } = require('lodash/fp');
@@ -100,58 +97,55 @@ const renderString = (text, { data, columns }) => {
     : renderText(text, data);
 };
 
-const renderArray = (scope) => (array) => {
-  const results = map(renderNode(scope), array);
-  return { value: map('value', results), errors: flatMap('errors', results) };
-};
-
-const renderObject = (scope) => (object) => {
-  const results = mapValues(renderNode(scope), object);
-  return {
-    value: mapValues('value', results),
-    errors: flow(values, flatMap('errors'))(results),
-  };
-};
-
 const keepValue = (value) => ({ value, errors: [] });
 
-const renderNode = (scope) =>
-  cond([
-    [isString, (text) => renderString(text, scope)],
-    [isArray, renderArray(scope)],
-    [isPlainObject, renderObject(scope)],
+// Walks a JSON template, applying visitString to each string, and gathers the
+// result and every string's errors. Keys, numbers, booleans and nulls are kept
+// as they are.
+const walkTemplate = (visitString) => {
+  const walkArray = (array) => {
+    const results = map(walk, array);
+    return { value: map('value', results), errors: flatMap('errors', results) };
+  };
+  const walkObject = (object) => {
+    const results = mapValues(walk, object);
+    return {
+      value: mapValues('value', results),
+      errors: flow(values, flatMap('errors'))(results),
+    };
+  };
+  const walk = cond([
+    [isString, visitString],
+    [isArray, walkArray],
+    [isPlainObject, walkObject],
     [stubTrue, keepValue],
   ]);
+  return walk;
+};
 
 /**
  * Renders a JSON template value by value. Each string is rendered with
  * Handlebars on its own, so a CSV value can only ever become part of a string,
  * never change the JSON's structure. A string that is exactly `{{column}}`
- * takes the column's type from `columns`. Keys, numbers, booleans and nulls are
- * kept as they are.
+ * takes the column's type from `columns`.
  * @param {unknown} template the parsed JSON template, or a single string
  * @param {object} data the values by column
  * @param {object} [columns] the declared type of each typed column
  * @returns {{ value: unknown, errors: Array<{ column?: string, reason: string }> }}
  *   the rendered value, which is only complete when there are no errors
  */
-const renderTemplate = (template, data, columns = {}) =>
-  renderNode({ data: toRowScope(data), columns })(template);
+const renderTemplate = (template, data, columns = {}) => {
+  const scope = { data: toRowScope(data), columns };
+  const render = walkTemplate((text) => renderString(text, scope));
+  return render(template);
+};
 
-// Every string in a template, for checking their syntax once.
-const templateStrings = cond([
-  [isString, (text) => [text]],
-  [isArray, (array) => flatMap(templateStrings, array)],
-  [isPlainObject, (object) => flatMap(templateStrings, values(object))],
-  [stubTrue, constant([])],
-]);
-
-const syntaxError = (text) => {
+const checkSyntax = (text) => {
   try {
     handlebars.parse(text);
-    return undefined;
+    return keepValue(text);
   } catch (error) {
-    return error.message;
+    return { value: text, errors: [error.message] };
   }
 };
 
@@ -160,10 +154,6 @@ const syntaxError = (text) => {
  * @param {unknown} template the parsed JSON template, or a single string
  * @returns {Array<string>} the syntax errors
  */
-const checkTemplateSyntax = flow(
-  templateStrings,
-  map(syntaxError),
-  reject(isNil),
-);
+const checkTemplateSyntax = flow(walkTemplate(checkSyntax), get('errors'));
 
 module.exports = { checkTemplateSyntax, renderTemplate };

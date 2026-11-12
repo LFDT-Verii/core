@@ -26,54 +26,32 @@ const {
   formatTextReport,
 } = require('../report/format-report');
 const { ExitCodes } = require('./exit-codes');
-const { formatFatalError } = require('./format-fatal-error');
 
 // The registrar is only needed to check credentials.
-const missingRegistrar = {
-  getCredentialTypeMetadata: async () => {
-    throw new Error(
-      'the spec has credentials, so --registrar is required to check them',
-    );
-  },
-};
-
 const initClients = ({ endpoint, authToken, registrar }) => ({
   hub: initHubClient({ endpoint, authToken }),
-  registrar:
-    registrar == null ? missingRegistrar : initRegistrarClient({ registrar }),
+  registrar: registrar == null ? undefined : initRegistrarClient({ registrar }),
 });
-
-const formatReport = (result, { json }) =>
-  json ? formatJsonReport(result) : formatTextReport(result);
 
 /**
  * `batch-issuer validate <spec> <csv>`: validates a batch and prints every
  * error. Nothing is written to the Hub.
  * @param {{ specFile: string, csvFile: string, options: object }} input the files and the command's options
- * @param {{ stdout: Function, stderr: Function }} io where the report and errors go
+ * @param {{ stdout: Function }} io where the report goes
  * @returns {Promise<number>} the exit code
  */
 const runValidate = async ({ specFile, csvFile, options }, io) => {
-  try {
-    const { errors, batch } = await validateBatch(
-      {
-        specFile,
-        csvFile,
-        vars: options.var,
-        options: {
-          defaultCountry: options.defaultCountry,
-          reuse: options.reuse,
-        },
-      },
-      initClients(options),
-    );
-    const summary = batch == null ? undefined : summarizeBatch(batch);
-    io.stdout(formatReport({ errors, summary }, options));
-    return isEmpty(errors) ? ExitCodes.OK : ExitCodes.FAILED;
-  } catch (error) {
-    io.stderr(formatFatalError(error));
-    return ExitCodes.ERROR;
-  }
+  const input = {
+    specFile,
+    csvFile,
+    vars: options.var,
+    options: { defaultCountry: options.defaultCountry, reuse: options.reuse },
+  };
+  const { errors, batch } = await validateBatch(input, initClients(options));
+  const summary = batch == null ? undefined : summarizeBatch(batch);
+  const formatReport = options.json ? formatJsonReport : formatTextReport;
+  io.stdout(formatReport({ errors, summary }));
+  return isEmpty(errors) ? ExitCodes.OK : ExitCodes.FAILED;
 };
 
 module.exports = { runValidate };

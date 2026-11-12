@@ -33,8 +33,9 @@ const isInternalVpAuth = (service) =>
 
 const isPreauth = (service) => includes('preauth', service.authMethods);
 
-const isDeactivated = (service, now) =>
-  service.deactivationDate != null && new Date(service.deactivationDate) <= now;
+const isDeactivated = (service) =>
+  service.deactivationDate != null &&
+  new Date(service.deactivationDate) <= new Date();
 
 // The rules in valueIndex order. Only an internal verifiable_presentation
 // service matches depots by their auth values.
@@ -57,8 +58,8 @@ const checkAuthMethods = (service) => {
     : [];
 };
 
-const checkActive = (service, now) =>
-  isDeactivated(service, now)
+const checkActive = (service) =>
+  isDeactivated(service)
     ? [{ reason: `the service was deactivated at ${service.deactivationDate}` }]
     : [];
 
@@ -100,19 +101,19 @@ const checkTemplateTypes = (spec, templates) => {
 
 /**
  * Step 1: checks the spec against the issuer service.
- * @param {{ spec: object, templates: Array<object>, service?: object, now?: Date }} context
+ * @param {{ spec: object, templates: Array<object>, service?: object }} context
  * @returns {{ authColumns?: Array<{ column: string, rule: object }>, errors: Array<{ reason: string }> }}
  *   the column of each auth rule in valueIndex order, missing when the spec and
  *   the service don't fit, and the errors
  */
-const checkService = ({ spec, templates, service, now = new Date() }) => {
+const checkService = ({ spec, templates, service }) => {
   const typeErrors = checkTemplateTypes(spec, templates);
   if (service == null) {
     const reason = `tenant ${spec.tenantId} has no issuer service ${spec.serviceId}`;
     return { errors: [{ reason }, ...typeErrors] };
   }
   const authMethodErrors = checkAuthMethods(service);
-  const activeErrors = checkActive(service, now);
+  const activeErrors = checkActive(service);
   if (!isEmpty(authMethodErrors)) {
     return { errors: [...authMethodErrors, ...activeErrors, ...typeErrors] };
   }
@@ -123,4 +124,4 @@ const checkService = ({ spec, templates, service, now = new Date() }) => {
   };
 };
 
-module.exports = { checkService, isInternalVpAuth };
+module.exports = { checkService };

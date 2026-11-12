@@ -24,7 +24,6 @@ const {
   isEqual,
   map,
   toLower,
-  uniqBy,
 } = require('lodash/fp');
 const {
   findDepotsRequestSchema,
@@ -88,22 +87,21 @@ const initHubClient = ({ endpoint, authToken }) => {
 
   /**
    * Finds the service's depots whose auth values match any of the tuples,
-   * with POST depots/get, at most 1000 tuples per request.
+   * with POST depots/get, in requests of at most the tuples it takes.
    * @param {{ tenantId: string, serviceId: string }} ids
-   * @param {Array<Array<string|number|boolean>>} authValues the tuples
-   * @returns {Promise<Array<object>>} the depots, each once
+   * @param {Array<Array<string|number|boolean>>} authValues the distinct tuples
+   * @returns {Promise<Array<object>>} the depots
    * @throws when a response has no list of depots
    */
   const findDepotsByAuthValues = async (ids, authValues) => {
-    const requests = flow(
-      chunk(MAX_AUTH_VALUES_PER_REQUEST),
-      map((tuples) => findDepotsChunk(ids, tuples)),
-    )(authValues);
-    const pages = await Promise.all(requests);
-    return flow(flatten, uniqBy('id'))(pages);
+    const chunks = chunk(MAX_AUTH_VALUES_PER_REQUEST, authValues);
+    const pages = await Promise.all(
+      map((tuples) => findDepotsChunk(ids, tuples), chunks),
+    );
+    return flatten(pages);
   };
 
   return { getIssuerService, findDepotsByAuthValues };
 };
 
-module.exports = { initHubClient, MAX_AUTH_VALUES_PER_REQUEST };
+module.exports = { initHubClient };

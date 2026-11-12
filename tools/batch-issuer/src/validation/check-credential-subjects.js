@@ -97,13 +97,20 @@ const checkRowSubjects =
  * didn't render are skipped.
  * @param {Array<object>} rows the checked rows, from step 2
  * @param {Array<object>} templates the spec's templates
- * @param {{ getCredentialTypeMetadata: Function, getSchema: Function }} registrar the registrar client
+ * @param {{ getCredentialTypeMetadata: Function, getSchema: Function }} [registrar] the registrar client,
+ *   which a spec without credentials doesn't need
+ * @throws when there are credentials and no registrar client
  * @returns {Promise<Array<object>>} the errors
  */
 const checkCredentialSubjects = async (rows, templates, registrar) => {
   const types = flow(map('type'), uniq)(templates);
   if (isEmpty(types)) {
     return [];
+  }
+  if (registrar == null) {
+    throw new Error(
+      'the spec has credentials, so --registrar is required to check them',
+    );
   }
   const metadatas = await registrar.getCredentialTypeMetadata(types);
   const foundMetadatas = flow(

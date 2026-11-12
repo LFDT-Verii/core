@@ -16,13 +16,36 @@
 
 const { Command, InvalidArgumentError, Option } = require('commander');
 const { isSupportedCountry } = require('libphonenumber-js');
-const { isEmpty, join, split, toUpper } = require('lodash/fp');
+const { get, isEmpty, join, split, toUpper } = require('lodash/fp');
 const packageJson = require('../package.json');
 const { ExitCodes } = require('./commands/exit-codes');
 const { runValidate } = require('./commands/validate');
 const { runCheckRules } = require('./commands/check-rules');
 
 const AUTH_TOKEN_ENV = 'BATCH_ISSUER_AUTH_TOKEN';
+
+// An HTTP error carries the response's status code and body. Its request
+// headers, which hold the operator token, are never printed.
+const describeResponse = (error) => {
+  const message = get(['body', 'message'], error) ?? error.message;
+  return error.statusCode == null ? message : `${error.statusCode} ${message}`;
+};
+
+const formatFatalError = (error) =>
+  error.url == null
+    ? `Error: ${error.message}\n`
+    : `Error: ${error.url} failed: ${describeResponse(error)}\n`;
+
+// Runs a command. An error that stops it, such as an unreadable file or a Hub
+// or registrar failure, is printed, and exits with ERROR.
+const runCommand = async (command, io) => {
+  try {
+    return await command();
+  } catch (error) {
+    io.stderr(formatFatalError(error));
+    return ExitCodes.ERROR;
+  }
+};
 
 // A value may itself hold "=", so only the first one separates the name.
 const parseVar = (text, vars) => {
@@ -86,7 +109,8 @@ const addValidateCommand = (program, io, resolve) =>
       'treat rows whose auth values already belong to a depot as errors',
     )
     .action(async (specFile, csvFile, options) => {
-      resolve(await runValidate({ specFile, csvFile, options }, io));
+      const validate = () => runValidate({ specFile, csvFile, options }, io);
+      resolve(await runCommand(validate, io));
     });
 
 const addCheckRulesCommand = (program, io, resolve) =>
@@ -103,7 +127,8 @@ const addCheckRulesCommand = (program, io, resolve) =>
       'a credential, as a JSON file or a file holding a JWT',
     )
     .action(async (specFile, options) => {
-      resolve(await runCheckRules({ specFile, options }, io));
+      const checkRules = () => runCheckRules({ specFile, options }, io);
+      resolve(await runCommand(checkRules, io));
     });
 
 // Commander throws instead of exiting. Help and the version exit with 0.

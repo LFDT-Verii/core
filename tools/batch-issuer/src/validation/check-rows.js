@@ -54,7 +54,7 @@ const checkOperatorApiSchema = (schemaId, data, dataVar) => {
     : [{ reason: wrapValidationError(errors, dataVar).message }];
 };
 
-const checkCellCount = ({ cellCount }, headers) =>
+const checkCellCount = ({ cellCount }, { headers }) =>
   cellCount > size(headers)
     ? [
         {
@@ -63,6 +63,8 @@ const checkCellCount = ({ cellCount }, headers) =>
       ]
     : [];
 
+// Without authColumns the spec doesn't fit the service, so there are no auth
+// values to check.
 const buildRowAuthValues = ({ authColumns, options }, data) =>
   authColumns == null
     ? { errors: [] }
@@ -125,7 +127,7 @@ const checkRow = (context) => (csvRow) => {
   const depot = renderDepot(context, data, auth.authValues);
   const credentials = map(renderCredential(context, data), context.templates);
   const errors = [
-    ...checkCellCount(csvRow, context.headers),
+    ...checkCellCount(csvRow, context.csv),
     ...auth.errors,
     ...depot.errors,
     ...flatMap('errors', credentials),
@@ -173,36 +175,9 @@ const liftAbsentColumns = (rowErrors, knownColumns) => {
 const errorsOfRow = ({ row, errors }) =>
   map((error) => ({ row, ...error }), errors);
 
-/**
- * Step 2: checks each row against the spec, and the rows against each other.
- * Renders each row's depot and credentials, builds its auth values, and
- * validates the depot and the credentials with the operator API's schemas.
- * @param {object} context
- * @param {object} context.spec the spec
- * @param {Array<object>} context.templates the spec's templates
- * @param {Array<{ column: string, rule: object }>} [context.authColumns] the auth value columns, from step 1.
- *   Without them, auth values aren't checked
- * @param {{ headers: Array<string>, rows: Array<object> }} context.csv the CSV
- * @param {object} [context.vars] the --var values
- * @param {{ defaultCountry?: string }} context.options
- * @returns {{ rows: Array<object>, errors: Array<object> }} the checked rows and the errors
- */
-const checkRows = ({
-  spec,
-  templates,
-  authColumns,
-  csv,
-  vars = {},
-  options,
-}) => {
-  const context = {
-    spec,
-    templates,
-    authColumns,
-    headers: csv.headers,
-    vars,
-    options,
-  };
+// Step 2: each row against the spec, and the rows against each other.
+const checkRows = (context) => {
+  const { csv, vars, authColumns } = context;
   const rows = map(checkRow(context), csv.rows);
   const rowErrors = flatMap(errorsOfRow, rows);
   const knownColumns = [...csv.headers, ...keys(vars)];

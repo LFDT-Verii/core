@@ -14,13 +14,7 @@
  * limitations under the License.
  */
 
-const { flow, get, has, isFinite, toLower, trim } = require('lodash/fp');
-
-const ValueTypes = {
-  STRING: 'string',
-  NUMBER: 'number',
-  BOOLEAN: 'boolean',
-};
+const { flow, get, has, isFinite, keys, toLower, trim } = require('lodash/fp');
 
 // Decimal notation only, so "0x10", "Infinity" and "" aren't numbers.
 const DECIMAL_NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
@@ -47,10 +41,12 @@ const toBoolean = (text) => {
 };
 
 const converters = {
-  [ValueTypes.STRING]: toString,
-  [ValueTypes.NUMBER]: toNumber,
-  [ValueTypes.BOOLEAN]: toBoolean,
+  string: toString,
+  number: toNumber,
+  boolean: toBoolean,
 };
+
+const VALUE_TYPES = keys(converters);
 
 /**
  * Converts a CSV cell to a value type.
@@ -66,4 +62,4 @@ const convertValue = (valueType, text) => {
   return convert(text);
 };
 
-module.exports = { convertValue, ValueTypes };
+module.exports = { convertValue, VALUE_TYPES };
