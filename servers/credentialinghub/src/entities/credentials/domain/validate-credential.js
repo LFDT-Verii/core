@@ -14,12 +14,57 @@
  * limitations under the License.
  *
  */
-const { wrapValidationError } = require('@verii/validation');
 const newError = require('http-errors');
-const { includes, isEmpty, keyBy, map, forEach } = require('lodash/fp');
+const {
+  filter,
+  flatten,
+  flow,
+  forEach,
+  includes,
+  isEmpty,
+  join,
+  keyBy,
+  map,
+} = require('lodash/fp');
+const { mapWithIndex } = require('@verii/common-functions');
 const { extractCredentialType } = require('@verii/vc-checks');
 const { CredentialErrors } = require('@verii/credentialing-hub-operator-api');
 
+// The errorCode @verii/fastify-plugins gives a request that fails validation
+const REQUEST_VALIDATION_FAILED = 'request_validation_failed';
+const CREDENTIAL_TYPE_PATH = '/credential/content/type';
+const CREDENTIAL_SUBJECT_PATH = '/credential/content/credentialSubject';
+
+// Validates every item and throws one 400 that lists the problems of all of
+// them, so nothing is created when any item is invalid.
+const initValidateCredentials = (
+  depots,
+  credentialTypeMetadatas,
+  schemas,
+  context,
+) => {
+  const validateCredential = initValidateCredential(
+    depots,
+    credentialTypeMetadatas,
+    schemas,
+    context,
+  );
+
+  return (credentialItems) => {
+    const errors = flow(
+      mapWithIndex((item, index) =>
+        map(toItemError(index), validateCredential(item)),
+      ),
+      flatten,
+    )(credentialItems);
+    if (!isEmpty(errors)) {
+      throw newCredentialItemsError(errors);
+    }
+  };
+};
+
+// Returns the item's problems as { path, errorCode, message }, with the path
+// relative to the item.
 const initValidateCredential = (
   depots,
   credentialTypeMetadatas,
@@ -37,48 +82,79 @@ const initValidateCredential = (
     schemas,
   );
 
-  return ({ credential, depotId, metadataIdx }) => {
-    validateCredential(
+  return ({ credential, depotId, metadataIdx }) => [
+    ...validateDepot(credential, depotsById[depotId]),
+    ...validateCredentialType(
       credential,
-      depotsById[depotId],
       credentialTypeMetadatas[metadataIdx],
       credentialSubjectValidators[metadataIdx],
-    );
-  };
+    ),
+  ];
 };
-const validateCredential = (
+
+const validateDepot = (credential, depot) => {
+  if (depot == null) {
+    return [problem('/depotId', CredentialErrors.REFERENCED_DEPOT_NOT_FOUND)];
+  }
+  if (isUnexpectedCredentialType(credential, depot)) {
+    return [
+      problem(
+        CREDENTIAL_TYPE_PATH,
+        CredentialErrors.CREDENTIAL_TYPE_NOT_EXPECTED,
+      ),
+    ];
+  }
+  return [];
+};
+
+const validateCredentialType = (
   credential,
-  depot,
   credentialTypeMetadata,
   validateCredentialSubject,
 ) => {
-  if (depot == null) {
-    throw newError(400, CredentialErrors.REFERENCED_DEPOT_NOT_FOUND, {
-      errorCode: CredentialErrors.REFERENCED_DEPOT_NOT_FOUND,
-    });
-  }
-  if (isUnexpectedCredentialType(credential, depot)) {
-    throw newError(400, CredentialErrors.CREDENTIAL_TYPE_NOT_EXPECTED, {
-      errorCode: CredentialErrors.CREDENTIAL_TYPE_NOT_EXPECTED,
-    });
-  }
   if (credentialTypeMetadata == null) {
-    throw newError(400, CredentialErrors.CREDENTIAL_TYPE_NOT_FOUND, {
-      errorCode: CredentialErrors.CREDENTIAL_TYPE_NOT_FOUND,
-    });
+    return [
+      problem(CREDENTIAL_TYPE_PATH, CredentialErrors.CREDENTIAL_TYPE_NOT_FOUND),
+    ];
   }
-
-  validateCredentialSubject(credential.content.credentialSubject);
-  if (validateCredentialSubject.errors !== null) {
-    throw wrapValidationError(
-      validateCredentialSubject.errors,
-      'credential.content.credentialSubject',
-    );
-  }
+  return validateCredentialSubject(credential.content.credentialSubject)
+    ? []
+    : map(toSchemaProblem, validateCredentialSubject.errors);
 };
 
 const isUnexpectedCredentialType = (credential, { expectedCredentialTypes }) =>
   !isEmpty(expectedCredentialTypes) &&
   !includes(extractCredentialType(credential.content), expectedCredentialTypes);
 
-module.exports = { initValidateCredential };
+const problem = (path, errorCode) => ({ path, errorCode, message: errorCode });
+
+// One problem per AJV error, with the message wrapValidationError gives it
+const toSchemaProblem = ({ instancePath, message }) => ({
+  path: `${CREDENTIAL_SUBJECT_PATH}${instancePath}`,
+  errorCode: REQUEST_VALIDATION_FAILED,
+  message: `credential.content.credentialSubject${instancePath} ${message}`,
+});
+
+const toItemError =
+  (index) =>
+  ({ path, errorCode, message }) => ({
+    index,
+    path: `/items/${index}${path}`,
+    errorCode,
+    message,
+  });
+
+// The top-level errorCode and message are the ones returned before every item
+// was reported: the first invalid item's first problem, with all the schema
+// errors of a credentialSubject in one message.
+const newCredentialItemsError = (errors) => {
+  const [{ index, errorCode }] = errors;
+  const message = flow(
+    filter({ index, errorCode }),
+    map('message'),
+    join(', '),
+  )(errors);
+  return newError(400, message, { errorCode, errors });
+};
+
+module.exports = { initValidateCredentials };

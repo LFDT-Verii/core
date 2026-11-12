@@ -30,7 +30,10 @@ const {
   NotificationStatuses,
   revokeCredential,
 } = require('../../../entities/credentials');
-const { revokeCredentialSchema } = require('./schemas');
+const {
+  credentialItemsErrorSchema,
+  revokeCredentialSchema,
+} = require('./schemas');
 
 const credentialsController = async (fastify) => {
   fastify
@@ -38,6 +41,7 @@ const credentialsController = async (fastify) => {
     .addSchema(w3cVcSchema)
     .addSchema(newCredentialSchema)
     .addSchema(credentialSchema)
+    .addSchema(credentialItemsErrorSchema)
     .addSchema(revokeCredentialSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .register(validationPlugin, {
@@ -110,11 +114,13 @@ const credentialsController = async (fastify) => {
                   required: ['depotId', 'credential'],
                 },
                 minItems: 1,
+                maxItems: 1000,
               },
             },
             required: ['tenantId', 'items'],
           },
           response: {
+            400: { $ref: 'credential-items-error#' },
             200: {
               type: 'object',
               properties: {

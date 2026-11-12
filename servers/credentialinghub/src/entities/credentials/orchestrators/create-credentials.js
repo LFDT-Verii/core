@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-const { map, forEach, findIndex, flow, uniq } = require('lodash/fp');
+const { map, findIndex, flow, uniq } = require('lodash/fp');
 const newError = require('http-errors');
 const { getCredentialTypeMetadata } = require('@verii/common-fetchers');
 const { initHttpClient } = require('@verii/http-client');
@@ -22,7 +22,7 @@ const { extractCredentialType } = require('@verii/vc-checks');
 const { CredentialErrors } = require('@verii/credentialing-hub-operator-api');
 const {
   initCanonicalizeCredentials,
-  initValidateCredential,
+  initValidateCredentials,
 } = require('../domain');
 
 const createCredentials = async (credentialItems, context) => {
@@ -48,7 +48,7 @@ const createCredentials = async (credentialItems, context) => {
     ),
   );
 
-  const validateCredential = initValidateCredential(
+  const validateCredentials = initValidateCredentials(
     depots,
     credentialTypeMetadatas,
     schemas,
@@ -59,8 +59,8 @@ const createCredentials = async (credentialItems, context) => {
     credentialTypeMetadatas,
   );
 
-  const canonicalizedCredentials = flow(
-    map((item) => ({
+  const items = map(
+    (item) => ({
       ...item,
       metadataIdx: findIndex(
         {
@@ -68,12 +68,12 @@ const createCredentials = async (credentialItems, context) => {
         },
         credentialTypeMetadatas,
       ),
-    })),
-    forEach(validateCredential),
-    map(canonicalizeCredential),
-  )(credentialItems);
+    }),
+    credentialItems,
+  );
+  validateCredentials(items);
 
-  return repos.credentials.insertMany(canonicalizedCredentials);
+  return repos.credentials.insertMany(map(canonicalizeCredential, items));
 };
 
 const loadSchema = async (credentialTypeMetadata, context) => {
