@@ -114,7 +114,7 @@ A template is a credential's JSON `content`, with `type` and `credentialSubject`
 ```
 
 - **Value by value.** Each string is rendered on its own, and the JSON is never rebuilt from text. A CSV value only ever becomes part of a string, so a value with quotes or braces can't change the credential's structure. Keys, numbers, booleans and nulls are kept as they are.
-- **Strict.** A column that a row doesn't have is an error, not an empty string. An empty cell renders as an empty string.
+- **Strict placeholders.** A column used in a placeholder, such as `{{name}}`, must be present: a row without it is an error, not an empty string. An empty cell renders as an empty string. A block helper's parameter isn't checked: `#if`, `#unless`, `#each` and `#with` read a missing column as falsy. So `{{#if middleName}} {{middleName}}{{/if}}` makes `middleName` optional, but a misspelled column there silently takes the other branch.
 - **Not escaped.** Values aren't HTML-escaped: `{{name}}` and `{{{name}}}` are the same.
 - **Typed values.** A string that is exactly `{{column}}`, or `{{[a column]}}`, takes the column's type from `columns`, so `"{{creditsEarned}}"` renders as the number `1.5`. Inside a longer string, a value stays text.
 - **Overrides.** `--var name=value` overrides the CSV column `name` in every row, or provides it when the CSV has no such column.
@@ -133,8 +133,8 @@ Every error is collected, and the command fails when there's any.
    - `depot.authValues` maps exactly the rules' `valueIndex` 0 to n−1;
    - each template's type is in `depot.expectedCredentialTypes`, when it's set.
 2. **Each row against the spec:**
-   - the columns the spec uses are present. A column the CSV doesn't have at all is one error, not one per row;
-   - auth values are non-blank once trimmed, and convert to their rule's `valueType`. A rule without a `valueType` takes strings;
+   - the columns the spec uses in placeholders are present. A block helper's parameter isn't checked, as [Templates](#templates) says. A column the CSV doesn't have at all is one error, not one per row;
+   - auth values are non-blank once trimmed, and convert to their rule's `valueType`;
    - phone values, for a rule of type `PhoneV1.0` or with `valueFormat: e164`, are normalized to E.164 (`+15556192191`) with `libphonenumber-js`, using `--default-country` for numbers without a country code. A number that can't be normalized is an error;
    - email values, for a rule of type `EmailV1.0` or with `valueFormat: email`, are email addresses, by the same check as the Hub's `email` format;
    - no two rows have the same auth values, compared as the Hub matches them: normalized with `buildAuthMatchValues`, and by type, so `"12345"` and `12345` differ. Each duplicate row gets an error that counts the other rows and lists at most 10 of them, such as `has the same auth values as 49,999 other rows: 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 and 49,989 more`;

@@ -154,6 +154,37 @@ describe('batch-issuer validate', () => {
     });
   });
 
+  it("doesn't check a block helper's parameter, so #if makes a column optional", async () => {
+    mockGetService();
+    mockFindDepots();
+    mockRegistrar();
+    const badge = loadJsonFixture('open-badge.template.json');
+    const template = {
+      ...badge,
+      credentialSubject: {
+        ...badge.credentialSubject,
+        achievement: {
+          ...badge.credentialSubject.achievement,
+          description:
+            'Awarded to {{firstName}}{{#if middleName}} {{middleName}}{{/if}} {{lastName}}',
+        },
+      },
+    };
+    const files = writeBatch({
+      csvLines: [ADAM, BETH],
+      templates: { 'open-badge.template.json': template },
+    });
+
+    const result = await validate(files);
+
+    expect(result).toEqual({
+      exitCode: 0,
+      stdout:
+        'The batch is valid: 2 rows, 2 new depots, 0 existing depots, 2 credentials. Nothing was written to the Hub.\n',
+      stderr: '',
+    });
+  });
+
   it('reports every error, grouped by row, and exits with 1', async () => {
     mockGetService();
     mockFindDepots();
