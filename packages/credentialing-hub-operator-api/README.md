@@ -15,12 +15,15 @@ The operator API's JSON schemas, with the `$id`s the Hub publishes in its OpenAP
 | `newDepotSchema` | `new-depot` | the `depot` of `depots/create` |
 | `depotSchema` | `depot` | a depot in responses |
 | `depotConflictErrorSchema` | `depot-conflict-error` | the 409 response of `depots/create` |
+| `findDepotsRequestSchema` | `find-depots-request` | the body of `POST depots/get`, which can find depots by their auth values |
 | `newCredentialSchema` | `new-credential` | the `credential` of `credentials/create` and of each `credentials/create-many` item |
 | `credentialSchema` | `Credential` | a credential in responses |
 
+`OBJECT_ID_PATTERN` is the pattern of the id filters, such as the `serviceId` and `depotId` of `depots/get`: 24 hex digits, in either case.
+
 ## Validator
 
-`initOperatorApiValidator()` compiles the request schemas (`new-issuer-service`, `new-depot` and `new-credential`) with the AJV options and formats the Hub uses. A client then accepts what the Hub accepts. Like the Hub, it doesn't apply schema defaults or coerce types, so it never changes the data, and it reports only the first error.
+`initOperatorApiValidator()` compiles the request schemas (`new-issuer-service`, `new-depot`, `new-credential` and `find-depots-request`) with the AJV options and formats the Hub uses. A client then accepts what the Hub accepts. Like the Hub, it doesn't apply schema defaults or coerce types, so it never changes the data, and it reports only the first error.
 
 ```js
 const {
@@ -44,6 +47,8 @@ A depot's `authValues` are matched against what a holder's credentials disclose 
 
 - `toAuthMatchValue(value)` trims and lower-cases a string, and leaves a number or boolean as it is. It doesn't convert between types, so `"12345"` never matches `12345`.
 - `buildAuthMatchValues(authValues)` normalizes each value of a depot's `authValues`, in order.
+
+`POST depots/get` with `authValues` matches the same way. To map the depots it returns back to the input, compare `buildAuthMatchValues` of each depot's `authValues` with `buildAuthMatchValues` of each input tuple.
 
 ## Rule evaluation
 

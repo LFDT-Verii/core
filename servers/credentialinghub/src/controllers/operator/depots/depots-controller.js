@@ -14,12 +14,14 @@
  * limitations under the License.
  *
  */
+const { isNil } = require('lodash/fp');
 const { coerceArray } = require('@verii/common-functions');
 const {
   depotConflictErrorSchema,
   depotSchema,
   findDepotsRequestSchema,
   newDepotSchema,
+  OBJECT_ID_PATTERN,
 } = require('@verii/credentialing-hub-operator-api');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
@@ -29,9 +31,6 @@ const {
   resolveDeferredCredentials,
   ResolveDeferredCredentialsStatuses,
 } = require('../../../entities/depots');
-
-// findDepots turns serviceId and depotId into ObjectIds
-const OBJECT_ID_PATTERN = '^[0-9a-fA-F]{24}$';
 
 const depotsController = async (fastify) => {
   fastify
@@ -170,13 +169,12 @@ const depotsController = async (fastify) => {
       async (req) => {
         const { serviceId, depotId, authValues } = req.body;
         const depotIds = coerceArray(depotId);
-        const depots =
-          authValues == null
-            ? await req.repos.depots.findDepots(serviceId, depotIds)
-            : await findDepotsByAuthValues(
-                { serviceId, depotIds, authValues },
-                req,
-              );
+        const depots = isNil(authValues)
+          ? await req.repos.depots.findDepots(serviceId, depotIds)
+          : await findDepotsByAuthValues(
+              { serviceId, depotIds, authValues },
+              req,
+            );
         return { depots };
       },
     )

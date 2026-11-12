@@ -23,6 +23,7 @@ const {
 } = require('@verii/common-schemas');
 const { initValidation, wrapValidationError } = require('@verii/validation');
 const {
+  findDepotsRequestSchema,
   newCredentialSchema,
   newDepotSchema,
   newIssuerServiceSchema,
@@ -68,11 +69,13 @@ const REQUEST_SCHEMAS = [
   newIssuerServiceSchema,
   newDepotSchema,
   newCredentialSchema,
+  findDepotsRequestSchema,
 ];
 
 /**
  * Builds a validator for the Hub's operator API request schemas
- * (`new-issuer-service`, `new-depot` and `new-credential`), with the AJV
+ * (`new-issuer-service`, `new-depot`, `new-credential` and
+ * `find-depots-request`), with the AJV
  * options and formats the Hub uses, so a client accepts what the Hub accepts.
  * It never changes the data: defaults aren't applied and types aren't coerced.
  * @returns {{

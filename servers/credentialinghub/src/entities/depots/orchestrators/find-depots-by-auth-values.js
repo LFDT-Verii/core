@@ -18,11 +18,15 @@ const newError = require('http-errors');
 const {
   filter,
   findIndex,
+  flow,
+  get,
   includes,
   isEmpty,
+  isNil,
   map,
   size,
   toLower,
+  toString,
 } = require('lodash/fp');
 const {
   buildAuthMatchValues,
@@ -45,14 +49,12 @@ const findDepotsByAuthValues = async (
   const service = await loadVpIssuerService(serviceId, context);
   validateAuthValueTuples(authValues, service);
   const tuples = map(buildAuthMatchValues, authValues);
-  const depots = filterByIds(
-    depotIds,
-    await context.repos.depots.findDepotsByAuthMatchTuples(
-      serviceId,
-      buildAuthRulesFingerprint(service),
-      tuples,
-    ),
+  const matchingDepots = await context.repos.depots.findDepotsByAuthMatchTuples(
+    serviceId,
+    buildAuthRulesFingerprint(service),
+    tuples,
   );
+  const depots = filterByIds(depotIds, matchingDepots);
   context.log.info(
     { serviceId, tupleCount: size(tuples), depotCount: size(depots) },
     'find depots by auth values',
@@ -64,7 +66,7 @@ const loadVpIssuerService = async (serviceId, { repos }) => {
   const service = await repos.issuerServices.findOne({
     filter: { _id: serviceId },
   });
-  if (service == null) {
+  if (isNil(service)) {
     throw newError(404, `Issuer service ${serviceId} not found`, {
       errorCode: ServiceConfigurationErrors.SERVICE_NOT_FOUND,
     });
@@ -82,10 +84,8 @@ const loadVpIssuerService = async (serviceId, { repos }) => {
 // Each tuple is validated as depots/create validates a depot's authValues.
 // The error names the first invalid tuple by its index, never by its values.
 const validateAuthValueTuples = (authValues, service) => {
-  const index = findIndex(
-    (tuple) => !hasValidAuthValues(tuple, service),
-    authValues,
-  );
+  const isInvalidTuple = (tuple) => !hasValidAuthValues(tuple, service);
+  const index = findIndex(isInvalidTuple, authValues);
   if (index !== -1) {
     throw newError(
       400,
@@ -95,14 +95,18 @@ const validateAuthValueTuples = (authValues, service) => {
   }
 };
 
+const depotIdOf = flow(get('_id'), toString);
+
 // As in the depotId filter of depots/get: no ids means no filter. Ids compare
 // as ObjectIds do, whatever the case of their hex digits.
 const filterByIds = (depotIds, depots) => {
   if (isEmpty(depotIds)) {
     return depots;
   }
-  const ids = map(toLower, depotIds);
-  return filter(({ _id }) => includes(`${_id}`, ids), depots);
+  const listedIds = map(toLower, depotIds);
+  const isListedId = (depotId) => includes(depotId, listedIds);
+  const isListedDepot = flow(depotIdOf, isListedId);
+  return filter(isListedDepot, depots);
 };
 
 module.exports = { findDepotsByAuthValues };

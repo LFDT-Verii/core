@@ -20,11 +20,13 @@ const issuerServiceSchema = require('./issuer-service.schema');
 const newDepotSchema = require('./new-depot.schema.json');
 const depotSchema = require('./depot.schema');
 const depotConflictErrorSchema = require('./depot-conflict-error.schema');
-const findDepotsRequestSchema = require('./find-depots-request.schema.json');
+const findDepotsRequestSchema = require('./find-depots-request.schema');
+const { OBJECT_ID_PATTERN } = require('./object-id-pattern');
 const newCredentialSchema = require('./new-credential.schema.json');
 const credentialSchema = require('./credential.schema');
 
 module.exports = {
+  OBJECT_ID_PATTERN,
   credentialSchema,
   depotConflictErrorSchema,
   depotSchema,
