@@ -1,0 +1,51 @@
+{
+  "name": "@verii/batch-issuer",
+  "version": "1.3.0",
+  "description": "Loads Credentialing Hub depots and credentials from a CSV file, a YAML spec and JSON Handlebars templates",
+  "repository": "https://github.com/LFDT-Verii/core",
+  "main": "src/index.js",
+  "bin": {
+    "batch-issuer": "src/index.js"
+  },
+  "scripts": {
+    "test": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout 'test/**/*.test.js'",
+    "test:ci": "cross-env NODE_ENV=test node --test --test-concurrency=1 --experimental-test-module-mocks --experimental-test-coverage --test-coverage-include='src/**' --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=test-results.junit.xml --test-reporter=lcov --test-reporter-destination=lcov.info 'test/**/*.test.js'",
+    "lint": "eslint .",
+    "lint:ci": "eslint . --format json >> eslint-results.json",
+    "lint:fix": "eslint --fix ."
+  },
+  "author": "Andres Olave",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@verii/common-fetchers": "workspace:*",
+    "@verii/credentialing-hub-operator-api": "workspace:*",
+    "@verii/http-client": "workspace:*",
+    "@verii/jwt": "workspace:*",
+    "@verii/validation": "workspace:*",
+    "@verii/vc-checks": "workspace:*",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "commander": "~15.0.0",
+    "csv-parse": "^7.0.3",
+    "handlebars": "^4.7.10",
+    "libphonenumber-js": "^1.13.15",
+    "lodash": "^4.18.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "eslint": "9.39.5",
+    "eslint-config-airbnb-extended": "3.3.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-better-mutation": "2.1.0",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-prefer-arrow-functions": "3.10.2",
+    "eslint-plugin-prettier": "5.5.7",
+    "eslint-watch": "8.0.0",
+    "expect": "30.5.2",
+    "nock": "15.0.5",
+    "prettier": "3.9.10"
+  }
+}

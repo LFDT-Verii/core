@@ -3673,6 +3673,85 @@ importers:
         specifier: 3.9.10
         version: 3.9.10
 
+  tools/batch-issuer:
+    dependencies:
+      '@verii/common-fetchers':
+        specifier: workspace:*
+        version: link:../../packages/common-fetchers
+      '@verii/credentialing-hub-operator-api':
+        specifier: workspace:*
+        version: link:../../packages/credentialing-hub-operator-api
+      '@verii/http-client':
+        specifier: workspace:*
+        version: link:../../packages/http-client
+      '@verii/jwt':
+        specifier: workspace:*
+        version: link:../../packages/jwt
+      '@verii/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
+      '@verii/vc-checks':
+        specifier: workspace:*
+        version: link:../../packages/vc-checks
+      ajv:
+        specifier: 8.20.0
+        version: 8.20.0
+      ajv-formats:
+        specifier: 3.0.1
+        version: 3.0.1(ajv@8.20.0)
+      commander:
+        specifier: ~15.0.0
+        version: 15.0.0
+      csv-parse:
+        specifier: ^7.0.3
+        version: 7.0.3
+      handlebars:
+        specifier: ^4.7.10
+        version: 4.7.10
+      libphonenumber-js:
+        specifier: ^1.13.15
+        version: 1.13.16
+      lodash:
+        specifier: ^4.18.1
+        version: 4.18.1
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
+    devDependencies:
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(jiti@2.7.0)
+      eslint-config-airbnb-extended:
+        specifier: 3.3.0
+        version: 3.3.0(@typescript-eslint/parser@8.72.1(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(@typescript-eslint/utils@8.72.1(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      eslint-config-prettier:
+        specifier: 10.1.8
+        version: 10.1.8(eslint@9.39.5(jiti@2.7.0))
+      eslint-plugin-better-mutation:
+        specifier: 2.1.0
+        version: 2.1.0(eslint@9.39.5(jiti@2.7.0))
+      eslint-plugin-import:
+        specifier: 2.32.0
+        version: 2.32.0(@typescript-eslint/parser@8.72.1(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3))(eslint-import-resolver-typescript@4.4.5)(eslint@9.39.5(jiti@2.7.0))
+      eslint-plugin-prefer-arrow-functions:
+        specifier: 3.10.2
+        version: 3.10.2(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+      eslint-plugin-prettier:
+        specifier: 5.5.7
+        version: 5.5.7(eslint-config-prettier@10.1.8(eslint@9.39.5(jiti@2.7.0)))(eslint@9.39.5(jiti@2.7.0))(prettier@3.9.10)
+      eslint-watch:
+        specifier: 8.0.0
+        version: 8.0.0(eslint@9.39.5(jiti@2.7.0))
+      expect:
+        specifier: 30.5.2
+        version: 30.5.2
+      nock:
+        specifier: 15.0.5
+        version: 15.0.5
+      prettier:
+        specifier: 3.9.10
+        version: 3.9.10
+
   tools/contracts-deployment:
     dependencies:
       '@verii/contract-permissions':
@@ -7761,6 +7840,9 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
+  csv-parse@7.0.3:
+    resolution: {integrity: sha512-YFd3QM/yo17vH91L1IOZuvl09zM0zEEtdfTcOCKWcMdM++MNaQSyp09slXyFCLaPXvHstQFx/xC8myiFHSMUvw==}
+
   csv-parser@3.2.1:
     resolution: {integrity: sha512-v8RPMSglouR9od735SnwSxLBbCJqEPSbgm1R5qfr8yIiMUCEFjox56kRZid0SvgHJEkxeIEu3+a9QS3YRh7CuA==}
     engines: {node: '>= 10'}
@@ -9272,6 +9354,9 @@ packages:
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
+
+  libphonenumber-js@1.13.16:
+    resolution: {integrity: sha512-tIOCM9yx2Go6d5/ZANe0K+G4AZek1Ymx81HxQpf19Sri4zMP95eQbKdnUGHAvFQ4nx0PeLhFqvAfisTADXj3tQ==}
 
   light-my-request@6.8.0:
     resolution: {integrity: sha512-5Q8PjoSEdtGIB8fikZsTem5vgRo4F2mR6vUKTDW/H1g6MtAt8e3duQbg/QxL5yzg6BZhor2KOUm3hhWMWLTZwg==}
@@ -15464,6 +15549,8 @@ snapshots:
 
   csstype@3.2.3: {}
 
+  csv-parse@7.0.3: {}
+
   csv-parser@3.2.1: {}
 
   damerau-levenshtein@1.0.8: {}
@@ -17320,6 +17407,8 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+
+  libphonenumber-js@1.13.16: {}
 
   light-my-request@6.8.0:
     dependencies:
