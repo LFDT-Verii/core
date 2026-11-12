@@ -95,6 +95,23 @@ describe('OAuth test suite', () => {
           error_description: "body must have required property 'grant_type'",
         });
       });
+      it('should 400 with invalid_request when the body is not valid JSON', async () => {
+        const response = await fastify.inject({
+          method: 'POST',
+          url: `/r/${tenant._id}/oauth/token`,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: '{',
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json()).toEqual({
+          error: 'invalid_request',
+          error_description:
+            "Body is not valid JSON but content-type is set to 'application/json'",
+        });
+      });
       it('should 400 with missing pre-authorized_code', async () => {
         const response = await fastify.inject({
           method: 'POST',

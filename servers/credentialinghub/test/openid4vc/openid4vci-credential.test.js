@@ -186,6 +186,24 @@ describe('openid4vc credential test suite', () => {
           error_description: expect.any(String),
         });
       });
+      it('should 400 with invalid_credential_request when the body is not valid JSON', async () => {
+        const response = await fastify.inject({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/credential`,
+          headers: {
+            authorization: `Bearer ${authToken}`,
+            'content-type': 'application/json',
+          },
+          body: '{',
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json()).toEqual({
+          error: 'invalid_credential_request',
+          error_description:
+            "Body is not valid JSON but content-type is set to 'application/json'",
+        });
+      });
       it('should 400 with invalid_proof if no proofs are sent', async () => {
         const response = await fastify.injectJson({
           method: 'POST',
