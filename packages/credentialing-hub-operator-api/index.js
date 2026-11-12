@@ -17,6 +17,7 @@
 module.exports = {
   ...require('./src/auth-match-values'),
   ...require('./src/errors'),
+  ...require('./src/limits'),
   ...require('./src/schemas'),
   ...require('./src/validator'),
   ...require('./src/vp-auth-rules'),

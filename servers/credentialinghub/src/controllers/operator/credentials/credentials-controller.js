@@ -21,6 +21,7 @@ const {
 } = require('@verii/common-schemas');
 const { validationPlugin } = require('@verii/validation');
 const {
+  CREDENTIALS_CREATE_MANY_MAX_ITEMS,
   credentialItemsErrorSchema,
   credentialSchema,
   newCredentialSchema,
@@ -112,7 +113,7 @@ const credentialsController = async (fastify) => {
                   required: ['depotId', 'credential'],
                 },
                 minItems: 1,
-                maxItems: 1000,
+                maxItems: CREDENTIALS_CREATE_MANY_MAX_ITEMS,
               },
             },
             required: ['tenantId', 'items'],

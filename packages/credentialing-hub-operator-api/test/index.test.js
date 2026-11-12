@@ -85,6 +85,11 @@ describe('credentialing hub operator api', () => {
     expect(api.OBJECT_ID_PATTERN).toEqual('^[0-9a-fA-F]{24}$');
   });
 
+  // Clients split loads by it, so lowering it is a breaking change.
+  it('should export the credentials/create-many item limit', () => {
+    expect(api.CREDENTIALS_CREATE_MANY_MAX_ITEMS).toEqual(1000);
+  });
+
   it('should export the helpers', () => {
     expect(api).toEqual(
       expect.objectContaining({
