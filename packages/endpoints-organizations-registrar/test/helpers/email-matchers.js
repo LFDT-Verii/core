@@ -27,7 +27,7 @@ const sendServicesActivatedEmailMatcher = () => ({
       Text: { Data: expect.any(String) },
     },
     Subject: {
-      Data: 'Velocity Services Activated on LocalDevNet',
+      Data: 'Velocity Services Activated on DevNet',
     },
   },
 });
@@ -78,7 +78,7 @@ Click the button below to accept the invitation and complete your organization�
       },
     },
     Subject: {
-      Data: 'LocalDevNet: Invitation by Test Organization to Join Velocity Network™',
+      Data: 'DevNet: Invitation by Test Organization to Join Velocity Network™',
     },
   },
 });
@@ -193,7 +193,7 @@ const expectedSupportEmail = (orgName = 'Test Organization') => ({
       },
     },
     Subject: {
-      Data: `LocalDevNet: Organization ${orgName} created`,
+      Data: `DevNet: Organization ${orgName} created`,
     },
   },
   ReplyToAddresses: [undefined],
@@ -223,7 +223,7 @@ const expectedSignatoryReminderEmail = (
 ) => expectedSignatoryApprovalEmail(inviterOrg, orgForApproval, messageMatcher);
 
 const expectedSupportMaxSignatoryReminderReachedEmailParams = () => [
-  expect.stringMatching(/LocalDevNet: Maximum signatory reminder alert/),
+  expect.stringMatching(/DevNet: Maximum signatory reminder alert/),
   expect.stringMatching(
     /The Velocity Network has sent the maximum number of reminder emails to/,
   ),

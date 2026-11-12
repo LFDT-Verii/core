@@ -247,7 +247,8 @@ const fullOrganizationController = async (fastify) => {
 
 const validateFullOrganizationBody = async (req) => {
   const schema =
-    req.config.isProd || req.headers['x-validate-kyb-profile'] === '1'
+    req.config.validateKybProfile ||
+    req.headers['x-validate-kyb-profile'] === '1'
       ? newKybFullOrganizationSchema
       : newFullOrganizationSchema;
 

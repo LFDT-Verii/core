@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-const buildRequestResponseSchema = (prefix, { isProd }) => {
+// The request as a signed JWT, or as unsigned JSON when asked for with ?format=json
+const buildRequestResponseSchema = (prefix) => {
   const requestName = `${prefix}_request`;
-  const defaultResponse = {
-    type: 'object',
-    properties: { [requestName]: { type: 'string' } },
-    required: [requestName],
-  };
-
-  if (isProd) {
-    return defaultResponse;
-  }
-
   return {
     oneOf: [
-      defaultResponse,
+      {
+        type: 'object',
+        properties: { [requestName]: { type: 'string' } },
+        required: [requestName],
+      },
       {
         type: 'object',
         properties: {

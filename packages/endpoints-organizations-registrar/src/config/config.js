@@ -4,7 +4,7 @@ const contractAbi = require('./abi.json');
 
 const createConfig = (packageJson) => {
   const { createBlockchainConfig, genericConfig } = require('@verii/config');
-  const { isTest } = genericConfig;
+  const { isProd, isTest } = genericConfig;
   const oauthConfig = createOauthConfig(env, genericConfig);
   const swaggerInfo = {
     info: {
@@ -147,6 +147,19 @@ const createConfig = (packageJson) => {
       .get('ORGANIZATION_CREATION_EMAIL_CC_LIST')
       .required()
       .asArray(','),
+    // The Velocity network the registrar runs on, such as devnet, testnet or mainnet. Its emails name it.
+    network: env.get('NETWORK').required().asString(),
+    // These two used to follow NODE_ENV, and default to what it gave them (#1234)
+    // Validates new organizations' profiles against the KYB schema. The x-validate-kyb-profile: 1 header also turns it on.
+    validateKybProfile: env
+      .get('REGISTRAR_VALIDATE_KYB_PROFILE')
+      .default(String(isProd))
+      .asBool(),
+    // Activates services as organizations add them. The x-auto-activate: 0 header turns it off.
+    autoActivateServices: env
+      .get('REGISTRAR_AUTO_ACTIVATE_SERVICES')
+      .default(String(!isProd))
+      .asBool(),
     libS3Bucket: env.get('LIB_S3_BUCKET').required(!isTest).asString(),
     libUrl: env.get('LIB_URL').required(!isTest).asString(),
     custodiedDidWebHost: env.get('CUSTODIED_DID_WEB_HOST').asString(),

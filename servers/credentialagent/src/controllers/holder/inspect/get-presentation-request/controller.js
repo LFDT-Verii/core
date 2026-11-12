@@ -53,16 +53,12 @@ const controller = async (fastify) => {
           },
         },
         response: {
-          200: buildRequestResponseSchema('presentation', fastify.config),
+          200: buildRequestResponseSchema('presentation'),
         },
       }),
     },
     async (req) => {
-      const {
-        repos,
-        query,
-        config: { isProd },
-      } = req;
+      const { repos, query } = req;
       const disclosure = await repos.disclosures.findById(query.id);
 
       const pushDelegate = getPushDelegate(query.push_delegate, req);
@@ -88,7 +84,7 @@ const controller = async (fastify) => {
 
       return {
         presentation_request:
-          !isProd && req.query.format === 'json'
+          req.query.format === 'json'
             ? presentationRequest
             : await signExchangeResponse(presentationRequest, {}, req),
       };

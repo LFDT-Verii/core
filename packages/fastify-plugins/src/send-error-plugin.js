@@ -22,7 +22,7 @@ const sendErrorPlugin = async (fastify) => {
     config: {
       sentryDsn,
       enableSentryDebug,
-      nodeEnv,
+      environmentLabel,
       version,
       serviceName,
       isTest,
@@ -34,7 +34,7 @@ const sendErrorPlugin = async (fastify) => {
   const { sendError } = await initSendError({
     dsn: sentryDsn,
     release: version,
-    environment: nodeEnv,
+    environment: environmentLabel,
     debug: enableSentryDebug,
     serviceName,
   });

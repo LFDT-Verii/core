@@ -12,6 +12,11 @@ not move `latest`.
 The image defaults to `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=3000`, and
 `LOG_SEVERITY=info`. Override these only when the deployment requires it.
 
+`ENVIRONMENT_LABEL` names the deployment, such as `testnet`, and Sentry events
+carry it as their environment. It defaults to `NETWORK`, the network the
+deployment runs on, and then to the value of `NODE_ENV`. Set it when neither
+tells your deployments apart.
+
 The image accepts generic blockchain OAuth names as aliases for the existing
 Hub configuration names:
 

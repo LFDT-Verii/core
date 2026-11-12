@@ -15,27 +15,21 @@
  *
  */
 
-const whichNet = ({ nodeEnv }) => {
-  switch (nodeEnv) {
-    case 'development':
-    case 'test':
-      return 'LocalDevNet';
-    case 'dev':
-      return 'DevNet';
-    case 'staging':
-      return 'TestNet';
-    case 'production':
-      return 'MainNet';
-    default:
-      return '';
-  }
+const { getOr, includes } = require('lodash/fp');
+
+// How the registrar's emails name each Velocity network. Any other NETWORK shows as it is.
+const networkNames = {
+  devnet: 'DevNet',
+  testnet: 'TestNet',
+  mainnet: 'MainNet',
 };
 
-const getSubjectNetPrefix = (config) => {
-  if (config.nodeEnv === 'production') {
-    return '';
-  }
-  return `${whichNet(config)}: `;
-};
+// Emails from these networks start their subject with the network's name
+const prefixedNetworks = ['devnet', 'testnet'];
+
+const whichNet = ({ network }) => getOr(network, network, networkNames);
+
+const getSubjectNetPrefix = (config) =>
+  includes(config.network, prefixedNetworks) ? `${whichNet(config)}: ` : '';
 
 module.exports = { whichNet, getSubjectNetPrefix };
