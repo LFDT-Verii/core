@@ -155,6 +155,47 @@ describe('Contract Client Nonce Management', { timeout: 120000 }, () => {
     expect(failures).toEqual([]);
   });
 
+  // A send that repeats an earlier send's nonce replaces that transaction
+  // instead of failing, so every send must also be mined.
+  it('gives concurrent sends through one provider consecutive nonces', async () => {
+    const deployerPrivateKey = generateDisposablePrivateKey();
+    const rpcProvider = initProvider(rpcUrl, authenticate);
+    const contract = await deployContract(
+      testNoEventsAbi,
+      deployerPrivateKey,
+      rpcUrl,
+    );
+    const { contractClient } = await initContractClient(
+      {
+        privateKey: deployerPrivateKey,
+        contractAddress: await contract.getAddress(),
+        rpcProvider,
+        contractAbi: testNoEventsAbi,
+      },
+      { log: { info: () => {}, error: () => {} } },
+    );
+
+    const transactions = await Promise.all(
+      Array.from({ length: cacheAttemptsCount }).map((_, i) =>
+        contractClient.addAddressScope(
+          targetAddress,
+          `nonce-consecutive-${Date.now()}-${i}`,
+        ),
+      ),
+    );
+
+    const nonces = transactions.map(({ nonce }) => nonce).sort((a, b) => a - b);
+    expect(nonces).toEqual(
+      Array.from({ length: cacheAttemptsCount }).map((_, i) => nonces[0] + i),
+    );
+    const receipts = await Promise.all(
+      transactions.map((transaction) => transaction.wait(1, 30000)),
+    );
+    expect(receipts.map(({ status }) => status)).toEqual(
+      transactions.map(() => 1),
+    );
+  });
+
   it('resyncs cached signer nonce after external wallet transactions', async () => {
     const deployerPrivateKey = generateDisposablePrivateKey();
     const rpcProvider = initProvider(rpcUrl, authenticate);
