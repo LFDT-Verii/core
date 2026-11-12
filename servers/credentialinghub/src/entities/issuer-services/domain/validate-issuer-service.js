@@ -10,9 +10,11 @@ const {
   sortBy,
 } = require('lodash/fp');
 const {
+  IssuerServicesErrors,
+} = require('@verii/credentialing-hub-operator-api');
+const {
   validateServiceConfiguration,
 } = require('../../service-configurations');
-const { IssuerServicesErrors } = require('./issuer-services-errors');
 const { isInternalVpAuth } = require('./is-internal-vp-auth');
 
 const validateIssuerService = ({ service, didDoc, otherServices }) => {

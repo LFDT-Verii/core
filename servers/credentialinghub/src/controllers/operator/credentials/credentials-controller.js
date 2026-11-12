@@ -20,17 +20,17 @@ const {
   w3cVcSchema,
 } = require('@verii/common-schemas');
 const { validationPlugin } = require('@verii/validation');
+const {
+  credentialSchema,
+  newCredentialSchema,
+} = require('@verii/credentialing-hub-operator-api');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
   createCredentials,
   NotificationStatuses,
   revokeCredential,
 } = require('../../../entities/credentials');
-const {
-  newCredentialSchema,
-  credentialSchema,
-  revokeCredentialSchema,
-} = require('./schemas');
+const { revokeCredentialSchema } = require('./schemas');
 
 const credentialsController = async (fastify) => {
   fastify

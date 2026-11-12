@@ -19,10 +19,10 @@ const newError = require('http-errors');
 const { getCredentialTypeMetadata } = require('@verii/common-fetchers');
 const { initHttpClient } = require('@verii/http-client');
 const { extractCredentialType } = require('@verii/vc-checks');
+const { CredentialErrors } = require('@verii/credentialing-hub-operator-api');
 const {
   initCanonicalizeCredentials,
   initValidateCredential,
-  CredentialErrors,
 } = require('../domain');
 
 const createCredentials = async (credentialItems, context) => {

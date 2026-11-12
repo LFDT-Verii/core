@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Velocity Team
+ * Copyright 2026 Velocity Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,9 @@
  *
  */
 
-const depotSchema = require('./depot.schema');
-const depotConflictErrorSchema = require('./depot-conflict-error.schema');
-const newDepotSchema = require('./new-depot.schema.json');
-
 module.exports = {
-  newDepotSchema,
-  depotSchema,
-  depotConflictErrorSchema,
+  ...require('./credential-errors'),
+  ...require('./depot-errors'),
+  ...require('./issuer-services-errors'),
+  ...require('./service-configuration-errors'),
 };

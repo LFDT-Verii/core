@@ -18,10 +18,12 @@ const newError = require('http-errors');
 const { every, isEmpty, size } = require('lodash/fp');
 const { isBefore } = require('date-fns/fp');
 const {
+  buildAuthMatchValues,
+  DepotErrors,
+} = require('@verii/credentialing-hub-operator-api');
+const {
   isInternalVpAuth,
 } = require('../../issuer-services/domain/is-internal-vp-auth');
-const { DepotErrors } = require('./depot-errors');
-const { buildAuthMatchValues } = require('./auth-match-values');
 
 const validateDepot = (depot, service, isIssuerService) => {
   if (isMissingOrDeactivated(service)) {

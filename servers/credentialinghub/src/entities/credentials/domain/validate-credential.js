@@ -18,7 +18,7 @@ const { wrapValidationError } = require('@verii/validation');
 const newError = require('http-errors');
 const { includes, isEmpty, keyBy, map, forEach } = require('lodash/fp');
 const { extractCredentialType } = require('@verii/vc-checks');
-const { CredentialErrors } = require('./credential-errors');
+const { CredentialErrors } = require('@verii/credentialing-hub-operator-api');
 
 const initValidateCredential = (
   depots,

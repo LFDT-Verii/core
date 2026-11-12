@@ -102,6 +102,8 @@ const {
 } = require('../../src/entities/exchanges');
 const {
   buildAuthMatchValues,
+} = require('@verii/credentialing-hub-operator-api');
+const {
   buildAuthRulesFingerprint,
   initDepotFactory,
 } = require('../../src/entities/depots');

@@ -17,14 +17,13 @@
 const { ObjectId } = require('mongodb');
 const newError = require('http-errors');
 const {
+  buildAuthMatchValues,
+  DepotErrors,
+} = require('@verii/credentialing-hub-operator-api');
+const {
   isInternalVpAuth,
 } = require('../../issuer-services/domain/is-internal-vp-auth');
-const {
-  buildAuthMatchValues,
-  buildAuthRulesFingerprint,
-  DepotErrors,
-  validateDepot,
-} = require('../domain');
+const { buildAuthRulesFingerprint, validateDepot } = require('../domain');
 
 const createDepot = async (newDepot, serviceId, context) => {
   const { repos } = context;
