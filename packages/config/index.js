@@ -16,8 +16,10 @@
 
 const config = require('./src/config');
 const { createBlockchainConfig } = require('./src/blockchain-config');
+const { networkName } = require('./src/network-name');
 
 module.exports = {
   genericConfig: config,
   createBlockchainConfig,
+  networkName,
 };
