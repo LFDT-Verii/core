@@ -59,12 +59,8 @@ const EXPECTED_OPERATION_METADATA = {
   ],
   'POST /operator/depots/create': ['Depots', 'createDepot', OPERATOR_SECURITY],
   'GET /operator/depots/get': ['Depots', 'getDepots', OPERATOR_SECURITY],
+  'POST /operator/depots/get': ['Depots', 'findDepots', OPERATOR_SECURITY],
   'POST /operator/depots/delete': ['Depots', 'deleteDepot', OPERATOR_SECURITY],
-  'POST /operator/depots/find-by-auth-values': [
-    'Depots',
-    'findDepotsByAuthValues',
-    OPERATOR_SECURITY,
-  ],
   'POST /operator/depots/resolve-deferred-credentials': [
     'Depots',
     'resolveDeferredCredentials',
@@ -249,8 +245,8 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/credentials/delete',
       'POST /operator/depots/create',
       'GET /operator/depots/get',
+      'POST /operator/depots/get',
       'POST /operator/depots/delete',
-      'POST /operator/depots/find-by-auth-values',
       'POST /operator/depots/resolve-deferred-credentials',
       'GET /operator/exchanges/get',
       'POST /operator/issue-links/refresh',
@@ -481,6 +477,12 @@ describe('swagger documents', () => {
     )) {
       expect(operations[operationKey].summary).toEqual(summary);
     }
+  });
+
+  it('returns the same depots response from GET and POST depots/get', () => {
+    const { get, post } = documents.operator.paths['/operator/depots/get'];
+
+    expect(post.responses['200']).toEqual(get.responses['200']);
   });
 
   it('emits only reachable schemas and no dangling component refs', () => {

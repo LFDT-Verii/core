@@ -15,7 +15,15 @@
  *
  */
 const newError = require('http-errors');
-const { findIndex, groupBy, map, size } = require('lodash/fp');
+const {
+  filter,
+  findIndex,
+  includes,
+  isEmpty,
+  map,
+  size,
+  toLower,
+} = require('lodash/fp');
 const {
   buildAuthMatchValues,
   DepotErrors,
@@ -26,30 +34,30 @@ const {
 } = require('../../issuer-services/domain/is-internal-vp-auth');
 const { buildAuthRulesFingerprint, hasValidAuthValues } = require('../domain');
 
-// Finds the depots whose auth values equal each tuple, the way authentication
-// and the depots/create 409 match them: normalized, in order, and only under
-// the service's current auth configuration. The values are never logged or
-// returned, only the request indexes that matched.
-const findDepotsByAuthValues = async ({ serviceId, authValues }, context) => {
+// Finds the depots whose auth values equal any of the tuples, the way
+// authentication and the depots/create 409 match them: normalized, in order,
+// and only under the service's current auth configuration. With depotIds, only
+// those depots. Only counts are logged, never the values.
+const findDepotsByAuthValues = async (
+  { serviceId, depotIds, authValues },
+  context,
+) => {
   const service = await loadVpIssuerService(serviceId, context);
   validateAuthValueTuples(authValues, service);
   const tuples = map(buildAuthMatchValues, authValues);
-  const depots = await context.repos.depots.findDepotsByAuthMatchTuples(
-    serviceId,
-    buildAuthRulesFingerprint(service),
-    tuples,
-  );
-  const matches = buildMatches(tuples, depots);
-  context.log.info(
-    {
+  const depots = filterByIds(
+    depotIds,
+    await context.repos.depots.findDepotsByAuthMatchTuples(
       serviceId,
-      tupleCount: size(tuples),
-      depotCount: size(depots),
-      matchCount: size(matches),
-    },
+      buildAuthRulesFingerprint(service),
+      tuples,
+    ),
+  );
+  context.log.info(
+    { serviceId, tupleCount: size(tuples), depotCount: size(depots) },
     'find depots by auth values',
   );
-  return matches;
+  return depots;
 };
 
 const loadVpIssuerService = async (serviceId, { repos }) => {
@@ -64,8 +72,8 @@ const loadVpIssuerService = async (serviceId, { repos }) => {
   if (!isInternalVpAuth(service)) {
     throw newError(
       400,
-      'Only internal verifiable_presentation issuer services match depots by auth values',
-      { errorCode: DepotErrors.FIND_BY_AUTH_VALUES_NOT_SUPPORTED },
+      'Only internal verifiable_presentation issuer services filter depots by auth values',
+      { errorCode: DepotErrors.AUTH_VALUES_FILTER_NOT_SUPPORTED },
     );
   }
   return service;
@@ -87,27 +95,14 @@ const validateAuthValueTuples = (authValues, service) => {
   }
 };
 
-// The same key for equal tuples, and different keys for "42" and 42.
-const toTupleKey = (tuple) => JSON.stringify(tuple);
-
-// Several request tuples can normalize to the same tuple, and concurrent
-// creates can leave more than one depot with the same values. Each index gets
-// one match per depot whose values equal its tuple.
-const buildMatches = (tuples, depots) => {
-  const depotsByTupleKey = groupBy(
-    ({ authMatchValues }) => toTupleKey(authMatchValues),
-    depots,
-  );
-  return tuples.flatMap((tuple, index) =>
-    map(
-      ({ _id, userReference }) => ({
-        index,
-        depotId: `${_id}`,
-        userReference,
-      }),
-      depotsByTupleKey[toTupleKey(tuple)],
-    ),
-  );
+// As in the depotId filter of depots/get: no ids means no filter. Ids compare
+// as ObjectIds do, whatever the case of their hex digits.
+const filterByIds = (depotIds, depots) => {
+  if (isEmpty(depotIds)) {
+    return depots;
+  }
+  const ids = map(toLower, depotIds);
+  return filter(({ _id }) => includes(`${_id}`, ids), depots);
 };
 
 module.exports = { findDepotsByAuthValues };

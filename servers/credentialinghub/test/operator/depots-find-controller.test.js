@@ -20,6 +20,9 @@ const { expect } = require('expect');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { ObjectId } = require('mongodb');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
+const {
+  buildAuthMatchValues,
+} = require('@verii/credentialing-hub-operator-api');
 const { filter, map, omit, sortBy, times } = require('lodash/fp');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { initTenantFactory } = require('../../src/entities/tenants');
@@ -31,10 +34,9 @@ const {
 } = require('../../src/entities/relying-party-services');
 const { buildAuthRulesFingerprint } = require('../../src/entities/depots');
 
-const depotsUrl = '/operator/depots';
-const testUrl = `${depotsUrl}/find-by-auth-values`;
+const testUrl = '/operator/depots/get';
 
-describe('Find Depots by Auth Values Test Suite', () => {
+describe('Find Depots Test Suite', () => {
   let fastify;
   let persistTenant;
   let persistIssuerService;
@@ -116,7 +118,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
   ) => {
     const response = await fastify.injectJson({
       method: 'POST',
-      url: `${depotsUrl}/create`,
+      url: '/operator/depots/create',
       payload: { tenantId, serviceId, depot },
     });
     expect(response.statusCode).toEqual(200);
@@ -124,44 +126,69 @@ describe('Find Depots by Auth Values Test Suite', () => {
   };
 
   // Inserted without depots/create, which refuses a second depot with the
-  // same auth values. Concurrent creates can still leave one.
+  // same auth values. Concurrent creates can still leave one. Returns the
+  // depot as depots/get returns it.
   const insertDepot = async ({
     userReference,
-    authMatchValues,
+    authValues,
     service = vpService,
     authRulesFingerprint = buildAuthRulesFingerprint(service),
     tenantId = tenant._id,
   }) => {
-    const depot = {
-      tenantId: new ObjectId(tenantId),
-      serviceId: new ObjectId(service._id),
-      userReference,
-      authMatchValues,
-      authRulesFingerprint,
-      deferredCredentials: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const now = new Date();
     const { insertedId } = await mongoDb()
       .collection('depots')
-      .insertOne(depot);
-    return { ...depot, _id: insertedId };
+      .insertOne({
+        tenantId: new ObjectId(tenantId),
+        serviceId: new ObjectId(service._id),
+        userReference,
+        authValues,
+        authMatchValues: buildAuthMatchValues(authValues),
+        authRulesFingerprint,
+        deferredCredentials: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+    return {
+      id: `${insertedId}`,
+      serviceId: `${service._id}`,
+      userReference,
+      authValues,
+      deferredCredentials: false,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    };
   };
 
-  const findByAuthValues = (
-    authValues,
-    { serviceId = vpService._id, tenantId = tenant._id } = {},
-  ) =>
+  const findDepots = (body) =>
     fastify.injectJson({
       method: 'POST',
       url: testUrl,
-      payload: { tenantId, serviceId, authValues },
+      payload: { tenantId: tenant._id, ...body },
     });
 
-  const expectMatches = (response, matches) => {
+  const findByAuthValues = (authValues, body = {}) =>
+    findDepots({ serviceId: vpService._id, authValues, ...body });
+
+  const getDepots = ({ tenantId = tenant._id, serviceId, depotId } = {}) => {
+    const params = [
+      ['tenantId', tenantId],
+      ['serviceId', serviceId],
+      ...map((id) => ['depotId', id], [].concat(depotId ?? [])),
+    ];
+    const query = new URLSearchParams(
+      filter(([, value]) => value != null, params),
+    );
+    return fastify.injectJson({ method: 'GET', url: `${testUrl}?${query}` });
+  };
+
+  const expectDepots = (response, depots) => {
     expect(response.statusCode).toEqual(200);
-    expect(response.json).toEqual({
-      matches,
+    expect({
+      ...response.json,
+      depots: sortBy('id', response.json.depots),
+    }).toEqual({
+      depots: sortBy('id', depots),
       requestId: expect.any(String),
     });
   };
@@ -188,8 +215,8 @@ describe('Find Depots by Auth Values Test Suite', () => {
     );
   };
 
-  describe('matching', () => {
-    it('should return the depot whose auth values match, with its userReference, and never the auth values', async () => {
+  describe('authValues', () => {
+    it('should return the depots whose auth values equal any of the tuples', async () => {
       const janeDepot = await createDepot({
         userReference: 'ABC123',
         authValues: ['jane.doe@example.com', 'EMP-1'],
@@ -205,15 +232,10 @@ describe('Find Depots by Auth Values Test Suite', () => {
         ['jane.doe@example.com', 'EMP-2'],
       ]);
 
-      expectMatches(response, [
-        { index: 1, depotId: janeDepot.id, userReference: 'ABC123' },
-      ]);
-      const body = response.body.toLowerCase();
-      expect(body).not.toContain('example.com');
-      expect(body).not.toContain('emp-');
+      expectDepots(response, [janeDepot]);
     });
 
-    it('should return no matches when no depot has the auth values', async () => {
+    it('should return no depots when none has the auth values', async () => {
       await createDepot({
         userReference: 'ABC123',
         authValues: ['jane.doe@example.com', 'EMP-1'],
@@ -224,7 +246,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
         ['EMP-1', 'jane.doe@example.com'],
       ]);
 
-      expectMatches(response, []);
+      expectDepots(response, []);
     });
 
     it('should match auth values that differ only in case or surrounding spaces', async () => {
@@ -237,9 +259,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
         ['  JANE.DOE@EXAMPLE.COM\t', ' emp-1 '],
       ]);
 
-      expectMatches(response, [
-        { index: 0, depotId: depot.id, userReference: 'ABC123' },
-      ]);
+      expectDepots(response, [depot]);
     });
 
     it('should match numbers and booleans by type and value', async () => {
@@ -264,21 +284,22 @@ describe('Find Depots by Auth Values Test Suite', () => {
         { serviceId: service._id },
       );
 
-      const response = await findByAuthValues(
+      const typeMismatchResponse = await findByAuthValues(
         [
           ['42', true],
           [42, 'true'],
-          [42, true],
         ],
         { serviceId: service._id },
       );
+      expectDepots(typeMismatchResponse, []);
 
-      expectMatches(response, [
-        { index: 2, depotId: depot.id, userReference: 'ABC123' },
-      ]);
+      const response = await findByAuthValues([[42, true]], {
+        serviceId: service._id,
+      });
+      expectDepots(response, [depot]);
     });
 
-    it('should report every index whose auth values normalize to the same depot', async () => {
+    it('should return a depot once when several tuples normalize to its auth values', async () => {
       const depot = await createDepot({
         userReference: 'ABC123',
         authValues: ['jane.doe@example.com', 'EMP-1'],
@@ -290,41 +311,31 @@ describe('Find Depots by Auth Values Test Suite', () => {
         [' Jane.Doe@Example.com', 'emp-1'],
       ]);
 
-      expectMatches(response, [
-        { index: 0, depotId: depot.id, userReference: 'ABC123' },
-        { index: 2, depotId: depot.id, userReference: 'ABC123' },
-      ]);
+      expectDepots(response, [depot]);
     });
 
-    it('should report each depot when more than one depot has the auth values, ordered by index', async () => {
+    it('should return each depot when more than one depot has the auth values', async () => {
+      const janeDepots = [
+        await insertDepot({
+          userReference: 'ABC123',
+          authValues: ['jane.doe@example.com', 'EMP-1'],
+        }),
+        await insertDepot({
+          userReference: 'XYZ789',
+          authValues: ['Jane.Doe@example.com', 'emp-1'],
+        }),
+      ];
       const johnDepot = await createDepot({
         userReference: 'DEF456',
         authValues: ['john.doe@example.com', 'EMP-2'],
       });
-      const janeDepots = [
-        await insertDepot({
-          userReference: 'ABC123',
-          authMatchValues: ['jane.doe@example.com', 'emp-1'],
-        }),
-        await insertDepot({
-          userReference: 'XYZ789',
-          authMatchValues: ['jane.doe@example.com', 'emp-1'],
-        }),
-      ];
 
       const response = await findByAuthValues([
-        ['nobody@example.com', 'EMP-1'],
-        ['Jane.Doe@example.com', 'EMP-1'],
+        ['jane.doe@example.com', 'EMP-1'],
         ['john.doe@example.com', 'EMP-2'],
       ]);
 
-      expect(response.statusCode).toEqual(200);
-      expect(map('index', response.json.matches)).toEqual([1, 1, 2]);
-      expect(sortBy('userReference', response.json.matches)).toEqual([
-        { index: 1, depotId: `${janeDepots[0]._id}`, userReference: 'ABC123' },
-        { index: 2, depotId: johnDepot.id, userReference: 'DEF456' },
-        { index: 1, depotId: `${janeDepots[1]._id}`, userReference: 'XYZ789' },
-      ]);
+      expectDepots(response, [...janeDepots, johnDepot]);
     });
 
     it('should match for a service with both auth methods', async () => {
@@ -344,38 +355,72 @@ describe('Find Depots by Auth Values Test Suite', () => {
         { serviceId: dualService._id },
       );
 
-      expectMatches(response, [
-        { index: 0, depotId: depot.id, userReference: 'ABC123' },
-      ]);
+      expectDepots(response, [depot]);
     });
 
-    it('should find every match of 1000 auth values', async () => {
-      await Promise.all(
+    it('should return every depot matching 1000 tuples, beyond a page of 200', async () => {
+      const depots = await Promise.all(
         times(
           (i) =>
             insertDepot({
               userReference: `user-${i}`,
-              authMatchValues: [`user${i}@example.com`, `emp-${i}`],
+              authValues: [`user${i}@example.com`, `EMP-${i}`],
             }),
           250,
         ),
       );
 
       const response = await findByAuthValues(
-        times((i) => [`User${i}@example.com`, `EMP-${i}`], 1000),
+        times((i) => [`User${i}@example.com`, `emp-${i}`], 1000),
       );
 
-      expect(response.statusCode).toEqual(200);
-      expect(response.json.matches).toHaveLength(250);
-      expect(map('index', response.json.matches)).toEqual(times(Number, 250));
-      expect(map('userReference', response.json.matches)).toEqual(
-        times((i) => `user-${i}`, 250),
+      expect(response.json.depots).toHaveLength(250);
+      expectDepots(response, depots);
+    });
+
+    it('should return only the listed depots whose auth values match', async () => {
+      const janeDepot = await createDepot({
+        userReference: 'ABC123',
+        authValues: ['jane.doe@example.com', 'EMP-1'],
+      });
+      const johnDepot = await createDepot({
+        userReference: 'DEF456',
+        authValues: ['john.doe@example.com', 'EMP-2'],
+      });
+      const jimDepot = await createDepot({
+        userReference: 'GHI789',
+        authValues: ['jim.doe@example.com', 'EMP-3'],
+      });
+      const authValues = [
+        ['jane.doe@example.com', 'EMP-1'],
+        ['john.doe@example.com', 'EMP-2'],
+      ];
+
+      expectDepots(
+        await findByAuthValues(authValues, {
+          depotId: [janeDepot.id, jimDepot.id],
+        }),
+        [janeDepot],
       );
+      expectDepots(
+        await findByAuthValues(authValues, {
+          depotId: johnDepot.id.toUpperCase(),
+        }),
+        [johnDepot],
+      );
+      expectDepots(
+        await findByAuthValues(authValues, { depotId: jimDepot.id }),
+        [],
+      );
+      expectDepots(await findByAuthValues(authValues, { depotId: [] }), [
+        janeDepot,
+        johnDepot,
+      ]);
     });
   });
 
-  describe('isolation', () => {
-    it('should not match a depot of another service', async () => {
+  describe('authValues isolation', () => {
+    it('should not return a depot of another service', async () => {
       const otherService = await persistVpService();
       await createDepot(
         {
@@ -389,10 +434,10 @@ describe('Find Depots by Auth Values Test Suite', () => {
         ['jane.doe@example.com', 'EMP-1'],
       ]);
 
-      expectMatches(response, []);
+      expectDepots(response, []);
     });
 
-    it('should not match a depot of another tenant, nor find its service', async () => {
+    it('should not return a depot of another tenant, nor find its service', async () => {
       const otherTenant = await persistTenant();
       const otherService = await persistVpService({ tenant: otherTenant });
       const otherDepot = await createDepot(
@@ -404,14 +449,14 @@ describe('Find Depots by Auth Values Test Suite', () => {
       );
       await insertDepot({
         userReference: 'DEF456',
-        authMatchValues: ['jane.doe@example.com', 'emp-1'],
+        authValues: ['jane.doe@example.com', 'EMP-1'],
         tenantId: otherTenant._id,
       });
 
       const response = await findByAuthValues([
         ['jane.doe@example.com', 'EMP-1'],
       ]);
-      expectMatches(response, []);
+      expectDepots(response, []);
 
       const otherServiceResponse = await findByAuthValues(
         [['jane.doe@example.com', 'EMP-1']],
@@ -424,19 +469,17 @@ describe('Find Depots by Auth Values Test Suite', () => {
         [['jane.doe@example.com', 'EMP-1']],
         { serviceId: otherService._id, tenantId: otherTenant._id },
       );
-      expectMatches(otherTenantResponse, [
-        { index: 0, depotId: otherDepot.id, userReference: 'ABC123' },
-      ]);
+      expectDepots(otherTenantResponse, [otherDepot]);
     });
 
-    it('should not match a depot created under a previous auth configuration', async () => {
+    it('should not return a depot created under a previous auth configuration', async () => {
       await createDepot({
         userReference: 'ABC123',
         authValues: ['jane.doe@example.com', 'EMP-1'],
       });
       await insertDepot({
         userReference: 'DEF456',
-        authMatchValues: ['jane.doe@example.com', 'emp-1'],
+        authValues: ['jane.doe@example.com', 'EMP-1'],
         authRulesFingerprint: 'previous-configuration',
       });
       await mongoDb()
@@ -450,11 +493,22 @@ describe('Find Depots by Auth Values Test Suite', () => {
         ['jane.doe@example.com', 'EMP-1'],
       ]);
 
-      expectMatches(response, []);
+      expectDepots(response, []);
     });
   });
 
-  describe('services', () => {
+  describe('authValues service', () => {
+    it('should 400 when authValues has no serviceId', async () => {
+      const response = await findDepots({
+        authValues: [['jane.doe@example.com', 'EMP-1']],
+      });
+
+      expectRequestValidationFailed(
+        response,
+        "body must NOT be valid, body must have required property 'serviceId', body must match a schema in anyOf",
+      );
+    });
+
     it('should 400 for a preauth service', async () => {
       const preauthService = await persistIssuerService({
         tenant,
@@ -470,9 +524,9 @@ describe('Find Depots by Auth Values Test Suite', () => {
       expect(response.json).toEqual(
         errorResponseMatcher({
           statusCode: 400,
-          errorCode: 'find_by_auth_values_not_supported',
+          errorCode: 'auth_values_filter_not_supported',
           message:
-            'Only internal verifiable_presentation issuer services match depots by auth values',
+            'Only internal verifiable_presentation issuer services filter depots by auth values',
         }),
       );
     });
@@ -519,8 +573,8 @@ describe('Find Depots by Auth Values Test Suite', () => {
     });
   });
 
-  describe('auth values validation', () => {
-    it('should 400 when auth values have fewer values than rules, naming the index', async () => {
+  describe('authValues validation', () => {
+    it('should 400 when a tuple has fewer values than rules, naming its index', async () => {
       const response = await findByAuthValues([
         ['jane.doe@example.com', 'EMP-1'],
         ['jane.doe@example.com'],
@@ -529,7 +583,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
       expectInvalidAuthValues(response, 1);
     });
 
-    it('should 400 when auth values have more values than rules', async () => {
+    it('should 400 when a tuple has more values than rules', async () => {
       const response = await findByAuthValues([
         ['jane.doe@example.com', 'EMP-1', 'extra'],
       ]);
@@ -558,7 +612,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
       expect(response.body).not.toContain('EMP-');
     });
 
-    it('should 400 when there are more than 1000 auth values', async () => {
+    it('should 400 when there are more than 1000 tuples', async () => {
       const response = await findByAuthValues(
         times((i) => [`user${i}@example.com`, `EMP-${i}`], 1001),
       );
@@ -569,7 +623,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
       );
     });
 
-    it('should 400 when auth values hold more than 10 values', async () => {
+    it('should 400 when a tuple has more than 10 values', async () => {
       const response = await findByAuthValues([times((i) => `value-${i}`, 11)]);
 
       expectRequestValidationFailed(
@@ -578,7 +632,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
       );
     });
 
-    it('should 400 when auth values hold no value', async () => {
+    it('should 400 when a tuple is empty', async () => {
       const response = await findByAuthValues([[]]);
 
       expectRequestValidationFailed(
@@ -587,7 +641,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
       );
     });
 
-    it('should 400 when there are no auth values', async () => {
+    it('should 400 when there are no tuples', async () => {
       const response = await findByAuthValues([]);
 
       expectRequestValidationFailed(
@@ -605,35 +659,111 @@ describe('Find Depots by Auth Values Test Suite', () => {
       expect(response.json.errorCode).toEqual('request_validation_failed');
     });
 
-    it('should 400 when authValues is missing', async () => {
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: testUrl,
-        payload: { tenantId: tenant._id, serviceId: vpService._id },
-      });
-
-      expectRequestValidationFailed(
-        response,
-        "body must have required property 'authValues'",
-      );
-    });
-
     it('should 400 for an unknown property', async () => {
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: testUrl,
-        payload: {
-          tenantId: tenant._id,
-          serviceId: vpService._id,
-          authValues: [['jane.doe@example.com', 'EMP-1']],
-          userReference: 'ABC123',
-        },
-      });
+      const response = await findByAuthValues(
+        [['jane.doe@example.com', 'EMP-1']],
+        { userReference: 'ABC123' },
+      );
 
       expectRequestValidationFailed(
         response,
         'body must NOT have additional properties',
       );
+    });
+
+    it('should 400 without a tenantId', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: { serviceId: vpService._id },
+      });
+
+      expectRequestValidationFailed(
+        response,
+        "body must have required property 'tenantId'",
+      );
+    });
+  });
+
+  describe('without authValues', () => {
+    it('should return the same depots as GET depots/get for the same filters', async () => {
+      const preauthService = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth'],
+      });
+      const vpDepots = [
+        await createDepot({
+          userReference: 'ABC123',
+          authValues: ['jane.doe@example.com', 'EMP-1'],
+        }),
+        await createDepot({
+          userReference: 'DEF456',
+          authValues: ['john.doe@example.com', 'EMP-2'],
+        }),
+      ];
+      const preauthDepot = await createDepot(
+        { userReference: 'GHI789' },
+        { serviceId: preauthService._id },
+      );
+      const otherTenant = await persistTenant();
+      const otherService = await persistVpService({ tenant: otherTenant });
+      await createDepot(
+        {
+          userReference: 'JKL012',
+          authValues: ['jane.doe@example.com', 'EMP-1'],
+        },
+        { serviceId: otherService._id, tenantId: otherTenant._id },
+      );
+
+      const expectations = [
+        [{}, [...vpDepots, preauthDepot]],
+        [{ serviceId: vpService._id }, vpDepots],
+        [{ serviceId: preauthService._id }, [preauthDepot]],
+        [{ depotId: preauthDepot.id }, [preauthDepot]],
+        [
+          { depotId: [vpDepots[0].id, preauthDepot.id] },
+          [vpDepots[0], preauthDepot],
+        ],
+        [
+          {
+            serviceId: vpService._id,
+            depotId: [vpDepots[1].id, preauthDepot.id],
+          },
+          [vpDepots[1]],
+        ],
+      ];
+      const responses = await Promise.all(
+        map(
+          ([filters]) => Promise.all([findDepots(filters), getDepots(filters)]),
+          expectations,
+        ),
+      );
+
+      responses.forEach(([response, getResponse], i) => {
+        expect(getResponse.statusCode).toEqual(200);
+        expect(response.json.depots).toEqual(getResponse.json.depots);
+        expectDepots(response, expectations[i][1]);
+      });
+    });
+
+    it('should page like GET depots/get', async () => {
+      await Promise.all(
+        times(
+          (i) =>
+            insertDepot({
+              userReference: `user-${i}`,
+              authValues: [`user${i}@example.com`, `EMP-${i}`],
+            }),
+          250,
+        ),
+      );
+
+      const response = await findDepots({ serviceId: vpService._id });
+      const getResponse = await getDepots({ serviceId: vpService._id });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.depots).toHaveLength(200);
+      expect(response.json.depots).toEqual(getResponse.json.depots);
     });
   });
 
@@ -649,6 +779,7 @@ describe('Find Depots by Auth Values Test Suite', () => {
         userReference: 'ABC123',
         authValues: ['jane.doe@example.com', 'EMP-1'],
       });
+      infoLogs.length = 0;
 
       const response = await findByAuthValues([
         ['jane.doe@example.com', 'EMP-1'],
@@ -657,18 +788,14 @@ describe('Find Depots by Auth Values Test Suite', () => {
       ]);
 
       expect(response.statusCode).toEqual(200);
-      const findLogs = filter(
-        ([, message]) => message === 'find depots by auth values',
-        infoLogs,
-      );
-      expect(findLogs).toEqual([
+      expect(
+        filter(
+          ([, message]) => message === 'find depots by auth values',
+          infoLogs,
+        ),
+      ).toEqual([
         [
-          {
-            serviceId: vpService._id,
-            tupleCount: 3,
-            depotCount: 1,
-            matchCount: 2,
-          },
+          { serviceId: vpService._id, tupleCount: 3, depotCount: 1 },
           'find depots by auth values',
         ],
       ]);

@@ -21,7 +21,7 @@ const DepotErrors = {
   AUTH_VALUES_ALREADY_USED: 'auth_values_already_used',
   DEFERRED_CREDENTIALS_NOT_SUPPORTED: 'deferred_credentials_not_supported',
   DEPOT_NOT_FOUND: 'depot_not_found',
-  FIND_BY_AUTH_VALUES_NOT_SUPPORTED: 'find_by_auth_values_not_supported',
+  AUTH_VALUES_FILTER_NOT_SUPPORTED: 'auth_values_filter_not_supported',
 };
 
 module.exports = { DepotErrors };

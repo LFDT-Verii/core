@@ -18,8 +18,7 @@ const { coerceArray } = require('@verii/common-functions');
 const {
   depotConflictErrorSchema,
   depotSchema,
-  findDepotsByAuthValuesRequestSchema,
-  findDepotsByAuthValuesResponseSchema,
+  findDepotsRequestSchema,
   newDepotSchema,
 } = require('@verii/credentialing-hub-operator-api');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
@@ -36,8 +35,7 @@ const depotsController = async (fastify) => {
     .addSchema(newDepotSchema)
     .addSchema(depotSchema)
     .addSchema(depotConflictErrorSchema)
-    .addSchema(findDepotsByAuthValuesRequestSchema)
-    .addSchema(findDepotsByAuthValuesResponseSchema)
+    .addSchema(findDepotsRequestSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .autoSchemaPreset({ tags: ['Depots'] })
     .post(
@@ -137,23 +135,44 @@ const depotsController = async (fastify) => {
       },
     )
     .post(
-      '/find-by-auth-values',
+      '/get',
       {
-        // The body carries holders' auth values, such as their emails
+        // The body can carry holders' auth values, such as their emails
         config: { sensitiveLogging: true },
         schema: fastify.autoSchema({
-          summary: 'Find depots by auth values',
-          operationId: 'findDepotsByAuthValues',
-          body: { $ref: 'find-depots-by-auth-values-request#' },
+          summary: 'Find depots',
+          operationId: 'findDepots',
+          body: { $ref: 'find-depots-request#' },
+          // The same response as GET depots/get
           response: {
-            200: { $ref: 'find-depots-by-auth-values-response#' },
+            200: {
+              type: 'object',
+              properties: {
+                depots: {
+                  type: 'array',
+                  items: {
+                    $ref: 'depot',
+                  },
+                },
+                requestId: { type: 'string' },
+              },
+              required: ['depots', 'requestId'],
+            },
             ...fastify.NotFoundResponse,
           },
         }),
       },
       async (req) => {
-        const matches = await findDepotsByAuthValues(req.body, req);
-        return { matches };
+        const { serviceId, depotId, authValues } = req.body;
+        const depotIds = coerceArray(depotId);
+        const depots =
+          authValues == null
+            ? await req.repos.depots.findDepots(serviceId, depotIds)
+            : await findDepotsByAuthValues(
+                { serviceId, depotIds, authValues },
+                req,
+              );
+        return { depots };
       },
     )
     .post(
