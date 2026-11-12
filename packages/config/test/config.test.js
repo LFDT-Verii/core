@@ -95,7 +95,7 @@ describe('genericConfig Sentry settings', () => {
 describe('genericConfig environment label', () => {
   const labelKeys = ['environmentLabel', 'nodeEnv'];
 
-  it('should default ENVIRONMENT_LABEL to NODE_ENV', () => {
+  it('should default ENVIRONMENT_LABEL to NODE_ENV without NETWORK', () => {
     expect(
       loadConfig({ ...productionEnv, NODE_ENV: 'staging' }, labelKeys),
     ).toEqual({
@@ -104,12 +104,30 @@ describe('genericConfig environment label', () => {
     });
   });
 
-  it('should read ENVIRONMENT_LABEL', () => {
+  it('should default ENVIRONMENT_LABEL to NETWORK', () => {
     expect(
-      loadConfig({ ...productionEnv, ENVIRONMENT_LABEL: 'testnet' }, labelKeys),
+      loadConfig({ ...productionEnv, NETWORK: 'mainnet' }, labelKeys),
     ).toEqual({
-      environmentLabel: 'testnet',
+      environmentLabel: 'mainnet',
       nodeEnv: 'production',
     });
+  });
+
+  it('should prefer ENVIRONMENT_LABEL to NETWORK', () => {
+    expect(
+      loadConfig(
+        { ...productionEnv, NETWORK: 'testnet', ENVIRONMENT_LABEL: 'staging' },
+        labelKeys,
+      ),
+    ).toEqual({
+      environmentLabel: 'staging',
+      nodeEnv: 'production',
+    });
+  });
+
+  it('should not expose NETWORK', () => {
+    expect(
+      loadConfig({ ...productionEnv, NETWORK: 'mainnet' }, ['network']),
+    ).toEqual({});
   });
 });
