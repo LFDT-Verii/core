@@ -40,23 +40,34 @@ const RuleCandidateValues = {
 
 // Only the rules' own names count, so a stored rule such as "constructor" gives
 // no values rather than an inherited method.
-const ruleCandidateValues = (rule, credentials) =>
-  has([rule.rule], RuleCandidateValues)
-    ? flow(ruleValues, get([rule.rule], RuleCandidateValues))(rule, credentials)
-    : [];
+const ruleCandidateValues = (rule, credentials) => {
+  if (!has([rule.rule], RuleCandidateValues)) {
+    return [];
+  }
+  const candidateValues = get([rule.rule], RuleCandidateValues);
+  return flow(ruleValues, candidateValues)(rule, credentials);
+};
 
-// Multiplies the positions' value counts, holding the product just past the
-// limit, so it never overflows to Infinity, and Infinity * 0 never gives NaN.
+// Multiplies the count by a position's number of values, holding the product
+// just past the limit, so it never overflows to Infinity, and Infinity * 0
+// never gives NaN.
+const multiplyCount = (count, values) =>
+  Math.min(count * size(values), MAX_CANDIDATE_TUPLES + 1);
+
+const isOverCandidateLimit = (count) => count > MAX_CANDIDATE_TUPLES;
+
+// Multiplies the positions' value counts and compares them with the limit.
 const exceedsCandidateLimit = flow(
-  reduce(
-    (count, values) => Math.min(count * size(values), MAX_CANDIDATE_TUPLES + 1),
-    1,
-  ),
-  (count) => count > MAX_CANDIDATE_TUPLES,
+  reduce(multiplyCount, 1),
+  isOverCandidateLimit,
 );
 
-const appendPosition = (tuples, values) =>
-  flatMap((tuple) => map((value) => [...tuple, value], values), tuples);
+// Each tuple extended with each of the position's values.
+const appendPosition = (tuples, values) => {
+  const extendWithEachValue = (tuple) =>
+    map((value) => [...tuple, value], values);
+  return flatMap(extendWithEachValue, tuples);
+};
 
 // Every combination of the positions' values. A position without values leaves
 // no tuples, and the count is checked before any tuple is built.
@@ -78,11 +89,13 @@ const combinePositions = (valuesByPosition) => {
 // combination of the rules' values, each value at its rule's valueIndex. The
 // value indexes are 0 to n-1, so ordering the rules by them gives the
 // positions.
-const buildCandidateTuples = (rules, credentials) =>
-  flow(
+const buildCandidateTuples = (rules, credentials) => {
+  const candidateValuesOf = (rule) => ruleCandidateValues(rule, credentials);
+  return flow(
     sortBy('valueIndex'),
-    map((rule) => ruleCandidateValues(rule, credentials)),
+    map(candidateValuesOf),
     combinePositions,
   )(rules);
+};
 
 module.exports = { buildCandidateTuples };

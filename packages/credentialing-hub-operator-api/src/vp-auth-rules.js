@@ -35,8 +35,8 @@ const {
   isPlainObject,
   isString,
   map,
-  negate,
   overSome,
+  size,
   stubTrue,
   uniq,
 } = require('lodash/fp');
@@ -77,33 +77,49 @@ const segmentSelector = cond([
 // credential and returns what it selects. A string selects a key of each
 // selected object, a non-negative integer an index of each selected array, and
 // null every element of each selected array. Any other segment selects nothing.
-// The pointer runs as a flow of its segments' selectors. It never throws.
-const selectClaims = (pointer, credential) =>
-  isArray(pointer) && !isEmpty(pointer)
-    ? flow(map(segmentSelector, pointer))([credential])
-    : [];
+// It never throws.
+//
+// An empty pointer selects nothing, rather than the credential. Otherwise the
+// pointer's segments are the steps of a flow, which starts with the credential
+// as the only selected element. castArray would take an array passed as the
+// credential as the selection itself, but a credential's JSON root is always
+// an object.
+const selectClaims = (pointer, credential) => {
+  if (!isArray(pointer) || isEmpty(pointer)) {
+    return [];
+  }
+  const steps = map(segmentSelector, pointer);
+  return flow(castArray, steps)(credential);
+};
 
 // A rule's pointers are tried in order, and the first one that selects a
 // usable value supplies the values. A selection of only nulls, objects or
 // arrays falls through to the next pointer. A rule has at most 10 pointers, so
 // every pointer is evaluated.
-const firstUsableValues = (pointers, credential) =>
-  flow(
+const firstUsableValues = (pointers, credential) => {
+  const selectFromCredential = (pointer) => selectClaims(pointer, credential);
+  const usableValues = flow(selectFromCredential, filter(isScalar));
+  return flow(
     castArray,
-    map((pointer) => filter(isScalar, selectClaims(pointer, credential))),
-    find(negate(isEmpty)),
+    map(usableValues),
+    find(size),
     defaultTo([]),
   )(pointers);
+};
 
 // The distinct normalized scalar values that a rule finds in the credentials of
 // its type. credentials are { type, credential } for each verified credential.
-const ruleValues = (rule, credentials) =>
-  flow(
-    filter(({ type }) => type === rule.type),
+const ruleValues = (rule, credentials) => {
+  const isOfRuleType = ({ type }) => type === rule.type;
+  const valuesInCredential = (credential) =>
+    firstUsableValues(rule.path, credential);
+  return flow(
+    filter(isOfRuleType),
     map('credential'),
-    flatMap((credential) => firstUsableValues(rule.path, credential)),
+    flatMap(valuesInCredential),
     map(toAuthMatchValue),
     uniq,
   )(credentials);
+};
 
 module.exports = { ruleValues, selectClaims };
