@@ -14,8 +14,8 @@
  * limitations under the License.
  *
  */
-const { flow, zip, range, map, forEach, castArray } = require('lodash/fp');
-const { appendSearchParam } = require('@verii/common-functions');
+const { flow, zip, range, map, castArray } = require('lodash/fp');
+const { buildDeepLink } = require('@verii/common-functions');
 
 const buildDeepLinkUrl = (
   requestUri,
@@ -29,28 +29,16 @@ const buildDeepLinkUrl = (
   const inspectorDids = castArray(inspectorDid);
   const issuerDids = castArray(issuerDid);
   const vendorOriginContexts = castArray(vendorOriginContext);
-  const parsedLinks = flow(
+  const links = flow(
     (items) => zip(items, range(0, items.length)),
     map(([value, index]) => ({
-      _requestUri: value,
-      _vendorOriginContext: vendorOriginContexts[index],
-      _inspectorDid: inspectorDids[index],
-      _issuerDid: issuerDids[index],
+      requestUri: value,
+      vendorOriginContext: vendorOriginContexts[index],
+      inspectorDid: inspectorDids[index],
+      issuerDid: issuerDids[index],
     })),
   )(requestUris);
-  const url = new URL(`${deepLinkProtocol}${suffix}`);
-  forEach(
-    ({ _requestUri, _inspectorDid, _issuerDid, _vendorOriginContext }) => {
-      flow(
-        appendSearchParam('request_uri', _requestUri),
-        appendSearchParam('inspectorDid', _inspectorDid),
-        appendSearchParam('issuerDid', _issuerDid),
-        appendSearchParam('vendorOriginContext', _vendorOriginContext),
-      )(url);
-    },
-    parsedLinks,
-  );
-  return url;
+  return buildDeepLink(deepLinkProtocol, suffix, links);
 };
 
 module.exports = {
