@@ -1,0 +1,17 @@
+{
+  "type": ["OpenBadgeCredential", "VerifiableCredential"],
+  "credentialSubject": {
+    "type": "AchievementSubject",
+    "creditsEarned": "{{creditsEarned}}",
+    "achievement": {
+      "id": "https://example.com/achievements/ivie",
+      "type": "Achievement",
+      "name": "Influenza Vaccine Immunization Education (IVIE)",
+      "description": "Awarded to {{firstName}} {{lastName}} for completing the IVIE module",
+      "criteria": {
+        "type": "Criteria",
+        "narrative": "Completed the self-guided IVIE learning module"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+# A batch of Open Badges for an issuer service with one email auth rule.
+tenantId: 6512a1b2c3d4e5f6a7b8c9d0
+serviceId: 6512a1b2c3d4e5f6a7b8c9d1
+depot:
+  userReference: "{{employeeId}}"
+  authValues:                  # position = the rule's valueIndex
+    - column: email            # rule 0: EmailV1.0, credentialSubject.email
+  expectedCredentialTypes: [OpenBadgeCredential]
+  deferredCredentials: false
+columns:                       # typed columns. Other columns are strings
+  creditsEarned: number
+credentials:
+  - template: ./open-badge.template.json
+    credentialReference: "{{employeeId}}-ivie-2026"
+    tags: [batch-2026-11]
