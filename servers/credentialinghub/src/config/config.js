@@ -14,12 +14,8 @@
  * limitations under the License.
  *
  */
-const {
-  createBlockchainConfig,
-  genericConfig,
-  networkEnv,
-} = require('@verii/config');
-const { accessors } = require('env-var');
+const { createBlockchainConfig, genericConfig } = require('@verii/config');
+const { accessors, from } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
 const {
   buildNotificationConfig,
@@ -38,30 +34,28 @@ const {
 const packageJson = require('../../package.json');
 const { createSwaggerConfig } = require('./swagger-config');
 
-// Built for each config, so it reads the environment as it is then
-const createEnv = () =>
-  networkEnv({
-    asMs: (value) => parseDuration(value),
-    asIntAboveZero: (value) => {
-      const int = accessors.asInt(value);
+const env = from(process.env, {
+  asMs: (value) => parseDuration(value),
+  asIntAboveZero: (value) => {
+    const int = accessors.asInt(value);
 
-      if (int < 1) {
-        throw new Error('should be an integer greater than 0');
-      }
+    if (int < 1) {
+      throw new Error('should be an integer greater than 0');
+    }
 
-      return int;
-    },
-    asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
-      const webhookUrl = accessors.asUrlString(value);
-      const error = findWebhookUrlError(webhookUrl, allowInsecureWebhookUrl);
+    return int;
+  },
+  asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
+    const webhookUrl = accessors.asUrlString(value);
+    const error = findWebhookUrlError(webhookUrl, allowInsecureWebhookUrl);
 
-      if (error != null) {
-        throw new Error(error);
-      }
+    if (error != null) {
+      throw new Error(error);
+    }
 
-      return webhookUrl;
-    },
-  });
+    return webhookUrl;
+  },
+});
 
 const ajvConfig = {
   ajvOptions: {
@@ -84,7 +78,6 @@ const openid4vcConfig = {};
  * @returns {Object} the config
  */
 const buildConfig = ({ servesHttp = true } = {}) => {
-  const env = createEnv();
   const notificationsEnabled = env
     .get('NOTIFICATIONS_ENABLED')
     .default('false')

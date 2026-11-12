@@ -35,7 +35,8 @@ if (JSON.stringify(config.Entrypoint) !== JSON.stringify(['node', 'docker/entryp
   throw new Error(`Unexpected image entrypoint: ${JSON.stringify(config.Entrypoint)}`);
 }
 
-const forbiddenEnvironment = /^(?:RPC_NODE_URL|CHAIN_ID|REGISTRAR_URL|[A-Z0-9_]*CONTRACT_ADDRESS|VNF_OAUTH_[A-Z0-9_]*|BLOCKCHAIN_OAUTH_[A-Z0-9_]*)=/;
+// The image presets no network: its operator sets every network value
+const forbiddenEnvironment = /^(?:NETWORK|RPC_NODE_URL|CHAIN_ID|REGISTRAR_URL|LIB_URL|DEEP_LINK_PROTOCOL|CREDENTIAL_EXTENSIONS_CONTEXT_URL|BLOCKCHAIN_API_AUDIENCE|[A-Z0-9_]*CONTRACT_ADDRESS|VNF_OAUTH_[A-Z0-9_]*|BLOCKCHAIN_OAUTH_[A-Z0-9_]*)=/;
 const exposed = (config.Env || []).filter((entry) => forbiddenEnvironment.test(entry));
 
 if (exposed.length > 0) {
@@ -43,31 +44,22 @@ if (exposed.length > 0) {
 }
 NODE
 
-if docker run --rm "$image" --velocity-devn >"$output_directory/unsupported-argument.log" 2>&1; then
-  echo 'Expected unsupported image argument to fail' >&2
-  exit 1
-fi
+# The image takes no arguments, including the network flags it used to take
+for argument in --mainnet --velocity-devnet --unsupported; do
+  status=0
+  docker run --rm "$image" "$argument" >"$output_directory/unsupported-argument.log" 2>&1 || status=$?
 
-if ! grep -Fq 'Unsupported Credentialing Hub image argument' "$output_directory/unsupported-argument.log"; then
-  echo 'Unsupported image argument error was not reported' >&2
-  exit 1
-fi
+  if [[ "$status" -ne 64 ]]; then
+    echo "Expected image argument $argument to fail with exit code 64, received $status" >&2
+    exit 1
+  fi
 
-readonly supplied_chain_id='424242'
-if docker run --rm -e "CHAIN_ID=$supplied_chain_id" "$image" --mainnet >"$output_directory/preset-conflict.log" 2>&1; then
-  echo 'Expected a changed mainnet CHAIN_ID to fail' >&2
-  exit 1
-fi
-
-if ! grep -Fq "CHAIN_ID can't be changed on mainnet" "$output_directory/preset-conflict.log"; then
-  echo 'Mainnet preset conflict did not name CHAIN_ID' >&2
-  exit 1
-fi
-
-if grep -Fq "$supplied_chain_id" "$output_directory/preset-conflict.log"; then
-  echo 'Mainnet preset conflict leaked the supplied CHAIN_ID value' >&2
-  exit 1
-fi
+  if ! grep -Fq 'Unsupported Credentialing Hub image argument' "$output_directory/unsupported-argument.log" ||
+    ! grep -Fq 'no longer presets a network' "$output_directory/unsupported-argument.log"; then
+    echo "Image argument $argument was not reported as unsupported" >&2
+    exit 1
+  fi
+done
 
 package_name="$(docker run --rm --entrypoint node "$image" -p "require('/app/package.json').name")"
 if [[ "$package_name" != '@verii/server-credentialing-hub' ]]; then

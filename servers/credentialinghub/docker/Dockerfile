@@ -24,7 +24,7 @@ FROM node:24.22.2-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5a
 ARG IMAGE_VERSION="0.0.0-local"
 ARG IMAGE_REVISION="unknown"
 LABEL org.opencontainers.image.title="Verii Credentialing Hub" \
-  org.opencontainers.image.description="Environment-agnostic Verii Credentialing Hub" \
+  org.opencontainers.image.description="Network-agnostic Verii Credentialing Hub" \
   org.opencontainers.image.source="https://github.com/LFDT-Verii/core" \
   org.opencontainers.image.url="https://hub.docker.com/r/lfdecentralizedtrust/verii-credentialing-hub" \
   org.opencontainers.image.licenses="Apache-2.0" \

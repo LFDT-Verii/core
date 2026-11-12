@@ -31,22 +31,19 @@ describe('Credentialing Hub Docker entrypoint', () => {
     );
   });
 
-  it('refuses to start when a mainnet network value is changed, without printing it', () => {
+  it('reports a former network flag as a configuration error that points at the network settings', () => {
     const result = spawnSync(process.execPath, [entrypointPath, '--mainnet'], {
       encoding: 'utf8',
-      env: {
-        PATH: process.env.PATH,
-        NODE_ENV: 'production',
-        CHAIN_ID: '424242',
-      },
+      env: {},
     });
 
-    assert.equal(result.status, 1);
+    assert.equal(result.status, 64);
     assert.match(
       result.stderr,
-      /CHAIN_ID can't be changed on mainnet\..*NETWORK=no-preset \(--no-preset\)/,
+      /Credentialing Hub startup configuration error: Unsupported Credentialing Hub image argument\./,
     );
-    assert.doesNotMatch(result.stderr, /424242/);
+    assert.match(result.stderr, /it no longer presets a network\./);
+    assert.match(result.stderr, /README\.md#network-settings/);
   });
 
   it('reports invalid image arguments as configuration errors', () => {
