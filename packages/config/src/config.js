@@ -17,6 +17,7 @@
 const env = require('env-var');
 const fs = require('fs');
 const { isEmpty } = require('lodash/fp');
+const { networkName } = require('./network-name');
 
 const nodeEnv = env.get('NODE_ENV').required().asString();
 const isTest = nodeEnv === 'test';
@@ -32,10 +33,11 @@ module.exports = {
   appHost: env.get('HOST').default('0.0.0.0').asString(),
   logSeverity: env.get('LOG_SEVERITY').default('info').asString(),
   // Names this deployment, for example in Sentry and in monitor names and email subjects.
-  // Defaults to NETWORK, the network the deployment runs on, then to NODE_ENV, which named it before (#1234).
+  // Defaults to the name of NETWORK, the network the deployment runs on (MainNet for mainnet),
+  // then to NODE_ENV, which named it before (#1234).
   environmentLabel: env
     .get('ENVIRONMENT_LABEL')
-    .default(env.get('NETWORK').default(nodeEnv).asString())
+    .default(networkName(env.get('NETWORK').default(nodeEnv).asString()))
     .asString(),
   // NODE_ENV says how Node runs. Behaviour that differs between deployments reads a named setting
   // instead (#1234). In Verii, isProd only picks some of those settings' defaults. Servers outside Verii still read it.

@@ -15,19 +15,15 @@
  *
  */
 
-const { getOr, includes } = require('lodash/fp');
-
-// How the registrar's emails name each Velocity network. Any other NETWORK shows as it is.
-const networkNames = {
-  devnet: 'DevNet',
-  testnet: 'TestNet',
-  mainnet: 'MainNet',
-};
+const { includes } = require('lodash/fp');
+// Required directly: @verii/config's index reads the whole environment when it's loaded
+const { networkName } = require('@verii/config/src/network-name');
 
 // Emails from these networks start their subject with the network's name
 const prefixedNetworks = ['devnet', 'testnet'];
 
-const whichNet = ({ network }) => getOr(network, network, networkNames);
+// Emails name the network, not ENVIRONMENT_LABEL, which a deployment may set to something else
+const whichNet = ({ network }) => networkName(network);
 
 const getSubjectNetPrefix = (config) =>
   includes(config.network, prefixedNetworks) ? `${whichNet(config)}: ` : '';

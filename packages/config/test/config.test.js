@@ -104,11 +104,20 @@ describe('genericConfig environment label', () => {
     });
   });
 
-  it('should default ENVIRONMENT_LABEL to NETWORK', () => {
+  it("should default ENVIRONMENT_LABEL to the network's name", () => {
     expect(
       loadConfig({ ...productionEnv, NETWORK: 'mainnet' }, labelKeys),
     ).toEqual({
-      environmentLabel: 'mainnet',
+      environmentLabel: 'MainNet',
+      nodeEnv: 'production',
+    });
+  });
+
+  it('should default ENVIRONMENT_LABEL to any other NETWORK as it is', () => {
+    expect(
+      loadConfig({ ...productionEnv, NETWORK: 'no-preset' }, labelKeys),
+    ).toEqual({
+      environmentLabel: 'no-preset',
       nodeEnv: 'production',
     });
   });
