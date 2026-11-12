@@ -141,16 +141,6 @@ describe('vp auth rules', () => {
         expect(ruleValues(valuesRule('boolean'), credentials)).toEqual([true]);
       });
 
-      it('should keep any string, number or boolean for a rule without a value type', () => {
-        expect(ruleValues(valuesRule(undefined), credentials)).toEqual([
-          'a@x.com',
-          1,
-          true,
-          '1',
-          'true',
-        ]);
-      });
-
       it('should keep nothing for an unknown value type', () => {
         expect(ruleValues(valuesRule('date'), credentials)).toEqual([]);
       });

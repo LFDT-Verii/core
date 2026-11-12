@@ -20,9 +20,8 @@ const {
   isInternalVpAuth,
 } = require('../../issuer-services/domain/is-internal-vp-auth');
 
-// valueType changes what a rule reads, so it's part of the hash. A rule saved
-// before valueType existed hashes as it did then, because JSON.stringify drops
-// an undefined valueType. valueFormat doesn't change matching, so it isn't.
+// valueType changes what a rule reads, so it's part of the hash. valueFormat
+// doesn't change matching, so it isn't.
 const canonicalRules = flow(
   map(({ path, rule, valueIndex, type, valueType }) => ({
     path,

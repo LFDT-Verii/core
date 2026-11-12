@@ -23,18 +23,12 @@ const {
   isBoolean,
   isFinite,
   isNil,
-  isNumber,
   isString,
   overEvery,
-  overSome,
   stubFalse,
   stubTrue,
 } = require('lodash/fp');
 const { toAuthMatchValue } = require('./auth-match-values');
-
-// What a rule saved before valueType existed takes: any string, number or
-// boolean.
-const isScalar = overSome([isString, isNumber, isBoolean]);
 
 // The checks of each valueType. They compare JavaScript types and never
 // convert, and a number must be finite.
@@ -65,14 +59,12 @@ const isKnownValueFormat = (valueFormat) =>
 const valueFormatCheck = (valueFormat) => get([valueFormat], ValueFormatChecks);
 
 /**
- * The check that a value has a rule's `valueType`. Without a `valueType`, as in
- * rules saved before it existed, any string, number or boolean passes. An
- * unknown `valueType` passes nothing.
- * @param {string} [valueType] `string`, `number` or `boolean`
+ * The check that a value has a rule's `valueType`. A missing or unknown
+ * `valueType` passes nothing.
+ * @param {string} valueType `string`, `number` or `boolean`
  * @returns {(value: unknown) => boolean} the check
  */
 const isOfValueType = cond([
-  [isNil, constant(isScalar)],
   [isKnownValueType, valueTypeCheck],
   [stubTrue, constant(stubFalse)],
 ]);

@@ -28,12 +28,14 @@ const rules = [
     rule: 'pick',
     valueIndex: 0,
     type: 'EmployeeIdV1.0',
+    valueType: 'string',
   },
   {
     path: [['credentialSubject', 'departmentId']],
     rule: 'equal',
     valueIndex: 1,
     type: 'EmployeeIdV1.0',
+    valueType: 'string',
   },
 ];
 const service = {

@@ -99,12 +99,6 @@ describe('auth value types', () => {
       ]);
     });
 
-    it('should accept any non-blank string, number or boolean for a rule without a value type', () => {
-      const rule = {};
-      expectValid(rule, ['EMP-1', 12345, 0, true, false]);
-      expectInvalid(rule, ['', '   ', null, undefined, {}, []]);
-    });
-
     it('should accept nothing for an unknown value type or value format', () => {
       expectInvalid({ valueType: 'date' }, ['2026-01-01', 12345, true]);
       expectInvalid({ valueType: 'constructor' }, ['EMP-1', 12345, true]);
@@ -127,17 +121,6 @@ describe('auth value types', () => {
 
     it('should accept a blank string, which only depots refuse', () => {
       expect(isOfValueType('string')('')).toEqual(true);
-    });
-
-    it('should accept any string, number or boolean without a value type', () => {
-      const isOfAnyType = isOfValueType(undefined);
-      expect([
-        isOfAnyType('a'),
-        isOfAnyType(1),
-        isOfAnyType(false),
-        isOfAnyType(null),
-        isOfAnyType({}),
-      ]).toEqual([true, true, true, false, false]);
     });
   });
 });

@@ -527,12 +527,14 @@ describe('Depots Test suite', () => {
             rule: 'pick',
             valueIndex: 0,
             type: 'EmailV1.0',
+            valueType: 'string',
           },
           {
             path: [['credentialSubject', 'employeeId']],
             rule: 'equal',
             valueIndex: 1,
             type: 'EmploymentPastV1.1',
+            valueType: 'string',
           },
         ],
         ...overrides,
@@ -560,7 +562,7 @@ describe('Depots Test suite', () => {
     });
 
     it('should store normalized authMatchValues in order, and never return them', async () => {
-      const authValues = ['  Jane.Doe@Example.COM\t', 42];
+      const authValues = ['  Jane.Doe@Example.COM\t', ' EMP-42 '];
       const response = await createDepot(vpService._id, {
         userReference: 'ABC123',
         authValues,
@@ -584,7 +586,7 @@ describe('Depots Test suite', () => {
       ).resolves.toEqual([
         {
           ...expectedDbDepot(response.json.depot, tenant),
-          authMatchValues: ['jane.doe@example.com', 42],
+          authMatchValues: ['jane.doe@example.com', 'emp-42'],
           authRulesFingerprint: buildAuthRulesFingerprint(vpService),
         },
       ]);
@@ -653,15 +655,6 @@ describe('Depots Test suite', () => {
       await expect(
         mongoDb().collection('depots').countDocuments({}),
       ).resolves.toEqual(0);
-    });
-
-    it('should accept any string, number or boolean for rules saved before they had a valueType', async () => {
-      const response = await createDepot(vpService._id, {
-        userReference: 'ABC123',
-        authValues: [true, 12345],
-      });
-
-      expect(response.statusCode).toEqual(200);
     });
 
     describe('auth value types and formats', () => {

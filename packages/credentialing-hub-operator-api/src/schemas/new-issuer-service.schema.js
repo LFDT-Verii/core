@@ -98,10 +98,15 @@ const newIssuerServiceSchema = {
       items: {
         type: 'object',
         required: ['path', 'rule', 'valueIndex', 'type', 'valueType'],
-        // valueFormat is only allowed on string rules
+        // valueFormat is only allowed on string rules. Each branch has its own
+        // type because fast-json-stringify compiles them on their own for the
+        // issuer-service response, and AJV's strictTypes logs untyped ones.
         anyOf: [
-          { properties: { valueType: { enum: ['string'] } } },
-          { not: { required: ['valueFormat'] } },
+          { type: 'object', properties: { valueType: { enum: ['string'] } } },
+          {
+            type: 'object',
+            not: { type: 'object', required: ['valueFormat'] },
+          },
         ],
         properties: {
           path: {

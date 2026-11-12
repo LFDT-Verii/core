@@ -99,6 +99,14 @@ const anyOfErrorMessage = (vpBranchError, authMethodIndex = 0) => {
   return `${preauthBranchError}, ${vpBranchError}, body/service must match a schema in anyOf`;
 };
 
+// AJV checks a rule's anyOf, whose branches each require an object, before
+// the rule's own type.
+const NOT_AN_OBJECT_RULE_MESSAGE = [
+  'body/service/verifiablePresentationAuthRules/0 must be object',
+  'body/service/verifiablePresentationAuthRules/0 must be object',
+  'body/service/verifiablePresentationAuthRules/0 must match a schema in anyOf',
+].join(', ');
+
 const emailAuthRule = (overrides) => ({
   path: [['credentialSubject', 'email']],
   rule: 'pick',
@@ -733,8 +741,7 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message:
-            'body/service/verifiablePresentationAuthRules/0 must be object',
+          message: NOT_AN_OBJECT_RULE_MESSAGE,
           errorCode: 'request_validation_failed',
         }),
       );
@@ -1352,31 +1359,6 @@ describe('Issuer services management Test suite', () => {
         requestId: expect.any(String),
       });
     });
-
-    it('should 200 with a service whose auth rules were saved before they had a valueType', async () => {
-      const service = await persistIssuerService({
-        tenant,
-        disclosureRequest: {
-          types: [{ type: 'EmailV1.0' }],
-          purpose: 'Identification',
-          retentionPeriod: 'P1D',
-        },
-        verifiablePresentationAuthRules: [
-          omit(['valueType'], emailAuthRule()),
-          emailAuthRule({ valueIndex: 1, valueFormat: 'email' }),
-        ],
-      });
-      const response = await fastify.injectJson({
-        method: 'GET',
-        url: `${testUrl}/get?tenantId=${tenant._id}&serviceId=${service._id}`,
-      });
-
-      expect(response.statusCode).toEqual(200);
-      expect(response.json).toEqual({
-        services: [expectedIssuerService(service)],
-        requestId: expect.any(String),
-      });
-    });
   });
 
   describe('Issuer Service Update Test Suite', () => {
@@ -1955,8 +1937,7 @@ describe('Issuer services management Test suite', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
-          message:
-            'body/service/verifiablePresentationAuthRules/0 must be object',
+          message: NOT_AN_OBJECT_RULE_MESSAGE,
           errorCode: 'request_validation_failed',
         }),
       );

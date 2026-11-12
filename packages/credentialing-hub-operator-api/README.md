@@ -48,7 +48,7 @@ A depot's `authValues` are matched against what a holder's credentials disclose 
 
 - `toAuthMatchValue(value)` trims and lower-cases a string, and leaves a number or boolean as it is. It doesn't convert between types, so `"12345"` never matches `12345`.
 - `buildAuthMatchValues(authValues)` normalizes each value of a depot's `authValues`, in order.
-- `isValidAuthValue(rule, value)` is the check `depots/create` runs on each auth value against the rule at its `valueIndex`, after `toAuthMatchValue`: the value has the rule's `valueType` (`string`, `number` or `boolean`, never converted), isn't a blank string, and has the rule's `valueFormat` (`email` or `e164`), if it has one. A rule without a `valueType`, saved before it existed, takes any string, number or boolean.
+- `isValidAuthValue(rule, value)` is the check `depots/create` runs on each auth value against the rule at its `valueIndex`, after `toAuthMatchValue`: the value has the rule's `valueType` (`string`, `number` or `boolean`, never converted), isn't a blank string, and has the rule's `valueFormat` (`email` or `e164`), if it has one.
 - `isOfValueType(valueType)` returns the `valueType` check alone, which `ruleValues` uses.
 
 `POST depots/get` with `authValues` matches the same way. To map the depots it returns back to the input, compare `buildAuthMatchValues` of each depot's `authValues` with `buildAuthMatchValues` of each input tuple.
@@ -58,7 +58,7 @@ A depot's `authValues` are matched against what a holder's credentials disclose 
 An issuer service's `verifiablePresentationAuthRules` read values from the credentials a holder presents:
 
 - `selectClaims(pointer, credential)` evaluates a claims path pointer (OpenID4VP 1.0, section 7) against a credential and returns what it selects. A string selects a key of an object, a non-negative integer an index of an array, and `null` every element of an array. It never throws.
-- `ruleValues(rule, credentials)` returns the distinct normalized scalar values that a rule finds in the credentials of its `type`. `credentials` are `{ type, credential }` for each credential. The rule's pointers are tried in order, and the first one that selects a value of the rule's `valueType` supplies the values. Values of other types are ignored, never converted, and a rule without a `valueType` uses any string, number or boolean.
+- `ruleValues(rule, credentials)` returns the distinct normalized scalar values that a rule finds in the credentials of its `type`. `credentials` are `{ type, credential }` for each credential. The rule's pointers are tried in order, and the first one that selects a value of the rule's `valueType` supplies the values. Values of other types are ignored, never converted.
 
 ```js
 const { ruleValues } = require('@verii/credentialing-hub-operator-api');

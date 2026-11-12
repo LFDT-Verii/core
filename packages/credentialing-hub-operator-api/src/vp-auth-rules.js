@@ -102,9 +102,8 @@ const firstUsableValues = (pointers, isUsable, credential) => {
 
 // The distinct normalized values of the rule's valueType that a rule finds in
 // the credentials of its type. Values of another type are ignored, never
-// converted. A rule without a valueType, saved before it existed, uses any
-// string, number or boolean. credentials are { type, credential } for each
-// verified credential.
+// converted. credentials are { type, credential } for each verified
+// credential.
 const ruleValues = (rule, credentials) => {
   const isOfRuleType = ({ type }) => type === rule.type;
   const isUsable = isOfValueType(rule.valueType);
