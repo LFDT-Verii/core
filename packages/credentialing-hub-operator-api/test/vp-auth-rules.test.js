@@ -24,6 +24,7 @@ const emailRule = (overrides) => ({
   rule: 'pick',
   valueIndex: 0,
   type: 'EmailV1.0',
+  valueType: 'string',
   ...overrides,
 });
 
@@ -124,15 +125,70 @@ describe('vp auth rules', () => {
       });
     });
 
-    it('should keep scalars only', () => {
-      const rule = emailRule({ path: [['credentialSubject', 'values', null]] });
-      expect(
-        ruleValues(rule, [
-          verified('EmailV1.0', {
-            values: ['A@x.com', 1, true, null, { email: 'b@x.com' }, ['c']],
-          }),
-        ]),
-      ).toEqual(['a@x.com', 1, true]);
+    describe('value types', () => {
+      const values = ['A@x.com', 1, true, '1', 'true', null, { a: 1 }, ['c']];
+      const valuesRule = (valueType) =>
+        emailRule({ path: [['credentialSubject', 'values', null]], valueType });
+      const credentials = [verified('EmailV1.0', { values })];
+
+      it("should keep only values of the rule's value type, without converting any", () => {
+        expect(ruleValues(valuesRule('string'), credentials)).toEqual([
+          'a@x.com',
+          '1',
+          'true',
+        ]);
+        expect(ruleValues(valuesRule('number'), credentials)).toEqual([1]);
+        expect(ruleValues(valuesRule('boolean'), credentials)).toEqual([true]);
+      });
+
+      it('should keep any string, number or boolean for a rule without a value type', () => {
+        expect(ruleValues(valuesRule(undefined), credentials)).toEqual([
+          'a@x.com',
+          1,
+          true,
+          '1',
+          'true',
+        ]);
+      });
+
+      it('should keep nothing for an unknown value type', () => {
+        expect(ruleValues(valuesRule('date'), credentials)).toEqual([]);
+      });
+
+      it('should ignore a number held as a string for a number rule', () => {
+        const rule = emailRule({
+          path: [['credentialSubject', 'employeeId']],
+          valueType: 'number',
+        });
+        expect(
+          ruleValues(rule, [
+            verified('EmailV1.0', { employeeId: '12345' }),
+            verified('EmailV1.0', { employeeId: 12345 }),
+          ]),
+        ).toEqual([12345]);
+      });
+
+      it('should fall through a pointer that selects only values of another type', () => {
+        const rule = emailRule({
+          path: [
+            ['credentialSubject', 'employeeId'],
+            ['credentialSubject', 'employeeNumber'],
+          ],
+          valueType: 'number',
+        });
+        expect(
+          ruleValues(rule, [
+            verified('EmailV1.0', { employeeId: 'E-1', employeeNumber: 12345 }),
+          ]),
+        ).toEqual([12345]);
+      });
+
+      it('should not check the value format', () => {
+        const rule = emailRule({ valueFormat: 'email' });
+        expect(ruleValues(rule, [emailCredential('Not An Email')])).toEqual([
+          'not an email',
+        ]);
+      });
     });
 
     it('should drop a selected array, which a null segment would expand', () => {

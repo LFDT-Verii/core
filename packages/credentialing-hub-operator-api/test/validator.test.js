@@ -50,6 +50,8 @@ const vpService = (overrides) =>
         rule: 'pick',
         valueIndex: 0,
         type: 'EmailV1.0',
+        valueType: 'string',
+        valueFormat: 'email',
       },
     ],
     ...overrides,
@@ -75,6 +77,7 @@ const authRule = (overrides) => ({
   rule: 'pick',
   valueIndex: 0,
   type: 'EmailV1.0',
+  valueType: 'string',
   ...overrides,
 });
 
@@ -369,6 +372,76 @@ describe('operator API validator', () => {
       ).toEqual(
         errorsWith('anyOf', '/verifiablePresentationAuthRules/0/path/0/1'),
       );
+    });
+
+    describe('auth rule value types and formats', () => {
+      const withRule = (overrides) =>
+        vpService({
+          verifiablePresentationAuthRules: [
+            {
+              path: [['credentialSubject', 'value']],
+              rule: 'pick',
+              valueIndex: 0,
+              type: 'EmailV1.0',
+              ...overrides,
+            },
+          ],
+        });
+
+      it('should accept each value type', () => {
+        for (const valueType of ['string', 'number', 'boolean']) {
+          expect(
+            validate('new-issuer-service', withRule({ valueType })),
+          ).toEqual([]);
+        }
+      });
+
+      it('should accept each value format on a string rule', () => {
+        for (const valueFormat of ['email', 'e164']) {
+          expect(
+            validate(
+              'new-issuer-service',
+              withRule({ valueType: 'string', valueFormat }),
+            ),
+          ).toEqual([]);
+        }
+      });
+
+      it('should refuse a rule without a value type', () => {
+        expect(validate('new-issuer-service', withRule({}))).toEqual([
+          error('required', '/verifiablePresentationAuthRules/0'),
+        ]);
+        expect(
+          validate('new-issuer-service', withRule({ valueFormat: 'email' })),
+        ).toEqual([error('required', '/verifiablePresentationAuthRules/0')]);
+      });
+
+      it('should refuse an unknown value type or value format', () => {
+        expect(
+          validate('new-issuer-service', withRule({ valueType: 'date' })),
+        ).toEqual([
+          error('enum', '/verifiablePresentationAuthRules/0/valueType'),
+        ]);
+        expect(
+          validate(
+            'new-issuer-service',
+            withRule({ valueType: 'string', valueFormat: 'phone' }),
+          ),
+        ).toEqual([
+          error('enum', '/verifiablePresentationAuthRules/0/valueFormat'),
+        ]);
+      });
+
+      it('should refuse a value format on a number or boolean rule', () => {
+        for (const valueType of ['number', 'boolean']) {
+          expect(
+            validate(
+              'new-issuer-service',
+              withRule({ valueType, valueFormat: 'email' }),
+            ),
+          ).toEqual(errorsWith('anyOf', '/verifiablePresentationAuthRules/0'));
+        }
+      });
     });
 
     it('should neither apply defaults nor coerce types', () => {

@@ -15,11 +15,11 @@
  *
  */
 const newError = require('http-errors');
-const { every, isEmpty, size } = require('lodash/fp');
+const { findIndex, flow, isEmpty, size, sortBy, zip } = require('lodash/fp');
 const { isBefore } = require('date-fns/fp');
 const {
-  buildAuthMatchValues,
   DepotErrors,
+  isValidAuthValue,
 } = require('@verii/credentialing-hub-operator-api');
 const {
   isInternalVpAuth,
@@ -35,7 +35,7 @@ const validateDepot = (depot, service, isIssuerService) => {
     isInternalVpAuth(service) &&
     !hasValidAuthValues(depot.authValues, service)
   ) {
-    throw newError(400, DepotErrors.INVALID_AUTH_VALUES, {
+    throw newError(400, invalidAuthValuesMessage(depot.authValues, service), {
       errorCode: DepotErrors.INVALID_AUTH_VALUES,
     });
   }
@@ -50,13 +50,40 @@ const validateDeferredCredentials = (depot, isIssuerService) => {
   }
 };
 
-// authValues hold exactly one value per rule, at the rule's valueIndex.
+// authValues hold exactly one value per rule, and each value suits the rule at
+// its valueIndex: it has the rule's valueType and valueFormat, and isn't blank.
 const hasValidAuthValues = (authValues, service) =>
-  !isEmpty(authValues) &&
-  size(authValues) === size(service.verifiablePresentationAuthRules) &&
-  every(isPresent, buildAuthMatchValues(authValues));
+  hasOneValuePerRule(authValues, service) &&
+  findInvalidAuthValueIndex(authValues, service) === -1;
 
-const isPresent = (value) => value != null && value !== '';
+const hasOneValuePerRule = (authValues, service) =>
+  !isEmpty(authValues) &&
+  size(authValues) === size(service.verifiablePresentationAuthRules);
+
+// The index of the first value that doesn't suit the rule at its valueIndex, or
+// -1 when they all do. The rules' value indexes are 0 to n-1, so ordering the
+// rules by them gives each value's rule.
+const findInvalidAuthValueIndex = (authValues, service) => {
+  const rulesByValueIndex = sortBy(
+    'valueIndex',
+    service.verifiablePresentationAuthRules,
+  );
+  const isInvalidForItsRule = ([rule, value]) => !isValidAuthValue(rule, value);
+  const indexOfInvalidValue = flow(
+    zip(rulesByValueIndex),
+    findIndex(isInvalidForItsRule),
+  );
+  return indexOfInvalidValue(authValues);
+};
+
+// Names an invalid value by its index, never by the value.
+const invalidAuthValuesMessage = (authValues, service) => {
+  if (!hasOneValuePerRule(authValues, service)) {
+    return DepotErrors.INVALID_AUTH_VALUES;
+  }
+  const index = findInvalidAuthValueIndex(authValues, service);
+  return `authValues[${index}] must be a non-blank value of its auth rule's valueType and valueFormat`;
+};
 
 const isMissingOrDeactivated = (service) =>
   service == null ||

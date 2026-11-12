@@ -17,6 +17,7 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
+const { calcSha384 } = require('@verii/crypto');
 const {
   buildAuthRulesFingerprint,
 } = require('../../src/entities/depots/domain/auth-rules-fingerprint');
@@ -156,6 +157,64 @@ describe('buildAuthRulesFingerprint', () => {
       );
     });
   }
+
+  describe('value types and formats', () => {
+    const withEmailRule = (overrides) =>
+      buildService({
+        verifiablePresentationAuthRules: [
+          { ...emailRule, ...overrides },
+          employeeIdRule,
+        ],
+      });
+
+    it('should be the hash it was before valueType existed for rules without one', () => {
+      const ruleFields = ({ path, rule, valueIndex, type }) => ({
+        path,
+        rule,
+        valueIndex,
+        type,
+      });
+      expect(fingerprint).toEqual(
+        calcSha384(
+          JSON.stringify({
+            rules: [ruleFields(emailRule), ruleFields(employeeIdRule)],
+            types: ['EmailV1.0', 'EmploymentPastV1.1'],
+          }),
+        ),
+      );
+    });
+
+    it('should change when a rule gets a valueType', () => {
+      expect(
+        buildAuthRulesFingerprint(withEmailRule({ valueType: 'string' })),
+      ).not.toEqual(fingerprint);
+    });
+
+    it("should change when a rule's valueType changes", () => {
+      const fingerprints = [
+        buildAuthRulesFingerprint(withEmailRule({ valueType: 'string' })),
+        buildAuthRulesFingerprint(withEmailRule({ valueType: 'number' })),
+        buildAuthRulesFingerprint(withEmailRule({ valueType: 'boolean' })),
+      ];
+      expect(new Set(fingerprints).size).toEqual(3);
+    });
+
+    it("should not change with a rule's valueFormat", () => {
+      const stringFingerprint = buildAuthRulesFingerprint(
+        withEmailRule({ valueType: 'string' }),
+      );
+      expect(
+        buildAuthRulesFingerprint(
+          withEmailRule({ valueType: 'string', valueFormat: 'email' }),
+        ),
+      ).toEqual(stringFingerprint);
+      expect(
+        buildAuthRulesFingerprint(
+          withEmailRule({ valueType: 'string', valueFormat: 'e164' }),
+        ),
+      ).toEqual(stringFingerprint);
+    });
+  });
 
   it('should be null for a preauth-only service', () => {
     expect(
