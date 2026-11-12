@@ -548,6 +548,62 @@ describe('batch-issuer validate', () => {
       const depotOnlyFiles = () =>
         writeBatch({ spec: depotOnlySpec, csvLines: [ADAM, BETH] });
 
+      it("reports a returning holder's depot that doesn't expect the spec's credential types", async () => {
+        mockGetService();
+        mockFindDepots(() => [
+          buildDepot({
+            deferredCredentials: true,
+            expectedCredentialTypes: ['EmailV1.0'],
+          }),
+        ]);
+
+        const { exitCode, report } = await validateJson(depotOnlyFiles());
+
+        expect(exitCode).toEqual(1);
+        expect(report.errors).toEqual([
+          {
+            row: 2,
+            column: 'email',
+            reason:
+              "the auth values belong to depot 6512a1b2c3d4e5f6a7b8c9e0, which doesn't expect credentials of type OpenBadgeCredential",
+          },
+        ]);
+      });
+
+      it("reuses a returning holder's depot that expects the spec's credential types", async () => {
+        mockGetService();
+        mockFindDepots(() => [
+          buildDepot({
+            deferredCredentials: true,
+            expectedCredentialTypes: ['EmailV1.0', 'OpenBadgeCredential'],
+          }),
+        ]);
+
+        const { exitCode } = await validateJson(depotOnlyFiles());
+
+        expect(exitCode).toEqual(0);
+      });
+
+      it('does not compare types when the spec expects none', async () => {
+        mockGetService();
+        mockFindDepots(() => [
+          buildDepot({
+            deferredCredentials: true,
+            expectedCredentialTypes: ['EmailV1.0'],
+          }),
+        ]);
+        const spec = {
+          ...depotOnlySpec,
+          depot: { ...depotOnlySpec.depot, expectedCredentialTypes: undefined },
+        };
+
+        const { exitCode } = await validateJson(
+          writeBatch({ spec, csvLines: [ADAM, BETH] }),
+        );
+
+        expect(exitCode).toEqual(0);
+      });
+
       it("reports a returning holder's depot that doesn't defer credentials", async () => {
         mockGetService();
         mockFindDepots(() => [buildDepot({ deferredCredentials: false })]);
@@ -794,6 +850,25 @@ describe('batch-issuer validate', () => {
   });
 
   describe('exit code 2', () => {
+    it('when POST depots/get does not return a list of depots', async () => {
+      mockGetService();
+      nock(HUB_URL)
+        .post('/operator/depots/get')
+        .reply(200, '<html><body>Sign in</body></html>', {
+          'content-type': 'text/html',
+        });
+      const batch = writeBatch({ spec: depotOnlySpec, csvLines: [ADAM] });
+
+      const result = await validate(batch);
+
+      expect(result).toEqual({
+        exitCode: 2,
+        stdout: '',
+        stderr:
+          "Error: operator/depots/get did not return a list of depots. Check that --endpoint is the Credentialing Hub's base URL\n",
+      });
+    });
+
     it('when the CSV cannot be read', async () => {
       mockGetService();
       const result = await validate({

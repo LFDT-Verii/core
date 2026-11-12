@@ -104,6 +104,11 @@ const toAuthValue = (rule, text, options) => {
   return formatAuthValue(rule, converted.value, options);
 };
 
+// Only the row's own values count, so a column named like an inherited
+// property, such as "constructor", is missing when the row doesn't have it.
+const cellOf = (column, data) =>
+  has([column], data) ? get([column], data) : undefined;
+
 /**
  * Builds a row's auth values, one for each rule, in `valueIndex` order.
  * @param {Array<{ column: string, rule: object }>} authColumns each auth rule and the column that holds its value
@@ -115,7 +120,7 @@ const toAuthValue = (rule, text, options) => {
 const buildAuthValues = (authColumns, data, options) => {
   const toColumnResult = ({ column, rule }) => ({
     column,
-    ...toAuthValue(rule, get([column], data), options),
+    ...toAuthValue(rule, cellOf(column, data), options),
   });
   const results = map(toColumnResult, authColumns);
   const errors = flow(

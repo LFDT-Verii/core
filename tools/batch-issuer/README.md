@@ -53,7 +53,7 @@ The token is never printed, including in error messages.
 | --- | --- | --- |
 | 0 | The batch is valid | Every rule reads a value from the samples |
 | 1 | The batch has errors | A rule reads nothing from the samples |
-| 2 | It couldn't validate: bad options, a spec or CSV file that can't be read, or a Hub or registrar error | It couldn't check: bad options or spec, a sample that can't be read, or a Hub error |
+| 2 | It couldn't validate: bad options, a spec or CSV file that can't be read, or a Hub or registrar error. A Hub response without the list it should hold, such as a proxy's HTML page, is an error | It couldn't check: bad options or spec, a sample that can't be read, or a Hub error |
 
 ## The spec
 
@@ -143,7 +143,7 @@ Every error is collected, and the command fails when there's any.
    - each depot and credential passes the operator API's validator (`initOperatorApiValidator`), as the Hub validates `depots/create` and `credentials/create`.
 3. **Each credential against its type:** the `credentialSubject` is checked against the type's JSON schema from the registrar, which `credentials/create` loads the same way. Every schema error is reported, not only the first.
 4. **The batch against the Hub:** one `POST depots/get` with the rows' auth values, at most 1000 tuples per request. The depots it returns are matched to rows by normalizing their `authValues` with `buildAuthMatchValues`. For a match:
-   - the same `userReference` is a returning holder, whose depot gets the row's credentials. The row's credential types must be in the depot's `expectedCredentialTypes`, when it has any. In a depot-only load, the depot must have `deferredCredentials: true`, as the load's new depots do: the setting can't be changed, and the holder would otherwise get an empty offer. With `--no-reuse`, it's an error;
+   - the same `userReference` is a returning holder, whose depot gets the row's credentials. The row's credential types must be in the depot's `expectedCredentialTypes`, when it has any. A depot-only row has no credentials, so the spec's `depot.expectedCredentialTypes`, which a later load adds, must be in them instead. In a depot-only load, the depot must also have `deferredCredentials: true`, as the load's new depots do: the setting can't be changed, and the holder would otherwise get an empty offer. With `--no-reuse`, it's an error;
    - a different `userReference` is always an error: two people share an email, or an email was reassigned;
    - auth values that belong to more than one depot are an error.
 

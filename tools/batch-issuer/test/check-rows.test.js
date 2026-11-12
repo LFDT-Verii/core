@@ -378,6 +378,17 @@ describe('checkRows', () => {
       ]);
     });
 
+    it("reports an auth value column named like an inherited property that the CSV doesn't have", () => {
+      const rule = { ...emailRule, type: 'IdV1.0' };
+      const authColumns = [{ column: 'constructor', rule }];
+      expect(check({ authColumns }).errors).toEqual([
+        {
+          column: 'constructor',
+          reason: 'is used by the spec, but the CSV has no such column',
+        },
+      ]);
+    });
+
     it("reports an auth value column the CSV doesn't have once", () => {
       const authColumns = [{ column: 'workEmail', rule: emailRule }];
       const rows = [holder(), holder({ employeeId: 'E2' })];

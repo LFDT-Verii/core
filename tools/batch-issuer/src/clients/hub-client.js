@@ -14,11 +14,51 @@
  * limitations under the License.
  */
 
-const { chunk, find, flatten, flow, map, uniqBy } = require('lodash/fp');
+const {
+  chunk,
+  find,
+  flatten,
+  flow,
+  get,
+  isArray,
+  isEqual,
+  map,
+  toLower,
+  uniqBy,
+} = require('lodash/fp');
+const {
+  findDepotsRequestSchema,
+} = require('@verii/credentialing-hub-operator-api');
 const { initClient } = require('./init-client');
 
-// The most auth values tuples that one POST depots/get takes.
-const MAX_AUTH_VALUES_PER_REQUEST = 1000;
+// The most auth values tuples that one POST depots/get takes, from its
+// request schema.
+const MAX_AUTH_VALUES_PER_REQUEST = get(
+  ['properties', 'authValues', 'maxItems'],
+  findDepotsRequestSchema,
+);
+
+const ISSUER_SERVICES_PATH = 'operator/issuer-services/get';
+const DEPOTS_PATH = 'operator/depots/get';
+
+// http-client's json() gives {} for a body that isn't JSON, such as a proxy's
+// HTML page, so a response without the list is an error rather than an empty
+// result, which would pass the checks it was meant for.
+const readList = async (response, key, path) => {
+  const body = await response.json();
+  const list = get([key], body);
+  if (!isArray(list)) {
+    throw new Error(
+      `${path} did not return a list of ${key}. Check that --endpoint is the Credentialing Hub's base URL`,
+    );
+  }
+  return list;
+};
+
+// Service ids are ObjectIds, which the Hub accepts in either case and
+// returns in lower case.
+const hasServiceId = (serviceId) =>
+  flow(get('id'), toLower, isEqual(toLower(serviceId)));
 
 /**
  * A client of the Credentialing Hub's operator API.
@@ -31,21 +71,19 @@ const initHubClient = ({ endpoint, authToken }) => {
    * Gets an issuer service with issuer-services/get.
    * @param {{ tenantId: string, serviceId: string }} ids
    * @returns {Promise<object|undefined>} the service, or undefined when the tenant has no such service
+   * @throws when the response has no list of services
    */
   const getIssuerService = async ({ tenantId, serviceId }) => {
     const searchParams = new URLSearchParams({ tenantId, serviceId });
-    const response = await client.get('operator/issuer-services/get', {
-      searchParams,
-    });
-    const { services } = await response.json();
-    return find({ id: serviceId }, services);
+    const response = await client.get(ISSUER_SERVICES_PATH, { searchParams });
+    const services = await readList(response, 'services', ISSUER_SERVICES_PATH);
+    return find(hasServiceId(serviceId), services);
   };
 
   const findDepotsChunk = async ({ tenantId, serviceId }, authValues) => {
     const body = { tenantId, serviceId, authValues };
-    const response = await client.post('operator/depots/get', body);
-    const { depots } = await response.json();
-    return depots ?? [];
+    const response = await client.post(DEPOTS_PATH, body);
+    return readList(response, 'depots', DEPOTS_PATH);
   };
 
   /**
@@ -54,6 +92,7 @@ const initHubClient = ({ endpoint, authToken }) => {
    * @param {{ tenantId: string, serviceId: string }} ids
    * @param {Array<Array<string|number|boolean>>} authValues the tuples
    * @returns {Promise<Array<object>>} the depots, each once
+   * @throws when a response has no list of depots
    */
   const findDepotsByAuthValues = async (ids, authValues) => {
     const requests = flow(

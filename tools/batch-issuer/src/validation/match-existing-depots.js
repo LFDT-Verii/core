@@ -39,18 +39,22 @@ const isLookedUp = ({ authValues, depot }) =>
 
 const depotAuthValuesKey = flow(get('authValues'), authValuesKey);
 
-// A returning holder's new credentials must be of types the depot expects,
-// when it expects any.
-const unexpectedTypes = (row, depot) => {
+// The credential types a returning holder's depot will receive: the row's
+// credentials' types or, in a depot-only load, the spec's
+// expectedCredentialTypes, which a later load adds.
+const incomingTypes = (row, { depotOnly, specExpectedTypes }) =>
+  depotOnly ? specExpectedTypes : flow(map('type'), uniq)(row.credentials);
+
+// The depot must expect each of them, when it expects any.
+const unexpectedTypes = (row, depot, context) => {
   if (isEmpty(depot.expectedCredentialTypes)) {
     return [];
   }
-  const rowTypes = flow(map('type'), uniq)(row.credentials);
-  return difference(rowTypes, depot.expectedCredentialTypes);
+  return difference(incomingTypes(row, context), depot.expectedCredentialTypes);
 };
 
-const unexpectedTypeErrors = (row, depot) => {
-  const types = unexpectedTypes(row, depot);
+const unexpectedTypeErrors = (row, depot, context) => {
+  const types = unexpectedTypes(row, depot, context);
   return isEmpty(types)
     ? []
     : [
@@ -71,7 +75,7 @@ const undeferredErrors = (depot, { depotOnly }) =>
 
 const checkReturningHolder = (row, depot, context) => {
   const errors = [
-    ...unexpectedTypeErrors(row, depot),
+    ...unexpectedTypeErrors(row, depot, context),
     ...undeferredErrors(depot, context),
   ];
   return isEmpty(errors) ? { existingDepot: depot, errors } : { errors };
@@ -106,9 +110,10 @@ const checkMatch = (row, depots, context) => {
  * Step 4: finds the depots that already hold the rows' auth values, with
  * POST depots/get, and matches them to the rows by their normalized auth
  * values. A depot whose userReference is the row's is a returning holder's,
- * which the row reuses unless --no-reuse is set. In a depot-only load, the
- * reused depot must defer credentials. A depot whose userReference differs is
- * always an error.
+ * which the row reuses unless --no-reuse is set. The reused depot must expect
+ * the row's credential types or, in a depot-only load, the spec's
+ * expectedCredentialTypes, and in a depot-only load it must defer
+ * credentials. A depot whose userReference differs is always an error.
  * @param {Array<object>} rows the checked rows, from step 2. Only rows with valid auth values and a rendered depot are looked up
  * @param {object} context
  * @param {object} context.spec the spec, for its tenantId and serviceId, and whether it has credentials
@@ -125,7 +130,11 @@ const matchExistingDepots = async (rows, { spec, authColumns, hub, reuse }) => {
   const tuples = flow(map('authValues'), uniqBy(authValuesKey))(lookedUpRows);
   const depots = await hub.findDepotsByAuthValues(spec, tuples);
   const depotsByKey = groupBy(depotAuthValuesKey, depots);
-  const matchContext = { reuse, depotOnly: !has('credentials', spec) };
+  const matchContext = {
+    reuse,
+    depotOnly: !has('credentials', spec),
+    specExpectedTypes: getOr([], ['depot', 'expectedCredentialTypes'], spec),
+  };
   const matchRow = (row) => {
     const rowDepots = getOr([], [authValuesKey(row.authValues)], depotsByKey);
     return { row: row.row, ...checkMatch(row, rowDepots, matchContext) };

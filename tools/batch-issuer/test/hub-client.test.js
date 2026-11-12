@@ -17,7 +17,11 @@
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 const nock = require('./helpers/nock');
-const { initHubClient } = require('../src/clients/hub-client');
+const { toUpper } = require('lodash/fp');
+const {
+  initHubClient,
+  MAX_AUTH_VALUES_PER_REQUEST,
+} = require('../src/clients/hub-client');
 const {
   AUTH_TOKEN,
   HUB_URL,
@@ -67,23 +71,75 @@ describe('initHubClient', () => {
       expect(sizes).toEqual([1000, 1000, 1]);
     });
 
-    it('treats a reply without depots as no depots', async () => {
-      nock(HUB_URL).post('/operator/depots/get').reply(200, {});
+    const depotsError =
+      "operator/depots/get did not return a list of depots. Check that --endpoint is the Credentialing Hub's base URL";
 
-      expect(
-        await hub.findDepotsByAuthValues(ids, [['a@example.com']]),
-      ).toEqual([]);
+    it('fails on a reply without a list of depots', async () => {
+      nock(HUB_URL)
+        .post('/operator/depots/get')
+        .reply(200, {})
+        .post('/operator/depots/get')
+        .reply(200, { depots: { id: 'x' } });
+
+      await expect(
+        hub.findDepotsByAuthValues(ids, [['a@example.com']]),
+      ).rejects.toThrow(depotsError);
+      await expect(
+        hub.findDepotsByAuthValues(ids, [['a@example.com']]),
+      ).rejects.toThrow(depotsError);
+    });
+
+    it('fails on a reply that is not JSON, such as a login page', async () => {
+      nock(HUB_URL)
+        .post('/operator/depots/get')
+        .reply(200, '<html><body>Sign in</body></html>', {
+          'content-type': 'text/html',
+        });
+
+      await expect(
+        hub.findDepotsByAuthValues(ids, [['a@example.com']]),
+      ).rejects.toThrow(depotsError);
+    });
+
+    it('takes its request limit from the find-depots-request schema', () => {
+      expect(MAX_AUTH_VALUES_PER_REQUEST).toEqual(1000);
     });
   });
 
   describe('getIssuerService', () => {
-    it('returns only the requested service', async () => {
+    const mockServices = (reply) =>
       nock(HUB_URL)
         .get('/operator/issuer-services/get')
         .query(true)
-        .reply(200, { services: [{ id: 'another' }], requestId: 'r' });
+        .reply(200, reply);
+
+    it('returns only the requested service', async () => {
+      mockServices({ services: [{ id: 'another' }], requestId: 'r' });
 
       expect(await hub.getIssuerService(ids)).toBeUndefined();
+    });
+
+    it('finds a service whose id the spec gives in upper case', async () => {
+      const service = { id: SERVICE_ID };
+      const query = nock(HUB_URL)
+        .get('/operator/issuer-services/get')
+        .query({ tenantId: TENANT_ID, serviceId: toUpper(SERVICE_ID) })
+        .reply(200, { services: [service], requestId: 'r' });
+
+      expect(
+        await hub.getIssuerService({ ...ids, serviceId: toUpper(SERVICE_ID) }),
+      ).toEqual(service);
+      expect(query.isDone()).toEqual(true);
+    });
+
+    it('fails on a reply without a list of services', async () => {
+      const servicesError =
+        "operator/issuer-services/get did not return a list of services. Check that --endpoint is the Credentialing Hub's base URL";
+      mockServices({});
+      await expect(hub.getIssuerService(ids)).rejects.toThrow(servicesError);
+
+      mockServices('<html><body>Sign in</body></html>');
+      await expect(hub.getIssuerService(ids)).rejects.toThrow(servicesError);
     });
   });
 });

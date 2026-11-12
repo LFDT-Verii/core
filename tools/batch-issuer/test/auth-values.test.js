@@ -33,6 +33,16 @@ describe('buildAuthValues', () => {
     ).toEqual({ authValues: ['Adam@Example.com', '+15556192191'], errors: [] });
   });
 
+  it('does not read an inherited property for a missing column', () => {
+    expect(
+      buildAuthValues(
+        [{ column: 'constructor', rule: { ...emailRule, type: 'IdV1.0' } }],
+        {},
+        {},
+      ),
+    ).toEqual({ errors: [{ column: 'constructor', reason: 'is missing' }] });
+  });
+
   it('builds no values for no auth columns', () => {
     expect(buildAuthValues([], { email: 'a@example.com' }, {})).toEqual({
       authValues: [],
