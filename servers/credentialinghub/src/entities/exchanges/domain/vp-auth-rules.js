@@ -18,6 +18,9 @@ const newError = require('http-errors');
 const {
   flatMap,
   flow,
+  get,
+  has,
+  identity,
   isEmpty,
   map,
   reduce,
@@ -31,37 +34,33 @@ const MAX_CANDIDATE_TUPLES = 100;
 
 // pick keeps every value found. equal needs exactly one distinct value.
 const RuleCandidateValues = {
-  pick: (values) => values,
+  pick: identity,
   equal: (values) => (size(values) === 1 ? values : []),
 };
 
+// Only the rules' own names count, so a stored rule such as "constructor" gives
+// no values rather than an inherited method.
 const ruleCandidateValues = (rule, credentials) =>
-  Object.hasOwn(RuleCandidateValues, rule.rule)
-    ? RuleCandidateValues[rule.rule](ruleValues(rule, credentials))
+  has([rule.rule], RuleCandidateValues)
+    ? flow(ruleValues, get([rule.rule], RuleCandidateValues))(rule, credentials)
     : [];
 
 // Multiplies the positions' value counts, holding the product just past the
 // limit, so it never overflows to Infinity, and Infinity * 0 never gives NaN.
-const exceedsCandidateLimit = (valuesByPosition) =>
+const exceedsCandidateLimit = flow(
   reduce(
     (count, values) => Math.min(count * size(values), MAX_CANDIDATE_TUPLES + 1),
     1,
-    valuesByPosition,
-  ) > MAX_CANDIDATE_TUPLES;
+  ),
+  (count) => count > MAX_CANDIDATE_TUPLES,
+);
 
 const appendPosition = (tuples, values) =>
   flatMap((tuple) => map((value) => [...tuple, value], values), tuples);
 
-// The tuples that a depot's authMatchValues must equal exactly: every
-// combination of the rules' values, each value at its rule's valueIndex. The
-// value indexes are 0 to n-1, so ordering the rules by them gives the
-// positions. A position without values leaves no tuples, and the count is
-// checked before any tuple is built.
-const buildCandidateTuples = (rules, credentials) => {
-  const valuesByPosition = flow(
-    sortBy('valueIndex'),
-    map((rule) => ruleCandidateValues(rule, credentials)),
-  )(rules);
+// Every combination of the positions' values. A position without values leaves
+// no tuples, and the count is checked before any tuple is built.
+const combinePositions = (valuesByPosition) => {
   if (isEmpty(valuesByPosition) || some(isEmpty, valuesByPosition)) {
     return [];
   }
@@ -74,5 +73,16 @@ const buildCandidateTuples = (rules, credentials) => {
   }
   return reduce(appendPosition, [[]], valuesByPosition);
 };
+
+// The tuples that a depot's authMatchValues must equal exactly: every
+// combination of the rules' values, each value at its rule's valueIndex. The
+// value indexes are 0 to n-1, so ordering the rules by them gives the
+// positions.
+const buildCandidateTuples = (rules, credentials) =>
+  flow(
+    sortBy('valueIndex'),
+    map((rule) => ruleCandidateValues(rule, credentials)),
+    combinePositions,
+  )(rules);
 
 module.exports = { buildCandidateTuples };

@@ -260,6 +260,75 @@ describe('vp auth rules', () => {
       ).toEqual([]);
     });
 
+    it('should select inherited keys of a nested object as nothing', () => {
+      for (const key of ['toString', 'hasOwnProperty', 'valueOf']) {
+        expect(
+          selectClaims(['credentialSubject', 'contacts', 0, key], credential),
+        ).toEqual([]);
+      }
+    });
+
+    it('should select an own __proto__ key of a decoded credential', () => {
+      const decoded = JSON.parse(
+        '{"credentialSubject":{"__proto__":{"email":"a@x.com"}}}',
+      );
+      expect(
+        selectClaims(['credentialSubject', '__proto__', 'email'], decoded),
+      ).toEqual(['a@x.com']);
+    });
+
+    it('should read a key with dots or brackets as the key, not as a path', () => {
+      const withPathLikeKeys = {
+        credentialSubject: {
+          'a.b': 'key a.b',
+          a: { b: 'path a.b' },
+          'c[0]': 'key c[0]',
+          c: ['path c[0]'],
+          'd.0': 'key d.0',
+          d: ['path d.0'],
+        },
+      };
+      expect(
+        selectClaims(['credentialSubject', 'a.b'], withPathLikeKeys),
+      ).toEqual(['key a.b']);
+      expect(
+        selectClaims(['credentialSubject', 'c[0]'], withPathLikeKeys),
+      ).toEqual(['key c[0]']);
+      expect(
+        selectClaims(['credentialSubject', 'd.0'], withPathLikeKeys),
+      ).toEqual(['key d.0']);
+      expect(
+        selectClaims(['credentialSubject', 'x.y'], withPathLikeKeys),
+      ).toEqual([]);
+      expect(
+        selectClaims(['credentialSubject', 'a.b'], {
+          credentialSubject: { a: { b: 'path a.b' } },
+        }),
+      ).toEqual([]);
+    });
+
+    it("should select nothing for an array's or a string's length", () => {
+      expect(
+        selectClaims(['credentialSubject', 'emails', 'length'], credential),
+      ).toEqual([]);
+      expect(
+        selectClaims(['credentialSubject', 'email', 'length'], credential),
+      ).toEqual([]);
+    });
+
+    it('should select an element of a sparse array as undefined', () => {
+      // ['a@x.com', <hole>, 'c@x.com']
+      const emails = ['a@x.com'];
+      emails[2] = 'c@x.com';
+      const sparse = { credentialSubject: { emails } };
+      expect(selectClaims(['credentialSubject', 'emails', 1], sparse)).toEqual([
+        undefined,
+      ]);
+      expect(selectClaims(['credentialSubject', 'emails', 3], sparse)).toEqual(
+        [],
+      );
+    });
+
     it('should return non-scalars as they are', () => {
       expect(
         selectClaims(['credentialSubject', 'nothing'], credential),

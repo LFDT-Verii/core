@@ -16,75 +16,84 @@
  */
 const {
   castArray,
+  cond,
+  constant,
+  defaultTo,
   filter,
+  find,
   flatMap,
+  flatten,
   flow,
+  get,
+  has,
   isArray,
   isBoolean,
   isEmpty,
+  isInteger,
+  isNull,
   isNumber,
+  isPlainObject,
   isString,
   map,
+  negate,
   overSome,
-  reduce,
+  stubTrue,
   uniq,
 } = require('lodash/fp');
 const { toAuthMatchValue } = require('./auth-match-values');
 
 const isScalar = overSome([isString, isNumber, isBoolean]);
 
-const isObject = (value) =>
-  value != null && typeof value === 'object' && !isArray(value);
+const isArrayIndex = (component) => isInteger(component) && component >= 0;
 
-const isArrayIndex = (component) =>
-  Number.isInteger(component) && component >= 0;
+// Each claims path pointer segment is a selector: it takes the selected
+// elements and returns what it selects from them. A segment applies only to
+// the elements it fits and drops the others, so a key never reads an array's or
+// a string's length, and an index never reads a character of a string.
 
-const selectKey = (key, value) =>
-  isObject(value) && Object.hasOwn(value, key) ? [value[key]] : [];
+// A key selects that own property, never an inherited one, of each object. The
+// path is an array, so a key such as "a.b" or "a[0]" is read as it is, not
+// parsed as a path.
+const selectKey = (key) =>
+  flow(filter(isPlainObject), filter(has([key])), map(get([key])));
 
-const selectIndex = (index, value) =>
-  isArray(value) && index < value.length ? [value[index]] : [];
+// An index selects that element of each array.
+const selectIndex = (index) =>
+  flow(filter(isArray), filter(has([index])), map(get([index])));
 
-const selectEvery = (value) => (isArray(value) ? value : []);
+// null selects every element of each array.
+const selectEvery = flow(filter(isArray), flatten);
 
-// One claims path pointer segment applied to one selected element. A segment
-// that doesn't apply to the element, or a missing key or index, drops it.
-const selectSegment = (component, value) => {
-  if (isString(component)) {
-    return selectKey(component, value);
-  }
-  if (component === null) {
-    return selectEvery(value);
-  }
-  return isArrayIndex(component) ? selectIndex(component, value) : [];
-};
+const selectNothing = constant([]);
+
+const segmentSelector = cond([
+  [isString, selectKey],
+  [isNull, constant(selectEvery)],
+  [isArrayIndex, selectIndex],
+  [stubTrue, constant(selectNothing)],
+]);
 
 // Evaluates a claims path pointer (OpenID4VP 1.0, section 7) against a
 // credential and returns what it selects. A string selects a key of each
 // selected object, a non-negative integer an index of each selected array, and
-// null every element of each selected array. It never throws.
+// null every element of each selected array. Any other segment selects nothing.
+// The pointer runs as a flow of its segments' selectors. It never throws.
 const selectClaims = (pointer, credential) =>
   isArray(pointer) && !isEmpty(pointer)
-    ? reduce(
-        (selected, component) =>
-          flatMap((value) => selectSegment(component, value), selected),
-        [credential],
-        pointer,
-      )
+    ? flow(map(segmentSelector, pointer))([credential])
     : [];
 
 // A rule's pointers are tried in order, and the first one that selects a
 // usable value supplies the values. A selection of only nulls, objects or
-// arrays falls through to the next pointer.
-const firstUsableValues = (pointers, credential) => {
-  for (const pointer of castArray(pointers)) {
-    const usable = filter(isScalar, selectClaims(pointer, credential));
-    if (!isEmpty(usable)) {
-      return usable;
-    }
-  }
-  return [];
-};
+// arrays falls through to the next pointer. A rule has at most 10 pointers, so
+// every pointer is evaluated.
+const firstUsableValues = (pointers, credential) =>
+  flow(
+    castArray,
+    map((pointer) => filter(isScalar, selectClaims(pointer, credential))),
+    find(negate(isEmpty)),
+    defaultTo([]),
+  )(pointers);
 
 // The distinct normalized scalar values that a rule finds in the credentials of
 // its type. credentials are { type, credential } for each verified credential.

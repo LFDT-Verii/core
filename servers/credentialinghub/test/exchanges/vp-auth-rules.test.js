@@ -171,6 +171,22 @@ describe('vp auth rules', () => {
       ).toEqual([]);
     });
 
+    it('should build no tuples for a rule named after an inherited property', () => {
+      for (const rule of [
+        'toString',
+        'valueOf',
+        'hasOwnProperty',
+        '__proto__',
+      ]) {
+        expect(
+          buildCandidateTuples(
+            [emailRule({ rule })],
+            [emailCredential('a@x.com')],
+          ),
+        ).toEqual([]);
+      }
+    });
+
     it('should allow up to 100 combinations', () => {
       const emails = times((i) => `user${i}@x.com`, 10);
       const phones = times((i) => `+1555000${i}`, 10);
