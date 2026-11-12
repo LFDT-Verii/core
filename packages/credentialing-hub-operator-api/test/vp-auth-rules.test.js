@@ -169,6 +169,22 @@ describe('vp auth rules', () => {
       const rule = emailRule({ path: ['$.credentialSubject.email'] });
       expect(ruleValues(rule, [emailCredential('a@x.com')])).toEqual([]);
     });
+
+    it('should read nothing through a path that is not an array of pointers', () => {
+      const paths = [
+        '$.credentialSubject.email',
+        ['credentialSubject', 'email'],
+        { 0: ['credentialSubject', 'email'] },
+        { pointer: ['credentialSubject', 'email'] },
+        undefined,
+        null,
+      ];
+      for (const path of paths) {
+        expect(
+          ruleValues(emailRule({ path }), [emailCredential('a@x.com')]),
+        ).toEqual([]);
+      }
+    });
   });
 
   describe('selectClaims', () => {

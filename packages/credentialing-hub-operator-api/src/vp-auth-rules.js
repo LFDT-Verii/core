@@ -15,7 +15,6 @@
  *
  */
 const {
-  castArray,
   cond,
   constant,
   defaultTo,
@@ -79,32 +78,29 @@ const segmentSelector = cond([
 // null every element of each selected array. Any other segment selects nothing.
 // It never throws.
 //
-// An empty pointer selects nothing, rather than the credential. Otherwise the
-// pointer's segments are the steps of a flow, which starts with the credential
-// as the only selected element. castArray would take an array passed as the
-// credential as the selection itself, but a credential's JSON root is always
-// an object.
+// An empty pointer selects nothing, rather than the credential. Otherwise each
+// segment is a step that works on the list of values selected so far, starting
+// from the credential.
 const selectClaims = (pointer, credential) => {
   if (!isArray(pointer) || isEmpty(pointer)) {
     return [];
   }
   const steps = map(segmentSelector, pointer);
-  return flow(castArray, steps)(credential);
+  return flow(steps)([credential]);
 };
 
 // A rule's pointers are tried in order, and the first one that selects a
 // usable value supplies the values. A selection of only nulls, objects or
 // arrays falls through to the next pointer. A rule has at most 10 pointers, so
-// every pointer is evaluated.
+// every pointer is evaluated. A path that isn't an array reads nothing: map
+// would walk an object's values as if they were pointers.
 const firstUsableValues = (pointers, credential) => {
+  if (!isArray(pointers)) {
+    return [];
+  }
   const selectFromCredential = (pointer) => selectClaims(pointer, credential);
   const usableValues = flow(selectFromCredential, filter(isScalar));
-  return flow(
-    castArray,
-    map(usableValues),
-    find(size),
-    defaultTo([]),
-  )(pointers);
+  return flow(map(usableValues), find(size), defaultTo([]))(pointers);
 };
 
 // The distinct normalized scalar values that a rule finds in the credentials of
