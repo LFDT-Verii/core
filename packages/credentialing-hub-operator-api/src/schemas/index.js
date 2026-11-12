@@ -20,6 +20,8 @@ const issuerServiceSchema = require('./issuer-service.schema');
 const newDepotSchema = require('./new-depot.schema.json');
 const depotSchema = require('./depot.schema');
 const depotConflictErrorSchema = require('./depot-conflict-error.schema');
+const findDepotsByAuthValuesRequestSchema = require('./find-depots-by-auth-values-request.schema.json');
+const findDepotsByAuthValuesResponseSchema = require('./find-depots-by-auth-values-response.schema.json');
 const newCredentialSchema = require('./new-credential.schema.json');
 const credentialSchema = require('./credential.schema');
 
@@ -27,6 +29,8 @@ module.exports = {
   credentialSchema,
   depotConflictErrorSchema,
   depotSchema,
+  findDepotsByAuthValuesRequestSchema,
+  findDepotsByAuthValuesResponseSchema,
   issuerServiceSchema,
   newCredentialSchema,
   newDepotSchema,

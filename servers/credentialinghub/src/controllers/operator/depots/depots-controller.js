@@ -18,12 +18,15 @@ const { coerceArray } = require('@verii/common-functions');
 const {
   depotConflictErrorSchema,
   depotSchema,
+  findDepotsByAuthValuesRequestSchema,
+  findDepotsByAuthValuesResponseSchema,
   newDepotSchema,
 } = require('@verii/credentialing-hub-operator-api');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
 const {
   createDepot,
   deleteDepot,
+  findDepotsByAuthValues,
   resolveDeferredCredentials,
   ResolveDeferredCredentialsStatuses,
 } = require('../../../entities/depots');
@@ -33,6 +36,8 @@ const depotsController = async (fastify) => {
     .addSchema(newDepotSchema)
     .addSchema(depotSchema)
     .addSchema(depotConflictErrorSchema)
+    .addSchema(findDepotsByAuthValuesRequestSchema)
+    .addSchema(findDepotsByAuthValuesResponseSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .autoSchemaPreset({ tags: ['Depots'] })
     .post(
@@ -129,6 +134,26 @@ const depotsController = async (fastify) => {
           coerceArray(depotIds),
         );
         return { depots };
+      },
+    )
+    .post(
+      '/find-by-auth-values',
+      {
+        // The body carries holders' auth values, such as their emails
+        config: { sensitiveLogging: true },
+        schema: fastify.autoSchema({
+          summary: 'Find depots by auth values',
+          operationId: 'findDepotsByAuthValues',
+          body: { $ref: 'find-depots-by-auth-values-request#' },
+          response: {
+            200: { $ref: 'find-depots-by-auth-values-response#' },
+            ...fastify.NotFoundResponse,
+          },
+        }),
+      },
+      async (req) => {
+        const matches = await findDepotsByAuthValues(req.body, req);
+        return { matches };
       },
     )
     .post(

@@ -64,6 +64,7 @@ describe('credentialing hub operator api', () => {
       AUTH_VALUES_ALREADY_USED: 'auth_values_already_used',
       DEFERRED_CREDENTIALS_NOT_SUPPORTED: 'deferred_credentials_not_supported',
       DEPOT_NOT_FOUND: 'depot_not_found',
+      FIND_BY_AUTH_VALUES_NOT_SUPPORTED: 'find_by_auth_values_not_supported',
     });
     expect(api.CredentialErrors).toEqual({
       REFERENCED_DEPOT_NOT_FOUND: 'referenced_depot_not_found',

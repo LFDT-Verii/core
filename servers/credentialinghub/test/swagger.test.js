@@ -60,6 +60,11 @@ const EXPECTED_OPERATION_METADATA = {
   'POST /operator/depots/create': ['Depots', 'createDepot', OPERATOR_SECURITY],
   'GET /operator/depots/get': ['Depots', 'getDepots', OPERATOR_SECURITY],
   'POST /operator/depots/delete': ['Depots', 'deleteDepot', OPERATOR_SECURITY],
+  'POST /operator/depots/find-by-auth-values': [
+    'Depots',
+    'findDepotsByAuthValues',
+    OPERATOR_SECURITY,
+  ],
   'POST /operator/depots/resolve-deferred-credentials': [
     'Depots',
     'resolveDeferredCredentials',
@@ -245,6 +250,7 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/depots/create',
       'GET /operator/depots/get',
       'POST /operator/depots/delete',
+      'POST /operator/depots/find-by-auth-values',
       'POST /operator/depots/resolve-deferred-credentials',
       'GET /operator/exchanges/get',
       'POST /operator/issue-links/refresh',
