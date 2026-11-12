@@ -59,21 +59,19 @@ const createCredentials = async (credentialItems, context) => {
     credentialTypeMetadatas,
   );
 
+  const findMetadataIdx = ({ content }) =>
+    findIndex(
+      { credentialType: extractCredentialType(content) },
+      credentialTypeMetadatas,
+    );
   const items = map(
-    (item) => ({
-      ...item,
-      metadataIdx: findIndex(
-        {
-          credentialType: extractCredentialType(item.credential.content),
-        },
-        credentialTypeMetadatas,
-      ),
-    }),
+    (item) => ({ ...item, metadataIdx: findMetadataIdx(item.credential) }),
     credentialItems,
   );
   validateCredentials(items);
 
-  return repos.credentials.insertMany(map(canonicalizeCredential, items));
+  const canonicalizedCredentials = map(canonicalizeCredential, items);
+  return repos.credentials.insertMany(canonicalizedCredentials);
 };
 
 const loadSchema = async (credentialTypeMetadata, context) => {

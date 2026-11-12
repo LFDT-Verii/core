@@ -17,6 +17,7 @@
 const newError = require('http-errors');
 const {
   filter,
+  first,
   flatten,
   flow,
   forEach,
@@ -48,13 +49,11 @@ const initValidateCredentials = (
     context,
   );
 
+  const validateItem = (item, index) =>
+    flow(validateCredential, map(toItemError(index)))(item);
+
   return (credentialItems) => {
-    const errors = flow(
-      mapWithIndex((item, index) =>
-        map(toItemError(index), validateCredential(item)),
-      ),
-      flatten,
-    )(credentialItems);
+    const errors = flow(mapWithIndex(validateItem), flatten)(credentialItems);
     if (!isEmpty(errors)) {
       throw newCredentialItemsError(errors);
     }
@@ -115,7 +114,10 @@ const validateCredentialType = (
       problem(CREDENTIAL_TYPE_PATH, CredentialErrors.CREDENTIAL_TYPE_NOT_FOUND),
     ];
   }
-  return validateCredentialSubject(credential.content.credentialSubject)
+  const isSubjectValid = validateCredentialSubject(
+    credential.content.credentialSubject,
+  );
+  return isSubjectValid
     ? []
     : map(toSchemaProblem, validateCredentialSubject.errors);
 };
@@ -146,7 +148,7 @@ const toItemError =
 // was reported: the first invalid item's first problem, with all the schema
 // errors of a credentialSubject in one message.
 const newCredentialItemsError = (errors) => {
-  const [{ index, errorCode }] = errors;
+  const { index, errorCode } = first(errors);
   const message = flow(
     filter({ index, errorCode }),
     map('message'),
