@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-const Ajv2019 = require('ajv/dist/2019');
-const addFormats = require('ajv-formats');
-const draft7MetaSchema = require('ajv/dist/refs/json-schema-draft-07.json');
 const {
   cloneDeep,
   difference,
@@ -35,22 +32,19 @@ const {
 const {
   operatorApiAjvFormats,
 } = require('@verii/credentialing-hub-operator-api');
-const { initValidation, wrapValidationError } = require('@verii/validation');
+const {
+  initAjv2019Validation,
+  wrapValidationError,
+} = require('@verii/validation');
 
 // credentials/create checks a credentialSubject with the validation plugin's
-// AJV: Ajv2019 with the draft-07 meta-schema, the Hub's formats, and the
-// credentials controller's options. It reports every error rather than the
-// first, which doesn't change what's valid.
-const initSubjectValidation = () => {
-  const ajv = new Ajv2019({
-    useDefaults: true,
-    strictTypes: false,
-    allErrors: true,
-  });
-  ajv.addMetaSchema(draft7MetaSchema);
-  addFormats(ajv, operatorApiAjvFormats);
-  return initValidation(ajv);
-};
+// AJV, the Hub's formats, and the credentials controller's options. It reports
+// every error rather than the first, which doesn't change what's valid.
+const initSubjectValidation = () =>
+  initAjv2019Validation(
+    { useDefaults: true, strictTypes: false, allErrors: true },
+    operatorApiAjvFormats,
+  );
 
 const loadSubjectValidators = async (metadatas, registrar) => {
   const schemas = await Promise.all(

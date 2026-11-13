@@ -10,11 +10,11 @@ const {
 } = require('lodash/fp');
 const {
   IssuerServicesErrors,
+  isInternalVpAuth,
 } = require('@verii/credentialing-hub-operator-api');
 const {
   validateServiceConfiguration,
 } = require('../../service-configurations');
-const { isInternalVpAuth } = require('./is-internal-vp-auth');
 
 // The new-issuer-service schema already requires an internal VP service to
 // have a disclosureRequest and at least one rule, and refuses a

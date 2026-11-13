@@ -25,6 +25,7 @@ const {
   flow,
   get,
   has,
+  identity,
   isArray,
   isEmpty,
   isInteger,
@@ -118,4 +119,21 @@ const ruleValues = (rule, credentials) => {
   )(credentials);
 };
 
-module.exports = { ruleValues, selectClaims };
+// pick keeps every value found. equal needs exactly one distinct value.
+const RuleCandidateValues = {
+  pick: identity,
+  equal: (values) => (size(values) === 1 ? values : []),
+};
+
+// The values of ruleValues that the rule uses. Only the rules' own names count,
+// so a rule such as "constructor" gives no values rather than an inherited
+// method.
+const ruleCandidateValues = (rule, credentials) => {
+  if (!has([rule.rule], RuleCandidateValues)) {
+    return [];
+  }
+  const candidateValues = get([rule.rule], RuleCandidateValues);
+  return candidateValues(ruleValues(rule, credentials));
+};
+
+module.exports = { ruleCandidateValues, ruleValues, selectClaims };

@@ -31,11 +31,9 @@ const {
 const {
   buildAuthMatchValues,
   DepotErrors,
+  isInternalVpAuth,
   ServiceConfigurationErrors,
 } = require('@verii/credentialing-hub-operator-api');
-const {
-  isInternalVpAuth,
-} = require('../../issuer-services/domain/is-internal-vp-auth');
 const { buildAuthRulesFingerprint, hasValidAuthValues } = require('../domain');
 
 // Finds the depots whose auth values equal any of the tuples, the way

@@ -18,9 +18,6 @@ const newError = require('http-errors');
 const {
   flatMap,
   flow,
-  get,
-  has,
-  identity,
   isEmpty,
   map,
   reduce,
@@ -28,25 +25,11 @@ const {
   some,
   sortBy,
 } = require('lodash/fp');
-const { ruleValues } = require('@verii/credentialing-hub-operator-api');
+const {
+  ruleCandidateValues,
+} = require('@verii/credentialing-hub-operator-api');
 
 const MAX_CANDIDATE_TUPLES = 100;
-
-// pick keeps every value found. equal needs exactly one distinct value.
-const RuleCandidateValues = {
-  pick: identity,
-  equal: (values) => (size(values) === 1 ? values : []),
-};
-
-// Only the rules' own names count, so a stored rule such as "constructor" gives
-// no values rather than an inherited method.
-const ruleCandidateValues = (rule, credentials) => {
-  if (!has([rule.rule], RuleCandidateValues)) {
-    return [];
-  }
-  const candidateValues = get([rule.rule], RuleCandidateValues);
-  return flow(ruleValues, candidateValues)(rule, credentials);
-};
 
 // Multiplies the count by a position's number of values, holding the product
 // just past the limit, so it never overflows to Infinity, and Infinity * 0

@@ -15,10 +15,8 @@
  *
  */
 const newError = require('http-errors');
+const { isInternalVpAuth } = require('@verii/credentialing-hub-operator-api');
 const { LinkErrors } = require('./link-errors');
-const {
-  isInternalVpAuth,
-} = require('../../issuer-services/domain/is-internal-vp-auth');
 const { isPreauthCodeAuth } = require('./is-preauth-code-auth');
 
 const validateIssueLink = (service, depotId, depot) => {

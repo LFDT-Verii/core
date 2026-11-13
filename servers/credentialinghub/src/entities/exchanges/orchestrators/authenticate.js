@@ -42,10 +42,8 @@ const {
 } = require('@verii/jwt');
 const { CheckResults, extractCredentialType } = require('@verii/vc-checks');
 const { buildFailedCheckResultError } = require('@verii/verii-verification');
+const { isInternalVpAuth } = require('@verii/credentialing-hub-operator-api');
 const { isPreauthCodeAuth } = require('../../links');
-const {
-  isInternalVpAuth,
-} = require('../../issuer-services/domain/is-internal-vp-auth');
 const {
   buildAuthRulesFingerprint,
 } = require('../../depots/domain/auth-rules-fingerprint');

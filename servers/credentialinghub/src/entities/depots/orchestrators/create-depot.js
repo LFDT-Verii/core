@@ -19,10 +19,8 @@ const newError = require('http-errors');
 const {
   buildAuthMatchValues,
   DepotErrors,
-} = require('@verii/credentialing-hub-operator-api');
-const {
   isInternalVpAuth,
-} = require('../../issuer-services/domain/is-internal-vp-auth');
+} = require('@verii/credentialing-hub-operator-api');
 const { buildAuthRulesFingerprint, validateDepot } = require('../domain');
 
 const createDepot = async (newDepot, serviceId, context) => {

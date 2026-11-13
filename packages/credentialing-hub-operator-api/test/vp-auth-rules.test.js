@@ -17,7 +17,11 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
-const { ruleValues, selectClaims } = require('../src/vp-auth-rules');
+const {
+  ruleCandidateValues,
+  ruleValues,
+  selectClaims,
+} = require('../src/vp-auth-rules');
 
 const emailRule = (overrides) => ({
   path: [['credentialSubject', 'email']],
@@ -228,6 +232,51 @@ describe('vp auth rules', () => {
       for (const path of paths) {
         expect(
           ruleValues(emailRule({ path }), [emailCredential('a@x.com')]),
+        ).toEqual([]);
+      }
+    });
+  });
+
+  describe('ruleCandidateValues', () => {
+    it('should keep every distinct value of a pick rule', () => {
+      expect(
+        ruleCandidateValues(emailRule(), [
+          emailCredential('a@x.com'),
+          emailCredential('b@x.com'),
+          emailCredential('A@x.com'),
+        ]),
+      ).toEqual(['a@x.com', 'b@x.com']);
+    });
+
+    it('should keep the value of an equal rule only when there is exactly one', () => {
+      const rule = emailRule({ rule: 'equal' });
+      expect(
+        ruleCandidateValues(rule, [
+          emailCredential('a@x.com'),
+          emailCredential(' A@X.com'),
+        ]),
+      ).toEqual(['a@x.com']);
+      expect(
+        ruleCandidateValues(rule, [
+          emailCredential('a@x.com'),
+          emailCredential('b@x.com'),
+        ]),
+      ).toEqual([]);
+    });
+
+    it('should keep no values for an unknown rule or one named after an inherited property', () => {
+      for (const rule of [
+        'unknown',
+        'constructor',
+        'toString',
+        'valueOf',
+        'hasOwnProperty',
+        '__proto__',
+      ]) {
+        expect(
+          ruleCandidateValues(emailRule({ rule }), [
+            emailCredential('a@x.com'),
+          ]),
         ).toEqual([]);
       }
     });

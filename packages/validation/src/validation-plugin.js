@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-const Ajv2019 = require('ajv/dist/2019');
-const ajvFormats = require('ajv-formats');
 const { forEach, keys } = require('lodash/fp');
 const fp = require('fastify-plugin');
-const draft7MetaSchema = require('ajv/dist/refs/json-schema-draft-07.json');
-const { initValidation } = require('./validation');
+const { initAjv2019Validation } = require('./ajv2019-validation');
 
 const validationPlugin = (fastify, options, next) => {
-  const ajvInstance = new Ajv2019(options.ajv);
-  ajvInstance.addMetaSchema(draft7MetaSchema);
-  ajvFormats(ajvInstance, fastify.config.ajvFormats);
-  const validationFns = initValidation(ajvInstance);
+  const validationFns = initAjv2019Validation(
+    options.ajv,
+    fastify.config.ajvFormats,
+  );
   forEach((validationFnName) => {
     fastify.decorate(validationFnName, validationFns[validationFnName]);
   }, keys(validationFns));
