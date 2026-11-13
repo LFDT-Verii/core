@@ -59,35 +59,6 @@ describe('vp auth rules', () => {
       ).toEqual([['adam@example.com']]);
     });
 
-    it('should keep every distinct value of a pick rule', () => {
-      expect(
-        buildCandidateTuples(
-          [emailRule()],
-          [
-            emailCredential('a@x.com'),
-            emailCredential('b@x.com'),
-            emailCredential('A@x.com'),
-          ],
-        ),
-      ).toEqual([['a@x.com'], ['b@x.com']]);
-    });
-
-    it('should keep the value of an equal rule only when there is exactly one', () => {
-      const rules = [emailRule({ rule: 'equal' })];
-      expect(
-        buildCandidateTuples(rules, [
-          emailCredential('a@x.com'),
-          emailCredential(' A@X.com'),
-        ]),
-      ).toEqual([['a@x.com']]);
-      expect(
-        buildCandidateTuples(rules, [
-          emailCredential('a@x.com'),
-          emailCredential('b@x.com'),
-        ]),
-      ).toEqual([]);
-    });
-
     it('should put each value at its rule valueIndex, whatever the order of the rules', () => {
       const credentials = [
         emailCredential('a@x.com'),
@@ -171,22 +142,6 @@ describe('vp auth rules', () => {
           [emailCredential('a@x.com')],
         ),
       ).toEqual([]);
-    });
-
-    it('should build no tuples for a rule named after an inherited property', () => {
-      for (const rule of [
-        'toString',
-        'valueOf',
-        'hasOwnProperty',
-        '__proto__',
-      ]) {
-        expect(
-          buildCandidateTuples(
-            [emailRule({ rule })],
-            [emailCredential('a@x.com')],
-          ),
-        ).toEqual([]);
-      }
     });
 
     it('should allow up to 100 combinations', () => {

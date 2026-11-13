@@ -31,6 +31,7 @@ const {
   trim,
 } = require('lodash/fp');
 const {
+  ruleCandidateValues,
   ruleValues,
   selectClaims,
 } = require('@verii/credentialing-hub-operator-api');
@@ -65,10 +66,6 @@ const readSample = async (file) => {
   }
 };
 
-// The Hub's equal rule uses a value only when the credentials give exactly one.
-const candidateValues = (rule, values) =>
-  rule.rule === 'equal' && size(values) !== 1 ? [] : values;
-
 const pointerSelections = (rule) => (sample) => ({
   file: sample.file,
   pointers: map(
@@ -80,14 +77,15 @@ const pointerSelections = (rule) => (sample) => ({
   ),
 });
 
+// The values the rule finds, and the ones the Hub uses: an equal rule uses a
+// value only when the credentials give exactly one.
 const checkRule = (samples) => (rule) => {
-  const values = ruleValues(rule, samples);
   const ruleSamples = filter({ type: rule.type }, samples);
   return {
     rule,
     samples: map(pointerSelections(rule), ruleSamples),
-    values,
-    candidateValues: candidateValues(rule, values),
+    values: ruleValues(rule, samples),
+    candidateValues: ruleCandidateValues(rule, samples),
   };
 };
 

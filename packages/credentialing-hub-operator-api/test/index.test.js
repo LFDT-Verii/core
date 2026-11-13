@@ -92,6 +92,7 @@ describe('credentialing hub operator api', () => {
         initOperatorApiValidator: expect.any(Function),
         isOfValueType: expect.any(Function),
         isValidAuthValue: expect.any(Function),
+        ruleCandidateValues: expect.any(Function),
         ruleValues: expect.any(Function),
         selectClaims: expect.any(Function),
         toAuthMatchValue: expect.any(Function),
