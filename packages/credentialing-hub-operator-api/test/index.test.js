@@ -90,7 +90,9 @@ describe('credentialing hub operator api', () => {
       expect.objectContaining({
         buildAuthMatchValues: expect.any(Function),
         initOperatorApiValidator: expect.any(Function),
+        isInternalVpAuth: expect.any(Function),
         isOfValueType: expect.any(Function),
+        isServiceDeactivated: expect.any(Function),
         isValidAuthValue: expect.any(Function),
         ruleCandidateValues: expect.any(Function),
         ruleValues: expect.any(Function),

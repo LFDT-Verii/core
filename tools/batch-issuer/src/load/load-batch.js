@@ -36,7 +36,8 @@ const {
   zipWith,
 } = require('lodash/fp');
 const { runSequentially } = require('@verii/common-functions');
-const { isInternalVpAuth, isPreauth } = require('../validation/check-service');
+const { isInternalVpAuth } = require('@verii/credentialing-hub-operator-api');
+const { isPreauth } = require('../validation/check-service');
 const { appendRecords, startState } = require('../state/state-file');
 const { count } = require('../report/count');
 

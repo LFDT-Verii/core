@@ -16,9 +16,7 @@
  */
 const { calcSha384 } = require('@verii/crypto');
 const { flow, identity, map, sortBy } = require('lodash/fp');
-const {
-  isInternalVpAuth,
-} = require('../../issuer-services/domain/is-internal-vp-auth');
+const { isInternalVpAuth } = require('@verii/credentialing-hub-operator-api');
 
 // valueType changes what a rule reads, so it's part of the hash. valueFormat
 // doesn't change matching, so it isn't.

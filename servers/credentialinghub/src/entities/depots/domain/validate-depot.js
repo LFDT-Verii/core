@@ -16,14 +16,12 @@
  */
 const newError = require('http-errors');
 const { findIndex, flow, isEmpty, size, sortBy, zip } = require('lodash/fp');
-const { isBefore } = require('date-fns/fp');
 const {
   DepotErrors,
+  isInternalVpAuth,
+  isServiceDeactivated,
   isValidAuthValue,
 } = require('@verii/credentialing-hub-operator-api');
-const {
-  isInternalVpAuth,
-} = require('../../issuer-services/domain/is-internal-vp-auth');
 
 const validateDepot = (depot, service, isIssuerService) => {
   if (isMissingOrDeactivated(service)) {
@@ -86,8 +84,6 @@ const invalidAuthValuesMessage = (authValues, service) => {
 };
 
 const isMissingOrDeactivated = (service) =>
-  service == null ||
-  (service.deactivationDate != null &&
-    isBefore(new Date(), service.deactivationDate));
+  service == null || isServiceDeactivated(service);
 
 module.exports = { hasValidAuthValues, validateDepot };

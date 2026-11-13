@@ -15,6 +15,5 @@
  *
  */
 module.exports = {
-  ...require('./is-internal-vp-auth'),
   ...require('./validate-issuer-service'),
 };

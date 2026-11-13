@@ -26,16 +26,12 @@ const {
   sortBy,
   zipWith,
 } = require('lodash/fp');
-
-const isInternalVpAuth = (service) =>
-  service.authMode === 'internal' &&
-  includes('verifiable_presentation', service.authMethods);
+const {
+  isInternalVpAuth,
+  isServiceDeactivated,
+} = require('@verii/credentialing-hub-operator-api');
 
 const isPreauth = (service) => includes('preauth', service.authMethods);
-
-const isDeactivated = (service) =>
-  service.deactivationDate != null &&
-  new Date(service.deactivationDate) <= new Date();
 
 // The rules in valueIndex order. Only an internal verifiable_presentation
 // service matches depots by their auth values.
@@ -59,7 +55,7 @@ const checkAuthMethods = (service) => {
 };
 
 const checkActive = (service) =>
-  isDeactivated(service)
+  isServiceDeactivated(service)
     ? [{ reason: `the service was deactivated at ${service.deactivationDate}` }]
     : [];
 
@@ -124,4 +120,4 @@ const checkService = ({ spec, templates, service }) => {
   };
 };
 
-module.exports = { checkService, isInternalVpAuth, isPreauth };
+module.exports = { checkService, isPreauth };
