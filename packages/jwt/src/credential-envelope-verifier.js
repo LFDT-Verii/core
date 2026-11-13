@@ -96,11 +96,7 @@ const VersionAlgorithmAllowlists = Object.freeze({
     'ES256',
     'RS256',
   ]),
-  [CredentialDataModelVersions.V2_0]: Object.freeze([
-    'ES256K',
-    'ES256',
-    'RS256',
-  ]),
+  [CredentialDataModelVersions.V2_0]: Object.freeze(['ES256', 'RS256']),
 });
 
 const DEFAULT_CLOCK_TOLERANCE_MILLISECONDS = 120000;
