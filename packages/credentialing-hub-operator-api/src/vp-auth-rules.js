@@ -133,7 +133,7 @@ const ruleCandidateValues = (rule, credentials) => {
     return [];
   }
   const candidateValues = get([rule.rule], RuleCandidateValues);
-  return flow(ruleValues, candidateValues)(rule, credentials);
+  return candidateValues(ruleValues(rule, credentials));
 };
 
 module.exports = { ruleCandidateValues, ruleValues, selectClaims };
