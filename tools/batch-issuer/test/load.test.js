@@ -850,28 +850,28 @@ describe('batch-issuer load', () => {
     expect(stateList(filesOf(batch).state, 'credentials')).toEqual([]);
   });
 
-  it('creates more than 1,000 credentials in requests of at most 1,000', async () => {
-    const hub = initFakeHub({ depots: holderDepots(1001) });
-    const batch = writeBatch({ csvLines: holders(1001) });
+  it('creates more than 100 credentials in requests of at most 100', async () => {
+    const hub = initFakeHub({ depots: holderDepots(101) });
+    const batch = writeBatch({ csvLines: holders(101) });
     mockRun(hub);
 
     const result = await load(batch);
 
     expect(result.exitCode).toEqual(0);
     expect(result.stdout).toContain(
-      'Depots: 0 created, 1,001 reused, 0 skipped.\nCredentials: 1,001 created, 0 skipped.\n',
+      'Depots: 0 created, 101 reused, 0 skipped.\nCredentials: 101 created, 0 skipped.\n',
     );
     const createMany = writeRequests(hub).filter(
       ({ path: requestPath }) => requestPath === 'credentials/create-many',
     );
-    expect(map(({ body }) => body.items.length, createMany)).toEqual([1000, 1]);
+    expect(map(({ body }) => body.items.length, createMany)).toEqual([100, 1]);
     expect(createMany[1].body.items[0]).toEqual({
-      depotId: objectId('e0', 1001),
+      depotId: objectId('e0', 101),
       credential: expect.objectContaining({
-        credentialReference: 'E3001-ivie-2026',
+        credentialReference: 'E2101-ivie-2026',
       }),
     });
-    expect(hub.credentials).toHaveLength(1001);
+    expect(hub.credentials).toHaveLength(101);
   });
 
   describe('a rerun after a dropped connection', () => {
@@ -894,17 +894,17 @@ describe('batch-issuer load', () => {
       {
         name: 'partway through the credentials',
         // Every holder but the last has a depot already.
-        initHub: () => initFakeHub({ depots: holderDepots(1000) }),
-        csvLines: holders(1001),
+        initHub: () => initFakeHub({ depots: holderDepots(100) }),
+        csvLines: holders(101),
         failures: { 'credentials/create-many': { at: 2 } },
         failedPath: 'credentials/create-many',
-        progress: '1 of 1 depot and 1,000 of 1,001 credentials',
+        progress: '1 of 1 depot and 100 of 101 credentials',
         rerun: [
-          'Depots: 0 created, 1,000 reused, 1 skipped.',
-          'Credentials: 1 created, 1,000 skipped.',
+          'Depots: 0 created, 100 reused, 1 skipped.',
+          'Credentials: 1 created, 100 skipped.',
         ],
-        depots: 1001,
-        credentials: 1001,
+        depots: 101,
+        credentials: 101,
         refreshes: 0,
       },
       {

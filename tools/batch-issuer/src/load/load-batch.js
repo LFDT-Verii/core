@@ -36,15 +36,16 @@ const {
   zipWith,
 } = require('lodash/fp');
 const { runSequentially } = require('@verii/common-functions');
-const {
-  CREDENTIALS_CREATE_MANY_MAX_ITEMS,
-} = require('@verii/credentialing-hub-operator-api');
 const { isInternalVpAuth, isPreauth } = require('../validation/check-service');
 const { appendRecords, startState } = require('../state/state-file');
 const { count } = require('../report/count');
 
 // The status of a wallet message that the Hub couldn't send.
 const FAILED_NOTIFICATION = 'failed';
+
+// create-many takes up to 1000 credentials, but the Hub limits a request's
+// body to 8 MiB, which 1000 large credentials can exceed.
+const CREDENTIALS_PER_REQUEST = 100;
 
 const addToList = (state, key, records) => ({
   ...state,
@@ -123,7 +124,7 @@ const toItems =
     );
 
 // The credentials that no run of this batch has created yet, each with its
-// row's depot, in requests of at most the items create-many takes.
+// row's depot, in requests of at most CREDENTIALS_PER_REQUEST.
 const pendingRequests = (rows, state) => {
   const depotIds = depotIdsByRow(rows, state);
   const createdReferences = new Set(
@@ -134,7 +135,7 @@ const pendingRequests = (rows, state) => {
   return flow(
     flatMap(toItems(depotIds)),
     reject(isCreated),
-    chunk(CREDENTIALS_CREATE_MANY_MAX_ITEMS),
+    chunk(CREDENTIALS_PER_REQUEST),
   )(rows);
 };
 
