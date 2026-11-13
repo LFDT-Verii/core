@@ -14,14 +14,13 @@
  * limitations under the License.
  *
  */
-const { includes } = require('lodash/fp');
 const { isBefore } = require('date-fns/fp');
 
 // A service that matches depots by the auth values its
 // verifiablePresentationAuthRules read from the presented credentials.
 const isInternalVpAuth = (service) =>
   service.authMode === 'internal' &&
-  includes('verifiable_presentation', service.authMethods);
+  service.authMethods?.includes('verifiable_presentation');
 
 // date-fns/fp takes the date to compare with first, so this is
 // deactivationDate < now: a service is deactivated once its deactivationDate
