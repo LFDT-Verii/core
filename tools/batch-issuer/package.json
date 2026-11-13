@@ -28,7 +28,6 @@
     "@verii/validation": "workspace:*",
     "@verii/vc-checks": "workspace:*",
     "ajv": "8.20.0",
-    "ajv-formats": "3.0.1",
     "commander": "~15.0.0",
     "csv-parse": "^7.0.3",
     "csv-stringify": "^6.9.0",
