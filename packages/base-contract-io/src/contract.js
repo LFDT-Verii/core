@@ -25,7 +25,9 @@ const signerWithoutProvider = new Map();
 
 const initProvider = (rpcUrl, authenticate, chainId) => {
   const network = chainId ? ethers.Network.from(chainId) : undefined;
-  const options = network ? { staticNetwork: network } : undefined;
+  // Without a configured chain ID, ask the node once and keep its answer,
+  // instead of asking again before most calls.
+  const options = { staticNetwork: network ?? true };
   const connection = new ethers.FetchRequest(rpcUrl);
 
   connection.preflightFunc = async (innerConn) => {
