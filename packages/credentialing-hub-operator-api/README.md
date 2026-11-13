@@ -59,6 +59,7 @@ An issuer service's `verifiablePresentationAuthRules` read values from the crede
 
 - `selectClaims(pointer, credential)` evaluates a claims path pointer (OpenID4VP 1.0, section 7) against a credential and returns what it selects. A string selects a key of an object, a non-negative integer an index of an array, and `null` every element of an array. It never throws.
 - `ruleValues(rule, credentials)` returns the distinct normalized scalar values that a rule finds in the credentials of its `type`. `credentials` are `{ type, credential }` for each credential. The rule's pointers are tried in order, and the first one that selects a value of the rule's `valueType` supplies the values. Values of other types are ignored, never converted.
+- `ruleCandidateValues(rule, credentials)` returns the values of `ruleValues` that the Hub matches depots with: all of them for a `pick` rule, and for an `equal` rule the value only when there is exactly one. Any other `rule` gives none.
 
 ```js
 const { ruleValues } = require('@verii/credentialing-hub-operator-api');
@@ -68,6 +69,11 @@ ruleValues(
   [{ type: 'EmailV1.0', credential: { credentialSubject: { email: ' Adam@Example.com' } } }],
 ); // ['adam@example.com']
 ```
+
+## Services
+
+- `isInternalVpAuth(service)` is true for a service with the `internal` `authMode` and the `verifiable_presentation` auth method, which matches depots by the auth values its `verifiablePresentationAuthRules` read.
+- `isServiceDeactivated(service)` is true once the service's `deactivationDate` is before now. The Hub then treats a reference to the service as one to a missing service, so `depots/create` answers `referenced_service_not_found`.
 
 ## Error codes
 
