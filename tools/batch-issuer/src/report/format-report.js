@@ -92,4 +92,9 @@ const formatJsonReport = ({ errors, summary }) => {
   return `${JSON.stringify(report, null, 2)}\n`;
 };
 
-module.exports = { formatJsonReport, formatTextReport };
+module.exports = {
+  formatErrors,
+  formatJsonReport,
+  formatSummary,
+  formatTextReport,
+};

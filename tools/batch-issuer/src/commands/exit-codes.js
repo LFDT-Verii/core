@@ -15,12 +15,15 @@
  */
 
 const ExitCodes = {
-  // validate: the batch is valid. check-rules: every rule reads a value
+  // validate: the batch is valid. load: the batch is loaded. check-rules:
+  // every rule reads a value
   OK: 0,
-  // validate: the batch has errors. check-rules: a rule reads nothing
+  // validate and load: the batch has errors, and nothing was written.
+  // check-rules: a rule reads nothing
   FAILED: 1,
-  // The command couldn't run: bad options, an unreadable file, or a Hub or
-  // registrar error
+  // The command couldn't run: bad options, an unreadable file, a state file
+  // of another batch, or a Hub or registrar error. load: a write failed, and
+  // the state file records what was written before it
   ERROR: 2,
 };
 

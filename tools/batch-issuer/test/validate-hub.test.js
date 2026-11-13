@@ -26,7 +26,7 @@ const {
   mockServices,
   useNock,
 } = require('./helpers/mock-services');
-const { HUB_ARGS, runCapture, validateJson } = require('./helpers/run-cli');
+const { BATCH_ARGS, runCapture, validateJson } = require('./helpers/run-cli');
 const {
   ADAM,
   BETH,
@@ -330,7 +330,7 @@ describe('batch-issuer validate: the batch against the Hub and the registrar', (
         'validate',
         batch.specFile,
         batch.csvFile,
-        ...HUB_ARGS,
+        ...BATCH_ARGS,
       ]);
 
       expect(result).toEqual({
@@ -350,7 +350,7 @@ describe('batch-issuer validate: the batch against the Hub and the registrar', (
         'validate',
         batch.specFile,
         batch.csvFile,
-        ...HUB_ARGS,
+        ...BATCH_ARGS,
       ]);
 
       expect(result).toEqual({

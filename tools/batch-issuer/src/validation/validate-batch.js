@@ -72,7 +72,13 @@ const validateBatch = async ({ specFile, csvFile, vars, options }, clients) => {
   );
   const { existingDepots, errors: depotErrors } = await matchExistingDepots(
     rows,
-    { spec, authColumns, hub: clients.hub, reuse: options.reuse },
+    {
+      spec,
+      authColumns,
+      hub: clients.hub,
+      reuse: options.reuse,
+      createdDepotIds: options.createdDepotIds,
+    },
   );
   const batchRows = map(toBatchRow(existingDepots), rows);
   return {

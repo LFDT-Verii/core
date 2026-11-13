@@ -124,4 +124,4 @@ const checkService = ({ spec, templates, service }) => {
   };
 };
 
-module.exports = { checkService };
+module.exports = { checkService, isInternalVpAuth, isPreauth };

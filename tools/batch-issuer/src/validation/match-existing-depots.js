@@ -93,7 +93,8 @@ const checkMatch = (row, depots, context) => {
       ],
     };
   }
-  if (!context.reuse) {
+  // A depot that an earlier run of this batch created isn't a reuse.
+  if (!context.reuse && !context.createdDepotIds.has(depot.id)) {
     return {
       errors: [
         `the auth values belong to depot ${depot.id}, and --no-reuse is set`,
@@ -104,7 +105,11 @@ const checkMatch = (row, depots, context) => {
 };
 
 // Step 4: the rows against the depots that already hold their auth values.
-const matchExistingDepots = async (rows, { spec, authColumns, hub, reuse }) => {
+// createdDepotIds are the depots that the batch's state file records.
+const matchExistingDepots = async (
+  rows,
+  { spec, authColumns, hub, reuse, createdDepotIds },
+) => {
   const lookedUpRows = filter(isLookedUp, rows);
   if (isEmpty(lookedUpRows)) {
     return { existingDepots: {}, errors: [] };
@@ -114,6 +119,7 @@ const matchExistingDepots = async (rows, { spec, authColumns, hub, reuse }) => {
   const depotsByKey = groupBy(depotAuthValuesKey, depots);
   const matchContext = {
     reuse,
+    createdDepotIds,
     depotOnly: !has('credentials', spec),
     specExpectedTypes: getOr([], ['depot', 'expectedCredentialTypes'], spec),
   };
