@@ -38,6 +38,8 @@ describe('root controller test', () => {
     expect(response.body).toEqual(`Welcome to the Credentialing Hub
 Host: https://localhost.test
 Version: ${packageJson.version}
+Environment: test
+Chain ID: 2020
 `);
   });
 
