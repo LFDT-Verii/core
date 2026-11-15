@@ -27,7 +27,7 @@ const {
 const { nanoid } = require('nanoid');
 const fastifyView = require('@fastify/view');
 const { appendSearchParam } = require('@verii/common-functions');
-const { describeDeployment } = require('@verii/config');
+const { deploymentDescription } = require('@verii/config');
 const handlebars = require('handlebars');
 const Error = require('http-errors');
 
@@ -56,10 +56,11 @@ const appRedirectController = async (fastify) => {
         },
       },
       async (req, reply) => {
+        const { hostUrl, version } = fastify.config;
         reply
           .status(200)
           .send(
-            `Welcome to Credential APIs\nHost: ${fastify.config.hostUrl}\nVersion: ${fastify.config.version}\n${describeDeployment(fastify.config)}`,
+            `Welcome to Credential APIs\nHost: ${hostUrl}\nVersion: ${version}\n${deploymentDescription(fastify.config)}`,
           );
       },
     )

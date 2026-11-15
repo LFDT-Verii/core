@@ -23,4 +23,10 @@ const describeDeployment = ({ environmentLabel, chainId }) =>
     ? `Environment: ${environmentLabel}\n`
     : `Environment: ${environmentLabel}\nChain ID: ${chainId}\n`;
 
-module.exports = { describeDeployment };
+// What GET / says about the deployment: the config's own describeDeployment, which a server that
+// embeds a Verii server can set (as configOverrides) to describe it differently, or the default.
+// An override can call the default describeDeployment.
+const deploymentDescription = (config) =>
+  (config.describeDeployment ?? describeDeployment)(config);
+
+module.exports = { describeDeployment, deploymentDescription };

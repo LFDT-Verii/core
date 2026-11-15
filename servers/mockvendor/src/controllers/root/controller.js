@@ -1,11 +1,11 @@
-const { describeDeployment } = require('@verii/config');
+const { deploymentDescription } = require('@verii/config');
 
 const rootRoutes = async (fastify) => {
   fastify.get('/', async (req, reply) => {
     reply
       .status(200)
       .send(
-        `Welcome to Mockvendor\nVersion: ${fastify.config.version}\n${describeDeployment(fastify.config)}`,
+        `Welcome to Mockvendor\nVersion: ${fastify.config.version}\n${deploymentDescription(fastify.config)}`,
       );
   });
   fastify.post('/test-integration', async (req, reply) => {

@@ -1,4 +1,4 @@
-const { describeDeployment } = require('@verii/config');
+const { deploymentDescription } = require('@verii/config');
 
 const rootRoutes = async (fastify) => {
   fastify.get(
@@ -19,7 +19,7 @@ const rootRoutes = async (fastify) => {
       reply
         .status(200)
         .send(
-          `Welcome to VelocityCore Registrar\nVersion: ${fastify.config.version}\n${describeDeployment(fastify.config)}`,
+          `Welcome to VelocityCore Registrar\nVersion: ${fastify.config.version}\n${deploymentDescription(fastify.config)}`,
         );
     },
   );

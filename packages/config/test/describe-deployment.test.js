@@ -16,7 +16,10 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
-const { describeDeployment } = require('../src/describe-deployment');
+const {
+  describeDeployment,
+  deploymentDescription,
+} = require('../src/describe-deployment');
 
 describe('describeDeployment', () => {
   it('should give the environment label and the chain ID', () => {
@@ -28,6 +31,26 @@ describe('describeDeployment', () => {
   it('should give only the environment label without blockchain config', () => {
     expect(describeDeployment({ environmentLabel: 'DevNet' })).toEqual(
       'Environment: DevNet\n',
+    );
+  });
+});
+
+describe('deploymentDescription', () => {
+  it("should give the default description when the config doesn't override it", () => {
+    expect(
+      deploymentDescription({ environmentLabel: 'TestNet', chainId: 2020 }),
+    ).toEqual('Environment: TestNet\nChain ID: 2020\n');
+  });
+
+  it("should give the config's own description, which can build on the default", () => {
+    const config = {
+      environmentLabel: 'TestNet',
+      chainId: 2020,
+      describeDeployment: (deploymentConfig) =>
+        `Network: testnet\n${describeDeployment(deploymentConfig)}`,
+    };
+    expect(deploymentDescription(config)).toEqual(
+      'Network: testnet\nEnvironment: TestNet\nChain ID: 2020\n',
     );
   });
 });
