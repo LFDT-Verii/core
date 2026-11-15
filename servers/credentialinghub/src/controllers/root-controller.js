@@ -15,6 +15,8 @@
  *
  */
 
+const { deploymentDescription } = require('@verii/config');
+
 const rootController = async (fastify) => {
   fastify.autoSchemaPreset({ tags: ['Utilities'] });
   fastify.get(
@@ -34,10 +36,11 @@ const rootController = async (fastify) => {
       }),
     },
     async (req, reply) => {
+      const { hostUrl, version } = fastify.config;
       reply
         .status(200)
         .send(
-          `Welcome to the Credentialing Hub\nHost: ${fastify.config.hostUrl}\nVersion: ${fastify.config.version}\n`,
+          `Welcome to the Credentialing Hub\nHost: ${hostUrl}\nVersion: ${version}\n${deploymentDescription(fastify.config)}`,
         );
     },
   );

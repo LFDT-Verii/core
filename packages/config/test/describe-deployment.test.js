@@ -1,0 +1,56 @@
+/**
+ * Copyright 2026 Velocity Team
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { describe, it } = require('node:test');
+const { expect } = require('expect');
+const {
+  describeDeployment,
+  deploymentDescription,
+} = require('../src/describe-deployment');
+
+describe('describeDeployment', () => {
+  it('should give the environment label and the chain ID', () => {
+    expect(
+      describeDeployment({ environmentLabel: 'TestNet', chainId: 2020 }),
+    ).toEqual('Environment: TestNet\nChain ID: 2020\n');
+  });
+
+  it('should give only the environment label without blockchain config', () => {
+    expect(describeDeployment({ environmentLabel: 'DevNet' })).toEqual(
+      'Environment: DevNet\n',
+    );
+  });
+});
+
+describe('deploymentDescription', () => {
+  it("should give the default description when the config doesn't override it", () => {
+    expect(
+      deploymentDescription({ environmentLabel: 'TestNet', chainId: 2020 }),
+    ).toEqual('Environment: TestNet\nChain ID: 2020\n');
+  });
+
+  it("should give the config's own description, which can build on the default", () => {
+    const config = {
+      environmentLabel: 'TestNet',
+      chainId: 2020,
+      describeDeployment: (deploymentConfig) =>
+        `Network: testnet\n${describeDeployment(deploymentConfig)}`,
+    };
+    expect(deploymentDescription(config)).toEqual(
+      'Network: testnet\nEnvironment: TestNet\nChain ID: 2020\n',
+    );
+  });
+});
