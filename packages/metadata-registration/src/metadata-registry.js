@@ -18,6 +18,7 @@ const { mapWithIndex } = require('@verii/common-functions');
 const {
   initContractClient,
   initContractWithTransactingClient,
+  sendContractTransaction,
 } = require('@verii/base-contract-io');
 
 const {
@@ -501,13 +502,16 @@ const initMetadataRegistry = async (
     };
   };
 
-  const setPermissionsAddress = async (permissionsContractAddress) => {
-    const tx = await contractClient.setPermissionsAddress(
-      permissionsContractAddress,
+  // Sent from the contract owner's key, which other servers may also send from.
+  const setPermissionsAddress = (permissionsContractAddress) =>
+    sendContractTransaction(
+      {
+        contract: contractClient,
+        method: 'setPermissionsAddress',
+        args: [permissionsContractAddress],
+      },
+      context,
     );
-
-    return tx.wait();
-  };
 
   const pullCreatedMetadataListEvents = pullEvents('CreatedMetadataList');
 
