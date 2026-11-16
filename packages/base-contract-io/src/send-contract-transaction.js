@@ -25,7 +25,8 @@ const maxAttempts = 3;
  * pending nonce, and drops the pending transaction it replaces. When another
  * transaction from the same account, sent by any server, takes this call's
  * nonce, the call is sent again with a new one. A replaced call never ran, so
- * sending it again doesn't repeat it.
+ * sending it again doesn't repeat it. If the other transaction made the same
+ * call, its outcome is returned instead, success or revert.
  *
  * Use it for accounts that send more than one transaction. A temporary
  * account from initContractWithTransactingClient sends only one.
@@ -43,15 +44,17 @@ const sendContractTransaction = async (call, context, attempt = 1) => {
       await tx.replaceableTransaction(startBlock).wait(),
     );
   } catch (error) {
-    if (
-      !ethers.isError(error, 'TRANSACTION_REPLACED') ||
-      attempt >= maxAttempts
-    ) {
+    if (!ethers.isError(error, 'TRANSACTION_REPLACED')) {
       throw error;
     }
-    // The other transaction made the same call, so it has done the work.
+    // The other transaction made the same call, so its outcome is this
+    // call's. Waiting on it throws CALL_EXCEPTION if it reverted, which the
+    // receipt on the error doesn't.
     if (error.reason === 'repriced') {
-      return toContractReceipt(contract, error.receipt);
+      return toContractReceipt(contract, await error.replacement.wait());
+    }
+    if (attempt >= maxAttempts) {
+      throw error;
     }
     context.log.warn(
       { method, nonce: tx.nonce, hash: tx.hash, replacedBy: error.hash },

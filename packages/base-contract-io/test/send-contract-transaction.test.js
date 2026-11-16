@@ -55,28 +55,31 @@ const setUp = async () => {
   return { contractClient, otherServerWallet, rpcProvider };
 };
 
-// The contract, except that the other server sends a transaction with the
-// same nonce just after the first call is sent.
-const raceFirstCall = (contractClient, buildOtherTransaction) => {
-  const calls = [];
+// The contract, except that the other server races the calls that have an
+// entry in otherTransactions. It waits for a new block, so the race has most
+// of a block period, and right after the call is sent it sends its own
+// transaction with the call's nonce. Later calls aren't raced.
+const raceCalls = (contractClient, rpcProvider, otherTransactions) => {
+  const sent = { ours: [], others: [] };
   const contract = {
     runner: contractClient.runner,
     interface: contractClient.interface,
     addAddressScope: async (...args) => {
+      const sendOther = otherTransactions[sent.ours.length];
+      if (sendOther) {
+        await waitForNewBlock(rpcProvider);
+      }
       const tx = await contractClient.addAddressScope(...args);
-      calls.push(tx.hash);
-      if (calls.length === 1) {
-        const other = await buildOtherTransaction(tx);
-        calls.push(other.hash);
+      sent.ours.push(tx.hash);
+      if (sendOther) {
+        sent.others.push((await sendOther(tx)).hash);
       }
       return tx;
     },
   };
-  return { contract, calls };
+  return { contract, sent };
 };
 
-// Resolves just after the node makes a block, so the race starts with most of
-// a block period before the next one.
 const waitForNewBlock = async (rpcProvider) => {
   const start = await rpcProvider.send('eth_blockNumber', []);
   for (;;) {
@@ -91,18 +94,49 @@ const waitForNewBlock = async (rpcProvider) => {
 
 const freeTransaction = { type: 0, gasPrice: 0n, value: 0n };
 
-describe('sendContractTransaction', { timeout: 60000 }, () => {
+// A different transaction from the other server, with the call's nonce.
+const differentTransaction = (wallet) => (tx) =>
+  wallet.sendTransaction({
+    ...freeTransaction,
+    to: targetAddress,
+    nonce: tx.nonce,
+  });
+
+// The same call from the other server, with the call's nonce. Its gas limit
+// differs, or the node treats it as the same transaction.
+const sameCall =
+  (wallet, gasLimit = (tx) => tx.gasLimit + 1n) =>
+  (tx) =>
+    wallet.sendTransaction({
+      ...freeTransaction,
+      to: tx.to,
+      data: tx.data,
+      nonce: tx.nonce,
+      gasLimit: gasLimit(tx),
+    });
+
+// Enough gas for the node to accept the transaction, but not to run it: the
+// base cost, plus calldata at the highest per-byte price of any fork, plus
+// 1,000. The call's storage write alone needs 20,000.
+const tooLittleGas = (tx) =>
+  ethers
+    .getBytes(tx.data)
+    .reduce((gas, byte) => gas + (byte === 0 ? 4n : 68n), 22000n);
+
+const isMined = async (rpcProvider, hash) =>
+  (await rpcProvider.getTransactionReceipt(hash)) != null;
+
+const addScope = (contract, scope) =>
+  sendContractTransaction(
+    { contract, method: 'addAddressScope', args: [targetAddress, scope] },
+    context,
+  );
+
+describe('sendContractTransaction', { timeout: 120000 }, () => {
   it('returns the receipt once the call is mined', async () => {
     const { contractClient, rpcProvider } = await setUp();
 
-    const receipt = await sendContractTransaction(
-      {
-        contract: contractClient,
-        method: 'addAddressScope',
-        args: [targetAddress, 'mined-scope'],
-      },
-      context,
-    );
+    const receipt = await addScope(contractClient, 'mined-scope');
 
     expect(receipt).toBeInstanceOf(ethers.ContractTransactionReceipt);
     expect(receipt.status).toEqual(1);
@@ -114,31 +148,18 @@ describe('sendContractTransaction', { timeout: 60000 }, () => {
 
   it('sends the call again when another transaction takes its nonce', async () => {
     const { contractClient, otherServerWallet, rpcProvider } = await setUp();
-    const { contract, calls } = raceFirstCall(contractClient, (tx) =>
-      otherServerWallet.sendTransaction({
-        ...freeTransaction,
-        to: targetAddress,
-        nonce: tx.nonce,
-      }),
-    );
-    await waitForNewBlock(rpcProvider);
+    const { contract, sent } = raceCalls(contractClient, rpcProvider, [
+      differentTransaction(otherServerWallet),
+    ]);
 
-    const receipt = await sendContractTransaction(
-      {
-        contract,
-        method: 'addAddressScope',
-        args: [targetAddress, 'replaced-scope'],
-      },
-      context,
-    );
+    const receipt = await addScope(contract, 'replaced-scope');
 
-    const [replacedHash, otherHash, resentHash] = calls;
-    expect(calls).toHaveLength(3);
-    expect(await rpcProvider.getTransactionReceipt(replacedHash)).toBeNull();
-    expect((await rpcProvider.getTransactionReceipt(otherHash)).status).toEqual(
-      1,
-    );
-    expect(receipt.hash).toEqual(resentHash);
+    expect(sent.ours).toHaveLength(2);
+    expect(await isMined(rpcProvider, sent.ours[0])).toEqual(false);
+    expect(
+      (await rpcProvider.getTransactionReceipt(sent.others[0])).status,
+    ).toEqual(1);
+    expect(receipt.hash).toEqual(sent.ours[1]);
     expect(receipt.status).toEqual(1);
     expect(
       await contractClient.checkAddressScope(targetAddress, 'replaced-scope'),
@@ -148,33 +169,62 @@ describe('sendContractTransaction', { timeout: 60000 }, () => {
 
   it('returns the other transaction when it made the same call', async () => {
     const { contractClient, otherServerWallet, rpcProvider } = await setUp();
-    // A different gas limit, or the node treats it as the same transaction.
-    const { contract, calls } = raceFirstCall(contractClient, (tx) =>
-      otherServerWallet.sendTransaction({
-        ...freeTransaction,
-        to: tx.to,
-        data: tx.data,
-        nonce: tx.nonce,
-        gasLimit: tx.gasLimit + 1n,
-      }),
-    );
-    await waitForNewBlock(rpcProvider);
+    const { contract, sent } = raceCalls(contractClient, rpcProvider, [
+      sameCall(otherServerWallet),
+    ]);
 
-    const receipt = await sendContractTransaction(
-      {
-        contract,
-        method: 'addAddressScope',
-        args: [targetAddress, 'repriced-scope'],
-      },
-      context,
-    );
+    const receipt = await addScope(contract, 'repriced-scope');
 
-    const [replacedHash, otherHash] = calls;
-    expect(calls).toHaveLength(2);
-    expect(await rpcProvider.getTransactionReceipt(replacedHash)).toBeNull();
-    expect(receipt.hash).toEqual(otherHash);
+    expect(sent.ours).toHaveLength(1);
+    expect(await isMined(rpcProvider, sent.ours[0])).toEqual(false);
+    expect(receipt.hash).toEqual(sent.others[0]);
     expect(
       await contractClient.checkAddressScope(targetAddress, 'repriced-scope'),
+    ).toEqual(true);
+    rpcProvider.destroy();
+  });
+
+  it('throws when the same call from the other transaction reverted', async () => {
+    const { contractClient, otherServerWallet, rpcProvider } = await setUp();
+    const { contract, sent } = raceCalls(contractClient, rpcProvider, [
+      sameCall(otherServerWallet, tooLittleGas),
+    ]);
+
+    await expect(addScope(contract, 'reverted-scope')).rejects.toMatchObject({
+      code: 'CALL_EXCEPTION',
+    });
+
+    expect(sent.ours).toHaveLength(1);
+    expect(
+      (await rpcProvider.getTransactionReceipt(sent.others[0])).status,
+    ).toEqual(0);
+    expect(
+      await contractClient.checkAddressScope(targetAddress, 'reverted-scope'),
+    ).toEqual(false);
+    rpcProvider.destroy();
+  });
+
+  it('returns the same call when it replaces the last attempt', async () => {
+    const { contractClient, otherServerWallet, rpcProvider } = await setUp();
+    const { contract, sent } = raceCalls(contractClient, rpcProvider, [
+      differentTransaction(otherServerWallet),
+      differentTransaction(otherServerWallet),
+      sameCall(otherServerWallet),
+    ]);
+
+    const receipt = await addScope(contract, 'last-attempt-scope');
+
+    expect(sent.ours).toHaveLength(3);
+    expect(
+      await Promise.all(sent.ours.map((hash) => isMined(rpcProvider, hash))),
+    ).toEqual([false, false, false]);
+    expect(receipt.hash).toEqual(sent.others[2]);
+    expect(receipt.status).toEqual(1);
+    expect(
+      await contractClient.checkAddressScope(
+        targetAddress,
+        'last-attempt-scope',
+      ),
     ).toEqual(true);
     rpcProvider.destroy();
   });
