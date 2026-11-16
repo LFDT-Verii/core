@@ -164,12 +164,14 @@ const buildUserId = (req) => {
   return {};
 };
 
+// logRedactPaths adds a server's own paths to those every server redacts.
 const loggerProvider = ({
   nodeEnv,
   logSeverity,
   traceIdHeader,
   version,
   destination,
+  logRedactPaths = [],
 }) => {
   // adds logging of the traceId if its on the request
   const serializers = {
@@ -191,6 +193,7 @@ const loggerProvider = ({
     ...SECURITY_PATHS,
     ...JSON_VC_PATHS,
     ...CREDENTIAL_DATA_PATHS,
+    ...logRedactPaths,
   ];
   redact.censor = (value, path) => {
     if (last(path) === 'file') {

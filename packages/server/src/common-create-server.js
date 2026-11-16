@@ -233,8 +233,8 @@ const buildHttpOptions = (config) => {
 };
 
 const createCommonLog = (config) => {
-  const { nodeEnv, logSeverity, version } = config;
-  return loggerProvider({ nodeEnv, logSeverity, version });
+  const { nodeEnv, logSeverity, version, logRedactPaths } = config;
+  return loggerProvider({ nodeEnv, logSeverity, version, logRedactPaths });
 };
 
 module.exports = { commonCreateServer, createCommonLog, isSensitiveRoute };
