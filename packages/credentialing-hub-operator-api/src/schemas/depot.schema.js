@@ -22,6 +22,12 @@ const depotSchema = {
       description:
         "the last time the issuer resolved the depot's deferred credentials",
     },
+    preauthCodeExpiresAt: {
+      type: 'string',
+      format: 'date-time',
+      description:
+        "when the depot's current pre-authorized code expires. Absent when the code doesn't expire",
+    },
   },
 };
 

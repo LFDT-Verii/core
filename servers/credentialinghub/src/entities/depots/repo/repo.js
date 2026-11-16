@@ -54,6 +54,8 @@ module.exports = (app, options, next = () => {}) => {
         authRulesFingerprint: 1,
         serviceId: 1,
         preauthCodeHash: 1,
+        preauthCodeExpiresIn: 1,
+        preauthCodeExpiresAt: 1,
         deferredCredentials: 1,
         expectedCredentialTypes: 1,
         deferredCredentialsResolvedAt: 1,

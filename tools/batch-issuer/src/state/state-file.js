@@ -52,8 +52,11 @@ const toLine = (record) => `${JSON.stringify(record)}\n`;
 /**
  * Identifies a batch: its network, tenant and service, and a hash of
  * everything that decides what a load writes, which is the spec, its
- * templates, the CSV, and the --var and --default-country values.
- * @param {{ specFile: string, csvFile: string, vars: object, options: { network: string, defaultCountry?: string } }} input
+ * templates, the CSV, and the --var, --default-country and
+ * --preauth-code-expires-in values. A value that isn't given isn't hashed, so
+ * state files written before --preauth-code-expires-in existed still match.
+ * @param {{ specFile: string, csvFile: string, vars: object, options: { network: string, defaultCountry?: string,
+ *   preauthCodeExpiresIn?: number|string } }} input
  * @param {object} spec the batch's spec
  * @returns {Promise<{ network: string, tenantId: string, serviceId: string, hash: string }>}
  */
@@ -70,7 +73,12 @@ const identifyBatch = async ({ specFile, csvFile, vars, options }, spec) => {
   );
   const hash = createHash('sha256')
     .update(
-      JSON.stringify({ files, vars, defaultCountry: options.defaultCountry }),
+      JSON.stringify({
+        files,
+        vars,
+        defaultCountry: options.defaultCountry,
+        preauthCodeExpiresIn: options.preauthCodeExpiresIn,
+      }),
     )
     .digest('hex');
   return {
@@ -164,8 +172,8 @@ const openState = (saved, batch, file) => {
   }
   if (!isEqual(saved.state.batch, batch)) {
     throw new Error(
-      `the state file ${file} belongs to a different batch: the spec, its templates, the CSV, --network, --var or --default-country ` +
-        'have changed since it was written. Rerun the batch it belongs to, or pass another --state',
+      `the state file ${file} belongs to a different batch: the spec, its templates, the CSV, --network, --var, --default-country ` +
+        'or --preauth-code-expires-in have changed since it was written. Rerun the batch it belongs to, or pass another --state',
     );
   }
   return saved.state;

@@ -79,4 +79,31 @@ describe('Hub config env validation', () => {
       expect.objectContaining({ openid4vciDeferredIntervalSeconds: 1 }),
     );
   });
+
+  it('should default the pre-authorized code lifetime to 72 hours', () => {
+    delete process.env.PREAUTH_CODE_EXPIRES_IN_SECONDS;
+    expect(
+      require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+    ).toEqual(expect.objectContaining({ preauthCodeExpiresInSeconds: 259200 }));
+  });
+
+  for (const value of ['1', '600', '315360000']) {
+    it(`should accept a pre-authorized code lifetime of ${value} seconds`, () => {
+      process.env.PREAUTH_CODE_EXPIRES_IN_SECONDS = value;
+      expect(
+        require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+      ).toEqual(
+        expect.objectContaining({ preauthCodeExpiresInSeconds: Number(value) }),
+      );
+    });
+  }
+
+  for (const value of ['0', '-600', '1.5', 'never', '72h', '315360001']) {
+    it(`should reject a pre-authorized code lifetime of ${value}`, () => {
+      process.env.PREAUTH_CODE_EXPIRES_IN_SECONDS = value;
+      expect(() =>
+        require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+      ).toThrow('PREAUTH_CODE_EXPIRES_IN_SECONDS');
+    });
+  }
 });

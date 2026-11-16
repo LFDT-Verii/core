@@ -443,6 +443,111 @@ describe('vn-api > authenticate', () => {
         ),
       );
     });
+    describe('pre-authorized code expiry', () => {
+      const persistDepotExpiringAt = (preauthCodeExpiresAt) =>
+        persistDepot({
+          tenant,
+          service: preauthIssuerService,
+          preauthCode,
+          preauthCodeExpiresIn: 600,
+          preauthCodeExpiresAt,
+        });
+
+      const authenticate = async (expiringDepot, code) =>
+        fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: await generatePreauthCodeAuthJwt(
+              expiringDepot,
+              code,
+              holderDid,
+              holderKeyPair,
+            ),
+          },
+        });
+
+      const expectRefused = async (response, errorCode) => {
+        expect(response.statusCode).toEqual(401);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            errorCode,
+            message: errorCode,
+            statusCode: 401,
+          }),
+        );
+        await expect(findOneExchange(exchange._id)).resolves.toEqual(
+          expectedDbExchange(
+            tenant,
+            exchange,
+            [
+              ExchangeStates.AUTHENTICATION_REQUEST,
+              ExchangeStates.AUTHENTICATION_FAILURE,
+            ],
+            { err: errorCode },
+          ),
+        );
+      };
+
+      it('should 401 preauth_code_expired once the code has expired', async () => {
+        const expiredDepot = await persistDepotExpiringAt(
+          new Date(Date.now() - 1000),
+        );
+
+        const response = await authenticate(expiredDepot, preauthCode);
+
+        await expectRefused(response, 'preauth_code_expired');
+      });
+
+      it('should 401 unauthorized, not preauth_code_expired, for another code of a depot whose code has expired', async () => {
+        const expiredDepot = await persistDepotExpiringAt(
+          new Date(Date.now() - 1000),
+        );
+
+        const response = await authenticate(expiredDepot, nanoid());
+
+        await expectRefused(response, 'unauthorized');
+      });
+
+      it('should 200 before the code expires', async () => {
+        const expiringDepot = await persistDepotExpiringAt(
+          new Date(Date.now() + 60 * 1000),
+        );
+
+        const response = await authenticate(expiringDepot, preauthCode);
+
+        expect(response.statusCode).toEqual(200);
+        await expect(findOneExchange(exchange._id)).resolves.toEqual(
+          expectedDbExchange(
+            tenant,
+            exchange,
+            [
+              ExchangeStates.AUTHENTICATION_REQUEST,
+              ExchangeStates.AUTHENTICATION_SUCCESS,
+            ],
+            {
+              depotId: new ObjectId(expiringDepot._id),
+              authenticatedJtis: [expect.any(String)],
+            },
+          ),
+        );
+      });
+
+      it('should 200 with a code that has no expiry', async () => {
+        const neverExpiringDepot = await persistDepot({
+          tenant,
+          service: preauthIssuerService,
+          preauthCode,
+          preauthCodeExpiresIn: 'never',
+        });
+
+        const response = await authenticate(neverExpiringDepot, preauthCode);
+
+        expect(response.statusCode).toEqual(200);
+      });
+    });
+
     it('should leave the exchange free to authenticate again when signing the token fails', async () => {
       const jwtVp = await generatePreauthCodeAuthJwt(
         depot,

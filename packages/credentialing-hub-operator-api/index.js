@@ -19,6 +19,7 @@ module.exports = {
   ...require('./src/auth-value-types'),
   ...require('./src/errors'),
   ...require('./src/limits'),
+  ...require('./src/preauth-codes'),
   ...require('./src/schemas'),
   ...require('./src/services'),
   ...require('./src/validator'),

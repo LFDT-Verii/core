@@ -284,6 +284,31 @@ describe('OAuth test suite', () => {
           error_description: "Invalid 'pre-authorized_code' provided",
         });
       });
+      it('should 400 with invalid_grant when the pre-authorized code has expired', async () => {
+        const issuerService = await persistIssuerService({ tenant });
+        const depot = await persistDepot({
+          tenant,
+          service: issuerService,
+          preauthCode: 'foo',
+          preauthCodeExpiresIn: 600,
+          preauthCodeExpiresAt: new Date(Date.now() - 1000),
+        });
+        await persistCredential({ tenant, depot });
+        const response = await fastify.inject({
+          method: 'POST',
+          url: `/r/${tenant._id}/oauth/token`,
+          body: 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code=foo',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json()).toEqual({
+          error: 'invalid_grant',
+          error_description: "Expired 'pre-authorized_code' provided",
+        });
+      });
       it('should 400 when tx_code is provided but not expected', async () => {
         const issuerService = await persistIssuerService({ tenant });
         await persistDepot({
@@ -358,6 +383,36 @@ describe('OAuth test suite', () => {
             depot_id: `${depot._id}`,
           },
         });
+      });
+
+      it('should 200 before the pre-authorized code expires', async () => {
+        const issuerService = await persistIssuerService({ tenant });
+        const depot = await persistDepot({
+          tenant,
+          service: issuerService,
+          preauthCode: 'foo',
+          preauthCodeExpiresIn: 600,
+          preauthCodeExpiresAt: new Date(Date.now() + 60 * 1000),
+        });
+        const credential = await persistCredential({ tenant, depot });
+        const response = await fastify.inject({
+          method: 'POST',
+          url: `/r/${tenant._id}/oauth/token`,
+          body: 'grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code=foo',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json().authorization_details).toEqual([
+          {
+            credential_configuration_id:
+              'foundation.velocitynetwork.Employment',
+            credential_identifiers: [`${credential._id}`],
+            type: 'openid_credential',
+          },
+        ]);
       });
 
       it('should leave signed, accepted, rejected and claimed credentials out of authorization_details', async () => {

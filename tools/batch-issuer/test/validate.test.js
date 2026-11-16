@@ -251,6 +251,36 @@ describe('batch-issuer validate', () => {
         message:
           "error: option '--default-country <code>' argument 'XX' is invalid. Use a two-letter country code, such as US.",
       },
+      ...[
+        ['0', 'Use a number of seconds, such as 604800 for a week, or never.'],
+        [
+          '-600',
+          'Use a number of seconds, such as 604800 for a week, or never.',
+        ],
+        [
+          '1.5',
+          'Use a number of seconds, such as 604800 for a week, or never.',
+        ],
+        [
+          '10m',
+          'Use a number of seconds, such as 604800 for a week, or never.',
+        ],
+        [
+          'Never',
+          'Use a number of seconds, such as 604800 for a week, or never.',
+        ],
+        ['315360001', 'Use at most 315360000 seconds (10 years), or never.'],
+      ].map(([value, hint]) => ({
+        name: `a --preauth-code-expires-in of ${value}`,
+        args: [
+          'validate',
+          'spec.yaml',
+          'rows.csv',
+          ...BATCH_ARGS,
+          `--preauth-code-expires-in=${value}`,
+        ],
+        message: `error: option '--preauth-code-expires-in <seconds|never>' argument '${value}' is invalid. ${hint}`,
+      })),
       {
         name: 'no command',
         args: [],

@@ -75,6 +75,10 @@ ruleValues(
 - `isInternalVpAuth(service)` is true for a service with the `internal` `authMode` and the `verifiable_presentation` auth method, which matches depots by the auth values its `verifiablePresentationAuthRules` read.
 - `isServiceDeactivated(service)` is true once the service's `deactivationDate` is before now. The Hub then treats a reference to the service as one to a missing service, so `depots/create` answers `referenced_service_not_found`.
 
+## Pre-authorized code lifetimes
+
+A depot's `preauthCodeExpiresIn` is how long each of its pre-authorized codes lasts: a number of seconds from 1 to `PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS` (315360000, 10 years), or `PREAUTH_CODE_NEVER_EXPIRES` (`never`) for codes that don't expire. Without it, the depot takes the Hub's `PREAUTH_CODE_EXPIRES_IN_SECONDS`, 72 hours by default.
+
 ## Error codes
 
 The `errorCode`s that the issuer service, depot and credential operator endpoints return:

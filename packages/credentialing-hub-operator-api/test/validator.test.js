@@ -17,7 +17,8 @@
 
 const { describe, it } = require('node:test');
 const { expect } = require('expect');
-const { constant, repeat, times } = require('lodash/fp');
+const { constant, forEach, repeat, times } = require('lodash/fp');
+const { PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS } = require('../src/preauth-codes');
 const {
   initOperatorApiValidator,
   operatorApiAjvFormats,
@@ -548,6 +549,34 @@ describe('operator API validator', () => {
           depot({ expectedCredentialTypes: ['EmailV1.0', 'EmailV1.0'] }),
         ),
       ).toEqual([error('uniqueItems', '/expectedCredentialTypes')]);
+    });
+
+    it('should accept a pre-authorized code lifetime from 1 second to 10 years, or never', () => {
+      forEach(
+        (preauthCodeExpiresIn) =>
+          expect(
+            validate('new-depot', depot({ preauthCodeExpiresIn })),
+          ).toEqual([]),
+        [1, 600, PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS, 'never'],
+      );
+    });
+
+    it('should refuse a pre-authorized code lifetime that is not a whole number of seconds from 1 to 10 years, or never', () => {
+      forEach(
+        ([preauthCodeExpiresIn, keyword]) =>
+          expect(
+            validate('new-depot', depot({ preauthCodeExpiresIn })),
+          ).toEqual(errorsWith(keyword, '/preauthCodeExpiresIn')),
+        [
+          [0, 'minimum'],
+          [-600, 'minimum'],
+          [1.5, 'type'],
+          [PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS + 1, 'maximum'],
+          ['600', 'const'],
+          ['Never', 'const'],
+          [null, 'type'],
+        ],
+      );
     });
 
     it('should neither apply defaults nor coerce types', () => {

@@ -387,16 +387,19 @@ const buildIssuer = async (context) => {
     });
   };
 
+  // Compares the hash of the code the wallet sent with the code of the depot
+  // that holds it, if any, and refuses an expired code with invalid_grant. A
+  // code without an expiry doesn't expire.
   const verifyPreauthCode = async (
-    preauthCode,
-    expectedPreAuthorizedCode,
+    preauthCodeHash,
+    depot,
     accessTokenParams,
     _context,
   ) =>
     authorizationServer.verifyPreAuthorizedCodeAccessTokenRequest({
       grant: {
         grantType: accessTokenParams.grant_type,
-        preAuthorizedCode: preauthCode,
+        preAuthorizedCode: preauthCodeHash,
         txCode: accessTokenParams.tx_code,
       },
       accessTokenRequest: accessTokenParams,
@@ -405,9 +408,9 @@ const buildIssuer = async (context) => {
         url: _context.raw.url,
         headers: new Headers(_context.raw.headers),
       },
-      expectedPreAuthorizedCode,
+      expectedPreAuthorizedCode: depot?.preauthCodeHash,
       expectedTxCode: undefined,
-      preAuthorizedCodeExpiresAt: undefined,
+      preAuthorizedCodeExpiresAt: depot?.preauthCodeExpiresAt,
     });
 
   return {

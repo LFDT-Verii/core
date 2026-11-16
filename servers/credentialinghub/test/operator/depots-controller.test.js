@@ -68,6 +68,57 @@ const INVALID_DEPOTS = [
   },
 ];
 
+// A pre-authorized code lifetime is a whole number of seconds or never, so a
+// value that fails fails both branches of the anyOf. A number fails both the
+// type and the const of the never branch.
+const lifetimeErrorMessage = (...errors) => {
+  const path = 'body/depot/preauthCodeExpiresIn';
+  return [...errors, 'must match a schema in anyOf']
+    .map((error) => `${path} ${error}`)
+    .join(', ');
+};
+
+const NOT_NEVER = ['must be string', 'must be equal to constant'];
+
+const INVALID_LIFETIMES = [
+  {
+    name: 'zero',
+    preauthCodeExpiresIn: 0,
+    message: lifetimeErrorMessage('must be >= 1', ...NOT_NEVER),
+  },
+  {
+    name: 'negative',
+    preauthCodeExpiresIn: -600,
+    message: lifetimeErrorMessage('must be >= 1', ...NOT_NEVER),
+  },
+  {
+    name: 'not an integer',
+    preauthCodeExpiresIn: 1.5,
+    message: lifetimeErrorMessage('must be integer', ...NOT_NEVER),
+  },
+  {
+    name: 'over 10 years',
+    preauthCodeExpiresIn: 315360001,
+    message: lifetimeErrorMessage('must be <= 315360000', ...NOT_NEVER),
+  },
+  {
+    name: 'a number in a string',
+    preauthCodeExpiresIn: '600',
+    message: lifetimeErrorMessage(
+      'must be integer',
+      'must be equal to constant',
+    ),
+  },
+  {
+    name: 'a word other than never',
+    preauthCodeExpiresIn: 'forever',
+    message: lifetimeErrorMessage(
+      'must be integer',
+      'must be equal to constant',
+    ),
+  },
+];
+
 // An auth value is a number, a non-blank string or a boolean, so a string that
 // fails fails every branch of the anyOf
 const authValueErrorMessage = (index, stringError) => {
@@ -373,6 +424,63 @@ describe('Depots Test suite', () => {
         mongoDb().collection('depots').find({}).toArray(),
       ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);
     });
+    forEach(({ name, preauthCodeExpiresIn, message }) => {
+      it(`should 400 if the pre-authorized code lifetime is ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create`,
+          payload: {
+            tenantId: tenant._id,
+            serviceId: issuerService._id,
+            depot: { userReference: 'ABC123', preauthCodeExpiresIn },
+          },
+        });
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 400,
+            errorCode: 'request_validation_failed',
+            message,
+          }),
+        );
+        await expect(
+          mongoDb().collection('depots').countDocuments({}),
+        ).resolves.toEqual(0);
+      });
+    }, INVALID_LIFETIMES);
+    forEach(
+      (preauthCodeExpiresIn) => {
+        it(`should 200 for a depot whose pre-authorized codes last ${preauthCodeExpiresIn}`, async () => {
+          const payload = {
+            tenantId: tenant._id,
+            serviceId: issuerService._id,
+            depot: { userReference: 'ABC123', preauthCodeExpiresIn },
+          };
+
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: `${testUrl}/create`,
+            payload,
+          });
+          expect(response.statusCode).toEqual(200);
+          expect(response.json).toEqual({
+            depot: {
+              ...payload.depot,
+              deferredCredentials: false,
+              serviceId: payload.serviceId,
+              id: expect.stringMatching(OBJECT_ID_FORMAT),
+              createdAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+              updatedAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+            },
+            requestId: expect.any(String),
+          });
+
+          await expect(
+            mongoDb().collection('depots').find({}).toArray(),
+          ).resolves.toEqual([expectedDbDepot(response.json.depot, tenant)]);
+        });
+      },
+      [1, 600, 315360000, 'never'],
+    );
     it('should 200 for a correctly setup depot', async () => {
       const payload = {
         tenantId: tenant._id,
@@ -1243,6 +1351,42 @@ describe('Depots Test suite', () => {
               expectedCredentialTypes: ['EmailV1.0'],
             },
             expectedDepot(depots[1]),
+          ]),
+          requestId: expect.any(String),
+        });
+        expect(response.json.depots).toHaveLength(2);
+      });
+      it("should return the pre-authorized code's lifetime and expiry", async () => {
+        const preauthCodeExpiresAt = new Date(Date.now() + 600 * 1000);
+        const expiringDepot = await persistDepot({
+          tenant,
+          service: issuerService,
+          userReference: nanoid(),
+          preauthCodeExpiresIn: 600,
+          preauthCodeExpiresAt,
+        });
+        const neverExpiringDepot = await persistDepot({
+          tenant,
+          service: issuerService,
+          userReference: nanoid(),
+          preauthCodeExpiresIn: 'never',
+        });
+
+        const response = await fastify.injectJson({
+          method: 'GET',
+          url: `${testUrl}/get?tenantId=${tenant._id}&depotId=${expiringDepot._id}&depotId=${neverExpiringDepot._id}`,
+        });
+        expect(response.json).toEqual({
+          depots: expect.arrayContaining([
+            {
+              ...expectedDepot(expiringDepot),
+              preauthCodeExpiresIn: 600,
+              preauthCodeExpiresAt: preauthCodeExpiresAt.toISOString(),
+            },
+            {
+              ...expectedDepot(neverExpiringDepot),
+              preauthCodeExpiresIn: 'never',
+            },
           ]),
           requestId: expect.any(String),
         });

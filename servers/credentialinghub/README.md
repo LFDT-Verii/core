@@ -109,6 +109,42 @@ docker run --rm --env-file hub.env --entrypoint node \
 The Hub supports only MongoDB, Amazon DocumentDB and Azure DocumentDB, at
 the address that `MONGO_URI` gives. CI tests against MongoDB 8.0.
 
+## Pre-authorized Codes
+
+`issue-links/refresh` with a `depotId` gives a depot of a `preauth` service a
+new pre-authorized code, which its VN API link and its OpenID4VCI credential
+offer carry. The depot's previous code stops working.
+
+Each code expires after the depot's lifetime, which `depots/create` sets with
+`preauthCodeExpiresIn`: a number of seconds from 1 to 315360000 (10 years),
+such as `600` for 10 minutes, or `never` for codes that don't expire. A depot
+without it takes `PREAUTH_CODE_EXPIRES_IN_SECONDS` at each refresh. A depot's
+lifetime can't be changed.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PREAUTH_CODE_EXPIRES_IN_SECONDS` | `259200` (72 hours) | How long the codes of a depot without `preauthCodeExpiresIn` last, in seconds, from 1 to 315360000. The Hub stops at startup on any other value. A change applies to codes refreshed afterwards, not to codes already issued. |
+
+`issue-links/refresh` returns the new code's `preauthCodeExpiresAt`, and
+`depots/get` shows the current code's. A code that doesn't expire has none.
+An expired code is refused:
+
+- VN API authentication answers 401 with the `errorCode`
+  `preauth_code_expired`, and the exchange records `AUTHENTICATION_FAILURE`.
+- The OpenID4VCI token endpoint answers 400 `invalid_grant`.
+
+Refresh the depot's link to give the holder a new code. Exchanges that
+authenticated before the code expired keep their access tokens, and shared
+links carry no code.
+
+A wallet waiting for a depot's deferred credentials authenticates again with
+the same code when `NewOffersReady` tells it they're ready. So the lifetime of a
+depot with `deferredCredentials` must cover the time the issuer takes to add
+its credentials and call `depots/resolve-deferred-credentials`.
+
+Codes made by Hub 2.2.0 and earlier have no expiry, and work until their depot
+is refreshed again.
+
 ## OpenID4VCI Nonces
 
 The nonce endpoint, `POST /r/:tenantId/openid4vc/nonce`, returns a stateless

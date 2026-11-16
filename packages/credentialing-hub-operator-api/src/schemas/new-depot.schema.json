@@ -47,6 +47,20 @@
       },
       "minItems": 1,
       "uniqueItems": true
+    },
+    "preauthCodeExpiresIn": {
+      "description": "How long each pre-authorized code of the depot lasts, from the `issue-links/refresh` that makes it: a number of seconds from 1 to 315360000 (10 years), such as `600` for 10 minutes, or `never` for codes that don't expire. Without it, the depot's codes last as long as the Hub's `PREAUTH_CODE_EXPIRES_IN_SECONDS` says at each refresh, 259200 (72 hours) by default. A wallet waiting for a depot's deferred credentials authenticates again with the same code when they're ready, so the lifetime must cover the time the issuer takes to add them. Can't be changed",
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 315360000
+        },
+        {
+          "type": "string",
+          "const": "never"
+        }
+      ]
     }
   }
 }
