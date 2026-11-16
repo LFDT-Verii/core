@@ -228,4 +228,54 @@ describe('sendContractTransaction', { timeout: 120000 }, () => {
     ).toEqual(true);
     rpcProvider.destroy();
   });
+
+  it('throws once three attempts have been replaced', async () => {
+    const { contractClient, otherServerWallet, rpcProvider } = await setUp();
+    const { contract, sent } = raceCalls(contractClient, rpcProvider, [
+      differentTransaction(otherServerWallet),
+      differentTransaction(otherServerWallet),
+      differentTransaction(otherServerWallet),
+    ]);
+
+    await expect(addScope(contract, 'abandoned-scope')).rejects.toMatchObject({
+      code: 'TRANSACTION_REPLACED',
+      reason: 'replaced',
+    });
+
+    expect(sent.ours).toHaveLength(3);
+    expect(
+      await Promise.all(sent.ours.map((hash) => isMined(rpcProvider, hash))),
+    ).toEqual([false, false, false]);
+    expect(
+      await contractClient.checkAddressScope(targetAddress, 'abandoned-scope'),
+    ).toEqual(false);
+    rpcProvider.destroy();
+  });
+
+  // A gas limit given with the call skips estimation, so the call is mined
+  // and reverts instead of failing before it is sent.
+  it('throws when the call itself reverts', async () => {
+    const { contractClient, rpcProvider } = await setUp();
+    const args = [targetAddress, 'reverting-scope'];
+    const data = contractClient.interface.encodeFunctionData(
+      'addAddressScope',
+      args,
+    );
+
+    await expect(
+      sendContractTransaction(
+        {
+          contract: contractClient,
+          method: 'addAddressScope',
+          args: [...args, { gasLimit: tooLittleGas({ data }) }],
+        },
+        context,
+      ),
+    ).rejects.toMatchObject({ code: 'CALL_EXCEPTION' });
+
+    expect(
+      await contractClient.checkAddressScope(targetAddress, 'reverting-scope'),
+    ).toEqual(false);
+    rpcProvider.destroy();
+  });
 });
