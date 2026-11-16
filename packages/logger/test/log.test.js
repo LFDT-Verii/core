@@ -490,6 +490,30 @@ describe('Test pino logger provider with redaction', () => {
     );
   });
 
+  it("redacts a server's own paths as well as the shared ones", () => {
+    const stream = new MemoryStream('server-redact-paths-log');
+    const serverLog = loggerProvider({
+      nodeEnv: 'test',
+      logSeverity: 'info',
+      version: '1.0',
+      traceIdHeader: 'x-trace-id',
+      destination: stream,
+      logRedactPaths: ['body.link'],
+    });
+
+    serverLog.info({
+      body: { link: 'link', token: 'token', allowedToLog: '123' },
+    });
+
+    expect(JSON.parse(stream.toString())).toMatchObject({
+      body: { link: CENSOR, token: CENSOR, allowedToLog: '123' },
+    });
+
+    // Servers that don't add the path still log it.
+    log.info({ body: { link: 'link' } });
+    expect(logStream.toString()).toMatch('"body":{"link":"link"}');
+  });
+
   it('Redaction should shh key.key', () => {
     const dataForLog = {
       key: {
