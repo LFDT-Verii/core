@@ -22,6 +22,7 @@ const ExchangeErrors = {
   MESSAGING_SETTINGS_INVALID: 'messaging_settings_invalid',
   CREDENTIAL_OFFER_REQUEST_INVALID: 'credential_offer_request_invalid',
   UNAUTHORIZED: 'unauthorized',
+  PREAUTH_CODE_EXPIRED: 'preauth_code_expired',
   PRESENTATION_SUBMISSION_INVALID: 'presentation_submission_invalid',
   AUTHENTICATION_METHOD_UNSUPPORTED: 'authentication_method_unsupported',
   CREDENTIAL_CHECK_UNAVAILABLE: 'credential_check_unavailable',

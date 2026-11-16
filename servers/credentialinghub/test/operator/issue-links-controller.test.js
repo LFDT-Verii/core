@@ -29,6 +29,7 @@ const { forEach, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { ObjectId } = require('mongodb');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
+const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -291,6 +292,7 @@ describe('Issue Links Test suite', () => {
           response.json.openidCredentialOffer,
         )}`,
         preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         requestId: expect.any(String),
       });
       expectedOidcCredentialOfferUri(
@@ -332,6 +334,7 @@ describe('Issue Links Test suite', () => {
           response.json.vnProtocolLink,
         )}`,
         preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         requestId: expect.any(String),
       });
     });
@@ -402,6 +405,7 @@ describe('Issue Links Test suite', () => {
           response.json.openidCredentialOffer,
         )}`,
         preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         requestId: expect.any(String),
       });
       expectedOidcCredentialOfferUri(
@@ -456,6 +460,7 @@ describe('Issue Links Test suite', () => {
           response.json.openidCredentialOffer,
         )}`,
         preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         requestId: expect.any(String),
       });
       expectedOidcCredentialOfferUri(
@@ -488,8 +493,134 @@ describe('Issue Links Test suite', () => {
           response.json.vnProtocolLink,
         )}`,
         preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         requestId: expect.any(String),
       });
+    });
+  });
+
+  describe('pre-authorized code expiry', () => {
+    let preauthIssuerService;
+
+    beforeEach(async () => {
+      preauthIssuerService = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth'],
+      });
+    });
+
+    // A depot without credentials or expected types gets no OpenID4VCI offer,
+    // so the refresh calls no registrar.
+    const refreshLinks = async (depot) => {
+      const refreshedAfter = Date.now();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: preauthIssuerService._id,
+          depotId: depot._id,
+        },
+      });
+      return { response, refreshedAfter, refreshedBefore: Date.now() };
+    };
+
+    const findDbDepot = (depot) =>
+      mongoDb()
+        .collection('depots')
+        .findOne({ _id: new ObjectId(depot._id) });
+
+    // The code expires the lifetime after the refresh, and the depot stores
+    // the expiry with the code.
+    const expectExpiresIn = async (
+      { response, refreshedAfter, refreshedBefore },
+      depot,
+      seconds,
+    ) => {
+      expect(response.statusCode).toEqual(200);
+      const expiresAt = new Date(response.json.preauthCodeExpiresAt);
+      expect(expiresAt.getTime()).toBeGreaterThanOrEqual(
+        refreshedAfter + seconds * 1000,
+      );
+      expect(expiresAt.getTime()).toBeLessThanOrEqual(
+        refreshedBefore + seconds * 1000,
+      );
+      const dbDepot = await findDbDepot(depot);
+      expect(dbDepot.preauthCodeExpiresAt).toEqual(expiresAt);
+    };
+
+    it('should expire the code 72 hours after the refresh for a depot without a lifetime', async () => {
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+      });
+
+      await expectExpiresIn(await refreshLinks(depot), depot, 72 * 60 * 60);
+    });
+
+    it("should take a depot without a lifetime's expiry from the Hub's setting", async () => {
+      fastify.overrides.reqConfig = (config) => ({
+        ...config,
+        preauthCodeExpiresInSeconds: 3600,
+      });
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+      });
+
+      await expectExpiresIn(await refreshLinks(depot), depot, 3600);
+    });
+
+    it("should expire the code after the depot's lifetime, not the Hub's setting", async () => {
+      fastify.overrides.reqConfig = (config) => ({
+        ...config,
+        preauthCodeExpiresInSeconds: 3600,
+      });
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        preauthCodeExpiresIn: 600,
+      });
+
+      await expectExpiresIn(await refreshLinks(depot), depot, 600);
+    });
+
+    it('should give a code without an expiry to a depot whose codes never expire', async () => {
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        preauthCodeExpiresIn: 'never',
+      });
+
+      const { response } = await refreshLinks(depot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.preauthCode).toEqual(expect.any(String));
+      expect(response.json).not.toHaveProperty('preauthCodeExpiresAt');
+      const dbDepot = await findDbDepot(depot);
+      expect(dbDepot.preauthCodeHash).toEqual(expect.any(String));
+      expect(dbDepot).not.toHaveProperty('preauthCodeExpiresAt');
+    });
+
+    it('should give the new code of a depot whose code has expired a new expiry', async () => {
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        preauthCode: nanoid(),
+        preauthCodeExpiresIn: 600,
+        preauthCodeExpiresAt: new Date(Date.now() - 1000),
+      });
+
+      const refresh = await refreshLinks(depot);
+
+      await expectExpiresIn(refresh, depot, 600);
+      const dbDepot = await findDbDepot(depot);
+      expect(dbDepot.preauthCodeHash).not.toEqual(depot.preauthCodeHash);
     });
   });
 
@@ -652,6 +783,7 @@ describe('Issue Links Test suite', () => {
           response.json.vnProtocolLink,
         )}`,
         preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         requestId: expect.any(String),
       });
     });

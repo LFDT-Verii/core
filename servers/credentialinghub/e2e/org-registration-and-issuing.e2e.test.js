@@ -611,6 +611,7 @@ describe('org registration and issuing e2e', () => {
         issueLinksJson.openidCredentialOffer,
       )}`,
       preauthCode: expect.any(String),
+      preauthCodeExpiresAt: expect.any(String),
       requestId: expect.any(String),
     });
     console.dir({ msg: 'Issue links refreshed', issueLinksJson });

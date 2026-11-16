@@ -71,25 +71,26 @@ const buildRowAuthValues = ({ authColumns, options }, data) =>
     : buildAuthValues(authColumns, data, options);
 
 // A service without auth rules takes depots without authValues.
-const buildDepot = (spec, userReference, authValues) =>
+const buildDepot = ({ spec, options }, userReference, authValues) =>
   omitBy(isUndefined, {
     userReference,
     authValues: isEmpty(authValues) ? undefined : authValues,
     expectedCredentialTypes: spec.depot.expectedCredentialTypes,
     deferredCredentials: spec.depot.deferredCredentials,
+    preauthCodeExpiresIn: options.preauthCodeExpiresIn,
   });
 
 // userReference, credentialReference and tags are strings, so they're
 // rendered without the typed columns.
-const renderDepot = ({ spec }, data, authValues) => {
+const renderDepot = (context, data, authValues) => {
   const { value: userReference, errors } = renderTemplate(
-    spec.depot.userReference,
+    context.spec.depot.userReference,
     data,
   );
   if (!isEmpty(errors)) {
     return { errors };
   }
-  const depot = buildDepot(spec, userReference, authValues);
+  const depot = buildDepot(context, userReference, authValues);
   return { depot, errors: checkOperatorApiSchema('new-depot', depot, 'depot') };
 };
 

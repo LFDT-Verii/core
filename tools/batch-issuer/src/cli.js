@@ -17,6 +17,10 @@
 const { Command, InvalidArgumentError, Option } = require('commander');
 const { isSupportedCountry } = require('libphonenumber-js');
 const { isEmpty, join, split, toLower, toUpper } = require('lodash/fp');
+const {
+  PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS,
+  PREAUTH_CODE_NEVER_EXPIRES,
+} = require('@verii/credentialing-hub-operator-api');
 const packageJson = require('../package.json');
 const { ExitCodes } = require('./commands/exit-codes');
 const { runLoad } = require('./commands/load');
@@ -53,6 +57,25 @@ const parseCountry = (text) => {
     );
   }
   return country;
+};
+
+// A whole number of seconds that the Hub accepts, or never.
+const parsePreauthCodeExpiresIn = (text) => {
+  if (text === PREAUTH_CODE_NEVER_EXPIRES) {
+    return text;
+  }
+  const seconds = Number(text);
+  if (!/^\d+$/.test(text) || seconds < 1) {
+    throw new InvalidArgumentError(
+      `Use a number of seconds, such as 604800 for a week, or ${PREAUTH_CODE_NEVER_EXPIRES}.`,
+    );
+  }
+  if (seconds > PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS) {
+    throw new InvalidArgumentError(
+      `Use at most ${PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS} seconds (10 years), or ${PREAUTH_CODE_NEVER_EXPIRES}.`,
+    );
+  }
+  return seconds;
 };
 
 const addHubOptions = (command) =>
@@ -94,6 +117,11 @@ const addBatchOptions = (command) =>
       'a value that overrides the CSV column of the same name. Repeatable',
       parseVar,
       {},
+    )
+    .option(
+      '--preauth-code-expires-in <seconds|never>',
+      "how long the pre-authorized code of each new depot's link lasts, for a preauth service (default: the Hub's, 72 hours unless configured)",
+      parsePreauthCodeExpiresIn,
     )
     .option(
       '--no-reuse',

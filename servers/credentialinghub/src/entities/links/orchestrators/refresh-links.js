@@ -17,6 +17,7 @@
 
 const { flatMap, flow, isEmpty, omit, uniq } = require('lodash/fp');
 const { optional } = require('@verii/common-functions');
+const { buildPreauthCodeExpiresAt } = require('../../depots/domain');
 const {
   OPENID4VP_DEPOT_REQUEST_PREFIX,
   OPENID4VP_SERVICE_REQUEST_PREFIX,
@@ -47,7 +48,10 @@ const refreshIssueLinks = async (serviceId, depotId, context) => {
 
 const buildDepotIssueLinks = async (service, depot, context) => {
   const { config, repos, tenant } = context;
-  const refreshedDepot = await repos.depots.refreshPreauthCode(depot._id);
+  const refreshedDepot = await repos.depots.refreshPreauthCode(
+    depot._id,
+    buildPreauthCodeExpiresAt(depot, config),
+  );
 
   // Credential types are the depot's expected types, or else are extracted from its credentials
   const credentialTypes =
@@ -76,6 +80,7 @@ const buildDepotIssueLinks = async (service, depot, context) => {
     vnProtocolLink: vnProtocolLinkUrl.href,
     openidCredentialOffer: openid4vciProtocolLinkUrl,
     preauthCode: refreshedDepot.preauthCode,
+    preauthCodeExpiresAt: refreshedDepot.preauthCodeExpiresAt,
   };
 };
 

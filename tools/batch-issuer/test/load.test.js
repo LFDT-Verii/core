@@ -434,6 +434,55 @@ describe('batch-issuer load', () => {
     }
   });
 
+  describe('--preauth-code-expires-in', () => {
+    for (const preauthCodeExpiresIn of [600, 'never']) {
+      it(`creates depots whose codes last ${preauthCodeExpiresIn}`, async () => {
+        const hub = initFakeHub({ service: preauthService, depots: [] });
+        const batch = writeBatch({ spec: preauthSpec, csvLines: [ADAM, BETH] });
+        mockRun(hub);
+
+        const result = await load(
+          batch,
+          '--preauth-code-expires-in',
+          `${preauthCodeExpiresIn}`,
+        );
+
+        expect(result.exitCode).toEqual(0);
+        expect(writeRequests(hub)).toEqual([
+          createDepotRequest({
+            ...preauthDepot('E1001'),
+            preauthCodeExpiresIn,
+          }),
+          createDepotRequest({
+            ...preauthDepot('E1002'),
+            preauthCodeExpiresIn,
+          }),
+          createManyRequest([
+            { depotId: newDepotId(1), credential: ADAM_CREDENTIAL },
+            { depotId: newDepotId(2), credential: BETH_CREDENTIAL },
+          ]),
+          refreshRequest(newDepotId(1)),
+          refreshRequest(newDepotId(2)),
+        ]);
+      });
+    }
+
+    it('continues a load with the same --preauth-code-expires-in', async () => {
+      const hub = initFakeHub({ service: preauthService, depots: [] });
+      const batch = writeBatch({ spec: preauthSpec, csvLines: [ADAM, BETH] });
+      mockRun(hub);
+      await load(batch, '--preauth-code-expires-in', '600');
+
+      mockRun(hub);
+      const result = await load(batch, '--preauth-code-expires-in', '600');
+
+      expect(result.exitCode).toEqual(0);
+      expect(result.stdout).toContain(
+        '\nDepots: 0 created, 0 reused, 2 skipped.\nCredentials: 0 created, 2 skipped.\n',
+      );
+    });
+  });
+
   describe('--resolve-deferred', () => {
     // Adam's depot waits for credentials, and Carl's doesn't.
     const initHub = (notification) =>
@@ -1221,6 +1270,10 @@ describe('batch-issuer load', () => {
       },
       { name: 'another --var', args: ['--var', 'lastName=Doe'] },
       { name: 'a --default-country', args: ['--default-country', 'US'] },
+      {
+        name: 'a --preauth-code-expires-in',
+        args: ['--preauth-code-expires-in', 'never'],
+      },
       { name: 'another --network', args: ['--network', 'testnet'] },
     ];
 
@@ -1241,7 +1294,8 @@ describe('batch-issuer load', () => {
           stdout: '',
           stderr:
             `Error: the state file ${filesOf(batch).state} belongs to a different batch: the spec, its templates, the CSV, ` +
-            '--network, --var or --default-country have changed since it was written. Rerun the batch it belongs to, or pass another --state\n',
+            '--network, --var, --default-country or --preauth-code-expires-in have changed since it was written. ' +
+            'Rerun the batch it belongs to, or pass another --state\n',
         });
         expect(writeRequests(hub)).toHaveLength(firstRunWrites);
       });

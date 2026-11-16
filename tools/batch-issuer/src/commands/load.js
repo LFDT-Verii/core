@@ -160,7 +160,10 @@ const runLoad = async ({ specFile, csvFile, options }, io) => {
     specFile,
     csvFile,
     vars: options.var,
-    options: pick(['defaultCountry', 'network', 'reuse'], options),
+    options: pick(
+      ['defaultCountry', 'network', 'preauthCodeExpiresIn', 'reuse'],
+      options,
+    ),
   };
   const validation = await validate(input, clients, files.state);
   if (!isEmpty(validation.errors) || options.dryrun) {

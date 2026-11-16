@@ -20,6 +20,7 @@ Validates the batch against its spec, the registrar and the Hub, and prints ever
 | `-r, --registrar <url>` | The registrar's base URL, for credential type schemas. Required when the spec has credentials |
 | `--default-country <code>` | The country of phone numbers written without a country code, such as `US` |
 | `--var <name=value>` | A value that overrides the CSV column of the same name, in every row. Repeatable |
+| `--preauth-code-expires-in <seconds\|never>` | How long the pre-authorized code in each new depot's link lasts, for a `preauth` service: a number of seconds up to 315360000 (10 years), such as `604800` for a week, or `never`. It's each new depot's `preauthCodeExpiresIn`. Without it, the codes last as long as the Hub's `PREAUTH_CODE_EXPIRES_IN_SECONDS` says, 72 hours by default, which can be too short for links sent by email. See [Link expiry](#link-expiry) |
 | `--no-reuse` | Treat rows whose auth values already belong to a depot as errors. A depot that the state file records, because an earlier load of the batch created it, isn't a reuse |
 | `--state <file>` | The batch's state file. Defaults to the CSV's name with `.state.jsonl` in the CSV's directory, such as `holders.state.jsonl` for `holders.csv`. See [Reruns and the state file](#reruns-and-the-state-file) |
 | `--json` | Print the report as JSON |
@@ -175,9 +176,15 @@ Then the state file must belong to the batch, as [Reruns and the state file](#re
 4. **Deferred credentials:** with `--resolve-deferred`, `depots/resolve-deferred-credentials` for each reused depot that has `deferredCredentials: true` and received credentials from the batch. A wallet that's waiting on the depot is told its credentials are ready. The depots the batch creates aren't resolved: their holders haven't had a link yet. The Hub answers with the wallet message's status: `sent`, `skipped_no_messaging_settings`, `skipped_no_waiting_exchange` or `failed`. A depot whose message `failed` isn't recorded as resolved: the load goes on, then reports each one with its row, its depot and the Hub's error, and exits with 2. A rerun resolves it again.
 5. **Links,** written to [the links file](#the-links-file):
    - a service with internal `verifiable_presentation` auth: the shared link, from `issue-links/refresh` without a `depotId`. It's printed, and every row gets it;
-   - a `preauth` service: each depot the batch created gets its own link, from `issue-links/refresh` with its `depotId`. Reused depots are never refreshed, because a refresh replaces the depot's pre-authorized code (`refreshPreauthCode`) and breaks the links already sent. A service with both kinds of auth gives a reused depot's row the shared link instead.
+   - a `preauth` service: each depot the batch created gets its own link, from `issue-links/refresh` with its `depotId`. The link's code expires as [Link expiry](#link-expiry) says. Reused depots are never refreshed, because a refresh replaces the depot's pre-authorized code (`refreshPreauthCode`) and breaks the links already sent. A service with both kinds of auth gives a reused depot's row the shared link instead.
 
 The state file records each depot, credential, resolved depot and `preauth` link as soon as the Hub confirms it. A depot whose wallet message failed isn't recorded as resolved.
+
+## Link expiry
+
+A `preauth` link carries its depot's pre-authorized code, which expires after the depot's lifetime: `--preauth-code-expires-in`, or without it the Hub's `PREAUTH_CODE_EXPIRES_IN_SECONDS`, 72 hours by default. The Hub then refuses the link, and the holder needs a new one, from `issue-links/refresh`, which a rerun doesn't do. So choose a lifetime that covers the time holders take to open their email, or `never`. A depot's lifetime is set when the load creates it, and can't be changed.
+
+A `verifiable_presentation` service's shared link carries no code, and doesn't expire.
 
 ## The links file
 
@@ -196,7 +203,7 @@ row,userReference,redirectUrl
 A load can fail partway after validation passes, for example on a network error. The Hub has no all-or-nothing endpoint, so the load records what it creates in a state file, and a rerun of the same command skips what's done.
 
 `--state`, by default `holders.state.jsonl` beside `holders.csv`, records:
-- the batch: its `--network`, `tenantId` and `serviceId`, and a hash of the spec file, its templates, the CSV, and the `--var` and `--default-country` values. The network tells apart loads into Hubs on different networks that hold the same tenant and service ids, such as a testnet Hub restored from a mainnet snapshot;
+- the batch: its `--network`, `tenantId` and `serviceId`, and a hash of the spec file, its templates, the CSV, and the `--var`, `--default-country` and `--preauth-code-expires-in` values. The network tells apart loads into Hubs on different networks that hold the same tenant and service ids, such as a testnet Hub restored from a mainnet snapshot;
 - each depot the batch created, with its row;
 - each credential it created, with its row, `credentialReference`, id and depot;
 - each depot whose deferred credentials it resolved, and each `preauth` link, with its row.
@@ -220,11 +227,11 @@ A rerun:
 
 A rerun of a finished load creates nothing, and writes the same links file.
 
-A state file belongs to one batch, and any change to the spec, its templates, the CSV, `--network`, `--var` or `--default-country` makes a different batch. `validate`, `load --dryrun` and `load` refuse the state file of another batch, and exit with 2. To load a new batch whose CSV has the same name, pass another `--state`, or move the old state file away.
+A state file belongs to one batch, and any change to the spec, its templates, the CSV, `--network`, `--var`, `--default-country` or `--preauth-code-expires-in` makes a different batch. `validate`, `load --dryrun` and `load` refuse the state file of another batch, and exit with 2. To load a new batch whose CSV has the same name, pass another `--state`, or move the old state file away.
 
 ### Keep the files private
 
-The state file and the links file can hold links that claim credentials: a `preauth` link carries the depot's pre-authorized code, so anyone who has it can claim that holder's credentials. The load creates both files readable and writable by their owner only (mode `0600`). Keep them private, and delete them when the batch is done. A `verifiable_presentation` service's shared link is the same for every holder, and isn't a secret in the same way, but the files are still private.
+The state file and the links file can hold links that claim credentials: a `preauth` link carries the depot's pre-authorized code, so anyone who has it can claim that holder's credentials until the code expires. The load creates both files readable and writable by their owner only (mode `0600`). Keep them private, and delete them when the batch is done. A `verifiable_presentation` service's shared link is the same for every holder, and isn't a secret in the same way, but the files are still private.
 
 ### What a rerun can't tell
 

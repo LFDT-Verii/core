@@ -85,6 +85,23 @@ describe('credentialing hub operator api', () => {
     expect(api.CREDENTIALS_CREATE_MANY_MAX_ITEMS).toEqual(1000);
   });
 
+  it('should export the pre-authorized code lifetime constants', () => {
+    expect(api.PREAUTH_CODE_NEVER_EXPIRES).toEqual('never');
+    expect(api.PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS).toEqual(315360000);
+  });
+
+  // The schema is JSON, so it repeats the limit
+  it("should give new-depot's preauthCodeExpiresIn the lifetime constants", () => {
+    expect(api.newDepotSchema.properties.preauthCodeExpiresIn.anyOf).toEqual([
+      {
+        type: 'integer',
+        minimum: 1,
+        maximum: api.PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS,
+      },
+      { type: 'string', const: api.PREAUTH_CODE_NEVER_EXPIRES },
+    ]);
+  });
+
   it('should export the helpers', () => {
     expect(api).toEqual(
       expect.objectContaining({

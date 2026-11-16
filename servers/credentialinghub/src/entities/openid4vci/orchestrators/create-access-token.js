@@ -39,7 +39,7 @@ const createAccessToken = async (accessTokenParameters, context) => {
   );
   await openid4VciIssuer.verifyPreauthCode(
     calcSha384(accessTokenParameters['pre-authorized_code']),
-    depot?.preauthCodeHash,
+    depot,
     accessTokenParameters,
     context,
   );

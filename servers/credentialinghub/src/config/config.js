@@ -18,6 +18,9 @@ const { createBlockchainConfig, genericConfig } = require('@verii/config');
 const { accessors, from } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
 const {
+  PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS,
+} = require('@verii/credentialing-hub-operator-api');
+const {
   buildNotificationConfig,
   findWebhookUrlError,
   NotificationWorkerModes,
@@ -36,11 +39,14 @@ const { createSwaggerConfig } = require('./swagger-config');
 
 const env = from(process.env, {
   asMs: (value) => parseDuration(value),
-  asIntAboveZero: (value) => {
+  asIntAboveZero: (value, max = Number.MAX_SAFE_INTEGER) => {
     const int = accessors.asInt(value);
 
     if (int < 1) {
       throw new Error('should be an integer greater than 0');
+    }
+    if (int > max) {
+      throw new Error(`should be an integer of at most ${max}`);
     }
 
     return int;
@@ -126,6 +132,12 @@ const buildConfig = ({ servesHttp = true } = {}) => {
       .get('OPENID4VCI_DEFERRED_INTERVAL_SECONDS')
       .default('30')
       .asIntAboveZero(),
+    // How long the pre-authorized codes of a depot without its own
+    // preauthCodeExpiresIn last. 72 hours by default
+    preauthCodeExpiresInSeconds: env
+      .get('PREAUTH_CODE_EXPIRES_IN_SECONDS')
+      .default('259200')
+      .asIntAboveZero(PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS),
     credentialSubjectContext: env
       .get('CREDENTIAL_SUBJECT_CONTEXT')
       .default('false')
