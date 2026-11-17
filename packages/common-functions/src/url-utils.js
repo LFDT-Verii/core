@@ -15,7 +15,7 @@
  *
  */
 
-const { forEach } = require('lodash/fp');
+const { castArray, flow, forEach, reduce } = require('lodash/fp');
 
 const appendSearchParam = (key, value) => (url) => {
   if (value != null) {
@@ -32,7 +32,30 @@ const appendSearchParamArray = (key, array) => (url) => {
   return url;
 };
 
+const buildAgentHolderUrl = (hostUrl, did, suffix) =>
+  new URL(`${hostUrl}/api/holder/v0.6/org/${did}/${suffix}`);
+
+const appendDeepLinkSearchParams = (
+  url,
+  { requestUri, inspectorDid, issuerDid, vendorOriginContext },
+) =>
+  flow(
+    appendSearchParam('request_uri', requestUri),
+    appendSearchParam('inspectorDid', inspectorDid),
+    appendSearchParam('issuerDid', issuerDid),
+    appendSearchParam('vendorOriginContext', vendorOriginContext),
+  )(url);
+
+const buildDeepLink = (deepLinkProtocol, type, links) =>
+  reduce(
+    appendDeepLinkSearchParams,
+    new URL(`${deepLinkProtocol}${type}`),
+    castArray(links),
+  );
+
 module.exports = {
   appendSearchParamArray,
   appendSearchParam,
+  buildAgentHolderUrl,
+  buildDeepLink,
 };

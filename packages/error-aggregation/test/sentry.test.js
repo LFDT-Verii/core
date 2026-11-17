@@ -74,6 +74,22 @@ describe('Sentry test suite', () => {
     ]);
   });
 
+  it('should tag every event with the service name when serviceName is provided', async () => {
+    await initSendError({ dsn: 'test', serviceName: 'test-service' });
+    expect(mockSentryInit.mock.calls[0].arguments[0]).toEqual(
+      expect.objectContaining({
+        initialScope: { tags: { service: 'test-service' } },
+      }),
+    );
+  });
+
+  it('should leave the service tag off when serviceName is not provided', async () => {
+    await initSendError({ dsn: 'test' });
+    expect(mockSentryInit.mock.calls[0].arguments[0]).not.toHaveProperty(
+      'initialScope',
+    );
+  });
+
   it('await initSendError should not initialize sentry and return a no-op sender when dsn is not provided', async () => {
     const { sendError } = await initSendError();
     const mockError = new Error('mock');

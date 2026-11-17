@@ -15,51 +15,66 @@
  *
  */
 import { useLocation, useSearchParams } from 'react-router';
-import { useStore } from 'react-admin';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { initTrace } from '../tracing.js';
 
 const trace = initTrace('useSignupRedirect');
 const REDIRECT_KEY = 'afterSignupRedirectUrl';
 
-const useSignupRedirect = ({ auth }) => {
-  const [searchParams] = useSearchParams();
-  const signupUrlParam = searchParams.get('signup_url');
+// Reads the configured Auth0 domain the way the Auth0 SDK does, with or without a scheme. The host
+// comes back lowercase and without the default port, the same form as a parsed link's host.
+const toAuth0Host = (authDomain) =>
+  new URL(/^https?:\/\//i.test(authDomain) ? authDomain : `https://${authDomain}`).host;
 
-  const [signupUrl, setSignupUrl] = useStore('signupUrl', null);
-  const isSignupProcess = signupUrlParam != null || signupUrl != null;
+// The registrar API sets `signup_url` to an Auth0 password link. Follow only https links on the
+// configured Auth0 domain, so a crafted link can't send the browser elsewhere or run script.
+const toAuth0PasswordUrl = (signupUrl, authDomain) => {
+  if (!signupUrl || !authDomain) {
+    return null;
+  }
+  try {
+    const url = new URL(decodeURIComponent(signupUrl));
+    return url.protocol === 'https:' && url.host === toAuth0Host(authDomain) ? url.href : null;
+  } catch {
+    return null;
+  }
+};
+
+// An invitation to someone without an account carries an Auth0 password link in `signup_url`.
+// Read it from the URL, not react-admin's store: this hook runs outside <Admin>, where that store
+// isn't set up and drops writes. Any other `signup_url` is ignored, and the invitee signs in as usual.
+const useSignupRedirect = ({ auth, authDomain }) => {
+  const [searchParams] = useSearchParams();
+  const signupUrl = toAuth0PasswordUrl(searchParams.get('signup_url'), authDomain);
+  const isSignupProcess = signupUrl != null;
 
   const location = useLocation();
+  const hasStartedRedirect = useRef(false);
 
   useEffect(() => {
     trace({
       event: 'signup-redirect-state-changed',
-      hasSignupUrlParam: signupUrlParam != null,
-      hasStoredSignupUrl: signupUrl != null,
       isLoading: auth.isLoading,
       isAuthenticated: auth.isAuthenticated,
       isSignupProcess,
     });
-  }, [auth.isAuthenticated, auth.isLoading, isSignupProcess, signupUrl, signupUrlParam]);
+  }, [auth.isAuthenticated, auth.isLoading, isSignupProcess]);
 
+  // Logging out changes `auth`, which runs this effect again, so start the redirect only once.
   useEffect(() => {
-    if (signupUrlParam !== signupUrl) {
-      setSignupUrl(signupUrlParam);
-    }
-  }, [signupUrlParam, signupUrl, setSignupUrl]);
-  // If a new signup URL is detected → start signup flow
-  useEffect(() => {
-    if (!signupUrl || signupUrlParam !== signupUrl) {
+    if (!signupUrl || hasStartedRedirect.current) {
       return;
     }
+    // eslint-disable-next-line better-mutation/no-mutation
+    hasStartedRedirect.current = true;
 
     trace({ event: 'signup-url-redirect-requested', pathname: location.pathname });
     localStorage.setItem(REDIRECT_KEY, location.pathname);
 
     auth.logout({ source: 'signup-redirect' }).then(() => {
-      window.location.replace(decodeURIComponent(signupUrl));
+      window.location.replace(signupUrl);
     });
-  }, [signupUrl, signupUrlParam, location.pathname, auth]);
+  }, [signupUrl, location.pathname, auth]);
 
   return { isSignupProcess };
 };

@@ -21,7 +21,8 @@ const {
 } = require('./entities/notifications/domain/notification-config');
 const { buildConfig } = require('./config');
 
-const config = buildConfig();
+// Only decides which process to start, which then builds its own config.
+const config = buildConfig({ servesHttp: false });
 
 /* istanbul ignore next */
 process.on('unhandledRejection', (error) => {

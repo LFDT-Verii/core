@@ -16,10 +16,11 @@
  */
 
 const { calcSha384 } = require('@verii/crypto');
-const { buildExchangeEvent } = require('../../exchanges/domain');
+const { ObjectId } = require('mongodb');
 const {
   buildIssuedCredentialEnvelope,
 } = require('../domain/credential-envelope');
+const { claimableCredentialFilter } = require('./claimable-credential-filter');
 
 const updateExtensions = (parent, context) => ({
   updateIssuedCredential: async (
@@ -27,7 +28,6 @@ const updateExtensions = (parent, context) => ({
     jwtVc,
     credentialSubjectId,
     isAccepted,
-    exchange,
   ) => {
     const {
       credentialDid,
@@ -51,9 +51,6 @@ const updateExtensions = (parent, context) => ({
     if (isAccepted) {
       $set.acceptedAt = new Date();
     }
-    if (exchange) {
-      $set.exchange = exchange;
-    }
     if (context.config.autocleanFinalizedOfferPii) {
       $set.content = {};
     } else {
@@ -62,13 +59,40 @@ const updateExtensions = (parent, context) => ({
 
     return parent.update(credentialId, $set);
   },
-  addExchangeState: async (credentialId, state, props) =>
-    parent.collection().updateOne(
-      { _id: credentialId },
+  rejectClaimableCredentials: async (credentialIds, depotId) =>
+    parent.updateUsingFilter(
       {
-        $set: props,
-        $push: { 'exchange.events': buildExchangeEvent(state) },
+        filter: {
+          _id: { $in: credentialIds },
+          depotId: new ObjectId(depotId),
+          ...claimableCredentialFilter,
+        },
       },
+      { rejectedAt: new Date() },
+    ),
+  // Atomically claims one claimable credential of the deferred transaction's type in its depot, so no other
+  // transaction, token or VN API exchange can claim it. Returns null if there is none.
+  claimDeferredCredential: async ({
+    _id: transactionId,
+    depotId,
+    credentialType,
+  }) =>
+    parent.collection().findOneAndUpdate(
+      parent.prepFilter({
+        depotId,
+        'content.type': credentialType,
+        ...claimableCredentialFilter,
+      }),
+      { $set: { deferredTransactionId: transactionId } },
+      { returnDocument: 'after', projection: parent.defaultColumnsSelection },
+    ),
+  releaseDeferredCredential: async (credentialId, transactionId) =>
+    parent.collection().updateOne(
+      parent.prepFilter({
+        _id: credentialId,
+        deferredTransactionId: transactionId,
+      }),
+      { $unset: { deferredTransactionId: '' } },
     ),
 });
 

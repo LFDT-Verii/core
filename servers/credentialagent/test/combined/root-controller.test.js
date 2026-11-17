@@ -40,5 +40,11 @@ describe('root controller test', () => {
   it('should ping', async () => {
     const response = await fastify.injectJson({ method: 'GET', url: '/' });
     expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual(`Welcome to Credential APIs
+Host: ${fastify.config.hostUrl}
+Version: ${fastify.config.version}
+Environment: test
+Chain ID: ${fastify.config.chainId}
+`);
   });
 });

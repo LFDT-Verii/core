@@ -15,7 +15,11 @@
  *
  */
 
-const { buildWebhookSignatureHeaders } = require('../domain');
+const { pick } = require('lodash/fp');
+const {
+  buildWebhookSignatureHeaders,
+  findWebhookUrlError,
+} = require('../domain');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_LOCK_DURATION_MS = 30000;
@@ -55,7 +59,15 @@ const deliverClaimedNotificationEvent = async (event, now, context) => {
   const { config, log, repos } = context;
 
   try {
-    const response = await postWebhook(event, context);
+    const destination = await resolveEventDestination(event, context);
+    const destinationError = findDestinationError(destination, config);
+
+    if (destinationError != null) {
+      await markDeadDelivery(event, destinationError, now, context);
+      return;
+    }
+
+    const response = await postWebhook(event, destination, context);
 
     if (isSuccessResponse(response)) {
       await repos.notification_events.markDelivered(
@@ -72,16 +84,44 @@ const deliverClaimedNotificationEvent = async (event, now, context) => {
   }
 };
 
-const postWebhook = async (event, context) => {
-  const { config, fetch } = context;
+const resolveEventDestination = (
+  event,
+  { config, db, resolveDestination = resolveHubWebhookDestination },
+) => resolveDestination(event, { config, db });
+
+const resolveHubWebhookDestination = (event, { config }) =>
+  pick(['url', 'secret', 'signatureHeaderName'], config.notifications.webhook);
+
+// Like a 4xx response, a missing or invalid destination is permanent, so the
+// event is marked dead without a retry.
+const findDestinationError = (destination, config) => {
+  if (destination == null) {
+    return { message: 'no_destination' };
+  }
+
+  if (typeof destination.secret !== 'string' || destination.secret === '') {
+    return {
+      message: 'invalid_destination: secret must be a non-empty string',
+    };
+  }
+
+  const urlError = findWebhookUrlError(
+    destination.url,
+    config.notifications.webhook.allowInsecureUrl,
+  );
+  return urlError && { message: `invalid_destination: url ${urlError}` };
+};
+
+const postWebhook = async (event, destination, { fetch }) => {
   const rawBody = JSON.stringify(event.payload);
 
-  return fetch.post(config.notifications.webhook.url, rawBody, {
+  // Post the normalized href: the http client only accepts a lowercase scheme.
+  return fetch.post(new URL(destination.url).href, rawBody, {
     headers: buildWebhookSignatureHeaders({
       event: event.payload,
       rawBody,
-      secret: config.notifications.webhook.secret,
-      signatureHeaderName: config.notifications.webhook.signatureHeaderName,
+      secret: destination.secret,
+      signatureHeaderName: destination.signatureHeaderName,
     }),
   });
 };
@@ -144,26 +184,30 @@ const parseContentLength = (headers = {}) => {
 
 const markFailedDelivery = async (event, error, now, context) => {
   const { config, repos } = context;
-  const failedUpdate = {
-    eventId: event._id,
-    lastError: normalizeDeliveryError(error),
-    lockedBy: event.lockedBy,
-    now,
-  };
 
   if (shouldRetryDelivery(error, event, config)) {
     await repos.notification_events.markRetrying({
-      ...failedUpdate,
+      ...buildFailedUpdate(event, error, now),
       nextAttemptAt: nextAttemptAt(now, event.attempts),
     });
     return;
   }
 
-  await repos.notification_events.markDead({
-    ...failedUpdate,
+  await markDeadDelivery(event, error, now, context);
+};
+
+const markDeadDelivery = (event, error, now, { config, repos }) =>
+  repos.notification_events.markDead({
+    ...buildFailedUpdate(event, error, now),
     retentionExpiresAt: retentionExpiresAt(config, now),
   });
-};
+
+const buildFailedUpdate = (event, error, now) => ({
+  eventId: event._id,
+  lastError: normalizeDeliveryError(error),
+  lockedBy: event.lockedBy,
+  now,
+});
 
 const shouldRetryDelivery = (error, event, config) =>
   event.attempts < config.notifications.webhook.maxAttempts &&

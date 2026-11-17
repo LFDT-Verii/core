@@ -15,7 +15,10 @@
  */
 
 const { last } = require('lodash/fp');
-const { initContractClient } = require('@verii/base-contract-io');
+const {
+  initContractClient,
+  sendContractTransaction,
+} = require('@verii/base-contract-io');
 const contractAbi = require('./contracts/verification-coupon.json');
 
 const initVerificationCoupon = async (
@@ -23,7 +26,7 @@ const initVerificationCoupon = async (
   context,
 ) => {
   const { log } = context;
-  log.info({ privateKey, contractAddress }, 'initVerificationCoupon');
+  log.info({ contractAddress }, 'initVerificationCoupon');
 
   const { contractClient, pullEvents } = await initContractClient(
     {
@@ -35,6 +38,14 @@ const initVerificationCoupon = async (
     context,
   );
 
+  // The keys that sign here, such as the root key, may also be sending from
+  // other servers.
+  const send = (method, ...args) =>
+    sendContractTransaction(
+      { contract: contractClient, method, args },
+      context,
+    );
+
   const isExpired = (tokenId) => {
     log.info({ tokenId }, 'isExpired');
     return contractClient.isExpired(tokenId);
@@ -43,7 +54,8 @@ const initVerificationCoupon = async (
   const mint = async ({ toAddress, expirationTime, quantity, ownerDid }) => {
     log.info({ toAddress, expirationTime, quantity, ownerDid }, 'mint');
     const { traceId } = context;
-    const tx = await contractClient.mint(
+    const transactionReceipt = await send(
+      'mint',
       toAddress,
       Math.floor(Date.parse(expirationTime) / 1000),
       quantity,
@@ -51,14 +63,13 @@ const initVerificationCoupon = async (
       ownerDid,
     );
 
-    const transactionReceipt = await tx.wait();
-
     return last(transactionReceipt.logs).args;
   };
 
   const burn = async (tokenId, traceId, caoDid, burnerDid, burnAddress) => {
     log.info({ tokenId, traceId, caoDid, burnerDid, burnAddress }, 'burn');
-    const tx = await contractClient.burn(
+    const transactionReceipt = await send(
+      'burn',
       tokenId,
       traceId,
       caoDid,
@@ -66,18 +77,11 @@ const initVerificationCoupon = async (
       burnAddress,
     );
 
-    const transactionReceipt = await tx.wait();
-
     return last(transactionReceipt.logs).args;
   };
 
-  const setPermissionsAddress = async (permissionsContractAddress) => {
-    const tx = await contractClient.setPermissionsAddress(
-      permissionsContractAddress,
-    );
-
-    return tx.wait();
-  };
+  const setPermissionsAddress = (permissionsContractAddress) =>
+    send('setPermissionsAddress', permissionsContractAddress);
 
   const getCoupon = (fromAddress) => {
     log.info({ fromAddress }, 'fromAddress');

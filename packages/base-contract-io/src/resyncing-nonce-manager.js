@@ -107,6 +107,22 @@ const getMinimumNonceFromError = (error, visited = new Set()) => {
   ]);
 };
 
+// Reads the account's nonce from the node. A JSON-RPC provider answers a
+// request repeated within 250 ms from its cache, so its getTransactionCount
+// can return the count from before the previous send, and the next send would
+// repeat that send's nonce.
+const readNonce = async (signer, blockTag) => {
+  if (typeof signer.provider?.send !== 'function') {
+    return signer.getNonce(blockTag);
+  }
+
+  const count = await signer.provider.send('eth_getTransactionCount', [
+    await signer.getAddress(),
+    blockTag,
+  ]);
+  return ethers.getNumber(count);
+};
+
 class ResyncingNonceManager extends ethers.NonceManager {
   constructor(signer) {
     super(signer);
@@ -116,8 +132,8 @@ class ResyncingNonceManager extends ethers.NonceManager {
   sendTransaction(tx) {
     const getNonceFloor = async (minimumNonceFromError) => {
       const [pendingNonce, latestNonce] = await Promise.all([
-        this.signer.getNonce('pending'),
-        this.signer.getNonce('latest'),
+        readNonce(this.signer, 'pending'),
+        readNonce(this.signer, 'latest'),
       ]);
 
       return Math.max(

@@ -1,6 +1,6 @@
 {
   "name": "@verii/validation",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Validation package for Velocity Projects, based on ajv and fastify validation",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
@@ -18,7 +18,7 @@
   "dependencies": {
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
-    "fastify-plugin": "^5.1.0",
+    "fastify-plugin": "^6.0.1",
     "lodash": "^4.18.1"
   },
   "devDependencies": {

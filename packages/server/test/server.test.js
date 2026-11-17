@@ -226,6 +226,83 @@ describe('Server package variant tests ', () => {
   });
 });
 
+describe('Server Configured log', () => {
+  let server;
+
+  afterEach(async () => {
+    if (server) {
+      await server.close();
+    }
+  });
+
+  it('logs the sorted names of set config values and none of the values', async () => {
+    const secretMarker = 'startup-config-secret-marker';
+    const config = {
+      ...genericConfig,
+      mongoConnection,
+      notifications: {
+        webhook: {
+          secret: secretMarker,
+          url: `https://user:${secretMarker}@example.com/hook`,
+        },
+      },
+      unsetNull: null,
+      unsetUndefined: undefined,
+      unsetString: '',
+      unsetArray: [],
+      unsetObject: {},
+      unsetNested: { value: null },
+    };
+    const logEntries = [];
+    const logSink = pinoTest.sink();
+    logSink.on('data', (entry) => logEntries.push(entry));
+    const log = loggerProvider({ ...config, destination: logSink });
+
+    server = createServer(config, log);
+    await server.ready();
+
+    expect(server.config).toBe(config);
+    expect(JSON.stringify(logEntries)).not.toContain(secretMarker);
+    const { configuredSettings } = logEntries.find(
+      (entry) => entry.msg === 'Server Configured',
+    );
+    expect(configuredSettings).toEqual([...configuredSettings].sort());
+    expect(configuredSettings).toEqual(
+      expect.arrayContaining([
+        'mongoConnection',
+        'notifications.webhook.secret',
+        'notifications.webhook.url',
+      ]),
+    );
+    expect(configuredSettings).not.toContain('notifications');
+    expect(configuredSettings).not.toContain('notifications.webhook');
+    expect(
+      configuredSettings.filter((name) => name.startsWith('unset')),
+    ).toEqual([]);
+  });
+
+  it('logs the chain ID but not the RPC node URL', async () => {
+    const config = {
+      ...genericConfig,
+      mongoConnection,
+      chainId: 1481,
+      rpcUrl: 'https://user:rpc-secret-marker@rpc.example.com',
+    };
+    const logEntries = [];
+    const logSink = pinoTest.sink();
+    logSink.on('data', (entry) => logEntries.push(entry));
+    const log = loggerProvider({ ...config, destination: logSink });
+
+    server = createServer(config, log);
+    await server.ready();
+
+    expect(
+      logEntries.find((entry) => entry.msg === 'Server Configured'),
+    ).toEqual(expect.objectContaining({ chainId: 1481 }));
+    expect(JSON.stringify(logEntries)).not.toContain('rpc-secret-marker');
+  });
+});
+
 describe('Swagger documentation', () => {
   let server;
 

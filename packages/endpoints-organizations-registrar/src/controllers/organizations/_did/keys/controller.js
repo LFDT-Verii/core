@@ -44,6 +44,7 @@ const keysController = async (fastify) => {
               ],
             },
           ],
+          querystring: { $ref: 'key-encoding-query-params#' },
           body: { $ref: 'https://velocitycareerlabs.io/add-key-body.json#' },
           response: {
             201: {
@@ -59,7 +60,12 @@ const keysController = async (fastify) => {
         }),
       },
       async (req, reply) => {
-        const response = await addKey(req.params.did, req.body, req);
+        const response = await addKey(
+          req.params.did,
+          req.body,
+          req.query.key_encoding,
+          req,
+        );
         reply.code(201);
         return response;
       },
@@ -81,6 +87,7 @@ const keysController = async (fastify) => {
               ],
             },
           ],
+          querystring: { $ref: 'key-encoding-query-params#' },
           response: {
             200: {
               type: 'object',
@@ -95,8 +102,8 @@ const keysController = async (fastify) => {
         }),
       },
       async (req) => {
-        const { params } = req;
-        return getKey(params.did, params.kid, req);
+        const { params, query } = req;
+        return getKey(params.did, params.kid, query.key_encoding, req);
       },
     )
     .delete(

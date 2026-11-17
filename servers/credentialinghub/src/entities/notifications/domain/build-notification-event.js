@@ -16,7 +16,7 @@
  */
 
 const { nanoid } = require('nanoid');
-const { castArray, compact, isNil, omitBy, uniq } = require('lodash/fp');
+const { castArray, compact, isNil, omitBy, trim, uniq } = require('lodash/fp');
 const { NotificationEventTypes } = require('./event-types');
 
 const NOTIFICATION_PAYLOAD_VERSION = 1;
@@ -50,6 +50,38 @@ const buildPresentationReceivedEvent = ({
       presentation: `/operator/presentations/get?tenantId=${encodeURIComponent(
         tenantId,
       )}&presentationId=${encodeURIComponent(presentationId)}`,
+    },
+  });
+};
+
+const buildPresentationDeclinedEvent = ({
+  tenant,
+  exchange,
+  id = newNotificationEventId(),
+  occurredAt = exchange.declinedAt,
+}) => {
+  const tenantId = tenant._id.toString();
+  const exchangeId = exchange._id.toString();
+
+  return buildBaseEvent({
+    id,
+    type: NotificationEventTypes.PRESENTATION_DECLINED,
+    occurredAt,
+    tenant,
+    exchange,
+    resource: {
+      type: 'exchange',
+      id: exchangeId,
+    },
+    data: omitBy(isNil, {
+      protocol: exchange.protocolMetadata.protocol,
+      declinedAt: toIsoString(exchange.declinedAt),
+      reason: exchange.declineReason,
+    }),
+    links: {
+      exchange: `/operator/exchanges/get?tenantId=${encodeURIComponent(
+        tenantId,
+      )}&exchangeId=${encodeURIComponent(exchangeId)}`,
     },
   });
 };
@@ -141,6 +173,7 @@ const buildBaseEvent = ({
   occurredAt: toIsoString(occurredAt),
   tenantId: tenant._id.toString(),
   tenantDid: tenant.did,
+  caoDid: toCaoDid(tenant.caoDid),
   serviceId: exchange.serviceId.toString(),
   depotId: exchange.depotId.toString(),
   exchangeId: exchange._id.toString(),
@@ -148,6 +181,11 @@ const buildBaseEvent = ({
   data,
   links,
 });
+
+// Legacy tenants may have no CAO DID, or a blank one. Send null for both rather
+// than omitting the field. Keep any other value exactly as stored, because the
+// Operator API scopes tenants by an exact caoDid match.
+const toCaoDid = (caoDid) => (trim(caoDid) === '' ? null : caoDid);
 
 const newNotificationEventId = () => `evt_${nanoid()}`;
 
@@ -175,6 +213,7 @@ const toIsoString = (value) => {
 module.exports = {
   buildCredentialIssuedEvent,
   buildCredentialRejectedEvent,
+  buildPresentationDeclinedEvent,
   buildPresentationReceivedEvent,
   newNotificationEventId,
 };

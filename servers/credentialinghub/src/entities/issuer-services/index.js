@@ -17,5 +17,6 @@
 module.exports = {
   ...require('./domain'),
   ...require('./factories'),
+  ...require('./orchestrators'),
   ...require('./repo'),
 };

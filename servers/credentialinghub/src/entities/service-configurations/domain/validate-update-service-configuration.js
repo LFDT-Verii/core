@@ -1,7 +1,7 @@
 const newError = require('http-errors');
 const {
   ServiceConfigurationErrors,
-} = require('./service-configuration-errors');
+} = require('@verii/credentialing-hub-operator-api');
 
 const validateUpdateServiceConfiguration =
   (validator) =>

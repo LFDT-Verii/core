@@ -1,0 +1,17 @@
+{
+  "title": "key-encoding-query-params",
+  "$id": "key-encoding-query-params",
+  "type": "object",
+  "description": "Query parameters that choose how returned keys are encoded",
+  "properties": {
+    "key_encoding": {
+      "type": "string",
+      "enum": [
+        "hex",
+        "jwk"
+      ],
+      "default": "hex",
+      "description": "`hex` returns a private key as `key` and the public key as `didDocumentKey.publicKeyMultibase`. `jwk` returns a private key as `jwk` and the public key as `didDocumentKey.publicKeyJwk`. Hex carries no curve, so keys on any curve other than secp256k1 are always returned as JWK."
+    }
+  }
+}

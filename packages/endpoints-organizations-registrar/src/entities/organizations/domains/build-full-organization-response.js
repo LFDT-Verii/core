@@ -25,6 +25,7 @@ const buildFullOrganizationResponse = ({
   profile,
   keys,
   keyPairs,
+  keyEncoding,
   ...rest
 }) => ({
   id: organization.didDoc.id,
@@ -34,11 +35,14 @@ const buildFullOrganizationResponse = ({
   custodied: !organization.didNotCustodied,
   profile: profile ?? buildProfileResponse(organization),
   services: services ?? organization.services,
-  keys: keys != null ? buildOutgoingKeys(keys, keyPairs) : organization.keys,
+  keys:
+    keys != null
+      ? buildOutgoingKeys(keys, keyPairs, keyEncoding)
+      : organization.keys,
   ...rest,
 });
 
-const buildOutgoingKeys = (keys, keyPairs) =>
-  mapWithIndex((key, i) => mapKeyResponse(key, keyPairs[i]), keys);
+const buildOutgoingKeys = (keys, keyPairs, keyEncoding) =>
+  mapWithIndex((key, i) => mapKeyResponse(key, keyPairs[i], keyEncoding), keys);
 
 module.exports = { buildFullOrganizationResponse, buildProfileResponse };

@@ -4,34 +4,25 @@ const {
   GENERIC_OAUTH_ALIASES,
   resolveRuntimeEnvironment,
 } = require('../../docker/resolve-runtime-environment');
-const {
-  VELOCITY_NETWORK_PRESETS,
-} = require('../../docker/velocity-network-presets');
+
+const unsupportedArgumentMessage =
+  'Unsupported Credentialing Hub image argument. The image takes no arguments: ' +
+  'it no longer presets a network. Set the network values as environment variables. ' +
+  'See https://github.com/LFDT-Verii/core/blob/main/servers/credentialinghub/README.md#network-settings';
 
 describe('resolveRuntimeEnvironment', () => {
-  for (const [shortcut, preset] of Object.entries(VELOCITY_NETWORK_PRESETS)) {
-    it(`applies ${shortcut} without mutating the environment`, () => {
-      const env = {
-        MONGO_URI: 'mongodb://mongo/hub',
-        VNF_OAUTH_CLIENT_ID: 'client-id',
-        VNF_OAUTH_CLIENT_SECRET: 'client-secret',
-      };
-      const original = { ...env };
-      const result = resolveRuntimeEnvironment({ args: [shortcut], env });
-
-      assert.deepEqual(env, original);
-      assert.deepEqual(result, { ...env, ...preset });
-    });
-  }
-
-  it('preserves unrelated operational and secret values', () => {
+  it('passes the environment through without mutating it', () => {
     const env = {
       MONGO_URI: 'mongodb://mongo/hub',
       OPERATOR_TOKEN: 'operator-secret',
+      RPC_NODE_URL: 'https://rpc.example.com',
+      CHAIN_ID: '1234',
     };
+    const original = { ...env };
 
     const result = resolveRuntimeEnvironment({ args: [], env });
 
+    assert.deepEqual(env, original);
     assert.deepEqual(result, env);
     assert.notEqual(result, env);
   });
@@ -49,19 +40,6 @@ describe('resolveRuntimeEnvironment', () => {
     }
   });
 
-  it('accepts generic OAuth client credentials with a network shortcut', () => {
-    const result = resolveRuntimeEnvironment({
-      args: ['--velocity-devnet'],
-      env: {
-        BLOCKCHAIN_OAUTH_CLIENT_ID: 'client-id',
-        BLOCKCHAIN_OAUTH_CLIENT_SECRET: 'client-secret',
-      },
-    });
-
-    assert.equal(result.VNF_OAUTH_CLIENT_ID, 'client-id');
-    assert.equal(result.VNF_OAUTH_CLIENT_SECRET, 'client-secret');
-  });
-
   for (const [genericName, hubName] of Object.entries(GENERIC_OAUTH_ALIASES)) {
     it(`rejects ${genericName} together with ${hubName}`, () => {
       assert.throws(
@@ -74,87 +52,23 @@ describe('resolveRuntimeEnvironment', () => {
     });
   }
 
-  it('rejects a shortcut with an owned Hub setting', () => {
-    assert.throws(
-      () =>
-        resolveRuntimeEnvironment({
-          args: ['--velocity-testnet'],
-          env: { RPC_NODE_URL: 'https://custom.example' },
-        }),
-      /--velocity-testnet cannot be combined with: RPC_NODE_URL/,
-    );
-  });
-
-  for (const genericName of [
-    'BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT',
-    'BLOCKCHAIN_OAUTH_AUDIENCE',
+  // The image's former network flags, and anything else
+  for (const arg of [
+    '--mainnet',
+    '--testnet',
+    '--devnet',
+    '--no-preset',
+    '--velocity-mainnet',
+    '--velocity-testnet',
+    '--velocity-devnet',
+    '--custom-network',
+    'run',
+    '',
   ]) {
-    it(`rejects a shortcut with ${genericName}`, () => {
-      assert.throws(
-        () =>
-          resolveRuntimeEnvironment({
-            args: ['--velocity-mainnet'],
-            env: { [genericName]: 'configured' },
-          }),
-        new RegExp(genericName),
-      );
+    it(`rejects the image argument ${JSON.stringify(arg)}`, () => {
+      assert.throws(() => resolveRuntimeEnvironment({ args: [arg] }), {
+        message: unsupportedArgumentMessage,
+      });
     });
   }
-
-  it('treats an explicitly empty owned setting as a shortcut conflict', () => {
-    assert.throws(
-      () =>
-        resolveRuntimeEnvironment({
-          args: ['--velocity-devnet'],
-          env: { RPC_NODE_URL: '' },
-        }),
-      /RPC_NODE_URL/,
-    );
-  });
-
-  it('rejects multiple network shortcuts', () => {
-    assert.throws(
-      () =>
-        resolveRuntimeEnvironment({
-          args: ['--velocity-devnet', '--velocity-testnet'],
-        }),
-      /Only one Velocity network shortcut may be supplied/,
-    );
-  });
-
-  it('rejects unknown image arguments', () => {
-    assert.throws(
-      () => resolveRuntimeEnvironment({ args: ['--custom-network'] }),
-      /Unsupported Credentialing Hub image argument/,
-    );
-  });
-
-  it('rejects malformed image arguments', () => {
-    assert.throws(
-      () => resolveRuntimeEnvironment({ args: [''] }),
-      /Unsupported Credentialing Hub image argument/,
-    );
-  });
-
-  it('rejects positional image arguments', () => {
-    assert.throws(
-      () => resolveRuntimeEnvironment({ args: ['run'] }),
-      /Unsupported Credentialing Hub image argument/,
-    );
-  });
-
-  it('names conflicting variables without exposing their values', () => {
-    const sentinel = 'do-not-print-this-value';
-
-    assert.throws(
-      () =>
-        resolveRuntimeEnvironment({
-          args: ['--velocity-devnet'],
-          env: { RPC_NODE_URL: sentinel },
-        }),
-      (error) =>
-        error.message.includes('RPC_NODE_URL') &&
-        !error.message.includes(sentinel),
-    );
-  });
 });

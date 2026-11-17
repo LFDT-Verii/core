@@ -85,8 +85,10 @@ const feedExtensions = (parent, context) => {
           projection: defaultProjection,
           returnDocument: 'after',
           includeResultMetadata: true,
+          // _id breaks updatedAt ties so the most recently inserted feed wins
           sort: {
             updatedAt: -1,
+            _id: -1,
           },
         });
       return updateResult.value;

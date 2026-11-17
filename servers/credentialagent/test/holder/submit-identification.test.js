@@ -2060,6 +2060,53 @@ describe('submit identification disclosure', () => {
         getCoupon: () => Promise.resolve(42),
       }));
     });
+    [
+      '$..verifiableCredential',
+      '$.verifiableCredential[*]',
+      '$.verifiableCredential[0].credentialSubject',
+      '$.verifiableCredential[1000]',
+    ].forEach((path) => {
+      it(`should 400 when the input descriptor path is ${JSON.stringify(path)}`, async () => {
+        const presentationEmail = await generateKYCPresentation(
+          exchange,
+          'email',
+        );
+        const identifyWebhook = nock(mockVendorUrl)
+          .post(identifyUserOnVendorEndpoint)
+          .reply(200, { vendorUserId });
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: idUrl(tenant),
+          headers: {
+            'x-vnf-protocol-version': `${VeriiProtocolVersions.PROTOCOL_VERSION_2}`,
+          },
+          payload: {
+            jwt_vp: await presentationEmail
+              .override({
+                presentation_submission: {
+                  descriptor_map: [{ path }],
+                },
+              })
+              .sign(holderKid, holderKeys.privateKey, holderDid),
+            exchange_id: exchange._id,
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'presentation_jsonpath_unsupported',
+            message:
+              'Velocity Presentation contains path descriptor that is unsupported',
+            statusCode: 400,
+          }),
+        );
+        expect(identifyWebhook.isDone()).toEqual(false);
+      });
+    });
+
     it('should 200 when identifying email', async () => {
       const presentationEmail = await generateKYCPresentation(
         exchange,

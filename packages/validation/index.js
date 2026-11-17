@@ -15,6 +15,7 @@
  */
 
 module.exports = {
+  ...require('./src/ajv2019-validation'),
   ...require('./src/validation'),
   ...require('./src/validation-plugin'),
 };

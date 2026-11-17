@@ -18,6 +18,7 @@
 const {
   buildCredentialIssuedEvent,
   buildCredentialRejectedEvent,
+  buildPresentationDeclinedEvent,
   buildPresentationReceivedEvent,
   newNotificationEventId,
 } = require('./domain/build-notification-event');
@@ -61,6 +62,7 @@ module.exports = {
   buildCredentialIssuedEvent,
   buildCredentialRejectedEvent,
   buildNotificationConfig,
+  buildPresentationDeclinedEvent,
   buildPresentationReceivedEvent,
   buildWebhookSignatureHeaders,
   deliverNextNotificationEvent,

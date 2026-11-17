@@ -29,7 +29,7 @@ module.exports = {
       {
         schemaName: 'education-degree-graduation-v1.1', // kebab cased schema
         credentialType: 'EducationDegreeGraduationV1.1', // camelCased schema
-        jsonldContext: v11jsonld,
+        jsonldContext: [v11jsonld],
         credentialGroup: CredentialGroup.Career,
         issuerCategory: 'RegularIssuer',
       },
@@ -37,22 +37,23 @@ module.exports = {
         schemaName: 'open-badge-credential', // kebab cased schema
         credentialType: 'OpenBadgeCredential', // camelCased schema
         defaultSignatureAlgorithm: 'RS256',
-        jsonldContext:
+        jsonldContext: [
           'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
+        ],
         credentialGroup: CredentialGroup.Career,
         issuerCategory: 'RegularIssuer',
       },
       {
         schemaName: 'employment-current-v1.1', // kebab cased schema
         credentialType: 'EmploymentCurrentV1.1', // camelCased schema
-        jsonldContext: v11jsonld,
+        jsonldContext: [v11jsonld],
         credentialGroup: CredentialGroup.Career,
         issuerCategory: 'RegularIssuer',
       },
       {
         schemaName: 'email-v1.0', // kebab cased schema
         credentialType: 'EmailV1.0', // camelCased schema
-        jsonldContext: v10jsonld,
+        jsonldContext: [v10jsonld],
         credentialGroup: CredentialGroup.Contact,
         issuerCategory: ServiceCategories.ContactIssuer,
       },

@@ -17,9 +17,14 @@ const { mock } = require('node:test');
 const { NotFoundError } = require('http-errors');
 
 const mockRoutes = { get: {} };
+const mockErrorRoutes = { get: {} };
 const buildDefaultImplementation =
   (method) =>
   (...args) => {
+    if (Object.hasOwn(mockErrorRoutes[method], args[0])) {
+      return Promise.reject(mockErrorRoutes[method][args[0]]);
+    }
+
     if (!Object.hasOwn(mockRoutes[method], args[0])) {
       return Promise.resolve({
         json: () =>
@@ -32,8 +37,11 @@ const buildDefaultImplementation =
     });
   };
 
+const defaultPostImplementation = () => Promise.resolve({ statusCode: 204 });
+
 const mockHttpClient = {
   get: mock.fn(buildDefaultImplementation('get')),
+  post: mock.fn(defaultPostImplementation),
   responseType: 'promise',
 };
 const mockCache = mock.fn();
@@ -45,6 +53,12 @@ const mockHttpClientModule = {
 
 const mockHttpClientJsonRoute = (method, url, response) => {
   mockRoutes[method][url] = response;
+};
+
+// Rejects the request itself, as @verii/http-client does for an error status
+// or a connection failure. Cleared by resetMockHttpClient.
+const mockHttpClientErrorRoute = (method, url, error) => {
+  mockErrorRoutes[method][url] = error;
 };
 
 let counter;
@@ -81,11 +95,14 @@ const restMockHttpClient = () => {
   mockRoutes.get = {};
 };
 const resetMockHttpClient = () => {
+  mockErrorRoutes.get = {};
   counter = { get: 0 };
   jsonResponses = { get: [] };
   mockHttpClientModule.initHttpClient.mock.resetCalls();
   mockHttpClient.get.mock.resetCalls();
   mockHttpClient.get.mock.mockImplementation(buildDefaultImplementation('get'));
+  mockHttpClient.post.mock.resetCalls();
+  mockHttpClient.post.mock.mockImplementation(defaultPostImplementation);
 };
 resetMockHttpClient();
 
@@ -95,6 +112,7 @@ module.exports = {
   mockHttpClientJsonResponse,
   mockHttpClientTextResponse,
   mockHttpClientError,
+  mockHttpClientErrorRoute,
   mockHttpClientJsonRoute,
   resetMockHttpClient,
   restMockHttpClient,

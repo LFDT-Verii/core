@@ -12,6 +12,7 @@ const organizationSearchQueryProfileParamsSchema = require('./organization.searc
 const organizationProfileVerifiableCredentialSchema = require('./organization-profile-verifiable-credential.schema.json');
 const organizationVerifiedProfileSchema = require('./organization-verified-profile.schema.json');
 const didKeySchema = require('./did-key.schema.json');
+const keyEncodingQueryParamsSchema = require('./key-encoding-query-params.schema.json');
 const organizationServiceSchema = require('./organization-service.schema.json');
 
 module.exports = {
@@ -29,5 +30,6 @@ module.exports = {
   organizationProfileVerifiableCredentialSchema,
   organizationVerifiedProfileSchema,
   didKeySchema,
+  keyEncodingQueryParamsSchema,
   organizationServiceSchema,
 };

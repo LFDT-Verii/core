@@ -23,7 +23,15 @@ const { mockHttpClientModule } = require('../helpers/mock-http-client');
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { decrypt, hexFromJwk } = require('@verii/crypto');
+const { ObjectId } = require('mongodb');
+const { omit } = require('lodash/fp');
+const {
+  generateKeyPair,
+  KeyAlgorithms,
+  KeyPurposes,
+} = require('@verii/crypto');
+const { jwtDecode, jwtVerify } = require('@verii/jwt');
+const { UUID_FORMAT } = require('@verii/test-regexes');
 
 const { initKeyFactory } = require('../../src/entities/keys');
 const { initTenantFactory } = require('../../src/entities/tenants');
@@ -34,7 +42,6 @@ describe('openid4vc nonce test suite', () => {
   let fastify;
 
   let tenant;
-  let issuerKeyPair;
 
   let persistTenant;
   let persistKey;
@@ -47,10 +54,7 @@ describe('openid4vc nonce test suite', () => {
 
     await mongoDb().collection('tenants').deleteMany({});
     await mongoDb().collection('keys').deleteMany({});
-    ({ tenant, issuerKeyPair } = await constructTenant(
-      persistTenant,
-      persistKey,
-    ));
+    ({ tenant } = await constructTenant(persistTenant, persistKey));
   });
 
   beforeEach(async () => {
@@ -63,25 +67,103 @@ describe('openid4vc nonce test suite', () => {
   });
 
   describe('openid4vc nonce test suite', () => {
-    it('should 200 with nonce', async () => {
-      const testStartTimestamp = Date.now();
+    it('should 200 with a nonce signed with the nonce secret that expires in 5 minutes', async () => {
+      const testStartUnix = Math.floor(Date.now() / 1000);
 
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: `/r/${tenant._id}/openid4vc/nonce`,
-      });
+      const response = await requestNonce(tenant._id);
 
       expect(response.statusCode).toEqual(200);
       expect(response.headers['cache-control']).toEqual('no-store');
       expect(response.json).toEqual({
         c_nonce: expect.any(String),
       });
-      const decodedNonce = decrypt(
+      const { header, payload } = await verifyNonce(
         response.json.c_nonce,
-        hexFromJwk(issuerKeyPair.privateKey),
+        tenant._id,
       );
-      expect(Number(decodedNonce)).toBeLessThan(Date.now());
-      expect(Number(decodedNonce)).toBeGreaterThan(testStartTimestamp);
+      expect(header).toEqual({ alg: 'HS256', typ: 'JWT' });
+      expect(payload).toEqual(expectedNoncePayload(tenant._id));
+      expect(payload.exp - payload.iat).toEqual(300);
+      expect(payload.iat).toBeGreaterThanOrEqual(testStartUnix);
+      expect(payload.iat).toBeLessThanOrEqual(Math.ceil(Date.now() / 1000));
+    });
+
+    it('should 200 with a different jti on every nonce', async () => {
+      const responses = await Promise.all([
+        requestNonce(tenant._id),
+        requestNonce(tenant._id),
+        requestNonce(tenant._id),
+      ]);
+
+      const jtis = responses.map(
+        ({ json }) => jwtDecode(json.c_nonce).payload.jti,
+      );
+      expect(new Set(jtis).size).toEqual(3);
+    });
+
+    it('should 200 with a nonce for a tenant whose EXCHANGES key is P-256', async () => {
+      const p256Tenant = await persistP256ExchangesTenant();
+
+      const response = await requestNonce(p256Tenant._id);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.headers['cache-control']).toEqual('no-store');
+      const { payload } = await verifyNonce(
+        response.json.c_nonce,
+        p256Tenant._id,
+      );
+      expect(payload).toEqual(expectedNoncePayload(p256Tenant._id));
     });
   });
+
+  const requestNonce = (tenantId) =>
+    fastify.injectJson({
+      method: 'POST',
+      url: `/r/${tenantId}/openid4vc/nonce`,
+    });
+
+  const verifyNonce = (cNonce, tenantId) =>
+    jwtVerify(cNonce, 'test-openid4vci-nonce-secret', {
+      algorithms: ['HS256'],
+      audience: credentialIssuerOf(tenantId),
+      issuer: credentialIssuerOf(tenantId),
+    });
+
+  const expectedNoncePayload = (tenantId) => ({
+    aud: credentialIssuerOf(tenantId),
+    exp: expect.any(Number),
+    iat: expect.any(Number),
+    iss: credentialIssuerOf(tenantId),
+    jti: expect.stringMatching(UUID_FORMAT),
+  });
+
+  const credentialIssuerOf = (tenantId) =>
+    `https://localhost.test/r/${tenantId}`;
+
+  const persistP256ExchangesTenant = async () => {
+    const { tenant: p256Tenant } = await constructTenant(
+      persistTenant,
+      persistKey,
+    );
+    const exchangesKey = await persistKey({
+      tenant: p256Tenant,
+      key: generateKeyPair({ curve: 'P-256', format: 'jwk' }).privateKey,
+      algorithm: KeyAlgorithms.ES256,
+      purposes: [KeyPurposes.EXCHANGES],
+    });
+    await mongoDb()
+      .collection('tenants')
+      .updateOne(
+        { _id: new ObjectId(p256Tenant._id) },
+        {
+          $set: {
+            [`keysByPurpose.${KeyPurposes.EXCHANGES}`]: omit(
+              ['encryptedJwk'],
+              exchangesKey,
+            ),
+          },
+        },
+      );
+    return p256Tenant;
+  };
 });

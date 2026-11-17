@@ -1,6 +1,6 @@
 {
   "name": "@verii/server-mockvendor",
-  "version": "1.28.0",
+  "version": "1.29.0",
   "description": "Mock Vendor backend",
   "repository": "https://github.com/LFDT-Verii/core",
   "engines": {
@@ -24,10 +24,10 @@
   "dependencies": {
     "@fastify/autoload": "^6.5.1",
     "@fastify/helmet": "^13.2.0",
-    "@fastify/jwt": "^10.2.4",
+    "@fastify/jwt": "^10.2.5",
     "@fastify/sensible": "^6.0.7",
     "@fastify/swagger": "^9.9.2",
-    "@fastify/swagger-ui": "^5.2.6",
+    "@fastify/swagger-ui": "^6.1.2",
     "@spencejs/spence-mongo-repos": "^1.1.0",
     "@verii/common-functions": "workspace:*",
     "@verii/common-schemas": "workspace:*",
@@ -42,7 +42,7 @@
     "date-fns": "^4.4.0",
     "env-var": "^7.5.0",
     "fastify": "^5.12.7",
-    "fastify-plugin": "^5.1.0",
+    "fastify-plugin": "^6.0.1",
     "http-errors": "^2.0.1",
     "lodash": "^4.18.1",
     "mongodb": "^7.7.0",
@@ -52,8 +52,8 @@
     "@spencejs/spence-factories": "^1.1.0",
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",
-    "canonicalize": "^2.1.0",
-    "dotenv": "^18.0.8",
+    "canonicalize": "^5.1.0",
+    "dotenv": "^18.0.9",
     "eslint": "9.39.5",
     "eslint-config-airbnb-extended": "3.3.0",
     "eslint-config-prettier": "10.1.8",
@@ -64,7 +64,7 @@
     "eslint-watch": "8.0.0",
     "expect": "30.5.2",
     "globals": "17.13.0",
-    "nock": "15.0.1",
+    "nock": "15.0.5",
     "nodemon": "3.1.14",
     "prettier": "3.9.10"
   }

@@ -592,6 +592,7 @@ const expectedPresentationRequest = (
     max_retention_period:
       relyingPartyService.disclosureRequest?.retentionPeriod ?? '',
     auth_token_uri: `${agentUrl}${vnUrl(tenant)}/oauth/token`,
+    decline_presentation_uri: `${agentUrl}${vnUrl(tenant)}/decline-presentation`,
     progress_uri: `${agentUrl}${vnUrl(tenant)}/get-exchange-progress`,
     submit_presentation_uri: `${agentUrl}${vnUrl(tenant)}/presentation`,
     feed: relyingPartyService.mode === 'feed',

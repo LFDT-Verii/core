@@ -17,11 +17,16 @@
 const { nanoid } = require('nanoid');
 const { calcSha384 } = require('@verii/crypto');
 
+// Replaces the depot's code with a new one that expires at
+// preauthCodeExpiresAt, or never when it's undefined. A depot's
+// preauthCodeExpiresIn can't change, so a depot whose codes never expire has
+// never had an expiry to clear.
 const refreshPreauthCodeExtension = (parent) => ({
-  refreshPreauthCode: async (depotId) => {
+  refreshPreauthCode: async (depotId, preauthCodeExpiresAt) => {
     const preauthCode = nanoid(16);
     const depot = await parent.update(depotId, {
       preauthCodeHash: calcSha384(preauthCode),
+      preauthCodeExpiresAt,
     });
     return { ...depot, preauthCode };
   },

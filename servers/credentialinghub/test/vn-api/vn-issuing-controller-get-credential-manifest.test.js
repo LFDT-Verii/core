@@ -315,10 +315,11 @@ describe('vn-api > get credential manifests', () => {
       );
     });
 
-    it('should 200, for presentationDefinition auth and wallet requests output types', async () => {
+    it('should 200, for a preauth service with a presentationDefinition and wallet requests output types', async () => {
       const issuerService = await persistIssuerService({
         tenant,
         description: 'Credential Issuance Disclosure',
+        authMethods: ['preauth'],
         presentationDefinition: testPresentationDefinition,
       });
 

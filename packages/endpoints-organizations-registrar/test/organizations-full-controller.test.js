@@ -137,6 +137,7 @@ const {
   castArray,
   compact,
   first,
+  find,
   flow,
   includes,
   last,
@@ -241,11 +242,7 @@ const setServicePingNock = (
 ) => {
   const uri = new URL(serviceEndpoint);
   const version = versionFlag ? `\nVersion: ${serviceAgentVersionMock}` : '';
-  return nock(uri.origin, {
-    reqheaders: {
-      'accept-encoding': 'gzip, deflate, br',
-    },
-  })
+  return nock(uri.origin)
     .get(uri.pathname)
     .delay(delay)
     .reply(
@@ -254,9 +251,11 @@ const setServicePingNock = (
     );
 };
 
-const setMonitorEventsNock = (delay = 10) => {
+// monitorCount: monitors created per service, e.g. 2 for a node operator (liveness and readiness)
+const setMonitorEventsNock = ({ delay = 10, monitorCount = 1 } = {}) => {
   return nock('https://betteruptime.com', {})
     .post('/api/v2/monitors')
+    .times(monitorCount)
     .reply(200, {
       data: {
         id: '12345678',
@@ -308,6 +307,7 @@ const setMonitorEventsNock = (delay = 10) => {
       },
     })
     .post(/\/api\/v2\/status-pages\/\d{6}\/resources/)
+    .times(monitorCount)
     .delay(delay)
     .reply(200, {
       data: {
@@ -1749,6 +1749,31 @@ describe('Organizations Full Test Suite', () => {
         );
       });
 
+      it('Should 400 if linkedInProfile is empty and validateKybProfile is on, without x-validate-kyb-profile', async (t) => {
+        fastify.config.validateKybProfile = true;
+        t.after(() => {
+          fastify.config.validateKybProfile = false;
+        });
+        const payload = {
+          profile: omit(['linkedInProfile'], orgProfile),
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers: {
+            'x-auto-activate': '1',
+            'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json.message).toEqual(
+          "body/profile must have required property 'linkedInProfile'",
+        );
+      });
+
       it('Should 400 if profile.logo already active', async () => {
         await persistImage({
           url: 'https://example.com/logo.png',
@@ -2153,6 +2178,65 @@ describe('Organizations Full Test Suite', () => {
         ]);
       });
 
+      describe('key_encoding', () => {
+        const createOrganization = (keyEncoding) =>
+          fastify.injectJson({
+            method: 'POST',
+            url: `${fullUrl}?key_encoding=${keyEncoding}`,
+            payload: { profile: orgProfile },
+            headers: {
+              'x-auto-activate': '0',
+              'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+            },
+          });
+
+        it('Should return every key as JWK when key_encoding is jwk', async () => {
+          const response = await createOrganization('jwk');
+
+          expect(response.statusCode).toEqual(201);
+          const orgFromDb = await getOrganizationFromDb(response.json.id);
+          const dbKeys = await getKeysFromDb(orgFromDb);
+          expect(response.json.keys).toHaveLength(5);
+          for (const responseKey of response.json.keys) {
+            const dbKey = find({ id: responseKey.kidFragment }, dbKeys);
+            expect(responseKey).toEqual({
+              kidFragment: dbKey.id,
+              purposes: dbKey.purposes,
+              algorithm: 'SECP256K1',
+              custodied: true,
+              encoding: 'jwk',
+              jwk: { ...dbKey.publicKey, d: expect.any(String) },
+              didDocumentKey: {
+                id: dbKey.id,
+                type: 'EcdsaSecp256k1VerificationKey2019',
+                controller: orgFromDb.didDoc.id,
+                publicKeyJwk: dbKey.publicKey,
+              },
+            });
+          }
+        });
+
+        it('Should return every key as hex when key_encoding is hex', async () => {
+          const response = await createOrganization('hex');
+
+          expect(response.statusCode).toEqual(201);
+          expect(response.json.keys).toEqual(
+            expectedCreateFullOrganizationResponse(response.json.id, orgProfile)
+              .keys,
+          );
+        });
+
+        it('Should 400 and create nothing when key_encoding is not supported', async () => {
+          const response = await createOrganization('hex_jwk');
+
+          expect(response.statusCode).toEqual(400);
+          expect(response.json.message).toContain('key_encoding');
+          expect(
+            await mongoDb().collection('organizations').countDocuments(),
+          ).toEqual(0);
+        });
+      });
+
       it('Should create org with a did service', async () => {
         const monitorNockScope = setMonitorEventsNock();
 
@@ -2269,6 +2353,7 @@ describe('Organizations Full Test Suite', () => {
           },
         ];
 
+        setServicePingNock(services[0].serviceEndpoint);
         const monitorNockScope = setMonitorEventsNock();
 
         const payload = {
@@ -2681,7 +2766,7 @@ describe('Organizations Full Test Suite', () => {
           serviceEndpoints: services,
         };
 
-        const monitorNockScope = setMonitorEventsNock();
+        const monitorNockScope = setMonitorEventsNock({ monitorCount: 2 });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -2818,6 +2903,10 @@ describe('Organizations Full Test Suite', () => {
           profile,
           serviceEndpoints: services,
         };
+
+        // one monitoring flow per node operator service
+        setMonitorEventsNock({ monitorCount: 2 });
+        setMonitorEventsNock({ monitorCount: 2 });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -3241,7 +3330,7 @@ describe('Organizations Full Test Suite', () => {
           serviceEndpoints: services,
         };
 
-        const monitorNockScope = setMonitorEventsNock();
+        const monitorNockScope = setMonitorEventsNock({ monitorCount: 2 });
         setServicePingNock(services[0].serviceEndpoint);
 
         const response = await fastify.injectJson({
@@ -3707,7 +3796,7 @@ describe('Organizations Full Test Suite', () => {
           };
 
           setServicePingNock(service[0].serviceEndpoint);
-          const monitorNockScope = setMonitorEventsNock(7000);
+          const monitorNockScope = setMonitorEventsNock({ delay: 7000 });
 
           const response = await fastify.injectJson({
             method: 'POST',
@@ -5388,6 +5477,7 @@ describe('Organizations Full Test Suite', () => {
             },
           ],
         };
+        setServicePingNock(services[0].serviceEndpoint);
         const monitorNockScope = setMonitorEventsNock();
 
         const response = await fastify.injectJson({
@@ -5563,59 +5653,59 @@ describe('Organizations Full Test Suite', () => {
             'https://www.w3.org/ns/did/v1',
             'https://w3id.org/security/suites/jws-2020/v1',
           ],
-          id: 'did:web:example.com/test:alias',
+          id: 'did:web:example.com%3A8443:test:alias',
           verificationMethod: [
             {
-              id: 'did:web:example.com/test:alias#key-0',
+              id: 'did:web:example.com%3A8443:test:alias#key-0',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
             {
-              id: 'did:web:example.com/test:alias#key-1',
+              id: 'did:web:example.com%3A8443:test:alias#key-1',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
             {
-              id: 'did:web:example.com/test:alias#key-2',
+              id: 'did:web:example.com%3A8443:test:alias#key-2',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
           ],
-          authentication: ['did:web:example.com/test:alias#key-0'],
-          assertionMethod: ['did:web:example.com/test:alias#key-0'],
+          authentication: ['did:web:example.com%3A8443:test:alias#key-0'],
+          assertionMethod: ['did:web:example.com%3A8443:test:alias#key-0'],
           publicKey: [
             {
-              id: 'did:web:example.com/test:alias#key-0',
+              id: 'did:web:example.com%3A8443:test:alias#key-0',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
             {
-              id: 'did:web:example.com/test:alias#key-1',
+              id: 'did:web:example.com%3A8443:test:alias#key-1',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
             {
-              id: 'did:web:example.com/test:alias#key-2',
+              id: 'did:web:example.com%3A8443:test:alias#key-2',
               type: 'JsonWebKey2020',
-              controller: 'did:web:example.com/test:alias',
+              controller: 'did:web:example.com%3A8443:test:alias',
               publicKeyJwk: keyPair.publicKey,
             },
           ],
           service: map(pick(didDocServiceFields), services),
         };
-        const nockData = nock('https://example.com/test')
-          .get('/alias/did.json')
+        const nockData = nock('https://example.com:8443')
+          .get('/test/alias/did.json')
           .reply(200, didWebDoc);
 
         const payload = {
           profile: orgProfile,
           serviceEndpoints: services,
-          byoDid: 'did:web:example.com%2Ftest:alias',
+          byoDid: didWebDoc.id,
           keys: [
             {
               kidFragment: toRelativeKeyId(
@@ -5637,6 +5727,7 @@ describe('Organizations Full Test Suite', () => {
             },
           ],
         };
+        setServicePingNock(services[0].serviceEndpoint);
         const monitorNockScope = setMonitorEventsNock();
 
         const response = await fastify.injectJson({
@@ -5654,7 +5745,7 @@ describe('Organizations Full Test Suite', () => {
         const did = response.json.id;
 
         // json response checks
-        expect(did).toMatch(expectedDidWebDoc.id);
+        expect(did).toEqual(didWebDoc.id);
         expect(response.json).toEqual(
           expectedCreateFullOrganizationResponse(did, orgProfile, services, {
             keys: payload.keys,
@@ -5861,6 +5952,10 @@ describe('Organizations Full Test Suite', () => {
       });
 
       it('Should throw error when did does not resolved', async () => {
+        const nockData = nock('https://example.com')
+          .get('/.well-known/did.json')
+          .reply(404);
+
         const payload = {
           profile: orgProfile,
           byoDid: expectedDidWebDoc.id,
@@ -5888,10 +5983,61 @@ describe('Organizations Full Test Suite', () => {
           errorResponseMatcher({
             error: 'Bad Request',
             errorCode: 'did_resolution_failed',
-            message: 'Could not resolve did:web:example.com',
+            message:
+              'Could not resolve did:web:example.com: DID must resolve to a valid https URL containing a JSON document',
             statusCode: 400,
           }),
         );
+        expect(nockData.isDone()).toEqual(true);
+      });
+
+      it('Should throw error when the did document id does not match the byoDid', async () => {
+        const nockData = nock('https://example.com')
+          .get('/.well-known/did.json')
+          .reply(200, {
+            ...expectedDidWebDoc,
+            id: 'did:web:other.example.com',
+          });
+
+        const payload = {
+          profile: orgProfile,
+          byoDid: expectedDidWebDoc.id,
+          keys: [
+            {
+              kidFragment: toRelativeKeyId(
+                expectedDidWebDoc.verificationMethod[0].id,
+              ),
+              purposes: [KeyPurposes.DLT_TRANSACTIONS],
+            },
+          ],
+        };
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: fullUrl,
+          payload,
+          headers: {
+            'x-auto-activate': '1',
+            'x-override-oauth-user': JSON.stringify(testRegistrarSuperUser),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toStrictEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'did_resolution_failed',
+            message:
+              'Could not resolve did:web:example.com: DID document id does not match requested did',
+            statusCode: 400,
+          }),
+        );
+        expect(nockData.isDone()).toEqual(true);
+        expect(
+          await mongoDb().collection('organizations').countDocuments(),
+        ).toEqual(0);
+        expect(
+          await mongoDb().collection('organizationKeys').countDocuments(),
+        ).toEqual(0);
       });
 
       it('Should throw error when no service in did document', async () => {

@@ -14,7 +14,15 @@
  * limitations under the License.
  *
  */
-const { after, before, beforeEach, describe, it, mock } = require('node:test');
+const {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+  mock,
+} = require('node:test');
 const { expect } = require('expect');
 const { ObjectId } = require('mongodb');
 const { mongoDb, tableRegistry } = require('@spencejs/spence-mongo-repos');
@@ -27,7 +35,7 @@ const {
 } = require('@verii/jwt');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
 const { VeriiProtocolVersions } = require('@verii/vc-checks');
-const { map, set, unset } = require('lodash/fp');
+const { first, map, set, times, unset } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const nock = require('nock').default;
 const { getDidUriFromJwk } = require('@verii/did-doc');
@@ -51,6 +59,7 @@ const {
 } = require('../../src/entities/exchanges');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
+const { setTenantCaoDid } = require('../helpers/set-tenant-cao-did');
 const {
   buildOpenBadgeCredential,
 } = require('../helpers/build-open-badge-credential');
@@ -60,6 +69,27 @@ const {
 const { NotificationEventTypes } = require('../../src/entities/notifications');
 
 const vnUrl = ({ did }) => `/vn-api/r/${did}`;
+
+const TENANT_CAO_DID = 'did:ion:tenant-specific-cao';
+
+const UNSUPPORTED_DESCRIPTOR_PATHS = [
+  '$..verifiableCredential',
+  '$.verifiableCredential[*]',
+  '$.verifiableCredential[?(@)]',
+  '$.verifiableCredential[(@.length-1)]',
+  '$.verifiableCredential[0,1]',
+  '$.verifiableCredential[0:2]',
+  "$['verifiableCredential'][0]",
+  '$.verifiableCredential[0].credentialSubject',
+  '$.other[0]',
+  '$.verifiableCredential[0]@other()',
+  '$.verifiableCredential[1000]',
+  '$.verifiableCredential[01]',
+  '$.verifiableCredential[-1]',
+  ' $.verifiableCredential[0]',
+  '$.verifiableCredential[0]\n',
+  '$',
+];
 
 const testUrl = (tenant, queryParams) => {
   const baseUrl = `${vnUrl(tenant)}/presentation`;
@@ -300,6 +330,36 @@ describe('vn-api > presentations', () => {
           statusCode: 400,
         });
       });
+      it('should 400 if the input descriptor path index is beyond the submitted credentials', async () => {
+        const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+        const modifiedVp = set(
+          'presentation_submission.descriptor_map[0]',
+          {
+            id: nanoid(),
+            path: '$.verifiableCredential[999]',
+            format: 'jwt_vc',
+          },
+          vpWrapper.vp,
+        );
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: await vpWrapper.jwtVp(modifiedVp),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'Bad Request',
+          errorCode: 'presentation_jsonpath_empty',
+          message:
+            'Presentation path descriptor does not reference any valid data: JSONPath expression returned no results',
+          requestId: expect.any(String),
+          statusCode: 400,
+        });
+      });
       it('should 400 if the input descriptor path only dereferences submission metadata', async () => {
         const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
         const modifiedVp = set(
@@ -324,9 +384,73 @@ describe('vn-api > presentations', () => {
         expect(response.statusCode).toEqual(400);
         expect(response.json).toEqual({
           error: 'Bad Request',
-          errorCode: 'presentation_jsonpath_empty',
-          message:
-            'Presentation path descriptor does not reference any valid data: JSONPath expression returned no results',
+          errorCode: 'presentation_jsonpath_unsupported',
+          message: 'Presentation path descriptor uses an unsupported path',
+          requestId: expect.any(String),
+          statusCode: 400,
+        });
+      });
+      UNSUPPORTED_DESCRIPTOR_PATHS.forEach((path) => {
+        it(`should 400 if the input descriptor path is ${JSON.stringify(path)}`, async () => {
+          const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+          const modifiedVp = set(
+            'presentation_submission.descriptor_map[0]',
+            {
+              id: nanoid(),
+              path,
+              format: 'jwt_vc',
+            },
+            vpWrapper.vp,
+          );
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: testUrl(tenant),
+            payload: {
+              exchange_id: exchange._id,
+              jwt_vp: await vpWrapper.jwtVp(modifiedVp),
+            },
+          });
+
+          expect(response.statusCode).toEqual(400);
+          expect(response.json).toEqual({
+            error: 'Bad Request',
+            errorCode: 'presentation_jsonpath_unsupported',
+            message: 'Presentation path descriptor uses an unsupported path',
+            requestId: expect.any(String),
+            statusCode: 400,
+          });
+          await expect(
+            mongoDb()
+              .collection('presentations')
+              .countDocuments({ depotId: new ObjectId(depot._id) }),
+          ).resolves.toEqual(0);
+        });
+      });
+      it('should 400 if a later input descriptor path is unsupported', async () => {
+        const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+        const modifiedVp = set(
+          'presentation_submission.descriptor_map[1]',
+          {
+            id: nanoid(),
+            path: '$.verifiableCredential[*]',
+            format: 'jwt_vc',
+          },
+          vpWrapper.vp,
+        );
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: await vpWrapper.jwtVp(modifiedVp),
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'Bad Request',
+          errorCode: 'presentation_jsonpath_unsupported',
+          message: 'Presentation path descriptor uses an unsupported path',
           requestId: expect.any(String),
           statusCode: 400,
         });
@@ -548,6 +672,7 @@ describe('vn-api > presentations', () => {
             _id: expect.stringMatching(/^evt_/),
             type: NotificationEventTypes.PRESENTATION_RECEIVED,
             version: 1,
+            caoDid: tenant.caoDid,
             status: 'pending',
             attempts: 0,
             nextAttemptAt: expect.any(Date),
@@ -566,6 +691,7 @@ describe('vn-api > presentations', () => {
               occurredAt: expect.any(String),
               tenantId: tenant._id,
               tenantDid: tenant.did,
+              caoDid: tenant.caoDid,
               serviceId: relyingPartyService._id,
               depotId: depot._id,
               exchangeId: exchange._id,
@@ -585,6 +711,52 @@ describe('vn-api > presentations', () => {
           .find({})
           .toArray();
         expect(JSON.stringify(event.payload)).not.toContain(jwtVp);
+      });
+      it('should 200 after the holder declined and emit presentation.received after presentation.declined', async () => {
+        fastify.overrides.reqConfig = enableNotifications(['presentation.*']);
+        const declineResponse = await fastify.injectJson({
+          method: 'POST',
+          url: `${vnUrl(tenant)}/decline-presentation`,
+          payload: { exchange_id: exchange._id, reason: 'not now' },
+        });
+        expect(declineResponse.statusCode).toEqual(204);
+        const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: await vpWrapper.jwtVp(),
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        await expect(
+          mongoDb()
+            .collection('exchanges')
+            .findOne({ _id: new ObjectId(exchange._id) }),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            events: [
+              { state: 'NEW', timestamp: expect.any(Date) },
+              { state: 'PRESENTATION_DECLINED', timestamp: expect.any(Date) },
+              {
+                state: 'PRESENTATION_SUBMISSION_RECEIVED',
+                timestamp: expect.any(Date),
+              },
+            ],
+          }),
+        );
+        const events = await mongoDb()
+          .collection('notification_events')
+          .find({})
+          .sort({ createdAt: 1 })
+          .toArray();
+        expect(map('type', events)).toEqual([
+          NotificationEventTypes.PRESENTATION_DECLINED,
+          NotificationEventTypes.PRESENTATION_RECEIVED,
+        ]);
       });
       it('should skip presentation notifications filtered out by event type config', async () => {
         fastify.overrides.reqConfig = enableNotifications([
@@ -638,6 +810,64 @@ describe('vn-api > presentations', () => {
         } finally {
           tableRegistry.notification_events = originalRepoFactory;
         }
+      });
+      describe('notification CAO DID', () => {
+        const submitPresentation = async () => {
+          fastify.overrides.reqConfig = enableNotifications([
+            NotificationEventTypes.PRESENTATION_RECEIVED,
+          ]);
+          const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+          return fastify.injectJson({
+            method: 'POST',
+            url: testUrl(tenant),
+            payload: {
+              exchange_id: exchange._id,
+              jwt_vp: await vpWrapper.jwtVp(),
+            },
+          });
+        };
+
+        afterEach(async () => {
+          await setTenantCaoDid(tenant, tenant.caoDid);
+        });
+
+        it("should use the tenant's own caoDid rather than the default CAO DID", async () => {
+          await setTenantCaoDid(tenant, TENANT_CAO_DID);
+
+          const response = await submitPresentation();
+
+          expect(response.statusCode).toEqual(200);
+          expect(TENANT_CAO_DID).not.toEqual(fastify.config.defaultCaoDid);
+          await expect(
+            mongoDb().collection('notification_events').find({}).toArray(),
+          ).resolves.toEqual([
+            expect.objectContaining({
+              type: NotificationEventTypes.PRESENTATION_RECEIVED,
+              caoDid: TENANT_CAO_DID,
+              payload: expect.objectContaining({ caoDid: TENANT_CAO_DID }),
+            }),
+          ]);
+        });
+
+        it('should set caoDid to null when the tenant has no caoDid', async () => {
+          await setTenantCaoDid(tenant, null);
+
+          const response = await submitPresentation();
+
+          expect(response.statusCode).toEqual(200);
+          await expect(
+            mongoDb().collection('notification_events').find({}).toArray(),
+          ).resolves.toEqual([
+            expect.objectContaining({
+              type: NotificationEventTypes.PRESENTATION_RECEIVED,
+              caoDid: null,
+              payload: expect.objectContaining({
+                tenantId: tenant._id,
+                caoDid: null,
+              }),
+            }),
+          ]);
+        });
       });
       it('should 200 and set the accessToken expiration from authTokensExpireIn', async () => {
         const relyingPartyService2 = await persistRelyingPartyService({
@@ -921,6 +1151,54 @@ describe('vn-api > presentations', () => {
             .findOne({ _id: new ObjectId(depot._id) }),
         ).resolves.toEqual(expectedDbDepot(tenant, relyingPartyService, depot));
 
+        await expect(
+          mongoDb()
+            .collection('presentations')
+            .find({ depotId: new ObjectId(depot._id) })
+            .toArray(),
+        ).resolves.toEqual([expectedDbPresentation(tenant, exchange, jwtVp)]);
+      });
+      it('should 200 when input descriptor paths reference credentials at later indexes', async () => {
+        const vpWrapper = await buildVpWrapper(tenant, holder, exchange);
+        const modifiedVp = {
+          ...vpWrapper.vp,
+          verifiableCredential: times(
+            () => first(vpWrapper.vp.verifiableCredential),
+            13,
+          ),
+          presentation_submission: {
+            ...vpWrapper.vp.presentation_submission,
+            descriptor_map: map(
+              (path) => ({ id: nanoid(), path, format: 'jwt_vc' }),
+              [
+                '$.verifiableCredential[0]',
+                '$.verifiableCredential[1]',
+                '$.verifiableCredential[12]',
+              ],
+            ),
+          },
+        };
+        const jwtVp = await vpWrapper.jwtVp(modifiedVp);
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: testUrl(tenant),
+          payload: {
+            exchange_id: exchange._id,
+            jwt_vp: jwtVp,
+          },
+        });
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          exchange: {
+            id: exchange._id,
+            type: 'DISCLOSURE',
+            disclosureComplete: true,
+            exchangeComplete: true,
+          },
+          token: expect.any(String),
+        });
         await expect(
           mongoDb()
             .collection('presentations')
