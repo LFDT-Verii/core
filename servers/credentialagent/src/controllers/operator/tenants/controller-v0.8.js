@@ -61,6 +61,8 @@ const tenantController = async (fastify) => {
   fastify.post(
     '/',
     {
+      // The body carries private keys
+      config: { sensitiveLogging: true },
       schema: fastify.autoSchema({
         body: {
           $ref: 'https://velocitycareerlabs.io/secret-new-tenant-v0.8.schema.json#',

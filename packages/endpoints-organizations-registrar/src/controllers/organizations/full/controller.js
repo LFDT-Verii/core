@@ -147,6 +147,7 @@ const fullOrganizationController = async (fastify) => {
               ],
             },
           ],
+          querystring: { $ref: 'key-encoding-query-params#' },
           body: {
             type: 'object',
             properties: {
@@ -216,6 +217,7 @@ const fullOrganizationController = async (fastify) => {
             profile,
             keys: byoKeys,
           },
+          query,
         } = req;
 
         const { organization, keys, keyPairs, authClients, messageCode } =
@@ -235,6 +237,7 @@ const fullOrganizationController = async (fastify) => {
           profile: buildProfileResponse(organization, true),
           keys,
           keyPairs,
+          keyEncoding: query.key_encoding,
           authClients,
           messageCode,
         });
@@ -244,7 +247,8 @@ const fullOrganizationController = async (fastify) => {
 
 const validateFullOrganizationBody = async (req) => {
   const schema =
-    req.config.isProd || req.headers['x-validate-kyb-profile'] === '1'
+    req.config.validateKybProfile ||
+    req.headers['x-validate-kyb-profile'] === '1'
       ? newKybFullOrganizationSchema
       : newFullOrganizationSchema;
 

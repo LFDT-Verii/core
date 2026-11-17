@@ -2,7 +2,7 @@ const newError = require('http-errors');
 const { find } = require('lodash/fp');
 const {
   ServiceConfigurationErrors,
-} = require('./service-configuration-errors');
+} = require('@verii/credentialing-hub-operator-api');
 
 const validateServiceConfiguration = ({ service, didDoc, otherServices }) => {
   const matchingService = find(

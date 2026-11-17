@@ -17,3 +17,13 @@ It is also possible to run the migrations using the services' docker images (ser
 ```
 docker run --name credentialagent-migrations -e MONGO_URI=****  ghcr.io/velocitynetworkfoundation/credentialagent:latest sh -c "cd servers/credentialagent && pnpm run migrate:up"
 ```
+
+## Settings that differ between deployments
+
+`ENVIRONMENT_LABEL` names the deployment, and Sentry events carry it as their
+environment. It defaults to `NETWORK`, the network the deployment runs on, and
+then to the value of `NODE_ENV`.
+
+The holder endpoints that return presentation and issuing requests return them
+as unsigned JSON, instead of as a signed JWT, when called with `?format=json`.
+They do that in every environment.

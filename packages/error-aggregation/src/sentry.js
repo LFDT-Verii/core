@@ -32,7 +32,18 @@ const dataCollection = {
   graphQL: { document: false, variables: false },
 };
 
-const initSentry = async ({ dsn, release, environment, debug }) => {
+// Tag every event with the server that sent it,
+// so servers that share a Sentry project can be told apart.
+const buildInitialScope = (serviceName) =>
+  serviceName ? { initialScope: { tags: { service: serviceName } } } : {};
+
+const initSentry = async ({
+  dsn,
+  release,
+  environment,
+  debug,
+  serviceName,
+}) => {
   const Sentry = await import('@sentry/node');
 
   Sentry.init({
@@ -41,6 +52,7 @@ const initSentry = async ({ dsn, release, environment, debug }) => {
     environment,
     debug,
     dataCollection,
+    ...buildInitialScope(serviceName),
   });
   return Sentry;
 };
@@ -49,9 +61,16 @@ const initSendError = async ({
   release,
   environment,
   debug = false,
+  serviceName,
 } = {}) => {
   if (dsn) {
-    const sentry = await initSentry({ dsn, release, environment, debug });
+    const sentry = await initSentry({
+      dsn,
+      release,
+      environment,
+      debug,
+      serviceName,
+    });
     return {
       sendError: (error) => {
         const code = error?.status || error?.statusCode;

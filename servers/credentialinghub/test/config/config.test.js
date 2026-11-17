@@ -1,0 +1,109 @@
+/*
+ * Copyright 2026 Velocity Team
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+const path = require('node:path');
+const { after, beforeEach, describe, it } = require('node:test');
+const { loadTestEnv } = require('@verii/tests-helpers');
+const { expect } = require('expect');
+
+const TEST_ENV_PATH = path.resolve(__dirname, '../helpers/.env.test');
+const CONFIG_MODULE_PATH = '../../src/config/config';
+const originalEnv = { ...process.env };
+
+describe('Hub config env validation', () => {
+  after(() => {
+    process.env = originalEnv;
+    delete require.cache[require.resolve(CONFIG_MODULE_PATH)];
+  });
+
+  beforeEach(() => {
+    process.env = { ...originalEnv, NODE_ENV: 'test' };
+    loadTestEnv(TEST_ENV_PATH);
+    delete process.env.OPENID4VCI_NONCE_SECRET;
+    delete require.cache[require.resolve(CONFIG_MODULE_PATH)];
+  });
+
+  it('should require the OpenID4VCI nonce secret for the HTTP server', () => {
+    expect(() => require(CONFIG_MODULE_PATH).buildConfig()).toThrow(
+      '"OPENID4VCI_NONCE_SECRET" is a required variable',
+    );
+  });
+
+  it('should not require the OpenID4VCI nonce secret for processes that serve no HTTP', () => {
+    expect(
+      require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+    ).toEqual(expect.objectContaining({ openid4vciNonceSecret: undefined }));
+  });
+
+  it('should require HOST_URL for the HTTP server', () => {
+    process.env.OPENID4VCI_NONCE_SECRET = 'nonce-secret';
+    delete process.env.HOST_URL;
+    expect(() => require(CONFIG_MODULE_PATH).buildConfig()).toThrow(
+      '"HOST_URL" is a required variable',
+    );
+  });
+
+  it('should not require HOST_URL for processes that serve no HTTP', () => {
+    delete process.env.HOST_URL;
+    expect(
+      require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+    ).toEqual(expect.objectContaining({ hostUrl: undefined }));
+  });
+
+  it('should reject a deferred polling interval of 0', () => {
+    process.env.OPENID4VCI_DEFERRED_INTERVAL_SECONDS = '0';
+    expect(() =>
+      require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+    ).toThrow('OPENID4VCI_DEFERRED_INTERVAL_SECONDS');
+  });
+
+  it('should accept a deferred polling interval of 1', () => {
+    process.env.OPENID4VCI_DEFERRED_INTERVAL_SECONDS = '1';
+    expect(
+      require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+    ).toEqual(
+      expect.objectContaining({ openid4vciDeferredIntervalSeconds: 1 }),
+    );
+  });
+
+  it('should default the pre-authorized code lifetime to 72 hours', () => {
+    delete process.env.PREAUTH_CODE_EXPIRES_IN_SECONDS;
+    expect(
+      require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+    ).toEqual(expect.objectContaining({ preauthCodeExpiresInSeconds: 259200 }));
+  });
+
+  for (const value of ['1', '600', '315360000']) {
+    it(`should accept a pre-authorized code lifetime of ${value} seconds`, () => {
+      process.env.PREAUTH_CODE_EXPIRES_IN_SECONDS = value;
+      expect(
+        require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+      ).toEqual(
+        expect.objectContaining({ preauthCodeExpiresInSeconds: Number(value) }),
+      );
+    });
+  }
+
+  for (const value of ['0', '-600', '1.5', 'never', '72h', '315360001']) {
+    it(`should reject a pre-authorized code lifetime of ${value}`, () => {
+      process.env.PREAUTH_CODE_EXPIRES_IN_SECONDS = value;
+      expect(() =>
+        require(CONFIG_MODULE_PATH).buildConfig({ servesHttp: false }),
+      ).toThrow('PREAUTH_CODE_EXPIRES_IN_SECONDS');
+    });
+  }
+});

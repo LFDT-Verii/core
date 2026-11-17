@@ -16,7 +16,6 @@
  */
 const { isEmpty, find } = require('lodash/fp');
 const newError = require('http-errors');
-const { resolveDidWeb } = require('@verii/did-web');
 const {
   serviceExists,
   toRelativeServiceId,
@@ -29,6 +28,7 @@ const {
   validateService,
 } = require('../domains');
 const { loadCaoServiceRefs } = require('./load-cao-service-refs');
+const { resolveDid } = require('../../organizations/orchestrators/resolve-did');
 
 const updateService = async (did, serviceId, replacementService, context) => {
   const { repos } = context;
@@ -63,7 +63,7 @@ const updateOrganizationService = async (
 ) => {
   const { repos } = context;
   const didDocument = organization.didNotCustodied
-    ? await resolveDidWeb(organization.didDoc.id)
+    ? await resolveDid(organization.didDoc.id, context)
     : organization.didDoc;
 
   // load and verify existing services from db and did document

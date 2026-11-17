@@ -3,6 +3,7 @@ const { expect } = require('expect');
 const {
   hexFromJwk,
   jwkFromSecp256k1Key,
+  jwkFromSecp256k1PublicKey,
   publicKeyFromPrivateKey,
 } = require('../src/key-transformer');
 
@@ -39,6 +40,8 @@ const PRIVATE_KEY =
   '1111111111111111111111111111111111111111111111111111111111111111';
 const PUBLIC_KEY =
   '044f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa385b6b1b8ead809ca67454d9683fcf2ba03456d6fe2c4abe2b07f0fbdbb2f1c1';
+const COMPRESSED_PUBLIC_KEY =
+  '034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa';
 const PRIVATE_JWK = {
   kty: 'EC',
   crv: 'secp256k1',
@@ -132,5 +135,52 @@ describe('Key Transformer Tests', () => {
     expect(publicKeyFromPrivateKey(PRIVATE_JWK_WITH_PADDING)).toEqual(
       PUBLIC_JWK_WITH_PADDING,
     );
+  });
+
+  describe('jwkFromSecp256k1PublicKey', () => {
+    it('should generate jwk for uncompressed hex public keys with or without prefix', () => {
+      expect(jwkFromSecp256k1PublicKey(PUBLIC_KEY)).toEqual(PUBLIC_JWK);
+      expect(jwkFromSecp256k1PublicKey(PUBLIC_KEY.slice(2))).toEqual(
+        PUBLIC_JWK,
+      );
+      expect(jwkFromSecp256k1PublicKey(`0x${PUBLIC_KEY}`)).toEqual(PUBLIC_JWK);
+    });
+
+    it('should generate jwk for compressed hex public keys', () => {
+      expect(jwkFromSecp256k1PublicKey(COMPRESSED_PUBLIC_KEY)).toEqual(
+        PUBLIC_JWK,
+      );
+    });
+
+    it('should preserve coordinate padding', () => {
+      expect(jwkFromSecp256k1PublicKey(PUBLIC_KEY_WITH_PADDING)).toEqual(
+        PUBLIC_JWK_WITH_PADDING,
+      );
+    });
+
+    it('should throw for private keys and other 32 byte keys', () => {
+      expect(() => jwkFromSecp256k1PublicKey(PRIVATE_KEY)).toThrow(
+        'Expected secp256k1 compressed public key (66 hex chars) or uncompressed public key (128/130 hex chars)',
+      );
+    });
+
+    it('should throw for keys with an unknown prefix or invalid hex', () => {
+      expect(() =>
+        jwkFromSecp256k1PublicKey(`05${PUBLIC_KEY.slice(2)}`),
+      ).toThrow(
+        'Expected secp256k1 compressed public key (66 hex chars) or uncompressed public key (128/130 hex chars)',
+      );
+      expect(() =>
+        jwkFromSecp256k1PublicKey(`${PUBLIC_KEY.slice(0, -2)}zz`),
+      ).toThrow(
+        'Expected secp256k1 compressed public key (66 hex chars) or uncompressed public key (128/130 hex chars)',
+      );
+    });
+
+    it('should throw for points that are not on the secp256k1 curve', () => {
+      expect(() => jwkFromSecp256k1PublicKey(`04${'11'.repeat(64)}`)).toThrow(
+        'Expected secp256k1 compressed public key (66 hex chars) or uncompressed public key (128/130 hex chars)',
+      );
+    });
   });
 });

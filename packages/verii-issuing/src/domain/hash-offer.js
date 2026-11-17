@@ -16,7 +16,7 @@
  */
 
 const { flow, pick } = require('lodash/fp');
-const canonicalize = require('canonicalize');
+const { default: canonicalize } = require('canonicalize');
 const { hashAndEncodeHex } = require('@verii/crypto');
 /** @import { CredentialOffer } from "../types/types" */
 

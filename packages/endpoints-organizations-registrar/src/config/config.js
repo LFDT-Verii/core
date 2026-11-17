@@ -3,8 +3,8 @@ const { createOauthConfig } = require('@verii/auth');
 const contractAbi = require('./abi.json');
 
 const createConfig = (packageJson) => {
-  const { genericConfig } = require('@verii/config');
-  const { isTest } = genericConfig;
+  const { createBlockchainConfig, genericConfig } = require('@verii/config');
+  const { isProd, isTest } = genericConfig;
   const oauthConfig = createOauthConfig(env, genericConfig);
   const swaggerInfo = {
     info: {
@@ -62,41 +62,20 @@ const createConfig = (packageJson) => {
       http2: false,
     },
     version: packageJson.version,
+    serviceName: packageJson.name,
     mongoSecret: env.get('MONGO_SECRET').required(!isTest).asString(),
     allowedCorsOrigins: env.get('ALLOWED_CORS_ORIGINS').default('').asArray(),
-    sentryDsn: env.get('SENTRY_DSN').required(!isTest).asString(),
-    enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   };
 
   const registrarConfig = {
+    ...createBlockchainConfig(),
     contractAbi,
-    rpcUrl: env
-      .get('RPC_NODE_URL')
-      .default('http://34.244.131.79:8547')
-      .asString(),
-    chainId: env.get('CHAIN_ID').default(2020).asInt(),
+    hostUrl: env.get('HOST_URL').required(!isTest).asString(),
     rootDid: env.get('ROOT_DID').required(!isTest).asString(),
-    rootAddress: env.get('ROOT_ADDRESS').required(!isTest).asString(),
     rootKid: env.get('ROOT_KID').required(!isTest).asString(),
     rootPrivateKey: env.get('ROOT_PRIVATE_KEY').required(!isTest).asString(),
     awsRegion: env.get('AWS_REGION').default('us-east-1').required().asString(),
     awsEndpoint: env.get('AWS_ENDPOINT').default('').asString(),
-    accountRulesContractAddress: env
-      .get('ACCOUNT_RULES_CONTRACT_ADDRESS')
-      .default('')
-      .asString(),
-    couponContractAddress: env
-      .get('COUPON_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
-    permissionsContractAddress: env
-      .get('PERMISSIONS_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
-    metadataRegistryContractAddress: env
-      .get('METADATA_REGISTRY_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
     auth0Domain: env.get('OAUTH0_DOMAIN').required(!isTest).asString(),
     auth0ManagementApiAudience: env
       .get('AUTH0_MANAGEMENT_API_AUDIENCE')
@@ -137,12 +116,6 @@ const createConfig = (packageJson) => {
       .get('REGISTRAR_API_AUDIENCE')
       .default('https://registrar.velocitynetwork.foundation')
       .asString(),
-    vnfClientId: env.get('VNF_OAUTH_CLIENT_ID').required(!isTest).asString(),
-    vnfClientSecret: env
-      .get('VNF_OAUTH_CLIENT_SECRET')
-      .required(!isTest)
-      .asString(),
-    vnfOAuthTokensEndpoint: oauthConfig.refreshUrl,
     registrarInvitationTtl: env
       .get('REGISTRAR_INVITATION_TTL')
       .default(2419200)
@@ -174,9 +147,28 @@ const createConfig = (packageJson) => {
       .get('ORGANIZATION_CREATION_EMAIL_CC_LIST')
       .required()
       .asArray(','),
+    // The Velocity network the registrar runs on, such as devnet, testnet or mainnet. Its emails name it.
+    network: env.get('NETWORK').required().asString(),
+    // These two used to follow NODE_ENV, and default to what it gave them (#1234)
+    // Validates new organizations' profiles against the KYB schema. The x-validate-kyb-profile: 1 header also turns it on.
+    validateKybProfile: env
+      .get('REGISTRAR_VALIDATE_KYB_PROFILE')
+      .default(String(isProd))
+      .asBool(),
+    // Activates services as organizations add them. The x-auto-activate: 0 header turns it off.
+    autoActivateServices: env
+      .get('REGISTRAR_AUTO_ACTIVATE_SERVICES')
+      .default(String(!isProd))
+      .asBool(),
     libS3Bucket: env.get('LIB_S3_BUCKET').required(!isTest).asString(),
     libUrl: env.get('LIB_URL').required(!isTest).asString(),
     custodiedDidWebHost: env.get('CUSTODIED_DID_WEB_HOST').asString(),
+    // New custodied organizations get P-256 ISSUING_METADATA and EXCHANGES keys.
+    // Leave off until agents in the wild verify ES256 and CAOs import JWK keys (#1028, #766).
+    es256OrganizationKeys: env
+      .get('ES256_ORGANIZATION_KEYS')
+      .default('false')
+      .asBool(),
     kmsPluginModule: env
       .get('KMS_PLUGIN_MODULE')
       .default('@verii/db-kms')
@@ -186,6 +178,25 @@ const createConfig = (packageJson) => {
       .default('1')
       .asIntPositive(),
     kmsPlugin: env.get('KMS_PLUGIN').default('dbKmsPlugin').asString(),
+    idCredentialTypes: env
+      .get('IDENTITY_CREDENTIAL_TYPES')
+      .default(
+        [
+          'IdDocument',
+          'Phone',
+          'Email',
+          'IdDocumentV1.0',
+          'DriversLicenseV1.0',
+          'NationalIdCardV1.0',
+          'PassportV1.0',
+          'ResidentPermitV1.0',
+          'EmailV1.0',
+          'PhoneV1.0',
+          'ProofOfAgeV1.0',
+          'VerificationIdentifier',
+        ].join(','),
+      )
+      .asArray(),
   };
 
   const monitoringEnvConfig = {

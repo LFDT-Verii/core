@@ -119,7 +119,11 @@ describe('notification domain', () => {
   describe('event builders', () => {
     it('should build a presentation payload without the full presentation', () => {
       const event = buildPresentationReceivedEvent({
-        tenant: { _id: 'tenant-id', did: 'did:web:issuer.example' },
+        tenant: {
+          _id: 'tenant-id',
+          did: 'did:web:issuer.example',
+          caoDid: 'did:web:cao.example',
+        },
         exchange: {
           _id: 'exchange-id',
           serviceId: 'service-id',
@@ -141,6 +145,7 @@ describe('notification domain', () => {
         occurredAt: '2026-06-25T10:15:30.000Z',
         tenantId: 'tenant-id',
         tenantDid: 'did:web:issuer.example',
+        caoDid: 'did:web:cao.example',
         serviceId: 'service-id',
         depotId: 'depot-id',
         exchangeId: 'exchange-id',
@@ -161,8 +166,13 @@ describe('notification domain', () => {
     });
 
     it('should build credential payloads without raw credential content', () => {
+      const tenant = {
+        _id: 'tenant-id',
+        did: 'did:web:issuer.example',
+        caoDid: 'did:web:cao.example',
+      };
       const issuedEvent = buildCredentialIssuedEvent({
-        tenant: { _id: 'tenant-id', did: 'did:web:issuer.example' },
+        tenant,
         exchange: {
           _id: 'exchange-id',
           serviceId: 'service-id',
@@ -183,7 +193,7 @@ describe('notification domain', () => {
         id: 'evt_issued',
       });
       const rejectedEvent = buildCredentialRejectedEvent({
-        tenant: { _id: 'tenant-id', did: 'did:web:issuer.example' },
+        tenant,
         exchange: {
           _id: 'exchange-id',
           serviceId: 'service-id',
@@ -212,6 +222,8 @@ describe('notification domain', () => {
         rejectionReason: 'Credential source data did not pass verification',
         rejectedAt: '2026-06-25T10:16:30.000Z',
       });
+      expect(issuedEvent.caoDid).toEqual('did:web:cao.example');
+      expect(rejectedEvent.caoDid).toEqual('did:web:cao.example');
       expect(JSON.stringify([issuedEvent, rejectedEvent])).not.toContain(
         'sensitive@example.test',
       );
@@ -244,6 +256,49 @@ describe('notification domain', () => {
         rejectedAt: '2026-06-25T10:16:30.000Z',
       });
     });
+
+    [
+      ['no caoDid field', {}],
+      ['a null caoDid', { caoDid: null }],
+      ['an empty caoDid', { caoDid: '' }],
+      ['a whitespace-only caoDid', { caoDid: ' \t ' }],
+    ].forEach(([description, tenantCaoDid]) => {
+      it(`should set caoDid to null for every event type when the tenant has ${description}`, () => {
+        const events = buildEveryEventType({
+          _id: 'tenant-id',
+          did: 'did:web:issuer.example',
+          ...tenantCaoDid,
+        });
+
+        expect(events).toEqual([
+          expect.objectContaining({
+            type: 'presentation.received',
+            caoDid: null,
+          }),
+          expect.objectContaining({ type: 'credential.issued', caoDid: null }),
+          expect.objectContaining({
+            type: 'credential.rejected',
+            caoDid: null,
+          }),
+        ]);
+      });
+    });
+
+    it('should keep a non-blank caoDid exactly as stored on the tenant', () => {
+      const caoDid = ' did:web:cao.example ';
+
+      const events = buildEveryEventType({
+        _id: 'tenant-id',
+        did: 'did:web:issuer.example',
+        caoDid,
+      });
+
+      expect(events.map((event) => event.caoDid)).toEqual([
+        caoDid,
+        caoDid,
+        caoDid,
+      ]);
+    });
   });
 
   it('should build deterministic webhook signature headers', () => {
@@ -274,3 +329,28 @@ describe('notification domain', () => {
     });
   });
 });
+
+const buildEveryEventType = (tenant) => {
+  const exchange = {
+    _id: 'exchange-id',
+    serviceId: 'service-id',
+    depotId: 'depot-id',
+  };
+  return [
+    buildPresentationReceivedEvent({
+      tenant,
+      exchange,
+      presentation: { _id: 'presentation-id', format: 'JWT_VP' },
+    }),
+    buildCredentialIssuedEvent({
+      tenant,
+      exchange,
+      credential: { _id: 'credential-id' },
+    }),
+    buildCredentialRejectedEvent({
+      tenant,
+      exchange,
+      credential: { _id: 'credential-id' },
+    }),
+  ];
+};

@@ -14,11 +14,15 @@
  * limitations under the License.
  *
  */
-const { resolveDidWeb } = require('@verii/did-web');
+const { resolveDid } = require('../../organizations/orchestrators/resolve-did');
 const { extractVerificationMethodFromByoDID } = require('../domains');
 
-const resolveVerificationMethodFromByoDID = async (did, kidFragment) => {
-  const didDocument = await resolveDidWeb(did);
+const resolveVerificationMethodFromByoDID = async (
+  did,
+  kidFragment,
+  context,
+) => {
+  const didDocument = await resolveDid(did, context);
 
   return extractVerificationMethodFromByoDID({ didDocument, kidFragment });
 };

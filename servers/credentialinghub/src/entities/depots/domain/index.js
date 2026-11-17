@@ -15,6 +15,7 @@
  *
  */
 module.exports = {
-  ...require('./depot-errors'),
+  ...require('./auth-rules-fingerprint'),
+  ...require('./preauth-code-expiry'),
   ...require('./validate-depot'),
 };

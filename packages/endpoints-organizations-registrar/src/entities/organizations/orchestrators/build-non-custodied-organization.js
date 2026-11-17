@@ -1,6 +1,5 @@
 const newError = require('http-errors');
 const { map, omit } = require('lodash/fp');
-const { resolveDidWeb } = require('@verii/did-web');
 const {
   buildOrganizationServices,
   loadCaoServiceRefs,
@@ -11,6 +10,7 @@ const {
   extractVerificationMethodFromByoDID,
 } = require('../../organization-keys');
 const { validateByoDidKeys, normalizeProfileName } = require('../domains');
+const { resolveDid } = require('./resolve-did');
 
 const buildNonCustodiedOrganization = async (
   { byoDid, byoKeys, serviceEndpoints, profile, invitation },
@@ -27,7 +27,7 @@ const buildNonCustodiedOrganization = async (
       errorCode: 'organization_already_exists',
     });
   }
-  const didDocument = await resolveDidWeb(byoDid);
+  const didDocument = await resolveDid(byoDid, context);
 
   // load keys from remote did document
   validateByoDidKeys(byoKeys);

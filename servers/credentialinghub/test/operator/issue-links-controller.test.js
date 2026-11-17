@@ -25,10 +25,11 @@ const {
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { map } = require('lodash/fp');
+const { forEach, map } = require('lodash/fp');
 const { nanoid } = require('nanoid');
 const { ObjectId } = require('mongodb');
 const { errorResponseMatcher } = require('@verii/tests-helpers');
+const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -69,6 +70,7 @@ describe('Issue Links Test suite', () => {
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
+    fastify.resetOverrides();
     ({ tenant } = await constructTenant(
       () =>
         persistTenant({
@@ -290,6 +292,7 @@ describe('Issue Links Test suite', () => {
           response.json.openidCredentialOffer,
         )}`,
         preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         requestId: expect.any(String),
       });
       expectedOidcCredentialOfferUri(
@@ -331,8 +334,293 @@ describe('Issue Links Test suite', () => {
           response.json.vnProtocolLink,
         )}`,
         preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
         requestId: expect.any(String),
       });
+    });
+  });
+
+  describe('depots with deferred credentials', () => {
+    let preauthIssuerService;
+
+    beforeEach(async () => {
+      preauthIssuerService = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth'],
+      });
+    });
+
+    const refreshLinks = (depot) =>
+      fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: preauthIssuerService._id,
+          depotId: depot._id,
+        },
+      });
+
+    it('should use the expected types in the VN API link and the OpenID4VCI offer before the depot has credentials', async () => {
+      mockHttpClientJsonResponse('get', [
+        {
+          credentialType: 'EmailV1.0',
+          schemaUrl: 'https://example.com/email.schema.json',
+          issuerCategory: 'ContactIssuer',
+        },
+        {
+          credentialType: 'PhoneV1.0',
+          schemaUrl: 'https://example.com/phone.schema.json',
+          issuerCategory: 'ContactIssuer',
+        },
+      ]);
+      mockHttpClientJsonResponse('get', {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['ContactIssuer'],
+        },
+      });
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        deferredCredentials: true,
+        expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
+      });
+
+      const response = await refreshLinks(deferredDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        openidCredentialOffer: expect.any(String),
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          deferredDepot,
+          response.json.preauthCode,
+          ['EmailV1.0', 'PhoneV1.0'],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}&openid4vc_uri=${encodeURIComponent(
+          response.json.openidCredentialOffer,
+        )}`,
+        preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        requestId: expect.any(String),
+      });
+      expectedOidcCredentialOfferUri(
+        response.json.openidCredentialOffer,
+        tenant,
+        ['EmailV1.0', 'PhoneV1.0'],
+      );
+    });
+
+    it("should use the expected types, not the credentials' types, in the VN API link and the OpenID4VCI offer", async () => {
+      mockHttpClientJsonResponse('get', [
+        {
+          credentialType: 'Employment',
+          schemaUrl: 'https://example.com/employment.schema.json',
+          issuerCategory: 'RegularIssuer',
+        },
+        {
+          credentialType: 'PhoneV1.0',
+          schemaUrl: 'https://example.com/phone.schema.json',
+          issuerCategory: 'ContactIssuer',
+        },
+      ]);
+      mockHttpClientJsonResponse('get', {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Issuer', 'ContactIssuer'],
+        },
+      });
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        deferredCredentials: true,
+        expectedCredentialTypes: ['Employment', 'PhoneV1.0'],
+      });
+      await persistCredential({ tenant, depot: deferredDepot });
+
+      const response = await refreshLinks(deferredDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        openidCredentialOffer: expect.any(String),
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          deferredDepot,
+          response.json.preauthCode,
+          ['Employment', 'PhoneV1.0'],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}&openid4vc_uri=${encodeURIComponent(
+          response.json.openidCredentialOffer,
+        )}`,
+        preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        requestId: expect.any(String),
+      });
+      expectedOidcCredentialOfferUri(
+        response.json.openidCredentialOffer,
+        tenant,
+        ['Employment', 'PhoneV1.0'],
+      );
+    });
+
+    it('should use no credential types and offer no OpenID4VCI credential when the depot expects no types and has no credentials', async () => {
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        deferredCredentials: true,
+      });
+
+      const response = await refreshLinks(deferredDepot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          preauthIssuerService,
+          deferredDepot,
+          response.json.preauthCode,
+          [],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        requestId: expect.any(String),
+      });
+    });
+  });
+
+  describe('pre-authorized code expiry', () => {
+    let preauthIssuerService;
+
+    beforeEach(async () => {
+      preauthIssuerService = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth'],
+      });
+    });
+
+    // A depot without credentials or expected types gets no OpenID4VCI offer,
+    // so the refresh calls no registrar.
+    const refreshLinks = async (depot) => {
+      const refreshedAfter = Date.now();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: preauthIssuerService._id,
+          depotId: depot._id,
+        },
+      });
+      return { response, refreshedAfter, refreshedBefore: Date.now() };
+    };
+
+    const findDbDepot = (depot) =>
+      mongoDb()
+        .collection('depots')
+        .findOne({ _id: new ObjectId(depot._id) });
+
+    // The code expires the lifetime after the refresh, and the depot stores
+    // the expiry with the code.
+    const expectExpiresIn = async (
+      { response, refreshedAfter, refreshedBefore },
+      depot,
+      seconds,
+    ) => {
+      expect(response.statusCode).toEqual(200);
+      const expiresAt = new Date(response.json.preauthCodeExpiresAt);
+      expect(expiresAt.getTime()).toBeGreaterThanOrEqual(
+        refreshedAfter + seconds * 1000,
+      );
+      expect(expiresAt.getTime()).toBeLessThanOrEqual(
+        refreshedBefore + seconds * 1000,
+      );
+      const dbDepot = await findDbDepot(depot);
+      expect(dbDepot.preauthCodeExpiresAt).toEqual(expiresAt);
+    };
+
+    it('should expire the code 72 hours after the refresh for a depot without a lifetime', async () => {
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+      });
+
+      await expectExpiresIn(await refreshLinks(depot), depot, 72 * 60 * 60);
+    });
+
+    it("should take a depot without a lifetime's expiry from the Hub's setting", async () => {
+      fastify.overrides.reqConfig = (config) => ({
+        ...config,
+        preauthCodeExpiresInSeconds: 3600,
+      });
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+      });
+
+      await expectExpiresIn(await refreshLinks(depot), depot, 3600);
+    });
+
+    it("should expire the code after the depot's lifetime, not the Hub's setting", async () => {
+      fastify.overrides.reqConfig = (config) => ({
+        ...config,
+        preauthCodeExpiresInSeconds: 3600,
+      });
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        preauthCodeExpiresIn: 600,
+      });
+
+      await expectExpiresIn(await refreshLinks(depot), depot, 600);
+    });
+
+    it('should give a code without an expiry to a depot whose codes never expire', async () => {
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        preauthCodeExpiresIn: 'never',
+      });
+
+      const { response } = await refreshLinks(depot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.preauthCode).toEqual(expect.any(String));
+      expect(response.json).not.toHaveProperty('preauthCodeExpiresAt');
+      const dbDepot = await findDbDepot(depot);
+      expect(dbDepot.preauthCodeHash).toEqual(expect.any(String));
+      expect(dbDepot).not.toHaveProperty('preauthCodeExpiresAt');
+    });
+
+    it('should give the new code of a depot whose code has expired a new expiry', async () => {
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        userReference: nanoid(),
+        preauthCode: nanoid(),
+        preauthCodeExpiresIn: 600,
+        preauthCodeExpiresAt: new Date(Date.now() - 1000),
+      });
+
+      const refresh = await refreshLinks(depot);
+
+      await expectExpiresIn(refresh, depot, 600);
+      const dbDepot = await findDbDepot(depot);
+      expect(dbDepot.preauthCodeHash).not.toEqual(depot.preauthCodeHash);
     });
   });
 
@@ -347,28 +635,51 @@ describe('Issue Links Test suite', () => {
         userReference: nanoid(),
       });
     });
-    it('should 200 for vp service if missing depotId property', async () => {
-      const response = await fastify.injectJson({
-        method: 'POST',
-        url: testUrl,
-        payload: {
-          tenantId: tenant._id,
-          serviceId: vpIssuerService._id,
-        },
+
+    forEach(
+      (deepLinkProtocol) => {
+        it(`should 200 with the shared link if missing depotId property for ${deepLinkProtocol}`, async () => {
+          fastify.overrides.reqConfig = (config) => ({
+            ...config,
+            deepLinkProtocol,
+          });
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: testUrl,
+            payload: {
+              tenantId: tenant._id,
+              serviceId: vpIssuerService._id,
+            },
+          });
+          expect(response.statusCode).toEqual(200);
+          const expectedLink =
+            `${deepLinkProtocol}issue` +
+            '?request_uri=https%3A%2F%2Flocalhost.test%2Fvn-api%2Fr%2Fdid%3Aweb%3Alocalhost%25253A3000' +
+            `%2Fget-credential-manifest%3Fid%3D${vpIssuerService._id}` +
+            '&issuerDid=did%3Aweb%3Alocalhost%253A3000';
+          expect(response.json).toEqual({
+            vnProtocolLink: expectedLink,
+            redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+              expectedLink,
+            )}`,
+            requestId: expect.any(String),
+          });
+          expectSharedLink(
+            response.json.vnProtocolLink,
+            deepLinkProtocol,
+            tenant,
+            vpIssuerService,
+          );
+        });
+      },
+      ['velocity-network://', 'velocity-network-testnet://'],
+    );
+
+    it('should 200 with the shared link for a vp only service given a depotId', async () => {
+      await persistCredential({
+        tenant,
+        depot: vpDepot,
       });
-      expect(response.statusCode).toEqual(200);
-      expect(response.json).toEqual({
-        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
-          tenant,
-          vpIssuerService,
-        )}`,
-        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
-          response.json.vnProtocolLink,
-        )}`,
-        requestId: expect.any(String),
-      });
-    });
-    it('should 200 for vp service', async () => {
       const response = await fastify.injectJson({
         method: 'POST',
         url: testUrl,
@@ -383,16 +694,151 @@ describe('Issue Links Test suite', () => {
         vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
           tenant,
           vpIssuerService,
-          vpDepot,
         )}`,
         redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
           response.json.vnProtocolLink,
         )}`,
         requestId: expect.any(String),
       });
+      expectSharedLink(
+        response.json.vnProtocolLink,
+        'velocity-network-devnet://',
+        tenant,
+        vpIssuerService,
+      );
+      const dbDepot = await mongoDb()
+        .collection('depots')
+        .findOne({ _id: new ObjectId(vpDepot._id) });
+      expect(dbDepot.preauthCodeHash).toBeUndefined();
+    });
+
+    it('should 400 for a vp only service given a depotId that cannot be found', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: vpIssuerService._id,
+          depotId: new ObjectId().toString(),
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          errorCode: 'referenced_depot_not_found',
+          message: 'referenced_depot_not_found',
+          statusCode: 400,
+        }),
+      );
+    });
+  });
+
+  describe('preauth and vp service', () => {
+    let service;
+    let depot;
+
+    beforeEach(async () => {
+      service = await persistIssuerService({
+        tenant,
+        authMethods: ['preauth', 'verifiable_presentation'],
+        authMode: 'internal',
+      });
+      depot = await persistDepot({
+        tenant,
+        service,
+        userReference: nanoid(),
+      });
+    });
+
+    it('should 200 with a preauth link given a depotId', async () => {
+      const profile = {
+        credentialSubject: {
+          permittedVelocityServiceCategory: ['Inspector', 'Issuer', 'Foo'],
+        },
+      };
+      mockHttpClientJsonResponse('get', profile);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: service._id,
+          depotId: depot._id,
+        },
+      });
+      expect(response.statusCode).toEqual(200);
+      const refreshedDepot = await mongoDb()
+        .collection('depots')
+        .findOne({ _id: new ObjectId(depot._id) });
+      expect(refreshedDepot.preauthCodeHash).toEqual(expect.any(String));
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          service,
+          refreshedDepot,
+          response.json.preauthCode,
+          [],
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        preauthCode: expect.any(String),
+        preauthCodeExpiresAt: expect.stringMatching(ISO_DATETIME_FORMAT),
+        requestId: expect.any(String),
+      });
+    });
+
+    it('should 200 with the shared link if missing depotId property', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl,
+        payload: {
+          tenantId: tenant._id,
+          serviceId: service._id,
+        },
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        vnProtocolLink: `velocity-network-devnet://issue?${expectedSearchParams(
+          tenant,
+          service,
+        )}`,
+        redirectUrl: `https://localhost.test/app-redirect?deeplink=${encodeURIComponent(
+          response.json.vnProtocolLink,
+        )}`,
+        requestId: expect.any(String),
+      });
+      expectSharedLink(
+        response.json.vnProtocolLink,
+        'velocity-network-devnet://',
+        tenant,
+        service,
+      );
+      const dbDepot = await mongoDb()
+        .collection('depots')
+        .findOne({ _id: new ObjectId(depot._id) });
+      expect(dbDepot.preauthCodeHash).toBeUndefined();
     });
   });
 });
+
+const expectSharedLink = (link, deepLinkProtocol, tenant, service) => {
+  const url = new URL(link);
+  expect(`${url.protocol}//${url.host}${url.pathname}`).toEqual(
+    `${deepLinkProtocol}issue`,
+  );
+  expect([...url.searchParams.keys()]).toEqual(['request_uri', 'issuerDid']);
+  expect(url.searchParams.get('issuerDid')).toEqual(tenant.did);
+
+  const requestUri = new URL(url.searchParams.get('request_uri'));
+  expect(`${requestUri.origin}${requestUri.pathname}`).toEqual(
+    `https://localhost.test/vn-api/r/${encodeURI(
+      tenant.did,
+    )}/get-credential-manifest`,
+  );
+  expect([...requestUri.searchParams.keys()]).toEqual(['id']);
+  expect(requestUri.searchParams.get('id')).toEqual(service._id);
+};
 
 const expectedSearchParams = (
   tenant,

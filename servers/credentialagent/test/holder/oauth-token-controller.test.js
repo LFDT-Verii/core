@@ -83,6 +83,30 @@ describe('Holder Oauth Token Test Suite', () => {
 
   const tokenUrl = ({ did }) => `/api/holder/v0.6/org/${did}/oauth/token`;
 
+  const setFeedsUpdatedAt = (feeds, updatedAt) =>
+    mongoDb()
+      .collection('feeds')
+      .updateMany(
+        { _id: { $in: feeds.map((feed) => new ObjectId(feed._id)) } },
+        { $set: { updatedAt } },
+      );
+
+  const findFeed = (feed) =>
+    mongoDb()
+      .collection('feeds')
+      .findOne({ _id: new ObjectId(feed._id) });
+
+  const findTokenSubjectVendorUserId = async (accessToken) => {
+    const { payload } = await jwtVerify(accessToken, keyPair.publicKey, {
+      issuer: tenant.did,
+      audience: tenant.did,
+    });
+    const user = await mongoDb()
+      .collection('vendorUserIdMappings')
+      .findOne({ _id: new ObjectId(payload.sub) });
+    return user?.vendorUserId;
+  };
+
   describe('/token test suite', () => {
     it("/token should 400 if grant_type:'authorization_code' and authorization_code is missing", async () => {
       const response = await fastify.injectJson({
@@ -308,6 +332,55 @@ describe('Holder Oauth Token Test Suite', () => {
         }),
       );
     });
+    it('/token should 200 using the most recently inserted feed if authorization_code feeds tie on updatedAt', async () => {
+      const leastRecentFeed = await persistFeed({
+        tenant,
+        disclosure,
+        preauthCode: 'codeFoo',
+        vendorUserId: 'leastIdFoo',
+      });
+      const mostRecentFeed = await persistFeed({
+        tenant,
+        disclosure,
+        preauthCode: 'codeFoo',
+        vendorUserId: 'idFoo',
+      });
+      const tiedUpdatedAt = new Date();
+      await setFeedsUpdatedAt([leastRecentFeed, mostRecentFeed], tiedUpdatedAt);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: tokenUrl(tenant),
+        payload: {
+          grant_type: 'authorization_code',
+          audience: tenant.did,
+          client_id: 'clientFoo',
+          authorization_code: 'codeFoo',
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(
+        await findTokenSubjectVendorUserId(response.json.access_token),
+      ).toEqual('idFoo');
+      expect(await findFeed(mostRecentFeed)).toEqual(
+        expect.objectContaining({
+          clientId: 'clientFoo',
+          refreshToken: hashAndEncodeHex(response.json.refresh_token),
+        }),
+      );
+      expect(await findFeed(leastRecentFeed)).toEqual(
+        mongoify({
+          _id: leastRecentFeed._id,
+          preauthCode: 'codeFoo',
+          vendorUserId: 'leastIdFoo',
+          tenantId: tenant._id,
+          disclosureId: disclosure._id,
+          createdAt: expect.any(Date),
+          updatedAt: tiedUpdatedAt,
+        }),
+      );
+    });
     it('/token should 200 if refresh_token and client_id match up to a feed', async () => {
       const startOfTestTimestamp = new Date();
       const leastRecentFeed = await persistFeed({
@@ -406,6 +479,107 @@ describe('Holder Oauth Token Test Suite', () => {
           disclosureId: disclosure._id,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
+        }),
+      );
+    });
+    it('/token should 200 using the most recently inserted feed if refresh_token feeds tie on updatedAt', async () => {
+      const leastRecentFeed = await persistFeed({
+        tenant,
+        disclosure,
+        preauthCode: 'leastCodeFoo',
+        refreshToken: 'refreshTokenFoo',
+        vendorUserId: 'leastIdFoo',
+        clientId: 'clientFoo',
+      });
+      const mostRecentFeed = await persistFeed({
+        tenant,
+        disclosure,
+        preauthCode: 'codeFoo',
+        refreshToken: 'refreshTokenFoo',
+        vendorUserId: 'idFoo',
+        clientId: 'clientFoo',
+      });
+      const tiedUpdatedAt = new Date();
+      await setFeedsUpdatedAt([leastRecentFeed, mostRecentFeed], tiedUpdatedAt);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: tokenUrl(tenant),
+        payload: {
+          grant_type: 'refresh_token',
+          audience: tenant.did,
+          client_id: 'clientFoo',
+          refresh_token: 'refreshTokenFoo',
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(
+        await findTokenSubjectVendorUserId(response.json.access_token),
+      ).toEqual('idFoo');
+      expect(await findFeed(mostRecentFeed)).toEqual(
+        expect.objectContaining({
+          refreshToken: hashAndEncodeHex(response.json.refresh_token),
+        }),
+      );
+      expect(await findFeed(leastRecentFeed)).toEqual(
+        mongoify({
+          _id: leastRecentFeed._id,
+          preauthCode: 'leastCodeFoo',
+          vendorUserId: 'leastIdFoo',
+          clientId: 'clientFoo',
+          refreshToken: hashAndEncodeHex('refreshTokenFoo'),
+          tenantId: tenant._id,
+          disclosureId: disclosure._id,
+          createdAt: expect.any(Date),
+          updatedAt: tiedUpdatedAt,
+        }),
+      );
+    });
+    it('/token should 200 using the most recently updated feed even if another refresh_token feed was inserted later', async () => {
+      const mostRecentlyUpdatedFeed = await persistFeed({
+        tenant,
+        disclosure,
+        preauthCode: 'codeFoo',
+        refreshToken: 'refreshTokenFoo',
+        vendorUserId: 'idFoo',
+        clientId: 'clientFoo',
+      });
+      const mostRecentlyInsertedFeed = await persistFeed({
+        tenant,
+        disclosure,
+        preauthCode: 'laterCodeFoo',
+        refreshToken: 'refreshTokenFoo',
+        vendorUserId: 'laterIdFoo',
+        clientId: 'clientFoo',
+      });
+      const now = Date.now();
+      await setFeedsUpdatedAt([mostRecentlyInsertedFeed], new Date(now - 1000));
+      await setFeedsUpdatedAt([mostRecentlyUpdatedFeed], new Date(now));
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: tokenUrl(tenant),
+        payload: {
+          grant_type: 'refresh_token',
+          audience: tenant.did,
+          client_id: 'clientFoo',
+          refresh_token: 'refreshTokenFoo',
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(
+        await findTokenSubjectVendorUserId(response.json.access_token),
+      ).toEqual('idFoo');
+      expect(await findFeed(mostRecentlyUpdatedFeed)).toEqual(
+        expect.objectContaining({
+          refreshToken: hashAndEncodeHex(response.json.refresh_token),
+        }),
+      );
+      expect(await findFeed(mostRecentlyInsertedFeed)).toEqual(
+        expect.objectContaining({
+          refreshToken: hashAndEncodeHex('refreshTokenFoo'),
         }),
       );
     });

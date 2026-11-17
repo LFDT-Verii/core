@@ -62,6 +62,12 @@ const issueLinksController = async (fastify) => {
                   type: 'string',
                   format: 'uri',
                 },
+                preauthCodeExpiresAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  description:
+                    "when the depot's new pre-authorized code expires. Absent when it doesn't expire",
+                },
                 requestId: {
                   type: 'string',
                   format: 'uri',

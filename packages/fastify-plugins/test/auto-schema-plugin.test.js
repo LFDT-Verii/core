@@ -144,6 +144,38 @@ describe('Auto Schema Plugin', () => {
     });
   });
 
+  it('autoSchema should keep a 400 the route declares if body is set', async () => {
+    await autoSchemaPlugin(fakeServer);
+    expect(
+      fakeServer.autoSchema({
+        body: { type: 'string' },
+        response: { 400: { $ref: 'custom-error#' } },
+      }),
+    ).toEqual({
+      body: { type: 'string' },
+      response: {
+        400: { $ref: 'custom-error#' },
+        '5xx': { $ref: 'error#' },
+      },
+    });
+  });
+
+  it('autoSchema should keep a validationErrorCode response the route declares if query is set', async () => {
+    await autoSchemaPlugin(fakeServer, { validationErrorCode: 422 });
+    expect(
+      fakeServer.autoSchema({
+        query: { type: 'string' },
+        response: { 422: { $ref: 'custom-error#' } },
+      }),
+    ).toEqual({
+      query: { type: 'string' },
+      response: {
+        422: { $ref: 'custom-error#' },
+        '5xx': { $ref: 'error#' },
+      },
+    });
+  });
+
   it('autoSchema should customize error to 422 if validationErrorCode is set', async () => {
     await autoSchemaPlugin(fakeServer, { validationErrorCode: 422 });
     expect(

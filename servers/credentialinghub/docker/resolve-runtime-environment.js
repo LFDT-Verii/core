@@ -1,11 +1,12 @@
-const { VELOCITY_NETWORK_PRESETS } = require('./velocity-network-presets');
-
 const GENERIC_OAUTH_ALIASES = Object.freeze({
   BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT: 'VNF_OAUTH_TOKENS_ENDPOINT',
   BLOCKCHAIN_OAUTH_CLIENT_ID: 'VNF_OAUTH_CLIENT_ID',
   BLOCKCHAIN_OAUTH_CLIENT_SECRET: 'VNF_OAUTH_CLIENT_SECRET',
   BLOCKCHAIN_OAUTH_AUDIENCE: 'BLOCKCHAIN_API_AUDIENCE',
 });
+
+const NETWORK_SETTINGS_URL =
+  'https://github.com/LFDT-Verii/core/blob/main/servers/credentialinghub/README.md#network-settings';
 
 const hasOwn = (object, property) =>
   Object.prototype.hasOwnProperty.call(object, property);
@@ -25,49 +26,24 @@ const applyOAuthAliases = (environment) => {
   return resolved;
 };
 
-const validateShortcut = (args) => {
-  if (args.length > 1) {
-    throw new Error('Only one Velocity network shortcut may be supplied');
-  }
-
-  const [shortcut] = args;
-  if (shortcut != null && !hasOwn(VELOCITY_NETWORK_PRESETS, shortcut)) {
+// The image took network flags such as --mainnet and --velocity-devnet. It no longer presets
+// a network, so it takes no arguments.
+const rejectArgs = (args) => {
+  if (args.length > 0) {
     throw new Error(
-      'Unsupported Credentialing Hub image argument. Expected one of: ' +
-        Object.keys(VELOCITY_NETWORK_PRESETS).join(', '),
+      'Unsupported Credentialing Hub image argument. The image takes no ' +
+        'arguments: it no longer presets a network. Set the network values ' +
+        `as environment variables. See ${NETWORK_SETTINGS_URL}`,
     );
   }
-
-  return shortcut;
-};
-
-const findPresetConflicts = (environment, preset) => {
-  const ownedNames = new Set(Object.keys(preset));
-  return [
-    ...Object.keys(preset),
-    ...Object.entries(GENERIC_OAUTH_ALIASES)
-      .filter(([, hubName]) => ownedNames.has(hubName))
-      .map(([genericName]) => genericName),
-  ].filter((name) => hasOwn(environment, name));
 };
 
 const resolveRuntimeEnvironment = ({ args = [], env = {} }) => {
-  const shortcut = validateShortcut(args);
-
-  if (shortcut == null) {
-    return applyOAuthAliases(env);
-  }
-
-  const preset = VELOCITY_NETWORK_PRESETS[shortcut];
-  const conflictingNames = findPresetConflicts(env, preset);
-
-  if (conflictingNames.length > 0) {
-    throw new Error(
-      `${shortcut} cannot be combined with: ${conflictingNames.join(', ')}`,
-    );
-  }
-
-  return { ...applyOAuthAliases(env), ...preset };
+  rejectArgs(args);
+  return applyOAuthAliases(env);
 };
 
-module.exports = { GENERIC_OAUTH_ALIASES, resolveRuntimeEnvironment };
+module.exports = {
+  GENERIC_OAUTH_ALIASES,
+  resolveRuntimeEnvironment,
+};

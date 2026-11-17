@@ -15,27 +15,17 @@
  *
  */
 
-const whichNet = ({ nodeEnv }) => {
-  switch (nodeEnv) {
-    case 'development':
-    case 'test':
-      return 'LocalDevNet';
-    case 'dev':
-      return 'DevNet';
-    case 'staging':
-      return 'TestNet';
-    case 'production':
-      return 'MainNet';
-    default:
-      return '';
-  }
-};
+const { includes } = require('lodash/fp');
+// Required directly: @verii/config's index reads the whole environment when it's loaded
+const { networkName } = require('@verii/config/src/network-name');
 
-const getSubjectNetPrefix = (config) => {
-  if (config.nodeEnv === 'production') {
-    return '';
-  }
-  return `${whichNet(config)}: `;
-};
+// Emails from these networks start their subject with the network's name
+const prefixedNetworks = ['devnet', 'testnet'];
+
+// Emails name the network, not ENVIRONMENT_LABEL, which a deployment may set to something else
+const whichNet = ({ network }) => networkName(network);
+
+const getSubjectNetPrefix = (config) =>
+  includes(config.network, prefixedNetworks) ? `${whichNet(config)}: ` : '';
 
 module.exports = { whichNet, getSubjectNetPrefix };

@@ -35,6 +35,8 @@ mock.module('@verii/metadata-registration', {
 });
 
 const {
+  mockHttpClient,
+  mockHttpClientErrorRoute,
   mockHttpClientJsonRoute,
   mockHttpClientModule,
   resetMockHttpClient,
@@ -45,17 +47,24 @@ mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 const { hashOffer } = require('@verii/verii-issuing');
 const { initMetadataRegistry } = require('@verii/metadata-registration');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { generateKeyPair } = require('@verii/crypto');
+const { default: canonicalize } = require('canonicalize');
+const {
+  createCommitment,
+  generateKeyPair,
+  KeyPurposes,
+} = require('@verii/crypto');
 const { applyOverrides, mapWithIndex } = require('@verii/common-functions');
 const { CheckResults } = require('@verii/vc-checks');
-const { getDidUriFromJwk } = require('@verii/did-doc');
+const { getDidUriFromJwk, toDidUrl } = require('@verii/did-doc');
 const {
   generatePresentationJwt,
   generateCredentialJwt,
   jwtDecode,
   jwtSign,
+  jwtVerify,
 } = require('@verii/jwt');
 const { map, omit } = require('lodash/fp');
+const newError = require('http-errors');
 const { ISO_DATETIME_FORMAT } = require('@verii/test-regexes/src/regexes');
 const {
   errorResponseMatcher,
@@ -79,6 +88,14 @@ const {
   initRelyingPartyServiceFactory,
 } = require('../../src/entities/relying-party-services');
 const { CredentialFormat } = require('../../src/entities/credentials');
+const {
+  ExchangeProtocols,
+  ExchangeTypes,
+  initExchangeFactory,
+} = require('../../src/entities/exchanges');
+const {
+  credentialVerificationSchema,
+} = require('../../src/controllers/operator/presentations/schemas');
 const {
   buildOpenBadgeCredential,
   openBadgeCredentialContent,
@@ -665,6 +682,138 @@ describe('Presentations Test Suite', () => {
           requestId: expect.any(String),
         });
       });
+      [
+        {
+          title: 'the signature does not verify with the ledger key',
+          tamperCheck: CheckResults.FAIL,
+          resolveDidDocument: () =>
+            Promise.resolve(
+              presentationDIDResolution(
+                [credentialDid],
+                [generateKeyPair({ format: 'jwk' })],
+                [boundIssuerVc],
+              ),
+            ),
+        },
+        {
+          title: 'the ledger cannot resolve the signing key',
+          tamperCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+          resolveDidDocument: () =>
+            Promise.reject(new Error('rpc unavailable')),
+        },
+        {
+          title: 'the ledger has no key for the kid',
+          tamperCheck: CheckResults.DATA_INTEGRITY_ERROR,
+          resolveDidDocument: () =>
+            Promise.resolve(
+              presentationDIDResolution(
+                ['did:velocity:v2:B:1:1'],
+                [vcKeyPair],
+                [boundIssuerVc],
+              ),
+            ),
+        },
+      ].forEach(({ title, tamperCheck, resolveDidDocument }) => {
+        it(`should report tamperCheck ${tamperCheck} when ${title}`, async () => {
+          mockResolveDidDocument.mock.mockImplementationOnce(
+            resolveDidDocument,
+          );
+          const payload = {
+            tenantId: tenant._id,
+            format: PresentationFormat.JWT_VP,
+            presentation: vp,
+          };
+
+          const response = await fastify.injectJson({
+            method: 'POST',
+            url: `${testUrl}/verify`,
+            payload,
+          });
+          expect(response.statusCode).toEqual(200);
+          expect(response.json.verification).toEqual({
+            verified: false,
+            tamperCheck: CheckResults.PASS,
+            credentials: [
+              {
+                format: CredentialFormat.JWT_VC,
+                credential: vc,
+                w3cCredential: {
+                  ...openBadgeCredential,
+                  issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
+                },
+                verified: false,
+                tamperCheck,
+                trustedIssuerCheck: CheckResults.NOT_CHECKED,
+                trustedHolderCheck: CheckResults.NOT_CHECKED,
+                revocationCheck: CheckResults.NOT_CHECKED,
+                expiryCheck: CheckResults.NOT_CHECKED,
+              },
+            ],
+          });
+          expectChecksInSchemaEnums(response.json.verification);
+        });
+      });
+
+      it('should report registrar and ledger outages as dependency resolution errors', async () => {
+        mockResolveDidDocument.mock.mockImplementationOnce(() =>
+          Promise.resolve(
+            presentationDIDResolution(
+              [credentialDid],
+              [vcKeyPair],
+              [boundIssuerVc],
+            ),
+          ),
+        );
+        mockHttpClientErrorRoute(
+          'get',
+          `api/v0.6/organizations/${encodeURIComponent(
+            tenant.did,
+          )}/verified-profile`,
+          newError(503, 'Response Error'),
+        );
+        mockGetStatus.mock.mockImplementationOnce(() =>
+          Promise.reject(new Error('ledger unavailable')),
+        );
+        const payload = {
+          tenantId: tenant._id,
+          format: PresentationFormat.JWT_VP,
+          presentation: vp,
+        };
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/verify`,
+          payload,
+        });
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          format: PresentationFormat.JWT_VP,
+          presentation: vp,
+          w3cPresentation: jwtDecode(payload.presentation).payload.vp,
+          verification: {
+            verified: false,
+            tamperCheck: CheckResults.PASS,
+            credentials: [
+              {
+                format: CredentialFormat.JWT_VC,
+                credential: vc,
+                w3cCredential: {
+                  ...openBadgeCredential,
+                  issuanceDate: expect.stringMatching(ISO_DATETIME_FORMAT),
+                },
+                verified: false,
+                tamperCheck: CheckResults.PASS,
+                trustedIssuerCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+                trustedHolderCheck: CheckResults.PASS,
+                revocationCheck: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+                expiryCheck: CheckResults.PASS,
+              },
+            ],
+          },
+          requestId: expect.any(String),
+        });
+        expectChecksInSchemaEnums(response.json.verification);
+      });
     });
 
     describe('run checks on a stored presentation', () => {
@@ -824,6 +973,350 @@ describe('Presentations Test Suite', () => {
         });
       });
     });
+
+    describe('notify the holder', () => {
+      const credentialDid = `did:velocity:v2:1:2:3:${hashOffer(
+        openBadgeCredentialContent,
+      )}`;
+      const messagingSettings = {
+        webhookUrl: 'https://wallet.example.com/push',
+        authToken: 'push-token-123',
+      };
+      let persistExchange;
+      let vcKeyPair;
+
+      before(() => {
+        ({ persistExchange } = initExchangeFactory(
+          fastify,
+          ExchangeTypes.RELYING_PARTY,
+        ));
+      });
+
+      beforeEach(() => {
+        vcKeyPair = generateKeyPair({ format: 'jwk' });
+      });
+
+      const persistExchangePresentation = async (exchangeOverrides) => {
+        const exchange = await persistExchange({
+          tenant,
+          protocolMetadata: { protocol: ExchangeProtocols.VN_API },
+          messagingSettings,
+          ...exchangeOverrides,
+        });
+        const presentation = await persistPresentation({
+          tenant,
+          exchange,
+          vcContent: openBadgeCredentialContent,
+          credentialDid,
+          vcKeyPair,
+        });
+        return { exchange, presentation };
+      };
+
+      const mockDidResolution = () =>
+        mockResolveDidDocument.mock.mockImplementationOnce(() =>
+          Promise.resolve(
+            presentationDIDResolution(
+              [credentialDid],
+              [vcKeyPair],
+              [boundIssuerVc],
+            ),
+          ),
+        );
+
+      const verifyAndNotify = (presentation) =>
+        fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/verify`,
+          payload: {
+            tenantId: tenant._id,
+            presentationId: presentation._id,
+            notifyHolder: true,
+          },
+        });
+
+      it('should send PresentationVerified to the push url with a signed authorization', async () => {
+        const { exchange, presentation } = await persistExchangePresentation();
+        mockDidResolution();
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          format: PresentationFormat.JWT_VP,
+          presentation: presentation.presentation,
+          w3cPresentation: expect.any(Object),
+          verification: expect.objectContaining({ verified: true }),
+          notification: { status: 'sent' },
+          requestId: expect.any(String),
+        });
+        expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+        const [url, body, { headers }] =
+          mockHttpClient.post.mock.calls[0].arguments;
+        expect(url).toEqual(messagingSettings.webhookUrl);
+        expect(body).toEqual({
+          id: expect.any(String),
+          pushToken: messagingSettings.authToken,
+          data: {
+            notificationType: 'PresentationVerified',
+            issuer: tenant.did,
+            exchangeId: `${exchange._id}`,
+            serviceEndpoint: messagingSettings.webhookUrl,
+          },
+        });
+        expect(headers.Authorization).toMatch(/^Bearer /);
+        const { header, payload } = await jwtVerify(
+          headers.Authorization.slice('Bearer '.length),
+          issuerKeyPair.publicKey,
+        );
+        expect(header.kid).toEqual(
+          toDidUrl(
+            tenant.did,
+            tenant.keysByPurpose[KeyPurposes.EXCHANGES].kidFragment,
+          ),
+        );
+        expect(payload).toEqual(
+          expect.objectContaining({
+            hash: createCommitment(canonicalize(body)),
+            sub: `${exchange._id}`,
+            aud: 'https://wallet.example.com',
+            iss: tenant.did,
+          }),
+        );
+        const dbPresentation = await mongoDb()
+          .collection('presentations')
+          .findOne({ _id: new ObjectId(presentation._id) });
+        expect(dbPresentation.verifications).toHaveLength(1);
+      });
+
+      it('should send PresentationVerified when the presentation fails verification', async () => {
+        const { presentation } = await persistExchangePresentation();
+        await mongoDb()
+          .collection('presentations')
+          .updateOne(
+            { _id: new ObjectId(presentation._id) },
+            { $set: { presentation: presentation.presentation.slice(0, -1) } },
+          );
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.verification).toEqual({
+          verified: false,
+          tamperCheck: CheckResults.FAIL,
+        });
+        expect(response.json.notification).toEqual({ status: 'sent' });
+        expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+        expect(
+          mockHttpClient.post.mock.calls[0].arguments[1].data.notificationType,
+        ).toEqual('PresentationVerified');
+      });
+
+      it('should skip the message when the exchange has no messaging settings', async () => {
+        const { presentation } = await persistExchangePresentation({
+          protocolMetadata: { protocol: ExchangeProtocols.OPENID4VP },
+          messagingSettings: undefined,
+        });
+        mockDidResolution();
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.verification.verified).toEqual(true);
+        expect(response.json.notification).toEqual({
+          status: 'skipped_no_messaging_settings',
+        });
+        expect(mockHttpClient.post.mock.callCount()).toEqual(0);
+      });
+
+      for (const [failure, error] of [
+        [
+          'times out',
+          Object.assign(new Error('Headers Timeout Error'), {
+            code: 'UND_ERR_HEADERS_TIMEOUT',
+          }),
+        ],
+      ]) {
+        it(`should return a failed notification and the verification when the push url ${failure}`, async () => {
+          const { presentation } = await persistExchangePresentation();
+          mockDidResolution();
+          mockHttpClient.post.mock.mockImplementationOnce(() =>
+            Promise.reject(error),
+          );
+
+          const response = await verifyAndNotify(presentation);
+
+          expect(response.statusCode).toEqual(200);
+          expect(response.json.verification.verified).toEqual(true);
+          expect(response.json.notification).toEqual({
+            status: 'failed',
+            error: error.message,
+          });
+          expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+          const dbPresentation = await mongoDb()
+            .collection('presentations')
+            .findOne({ _id: new ObjectId(presentation._id) });
+          expect(dbPresentation.verifications).toHaveLength(1);
+        });
+      }
+
+      for (const statusCode of [307, 500]) {
+        it(`should return a failed notification and the verification when the push url responds with ${statusCode}`, async () => {
+          const { presentation } = await persistExchangePresentation();
+          mockDidResolution();
+          const rawBody = { on: mock.fn(() => rawBody), destroy: mock.fn() };
+          mockHttpClient.post.mock.mockImplementationOnce(() =>
+            Promise.resolve({ statusCode, rawBody }),
+          );
+
+          const response = await verifyAndNotify(presentation);
+
+          expect(response.statusCode).toEqual(200);
+          expect(response.json.verification.verified).toEqual(true);
+          expect(response.json.notification).toEqual({
+            status: 'failed',
+            error: `push url responded with ${statusCode}`,
+          });
+          expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+          expect(rawBody.destroy.mock.callCount()).toEqual(1);
+        });
+      }
+
+      it('should discard the push response body', async () => {
+        const { presentation } = await persistExchangePresentation();
+        mockDidResolution();
+        const rawBody = { on: mock.fn(() => rawBody), destroy: mock.fn() };
+        mockHttpClient.post.mock.mockImplementationOnce(() =>
+          Promise.resolve({ statusCode: 200, rawBody }),
+        );
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.notification).toEqual({ status: 'sent' });
+        expect(rawBody.destroy.mock.callCount()).toEqual(1);
+      });
+
+      it('should post to the normalized push url when its scheme is uppercase', async () => {
+        const { presentation } = await persistExchangePresentation({
+          messagingSettings: {
+            ...messagingSettings,
+            webhookUrl: 'HTTPS://wallet.example.com/push',
+          },
+        });
+        mockDidResolution();
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.notification).toEqual({ status: 'sent' });
+        expect(mockHttpClient.post.mock.calls[0].arguments[0]).toEqual(
+          'https://wallet.example.com/push',
+        );
+      });
+
+      it('should fail without posting to an http push url', async () => {
+        const { presentation } = await persistExchangePresentation({
+          messagingSettings: {
+            ...messagingSettings,
+            webhookUrl: 'http://wallet.example.com/push',
+          },
+        });
+        mockDidResolution();
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.notification).toEqual({
+          status: 'failed',
+          error: 'push url must use https',
+        });
+        expect(mockHttpClient.post.mock.callCount()).toEqual(0);
+      });
+
+      it('should post to an http push url when WALLET_MESSAGES_ALLOW_INSECURE_URL is set', async (t) => {
+        fastify.config.walletMessagesAllowInsecureUrl = true;
+        t.after(() => {
+          fastify.config.walletMessagesAllowInsecureUrl = false;
+        });
+        const { presentation } = await persistExchangePresentation({
+          messagingSettings: {
+            ...messagingSettings,
+            webhookUrl: 'http://wallet.example.com/push',
+          },
+        });
+        mockDidResolution();
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.notification).toEqual({ status: 'sent' });
+        expect(mockHttpClient.post.mock.calls[0].arguments[0]).toEqual(
+          'http://wallet.example.com/push',
+        );
+      });
+
+      it('should send nothing when verification requires payment', async () => {
+        const { presentation } = await persistExchangePresentation();
+        mockResolveDidDocument.mock.mockImplementationOnce(() => {
+          const resolutionError = new Error();
+          resolutionError.reason = 'No available tokens';
+          return Promise.reject(resolutionError);
+        });
+
+        const response = await verifyAndNotify(presentation);
+
+        expect(response.statusCode).toEqual(402);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Payment Required',
+            message: 'Verification vouchers exhausted',
+            errorCode: 'verification_payment_required',
+          }),
+        );
+        expect(mockHttpClient.post.mock.callCount()).toEqual(0);
+      });
+
+      it('should 400 when notifyHolder is sent with an inline presentation', async () => {
+        const { presentation } = await persistExchangePresentation();
+
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/verify`,
+          payload: {
+            tenantId: tenant._id,
+            format: PresentationFormat.JWT_VP,
+            presentation: presentation.presentation,
+            notifyHolder: true,
+          },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            message: 'notifyHolder requires a presentationId',
+            errorCode: 'presentation_verify_request_invalid',
+          }),
+        );
+        expect(mockHttpClient.post.mock.callCount()).toEqual(0);
+      });
+
+      it('should 404 when the presentation is unknown', async () => {
+        const presentationId = new ObjectId().toString();
+
+        const response = await verifyAndNotify({ _id: presentationId });
+
+        expect(response.statusCode).toEqual(404);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Not Found',
+            message: `Presentation ${presentationId} not found`,
+            errorCode: 'presentation_not_found',
+          }),
+        );
+      });
+    });
   });
 });
 
@@ -843,6 +1336,24 @@ const expectedResponsePresentation = (presentation, overrides) =>
     overrides,
   );
 
+// Every check value in a credential verification is one its response schema
+// lists.
+const expectChecksInSchemaEnums = ({ credentials }) => {
+  for (const credentialVerification of credentials) {
+    for (const check of [
+      'tamperCheck',
+      'trustedIssuerCheck',
+      'trustedHolderCheck',
+      'revocationCheck',
+      'expiryCheck',
+    ]) {
+      expect(credentialVerificationSchema.properties[check].enum).toContain(
+        credentialVerification[check],
+      );
+    }
+  }
+};
+
 const presentationDIDResolution = (
   credentialDids,
   credentialKeyPairs,
@@ -854,7 +1365,8 @@ const presentationDIDResolution = (
     )}`,
     publicKey: mapWithIndex(
       (credentialDid, i) => ({
-        id: `${credentialDid.toLowerCase()}#key-1`,
+        // The ledger resolver echoes the verifier-supplied credential id.
+        id: `${credentialDid}#key-1`,
         publicKeyJwk: credentialKeyPairs[i].publicKey,
       }),
       credentialDids,
@@ -864,7 +1376,7 @@ const presentationDIDResolution = (
   didDocumentMetadata: {
     boundIssuerVcs: mapWithIndex(
       (credentialDid, i) => ({
-        id: credentialDid.toLowerCase(),
+        id: credentialDid,
         format: 'jwt_vc',
         vc: boundIssuerVcs[i],
       }),

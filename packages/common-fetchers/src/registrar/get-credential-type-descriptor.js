@@ -39,7 +39,7 @@ const getCredentialTypeDescriptor = async (
     return await response.json();
   } catch (e) {
     // ignore the 404s for particular types and return a basic version.
-    if (e.response?.statusCode ?? e.statusCode === 404) {
+    if ((e.response?.statusCode ?? e.statusCode) === 404) {
       return {
         id: type,
         name: type,

@@ -15,6 +15,5 @@
  *
  */
 module.exports = {
-  ...require('./issuer-services-errors'),
   ...require('./validate-issuer-service'),
 };

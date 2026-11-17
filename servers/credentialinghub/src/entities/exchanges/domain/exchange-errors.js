@@ -16,13 +16,17 @@
  */
 const ExchangeErrors = {
   REFERENCED_EXCHANGE_NOT_FOUND: 'referenced_exchange_not_found',
+  EXCHANGE_NOT_DECLINABLE: 'exchange_not_declinable',
   REFERENCED_SERVICE_NOT_FOUND: 'referenced_service_not_found',
   REFERENCED_DEPOT_NOT_FOUND: 'referenced_depot_not_found',
   MESSAGING_SETTINGS_INVALID: 'messaging_settings_invalid',
   CREDENTIAL_OFFER_REQUEST_INVALID: 'credential_offer_request_invalid',
   UNAUTHORIZED: 'unauthorized',
+  PREAUTH_CODE_EXPIRED: 'preauth_code_expired',
   PRESENTATION_SUBMISSION_INVALID: 'presentation_submission_invalid',
   AUTHENTICATION_METHOD_UNSUPPORTED: 'authentication_method_unsupported',
+  CREDENTIAL_CHECK_UNAVAILABLE: 'credential_check_unavailable',
+  IDENTIFICATION_USER_NOT_FOUND: 'integrated_identification_user_not_found',
 };
 
 module.exports = { ExchangeErrors };

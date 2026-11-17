@@ -226,6 +226,41 @@ describe('Tenant keys test suite', () => {
       expect(count).toEqual(0);
     });
 
+    it('should 400 with a jwk whose x and y do not match its d', async () => {
+      const key1 = omit(
+        ['tenantId', 'key', 'publicKey'],
+        await newKey({ tenant }),
+      );
+      const otherPublicJwk = generateKeyPair({ format: 'jwk' }).publicKey;
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: buildKeysUrl({ tenant }),
+        payload: {
+          ...key1,
+          encoding: KeyEncodings.JWK,
+          jwk: {
+            ...jwkFromSecp256k1Key(orgKey),
+            x: otherPublicJwk.x,
+            y: otherPublicJwk.y,
+          },
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'public_key_not_matched',
+          message: 'Public key not matched to private key',
+          statusCode: 400,
+        }),
+      );
+
+      const count = await mongoDb().collection('keys').countDocuments();
+      expect(count).toEqual(0);
+    });
+
     it('should 400 with an unrecognized purpose', async () => {
       const key1 = omit(
         ['tenantId'],
@@ -429,7 +464,10 @@ describe('Tenant keys test suite', () => {
     });
 
     it('should 201 adding a key with 3 purposes to the tenant', async () => {
-      const key1 = omit(['tenantId'], await newKey({ tenant }));
+      const key1 = omit(
+        ['tenantId'],
+        await newKey({ tenant, publicKey: jwkFromSecp256k1Key(orgKey, false) }),
+      );
 
       const response = await fastify.injectJson({
         method: 'POST',
@@ -481,7 +519,11 @@ describe('Tenant keys test suite', () => {
     it('should 201 adding a key with 1 purpose to the tenant', async () => {
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: ['DLT_TRANSACTIONS'] }),
+        await newKey({
+          tenant,
+          purposes: ['DLT_TRANSACTIONS'],
+          publicKey: jwkFromSecp256k1Key(orgKey, false),
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -532,6 +574,75 @@ describe('Tenant keys test suite', () => {
       });
     });
 
+    it('should 201 and import the JWK of a key forwarded from a create_tenant message', async () => {
+      // jwkFromSecp256k1Key adds `use`, which a JWK from the registrar doesn't
+      // have, so the stored key shows whether the JWK or the hex was imported.
+      const jwk = omit(['use'], jwkFromSecp256k1Key(orgKey));
+      const publicJwk = omit(['d'], jwk);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: buildKeysUrl({ tenant }),
+        payload: {
+          kidFragment: '#velocity-key-1',
+          purposes: [KeyPurposes.ISSUING_METADATA],
+          algorithm: 'SECP256K1',
+          encoding: KeyEncodings.HEX,
+          key: orgKey,
+          publicKey: orgPublicKey,
+          jwk,
+          publicJwk,
+        },
+      });
+
+      expect(response.statusCode).toEqual(201);
+      const keyFromDb = await mongoDb().collection('keys').findOne();
+      expect(keyFromDb).toEqual({
+        _id: expect.any(ObjectId),
+        kidFragment: '#velocity-key-1',
+        purposes: [KeyPurposes.ISSUING_METADATA],
+        algorithm: 'SECP256K1',
+        encoding: KeyEncodings.JWK,
+        tenantId: new ObjectId(tenant._id),
+        key: expect.any(String),
+        publicKey: publicJwk,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
+      const decryptedKey = await kms.exportKeyOrSecret(response.json.id);
+      expect(decryptedKey.privateJwk).toEqual(jwk);
+    });
+
+    it('should 400 and not add a key whose hex and JWK are different keys', async () => {
+      const otherJwk = generateKeyPair({ format: 'jwk' }).privateKey;
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: buildKeysUrl({ tenant }),
+        payload: {
+          kidFragment: '#velocity-key-1',
+          purposes: [KeyPurposes.ISSUING_METADATA],
+          algorithm: 'SECP256K1',
+          encoding: KeyEncodings.HEX,
+          key: orgKey,
+          publicKey: orgPublicKey,
+          jwk: otherJwk,
+          publicJwk: omit(['d'], otherJwk),
+        },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'key_formats_mismatch',
+          message: 'The JWK and legacy encodings of the key do not match',
+          statusCode: 400,
+        }),
+      );
+      expect(await mongoDb().collection('keys').countDocuments()).toEqual(0);
+    });
+
     it('should not change primaryAddress if DLT_TRANSACTION key already exist in db', async () => {
       await persistKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] });
 
@@ -559,7 +670,11 @@ describe('Tenant keys test suite', () => {
       tenantRepo.update(tenant._id, { primaryAddress: '' });
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] }),
+        await newKey({
+          tenant,
+          purposes: [KeyPurposes.DLT_TRANSACTIONS],
+          publicKey: jwkFromSecp256k1Key(orgKey, false),
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -587,6 +702,7 @@ describe('Tenant keys test suite', () => {
         ['tenantId'],
         await newKey({
           tenant: tenant1,
+          publicKey: jwkFromSecp256k1Key(orgKey, false),
           purposes: [
             KeyPurposes.EXCHANGES,
             KeyPurposes.ISSUING_METADATA,
@@ -620,7 +736,11 @@ describe('Tenant keys test suite', () => {
       const prevPrimaryAddress = tenant1.primaryAddress;
       const key1 = omit(
         ['tenantId'],
-        await newKey({ tenant, purposes: [KeyPurposes.DLT_TRANSACTIONS] }),
+        await newKey({
+          tenant,
+          purposes: [KeyPurposes.DLT_TRANSACTIONS],
+          publicKey: jwkFromSecp256k1Key(orgKey, false),
+        }),
       );
 
       const response = await fastify.injectJson({
@@ -736,7 +856,10 @@ describe('Tenant keys test suite', () => {
     });
 
     it('should 201 adding a key with 3 purposes to the tenant', async () => {
-      const key1 = omit(['tenantId'], await newKey({ tenant }));
+      const key1 = omit(
+        ['tenantId'],
+        await newKey({ tenant, publicKey: keyPair.publicKey }),
+      );
 
       const response = await fastify.injectJson({
         method: 'POST',
@@ -791,7 +914,10 @@ describe('Tenant keys test suite', () => {
     });
 
     it('should 201 adding a jwk to the tenant', async () => {
-      const key1 = omit(['tenantId', 'key'], await newKey({ tenant }));
+      const key1 = omit(
+        ['tenantId', 'key'],
+        await newKey({ tenant, publicKey: keyPair.publicKey }),
+      );
 
       const response = await fastify.injectJson({
         method: 'POST',

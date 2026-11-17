@@ -4,7 +4,7 @@ const { expect } = require('expect');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { signAndEncodeBase64 } = require('@verii/crypto');
 const { ObjectId } = require('mongodb');
-const canonicalize = require('canonicalize');
+const { default: canonicalize } = require('canonicalize');
 const buildFastify = require('./helpers/mockvendor-build-fastify');
 
 describe('Registrar messages controller tests', () => {

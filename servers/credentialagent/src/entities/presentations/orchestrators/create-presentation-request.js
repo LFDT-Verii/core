@@ -16,7 +16,10 @@
  */
 
 const { map } = require('lodash/fp');
-const { mapWithIndex } = require('@verii/common-functions');
+const {
+  buildAgentHolderUrl,
+  mapWithIndex,
+} = require('@verii/common-functions');
 const {
   getOrganizationVerifiedProfile,
   getCredentialTypeDescriptor,
@@ -91,7 +94,8 @@ const buildMetadata = (
   { config: { hostUrl }, tenant },
   // eslint-disable-next-line complexity
 ) => {
-  const baseUrl = `${hostUrl}/api/holder/v0.6/org/${encodeURI(tenant.did)}`;
+  const holderUrl = (suffix) =>
+    buildAgentHolderUrl(hostUrl, encodeURI(tenant.did), suffix).href;
 
   const clientName = disclosure.commercialEntityName ?? orgProfile?.name;
   const logoUri = disclosure.commercialEntityLogo ?? orgProfile?.logo;
@@ -100,21 +104,21 @@ const buildMetadata = (
     logo_uri: logoUri,
     tos_uri: disclosure?.termsUrl,
     max_retention_period: disclosure?.duration,
-    progress_uri: `${baseUrl}/get-exchange-progress`,
-    auth_token_uri: `${baseUrl}/oauth/token`,
+    progress_uri: holderUrl('get-exchange-progress'),
+    auth_token_uri: holderUrl('oauth/token'),
     feed: disclosure?.feed,
   };
 
   if (exchange.type === ExchangeTypes.ISSUING) {
     metadata.submit_presentation_uri =
       exchange.protocolMetadata?.redirect_uri ??
-      `${baseUrl}/issue/submit-identification`;
-    metadata.check_offers_uri = `${baseUrl}/issue/credential-offers`;
-    metadata.finalize_offers_uri = `${baseUrl}/issue/finalize-offers`;
+      holderUrl('issue/submit-identification');
+    metadata.check_offers_uri = holderUrl('issue/credential-offers');
+    metadata.finalize_offers_uri = holderUrl('issue/finalize-offers');
   } else {
     metadata.submit_presentation_uri =
       exchange.protocolMetadata?.redirect_uri ??
-      `${baseUrl}/inspect/submit-presentation`;
+      holderUrl('inspect/submit-presentation');
   }
 
   return metadata;

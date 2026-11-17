@@ -29,9 +29,11 @@ const {
   flow,
   includes,
   map,
+  getOr,
   split,
   toLower,
   fromPairs,
+  noop,
   uniq,
 } = require('lodash/fp');
 const {
@@ -45,6 +47,7 @@ const { jwtVerify, keyAlgorithmToJoseAlg } = require('@verii/jwt');
 const {
   getCredentialSigningAlgorithmsSupported,
 } = require('../../tenants/domain');
+const { generateCNonce, verifyProofNonce } = require('../domain');
 
 const openid4vciPlugin = async (fastify) => {
   fastify.decorateRequest(
@@ -53,6 +56,27 @@ const openid4vciPlugin = async (fastify) => {
       return buildIssuer(this);
     },
   );
+  // The routes declare the OAuth error as their 400 and 500 responses, so any
+  // other error, such as a body that isn't JSON or an unexpected failure, has
+  // to be answered in that shape too. Fastify can't serialize anything else.
+  const toOauthErrorResponse = (error, request, reply) => {
+    // Reported as the global error handler would have
+    const { sendError = noop } = fastify;
+    sendError(error);
+    const statusCode = getOr(500, 'statusCode', error);
+    reply.status(statusCode);
+    if (statusCode < 500) {
+      return {
+        error: Oauth2ErrorCodes.InvalidRequest,
+        error_description: error.message,
+      };
+    }
+    request.log.error(error);
+    return {
+      error: Oauth2ErrorCodes.ServerError,
+      error_description: 'Unexpected server error',
+    };
+  };
   fastify.decorate('openid4vcErrorHandler', (error, request, reply) => {
     if (error.statusCode === 401) {
       reply.status(error.statusCode);
@@ -69,7 +93,7 @@ const openid4vciPlugin = async (fastify) => {
       };
     }
     if (error.errorResponse == null) {
-      throw error;
+      return toOauthErrorResponse(error, request, reply);
     }
     reply.status(error.status);
     return error.errorResponse;
@@ -89,18 +113,28 @@ const openid4vciPlugin = async (fastify) => {
     if (toLower(bearerType) !== 'bearer') {
       throwInvalidToken();
     }
-    try {
-      const claims = { subject: getIssuerUri(req) };
-      await jwtVerify(
-        bearerValue,
-        req.tenant.keysByPurpose.EXCHANGES.publicJwk,
-        claims,
-      );
-    } catch (e) {
+    const payload = await verifyBearerToken(bearerValue, req).catch((e) => {
       req.log.warn(e);
+      return throwInvalidToken();
+    });
+    // A token without a depot, such as one issued before tokens carried it,
+    // can't be scoped to a holder's credentials.
+    if (isEmpty(payload[DEPOT_ID_CLAIM])) {
       throwInvalidToken();
     }
+    req.openid4vciDepotId = payload[DEPOT_ID_CLAIM];
   });
+};
+
+const DEPOT_ID_CLAIM = 'depot_id';
+
+const verifyBearerToken = async (bearerValue, req) => {
+  const { payload } = await jwtVerify(
+    bearerValue,
+    req.tenant.keysByPurpose.EXCHANGES.publicJwk,
+    { subject: getIssuerUri(req) },
+  );
+  return payload;
 };
 
 const buildIssuer = async (context) => {
@@ -127,11 +161,6 @@ const buildIssuer = async (context) => {
     } catch {
       return { verified: false };
     }
-  };
-
-  const encryptString = (data) => {
-    const exchangesKey = tenant.keysByPurpose[KeyPurposes.EXCHANGES];
-    return kms.encryptString(data, exchangesKey._id);
   };
 
   const hash = (data, alg) =>
@@ -260,10 +289,11 @@ const buildIssuer = async (context) => {
   };
 
   const getCredentialRequest = async (parameters) => {
+    const issuerMetadata = {
+      credentialIssuer: { credential_issuer: openIdIssuer },
+    };
     const credentialRequest = issuer.parseCredentialRequest({
-      issuerMetadata: {
-        credentialIssuer: { credential_issuer: openIdIssuer },
-      },
+      issuerMetadata,
       credentialRequest: {
         credential_identifier: parameters.credential_identifier,
         proofs: {
@@ -271,9 +301,6 @@ const buildIssuer = async (context) => {
         },
       },
     });
-    const issuerMetadata = {
-      credentialIssuer: openIdIssuer,
-    };
     if (isEmpty(credentialRequest.proofs.jwt)) {
       await issuer.verifyCredentialRequestJwtProof({
         jwt: '',
@@ -284,29 +311,43 @@ const buildIssuer = async (context) => {
       });
     }
     await Promise.all(
-      map(
-        async (jwt) =>
-          issuer.verifyCredentialRequestJwtProof({
-            jwt,
-            issuerMetadata,
-            callbacks: {
-              verifyJwt,
-            },
-          }),
-        credentialRequest.proofs.jwt,
-      ),
+      map(async (jwt) => {
+        const { payload } = await issuer.verifyCredentialRequestJwtProof({
+          jwt,
+          issuerMetadata,
+          callbacks: {
+            verifyJwt,
+          },
+        });
+        await verifyProofNonce(payload, openIdIssuer, context);
+      }, credentialRequest.proofs.jwt),
     );
     return credentialRequest;
   };
 
+  // Response encryption isn't supported, so a request for it is rejected
+  const getDeferredCredentialRequest = (parameters) =>
+    issuer.parseDeferredCredentialRequest({
+      issuerMetadata: {
+        credentialIssuer: { credential_issuer: openIdIssuer },
+      },
+      deferredCredentialRequest: parameters,
+    }).deferredCredentialRequest;
+  const createDeferredCredentialResponse = async (options) => {
+    const { deferredCredentialResponse } =
+      await issuer.createDeferredCredentialResponse(options);
+    return deferredCredentialResponse;
+  };
+
   const createNonce = async () =>
     issuer.createNonceResponse({
-      cNonce: await encryptString(`${Date.now()}`),
+      cNonce: await generateCNonce(openIdIssuer, context),
     });
   const generateAccessToken = async (
     accessTokenParams,
     authorizationDetails,
     expiresInSeconds,
+    depotId,
   ) => {
     const authorizationServerMetadata = getAuthorizationServerMetadata();
     const accessTokenResponse =
@@ -325,6 +366,10 @@ const buildIssuer = async (context) => {
         expiresInSeconds,
         audience: authorizationServerMetadata.issuer,
         subject: openIdIssuer,
+        // The credential and notification endpoints only act on this depot.
+        additionalAccessTokenPayload: {
+          [DEPOT_ID_CLAIM]: `${depotId}`,
+        },
         additionalAccessTokenResponsePayload: {
           authorization_details: authorizationDetails,
         },
@@ -342,16 +387,19 @@ const buildIssuer = async (context) => {
     });
   };
 
+  // Compares the hash of the code the wallet sent with the code of the depot
+  // that holds it, if any, and refuses an expired code with invalid_grant. A
+  // code without an expiry doesn't expire.
   const verifyPreauthCode = async (
-    preauthCode,
-    expectedPreAuthorizedCode,
+    preauthCodeHash,
+    depot,
     accessTokenParams,
     _context,
   ) =>
     authorizationServer.verifyPreAuthorizedCodeAccessTokenRequest({
       grant: {
         grantType: accessTokenParams.grant_type,
-        preAuthorizedCode: preauthCode,
+        preAuthorizedCode: preauthCodeHash,
         txCode: accessTokenParams.tx_code,
       },
       accessTokenRequest: accessTokenParams,
@@ -360,9 +408,9 @@ const buildIssuer = async (context) => {
         url: _context.raw.url,
         headers: new Headers(_context.raw.headers),
       },
-      expectedPreAuthorizedCode,
+      expectedPreAuthorizedCode: depot?.preauthCodeHash,
       expectedTxCode: undefined,
-      preAuthorizedCodeExpiresAt: undefined,
+      preAuthorizedCodeExpiresAt: depot?.preauthCodeExpiresAt,
     });
 
   return {
@@ -374,6 +422,8 @@ const buildIssuer = async (context) => {
     getAuthorizationServerMetadata,
     getCredentialIssuerMetadata,
     getCredentialRequest,
+    getDeferredCredentialRequest,
+    createDeferredCredentialResponse,
   };
 };
 

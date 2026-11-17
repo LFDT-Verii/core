@@ -57,6 +57,15 @@ const exchangeSchema = {
         message: { type: 'string' },
       },
     },
+    decline: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['declinedAt'],
+      properties: {
+        declinedAt: { type: 'string', format: 'date-time' },
+        reason: { type: 'string' },
+      },
+    },
     credentialIds: { type: 'array', items: { type: 'string' } },
     presentationIds: { type: 'array', items: { type: 'string' } },
     createdAt: { type: 'string', format: 'date-time' },

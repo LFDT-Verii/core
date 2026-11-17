@@ -40,6 +40,7 @@ const initCredentialSchemaFactory = require('./factories/credential-schema-facto
 const convertToJson = ({ _id, ...x }) => ({
   id: _id,
   issuerCategory: 'RegularIssuer',
+  defaultSignatureAlgorithm: KeyAlgorithms.SECP256K1,
   ...omit(['title'], x),
 });
 
@@ -973,6 +974,27 @@ describe('credential types endpoints', () => {
       });
       expect(response.statusCode).toEqual(200);
       expect(response.json).toEqual([convertToJson(credentialTypes[1])]);
+    });
+    it('should respond 200 to a get one by credential type when jsonldContext is null', async () => {
+      const credentialType = await persistCredentialSchema({
+        credentialType: 'Badge',
+        schemaName: 'obi',
+        linkedinProfileCompatible: false,
+      });
+      await mongoDb()
+        .collection('credentialSchemas')
+        .updateOne(
+          { _id: new ObjectId(credentialType._id) },
+          { $set: { jsonldContext: null } },
+        );
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: '/api/v0.6/credential-types?credentialType=Badge',
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual([
+        convertToJson({ ...credentialType, jsonldContext: [] }),
+      ]);
     });
   });
 });

@@ -18,6 +18,8 @@ const { tenantLoaderPlugin } = require('../../entities/tenants');
 const { kmsPlugin } = require('../../entities/keys');
 const {
   ExchangeTypes,
+  MAX_DECLINE_REASON_LENGTH,
+  declinePresentation,
   getPresentationRequest,
   postPresentation,
   signExchangeResponse,
@@ -118,7 +120,12 @@ const vnApiPresentationController = async (fastify) => {
               exchange_id: { type: 'string', description: 'exchange id value' },
               jwt_vp: {
                 type: 'string',
-                description: 'vp encoded as a jwt signed by the holder',
+                description:
+                  'vp encoded as a jwt signed by the holder. ' +
+                  'Each `presentation_submission.descriptor_map[].path` in the vp must be `$.verifiableCredential[<n>]`, ' +
+                  'where `<n>` is an index from 0 to 999 with no leading zeros, ' +
+                  'or `$` or `$[0]` with `path_nested.path` set to `$.verifiableCredential[<n>]`. ' +
+                  'Any other path is rejected with 400 `presentation_jsonpath_unsupported`.',
               },
             },
             required: ['exchange_id', 'jwt_vp'],
@@ -156,6 +163,37 @@ const vnApiPresentationController = async (fastify) => {
             exchangeComplete: true,
           },
         };
+      },
+    )
+    .post(
+      '/r/:tenantId/decline-presentation',
+      {
+        schema: fastify.autoSchema({
+          summary: 'Decline a VN-API presentation request',
+          operationId: 'declineVnApiPresentation',
+          body: {
+            type: 'object',
+            properties: {
+              exchange_id: { type: 'string', description: 'exchange id value' },
+              reason: {
+                type: 'string',
+                maxLength: MAX_DECLINE_REASON_LENGTH,
+                description: 'why the holder declined to share',
+              },
+            },
+            required: ['exchange_id'],
+          },
+          response: {
+            204: {
+              type: 'null',
+              description: 'The presentation request was declined',
+            },
+          },
+        }),
+      },
+      async (req, reply) => {
+        await declinePresentation(req.body.exchange_id, req.body.reason, req);
+        return reply.code(204).send();
       },
     );
 };

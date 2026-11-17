@@ -56,7 +56,6 @@ const registrarUrl = `https://${registrarHost}`;
 
 describe('Verify verii credentials', () => {
   const orgKeyPair = generateKeyPair({ format: 'jwk' });
-  const orgPublicKey = hexFromJwk(orgKeyPair.publicKey, false);
   const orgPrivateKey = hexFromJwk(orgKeyPair.privateKey);
   const issuerDid = 'did:ion:1234567890';
   const issuerKeyPair = generateKeyPair({ format: 'jwk' });
@@ -78,7 +77,6 @@ describe('Verify verii credentials', () => {
   const credentialTypePath = '/api/v0.6/credential-types';
 
   const config = {
-    rootPublicKey: orgPublicKey,
     revocationContractAddress: 'any',
     registrarUrl,
     isTest: true,
@@ -625,43 +623,116 @@ describe('Verify verii credentials', () => {
         ]);
       });
 
-      it('TRUSTED_ISSUER should return FAIL if issuerDidDocument resolution fails', async () => {
-        nock.removeInterceptor({
-          hostname: registrarHost,
-          path: resolveDidPath,
-          method: 'GET',
-          proto: 'https',
+      [
+        { lookup: 'DID', path: resolveDidPath },
+        { lookup: 'verified profile', path: verifiedProfilePath },
+      ].forEach(({ lookup, path }) => {
+        it(`TRUSTED_ISSUER should FAIL if the registrar rejects the issuer DID in the ${lookup} lookup with a 400`, async () => {
+          nock.removeInterceptor({
+            hostname: registrarHost,
+            path,
+            method: 'GET',
+            proto: 'https',
+          });
+          nock(registrarUrl).get(path).reply(400);
+
+          const result = await verifyVeriiCredentials(
+            {
+              credentials: [openBadgeVc],
+              expectedHolderDid: issuerDidJwk,
+              relyingParty: {
+                did: 'did:ion:123',
+                dltOperatorKMSKeyId: 'keyid-1',
+              },
+            },
+            context,
+          );
+
+          expect(result).toEqual([
+            {
+              dataModelVersion: '1.1',
+              envelopeFormat: 'jwt_vc_json-ld',
+              signingAlgorithm: 'ES256K',
+              credential: openBadgeCredential,
+              credentialChecks: {
+                UNTAMPERED: CheckResults.PASS,
+                TRUSTED_ISSUER: CheckResults.FAIL,
+                TRUSTED_HOLDER: CheckResults.PASS,
+                UNEXPIRED: CheckResults.PASS,
+                UNREVOKED: CheckResults.PASS,
+              },
+            },
+          ]);
         });
-        nock(registrarUrl).get(resolveDidPath).reply(400);
-
-        const result = await verifyVeriiCredentials(
-          {
-            credentials: [openBadgeVc],
-            expectedHolderDid: issuerDidJwk,
-            relyingParty: {
-              did: 'did:ion:123',
-              dltOperatorKMSKeyId: 'keyid-1',
-            },
-          },
-          context,
-        );
-
-        expect(result).toEqual([
-          {
-            dataModelVersion: '1.1',
-            envelopeFormat: 'jwt_vc_json-ld',
-            signingAlgorithm: 'ES256K',
-            credential: openBadgeCredential,
-            credentialChecks: {
-              UNTAMPERED: CheckResults.PASS,
-              TRUSTED_ISSUER: CheckResults.FAIL,
-              TRUSTED_HOLDER: CheckResults.PASS,
-              UNEXPIRED: CheckResults.PASS,
-              UNREVOKED: CheckResults.PASS,
-            },
-          },
-        ]);
       });
+
+      const registrarFailures = [
+        {
+          title: 'a 429 response',
+          reply: (interceptor) => interceptor.reply(429),
+        },
+        {
+          title: 'a 500 response',
+          reply: (interceptor) => interceptor.reply(500),
+        },
+        {
+          title: 'a connection error',
+          reply: (interceptor) =>
+            interceptor.replyWithError('connect ECONNREFUSED'),
+        },
+        {
+          title: 'a response body that is not JSON',
+          reply: (interceptor) =>
+            interceptor.reply(200, '<html>Service Unavailable</html>', {
+              'content-type': 'text/html',
+            }),
+        },
+      ];
+
+      [
+        { lookup: 'DID', path: resolveDidPath },
+        { lookup: 'verified profile', path: verifiedProfilePath },
+      ].forEach(({ lookup, path }) =>
+        registrarFailures.forEach(({ title, reply }) => {
+          it(`TRUSTED_ISSUER should return DEPENDENCY_RESOLUTION_ERROR if the issuer ${lookup} lookup fails with ${title}`, async () => {
+            nock.removeInterceptor({
+              hostname: registrarHost,
+              path,
+              method: 'GET',
+              proto: 'https',
+            });
+            reply(nock(registrarUrl).get(path));
+
+            const result = await verifyVeriiCredentials(
+              {
+                credentials: [openBadgeVc],
+                expectedHolderDid: issuerDidJwk,
+                relyingParty: {
+                  did: 'did:ion:123',
+                  dltOperatorKMSKeyId: 'keyid-1',
+                },
+              },
+              context,
+            );
+
+            expect(result).toEqual([
+              {
+                dataModelVersion: '1.1',
+                envelopeFormat: 'jwt_vc_json-ld',
+                signingAlgorithm: 'ES256K',
+                credential: openBadgeCredential,
+                credentialChecks: {
+                  UNTAMPERED: CheckResults.PASS,
+                  TRUSTED_ISSUER: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
+                  TRUSTED_HOLDER: CheckResults.PASS,
+                  UNEXPIRED: CheckResults.PASS,
+                  UNREVOKED: CheckResults.PASS,
+                },
+              },
+            ]);
+          });
+        }),
+      );
 
       it('TRUSTED_ISSUER should FAIL when issuerDidDocument not found', async () => {
         nock.removeInterceptor({
@@ -834,7 +905,7 @@ describe('Verify verii credentials', () => {
           method: 'GET',
           proto: 'https',
         });
-        nock(registrarUrl).get(resolveDidPath).reply(404);
+        nock(registrarUrl).get(verifiedProfilePath).reply(404);
 
         const result = await verifyVeriiCredentials(
           {
@@ -971,7 +1042,7 @@ describe('Verify verii credentials', () => {
         ]);
       });
 
-      it('UNREVOKED should return FAIL when status request errors', async () => {
+      it('UNREVOKED should return DEPENDENCY_RESOLUTION_ERROR when status request errors', async () => {
         initRevocationRegistry.mock.mockImplementationOnce(() => ({
           getRevokedStatus: mock.fn(() => Promise.reject(new Error('boom'))),
         }));
@@ -998,12 +1069,173 @@ describe('Verify verii credentials', () => {
               UNTAMPERED: CheckResults.PASS,
               TRUSTED_ISSUER: CheckResults.PASS,
               TRUSTED_HOLDER: CheckResults.PASS,
-              UNREVOKED: CheckResults.FAIL,
+              UNREVOKED: CheckResults.DEPENDENCY_RESOLUTION_ERROR,
               UNEXPIRED: CheckResults.PASS,
             },
           },
         ]);
       });
+    });
+  });
+
+  describe('trusted issuer with a P-256 issuing metadata key', () => {
+    const issuingMetadataKeyPair = generateKeyPair({
+      format: 'jwk',
+      curve: 'P-256',
+    });
+    let credentialDid;
+    let openBadgeCredential;
+    let openBadgeVc;
+
+    const nockIssuerDidDocument = (publicKeyJwk) =>
+      nock(registrarUrl)
+        .get(resolveDidPath)
+        .reply(200, {
+          id: issuerDid,
+          verificationMethod: [
+            {
+              id: '#key-1',
+              type: 'JsonWebKey2020',
+              controller: issuerDid,
+              publicKeyJwk,
+            },
+          ],
+          assertionMethod: ['#key-1'],
+        });
+
+    beforeEach(async () => {
+      credentialDid = buildDid(['0xf123', 1, 42]);
+      const listHeaderVc = await generateCredentialJwt(
+        {
+          issuer: issuerDid,
+          id: credentialDid,
+          type: ['CredentialMetadataListHeader'],
+          credentialSubject: { accountId: '0xf123', listId: 1 },
+        },
+        issuingMetadataKeyPair.privateKey,
+        `${issuerDid}#key-1`,
+        'ES256',
+      );
+      resolveVelocityDidDocument.mock.resetCalls();
+      resolveVelocityDidDocument.mock.mockImplementation(() => ({
+        didDocument: {
+          id: 'DID',
+          publicKey: [
+            {
+              id: `${credentialDid.toLowerCase()}#key`,
+              publicKeyJwk: orgKeyPair.publicKey,
+            },
+          ],
+        },
+        didDocumentMetadata: {
+          boundIssuerVcs: [
+            {
+              id: credentialDid.toLowerCase(),
+              format: 'jwt_vc',
+              vc: listHeaderVc,
+            },
+          ],
+        },
+        didResolutionMetadata: {},
+      }));
+
+      nock.cleanAll();
+      nock(registrarUrl)
+        .get(verifiedProfilePath)
+        .reply(200, mockGetOrganizationVerifiedProfile);
+      nock(registrarUrl)
+        .get(`${credentialTypePath}?credentialType=OpenBadgeCredential`)
+        .reply(200, [
+          {
+            credentialType: 'OpenBadgeCredential',
+            issuerCategory: 'RegularIssuer',
+            primaryOrganizationClaimPaths: [
+              ['credentialSubject', 'authority', 'id'],
+            ],
+          },
+        ]);
+
+      openBadgeCredential = applyOverrides(credentialUnexpired, {
+        id: credentialDid,
+        issuer: { id: issuerDid },
+        credentialStatus: {
+          type: VelocityRevocationListType,
+          id: 'ethereum:URL:2',
+        },
+        credentialSubject: {
+          ...credentialUnexpired.credentialSubject,
+          type: 'OpenBadgeCredential',
+          id: issuerDidJwk,
+          authority: { id: issuerDid },
+        },
+        vnfProtocolVersion: VeriiProtocolVersions.PROTOCOL_VERSION_2,
+      });
+      openBadgeVc = await generateCredentialJwt(
+        openBadgeCredential,
+        orgKeyPair.privateKey,
+        `${credentialDid}#key`,
+      );
+    });
+
+    it('TRUSTED_ISSUER should PASS when the list header is signed by the issuer P-256 key', async () => {
+      const resolveDidScope = nockIssuerDidDocument(
+        issuingMetadataKeyPair.publicKey,
+      );
+
+      const result = await verifyVeriiCredentials(
+        {
+          credentials: [openBadgeVc],
+          expectedHolderDid: issuerDidJwk,
+          relyingParty: { did: 'did:ion:123', dltOperatorKMSKeyId: 'keyid-1' },
+        },
+        context,
+      );
+
+      expect(issuingMetadataKeyPair.publicKey.crv).toEqual('P-256');
+      expect(result).toEqual([
+        {
+          dataModelVersion: '1.1',
+          envelopeFormat: 'jwt_vc_json-ld',
+          signingAlgorithm: 'ES256K',
+          credential: openBadgeCredential,
+          credentialChecks: {
+            UNTAMPERED: CheckResults.PASS,
+            TRUSTED_ISSUER: CheckResults.PASS,
+            TRUSTED_HOLDER: CheckResults.PASS,
+            UNEXPIRED: CheckResults.PASS,
+            UNREVOKED: CheckResults.PASS,
+          },
+        },
+      ]);
+      expect(resolveDidScope.isDone()).toEqual(true);
+    });
+
+    it('TRUSTED_ISSUER should FAIL when the issuer DID document has a different P-256 key', async () => {
+      const resolveDidScope = nockIssuerDidDocument(
+        generateKeyPair({ format: 'jwk', curve: 'P-256' }).publicKey,
+      );
+
+      const result = await verifyVeriiCredentials(
+        {
+          credentials: [openBadgeVc],
+          expectedHolderDid: issuerDidJwk,
+          relyingParty: { did: 'did:ion:123', dltOperatorKMSKeyId: 'keyid-1' },
+        },
+        context,
+      );
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          credentialChecks: {
+            UNTAMPERED: CheckResults.PASS,
+            TRUSTED_ISSUER: CheckResults.FAIL,
+            TRUSTED_HOLDER: CheckResults.PASS,
+            UNEXPIRED: CheckResults.PASS,
+            UNREVOKED: CheckResults.PASS,
+          },
+        }),
+      ]);
+      expect(resolveDidScope.isDone()).toEqual(true);
     });
   });
 });

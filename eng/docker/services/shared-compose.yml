@@ -45,24 +45,27 @@ services:
   velocity-mongo:
     image: mongo:8.0@sha256:7bd28e5eea1c5766a084d5818254046f3ebe3b8f20a65e3a274640189e296667
     restart: on-failure
+    environment:
+      # mongod 8.0.0-8.0.20 crash after ~60s on Linux 6.19-7.0.13, and 8.0.21+ exits at startup on Ubuntu 7.0.0-*
+      # kernels because uname hides the upstream fix level (SERVER-121912, SERVER-125742, SERVER-136848).
+      # glibc.pthread.rseq=1 turns TCMalloc per-CPU caches off, so neither applies.
+      - GLIBC_TUNABLES=glibc.pthread.rseq=1
     ports:
       - 17017:27017
 
+  # One-shot: writes the certs and gives them to uid 1000. Services that read them
+  # wait for service_completed_successfully. With no restart policy, a failure fails `up` instead of hanging.
+  # The command must stay a one-item list: compose splits a string command, so sh -c would get only "openssl".
   certgen:
     image: alpine/openssl@sha256:f4dead2cc05e01fb683f04ef5573da53ecf2004c8d7603e1c65f6994d8d38313
-    restart: on-failure
+    restart: "no"
     volumes:
       - httpscert:/certs
-    command: req -x509 -keyout /certs/key.pem -out /certs/cert.crt -sha256 -days 365 -nodes -subj "/CN=e2e-registrar"
-
-  certfix:
-    image: alpine@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
-    restart: on-failure
-    volumes:
-      - httpscert:/certs
-    command: chown -R 1000:1000 /certs
-    depends_on:
-      - certgen
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        openssl req -x509 -keyout /certs/key.pem -out /certs/cert.crt -sha256 -days 365 -nodes -subj "/CN=e2e-registrar"
+        && chown 1000:1000 /certs/key.pem /certs/cert.crt
 
 volumes:
   httpscert:

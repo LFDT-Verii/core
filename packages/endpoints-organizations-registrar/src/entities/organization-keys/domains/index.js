@@ -1,5 +1,6 @@
 module.exports = {
   ...require('./constants'),
+  ...require('./build-cao-key-transfer'),
   ...require('./build-organization-key'),
   ...require('./extract-verification-method-from-byo-did-document'),
   ...require('./find-key-by-purpose'),

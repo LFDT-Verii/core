@@ -141,7 +141,17 @@ const openid4vpController = async (fastify) => {
                     minLength: 1,
                     pattern: '^(?!\\s*\\[\\s*\\]\\s*$).+',
                   },
-                  presentation_submission: { type: 'string', minLength: 1 },
+                  presentation_submission: {
+                    type: 'string',
+                    minLength: 1,
+                    description:
+                      'JSON-encoded presentation submission. ' +
+                      'Each `descriptor_map[].path` must be `$.verifiableCredential[<n>]`, ' +
+                      'where `<n>` is an index from 0 to 999 with no leading zeros, ' +
+                      'or `$` or `$[0]` with `path_nested.path` set to `$.verifiableCredential[<n>]`. ' +
+                      'Any other path is rejected with 400 `invalid_request`, ' +
+                      'and the exchange records `presentation_jsonpath_unsupported`.',
+                  },
                 },
                 required: ['state', 'vp_token', 'presentation_submission'],
               },

@@ -51,12 +51,20 @@ describe('Resolve did test suite', () => {
 
   describe('did:ion resolution', () => {
     it('Should return 404 when DID document not found', async () => {
-      const response = await fastify.inject({
+      const response = await fastify.injectJson({
         method: 'GET',
         url: `${baseUrl}/did:test:123`,
       });
 
       expect(response.statusCode).toEqual(404);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Not Found',
+          errorCode: 'organization_not_found',
+          message: 'Organization not found',
+          statusCode: 404,
+        }),
+      );
     });
 
     it('Should resolve did for "did:ion" did', async () => {
@@ -174,6 +182,51 @@ describe('Resolve did test suite', () => {
       expect(nockData.isDone()).toBe(true);
     });
 
+    it('Should resolve did:web with P-256 verification methods of any type', async () => {
+      const p256Jwk = { kty: 'EC', crv: 'P-256', x: 'x', y: 'y' };
+      const didWebDoc = {
+        '@context': ['https://www.w3.org/ns/did/v1'],
+        id: 'did:web:nock.test',
+        verificationMethod: [
+          {
+            id: 'did:web:nock.test#key-1',
+            type: 'JsonWebKey',
+            controller: 'did:web:nock.test',
+            publicKeyJwk: p256Jwk,
+          },
+          {
+            id: 'did:web:nock.test#key-2',
+            type: 'EcdsaSecp256r1VerificationKey2019',
+            controller: 'did:web:nock.test',
+            publicKeyJwk: p256Jwk,
+          },
+          {
+            id: 'did:web:nock.test#key-3',
+            type: 'Multikey',
+            controller: 'did:web:nock.test',
+            publicKeyMultibase: 'zDnaeexample',
+          },
+        ],
+        assertionMethod: [
+          'did:web:nock.test#key-1',
+          'did:web:nock.test#key-2',
+          'did:web:nock.test#key-3',
+        ],
+      };
+      const nockData = nock('https://nock.test')
+        .get('/.well-known/did.json')
+        .reply(200, didWebDoc);
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${baseUrl}/did:web:nock.test`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual(didWebDoc);
+      expect(nockData.isDone()).toBe(true);
+    });
+
     it('Should resolve did:web with path', async () => {
       const nockData = nock('https://localhost:8081')
         .get('/d/www.acmecorp.com/did.json')
@@ -203,10 +256,10 @@ describe('Resolve did test suite', () => {
       const nockData = nock('https://nock.test:8000')
         .get('/test/did.json')
         .reply(200, {
-          id: 'did:web:nock.test:test',
+          id: 'did:web:nock.test%3A8000:test',
         });
       await persistOrganization({
-        didDocId: 'did:web:nock.test:test',
+        didDocId: 'did:web:nock.test%3A8000:test',
       });
 
       const response = await fastify.injectJson({
@@ -220,8 +273,36 @@ describe('Resolve did test suite', () => {
 
       expect(nockData.isDone()).toBe(true);
       expect(response.json).toEqual({
-        id: 'did:web:nock.test:test',
+        id: 'did:web:nock.test%3A8000:test',
       });
+    });
+
+    it('Should error with 404 when DID document id does not match the requested did', async () => {
+      const nockData = nock('https://nock.test:8000')
+        .get('/test/did.json')
+        .reply(200, {
+          ...expectedDidWebDoc,
+          id: 'did:web:nock.test:test',
+        });
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${baseUrl}/${encodeURIComponent(
+          'did:web:nock.test%3A8000:test',
+        )}`,
+      });
+
+      expect(response.statusCode).toEqual(404);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Not Found',
+          errorCode: 'did_resolution_failed',
+          message:
+            'Could not resolve did:web:nock.test%3A8000:test: DID document id does not match requested did',
+          statusCode: 404,
+        }),
+      );
+      expect(nockData.isDone()).toBe(true);
     });
 
     it('Should resolve did with aliases for encoded "did:web"', async () => {
@@ -281,7 +362,8 @@ describe('Resolve did test suite', () => {
         errorResponseMatcher({
           error: 'Not Found',
           errorCode: 'did_resolution_failed',
-          message: 'Could not resolve did:web:nock.test',
+          message:
+            'Could not resolve did:web:nock.test: DID must resolve to a valid https URL containing a JSON document',
           statusCode: 404,
         }),
       );
@@ -314,11 +396,55 @@ describe('Resolve did test suite', () => {
         errorResponseMatcher({
           error: 'Not Found',
           errorCode: 'did_resolution_failed',
-          message: 'Could not resolve did:web:nock.test',
+          message:
+            'Could not resolve did:web:nock.test: DID must resolve to a valid https URL containing a JSON document',
           statusCode: 404,
         }),
       );
       expect(nockData.isDone()).toBe(true);
+    });
+  });
+
+  describe('custodied did:web resolution', () => {
+    it('Should resolve a custodied did:web from the database without fetching it', async () => {
+      const organization = await persistOrganization({
+        did: 'did:web:members.localhost.test:d:www.example.com',
+      });
+      const didJson = nock('https://members.localhost.test')
+        .get('/d/www.example.com/did.json')
+        .reply(200, { id: organization.didDoc.id });
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${baseUrl}/${organization.didDoc.id}`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual(organization.didDoc);
+      expect(didJson.isDone()).toBe(false);
+    });
+
+    it('Should error with 404 for an unknown custodied did:web without fetching it', async () => {
+      const did = 'did:web:members.localhost.test:d:www.unknown.com';
+      const didJson = nock('https://members.localhost.test')
+        .get('/d/www.unknown.com/did.json')
+        .reply(200, { id: did });
+
+      const response = await fastify.injectJson({
+        method: 'GET',
+        url: `${baseUrl}/${did}`,
+      });
+
+      expect(response.statusCode).toEqual(404);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Not Found',
+          errorCode: 'did_resolution_failed',
+          message: `Could not resolve ${did}: DID document not found`,
+          statusCode: 404,
+        }),
+      );
+      expect(didJson.isDone()).toBe(false);
     });
   });
 

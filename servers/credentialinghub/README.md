@@ -12,6 +12,11 @@ not move `latest`.
 The image defaults to `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=3000`, and
 `LOG_SEVERITY=info`. Override these only when the deployment requires it.
 
+`ENVIRONMENT_LABEL` names the deployment, such as `testnet`, and Sentry events
+carry it as their environment. It defaults to `NETWORK`, the network the
+deployment runs on, and then to the value of `NODE_ENV`. Set it when neither
+tells your deployments apart.
+
 The image accepts generic blockchain OAuth names as aliases for the existing
 Hub configuration names:
 
@@ -25,8 +30,33 @@ Hub configuration names:
 Supply one name from each alias pair, never both: the image rejects a
 configuration that provides both names in a pair.
 
-For a generic authenticated Besu/JSON-RPC deployment, put the configuration in
-an environment file such as `hub.env`:
+### Network settings
+
+The image presets no network. It runs on any network, and you set the network
+values as environment variables:
+
+| Variable | Value |
+| --- | --- |
+| `RPC_NODE_URL` | The URL of the blockchain node the Hub calls |
+| `CHAIN_ID` | The network's chain ID |
+| `REVOCATION_CONTRACT_ADDRESS` | The address of the revocation list contract |
+| `METADATA_REGISTRY_CONTRACT_ADDRESS` | The address of the metadata registry contract |
+| `COUPON_CONTRACT_ADDRESS` | The address of the verification coupon contract |
+| `PERMISSIONS_CONTRACT_ADDRESS` | The address of the permissions contract |
+| `VNF_OAUTH_TOKENS_ENDPOINT` or `BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT` | The token endpoint of the OAuth server that authenticates calls to the node |
+| `BLOCKCHAIN_API_AUDIENCE` or `BLOCKCHAIN_OAUTH_AUDIENCE` | The audience of those tokens |
+| `VNF_OAUTH_CLIENT_ID` or `BLOCKCHAIN_OAUTH_CLIENT_ID` | The Hub's OAuth client ID |
+| `VNF_OAUTH_CLIENT_SECRET` or `BLOCKCHAIN_OAUTH_CLIENT_SECRET` | The Hub's OAuth client secret |
+| `REGISTRAR_URL` | The URL of the network's registrar |
+| `LIB_URL` | The URL of the network's library server |
+| `CREDENTIAL_EXTENSIONS_CONTEXT_URL` | The URL of the JSON-LD context for credential extensions |
+| `DEEP_LINK_PROTOCOL` | The deep link protocol of the network's wallets, such as `example-network://` |
+
+The Hub needs all of them, and stops at startup when one is missing. It logs
+its chain ID at startup.
+
+For example, put the configuration for an authenticated Besu/JSON-RPC network
+in an environment file such as `hub.env`:
 
 ```dotenv
 RPC_NODE_URL=https://besu.example.org
@@ -36,7 +66,6 @@ REVOCATION_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000001
 METADATA_REGISTRY_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000002
 COUPON_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000003
 PERMISSIONS_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000004
-ROOT_PUBLIC_KEY=04your-root-public-key
 DEEP_LINK_PROTOCOL=example-network://
 LIB_URL=https://lib.example.org
 CREDENTIAL_EXTENSIONS_CONTEXT_URL=https://lib.example.org/contexts/credential-extensions.jsonld
@@ -48,6 +77,7 @@ MONGO_URI=mongodb://mongo:27017/credentialinghub
 HOST_URL=https://hub.example.org
 SECRET=replace-with-session-secret
 KEY_ENCRYPTION_SECRET=replace-with-key-encryption-secret
+OPENID4VCI_NONCE_SECRET=replace-with-openid4vci-nonce-secret
 OPERATOR_API_TOKEN=replace-with-operator-api-token
 DEFAULT_CAO_DID=did:example:cao
 ```
@@ -62,37 +92,128 @@ The Hub blockchain client still requires OAuth, even when the RPC endpoint
 itself has no HTTP authentication. Supporting unauthenticated RPC separately
 is tracked in issue #890.
 
-For Velocity Network environments, use exactly one shortcut argument:
+The image takes no arguments. Earlier versions took a network flag, such as
+`--velocity-mainnet` or `--mainnet`, that preset the network values. The image
+now stops at startup when given any argument, with exit code 64. Set the
+network values as environment variables instead.
+
+For advanced wrappers, override the entrypoint:
 
 ```bash
-docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-devnet
-docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-testnet
-docker run --rm --env-file hub-secrets.env -p 3000:3000 \
-  lfdecentralizedtrust/verii-credentialing-hub:latest --velocity-mainnet
+docker run --rm --env-file hub.env --entrypoint node \
+  lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
 ```
 
-Each shortcut owns `RPC_NODE_URL`, `CHAIN_ID`, `REGISTRAR_URL`,
-`REVOCATION_CONTRACT_ADDRESS`, `METADATA_REGISTRY_CONTRACT_ADDRESS`,
-`COUPON_CONTRACT_ADDRESS`, `PERMISSIONS_CONTRACT_ADDRESS`, `ROOT_PUBLIC_KEY`,
-`VNF_OAUTH_TOKENS_ENDPOINT`, `BLOCKCHAIN_API_AUDIENCE`, `DEEP_LINK_PROTOCOL`,
-`LIB_URL`, and `CREDENTIAL_EXTENSIONS_CONTEXT_URL`. The associated generic
-aliases `BLOCKCHAIN_OAUTH_TOKEN_ENDPOINT` and `BLOCKCHAIN_OAUTH_AUDIENCE` are
-also shortcut-owned. Supplying any shortcut-owned value with a shortcut
-hard-fails. OAuth client ID and secret settings, plus operational and built-in
-CAO settings, remain allowed.
+## Database
 
-Image arguments are reserved for a Velocity Network shortcut. For advanced
-wrappers, override the entrypoint instead:
+The Hub supports only MongoDB, Amazon DocumentDB and Azure DocumentDB, at
+the address that `MONGO_URI` gives. CI tests against MongoDB 8.0.
 
-```bash
-docker run --rm --entrypoint node lfdecentralizedtrust/verii-credentialing-hub:latest src/main.js
-```
+## Pre-authorized Codes
+
+`issue-links/refresh` with a `depotId` gives a depot of a `preauth` service a
+new pre-authorized code, which its VN API link and its OpenID4VCI credential
+offer carry. The depot's previous code stops working.
+
+Each code expires after the depot's lifetime, which `depots/create` sets with
+`preauthCodeExpiresIn`: a number of seconds from 1 to 315360000 (10 years),
+such as `600` for 10 minutes, or `never` for codes that don't expire. A depot
+without it takes `PREAUTH_CODE_EXPIRES_IN_SECONDS` at each refresh. A depot's
+lifetime can't be changed.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PREAUTH_CODE_EXPIRES_IN_SECONDS` | `259200` (72 hours) | How long the codes of a depot without `preauthCodeExpiresIn` last, in seconds, from 1 to 315360000. The Hub stops at startup on any other value. A change applies to codes refreshed afterwards, not to codes already issued. |
+
+`issue-links/refresh` returns the new code's `preauthCodeExpiresAt`, and
+`depots/get` shows the current code's. A code that doesn't expire has none.
+An expired code is refused:
+
+- VN API authentication answers 401 with the `errorCode`
+  `preauth_code_expired`, and the exchange records `AUTHENTICATION_FAILURE`.
+- The OpenID4VCI token endpoint answers 400 `invalid_grant`.
+
+Refresh the depot's link to give the holder a new code. Exchanges that
+authenticated before the code expired keep their access tokens, and shared
+links carry no code.
+
+A wallet waiting for a depot's deferred credentials authenticates again with
+the same code when `NewOffersReady` tells it they're ready. So the lifetime of a
+depot with `deferredCredentials` must cover the time the issuer takes to add
+its credentials and call `depots/resolve-deferred-credentials`.
+
+Codes made by Hub 2.2.0 and earlier have no expiry, and work until their depot
+is refreshed again.
+
+## OpenID4VCI Nonces
+
+The nonce endpoint, `POST /r/:tenantId/openid4vc/nonce`, returns a stateless
+`c_nonce`: an HS256 JWT signed with `OPENID4VCI_NONCE_SECRET`. Its `iss` and
+`aud` are the tenant's credential issuer URL, and it carries `iat`, `exp` and a
+random `jti`. Every key proof sent to the credential endpoint must carry a
+nonce from this endpoint. A proof without a `nonce` is rejected with
+`invalid_proof`. An expired or altered nonce, or one issued for another tenant,
+is rejected with `invalid_nonce`, so the wallet fetches a new one.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OPENID4VCI_NONCE_SECRET` | none (required by the Hub server) | Secret that signs and verifies nonces. Use a long random value, for example the output of `openssl rand -hex 32`, and give every Hub instance the same value. |
+| `OPENID4VCI_NONCE_EXPIRES_IN` | `5m` | How long a nonce stays valid, as a duration such as `90s` or `5m`. |
+
+The Hub stores no nonces, so a nonce can be reused until it expires.
+Changing the secret invalidates every outstanding nonce. The standalone
+notification worker issues no nonces, so it starts without
+`OPENID4VCI_NONCE_SECRET`.
+
+## OpenID4VCI Deferred Issuance
+
+For a depot with `deferredCredentials`, the access token also lists a
+`deferred:<credential type>` credential identifier for each of the depot's
+`expectedCredentialTypes` that has no credential to claim. A credential request
+for one returns the credential at once if one of that type has been added, and
+HTTP 202 with a `transaction_id` otherwise. The wallet then polls
+`POST /r/:tenantId/openid4vc/deferred_credential` with it until a credential of
+that type is added. Once the issuer has called
+`depots/resolve-deferred-credentials` after the transaction was created, a poll
+that finds nothing to claim denies the transaction.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `OPENID4VCI_DEFERRED_INTERVAL_SECONDS` | `30` | The `interval`, in seconds, that tells a wallet how long to wait before it polls again. Must be at least 1. |
+
+## Presentation Submission Descriptor Paths
+
+Wallets submit presentations to `POST /vn-api/r/:tenantId/presentation` and
+`POST /r/:tenantId/openid4vp/direct-post`. Each entry in the submission's
+`presentation_submission.descriptor_map` names one credential in the
+presentation's `verifiableCredential` array. Its `path` takes one of these
+forms:
+
+| Descriptor | `path` | `path_nested.path` |
+| --- | --- | --- |
+| Direct | `$.verifiableCredential[<n>]` | not sent |
+| Nested | `$` or `$[0]` | `$.verifiableCredential[<n>]` |
+
+`<n>` is an index from `0` to `999`, written without leading zeros. The whole
+path must match one of these forms, with no other characters or segments. A
+nested descriptor can't contain another `path_nested`.
+
+| Submission | Error |
+| --- | --- |
+| A `path` in any other form | 400 `presentation_jsonpath_unsupported` |
+| An index with no credential in `verifiableCredential` | 400 `presentation_jsonpath_empty` |
+
+The VN-API endpoint returns these as the response's `errorCode`. The OpenID4VP
+direct post returns an OAuth `invalid_request` error, and the exchange records
+the code.
 
 ## Design Docs
 
-- [Notification webhooks design](docs/notification-webhooks-design.md)
+Design docs live on GitHub, next to the issue or pull request they belong to:
+
+- [Notification webhooks](https://github.com/LFDT-Verii/core/pull/814#issuecomment-6646467974)
+- [Swagger documents split by audience](https://github.com/LFDT-Verii/core/pull/840#issuecomment-6646467124) and its [implementation plan](https://github.com/LFDT-Verii/core/pull/840#issuecomment-6646467554)
+- [Shared issue links with email authentication](https://github.com/LFDT-Verii/core/issues/1202#issuecomment-6646466326)
 
 ## CAO Security Provider
 
@@ -105,7 +226,7 @@ contract calling code uses the configured client credentials directly, so the
 default provider does not install a blockchain credentials capability plugin.
 Startup fails when any of the four values is absent from both
 `configOverrides` and the environment. This applies to every entry point that
-uses the built-in provider, including the standalone notification worker.
+uses the built-in provider. The notification worker doesn't use a provider.
 Deployments upgrading from the earlier static-token setup must now supply
 `DEFAULT_CAO_DID`; it was previously optional because tenant creation could
 instead receive a `caoDid` in the request. The current Operator create endpoint
@@ -246,6 +367,15 @@ the loaded tenant, while authenticated Operator requests can resolve it from
 the Operator principal. A multi-CAO provider should reject requests when both
 sources exist but disagree, or when neither source supplies a CAO DID.
 
+Test mode (`NODE_ENV=test` or the `isTest` config value) does not change how
+blockchain calls are authenticated. A custom provider's blockchain client
+credentials are used in tests exactly as in production, so a wrapper's tests
+can call `createAppServer` without overriding `isTest` and fake the VNF OAuth
+token endpoint and the RPC node. Some test servers, such as
+`createTestServer` from `@verii/server-provider`, register a stub VNF
+authenticator. The built-in provider keeps that stub, while a custom
+provider's credentials replace it.
+
 Custom providers are trusted server setup code, so apart from the Operator
 principal's required `caoDid`, the Hub does not perform additional shape
 validation on their descriptors or principals. Fastify reports invalid plugin
@@ -253,3 +383,48 @@ and missing decorator integrations through its normal startup and request
 behavior. Credential values are validated by the blockchain authentication
 layer when they are consumed. Provider errors are returned to the caller and
 never fall back to the built-in static credentials.
+
+## Notification Worker
+
+The notification worker needs only the Hub's config and MongoDB, so it starts
+without a CAO security provider or its environment variables. By default it
+posts every event to `NOTIFICATIONS_WEBHOOK_URL`. A wrapper can choose each
+event's destination by starting the worker from its own module:
+
+```js
+// notification-worker.js
+const { startNotificationWorker } = require('@verii/server-credentialing-hub');
+
+startNotificationWorker({
+  // event is the stored notification event; db is the Hub's MongoDB database.
+  resolveDestination: async (event, { db }) => {
+    const webhook = await db
+      .collection('webhooks')
+      .findOne({ tenantId: event.payload.tenantId });
+    return webhook && { url: webhook.url, secret: webhook.secret };
+  },
+});
+```
+
+The resolver returns `{ url, secret, signatureHeaderName? }` or `null`. The URL
+must pass the same checks as `NOTIFICATIONS_WEBHOOK_URL`, and the secret must
+be a non-empty string. Without `signatureHeaderName`, the signature header is
+`Verii-Signature`, not `NOTIFICATIONS_WEBHOOK_SIGNATURE_HEADER_NAME`. An event
+with no destination, an invalid URL or an invalid secret is marked `dead`
+without a request; a resolver that throws is retried like a failed delivery.
+The resolver runs inside the event's 30 s claim lease and has no timeout of its
+own, so it should return quickly.
+
+`NOTIFICATIONS_WEBHOOK_URL` and `NOTIFICATIONS_WEBHOOK_SECRET` are still
+required when notifications are enabled, even if the resolver doesn't use them.
+
+Run the module directly in `standalone` mode. In `embedded-child` mode, pass
+its absolute path to `startAppServer`, which forks it instead of the Hub's
+worker and fails at startup if the file doesn't exist:
+
+```js
+startAppServer({
+  caoSecurityProvider,
+  notificationWorkerModulePath: require.resolve('./notification-worker'),
+});
+```
