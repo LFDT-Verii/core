@@ -20,7 +20,7 @@ import { JsonWebKey } from 'crypto';
 
 export interface KeySpec {
   algorithm: 'ec' | 'rsa';
-  curve?: 'P-256' | 'P-384' | 'P-512' | 'secp256k1';
+  curve?: 'P-256' | 'P-384' | 'P-521' | 'secp256k1';
 }
 
 type Key = JsonWebKey;
