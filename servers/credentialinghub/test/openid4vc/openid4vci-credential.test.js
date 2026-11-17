@@ -46,10 +46,12 @@ const {
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
 
 const { jwtSign, tamperJwt, jwtDecode } = require('@verii/jwt');
+const { getUnixTime } = require('date-fns');
 const { NANO_ID_FORMAT, DID_FORMAT } = require('@verii/test-regexes');
+const crypto = require('crypto');
 const { mongoify } = require('@verii/tests-helpers');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
-const { map, find, isEqual, omit, entries, set } = require('lodash/fp');
+const { map, find, isEqual, omit } = require('lodash/fp');
 const { initKeyFactory } = require('../../src/entities/keys');
 const { initTenantFactory } = require('../../src/entities/tenants');
 const {
@@ -60,11 +62,6 @@ const { initCredentialFactory } = require('../../src/entities/credentials');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
 const { jwtVcExpectation } = require('../helpers/jwt-vc-expectation');
-const {
-  ExchangeStates,
-  ExchangeProtocols,
-  ExchangeTypes,
-} = require('../../src/entities/exchanges');
 
 describe('openid4vc credential test suite', () => {
   let fastify;
@@ -119,20 +116,28 @@ describe('openid4vc credential test suite', () => {
     await mongoDb().collection('issuerServices').deleteMany({});
     await mongoDb().collection('depots').deleteMany({});
     await mongoDb().collection('credentials').deleteMany({});
+    await mongoDb().collection('openid4vciTransactions').deleteMany({});
     await mongoDb().collection('notifications').deleteMany({});
 
     holderKeyPair = generateKeyPair({ format: 'jwk' });
     holderDid = getDidUriFromJwk(holderKeyPair.publicKey);
-    authToken = await jwtSign({}, issuerKeyPair.privateKey, {
-      subject: `https://localhost.test/r/${tenant._id}`,
-    });
     issuerService = await persistIssuerService({ tenant });
     depot = await persistDepot({
       tenant,
       service: issuerService,
     });
+    authToken = await buildAuthToken(depot);
     credential = await persistCredential({ tenant, depot });
   });
+
+  const buildAuthToken = (tokenDepot, payload) =>
+    jwtSign(
+      payload ?? { depot_id: `${tokenDepot._id}` },
+      issuerKeyPair.privateKey,
+      {
+        subject: `https://localhost.test/r/${tenant._id}`,
+      },
+    );
 
   after(async () => {
     await fastify.close();
@@ -142,20 +147,11 @@ describe('openid4vc credential test suite', () => {
   describe('openid4vc credential test suite', () => {
     describe('openid4vc credential endpoint error cases', () => {
       it('should 401 with invalid_token', async () => {
-        const encryptedNonce = encrypt(
-          `${Date.now()}`,
-          hexFromJwk(issuerKeyPair.privateKey, true),
-        );
+        const cNonce = await requestNonce(tenant._id);
 
-        const proof = await buildProof(
-          holderDid,
-          holderKeyPair,
-          encryptedNonce,
-          {
-            typ: 'openid4vci-proof+jwt',
-            // aud: 'https://devcih.velocitycareerlabs.io',
-          },
-        );
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+        });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -190,6 +186,24 @@ describe('openid4vc credential test suite', () => {
           error_description: expect.any(String),
         });
       });
+      it('should 400 with invalid_credential_request when the body is not valid JSON', async () => {
+        const response = await fastify.inject({
+          method: 'POST',
+          url: `/r/${tenant._id}/openid4vc/credential`,
+          headers: {
+            authorization: `Bearer ${authToken}`,
+            'content-type': 'application/json',
+          },
+          body: '{',
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json()).toEqual({
+          error: 'invalid_credential_request',
+          error_description:
+            "Body is not valid JSON but content-type is set to 'application/json'",
+        });
+      });
       it('should 400 with invalid_proof if no proofs are sent', async () => {
         const response = await fastify.injectJson({
           method: 'POST',
@@ -209,17 +223,11 @@ describe('openid4vc credential test suite', () => {
         });
       });
       it('should 400 with invalid_proof if bad proof is sent', async () => {
-        const encryptedNonce = encrypt(
-          `${Date.now()}`,
-          hexFromJwk(issuerKeyPair.privateKey, true),
-        );
+        const cNonce = await requestNonce(tenant._id);
 
-        const proof = await buildProof(
-          holderDid,
-          holderKeyPair,
-          encryptedNonce,
-          { typ: 'openid4vci-proof+jwt' },
-        );
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+        });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -244,18 +252,137 @@ describe('openid4vc credential test suite', () => {
             .findOne({ _id: new ObjectId(credential._id) }),
         ).resolves.toEqual(mongoify(credential));
       });
-      it('should 400 with unknown_credential_identifier', async () => {
+      it('should 400 with invalid_proof if the proof has no nonce', async () => {
+        const proof = await buildProof(holderDid, holderKeyPair, undefined, {
+          typ: 'openid4vci-proof+jwt',
+        });
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'invalid_proof',
+          error_description:
+            "Credential request proof jwt is missing a 'nonce'.",
+        });
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with invalid_proof if the proof aud is another credential issuer', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+          aud: credentialIssuerOf(new ObjectId()),
+        });
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'invalid_proof',
+          error_description:
+            "Error verifying credential request proof jwt. jwt 'aud' does not match expected value.",
+        });
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with invalid_proof if the proof has no aud', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+          aud: undefined,
+        });
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'invalid_proof',
+          error_description: 'Invalid proof',
+        });
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with invalid_nonce if the nonce has expired', async () => {
+        const nowUnix = getUnixTime(new Date());
+        const expiredNonce = await jwtSign({}, 'test-openid4vci-nonce-secret', {
+          alg: 'HS256',
+          audience: `https://localhost.test/r/${tenant._id}`,
+          exp: nowUnix - 1,
+          iat: nowUnix - 301,
+          issuer: `https://localhost.test/r/${tenant._id}`,
+          jti: crypto.randomUUID(),
+        });
+        const proof = await buildProof(holderDid, holderKeyPair, expiredNonce, {
+          typ: 'openid4vci-proof+jwt',
+        });
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(invalidNonceResponse);
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with invalid_nonce if the nonce has been tampered with', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const tamperedNonce = tamperJwt(cNonce, {
+          exp: getUnixTime(new Date()) + 3600,
+        });
+        const proof = await buildProof(
+          holderDid,
+          holderKeyPair,
+          tamperedNonce,
+          {
+            typ: 'openid4vci-proof+jwt',
+          },
+        );
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(invalidNonceResponse);
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with invalid_nonce if the nonce was issued for another tenant', async () => {
+        const { tenant: otherTenant } = await constructTenant(
+          persistTenant,
+          persistKey,
+        );
+        const otherTenantNonce = await requestNonce(otherTenant._id);
+        const proof = await buildProof(
+          holderDid,
+          holderKeyPair,
+          otherTenantNonce,
+          { typ: 'openid4vci-proof+jwt' },
+        );
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(invalidNonceResponse);
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with invalid_nonce if the nonce has the pre-upgrade encrypted format', async () => {
         const encryptedNonce = encrypt(
           `${Date.now()}`,
           hexFromJwk(issuerKeyPair.privateKey, true),
         );
-
         const proof = await buildProof(
           holderDid,
           holderKeyPair,
           encryptedNonce,
           { typ: 'openid4vci-proof+jwt' },
         );
+
+        const response = await requestCredential(proof);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(invalidNonceResponse);
+        await expectCredentialNotIssued();
+      });
+      it('should 400 with unknown_credential_identifier', async () => {
+        const cNonce = await requestNonce(tenant._id);
+
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+        });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -275,18 +402,128 @@ describe('openid4vc credential test suite', () => {
         });
       });
 
-      it('should 400 if server issue', async () => {
-        const encryptedNonce = encrypt(
-          `${Date.now()}`,
-          hexFromJwk(issuerKeyPair.privateKey, true),
-        );
+      it('should 401 with invalid_token if the token has no depot', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+        const tokenWithoutDepot = await buildAuthToken(undefined, {});
 
-        const proof = await buildProof(
-          holderDid,
-          holderKeyPair,
-          encryptedNonce,
-          { typ: 'openid4vci-proof+jwt' },
-        );
+        const response = await requestCredential(proof, credential._id, {
+          token: tokenWithoutDepot,
+        });
+
+        expect(response.statusCode).toEqual(401);
+        expect(response.json).toEqual({
+          error: 'invalid_token',
+          error_description: 'invalid_token',
+        });
+        await expectCredentialNotIssued();
+      });
+
+      it("should 400 with unknown_credential_identifier for another depot's credential", async () => {
+        const otherDepot = await persistDepot({
+          tenant,
+          service: issuerService,
+        });
+        const otherCredential = await persistCredential({
+          tenant,
+          depot: otherDepot,
+        });
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+
+        const response = await requestCredential(proof, otherCredential._id);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'unknown_credential_identifier',
+          error_description: `Error identifying credential ${otherCredential._id}`,
+        });
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(otherCredential._id) }),
+        ).resolves.toEqual(mongoify(otherCredential));
+      });
+
+      it('should 400 with credential_request_denied if the credential was already signed', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+        const firstResponse = await requestCredential(proof);
+        expect(firstResponse.statusCode).toEqual(200);
+        const signedCredential = await mongoDb()
+          .collection('credentials')
+          .findOne({ _id: new ObjectId(credential._id) });
+
+        const secondResponse = await requestCredential(proof);
+
+        expect(secondResponse.statusCode).toEqual(400);
+        expect(secondResponse.json).toEqual({
+          error: 'credential_request_denied',
+          error_description: `Credential ${credential._id} can't be issued again`,
+        });
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(credential._id) }),
+        ).resolves.toEqual(signedCredential);
+        await expect(findTransactionsInDb()).resolves.toHaveLength(1);
+      });
+
+      ['acceptedAt', 'rejectedAt'].forEach((finalField) => {
+        it(`should 400 with credential_request_denied if the credential has ${finalField}`, async () => {
+          const finalCredential = await persistCredential({
+            tenant,
+            depot,
+            [finalField]: new Date(),
+          });
+          const cNonce = await requestNonce(tenant._id);
+          const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+
+          const response = await requestCredential(proof, finalCredential._id);
+
+          expect(response.statusCode).toEqual(400);
+          expect(response.json).toEqual({
+            error: 'credential_request_denied',
+            error_description: `Credential ${finalCredential._id} can't be issued again`,
+          });
+          await expect(
+            mongoDb()
+              .collection('credentials')
+              .findOne({ _id: new ObjectId(finalCredential._id) }),
+          ).resolves.toEqual(mongoify(finalCredential));
+        });
+      });
+
+      it('should 400 with credential_request_denied if a deferred transaction has claimed the credential', async () => {
+        const claimedCredential = await persistCredential({
+          tenant,
+          depot,
+          deferredTransactionId: new ObjectId(),
+        });
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce);
+
+        const response = await requestCredential(proof, claimedCredential._id);
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual({
+          error: 'credential_request_denied',
+          error_description: `Credential ${claimedCredential._id} can't be issued again`,
+        });
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .findOne({ _id: new ObjectId(claimedCredential._id) }),
+        ).resolves.toEqual(mongoify(claimedCredential));
+        await expect(findTransactionsInDb()).resolves.toEqual([]);
+      });
+
+      it('should 400 if server issue', async () => {
+        const cNonce = await requestNonce(tenant._id);
+
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+        });
         mockAddRevocationListSigned.mock.mockImplementationOnce(() =>
           Promise.reject(new Error('error')),
         );
@@ -308,36 +545,23 @@ describe('openid4vc credential test suite', () => {
           error_description:
             'revocationRegistry.addWalletToRegistrySigned is not a function',
         });
-        await expect(
-          mongoDb()
-            .collection('credentials')
-            .findOne({ _id: new ObjectId(credential._id) }),
-        ).resolves.toEqual({
-          ...mongoify(credential),
-          exchange: expectedDbExchange(
-            issuerService,
-            [ExchangeStates.NEW, ExchangeStates.UNEXPECTED_ERROR],
-            {
-              err: 'revocationRegistry.addWalletToRegistrySigned is not a function',
-            },
-          ),
-          updatedAt: expect.any(Date),
-        });
+        await expectCredentialNotIssued();
+        await expect(findTransactionsInDb()).resolves.toEqual([
+          {
+            ...expectedDbTransaction(),
+            status: 'error',
+            err: 'revocationRegistry.addWalletToRegistrySigned is not a function',
+          },
+        ]);
       });
     });
     describe('openid4vc credential endpoint success cases', () => {
       it('should 200 with a credential', async () => {
-        const encryptedNonce = encrypt(
-          `${Date.now()}`,
-          hexFromJwk(issuerKeyPair.privateKey, true),
-        );
+        const cNonce = await requestNonce(tenant._id);
 
-        const proof = await buildProof(
-          holderDid,
-          holderKeyPair,
-          encryptedNonce,
-          { typ: 'openid4vci-proof+jwt' },
-        );
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+        });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -358,7 +582,7 @@ describe('openid4vc credential test suite', () => {
               credential: expect.any(String),
             },
           ],
-          notification_id: expect.any(String),
+          notification_id: expect.stringMatching(NANO_ID_FORMAT),
         });
         const decodedVcs = map(
           ({ credential: vcJwt }) => jwtDecode(vcJwt),
@@ -404,29 +628,31 @@ describe('openid4vc credential test suite', () => {
           envelopeFormat: 'jwt_vc_json-ld',
           jwtVc: response.json.credentials[0].credential,
           signingAlgorithm: 'ES256K',
-          exchange: expectedDbExchange(
-            issuerService,
-            [ExchangeStates.NEW, ExchangeStates.CREDENTIALS_SIGNED],
-            {
-              credentialMetadata: {
-                contentHash: expect.any(String),
-                credentialType: 'Employment',
-                credentialTypeEncoded: '0xfe3f',
-                index: expect.any(Number),
-                isNewList: true,
-                listId: expect.any(Number),
-                algType: 'aes-256-gcm',
-                publicKey: {
-                  crv: 'secp256k1',
-                  kty: 'EC',
-                  x: expect.any(String),
-                  y: expect.any(String),
-                },
-              },
-            },
-          ),
           updatedAt: expect.any(Date),
         });
+        await expect(findTransactionsInDb()).resolves.toEqual([
+          {
+            ...expectedDbTransaction(),
+            credentialSubjectId: holderDid,
+            notificationId: response.json.notification_id,
+            status: 'signed',
+            credentialMetadata: {
+              contentHash: expect.any(String),
+              credentialType: 'Employment',
+              credentialTypeEncoded: '0xfe3f',
+              index: expect.any(Number),
+              isNewList: true,
+              listId: expect.any(Number),
+              algType: 'aes-256-gcm',
+              publicKey: {
+                crv: 'secp256k1',
+                kty: 'EC',
+                x: expect.any(String),
+                y: expect.any(String),
+              },
+            },
+          },
+        ]);
       });
 
       it('should sign with ES256 when the tenant policy overrides the type default', async () => {
@@ -436,16 +662,10 @@ describe('openid4vc credential test suite', () => {
             { _id: new ObjectId(tenant._id) },
             { $set: { credentialSigningAlgorithm: 'ES256' } },
           );
-        const encryptedNonce = encrypt(
-          `${Date.now()}`,
-          hexFromJwk(issuerKeyPair.privateKey, true),
-        );
-        const proof = await buildProof(
-          holderDid,
-          holderKeyPair,
-          encryptedNonce,
-          { typ: 'openid4vci-proof+jwt' },
-        );
+        const cNonce = await requestNonce(tenant._id);
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+        });
 
         const response = await fastify.injectJson({
           method: 'POST',
@@ -469,70 +689,149 @@ describe('openid4vc credential test suite', () => {
         ).resolves.toEqual(
           expect.objectContaining({
             signingAlgorithm: 'ES256',
-            exchange: expect.objectContaining({
-              credentialMetadata: expect.objectContaining({
-                publicKey: expect.objectContaining({
-                  crv: 'P-256',
-                  kty: 'EC',
-                }),
+          }),
+        );
+        await expect(findTransactionsInDb()).resolves.toEqual([
+          expect.objectContaining({
+            credentialMetadata: expect.objectContaining({
+              publicKey: expect.objectContaining({
+                crv: 'P-256',
+                kty: 'EC',
               }),
             }),
           }),
+        ]);
+      });
+
+      it('should 200 when a nonce is reused before it expires', async () => {
+        const cNonce = await requestNonce(tenant._id);
+        const secondCredential = await persistCredential({ tenant, depot });
+        const proof = await buildProof(holderDid, holderKeyPair, cNonce, {
+          typ: 'openid4vci-proof+jwt',
+        });
+
+        const firstResponse = await requestCredential(proof);
+        const secondResponse = await requestCredential(
+          proof,
+          secondCredential._id,
+        );
+
+        expect(firstResponse.statusCode).toEqual(200);
+        expect(secondResponse.statusCode).toEqual(200);
+        await expect(
+          mongoDb()
+            .collection('credentials')
+            .find(
+              {
+                _id: {
+                  $in: [
+                    new ObjectId(credential._id),
+                    new ObjectId(secondCredential._id),
+                  ],
+                },
+              },
+              { projection: { jwtVc: 1 } },
+            )
+            .toArray(),
+        ).resolves.toEqual(
+          expect.arrayContaining([
+            {
+              _id: new ObjectId(credential._id),
+              jwtVc: firstResponse.json.credentials[0].credential,
+            },
+            {
+              _id: new ObjectId(secondCredential._id),
+              jwtVc: secondResponse.json.credentials[0].credential,
+            },
+          ]),
         );
       });
     });
   });
+
+  const requestNonce = async (tenantId) => {
+    const response = await fastify.injectJson({
+      method: 'POST',
+      url: `/r/${tenantId}/openid4vc/nonce`,
+    });
+    return response.json.c_nonce;
+  };
+
+  const requestCredential = (
+    proof,
+    credentialIdentifier = credential._id,
+    { token = authToken } = {},
+  ) =>
+    fastify.injectJson({
+      method: 'POST',
+      url: `/r/${tenant._id}/openid4vc/credential`,
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+      payload: {
+        credential_identifier: credentialIdentifier,
+        proofs: { jwt: [proof.jwt] },
+      },
+    });
+
+  const buildProof = async (
+    didJwk,
+    keyPair,
+    challenge,
+    { useKid = true, typ = 'openid4vci-proof+jwt', ...payloadOverrides } = {},
+  ) => {
+    const options = {
+      alg: keyPair.publicKey.crv === 'P-256' ? 'ES256' : 'ES256K',
+      typ,
+    };
+    if (useKid) {
+      options.kid = `${didJwk}#0`;
+    } else {
+      options.jwk = keyPair.publicKey;
+    }
+    const jwt = await jwtSign(
+      applyOverrides(
+        {
+          aud: credentialIssuerOf(tenant._id),
+          nonce: challenge,
+          iss: didJwk,
+        },
+        payloadOverrides,
+      ),
+      keyPair.privateKey,
+      options,
+    );
+    return {
+      proof_type: 'jwt',
+      jwt,
+    };
+  };
+
+  const expectCredentialNotIssued = () =>
+    expect(
+      mongoDb()
+        .collection('credentials')
+        .findOne({ _id: new ObjectId(credential._id) }),
+    ).resolves.toEqual(mongoify(credential));
+
+  const findTransactionsInDb = () =>
+    mongoDb().collection('openid4vciTransactions').find({}).toArray();
+
+  const expectedDbTransaction = () => ({
+    _id: expect.any(ObjectId),
+    tenantId: new ObjectId(tenant._id),
+    depotId: new ObjectId(depot._id),
+    serviceId: new ObjectId(issuerService._id),
+    credentialId: new ObjectId(credential._id),
+    createdAt: expect.any(Date),
+    updatedAt: expect.any(Date),
+  });
 });
 
-const buildProof = async (
-  didJwk,
-  keyPair,
-  challenge,
-  { useKid = true, typ = 'openid4vci-proof+jwt', ...payloadOverrides } = {},
-) => {
-  const options = {
-    alg: keyPair.publicKey.crv === 'P-256' ? 'ES256' : 'ES256K',
-    typ,
-  };
-  if (useKid) {
-    options.kid = `${didJwk}#0`;
-  } else {
-    options.jwk = keyPair.publicKey;
-  }
-  const jwt = await jwtSign(
-    applyOverrides(
-      {
-        aud: 'https://localhost.test',
-        nonce: challenge,
-        iss: didJwk,
-      },
-      payloadOverrides,
-    ),
-    keyPair.privateKey,
-    options,
-  );
-  return {
-    proof_type: 'jwt',
-    jwt,
-  };
+const invalidNonceResponse = {
+  error: 'invalid_nonce',
+  error_description:
+    "Credential request proof jwt 'nonce' is invalid or expired.",
 };
 
-const expectedDbExchange = (issuerService, events, overrides) => {
-  const exchangeEvents = events ?? [ExchangeStates.NEW];
-  let expectation = {
-    id: expect.stringMatching(NANO_ID_FORMAT),
-    protocolMetadata: { protocol: ExchangeProtocols.OPENID4VCI },
-    events: exchangeEvents.map((state) => ({
-      state,
-      timestamp: expect.any(Date),
-    })),
-    serviceId: new ObjectId(issuerService._id),
-    type: ExchangeTypes.ISSUER,
-  };
-
-  for (const [issuerKey, value] of entries(overrides)) {
-    expectation = set(issuerKey, value, expectation);
-  }
-
-  return expectation;
-};
+const credentialIssuerOf = (tenantId) => `https://localhost.test/r/${tenantId}`;

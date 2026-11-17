@@ -82,6 +82,25 @@ const {
   NotificationTypes,
 } = require('../../src/entities');
 
+const UNSUPPORTED_DESCRIPTOR_PATHS = [
+  '$..verifiableCredential',
+  '$.verifiableCredential[*]',
+  '$.verifiableCredential[?(@)]',
+  '$.verifiableCredential[(@.length-1)]',
+  '$.verifiableCredential[0,1]',
+  '$.verifiableCredential[0:2]',
+  "$['verifiableCredential'][0]",
+  '$.verifiableCredential[0].credentialSubject',
+  '$.other[0]',
+  '$.verifiableCredential[0]@other()',
+  '$.verifiableCredential[1000]',
+  '$.verifiableCredential[01]',
+  '$.verifiableCredential[-1]',
+  ' $.verifiableCredential[0]',
+  '$.verifiableCredential[0]\n',
+  '$',
+];
+
 describe('presentation submission', () => {
   let fastify;
   let persistDisclosure;
@@ -242,6 +261,53 @@ describe('presentation submission', () => {
   const sendCredentialsCheckedEndpoint = `/inspection/${VendorEndpoint.RECEIVE_CHECKED_CREDENTIALS}`;
   const sendCredentialsUncheckedEndpoint = `/inspection/${VendorEndpoint.RECEIVE_UNCHECKED_CREDENTIALS}`;
   const sendCredentialsPayload = { body: { numProcessed: 3 } };
+
+  const setFeedsUpdatedAt = (feeds, updatedAt) =>
+    mongoDb()
+      .collection('feeds')
+      .updateMany(
+        { _id: { $in: feeds.map((feed) => new ObjectId(feed._id)) } },
+        { $set: { updatedAt } },
+      );
+
+  const findFeed = (feed) =>
+    mongoDb()
+      .collection('feeds')
+      .findOne({ _id: new ObjectId(feed._id) });
+
+  const submitUncheckedPresentationAsVendorUser = async (
+    presentationDisclosure,
+  ) => {
+    const exchange = await persistDisclosureExchange({
+      disclosure: presentationDisclosure,
+      tenant,
+      protocolMetadata: {
+        protocol: ExchangeProtocols.VNF_API,
+      },
+    });
+    const presentationBuilder = await generatePresentation(exchange);
+    nock(mockVendorUrl)
+      .post(sendCredentialsUncheckedEndpoint)
+      .reply(200, sendCredentialsPayload);
+    const signedJwt = await generateDocJwt({}, tenantKeyPair.privateKey, {
+      kid: '#exchanges-1',
+      subject: vendorUserIdMapping._id,
+      issuer: tenant.did,
+      audience: tenant.did,
+      expiresIn: '1h',
+    });
+    return fastify.inject({
+      method: 'POST',
+      url: inspectUrl(tenant, '/submit-presentation'),
+      headers: {
+        Authorization: `Bearer ${signedJwt}`,
+      },
+      payload: {
+        exchange_id: exchange._id,
+        vp_jwt: await presentationBuilder.selfSign(),
+      },
+    });
+  };
 
   describe('base presentation submission tests', () => {
     it('should 400 if the jwt is invalid', async () => {
@@ -512,6 +578,72 @@ describe('presentation submission', () => {
         });
       expect(dbLeastRecentFeed.feedTimestamp).toBeUndefined();
       expect(dbMostRecentFeed.feedTimestamp).toEqual(expect.any(Date));
+    });
+
+    it("should 200 and update feedTimestamp of user's most recently inserted feed if feeds tie on updatedAt", async () => {
+      const presentationDisclosure = await persistDisclosure({
+        tenant,
+        vendorEndpoint: VendorEndpoint.RECEIVE_UNCHECKED_CREDENTIALS,
+        feed: true,
+      });
+      const leastRecentFeed = await persistFeed({
+        tenant,
+        disclosure: presentationDisclosure,
+        vendorUserId: vendorUserIdMapping.vendorUserId,
+      });
+      const mostRecentFeed = await persistFeed({
+        tenant,
+        disclosure: presentationDisclosure,
+        vendorUserId: vendorUserIdMapping.vendorUserId,
+      });
+      const tiedUpdatedAt = new Date();
+      await setFeedsUpdatedAt([leastRecentFeed, mostRecentFeed], tiedUpdatedAt);
+
+      const response = await submitUncheckedPresentationAsVendorUser(
+        presentationDisclosure,
+      );
+
+      expect(response.statusCode).toEqual(200);
+      const dbLeastRecentFeed = await findFeed(leastRecentFeed);
+      const dbMostRecentFeed = await findFeed(mostRecentFeed);
+      expect(dbLeastRecentFeed.feedTimestamp).toBeUndefined();
+      expect(dbLeastRecentFeed.updatedAt).toEqual(tiedUpdatedAt);
+      expect(dbMostRecentFeed.feedTimestamp).toEqual(expect.any(Date));
+    });
+
+    it("should 200 and update feedTimestamp of user's most recently updated feed even if another feed was inserted later", async () => {
+      const presentationDisclosure = await persistDisclosure({
+        tenant,
+        vendorEndpoint: VendorEndpoint.RECEIVE_UNCHECKED_CREDENTIALS,
+        feed: true,
+      });
+      const mostRecentlyUpdatedFeed = await persistFeed({
+        tenant,
+        disclosure: presentationDisclosure,
+        vendorUserId: vendorUserIdMapping.vendorUserId,
+      });
+      const mostRecentlyInsertedFeed = await persistFeed({
+        tenant,
+        disclosure: presentationDisclosure,
+        vendorUserId: vendorUserIdMapping.vendorUserId,
+      });
+      const now = Date.now();
+      const olderUpdatedAt = new Date(now - 1000);
+      await setFeedsUpdatedAt([mostRecentlyInsertedFeed], olderUpdatedAt);
+      await setFeedsUpdatedAt([mostRecentlyUpdatedFeed], new Date(now));
+
+      const response = await submitUncheckedPresentationAsVendorUser(
+        presentationDisclosure,
+      );
+
+      expect(response.statusCode).toEqual(200);
+      const dbMostRecentlyUpdatedFeed = await findFeed(mostRecentlyUpdatedFeed);
+      const dbMostRecentlyInsertedFeed = await findFeed(
+        mostRecentlyInsertedFeed,
+      );
+      expect(dbMostRecentlyUpdatedFeed.feedTimestamp).toEqual(expect.any(Date));
+      expect(dbMostRecentlyInsertedFeed.feedTimestamp).toBeUndefined();
+      expect(dbMostRecentlyInsertedFeed.updatedAt).toEqual(olderUpdatedAt);
     });
 
     it('should 200 and use custom webhook url from tenant for receive unchecked credential', async () => {
@@ -982,6 +1114,175 @@ describe('presentation submission', () => {
       });
 
       expect(response.statusCode).toEqual(400);
+    });
+
+    UNSUPPORTED_DESCRIPTOR_PATHS.forEach((path) => {
+      it(`should 400 if the input descriptor path is ${JSON.stringify(path)}`, async () => {
+        const builder = await generatePresentation(disclosureExchange);
+
+        // eslint-disable-next-line camelcase
+        const jwt_vp = await builder
+          .override({
+            presentation_submission: {
+              descriptor_map: [
+                {
+                  id: nanoid(),
+                  path,
+                  format: 'jwt_vc',
+                },
+              ],
+            },
+          })
+          .selfSign();
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: inspectUrl(tenant, '/submit-presentation'),
+          // eslint-disable-next-line camelcase
+          payload: { exchange_id: disclosureExchange._id, jwt_vp },
+        });
+
+        expect(response.statusCode).toEqual(400);
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'presentation_jsonpath_unsupported',
+            message:
+              'Velocity Presentation contains path descriptor that is unsupported',
+            statusCode: 400,
+          }),
+        );
+      });
+    });
+
+    it('should 400 if the input descriptor path index is beyond the submitted credentials', async () => {
+      const builder = await generatePresentation(disclosureExchange);
+
+      // eslint-disable-next-line camelcase
+      const jwt_vp = await builder
+        .override({
+          presentation_submission: {
+            descriptor_map: [
+              {
+                id: nanoid(),
+                path: '$.verifiableCredential[999]',
+                format: 'jwt_vc',
+              },
+            ],
+          },
+        })
+        .selfSign();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: inspectUrl(tenant, '/submit-presentation'),
+        // eslint-disable-next-line camelcase
+        payload: { exchange_id: disclosureExchange._id, jwt_vp },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'presentation_jsonpath_empty',
+          message:
+            'Velocity Presentation contains path descriptor that is empty',
+          statusCode: 400,
+        }),
+      );
+    });
+
+    it('should 400 if a later input descriptor path is unsupported', async () => {
+      const builder = await generatePresentation(disclosureExchange);
+
+      // eslint-disable-next-line camelcase
+      const jwt_vp = await builder
+        .override({
+          presentation_submission: {
+            descriptor_map: [
+              {
+                id: nanoid(),
+                path: '$.verifiableCredential[0]',
+                format: 'jwt_vc',
+              },
+              {
+                id: nanoid(),
+                path: '$.verifiableCredential[*]',
+                format: 'jwt_vc',
+              },
+            ],
+          },
+        })
+        .selfSign();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: inspectUrl(tenant, '/submit-presentation'),
+        // eslint-disable-next-line camelcase
+        payload: { exchange_id: disclosureExchange._id, jwt_vp },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'presentation_jsonpath_unsupported',
+          message:
+            'Velocity Presentation contains path descriptor that is unsupported',
+          statusCode: 400,
+        }),
+      );
+    });
+
+    it('should 200 when input descriptor paths reference credentials at later indexes', async () => {
+      const builder = await generatePresentation(disclosureExchange);
+      const [vc1, vc2, vc3, vc4] = builder.presentation.verifiableCredential;
+      let webhookPayload;
+
+      nock(mockVendorUrl)
+        .post(sendCredentialsCheckedEndpoint)
+        .reply(200, async (request) => {
+          webhookPayload = await request.json();
+          return sendCredentialsPayload;
+        });
+
+      // eslint-disable-next-line camelcase
+      const jwt_vp = await builder
+        .override({
+          verifiableCredential: [vc1, vc2, ...Array(10).fill(vc3), vc4],
+          presentation_submission: {
+            descriptor_map: map(
+              (path) => ({ id: nanoid(), path, format: 'jwt_vc' }),
+              [
+                '$.verifiableCredential[0]',
+                '$.verifiableCredential[1]',
+                '$.verifiableCredential[2]',
+                '$.verifiableCredential[12]',
+              ],
+            ),
+          },
+        })
+        .selfSign();
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: inspectUrl(tenant, '/submit-presentation'),
+        // eslint-disable-next-line camelcase
+        payload: { exchange_id: disclosureExchange._id, jwt_vp },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        exchange: {
+          id: disclosureExchange._id,
+          type: ExchangeTypes.DISCLOSURE,
+          disclosureComplete: true,
+          exchangeComplete: true,
+        },
+        token: expect.any(String),
+      });
+      expect(map('rawCredential', webhookPayload.rawCredentials)).toEqual([
+        vc1,
+        vc2,
+        vc3,
+        vc4,
+      ]);
     });
 
     it('should 400 id disclosure deactivated', async () => {

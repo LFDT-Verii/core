@@ -15,15 +15,13 @@
  *
  */
 const newError = require('http-errors');
-const { isBefore } = require('date-fns/fp');
+const {
+  isServiceDeactivated,
+} = require('@verii/credentialing-hub-operator-api');
 const { ExchangeErrors } = require('./exchange-errors');
 
 const validateReferencedService = (service) => {
-  if (
-    service == null ||
-    (service.deactivationDate != null &&
-      isBefore(new Date(), service.deactivationDate))
-  ) {
+  if (service == null || isServiceDeactivated(service)) {
     throw newError(400, ExchangeErrors.REFERENCED_SERVICE_NOT_FOUND, {
       errorCode: ExchangeErrors.REFERENCED_SERVICE_NOT_FOUND,
     });

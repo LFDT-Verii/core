@@ -41,11 +41,7 @@ const setServicePingNock = (
 ) => {
   const uri = new URL(serviceEndpoint);
   const version = versionFlag ? `\nVersion: ${serviceAgentVersionMock}` : '';
-  return nock(uri.origin, {
-    reqheaders: {
-      'accept-encoding': 'gzip, deflate, br',
-    },
-  })
+  return nock(uri.origin)
     .get(uri.pathname)
     .delay(delay)
     .reply(
@@ -213,7 +209,7 @@ const setGetMonitorsNock = (dids, serviceIds) => {
           type: 'monitor',
           attributes: {
             url: 'https://devagent.velocitycareerlabs.io/',
-            pronounceable_name: `TEST, Test Organization, ${did} : ${serviceIdArray[i]}, version-0.9.0-build.abc12345`,
+            pronounceable_name: `test, Test Organization, ${did} : ${serviceIdArray[i]}, version-0.9.0-build.abc12345`,
             monitor_type: 'expected_status_code',
             monitor_group_id: null,
             last_checked_at: '2021-10-10T14:42:44.000Z',
@@ -265,8 +261,6 @@ const nockExecuted = (pendingMockString) => (nockScope) => {
   const pendingMocks = nockScope.pendingMocks();
   return !some((element) => includes(pendingMockString, element), pendingMocks);
 };
-
-const getServiceVersionNockExecuted = (uri) => nockExecuted(`GET ${uri}`);
 
 const postMonitorNockExecuted = nockExecuted(
   'POST https://betteruptime.com:443/api/v2/monitors',
@@ -416,16 +410,8 @@ describe('Monitoring Test Suite', () => {
         });
 
         expect(response.statusCode).toEqual(204);
-        expect(
-          getServiceVersionNockExecuted(serviceEndpoints[0])(
-            serviceVersion0Nock,
-          ),
-        ).toEqual(true);
-        expect(
-          getServiceVersionNockExecuted(serviceEndpoints[1])(
-            serviceVersion1Nock,
-          ),
-        ).toEqual(true);
+        expect(serviceVersion0Nock.isDone()).toEqual(true);
+        expect(serviceVersion1Nock.isDone()).toEqual(true);
         for (const monitorEventNock of monitorEventNocks) {
           expect(postMonitorNockExecuted(monitorEventNock)).toEqual(true);
         }

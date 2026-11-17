@@ -62,14 +62,12 @@ const createConfig = (packageJson) => {
       http2: false,
     },
     version: packageJson.version,
+    serviceName: packageJson.name,
     allowedCorsOrigins: env.get('ALLOWED_CORS_ORIGINS').default('').asArray(),
-    sentryDsn: env.get('SENTRY_DSN').required(!isTest).asString(),
-    enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   };
 
   const registrarConfig = {
     rootDid: env.get('ROOT_DID').required(!isTest).asString(),
-    rootAddress: env.get('ROOT_ADDRESS').required(!isTest).asString(),
     rootKid: env.get('ROOT_KID').required(!isTest).asString(),
     rootPrivateKey: env.get('ROOT_PRIVATE_KEY').required(!isTest).asString(),
     awsRegion: env.get('AWS_REGION').default('us-east-1').required().asString(),

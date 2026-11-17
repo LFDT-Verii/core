@@ -18,6 +18,7 @@
 const { after, before, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
+const { ECDH, generateKeyPairSync } = require('node:crypto');
 const nock = require('./helpers/nock');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { extractVerificationKey } = require('@verii/did-doc');
@@ -89,6 +90,27 @@ describe('Public Key Resolution', () => {
     });
 
     expect(response.statusCode).toEqual(404);
+  });
+
+  it('Should resolve kid public key for a custodied did:web without fetching its DID document', async () => {
+    const organization = await persistOrganization({
+      did: 'did:web:members.localhost.test:d:www.example.com',
+      keys: DEFAULT_KEYS,
+    });
+    const { didDoc } = organization;
+    const kid = `${didDoc.id}#vc-signing-key-1`;
+    const didJson = nock('https://members.localhost.test')
+      .get('/d/www.example.com/did.json')
+      .reply(200, { id: didDoc.id });
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}`,
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual(extractVerificationKey(didDoc, kid));
+    expect(didJson.isDone()).toBe(false);
   });
 
   it('[Deprecated] Should resolve kid public key for "did:velocity" did with jwk publicKey', async () => {
@@ -217,6 +239,252 @@ describe('Public Key Resolution', () => {
     });
   });
 
+  describe('P-256 verification methods', () => {
+    const p256PublicJwk = generateKeyPair({
+      format: 'jwk',
+      curve: 'P-256',
+    }).publicKey;
+    let kid;
+    let storedPublicKeyJwk;
+
+    beforeEach(async () => {
+      const organization = await persistOrganization({
+        keys: [
+          {
+            id: '#exchange-key-1',
+            purposes: [KeyPurposes.EXCHANGES],
+            type: 'JsonWebKey2020',
+            publicKey: p256PublicJwk,
+          },
+          ...DEFAULT_KEYS,
+        ],
+      });
+      kid = `${organization.didDoc.id}#exchange-key-1`;
+      storedPublicKeyJwk = organization.didDoc.verificationMethod.find(
+        ({ id }) => id === '#exchange-key-1',
+      ).publicKeyJwk;
+    });
+
+    it("Should return the stored P-256 JWK when query param set to 'jwk'", async () => {
+      const response = await fastify.inject({
+        method: 'GET',
+        url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=jwk`,
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(storedPublicKeyJwk).toEqual(p256PublicJwk);
+      expect(response.json()).toEqual(storedPublicKeyJwk);
+      expect(response.json()).toEqual({
+        kty: 'EC',
+        crv: 'P-256',
+        x: p256PublicJwk.x,
+        y: p256PublicJwk.y,
+      });
+    });
+
+    it('Should return 400 for the default HEX format', async () => {
+      const response = await fastify.inject({
+        method: 'GET',
+        url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}`,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'public_key_format_not_supported',
+          message:
+            'Public key format hex is only supported for secp256k1 keys. Use format jwk',
+          statusCode: 400,
+        }),
+      );
+    });
+
+    it("Should return 400 when query param set to 'hex'", async () => {
+      const response = await fastify.inject({
+        method: 'GET',
+        url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=hex`,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'public_key_format_not_supported',
+          message:
+            'Public key format hex is only supported for secp256k1 keys. Use format jwk',
+          statusCode: 400,
+        }),
+      );
+    });
+
+    it("Should return 400 when query param set to 'base58'", async () => {
+      const response = await fastify.inject({
+        method: 'GET',
+        url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=base58`,
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.json()).toEqual(
+        errorResponseMatcher({
+          error: 'Bad Request',
+          errorCode: 'public_key_format_not_supported',
+          message:
+            'Public key format base58 is only supported for secp256k1 keys. Use format jwk',
+          statusCode: 400,
+        }),
+      );
+    });
+
+    it('Should keep resolving secp256k1 keys in the same DID document', async () => {
+      const secp256k1Kid = kid.replace('#exchange-key-1', '#vc-signing-key-1');
+      const publicKeyHex = hexFromJwk(DEFAULT_KEYS[0].publicKey, false);
+
+      const responses = await Promise.all(
+        ['hex', 'base58', 'jwk'].map((format) =>
+          fastify.inject({
+            method: 'GET',
+            url: `/api/v0.6/resolve-kid/${encodeURIComponent(
+              secp256k1Kid,
+            )}?format=${format}`,
+          }),
+        ),
+      );
+
+      expect(responses.map(({ statusCode }) => statusCode)).toEqual([
+        200, 200, 200,
+      ]);
+      expect(responses.map(({ body }) => body)).toEqual([
+        publicKeyHex,
+        bs58.encode(Buffer.from(publicKeyHex, 'hex')),
+        JSON.stringify({
+          kty: 'EC',
+          crv: 'secp256k1',
+          use: 'sig',
+          x: DEFAULT_KEYS[0].publicKey.x,
+          y: DEFAULT_KEYS[0].publicKey.y,
+        }),
+      ]);
+    });
+  });
+
+  describe('legacy secp256k1 encodings', () => {
+    const { publicKey: legacyPublicJwk } = generateKeyPair({ format: 'jwk' });
+    const legacyPublicKeyHex = hexFromJwk(legacyPublicJwk, false);
+    const legacyPublicKeyBase58 = bs58.encode(
+      Buffer.from(legacyPublicKeyHex, 'hex'),
+    );
+    const expectedJwkBody = JSON.stringify(
+      jwkFromSecp256k1Key(legacyPublicKeyHex, false),
+    );
+
+    const legacyEncodings = [
+      { name: 'publicKeyHex', publicKeyHex: legacyPublicKeyHex },
+      { name: 'publicKeyBase58', publicKeyBase58: legacyPublicKeyBase58 },
+      {
+        name: 'compressedPublicKeyHex',
+        publicKeyHex: ECDH.convertKey(
+          legacyPublicKeyHex,
+          'secp256k1',
+          'hex',
+          'hex',
+          'compressed',
+        ),
+      },
+    ];
+
+    legacyEncodings.forEach(({ name, ...encodedKey }) => {
+      it(`Should resolve a ${name} verification method in every format`, async () => {
+        const did = `did:velocity:legacy-${name.toLowerCase()}`;
+        const kid = `${did}#key-1`;
+        await persistOrganization({
+          didDoc: {
+            id: did,
+            publicKey: [
+              {
+                id: kid,
+                type: 'EcdsaSecp256k1VerificationKey2019',
+                controller: did,
+                ...encodedKey,
+              },
+            ],
+          },
+        });
+
+        const responses = await Promise.all(
+          ['hex', 'base58', 'jwk'].map((format) =>
+            fastify.inject({
+              method: 'GET',
+              url: `/api/v0.6/resolve-kid/${encodeURIComponent(
+                kid,
+              )}?format=${format}`,
+            }),
+          ),
+        );
+
+        expect(responses.map(({ statusCode }) => statusCode)).toEqual([
+          200, 200, 200,
+        ]);
+        expect(responses.map(({ body }) => body)).toEqual([
+          legacyPublicKeyHex,
+          legacyPublicKeyBase58,
+          expectedJwkBody,
+        ]);
+        expect(JSON.parse(expectedJwkBody)).toEqual({
+          ...legacyPublicJwk,
+          use: 'sig',
+        });
+      });
+    });
+
+    it('Should return 400 in every format when a legacy key is not secp256k1', async () => {
+      const did = 'did:velocity:legacy-ed25519';
+      const kid = `${did}#key-1`;
+      const ed25519PublicKey = Buffer.from(
+        generateKeyPairSync('ed25519').publicKey.export({ format: 'jwk' }).x,
+        'base64url',
+      );
+      await persistOrganization({
+        didDoc: {
+          id: did,
+          publicKey: [
+            {
+              id: kid,
+              type: 'Ed25519VerificationKey2018',
+              controller: did,
+              publicKeyBase58: bs58.encode(ed25519PublicKey),
+            },
+          ],
+        },
+      });
+
+      const responses = await Promise.all(
+        ['hex', 'base58', 'jwk'].map((format) =>
+          fastify.inject({
+            method: 'GET',
+            url: `/api/v0.6/resolve-kid/${encodeURIComponent(
+              kid,
+            )}?format=${format}`,
+          }),
+        ),
+      );
+
+      expect(responses.map(({ statusCode }) => statusCode)).toEqual([
+        400, 400, 400,
+      ]);
+      responses.forEach((response) =>
+        expect(response.json()).toEqual(
+          errorResponseMatcher({
+            error: 'Bad Request',
+            errorCode: 'unsupported_public_key',
+            message: `Verification method ${kid} does not contain a secp256k1 public key`,
+            statusCode: 400,
+          }),
+        ),
+      );
+    });
+  });
+
   describe('DID:WEB test suite', () => {
     const keyPair = generateKeyPair({ format: 'jwk' });
     const expectedDidWebDoc = {
@@ -247,6 +515,10 @@ describe('Public Key Resolution', () => {
     };
 
     it('Should return 404 when DID document not found', async () => {
+      const nockData = nock('https://example.com')
+        .get('/.well-known/did.json')
+        .reply(404);
+
       const response = await fastify.inject({
         method: 'GET',
         url: '/api/v0.6/resolve-kid/did:web:example.com#key-0',
@@ -257,10 +529,12 @@ describe('Public Key Resolution', () => {
         errorResponseMatcher({
           error: 'Not Found',
           errorCode: 'did_resolution_failed',
-          message: 'Could not resolve did:web:example.com',
+          message:
+            'Could not resolve did:web:example.com: DID must resolve to a valid https URL containing a JSON document',
           statusCode: 404,
         }),
       );
+      expect(nockData.isDone()).toEqual(true);
     });
 
     it('Should return 404 when public key not found in document', async () => {
@@ -287,7 +561,7 @@ describe('Public Key Resolution', () => {
           statusCode: 404,
         }),
       );
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
     });
 
     it('Should return public key for "DID:WEB" did', async () => {
@@ -305,7 +579,7 @@ describe('Public Key Resolution', () => {
         url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}`,
       });
       expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
 
       expect(response.body).toBe(hexFromJwk(keyPair.publicKey, false));
     });
@@ -326,7 +600,7 @@ describe('Public Key Resolution', () => {
       });
 
       expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
       expect(response.body).toEqual(hexFromJwk(keyPair.publicKey, false));
     });
 
@@ -345,7 +619,7 @@ describe('Public Key Resolution', () => {
         url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=base58`,
       });
       expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
 
       expect(response.body).toEqual(
         bs58.encode(Buffer.from(hexFromJwk(keyPair.publicKey, false), 'hex')),
@@ -367,7 +641,7 @@ describe('Public Key Resolution', () => {
         url: `/api/v0.6/resolve-kid/${encodeURIComponent(kid)}?format=jwk`,
       });
       expect(response.statusCode).toEqual(200);
-      expect(nockData.isDone()).toBeTruthy();
+      expect(nockData.isDone()).toEqual(true);
 
       expect(response.json()).toEqual({
         ...keyPair.publicKey,

@@ -18,7 +18,6 @@ const {
   buildDidDocWithAlternativeId,
   toRelativeServiceId,
 } = require('@verii/did-doc');
-const { resolveDidWeb } = require('@verii/did-web');
 const {
   VerifiableCredentialTypes,
   VerifiableCredentialFormats,
@@ -43,6 +42,7 @@ const {
   validateServicesForDelete,
   initAuth0Provisioner,
   validateByoDidDocService,
+  resolveDid,
 } = require('../../../entities');
 
 const organizationController = async (fastify) => {
@@ -308,7 +308,7 @@ const organizationController = async (fastify) => {
         }
 
         const didDocument = organization.didNotCustodied
-          ? await resolveDidWeb(organization.didDoc.id)
+          ? await resolveDid(organization.didDoc.id, req)
           : organization.didDoc;
 
         validateServicesForDelete({
@@ -485,7 +485,7 @@ const organizationController = async (fastify) => {
 
         // validate byo did scenarios
         if (organization.didNotCustodied) {
-          const didDocument = await resolveDidWeb(organization.didDoc.id);
+          const didDocument = await resolveDid(organization.didDoc.id, req);
           const keys = await repos.organizationKeys.find({
             filter: { organizationId: organization._id },
           });

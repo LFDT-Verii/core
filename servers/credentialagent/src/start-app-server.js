@@ -22,14 +22,28 @@ const { initServer } = require('./init-server');
 const { initHolderServer } = require('./init-holder-server');
 const { initOperatorServer } = require('./init-operator-server');
 
-const startAppServer = () =>
-  flow(createServer, initServer, listenServer)(config);
+// configOverrides lets a server that embeds the agent change its config, as the Hub's createAppServer
+// does, for example to describe its deployment its own way (describeDeployment)
+const startAppServer = ({ configOverrides = {} } = {}) =>
+  flow(
+    createServer,
+    initServer,
+    listenServer,
+  )({ ...config, ...configOverrides });
 
-const startHolderAppServer = () =>
-  flow(createServer, initHolderServer, listenServer)(holderConfig);
+const startHolderAppServer = ({ configOverrides = {} } = {}) =>
+  flow(
+    createServer,
+    initHolderServer,
+    listenServer,
+  )({ ...holderConfig, ...configOverrides });
 
-const startOperatorAppServer = () =>
-  flow(createServer, initOperatorServer, listenServer)(operatorConfig);
+const startOperatorAppServer = ({ configOverrides = {} } = {}) =>
+  flow(
+    createServer,
+    initOperatorServer,
+    listenServer,
+  )({ ...operatorConfig, ...configOverrides });
 
 module.exports = {
   startAppServer,

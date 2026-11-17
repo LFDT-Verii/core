@@ -1,0 +1,64 @@
+# Services the tests expect on localhost: Mongo, LocalStack and a Besu dev node.
+# CI's Test job (.github/workflows/node-ci.workflow.yml) starts them the same way:
+#   docker compose -f eng/docker/services/test-compose.yml up -d --wait
+# then runs the Credential Agent migrations (servers/credentialagent:
+# MONGO_URI=mongodb://localhost:27017/test-credential-agent pnpm run migrate:up).
+# The e2e stacks use shared-compose.yml instead.
+services:
+  mongo:
+    image: mongo:${MONGO_VERSION:-8.0}
+    # Test data is small; without a cache limit mongod takes half the machine's memory.
+    command: [--replSet, insert-replica-set-name, --wiredTigerCacheSizeGB, "0.25"]
+    environment:
+      # mongod 8.0.0-8.0.20 crash after ~60s on Linux 6.19-7.0.13, and 8.0.21+ exits at startup on Ubuntu 7.0.0-*
+      # kernels because uname hides the upstream fix level (SERVER-121912, SERVER-125742, SERVER-136848).
+      # glibc.pthread.rseq=1 turns TCMalloc per-CPU caches off, so neither applies.
+      GLIBC_TUNABLES: glibc.pthread.rseq=1
+    ports: ["27017:27017"]
+    healthcheck:
+      # Creates the single-node replica set on the first check; healthy once this node is primary.
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - >-
+          try { rs.status() } catch (e) {
+          rs.initiate({ _id: 'insert-replica-set-name', members: [{ _id: 0, host: 'localhost:27017' }] }) }
+          quit(db.hello().isWritablePrimary ? 0 : 1)
+      interval: 30s
+      start_period: 2m
+      start_interval: 1s
+
+  localstack:
+    image: localstack/localstack:2.3.2@sha256:c396d899a3cdc038ba6bb82d54a40f12c037004b93c3e1efc4c821db60306f79
+    environment:
+      SERVICES: sns,ses,kms,s3
+    ports: ["4566:4566", "4571:4571"]
+    healthcheck:
+      test: [CMD, curl, -fsS, http://localhost:4566/_localstack/health]
+      interval: 30s
+      start_period: 2m
+      start_interval: 1s
+
+  blockchain:
+    image: hyperledger/besu:25.4.1@sha256:00468488df234ead7c0e450ffcd5bc1ac3ed62f458a0de42ba029155ecdf5331
+    command:
+      - --genesis-file=/opt/besu/config/genesis.json
+      - --node-private-key-file=/opt/besu/config/key
+      - --rpc-http-enabled
+      - --rpc-http-api=ETH,NET,WEB3
+      - --host-allowlist=*
+      - --rpc-http-cors-origins=all
+      - --min-gas-price=0
+      - --profile=enterprise
+    environment:
+      BESU_OPTS: -Xmx512m
+    volumes:
+      - ./blockchain-config:/opt/besu/config:ro
+    ports: ["8545:8545"]
+    healthcheck:
+      test: [CMD, bash, -c, ">/dev/tcp/localhost/8545"]
+      interval: 30s
+      start_period: 2m
+      start_interval: 1s

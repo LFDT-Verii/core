@@ -17,10 +17,12 @@
 
 const NotificationEventTypes = {
   PRESENTATION_RECEIVED: 'presentation.received',
+  PRESENTATION_DECLINED: 'presentation.declined',
   CREDENTIAL_ISSUED: 'credential.issued',
   CREDENTIAL_REJECTED: 'credential.rejected',
 };
 
+// presentation.declined is opt-in, so existing receivers don't get a type they don't expect.
 const DefaultNotificationEventTypes = [
   NotificationEventTypes.PRESENTATION_RECEIVED,
   NotificationEventTypes.CREDENTIAL_ISSUED,

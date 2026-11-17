@@ -33,7 +33,7 @@ const {
   ISO_DATETIME_FORMAT,
   OBJECT_ID_FORMAT,
 } = require('@verii/test-regexes');
-const { map, omit } = require('lodash/fp');
+const { constant, forEach, map, omit, repeat, times } = require('lodash/fp');
 const { generateKeyPair } = require('@verii/crypto');
 const { jwtSign } = require('@verii/jwt');
 const { hashOffer } = require('@verii/verii-issuing');
@@ -51,6 +51,41 @@ const {
 } = require('../helpers/sample-education-degree-graduation');
 
 const testUrl = '/operator/credentials';
+
+// The request schema limits the credentialReference's length and the tags
+const INVALID_CREDENTIALS = [
+  {
+    name: 'credentialReference is empty',
+    overrides: { credentialReference: '' },
+    error: 'credentialReference must NOT have fewer than 1 characters',
+  },
+  {
+    name: 'credentialReference is longer than 64 characters',
+    overrides: { credentialReference: repeat(65, 'c') },
+    error: 'credentialReference must NOT have more than 64 characters',
+  },
+  {
+    name: 'there are more than 10 tags',
+    overrides: { tags: times(constant('tag'), 11) },
+    error: 'tags must NOT have more than 10 items',
+  },
+  {
+    name: 'a tag is empty',
+    overrides: { tags: [''] },
+    error: 'tags/0 must NOT have fewer than 1 characters',
+  },
+  {
+    name: 'a tag is longer than 32 characters',
+    overrides: { tags: [repeat(33, 't')] },
+    error: 'tags/0 must NOT have more than 32 characters',
+  },
+];
+
+const buildCredential = (overrides) => ({
+  credentialReference: 'cred1',
+  content: { type: ['fooType'], credentialSubject: { foo: 'bar' } },
+  ...overrides,
+});
 describe('Credentials Test suite', () => {
   let fastify;
   let persistTenant;
@@ -272,6 +307,101 @@ describe('Credentials Test suite', () => {
         ),
       ]);
     });
+    forEach(({ name, overrides, error }) => {
+      it(`should 400 if ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create`,
+          payload: {
+            tenantId: tenant._id,
+            depotId: depot._id,
+            credential: buildCredential(overrides),
+          },
+        });
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 400,
+            errorCode: 'request_validation_failed',
+            message: `body/credential/${error}`,
+          }),
+        );
+      });
+    }, INVALID_CREDENTIALS);
+    it('should 200 and create a credential with a 64 character credentialReference and 10 tags of 32 characters', async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const credential = buildCredential({
+        credentialReference: repeat(64, 'c'),
+        tags: times(constant(repeat(32, 't')), 10),
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: { tenantId: tenant._id, depotId: depot._id, credential },
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.credential).toEqual(
+        expect.objectContaining(omit(['content'], credential)),
+      );
+    });
+    it("should 400 if the credential type is not one of the depot's expected types", async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: issuerService,
+        deferredCredentials: true,
+        expectedCredentialTypes: ['EmailV1.0', 'PhoneV1.0'],
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          depotId: deferredDepot._id,
+          credential: {
+            credentialReference: 'cred1',
+            content: { type: ['fooType'], credentialSubject: { foo: 'bar' } },
+          },
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'credential_type_not_expected',
+          message: 'credential_type_not_expected',
+          error: 'Bad Request',
+        }),
+      );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it("should 200 and create a credential of one of the depot's expected types", async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const deferredDepot = await persistDepot({
+        tenant,
+        service: issuerService,
+        deferredCredentials: true,
+        expectedCredentialTypes: ['fooType'],
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          depotId: deferredDepot._id,
+          credential: {
+            credentialReference: 'cred1',
+            content: { type: ['fooType'], credentialSubject: { foo: 'bar' } },
+          },
+        },
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json.credential.depotId).toEqual(deferredDepot._id);
+    });
     it('should 400 if depot is not found', async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
       mockHttpClientJsonResponse('get', schemas[0]);
@@ -305,6 +435,83 @@ describe('Credentials Test suite', () => {
         .find({})
         .toArray();
       expect(dbCredentials).toEqual([]);
+    });
+    it('should 400 if the credential type is not found', async () => {
+      mockHttpClientJsonResponse('get', []);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          ...buildCredentialItem(depot._id, 'cred1'),
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'credential_type_not_found',
+          message: 'credential_type_not_found',
+          error: 'Bad Request',
+        }),
+      );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it('should 400 if the credential subject fails schema validation', async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          ...buildCredentialItem(depot._id, 'cred1', {
+            credentialSubject: { foo: 'fo' },
+          }),
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'request_validation_failed',
+          message:
+            'credential.content.credentialSubject/foo must NOT have fewer than 3 characters',
+          error: 'Bad Request',
+        }),
+      );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it('should 400 with every schema error of the credential subject in the message', async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[3]]);
+      mockHttpClientJsonResponse('get', schemas[3]);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create`,
+        payload: {
+          tenantId: tenant._id,
+          ...buildCredentialItem(depot._id, 'cred1', {
+            type: ['AnyOfType'],
+            credentialSubject: { foo: true },
+          }),
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          errorCode: 'request_validation_failed',
+          message:
+            'credential.content.credentialSubject/foo must be string, ' +
+            'credential.content.credentialSubject/foo must be number, ' +
+            'credential.content.credentialSubject/foo must match a schema in anyOf',
+          error: 'Bad Request',
+        }),
+      );
     });
   });
 
@@ -397,6 +604,31 @@ describe('Credentials Test suite', () => {
         }),
       );
     });
+    forEach(({ name, overrides, error }) => {
+      it(`should 400 if ${name}`, async () => {
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create-many`,
+          payload: {
+            tenantId: tenant._id,
+            items: [
+              { depotId: depot._id, credential: buildCredential() },
+              { depotId: depot._id, credential: buildCredential(overrides) },
+            ],
+          },
+        });
+        expect(response.json).toEqual(
+          errorResponseMatcher({
+            statusCode: 400,
+            errorCode: 'request_validation_failed',
+            message: `body/items/1/credential/${error}`,
+          }),
+        );
+        await expect(
+          mongoDb().collection('credentials').countDocuments({}),
+        ).resolves.toEqual(0);
+      });
+    }, INVALID_CREDENTIALS);
     it('should 400 if credential type is not found', async () => {
       mockHttpClientJsonResponse('get', []);
       const credentialItems = [
@@ -425,13 +657,31 @@ describe('Credentials Test suite', () => {
           items: credentialItems,
         },
       });
+      expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
           statusCode: 400,
           errorCode: 'credential_type_not_found',
           message: 'credential_type_not_found',
+          errors: [
+            {
+              index: 0,
+              path: '/items/0/credential/content/type',
+              errorCode: 'credential_type_not_found',
+              message: 'credential_type_not_found',
+            },
+            {
+              index: 1,
+              path: '/items/1/credential/content/type',
+              errorCode: 'credential_type_not_found',
+              message: 'credential_type_not_found',
+            },
+          ],
         }),
       );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
     });
     it('should 400 if credential subject fails schema validation', async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
@@ -462,14 +712,34 @@ describe('Credentials Test suite', () => {
           items: credentialItems,
         },
       });
+      expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
           statusCode: 400,
           errorCode: 'request_validation_failed',
           message:
             "credential.content.credentialSubject must have required property 'foo'",
+          errors: [
+            {
+              index: 0,
+              path: '/items/0/credential/content/credentialSubject',
+              errorCode: 'request_validation_failed',
+              message:
+                "credential.content.credentialSubject must have required property 'foo'",
+            },
+            {
+              index: 1,
+              path: '/items/1/credential/content/credentialSubject',
+              errorCode: 'request_validation_failed',
+              message:
+                "credential.content.credentialSubject must have required property 'foo'",
+            },
+          ],
         }),
       );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
     });
     it('should 400 if depot is not found', async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
@@ -508,6 +778,14 @@ describe('Credentials Test suite', () => {
           errorCode: 'referenced_depot_not_found',
           message: 'referenced_depot_not_found',
           error: 'Bad Request',
+          errors: [
+            {
+              index: 0,
+              path: '/items/0/depotId',
+              errorCode: 'referenced_depot_not_found',
+              message: 'referenced_depot_not_found',
+            },
+          ],
         }),
       );
       const dbCredentials = await mongoDb()
@@ -516,7 +794,7 @@ describe('Credentials Test suite', () => {
         .toArray();
       expect(dbCredentials).toEqual([]);
     });
-    it('should 400 if credentialSubject validation fails', async () => {
+    it('should 400 with the path of the credentialSubject field that fails validation', async () => {
       mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
       mockHttpClientJsonResponse('get', schemas[0]);
       const credentialItems = [
@@ -524,7 +802,7 @@ describe('Credentials Test suite', () => {
           depotId: depot._id,
           credential: {
             credentialReference: 'cred1',
-            content: { type: ['fooType'], credentialSubject: {} },
+            content: { type: ['fooType'], credentialSubject: { foo: 'foo' } },
             tags: ['tag1'],
           },
         },
@@ -532,7 +810,7 @@ describe('Credentials Test suite', () => {
           depotId: depot._id,
           credential: {
             credentialReference: 'cred2',
-            content: { type: ['fooType'], credentialSubject: {} },
+            content: { type: ['fooType'], credentialSubject: { foo: 'fo' } },
             tags: ['tag2'],
           },
         },
@@ -545,17 +823,318 @@ describe('Credentials Test suite', () => {
           items: credentialItems,
         },
       });
+      expect(response.statusCode).toEqual(400);
       expect(response.json).toEqual(
         errorResponseMatcher({
           statusCode: 400,
           errorCode: 'request_validation_failed',
           message:
+            'credential.content.credentialSubject/foo must NOT have fewer than 3 characters',
+          errors: [
+            {
+              index: 1,
+              path: '/items/1/credential/content/credentialSubject/foo',
+              errorCode: 'request_validation_failed',
+              message:
+                'credential.content.credentialSubject/foo must NOT have fewer than 3 characters',
+            },
+          ],
+        }),
+      );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it('should 400 with every invalid item and insert nothing', async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create-many`,
+        payload: {
+          tenantId: tenant._id,
+          items: [
+            buildCredentialItem(depot._id, 'cred1'),
+            buildCredentialItem(depot._id, 'cred2', { credentialSubject: {} }),
+            buildCredentialItem(depot._id, 'cred3'),
+            buildCredentialItem(depot._id, 'cred4', {
+              credentialSubject: { foo: 'fo' },
+            }),
+          ],
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          error: 'Bad Request',
+          errorCode: 'request_validation_failed',
+          message:
             "credential.content.credentialSubject must have required property 'foo'",
+          errors: [
+            {
+              index: 1,
+              path: '/items/1/credential/content/credentialSubject',
+              errorCode: 'request_validation_failed',
+              message:
+                "credential.content.credentialSubject must have required property 'foo'",
+            },
+            {
+              index: 3,
+              path: '/items/3/credential/content/credentialSubject/foo',
+              errorCode: 'request_validation_failed',
+              message:
+                'credential.content.credentialSubject/foo must NOT have fewer than 3 characters',
+            },
+          ],
+        }),
+      );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it('should 400 with the errorCode and path of each kind of item error', async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const emailDepot = await persistDepot({
+        tenant,
+        service: issuerService,
+        deferredCredentials: true,
+        expectedCredentialTypes: ['EmailV1.0'],
+      });
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create-many`,
+        payload: {
+          tenantId: tenant._id,
+          items: [
+            buildCredentialItem(depot._id, 'cred1'),
+            buildCredentialItem(new ObjectId(), 'cred2'),
+            buildCredentialItem(emailDepot._id, 'cred3'),
+            buildCredentialItem(depot._id, 'cred4', { type: ['barType'] }),
+            buildCredentialItem(depot._id, 'cred5', {
+              credentialSubject: { foo: 'fo' },
+            }),
+          ],
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          error: 'Bad Request',
+          errorCode: 'referenced_depot_not_found',
+          message: 'referenced_depot_not_found',
+          errors: [
+            {
+              index: 1,
+              path: '/items/1/depotId',
+              errorCode: 'referenced_depot_not_found',
+              message: 'referenced_depot_not_found',
+            },
+            {
+              index: 2,
+              path: '/items/2/credential/content/type',
+              errorCode: 'credential_type_not_expected',
+              message: 'credential_type_not_expected',
+            },
+            {
+              index: 3,
+              path: '/items/3/credential/content/type',
+              errorCode: 'credential_type_not_found',
+              message: 'credential_type_not_found',
+            },
+            {
+              index: 4,
+              path: '/items/4/credential/content/credentialSubject/foo',
+              errorCode: 'request_validation_failed',
+              message:
+                'credential.content.credentialSubject/foo must NOT have fewer than 3 characters',
+            },
+          ],
+        }),
+      );
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
+    it('should 400 with every problem of an item', async () => {
+      mockHttpClientJsonResponse('get', []);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create-many`,
+        payload: {
+          tenantId: tenant._id,
+          items: [buildCredentialItem(new ObjectId(), 'cred1')],
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          error: 'Bad Request',
+          errorCode: 'referenced_depot_not_found',
+          message: 'referenced_depot_not_found',
+          errors: [
+            {
+              index: 0,
+              path: '/items/0/depotId',
+              errorCode: 'referenced_depot_not_found',
+              message: 'referenced_depot_not_found',
+            },
+            {
+              index: 0,
+              path: '/items/0/credential/content/type',
+              errorCode: 'credential_type_not_found',
+              message: 'credential_type_not_found',
+            },
+          ],
         }),
       );
     });
+    it('should use the first error for the top-level errorCode and message', async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+      mockHttpClientJsonResponse('get', schemas[0]);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create-many`,
+        payload: {
+          tenantId: tenant._id,
+          items: [
+            buildCredentialItem(depot._id, 'cred1', {
+              credentialSubject: { foo: 'fo' },
+            }),
+            buildCredentialItem(new ObjectId(), 'cred2'),
+            buildCredentialItem(new ObjectId(), 'cred3'),
+          ],
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          error: 'Bad Request',
+          errorCode: 'request_validation_failed',
+          message:
+            'credential.content.credentialSubject/foo must NOT have fewer than 3 characters',
+          errors: [
+            {
+              index: 0,
+              path: '/items/0/credential/content/credentialSubject/foo',
+              errorCode: 'request_validation_failed',
+              message:
+                'credential.content.credentialSubject/foo must NOT have fewer than 3 characters',
+            },
+            {
+              index: 1,
+              path: '/items/1/depotId',
+              errorCode: 'referenced_depot_not_found',
+              message: 'referenced_depot_not_found',
+            },
+            {
+              index: 2,
+              path: '/items/2/depotId',
+              errorCode: 'referenced_depot_not_found',
+              message: 'referenced_depot_not_found',
+            },
+          ],
+        }),
+      );
+    });
+    it("should 400 with one error per schema error and all of the first item's in the top-level message", async () => {
+      mockHttpClientJsonResponse('get', [credentialTypeMetadatas[3]]);
+      mockHttpClientJsonResponse('get', schemas[3]);
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create-many`,
+        payload: {
+          tenantId: tenant._id,
+          items: [
+            buildCredentialItem(depot._id, 'cred1', {
+              type: ['AnyOfType'],
+              credentialSubject: { foo: true },
+            }),
+            buildCredentialItem(depot._id, 'cred2', {
+              type: ['AnyOfType'],
+              credentialSubject: { foo: false },
+            }),
+          ],
+        },
+      });
+      const subjectFooErrors = (index) =>
+        map(
+          (message) => ({
+            index,
+            path: `/items/${index}/credential/content/credentialSubject/foo`,
+            errorCode: 'request_validation_failed',
+            message: `credential.content.credentialSubject/foo ${message}`,
+          }),
+          ['must be string', 'must be number', 'must match a schema in anyOf'],
+        );
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          error: 'Bad Request',
+          errorCode: 'request_validation_failed',
+          message:
+            'credential.content.credentialSubject/foo must be string, ' +
+            'credential.content.credentialSubject/foo must be number, ' +
+            'credential.content.credentialSubject/foo must match a schema in anyOf',
+          errors: [...subjectFooErrors(0), ...subjectFooErrors(1)],
+        }),
+      );
+    });
+    it('should 400 if items has more than 1000 items', async () => {
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: `${testUrl}/create-many`,
+        payload: {
+          tenantId: tenant._id,
+          items: times((i) => buildCredentialItem(depot._id, `cred${i}`), 1001),
+        },
+      });
+      expect(response.statusCode).toEqual(400);
+      expect(response.json).toEqual(
+        errorResponseMatcher({
+          statusCode: 400,
+          error: 'Bad Request',
+          errorCode: 'request_validation_failed',
+          message: 'body/items must NOT have more than 1000 items',
+        }),
+      );
+      expect(mockHttpClient.get.mock.callCount()).toEqual(0);
+      await expect(
+        mongoDb().collection('credentials').countDocuments({}),
+      ).resolves.toEqual(0);
+    });
 
     describe('successful use cases', () => {
+      it('should 200 and create 1000 credentials', async () => {
+        mockHttpClientJsonResponse('get', [credentialTypeMetadatas[0]]);
+        mockHttpClientJsonResponse('get', schemas[0]);
+        const credentialItems = times(
+          (i) => buildCredentialItem(depot._id, `cred${i}`),
+          1000,
+        );
+        const response = await fastify.injectJson({
+          method: 'POST',
+          url: `${testUrl}/create-many`,
+          payload: {
+            tenantId: tenant._id,
+            items: credentialItems,
+          },
+        });
+        expect(response.statusCode).toEqual(200);
+        expect(response.json.credentials).toHaveLength(1000);
+        expect(response.json.credentials[999]).toEqual(
+          expectedCredential(credentialItems[999].credential, depot),
+        );
+        await expect(
+          mongoDb().collection('credentials').countDocuments({}),
+        ).resolves.toEqual(1000);
+      });
+
       it('should 200 and create an layer 1.1 credential', async () => {
         mockHttpClientJsonResponse('get', [credentialTypeMetadatas[1]]);
         mockHttpClientJsonResponse('get', schemas[1]);
@@ -1171,6 +1750,18 @@ const expectedDbCredential = (
     overrides,
   );
 
+const buildCredentialItem = (depotId, credentialReference, content) => ({
+  depotId,
+  credential: {
+    credentialReference,
+    content: {
+      type: ['fooType'],
+      credentialSubject: { foo: 'foo' },
+      ...content,
+    },
+  },
+});
+
 const credentialTypeMetadatas = [
   {
     credentialType: 'fooType',
@@ -1185,6 +1776,10 @@ const credentialTypeMetadatas = [
     credentialType: 'OpenBadgeCredential',
     schemaUrl: 'https://example.com/open-badge-credential.schema.json',
   },
+  {
+    credentialType: 'AnyOfType',
+    schemaUrl: 'https://example.com/any-of.schema.json',
+  },
 ];
 
 const schemas = [
@@ -1195,4 +1790,8 @@ const schemas = [
   },
   { ...require('../helpers/education-degree-graduation-v1.1.schema.json') },
   { ...require('../helpers/open-badge-credential.schema.json') },
+  {
+    $id: 'any-of',
+    properties: { foo: { anyOf: [{ type: 'string' }, { type: 'number' }] } },
+  },
 ];

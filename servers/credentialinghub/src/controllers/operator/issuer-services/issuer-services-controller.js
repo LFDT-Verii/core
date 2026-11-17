@@ -15,34 +15,31 @@
  *
  */
 const { coerceArray } = require('@verii/common-functions');
+const {
+  issuerServiceSchema,
+  newIssuerServiceSchema,
+} = require('@verii/credentialing-hub-operator-api');
 const { tenantLoaderPlugin } = require('../../../entities/tenants');
-const { validateIssuerService } = require('../../../entities/issuer-services');
+const {
+  updateIssuerService,
+  validateIssuerService,
+} = require('../../../entities/issuer-services');
 const {
   createServiceConfiguration,
   deleteServiceConfiguration,
-  updateServiceConfiguration,
-  validateUpdateServiceConfiguration,
 } = require('../../../entities/service-configurations');
-const {
-  issuerConfigurationSchema,
-  newIssuerConfigurationSchema,
-} = require('./schemas');
 
 const REPO_NAME = 'issuerServices';
 const createIssuerServiceConfiguration = createServiceConfiguration(
   REPO_NAME,
   validateIssuerService,
 );
-const updateIssuerServiceConfiguration = updateServiceConfiguration(
-  REPO_NAME,
-  validateUpdateServiceConfiguration(validateIssuerService),
-);
 const deleteIssuerServiceConfiguration = deleteServiceConfiguration(REPO_NAME);
 
 module.exports = async (fastify) => {
   fastify
-    .addSchema(issuerConfigurationSchema)
-    .addSchema(newIssuerConfigurationSchema)
+    .addSchema(issuerServiceSchema)
+    .addSchema(newIssuerServiceSchema)
     .register(tenantLoaderPlugin, { notFoundStatusCode: 400 })
     .autoSchemaPreset({ tags: ['Issuer Services'] })
     .post(
@@ -168,7 +165,7 @@ module.exports = async (fastify) => {
         }),
       },
       async (req) => {
-        const service = await updateIssuerServiceConfiguration(
+        const service = await updateIssuerService(
           req.body.serviceId,
           req.body.service,
           req,

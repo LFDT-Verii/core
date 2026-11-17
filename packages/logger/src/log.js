@@ -50,6 +50,18 @@ const JSON_VC_PATHS = flatMap(
   ],
 );
 
+// Credential data objects, as built by @verii/verii-verification, hold the
+// decoded credential, the raw credential JWT (twice) and its content hash.
+const CREDENTIAL_DATA_PATHS = flatMap(
+  (root) => [
+    `${root}.credential.credentialSubject`,
+    `${root}.jwtVc`,
+    `${root}.compact`,
+    `${root}.contentHash`,
+  ],
+  ['credential', 'credentials[*]'],
+);
+
 const SECURITY_PATHS = [
   'Authorization',
   'access_token',
@@ -64,11 +76,16 @@ const SECURITY_PATHS = [
   'body.authClients[*].clientSecret',
   'body.account.refreshToken',
   'body.emails[*]',
+  'body.hexKey',
+  'body.jwk.d',
   'body.payload.create_tenant.keys.*.key',
+  'body.payload.create_tenant.keys.*.jwk.d',
   'body.phones[*]',
   'body.key.key',
+  'body.key.jwk.d',
   'body.keys[*].key',
-  'body.payload.create_tenant.keys.*.key',
+  'body.keys[*].jwk.d',
+  'body.keys[*].hexKey',
   'body.refresh_token',
   'body.token',
   'body.value',
@@ -81,12 +98,21 @@ const SECURITY_PATHS = [
   'headers["x-firebase-appcheck"]',
   'headers["x-vcl-installation-id"]',
   'keyEncryptionSecret',
+  'jwk.d',
   'key.key',
+  'key.jwk.d',
+  'keys[*].hexKey',
   'keys[*].key',
+  'keys[*].jwk.d',
   'metadataPrivateKey',
   'mongoConnection',
   'mongoSecret',
   'privateKey',
+  'reqHeaders.Authorization',
+  'reqHeaders.authorization',
+  'reqHeaders.Cookie',
+  'reqHeaders.cookie',
+  'resHeaders["set-cookie"]',
   'revocationPrivateKey',
   'rootPrivateKey',
   'secret',
@@ -138,12 +164,14 @@ const buildUserId = (req) => {
   return {};
 };
 
+// logRedactPaths adds a server's own paths to those every server redacts.
 const loggerProvider = ({
   nodeEnv,
   logSeverity,
   traceIdHeader,
   version,
   destination,
+  logRedactPaths = [],
 }) => {
   // adds logging of the traceId if its on the request
   const serializers = {
@@ -160,7 +188,13 @@ const loggerProvider = ({
     }),
   };
   const redact = {};
-  redact.paths = [...SPAM_PATHS, ...SECURITY_PATHS, ...JSON_VC_PATHS];
+  redact.paths = [
+    ...SPAM_PATHS,
+    ...SECURITY_PATHS,
+    ...JSON_VC_PATHS,
+    ...CREDENTIAL_DATA_PATHS,
+    ...logRedactPaths,
+  ];
   redact.censor = (value, path) => {
     if (last(path) === 'file') {
       return '...large file...';

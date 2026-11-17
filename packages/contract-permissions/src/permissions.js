@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-const { initContractClient } = require('@verii/base-contract-io');
+const {
+  initContractClient,
+  sendContractTransaction,
+} = require('@verii/base-contract-io');
 
 const contractAbi = require('./contracts/permissions.json');
 
@@ -35,6 +38,14 @@ const initPermissions = async (
     context,
   );
 
+  // The keys that sign here, such as the root key or an organization's
+  // permissioning key, may also be sending from other servers.
+  const send = (method, ...args) =>
+    sendContractTransaction(
+      { contract: contractClient, method, args },
+      context,
+    );
+
   const updateAddressScopes = async ({
     address,
     scopesToAdd = [],
@@ -46,24 +57,17 @@ const initPermissions = async (
       scopesToAdd,
       scopesToRemove,
     });
-    const tx = await contractClient.updateAddressScopes(
-      address,
-      scopesToAdd,
-      scopesToRemove,
-    );
-    await tx.wait();
+    await send('updateAddressScopes', address, scopesToAdd, scopesToRemove);
   };
 
   const addAddressScope = async ({ address, scope }) => {
     log.info({ func: 'addAddressScope', address, scope });
-    const tx = await contractClient.addAddressScope(address, scope);
-    await tx.wait();
+    await send('addAddressScope', address, scope);
   };
 
   const removeAddressScope = async ({ address, scope }) => {
     log.info({ func: 'removeAddressScope', address, scope });
-    const tx = await contractClient.removeAddressScope(address, scope);
-    await tx.wait();
+    await send('removeAddressScope', address, scope);
   };
 
   const getPrimaries = async () => {
@@ -73,34 +77,22 @@ const initPermissions = async (
 
   const addPrimary = async ({ primary, permissioning, rotation }) => {
     log.info({ func: 'addPrimary', primary, permissioning, rotation });
-    const tx = await contractClient.addPrimary(
-      primary,
-      permissioning,
-      rotation,
-    );
-    await tx.wait();
+    await send('addPrimary', primary, permissioning, rotation);
   };
 
   const removeOperatorKey = async ({ primary, operator }) => {
     log.info({ func: 'removeOperator', primary, operator });
-    const tx = await contractClient.removeOperatorKey(primary, operator);
-    await tx.wait();
+    await send('removeOperatorKey', primary, operator);
   };
 
   const addOperatorKey = async ({ primary, operator }) => {
     log.info({ func: 'addOperatorKey', primary, operator });
-    const tx = await contractClient.addOperatorKey(primary, operator);
-    await tx.wait();
+    await send('addOperatorKey', primary, operator);
   };
 
   const rotateOperatorKey = async ({ primary, newOperator, oldOperator }) => {
     log.info({ func: 'rotateOperatorKey', primary, newOperator, oldOperator });
-    const tx = await contractClient.rotateOperatorKey(
-      primary,
-      newOperator,
-      oldOperator,
-    );
-    await tx.wait();
+    await send('rotateOperatorKey', primary, newOperator, oldOperator);
   };
 
   const rotatePermissioning = async ({
@@ -114,12 +106,7 @@ const initPermissions = async (
       newPermissioning,
       newRotation,
     });
-    const tx = await contractClient.rotatePermissioning(
-      primary,
-      newPermissioning,
-      newRotation,
-    );
-    await tx.wait();
+    await send('rotatePermissioning', primary, newPermissioning, newRotation);
   };
 
   const lookupPrimary = async (address) => {

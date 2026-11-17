@@ -68,6 +68,7 @@ const buildPresentationRequest = (
     },
     {
       'metadata.submit_presentation_uri': `${baseUrl}/presentation`,
+      'metadata.decline_presentation_uri': `${baseUrl}/decline-presentation`,
       'metadata.auth_token_uri': `${baseUrl}/oauth/token`,
     },
   );

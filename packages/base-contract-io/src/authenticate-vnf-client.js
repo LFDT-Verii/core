@@ -152,9 +152,15 @@ const initAuthenticateVnfClientPlugin = (fastify, options, next) => {
     );
   }
 
+  // A plugin loaded earlier, such as a test server's stub, may already
+  // declare the authenticator. This plugin's hook runs after the earlier
+  // plugin's hook and replaces the authenticator it set.
+  if (!fastify.hasRequestDecorator('vnfBlockchainAuthenticate')) {
+    fastify.decorateRequest('vnfBlockchainAuthenticate', null);
+  }
+
   fastify
     .decorate('vnfAuthTokensCache', new Map())
-    .decorateRequest('vnfBlockchainAuthenticate', null)
     .addHook('preValidation', async (req) => {
       req.vnfBlockchainAuthenticate = initAuthenticateVnfBlockchainClient(
         fastify,

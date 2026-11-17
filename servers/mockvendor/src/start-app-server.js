@@ -26,7 +26,13 @@ process.on('unhandledRejection', (error) => {
   process.exit(1);
 });
 
-const startAppServer = () =>
-  flow(createServer, initServer, listenServer)(config);
+// configOverrides lets a server that embeds mockvendor change its config, as the Hub's
+// createAppServer does, for example to describe its deployment its own way (describeDeployment)
+const startAppServer = ({ configOverrides = {} } = {}) =>
+  flow(
+    createServer,
+    initServer,
+    listenServer,
+  )({ ...config, ...configOverrides });
 
 module.exports = { startAppServer };

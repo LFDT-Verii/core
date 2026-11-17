@@ -17,6 +17,7 @@
 
 const { flatMap, flow, isEmpty, omit, uniq } = require('lodash/fp');
 const { optional } = require('@verii/common-functions');
+const { buildPreauthCodeExpiresAt } = require('../../depots/domain');
 const {
   OPENID4VP_DEPOT_REQUEST_PREFIX,
   OPENID4VP_SERVICE_REQUEST_PREFIX,
@@ -32,24 +33,30 @@ const {
   validatePresentationLink,
 } = require('../domain');
 
-// eslint-disable-next-line complexity
 const refreshIssueLinks = async (serviceId, depotId, context) => {
-  const { config, repos, tenant } = context;
+  const { repos } = context;
   const [service, depot] = await Promise.all([
     repos.issuerServices.findOne({ filter: { _id: serviceId } }),
-    repos.depots.findOne({ filter: { _id: depotId } }),
+    optional(loadDepot, [depotId, repos]),
   ]);
   validateIssueLink(service, depotId, depot);
 
-  const refreshedDepot = isPreauthCodeAuth(service)
-    ? await repos.depots.refreshPreauthCode(depotId)
-    : depot;
+  return isPreauthCodeAuth(service) && depot != null
+    ? buildDepotIssueLinks(service, depot, context)
+    : buildSharedIssueLinks(service, context);
+};
 
-  // Credential types are extracted from the depot
-  const credentialTypes = await optional(loadCredentialTypeHints, [
-    refreshedDepot,
-    context,
-  ]);
+const buildDepotIssueLinks = async (service, depot, context) => {
+  const { config, repos, tenant } = context;
+  const refreshedDepot = await repos.depots.refreshPreauthCode(
+    depot._id,
+    buildPreauthCodeExpiresAt(depot, config),
+  );
+
+  // Credential types are the depot's expected types, or else are extracted from its credentials
+  const credentialTypes =
+    refreshedDepot.expectedCredentialTypes ??
+    (await loadCredentialTypeHints(refreshedDepot, context));
 
   const vnProtocolLinkUrl = buildIssuingDeepLink(
     tenant,
@@ -59,26 +66,41 @@ const refreshIssueLinks = async (serviceId, depotId, context) => {
     config.deepLinkProtocol,
   );
 
-  const openid4vciProtocolLinkUrl =
-    refreshedDepot?.preauthCode != null && !isEmpty(credentialTypes)
-      ? await buildCredentialOfferLink(refreshedDepot, credentialTypes, context)
-      : undefined;
+  const openid4vciProtocolLinkUrl = !isEmpty(credentialTypes)
+    ? await buildCredentialOfferLink(refreshedDepot, credentialTypes, context)
+    : undefined;
   const redirectUrl = buildRedirectUrl(
     tenant,
     vnProtocolLinkUrl,
     openid4vciProtocolLinkUrl,
   );
 
-  const links = {
+  return {
     redirectUrl: redirectUrl.href,
     vnProtocolLink: vnProtocolLinkUrl.href,
     openidCredentialOffer: openid4vciProtocolLinkUrl,
+    preauthCode: refreshedDepot.preauthCode,
+    preauthCodeExpiresAt: refreshedDepot.preauthCodeExpiresAt,
   };
+};
 
-  if (refreshedDepot?.preauthCode) {
-    links.preauthCode = refreshedDepot.preauthCode;
-  }
-  return links;
+// One link for every depot of the service. The holder is matched to a depot
+// when they authenticate, so the link carries no depot, credential types or
+// pre-authorized code.
+const buildSharedIssueLinks = (service, { config, tenant }) => {
+  const vnProtocolLinkUrl = buildIssuingDeepLink(
+    tenant,
+    service,
+    null,
+    undefined,
+    config.deepLinkProtocol,
+  );
+  const redirectUrl = buildRedirectUrl(tenant, vnProtocolLinkUrl);
+
+  return {
+    redirectUrl: redirectUrl.href,
+    vnProtocolLink: vnProtocolLinkUrl.href,
+  };
 };
 
 const loadCredentialTypeHints = async (depot, context) => {

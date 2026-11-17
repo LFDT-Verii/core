@@ -1,0 +1,4 @@
+employeeId,email,firstName,lastName,creditsEarned
+E1001,adam.smith@example.com,Adam,Smith,1.5
+E1002,Beth.Jones@Example.com,Beth,Jones,2
+E1003,carl.ng@example.com,Carl,"Ng ""CJ""",0.5

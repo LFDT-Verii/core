@@ -19,4 +19,5 @@ module.exports = {
   ...require('./src/contract'),
   ...require('./src/contract-with-transacting-client'),
   ...require('./src/rpc-provider-plugin'),
+  ...require('./src/send-contract-transaction'),
 };

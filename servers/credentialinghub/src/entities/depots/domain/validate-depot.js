@@ -15,30 +15,75 @@
  *
  */
 const newError = require('http-errors');
-const { isEmpty } = require('lodash/fp');
-const { isBefore } = require('date-fns/fp');
-const { DepotErrors } = require('./depot-errors');
+const { findIndex, flow, isEmpty, size, sortBy, zip } = require('lodash/fp');
+const {
+  DepotErrors,
+  isInternalVpAuth,
+  isServiceDeactivated,
+  isValidAuthValue,
+} = require('@verii/credentialing-hub-operator-api');
 
-const validateDepot = (depot, service) => {
+const validateDepot = (depot, service, isIssuerService) => {
   if (isMissingOrDeactivated(service)) {
     throw newError(400, DepotErrors.REFERENCED_SERVICE_NOT_FOUND, {
       errorCode: DepotErrors.REFERENCED_SERVICE_NOT_FOUND,
     });
   }
   if (
-    service.authMode === 'internal' &&
-    service.authMethods.includes('verifiable_presentation') &&
-    isEmpty(depot.authValues)
+    isInternalVpAuth(service) &&
+    !hasValidAuthValues(depot.authValues, service)
   ) {
-    throw newError(400, DepotErrors.INVALID_AUTH_VALUES, {
+    throw newError(400, invalidAuthValuesMessage(depot.authValues, service), {
       errorCode: DepotErrors.INVALID_AUTH_VALUES,
+    });
+  }
+  validateDeferredCredentials(depot, isIssuerService);
+};
+
+const validateDeferredCredentials = (depot, isIssuerService) => {
+  if (depot.deferredCredentials === true && !isIssuerService) {
+    throw newError(400, DepotErrors.DEFERRED_CREDENTIALS_NOT_SUPPORTED, {
+      errorCode: DepotErrors.DEFERRED_CREDENTIALS_NOT_SUPPORTED,
     });
   }
 };
 
-const isMissingOrDeactivated = (service) =>
-  service == null ||
-  (service.deactivationDate != null &&
-    isBefore(new Date(), service.deactivationDate));
+// authValues hold exactly one value per rule, and each value suits the rule at
+// its valueIndex: it has the rule's valueType and valueFormat, and isn't blank.
+const hasValidAuthValues = (authValues, service) =>
+  hasOneValuePerRule(authValues, service) &&
+  findInvalidAuthValueIndex(authValues, service) === -1;
 
-module.exports = { validateDepot };
+const hasOneValuePerRule = (authValues, service) =>
+  !isEmpty(authValues) &&
+  size(authValues) === size(service.verifiablePresentationAuthRules);
+
+// The index of the first value that doesn't suit the rule at its valueIndex, or
+// -1 when they all do. The rules' value indexes are 0 to n-1, so ordering the
+// rules by them gives each value's rule.
+const findInvalidAuthValueIndex = (authValues, service) => {
+  const rulesByValueIndex = sortBy(
+    'valueIndex',
+    service.verifiablePresentationAuthRules,
+  );
+  const isInvalidForItsRule = ([rule, value]) => !isValidAuthValue(rule, value);
+  const indexOfInvalidValue = flow(
+    zip(rulesByValueIndex),
+    findIndex(isInvalidForItsRule),
+  );
+  return indexOfInvalidValue(authValues);
+};
+
+// Names an invalid value by its index, never by the value.
+const invalidAuthValuesMessage = (authValues, service) => {
+  if (!hasOneValuePerRule(authValues, service)) {
+    return DepotErrors.INVALID_AUTH_VALUES;
+  }
+  const index = findInvalidAuthValueIndex(authValues, service);
+  return `authValues[${index}] must be a non-blank value of its auth rule's valueType and valueFormat`;
+};
+
+const isMissingOrDeactivated = (service) =>
+  service == null || isServiceDeactivated(service);
+
+module.exports = { hasValidAuthValues, validateDepot };

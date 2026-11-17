@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 const {
+  compact,
   filter,
   find,
   first,
+  flatMap,
   flow,
   isArray,
   isEmpty,
+  isString,
   join,
   keyBy,
   map,
+  mapValues,
   omit,
   partition,
-  reduce,
+  pick,
   size,
   some,
   startsWith,
-  toLower,
   uniq,
 } = require('lodash/fp');
 const {
@@ -39,6 +42,7 @@ const {
   getCredentialId,
   getCredentialIssuer,
   isCredentialVerificationAccepted,
+  jwkThumbprint,
   verifyCredentialEnvelope,
 } = require('@verii/jwt');
 const {
@@ -54,14 +58,39 @@ const {
   checkCredentialStatus,
   checkIssuerTrust,
   checkHolder,
+  credentialForLog,
+  didDocumentForLog,
   extractCredentialType,
+  issuerDependenciesForLog,
   VelocityRevocationListType,
 } = require('@verii/vc-checks');
 const { mapWithIndex } = require('@verii/common-functions');
-const { resolveDidJwkDocument, toDidUrl } = require('@verii/did-doc');
+const {
+  getJwkFromDidUri,
+  resolveDidJwkDocument,
+  toDidUrl,
+} = require('@verii/did-doc');
 
 const MAX_CREDENTIALS_PER_VERIFICATION = 100;
 const MAX_ROUTING_IDENTIFIER_CHARACTERS = 2048;
+const DID_JWK_PATTERN = /^did:jwk:[A-Za-z0-9_-]+$/;
+
+// How the claimed issuer is bound to the key that verified the signature. A
+// valid signature only proves possession of that key; it authenticates the
+// issuer only through a did:velocity ledger binding or a self-certifying
+// did:jwk issuer whose JWK is the verification key.
+const IssuerKeyBindings = Object.freeze({
+  DID_JWK: 'DID_JWK',
+  DID_JWK_MISMATCH: 'DID_JWK_MISMATCH',
+  LEDGER: 'LEDGER',
+  UNBOUND: 'UNBOUND',
+});
+
+const SelfCertifiedIssuerChecks = Object.freeze({
+  [IssuerKeyBindings.DID_JWK]: CheckResults.SELF_SIGNED,
+  [IssuerKeyBindings.DID_JWK_MISMATCH]: CheckResults.DATA_INTEGRITY_ERROR,
+  [IssuerKeyBindings.UNBOUND]: CheckResults.FAIL,
+});
 
 const verifyCredentials = async (
   { credentials: jwtVcs, expectedHolderDid, relyingParty },
@@ -203,6 +232,8 @@ const emptyIssuerRefs = () => ({
   accreditationVCMap: {},
   credentialTypeMetadatasMap: {},
   issuerDidDocumentMap: {},
+  rejectedIssuerIds: new Set(),
+  unresolvedIssuerIds: new Set(),
 });
 
 const assertCredentialBatch = (jwtVcs) => {
@@ -216,7 +247,6 @@ const assertCredentialBatch = (jwtVcs) => {
   }
 };
 
-const isIssuerTheSubject = (header) => !isDidVelocityCredential(header);
 const isDidVelocityCredential = ({ kid }) => startsWith('did:velocity:', kid);
 
 const resolveKeyRefs = async (credentialDataList, relyingParty, context) => {
@@ -237,30 +267,34 @@ const resolveKeyRefs = async (credentialDataList, relyingParty, context) => {
     ),
   ]);
 
-  const keyMap = reduce(
-    (acc, { didDocument }) => {
-      const keys =
-        didDocument?.verificationMethod ?? didDocument?.publicKey ?? [];
-      for (const key of keys) {
-        acc[toLower(toDidUrl(didDocument.id, key.id))] = key;
-      }
-      return acc;
-    },
-    {},
-    resolutions,
-  );
-
-  const boundIssuerVcsMap = keyBy(
-    ({ id }) => toLower(id),
-    first(resolutions)?.didDocumentMetadata?.boundIssuerVcs,
-  );
-
   return {
-    keyMap,
-    boundIssuerVcsMap,
+    keyMap: indexVerificationMethods(resolutions),
+    boundIssuerVcsMap: indexBoundIssuerVcs(
+      first(resolutions)?.didDocumentMetadata?.boundIssuerVcs,
+    ),
     errors: flow(map('errors'), find(size))(resolutions),
   };
 };
+
+// Verification methods are indexed by their exact absolute DID URL. DID URL
+// paths, queries and fragments are case-sensitive, so no case folding is
+// applied. did:velocity needs no method-specific canonicalization here: the
+// resolver derives each verification method id from the credential id that the
+// verifier supplies, and issuers derive the kid from that same id.
+const indexVerificationMethods = flow(
+  flatMap(({ didDocument }) =>
+    map(
+      (key) => [toDidUrl(didDocument.id, key.id), key],
+      didDocument?.verificationMethod ?? didDocument?.publicKey ?? [],
+    ),
+  ),
+  (entries) => new Map(entries),
+);
+
+const indexBoundIssuerVcs = flow(
+  map((boundIssuerVc) => [boundIssuerVc.id, boundIssuerVc]),
+  (entries) => new Map(entries),
+);
 
 const resolveVelocityDidDocument = async (
   credentialData,
@@ -313,7 +347,11 @@ const resolveVelocityDidDocument = async (
       });
 
     log.info(
-      { didDocument, didDocumentMetadata, didResolutionMetadata },
+      {
+        didDocument: didDocumentForLog(didDocument),
+        didDocumentMetadata: didDocumentMetadataForLog(didDocumentMetadata),
+        didResolutionMetadata,
+      },
       'did:velocity doc resolved',
     );
 
@@ -327,6 +365,13 @@ const resolveVelocityDidDocument = async (
     return { errors: { keyResolutionError: true } };
   }
 };
+
+// The resolved document's bound issuer VCs are JWTs, so each is logged as an
+// object with its id.
+const didDocumentMetadataForLog = flow(
+  pick(['boundIssuerVcs']),
+  mapValues(map(pick(['id']))),
+);
 
 const resolveOtherDidDocument = async ({ keyMetadata }, { log }) => {
   try {
@@ -343,21 +388,28 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
     const issuerIds = flow(map('issuerId'), uniq)(credentialData);
     const credentialTypes = flow(map('credentialType'), uniq)(credentialData);
 
-    const [accreditationVCs, issuerDidDocuments, credentialTypeMetadatas] =
+    const [accreditationLookups, didDocumentLookups, credentialTypeMetadatas] =
       await Promise.all([
         Promise.all(
           map(
             (issuerId) =>
-              fetchers
-                .getOrganizationVerifiedProfile(issuerId, context)
-                .catch(() => {}),
+              lookupIssuerDependency(
+                () =>
+                  fetchers.getOrganizationVerifiedProfile(issuerId, context),
+                issuerId,
+                context,
+              ),
             issuerIds,
           ),
         ),
         Promise.all(
           map(
             (issuerId) =>
-              fetchers.resolveDid(issuerId, context).catch(() => {}),
+              lookupIssuerDependency(
+                () => fetchers.resolveDid(issuerId, context),
+                issuerId,
+                context,
+              ),
             issuerIds,
           ),
         ),
@@ -365,18 +417,75 @@ const resolveIssuerMetadata = async (credentialData, fetchers, context) => {
       ]);
 
     return {
-      accreditationVCMap: keyBy('credentialSubject.id', accreditationVCs),
-      issuerDidDocumentMap: keyBy('id', issuerDidDocuments),
+      accreditationVCMap: keyBy(
+        'credentialSubject.id',
+        lookupValues(accreditationLookups),
+      ),
+      issuerDidDocumentMap: keyBy('id', lookupValues(didDocumentLookups)),
       credentialTypeMetadatasMap: keyBy(
         'credentialType',
         credentialTypeMetadatas,
       ),
+      rejectedIssuerIds: lookupIssuerIdsWith('rejected', [
+        ...accreditationLookups,
+        ...didDocumentLookups,
+      ]),
+      unresolvedIssuerIds: lookupIssuerIdsWith('failed', [
+        ...accreditationLookups,
+        ...didDocumentLookups,
+      ]),
     };
   } catch (error) {
     context.log.error(error);
     return { errors: { metadataRetrievalError: true } };
   }
 };
+
+// The registrar client (@verii/http-client) throws an undici ResponseError that
+// carries the HTTP statusCode for every 4xx and 5xx response. The got-style
+// clients that @verii/common-fetchers also supports carry it on
+// error.response.statusCode. A 404 says the registrar has no such record, and
+// a 400 says it rejected the issuer DID as malformed. Both are problems with
+// the credential. Any other status (including 401, 403 and 429), and a timeout
+// or connection error, which has no status, means the registrar could not
+// answer.
+const IssuerRejectedStatusCodes = [400, 404];
+const isIssuerRejectedError = (error) =>
+  IssuerRejectedStatusCodes.includes(
+    error?.response?.statusCode ?? error?.statusCode,
+  );
+
+// A 400 or 404 rejects the issuer, so the issuer trust check fails as it does
+// for an unregistered issuer. @verii/http-client resolves a body it
+// cannot parse as JSON to {}, so an empty value is an unreadable response, and
+// fails the lookup like any other registrar error. The lookup calls the
+// fetcher as a method of the fetchers object, so fetchers that use `this` keep
+// working.
+const lookupIssuerDependency = async (lookup, issuerId, context) => {
+  try {
+    const value = await lookup();
+    if (isEmpty(value)) {
+      context.log.error({ issuerId }, 'issuer lookup returned no data');
+      return { issuerId, failed: true };
+    }
+    return { issuerId, value };
+  } catch (error) {
+    if (isIssuerRejectedError(error)) {
+      return { issuerId, rejected: true };
+    }
+    context.log.error({ err: error, issuerId }, 'issuer lookup failed');
+    return { issuerId, failed: true };
+  }
+};
+
+const lookupValues = flow(map('value'), compact);
+
+const lookupIssuerIdsWith = (outcome, lookups) =>
+  flow(
+    filter(outcome),
+    map('issuerId'),
+    (issuerIds) => new Set(issuerIds),
+  )(lookups);
 
 const resolveCredentialStatuses = async (credentialData, context) => {
   try {
@@ -395,6 +504,24 @@ const resolveCredentialStatuses = async (credentialData, context) => {
     return { errors: { credentialStatusRetrievalError: true } };
   }
 };
+
+// The code @verii/metadata-registration's getRevokedStatus sets when a status
+// URL cannot be parsed, names another scheme, contract or function, lacks a
+// parameter or has one the contract cannot take, and when the registry
+// rejects the URL's wallet, list or index by reverting
+// (RevocationRegistryErrorCodes.INVALID_REVOCATION_URL). It is repeated here
+// rather than imported: a stub of @verii/metadata-registration without the
+// export would make it undefined, and every error without a code would then
+// count as invalid status data.
+const INVALID_REVOCATION_URL = 'invalid_revocation_url';
+
+// Invalid status data fails the check. Any other error, such as a network
+// failure or a call that returned no revert data, means the revocation
+// registry could not be read.
+const credentialStatusFromError = (error) =>
+  error?.code === INVALID_REVOCATION_URL
+    ? CredentialStatus.INVALID
+    : CredentialStatus.DEPENDENCY_RESOLUTION_ERROR;
 
 const initResolveCredentialStatus = async (context) => {
   const {
@@ -421,7 +548,7 @@ const initResolveCredentialStatus = async (context) => {
         : CredentialStatus.UNREVOKED;
     } catch (err) {
       log.error(err);
-      return CredentialStatus.DEPENDENCY_RESOLUTION_ERROR;
+      return credentialStatusFromError(err);
     }
   };
 };
@@ -457,12 +584,18 @@ const verifyCredentialData = async (data, { keyMap, errors }, context) => {
         CheckResults.FAIL,
       );
     }
+    const issuerId = issuerIdFrom(verifiedEnvelope.credential.issuer);
     return {
       ...data,
       ...verifiedEnvelope,
       credentialType: extractCredentialType(verifiedEnvelope.credential),
       id: getCredentialId(verifiedEnvelope),
-      issuerId: issuerIdFrom(verifiedEnvelope.credential.issuer),
+      issuerId,
+      issuerKeyBinding: await bindIssuerToKey(
+        issuerId,
+        data.keyMetadata,
+        verificationKey,
+      ),
       tamperingCheck: CheckResults.PASS,
     };
   } catch (error) {
@@ -494,22 +627,68 @@ const resolutionFailureFrom = (errors) => {
     : null;
 };
 
-const getVerificationKey = ({ keyMetadata }, keyMap) => {
-  if (keyMetadata.kid != null) {
-    return keyMap[toLower(keyMetadata.kid)]?.publicKeyJwk;
-  }
-  return isIssuerTheSubject(keyMetadata) ? keyMetadata.jwk : null;
-};
+// A supplied kid is authoritative: when it does not resolve, the embedded jwk
+// is never used instead. Without a kid, the embedded jwk can verify the
+// signature, but bindIssuerToKey decides whether it authenticates the issuer.
+const getVerificationKey = ({ keyMetadata }, keyMap) =>
+  keyMetadata.kid != null
+    ? keyMap.get(keyMetadata.kid)?.publicKeyJwk
+    : keyMetadata.jwk;
 
 const issuerIdFrom = (issuer) => issuer?.id ?? issuer;
 
+const bindIssuerToKey = async (issuerId, { kid }, verificationKey) => {
+  if (isDidVelocityCredential({ kid })) {
+    return IssuerKeyBindings.LEDGER;
+  }
+  if (await isDidJwkOfKey(issuerId, verificationKey)) {
+    return IssuerKeyBindings.DID_JWK;
+  }
+  // Only did:jwk kids resolve outside the ledger, so a kid or a did:jwk issuer
+  // here claims a did:jwk binding that does not hold for this key.
+  return kid != null || startsWith('did:jwk:', issuerId)
+    ? IssuerKeyBindings.DID_JWK_MISMATCH
+    : IssuerKeyBindings.UNBOUND;
+};
+
+// A did:jwk issuer controls the verification key when its JWK is the same key,
+// compared by RFC 7638 thumbprint so that non-key members such as alg, kid or
+// key_ops on either side do not matter. With a kid, the verification key is the
+// key the kid's did:jwk encodes, so the issuer and the kid name the same key.
+const isDidJwkOfKey = async (issuerId, verificationKey) => {
+  const issuerThumbprint = await signingKeyThumbprintOf(issuerId);
+  return (
+    issuerThumbprint != null &&
+    issuerThumbprint === (await jwkThumbprint(verificationKey))
+  );
+};
+
+// The did:jwk method gives a `use: "enc"` key only keyAgreement, never
+// assertionMethod, so such an issuer cannot sign credentials. An issuer that is
+// not a well-formed did:jwk of a supported key has no signing key.
+const signingKeyThumbprintOf = async (issuerId) => {
+  if (!isDidJwk(issuerId)) {
+    return null;
+  }
+  try {
+    const issuerJwk = getJwkFromDidUri(issuerId);
+    return issuerJwk?.use === 'enc' ? null : await jwkThumbprint(issuerJwk);
+  } catch {
+    return null;
+  }
+};
+
+const isDidJwk = (value) => isString(value) && DID_JWK_PATTERN.test(value);
+
 const runIssuerTrustCheck = (
-  { id, keyMetadata, issuerId, credentialType, credential },
+  { id, issuerKeyBinding, issuerId, credentialType, credential },
   {
     boundIssuerVcsMap,
     accreditationVCMap,
     issuerDidDocumentMap,
     credentialTypeMetadatasMap,
+    rejectedIssuerIds,
+    unresolvedIssuerIds,
     errors,
   },
   context,
@@ -520,12 +699,36 @@ const runIssuerTrustCheck = (
     return Promise.resolve(CheckResults.DEPENDENCY_RESOLUTION_ERROR);
   }
 
-  if (isIssuerTheSubject(keyMetadata)) {
-    return Promise.resolve(CheckResults.SELF_SIGNED);
+  if (issuerKeyBinding !== IssuerKeyBindings.LEDGER) {
+    if (issuerKeyBinding !== IssuerKeyBindings.DID_JWK) {
+      log.warn(
+        { id, issuerId, issuerKeyBinding },
+        'runIssuerTrustCheck: issuer is not bound to the verification key',
+      );
+    }
+    return Promise.resolve(SelfCertifiedIssuerChecks[issuerKeyBinding]);
+  }
+
+  // A 400 or 404 from either registrar lookup settles the check, even when
+  // the other lookup failed: the credential fails once the registrar answers.
+  if (rejectedIssuerIds.has(issuerId)) {
+    log.error(
+      { id, issuerId },
+      'runIssuerTrustCheck: the registrar rejected the issuer',
+    );
+    return Promise.resolve(CheckResults.FAIL);
+  }
+
+  if (unresolvedIssuerIds.has(issuerId)) {
+    log.error(
+      { id, issuerId },
+      'runIssuerTrustCheck: issuer lookups could not be completed',
+    );
+    return Promise.resolve(CheckResults.DEPENDENCY_RESOLUTION_ERROR);
   }
 
   const resolvedDeps = {
-    boundIssuerVc: boundIssuerVcsMap[toLower(id)]?.vc,
+    boundIssuerVc: boundIssuerVcsMap.get(id)?.vc,
     issuerAccreditation: accreditationVCMap[issuerId]?.credentialSubject,
     issuerDidDocument: issuerDidDocumentMap[issuerId],
     credentialTypeMetadata: credentialTypeMetadatasMap[credentialType],
@@ -533,7 +736,13 @@ const runIssuerTrustCheck = (
 
   if (some(isEmpty, Object.values(resolvedDeps))) {
     log.error(
-      { id, credential, issuerId, credentialType, resolvedDeps },
+      {
+        id,
+        credential: credentialForLog(credential),
+        issuerId,
+        credentialType,
+        resolvedDeps: issuerDependenciesForLog(resolvedDeps),
+      },
       'runIssuerTrustCheck: resolvedDeps failed',
     );
     return Promise.resolve(CheckResults.FAIL);

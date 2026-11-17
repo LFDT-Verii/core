@@ -17,10 +17,7 @@
 const path = require('node:path');
 const fastifyAutoload = require('@fastify/autoload');
 const { httpClientPlugin } = require('@verii/fastify-plugins');
-const {
-  rpcProviderPlugin,
-  authenticateVnfClientPlugin,
-} = require('@verii/base-contract-io');
+const { rpcProviderPlugin } = require('@verii/base-contract-io');
 const { pick } = require('lodash/fp');
 const { openid4vciPlugin } = require('./entities/openid4vci');
 const { openid4vpPlugin } = require('./entities/openid4vp');
@@ -29,14 +26,12 @@ const {
 } = require('./entities/notifications');
 const {
   registerCaoSecurityProvider,
+  registerVnfClientAuthentication,
 } = require('./plugins/cao-security-provider');
 
 const initServer = (server, { caoSecurityProvider } = {}) => {
   registerCaoSecurityProvider(server, caoSecurityProvider);
-
-  if (!server.config.isTest) {
-    server.register(authenticateVnfClientPlugin);
-  }
+  registerVnfClientAuthentication(server, caoSecurityProvider);
 
   return server
     .register(rpcProviderPlugin)
@@ -86,6 +81,24 @@ const initServer = (server, { caoSecurityProvider } = {}) => {
           server.config,
         ),
         prefixUrl: server.config.registrarUrl,
+      },
+    })
+    .register(httpClientPlugin, {
+      name: 'walletMessageFetch',
+      options: {
+        ...pick(
+          [
+            'nodeEnv',
+            'requestTimeout',
+            'traceIdHeader',
+            'tlsRejectUnauthorized',
+            'isTest',
+          ],
+          server.config,
+        ),
+        // Push URLs come from the wallet, so error responses are returned rather than read into
+        // memory by the client, which would wait for however long the body takes to end.
+        responseErrorMode: 'return',
       },
     })
     .register(openid4vciPlugin)

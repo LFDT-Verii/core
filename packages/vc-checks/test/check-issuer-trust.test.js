@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const { before, describe, it, mock } = require('node:test');
+const { before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const { omit, set, times, join } = require('lodash/fp');
-const { generateCredentialJwt } = require('@verii/jwt');
+const { generateCredentialJwt, jwtSign } = require('@verii/jwt');
 const { generateKeyPair, hexFromJwk } = require('@verii/crypto');
+const { generatePublicKeySection } = require('@verii/did-doc');
 const { checkIssuerTrust } = require('../src/check-issuer-trust');
 const {
   verifyPrimarySourceIssuer,
@@ -47,10 +48,8 @@ describe('issuer checks', () => {
     },
   };
   const config = {
-    rootPublicKey: issuerPublicKey,
     revocationContractAddress: 'any',
     rpcUrl: 'any',
-    trustedIssuerCheckMinDate: '2024-02-28T00:00:00Z',
   };
 
   let boundIssuerVc;
@@ -304,6 +303,303 @@ describe('issuer checks', () => {
     );
 
     expect(result).toEqual(CheckResults.PASS);
+  });
+
+  describe('issuing metadata key formats', () => {
+    const p256KeyPair = generateKeyPair({ format: 'jwk', curve: 'P-256' });
+    let p256BoundIssuerVc;
+
+    before(async () => {
+      p256BoundIssuerVc = await generateCredentialJwt(
+        issuerCred,
+        p256KeyPair.privateKey,
+        issuerKid,
+        'ES256',
+      );
+    });
+
+    const checkWithIssuerKey = (verificationMethod, overrides = {}) =>
+      checkIssuerTrust(
+        identityCredential,
+        issuerDid,
+        {
+          ...defaultDependencies,
+          issuerDidDocument: {
+            id: issuerDid,
+            verificationMethod: [{ id: '#key-1', ...verificationMethod }],
+          },
+          ...overrides,
+        },
+        context,
+      );
+
+    it('Should PASS when the boundIssuerVC is signed by a P-256 JsonWebKey2020 key', async () => {
+      const result = await checkWithIssuerKey(
+        {
+          type: 'JsonWebKey2020',
+          controller: issuerDid,
+          publicKeyJwk: p256KeyPair.publicKey,
+        },
+        { boundIssuerVc: p256BoundIssuerVc },
+      );
+
+      expect(p256KeyPair.publicKey.crv).toEqual('P-256');
+      expect(result).toEqual(CheckResults.PASS);
+    });
+
+    it('Should FAIL when the boundIssuerVC is signed by a different P-256 key', async () => {
+      const { publicKey: otherP256Jwk } = generateKeyPair({
+        format: 'jwk',
+        curve: 'P-256',
+      });
+
+      const result = await checkWithIssuerKey(
+        { type: 'JsonWebKey2020', publicKeyJwk: otherP256Jwk },
+        { boundIssuerVc: p256BoundIssuerVc },
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should FAIL when a P-256 boundIssuerVC is checked against a secp256k1 key', async () => {
+      const result = await checkWithIssuerKey(
+        { type: 'JsonWebKey2020', publicKeyJwk: issuerKeyPair.publicKey },
+        { boundIssuerVc: p256BoundIssuerVc },
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should PASS when the issuer key is a legacy secp256k1 publicKeyHex', async () => {
+      const result = await checkWithIssuerKey({
+        type: 'EcdsaSecp256k1VerificationKey2019',
+        publicKeyHex: issuerPublicKey,
+      });
+
+      expect(result).toEqual(CheckResults.PASS);
+    });
+
+    it('Should PASS when the issuer key is a legacy secp256k1 publicKeyBase58', async () => {
+      const { publicKeyBase58 } = generatePublicKeySection(
+        '#key-1',
+        issuerDid,
+        issuerPublicKey,
+      );
+      expect(publicKeyBase58).toBeDefined();
+
+      const result = await checkWithIssuerKey({
+        type: 'EcdsaSecp256k1VerificationKey2019',
+        publicKeyBase58,
+      });
+
+      expect(result).toEqual(CheckResults.PASS);
+    });
+
+    it('Should FAIL when a legacy secp256k1 publicKeyHex does not match the signer', async () => {
+      const { publicKey: otherJwk } = generateKeyPair({ format: 'jwk' });
+
+      const result = await checkWithIssuerKey({
+        type: 'EcdsaSecp256k1VerificationKey2019',
+        publicKeyHex: hexFromJwk(otherJwk, false),
+      });
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should FAIL when the kid is not in the DID document even if the header embeds a jwk', async () => {
+      const attackerKeyPair = generateKeyPair({ format: 'jwk' });
+      const embeddedJwkVc = await jwtSign(
+        { iss: issuerDid, vc: issuerCred },
+        attackerKeyPair.privateKey,
+        {
+          kid: `${issuerDid}#key-2`,
+          jwk: attackerKeyPair.publicKey,
+        },
+      );
+
+      const result = await checkWithIssuerKey(
+        { publicKeyJwk: issuerKeyPair.publicKey },
+        { boundIssuerVc: embeddedJwkVc },
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should FAIL when the boundIssuerVC uses a symmetric algorithm', async () => {
+      const secret = 'issuer-did-document-secret';
+      const hs256Vc = await jwtSign(
+        { iss: issuerDid, vc: issuerCred },
+        secret,
+        {
+          kid: issuerKid,
+        },
+      );
+
+      const result = await checkWithIssuerKey(
+        {
+          publicKeyJwk: {
+            kty: 'oct',
+            k: Buffer.from(secret).toString('base64url'),
+          },
+        },
+        { boundIssuerVc: hs256Vc },
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+    });
+
+    it('Should not emit the deriveJwk hex deprecation warning', async (t) => {
+      const emitWarning = t.mock.method(process, 'emitWarning', () => {});
+
+      const result = await checkWithIssuerKey({
+        type: 'EcdsaSecp256k1VerificationKey2019',
+        publicKeyHex: issuerPublicKey,
+      });
+
+      expect(result).toEqual(CheckResults.PASS);
+      expect(
+        emitWarning.mock.calls.filter(
+          ({ arguments: [, options] }) => options?.code === 'VERII_JWT_DEP001',
+        ),
+      ).toEqual([]);
+    });
+  });
+
+  describe('logging', () => {
+    const email = 'holder@example.com';
+    let spyContext;
+    let credentialWithEmail;
+
+    const loggedCalls = () =>
+      Object.values(spyContext.log).flatMap((fn) =>
+        fn.mock.calls.map((call) => call.arguments),
+      );
+
+    before(() => {
+      credentialWithEmail = {
+        ...identityCredential,
+        id: 'did:velocity:v2:0x1:1:1',
+        credentialSubject: { ...identityCredential.credentialSubject, email },
+      };
+    });
+
+    beforeEach(() => {
+      spyContext = {
+        config,
+        log: { info: mock.fn(), warn: mock.fn(), error: mock.fn() },
+      };
+    });
+
+    it('should log only identifiers when the issuer chain fails', async () => {
+      const result = await checkIssuerTrust(
+        credentialWithEmail,
+        issuerDid,
+        {
+          ...defaultDependencies,
+          issuerAccreditation: {
+            id: issuerDid,
+            permittedVelocityServiceCategory: [],
+          },
+        },
+        spyContext,
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+      const logged = JSON.stringify(loggedCalls());
+      expect(logged).not.toContain(email);
+      expect(logged).not.toContain(boundIssuerVc);
+      expect(logged).not.toContain('accountId');
+      expect(spyContext.log.error.mock.calls[0].arguments).toEqual([
+        {
+          err: expect.any(Error),
+          credential: {
+            id: credentialWithEmail.id,
+            type: ['Passport'],
+            issuer: { id: issuerDid },
+          },
+          dependencies: {
+            boundIssuerVc: {
+              header: { alg: 'ES256K', kid: issuerKid, typ: 'JWT' },
+              payload: { iss: issuerDid },
+            },
+            issuerAccreditation: { id: issuerDid },
+            issuerDidDocument: {
+              id: issuerDid,
+              verificationMethod: [{ id: '#key-1' }],
+            },
+            credentialTypeMetadata: { credentialType: 'Passport' },
+          },
+        },
+        'Check issuer credentials: the issuer chain failed for the issuer VC',
+      ]);
+    });
+
+    it('should log only identifiers when the boundIssuerVc does not verify', async () => {
+      const { privateKey } = generateKeyPair({ format: 'jwk' });
+      const wrongSigVc = await generateCredentialJwt(
+        issuerCred,
+        privateKey,
+        issuerKid,
+      );
+
+      const result = await checkIssuerTrust(
+        credentialWithEmail,
+        issuerDid,
+        { ...defaultDependencies, boundIssuerVc: wrongSigVc },
+        spyContext,
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+      expect(JSON.stringify(loggedCalls())).not.toContain(wrongSigVc);
+      expect(JSON.stringify(loggedCalls())).not.toContain('accountId');
+      expect(loggedCalls()).toEqual([
+        [
+          {
+            decodedBoundIssuerVc: {
+              header: { alg: 'ES256K', kid: issuerKid, typ: 'JWT' },
+              payload: { iss: issuerDid },
+            },
+          },
+          'checkIssuerTrust: the boundIssuerVc does not verify',
+        ],
+      ]);
+    });
+
+    it('should log only identifiers when the boundIssuerVc is for another issuer', async () => {
+      const otherIssuerDid = 'did:ion:other-issuer';
+      const otherIssuerVc = await generateCredentialJwt(
+        { ...issuerCred, issuer: otherIssuerDid },
+        issuerKeyPair.privateKey,
+        issuerKid,
+      );
+
+      const result = await checkIssuerTrust(
+        credentialWithEmail,
+        issuerDid,
+        { ...defaultDependencies, boundIssuerVc: otherIssuerVc },
+        spyContext,
+      );
+
+      expect(result).toEqual(CheckResults.FAIL);
+      expect(JSON.stringify(loggedCalls())).not.toContain(otherIssuerVc);
+      expect(JSON.stringify(loggedCalls())).not.toContain('accountId');
+      expect(JSON.stringify(loggedCalls())).not.toContain('publicKeyJwk');
+      expect(loggedCalls()).toEqual([
+        [
+          {
+            issuerDidDocument: {
+              id: issuerDid,
+              verificationMethod: [{ id: '#key-1' }],
+            },
+            decodedBoundIssuerVc: {
+              header: { alg: 'ES256K', kid: issuerKid, typ: 'JWT' },
+              payload: { iss: otherIssuerDid },
+            },
+          },
+          "checkIssuerTrust: the boundIssuerVc is not for the credential's issuer",
+        ],
+      ]);
+    });
   });
 
   describe('checkIdentityIssuer tests suite', () => {

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.28@sha256:bb22d9815c728170f72750f4e5b0d672e06176142e1d602c7e66c050100b7e5b
-FROM node:24.22.0-slim@sha256:a5f4366e834695d5f363b920c104953a535d3a9864d1bdf74566a0ebe01daee5 AS builder
+FROM node:24.22.2-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9 AS builder
 ENV PNPM_HOME="/home/node/.local/share/pnpm"
 ENV PATH="${PNPM_HOME}:${PATH}"
 WORKDIR /app
@@ -20,11 +20,11 @@ COPY --chown=node:node servers ./servers
 RUN pnpm --filter @verii/server-credentialing-hub... install --offline --prod --frozen-lockfile
 RUN pnpm --filter @verii/server-credentialing-hub --prod deploy --legacy /app/deploy
 
-FROM node:24.22.0-slim@sha256:a5f4366e834695d5f363b920c104953a535d3a9864d1bdf74566a0ebe01daee5
+FROM node:24.22.2-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
 ARG IMAGE_VERSION="0.0.0-local"
 ARG IMAGE_REVISION="unknown"
 LABEL org.opencontainers.image.title="Verii Credentialing Hub" \
-  org.opencontainers.image.description="Environment-agnostic Verii Credentialing Hub" \
+  org.opencontainers.image.description="Network-agnostic Verii Credentialing Hub" \
   org.opencontainers.image.source="https://github.com/LFDT-Verii/core" \
   org.opencontainers.image.url="https://hub.docker.com/r/lfdecentralizedtrust/verii-credentialing-hub" \
   org.opencontainers.image.licenses="Apache-2.0" \
@@ -38,9 +38,6 @@ COPY --chown=node:node --from=builder \
 COPY --chown=node:node --from=builder \
   /app/servers/credentialinghub/docker/resolve-runtime-environment.js \
   ./docker/resolve-runtime-environment.js
-COPY --chown=node:node --from=builder \
-  /app/servers/credentialinghub/docker/velocity-network-presets.js \
-  ./docker/velocity-network-presets.js
 USER node
 EXPOSE 3000
 ENTRYPOINT ["node", "docker/entrypoint.js"]

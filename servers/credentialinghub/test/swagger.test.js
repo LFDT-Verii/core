@@ -1,6 +1,26 @@
 const { after, before, describe, it } = require('node:test');
 const { expect } = require('expect');
 const fp = require('fastify-plugin');
+const {
+  compact,
+  defaultTo,
+  filter,
+  find,
+  flatMap,
+  flow,
+  get: getPath,
+  includes,
+  isPlainObject,
+  keyBy,
+  keys,
+  map,
+  mapValues,
+  overSome,
+  reject,
+  startsWith,
+  uniq,
+  values,
+} = require('lodash/fp');
 const { buildMongoConnection } = require('@verii/tests-helpers');
 const packageJson = require('../package.json');
 const buildFastify = require('./helpers/create-test-fastify');
@@ -23,6 +43,8 @@ const EXPECTED_OPENID4VCI_SUMMARIES = {
     'Get OpenID4VCI credential issuer metadata',
   'POST /r/{tenantId}/oauth/token': 'Create an OpenID4VCI access token',
   'POST /r/{tenantId}/openid4vc/credential': 'Create an OpenID4VCI credential',
+  'POST /r/{tenantId}/openid4vc/deferred_credential':
+    'Create an OpenID4VCI deferred credential',
   'POST /r/{tenantId}/openid4vc/nonce': 'Create an OpenID4VCI nonce',
   'POST /r/{tenantId}/openid4vc/notification':
     'Submit an OpenID4VCI notification',
@@ -57,7 +79,13 @@ const EXPECTED_OPERATION_METADATA = {
   ],
   'POST /operator/depots/create': ['Depots', 'createDepot', OPERATOR_SECURITY],
   'GET /operator/depots/get': ['Depots', 'getDepots', OPERATOR_SECURITY],
+  'POST /operator/depots/get': ['Depots', 'findDepots', OPERATOR_SECURITY],
   'POST /operator/depots/delete': ['Depots', 'deleteDepot', OPERATOR_SECURITY],
+  'POST /operator/depots/resolve-deferred-credentials': [
+    'Depots',
+    'resolveDeferredCredentials',
+    OPERATOR_SECURITY,
+  ],
   'GET /operator/exchanges/get': [
     'Exchanges',
     'getExchange',
@@ -101,6 +129,11 @@ const EXPECTED_OPERATION_METADATA = {
   'POST /operator/presentations/verify': [
     'Presentations',
     'verifyPresentation',
+    OPERATOR_SECURITY,
+  ],
+  'POST /operator/presentations/delete': [
+    'Presentations',
+    'deletePresentations',
     OPERATOR_SECURITY,
   ],
   'POST /operator/relying-party-services/create': [
@@ -156,6 +189,11 @@ const EXPECTED_OPERATION_METADATA = {
     'createOpenid4vciCredential',
     OPENID4VCI_SECURITY,
   ],
+  'POST /r/{tenantId}/openid4vc/deferred_credential': [
+    'OpenID4VCI',
+    'createOpenid4vciDeferredCredential',
+    OPENID4VCI_SECURITY,
+  ],
   'POST /r/{tenantId}/openid4vc/nonce': ['OpenID4VCI', 'createOpenid4vciNonce'],
   'POST /r/{tenantId}/openid4vc/notification': [
     'OpenID4VCI',
@@ -178,6 +216,10 @@ const EXPECTED_OPERATION_METADATA = {
     'Issuing',
     'getVnApiCredentialOffers',
     VN_API_SECURITY,
+  ],
+  'POST /vn-api/r/{tenantId}/decline-presentation': [
+    'Presentation',
+    'declineVnApiPresentation',
   ],
   'GET /vn-api/r/{tenantId}/get-credential-manifest': [
     'Issuing',
@@ -223,7 +265,9 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/credentials/delete',
       'POST /operator/depots/create',
       'GET /operator/depots/get',
+      'POST /operator/depots/get',
       'POST /operator/depots/delete',
+      'POST /operator/depots/resolve-deferred-credentials',
       'GET /operator/exchanges/get',
       'POST /operator/issue-links/refresh',
       'POST /operator/issuer-services/create',
@@ -233,6 +277,7 @@ const EXPECTED_DOCUMENTS = {
       'POST /operator/presentation-links/refresh',
       'GET /operator/presentations/get',
       'POST /operator/presentations/verify',
+      'POST /operator/presentations/delete',
       'POST /operator/relying-party-services/create',
       'GET /operator/relying-party-services/get',
       'POST /operator/relying-party-services/update',
@@ -252,6 +297,7 @@ const EXPECTED_DOCUMENTS = {
       'GET /.well-known/openid-credential-issuer/r/{tenantId}',
       'POST /r/{tenantId}/oauth/token',
       'POST /r/{tenantId}/openid4vc/credential',
+      'POST /r/{tenantId}/openid4vc/deferred_credential',
       'POST /r/{tenantId}/openid4vc/nonce',
       'POST /r/{tenantId}/openid4vc/notification',
       'POST /r/{tenantId}/openid4vp/authorization-request/{requestId}',
@@ -265,6 +311,7 @@ const EXPECTED_DOCUMENTS = {
     operations: [
       'POST /vn-api/r/{tenantId}/authenticate',
       'POST /vn-api/r/{tenantId}/credential-offers',
+      'POST /vn-api/r/{tenantId}/decline-presentation',
       'GET /vn-api/r/{tenantId}/get-credential-manifest',
       'GET /vn-api/r/{tenantId}/get-presentation-request',
       'POST /vn-api/r/{tenantId}/issue-credentials',
@@ -365,6 +412,92 @@ const getLocalComponentReferences = (value, seen = new WeakSet()) => {
   return references;
 };
 
+// The keywords of an OpenAPI 3.0 Schema Object. Extensions start with x-.
+const OPENAPI_30_SCHEMA_KEYWORDS = [
+  '$ref',
+  'additionalProperties',
+  'allOf',
+  'anyOf',
+  'default',
+  'deprecated',
+  'description',
+  'discriminator',
+  'enum',
+  'example',
+  'exclusiveMaximum',
+  'exclusiveMinimum',
+  'externalDocs',
+  'format',
+  'items',
+  'maxItems',
+  'maxLength',
+  'maxProperties',
+  'maximum',
+  'minItems',
+  'minLength',
+  'minProperties',
+  'minimum',
+  'multipleOf',
+  'not',
+  'nullable',
+  'oneOf',
+  'pattern',
+  'properties',
+  'readOnly',
+  'required',
+  'title',
+  'type',
+  'uniqueItems',
+  'writeOnly',
+  'xml',
+];
+
+// OpenAPI 3.0 has no null type: a schema is nullable instead
+const OPENAPI_30_TYPES = [
+  'array',
+  'boolean',
+  'integer',
+  'number',
+  'object',
+  'string',
+];
+
+const isOpenApi30Keyword = overSome([
+  (keyword) => includes(keyword, OPENAPI_30_SCHEMA_KEYWORDS),
+  startsWith('x-'),
+]);
+
+const isOpenApi30Type = (type) => includes(type, OPENAPI_30_TYPES);
+
+// The schemas nested in a schema. additionalProperties can be a boolean.
+const subschemas = (schema) =>
+  filter(isPlainObject, [
+    ...values(schema.properties),
+    schema.items,
+    schema.not,
+    schema.additionalProperties,
+    ...flatMap(defaultTo([]), [schema.allOf, schema.anyOf, schema.oneOf]),
+  ]);
+
+// A schema and every schema nested in it
+const withSubschemas = (schema) => [
+  schema,
+  ...flatMap(withSubschemas, subschemas(schema)),
+];
+
+const componentSchema = (document, title) =>
+  find({ title }, values(document.components.schemas));
+
+const CLAIMS_PATH_POINTER_SEGMENT_PATH = [
+  'properties',
+  'verifiablePresentationAuthRules',
+  'items',
+  'properties',
+  'path',
+  'items',
+  'items',
+];
+
 const resolveLocalReference = (document, reference) =>
   reference
     .slice(2)
@@ -452,6 +585,73 @@ describe('swagger documents', () => {
     }
   });
 
+  it('returns the same depots response from GET and POST depots/get', () => {
+    const { get, post } = documents.operator.paths['/operator/depots/get'];
+
+    expect(post.responses['200']).toEqual(get.responses['200']);
+  });
+
+  it('documents the serviceId and depotId of depots/get as ObjectIds', () => {
+    const { get, post } = documents.operator.paths['/operator/depots/get'];
+    const objectId = { type: 'string', pattern: '^[0-9a-fA-F]{24}$' };
+    const idFilters = {
+      serviceId: objectId,
+      depotId: { anyOf: [objectId, { type: 'array', items: objectId }] },
+    };
+
+    expect(
+      flow(keyBy('name'), mapValues('schema'))(get.parameters),
+    ).toMatchObject(idFilters);
+    expect(
+      resolveLocalReference(
+        documents.operator,
+        getPath(
+          ['requestBody', 'content', 'application/json', 'schema', '$ref'],
+          post,
+        ),
+      ).properties,
+    ).toMatchObject(idFilters);
+  });
+
+  it('documents the item errors in the credentials/create-many 400 response only', () => {
+    const getBadRequestSchema = (path) => {
+      const { schema } =
+        documents.operator.paths[path].post.responses['400'].content[
+          'application/json'
+        ];
+      return schema.$ref == null
+        ? schema
+        : resolveLocalReference(documents.operator, schema.$ref);
+    };
+
+    expect(
+      getBadRequestSchema('/operator/credentials/create-many').properties,
+    ).toEqual({
+      error: { type: 'string' },
+      message: { type: 'string' },
+      statusCode: { type: 'integer' },
+      errorCode: { type: 'string' },
+      requestId: { type: 'string' },
+      errors: {
+        type: 'array',
+        description: expect.any(String),
+        items: {
+          type: 'object',
+          properties: {
+            index: { type: 'integer', description: expect.any(String) },
+            path: { type: 'string', description: expect.any(String) },
+            errorCode: { type: 'string' },
+            message: { type: 'string' },
+          },
+          required: ['index', 'path', 'errorCode', 'message'],
+        },
+      },
+    });
+    expect(
+      getBadRequestSchema('/operator/credentials/create').properties,
+    ).not.toHaveProperty('errors');
+  });
+
   it('emits only reachable schemas and no dangling component refs', () => {
     for (const document of Object.values(documents)) {
       expect(new Set(Object.keys(document.components?.schemas ?? {}))).toEqual(
@@ -461,6 +661,103 @@ describe('swagger documents', () => {
         expect(resolveLocalReference(document, reference)).toBeDefined();
       }
     }
+  });
+
+  it('uses only the schema keywords and types that OpenAPI 3.0 has', () => {
+    for (const document of Object.values(documents)) {
+      const schemas = flatMap(
+        withSubschemas,
+        values(document.components?.schemas),
+      );
+      const usedKeywords = flow(flatMap(keys), uniq)(schemas);
+      const usedTypes = flow(map('type'), compact, uniq)(schemas);
+
+      expect(reject(isOpenApi30Keyword, usedKeywords)).toEqual([]);
+      expect(reject(isOpenApi30Type, usedTypes)).toEqual([]);
+    }
+  });
+
+  it('documents a null claims path pointer segment as nullable', () => {
+    for (const title of ['new-issuer-service', 'issuer-service']) {
+      const issuerService = componentSchema(documents.operator, title);
+
+      expect(getPath(CLAIMS_PATH_POINTER_SEGMENT_PATH, issuerService)).toEqual({
+        anyOf: [
+          { type: 'string', minLength: 1, nullable: true },
+          { type: 'integer', minimum: 0 },
+        ],
+      });
+    }
+  });
+
+  it("documents the issuer service's auth method rules", () => {
+    const newIssuerService = componentSchema(
+      documents.operator,
+      'new-issuer-service',
+    );
+    const authRuleProperties =
+      newIssuerService.properties.verifiablePresentationAuthRules.items
+        .properties;
+
+    expect(newIssuerService.anyOf).toEqual([
+      {
+        description: 'preauth only',
+        properties: {
+          authMethods: { type: 'array', items: { enum: ['preauth'] } },
+        },
+      },
+      {
+        description: 'internal verifiable_presentation, alone or with preauth',
+        required: ['disclosureRequest', 'verifiablePresentationAuthRules'],
+        properties: {
+          authMode: { enum: ['internal'] },
+          verifiablePresentationAuthRules: { type: 'array', minItems: 1 },
+        },
+        not: { required: ['presentationDefinition'] },
+      },
+    ]);
+    expect(authRuleProperties.valueIndex).toEqual(
+      expect.objectContaining({ type: 'integer', minimum: 0, maximum: 9 }),
+    );
+    expect(authRuleProperties.rule).toEqual(
+      expect.objectContaining({
+        enum: ['pick', 'equal'],
+        description: expect.stringMatching(/`pick` .*`equal` /),
+      }),
+    );
+    expect(
+      newIssuerService.properties.disclosureRequest.properties.types.items,
+    ).toEqual(
+      expect.objectContaining({
+        required: ['type'],
+        additionalProperties: false,
+      }),
+    );
+  });
+
+  it('documents the limits of a new depot and a new credential', () => {
+    const newDepot = componentSchema(documents.operator, 'new-depot');
+    const newCredential = componentSchema(documents.operator, 'new-credential');
+
+    expect(newDepot.properties.authValues).toEqual(
+      expect.objectContaining({ minItems: 1, maxItems: 10 }),
+    );
+    expect(newDepot.properties.authValues.items.anyOf).toContainEqual({
+      type: 'string',
+      minLength: 1,
+      pattern: '\\S',
+    });
+    expect(newDepot.properties.userReference).toEqual(
+      expect.objectContaining({ minLength: 1, maxLength: 64 }),
+    );
+    expect(newCredential.properties.credentialReference).toEqual(
+      expect.objectContaining({ minLength: 1, maxLength: 64 }),
+    );
+    expect(newCredential.properties.tags).toEqual({
+      type: 'array',
+      maxItems: 10,
+      items: { type: 'string', minLength: 1, maxLength: 32 },
+    });
   });
 
   it('offers all documents in Swagger UI without preconfigured OAuth credentials', async () => {
@@ -526,7 +823,6 @@ describe('CAO security provider documentation', () => {
         },
       },
       configOverrides: {
-        isTest: false,
         mongoConnection: buildMongoConnection('test-credentialing-hub'),
       },
     });
