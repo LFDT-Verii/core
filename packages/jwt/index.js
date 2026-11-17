@@ -25,5 +25,7 @@ module.exports = {
   ...require('./src/verifiable-decoders'),
   ...require('./src/vc-mappers'),
   ...require('./src/key-transformer'),
+  ...require('./src/key-pair'),
+  ...require('./src/transferred-key'),
   generateDocJwt,
 };

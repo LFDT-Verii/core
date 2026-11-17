@@ -19,6 +19,9 @@ const CredentialStatus = {
   REVOKED: 'REVOKED',
   UNREVOKED: 'UNREVOKED',
   DEPENDENCY_RESOLUTION_ERROR: 'DEPENDENCY_RESOLUTION_ERROR',
+  // the credential's status entry cannot be checked, for example a revocation
+  // url for another contract or function
+  INVALID: 'INVALID',
 };
 
 module.exports = { CredentialStatus };

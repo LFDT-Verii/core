@@ -122,7 +122,8 @@ const matchFeed = async (
     grantType === 'authorization_code'
       ? { preauthCode: authorizationCode }
       : { refreshToken, clientId };
-  const sort = { updatedAt: -1 };
+  // _id breaks updatedAt ties so the most recently inserted feed wins
+  const sort = { updatedAt: -1, _id: -1 };
   const feed = await repos.feeds.findOne({ filter, sort });
   if (feed == null) {
     throw newError.Unauthorized();

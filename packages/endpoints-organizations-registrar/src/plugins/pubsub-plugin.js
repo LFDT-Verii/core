@@ -33,36 +33,27 @@ const pubsubPlugin = async (fastify) => {
     'renderTemplate',
   ]);
 
-  const baseContext = {
-    config: fastify.config,
-    user: null,
-    log: null,
-    repos: null,
-    kms: null,
-    serviceVersionFetch: null,
-    secureMessagesFetch: null,
-    betterUptimeFetch: null,
-    getDocValidator: null,
-    headers: null,
-  };
-
   const pubsub = (subscriberName) => ({
     subscribe(topic, eventName, subscriber) {
       spenceSubscribe(topic, eventName, async (event) => {
-        const context = structuredClone(baseContext);
-        context.user = event.meta.user;
-        context.log = fastify.log.child({
-          msgId: event.meta.id,
-          traceId: event.meta.traceId,
-        });
-        context.repos = event.meta.repos;
-        context.serviceVersionFetch = event.meta.serviceVersionFetch;
-        context.secureMessagesFetch = event.meta.secureMessagesFetch;
-        context.betterUptimeFetch = event.meta.betterUptimeFetch;
-        context.getDocValidator = event.meta.getDocValidator;
-        context.renderTemplate = event.meta.renderTemplate;
-        context.headers = event.meta.headers;
-        context.kms = event.meta.kms;
+        // A new context for each event, sharing the server's config. Cloning
+        // the config would fail on the functions a server can put in it.
+        const context = {
+          config: fastify.config,
+          user: event.meta.user,
+          log: fastify.log.child({
+            msgId: event.meta.id,
+            traceId: event.meta.traceId,
+          }),
+          repos: event.meta.repos,
+          kms: event.meta.kms,
+          serviceVersionFetch: event.meta.serviceVersionFetch,
+          secureMessagesFetch: event.meta.secureMessagesFetch,
+          betterUptimeFetch: event.meta.betterUptimeFetch,
+          getDocValidator: event.meta.getDocValidator,
+          renderTemplate: event.meta.renderTemplate,
+          headers: event.meta.headers,
+        };
 
         try {
           await subscriber(event, context);

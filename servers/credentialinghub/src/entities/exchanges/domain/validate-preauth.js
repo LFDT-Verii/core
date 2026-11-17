@@ -17,15 +17,16 @@
 const { isEmpty } = require('lodash/fp');
 const newError = require('http-errors');
 const { calcSha384 } = require('@verii/crypto');
+const {
+  isPreauthCodeExpired,
+} = require('../../depots/domain/preauth-code-expiry');
 const { ExchangeErrors } = require('./exchange-errors');
 const { ExchangeStates } = require('./exchange-states');
 
+// A code is checked against its depot's current code first, so only the
+// holder of that code learns that it has expired.
 const validatePreauth = (preauthCode, depot, { log }) => {
-  if (
-    depot == null ||
-    isEmpty(preauthCode) ||
-    calcSha384(preauthCode) !== depot.preauthCodeHash
-  ) {
+  if (!isDepotPreauthCode(preauthCode, depot)) {
     log.error(
       {
         depot,
@@ -35,11 +36,29 @@ const validatePreauth = (preauthCode, depot, { log }) => {
       },
       'Preauth failed',
     );
-    throw newError(401, ExchangeErrors.UNAUTHORIZED, {
-      exchangeErrorState: ExchangeStates.AUTHENTICATION_FAILURE,
-      errorCode: ExchangeErrors.UNAUTHORIZED,
-    });
+    throw preauthError(ExchangeErrors.UNAUTHORIZED);
+  }
+  if (isPreauthCodeExpired(depot)) {
+    log.warn(
+      {
+        depotId: depot._id,
+        preauthCodeExpiresAt: depot.preauthCodeExpiresAt,
+      },
+      'Preauth code expired',
+    );
+    throw preauthError(ExchangeErrors.PREAUTH_CODE_EXPIRED);
   }
 };
+
+const isDepotPreauthCode = (preauthCode, depot) =>
+  depot != null &&
+  !isEmpty(preauthCode) &&
+  calcSha384(preauthCode) === depot.preauthCodeHash;
+
+const preauthError = (errorCode) =>
+  newError(401, errorCode, {
+    exchangeErrorState: ExchangeStates.AUTHENTICATION_FAILURE,
+    errorCode,
+  });
 
 module.exports = { validatePreauth };

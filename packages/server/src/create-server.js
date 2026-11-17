@@ -16,6 +16,16 @@
 
 const fastifyHelmet = require('@fastify/helmet');
 const fastifySensible = require('@fastify/sensible');
+const {
+  flatMap,
+  identity,
+  isArray,
+  isEmpty,
+  isNil,
+  isPlainObject,
+  isString,
+  sortBy,
+} = require('lodash/fp');
 
 const {
   commonCreateServer,
@@ -23,8 +33,31 @@ const {
   isSensitiveRoute,
 } = require('./common-create-server');
 
+const isUnset = (value) =>
+  isNil(value) ||
+  ((isString(value) || isArray(value) || isPlainObject(value)) &&
+    isEmpty(value));
+
+const listSetConfigNames = (config, prefix = '') =>
+  flatMap(([key, value]) => {
+    if (isUnset(value)) {
+      return [];
+    }
+    return isPlainObject(value)
+      ? listSetConfigNames(value, `${prefix}${key}.`)
+      : [`${prefix}${key}`];
+  }, Object.entries(config));
+
 const createServer = (config, log = createCommonLog(config)) => {
-  log.info(config, 'Server Configured');
+  // log only the names of set config values, never the values themselves.
+  // The chain ID is public, and names the network the server runs on.
+  log.info(
+    {
+      chainId: config.chainId,
+      configuredSettings: sortBy(identity, listSetConfigNames(config)),
+    },
+    'Server Configured',
+  );
 
   const server = commonCreateServer(config, log);
 

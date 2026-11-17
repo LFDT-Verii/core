@@ -35,7 +35,8 @@ if (JSON.stringify(config.Entrypoint) !== JSON.stringify(['node', 'docker/entryp
   throw new Error(`Unexpected image entrypoint: ${JSON.stringify(config.Entrypoint)}`);
 }
 
-const forbiddenEnvironment = /^(?:RPC_NODE_URL|CHAIN_ID|REGISTRAR_URL|ROOT_PUBLIC_KEY|[A-Z0-9_]*CONTRACT_ADDRESS|VNF_OAUTH_[A-Z0-9_]*|BLOCKCHAIN_OAUTH_[A-Z0-9_]*)=/;
+// The image presets no network: its operator sets every network value
+const forbiddenEnvironment = /^(?:NETWORK|RPC_NODE_URL|CHAIN_ID|REGISTRAR_URL|LIB_URL|DEEP_LINK_PROTOCOL|CREDENTIAL_EXTENSIONS_CONTEXT_URL|BLOCKCHAIN_API_AUDIENCE|[A-Z0-9_]*CONTRACT_ADDRESS|VNF_OAUTH_[A-Z0-9_]*|BLOCKCHAIN_OAUTH_[A-Z0-9_]*)=/;
 const exposed = (config.Env || []).filter((entry) => forbiddenEnvironment.test(entry));
 
 if (exposed.length > 0) {
@@ -43,31 +44,22 @@ if (exposed.length > 0) {
 }
 NODE
 
-if docker run --rm "$image" --velocity-devn >"$output_directory/unsupported-argument.log" 2>&1; then
-  echo 'Expected unsupported image argument to fail' >&2
-  exit 1
-fi
+# The image takes no arguments, including the network flags it used to take
+for argument in --mainnet --velocity-devnet --unsupported; do
+  status=0
+  docker run --rm "$image" "$argument" >"$output_directory/unsupported-argument.log" 2>&1 || status=$?
 
-if ! grep -Fq 'Unsupported Credentialing Hub image argument' "$output_directory/unsupported-argument.log"; then
-  echo 'Unsupported image argument error was not reported' >&2
-  exit 1
-fi
+  if [[ "$status" -ne 64 ]]; then
+    echo "Expected image argument $argument to fail with exit code 64, received $status" >&2
+    exit 1
+  fi
 
-readonly supplied_rpc_url='https://example.invalid'
-if docker run --rm -e "RPC_NODE_URL=$supplied_rpc_url" "$image" --velocity-devnet >"$output_directory/preset-conflict.log" 2>&1; then
-  echo 'Expected preset conflict to fail' >&2
-  exit 1
-fi
-
-if ! grep -Fq 'RPC_NODE_URL' "$output_directory/preset-conflict.log"; then
-  echo 'Preset conflict did not name RPC_NODE_URL' >&2
-  exit 1
-fi
-
-if grep -Fq "$supplied_rpc_url" "$output_directory/preset-conflict.log"; then
-  echo 'Preset conflict leaked the supplied RPC_NODE_URL value' >&2
-  exit 1
-fi
+  if ! grep -Fq 'Unsupported Credentialing Hub image argument' "$output_directory/unsupported-argument.log" ||
+    ! grep -Fq 'no longer presets a network' "$output_directory/unsupported-argument.log"; then
+    echo "Image argument $argument was not reported as unsupported" >&2
+    exit 1
+  fi
+done
 
 package_name="$(docker run --rm --entrypoint node "$image" -p "require('/app/package.json').name")"
 if [[ "$package_name" != '@verii/server-credentialing-hub' ]]; then

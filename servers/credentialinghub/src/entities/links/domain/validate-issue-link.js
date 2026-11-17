@@ -15,6 +15,7 @@
  *
  */
 const newError = require('http-errors');
+const { isInternalVpAuth } = require('@verii/credentialing-hub-operator-api');
 const { LinkErrors } = require('./link-errors');
 const { isPreauthCodeAuth } = require('./is-preauth-code-auth');
 
@@ -29,11 +30,16 @@ const validateIssueLink = (service, depotId, depot) => {
       errorCode: LinkErrors.referenced_depot_not_found,
     });
   }
-  if (isPreauthCodeAuth(service) && depot == null) {
+  if (depot == null && requiresDepot(service)) {
     throw newError(400, LinkErrors.issue_link_requires_depotId, {
       errorCode: LinkErrors.issue_link_requires_depotId,
     });
   }
 };
+
+// A service that can authenticate holders by presentation can use a shared
+// link, so only a preauth-only service needs a depot.
+const requiresDepot = (service) =>
+  isPreauthCodeAuth(service) && !isInternalVpAuth(service);
 
 module.exports = { validateIssueLink };

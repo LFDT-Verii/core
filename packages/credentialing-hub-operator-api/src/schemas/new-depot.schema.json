@@ -1,0 +1,66 @@
+{
+  "$id": "new-depot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "userReference"
+  ],
+  "properties": {
+    "userReference": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "The internal user reference for this depot. Typically a employee or student id of the system"
+    },
+    "authValues": {
+      "type": "array",
+      "description": "auth values to use for authenticating the user or session. For an issuer service with internal `verifiable_presentation` auth, one value per rule of its `verifiablePresentationAuthRules`, at the rule's `valueIndex`. Each value must have its rule's `valueType`, and its `valueFormat` if the rule has one, and a string must not be blank. Strings are trimmed and lower-cased before they are checked and matched, and numbers and booleans are used as they are. Values of different types never match, so `\"12345\"` never matches `12345`.",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    "deferredCredentials": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the depot's credentials may come later. A wallet with nothing to claim then waits until depots/resolve-deferred-credentials is called. Only allowed for issuer service depots, and can't be changed"
+    },
+    "expectedCredentialTypes": {
+      "type": "array",
+      "description": "The credential types the depot may receive",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "preauthCodeExpiresIn": {
+      "description": "How long each pre-authorized code of the depot lasts, from the `issue-links/refresh` that makes it: a number of seconds from 1 to 315360000 (10 years), such as `600` for 10 minutes, or `never` for codes that don't expire. Without it, the depot's codes last as long as the Hub's `PREAUTH_CODE_EXPIRES_IN_SECONDS` says at each refresh, 259200 (72 hours) by default. A wallet waiting for a depot's deferred credentials authenticates again with the same code when they're ready, so the lifetime must cover the time the issuer takes to add them. Can't be changed",
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 315360000
+        },
+        {
+          "type": "string",
+          "const": "never"
+        }
+      ]
+    }
+  }
+}

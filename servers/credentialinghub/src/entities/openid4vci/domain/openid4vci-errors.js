@@ -18,6 +18,7 @@
 const Oidc4vciErrors = {
   PRE_AUTHORIZATION_CODE_NOT_MATCHED: 'pre_authorization_code_not_matched',
   UNKNOWN_CREDENTIAL_IDENTIFIER: 'unknown_credential_identifier',
+  CREDENTIAL_REQUEST_DENIED: 'credential_request_denied',
   INVALID_NOTIFICATION_ID: 'invalid_notification_id',
   INVALID_NOTIFICATION_REQUEST: 'invalid_notification_request',
 };

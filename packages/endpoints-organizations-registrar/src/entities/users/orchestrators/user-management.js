@@ -25,7 +25,10 @@ const {
   pick,
   omit,
 } = require('lodash/fp');
-const { initAuth0RoleArrToRolesObj } = require('../../oauth');
+const {
+  initAuth0RoleArrToRolesObj,
+  toManagementDomain,
+} = require('../../oauth');
 
 const initManagementClient = async ({
   domain,
@@ -39,7 +42,7 @@ const initManagementClient = async ({
 
   return new ManagementClient({
     audience,
-    domain,
+    domain: toManagementDomain(domain),
     clientId,
     clientSecret,
   });

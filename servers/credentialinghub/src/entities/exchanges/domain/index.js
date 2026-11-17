@@ -18,6 +18,7 @@ module.exports = {
   ...require('./authorize-exchange'),
   ...require('./build-presentation-request'),
   ...require('./build-exchange-event'),
+  ...require('./clean-decline-reason'),
   ...require('./exchange-errors'),
   ...require('./exchange-protocols'),
   ...require('./exchange-states'),
@@ -29,4 +30,5 @@ module.exports = {
   ...require('./validate-referenced-service'),
   ...require('./verify-issuing-challenge'),
   ...require('./verify-proof-of-key-possession'),
+  ...require('./vp-auth-rules'),
 };

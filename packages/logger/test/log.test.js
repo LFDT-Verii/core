@@ -18,6 +18,7 @@ const { beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 
 const { Writable } = require('node:stream');
+const { omit } = require('lodash/fp');
 const { loggerProvider } = require('../index');
 
 const store = {};
@@ -255,6 +256,44 @@ describe('Test pino logger provider with redaction', () => {
     );
   });
 
+  it('Redaction should shh credential data from verifyCredentials', () => {
+    const email = 'holder@example.com';
+    const jwtVc =
+      'eyJhbGciOiJFUzI1NksifQ.eyJzdWIiOiJob2xkZXJAZXhhbXBsZS5jb20ifQ.c2lnbmF0dXJl';
+    const contentHash = 'f0e1d2c3b4a5968778695a4b3c2d1e0f';
+    const id = 'did:velocity:v2:0x1:1:1';
+    const credentialData = () => ({
+      id,
+      credentialType: 'EmailV1.0',
+      contentHash,
+      credential: { id, credentialSubject: { email } },
+      jwtVc,
+      compact: jwtVc,
+    });
+
+    log.info({
+      credentials: [credentialData(), credentialData()],
+      credential: credentialData(),
+    });
+
+    const output = logStream.toString();
+    expect(output).not.toContain(email);
+    expect(output).not.toContain(jwtVc);
+    expect(output).not.toContain(contentHash);
+    const redactedCredentialData = {
+      id,
+      credentialType: 'EmailV1.0',
+      contentHash: CENSOR,
+      credential: { id, credentialSubject: CENSOR },
+      jwtVc: CENSOR,
+      compact: CENSOR,
+    };
+    expect(JSON.parse(output)).toMatchObject({
+      credentials: [redactedCredentialData, redactedCredentialData],
+      credential: redactedCredentialData,
+    });
+  });
+
   it('Redaction should shh key', () => {
     const dataForLog = {
       keys: [
@@ -307,6 +346,39 @@ describe('Test pino logger provider with redaction', () => {
     expect(logStream.toString()).toMatch(
       '"Authorization":"...shhh...","headers":{"Authorization":"...shhh...","authorization":"...shhh..."}',
     );
+  });
+
+  it('Redaction should shh credentials in http client request and response headers', () => {
+    const dataForLog = {
+      reqHeaders: {
+        Authorization: 'Bearer fake-configured-token',
+        authorization: 'Bearer fake-request-token',
+        Cookie: 'session=fake-configured-session',
+        cookie: 'session=fake-request-session',
+        'user-agent': '@verii/http-client/1.0.0',
+      },
+      resHeaders: {
+        'content-type': 'application/json',
+        'set-cookie': ['session=fake-response-session'],
+      },
+    };
+
+    log.info(dataForLog);
+
+    expect(logStream.toString()).not.toContain('fake-');
+    expect(JSON.parse(logStream.toString())).toMatchObject({
+      reqHeaders: {
+        Authorization: CENSOR,
+        authorization: CENSOR,
+        Cookie: CENSOR,
+        cookie: CENSOR,
+        'user-agent': '@verii/http-client/1.0.0',
+      },
+      resHeaders: {
+        'content-type': 'application/json',
+        'set-cookie': CENSOR,
+      },
+    });
   });
 
   it('Redaction should shh App Check request security fields', () => {
@@ -418,6 +490,30 @@ describe('Test pino logger provider with redaction', () => {
     );
   });
 
+  it("redacts a server's own paths as well as the shared ones", () => {
+    const stream = new MemoryStream('server-redact-paths-log');
+    const serverLog = loggerProvider({
+      nodeEnv: 'test',
+      logSeverity: 'info',
+      version: '1.0',
+      traceIdHeader: 'x-trace-id',
+      destination: stream,
+      logRedactPaths: ['body.link'],
+    });
+
+    serverLog.info({
+      body: { link: 'link', token: 'token', allowedToLog: '123' },
+    });
+
+    expect(JSON.parse(stream.toString())).toMatchObject({
+      body: { link: CENSOR, token: CENSOR, allowedToLog: '123' },
+    });
+
+    // Servers that don't add the path still log it.
+    log.info({ body: { link: 'link' } });
+    expect(logStream.toString()).toMatch('"body":{"link":"link"}');
+  });
+
   it('Redaction should shh key.key', () => {
     const dataForLog = {
       key: {
@@ -434,6 +530,90 @@ describe('Test pino logger provider with redaction', () => {
 
     expect(logStream.toString()).toMatch(
       '"key":{"key":"...shhh..."},"body":{"key":{"key":"...shhh..."}}',
+    );
+  });
+
+  it('Redaction should shh the private part of a jwk key', () => {
+    const dataForLog = {
+      key: { jwk: { kty: 'EC', d: 'd' } },
+      keys: [{ jwk: { kty: 'EC', d: 'd' } }],
+      body: {
+        key: { jwk: { kty: 'EC', d: 'd' } },
+        keys: [{ jwk: { kty: 'EC', d: 'd' } }],
+      },
+    };
+
+    log.info(dataForLog);
+
+    const redactedJwk = '{"jwk":{"kty":"EC","d":"...shhh..."}}';
+    expect(logStream.toString()).toMatch(
+      `"key":${redactedJwk},"keys":[${redactedJwk}],"body":{"key":${redactedJwk},"keys":[${redactedJwk}]}`,
+    );
+  });
+
+  it('Redaction should shh the private members of transferred keys', () => {
+    const transferredKey = () => ({
+      kidFragment: '#key-1',
+      key: 'private-hex',
+      hexKey: 'private-hex',
+      jwk: { kty: 'EC', crv: 'secp256k1', x: 'x', y: 'y', d: 'private-d' },
+      publicJwk: { kty: 'EC', crv: 'secp256k1', x: 'x', y: 'y' },
+    });
+    const redactedJwk = {
+      kty: 'EC',
+      crv: 'secp256k1',
+      x: 'x',
+      y: 'y',
+      d: CENSOR,
+    };
+    const redactedKey = {
+      kidFragment: '#key-1',
+      key: CENSOR,
+      hexKey: CENSOR,
+      jwk: redactedJwk,
+      publicJwk: { kty: 'EC', crv: 'secp256k1', x: 'x', y: 'y' },
+    };
+
+    log.info({
+      msg: 'transferred keys',
+      jwk: transferredKey().jwk,
+      keys: [transferredKey()],
+      body: {
+        payload: {
+          create_tenant: { keys: [omit(['hexKey'], transferredKey())] },
+        },
+        keys: [transferredKey()],
+      },
+    });
+    log.info({
+      msg: 'added key',
+      body: {
+        hexKey: 'private-hex',
+        jwk: transferredKey().jwk,
+      },
+    });
+
+    const [transferredKeysEntry, addedKeyEntry] = logStream
+      .toString()
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+    expect(transferredKeysEntry).toEqual(
+      expect.objectContaining({
+        jwk: redactedJwk,
+        keys: [redactedKey],
+        body: {
+          payload: {
+            create_tenant: { keys: [omit(['hexKey'], redactedKey)] },
+          },
+          keys: [redactedKey],
+        },
+      }),
+    );
+    expect(addedKeyEntry).toEqual(
+      expect.objectContaining({
+        body: { hexKey: CENSOR, jwk: redactedJwk },
+      }),
     );
   });
 

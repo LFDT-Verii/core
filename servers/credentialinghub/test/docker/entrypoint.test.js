@@ -31,6 +31,21 @@ describe('Credentialing Hub Docker entrypoint', () => {
     );
   });
 
+  it('reports a former network flag as a configuration error that points at the network settings', () => {
+    const result = spawnSync(process.execPath, [entrypointPath, '--mainnet'], {
+      encoding: 'utf8',
+      env: {},
+    });
+
+    assert.equal(result.status, 64);
+    assert.match(
+      result.stderr,
+      /Credentialing Hub startup configuration error: Unsupported Credentialing Hub image argument\./,
+    );
+    assert.match(result.stderr, /it no longer presets a network\./);
+    assert.match(result.stderr, /README\.md#network-settings/);
+  });
+
   it('reports invalid image arguments as configuration errors', () => {
     const result = spawnSync(
       process.execPath,

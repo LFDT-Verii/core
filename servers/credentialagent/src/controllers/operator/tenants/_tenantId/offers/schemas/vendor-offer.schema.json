@@ -19,7 +19,7 @@
           "type": "object",
           "properties": {
             "type": {
-              "oneOf": [
+              "anyOf": [
                 {
                   "type": "string"
                 },

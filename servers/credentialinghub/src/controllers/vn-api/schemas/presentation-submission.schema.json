@@ -24,9 +24,13 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "path": { "type": "string" },
+        "path": {
+          "type": "string",
+          "description": "Where the credential is in the submitted presentation. Without `path_nested`, this must be `$.verifiableCredential[<n>]`, where `<n>` is an index from 0 to 999 with no leading zeros. With `path_nested`, this must be `$` or `$[0]`. Any other value is rejected with 400 `presentation_jsonpath_unsupported`. An index with no credential is rejected with 400 `presentation_jsonpath_empty`."
+        },
         "path_nested": {
-          "$ref": "#/definitions/descriptor"
+          "description": "Optional. Used when `path` is `$` or `$[0]`, which select the submitted presentation. Its `path` must be `$.verifiableCredential[<n>]`, and it must not contain another `path_nested`.",
+          "allOf": [{ "$ref": "#/definitions/descriptor" }]
         },
         "format": {
           "type": "string",

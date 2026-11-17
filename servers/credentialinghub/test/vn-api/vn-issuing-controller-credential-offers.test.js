@@ -17,16 +17,33 @@
 
 const { after, before, beforeEach, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
-const { ALG_TYPE } = require('@verii/metadata-registration');
 
-const { mockHttpClientModule } = require('../helpers/mock-http-client');
+const mockResolveDidDocument = mock.fn();
+
+mock.module('@verii/metadata-registration', {
+  namedExports: {
+    ...require('@verii/metadata-registration'),
+    initVerificationCoupon: mock.fn(() => {}),
+    initMetadataRegistry: mock.fn(() => ({
+      resolveDidDocument: mockResolveDidDocument,
+    })),
+    initRevocationRegistry: mock.fn(() => ({
+      getRevokedStatus: () => Promise.resolve(0),
+    })),
+  },
+});
+
+const {
+  mockHttpClient,
+  mockHttpClientModule,
+  resetMockHttpClient,
+  restMockHttpClient,
+} = require('../helpers/mock-http-client');
 
 mock.module('@verii/http-client', { namedExports: mockHttpClientModule });
-mock.module('@verii/metadata-registration', { namedExports: { ALG_TYPE } });
-mock.module('@verii/common-fetchers', { namedExports: {} });
 
 const { ObjectId } = require('mongodb');
-const { entries, map, set } = require('lodash/fp');
+const { entries, map, set, sortBy } = require('lodash/fp');
 const { mongoDb } = require('@spencejs/spence-mongo-repos');
 const { mongoify } = require('@verii/tests-helpers');
 const { jwtSign, jwtVerify } = require('@verii/jwt');
@@ -38,11 +55,27 @@ const {
 const { initCredentialFactory } = require('../../src/entities/credentials');
 const {
   initExchangeFactory,
+  ExchangeProtocols,
   ExchangeStates,
 } = require('../../src/entities/exchanges');
-const { initDepotFactory } = require('../../src/entities/depots');
+const {
+  buildAuthMatchValues,
+} = require('@verii/credentialing-hub-operator-api');
+const {
+  buildAuthRulesFingerprint,
+  initDepotFactory,
+} = require('../../src/entities/depots');
 const createTestFastify = require('../helpers/create-test-fastify');
 const { constructTenant } = require('../helpers/construct-tenant');
+const {
+  didVelocityResolution,
+  emailIssuerService,
+  generateAuthVp,
+  generateEmailCredential,
+  generateEmailIssuer,
+  generateHolder,
+  mockEmailIssuerRoutes,
+} = require('../helpers/email-credential-auth');
 
 const testUrl = (tenant2) => `/vn-api/r/${tenant2.did}/credential-offers`;
 
@@ -746,6 +779,432 @@ describe('vn-api > credential offers', () => {
           },
         ),
       );
+    });
+  });
+
+  describe('depots with deferred credentials', () => {
+    const messagingSettings = {
+      webhookUrl: 'https://wallet.example.com/push',
+      authToken: 'push-token-123',
+    };
+    let deferredDepot;
+    let deferredExchange;
+
+    beforeEach(async () => {
+      resetMockHttpClient();
+      deferredDepot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        deferredCredentials: true,
+        expectedCredentialTypes: ['EmailV1.0'],
+      });
+      deferredExchange = await persistVnApiExchange(deferredDepot);
+    });
+
+    const persistVnApiExchange = (depot, overrides = {}) =>
+      persistExchange({
+        tenant,
+        service: preauthIssuerService,
+        depotId: new ObjectId(depot._id),
+        protocolMetadata: { protocol: ExchangeProtocols.VN_API },
+        messagingSettings,
+        events: [
+          {
+            state: ExchangeStates.AUTHENTICATION_SUCCESS,
+            timestamp: new Date(),
+          },
+        ],
+        ...overrides,
+      });
+
+    const requestOffers = async (
+      offersExchange = deferredExchange,
+      depot = deferredDepot,
+    ) =>
+      fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${await buildTestAccessToken(
+            tenant.did,
+            offersExchange._id,
+            depot._id,
+            holderAccessTokensSecret,
+          )}`,
+        },
+        payload: { offerHashes: [] },
+      });
+
+    const resolveDeferredCredentials = () =>
+      fastify.injectJson({
+        method: 'POST',
+        url: '/operator/depots/resolve-deferred-credentials',
+        payload: { tenantId: tenant._id, depotId: deferredDepot._id },
+      });
+
+    const persistEmailCredential = () =>
+      persistCredential({
+        tenant,
+        depot: deferredDepot,
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'bob.foobar@example.com' },
+        },
+      });
+
+    it('should 202 with no offers and wait when there is nothing to claim', async () => {
+      await persistCredential({
+        tenant,
+        depot: deferredDepot,
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'accepted@example.com' },
+        },
+        acceptedAt: new Date(),
+      });
+
+      const response = await requestOffers();
+
+      expect(response.statusCode).toEqual(202);
+      expect(response.json).toEqual({ offers: [] });
+      await expect(findOneExchange(deferredExchange._id)).resolves.toEqual(
+        expectedDbExchange(tenant, deferredExchange, [
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_WAITING,
+        ]),
+      );
+    });
+
+    it('should return the offers and a challenge when there is something to claim', async () => {
+      const credential = await persistEmailCredential();
+
+      const response = await requestOffers();
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        challenge: expect.any(String),
+        offers: [expectedOffer(tenant, credential)],
+      });
+      await expect(findOneExchange(deferredExchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          deferredExchange,
+          [ExchangeStates.OFFERS_REQUESTED, ExchangeStates.OFFERS_SENT],
+          { credentialIds: [new ObjectId(credential._id)] },
+        ),
+      );
+    });
+
+    it('should return a challenge and no offers for a depot without deferred credentials', async () => {
+      const depot = await persistDepot({
+        tenant,
+        service: preauthIssuerService,
+        expectedCredentialTypes: ['EmailV1.0'],
+      });
+      const depotExchange = await persistVnApiExchange(depot);
+
+      const response = await requestOffers(depotExchange, depot);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        challenge: expect.any(String),
+        offers: [],
+      });
+      await expect(findOneExchange(depotExchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          depotExchange,
+          [ExchangeStates.OFFERS_REQUESTED, ExchangeStates.OFFERS_SENT],
+          { credentialIds: [] },
+        ),
+      );
+    });
+
+    it('should return the offers and a challenge when a credential is added just before the exchange starts waiting', async (t) => {
+      // Adds a credential and resolves the depot's deferred credentials when the exchange is about to
+      // record OFFERS_WAITING, so resolving them finds no waiting exchange to message.
+      const collectionPrototype = Object.getPrototypeOf(
+        mongoDb().collection('exchanges'),
+      );
+      const { findOneAndUpdate } = collectionPrototype;
+      let credential;
+      let resolveResponse;
+      t.mock.method(
+        collectionPrototype,
+        'findOneAndUpdate',
+        async function resolveBeforeWaiting(filter, update, ...args) {
+          if (
+            resolveResponse == null &&
+            update.$push?.events?.state === ExchangeStates.OFFERS_WAITING
+          ) {
+            credential = await persistEmailCredential();
+            resolveResponse = await resolveDeferredCredentials();
+          }
+          return findOneAndUpdate.call(this, filter, update, ...args);
+        },
+      );
+
+      const response = await requestOffers();
+
+      expect(resolveResponse.json.notification).toEqual({
+        status: 'skipped_no_waiting_exchange',
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        challenge: expect.any(String),
+        offers: [expectedOffer(tenant, credential)],
+      });
+      expect(mockHttpClient.post.mock.callCount()).toEqual(0);
+      await expect(findOneExchange(deferredExchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          deferredExchange,
+          [
+            ExchangeStates.OFFERS_REQUESTED,
+            ExchangeStates.OFFERS_WAITING,
+            ExchangeStates.OFFERS_SENT,
+          ],
+          { credentialIds: [new ObjectId(credential._id)] },
+        ),
+      );
+    });
+
+    [
+      { settings: 'with', overrides: {}, status: 'sent' },
+      {
+        settings: 'without',
+        overrides: { messagingSettings: undefined },
+        status: 'skipped_no_messaging_settings',
+      },
+    ].forEach(({ settings, overrides, status }) => {
+      it(`should return a challenge and no offers after a resolve with nothing to claim, for exchanges ${settings} messaging settings`, async () => {
+        const waitedExchange = await persistVnApiExchange(
+          deferredDepot,
+          overrides,
+        );
+        expect((await requestOffers(waitedExchange)).statusCode).toEqual(202);
+        const resolveResponse = await resolveDeferredCredentials();
+        expect(resolveResponse.json.notification).toEqual({
+          status,
+          exchangeId: waitedExchange._id,
+        });
+
+        const response = await requestOffers(waitedExchange);
+
+        expect(response.statusCode).toEqual(200);
+        expect(response.json).toEqual({
+          challenge: expect.any(String),
+          offers: [],
+        });
+        const dbExchange = await findOneExchange(waitedExchange._id);
+        expect(map('state', dbExchange.events)).toEqual([
+          ExchangeStates.AUTHENTICATION_SUCCESS,
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_WAITING,
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_SENT,
+        ]);
+      });
+    });
+
+    it('should 202 and wait for an exchange created after the last resolve', async () => {
+      await resolveDeferredCredentials();
+      const newerExchange = await persistVnApiExchange(deferredDepot);
+
+      const response = await requestOffers(newerExchange);
+
+      expect(response.statusCode).toEqual(202);
+      expect(response.json).toEqual({ offers: [] });
+      await expect(findOneExchange(newerExchange._id)).resolves.toEqual(
+        expectedDbExchange(tenant, newerExchange, [
+          ExchangeStates.OFFERS_REQUESTED,
+          ExchangeStates.OFFERS_WAITING,
+        ]),
+      );
+    });
+
+    it('should return the offers and a challenge after NewOffersReady', async () => {
+      const waitingResponse = await requestOffers();
+      expect(waitingResponse.statusCode).toEqual(202);
+      const credential = await persistEmailCredential();
+
+      const resolveResponse = await resolveDeferredCredentials();
+      expect(resolveResponse.statusCode).toEqual(200);
+      expect(resolveResponse.json.notification).toEqual({
+        status: 'sent',
+        exchangeId: deferredExchange._id,
+      });
+      expect(mockHttpClient.post.mock.callCount()).toEqual(1);
+      expect(
+        mockHttpClient.post.mock.calls[0].arguments[1].data.notificationType,
+      ).toEqual('NewOffersReady');
+
+      const response = await requestOffers();
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        challenge: expect.any(String),
+        offers: [expectedOffer(tenant, credential)],
+      });
+      await expect(findOneExchange(deferredExchange._id)).resolves.toEqual(
+        expectedDbExchange(
+          tenant,
+          deferredExchange,
+          [
+            ExchangeStates.OFFERS_REQUESTED,
+            ExchangeStates.OFFERS_WAITING,
+            ExchangeStates.OFFERS_REQUESTED,
+            ExchangeStates.OFFERS_SENT,
+          ],
+          { credentialIds: [new ObjectId(credential._id)] },
+        ),
+      );
+    });
+  });
+
+  describe('shared issue link', () => {
+    let emailIssuer;
+
+    before(async () => {
+      emailIssuer = await generateEmailIssuer();
+    });
+
+    beforeEach(() => {
+      resetMockHttpClient();
+      restMockHttpClient();
+      mockEmailIssuerRoutes(emailIssuer);
+    });
+
+    it('should offer every claimable credential in the depot, whatever its type, after authenticating', async () => {
+      const vpIssuerService = await persistIssuerService({
+        tenant,
+        ...emailIssuerService(),
+      });
+      const authValues = ['adam.smith@example.com'];
+      const depot = await persistDepot({
+        tenant,
+        service: vpIssuerService,
+        authValues,
+        authMatchValues: buildAuthMatchValues(authValues),
+        authRulesFingerprint: buildAuthRulesFingerprint(vpIssuerService),
+      });
+      const claimableCredentials = [
+        await persistCredential({
+          tenant,
+          depot,
+          content: {
+            type: ['EmailV1.0'],
+            credentialSubject: { email: 'adam.smith@example.com' },
+          },
+        }),
+        await persistCredential({
+          tenant,
+          depot,
+          content: {
+            type: ['PhoneV1.0'],
+            credentialSubject: { phone: '+15558094151' },
+          },
+        }),
+        await persistCredential({
+          tenant,
+          depot,
+          content: {
+            type: ['PastEmploymentPosition'],
+            credentialSubject: { company: 'did:example:employer' },
+          },
+        }),
+      ];
+      await persistCredential({
+        tenant,
+        depot,
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'adam@example.com' },
+        },
+        acceptedAt: new Date(),
+      });
+      await persistCredential({
+        tenant,
+        depot: depots[0],
+        content: {
+          type: ['EmailV1.0'],
+          credentialSubject: { email: 'jane.jar@example.com' },
+        },
+      });
+
+      const manifestResponse = await fastify.injectJson({
+        method: 'GET',
+        url: `/vn-api/r/${tenant.did}/get-credential-manifest?id=${vpIssuerService._id}&format=json`,
+      });
+      expect(manifestResponse.statusCode).toEqual(200);
+      const sharedLinkExchange = {
+        _id: manifestResponse.json.issuing_request.exchange_id,
+        serviceId: vpIssuerService._id,
+      };
+
+      const holder = generateHolder();
+      const emailCredential = await generateEmailCredential({
+        issuer: emailIssuer,
+        holderDid: holder.did,
+        email: 'adam.smith@example.com',
+      });
+      mockResolveDidDocument.mock.mockImplementation(() =>
+        Promise.resolve(didVelocityResolution([emailCredential])),
+      );
+      const authenticateResponse = await fastify.injectJson({
+        method: 'POST',
+        url: `/vn-api/r/${tenant.did}/authenticate`,
+        payload: {
+          exchange_id: sharedLinkExchange._id,
+          jwt_vp: await generateAuthVp({
+            exchange: sharedLinkExchange,
+            holder,
+            jwtVcs: [emailCredential.jwt],
+          }),
+        },
+      });
+      expect(authenticateResponse.statusCode).toEqual(200);
+
+      const response = await fastify.injectJson({
+        method: 'POST',
+        url: testUrl(tenant),
+        headers: {
+          authorization: `Bearer ${authenticateResponse.json.token}`,
+        },
+        payload: {
+          offerHashes: [],
+        },
+      });
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.json).toEqual({
+        challenge: expect.any(String),
+        offers: expect.any(Array),
+      });
+      expect(sortBy('id', response.json.offers)).toEqual(
+        sortBy(
+          'id',
+          map(
+            (credential) => expectedOffer(tenant, credential),
+            claimableCredentials,
+          ),
+        ),
+      );
+      const dbExchange = await findOneExchange(sharedLinkExchange._id);
+      expect(dbExchange).toEqual(
+        expect.objectContaining({
+          depotId: new ObjectId(depot._id),
+          credentialIds: expect.arrayContaining(
+            map(
+              (credential) => new ObjectId(credential._id),
+              claimableCredentials,
+            ),
+          ),
+        }),
+      );
+      expect(dbExchange.credentialIds).toHaveLength(3);
+      // The shared link has no credential_types, so the offers aren't filtered.
+      expect(dbExchange.credentialTypes).toBeUndefined();
     });
   });
 

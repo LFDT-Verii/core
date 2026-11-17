@@ -14,11 +14,15 @@
  * limitations under the License.
  *
  */
-const { genericConfig } = require('@verii/config');
+const { createBlockchainConfig, genericConfig } = require('@verii/config');
 const { accessors, from } = require('env-var');
 const { parse: parseDuration } = require('@lukeed/ms');
 const {
+  PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS,
+} = require('@verii/credentialing-hub-operator-api');
+const {
   buildNotificationConfig,
+  findWebhookUrlError,
   NotificationWorkerModes,
 } = require('../entities/notifications/domain/notification-config');
 const {
@@ -33,20 +37,26 @@ const {
 const packageJson = require('../../package.json');
 const { createSwaggerConfig } = require('./swagger-config');
 
-const { isTest } = genericConfig;
-
 const env = from(process.env, {
   asMs: (value) => parseDuration(value),
-  asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
-    const webhookUrl = accessors.asUrlString(value);
-    const parsedUrl = new URL(webhookUrl);
+  asIntAboveZero: (value, max = Number.MAX_SAFE_INTEGER) => {
+    const int = accessors.asInt(value);
 
-    if (parsedUrl.username || parsedUrl.password) {
-      throw new Error('must not include credentials');
+    if (int < 1) {
+      throw new Error('should be an integer greater than 0');
+    }
+    if (int > max) {
+      throw new Error(`should be an integer of at most ${max}`);
     }
 
-    if (parsedUrl.protocol !== 'https:' && !allowInsecureWebhookUrl) {
-      throw new Error('must use https');
+    return int;
+  },
+  asNotificationWebhookUrl: (value, allowInsecureWebhookUrl = false) => {
+    const webhookUrl = accessors.asUrlString(value);
+    const error = findWebhookUrlError(webhookUrl, allowInsecureWebhookUrl);
+
+    if (error != null) {
+      throw new Error(error);
     }
 
     return webhookUrl;
@@ -66,7 +76,14 @@ const swaggerConfig = createSwaggerConfig(packageJson.version);
 
 const openid4vcConfig = {};
 
-const buildConfig = () => {
+/**
+ * Builds the Hub config from the environment.
+ * @param {{servesHttp?: boolean}} [options] `servesHttp: false` for processes that serve no
+ *   HTTP requests, such as the standalone notification worker, which then don't need the
+ *   settings that only the HTTP server uses
+ * @returns {Object} the config
+ */
+const buildConfig = ({ servesHttp = true } = {}) => {
   const notificationsEnabled = env
     .get('NOTIFICATIONS_ENABLED')
     .default('false')
@@ -84,52 +101,43 @@ const buildConfig = () => {
 
   return {
     ...genericConfig,
+    ...createBlockchainConfig(),
     ...ajvConfig,
     ...swaggerConfig,
     ...openid4vcConfig,
     version: packageJson.version,
+    serviceName: packageJson.name,
     customFastifyOptions: {
       bodyLimit: 8388608,
     },
+    hostUrl: env.get('HOST_URL').required(servesHttp).asString(),
     deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
     keyEncryptionSecret: env.get('KEY_ENCRYPTION_SECRET').required().asString(),
     registrarUrl: env.get('REGISTRAR_URL').required().asString(),
     libUrl: env.get('LIB_URL').required().asString(),
     credentialExtensionsContextUrl: env
       .get('CREDENTIAL_EXTENSIONS_CONTEXT_URL')
-      .default(
-        'https://lib.velocitynetwork.foundation/contexts/credential-extensions-2022.jsonld.json',
-      )
+      .required()
       .asString(),
     challengesExpireIn: env.get('CHALLENGES_EXPIRE_IN').default('3d').asMs(),
-    // blockchain setup
-    rpcUrl: env
-      .get('RPC_NODE_URL')
-      .required()
-      .default('http://34.244.131.79:8547')
+    openid4vciNonceSecret: env
+      .get('OPENID4VCI_NONCE_SECRET')
+      .required(servesHttp)
       .asString(),
-    chainId: env.get('CHAIN_ID').default(2020).asInt(),
-    metadataRegistryContractAddress: env
-      .get('METADATA_REGISTRY_CONTRACT_ADDRESS')
-      .required(!isTest)
-      .asString(),
-    permissionsContractAddress: env
-      .get('PERMISSIONS_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
-    couponContractAddress: env
-      .get('COUPON_CONTRACT_ADDRESS')
-      .required()
-      .asString(),
-    revocationContractAddress: env
-      .get('REVOCATION_CONTRACT_ADDRESS')
-      .required()
-      .default('0xf755E1Ca66bE12F177178E7Ea696969E0A55Bb64')
-      .asString(),
-    vnfOAuthTokensEndpoint: env
-      .get('VNF_OAUTH_TOKENS_ENDPOINT')
-      .required()
-      .asString(),
+    openid4vciNonceExpiresIn: env
+      .get('OPENID4VCI_NONCE_EXPIRES_IN')
+      .default('5m')
+      .asMs(),
+    openid4vciDeferredIntervalSeconds: env
+      .get('OPENID4VCI_DEFERRED_INTERVAL_SECONDS')
+      .default('30')
+      .asIntAboveZero(),
+    // How long the pre-authorized codes of a depot without its own
+    // preauthCodeExpiresIn last. 72 hours by default
+    preauthCodeExpiresInSeconds: env
+      .get('PREAUTH_CODE_EXPIRES_IN_SECONDS')
+      .default('259200')
+      .asIntAboveZero(PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS),
     credentialSubjectContext: env
       .get('CREDENTIAL_SUBJECT_CONTEXT')
       .default('false')
@@ -171,6 +179,11 @@ const buildConfig = () => {
         .asIntPositive(),
       allowInsecureWebhookUrl: allowInsecureNotificationWebhookUrl,
     }),
+    // allows http push URLs for wallet messages, for local development
+    walletMessagesAllowInsecureUrl: env
+      .get('WALLET_MESSAGES_ALLOW_INSECURE_URL')
+      .default('false')
+      .asBool(),
   };
 };
 

@@ -33,10 +33,7 @@ const {
   credentialOfferRequest,
   issueCredentials,
 } = require('../../entities/exchanges');
-const {
-  generateAccessToken,
-  verifyAccessToken,
-} = require('../../entities/tokens');
+const { verifyAccessToken } = require('../../entities/tokens');
 const { ExchangeErrors, ExchangeStates } = require('../../entities/exchanges');
 const { tenantLoaderPlugin } = require('../../entities/tenants');
 const { kmsPlugin } = require('../../entities/keys');
@@ -157,6 +154,7 @@ const vnfIssuingController = async (fastify) => {
               $ref: 'https://velocitycareerlabs.io/velocity-presentation-submission-response.schema.json#',
             },
             ...fastify.UnauthorizedResponse,
+            ...fastify.PaymentRequiredResponse,
           },
         }),
         onError: async (req, reply, err) =>
@@ -166,17 +164,12 @@ const vnfIssuingController = async (fastify) => {
         const vp = await verifyVerifiablePresentationJwt(req.body.jwt_vp, {
           vnfProtocolVersion: 2,
         });
-        req.validateInput(vp, {
-          $ref: 'https://velocitycareerlabs.io/velocity-presentation-submission.schema.json#',
-        });
 
-        const [issuerService, exchange] = await authenticate(
+        const { exchange, token } = await authenticate(
           req.body.exchange_id,
-          vp,
+          { vp, jwtVp: req.body.jwt_vp },
           req,
         );
-
-        const token = await generateAccessToken(issuerService, exchange, req);
 
         return {
           token,
@@ -225,6 +218,18 @@ const vnfIssuingController = async (fastify) => {
               },
               required: ['offers'],
             },
+            202: {
+              type: 'object',
+              description:
+                'The offers are not ready yet. The wallet waits for a NewOffersReady or NoOffersFound message',
+              properties: {
+                offers: {
+                  type: 'array',
+                  maxItems: 0,
+                },
+              },
+              required: ['offers'],
+            },
             502: {
               $ref: 'error#',
             },
@@ -234,8 +239,18 @@ const vnfIssuingController = async (fastify) => {
         onError: async (req, reply, err) =>
           exchangeErrorHook(req.body.exchange_id, err, req),
       },
-      async (req) =>
-        credentialOfferRequest(req.token, req.body.offerHashes, req),
+      async (req, reply) => {
+        const result = await credentialOfferRequest(
+          req.token,
+          req.body.offerHashes,
+          req,
+        );
+        // Offers come without a challenge only while the wallet waits for deferred credentials
+        if (result.challenge == null) {
+          reply.code(202);
+        }
+        return result;
+      },
     )
     .post(
       '/r/:tenantId/issue-credentials',

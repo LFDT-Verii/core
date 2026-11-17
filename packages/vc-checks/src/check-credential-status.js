@@ -23,12 +23,15 @@ const checkCredentialStatus = (credentialStatus) => {
   }
 
   if (
-    [
-      CredentialStatus.REVOKED,
-      CredentialStatus.DEPENDENCY_RESOLUTION_ERROR,
-    ].includes(credentialStatus)
+    [CredentialStatus.REVOKED, CredentialStatus.INVALID].includes(
+      credentialStatus,
+    )
   ) {
     return CheckResults.FAIL;
+  }
+
+  if (credentialStatus === CredentialStatus.DEPENDENCY_RESOLUTION_ERROR) {
+    return CheckResults.DEPENDENCY_RESOLUTION_ERROR;
   }
 
   return CheckResults.PASS;

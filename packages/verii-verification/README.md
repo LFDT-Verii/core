@@ -43,7 +43,6 @@ async function authenticator () {
 }
 
 const config = {
-    rootPublicKey: "0x899ef1cc48d17ee2701b25b14203d45e15bb01d07767450e9191ea71760d558a", // TRUST Root Private key
     revocationContractAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e", // DLT address for revocation address
     metadataRegistryContractAddress: "0x3f5CE5FBFe3E9af3971dD833D26BA9b5C936f0bE", // DLT address for VC metadata
     rpcProvider: initProvider("http://localhost:8545", authenticator),
@@ -101,6 +100,82 @@ A successful VC 2.0 entry additionally contains:
   }
 }
 ```
+
+#### Signature validity, self-signed status, and issuer authentication
+
+`credentialChecks.UNTAMPERED` reports whether the signature (and, for VC 2.0,
+the `@verii/jwt` proof, conformance, and policy assessments) verified with the
+discovered key. A valid signature proves possession of that key; it does not
+authenticate the claimed issuer. `credentialChecks.TRUSTED_ISSUER` reports how
+the claimed issuer (`issuer` or `issuer.id`; `iss` for VC 1.1) is bound to that
+key:
+
+- `PASS`: the issuer is authenticated and authorized. Only `did:velocity`
+  credentials can reach `PASS`, through the ledger-bound issuer credential and
+  registrar accreditation for the credential type.
+- `SELF_SIGNED`: the issuer is a self-certifying `did:jwk` whose JWK is the
+  verification key and is not restricted to encryption. The issuer controls the
+  key, but nothing vouches for the issuer.
+- `DATA_INTEGRITY_ERROR`: the credential claims a `did:jwk` binding that does
+  not hold, for example a `did:jwk` `kid` whose key is not the issuer's, or a
+  `did:jwk` issuer that encodes a different key, encodes an encryption-only
+  key, or cannot be decoded.
+- `FAIL`: the issuer is not authenticated. This includes an embedded `jwk`
+  with any issuer other than its own `did:jwk`; Career Wallet self-reported
+  credentials, which use a UUID `iss`, fall into this case. It also includes a
+  `did:velocity` credential whose issuer has no verified profile or DID
+  document on the registrar (a 404), or whose issuer DID the registrar rejects
+  as malformed (a 400).
+- `DEPENDENCY_RESOLUTION_ERROR`: the issuer of a `did:velocity` credential could
+  not be checked because a registrar lookup failed: the credential type
+  metadata lookup, or the issuer's verified profile or DID document lookup
+  with anything other than a 400 or 404 (another error status such as 401,
+  403, 429 or a 5xx, a timeout, a connection error, or a body that is not
+  JSON). The same credential may pass once the registrar answers. A 400 or
+  404 from one of the issuer's lookups still gives `FAIL` when the other
+  lookup failed.
+
+`credentialChecks.UNREVOKED` is `FAIL` for a revoked credential, and for a
+status entry that cannot be checked: a revocation URL that cannot be parsed,
+names another scheme, contract or function (for example another network's
+revocation contract), lacks a parameter or has one the contract cannot take,
+or names a wallet, list or index the revocation registry does not have, so
+the registry call reverts. It is `NOT_APPLICABLE` when the credential has no
+Velocity revocation list status, and `DEPENDENCY_RESOLUTION_ERROR` when the
+revocation registry could not be read, for example after a network failure or
+a call that returned no revert data.
+
+Keys are discovered from the protected header:
+
+| Protected header | Verification key | Issuer binding |
+| --- | --- | --- |
+| `kid` is a `did:velocity` DID URL | Resolved from the credential metadata ledger | Ledger-bound issuer credential and registrar accreditation |
+| `kid` is a `did:jwk` DID URL | The JWK encoded in the DID | Issuer must be a `did:jwk` of that key |
+| `kid` uses another DID method | Not resolved (`UNTAMPERED: DEPENDENCY_RESOLUTION_ERROR`) | Not checked |
+| `kid` does not resolve to a verification method | None (`UNTAMPERED: DATA_INTEGRITY_ERROR`) | Not checked |
+| No `kid`, embedded `jwk` | The embedded `jwk` | Issuer must be a `did:jwk` of that key |
+
+A supplied `kid` is authoritative: the verifier never falls back to an
+embedded `jwk` when the `kid` cannot be resolved or resolves to a different
+key. A `did:jwk` issuer is a `did:jwk` of the verification key when all of
+these hold:
+
+- The issuer is a DID of the form `did:jwk:<base64url>`, not a DID URL.
+- The JWK decoded from the issuer has the same RFC 7638 thumbprint as the
+  verification key. Key material is compared, not encoded strings, so non-key
+  members such as `alg`, `kid` or `key_ops` on either side, and member order,
+  do not matter.
+- The decoded JWK does not have `use: "enc"`. The `did:jwk` method lists such
+  a key only under `keyAgreement`, never `assertionMethod`, so it cannot sign
+  credentials. `key_ops` is not checked, because the method does not derive
+  verification relationships from it.
+
+A `did:jwk` issuer that cannot be decoded or thumbprinted (invalid base64url
+or JSON, an unsupported `kty`, missing key members) is reported as
+`DATA_INTEGRITY_ERROR`. For VC 2.0, `@verii/jwt` conformance still compares a
+`did:jwk` `kid` with the issuer as strings: a `kid` whose DID is not exactly
+the issuer fails there, even when both encode the same key, and is reported as
+`UNTAMPERED: FAIL` (`CREDENTIAL_SELF_SIGNED_ISSUER_INVALID`).
 
 ### 2. `verifyVerifiablePresentationJwt`
 

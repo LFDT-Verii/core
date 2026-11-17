@@ -74,6 +74,8 @@ const keysController = async (fastify) => {
   fastify.post(
     '/',
     {
+      // The body carries a private key
+      config: { sensitiveLogging: true },
       schema: fastify.autoSchema({
         body: {
           $ref: 'https://velocitycareerlabs.io/secret-tenant-key-v0.8.schema.json#',

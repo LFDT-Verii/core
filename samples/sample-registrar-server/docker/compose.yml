@@ -30,8 +30,8 @@ services:
 
   registrar:
     depends_on:
-      certfix:
-        condition: service_started
+      certgen:
+        condition: service_completed_successfully
       contracts-deployment:
         condition: service_completed_successfully
       registrar-migrations:
@@ -75,13 +75,13 @@ services:
       - 13999:3000
 
   registrar-proxy:
-    image: nginx:alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d
+    image: nginx:alpine@sha256:713fc2ebfd92e8217db451477182ee91944b123d2b1ee9fd5a8c6e91ca6c3a11
     restart: on-failure
     depends_on:
       registrar:
         condition: service_healthy
-      certfix:
-        condition: service_started
+      certgen:
+        condition: service_completed_successfully
     ports:
       - "13003:80"
       - "13004:443"

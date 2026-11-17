@@ -83,7 +83,7 @@ const autoSchemaPlugin = async (fastify, opts) => {
   const buildResponse = (schema) => {
     const response = { ...schema.response, '5xx': errorSchemaRef };
     if (schema.body != null || schema.query != null) {
-      response[options.validationErrorCode] = errorSchemaRef;
+      response[options.validationErrorCode] = validationErrorResponse(schema);
     }
     if (schema.params != null) {
       response[404] = errorSchemaRef;
@@ -95,6 +95,11 @@ const autoSchemaPlugin = async (fastify, opts) => {
 
     return response;
   };
+
+  // A route can declare its own validation error response, for example one
+  // that adds fields to the error schema. Otherwise it gets the error schema.
+  const validationErrorResponse = (schema) =>
+    schema.response?.[options.validationErrorCode] ?? errorSchemaRef;
 };
 
 module.exports = { autoSchemaPlugin: fp(autoSchemaPlugin) };

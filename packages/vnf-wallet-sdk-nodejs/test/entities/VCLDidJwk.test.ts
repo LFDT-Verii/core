@@ -1,3 +1,4 @@
+import { createPublicKey, KeyPairKeyObjectResult } from 'crypto';
 import { describe, test } from 'node:test';
 import { expect } from 'expect';
 
@@ -39,5 +40,18 @@ describe('VCLDidJwk', () => {
         expect(subject.kid).toEqual(expectedKid);
         expect(subject.keyId).toEqual(expectedKeyId);
         expect(subject.publicJwk.valueJson).toStrictEqual(expectedPublicJwk);
+    });
+
+    test('generates the did:jwk of a public key from its canonical JWK', async () => {
+        const publicKey = createPublicKey({
+            key: expectedPublicJwk,
+            format: 'jwk',
+        });
+
+        const did = await VCLDidJwk.Utils.generateDidJwk({
+            publicKey,
+        } as KeyPairKeyObjectResult);
+
+        expect(did).toEqual(expectedDid);
     });
 });

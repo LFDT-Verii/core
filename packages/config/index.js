@@ -15,9 +15,17 @@
  */
 
 const config = require('./src/config');
-const abi = require('./src/abi.json');
+const { createBlockchainConfig } = require('./src/blockchain-config');
+const { networkName } = require('./src/network-name');
+const {
+  describeDeployment,
+  deploymentDescription,
+} = require('./src/describe-deployment');
 
 module.exports = {
   genericConfig: config,
-  abi,
+  createBlockchainConfig,
+  networkName,
+  describeDeployment,
+  deploymentDescription,
 };

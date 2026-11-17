@@ -16,7 +16,7 @@
 
 const { Resolver } = require('did-resolver');
 const { getResolver } = require('web-did-resolver');
-const { isEmpty } = require('lodash/fp');
+const { first, flow, replace, split } = require('lodash/fp');
 const newError = require('http-errors');
 
 const webResolver = getResolver();
@@ -25,13 +25,35 @@ const didResolver = new Resolver(webResolver);
 const isWebDid = (did) => /^did:web:.+/.test(did);
 
 const resolveDidWeb = async (did) => {
-  const doc = await didResolver.resolve(did);
-  if (isEmpty(doc.didDocument)) {
-    throw newError(400, `Could not resolve ${did}`, {
+  const { didDocument, didResolutionMetadata } = await didResolver.resolve(did);
+  const failure = findResolutionFailure(
+    did,
+    didDocument,
+    didResolutionMetadata,
+  );
+  if (failure != null) {
+    throw newError(400, `Could not resolve ${did}: ${failure}`, {
       errorCode: 'did_resolution_failed',
     });
   }
-  return doc.didDocument;
+  return didDocument;
 };
+
+const findResolutionFailure = (did, didDocument, { error, message }) => {
+  if (error != null) {
+    return summarizeResolverMessage(message ?? error);
+  }
+  if (didDocument?.id !== did) {
+    return 'DID document id does not match requested did';
+  }
+  return undefined;
+};
+
+// Keep only the summary: web-did-resolver appends the underlying fetch error (URLs, network or parser details) after it.
+const summarizeResolverMessage = flow(
+  replace(/^resolver_error: /, ''),
+  split(': '),
+  first,
+);
 
 module.exports = { resolveDidWeb, isWebDid };

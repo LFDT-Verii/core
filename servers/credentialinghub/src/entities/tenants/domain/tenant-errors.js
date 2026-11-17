@@ -25,5 +25,6 @@ const TenantErrors = {
   RELATED_SERVICE_UNDELETED: 'related_service_undeleted',
   NAME_MUST_MATCH_PROFILE: 'name_must_match_profile',
   LOGO_MUST_MATCH_PROFILE: 'logo_must_match_profile',
+  PRIMARY_ACCOUNT_MUST_MATCH_CHAIN: 'primary_account_must_match_chain',
 };
 module.exports = { TenantErrors };

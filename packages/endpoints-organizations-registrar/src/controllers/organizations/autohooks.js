@@ -22,6 +22,7 @@ const {
   organizationProfileVerifiableCredentialSchema,
   organizationVerifiedProfileSchema,
   didKeySchema,
+  keyEncodingQueryParamsSchema,
   organizationServiceSchema,
 } = require('./schemas');
 const {
@@ -56,6 +57,7 @@ module.exports = async (fastify) => {
     .addSchema(createDidServiceSchema)
     .addSchema(modifyDidServiceSchema)
     .addSchema(didKeySchema)
+    .addSchema(keyEncodingQueryParamsSchema)
     .autoSchemaPreset({ tags: ['registrar_organizations'] })
     .register(CredentialTypesPlugin)
     .register(

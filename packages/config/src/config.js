@@ -17,6 +17,7 @@
 const env = require('env-var');
 const fs = require('fs');
 const { isEmpty } = require('lodash/fp');
+const { networkName } = require('./network-name');
 
 const nodeEnv = env.get('NODE_ENV').required().asString();
 const isTest = nodeEnv === 'test';
@@ -28,14 +29,22 @@ const serverCertificateKeyFile = env
   .asString();
 
 module.exports = {
-  appPort: env.get('PORT').required(!isTest).asPortNumber(),
-  appHost: env.get('HOST').required(!isTest).asString(),
+  appPort: env.get('PORT').default('3000').asPortNumber(),
+  appHost: env.get('HOST').default('0.0.0.0').asString(),
   logSeverity: env.get('LOG_SEVERITY').default('info').asString(),
+  // Names this deployment, for example in Sentry and in monitor names and email subjects.
+  // Defaults to the name of NETWORK, the network the deployment runs on (MainNet for mainnet),
+  // then to NODE_ENV, which named it before (#1234).
+  environmentLabel: env
+    .get('ENVIRONMENT_LABEL')
+    .default(networkName(env.get('NETWORK').default(nodeEnv).asString()))
+    .asString(),
+  // NODE_ENV says how Node runs. Behaviour that differs between deployments reads a named setting
+  // instead (#1234). In Verii, isProd only picks some of those settings' defaults. Servers outside Verii still read it.
   nodeEnv,
   isProd: nodeEnv === 'production',
   isDev,
   isTest,
-  hostUrl: env.get('HOST_URL').required(!isTest).asString(),
   mongoConnection: env.get('MONGO_URI').required(!isTest).asString(),
   tlsRejectUnauthorized: env
     .get('NODE_TLS_REJECT_UNAUTHORIZED')
@@ -50,30 +59,8 @@ module.exports = {
     : fs.readFileSync(serverCertificateKeyFile),
   requestTimeout: env.get('REQUEST_TIMEOUT').default('30000').asInt(),
   traceIdHeader: env.get('TRACE_ID_HEADER').default('x-trace-id').asString(),
-  blockchainApiAudience: env
-    .get('BLOCKCHAIN_API_AUDIENCE')
-    .default('https://velocitynetwork.node')
-    .asString(),
-  rootPublicKey: env.get('ROOT_PUBLIC_KEY').required(!isTest).asString(),
-  idCredentialTypes: env
-    .get('IDENTITY_CREDENTIAL_TYPES')
-    .default(
-      [
-        'IdDocument',
-        'Phone',
-        'Email',
-        'IdDocumentV1.0',
-        'DriversLicenseV1.0',
-        'NationalIdCardV1.0',
-        'PassportV1.0',
-        'ResidentPermitV1.0',
-        'EmailV1.0',
-        'PhoneV1.0',
-        'ProofOfAgeV1.0',
-        'VerificationIdentifier',
-      ].join(','),
-    )
-    .asArray(),
+  sentryDsn: env.get('SENTRY_DSN').default('').asString(),
+  enableSentryDebug: env.get('ENABLE_SENTRY_DEBUG').default('false').asBool(),
   ajvOptions: {
     removeAdditional: true,
     useDefaults: true,

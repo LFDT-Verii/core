@@ -38,6 +38,8 @@ describe('root controller test', () => {
     expect(response.body).toEqual(`Welcome to the Credentialing Hub
 Host: https://localhost.test
 Version: ${packageJson.version}
+Environment: test
+Chain ID: 2020
 `);
   });
 
@@ -60,5 +62,29 @@ Version: ${packageJson.version}
         url: '/openid4vp/r/:tenantId/openid4vp/direct-post',
       }),
     ).toEqual(false);
+  });
+});
+
+describe('root controller test with a deployment description of its own', () => {
+  let fastify;
+
+  before(async () => {
+    fastify = createTestFastify({
+      describeDeployment: () => 'Network: devnet\n',
+    });
+    await fastify.ready();
+  });
+
+  after(async () => {
+    await fastify.close();
+  });
+
+  it("should give the config's own deployment description", async () => {
+    const response = await fastify.injectJson({ method: 'GET', url: '/' });
+    expect(response.body).toEqual(`Welcome to the Credentialing Hub
+Host: https://localhost.test
+Version: ${packageJson.version}
+Network: devnet
+`);
   });
 });

@@ -2,7 +2,7 @@ const {
   didServiceSchema,
   modifyDidServiceSchema,
 } = require('@verii/common-schemas');
-const { resolveDid } = require('./resolve-did');
+const { resolveDidOrNotFound } = require('./resolve-did');
 const { didDocSchema, didProofSchema, publicKeySchema } = require('./schemas');
 
 const resolveDidController = async (fastify) => {
@@ -37,7 +37,7 @@ const resolveDidController = async (fastify) => {
       const {
         params: { did },
       } = req;
-      return resolveDid(did, req);
+      return resolveDidOrNotFound(did, req);
     },
   );
 };
