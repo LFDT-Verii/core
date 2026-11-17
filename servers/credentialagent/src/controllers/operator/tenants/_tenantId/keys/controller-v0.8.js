@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { isEmpty, some, map } = require('lodash/fp');
+const { isEmpty, some } = require('lodash/fp');
 const newError = require('http-errors');
 const { KeyEncodings, KeyPurposes } = require('@verii/crypto');
 const { resolveDid } = require('@verii/common-fetchers');
@@ -50,7 +50,7 @@ const keysController = async (fastify) => {
     },
     async (req) => {
       const { repos, tenant } = req;
-      const keys = await repos.keys.find(
+      return repos.keys.find(
         { filter: { tenantId: tenant._id }, sort: { _id: 1 } },
         {
           _id: 1,
@@ -60,13 +60,6 @@ const keysController = async (fastify) => {
           kidFragment: 1,
           createdAt: 1,
         },
-      );
-      return map(
-        (key) => ({
-          ...key,
-          encoding: KeyEncodings.HEX,
-        }),
-        keys,
       );
     },
   );
@@ -131,7 +124,7 @@ const keysController = async (fastify) => {
       }
 
       reply.code(201);
-      return { ...key, encoding: KeyEncodings.HEX };
+      return key;
     },
   );
 
