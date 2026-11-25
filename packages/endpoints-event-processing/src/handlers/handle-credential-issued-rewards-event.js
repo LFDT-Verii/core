@@ -1,4 +1,5 @@
 const {
+  filter,
   partition,
   reduce,
   map,
@@ -18,6 +19,7 @@ const { TransactionReasons } = require('../entities');
 const { decodeIssuerVc, initDocumentFunctions } = require('../helpers');
 
 const task = 'credential-issued-rewards';
+const MaxBlocksPerRun = 1000000;
 
 const initReadEventsFromBlock = async (context) => {
   const { config } = context;
@@ -29,9 +31,7 @@ const initReadEventsFromBlock = async (context) => {
     context,
   );
 
-  return async (block) => {
-    return pullAddedCredentialMetadataEvents(block);
-  };
+  return pullAddedCredentialMetadataEvents;
 };
 const executeTransfers = async (
   { rewardsDictionary, organizations },
@@ -100,10 +100,7 @@ const eventsToOrganizationTransactions = async (
   let numberOfEventsRead = 0;
   for await (const events of eventsCursor()) {
     numberOfEventsRead += events.length;
-    const validEvents = getRewardableEvents(
-      { events, credentialTypes },
-      context,
-    );
+    const validEvents = getRewardableEvents({ events, credentialTypes });
     for (const { issuerKey, caoKey, issuerDid, caoDid } of validEvents) {
       dids.push(issuerDid);
       dids.push(caoDid);
@@ -126,6 +123,7 @@ const handleCredentialIssuedRewardsEvent = async (context) => {
   log.info({ task, lastReadBlock });
   const { eventsCursor, latestBlock } = await readEventsFromBlock(
     lastReadBlock + 1,
+    lastReadBlock + MaxBlocksPerRun,
   );
   const { rewardsDictionary, numberOfEventsRead, dids } =
     await eventsToOrganizationTransactions(
@@ -160,19 +158,8 @@ const handleCredentialIssuedRewardsEvent = async (context) => {
   await writeLastSuccessfulBlock(latestBlock);
 };
 
-const getRewardableEvents = ({ events, credentialTypes }, context) => {
-  const [rewardableEvents, unRewardableEvents] = flow(
-    map(mapEvent),
-    partition(isRewardedEvent(credentialTypes)),
-  )(events);
-  context.log.info({
-    rewardableEvents,
-    unRewardableEvents,
-    events,
-    credentialTypes,
-  });
-  return rewardableEvents;
-};
+const getRewardableEvents = ({ events, credentialTypes }) =>
+  flow(map(mapEvent), filter(isRewardedEvent(credentialTypes)))(events);
 
 const isRewardedEvent = (credentialTypes) => (event) => {
   const issuerDid = decodeIssuerVc(event.args[1]);
