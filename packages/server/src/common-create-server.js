@@ -18,11 +18,12 @@
 const { readFileSync } = require('node:fs');
 const { resolve } = require('node:path');
 const ajvFormatsPlugin = require('ajv-formats');
-const { loggerProvider } = require('@verii/logger');
+const { censorUrl, loggerProvider } = require('@verii/logger');
 const { nanoid } = require('nanoid');
 const { customFastifyQueryStringParser } = require('@verii/rest-queries');
 const Fastify = require('fastify');
 const { FST_ERR_LOG_INVALID_LOGGER_CONFIG } = require('fastify/lib/errors');
+const { kLogController } = require('fastify/lib/symbols');
 const { initEvents } = require('@spencejs/spence-events');
 const {
   immutableEntitySchema,
@@ -66,6 +67,9 @@ const commonCreateServer = (config, log) => {
       ignoreTrailingSlash: true,
       maxParamLength: 2000,
       querystringParser: customFastifyQueryStringParser,
+      // The request log's URL censor (censorUrl in @verii/logger) starts the
+      // query only at `?` or `#`, so the router must too.
+      useSemicolonDelimiter: false,
     },
   };
 
@@ -80,7 +84,8 @@ const commonCreateServer = (config, log) => {
   initEvents({
     log,
     errorHandler: (event, context, error) => {
-      log.error({ context, event }, 'Error Context');
+      const { id: eventId, topic, eventName } = event?.meta ?? {};
+      log.error({ eventId, topic, eventName }, 'Error Context');
       log.error(error);
     },
   });
@@ -122,6 +127,8 @@ const commonCreateServer = (config, log) => {
         opts.logLevel = 'silent';
       }
     })
+    // Sets the root not-found handler: a consumer that calls setNotFoundHandler on the root instance now throws.
+    .setNotFoundHandler(notFoundHandler)
     .addHook('onError', async (req, reply, error) => {
       const { body } = req;
       const errorLog = isSensitiveRoute(req)
@@ -146,6 +153,18 @@ const commonCreateServer = (config, log) => {
   registerSwaggerDocumentation(server, config);
 
   return server;
+};
+
+// Fastify's default not-found handler, with the query parameters of the url
+// censored as they are in the request log. Like Fastify's, it logs only when
+// the log controller allows request logging (disableRequestLogging).
+const notFoundHandler = (req, reply) => {
+  const { method, url } = req.raw;
+  const message = `Route ${method}:${censorUrl(url)} not found`;
+  if (!req.server[kLogController].isLogDisabled(req)) {
+    req.log.info(message);
+  }
+  return reply.code(404).send({ message, error: 'Not Found', statusCode: 404 });
 };
 
 const registerSwaggerDocumentation = (server, config) => {
@@ -237,4 +256,8 @@ const createCommonLog = (config) => {
   return loggerProvider({ nodeEnv, logSeverity, version, logRedactPaths });
 };
 
-module.exports = { commonCreateServer, createCommonLog, isSensitiveRoute };
+module.exports = {
+  commonCreateServer,
+  createCommonLog,
+  isSensitiveRoute,
+};
