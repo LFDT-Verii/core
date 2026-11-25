@@ -31,9 +31,12 @@ const mockEventCursor = mock.fn(() => ({
   }),
 }));
 
+const mockPullAddedCredentialMetadataEvents = mock.fn(async () => ({
+  eventsCursor: mockEventCursor,
+  latestBlock: 42,
+}));
 const mockInitMetadataRegistry = mock.fn(async () => ({
-  pullAddedCredentialMetadataEvents: () =>
-    Promise.resolve({ eventsCursor: mockEventCursor, latestBlock: 42 }),
+  pullAddedCredentialMetadataEvents: mockPullAddedCredentialMetadataEvents,
 }));
 
 mock.module('@verii/aws-clients', {
@@ -130,6 +133,7 @@ describe('Credential issued event rewards distribution task test suite', () => {
       { done: true },
     ];
     mockInitMetadataRegistry.mock.resetCalls();
+    mockPullAddedCredentialMetadataEvents.mock.resetCalls();
     mockReadDocument.mock.resetCalls();
     mockWriteDocument.mock.resetCalls();
     mockBatchTransferCredits.mock.resetCalls();
@@ -181,6 +185,93 @@ describe('Credential issued event rewards distribution task test suite', () => {
   after(async () => {
     await mongoCloseWrapper();
     mock.reset();
+  });
+
+  [
+    ['caps a long backlog', 1500000, 1000010],
+    ['reads a short backlog to the chain head', 42, 42],
+  ].forEach(([name, head, endBlock]) => {
+    it(name, async () => {
+      mockReadDocument.mock.mockImplementationOnce(async () => ({
+        Item: { EventName: task, BlockNumber: 10 },
+      }));
+      const { args } = sampleCredentialEventsArray[0];
+      const rewardableEvents = [10, 11, endBlock, endBlock + 1].map(
+        (blockNumber) => ({
+          blockNumber,
+          args: args.with(3, credentialSchemaHashLayer1),
+        }),
+      );
+      mockPullAddedCredentialMetadataEvents.mock.mockImplementationOnce(
+        async (fromBlock, toBlock = head) => {
+          const latestBlock = Math.min(toBlock, head);
+          eventsWrapper.events = [
+            {
+              value: rewardableEvents.filter(
+                ({ blockNumber }) =>
+                  blockNumber >= fromBlock && blockNumber <= latestBlock,
+              ),
+            },
+            { done: true },
+          ];
+          return { eventsCursor: mockEventCursor, latestBlock };
+        },
+      );
+      const log = { info: mock.fn(), warn: mock.fn() };
+
+      await handleCredentialIssuedRewardsEvent({ ...testContext, log });
+
+      expect({
+        read: mockPullAddedCredentialMetadataEvents.mock.calls.map(
+          ({ arguments: argsPassed }) => argsPassed,
+        ),
+        paid: mockBatchTransferCredits.mock.calls.map(
+          ({ arguments: [{ transfers }] }) =>
+            transfers.toSorted((a, b) => a.amount - b.amount),
+        ),
+        written: mockWriteDocument.mock.calls.map(
+          ({ arguments: argsPassed }) => argsPassed,
+        ),
+      }).toEqual({
+        read: [[11, 1000010]],
+        paid: [
+          [
+            {
+              amount: 10,
+              description: TransactionTypes.ISSUER_ISSUING_REWARD,
+              fromAccount: 'abc123',
+              toAccount: '9',
+            },
+            {
+              amount: 14,
+              description: TransactionTypes.CAO_ISSUING_REWARD,
+              fromAccount: 'abc123',
+              toAccount: '11',
+            },
+          ],
+        ],
+        written: [
+          [
+            config.dynamoDbTableEventBlock,
+            { EventName: task, BlockNumber: endBlock },
+          ],
+        ],
+      });
+    });
+  });
+
+  it('does not include event objects in logs', async () => {
+    const log = { info: mock.fn(), warn: mock.fn() };
+
+    await handleCredentialIssuedRewardsEvent({ ...testContext, log });
+
+    const eventKeys = ['events', 'rewardableEvents', 'unRewardableEvents'];
+    const loggedKeys = [log.info, log.warn].flatMap((method) =>
+      method.mock.calls.flatMap(({ arguments: args }) =>
+        args.flatMap((arg) => Object.keys(arg ?? {})),
+      ),
+    );
+    expect(loggedKeys.filter((key) => eventKeys.includes(key))).toEqual([]);
   });
 
   it('Should successfully distribute rewards for a given set of events read off the blockchain', async () => {

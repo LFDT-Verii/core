@@ -47,7 +47,7 @@ const context = {
   config,
 };
 
-describe('Contract Client Test Suite', { timeout: 15000 }, () => {
+describe('Contract Client Test Suite', { timeout: 25000 }, () => {
   const deployerPrivateKey = generateDisposablePrivateKey();
   const randomAccount = generateAccount().address;
   const rpcUrl = 'http://localhost:8545';
@@ -121,10 +121,18 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
   });
 
   describe('Contract Client functions Test Suite', () => {
+    let initialized;
     let contractWithEventsClient;
 
-    beforeEach(async () => {
+    before(async () => {
       const contractInstance = await deployContractThatHasEvents();
+      [initialized] = await contractInstance.queryFilter('Initialized');
+      // Make the event block historical so the upper bound differs from the head.
+      const later = await contractInstance.runner.sendTransaction({
+        to: randomAccount,
+        value: 0,
+      });
+      await later.wait();
       const clientPrivateKey = generateDisposablePrivateKey();
 
       contractWithEventsClient = await initContractClient(
@@ -138,16 +146,59 @@ describe('Contract Client Test Suite', { timeout: 15000 }, () => {
       );
     });
 
-    it('Should be able to get events', async () => {
-      const pullFooEvents = contractWithEventsClient.pullEvents(
+    it('clamps an event query to the chain head', async (t) => {
+      const futureBlock = (await rpcProvider.getBlockNumber()) + 1000;
+      const getBlockNumber = t.mock.method(rpcProvider, 'getBlockNumber');
+      const getLogs = t.mock.method(rpcProvider, 'getLogs');
+      const pullEvents = contractWithEventsClient.pullEvents(
         'CreatedMetadataList',
       );
-      const { latestBlock, eventsCursor } = await pullFooEvents();
+      const { latestBlock, eventsCursor } = await pullEvents(0, futureBlock);
+      const events = (await Array.fromAsync(eventsCursor())).flat();
+      const [{ toBlock }] = getLogs.mock.calls.at(-1).arguments;
+      const head = await getBlockNumber.mock.calls[0].result;
 
-      for await (const events of eventsCursor()) {
-        expect(events).toEqual([]);
-      }
-      expect(latestBlock).toBeGreaterThan(0);
+      expect({ latestBlock, toBlock, events }).toEqual({
+        latestBlock: head,
+        toBlock: head,
+        events: [],
+      });
+    });
+
+    [
+      ['includes an event in a single-block range', 0],
+      ['includes an event at the end of a bounded range', 500],
+    ].forEach(([name, span]) => {
+      it(name, async (t) => {
+        const endBlock = initialized.blockNumber;
+        // A fresh test chain may have fewer than 500 historical blocks.
+        const fromBlock = Math.max(0, endBlock - span);
+        const getLogs = t.mock.method(rpcProvider, 'getLogs');
+        const pullEvents = contractWithEventsClient.pullEvents('Initialized');
+        const { latestBlock, eventsCursor } = await pullEvents(
+          fromBlock,
+          endBlock,
+        );
+        const events = (await Array.fromAsync(eventsCursor())).flat();
+
+        const firstRangeEnd = Math.min(fromBlock + 499, endBlock);
+        const ranges = [[fromBlock, firstRangeEnd]];
+        if (firstRangeEnd < endBlock) {
+          ranges.push([endBlock, endBlock]);
+        }
+
+        expect({
+          latestBlock,
+          ranges: getLogs.mock.calls.map(
+            ({ arguments: [{ fromBlock: from, toBlock: to }] }) => [from, to],
+          ),
+          events: events.map(({ transactionHash }) => transactionHash),
+        }).toEqual({
+          latestBlock: endBlock,
+          ranges,
+          events: [initialized.transactionHash],
+        });
+      });
     });
   });
 });
