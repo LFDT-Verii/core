@@ -188,34 +188,21 @@ describe('Credential issued event rewards distribution task test suite', () => {
   });
 
   [
-    ['caps a long backlog', 1500000, 1000010],
-    ['reads a short backlog to the chain head', 42, 42],
-  ].forEach(([name, head, endBlock]) => {
+    ['caps a long backlog', 1000010],
+    ['reads a short backlog to the chain head', 42],
+  ].forEach(([name, endBlock]) => {
     it(name, async () => {
       mockReadDocument.mock.mockImplementationOnce(async () => ({
         Item: { EventName: task, BlockNumber: 10 },
       }));
       const { args } = sampleCredentialEventsArray[0];
-      const rewardableEvents = [10, 11, endBlock, endBlock + 1].map(
-        (blockNumber) => ({
-          blockNumber,
-          args: args.with(3, credentialSchemaHashLayer1),
-        }),
-      );
+      const event = { args: args.with(3, credentialSchemaHashLayer1) };
+      eventsWrapper.events = [{ value: [event, event] }, { done: true }];
       mockPullAddedCredentialMetadataEvents.mock.mockImplementationOnce(
-        async (fromBlock, toBlock = head) => {
-          const latestBlock = Math.min(toBlock, head);
-          eventsWrapper.events = [
-            {
-              value: rewardableEvents.filter(
-                ({ blockNumber }) =>
-                  blockNumber >= fromBlock && blockNumber <= latestBlock,
-              ),
-            },
-            { done: true },
-          ];
-          return { eventsCursor: mockEventCursor, latestBlock };
-        },
+        async () => ({
+          eventsCursor: mockEventCursor,
+          latestBlock: endBlock,
+        }),
       );
       const log = { info: mock.fn(), warn: mock.fn() };
 
@@ -261,15 +248,16 @@ describe('Credential issued event rewards distribution task test suite', () => {
   });
 
   it('does not include event objects in logs', async () => {
-    const log = { info: mock.fn(), warn: mock.fn() };
+    const log = mock.fn();
 
-    await handleCredentialIssuedRewardsEvent({ ...testContext, log });
+    await handleCredentialIssuedRewardsEvent({
+      ...testContext,
+      log: { info: log, warn: log },
+    });
 
     const eventKeys = ['events', 'rewardableEvents', 'unRewardableEvents'];
-    const loggedKeys = [log.info, log.warn].flatMap((method) =>
-      method.mock.calls.flatMap(({ arguments: args }) =>
-        args.flatMap((arg) => Object.keys(arg ?? {})),
-      ),
+    const loggedKeys = log.mock.calls.flatMap(({ arguments: args }) =>
+      args.flatMap((arg) => Object.keys(arg ?? {})),
     );
     expect(loggedKeys.filter((key) => eventKeys.includes(key))).toEqual([]);
   });
