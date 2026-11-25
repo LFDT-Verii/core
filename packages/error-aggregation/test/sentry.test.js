@@ -69,9 +69,21 @@ describe('Sentry test suite', () => {
       },
     ]);
     expect(mockSentryCaptureException.mock.callCount()).toEqual(1);
-    expect(mockSentryCaptureException.mock.calls[0].arguments).toEqual([
+    expect(mockSentryCaptureException.mock.calls[0].arguments).toStrictEqual([
       mockError,
     ]);
+  });
+
+  it('forwards only tags from the sendError context', async () => {
+    const { sendError } = await initSendError({ dsn: 'test' });
+    const error = new Error('mock');
+    const tags = { eventId: 'fixture-event-id' };
+
+    sendError(error, { tags, profile: { name: 'Example' } });
+
+    expect(
+      mockSentryCaptureException.mock.calls.map(({ arguments: args }) => args),
+    ).toStrictEqual([[error, { tags }]]);
   });
 
   it('should tag every event with the service name when serviceName is provided', async () => {

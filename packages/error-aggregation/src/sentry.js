@@ -56,6 +56,12 @@ const initSentry = async ({
   });
   return Sentry;
 };
+
+// Only the tags in a sendError context reach Sentry. Callers also pass
+// messages and request data in it for their own use.
+const buildCaptureContext = (context) =>
+  context?.tags ? [{ tags: context.tags }] : [];
+
 const initSendError = async ({
   dsn,
   release,
@@ -72,12 +78,12 @@ const initSendError = async ({
       serviceName,
     });
     return {
-      sendError: (error) => {
+      sendError: (error, context) => {
         const code = error?.status || error?.statusCode;
         if (code >= 400 && code <= 404) {
           return;
         }
-        sentry.captureException(error);
+        sentry.captureException(error, ...buildCaptureContext(context));
       },
     };
   }

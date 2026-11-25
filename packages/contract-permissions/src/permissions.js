@@ -26,7 +26,11 @@ const initPermissions = async (
   context,
 ) => {
   const { log } = context;
-  log.info({ func: 'initPermission', privateKey, contractAddress });
+  log.info({
+    func: 'initPermission',
+    contractAddress,
+    hasPrivateKey: Boolean(privateKey),
+  });
 
   const { contractClient } = await initContractClient(
     {

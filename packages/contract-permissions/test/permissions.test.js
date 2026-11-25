@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const { after, afterEach, before, describe, it } = require('node:test');
+const { after, afterEach, before, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 
 const { generateAccount } = require('@verii/blockchain-functions');
@@ -87,6 +87,36 @@ describe('Permissions Contract Test Suite', { timeout: 120000 }, () => {
 
   after(async () => {
     await mongoCloseWrapper();
+  });
+
+  it('initPermissions logs key presence without disclosing the key', async () => {
+    const { privateKey } = permissioningAccount;
+    const contractAddress = await deployedContract.getAddress();
+    const log = {
+      info: mock.fn(),
+      warn: mock.fn(),
+      error: mock.fn(),
+      debug: mock.fn(),
+    };
+
+    await initPermissions(
+      { privateKey, contractAddress, rpcProvider },
+      { ...context, log },
+    );
+
+    const initCalls = log.info.mock.calls
+      .map((call) => call.arguments[0])
+      .filter((entry) => entry?.func === 'initPermission');
+    expect(initCalls).toEqual([
+      { func: 'initPermission', contractAddress, hasPrivateKey: true },
+    ]);
+
+    const loggedArguments = Object.values(log).flatMap((fn) =>
+      fn.mock.calls.map((call) => call.arguments),
+    );
+    const output = JSON.stringify(loggedArguments);
+    expect(output).not.toContain(privateKey.replace(/^0x/, ''));
+    expect(output).not.toContain('privateKey');
   });
 
   describe('VNF Key Contract Operation Test Suite', () => {

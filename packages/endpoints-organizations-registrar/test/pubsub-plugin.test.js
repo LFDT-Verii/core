@@ -15,10 +15,11 @@
  *
  */
 
+const { Writable } = require('node:stream');
 const { after, before, describe, it, mock } = require('node:test');
 const { expect } = require('expect');
 const Fastify = require('fastify');
-const { publish } = require('@spencejs/spence-events');
+const { initEvents, publish } = require('@spencejs/spence-events');
 const { pubsubPlugin } = require('../src/plugins/pubsub-plugin');
 
 describe('pubsub plugin', () => {
@@ -29,9 +30,17 @@ describe('pubsub plugin', () => {
   const sendError = mock.fn();
   const subscriber = mock.fn();
   let fastify;
+  let output = '';
 
   before(async () => {
-    fastify = Fastify();
+    const stream = new Writable({
+      write: (chunk, encoding, callback) => {
+        output += chunk.toString();
+        callback();
+      },
+    });
+    fastify = Fastify({ logger: { level: 'error', stream } });
+    initEvents({ log: fastify.log, errorHandler: sendError });
     fastify.decorate('config', config);
     fastify.decorate('sendError', sendError);
     await fastify.register(pubsubPlugin);
@@ -57,5 +66,33 @@ describe('pubsub plugin', () => {
     expect(event.payload).toEqual(payload);
     expect(context.config).toBe(config);
     expect(context.user).toEqual(user);
+  });
+
+  it('logs and reports the original event ID when a subscriber removes its metadata', async () => {
+    const subscriberName = 'failingSubscriber';
+    const error = new Error('Subscriber failed');
+    let eventId;
+    fastify
+      .pubsub(subscriberName)
+      .subscribe('things', 'failed', async (event) => {
+        eventId = event.meta.id;
+        delete event.meta;
+        throw error;
+      });
+
+    await publish('things', 'failed', { thing: 'fixture' }, {});
+
+    const message = `subscriber named ${subscriberName} failed`;
+    const entry = JSON.parse(output);
+    expect(entry).toMatchObject({
+      eventId,
+      subscriberName,
+      msg: message,
+      err: { message: error.message },
+    });
+    expect(entry).not.toHaveProperty('event');
+    expect(
+      sendError.mock.calls.map(({ arguments: args }) => args),
+    ).toStrictEqual([[error, { message, tags: { eventId, subscriberName } }]]);
   });
 });
