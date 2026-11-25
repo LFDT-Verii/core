@@ -31,9 +31,7 @@ const initReadEventsFromBlock = async (context) => {
     context,
   );
 
-  return async (fromBlock, toBlock) => {
-    return pullAddedCredentialMetadataEvents(fromBlock, toBlock);
-  };
+  return pullAddedCredentialMetadataEvents;
 };
 const executeTransfers = async (
   { rewardsDictionary, organizations },
