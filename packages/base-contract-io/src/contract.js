@@ -56,9 +56,10 @@ const queryBlockRange = async (contract, event, currBlock, latestBlock) => {
 const initPullLogEntries =
   (contract) =>
   (event) =>
-  async (fromBlock = 0) => {
-    const latestBlock = await contract.runner.provider.getBlockNumber();
-    const blocksRange = rangeStep(QueryMaxBlocks, fromBlock, latestBlock);
+  async (fromBlock = 0, toBlock = Infinity) => {
+    const headBlock = await contract.runner.provider.getBlockNumber();
+    const latestBlock = Math.min(toBlock, headBlock);
+    const blocksRange = rangeStep(QueryMaxBlocks, fromBlock, latestBlock + 1);
 
     return {
       async *eventsCursor() {
