@@ -20,6 +20,7 @@ const { parse: parseDuration } = require('@lukeed/ms');
 const {
   PREAUTH_CODE_EXPIRES_IN_MAX_SECONDS,
 } = require('@verii/credentialing-hub-operator-api');
+const { HUB_CLIENT_REDACT_PATHS } = require('@verii/logger');
 const {
   buildNotificationConfig,
   findWebhookUrlError,
@@ -110,6 +111,16 @@ const buildConfig = ({ servesHttp = true } = {}) => {
     customFastifyOptions: {
       bodyLimit: 8388608,
     },
+    // Fields only the hub logs, added to the paths every server redacts.
+    logRedactPaths: [
+      ...HUB_CLIENT_REDACT_PATHS,
+      'body.jwt_vp',
+      'body.push_delegate.push_token',
+      'body.vp_jwt',
+      'err.exchange.events',
+      'err.exchange.messagingSettings.authToken',
+      'preauthCode',
+    ],
     hostUrl: env.get('HOST_URL').required(servesHttp).asString(),
     deepLinkProtocol: env.get('DEEP_LINK_PROTOCOL').required().asString(),
     keyEncryptionSecret: env.get('KEY_ENCRYPTION_SECRET').required().asString(),

@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-const { createServer, listenServer } = require('@verii/server-provider');
+const {
+  applyConfigOverrides,
+  createServer,
+  listenServer,
+} = require('@verii/server-provider');
 const { buildConfig } = require('./config');
 const { createSwaggerConfig } = require('./config/swagger-config');
 const { initServer } = require('./init-server');
@@ -31,10 +35,8 @@ const createAppServer = ({
 } = {}) => {
   const resolvedCaoSecurityProvider =
     resolveCaoSecurityProvider(caoSecurityProvider);
-  const baseConfig = {
-    ...buildConfig(),
-    ...configOverrides,
-  };
+  // configOverrides' logRedactPaths are added to the hub's own.
+  const baseConfig = applyConfigOverrides(buildConfig(), configOverrides);
   const serverConfig = {
     ...baseConfig,
     ...createSwaggerConfig(

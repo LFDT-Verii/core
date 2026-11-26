@@ -82,6 +82,7 @@
   },
   "devDependencies": {
     "@spencejs/spence-config": "1.1.0",
+    "@verii/logger": "workspace:*",
     "@verii/sample-data": "workspace:*",
     "@verii/test-regexes": "workspace:*",
     "@verii/tests-helpers": "workspace:*",

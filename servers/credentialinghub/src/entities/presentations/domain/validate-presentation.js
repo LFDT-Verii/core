@@ -121,7 +121,6 @@ const verifyPresentationSubmissionAgainstDefinition = (
         'Presentation path descriptor does not reference any valid data: JSONPath expression returned no results',
         {
           descriptor,
-          json: presentationContent,
           errorCode: 'presentation_jsonpath_empty',
         },
       );

@@ -3255,6 +3255,9 @@ importers:
       '@spencejs/spence-config':
         specifier: 1.1.0
         version: 1.1.0
+      '@verii/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@verii/sample-data':
         specifier: workspace:*
         version: link:../../packages/sample-data
@@ -3408,6 +3411,9 @@ importers:
       '@verii/jwt':
         specifier: workspace:*
         version: link:../../packages/jwt
+      '@verii/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@verii/organizations-registry':
         specifier: workspace:*
         version: link:../../packages/organizations-registry
