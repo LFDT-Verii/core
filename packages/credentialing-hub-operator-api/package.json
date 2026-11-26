@@ -1,6 +1,6 @@
 {
   "name": "@verii/credentialing-hub-operator-api",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Schemas, validation, auth value and error code helpers shared by the Credentialing Hub's operator API and its clients",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
