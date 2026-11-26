@@ -1,6 +1,6 @@
 {
   "name": "@verii/server-provider",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Server common package for Velocity Projects ",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",

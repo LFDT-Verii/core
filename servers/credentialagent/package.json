@@ -1,6 +1,6 @@
 {
   "name": "@verii/server-credentialagent",
-  "version": "1.30.0",
+  "version": "1.31.0",
   "description": "Credential Agent application",
   "main": "src/index.js",
   "repository": "https://github.com/LFDT-Verii/core",

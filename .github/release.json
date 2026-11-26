@@ -2,9 +2,9 @@
   "kind": "verii-release",
   "bump": "minor",
   "groups": {
-    "platform": "1.4.0",
-    "credentialagent": "1.30.0",
-    "credentialinghub": "2.3.0",
-    "sdk-nodejs": "2.13.0"
+    "platform": "1.5.0",
+    "credentialagent": "1.31.0",
+    "credentialinghub": "2.4.0",
+    "sdk-nodejs": "2.14.0"
   }
 }

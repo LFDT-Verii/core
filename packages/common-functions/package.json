@@ -1,6 +1,6 @@
 {
   "name": "@verii/common-functions",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Set of functions and utils used by Verii projects",
   "repository": "https://github.com/LFDT-Verii/core",
   "main": "index.js",
