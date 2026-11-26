@@ -23,6 +23,7 @@ const {
 } = require('undici');
 const { createOidcInterceptor } = require('undici-oidc-interceptor');
 const { isObject } = require('lodash');
+const { censorUrl } = require('@verii/logger');
 const pkg = require('../package.json');
 
 const USER_AGENT_HEADER = `${pkg.name}/${pkg.version}`;
@@ -56,9 +57,17 @@ const initHttpClient = (options) => {
   ) => {
     const reqId = nanoid();
     const reqHeaders = buildReqHeaders(reqOptions, contentType, traceId);
-    const [origin, path] = buildUrl(host, url, reqOptions);
+    const [origin, path] = buildCensoredErrorUrl(host, url, reqOptions);
+    // Logs and errors carry the urls with the values of sensitive query
+    // parameters censored, as the server's request log does.
+    const loggedPath = censorUrl(path);
+    const loggedUrl = censorUrl(omitUserInfo(`${url}`));
 
-    log.info({ origin, path, url, reqId, reqHeaders }, 'HttpClient request');
+    // Info logs carry only HTTP metadata. Headers and bodies are logged at
+    // debug, when the logger has a debug method.
+    const loggedRequest = { origin, path: loggedPath, url: loggedUrl, reqId };
+    log.info(loggedRequest, 'HttpClient request');
+    log.debug?.({ reqId, reqHeaders }, 'HttpClient request');
 
     try {
       const httpRequest = {
@@ -70,6 +79,13 @@ const initHttpClient = (options) => {
       };
       const httpResponse = await agent.request(httpRequest);
       const { statusCode, headers: resHeaders, body: rawBody } = httpResponse;
+      const logResponse = (resBody) => {
+        log.info({ ...loggedRequest, statusCode }, 'HttpClient response');
+        log.debug?.(
+          { reqId, resHeaders, body: resBody },
+          'HttpClient response',
+        );
+      };
       return {
         rawBody,
         statusCode,
@@ -77,32 +93,24 @@ const initHttpClient = (options) => {
         json: async () => {
           try {
             const bodyJson = await rawBody.json();
-            log.info(
-              { origin, url, reqId, statusCode, resHeaders, body: bodyJson },
-              'HttpClient response',
-            );
+            logResponse(bodyJson);
             return bodyJson;
           } catch (error) {
-            log.error(
-              { origin, url, reqId, statusCode, resHeaders, error },
-              'JSON parsing error',
-            );
+            log.error({ ...loggedRequest, statusCode }, 'JSON parsing error');
+            log.debug?.({ reqId, resHeaders, error }, 'HttpClient response');
 
             return {};
           }
         },
         text: async () => {
           const bodyText = await rawBody.text();
-          log.info(
-            { origin, url, reqId, statusCode, resHeaders, body: bodyText },
-            'HttpClient response',
-          );
+          logResponse(bodyText);
           return bodyText;
         },
       };
     } catch (error) {
       // eslint-disable-next-line better-mutation/no-mutation
-      error.url = `${origin}${path}`;
+      error.url = `${origin}${loggedPath}`;
 
       throw error;
     }
@@ -260,6 +268,38 @@ const buildUrl = (host, url, reqOptions) => {
     );
   }
   return [host.origin, buildRelativePath(host.rootPath ?? '', url, reqOptions)];
+};
+
+// Logs and errors leave out a url's user and password, as its parsed origin
+// does. A url that doesn't parse, like an invalid url error's input, has
+// them cut from after its scheme.
+const omitUserInfo = (url) => {
+  if (!url.includes('@')) {
+    return url;
+  }
+  if (!URL.canParse(url)) {
+    return url.replace(/^\s*([a-z][a-z\d+.-]*:\/\/)[^/?#\\]*@/i, '$1');
+  }
+  const { username, password, protocol, host, pathname, search, hash } =
+    new URL(url);
+  if (username === '' && password === '') {
+    return url;
+  }
+  return `${protocol}//${host}${pathname}${search}${hash}`;
+};
+
+// An invalid url's error carries the url as its input, so it's censored
+// before the error reaches a log.
+const buildCensoredErrorUrl = (host, url, reqOptions) => {
+  try {
+    return buildUrl(host, url, reqOptions);
+  } catch (error) {
+    if (typeof error.input === 'string') {
+      // eslint-disable-next-line better-mutation/no-mutation
+      error.input = censorUrl(omitUserInfo(error.input));
+    }
+    throw error;
+  }
 };
 
 const parseFullURL = (url, reqOptions) => {

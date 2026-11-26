@@ -11,6 +11,7 @@ export interface HttpClientContext {
   log?: {
     info?: (...args: any[]) => void;
     error?: (...args: any[]) => void;
+    debug?: (...args: any[]) => void;
   };
 }
 

@@ -1500,6 +1500,9 @@ importers:
       '@sentry/node':
         specifier: ^11.9.0
         version: 11.10.0
+      '@verii/logger':
+        specifier: workspace:*
+        version: link:../logger
     devDependencies:
       eslint:
         specifier: 9.39.5
@@ -1668,6 +1671,9 @@ importers:
 
   packages/http-client:
     dependencies:
+      '@verii/logger':
+        specifier: workspace:*
+        version: link:../logger
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
