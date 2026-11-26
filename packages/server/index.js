@@ -15,6 +15,7 @@
  */
 
 module.exports = {
+  ...require('./src/apply-config-overrides'),
   ...require('./src/create-server'),
   ...require('./src/create-test-server'),
 };

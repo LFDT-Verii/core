@@ -1500,6 +1500,9 @@ importers:
       '@sentry/node':
         specifier: ^11.9.0
         version: 11.10.0
+      '@verii/logger':
+        specifier: workspace:*
+        version: link:../logger
     devDependencies:
       eslint:
         specifier: 9.39.5
@@ -1668,6 +1671,9 @@ importers:
 
   packages/http-client:
     dependencies:
+      '@verii/logger':
+        specifier: workspace:*
+        version: link:../logger
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -1835,6 +1841,9 @@ importers:
       '@verii/jwt':
         specifier: workspace:*
         version: link:../jwt
+      '@verii/rest-queries':
+        specifier: workspace:*
+        version: link:../rest-queries
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -3252,6 +3261,9 @@ importers:
       '@spencejs/spence-config':
         specifier: 1.1.0
         version: 1.1.0
+      '@verii/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@verii/sample-data':
         specifier: workspace:*
         version: link:../../packages/sample-data
@@ -3405,6 +3417,9 @@ importers:
       '@verii/jwt':
         specifier: workspace:*
         version: link:../../packages/jwt
+      '@verii/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@verii/organizations-registry':
         specifier: workspace:*
         version: link:../../packages/organizations-registry

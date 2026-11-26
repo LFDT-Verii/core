@@ -29,8 +29,7 @@ const validatePreauth = (preauthCode, depot, { log }) => {
   if (!isDepotPreauthCode(preauthCode, depot)) {
     log.error(
       {
-        depot,
-        preauthCode,
+        depotId: depot?._id,
         preauthCodeHash:
           preauthCode != null ? calcSha384(preauthCode) : undefined,
       },

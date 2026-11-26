@@ -55,6 +55,7 @@
     "@verii/fastify-plugins": "workspace:*",
     "@verii/http-client": "workspace:*",
     "@verii/jwt": "workspace:*",
+    "@verii/logger": "workspace:*",
     "@verii/organizations-registry": "workspace:*",
     "@verii/server-provider": "workspace:*",
     "@verii/spencer-mongo-extensions": "workspace:*",

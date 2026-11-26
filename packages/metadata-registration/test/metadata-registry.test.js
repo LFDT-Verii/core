@@ -606,6 +606,48 @@ describe('Metadata Registry', { timeout: 600000 }, () => {
       expect(result).toEqual(false);
     });
 
+    it('setEntrySigned logs only the entry location', async () => {
+      const info = mock.fn();
+      const spyClient = await initMetadataRegistry(
+        {
+          privateKey: operatorPrivateKey,
+          contractAddress: metadataAddress,
+          rpcProvider,
+        },
+        { ...context, log: { ...console, info } },
+      );
+      const loggedListId = 9001;
+      await spyClient.createCredentialMetadataList(
+        primaryAddress,
+        loggedListId,
+        vc,
+        caoDid,
+      );
+
+      await spyClient.setEntrySigned(
+        regularIssuingCredentialTypeHash,
+        bytes,
+        loggedListId,
+        1,
+        caoDid,
+      );
+
+      const setEntryCalls = info.mock.calls
+        .map(({ arguments: args }) => args)
+        .filter(([, message]) => message === 'setEntrySigned');
+      expect(setEntryCalls).toEqual([
+        [
+          {
+            credentialType: regularIssuingCredentialTypeHash,
+            listId: loggedListId,
+            index: 1,
+            caoDid,
+          },
+          'setEntrySigned',
+        ],
+      ]);
+    });
+
     describe('Get entries with & without coupon', () => {
       beforeEach(async () => {
         await deployerVerificationCouponClient.mint({

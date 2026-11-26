@@ -36,13 +36,15 @@ const pubsubPlugin = async (fastify) => {
   const pubsub = (subscriberName) => ({
     subscribe(topic, eventName, subscriber) {
       spenceSubscribe(topic, eventName, async (event) => {
+        // Read before the subscriber runs, which can change the event.
+        const eventId = event.meta.id;
         // A new context for each event, sharing the server's config. Cloning
         // the config would fail on the functions a server can put in it.
         const context = {
           config: fastify.config,
           user: event.meta.user,
           log: fastify.log.child({
-            msgId: event.meta.id,
+            msgId: eventId,
             traceId: event.meta.traceId,
           }),
           repos: event.meta.repos,
@@ -59,8 +61,11 @@ const pubsubPlugin = async (fastify) => {
           await subscriber(event, context);
         } catch (error) {
           const message = `subscriber named ${subscriberName} failed`;
-          context.log.error({ err: error, event, subscriberName }, message);
-          fastify.sendError(error, { message, event, subscriberName });
+          context.log.error({ err: error, eventId, subscriberName }, message);
+          fastify.sendError(error, {
+            message,
+            tags: { eventId, subscriberName },
+          });
         }
       });
       return this;

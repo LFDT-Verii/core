@@ -17,7 +17,8 @@ const http = require('node:http');
 const { before, describe, it } = require('node:test');
 const { expect } = require('expect');
 const { NotFoundError } = require('http-errors');
-const { entries, set } = require('lodash/fp');
+const { entries, omit, set } = require('lodash/fp');
+const { censorUrl, loggerProvider } = require('@verii/logger');
 const {
   MockAgent,
   ResponseStatusCodeError,
@@ -1001,6 +1002,171 @@ describe('Http Client Package', () => {
         } finally {
           await closeServer(server);
         }
+      });
+    });
+
+    describe('Request logging', () => {
+      const path = '/resource?authCode=fixture';
+      const createClient = (log = console) =>
+        initHttpClient({ isTest: true, prefixUrl: origin })(origin, { log });
+      const reply = (status, body, options) =>
+        mockAgent
+          .get(origin)
+          .intercept({ path, method: 'GET' })
+          .reply(status, body, options);
+
+      const validJson = { ok: true };
+      const invalidJson = 'invalid';
+      const logSeverities = [
+        ['info', 'valid JSON', validJson],
+        ['debug', 'valid JSON', validJson],
+        ['info', 'invalid JSON', invalidJson],
+        ['debug', 'invalid JSON', invalidJson],
+        ['error', 'invalid JSON', invalidJson],
+      ];
+
+      for (const [logSeverity, responseType, body] of logSeverities) {
+        const includesDetails = logSeverity === 'debug';
+        const parsingError = body === invalidJson;
+        const responseLog = { msg: 'HttpClient response' };
+        const responseSummary = parsingError
+          ? { msg: 'JSON parsing error', level: 50 }
+          : { ...responseLog, level: 30 };
+        const responseData = parsingError ? { error: {} } : { body };
+        const debugError = parsingError ? expect.any(SyntaxError) : undefined;
+        it(`logs HTTP traffic at ${logSeverity} with ${responseType}`, async (t) => {
+          const write = t.mock.fn();
+          const log = loggerProvider({ logSeverity, destination: { write } });
+          const debug = t.mock.method(log, 'debug');
+          const reqHeaders = { 'x-request-header': 'request' };
+          const resHeaders = { 'x-response-header': 'response' };
+          reply(200, body, { headers: resHeaders });
+
+          const response = await createClient(log).get(path, {
+            headers: reqHeaders,
+          });
+          await response.json();
+
+          const logs = write.mock.calls.map(({ arguments: [line] }) =>
+            omit(['time', 'pid', 'hostname'], JSON.parse(line)),
+          );
+          const reqId = logs[0]?.reqId;
+          expect(reqId).toEqual(expect.any(String));
+          const metadata = {
+            origin,
+            path: censorUrl(path),
+            url: censorUrl(path),
+          };
+          const request = { msg: 'HttpClient request' };
+          const responseDetails = {
+            ...responseLog,
+            level: 20,
+            reqId,
+            resHeaders,
+            ...responseData,
+          };
+          expect(logs).toEqual([
+            ...(logSeverity === 'error'
+              ? []
+              : [{ ...request, level: 30, ...metadata, reqId }]),
+            ...(includesDetails
+              ? [
+                  {
+                    ...request,
+                    level: 20,
+                    reqId,
+                    reqHeaders: expect.objectContaining(reqHeaders),
+                  },
+                ]
+              : []),
+            {
+              ...metadata,
+              ...responseSummary,
+              reqId,
+              statusCode: 200,
+            },
+            ...(includesDetails ? [responseDetails] : []),
+          ]);
+          if (includesDetails) {
+            expect(debug.mock.calls[1].arguments[0].error).toEqual(debugError);
+          }
+        });
+      }
+
+      const cases = [
+        ['JSON response', path, 'json', '{}', 'HttpClient response'],
+        [
+          'text response',
+          new URL(path, origin),
+          'text',
+          'ok',
+          'HttpClient response',
+        ],
+        ['JSON parsing error', path, 'json', invalidJson, 'JSON parsing error'],
+      ];
+
+      for (const [name, url, read, body, message] of cases) {
+        it(`logs only metadata for ${name} without a debug method`, async (t) => {
+          const info = t.mock.fn();
+          const error = t.mock.fn();
+          reply(200, body);
+
+          const response = await createClient({ info, error }).get(url);
+          await response[read]();
+
+          const calls = [...info.mock.calls, ...error.mock.calls];
+          const reqId = calls[0]?.arguments[0].reqId;
+          const metadata = {
+            origin,
+            path: censorUrl(path),
+            url: censorUrl(String(url)),
+            reqId,
+          };
+          expect(calls.map(({ arguments: args }) => args)).toEqual([
+            [{ ...metadata, reqId: expect.any(String) }, 'HttpClient request'],
+            [{ ...metadata, statusCode: 200 }, message],
+          ]);
+        });
+      }
+
+      it('censors the URL attached to a failed request', async (t) => {
+        reply(404);
+        await expect(
+          createClient({ info: t.mock.fn() }).get(path),
+        ).rejects.toMatchObject({
+          url: censorUrl(`${origin}${path}`),
+        });
+      });
+
+      it('leaves the user and password out of a logged url', async (t) => {
+        const url = new URL(path, origin);
+        url.username = 'fixture-user';
+        url.password = 'fixture-password';
+        const loggedUrls = async (spelling) => {
+          const info = t.mock.fn();
+          reply(200, {});
+          const response = await createClient({ info }).get(spelling);
+          await response.json();
+          return info.mock.calls.map(({ arguments: [data] }) => data.url);
+        };
+        const censored = censorUrl(`${origin}${path}`);
+
+        // new URL() trims a leading space, so the logged url is cut the same
+        // way.
+        expect(
+          await Promise.all([String(url), ` ${url}`].map(loggedUrls)),
+        ).toEqual([
+          [censored, censored],
+          [censored, censored],
+        ]);
+      });
+
+      it('censors the input attached to an invalid URL error', async () => {
+        const input = `https://fixture-user:fixture-password@[invalid]${path}`;
+        await expect(createClient().get(input)).rejects.toMatchObject({
+          code: 'ERR_INVALID_URL',
+          input: censorUrl(`https://[invalid]${path}`),
+        });
       });
     });
   });

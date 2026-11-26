@@ -54,24 +54,85 @@ describe('Sentry test suite', () => {
           userInfo: false,
           cookies: false,
           httpHeaders: {
-            request: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
+            request: {
+              deny: ['forwarded', '-ip', 'remote-', 'via', '-user', 'referer'],
+            },
             response: { deny: ['forwarded', '-ip', 'remote-', 'via', '-user'] },
           },
           httpBodies: [],
           urlQueryParams: {
-            deny: ['forwarded', '-ip', 'remote-', 'via', '-user'],
+            deny: expect.arrayContaining([
+              'forwarded',
+              '-ip',
+              'remote-',
+              'via',
+              '-user',
+              'push_token',
+              'authCode',
+            ]),
           },
           genAI: { inputs: false, outputs: false },
           databaseQueryData: false,
           queues: false,
           graphQL: { document: false, variables: false },
         },
+        beforeSend: expect.any(Function),
+        beforeBreadcrumb: expect.any(Function),
       },
     ]);
     expect(mockSentryCaptureException.mock.callCount()).toEqual(1);
-    expect(mockSentryCaptureException.mock.calls[0].arguments).toEqual([
+    expect(mockSentryCaptureException.mock.calls[0].arguments).toStrictEqual([
       mockError,
     ]);
+  });
+
+  const query = 'redirect=https://example.test/cb?authCode=fixture&state=abc';
+  const censored =
+    'redirect=https://example.test/cb?authCode=...shhh...&state=abc';
+  const requestCases = [
+    {
+      name: 'censors nested query parameters in Sentry requests',
+      request: { url: `/path?${query}`, query_string: query },
+      expected: { url: `/path?${censored}`, query_string: censored },
+    },
+    {
+      name: 'keeps Sentry query strings provided as arrays of pairs',
+      request: { query_string: [['state', 'abc']] },
+      expected: { query_string: [['state', 'abc']] },
+    },
+  ];
+
+  for (const { name, request, expected } of requestCases) {
+    it(name, async () => {
+      await initSendError({ dsn: 'test' });
+      const { beforeSend } = mockSentryInit.mock.calls[0].arguments[0];
+      expect(beforeSend({ request })).toEqual({ request: expected });
+    });
+  }
+
+  it('censors encoded nested query parameters in Sentry breadcrumbs', async () => {
+    await initSendError({ dsn: 'test' });
+    const { beforeBreadcrumb } = mockSentryInit.mock.calls[0].arguments[0];
+    expect(
+      beforeBreadcrumb({
+        data: {
+          'url.query':
+            'redirect=https%3A%2F%2Fexample.test%2F%3FauthCode%3Dfixture&state=abc',
+        },
+      }),
+    ).toEqual({ data: { 'url.query': 'redirect=...shhh...&state=abc' } });
+  });
+
+  it('forwards only tags from the sendError context', async () => {
+    const { sendError } = await initSendError({ dsn: 'test' });
+    const error = new Error('mock');
+    const tags = { eventId: 'fixture-event-id' };
+
+    sendError(error, { tags, profile: { name: 'Example' } });
+
+    expect(
+      mockSentryCaptureException.mock.calls.map(({ arguments: args }) => args),
+    ).toStrictEqual([[error, { tags }]]);
   });
 
   it('should tag every event with the service name when serviceName is provided', async () => {

@@ -26,7 +26,7 @@ const initVerifyAccessToken = (options) => {
       return await context.repos.vendorUserIdMappings.findById(internalUserId);
     } catch (e) {
       context.log.warn(
-        { accessToken: context.accessToken, err: e },
+        { userId: internalUserId, err: e },
         'User in sub claim not found',
       );
       throw e;
@@ -47,12 +47,7 @@ const initVerifyAccessToken = (options) => {
       /* eslint-disable better-mutation/no-mutation */
       req.accessToken = payload;
       req.user = user;
-      req.log = req.log.child({
-        // update the log to include access token and user if available
-        traceId: req.traceId,
-        accessToken: req.accessToken,
-        user: req.user,
-      });
+      req.log = req.log.child({ userId: payload.sub });
       /* eslint-enable better-mutation/no-mutation */
       return req;
     } catch (error) {

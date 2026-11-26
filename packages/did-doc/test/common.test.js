@@ -411,6 +411,20 @@ describe('DID Documents Common', () => {
       expect(result).toThrow(Error);
     });
 
+    it('should not attach the private key to the error of a null payload', () => {
+      let error;
+      try {
+        generateProof(null, privateKey, 'VERIFICATION-METHOD');
+      } catch (e) {
+        error = e;
+      }
+
+      expect(error).toEqual(
+        expect.objectContaining({ verificationMethod: 'VERIFICATION-METHOD' }),
+      );
+      expect(error).not.toHaveProperty('privateKey');
+    });
+
     it('should throw when payload is an empty string', () => {
       const result = () => generateProof('', privateKey, 'VERIFICATION-METHOD');
 

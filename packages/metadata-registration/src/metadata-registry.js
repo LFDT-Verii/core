@@ -106,10 +106,7 @@ const initMetadataRegistry = async (
     index,
     caoDid,
   ) => {
-    log.info(
-      { credentialType, encryptedPK, listId, index, caoDid },
-      'setEntrySigned',
-    );
+    log.info({ credentialType, listId, index, caoDid }, 'setEntrySigned');
     const { transactingClient, signature } =
       await initContractWithTransactingClient(
         {

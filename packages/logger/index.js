@@ -14,8 +14,16 @@
  * limitations under the License.
  */
 
-const { loggerProvider } = require('./src/log');
+const {
+  censorUrl,
+  HUB_CLIENT_REDACT_PATHS,
+  loggerProvider,
+  SECURITY_QUERY_PARAMS,
+} = require('./src/log');
 
 module.exports = {
+  censorUrl,
+  HUB_CLIENT_REDACT_PATHS,
   loggerProvider,
+  SECURITY_QUERY_PARAMS,
 };

@@ -112,7 +112,7 @@ const buildCanonicalVp = ({
         throw createError(
           400,
           'Velocity Presentation contains path descriptor that is empty',
-          { descriptor, json, errorCode: 'presentation_jsonpath_empty' },
+          { descriptor, errorCode: 'presentation_jsonpath_empty' },
         );
       }
       const jwtString = get(credentialPath, json);

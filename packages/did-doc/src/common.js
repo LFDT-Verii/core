@@ -71,7 +71,6 @@ const generateProof = (payload, privateKey, verificationMethod) => {
   if (isNil(payload)) {
     throw newError('Payload is null or undefined', {
       payload,
-      privateKey,
       verificationMethod,
     });
   }

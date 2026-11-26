@@ -17,6 +17,7 @@
   "author": "Itay Podhajcer",
   "license": "Apache-2.0",
   "dependencies": {
+    "@verii/logger": "workspace:*",
     "date-fns": "^4.4.0",
     "http-errors": "^2.0.1",
     "lodash": "^4.18.1",

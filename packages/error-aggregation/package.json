@@ -17,6 +17,7 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
+    "@verii/logger": "workspace:*",
     "@sentry/node": "^11.9.0"
   },
   "devDependencies": {

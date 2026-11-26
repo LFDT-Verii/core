@@ -15,7 +15,11 @@
  *
  */
 
-const { createServer, listenServer } = require('@verii/server-provider');
+const {
+  applyConfigOverrides,
+  createServer,
+  listenServer,
+} = require('@verii/server-provider');
 const { flow } = require('lodash/fp');
 const { config, holderConfig, operatorConfig } = require('./config');
 const { initServer } = require('./init-server');
@@ -23,27 +27,28 @@ const { initHolderServer } = require('./init-holder-server');
 const { initOperatorServer } = require('./init-operator-server');
 
 // configOverrides lets a server that embeds the agent change its config, as the Hub's createAppServer
-// does, for example to describe its deployment its own way (describeDeployment)
+// does, for example to describe its deployment its own way (describeDeployment). Its logRedactPaths
+// are added to the agent's own.
 const startAppServer = ({ configOverrides = {} } = {}) =>
   flow(
     createServer,
     initServer,
     listenServer,
-  )({ ...config, ...configOverrides });
+  )(applyConfigOverrides(config, configOverrides));
 
 const startHolderAppServer = ({ configOverrides = {} } = {}) =>
   flow(
     createServer,
     initHolderServer,
     listenServer,
-  )({ ...holderConfig, ...configOverrides });
+  )(applyConfigOverrides(holderConfig, configOverrides));
 
 const startOperatorAppServer = ({ configOverrides = {} } = {}) =>
   flow(
     createServer,
     initOperatorServer,
     listenServer,
-  )({ ...operatorConfig, ...configOverrides });
+  )(applyConfigOverrides(operatorConfig, configOverrides));
 
 module.exports = {
   startAppServer,

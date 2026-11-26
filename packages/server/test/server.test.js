@@ -17,9 +17,10 @@ const { createHash } = require('node:crypto');
 const { afterEach, beforeEach, describe, it } = require('node:test');
 const { expect } = require('expect');
 const pinoTest = require('pino-test');
+const Fastify = require('fastify');
 
 const { loadTestEnv, buildMongoConnection } = require('@verii/tests-helpers');
-const { loggerProvider } = require('@verii/logger');
+const { censorUrl, loggerProvider } = require('@verii/logger');
 
 loadTestEnv();
 const { genericConfig } = require('@verii/config');
@@ -300,6 +301,137 @@ describe('Server Configured log', () => {
       logEntries.find((entry) => entry.msg === 'Server Configured'),
     ).toEqual(expect.objectContaining({ chainId: 1481 }));
     expect(JSON.stringify(logEntries)).not.toContain('rpc-secret-marker');
+  });
+});
+
+describe('Not found responses', () => {
+  let server;
+  let logEntries;
+
+  beforeEach(() => {
+    const config = {
+      ...genericConfig,
+      mongoConnection,
+      logSeverity: 'debug',
+      customFastifyOptions: { useSemicolonDelimiter: true },
+    };
+    logEntries = [];
+    const logSink = pinoTest.sink();
+    logSink.on('data', (entry) => logEntries.push(entry));
+    server = createServer(
+      config,
+      loggerProvider({ ...config, destination: logSink }),
+    );
+    server.register(
+      async (instance) => {
+        instance.get('/found', async () => ({ found: true }));
+      },
+      { prefix: '/prefixed' },
+    );
+  });
+
+  afterEach(async () => {
+    if (server) {
+      await server.close();
+    }
+  });
+
+  const urls = [
+    '/missing-route?authCode=fixture&state=abc',
+    '/prefixed/missing-route?authCode=fixture',
+  ];
+
+  urls.forEach((url) => {
+    it(`uses the censored URL for the 404 response and logs for ${url}`, async () => {
+      const response = await server.inject({ method: 'GET', url });
+
+      const message = `Route GET:${censorUrl(url)} not found`;
+      expect(response.statusCode).toEqual(404);
+      expect(response.json()).toEqual({
+        message,
+        error: 'Not Found',
+        statusCode: 404,
+      });
+      expect(logEntries).toContainEqual(
+        expect.objectContaining({ level: 30, msg: message }),
+      );
+      expect(logEntries).toContainEqual(
+        expect.objectContaining({
+          level: 20,
+          msg: 'response body',
+          body: expect.objectContaining({ message }),
+        }),
+      );
+    });
+  });
+
+  it("keeps the status, content type and body of Fastify's default response", async () => {
+    const url = '/missing-route?state=abc';
+    const defaultServer = Fastify();
+    const expected = await defaultServer.inject({ method: 'POST', url });
+    await defaultServer.close();
+
+    const response = await server.inject({ method: 'POST', url });
+
+    expect(response.statusCode).toEqual(expected.statusCode);
+    expect(response.headers['content-type']).toEqual(
+      expected.headers['content-type'],
+    );
+    expect(response.json()).toEqual(expected.json());
+  });
+
+  it('still serves the routes of a prefixed plugin', async () => {
+    const response = await server.inject({
+      method: 'GET',
+      url: '/prefixed/found',
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.json()).toEqual({ found: true });
+  });
+
+  it('keeps semicolons in the path even with the legacy delimiter option enabled', async () => {
+    const response = await server.inject({
+      method: 'GET',
+      url: '/prefixed/found;state=fixture-state',
+    });
+
+    expect(response.statusCode).toEqual(404);
+  });
+
+  const disabledLoggingCases = [
+    { name: 'true', disableRequestLogging: true },
+    { name: 'a function', disableRequestLogging: (req) => req.url !== '/' },
+  ];
+
+  disabledLoggingCases.forEach(({ name, disableRequestLogging }) => {
+    it(`logs no not-found line when disableRequestLogging is ${name}`, async () => {
+      const config = {
+        ...genericConfig,
+        mongoConnection,
+        logSeverity: 'debug',
+        customFastifyOptions: { disableRequestLogging },
+      };
+      const entries = [];
+      const logSink = pinoTest.sink();
+      logSink.on('data', (entry) => entries.push(entry));
+      const quietServer = createServer(
+        config,
+        loggerProvider({ ...config, destination: logSink }),
+      );
+
+      const response = await quietServer.inject({
+        method: 'GET',
+        url: '/missing',
+      });
+      await quietServer.close();
+
+      expect(response.statusCode).toEqual(404);
+      expect(response.json().message).toEqual('Route GET:/missing not found');
+      expect(entries).not.toContainEqual(
+        expect.objectContaining({ msg: 'Route GET:/missing not found' }),
+      );
+    });
   });
 });
 
