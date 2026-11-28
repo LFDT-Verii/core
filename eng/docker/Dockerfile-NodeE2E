@@ -1,4 +1,4 @@
-FROM node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS builder
+FROM node:26.13.1-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5 AS builder
 ARG NODE_ENV=production
 ARG SERVICE
 WORKDIR /app
@@ -21,7 +21,7 @@ COPY --chown=node:node servers ./servers
 COPY --chown=node:node samples ./samples
 RUN HUSKY=0 pnpm install --frozen-lockfile
 
-FROM node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
+FROM node:26.13.1-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5
 ARG SERVICE
 WORKDIR /app
 RUN corepack enable \

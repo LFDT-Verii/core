@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.28@sha256:bb22d9815c728170f72750f4e5b0d672e06176142e1d602c7e66c050100b7e5b
-FROM node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS builder
+FROM node:26.13.1-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5 AS builder
 ENV PNPM_HOME="/home/node/.local/share/pnpm"
 ENV PATH="${PNPM_HOME}:${PATH}"
 WORKDIR /app
@@ -20,7 +20,7 @@ COPY --chown=node:node servers ./servers
 RUN pnpm --filter @verii/server-credentialing-hub... install --offline --prod --frozen-lockfile
 RUN pnpm --filter @verii/server-credentialing-hub --prod deploy --legacy /app/deploy
 
-FROM node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
+FROM node:26.13.1-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5
 ARG IMAGE_VERSION="0.0.0-local"
 ARG IMAGE_REVISION="unknown"
 LABEL org.opencontainers.image.title="Verii Credentialing Hub" \
