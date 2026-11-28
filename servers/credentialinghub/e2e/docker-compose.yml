@@ -54,7 +54,7 @@ services:
       - 13002:3000
 
   webhook-receiver:
-    image: node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
+    image: node:26.13.1-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5
     init: true
     command: node /webhook-receiver/webhook-receiver.js
     volumes:
